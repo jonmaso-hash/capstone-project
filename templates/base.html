@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %} KCV Capital{% endblock title %}</title>
+
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    {% block css %}{% endblock %}
+</head>
+<body>
+    <!--Navigation-->
+    <header>
+      <div class="navbar">
+    <div class="title">KCV Capital</div>
+
+    <div class="nav-links">
+      <a href="{% url 'home' %}">Home</a>
+      <a href="{% url 'services' %}">Services</a>
+      <a href="{% url 'about' %}">About</a>
+      <a href="{% url 'post_list' %}">Blog</a>
+      <a href="{% url 'contact' %}">Contact</a>
+    </div>
+  </div>   
+    </header>
+    <!--Content main-->
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!--Footer-->
+    <Footer>
+
+    </Footer>
+    
+</body>
+</html>

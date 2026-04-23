@@ -1,0 +1,41 @@
+ body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between; /* pushes items apart */
+      align-items: center;
+      background-color: #333;
+      padding: 0 20px;
+      height: 60px;
+      color: white;
+    }
+
+    .navbar .title {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 20px; /* spacing between links */
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+    }
+
+    .nav-links a:hover {
+      text-decoration: underline;
+    }
+
+    footer{
+      background-color: #333 ;
+      color: white;
+      text-align: center;
+      padding: 12px 0;
+    }
