@@ -1,12 +1,228 @@
 {% extends 'base.html' %}
+{% load static %} 
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
 
 {% block content %}
+<div class="tagline" >
+<H1> Founders and Investors </H1>
+<p>Fill Out Form to Get Connected </p>
+</div>
+<section class="home">
+
+<div class="home-card">
+    <div class="card-header">
+        <h1>Investors</h1>
+        <button>Register</button>
+    </div>
+    <h5>Find Quality Startups</h5>
+    <ul>
+        <li>
+            <h9>Deal Sourcing Efficiency</h9>
+        </li>
+    </ul>
+    <ul>
+        <li>
+            <h9>Access to Proprietary Deals</h9>
+        </li>
+    </ul>
+    <ul>
+        <li>
+            <h9>Due Diligence Support</h9>
+        </li>
+    </ul>
+</div>
+
+    <div class="home-card">
+    <div class="card-header">
+        <h1>Seeking Investments</h1>
+        <button>Register</button>
+    </div>
+    <h5>Connect with Investors</h5>
+        <ul>
+        <li>
+            <h9>Access to Capital Networks</h9>
+        </li>
+    </ul>
+    <ul>
+        <li>
+            <h9>Pitch Refinement and Positioning</h9>
+        </li>
+    </ul>
+    <ul>
+        <li>
+            <h9>Deal structuring support</h9>
+        </li>
+    </ul>
+
+</div>
+
+    <div class="home-card">
+    <div class="card-header">
+        <h1>Inquiries</h1>
+        <a href="{% url 'contact' %}" class="button-link">Learn More</a>
+    </div>
+    <h5>Have a Question? Send Us a Message</h5>
+    <ul>
+        <li>
+            <h9>Interested in Early, Growth, or Late-stage Venture Investments</h9>
+        </li>
+    </ul>
+    <ul>
+        <li>
+            <h9>Raising Seed, Series A, B, or Growth Capital</h9>
+        </li>
+    </ul>
+    <ul>
+        <li>
+            <h9>Request a Consultation</h9>
+        </li>
+    </ul>
+</div>
+</section>
+
+<section class="services-section py-5">
+  <div class="container">
+    <h2 class="text-uppercase mb-5 font-weight-bold text-warning text-center">Our Services</h2>
+
+    <div class="services-grid">
+      <div class="service-item">
+        <span class="checkmark">✔</span>
+        <p>Board and Investor Relations</p>
+      </div>
+      <div class="service-item">
+        <span class="checkmark">✔</span>
+        <p>Financial Planning, Analysis and Modeling</p>
+      </div>
+      <div class="service-item">
+        <span class="checkmark">✔</span>
+        <p>Fundraising</p>
+      </div>
+      <div class="service-item">
+        <span class="checkmark">✔</span>
+        <p>Joint Venture and Acquisition Analysis</p>
+      </div>
+      <div class="service-item">
+        <span class="checkmark">✔</span>
+        <p>Measures, Incentives and KPIs</p>
+      </div>
+      
+      <div class="service-item">
+        <span class="checkmark">✔</span>
+        <p>Strategic Planning</p>
+      </div>
+      <div class="service-item">
+        <span class="checkmark">✔</span>
+        <p>Workforce Planning</p>
+      </div>
+    </div>
+  </div>
+</section>
 
 <section>
-    <div>
-
+    <div class="container py-5">
+        <h1 class="mb-4 text-center">Selected Clients</h1>
         
+        <div class="row g-4"> 
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">HV Vision</h5>
+                        <p class="card-text text-muted">Industry: AG Tech</p>
+                        <a href="https://www.hv-vision.com" class="btn btn-outline-primary btn-sm">HV-Vision.com</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">DwellFi</h5>
+                        <p class="card-text text-muted">Industry: Blockchain</p>
+                        <a href="https://www.dwell.fi" class="btn btn-outline-primary btn-sm">DwellFi.com</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">Aerones</h5>
+                        <p class="card-text text-muted">Industry: Clean Tech</p>
+                        <a href="https://aerones.com/" class="btn btn-outline-primary btn-sm">Aerones.com</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">Bristol Group</h5>
+                        <h5 class="card-title fw-bold">House Properties</h5>
+                        <h5 class="card-title fw-bold">Triple Five Group</h5>
+                        <p class="card-text text-muted">Industry: Commercial Real Estate</p>
+                        <div class="d-grid gap-2">
+                            <a href="https://bristolgroupinc.com" class="btn btn-outline-primary btn-sm">Bristol Group.com</a>
+                            <a href="https://bristolgroupinc.com" class="btn btn-outline-primary btn-sm">House Properties.com</a>
+                            <a href="https://bristolgroupinc.com" class="btn btn-outline-primary btn-sm">Triple Five Group.com</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">Lyte</h5>
+                        <h5 class="card-title fw-bold">Seven Seas Music</h5>
+                        <p class="card-text text-muted">Industry: Entertainment</p>
+                        <div class="d-grid gap-2">
+                            <a href="https://maintenance.lyteup.com" class="btn btn-outline-primary btn-sm">Lyte.com</a>
+                            <a href="https://sevenseasmusic.com" class="btn btn-outline-primary btn-sm">Sevenseasmusic.com</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">Biproxi</h5>
+                        <h5 class="card-title fw-bold">Eprazel</h5>
+                        <h5 class="card-title fw-bold">PLUM Lending</h5>
+                        <p class="card-text text-muted">Industry: Fintech</p>
+                        <div class="d-grid gap-2">
+                            <a href="https://biproxi.com" class="btn btn-outline-primary btn-sm">Biproxi.com</a>
+                            <a href="https://www.eprazel.com" class="btn btn-outline-primary btn-sm">Eprazel.com</a>
+                            <a href="https://plumlending.com/" class="btn btn-outline-primary btn-sm">PLUMLending.com</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">Abound</h5>
+                        <h5 class="card-title fw-bold">Akorda</h5>
+                        <h5 class="card-title fw-bold">Join</h5>
+                        <p class="card-text text-muted">Industry: SaaS</p>
+                        <div class="d-grid gap-2">
+                            <a href="https://www.withabound.com" class="btn btn-outline-primary btn-sm">Abound.com</a>
+                            <a href="https://www.legalsifter.com" class="btn btn-outline-primary btn-sm">Akorda.com</a>
+                            <a href="https://joindigital.com" class="btn btn-outline-primary btn-sm">joindigital.com</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </div>
 </section>
+
+</section>
+
 
 {% endblock %}

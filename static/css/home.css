@@ -1,0 +1,145 @@
+/* Form section */
+.home {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding: 40px;
+}
+
+/* smaller, tighter cards */
+.home-card {
+    border: 2px solid #333;
+    padding: 15px;              /* reduced from 20px */
+    border-radius: 8px;
+    background-color: #f9f9f9;
+
+    max-width: 280px;           /* controls card size */
+    margin: 0 auto;             /* centers each card */
+}
+
+/* compact header row */
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+}
+
+/* smaller title */
+.card-header h1 {
+    margin: 0;
+    font-size: 18px;
+}
+
+/* smaller button */
+.card-header button {
+    padding: 5px 10px;
+    font-size: 12px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* optional spacing cleanup */
+.home-card h5 {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #666;
+}
+
+.button-link {
+  display: inline-block;
+  padding: 3px 3px;
+  background-color: #2563eb; /* A nice modern blue */
+  color: #ffffff !important; /* Ensures text stays white */
+  text-decoration: none;     /* Removes the link underline */
+  border-radius: 8px;        /* Rounded corners */
+  font-weight: 600;
+  font-family: system-ui, sans-serif;
+  transition: transform 0.1s, background-color 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+/* Hover effect */
+.button-link:hover {
+  background-color: #1d4ed8;
+  text-decoration: none;
+}
+
+/* Click effect */
+.button-link:active {
+  transform: scale(0.98);
+}
+
+.tagline{
+    text-align: center;
+}
+
+.service-div{
+    text-align: center;
+}
+
+.home {
+  position: relative;
+  background-image: url('/media/img/business2.jpg');
+  background-size: cover;
+  background-position: center;
+  z-index: 1;
+}
+
+/* service section */
+
+/* Container for the items */
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Adjust as needed */
+  gap: 20px;
+  border: 2px solid #1A1A40; /* Matches your 'text-warning' yellow/gold */
+  border-radius: 15px;
+  padding: 30px;
+  background-color: rgba(255, 193, 7, 0.05); /* Very light tinted background */
+}
+
+/* Individual Service Box */
+.service-item {
+    display: flex;
+    align-items: flex-start; /* Keeps checkmark at the top of multi-line text */
+    background: #f8f9fa;
+    padding: 1.25rem;
+    border-radius: 8px;
+    border-left: 4px solid #ffc107; /* Matches your text-warning color */
+    transition: all 0.3s ease;
+}
+
+.service-item:hover {
+    background: #ffffff;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    transform: translateY(-3px);
+}
+
+/* Checkmark Style */
+.checkmark {
+    color: #198754; /* Green success color */
+    font-size: 1.2rem;
+    margin-right: 12px;
+    margin-top: -2px; /* Fine-tune vertical alignment */
+}
+
+/* Paragraph Text */
+.service-item p {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #212529;
+}
+
