@@ -1,21 +1,85 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} Contact {% endblock title %}
+
+{% block title %}Contact{% endblock title %}
 
 {% block content %}
+<link rel="stylesheet" href="{% static 'css/contact.css' %}">
+
 <div class="contact-container">
     <section class="contact-card">
         <h1>Contact Me</h1>
         <p class="contact-subtitle">Have a question? I'd love to hear from you.</p>
-        
-        <form id="contactForm" method="POST">
+
+        <!-- Django Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" action="" novalidate>
             {% csrf_token %}
+
+            <!-- Non-field errors -->
+            {% if form.non_field_errors %}
+                <div class="form-errors">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
             <div class="form-fields">
-                {{ form.as_p }}
+
+                <!-- Name -->
+                <div class="form-group">
+                    <label for="id_name">Full Name</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                        <div class="error">{{ form.name.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Email -->
+                <div class="form-group">
+                    <label for="id_email">Email Address</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <div class="error">{{ form.email.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Company -->
+                <div class="form-group">
+                    <label for="id_company">Company Name</label>
+                    {{ form.company }}
+                    {% if form.company.errors %}
+                        <div class="error">{{ form.company.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Phone -->
+                <div class="form-group">
+                    <label for="id_phone">Phone Number</label>
+                    {{ form.phone }}
+                    {% if form.phone.errors %}
+                        <div class="error">{{ form.phone.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Message -->
+                <div class="form-group">
+                    <label for="id_message">Message</label>
+                    {{ form.message }}
+                    {% if form.message.errors %}
+                        <div class="error">{{ form.message.errors }}</div>
+                    {% endif %}
+                </div>
+
             </div>
+
             <div class="form-actions">
                 <button type="submit" class="btn-send">Send Message</button>
-                <button type="reset" class="btn-reset">Clear</button>
+                <button type="reset" class="btn-reset">Clear Form</button>
             </div>
         </form>
     </section>
