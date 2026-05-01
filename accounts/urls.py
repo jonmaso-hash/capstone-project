@@ -10,8 +10,11 @@ urlpatterns = [
     # If using a Class Based View, use views.SignUpView.as_view()
     # If using a function, use views.signup_view
     path('signup/', views.signup_view, name='signup'),
+    path('login/', views.login_view, name='login'),  # if you have login
+
 
     # Profile View
     # This matches the 'user.username' argument in your template
     path('profile/<str:username>/', views.profile_view, name='profile'),
+
 ]

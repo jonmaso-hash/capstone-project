@@ -24,36 +24,35 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navbarNav">
-                <div class="navbar-nav ms-auto">
-                    <a class="nav-link" href="{% url 'home' %}">Home</a>
-                    <a class="nav-link" href="{% url 'about' %}">About</a>
-                    <a class="nav-link" href="{% url 'blog' %}">Blog</a>
-                    <a class="nav-link" href="{% url 'contact' %}">Contact</a>
+    <div class="navbar-nav ms-auto align-items-center">
+        <a class="nav-link" href="{% url 'home' %}">Home</a>
+        <a class="nav-link" href="{% url 'about' %}">About</a>
+        <a class="nav-link" href="{% url 'blog' %}">Blog</a>
+        <a class="nav-link" href="{% url 'contact' %}">Contact</a>
 
-                    {% if user.is_authenticated %}
-
-
-
-                    {% else %}
-                    <div class="d-flex ms-3">
-                        <a href="{% url 'login' %}" class="btn btn-outline-dark btn-sm me-2">Login</a>
-                    </div>
-                    {% endif %}
-
-                    {% if user.is_authenticated %}
-                    <div class="d-flex" style="margin-right: 15px;">
-                        <a href="/accounts/profile/{{user.username}}" class="badge text-bg-info">{{ user.username}}</a>
-                        <li class="nav-item">
-                            <form action="{% url 'logout' %}" method="post">
-                                {% csrf_token %}
-                                <input type="submit" value="Logout" class="nav-link">
-                            </form>
-                        </li>
-                    </div>
-                    {% endif %}
-
-                </div>
+        {% if user.is_authenticated %}
+            <!-- Profile Link -->
+            <div class="ms-lg-3">
+                <a href="/accounts/profile/{{user.username}}" 
+                   class="nav-link d-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-light border transition-all">
+                    <i class="bi bi-person-circle fs-5 text-primary"></i>
+                    <span class="fw-medium text-dark small">{{ user.username }}</span>
+                </a>
             </div>
+            <!-- Logout Button -->
+            <form action="{% url 'logout' %}" method="post" class="ms-lg-2">
+                {% csrf_token %}
+                <button type="submit" class="nav-link border-0 bg-transparent">Logout</button>
+            </form>
+        {% else %}
+            <!-- Auth Buttons -->
+            <div class="d-flex ms-lg-3 gap-2">
+                <a href="{% url 'login' %}" class="btn btn-outline-dark btn-sm px-3">Login</a>
+                <a href="{% url 'accounts:signup' %}" class="btn btn-primary">Sign Up</a>       
+            </div>
+        {% endif %}
+    </div>
+</div>
         </nav>
     </header>
 

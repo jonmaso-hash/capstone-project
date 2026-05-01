@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contact{% endblock title %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    {% if user.is_authenticated %}
+
+        <form method="post" class="card border-0 shadow-lg overflow-hidden">
+            {% csrf_token %}
+
+            <div class="card-header bg-dark text-white p-4">
+                <h4 class="mb-0 fw-bold">Founder Application</h4>
+                <p class="small text-white-50 mb-0">
+                    Tell us about yourself and your venture.
+                </p>
+            </div>
+
+            <div class="card-body p-4 p-lg-5">
+
+                <!-- Personal Details -->
+                <div class="mb-5">
+                    <h6 class="text-uppercase text-muted fw-bold mb-3 small tracking-wider">
+                        Personal Details
+                    </h6>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Full Name</label>
+                            <input type="text" name="founder_name"
+                                   class="form-control form-control-lg bg-light"
+                                   placeholder="Jane Doe" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Email Address</label>
+                            <input type="email" name="email"
+                                   class="form-control form-control-lg bg-light"
+                                   placeholder="jane@company.com" required>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4 opacity-10">
+
+                <!-- Company Identity -->
+                <div class="mb-5">
+                    <h6 class="text-uppercase text-muted fw-bold mb-3 small tracking-wider">
+                        Company Identity
+                    </h6>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Company Name</label>
+                            <input type="text" name="company_name"
+                                   class="form-control form-control-lg bg-light"
+                                   placeholder="Acme Corp" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Company Website</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted border-end-0">
+                                    https://
+                                </span>
+                                <input type="url" name="company_website"
+                                       class="form-control form-control-lg bg-light border-start-0"
+                                       placeholder="www.example.com">
+                            </div>
+                        </div>
+
+                        <div class="col-12 mt-3">
+                            <label class="form-label fw-semibold">Pitch Summary</label>
+                            <textarea name="description" rows="3"
+                                      class="form-control bg-light"
+                                      placeholder="Describe your mission in 2-3 sentences..."
+                                      required></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4 opacity-10">
+
+                <!-- Funding & Stage -->
+                <div class="mb-4">
+                    <h6 class="text-uppercase text-muted fw-bold mb-3 small tracking-wider">
+                        Funding & Stage
+                    </h6>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Industry Sector</label>
+                            <input type="text" name="sector"
+                                   class="form-control bg-light"
+                                   placeholder="Fintech, SaaS, etc.">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Current Stage</label>
+                            <select name="stage" class="form-select bg-light">
+                                <option value="" selected disabled>Select stage</option>
+                                <option value="idea">Idea / Pre-seed</option>
+                                <option value="mvp">MVP / Prototype</option>
+                                <option value="early">Early Revenue</option>
+                                <option value="growth">Growth</option>
+                                <option value="scale">Scaling</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Target Raise ($)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">$</span>
+                                <input type="number" name="raising_amount"
+                                       class="form-control bg-light"
+                                       placeholder="500,000">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Extra Info -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Additional Context</label>
+                    <textarea name="extra_info" rows="4"
+                              class="form-control bg-light"
+                              placeholder="Tell us anything else relevant to your application..."></textarea>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-5">
+                    <button type="button"
+                            class="btn btn-link text-decoration-none text-muted me-md-2">
+                        Cancel
+                    </button>
+
+                    <button type="submit"
+                            class="btn btn-primary px-5 fw-bold shadow-sm">
+                        Save Founder Profile
+                    </button>
+                </div>
+
+            </div>
+        </form>
+
+    {% else %}
+
+        <!-- Not logged in message -->
+        <div class="alert alert-warning shadow-sm p-4 text-center">
+            <h5 class="mb-2">Login Required</h5>
+            <p class="mb-3">
+                You must be logged in to access the Founder Application form.
+            </p>
+
+            <a href="{% url 'accounts:signup' %}" class="btn btn-primary">
+                Sign Up / Login
+            </a>
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

@@ -18,3 +18,9 @@
 body {
   background-color: lightgrey;
 }
+
+.hover-shadow:hover {
+        background-color: #f0f2f5 !important;
+        border-color: #0d6efd !important;
+        transition: all 0.2s ease;
+    }

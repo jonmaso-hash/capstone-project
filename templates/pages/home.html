@@ -15,7 +15,7 @@
 <div class="home-card">
     <div class="card-header">
         <h1>Investors</h1>
-        <button>Register</button>
+        <button>Get Started</button>
     </div>
     <h5>Find Quality Startups</h5>
     <ul>
@@ -37,9 +37,11 @@
 
     <div class="home-card">
     <div class="card-header">
-        <h1>Seeking Investments</h1>
-        <button>Register</button>
-    </div>
+    <h1>Seeking Investments</h1>
+    <a href="{% url 'seeking_investment' %}" class="btn btn-primary btn-sm">
+        Get Started
+    </a>
+</div>
     <h5>Connect with Investors</h5>
         <ul>
         <li>
@@ -223,6 +225,4 @@
 </section>
 
 </section>
-
-
 {% endblock %}
