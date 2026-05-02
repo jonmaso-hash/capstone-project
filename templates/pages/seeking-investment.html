@@ -32,18 +32,25 @@
                     </h6>
 
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label fw-semibold">Full Name</label>
                             <input type="text" name="founder_name"
                                    class="form-control form-control-lg bg-light"
                                    placeholder="Jane Doe" required>
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label fw-semibold">Email Address</label>
                             <input type="email" name="email"
                                    class="form-control form-control-lg bg-light"
                                    placeholder="jane@company.com" required>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Phone Number</label>
+                            <input type="tel" name="phone_number"
+                                   class="form-control form-control-lg bg-light"
+                                   placeholder="+1 555 123 4567">
                         </div>
                     </div>
                 </div>
@@ -80,8 +87,15 @@
                             <label class="form-label fw-semibold">Pitch Summary</label>
                             <textarea name="description" rows="3"
                                       class="form-control bg-light"
-                                      placeholder="Describe your mission in 2-3 sentences..."
+                                      placeholder="Describe your mission in 2–3 sentences..."
                                       required></textarea>
+                        </div>
+
+                        <div class="col-12 mt-3">
+                            <label class="form-label fw-semibold">Full Business Description</label>
+                            <textarea name="business_description" rows="4"
+                                      class="form-control bg-light"
+                                      placeholder="Provide a detailed explanation of your business, product, and market..."></textarea>
                         </div>
                     </div>
                 </div>
@@ -96,7 +110,7 @@
 
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold">Industry Sector</label>
+                            <label class="form-label fw-semibold">Industry/Sector</label>
                             <input type="text" name="sector"
                                    class="form-control bg-light"
                                    placeholder="Fintech, SaaS, etc.">
@@ -118,20 +132,57 @@
                             <label class="form-label fw-semibold">Target Raise ($)</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light">$</span>
-                                <input type="number" name="raising_amount"
-                                       class="form-control bg-light"
-                                       placeholder="500,000">
+                                <input type="text" name="raising_amount"
+                                    class="form-control bg-light"
+                                    placeholder="500,000">
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Years in Business</label>
+                            <input type="number" name="years_in_business"
+                                   class="form-control bg-light"
+                                   placeholder="3">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Company Size</label>
+                            <select name="company_size" class="form-select bg-light">
+                                <option value="" selected disabled>Select size</option>
+                                <option value="1">Just me</option>
+                                <option value="2-5">2–5 employees</option>
+                                <option value="6-10">6–10 employees</option>
+                                <option value="11-50">11–50 employees</option>
+                                <option value="50+">50+ employees</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Amount Raised to Date ($)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">$</span>
+                                <input type="text" name="amount_raised"
+                                    class="form-control bg-light"
+                                    placeholder="250,000">
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Extra Info -->
+                <!-- Reason for Capital -->
                 <div class="mb-4">
-                    <label class="form-label fw-semibold">Additional Context</label>
+                    <label class="form-label fw-semibold">Reason for Capital</label>
+                    <textarea name="reason_for_capital" rows="3"
+                              class="form-control bg-light"
+                              placeholder="How will you use the funds? (e.g., hiring, product development, marketing)"></textarea>
+                </div>
+
+                <!-- Additional Info -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Additional Notes</label>
                     <textarea name="extra_info" rows="4"
                               class="form-control bg-light"
-                              placeholder="Tell us anything else relevant to your application..."></textarea>
+                              placeholder="Anything else you'd like us to know..."></textarea>
                 </div>
 
                 <!-- Buttons -->
@@ -143,7 +194,7 @@
 
                     <button type="submit"
                             class="btn btn-primary px-5 fw-bold shadow-sm">
-                        Save Founder Profile
+                        Submit Application
                     </button>
                 </div>
 
@@ -152,7 +203,6 @@
 
     {% else %}
 
-        <!-- Not logged in message -->
         <div class="alert alert-warning shadow-sm p-4 text-center">
             <h5 class="mb-2">Login Required</h5>
             <p class="mb-3">

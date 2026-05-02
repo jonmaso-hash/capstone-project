@@ -1,20 +1,28 @@
 from django.urls import path
 from . import views
 
-# This 'app_name' is the "namespace". 
-# It allows you to use {% url 'accounts:profile' %} in templates.
 app_name = 'accounts'
 
 urlpatterns = [
-    # Signup View
-    # If using a Class Based View, use views.SignUpView.as_view()
-    # If using a function, use views.signup_view
+    # ----------------------
+    # Authentication
+    # ----------------------
     path('signup/', views.signup_view, name='signup'),
-    path('login/', views.login_view, name='login'),  # if you have login
+    path('login/', views.login_view, name='login'),
 
-
-    # Profile View
-    # This matches the 'user.username' argument in your template
+    # ----------------------
+    # User Profile
+    # ----------------------
     path('profile/<str:username>/', views.profile_view, name='profile'),
 
+    # ----------------------
+    # Founder Application Flow
+    # ----------------------
+    path('apply/', views.seeking_investment, name='apply'),
+    path('thank-you/', views.thank_you, name='thank_you'),
+
+    # ----------------------
+    # Admin-style Applications Dashboard
+    # ----------------------
+    path('applications/', views.applications_list, name='applications'),
 ]
