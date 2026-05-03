@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profile - {{ profile_user.username }}{% endblock title %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <div class="card shadow-lg border-0">
+
+        <div class="card-header bg-dark text-white p-4">
+            <h3 class="mb-0">Founder Profile</h3>
+            <p class="mb-0 text-white-50">
+                Viewing application for <strong>{{ profile_user.username }}</strong>
+            </p>
+        </div>
+
+        <div class="card-body p-4">
+
+            <!-- Basic Info -->
+            <h5 class="mb-3">Account Information</h5>
+            <ul class="list-group mb-4">
+                <li class="list-group-item">
+                    <strong>Username:</strong> {{ profile_user.username }}
+                </li>
+                <li class="list-group-item">
+                    <strong>Email:</strong> {{ profile_user.email }}
+                </li>
+            </ul>
+
+            <!-- Application Section (if you later pass a submission object) -->
+            <h5 class="mb-3">Application Details</h5>
+
+            {% if application %}
+                <ul class="list-group">
+
+                    <li class="list-group-item">
+                        <strong>Company:</strong> {{ application.company_name }}
+                    </li>
+
+                    <li class="list-group-item">
+                        <strong>Phone:</strong> {{ application.phone_number }}
+                    </li>
+
+                    <li class="list-group-item">
+                        <strong>Sector:</strong> {{ application.sector }}
+                    </li>
+
+                    <li class="list-group-item">
+                        <strong>Years in Business:</strong> {{ application.years_in_business }}
+                    </li>
+
+                    <li class="list-group-item">
+                        <strong>Company Size:</strong> {{ application.company_size }}
+                    </li>
+
+                    <li class="list-group-item">
+                        <strong>Amount Raised:</strong> ${{ application.amount_raised }}
+                    </li>
+
+                    <li class="list-group-item">
+                        <strong>Target Raise:</strong> ${{ application.raising_amount }}
+                    </li>
+
+                    <li class="list-group-item">
+                        <strong>Reason for Capital:</strong><br>
+                        {{ application.reason_for_capital }}
+                    </li>
+
+                    <li class="list-group-item">
+                        <strong>Business Description:</strong><br>
+                        {{ application.business_description }}
+                    </li>
+
+                </ul>
+            {% else %}
+                <div class="alert alert-info">
+                    No application data found for this user yet.
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

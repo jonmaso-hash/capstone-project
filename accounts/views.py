@@ -1,137 +1,61 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.decorators import login_required
-from django.views.generic import TemplateView
-from django.contrib.auth import get_user_model
-from django.contrib.admin.views.decorators import staff_member_required
-import re
-
-from .models import FounderApplication
-
-User = get_user_model()
+from django.contrib.auth.models import User
+from django.contrib import messages
+from .models import Application
 
 
-# -------------------------
-# Helpers
-# -------------------------
-def clean_money(value):
-    """
-    Converts strings like:
-    '500,000', '$500,000', ' 500 000 ' → 500000.0
-    """
-    if not value:
-        return None
-    value = re.sub(r"[^\d.]", "", value)
-    return float(value) if value else None
-
-
-# -------------------------
-# Auth Views
-# -------------------------
 def signup_view(request):
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect('home')
-    else:
-        form = UserCreationForm()
-
-    return render(request, 'accounts/signup.html', {'form': form})
+    return render(request, "accounts/signup.html")
 
 
 def login_view(request):
-    if request.user.is_authenticated:
-        return redirect('home')
-
-    form = AuthenticationForm(request, data=request.POST or None)
-
-    if request.method == "POST":
-        if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            return redirect('home')
-
-    return render(request, 'accounts/login.html', {'form': form})
+    return render(request, "accounts/login.html")
 
 
-# -------------------------
-# Profile
-# -------------------------
-def profile_view(request, username):
-    user = get_object_or_404(User, username=username)
-    return render(request, 'accounts/profile.html', {'profile_user': user})
-
-
-# -------------------------
-# Application Form
-# -------------------------
-@login_required
 def seeking_investment(request):
     if request.method == "POST":
+        company_name = request.POST.get("company_name")
+        description = request.POST.get("description")
+        amount_requested = request.POST.get("amount_requested")
 
-        FounderApplication.objects.create(
-            user=request.user,
+        if company_name and description and amount_requested:
+            Application.objects.create(
+                user=request.user,
+                company_name=company_name,
+                description=description,
+                amount_requested=amount_requested,
+            )
+            messages.success(request, "Application submitted successfully.")
+            return redirect("accounts:thank_you")
 
-            # Personal
-            founder_name=request.POST.get("founder_name"),
-            email=request.POST.get("email"),
-            phone_number=request.POST.get("phone_number"),
+        messages.error(request, "All fields are required.")
 
-            # Company
-            company_name=request.POST.get("company_name"),
-            company_website=request.POST.get("company_website"),
-
-            # Description
-            pitch_summary=request.POST.get("description"),
-            business_description=request.POST.get("business_description"),
-
-            # Funding
-            sector=request.POST.get("sector"),
-            stage=request.POST.get("stage"),
-
-            raising_amount=clean_money(request.POST.get("raising_amount")),
-            years_in_business=request.POST.get("years_in_business") or None,
-            company_size=request.POST.get("company_size"),
-
-            amount_raised=clean_money(request.POST.get("amount_raised")),
-
-            # Intent
-            reason_for_capital=request.POST.get("reason_for_capital"),
-
-            # Extra
-            extra_info=request.POST.get("extra_info"),
-        )
-
-        request.session["applicant_name"] = request.POST.get("founder_name")
-
-        return redirect('accounts:thank_you')
-
-    return render(request, 'seeking-investment.html')
+    return render(request, "accounts/seeking_investment.html")
 
 
-# -------------------------
-# Thank You Page
-# -------------------------
-@login_required
-def thank_you(request):
-    name = request.session.get("applicant_name", request.user.username)
+def profile_view(request, username):
+    user = get_object_or_404(User, username=username)
+    application = Application.objects.filter(user=user).first()
 
-    return render(request, 'thank_you.html', {
-        "name": name
+    return render(request, "accounts/profile.html", {
+        "profile_user": user,
+        "application": application
     })
 
 
-# -------------------------
-# Admin-style Applications View
-# -------------------------
-@staff_member_required
-def applications_list(request):
-    applications = FounderApplication.objects.all().order_by('-created_at')
+def thank_you(request):
+    return render(request, "accounts/thank_you.html")
 
-    return render(request, 'accounts/applications.html', {
-        'applications': applications
+
+def applications_list(request):
+    applications = Application.objects.all()
+    return render(request, "accounts/applications_list.html", {
+        "applications": applications
+    })
+
+
+def application_detail(request, pk):
+    application = get_object_or_404(Application, pk=pk)
+    return render(request, "accounts/application_detail.html", {
+        "application": application
     })

@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}Application Details{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <div class="card shadow-lg border-0">
+
+        <!-- Header -->
+        <div class="card-header bg-dark text-white p-4">
+            <h3 class="mb-0">{{ application.company_name }}</h3>
+            <small class="text-white-50">
+                Submitted by {{ application.founder_name }} on {{ application.created_at|date:"M d, Y H:i" }}
+            </small>
+        </div>
+
+        <div class="card-body p-4">
+
+            <!-- Personal Info -->
+            <h5 class="mb-3 text-primary">Personal Information</h5>
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <strong>Name:</strong><br>
+                    {{ application.founder_name }}
+                </div>
+                <div class="col-md-4">
+                    <strong>Email:</strong><br>
+                    {{ application.email }}
+                </div>
+                <div class="col-md-4">
+                    <strong>Phone:</strong><br>
+                    {{ application.phone_number }}
+                </div>
+            </div>
+
+            <hr>
+
+            <!-- Company Info -->
+            <h5 class="mb-3 text-primary">Company Information</h5>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <strong>Company:</strong><br>
+                    {{ application.company_name }}
+                </div>
+                <div class="col-md-6">
+                    <strong>Website:</strong><br>
+                    <a href="{{ application.company_website }}" target="_blank">
+                        {{ application.company_website }}
+                    </a>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <strong>Pitch Summary:</strong>
+                <p class="mt-2">{{ application.pitch_summary }}</p>
+            </div>
+
+            <div class="mb-4">
+                <strong>Full Business Description:</strong>
+                <p class="mt-2">{{ application.business_description }}</p>
+            </div>
+
+            <hr>
+
+            <!-- Funding Info -->
+            <h5 class="mb-3 text-primary">Funding Information</h5>
+
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <strong>Sector:</strong><br>
+                    {{ application.sector }}
+                </div>
+
+                <div class="col-md-4">
+                    <strong>Stage:</strong><br>
+                    {{ application.stage }}
+                </div>
+
+                <div class="col-md-4">
+                    <strong>Target Raise:</strong><br>
+                    ${{ application.raising_amount }}
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <strong>Years in Business:</strong><br>
+                    {{ application.years_in_business }}
+                </div>
+
+                <div class="col-md-4">
+                    <strong>Company Size:</strong><br>
+                    {{ application.company_size }}
+                </div>
+
+                <div class="col-md-4">
+                    <strong>Amount Raised:</strong><br>
+                    ${{ application.amount_raised }}
+                </div>
+            </div>
+
+            <hr>
+
+            <!-- Intent -->
+            <h5 class="mb-3 text-primary">Capital Use</h5>
+            <div class="mb-4">
+                <p>{{ application.reason_for_capital }}</p>
+            </div>
+
+            <hr>
+
+            <!-- Extra -->
+            <h5 class="mb-3 text-primary">Additional Notes</h5>
+            <div class="mb-4">
+                <p>{{ application.extra_info }}</p>
+            </div>
+
+        </div>
+
+    </div>
+
+    <a href="{% url 'accounts:applications' %}" class="btn btn-secondary mt-3">
+        ← Back to Applications
+    </a>
+
+</div>
+
+{% endblock %}

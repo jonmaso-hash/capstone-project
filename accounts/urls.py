@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 
+
 app_name = 'accounts'
 
 urlpatterns = [
@@ -25,4 +26,6 @@ urlpatterns = [
     # Admin-style Applications Dashboard
     # ----------------------
     path('applications/', views.applications_list, name='applications'),
+
+    path('applications/<int:pk>/', views.application_detail, name='application_detail'),
 ]
