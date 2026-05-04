@@ -5,6 +5,37 @@
 
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/home.css' %}">
+<style>
+    .form-section-title {
+        font-size: 12px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: #6c757d;
+        margin-bottom: 15px;
+    }
+
+    .form-control, .form-select {
+        padding: 12px;
+        border-radius: 10px;
+    }
+
+    .card {
+        border-radius: 16px;
+    }
+
+    .btn-primary {
+        border-radius: 10px;
+        padding: 10px 28px;
+    }
+
+    label {
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: #495057;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -13,96 +44,121 @@
 
     {% if user.is_authenticated %}
 
-    <form method="post" action="{% url 'accounts:apply' %}" class="card border-0 shadow-lg overflow-hidden">
+    <form method="post" action="{% url 'accounts:apply' %}" class="card shadow-lg border-0">
         {% csrf_token %}
 
+        <!-- HEADER -->
         <div class="card-header bg-dark text-white p-4">
-            <h4 class="mb-0 fw-bold">Founder Application</h4>
-            <p class="small text-white-50 mb-0">
-                Tell us about yourself and your venture.
+            <h3 class="mb-1 fw-bold">Founder Application</h3>
+            <p class="mb-0 text-white-50">
+                Tell us about your startup so we can evaluate your funding request.
             </p>
         </div>
 
         <div class="card-body p-4 p-lg-5">
 
-            <!-- Personal Details -->
+            <!-- PERSONAL -->
             <div class="mb-5">
-                <h6 class="text-uppercase text-muted fw-bold mb-3 small">
-                    Personal Details
-                </h6>
+                <div class="form-section-title">Personal Details</div>
 
                 <div class="row g-3">
+
                     <div class="col-md-4">
-                        <input type="text" name="founder_name" class="form-control bg-light" placeholder="Full Name" required>
+                        <label for="founder_name">Full Name</label>
+                        <input type="text" id="founder_name" name="founder_name" class="form-control bg-light" required>
                     </div>
 
                     <div class="col-md-4">
-                        <input type="email" name="email" class="form-control bg-light" placeholder="Email" required>
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" class="form-control bg-light" required>
                     </div>
 
                     <div class="col-md-4">
-                        <input type="tel" name="phone_number" class="form-control bg-light" placeholder="Phone">
+                        <label for="phone_number">Phone Number</label>
+                        <input type="tel" id="phone_number" name="phone_number" class="form-control bg-light">
                     </div>
+
                 </div>
             </div>
 
-            <hr>
+            <hr class="my-4">
 
-            <!-- Company -->
+            <!-- COMPANY -->
+            <div class="mb-5">
+                <div class="form-section-title">Company Information</div>
+
+                <label for="company_name">Company Name</label>
+                <input type="text" id="company_name" name="company_name" class="form-control bg-light mb-3" required>
+
+                <label for="company_size">Company Size</label>
+                <input type="text" id="company_size" name="company_size" class="form-control bg-light mb-3">
+
+                <label for="company_website">Website</label>
+                <input type="url" id="company_website" name="company_website" class="form-control bg-light mb-3">
+
+                <label for="description">Short Pitch</label>
+                <textarea id="description" name="description" class="form-control bg-light mb-3" rows="3"></textarea>
+
+                <label for="business_description">Business Description</label>
+                <textarea id="business_description" name="business_description" class="form-control bg-light" rows="4"></textarea>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- FUNDING -->
             <div class="mb-4">
-                <input type="text" name="company_name" class="form-control bg-light mb-3" placeholder="Company Name" required>
+                <div class="form-section-title">Funding Details</div>
 
-                <input type="text" name="company_size" class="form-control bg-light mb-3" placeholder="Company size" required>
+                <div class="row g-3 mb-3">
 
-                <input type="text" name="company_website" class="form-control bg-light mb-3" placeholder="Website">
+                    <div class="col-md-4">
+                        <label for="sector">Sector</label>
+                        <input type="text" id="sector" name="sector" class="form-control bg-light">
+                    </div>
 
-                <textarea name="description" class="form-control bg-light mb-3" rows="3" placeholder="Short Pitch"></textarea>
+                    <div class="col-md-4">
+                        <label for="stage">Stage</label>
+                        <select id="stage" name="stage" class="form-select bg-light">
+                            <option selected disabled>Select stage</option>
+                            <option value="pre_seed">Pre-Seed</option>
+                            <option value="seed">Seed</option>
+                            <option value="series_a">Series A</option>
+                            <option value="series_b">Series B</option>
+                            <option value="series_c">Series C+</option>
+                        </select>
+                    </div>
 
-                <textarea name="business_description" class="form-control bg-light" rows="4" placeholder="Business Description"></textarea>
+                    <div class="col-md-4">
+                        <label for="raising_amount">Amount Seeking</label>
+                        <input type="text" id="raising_amount" name="raising_amount" class="form-control bg-light">
+                    </div>
+
+                </div>
+
+                <div class="row g-3 mb-3">
+
+                    <div class="col-md-6">
+                        <label for="amount_raised">Total Raised To Date</label>
+                        <input type="text" id="amount_raised" name="amount_raised" class="form-control bg-light">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="current_revenue">Current Revenue</label>
+                        <input type="text" id="current_revenue" name="current_revenue" class="form-control bg-light">
+                    </div>
+
+                </div>
+
+                <label for="reason_for_capital">Reason for Capital</label>
+                <textarea id="reason_for_capital" name="reason_for_capital" class="form-control bg-light mb-3" rows="3"></textarea>
+
+                <label for="extra_info">Additional Information</label>
+                <textarea id="extra_info" name="extra_info" class="form-control bg-light" rows="3"></textarea>
             </div>
 
-            <hr>
-
-            <!-- Funding -->
-            <div class="row g-3 mb-4">
-                <div class="col-md-4">
-                    <input type="text" name="sector" class="form-control bg-light" placeholder="Sector">
-                </div>
-
-                <div class="col-md-4">
-                    <select name="stage" class="form-select bg-light">
-                        <option disabled selected>Stage</option>
-                        <option value="idea">Pre-Seed</option>
-                        <option value="mvp">Seed</option>
-                        <option value="growth">Series A</option>
-                        <option value="growth">Series B</option>
-                        <option value="growth">Series C+</option>
-
-
-                    </select>
-                </div>
-
-                <div class="col-md-4">
-                    <input type="text" name="raising_amount" class="form-control bg-light" placeholder="How Much Money Are You Seeking?">
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                    <input type="text" name="prior_amount_raised" class="form-control bg-light" placeholder="How Much Monehy Have You Raised?">
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                    <input type="text" name="current_revenue" class="form-control bg-light" placeholder="Current Revenue">
-                </div>
-            </div>
-
-            <textarea name="reason_for_capital" class="form-control bg-light mb-3" rows="3" placeholder="Reason for Capital"></textarea>
-
-            <textarea name="extra_info" class="form-control bg-light" rows="3" placeholder="Additional Info"></textarea>
-
+            <!-- SUBMIT -->
             <div class="text-end mt-4">
-                <button type="submit" class="btn btn-primary px-5">
+                <button type="submit" class="btn btn-primary">
                     Submit Application
                 </button>
             </div>
@@ -113,7 +169,7 @@
     {% else %}
 
     <div class="alert alert-warning text-center">
-        Please log in to access this form.
+        Please log in to access the founder application form.
     </div>
 
     {% endif %}
