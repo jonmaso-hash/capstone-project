@@ -23,6 +23,8 @@ class Application(models.Model):
     description = models.TextField()
     business_description = models.TextField(blank=True, null=True)
 
+    current_revenue = models.CharField(max_length=50, blank=True, null=True)
+
     sector = models.CharField(max_length=255, blank=True, null=True)
     stage = models.CharField(max_length=50, blank=True, null=True)
 
@@ -31,13 +33,14 @@ class Application(models.Model):
 
     raising_amount = models.CharField(max_length=50, blank=True, null=True)
     amount_raised = models.CharField(max_length=50, blank=True, null=True)
+    prior_amount_raised = models.CharField(max_length=50, blank=True, null=True)
+
 
     reason_for_capital = models.TextField(blank=True, null=True)
     extra_info = models.TextField(blank=True, null=True)
 
-    # timestamps (FIXED)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True)  # ✅ FIX for your crash
 
     def __str__(self):
         return self.company_name or self.user.username
