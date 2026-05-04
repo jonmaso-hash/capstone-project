@@ -1,92 +1,74 @@
-{% extends 'base.html' %}
-{% load static %}
-
-{% block title %}Profile - {{ profile_user.username }}{% endblock title %}
-
-{% block css %}
-<link rel="stylesheet" href="{% static 'css/home.css' %}">
-{% endblock %}
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
 
 {% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Profile: "{% url 'accounts:profile' %}"</h2>
+                <span class="badge bg-secondary">Account User</span>
+            </div>
 
-<div class="container py-5">
+            <hr>
 
-    <div class="card shadow-lg border-0">
-
-        <div class="card-header bg-dark text-white p-4">
-            <h3 class="mb-0">Founder Profile</h3>
-            <p class="mb-0 text-white-50">
-                Viewing application for <strong>{{ profile_user.username }}</strong>
-            </p>
-        </div>
-
-        <div class="card-body p-4">
-
-            <!-- Basic Info -->
-            <h5 class="mb-3">Account Information</h5>
-            <ul class="list-group mb-4">
-                <li class="list-group-item">
-                    <strong>Username:</strong> {{ profile_user.username }}
-                </li>
-                <li class="list-group-item">
-                    <strong>Email:</strong> {{ profile_user.email }}
-                </li>
-            </ul>
-
-            <!-- Application Section (if you later pass a submission object) -->
-            <h5 class="mb-3">Application Details</h5>
-
+            <!-- SECTION: Display Existing Application Data -->
             {% if application %}
-                <ul class="list-group">
+                <h3 class="mb-3">Current Application Details</h3>
+                <div class="card shadow-sm mb-5">
+                    <div class="card-body">
+                        <h4 class="card-title text-primary">{{ application.company_name }}</h4>
+                        <p class="text-muted">{{ application.description }}</p>
+                        
+                        <div class="row mt-4">
+                            <div class="col-sm-6">
+                                <h5>Founder Info</h5>
+                                <p><strong>Name:</strong> {{ application.founder_name }}<br>
+                                   <strong>Email:</strong> {{ application.email }}<br>
+                                   <strong>Phone:</strong> {{ application.phone_number|default:"N/A" }}</p>
+                            </div>
+                            <div class="col-sm-6">
+                                <h5>Business Details</h5>
+                                <p><strong>Website:</strong> <a href="{{ application.company_website }}" target="_blank">{{ application.company_website }}</a><br>
+                                   <strong>Sector:</strong> {{ application.sector }}<br>
+                                   <strong>Stage:</strong> {{ application.stage }}</p>
+                            </div>
+                        </div>
 
-                    <li class="list-group-item">
-                        <strong>Company:</strong> {{ application.company_name }}
-                    </li>
-
-                    <li class="list-group-item">
-                        <strong>Phone:</strong> {{ application.phone_number }}
-                    </li>
-
-                    <li class="list-group-item">
-                        <strong>Sector:</strong> {{ application.sector }}
-                    </li>
-
-                    <li class="list-group-item">
-                        <strong>Years in Business:</strong> {{ application.years_in_business }}
-                    </li>
-
-                    <li class="list-group-item">
-                        <strong>Company Size:</strong> {{ application.company_size }}
-                    </li>
-
-                    <li class="list-group-item">
-                        <strong>Amount Raised:</strong> ${{ application.amount_raised }}
-                    </li>
-
-                    <li class="list-group-item">
-                        <strong>Target Raise:</strong> ${{ application.raising_amount }}
-                    </li>
-
-                    <li class="list-group-item">
-                        <strong>Reason for Capital:</strong><br>
-                        {{ application.reason_for_capital }}
-                    </li>
-
-                    <li class="list-group-item">
-                        <strong>Business Description:</strong><br>
-                        {{ application.business_description }}
-                    </li>
-
-                </ul>
+                        <div class="mt-3">
+                            <h5>Investment Goals</h5>
+                            <p><strong>Raising:</strong> {{ application.raising_amount }}<br>
+                               <strong>Reason:</strong> {{ application.reason_for_capital }}</p>
+                        </div>
+                        
+                        <p class="text-muted small mt-4">Submitted on: {{ application.created_at|date:"F d, Y" }}</p>
+                    </div>
+                </div>
             {% else %}
                 <div class="alert alert-info">
-                    No application data found for this user yet.
+                    No application has been submitted for this profile yet.
                 </div>
             {% endif %}
 
-        </div>
+            <!-- SECTION: Form Input (Only visible to the profile owner) -->
+        {% if user.is_authenticated %}
+<form method="post" action="{% url 'accounts:profile' %}" class="card border-0 shadow-lg overflow-hidden">
+    {% csrf_token %}
+
+    <div class="card-header bg-dark text-white p-4">
+        <h4 class="mb-0 fw-bold">Founder Application</h4>
+        <p class="small text-white-50 mb-0">
+            Tell us about yourself and your venture.
+        </p>
     </div>
 
-</div>
+    <!-- your inputs here -->
 
+</form>
+{% endif %}
+
+        </div>
+    </div>
+</div>
 {% endblock %}

@@ -1,8 +1,25 @@
 from django import forms
-from .models import Profile
+from django.forms import ModelForm
+from .models import Application
 
 
-class ProfileForm(forms.ModelForm):
+class ApplicationForm(forms.ModelForm):
     class Meta:
-        model = Profile
-        fields = ['company_name', 'sector', 'funding_stage']
+        model = Application
+        fields = [
+            "company_name",
+            "company_website",
+            "founder_name",
+            "email",
+            "phone_number",
+            "description",
+            "business_description",
+            "sector",
+            "stage",
+            "raising_amount",
+            "years_in_business",
+            "company_size",
+            "amount_raised",
+            "reason_for_capital",
+            "extra_info",
+        ]

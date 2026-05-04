@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Contact{% endblock title %}
+{% block title %}Founder Application{% endblock title %}
 
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/home.css' %}">
@@ -13,206 +13,94 @@
 
     {% if user.is_authenticated %}
 
-        <form method="post" class="card border-0 shadow-lg overflow-hidden">
-            {% csrf_token %}
+    <form method="post" action="{% url 'accounts:apply' %}" class="card border-0 shadow-lg overflow-hidden">
+        {% csrf_token %}
 
-            <div class="card-header bg-dark text-white p-4">
-                <h4 class="mb-0 fw-bold">Founder Application</h4>
-                <p class="small text-white-50 mb-0">
-                    Tell us about yourself and your venture.
-                </p>
+        <div class="card-header bg-dark text-white p-4">
+            <h4 class="mb-0 fw-bold">Founder Application</h4>
+            <p class="small text-white-50 mb-0">
+                Tell us about yourself and your venture.
+            </p>
+        </div>
+
+        <div class="card-body p-4 p-lg-5">
+
+            <!-- Personal Details -->
+            <div class="mb-5">
+                <h6 class="text-uppercase text-muted fw-bold mb-3 small">
+                    Personal Details
+                </h6>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" name="founder_name" class="form-control bg-light" placeholder="Full Name" required>
+                    </div>
+
+                    <div class="col-md-4">
+                        <input type="email" name="email" class="form-control bg-light" placeholder="Email" required>
+                    </div>
+
+                    <div class="col-md-4">
+                        <input type="tel" name="phone_number" class="form-control bg-light" placeholder="Phone">
+                    </div>
+                </div>
             </div>
 
-            <div class="card-body p-4 p-lg-5">
+            <hr>
 
-                <!-- Personal Details -->
-                <div class="mb-5">
-                    <h6 class="text-uppercase text-muted fw-bold mb-3 small tracking-wider">
-                        Personal Details
-                    </h6>
+            <!-- Company -->
+            <div class="mb-4">
+                <input type="text" name="company_name" class="form-control bg-light mb-3" placeholder="Company Name" required>
 
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Full Name</label>
-                            <input type="text" name="founder_name"
-                                   class="form-control form-control-lg bg-light"
-                                   placeholder="Jane Doe" required>
-                        </div>
+                <input type="text" name="company_size" class="form-control bg-light mb-3" placeholder="Company size" required>
 
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Email Address</label>
-                            <input type="email" name="email"
-                                   class="form-control form-control-lg bg-light"
-                                   placeholder="jane@company.com" required>
-                        </div>
+                <input type="text" name="company_website" class="form-control bg-light mb-3" placeholder="Website">
 
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Phone Number</label>
-                            <input type="tel" name="phone_number"
-                                   class="form-control form-control-lg bg-light"
-                                   placeholder="+1 555 123 4567">
-                        </div>
-                    </div>
-                </div>
+                <textarea name="description" class="form-control bg-light mb-3" rows="3" placeholder="Short Pitch"></textarea>
 
-                <hr class="my-4 opacity-10">
-
-                <!-- Company Identity -->
-                <div class="mb-5">
-                    <h6 class="text-uppercase text-muted fw-bold mb-3 small tracking-wider">
-                        Company Identity
-                    </h6>
-
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Company Name</label>
-                            <input type="text" name="company_name"
-                                   class="form-control form-control-lg bg-light"
-                                   placeholder="Acme Corp" required>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Company Website</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light text-muted border-end-0">
-                                    https://
-                                </span>
-                                <input type="url" name="company_website"
-                                       class="form-control form-control-lg bg-light border-start-0"
-                                       placeholder="www.example.com">
-                            </div>
-                        </div>
-
-                        <div class="col-12 mt-3">
-                            <label class="form-label fw-semibold">Pitch Summary</label>
-                            <textarea name="description" rows="3"
-                                      class="form-control bg-light"
-                                      placeholder="Describe your mission in 2–3 sentences..."
-                                      required></textarea>
-                        </div>
-
-                        <div class="col-12 mt-3">
-                            <label class="form-label fw-semibold">Full Business Description</label>
-                            <textarea name="business_description" rows="4"
-                                      class="form-control bg-light"
-                                      placeholder="Provide a detailed explanation of your business, product, and market..."></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <hr class="my-4 opacity-10">
-
-                <!-- Funding & Stage -->
-                <div class="mb-4">
-                    <h6 class="text-uppercase text-muted fw-bold mb-3 small tracking-wider">
-                        Funding & Stage
-                    </h6>
-
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Industry/Sector</label>
-                            <input type="text" name="sector"
-                                   class="form-control bg-light"
-                                   placeholder="Fintech, SaaS, etc.">
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Current Stage</label>
-                            <select name="stage" class="form-select bg-light">
-                                <option value="" selected disabled>Select stage</option>
-                                <option value="idea">Idea / Pre-seed</option>
-                                <option value="mvp">Seed</option>
-                                <option value="early">Series A</option>
-                                <option value="growth">Series B</option>
-                                <option value="scale">Series C+</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Target Raise ($)</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light">$</span>
-                                <input type="text" name="raising_amount"
-                                    class="form-control bg-light"
-                                    placeholder="500,000">
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Years in Business</label>
-                            <input type="number" name="years_in_business"
-                                   class="form-control bg-light"
-                                   placeholder="3">
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Company Size</label>
-                            <select name="company_size" class="form-select bg-light">
-                                <option value="" selected disabled>Select size</option>
-                                <option value="1">Just me</option>
-                                <option value="2-5">2–5 employees</option>
-                                <option value="6-10">6–10 employees</option>
-                                <option value="11-50">11–50 employees</option>
-                                <option value="50+">50+ employees</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Amount Raised to Date ($)</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light">$</span>
-                                <input type="text" name="amount_raised"
-                                    class="form-control bg-light"
-                                    placeholder="250,000">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Reason for Capital -->
-                <div class="mb-4">
-                    <label class="form-label fw-semibold">Reason for Capital</label>
-                    <textarea name="reason_for_capital" rows="3"
-                              class="form-control bg-light"
-                              placeholder="How will you use the funds? (e.g., hiring, product development, marketing)"></textarea>
-                </div>
-
-                <!-- Additional Info -->
-                <div class="mb-4">
-                    <label class="form-label fw-semibold">Additional Notes</label>
-                    <textarea name="extra_info" rows="4"
-                              class="form-control bg-light"
-                              placeholder="Anything else you'd like us to know..."></textarea>
-                </div>
-
-                <!-- Buttons -->
-                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-5">
-                    <button type="button"
-                            class="btn btn-link text-decoration-none text-muted me-md-2">
-                        Cancel
-                    </button>
-
-                    <button type="submit"
-                            class="btn btn-primary px-5 fw-bold shadow-sm">
-                        Submit Application
-                    </button>
-                </div>
-
+                <textarea name="business_description" class="form-control bg-light" rows="4" placeholder="Business Description"></textarea>
             </div>
-        </form>
+
+            <hr>
+
+            <!-- Funding -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <input type="text" name="sector" class="form-control bg-light" placeholder="Sector">
+                </div>
+
+                <div class="col-md-4">
+                    <select name="stage" class="form-select bg-light">
+                        <option disabled selected>Stage</option>
+                        <option value="idea">Idea</option>
+                        <option value="mvp">MVP</option>
+                        <option value="growth">Growth</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <input type="text" name="raising_amount" class="form-control bg-light" placeholder="Raising Amount">
+                </div>
+            </div>
+
+            <textarea name="reason_for_capital" class="form-control bg-light mb-3" rows="3" placeholder="Reason for Capital"></textarea>
+
+            <textarea name="extra_info" class="form-control bg-light" rows="3" placeholder="Additional Info"></textarea>
+
+            <div class="text-end mt-4">
+                <button type="submit" class="btn btn-primary px-5">
+                    Submit Application
+                </button>
+            </div>
+
+        </div>
+    </form>
 
     {% else %}
 
-        <div class="alert alert-warning shadow-sm p-4 text-center">
-            <h5 class="mb-2">Login Required</h5>
-            <p class="mb-3">
-                You must be logged in to access the Founder Application form.
-            </p>
-
-            <a href="{% url 'accounts:signup' %}" class="btn btn-primary">
-                Sign Up / Login
-            </a>
-        </div>
+    <div class="alert alert-warning text-center">
+        Please log in to access this form.
+    </div>
 
     {% endif %}
 
