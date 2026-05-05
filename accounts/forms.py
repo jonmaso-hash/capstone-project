@@ -1,7 +1,10 @@
 from django import forms
-from .models import Application
+from .models import Application, InvestorApplication
 
 
+# -----------------------------
+# Founder Application Form
+# -----------------------------
 class ApplicationForm(forms.ModelForm):
     class Meta:
         model = Application
@@ -22,4 +25,36 @@ class ApplicationForm(forms.ModelForm):
             "company_size",
             "reason_for_capital",
             "extra_info",
+        ]
+
+
+# -----------------------------
+# Investor Application Form
+# -----------------------------
+class InvestorForm(forms.ModelForm):
+
+    INVESTMENT_STAGE_CHOICES = [
+        ("idea", "Pre-Seed"),
+        ("early", "Seed"),
+        ("growth", "Series-A"),
+        ("late", "Series-B"),
+        ("ipo", "Series-C+"),
+        ("other", "Other"),
+    ]
+
+    investment_stage = forms.ChoiceField(
+        choices=INVESTMENT_STAGE_CHOICES,
+        widget=forms.Select(attrs={"class": "form-select"})
+    )
+
+    class Meta:
+        model = InvestorApplication
+        fields = [
+            "full_name",
+            "email",
+            "phone",
+            "company_name",
+            "investment_focus",
+            "investment_stage",
+            "investment_amount",
         ]

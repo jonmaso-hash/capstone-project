@@ -11,7 +11,9 @@ urlpatterns = [
     # Profile
     path('profile/', views.profile, name='profile'),
 
-    # ✅ NEW: Founder application flow
+    #  NEW: Founder application flow
     path('apply/', views.seeking_investment, name='apply'),
     
+    # Investor application 
+    path('investor-form/', views.investor_form, name= 'investor')
 ]

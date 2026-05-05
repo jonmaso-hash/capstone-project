@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<style>
+    /* Global fix to hide the red asterisks (*) */
+    .asteriskField {
+        display: none !important;
+    }
+</style>
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-header bg-dark text-white p-4 text-center">
+                    <h2 class="h4 mb-0 fw-bold">Investor Application</h2>
+                    <p class="small mb-0 text-white-50">Join our network of strategic investors</p>
+                </div>
+                
+                <div class="card-body p-4 p-md-5">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        {# Rendering fields individually to allow the $ prefix on amount #}
+                        {{ form.full_name|as_crispy_field }}
+                        {{ form.email|as_crispy_field }}
+                        {{ form.phone|as_crispy_field }}
+                        {{ form.company_name|as_crispy_field }}
+                        {{ form.investment_focus|as_crispy_field }}
+                        {{ form.investment_stage|as_crispy_field }}
+
+                        <!-- Investment Amount with $ Prefix -->
+                        <label class="form-label">Investment Amount (USD)</label>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">$</span>
+                            <input type="text" name="investment_amount" class="form-control" 
+                                   value="{{ form.investment_amount.value|default:'' }}">
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg shadow-sm">
+                                Submit Application
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
