@@ -15,5 +15,6 @@ urlpatterns = [
     path('apply/', views.seeking_investment, name='apply'),
     
     # Investor application 
-    path('investor-form/', views.investor_form, name= 'investor')
+    path('investor-form/', views.investor_form, name= 'investor'),
+
 ]

@@ -4,70 +4,126 @@
 {% block content %}
 <div class="container mt-5">
     <div class="row">
-        <div class="col-md-8 offset-md-2">
+        <div class="col-md-10 offset-md-1">
 
-       <div class="card shadow-lg border-0 mb-4">
-    <div class="card-header bg-dark text-white p-4">
-        <h3 class="mb-1 fw-bold">Founder Application</h3>
-        <p class="small text-white-50 mb-0">
-            Thank you for applying!
-        </p>
-    </div>
-</div>
+            <!-- SECTION: One-Time Welcome Alert -->
+            {% if show_welcome_prompt %}
+            <div class="alert alert-dark shadow-lg border-0 p-5 mb-5 text-center">
+                <h2 class="fw-bold text-white mb-3">Welcome to KCV</h2>
+                <p class="text-white-50 mb-4">To get started, please select your path. This will customize your profile experience.</p>
+                
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{% url 'accounts:apply' %}" class="btn btn-success btn-lg px-5 shadow-sm">
+                        <i class="fas fa-rocket me-2"></i> I am a Founder
+                    </a>
+                    <a href="{% url 'accounts:investor' %}" class="btn btn-primary btn-lg px-5 shadow-sm">
+                        <i class="fas fa-chart-line me-2"></i> I am an Investor
+                    </a>
+                </div>
+                <small class="d-block mt-3 text-white-50">Note: You can only maintain one application type per account.</small>
+            </div>
+            {% endif %}
 
-            <hr>
+            <!-- SECTION: User Identity Header -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-dark text-white p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-1 fw-bold">User Profile</h3>
+                        <p class="small text-white-50 mb-0">{{ user.email }}</p>
+                    </div>
+                    {% if application %}
+                        <span class="badge rounded-pill bg-success px-3 py-2">Founder</span>
+                    {% elif investor_application %}
+                        <span class="badge rounded-pill bg-primary px-3 py-2">Investor</span>
+                    {% endif %}
+                </div>
+            </div>
 
-            <!-- SECTION: Display Existing Application Data -->
+            <!-- SECTION: Conditional Content Display -->
             {% if application %}
-                <h3 class="mb-3">Current Application Details</h3>
-                <div class="card shadow-sm mb-5">
-                    <div class="card-body">
-                        <h4 class="card-title text-primary">{{ application.company_name }}</h4>
-                        <p class="text-muted">{{ application.description }}</p>
+                <!-- FOUNDER VIEW: Only visible if user has a Founder application -->
+                <div class="d-flex justify-content-between align-items-end mb-3">
+                    <h3 class="mb-0">Founder Application Details</h3>
+                    <a href="{% url 'accounts:apply' %}" class="btn btn-sm btn-outline-secondary">Edit Details</a>
+                </div>
+                
+                <div class="card shadow-sm mb-5 border-0">
+                    <div class="card-body p-4">
+                        <h4 class="card-title text-success fw-bold">{{ application.company_name }}</h4>
+                        <p class="lead text-muted">{{ application.description }}</p>
                         
                         <div class="row mt-4">
                             <div class="col-sm-6">
-                                <h5>Founder Info</h5>
+                                <h5 class="fw-bold border-bottom pb-2">Founder Info</h5>
                                 <p><strong>Name:</strong> {{ application.founder_name }}<br>
                                    <strong>Email:</strong> {{ application.email }}<br>
                                    <strong>Phone:</strong> {{ application.phone_number|default:"N/A" }}</p>
                             </div>
                             <div class="col-sm-6">
-                                <h5>Business Details</h5>
+                                <h5 class="fw-bold border-bottom pb-2">Business Details</h5>
                                 <p><strong>Website:</strong> <a href="{{ application.company_website }}" target="_blank">{{ application.company_website }}</a><br>
-                                   <strong>Sector/Industry:</strong> {{ application.sector }}<br>
+                                   <strong>Industry:</strong> {{ application.sector }}<br>
                                    <strong>Stage:</strong> {{ application.stage }}</p>
                             </div>
                         </div>
 
-                       <div class="mt-3">
-    <h5>Investment Goals</h5>
-
-    <p>
-        <strong>Raising:</strong> ${{ application.raising_amount }}<br>
-        <strong>Current Revenue:</strong> ${{ application.current_revenue }}<br>
-        <strong>Prior Amount Raised:</strong> ${{ application.prior_amount_raised }}<br>
-        <strong>Reason:</strong> {{ application.reason_for_capital }}
-    </p>
-</div>
-                        
-                        <p class="text-muted small mt-4">Submitted on: {{ application.created_at|date:"F d, Y" }}</p>
+                        <div class="mt-4 p-3 bg-light rounded">
+                            <h5 class="fw-bold">Investment Goals</h5>
+                            <div class="row text-center mt-3">
+                                <div class="col-4">
+                                    <small class="text-uppercase text-muted d-block">Raising</small>
+                                    <span class="h5 fw-bold">${{ application.raising_amount }}</span>
+                                </div>
+                                <div class="col-4 border-start border-end">
+                                    <small class="text-uppercase text-muted d-block">Revenue</small>
+                                    <span class="h5 fw-bold">${{ application.current_revenue }}</span>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-uppercase text-muted d-block">Prior Raised</small>
+                                    <span class="h5 fw-bold">${{ application.prior_amount_raised }}</span>
+                                </div>
+                            </div>
+                            <p class="mt-3 mb-0"><strong>Strategy:</strong> {{ application.reason_for_capital }}</p>
+                        </div>
+                        <p class="text-muted small mt-4 mb-0">Submitted on: {{ application.created_at|date:"F d, Y" }}</p>
                     </div>
                 </div>
+
+            {% elif investor_application %}
+                <!-- INVESTOR VIEW: Only visible if user has an Investor application -->
+                <div class="d-flex justify-content-between align-items-end mb-3">
+                    <h3 class="mb-0">Investor Profile Details</h3>
+                    <a href="{% url 'accounts:investor' %}" class="btn btn-sm btn-outline-secondary">Edit Details</a>
+                </div>
+
+                <div class="card shadow-sm mb-5 border-0">
+                    <div class="card-body p-4">
+                        <h4 class="card-title text-primary fw-bold">{{ investor_application.company_name }}</h4>
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <h5 class="fw-bold border-bottom pb-2">Investor Info</h5>
+                                <p><strong>Full Name:</strong> {{ investor_application.full_name }}<br>
+                                <strong>Company Name: </strong> {{ investor_application.company_name }}<br>
+                                <strong>Email:</strong> {{ investor_application.email }}<br>
+                                   <strong>Phone:</strong> {{ investor_application.phone }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="fw-bold border-bottom pb-2">Investment Scope</h5>
+                                <p><strong>Investment Focus:</strong> {{ investor_application.investment_focus }}<br>
+                                   <strong>Target Stage:</strong> {{ investor_application.investment_stage }}<br>
+                                   <strong>Investment Amount:</strong> ${{ investor_application.investment_amount }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             {% else %}
-                <div class="alert alert-info">
-                    No application has been submitted for this profile yet.
+                <!-- EMPTY STATE: Visible only if neither application exists -->
+                <div class="alert alert-info border-0 shadow-sm text-center p-4">
+                    <i class="fas fa-info-circle fa-2x mb-3 d-block"></i>
+                    No application has been submitted yet. Please use the welcome prompt above to get started.
                 </div>
             {% endif %}
-
-            <!-- SECTION: Form Input (Only visible to the profile owner) -->
-        {% if user.is_authenticated %}
-<form method="post" action="{% url 'accounts:profile' %}" class="card border-0 shadow-lg overflow-hidden">
-    {% csrf_token %}
-
-
-</form>
-{% endif %}
 
         </div>
     </div>
