@@ -18,6 +18,13 @@
     .form-control, .form-select {
         padding: 12px;
         border-radius: 10px;
+        border: 1px solid #dee2e6;
+    }
+
+    .form-control:focus, .form-select:focus {
+        background-color: #fff !important;
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
     }
 
     .card {
@@ -26,7 +33,8 @@
 
     .btn-primary {
         border-radius: 10px;
-        padding: 10px 28px;
+        padding: 12px 30px;
+        font-weight: 600;
     }
 
     label {
@@ -35,154 +43,174 @@
         margin-bottom: 6px;
         color: #495057;
     }
+
+    .input-group-text {
+        border-radius: 10px 0 0 10px;
+        background-color: #e9ecef;
+        font-weight: bold;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-
 <div class="container py-5">
 
     {% if user.is_authenticated %}
-
     <form method="post" action="{% url 'accounts:apply' %}" class="card shadow-lg border-0">
         {% csrf_token %}
 
         <!-- HEADER -->
         <div class="card-header bg-dark text-white p-4">
             <h3 class="mb-1 fw-bold">Founder Application</h3>
-            <p class="mb-0 text-white-50">
-                Tell us about your startup so we can evaluate your funding request.
-            </p>
+            <p class="mb-0 text-white-50">Tell us about your startup</p>
         </div>
 
         <div class="card-body p-4 p-lg-5">
 
-            <!-- PERSONAL -->
+            <!-- PERSONAL DETAILS -->
             <div class="mb-5">
                 <div class="form-section-title">Personal Details</div>
-
                 <div class="row g-3">
-
                     <div class="col-md-4">
                         <label for="founder_name">Full Name</label>
                         <input type="text" id="founder_name" name="founder_name" class="form-control bg-light" required>
                     </div>
-
                     <div class="col-md-4">
-                        <label for="email">Email</label>
+                        <label for="email">Email Address</label>
                         <input type="email" id="email" name="email" class="form-control bg-light" required>
                     </div>
-
                     <div class="col-md-4">
                         <label for="phone_number">Phone Number</label>
                         <input type="tel" id="phone_number" name="phone_number" class="form-control bg-light">
                     </div>
-
                 </div>
             </div>
 
             <hr class="my-4">
 
-            <!-- COMPANY -->
+            <!-- COMPANY INFORMATION -->
             <div class="mb-5">
                 <div class="form-section-title">Company Information</div>
+                
+                <div class="row g-3 mb-3">
+                    <div class="col-md-8">
+                        <label for="company_name">Company Name</label>
+                        <input type="text" id="company_name" name="company_name" class="form-control bg-light" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="company_website">Website</label>
+                        <input type="url" id="company_website" name="company_website" placeholder="https://" class="form-control bg-light">
+                    </div>
+                </div>
 
-                <label for="company_name">Company Name</label>
-                <input type="text" id="company_name" name="company_name" class="form-control bg-light mb-3" required>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label for="company_size">Company Size (Employees)</label>
+                        <input type="number" id="company_size" name="company_size" min="0" class="form-control bg-light" placeholder="e.g. 10">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="years_in_business">Years in Business</label>
+                        <input type="number" id="years_in_business" name="years_in_business" min="0" class="form-control bg-light" placeholder="e.g. 3">
+                    </div>
+                </div>
 
-                <label for="company_size">Company Size</label>
-                <input type="text" id="company_size" name="company_size" class="form-control bg-light mb-3">
-
-                <label for="company_website">Website</label>
-                <input type="url" id="company_website" name="company_website" class="form-control bg-light mb-3">
-
-                <label for="description">Short Pitch</label>
-                <textarea id="description" name="description" class="form-control bg-light mb-3" rows="3"></textarea>
-
-                <label for="business_description">Business Description</label>
-                <textarea id="business_description" name="business_description" class="form-control bg-light" rows="4"></textarea>
+                <div class="mb-3">
+                    <label for="description">Short Pitch</label>
+                    <textarea id="description" name="description" class="form-control bg-light" rows="2" placeholder="One sentence summary..."></textarea>
+                </div>
             </div>
 
             <hr class="my-4">
 
-            <!-- FUNDING -->
+            <!-- FUNDING DETAILS -->
             <div class="mb-4">
                 <div class="form-section-title">Funding Details</div>
 
                 <div class="row g-3 mb-3">
-
                     <div class="col-md-4">
-                        <label for="sector">Sector</label>
-                        <input type="text" id="sector" name="sector" class="form-control bg-light">
+                        <label for="sector">Sector/Industry</label>
+                        <input type="text" id="sector" name="sector" class="form-control bg-light" required>
                     </div>
-
                     <div class="col-md-4">
-                        <label for="stage">Stage</label>
-                        <select id="stage" name="stage" class="form-select bg-light">
-                            <option selected disabled>Select stage</option>
+                        <label for="stage">Current Stage</label>
+                        <select id="stage" name="stage" class="form-select bg-light" required>
+                            <option value="" selected disabled>Select stage</option>
                             <option value="pre_seed">Pre-Seed</option>
                             <option value="seed">Seed</option>
                             <option value="series_a">Series A</option>
-                            <option value="series_b">Series B</option>
-                            <option value="series_c">Series C+</option>
                         </select>
                     </div>
-
                     <div class="col-md-4">
-    <label for="raising_amount">Amount Seeking</label>
-    <div class="input-group">
-        <span class="input-group-text">$</span>
-        <input type="text" id="raising_amount" name="raising_amount" class="form-control bg-light">
-    </div>
-</div>
-
+                        <label for="raising_amount">Amount Seeking</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="text" id="raising_amount" name="raising_amount" class="form-control bg-light comma-format" placeholder="1,000,000">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row g-3 mb-3">
-
                     <div class="col-md-6">
-    <label for="prior_amount_raised">Total Raised To Date</label>
-    <div class="input-group">
-        <span class="input-group-text">$</span>
-        <input type="text" id="prior_amount_raised" name="prior_amount_raised" class="form-control bg-light">
-    </div>
-</div>
-
-                   <div class="col-md-6">
-    <label for="current_revenue">Current Revenue</label>
-    <div class="input-group">
-        <span class="input-group-text">$</span>
-        <input type="text" id="current_revenue" name="current_revenue" class="form-control bg-light">
-    </div>
-</div>
-
+                        <label for="prior_amount_raised">Total Raised To Date</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="text" id="prior_amount_raised" name="prior_amount_raised" class="form-control bg-light comma-format" placeholder="500,000">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="current_revenue">Current Annual Revenue</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="text" id="current_revenue" name="current_revenue" class="form-control bg-light comma-format" placeholder="25,000">
+                        </div>
+                    </div>
                 </div>
 
-                <label for="reason_for_capital">Reason for Capital</label>
-                <textarea id="reason_for_capital" name="reason_for_capital" class="form-control bg-light mb-3" rows="3"></textarea>
-
-                <label for="extra_info">Additional Information</label>
-                <textarea id="extra_info" name="extra_info" class="form-control bg-light" rows="3"></textarea>
+                <div class="mb-3">
+                    <label for="reason_for_capital">Use of Funds</label>
+                    <textarea id="reason_for_capital" name="reason_for_capital" class="form-control bg-light" rows="3"></textarea>
+                </div>
             </div>
 
-            <!-- SUBMIT -->
             <div class="text-end mt-4">
-                <button type="submit" class="btn btn-primary">
-                    Submit Application
-                </button>
+                <button type="submit" class="btn btn-primary shadow-sm">Submit Application</button>
             </div>
 
         </div>
     </form>
-
     {% else %}
-
-    <div class="alert alert-warning text-center">
-        Please log in to access the founder application form.
+    <div class="card shadow-sm border-0 text-center py-5">
+        <div class="card-body">
+            <h4 class="fw-bold">Ready to Scale?</h4>
+            <p class="text-muted mb-4">Please log in to submit your application.</p>
+            <a href="{% url 'login' %}" class="btn btn-primary px-5">Login to Apply</a>
+        </div>
     </div>
-
     {% endif %}
-
 </div>
+
+<!-- JavaScript to handle Comma Formatting -->
+<script>
+    document.querySelectorAll('.comma-format').forEach(input => {
+        input.addEventListener('input', function(e) {
+            // Remove all non-digits
+            let value = this.value.replace(/\D/g, '');
+            
+            // Format with commas
+            if (value !== "") {
+                this.value = Number(value).toLocaleString('en-US');
+            } else {
+                this.value = "";
+            }
+        });
+    });
+
+    // Strip commas before submitting to Django
+    document.querySelector('form').addEventListener('submit', function() {
+        document.querySelectorAll('.comma-format').forEach(input => {
+            input.value = input.value.replace(/,/g, '');
+        });
+    });
+</script>
 
 {% endblock %}

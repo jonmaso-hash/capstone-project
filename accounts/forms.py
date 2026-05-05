@@ -1,5 +1,4 @@
 from django import forms
-from django.forms import ModelForm
 from .models import Application
 
 
@@ -21,7 +20,6 @@ class ApplicationForm(forms.ModelForm):
             "prior_amount_raised",
             "years_in_business",
             "company_size",
-            "amount_raised",
             "reason_for_capital",
             "extra_info",
         ]

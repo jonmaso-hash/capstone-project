@@ -32,7 +32,6 @@ class Application(models.Model):
     company_size = models.CharField(max_length=50, blank=True, null=True)
 
     raising_amount = models.CharField(max_length=50, blank=True, null=True)
-    amount_raised = models.CharField(max_length=50, blank=True, null=True)
     prior_amount_raised = models.CharField(max_length=50, blank=True, null=True)
 
 
