@@ -10,7 +10,7 @@
             {% if show_welcome_prompt %}
             <div class="alert alert-dark shadow-lg border-0 p-5 mb-5 text-center">
                 <h2 class="fw-bold text-white mb-3">Welcome to KCV</h2>
-                <p class="text-white-50 mb-4">To get started, please select your path. This will customize your profile experience.</p>
+                <p class="text-white-50 mb-4">Select whether you are an Investor or Founder. </p>
                 
                 <div class="d-flex justify-content-center gap-3">
                     <a href="{% url 'accounts:apply' %}" class="btn btn-success btn-lg px-5 shadow-sm">
@@ -121,7 +121,7 @@
                 <!-- EMPTY STATE: Visible only if neither application exists -->
                 <div class="alert alert-info border-0 shadow-sm text-center p-4">
                     <i class="fas fa-info-circle fa-2x mb-3 d-block"></i>
-                    No application has been submitted yet. Please use the welcome prompt above to get started.
+                    No application has been submitted.
                 </div>
             {% endif %}
 
