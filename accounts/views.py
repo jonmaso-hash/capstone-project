@@ -39,7 +39,6 @@ def seeking_investment(request):
     # 2. Check if they have already submitted a Founder application
     application = getattr(request.user, "application", None)
     if application:
-        messages.info(request, "Thank you for applying! Your application was successfully received.")
         return redirect("accounts:profile")
 
     if request.method == "POST":
@@ -59,13 +58,11 @@ def seeking_investment(request):
 def investor_form(request):
     # 1. Check if they are already a Founder
     if hasattr(request.user, "application"):
-        messages.error(request, "You are registered as a Founder and cannot apply as an Investor.")
         return redirect("accounts:profile")
 
     # 2. Check if they have already submitted an Investor profile
     investor_app = getattr(request.user, "investor_application", None)
     if investor_app:
-        messages.info(request, "Thank you! Your investor profile was successfully received.")
         return redirect("accounts:profile")
 
     if request.method == "POST":

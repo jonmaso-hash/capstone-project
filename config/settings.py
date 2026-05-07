@@ -1,6 +1,15 @@
 from pathlib import Path
+import environ
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+#Initilize secure connections
+
+
+#Load envirment variables from .env file
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = "django-insecure-demo-key"
 DEBUG = True
@@ -77,11 +86,10 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 # Email configuration
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'jonmaso@gmail.com'
+EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-
-EMAIL_HOST_USER = 'jonmaso@gmail.com'
-EMAIL_HOST_PASSWORD = 'your_app_password'
-
-DEFAULT_FROM_EMAIL = 'your@gmail.com'
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='jonmaso@gmail.com')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='kmzx vuvy sonm uurl'
+)

@@ -1,0 +1,13 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<form action="" method="post">
+    {% csrf_token %}
+    <p>Select the investor you want to send the profile(s) for <strong>{{ items|join:", " }}</strong> to:</p>
+    
+    {{ form.as_p }}
+
+    <input type="hidden" name="action" value="send_to_single_investor_action" />
+    <input type="submit" name="apply" value="Send to Investor" style="background: #79aec8; color: white; padding: 10px 15px; border: none; cursor: pointer;" />
+    <a href="#" onclick="window.history.back();" class="button cancel-link">Cancel</a>
+</form>
+{% endblock %}

@@ -4,6 +4,20 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
+# =================================================
+# INVESTOR PROFILE
+# =================================================
+class Investor(models.Model):
+    name = models.CharField(max_length=255)
+    email = models.EmailField(unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+# =================================================
+# APPLICATION (FOUNDERS)
+# =================================================
 class Application(models.Model):
     user = models.OneToOneField(
         User,
@@ -11,15 +25,14 @@ class Application(models.Model):
         related_name="application"
     )
 
-    # Founder
+    # Founder info
     founder_name = models.CharField(max_length=255)
     email = models.EmailField()
     phone_number = models.CharField(max_length=30, blank=True, null=True)
 
-    # Company
+    # Company info
     company_name = models.CharField(max_length=255)
     company_website = models.URLField(blank=True, null=True)
-
     description = models.TextField()
     business_description = models.TextField(blank=True, null=True)
 
@@ -34,17 +47,27 @@ class Application(models.Model):
     raising_amount = models.CharField(max_length=50, blank=True, null=True)
     prior_amount_raised = models.CharField(max_length=50, blank=True, null=True)
 
-
     reason_for_capital = models.TextField(blank=True, null=True)
     extra_info = models.TextField(blank=True, null=True)
 
+    # 🔥 THIS is the correct place for investor relationships
+    investors = models.ManyToManyField(
+        Investor,
+        through="DealFlowLog",
+        blank=True,
+        related_name="applications"
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)  
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.company_name or self.user.username
-    
+        return self.company_name or self.founder_name
 
+
+# =================================================
+# INVESTOR APPLICATION (optional onboarding form)
+# =================================================
 class InvestorApplication(models.Model):
     user = models.OneToOneField(
         User,
@@ -52,16 +75,32 @@ class InvestorApplication(models.Model):
         related_name="investor_application"
     )
 
-    #Investor
     full_name = models.CharField(max_length=255)
     email = models.EmailField()
     phone = models.CharField(max_length=30, blank=True, null=True)
 
-    #company
     company_name = models.CharField(max_length=255)
 
-    #funding
-    investment_focus =  models.CharField(max_length=255)
-    investment_stage =  models.CharField(max_length=255)
-    investment_amount =  models.CharField(max_length=50, blank=True, null=True)
+    investment_focus = models.CharField(max_length=255)
+    investment_stage = models.CharField(max_length=255)
+    investment_amount = models.CharField(max_length=50, blank=True, null=True)
 
+    def __str__(self):
+        return self.full_name
+
+
+# =================================================
+# DEAL FLOW LOG (JOIN TABLE)
+# =================================================
+class DealFlowLog(models.Model):
+    investor = models.ForeignKey(Investor, on_delete=models.CASCADE)
+    application = models.ForeignKey(Application, on_delete=models.CASCADE)
+
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("investor", "application")
+        ordering = ["-sent_at"]
+
+    def __str__(self):
+        return f"{self.investor.name} → {self.application.company_name}"
