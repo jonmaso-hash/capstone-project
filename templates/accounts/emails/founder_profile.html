@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block title %}Founder profile{% endblock title %}
+
+{% block content %}
+
+<h3>Founder Profile Shared by Admin</h3>
+<p><strong>Name:</strong> {{ founder.first_name }} {{ founder.last_name }}</p>
+<p><strong>Project:</strong> {{ application.project_name }}</p>
+<p><strong>Funding Goal:</strong> ${{ application.funding_amount }}</p>
+<hr>
+<p>Please contact the administrator for further details.</p>
+
+{% endblock %}

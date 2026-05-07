@@ -33,7 +33,7 @@ def login_view(request):
 def seeking_investment(request):
     # 1. Check if they are already an Investor
     if hasattr(request.user, "investor_application"):
-        messages.error(request, "You are registered as an Investor and cannot apply as a Founder.")
+
         return redirect("accounts:profile")
 
     # 2. Check if they have already submitted a Founder application

@@ -57,6 +57,3 @@ def contact_view(request):
         form = contactForm()
 
     return render(request, 'pages/contact.html', {'form': form})
-
-def seeking_investment(request):
-    return render(request, 'pages/seeking-investment.html')
