@@ -50,7 +50,6 @@ class Application(models.Model):
     reason_for_capital = models.TextField(blank=True, null=True)
     extra_info = models.TextField(blank=True, null=True)
 
-    # 🔥 THIS is the correct place for investor relationships
     investors = models.ManyToManyField(
         Investor,
         through="DealFlowLog",

@@ -1,8 +1,8 @@
-from django.shortcuts import render
-from .forms import contactForm
+from django.shortcuts import render, redirect  # Added redirect here
 from django.core.mail import send_mail 
+from django.contrib import messages 
+from .forms import contactForm  # Added your form import back
 
-# Create your views here.
 # Create your views here.
 def home_view(request):
     return render(request, 'pages/home.html')
@@ -20,39 +20,35 @@ def contact_view(request):
         if form.is_valid():
             name = form.cleaned_data['name']
             email = form.cleaned_data['email']
-            company_name = form.cleaned_data['company name']
-            phone_number = form.cleaned_data['phone number']
+            company_name = form.cleaned_data['company']
+            phone_number = form.cleaned_data['phone']
             message = form.cleaned_data['message']
 
+            # Formatted string for the email content
             message_body = (
-                f'You have a new inquiry \n'
+                f'You have a new inquiry\n\n'
                 f'Name: {name}\n'
                 f'Email: {email}\n'
                 f'Company Name: {company_name}\n'
-                f'Phone Number: {phone_number}\n'
-                f'Message: {message}\n'
+                f'Phone Number: {phone_number}\n\n'
+                f'Message:\n{message}'
             )
 
             try:
                 send_mail(
-                    "Email From KCV Capital",
-                    name,
-                    email,
-                    company_name,
-                    phone_number,
-                    message
-                    ['jonmaso@gmail.com'],
+                    subject=f"Email From KCV Capital: {name}",
+                    message=message_body,
+                    from_email=None,      # Uses EMAIL_HOST_USER from settings.py
+                    recipient_list=['jonmaso@gmail.com'],
+                    fail_silently=False,
                 )
-                print("Email sent successfully")
-                form = contactForm()  # reset form after success
+                messages.success(request, "Message sent successfully!")
+                return redirect('contact') # This clears the form and shows the success message
 
             except Exception as e:
-                print(f'Error sending email: {e}')
-
+                messages.error(request, f"Error sending email: {e}")
         else:
-            print("Form is not valid")
-            print(form.errors)
-
+            messages.error(request, "Please correct the errors below.")
     else:
         form = contactForm()
 

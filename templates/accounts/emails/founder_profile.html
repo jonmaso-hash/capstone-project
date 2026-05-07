@@ -1,19 +1,125 @@
-{% extends 'base.html' %}
-{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; color: #333333; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 20px auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
+        .header { background-color: #002147; color: #ffffff; padding: 25px; text-align: center; }
+        .header h2 { margin: 0; font-size: 22px; letter-spacing: 1px; }
+        .content { padding: 30px; background-color: #ffffff; }
+        .section-title { font-size: 14px; font-weight: bold; color: #002147; text-transform: uppercase; border-bottom: 2px solid #f0f0f0; padding-bottom: 5px; margin-bottom: 15px; margin-top: 25px; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table td { padding: 8px 0; vertical-align: top; border-bottom: 1px solid #fafafa; }
+        .label { font-weight: 600; color: #666666; width: 40%; font-size: 13px; }
+        .value { color: #111111; font-size: 14px; }
+        .footer { background-color: #f9f9f9; padding: 20px; text-align: center; font-size: 12px; color: #888888; }
+        .btn { display: inline-block; padding: 12px 20px; background-color: #002147; color: #ffffff; text-decoration: none; border-radius: 4px; margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h2>KCV CAPITAL</h2>
+            <div style="font-size: 12px; opacity: 0.8; margin-top: 5px;">Exclusive Founder Profile</div>
+        </div>
 
-{% block css %}
-<link rel="stylesheet" href="{% static 'css/home.css' %}">
-{% endblock %}
+        <div class="content">
+            <p style="margin-top: 0;">KCV Capital has shared a new investment opportunity with you. Below are the details for <strong>{{ application.company_name|default:"the venture" }}</strong>.</p>
 
-{% block title %}Founder profile{% endblock title %}
+            <!-- Founder Info -->
+            <div class="section-title">Founder Information</div>
+            <table class="data-table">
+                <tr>
+                    <td class="label">Founder Name</td>
+                    <td class="value">{{ application.founder_name }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Email Address</td>
+                    <td class="value"><a href="mailto:{{ application.email }}" style="color: #002147;">{{ application.email }}</a></td>
+                </tr>
+                <tr>
+                    <td class="label">Phone Number</td>
+                    <td class="value">{{ application.phone_number }}</td>
+                </tr>
+            </table>
 
-{% block content %}
+            <!-- Business Details -->
+            <div class="section-title">Business Details</div>
+            <table class="data-table">
 
-<h3>Founder Profile Shared by Admin</h3>
-<p><strong>Name:</strong> {{ founder.first_name }} {{ founder.last_name }}</p>
-<p><strong>Project:</strong> {{ application.project_name }}</p>
-<p><strong>Funding Goal:</strong> ${{ application.funding_amount }}</p>
-<hr>
-<p>Please contact the administrator for further details.</p>
+            <tr>
+                    <td class="label">Company Name </td>
+                    <td class="value">{{ application.company_name }}</td>
+                </tr>
+                <tr>
 
-{% endblock %}
+                <tr>
+                    <td class="label">Website</td>
+                    <td class="value"><a href="{{ application.website }}" style="color: #002147;">{{ application.company_website }}</a></td>
+                </tr>
+
+                <tr>
+                    <td class="label">Industry / Sector</td>
+                    <td class="value">{{ application.sector }}</td>
+                </tr>
+
+                <tr>
+                    <td class="label">Years In Business </td>
+                    <td class="value">{{ application.years_in_business }}</td>
+                </tr>
+
+                 <tr>
+                    <td class="label">Company Size </td>
+                    <td class="value">{{application.company_size }}</td>
+                </tr>
+
+                <tr>
+                    <td class="label">Funding Stage</td>
+                    <td class="value">{{ application.stage }}</td>
+                </tr>
+
+                <tr>
+                    <td class="label">Company Description</td>
+                    <td class="value">{{ application.description }}</td>
+                </tr>
+            </table>
+
+            <!-- Investment Goals -->
+            <div class="section-title">Investment Metrics</div>
+            <table class="data-table">
+                <tr>
+                    <td class="label">Raising: </td>
+                    <td class="value"><strong>${{ application.raising_amount }}</strong></td>
+                </tr>
+                <tr>
+                    <td class="label">Current Revenue</td>
+                    <td class="value">${{ application.current_revenue }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Prior Capital Raised</td>
+                    <td class="value">${{ application.prior_amount_raised }}</td>
+                </tr>
+            </table>
+
+            <!-- Use of Funds -->
+            <div class="section-title">Reason for Funds</div>
+            <p class="value" style="background-color: #fcfcfc; padding: 15px; border-left: 3px solid #002147; font-style: italic;">
+               {{application.reason_for_capital}}
+            </p>
+
+            <div style="text-align: center;">
+                <a href="mailto:admin@kcvcapital.com?subject=Inquiry: {{ application.company_name }}" class="btn">Request Introduction</a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            © 2026 KCV Capital. Confidential Investment Memo.<br>
+            San Diego, California | <a href="https://kcvcapital.com" style="color: #888888;">kcvcapital.com</a>
+        </div>
+    </div>
+</body>
+</html>
