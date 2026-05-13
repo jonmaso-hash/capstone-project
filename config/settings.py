@@ -92,4 +92,3 @@ EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='jonmaso@gmail.com')
 
-)

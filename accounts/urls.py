@@ -9,8 +9,7 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
 
     # Profile
-    path('profile/', views.profile, name='profile'),
-
+    path('profile/<str:username>/', views.profile, name='profile'),
     #  NEW: Founder application flow
     path('apply/', views.seeking_investment, name='apply'),
     
