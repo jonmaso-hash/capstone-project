@@ -13,6 +13,9 @@ def services(request):
 def about(request):
     return render(request, 'pages/about.html')
 
+def bulletin_board(request):
+    return render(request, 'pages/bulletin_board.html')
+
 def contact_view(request):
     if request.method == 'POST':
         form = contactForm(request.POST)

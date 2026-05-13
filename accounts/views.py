@@ -12,7 +12,6 @@ def signup_view(request):
         if form.is_valid():
             user = form.save()
             auth_login(request, user)
-            messages.success(request, "Account created successfully! Please choose your path.")
             return redirect("accounts:profile")
     else:
         form = UserCreationForm()

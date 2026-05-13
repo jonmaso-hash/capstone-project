@@ -34,11 +34,11 @@ class ApplicationForm(forms.ModelForm):
 class InvestorForm(forms.ModelForm):
 
     INVESTMENT_STAGE_CHOICES = [
-        ("idea", "Pre-Seed"),
-        ("early", "Seed"),
-        ("growth", "Series-A"),
-        ("late", "Series-B"),
-        ("ipo", "Series-C+"),
+        ("Pre-Seed", "Pre-Seed"),
+        ("Seed", "Seed"),
+        ("Series-A", "Series-A"),
+        ("Series-B", "Series-B"),
+        ("Series-C+", "Series-C+"),
         ("other", "Other"),
     ]
 

@@ -6,219 +6,66 @@
 {% endblock %}
 
 {% block content %}
-<div class="tagline" >
-<H1> Founders and Investors </H1>
-<h5>Discover, Connect, and Grow Faster</h5>
-<p>Fill out an application form online to get connected</p>
+<!-- Hero Section -->
+<div class="tagline text-center py-5">
+    <h1 class="display-4 fw-bold">Connecting Startups With Investors</h1>
+    <p class="lead text-muted">
+        Discover startups raising capital or connect with investors actively seeking new opportunities.
+    </p>
 </div>
 
-<section class="home">
-<div class="home-card">
-    <div class="card-header">
-        <h1>Investors</h1>
-<a href="{% url 'accounts:investor' %}" class="btn btn-primary btn-sm"> 
-        Get Started </a>
-    </div>
-    <h5>Find Quality Startups</h5>
-    <ul>
-        <li>
-            <h9>Deal Sourcing Efficiency</h9>
-        </li>
-    </ul>
-    <ul>
-        <li>
-            <h9>Access to Proprietary Deals</h9>
-        </li>
-    </ul>
-    <ul>
-        <li>
-            <h9>Due Diligence Support</h9>
-        </li>
-    </ul>
-</div>
-
-    <div class="home-card">
-    <div class="card-header">
-    <h1>Seeking Investments</h1>
-    <a href="{% url 'accounts:apply' %}" class="btn btn-primary btn-sm">
-        Get Started
-    </a>
-</div>
-    <h5>Connect with Investors</h5>
-        <ul>
-        <li>
-            <h9>Access to Capital Networks</h9>
-        </li>
-    </ul>
-    <ul>
-        <li>
-            <h9>Pitch Refinement and Positioning</h9>
-        </li>
-    </ul>
-    <ul>
-        <li>
-            <h9>Deal structuring support</h9>
-        </li>
-    </ul>
-
-</div>
-
-    <div class="home-card">
-    <div class="card-header">
-        <h1>Inquiries</h1>
-        <a href="{% url 'contact' %}" class="button-link">Learn More</a>
-    </div>
-    <h5>Have a Question? Send Us a Message</h5>
-    <ul>
-        <li>
-            <h9>Interested in Early, Growth, or Late-stage Venture Investments</h9>
-        </li>
-    </ul>
-    <ul>
-        <li>
-            <h9>Raising Seed, Series A, B, or Growth Capital</h9>
-        </li>
-    </ul>
-    <ul>
-        <li>
-            <h9>Request a Consultation</h9>
-        </li>
-    </ul>
-</div>
-</section>
-
-<section class="services-section py-5">
-  <div class="container">
-    <h2 class="text-uppercase mb-5 font-weight-bold text-warning text-center">Our Services</h2>
-
-    <div class="services-grid">
-      <div class="service-item">
-        <span class="checkmark">✔</span>
-        <p>Board and Investor Relations</p>
-      </div>
-      <div class="service-item">
-        <span class="checkmark">✔</span>
-        <p>Financial Planning, Analysis and Modeling</p>
-      </div>
-      <div class="service-item">
-        <span class="checkmark">✔</span>
-        <p>Fundraising</p>
-      </div>
-      <div class="service-item">
-        <span class="checkmark">✔</span>
-        <p>Joint Venture and Acquisition Analysis</p>
-      </div>
-      <div class="service-item">
-        <span class="checkmark">✔</span>
-        <p>Measures, Incentives and KPIs</p>
-      </div>
-      
-      <div class="service-item">
-        <span class="checkmark">✔</span>
-        <p>Strategic Planning</p>
-      </div>
-      <div class="service-item">
-        <span class="checkmark">✔</span>
-        <p>Workforce Planning</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section>
-    <div class="container py-5">
-        <h1 class="mb-4 text-center">Selected Clients</h1>
-        
-        <div class="row g-4"> 
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">HV Vision</h5>
-                        <p class="card-text text-muted">Industry: AG Tech</p>
-                        <a href="https://www.hv-vision.com" class="btn btn-outline-primary btn-sm">HV-Vision.com</a>
+<!-- Primary Portals -->
+<section class="marketplace-portal pb-5">
+    <div class="container">
+        <div class="row g-4 justify-content-center">
+            
+            <!-- Investors Column -->
+            <div class="col-md-6 col-lg-5">
+                <div class="card h-100 shadow-sm border-0 p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h3 mb-0">For Investors</h2>
+                        <a href="{% url 'accounts:investor' %}" class="btn btn-primary btn-sm">Join Network</a>
                     </div>
+                    <h5 class="text-muted mb-4">Curated Deal Flow & Execution</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill text-primary me-2 mt-1"></i>
+                            <span><strong>Enhanced Sourcing:</strong> Algorithmic matching tailored to your investment thesis.</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill text-primary me-2 mt-1"></i>
+                            <span><strong>Proprietary Access:</strong> Exclusive entry into oversubscribed rounds.</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill text-primary me-2 mt-1"></i>
+                            <span><strong>Diligence Acceleration:</strong> Comprehensive data rooms and reporting.</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
 
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">DwellFi</h5>
-                        <p class="card-text text-muted">Industry: Blockchain</p>
-                        <a href="https://www.dwell.fi" class="btn btn-outline-primary btn-sm">DwellFi.com</a>
+            <!-- Founders Column -->
+            <div class="col-md-6 col-lg-5">
+                <div class="card h-100 shadow-sm border-0 p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h3 mb-0">For Founders</h2>
+                        <a href="{% url 'accounts:apply' %}" class="btn btn-outline-primary btn-sm">Submit Venture</a>
                     </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">Aerones</h5>
-                        <p class="card-text text-muted">Industry: Clean Tech</p>
-                        <a href="https://aerones.com/" class="btn btn-outline-primary btn-sm">Aerones.com</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">Bristol Group</h5>
-                        <h5 class="card-title fw-bold">House Properties</h5>
-                        <h5 class="card-title fw-bold">Triple Five Group</h5>
-                        <p class="card-text text-muted">Industry: Commercial Real Estate</p>
-                        <div class="d-grid gap-2">
-                            <a href="https://bristolgroupinc.com" class="btn btn-outline-primary btn-sm">Bristol Group.com</a>
-                            <a href="https://bristolgroupinc.com" class="btn btn-outline-primary btn-sm">House Properties.com</a>
-                            <a href="https://bristolgroupinc.com" class="btn btn-outline-primary btn-sm">Triple Five Group.com</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">Lyte</h5>
-                        <h5 class="card-title fw-bold">Seven Seas Music</h5>
-                        <p class="card-text text-muted">Industry: Entertainment</p>
-                        <div class="d-grid gap-2">
-                            <a href="https://maintenance.lyteup.com" class="btn btn-outline-primary btn-sm">Lyte.com</a>
-                            <a href="https://sevenseasmusic.com" class="btn btn-outline-primary btn-sm">Sevenseasmusic.com</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">Biproxi</h5>
-                        <h5 class="card-title fw-bold">Eprazel</h5>
-                        <h5 class="card-title fw-bold">PLUM Lending</h5>
-                        <p class="card-text text-muted">Industry: Fintech</p>
-                        <div class="d-grid gap-2">
-                            <a href="https://biproxi.com" class="btn btn-outline-primary btn-sm">Biproxi.com</a>
-                            <a href="https://www.eprazel.com" class="btn btn-outline-primary btn-sm">Eprazel.com</a>
-                            <a href="https://plumlending.com/" class="btn btn-outline-primary btn-sm">PLUMLending.com</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">Abound</h5>
-                        <h5 class="card-title fw-bold">Akorda</h5>
-                        <h5 class="card-title fw-bold">Join</h5>
-                        <p class="card-text text-muted">Industry: SaaS</p>
-                        <div class="d-grid gap-2">
-                            <a href="https://www.withabound.com" class="btn btn-outline-primary btn-sm">Abound.com</a>
-                            <a href="https://www.legalsifter.com" class="btn btn-outline-primary btn-sm">Akorda.com</a>
-                            <a href="https://joindigital.com" class="btn btn-outline-primary btn-sm">joindigital.com</a>
-                        </div>
-                    </div>
+                    <h5 class="text-muted mb-4">Capital Acquisition & Strategy</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill text-primary me-2 mt-1"></i>
+                            <span><strong>Strategic Capital:</strong> Exposure to Tier-1 VCs, Family Offices, and Angels.</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill text-primary me-2 mt-1"></i>
+                            <span><strong>Narrative Optimization:</strong> Expert guidance on positioning and modeling.</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill text-primary me-2 mt-1"></i>
+                            <span><strong>Transaction Support:</strong> Assistance with deal structuring and term sheets.</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
 
@@ -226,5 +73,126 @@
     </div>
 </section>
 
+<!-- Matchmaking Services Grid -->
+<section class="services-section py-5 bg-white">
+  <div class="container">
+    <h2 class="text-uppercase mb-5 font-weight-bold text-center" style="color: #f39c12;">
+      Our Matchmaking Services
+    </h2>
+
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="icon">🤝</div>
+        <h5>Investor–Founder Matching</h5>
+        <p>We connect high-potential startups with aligned investors.</p>
+      </div>
+
+      <div class="service-card">
+        <div class="icon">💼</div>
+        <h5>Capital Introduction</h5>
+        <p>Access curated deal flow and vetted investment opportunities.</p>
+      </div>
+
+      <div class="service-card">
+        <div class="icon">📊</div>
+        <h5>Funding Readiness</h5>
+        <p>Assess and prepare startups for institutional investment.</p>
+      </div>
+
+      <div class="service-card">
+        <div class="icon">🏦</div>
+        <h5>VC & PE Connections</h5>
+        <p>Direct introductions to venture capital and private equity firms.</p>
+      </div>
+
+      <div class="service-card">
+        <div class="icon">🔗</div>
+        <h5>Strategic Partnerships</h5>
+        <p>Match businesses with complementary growth partners.</p>
+      </div>
+
+      <div class="service-card">
+        <div class="icon">📈</div>
+        <h5>M&A Opportunities</h5>
+        <p>Identify acquisition targets and merger synergies.</p>
+      </div>
+
+      <div class="service-card">
+        <div class="icon">🎯</div>
+        <h5>Targeted Investor Access</h5>
+        <p>Reach investors aligned with your industry and stage.</p>
+      </div>
+
+      <div class="service-card">
+        <div class="icon">⭐</div>
+        <h5>Elite Network Access</h5>
+        <p>Connect with high-net-worth and institutional investors.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats Pipeline Section -->
+<section class="py-5 bg-light border-top border-bottom">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold text-dark">The Interlink Pipeline</h2>
+            <p class="lead text-muted">Real-time matchmaking statistics across our proprietary foundry network.</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm text-center p-4">
+                    <div class="display-6 fw-bold text-primary mb-1">42</div>
+                    <h5 class="fw-bold mb-3">Fintech & DeFi</h5>
+                    <p class="small text-muted mb-4">Focus: Cross-border payments, Neo-banking, and Yield protocols.</p>
+                    <div class="progress mb-2" style="height: 8px;">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: 85%"></div>
+                    </div>
+                    <small class="text-uppercase fw-bold text-muted" style="font-size: 0.7rem;">Investor Demand: High</small>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm text-center p-4">
+                    <div class="display-6 fw-bold text-primary mb-1">28</div>
+                    <h5 class="fw-bold mb-3">PropTech & CRE</h5>
+                    <p class="small text-muted mb-4">Focus: Commercial asset management and tokenized equity.</p>
+                    <div class="progress mb-2" style="height: 8px;">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: 60%"></div>
+                    </div>
+                    <small class="text-uppercase fw-bold text-muted" style="font-size: 0.7rem;">Investor Demand: Stable</small>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm text-center p-4">
+                    <div class="display-6 fw-bold text-primary mb-1">61</div>
+                    <h5 class="fw-bold mb-3">Enterprise SaaS</h5>
+                    <p class="small text-muted mb-4">Focus: B2B infrastructure, AI-driven automation, and CRM tools.</p>
+                    <div class="progress mb-2" style="height: 8px;">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: 95%"></div>
+                    </div>
+                    <small class="text-uppercase fw-bold text-muted" style="font-size: 0.7rem;">Investor Demand: Peak</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Stats Row -->
+        <div class="row mt-5 pt-4 border-top">
+            <div class="col-md-4 text-center">
+                <h6 class="text-muted text-uppercase mb-1" style="letter-spacing: 1px;">Network Value</h6>
+                <p class="h4 fw-bold">$125M+ Capital Pool</p>
+            </div>
+            <div class="col-md-4 text-center border-start border-end">
+                <h6 class="text-muted text-uppercase mb-1" style="letter-spacing: 1px;">Inquiry Speed</h6>
+                <p class="h4 fw-bold">Avg. 18hr Match Time</p>
+            </div>
+            <div class="col-md-4 text-center">
+                <h6 class="text-muted text-uppercase mb-1" style="letter-spacing: 1px;">Global Reach</h6>
+                <p class="h4 fw-bold">14 Countries Active</p>
+            </div>
+        </div>
+    </div>
 </section>
 {% endblock %}
