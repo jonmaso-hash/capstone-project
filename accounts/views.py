@@ -106,3 +106,8 @@ def profile(request, username):
         "investor_application": investor_application,
         "show_welcome_prompt": show_welcome_prompt, 
     })
+
+@login_required
+def redirect_to_own_profile(request):
+    """Redirects /accounts/profile/ to /accounts/profile/the_username/"""
+    return redirect("accounts:profile", username=request.user.username)

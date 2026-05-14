@@ -16,4 +16,7 @@ urlpatterns = [
     # Investor application 
     path('investor-form/', views.investor_form, name= 'investor'),
 
+    path('profile/', views.redirect_to_own_profile), 
+    
+
 ]

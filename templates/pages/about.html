@@ -1,22 +1,28 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/about.css' %}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+{% endblock %}
 
 {% block content %}
-
- <section class="page">
-<aside class="left">
-            <div class="left-inner">
-                <div class="img-card">
-                    <img src="/media/img/dan.jpg" alt="">
-                </div>
+<section class="page">
+    <aside class="left">
+        <div class="left-inner">
+            <div class="img-card">
+                <img src="/media/img/profile_pic.png" alt="Daniel Ibarra" class="profile-photo">
             </div>
-        </aside>
-        <section class="right">
-                <div class="content">
-                <p>
-                <h1 class="right-title-center">About Me</h1>
+        </div>
+    </aside>
+
+    <section class="right">
+        <div class="content">
+            <h1 class="right-title-center">About Me</h1>
+            <p>
                 Daniel Ibarra has advised Founders and CEOs as an independent consultant for the last 19 years on long-term financial planning, capital raising, acquisitions and joint ventures across several sectors including FinTech, SaaS, Blockchain, CleanTech, AgTech, Entertainment and Commercial Real Estate. His clients were able to: launch seven new venture-backed businesses; raise over $130 million in venture equity; invest in 16 commercial properties worth over $300 million; and renegotiate over $100 million in defaulted loans. Daniel began his career as a commercial and investment banker with Wells Fargo, DLJ (now UBS) and Jefferies as well as directed the investor relations program for BEA Systems (now Oracle), a Nasdaq-listed enterprise software company. He holds an MBA from Harvard Business School and a BS in Finance from Arizona State University.
-                </p>
-    </div>
+            </p>
+        </div>
     </section>
-    </section>
+</section>
 {% endblock %}
