@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header & Dashboard Stats -->
+    <div class="row align-items-center mb-4">
+        <div class="col-md-7">
+            <h2 class="fw-bold mb-1">Interlink Foundry Matchmaker</h2>
+            <p class="text-secondary mb-0">
+                Personalized deal flow based on your <strong>{{ investor.investment_stage }}</strong> mandate.
+            </p>
+        </div>
+        <div class="col-md-5 text-md-end mt-3 mt-md-0">
+            <div class="d-inline-flex align-items-center gap-2 bg-white border rounded-pill px-3 py-2 shadow-sm">
+                <span class="small fw-bold text-uppercase text-muted" style="letter-spacing: 0.5px;">Sectors:</span>
+                <span class="badge rounded-pill bg-warning text-dark px-3">
+                    {{ investor.investment_focus|truncatechars:30 }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Professional Status Bar -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="d-flex flex-wrap gap-4 py-3 px-4 bg-dark rounded-4 text-white-50 small shadow-sm">
+                <span><i class="bi bi-shield-check text-success me-1"></i> Brokerage Status: <strong class="text-white">Active</strong></span>
+                <span><i class="bi bi-cpu text-info me-1"></i> AI Analysis: <strong class="text-white">Vector Matching Enabled</strong></span>
+                <span><i class="bi bi-database-fill text-warning me-1"></i> Matches Found: <strong class="text-white">{{ matches|length }}</strong></span>
+            </div>
+        </div>
+    </div>
+
+    {% if investor %}
+        <div class="row g-4">
+            {% for match in matches %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden hover-lift">
+                        <!-- Score Header -->
+                        <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+                            <span class="small text-uppercase fw-bold text-muted">Blended Match</span>
+                            <span class="h4 mb-0 fw-bold text-primary">{{ match.final_score }}%</span>
+                        </div>
+
+                        <div class="card-body p-4">
+                            <!-- Company Info -->
+                            <h5 class="card-title fw-bold text-dark mb-1">{{ match.founder.company_name }}</h5>
+                            <h6 class="card-subtitle mb-3 text-primary small text-uppercase fw-bold">
+                                {{ match.founder.industry }} • {{ match.founder.investment_stage }}
+                            </h6>
+                            
+                            <p class="card-text text-secondary small mb-4 line-clamp">
+                                {{ match.founder.pitch_summary }}
+                            </p>
+                            
+                            <!-- Score Breakdown -->
+                            <div class="bg-light rounded-3 p-3 mb-4 d-flex justify-content-around text-center border">
+                                <div class="w-100">
+                                    <small class="d-block text-muted text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Rules</small>
+                                    <span class="badge bg-white text-dark border w-75">{{ match.rule_score }}%</span>
+                                </div>
+                                <div class="vr mx-2 opacity-25"></div>
+                                <div class="w-100">
+                                    <small class="d-block text-muted text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">AI Similarity</small>
+                                    <span class="badge bg-white text-dark border w-75">{{ match.ai_score }}%</span>
+                                </div>
+                            </div>
+
+                            <!-- Feedback/Voting Buttons -->
+                            <div class="d-flex gap-2 mb-2">
+                                <form action="{% url 'matchmaking:record_vote' %}" method="POST" class="flex-grow-1">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="application_id" value="{{ match.founder.id }}">
+                                    <input type="hidden" name="vote" value="up">
+                                    <button type="submit" class="btn btn-outline-success btn-sm w-100 py-2 rounded-3">
+                                        <i class="bi bi-hand-thumbs-up"></i>
+                                    </button>
+                                </form>
+                                <form action="{% url 'matchmaking:record_vote' %}" method="POST" class="flex-grow-1">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="application_id" value="{{ match.founder.id }}">
+                                    <input type="hidden" name="vote" value="down">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm w-100 py-2 rounded-3">
+                                        <i class="bi bi-hand-thumbs-down"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="card-footer bg-white border-0 p-4 pt-0">
+                            {% if match.already_requested %}
+                                <button class="btn btn-secondary w-100 py-2 fw-bold rounded-pill shadow-sm disabled" disabled>
+                                    Intro Requested
+                                </button>
+                            {% else %}
+<form action="{% url 'matchmaking:request_intro' application_id=match.founder.id investor_id=investor.id %}" method="POST">                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-dark w-100 py-2 fw-bold rounded-pill shadow-sm">
+                                        Request Introduction
+                                    </button>
+                                </form>
+                            {% endif %}
+                            <a href="#" class="btn btn-link btn-sm w-100 text-decoration-none mt-2 text-muted fw-medium">
+                                <i class="bi bi-file-earmark-bar-graph me-1"></i> View Acquisition Summary
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <!-- Empty State -->
+                <div class="col-12 text-center py-5">
+                    <div class="bg-light p-5 rounded-4 border border-dashed">
+                        <i class="bi bi-radar display-1 text-muted mb-3 d-block"></i>
+                        <h3 class="fw-bold">No Matches Found Yet</h3>
+                        <p class="text-muted mx-auto" style="max-width: 500px;">
+                            We are currently vetting new founders. We'll send you an instant notification as soon as a startup joins that matches your specific criteria.
+                        </p>
+                        <a href="{% url 'accounts:investor_form' %}" class="btn btn-outline-dark mt-3 px-4">Refine Investment Mandate</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- Access Required -->
+        <div class="row justify-content-center">
+            <div class="col-md-6 text-center py-5">
+                <div class="card shadow border-0 p-5 rounded-4">
+                    <div class="mb-4">
+                        <i class="bi bi-lock-fill display-4 text-warning"></i>
+                    </div>
+                    <h3 class="fw-bold">Investor Onboarding Required</h3>
+                    <p class="text-secondary mb-4">Complete your mandate details to unlock AI-driven deal flow and connect with founders.</p>
+                    <a href="{% url 'accounts:investor_form' %}" class="btn btn-primary px-5 py-3 rounded-pill fw-bold">Complete Profile</a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .hover-lift {
+        transition: all 0.3s ease;
+    }
+    .hover-lift:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
+    }
+    .line-clamp {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        height: 4.5rem;
+    }
+    .border-dashed {
+        border-style: dashed !important;
+        border-width: 2px !important;
+    }
+</style>
+{% endblock %}

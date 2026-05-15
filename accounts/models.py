@@ -1,105 +1,37 @@
 from django.db import models
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 
-User = get_user_model()
-
-
-# =================================================
-# INVESTOR PROFILE
-# =================================================
-class Investor(models.Model):
-    name = models.CharField(max_length=255)
-    email = models.EmailField(unique=True)
-
-    def __str__(self):
-        return self.name
-
-
-# =================================================
-# APPLICATION (FOUNDERS)
-# =================================================
-class Application(models.Model):
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        related_name="application"
-    )
-
-    # Founder info
-    founder_name = models.CharField(max_length=255)
-    email = models.EmailField()
-    phone_number = models.CharField(max_length=30, blank=True, null=True)
-
-    # Company info
+class InvestorApplication(models.Model):
+    # Core Relationship
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='accounts_investor_profile')
+    
+    # Firm Details
     company_name = models.CharField(max_length=255)
-    company_website = models.URLField(blank=True, null=True)
-    description = models.TextField()
-    business_description = models.TextField(blank=True, null=True)
+    website = models.URLField(max_length=500, blank=True, null=True)
+    full_name = models.CharField(max_length=255) # For the profile header we built
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    
+    # The Mandate (The "Rules" for the engine)
+    investment_focus = models.CharField(max_length=255) # e.g., "SaaS, AI, FinTech"
+    investment_stage = models.CharField(max_length=50)  # e.g., "Seed, Series A"
+    
+    # Financials
+    # Rename to 'target_ticket_size' or keep 'investment_amount'
+    investment_amount = models.DecimalField(max_digits=15, decimal_places=2, help_text="Average check size")
+    min_check = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    max_check = models.DecimalField(max_digits=15, decimal_places=2, default=0)
 
-    current_revenue = models.CharField(max_length=50, blank=True, null=True)
+    # Geographic Focus (Vital for many investors)
+    location_preference = models.CharField(max_length=255, default="Global") # e.g., "North America", "San Diego"
 
-    sector = models.CharField(max_length=255, blank=True, null=True)
-    stage = models.CharField(max_length=50, blank=True, null=True)
+    # Social Proof / Trust
+    is_verified = models.BooleanField(default=False) # Manual flag for you to set
+    linkedin_url = models.URLField(blank=True, null=True)
 
-    years_in_business = models.PositiveIntegerField(blank=True, null=True)
-    company_size = models.CharField(max_length=50, blank=True, null=True)
-
-    raising_amount = models.CharField(max_length=50, blank=True, null=True)
-    prior_amount_raised = models.CharField(max_length=50, blank=True, null=True)
-
-    reason_for_capital = models.TextField(blank=True, null=True)
-    extra_info = models.TextField(blank=True, null=True)
-
-    investors = models.ManyToManyField(
-        Investor,
-        through="DealFlowLog",
-        blank=True,
-        related_name="applications"
-    )
-
+    # AI & Metadata
+    focus_vector = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.company_name or self.founder_name
-
-
-# =================================================
-# INVESTOR APPLICATION (optional onboarding form)
-# =================================================
-class InvestorApplication(models.Model):
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        related_name="investor_application"
-    )
-
-    full_name = models.CharField(max_length=255)
-    email = models.EmailField()
-    phone = models.CharField(max_length=30, blank=True, null=True)
-
-    company_name = models.CharField(max_length=255)
-
-    investment_focus = models.CharField(max_length=255)
-    investment_stage = models.CharField(max_length=255)
-    investment_amount = models.CharField(max_length=50, blank=True, null=True)
-
-    def __str__(self):
-        return self.full_name
-
-
-# =================================================
-# DEAL FLOW LOG (JOIN TABLE)
-# =================================================
-class DealFlowLog(models.Model):
-    investor = models.ForeignKey(Investor, on_delete=models.CASCADE)
-    application = models.ForeignKey(Application, on_delete=models.CASCADE)
-
-    sent_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ("investor", "application")
-        ordering = ["-sent_at"]
-
-    def __str__(self):
-        return f"{self.investor.name} → {self.application.company_name}"
+        return f"{self.company_name} ({self.user.username})"

@@ -8,6 +8,8 @@ urlpatterns = [
     path('', include('pages.urls')),
     path('accounts/', include('accounts.urls')),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('matchmaking/', include('matchmaking.urls')), 
+    path('', include('pages.urls', namespace='pages')), 
     path('', include('blog.urls')),
 ]
 

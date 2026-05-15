@@ -80,4 +80,30 @@ def like_article(request, pk):
         article.likes.remove(request.user)
     else:
         article.likes.add(request.user)
-    return redirect('blog_view') # or wherever your feed lives
+    return redirect('blog_view') 
+
+@login_required
+def favorites_list(request):
+    # This fetches only articles where the current user is in the 'likes' field
+    favorite_posts = Article.objects.filter(likes=request.user).order_by('-created_on')
+    
+    return render(request, 'blog/favorites.html', {'favorite_posts': favorite_posts})
+
+def article_detail(request, pk):
+    # This fetches the specific article by its ID (pk)
+    # or returns a 404 error if it doesn't exist
+    article = get_object_or_404(Article, pk=pk)
+    
+    context = {
+        'article': article,
+    }
+    return render(request, 'blog/article_detail.html', context)
+
+@login_required
+def toggle_favorite(request, pk):
+    article = get_object_or_404(Article, pk=pk)
+    if article.favorites.filter(id=request.user.id).exists():
+        article.favorites.remove(request.user)
+    else:
+        article.favorites.add(request.user)
+    return redirect('article_detail', pk=pk)

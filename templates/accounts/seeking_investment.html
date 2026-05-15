@@ -56,8 +56,8 @@
 <div class="container py-5">
 
     {% if user.is_authenticated %}
-    <form method="post" action="{% url 'accounts:apply' %}" class="card shadow-lg border-0">
-        {% csrf_token %}
+<form method="post" action="{% url 'accounts:seeking_investment' %}" class="card shadow-lg border-0">
+            {% csrf_token %}
 
         <!-- HEADER -->
         <div class="card-header bg-dark text-white p-4">

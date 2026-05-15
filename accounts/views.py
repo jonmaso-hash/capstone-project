@@ -5,47 +5,56 @@ from django.contrib.auth import login as auth_login
 from django.contrib.auth.models import User
 from django.contrib import messages 
 
-from .models import Application, InvestorApplication
-from .forms import ApplicationForm, InvestorForm
+# Syncing with the models we defined for the matching engine
+from matchmaking.models import Application, InvestorApplication
+from .forms import ApplicationForm, InvestorForm 
 
 # --- Authentication Views ---
 
 def signup_view(request):
+    if request.user.is_authenticated:
+        return redirect("accounts:profile", username=request.user.username)
     if request.method == "POST":
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             auth_login(request, user)
-            # Fix: Pass username to redirect
+            messages.success(request, f"Welcome to Interlink Foundry, {user.username}!")
             return redirect("accounts:profile", username=user.username)
     else:
         form = UserCreationForm()
     return render(request, "accounts/signup.html", {"form": form})
 
 def login_view(request):
+    if request.user.is_authenticated:
+        return redirect("accounts:profile", username=request.user.username)
     if request.method == "POST":
         form = AuthenticationForm(data=request.POST)
         if form.is_valid():
             user = form.get_user()
             auth_login(request, user)
-            # Fix: Pass username to redirect
             return redirect("accounts:profile", username=user.username)
     else:
         form = AuthenticationForm()
     return render(request, "accounts/login.html", {"form": form})
 
-# --- Application Flow Views ---
+# --- Application & Investor Flow ---
 
 @login_required
 def seeking_investment(request):
-    # 1. Prevent Investors from applying as Founders
-    if hasattr(request.user, "investor_application"):
+    """
+    Founder Onboarding: Collects startup data for the matching engine.
+    """
+    # 1. Block existing Investors from becoming Founders
+    if hasattr(request.user, "match_investor_profile"):
         messages.warning(request, "Investors cannot submit founder applications.")
         return redirect("accounts:profile", username=request.user.username)
 
-    # 2. Prevent duplicate Founder applications
-    application = getattr(request.user, "application", None)
+    # 2. Prevent duplicate applications
+    application = getattr(request.user, "match_founder_profile", None)
     if application:
+        # If they already have one, treat this view as an 'Edit' or redirect
+        messages.info(request, "You already have an active founder profile.")
         return redirect("accounts:profile", username=request.user.username)
 
     if request.method == "POST":
@@ -54,7 +63,7 @@ def seeking_investment(request):
             app = form.save(commit=False)
             app.user = request.user
             app.save()
-            messages.success(request, "Application submitted successfully!")
+            messages.success(request, "Founder profile submitted! The matching engine is now analyzing your pitch.")
             return redirect("accounts:profile", username=request.user.username)
     else:
         form = ApplicationForm()
@@ -63,14 +72,18 @@ def seeking_investment(request):
 
 @login_required
 def investor_form(request):
-    # 1. Prevent Founders from applying as Investors
-    if hasattr(request.user, "application"):
+    """
+    Investor Onboarding: Collects investment mandate for the matching engine.
+    """
+    # 1. Block existing Founders from becoming Investors
+    if hasattr(request.user, "match_founder_profile"):
         messages.warning(request, "Founders cannot submit investor profiles.")
         return redirect("accounts:profile", username=request.user.username)
 
-    # 2. Prevent duplicate Investor profiles
-    investor_app = getattr(request.user, "investor_application", None)
-    if investor_app:
+    # 2. Check for existing profile
+    investor_profile = getattr(request.user, "match_investor_profile", None)
+    if investor_profile:
+        messages.info(request, "Your investor mandate is already complete.")
         return redirect("accounts:profile", username=request.user.username)
 
     if request.method == "POST":
@@ -79,25 +92,28 @@ def investor_form(request):
             app = form.save(commit=False)
             app.user = request.user
             app.save()
-            messages.success(request, "Investor profile created successfully!")
-            return redirect("accounts:profile", username=request.user.username)
+            messages.success(request, "Mandate saved. Accessing the Deal Flow dashboard...")
+            # Redirect straight to the dashboard for high-value users
+            return redirect("matchmaking:investor_index")
     else:
         form = InvestorForm()
 
     return render(request, "accounts/investor_form.html", {"form": form})
 
-# --- Profile View ---
+# --- Profile & Navigation ---
 
 @login_required
 def profile(request, username):
-    # Fetch the user for the profile being viewed
+    """
+    Main User Hub: Displays the profile cards we built for Interlink Foundry.
+    """
     viewed_user = get_object_or_404(User, username=username)
     
-    # Get associated data
-    application = getattr(viewed_user, "application", None)
-    investor_application = getattr(viewed_user, "investor_application", None)
+    # Using the matching engine's related_names
+    application = getattr(viewed_user, "match_founder_profile", None)
+    investor_application = getattr(viewed_user, "match_investor_profile", None)
 
-    # UI logic
+    # Trigger for the UI Welcome Prompt
     show_welcome_prompt = not application and not investor_application
 
     return render(request, "accounts/profile.html", {
@@ -109,5 +125,4 @@ def profile(request, username):
 
 @login_required
 def redirect_to_own_profile(request):
-    """Redirects /accounts/profile/ to /accounts/profile/the_username/"""
     return redirect("accounts:profile", username=request.user.username)

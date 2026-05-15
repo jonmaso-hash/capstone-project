@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-5">
+        <div class="col-md-8">
+            <h1 class="h2 fw-bold">Investor Matchmaking</h1>
+            <p class="text-secondary">Based on your {{ application.stage }} stage and {{ application.sector }} focus.</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'accounts:seeking_investment' %}" class="btn btn-outline-secondary btn-sm">Edit Pitch Details</a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for match in matches %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-0 rounded-3">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="card-title fw-bold mb-1">{{ match.investor.company_name|default:"Venture Partner" }}</h5>
+                            <span class="badge bg-light text-primary border border-primary-subtle small">
+                                {{ match.investor.investment_stage }}
+                            </span>
+                        </div>
+                        <div class="text-end">
+                            <div class="h4 mb-0 fw-bold text-primary">{{ match.final_score }}%</div>
+                            <small class="text-muted uppercase" style="font-size: 0.65rem;">Match</small>
+                        </div>
+                    </div>
+
+                    <p class="card-text small text-secondary mb-4">
+                        {{ match.investor.investment_focus|truncatewords:20 }}
+                    </p>
+
+                    <div class="mb-4">
+                        <label class="d-block small text-uppercase text-muted fw-bold mb-2" style="letter-spacing: 1px;">Interested Sectors</label>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for sector in match.investor.interested_sectors.split|slice:":3" %}
+                                <span class="badge bg-light text-dark fw-normal border">{{ sector|replace:",","" }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    {% if match.rule_match %}
+                        <div class="alert alert-info py-2 px-3 border-0 small d-flex align-items-center">
+                            <i class="bi bi-patch-check-fill me-2"></i> Perfect Mandate Fit
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-white border-0 p-4 pt-0">
+                    <button class="btn btn-primary w-100 py-2">Express Interest</button>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="bg-light p-5 rounded-4 border">
+                <h3>Scanning the Foundry...</h3>
+                <p class="text-muted">No high-probability matches found yet. We'll notify you as new investors join the platform.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,6 +1,5 @@
 from django import forms
-from .models import Application, InvestorApplication
-
+from matchmaking.models import Application, InvestorApplication
 
 # -----------------------------
 # Founder Application Form
@@ -14,8 +13,7 @@ class ApplicationForm(forms.ModelForm):
             "founder_name",
             "email",
             "phone_number",
-            "description",
-            "business_description",
+            "description", # This replaces the old 'business_description'
             "current_revenue",
             "sector",
             "stage",
@@ -26,13 +24,17 @@ class ApplicationForm(forms.ModelForm):
             "reason_for_capital",
             "extra_info",
         ]
-
+        # Adding Bootstrap classes for consistent UI
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 4, "class": "form-control"}),
+            "reason_for_capital": forms.Textarea(attrs={"rows": 3, "class": "form-control"}),
+            "extra_info": forms.Textarea(attrs={"rows": 2, "class": "form-control"}),
+        }
 
 # -----------------------------
 # Investor Application Form
 # -----------------------------
 class InvestorForm(forms.ModelForm):
-
     INVESTMENT_STAGE_CHOICES = [
         ("Pre-Seed", "Pre-Seed"),
         ("Seed", "Seed"),
@@ -54,7 +56,11 @@ class InvestorForm(forms.ModelForm):
             "email",
             "phone",
             "company_name",
+            "website", # Added to match your InvestorApplication model
             "investment_focus",
             "investment_stage",
             "investment_amount",
         ]
+        widgets = {
+            "investment_focus": forms.Textarea(attrs={"rows": 4, "class": "form-control"}),
+        }

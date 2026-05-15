@@ -8,9 +8,8 @@ class Article(models.Model):
     body = models.TextField()
     image = models.ImageField(upload_to='imgProject/')
     created_on = models.DateTimeField(auto_now_add=True)
-    
-    
     likes = models.ManyToManyField(User, related_name='blog_likes', blank=True)
+    favorites = models.ManyToManyField(User, related_name='favorite_articles', blank=True)
 
     def total_likes(self):
         return self.likes.count()

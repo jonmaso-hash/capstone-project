@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="fw-bold text-dark">Venture Bulletin</h1>
+            <p class="text-muted">Explore the latest founder pitches in the Interlink network.</p>
+        </div>
+        
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary dropdown-toggle rounded-pill" type="button" data-bs-toggle="dropdown">
+                Filter by Industry
+            </button>
+            <ul class="dropdown-menu shadow border-0">
+                <li><a class="dropdown-item" href="#">SaaS</a></li>
+                <li><a class="dropdown-item" href="#">FinTech</a></li>
+                <li><a class="dropdown-item" href="#">HealthTech</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#">Clear Filters</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Pitches Grid -->
+    <div class="row g-4">
+        {% for pitch in pitches %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 hover-lift">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <span class="badge bg-primary-soft text-primary rounded-pill px-3">
+                            {{ pitch.industry|default:"General" }}
+                        </span>
+                        <button class="btn btn-link text-muted p-0" title="Bookmark">
+                            <i class="bi bi-bookmark"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- FIXED: Using 'startup_name' instead of 'company_name' -->
+                    <h4 class="fw-bold mb-2">{{ pitch.startup_name }}</h4>
+                    
+                    <!-- FIXED: Using 'description' instead of 'pitch_line' -->
+                    <p class="text-muted small mb-4">
+                        {{ pitch.description|truncatewords:25 }}
+                    </p>
+
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="bg-light rounded-circle p-2 me-3">
+                            <i class="bi bi-person text-secondary"></i>
+                        </div>
+                        <div>
+                            <p class="mb-0 small fw-bold">
+                                {{ pitch.user.get_full_name|default:pitch.user.username }}
+                            </p>
+                            <p class="mb-0 smallest text-uppercase text-muted tracking-widest">Founder</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-transparent border-0 p-4 pt-0">
+                    <a href="{% url 'accounts:profile' pitch.user.username %}" class="btn btn-dark w-100 rounded-pill py-2">
+                        Review Pitch
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <!-- Empty State -->
+        <div class="col-12 text-center py-5">
+            <div class="bg-light d-inline-block rounded-circle p-4 mb-3">
+                <i class="bi bi-clipboard-x display-4 text-muted"></i>
+            </div>
+            <h3 class="fw-bold">No Pitches Yet</h3>
+            <p class="text-muted">There are currently no active applications in the database.</p>
+            <a href="{% url 'accounts:seeking_investment' %}" class="btn btn-primary rounded-pill px-4">Submit a Pitch</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    /* Professional lift effect on cards */
+    .hover-lift {
+        transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+    }
+    .hover-lift:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 1.5rem 3rem rgba(0,0,0,.08) !important;
+    }
+
+    /* Soft Blue Badge Styling */
+    .bg-primary-soft {
+        background-color: rgba(13, 110, 253, 0.08);
+    }
+
+    /* Typography Tweaks */
+    .smallest {
+        font-size: 0.65rem;
+    }
+    .tracking-widest {
+        letter-spacing: 0.12em;
+    }
+</style>
+{% endblock %}
