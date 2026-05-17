@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Header Block -->
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h1 class="display-5 fw-bold text-dark">Your Matchmaker Radar</h1>
+            <p class="text-muted fs-5">Real-time investors who have reviewed and liked <strong>{{ founder_app.company_name }}</strong>.</p>
+        </div>
+        <div class="col-auto">
+            <span class="badge bg-success p-2.5 fs-6">Ref ID: {{ founder_app.ref_id }}</span>
+        </div>
+    </div>
+
+    <hr class="mb-5">
+
+    <!-- Match Grid -->
+    <div class="row">
+        {% if interested_investors %}
+            {% for investor in interested_investors %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 border-0 shadow-sm rounded-3">
+                        <div class="card-body p-4 d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h4 class="card-title fw-bold text-primary mb-0">{{ investor.firm_name }}</h4>
+                                    <small class="text-muted">{{ investor.contact_name }}</small>
+                                </div>
+                                <span class="badge bg-light text-primary border border-primary px-2.5 py-1.5">Match Verified</span>
+                            </div>
+                            
+                            <p class="card-text text-secondary flex-grow-1">
+                                {% if investor.investment_focus %}
+                                    <strong>Focus Area:</strong> {{ investor.investment_focus|truncatechars:100 }}
+                                {% else %}
+                                    <em>No specific focus parameters provided.</em>
+                                {% endif %}
+                            </p>
+                            
+                            <hr class="my-3">
+                            
+                            <!-- Contact details revealed automatically since it's a mutual match -->
+                            <div class="bg-light p-3 rounded-2 text-dark small">
+                                <div class="mb-2"><strong>📧 Email:</strong> <a href="mailto:{{ investor.user.email }}" class="text-decoration-none">{{ investor.user.email }}</a></div>
+                                {% if investor.phone_number %}
+                                    <div><strong>📞 Phone:</strong> {{ investor.phone_number }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <!-- Empty State UI -->
+            <div class="col-12 text-center py-5">
+                <div class="p-5 bg-white rounded-3 shadow-sm border max-width-600 mx-auto">
+                    <div class="fs-1 text-muted mb-3">📡</div>
+                    <h3 class="fw-bold text-secondary">Awaiting Your First Signal</h3>
+                    <p class="text-muted px-4">Your profile is active on the main dashboard. As soon as verified angel investors swipe right or like your startup details, their institutional contacts will reveal themselves instantly right here.</p>
+                    <a href="{% url 'matchmaking:bulletin_board' %}" class="btn btn-outline-primary mt-2">View Bulletin Status</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

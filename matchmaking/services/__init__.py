@@ -1,1 +1,1 @@
-from .ai_engine import generate_vector, calculate_similarity
+from .ai_engine import generate_profile_embedding, calculate_similarity

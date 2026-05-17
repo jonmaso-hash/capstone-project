@@ -23,6 +23,20 @@ class Application(models.Model):
     sector = models.CharField(max_length=255, blank=True, null=True) # Maps to investor.investment_focus / sector lookups
     stage = models.CharField(max_length=50, blank=True, null=True)   # Maps to investor.investment_stage
 
+    # MULTIMODAL DEAL SCREENING DATA
+    pitch_deck = models.FileField(
+        upload_to='pitch_decks/', 
+        null=True, 
+        blank=True,
+        help_text="Founder pitch deck file (PDF) used for multimodal Gemini analysis."
+    )
+    file_search_store_id = models.CharField(
+        max_length=255, 
+        null=True, 
+        blank=True,
+        help_text="The native Gemini managed vector store identifier used for grounding checks."
+    )
+
     # ADVANCED KEYWORD MATCHING
     # This stores explicit comma-separated fallback keywords (e.g., "saas, b2b, ai, fintech")
     # used alongside vector logic to maximize query accuracy across complex mandates.
@@ -133,6 +147,7 @@ class AIMatch(models.Model):
     class Meta:
         ordering = ['-score']
         unique_together = ('investor', 'founder')
+
 
 class MatchFeedback(models.Model):
     VOTE_CHOICES = [

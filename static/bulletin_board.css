@@ -1,0 +1,24 @@
+/* Soft Status Badges */
+.bg-success-soft {
+    background-color: rgba(25, 135, 84, 0.08);
+}
+.bg-secondary-soft {
+    background-color: rgba(108, 117, 125, 0.08);
+}
+
+/* Premium Match Score Numeric Indicator */
+.match-score-badge {
+    width: 46px;
+    height: 46px;
+    border: 3px solid;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+}
+.match-score-badge span {
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}

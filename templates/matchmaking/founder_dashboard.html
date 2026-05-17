@@ -1,16 +1,72 @@
 {% extends "base.html" %}
 
+{% block title %}Founder Dashboard - Interlink Foundry{% endblock title %}
+
 {% block content %}
-<div class="container py-5">
-    <div class="row mb-5">
+<div class="container py-4">
+    
+    <!-- Top Workspace Header Brand Strip -->
+    <div class="row align-items-center mb-5">
         <div class="col-md-8">
-            <h1 class="h2 fw-bold">Investor Matchmaking</h1>
-            <p class="text-secondary">Based on your {{ application.stage }} stage and {{ application.sector }} focus.</p>
+            <h1 class="h2 fw-bold mb-1">Investor Matchmaking</h1>
+            <p class="text-secondary mb-0">
+                Optimizing matches for your <span class="badge bg-light text-dark border">{{ application.stage }}</span> stage and <span class="badge bg-light text-dark border">{{ application.sector }}</span> sector profile.
+            </p>
         </div>
-        <div class="col-md-4 text-md-end">
-            <a href="{% url 'accounts:seeking_investment' %}" class="btn btn-outline-secondary btn-sm">Edit Pitch Details</a>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="{% url 'accounts:seeking_investment' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="bi bi-pencil-square me-1"></i> Edit Pitch Details
+            </a>
         </div>
     </div>
+
+    <!-- Incoming Inbound Connection Handshakes Component Segment -->
+    <div class="mb-5">
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <h3 class="h5 fw-bold mb-0 text-dark">Pending Handshake Handles</h3>
+            <span class="badge bg-danger rounded-pill small">{{ pending_requests|length }} New</span>
+        </div>
+        
+        {% if pending_requests %}
+            <div class="row g-3">
+                {% for request in pending_requests %}
+                    <div class="col-12">
+                        <div class="card bg-light border-0 shadow-sm">
+                            <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                                <div>
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <h5 class="mb-0 fw-bold text-dark">{{ request.investor.company_name|default:"Private Venture Partner" }}</h5>
+                                        <span class="badge bg-warning text-dark small">Incoming Request</span>
+                                    </div>
+                                    <p class="text-muted small mb-0">Requested on: {{ request.created_at|date:"M d, Y"|default:"Recently" }}</p>
+                                </div>
+                                <div>
+                                    <a href="{% url 'pages:contact' %}" class="btn btn-dark btn-sm px-4 rounded-pill">
+                                        Review Allocation Message
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card border border-dashed py-4 text-center bg-white rounded-3">
+                <div class="card-body py-2">
+                    <p class="text-muted small mb-0">
+                        <i class="bi bi-envelope-open me-2 text-secondary"></i>No pending inbound allocator requests. Outbound dynamic matches are down below.
+                    </p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <hr class="my-5 opacity-25">
+
+    <!-- Outbound Dynamic Algorithm Matches Result Grid -->
+    <h3 class="h5 fw-bold mb-4 text-dark d-flex align-items-center gap-2">
+        <i class="bi bi-cpu text-primary"></i> AI Algorithmic Mandate Pipeline
+    </h3>
 
     <div class="row g-4">
         {% for match in matches %}
@@ -18,50 +74,60 @@
             <div class="card h-100 shadow-sm border-0 rounded-3">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div>
-                            <h5 class="card-title fw-bold mb-1">{{ match.investor.company_name|default:"Venture Partner" }}</h5>
+                        <div style="max-width: 70%;">
+                            <h5 class="card-title fw-bold mb-1 text-truncate">{{ match.investor.company_name|default:"Venture Partner" }}</h5>
                             <span class="badge bg-light text-primary border border-primary-subtle small">
                                 {{ match.investor.investment_stage }}
                             </span>
                         </div>
                         <div class="text-end">
                             <div class="h4 mb-0 fw-bold text-primary">{{ match.final_score }}%</div>
-                            <small class="text-muted uppercase" style="font-size: 0.65rem;">Match</small>
+                            <small class="text-muted text-uppercase fw-bold" style="font-size: 0.6rem; letter-spacing: 0.5px;">Match</small>
                         </div>
                     </div>
 
-                    <p class="card-text small text-secondary mb-4">
+                    <p class="card-text small text-secondary mb-4 line-clamp-3" style="min-height: 3.6rem;">
                         {{ match.investor.investment_focus|truncatewords:20 }}
                     </p>
 
+                    <!-- Safe Parameter Loop Strategy bypassing the filter constraint -->
                     <div class="mb-4">
-                        <label class="d-block small text-uppercase text-muted fw-bold mb-2" style="letter-spacing: 1px;">Interested Sectors</label>
+                        <label class="d-block small text-uppercase text-muted fw-bold mb-2" style="letter-spacing: 0.5px;">Target Mandate</label>
                         <div class="d-flex flex-wrap gap-1">
-                            {% for sector in match.investor.interested_sectors.split|slice:":3" %}
-                                <span class="badge bg-light text-dark fw-normal border">{{ sector|replace:",","" }}</span>
-                            {% endfor %}
+                            {% if match.investor.investment_focus %}
+                                <span class="badge bg-light text-dark fw-normal border px-2 py-1 small">
+                                    {{ match.investor.investment_stage }} Focus
+                                </span>
+                            {% else %}
+                                <span class="badge bg-light text-secondary fw-normal border px-2 py-1 small">Generalist Allocation</span>
+                            {% endif %}
                         </div>
                     </div>
 
                     {% if match.rule_match %}
-                        <div class="alert alert-info py-2 px-3 border-0 small d-flex align-items-center">
-                            <i class="bi bi-patch-check-fill me-2"></i> Perfect Mandate Fit
+                        <div class="alert alert-success py-2 px-3 border-0 small d-flex align-items-center mb-0 rounded-3">
+                            <i class="bi bi-patch-check-fill me-2"></i> Perfect Mandate Match
                         </div>
                     {% endif %}
                 </div>
                 <div class="card-footer bg-white border-0 p-4 pt-0">
-                    <button class="btn btn-primary w-100 py-2">Express Interest</button>
+                    <a href="{% url 'pages:contact' %}" class="btn btn-primary w-100 py-2 rounded-pill fw-medium small">
+                        Express Introduction Interest
+                    </a>
                 </div>
             </div>
         </div>
         {% empty %}
         <div class="col-12 text-center py-5">
             <div class="bg-light p-5 rounded-4 border">
-                <h3>Scanning the Foundry...</h3>
-                <p class="text-muted">No high-probability matches found yet. We'll notify you as new investors join the platform.</p>
+                <i class="bi bi-incognito display-4 text-muted mb-3 d-block"></i>
+                <h3 class="fw-bold h5">Scanning the Foundry Engine...</h3>
+                <p class="text-muted small mx-auto mb-0" style="max-width: 460px;">
+                    No high-probability matches found yet. Your application remains live in our matchmaking array, and matches will dynamically append here as allocators review profiles.
+                </p>
             </div>
         </div>
         {% endfor %}
     </div>
 </div>
-{% endblock %}
+{% endblock content %}

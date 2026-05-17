@@ -1,24 +1,31 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Venture Bulletin | Interlink Foundry{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/bulletin_board.css' %}">
+{% endblock css %}
 
 {% block content %}
 <div class="container py-5">
     <!-- Header Section -->
-    <div class="d-flex justify-content-between align-items-center mb-5">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-3">
         <div>
-            <h1 class="fw-bold text-dark">Venture Bulletin</h1>
-            <p class="text-muted">Explore the latest founder pitches in the Interlink network.</p>
+            <h1 class="fw-bold text-dark mb-1">Venture Bulletin</h1>
+            <p class="text-muted mb-0">Explore active founder pitches in the Interlink Foundry database network.</p>
         </div>
         
         <div class="dropdown">
-            <button class="btn btn-outline-secondary dropdown-toggle rounded-pill" type="button" data-bs-toggle="dropdown">
-                Filter by Industry
+            <button class="btn btn-outline-secondary dropdown-toggle rounded-pill px-4" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-funnel me-1"></i> Filter by Industry
             </button>
-            <ul class="dropdown-menu shadow border-0">
-                <li><a class="dropdown-item" href="#">SaaS</a></li>
-                <li><a class="dropdown-item" href="#">FinTech</a></li>
-                <li><a class="dropdown-item" href="#">HealthTech</a></li>
+            <ul class="dropdown-menu shadow border-0 mt-2">
+                <li><a class="dropdown-item" href="?sector=SaaS">SaaS</a></li>
+                <li><a class="dropdown-item" href="?sector=FinTech">FinTech</a></li>
+                <li><a class="dropdown-item" href="?sector=HealthTech">HealthTech</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="#">Clear Filters</a></li>
+                <li><a class="dropdown-item" href="?">Clear Filters</a></li>
             </ul>
         </div>
     </div>
@@ -27,31 +34,46 @@
     <div class="row g-4">
         {% for pitch in pitches %}
         <div class="col-md-6 col-lg-4">
-            <div class="card h-100 border-0 shadow-sm rounded-4 hover-lift">
+            <div class="card h-100 border-0 shadow-sm rounded-4 hover-lift d-flex flex-column justify-content-between">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-start mb-3">
-                        <span class="badge bg-primary-soft text-primary rounded-pill px-3">
-                            {{ pitch.industry|default:"General" }}
-                        </span>
-                        <button class="btn btn-link text-muted p-0" title="Bookmark">
-                            <i class="bi bi-bookmark"></i>
-                        </button>
+                        <!-- Dynamic Match Badges based on backend vector scores -->
+                        {% if user.is_authenticated and user.match_investor_profile and pitch.match_percentage >= 90 %}
+                            <span class="badge bg-success-soft text-success rounded-pill px-3 py-2">
+                                <i class="bi bi-lightning-charge-fill me-1"></i> Strong Match
+                            </span>
+                        {% elif user.is_authenticated and user.match_investor_profile and pitch.match_percentage >= 75 %}
+                            <span class="badge bg-primary-soft text-primary rounded-pill px-3 py-2">
+                                <i class="bi bi-check-circle-fill me-1"></i> Good Match
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary-soft text-secondary rounded-pill px-3 py-2">
+                                {{ pitch.sector|default:"General Tech" }}
+                            </span>
+                        {% endif %}
+                        
+                        <!-- Premium Visual Match Score Ring Component -->
+                        <div class="d-flex align-items-center">
+                            <div class="match-score-badge {% if pitch.match_percentage >= 90 and user.match_investor_profile %}border-success text-success{% else %}border-primary text-primary{% endif %}" title="AI Matching Match Score Matrix Metric">
+                                <span class="fw-extrabold fs-6">{{ pitch.match_percentage }}%</span>
+                            </div>
+                        </div>
                     </div>
                     
-                    <!-- FIXED: Using 'startup_name' instead of 'company_name' -->
-                    <h4 class="fw-bold mb-2">{{ pitch.startup_name }}</h4>
+                    <!-- Structural Content Mapping -->
+                    <h4 class="fw-bold text-dark mb-1">{{ pitch.company_name }}</h4>
+                    <p class="smallest text-uppercase tracking-widest text-muted mb-3">{{ pitch.sector|default:"General Tech" }}</p>
                     
-                    <!-- FIXED: Using 'description' instead of 'pitch_line' -->
-                    <p class="text-muted small mb-4">
-                        {{ pitch.description|truncatewords:25 }}
+                    <p class="text-secondary small mb-4" style="line-height: 1.6;">
+                        {{ pitch.description|truncatewords:25|default:"No pitch text description has been finalized yet." }}
                     </p>
 
                     <div class="d-flex align-items-center mb-2">
-                        <div class="bg-light rounded-circle p-2 me-3">
+                        <div class="bg-light rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                             <i class="bi bi-person text-secondary"></i>
                         </div>
                         <div>
-                            <p class="mb-0 small fw-bold">
+                            <p class="mb-0 small fw-bold text-dark">
                                 {{ pitch.user.get_full_name|default:pitch.user.username }}
                             </p>
                             <p class="mb-0 smallest text-uppercase text-muted tracking-widest">Founder</p>
@@ -67,14 +89,18 @@
             </div>
         </div>
         {% empty %}
-        <!-- Empty State -->
+        <!-- Empty Grid State -->
         <div class="col-12 text-center py-5">
-            <div class="bg-light d-inline-block rounded-circle p-4 mb-3">
-                <i class="bi bi-clipboard-x display-4 text-muted"></i>
+            <div class="card p-5 bg-light border-0 rounded-4 max-width-600 mx-auto">
+                <div class="d-inline-block rounded-circle bg-white shadow-sm p-4 mb-3">
+                    <i class="bi bi-clipboard-x display-4 text-muted"></i>
+                </div>
+                <h3 class="fw-bold text-dark">No Pitches Yet</h3>
+                <p class="text-muted mb-4">There are currently no active applications matching your database filters.</p>
+                <a href="{% url 'accounts:seeking_investment' %}" class="btn btn-primary rounded-pill px-4 py-2">
+                    Submit a Pitch
+                </a>
             </div>
-            <h3 class="fw-bold">No Pitches Yet</h3>
-            <p class="text-muted">There are currently no active applications in the database.</p>
-            <a href="{% url 'accounts:seeking_investment' %}" class="btn btn-primary rounded-pill px-4">Submit a Pitch</a>
         </div>
         {% endfor %}
     </div>
@@ -83,24 +109,51 @@
 <style>
     /* Professional lift effect on cards */
     .hover-lift {
-        transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+        transition: transform 0.3s cubic-bezier(.25,.8,.25,1), box-shadow 0.3s ease;
+        background-color: #ffffff;
     }
     .hover-lift:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 1.5rem 3rem rgba(0,0,0,.08) !important;
+        transform: translateY(-6px);
+        box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,.06) !important;
     }
 
-    /* Soft Blue Badge Styling */
+    /* Soft Context Badge Stylings */
     .bg-primary-soft {
-        background-color: rgba(13, 110, 253, 0.08);
+        background-color: rgba(13, 110, 253, 0.06);
+    }
+    .bg-success-soft {
+        background-color: rgba(25, 135, 84, 0.08);
+    }
+    .bg-secondary-soft {
+        background-color: rgba(108, 117, 125, 0.08);
+    }
+
+    /* Premium Match Score Numeric Circular Indicator */
+    .match-score-badge {
+        width: 46px;
+        height: 46px;
+        border: 3px solid;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #ffffff;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+    }
+    .match-score-badge span {
+        font-weight: 800;
+        letter-spacing: -0.02em;
     }
 
     /* Typography Tweaks */
     .smallest {
-        font-size: 0.65rem;
+        font-size: 0.62rem;
     }
     .tracking-widest {
-        letter-spacing: 0.12em;
+        letter-spacing: 0.1em;
+    }
+    .max-width-600 {
+        max-width: 600px;
     }
 </style>
 {% endblock %}
