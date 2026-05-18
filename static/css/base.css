@@ -24,3 +24,12 @@ body {
         border-color: #0d6efd !important;
         transition: all 0.2s ease;
     }
+
+/* Triggers automatically when a user navigates to text via Zelda search */
+::target-text {
+    background-color: rgba(234, 179, 8, 0.4); /* Elegant golden-yellow highlight */
+    color: #111827; /* Dark text for crisp readability */
+    font-weight: bold;
+    border-radius: 2px;
+    padding: 0 2px;
+}

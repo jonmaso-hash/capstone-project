@@ -1,1 +1,1 @@
-from .ai_engine import generate_profile_embedding, calculate_similarity
+from matchmaking.services.ai_engine import generate_profile_embedding, calculate_similarity

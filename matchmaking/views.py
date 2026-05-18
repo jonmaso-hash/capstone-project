@@ -1,6 +1,8 @@
 import math
+import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.db.models import Q
@@ -16,6 +18,7 @@ from .models import Application, InvestorApplication, Connection, MatchFeedback
 from matchmaking.services.ai_engine import generate_profile_embedding, calculate_similarity
 from .logic import calculate_rule_based_score, get_blended_match
 
+logger = logging.getLogger(__name__)
 
 # ==========================================
 # CUSTOM SECURITY DECORATORS
@@ -81,14 +84,15 @@ def investor_dashboard(request):
         messages.info(request, "Please complete your investor profile to view matches.")
         return redirect('accounts:investor_form')
 
-    # Lazy-generation framework utilizing the unified Gemini SDK
+    # Lazy-generation framework utilizing the unified vector pipeline
     if not investor_profile.focus_vector and investor_profile.investment_focus:
         try:
             vector_array = generate_profile_embedding(investor_profile.investment_focus)
             if vector_array:
                 investor_profile.focus_vector = vector_array
                 investor_profile.save()
-        except Exception:
+        except Exception as e:
+            logger.error(f"Failed to generate investor focus vector: {str(e)}")
             investor_profile.focus_vector = None
 
     match_results = []
@@ -113,8 +117,8 @@ def investor_dashboard(request):
                 if vector_array:
                     founder.description_vector = vector_array
                     founder.save()
-            except Exception:
-                pass  # Fallback to pure rule-based calculation instead of dropping data
+            except Exception as e:
+                logger.warning(f"Failed lazy-generation embedding for founder application {founder.id}: {str(e)}")
 
         if investor_profile.focus_vector and founder.description_vector:
             try:
@@ -158,15 +162,15 @@ def founder_dashboard(request):
         messages.info(request, "Complete your founder profile to see investor matches.")
         return redirect('accounts:seeking_investment')
 
-    # Lazy-generation engine using unified Gemini vectorization pipeline
+    # Lazy-generation engine using unified vectorization pipeline
     if not application.description_vector and application.description:
         try:
             vector_array = generate_profile_embedding(application.description)
             if vector_array:
                 application.description_vector = vector_array
                 application.save()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed lazy-generation embedding for founder application {application.id}: {str(e)}")
 
     # Extract pending inbound handshake records optimized via select_related
     pending_requests = Connection.objects.filter(
@@ -234,9 +238,15 @@ def founder_bulletin_board(request):
     """
     Queries verified startup Application profiles to display on the Interlink Foundry bulletin board.
     Calculates dynamic AI match scores and explicit breakdown data blocks if an authenticated investor is browsing.
+    Supports GET request parameters for industry filtering tags.
     """
     pitches_queryset = Application.objects.all().select_related('user')
     
+    # Process sector query string parameters safely
+    selected_sector = request.GET.get('sector', '').strip()
+    if selected_sector:
+        pitches_queryset = pitches_queryset.filter(sector__iexact=selected_sector)
+
     investor_profile = None
     if request.user.is_authenticated:
         investor_profile = getattr(request.user, 'match_investor_profile', None)
@@ -244,14 +254,16 @@ def founder_bulletin_board(request):
     pitches = []
     for pitch in pitches_queryset:
         ai_insights_data = None
+        
         if investor_profile and investor_profile.focus_vector and pitch.description_vector:
             try:
                 raw_similarity = calculate_similarity(investor_profile.focus_vector, pitch.description_vector)
                 ai_score = max(0.0, min(100.0, raw_similarity * 100))
                 match_percentage = int(round(ai_score))
                 
-                rule_score_fallback = 70.0
-                ai_insights_data = _generate_explanatory_insights(ai_score, rule_score_fallback, pitch, investor_profile)
+                # Dynamic validation via rule engine instead of a static score fallback
+                rule_score = calculate_rule_based_score(application=pitch, investor=investor_profile)
+                ai_insights_data = _generate_explanatory_insights(ai_score, rule_score, pitch, investor_profile)
             except Exception:
                 match_percentage = 75
         else:
@@ -266,6 +278,7 @@ def founder_bulletin_board(request):
 
     return render(request, 'matchmaking/bulletin_board.html', {
         'pitches': pitches,
+        'selected_sector': selected_sector,
     })
 
 
@@ -343,6 +356,7 @@ def record_vote(request):
     messages.success(request, "Feedback recorded. We're tuning your algorithm!")
     return redirect(request.META.get('HTTP_REFERER', 'matchmaking:investor_dashboard'))
 
+
 @login_required
 def initiate_direct_chat(request, target_user_id):
     """
@@ -366,8 +380,7 @@ def initiate_direct_chat(request, target_user_id):
         {'id': target_id_str, 'name': target_user.username}
     ])
 
-    # Generate a unique, deterministic ID for this pair (e.g., "chat_member_2_and_5")
-    # Sorting ensures that no matter who clicks "Message", they wind up in the exact same room
+    # Generate a unique, deterministic ID for this pair
     sorted_ids = sorted([int(current_user_id), int(target_id_str)])
     channel_id = f"chat_{sorted_ids[0]}_and_{sorted_ids[1]}"
 
@@ -378,11 +391,12 @@ def initiate_direct_chat(request, target_user_id):
     channel.create(
         members=[current_user_id, target_id_str],
         data={
-            "name": f"{target_user.username}", # Sidebar shows the name of the person they are talking to
+            "name": f"{target_user.username}",
         }
     )
 
     return redirect('matchmaking:diligence_chat')
+
 
 @login_required
 def deal_room_workspace(request):
@@ -391,3 +405,7 @@ def deal_room_workspace(request):
     The real-time token fetching is handled downstream by accounts:stream_token.
     """
     return render(request, 'matchmaking/chat.html')
+
+def global_search(request):
+    # Your search view code here...
+    pass

@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}Zelda AI Search Workspace - Interlink Foundry{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- LEFT PANEL: Query Input & Engine Settings -->
+        <div class="col-lg-5 mb-4">
+            <div class="card shadow-sm border-0 h-100 bg-white p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-primary-subtle text-primary rounded p-2 me-3">
+                        <i class="bi bi-cpu-fill fs-3"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0">Zelda AI Workspace</h4>
+                        <small class="text-muted text-uppercase tracking-wider fw-semibold" style="font-size: 0.75rem;">Ecosystem Matchmaking Engine</small>
+                    </div>
+                </div>
+                
+                <p class="text-muted small mb-4">
+                    Query raw pitch decks, investor mandates, founder profiles, and active bulletin listings using plain conversational text.
+                </p>
+
+                <!-- Search Input Group -->
+                <div class="mb-4">
+                    <label for="aiSearchQuery" class="form-label fw-bold text-secondary small">What are you looking for?</label>
+                    <textarea id="aiSearchQuery" class="form-control border-2 shadow-sm" rows="4" placeholder="e.g., 'Find B2B SaaS pre-seed founders based in California working on AI infrastructure...'"></textarea>
+                </div>
+
+                <!-- Parameters Toggles -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-secondary small d-block mb-2">Search Boundaries</label>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="checkFounders" checked>
+                        <label class="form-check-label small" for="checkFounders">Founders</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="checkInvestors" checked>
+                        <label class="form-check-label small" for="checkInvestors">Investors</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="checkBulletins" checked>
+                        <label class="form-check-label small" for="checkBulletins">Bulletins</label>
+                    </div>
+                </div>
+
+                <button id="submitSearchBtn" class="btn btn-primary w-100 py-2 fw-bold shadow-sm">
+                    <i class="bi bi-lightning-charge-fill me-1"></i> Execute AI Search
+                </button>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: Dynamic Execution Results Display Canvas -->
+        <div class="col-lg-7 mb-4">
+            <div class="card shadow-sm border-0 h-100 bg-light-subtle d-flex flex-column" style="min-height: 500px;">
+                <div class="card-header bg-white border-bottom-0 py-3 d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-dark"><i class="bi bi-terminal me-2 text-secondary"></i>Engine Output</span>
+                    <span id="statusBadge" class="badge bg-secondary-subtle text-secondary py-1 px-2">Idle</span>
+                </div>
+                
+                <!-- Dynamic Results Body Content -->
+                <div id="resultsCanvas" class="card-body d-flex flex-column justify-content-center align-items-center p-4 overflow-auto bg-white m-3 rounded border border-light shadow-inner">
+                    <div id="placeholderState" class="text-center py-5 text-muted">
+                        <i class="bi bi-binoculars display-4 d-block mb-3 opacity-25 text-primary"></i>
+                        <h5 class="fw-bold text-dark mb-1">No Query Compiled</h5>
+                        <p class="small mb-0 max-w-sm">Type your matchmaking parameters on the left panel to crawl across the platform indexes.</p>
+                    </div>
+
+                    <!-- Loader (Hidden initially) -->
+                    <div id="engineLoader" class="d-none text-center py-5">
+                        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+                        <p class="text-secondary fw-semibold mb-0">Zelda Engine parsing structural registries...</p>
+                    </div>
+
+                    <!-- Output Anchor (Populated dynamically) -->
+                    <div id="outputContent" class="w-100 d-none"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================================================================= -->
+<!-- ASYNC SEARCH ENGINE CONTROLLER SCRIPT -->
+<!-- ================================================================= -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchBtn = document.getElementById('submitSearchBtn');
+    const queryInput = document.getElementById('aiSearchQuery');
+    const statusBadge = document.getElementById('statusBadge');
+    
+    const placeholderState = document.getElementById('placeholderState');
+    const engineLoader = document.getElementById('engineLoader');
+    const outputContent = document.getElementById('outputContent');
+    const resultsCanvas = document.getElementById('resultsCanvas');
+
+    searchBtn.addEventListener('click', function() {
+        const queryValue = queryInput.value.trim();
+        if (!queryValue) {
+            alert('Please input search criteria or a conversational command first.');
+            return;
+        }
+
+        // 1. Shift UI state into "Loading" mode
+        placeholderState.classList.add('d-none');
+        outputContent.classList.add('d-none');
+        engineLoader.classList.remove('d-none');
+        resultsCanvas.classList.remove('justify-content-center', 'align-items-center');
+        
+        statusBadge.textContent = 'Processing...';
+        statusBadge.className = 'badge bg-warning text-dark py-1 px-2';
+        searchBtn.disabled = true;
+
+        // 2. Gather parameters and build URL query string (GET format)
+        const params = new URLSearchParams({
+            q: queryValue,
+            founders: document.getElementById('checkFounders').checked,
+            investors: document.getElementById('checkInvestors').checked,
+            bulletins: document.getElementById('checkBulletins').checked
+        });
+
+        // 3. Request across the unified search pipeline
+        fetch(`/accounts/search-api/?${params.toString()}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Network error or server misconfiguration.');
+            return response.json();
+        })
+        .then(data => {
+            // 4. Clear loader and expose output canvas
+            engineLoader.classList.add('d-none');
+            outputContent.classList.remove('d-none');
+            
+            statusBadge.textContent = 'Success';
+            statusBadge.className = 'badge bg-success text-white py-1 px-2';
+            searchBtn.disabled = false;
+
+            // 5. Render dynamic payload responses gracefully
+            if (data.results && data.results.length > 0) {
+                let htmlPayload = '<div class="list-group list-group-flush w-100">';
+                data.results.forEach(item => {
+                    htmlPayload += `
+                        <div class="list-group-item px-0 py-3 border-bottom">
+                            <span class="badge bg-primary-subtle text-primary mb-2 text-uppercase font-monospace text-xs">${item.type || 'Match'}</span>
+                            <h6 class="fw-bold text-dark mb-1">${item.title}</h6>
+                            <p class="text-muted small mb-0">${item.description || ''}</p>
+                        </div>
+                    `;
+                });
+                htmlPayload += '</div>';
+                outputContent.innerHTML = htmlPayload;
+            } else {
+                outputContent.innerHTML = `
+                    <div class="alert alert-light border text-center py-4" role="alert">
+                        <i class="bi bi-exclamation-circle text-warning fs-3 d-block mb-2"></i>
+                        <h6 class="fw-bold text-dark">No direct matches indexed</h6>
+                        <p class="small text-muted mb-0">Try broader phrases, alternate sectors, or adjusting boundary toggles.</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Zelda Engine Exception:', error);
+            engineLoader.classList.add('d-none');
+            outputContent.classList.remove('d-none');
+            
+            statusBadge.textContent = 'Error';
+            statusBadge.className = 'badge bg-danger text-white py-1 px-2';
+            searchBtn.disabled = false;
+            
+            outputContent.innerHTML = `
+                <div class="alert alert-danger text-center py-4" role="alert">
+                    <i class="bi bi-x-octagon-fill fs-3 d-block mb-2"></i>
+                    <h6 class="fw-bold">Search Execution Failed</h6>
+                    <p class="small mb-0">Confirm your API route is linked and handling JSON requests safely.</p>
+                </div>
+            `;
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "jobs.apps.JobsConfig",
 
     # Third-Party Infrastructure Layout Extensions
     "crispy_forms",
@@ -50,6 +51,7 @@ INSTALLED_APPS = [
     "pages",
     "accounts",
     "matchmaking",
+
 ]
 
 MIDDLEWARE = [

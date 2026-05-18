@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Ecosystem Talent Board</h1>
+            <p class="text-muted">Discover roles at funded, vetted startups inside Interlink Foundry.</p>
+        </div>
+        {% if user.is_authenticated %}
+            <a href="{% url 'jobs:create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i> Post a Job 
+            </a>
+        {% endif %}
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            {% for job in jobs %}
+                <!-- Highlight background conditionally if the listing is paid/featured -->
+                <div class="card mb-3 {% if job.is_featured %}border-primary bg-light-subtle shadow-sm{% else %}border-light-subtle{% endif %}">
+                    <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="fw-bold text-dark">{{ job.company_name }}</span>
+                                {% if job.is_featured %}
+                                    <span class="badge bg-primary text-uppercase" style="font-size: 0.65rem;">Featured</span>
+                                {% endif %}
+                                <span class="badge bg-secondary-subtle text-secondary small">{{ job.get_job_type_display }}</span>
+                            </div>
+                            <h5 class="card-title mb-1">
+                                <a href="{% url 'jobs:detail' job.pk %}" class="text-decoration-none text-dark fw-semibold hover-primary">
+                                    {{ job.title }}
+                                </a>
+                            </h5>
+                            <div class="text-muted small d-flex flex-wrap gap-3 mt-2">
+                                <span><i class="bi bi-geo-alt me-1"></i>{{ job.location }}</span>
+                                {% if job.salary_range %}
+                                    <span><i class="bi bi-cash me-1"></i>{{ job.salary_range }}</span>
+                                {% endif %}
+                                {% if job.equity_range %}
+                                    <span><i class="bi bi-pie-chart me-1"></i>{{ job.equity_range }} equity</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div>
+                            <a href="{% url 'jobs:detail' job.pk %}" class="btn btn-outline-dark btn-sm px-4">
+                                View Role
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="text-center py-5 border rounded bg-white">
+                    <i class="bi bi-briefcase text-muted" style="font-size: 2.5rem;"></i>
+                    <p class="text-muted mt-3">No jobs posted yet. Check back soon!</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -22,9 +22,21 @@ urlpatterns = [
     # ==========================================
     # WORKSPACE MATCHMAKING ONBOARDING FLOWS
     # ==========================================
-    # Maintained named path mapping to safely prevent NoReverseMatch template compile errors
-    path('apply/', views.seeking_investment, name='seeking_investment'),
+    path('seeking-investment/', views.seeking_investment, name='seeking_investment'),
     path('investor-form/', views.investor_form, name='investor_form'),
 
+    # ==========================================
+    # DATA & COMMUNICATIONS ENDPOINTS (APIs)
+    # ==========================================
     path('api/stream-token/', views.get_stream_token, name='stream_token'),
+    
+    # ADDED: This registers the endpoint your live-typing global search is hitting
+    path('search-api/', views.search_api, name='search-api'), 
+
+    # ==========================================
+    # AI ASSISTANCE SEARCH ENGINE CANVAS
+    # ==========================================
+    # Fixed naming collision: Explicit route paths for the UI workspaces
+    path('ai_search/', views.ai_search_page, name='ai_search_page'),
+    path('assistant/', views.ai_search_page, name='ai_assistant_page'),
 ]

@@ -1,0 +1,60 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <h2>Search Results for "{{ query }}"</h2>
+    <p class="text-muted">{{ total_results }} matches found across the network.</p>
+
+    <!-- Match Radar / Pitches Section -->
+    {% if pitch_results %}
+        <h3 class="mt-4 border-bottom pb-2">Match Radar / Pitches</h3>
+        <div class="row g-3">
+            {% for pitch in pitch_results %}
+                <div class="col-md-4">
+                    <div class="card p-3">
+                        <h5>{{ pitch.company_name }}</h5>
+                        <p class="small text-muted">{{ pitch.sector }} • {{ pitch.location }}</p>
+                        <a href="{% url 'matchmaking:bulletin_board' %}" class="btn btn-sm btn-outline-dark">View Pitch</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Blog Section -->
+    {% if blog_results %}
+        <h3 class="mt-5 border-bottom pb-2">Venture Insights Blog</h3>
+        <div class="vstack gap-3">
+            {% for article in blog_results %}
+                <div class="card p-3">
+                    <h5><a href="{% url 'blog:article_detail' article.pk %}">{{ article.title }}</a></h5>
+                    <p class="mb-0 text-secondary small">{{ article.content|truncatewords:20 }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Jobs Section -->
+    {% if job_results %}
+        <h3 class="mt-5 border-bottom pb-2">Active Job Postings</h3>
+        <div class="vstack gap-2">
+            {% for job in job_results %}
+                <div class="border rounded p-3 bg-light d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1 fw-bold">{{ job.title }}</h6>
+                        <small class="text-muted">{{ job.company }}</small>
+                    </div>
+                    <a href="#" class="btn btn-sm btn-dark">Apply</a>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if total_results == 0 %}
+        <div class="text-center py-5">
+            <p class="text-muted">No records match your query in our database layers.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
