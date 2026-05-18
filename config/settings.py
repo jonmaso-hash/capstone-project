@@ -1,27 +1,39 @@
-import os
 from pathlib import Path
+import os
 import environ
 
+# --- BASE DIRECTORY ROUTING ---
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Initialize environment variables
+# --- ENVIRONMENT VARIABLES ENGINE SETUP ---
+# Initialize django-environ structure with type defaults
 env = environ.Env(
     DEBUG=(bool, True),
     ALLOWED_HOSTS=(list, []),
     SITE_URL=(str, 'http://127.0.0.1:8000'),
     ADMIN_EMAIL=(str, 'jonmaso@gmail.com'),
+    GEMINI_API_KEY=(str, ''),
+    STREAM_API_KEY=(str, ''),
+    STREAM_API_SECRET=(str, ''),
+    EMAIL_HOST_USER=(str, 'jonmaso@gmail.com'),
+    EMAIL_HOST_PASSWORD=(str, ''),
 )
 
-# Load environment variables from .env file
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+# Read environment parameters straight from your secure root .env file
+# FIXED: Consolidated redundant dual-load declarations down to a single clean routing path
+environ.Env.read_env(BASE_DIR / '.env')
 
-# --- SECURITY WARNINGS ---
+
+# --- CORE SECURITY CONFIGURATION ---
 SECRET_KEY = env('SECRET_KEY', default='django-insecure-demo-key')
 DEBUG = env('DEBUG')
 ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 
+
 # --- APPLICATION DEFINITION ---
 INSTALLED_APPS = [
+    # Core Django Framework Engines
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -29,8 +41,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
+    # Third-Party Infrastructure Layout Extensions
     "crispy_forms",
     "crispy_bootstrap5",
+
+    # Internal Interlink Foundry Apps
     "blog",
     "pages",
     "accounts",
@@ -60,6 +75,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                # Shared context tracking metrics for navigation layout layers
                 'matchmaking.context_processors.investor_status',
             ],
         },
@@ -68,7 +84,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-# --- DATABASE CONFIGURATION ---
+
+# --- DATABASE LAYER ---
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -78,33 +95,48 @@ DATABASES = {
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# --- STATIC & MEDIA STORAGE ---
+
+# --- STATIC & MEDIA ASSET STORAGE PIPELINES ---
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
+# Active media routes to manage PDF Pitch Deck layout allocations
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# --- AUTHENTICATION ROUTING ---
-LOGIN_REDIRECT_URL = "home"
-LOGOUT_REDIRECT_URL = "home"
-LOGIN_URL = "login"
 
-# --- THIRD-PARTY PACK CRISPY CONFIG ---
+# --- CORE PLATFORM SECURITY & AUTH ROUTING ---
+# Redirect paths configured to cleanly navigate users straight to their interactive workspace hubs
+LOGIN_REDIRECT_URL = "accounts:profile_self"
+LOGOUT_REDIRECT_URL = "accounts:login"
+LOGIN_URL = "accounts:login"
+
+
+# --- THIRD-PARTY INTERFACE DESIGN CONFIGURATION ---
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
-# --- INTERLINK FOUNDRY APPLICATION VARIABLES ---
+
+# --- INTERLINK FOUNDRY ENVIRONMENT GLOBALS ---
 SITE_URL = env('SITE_URL')
 ADMIN_EMAIL = env('ADMIN_EMAIL')
 
-# --- EMAIL TRANSMISSION SETTINGS ---
+
+# --- THIRD-PARTY API INTEGRATIONS & EMBEDDING ENGINES ---
+# Gemini AI Platform Engine (For asynchronous multimodal processing)
+GEMINI_API_KEY = env('GEMINI_API_KEY')
+
+# Stream Chat Engine (For real-time secure diligence matchmaking communication)
+STREAM_API_KEY = env('STREAM_API_KEY')
+STREAM_API_SECRET = env('STREAM_API_SECRET')
+
+
+# --- EMAIL TRANSMISSION LAYERS (SMTP GMAIL PIPELINES) ---
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
-EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='jonmaso@gmail.com')
-# Your raw app password should be placed in your local .env file under this exact key name:
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='') 
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD') 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

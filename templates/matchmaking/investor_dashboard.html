@@ -1,5 +1,43 @@
 {% extends "base.html" %}
 
+{% block title %}Investor Workspace | Interlink Foundry{% endblock %}
+
+{% block css %}
+<style>
+    /* Professional lift effect on deal cards */
+    .hover-lift {
+        transition: transform 0.3s cubic-bezier(.25,.8,.25,1), box-shadow 0.3s ease;
+    }
+    .hover-lift:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, .1) !important;
+    }
+    
+    /* Multiline summary layout boundary control */
+    .line-clamp {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        -webkit-overflow: hidden;
+        overflow: hidden;
+        min-height: 4.5rem;
+    }
+    
+    .border-dashed {
+        border-style: dashed !important;
+        border-width: 2px !important;
+    }
+    
+    .smallest {
+        font-size: 0.65rem;
+    }
+    
+    .tracking-wider {
+        letter-spacing: 0.05em;
+    }
+</style>
+{% endblock css %}
+
 {% block content %}
 <div class="container py-5">
     <!-- Header & Dashboard Stats -->
@@ -7,16 +45,18 @@
         <div class="col-md-7">
             <h2 class="fw-bold mb-1">Interlink Foundry Matchmaker</h2>
             <p class="text-secondary mb-0">
-                Personalized deal flow based on your <strong>{{ investor.investment_stage }}</strong> mandate.
+                Personalized deal flow based on your <strong>{{ investor.investment_stage|default:"Active" }}</strong> mandate.
             </p>
         </div>
         <div class="col-md-5 text-md-end mt-3 mt-md-0">
+            {% if investor.investment_focus %}
             <div class="d-inline-flex align-items-center gap-2 bg-white border rounded-pill px-3 py-2 shadow-sm">
-                <span class="small fw-bold text-uppercase text-muted" style="letter-spacing: 0.5px;">Sectors:</span>
-                <span class="badge rounded-pill bg-warning text-dark px-3">
+                <span class="small fw-bold text-uppercase text-muted tracking-wider" style="font-size: 0.7rem;">Sectors:</span>
+                <span class="badge rounded-pill bg-primary-subtle text-primary px-3 py-2 fw-semibold">
                     {{ investor.investment_focus|truncatechars:30 }}
                 </span>
             </div>
+            {% endif %}
         </div>
     </div>
 
@@ -35,126 +75,249 @@
         <div class="row g-4">
             {% for match in matches %}
                 <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden hover-lift">
-                        <!-- Score Header -->
-                        <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
-                            <span class="small text-uppercase fw-bold text-muted">Blended Match</span>
-                            <span class="h4 mb-0 fw-bold text-primary">{{ match.final_score }}%</span>
-                        </div>
-
-                        <div class="card-body p-4">
-                            <!-- Company Info -->
-                            <h5 class="card-title fw-bold text-dark mb-1">{{ match.founder.company_name }}</h5>
-                            <h6 class="card-subtitle mb-3 text-primary small text-uppercase fw-bold">
-                                {{ match.founder.industry }} • {{ match.founder.investment_stage }}
-                            </h6>
-                            
-                            <p class="card-text text-secondary small mb-4 line-clamp">
-                                {{ match.founder.pitch_summary }}
-                            </p>
-                            
-                            <!-- Score Breakdown -->
-                            <div class="bg-light rounded-3 p-3 mb-4 d-flex justify-content-around text-center border">
-                                <div class="w-100">
-                                    <small class="d-block text-muted text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Rules</small>
-                                    <span class="badge bg-white text-dark border w-75">{{ match.rule_score }}%</span>
-                                </div>
-                                <div class="vr mx-2 opacity-25"></div>
-                                <div class="w-100">
-                                    <small class="d-block text-muted text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">AI Similarity</small>
-                                    <span class="badge bg-white text-dark border w-75">{{ match.ai_score }}%</span>
-                                </div>
+                    <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden hover-lift d-flex flex-column justify-content-between">
+                        <div>
+                            <!-- Score Header -->
+                            <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+                                <span class="small text-uppercase fw-bold text-muted tracking-wider" style="font-size: 0.7rem;">Blended Index Match</span>
+                                <span class="h4 mb-0 fw-bold text-primary">{{ match.final_score }}%</span>
                             </div>
 
-                            <!-- Feedback/Voting Buttons -->
-                            <div class="d-flex gap-2 mb-2">
-                                <form action="{% url 'matchmaking:record_vote' %}" method="POST" class="flex-grow-1">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="application_id" value="{{ match.founder.id }}">
-                                    <input type="hidden" name="vote" value="up">
-                                    <button type="submit" class="btn btn-outline-success btn-sm w-100 py-2 rounded-3">
-                                        <i class="bi bi-hand-thumbs-up"></i>
-                                    </button>
-                                </form>
-                                <form action="{% url 'matchmaking:record_vote' %}" method="POST" class="flex-grow-1">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="application_id" value="{{ match.founder.id }}">
-                                    <input type="hidden" name="vote" value="down">
-                                    <button type="submit" class="btn btn-outline-danger btn-sm w-100 py-2 rounded-3">
-                                        <i class="bi bi-hand-thumbs-down"></i>
-                                    </button>
-                                </form>
+                            <div class="card-body p-4">
+                                <!-- Company Info -->
+                                <h5 class="card-title fw-bold text-dark mb-1">
+                                    {{ match.application.company_name|default:match.founder.company_name }}
+                                </h5>
+                                <h6 class="card-subtitle mb-2 text-secondary small text-uppercase fw-bold tracking-wider" style="font-size: 0.75rem;">
+                                    {{ match.application.sector|default:match.founder.sector|default:"General Tech" }} • {{ match.application.stage|default:match.founder.stage }}
+                                </h6>
+                                
+                                <!-- Injected Location Field -->
+                                <p class="text-muted small mb-3">
+                                    <i class="bi bi-geo-alt-fill text-danger me-1"></i> 
+                                    {{ match.application.location|default:match.founder.location|default:"Global / Remote" }}
+                                </p>
+                                
+                                <p class="card-text text-secondary small mb-4 line-clamp" style="line-height: 1.5;">
+                                    {{ match.application.description|default:match.founder.description|default:"No description has been finalized yet." }}
+                                </p>
+                                
+                                <!-- Core Numerical Score Breakdown Elements -->
+                                {% if match.rule_score or match.ai_score %}
+                                <div class="bg-light rounded-3 p-3 mb-3 d-flex justify-content-around text-center border border-light-subtle">
+                                    <div class="w-100">
+                                        <small class="d-block text-muted text-uppercase fw-bold mb-1 smallest tracking-wider">Rules</small>
+                                        <span class="badge bg-white text-dark border px-2 py-2 w-75 fs-7 fw-medium">{{ match.rule_score|default:"--" }}%</span>
+                                    </div>
+                                    <div class="vr mx-2 opacity-25"></div>
+                                    <div class="w-100">
+                                        <small class="d-block text-muted text-uppercase fw-bold mb-1 smallest tracking-wider">AI Similarity</small>
+                                        <span class="badge bg-white text-dark border px-2 py-2 w-75 fs-7 fw-medium">{{ match.ai_score|default:"--" }}%</span>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Injected Raising & Target Financial Metrics Layout Frame -->
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <div class="bg-light p-2 rounded-3 text-center border border-light-subtle">
+                                            <small class="text-muted d-block text-uppercase fw-bold smallest tracking-wider mb-1">Target Raise</small>
+                                            <span class="fw-bold text-success small">
+                                                {% if "$" not in match.application.raising_amount and "$" not in match.founder.raising_amount %}${% endif %}{{ match.application.raising_amount|default:match.founder.raising_amount|default:"--" }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="bg-light p-2 rounded-3 text-center border border-light-subtle">
+                                            <small class="text-muted d-block text-uppercase fw-bold smallest tracking-wider mb-1">Revenue</small>
+                                            <span class="fw-bold text-dark small">
+                                                {% if "$" not in match.application.current_revenue and "$" not in match.founder.current_revenue %}${% endif %}{{ match.application.current_revenue|default:match.founder.current_revenue|default:"--" }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Operational Metadata Meta-Tags Row -->
+                                <div class="mb-4">
+                                    <div class="d-flex flex-wrap gap-1">
+                                        {% if match.application.years_in_business or match.founder.years_in_business %}
+                                        <span class="badge bg-light text-secondary border fw-normal smallest">
+                                            🕒 {{ match.application.years_in_business|default:match.founder.years_in_business }} Years Biz
+                                        </span>
+                                        {% endif %}
+                                        {% if match.application.company_size or match.founder.company_size %}
+                                        <span class="badge bg-light text-secondary border fw-normal smallest">
+                                            👥 {{ match.application.company_size|default:match.founder.company_size }} Headcount
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Injected Explanatory AI Insights Sub-Panel Container -->
+                                {% if match.ai_insights or match.pillars %}
+                                <div class="p-3 bg-light rounded-3 mb-4 border border-light-subtle">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="bi bi-cpu-fill text-primary me-2"></i>
+                                        <span class="smallest text-uppercase fw-bold text-dark tracking-wider">Match Pillars Rationale</span>
+                                    </div>
+                                    <div class="vstack gap-2">
+                                        {% if match.ai_insights.pillars %}
+                                            {% for pillar in match.ai_insights.pillars %}
+                                            <div class="d-flex justify-content-between align-items-center bg-white px-2 py-2 rounded border border-light-subtle">
+                                                <span class="text-secondary fw-medium" style="font-size: 0.75rem;">{{ pillar.title }}</span>
+                                                <span class="badge rounded-pill smallest {% if pillar.score == 'Excellent' or pillar.score == 'Match' or pillar.score == 'Passed' %}bg-success-subtle text-success{% else %}bg-warning-subtle text-warning{% endif %}">
+                                                    {{ pillar.score }}
+                                                </span>
+                                            </div>
+                                            {% endfor %}
+                                        {% elif match.pillars %}
+                                            {% for pillar in match.pillars %}
+                                            <div class="d-flex justify-content-between align-items-center bg-white px-2 py-2 rounded border border-light-subtle">
+                                                <span class="text-secondary fw-medium" style="font-size: 0.75rem;">{{ pillar.title }}</span>
+                                                <span class="badge rounded-pill smallest {% if pillar.score == 'Excellent' or pillar.score == 'Match' or pillar.score == 'Passed' %}bg-success-subtle text-success{% else %}bg-warning-subtle text-warning{% endif %}">
+                                                    {{ pillar.score }}
+                                                </span>
+                                            </div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Interaction / Quick Optimization Voting Triggers -->
+                                <div class="d-flex gap-2 mb-2">
+                                    <form action="{% url 'matchmaking:record_vote' %}" method="POST" class="flex-grow-1 feedback-form">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="application_id" value="{{ match.application.id|default:match.founder.id }}">
+                                        <input type="hidden" name="vote" value="up">
+                                        <button type="submit" class="btn btn-outline-success btn-sm w-100 py-2 rounded-3" title="Upvote Match Parameters">
+                                            <i class="bi bi-hand-thumbs-up-fill me-1"></i> Relevant
+                                        </button>
+                                    </form>
+                                    
+                                    <form action="{% url 'matchmaking:record_vote' %}" method="POST" class="flex-grow-1 feedback-form">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="application_id" value="{{ match.application.id|default:match.founder.id }}">
+                                        <input type="hidden" name="vote" value="down">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm w-100 py-2 rounded-3" title="Downvote Match Parameters">
+                                            <i class="bi bi-hand-thumbs-down-fill me-1"></i> Hide
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Actions -->
+                        <!-- Card Operational CTA Footers -->
                         <div class="card-footer bg-white border-0 p-4 pt-0">
                             {% if match.already_requested %}
                                 <button class="btn btn-secondary w-100 py-2 fw-bold rounded-pill shadow-sm disabled" disabled>
-                                    Intro Requested
+                                    <i class="bi bi-envelope-check me-1"></i> Intro Requested
                                 </button>
                             {% else %}
-<form action="{% url 'matchmaking:request_intro' application_id=match.founder.id investor_id=investor.id %}" method="POST">                                    {% csrf_token %}
+                                <form action="{% url 'matchmaking:request_intro' match.application.id|default:match.founder.id investor.id %}" method="POST">
+                                    {% csrf_token %}
                                     <button type="submit" class="btn btn-dark w-100 py-2 fw-bold rounded-pill shadow-sm">
                                         Request Introduction
                                     </button>
                                 </form>
                             {% endif %}
-                            <a href="#" class="btn btn-link btn-sm w-100 text-decoration-none mt-2 text-muted fw-medium">
-                                <i class="bi bi-file-earmark-bar-graph me-1"></i> View Acquisition Summary
+                            
+                            {% if match.application.user.username or match.founder.user.username %}
+                            <a href="{% url 'accounts:profile' match.application.user.username|default:match.founder.user.username %}" class="btn btn-link btn-sm w-100 text-decoration-none mt-2 text-muted fw-medium">
+                                <i class="bi bi-file-earmark-bar-graph me-1"></i> View Founder Profile
                             </a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
             {% empty %}
-                <!-- Empty State -->
+                <!-- Empty Dashboard Grid Fallback Context -->
                 <div class="col-12 text-center py-5">
-                    <div class="bg-light p-5 rounded-4 border border-dashed">
+                    <div class="bg-light p-5 rounded-4 border border-dashed border-secondary-subtle">
                         <i class="bi bi-radar display-1 text-muted mb-3 d-block"></i>
-                        <h3 class="fw-bold">No Matches Found Yet</h3>
-                        <p class="text-muted mx-auto" style="max-width: 500px;">
-                            We are currently vetting new founders. We'll send you an instant notification as soon as a startup joins that matches your specific criteria.
+                        <h3 class="fw-bold text-dark">No Matches Found Yet</h3>
+                        <p class="text-muted mx-auto mb-4" style="max-width: 500px;">
+                            We are currently vetting and processing inbound founders. You'll receive a real-time notification alert as soon as a company registers that aligns with your active mandate criteria.
                         </p>
-                        <a href="{% url 'accounts:investor_form' %}" class="btn btn-outline-dark mt-3 px-4">Refine Investment Mandate</a>
+                        <a href="{% url 'accounts:investor_form' %}" class="btn btn-outline-dark px-4 rounded-pill">Refine Investment Mandate</a>
                     </div>
                 </div>
             {% endfor %}
         </div>
     {% else %}
-        <!-- Access Required -->
+        <!-- Access Blocked: Missing Allocation Profile Layer Context -->
         <div class="row justify-content-center">
             <div class="col-md-6 text-center py-5">
-                <div class="card shadow border-0 p-5 rounded-4">
+                <div class="card shadow-sm border-0 p-5 rounded-4">
                     <div class="mb-4">
                         <i class="bi bi-lock-fill display-4 text-warning"></i>
                     </div>
-                    <h3 class="fw-bold">Investor Onboarding Required</h3>
-                    <p class="text-secondary mb-4">Complete your mandate details to unlock AI-driven deal flow and connect with founders.</p>
+                    <h3 class="fw-bold text-dark">Investor Onboarding Required</h3>
+                    <p class="text-secondary mb-4">Complete your mandate details configuration settings to unlock automated deal flow routing pools and connect with founders.</p>
                     <a href="{% url 'accounts:investor_form' %}" class="btn btn-primary px-5 py-3 rounded-pill fw-bold">Complete Profile</a>
                 </div>
             </div>
         </div>
     {% endif %}
 </div>
+{% endblock content %}
 
-<style>
-    .hover-lift {
-        transition: all 0.3s ease;
-    }
-    .hover-lift:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
-    }
-    .line-clamp {
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        height: 4.5rem;
-    }
-    .border-dashed {
-        border-style: dashed !important;
-        border-width: 2px !important;
-    }
-</style>
-{% endblock %}
+{% block script %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const feedbackForms = document.querySelectorAll('.feedback-form');
+
+    feedbackForms.forEach(form => {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalContent = submitButton.innerHTML;
+            
+            const formData = new FormData(form);
+            const actionUrl = form.getAttribute('action');
+
+            try {
+                submitButton.disabled = true;
+                submitButton.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...`;
+
+                const response = await fetch(actionUrl, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (response.ok) {
+                    submitButton.classList.add('disabled');
+                    if (formData.get('vote') === 'up') {
+                        submitButton.className = 'btn btn-success btn-sm w-100 py-2 rounded-3 disabled';
+                        submitButton.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> Saved`;
+                        
+                        const card = form.closest('.card-body');
+                        const partnerForm = card.querySelector('input[value="down"]')?.closest('form');
+                        if (partnerForm) partnerForm.querySelector('button').classList.add('opacity-50', 'disabled');
+                    } else {
+                        submitButton.className = 'btn btn-danger btn-sm w-100 py-2 rounded-3 disabled';
+                        submitButton.innerHTML = `<i class="bi bi-eye-slash-fill me-1"></i> Hidden`;
+                        
+                        const dealCard = form.closest('.hover-lift').parentElement;
+                        dealCard.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                        dealCard.style.opacity = '0.15';
+                        dealCard.style.transform = 'scale(0.95)';
+                    }
+                } else {
+                    throw new Error('Network payload rejection context detected.');
+                }
+            } catch (error) {
+                console.error('Feedback state preservation drop failure:', error);
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalContent;
+                alert('Could not sync feedback parameters. Please try again.');
+            }
+        });
+    });
+});
+</script>
+{% endblock script %}

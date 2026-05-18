@@ -1,7 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Founder Application{% endblock title %}
+{% block title %}
+    {% if form.instance.pk %}Edit Pitch Profile{% else %}Founder Application{% endif %} | Interlink Foundry
+{% endblock title %}
 
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/home.css' %}">
@@ -23,15 +25,15 @@
 
     .form-control:focus, .form-select:focus {
         background-color: #fff !important;
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+        border-color: #198754;
+        box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.15);
     }
 
     .card {
         border-radius: 16px;
     }
 
-    .btn-primary {
+    .btn-success {
         border-radius: 10px;
         padding: 12px 30px;
         font-weight: 600;
@@ -54,39 +56,67 @@
 
 {% block content %}
 <div class="container py-5">
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'accounts:profile_self' %}" class="text-decoration-none">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Founder Workspace</li>
+        </ol>
+    </nav>
 
-    {% if user.is_authenticated %}
-<form method="post" action="{% url 'accounts:seeking_investment' %}" class="card shadow-lg border-0">
-            {% csrf_token %}
+    <!-- Form Container -->
+    <form method="post" enctype="multipart/form-data" action="{% url 'accounts:seeking_investment' %}" class="card shadow-lg border-0" novalidate>
+        {% csrf_token %}
 
         <!-- HEADER -->
-        <div class="card-header bg-dark text-white p-4">
-            <h3 class="mb-1 fw-bold">Founder Application</h3>
-            <p class="mb-0 text-white-50">Tell us about your startup</p>
+        <div class="card-header bg-success text-white p-4">
+            <div class="d-flex align-items-center">
+                <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
+                    <i class="bi bi-rocket-takeoff-fill fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="mb-1 fw-bold">
+                        {% if form.instance.pk %}Update Venture Profile{% else %}Founder Application{% endif %}
+                    </h3>
+                    <p class="mb-0 text-white-50">Provide your startup configuration and parameters for vector matchmaking.</p>
+                </div>
+            </div>
         </div>
 
         <div class="card-body p-4 p-lg-5">
+            
+            <!-- AI PIPELINE INFOBAR -->
+            <div class="alert alert-success-subtle border border-success-subtle rounded-3 d-flex align-items-start mb-5" role="alert">
+                <i class="bi bi-cpu-fill text-success fs-5 me-3 mt-1"></i>
+                <div>
+                    <strong class="text-success d-block mb-1">AI-Ready Pipeline Execution</strong>
+                    <span class="small text-muted">Uploading a pitch deck triggers the Gemini Multimodal engine. The system extracts market context, financials, and core value props to align with matching investor mandates instantly.</span>
+                </div>
+            </div>
 
             <!-- PERSONAL DETAILS -->
             <div class="mb-5">
                 <div class="form-section-title">Personal Details</div>
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <label for="founder_name">Full Name</label>
-                        <input type="text" id="founder_name" name="founder_name" class="form-control bg-light" required>
+                        {{ form.founder_name.label_tag }}
+                        <input type="text" name="founder_name" id="id_founder_name" class="form-control" value="{{ form.founder_name.value|default:'' }}" required>
+                        {{ form.founder_name.errors }}
                     </div>
                     <div class="col-md-4">
-                        <label for="email">Email Address</label>
-                        <input type="email" id="email" name="email" class="form-control bg-light" required>
+                        {{ form.email.label_tag }}
+                        <input type="email" name="email" id="id_email" class="form-control" value="{{ form.email.value|default:'' }}" required>
+                        {{ form.email.errors }}
                     </div>
                     <div class="col-md-4">
-                        <label for="phone_number">Phone Number</label>
-                        <input type="tel" id="phone_number" name="phone_number" class="form-control bg-light">
+                        {{ form.phone_number.label_tag }}
+                        <input type="text" name="phone_number" id="id_phone_number" class="form-control" value="{{ form.phone_number.value|default:'' }}">
+                        {{ form.phone_number.errors }}
                     </div>
                 </div>
             </div>
 
-            <hr class="my-4">
+            <hr class="my-4 opacity-25">
 
             <!-- COMPANY INFORMATION -->
             <div class="mb-5">
@@ -94,125 +124,125 @@
                 
                 <div class="row g-3 mb-3">
                     <div class="col-md-8">
-                        <label for="company_name">Company Name</label>
-                        <input type="text" id="company_name" name="company_name" class="form-control bg-light" required>
+                        {{ form.company_name.label_tag }}
+                        <input type="text" name="company_name" id="id_company_name" class="form-control" value="{{ form.company_name.value|default:'' }}" required>
+                        {{ form.company_name.errors }}
                     </div>
                     <div class="col-md-4">
-                        <label for="company_website">Website</label>
-                        <input type="url" id="company_website" name="company_website" placeholder="https://" class="form-control bg-light">
+                        {{ form.company_website.label_tag }}
+                        <input type="url" name="company_website" id="id_company_website" class="form-control" value="{{ form.company_website.value|default:'' }}">
+                        {{ form.company_website.errors }}
                     </div>
                 </div>
 
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <label for="company_size">Company Size (Employees)</label>
-                        <input type="number" id="company_size" name="company_size" min="0" class="form-control bg-light" placeholder="e.g. 10">
+                        {{ form.company_size.label_tag }}
+                        <input type="text" name="company_size" id="id_company_size" class="form-control" placeholder="e.g., 1-10, 11-50 employees" value="{{ form.company_size.value|default:'' }}">
+                        {{ form.company_size.errors }}
                     </div>
                     <div class="col-md-6">
-                        <label for="years_in_business">Years in Business</label>
-                        <input type="number" id="years_in_business" name="years_in_business" min="0" class="form-control bg-light" placeholder="e.g. 3">
+                        {{ form.years_in_business.label_tag }}
+                        <input type="number" name="years_in_business" id="id_years_in_business" class="form-control" min="0" value="{{ form.years_in_business.value|default:0 }}">
+                        {{ form.years_in_business.errors }}
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label for="description">Short Pitch</label>
-                    <textarea id="description" name="description" class="form-control bg-light" rows="2" placeholder="One sentence summary..."></textarea>
+                    {{ form.description.label_tag }}
+                    <textarea name="description" id="id_description" class="form-control" rows="2" placeholder="One-sentence pitch or short technical summary." required>{{ form.description.value|default:'' }}</textarea>
+                    {{ form.description.errors }}
+                </div>
+                
+                <div class="mb-3">
+                    <label for="id_location">HQ Operating Location</label>
+                    <input type="text" name="location" id="id_location" class="form-control" placeholder="e.g., San Francisco, CA or London, UK" value="{{ form.location.value|default:'' }}">
+                    {{ form.location.errors }}
                 </div>
             </div>
 
-            <hr class="my-4">
+            <hr class="my-4 opacity-25">
 
-            <!-- FUNDING DETAILS -->
-            <div class="mb-4">
+            <!-- FUNDING DETAILS (Refactored to cleanly pass through plain-text values) -->
+            <div class="mb-5">
                 <div class="form-section-title">Funding Details</div>
 
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
-                        <label for="sector">Sector/Industry</label>
-                        <input type="text" id="sector" name="sector" class="form-control bg-light" required>
+                        {{ form.sector.label_tag }}
+                        <input type="text" name="sector" id="id_sector" class="form-control" placeholder="e.g., SaaS, FinTech, AI" value="{{ form.sector.value|default:'' }}">
+                        {{ form.sector.errors }}
                     </div>
                     <div class="col-md-4">
-                        <label for="stage">Current Stage</label>
-                        <select id="stage" name="stage" class="form-select bg-light" required>
-                            <option value="" selected disabled>Select stage</option>
-                            <option value="pre_seed">Pre-Seed</option>
-                            <option value="seed">Seed</option>
-                            <option value="series_a">Series A</option>
-                            <option value="series_b">Series B</option>
-                            <option value="series_c+">Series C+ </option>
-                        </select>
+                        {{ form.stage.label_tag }}
+                        <input type="text" name="stage" id="id_stage" class="form-control" placeholder="e.g., Pre-Seed, Seed" value="{{ form.stage.value|default:'' }}">
+                        {{ form.stage.errors }}
                     </div>
                     <div class="col-md-4">
-                        <label for="raising_amount">Amount Seeking</label>
+                        {{ form.raising_amount.label_tag }}
                         <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input type="text" id="raising_amount" name="raising_amount" class="form-control bg-light comma-format" placeholder="1,000,000">
+                            <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                            <input type="text" name="raising_amount" id="id_raising_amount" class="form-control" placeholder="e.g., 1,500,000 or 2M" value="{{ form.raising_amount.value|default:'' }}">
                         </div>
+                        {{ form.raising_amount.errors }}
                     </div>
                 </div>
 
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <label for="prior_amount_raised">Total Raised To Date</label>
+                        {{ form.prior_amount_raised.label_tag }}
                         <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input type="text" id="prior_amount_raised" name="prior_amount_raised" class="form-control bg-light comma-format" placeholder="500,000">
+                            <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                            <input type="text" name="prior_amount_raised" id="id_prior_amount_raised" class="form-control" placeholder="e.g., 500,000 or 0" value="{{ form.prior_amount_raised.value|default:'0' }}">
                         </div>
+                        {{ form.prior_amount_raised.errors }}
                     </div>
                     <div class="col-md-6">
-                        <label for="current_revenue">Current Annual Revenue</label>
+                        {{ form.current_revenue.label_tag }}
                         <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input type="text" id="current_revenue" name="current_revenue" class="form-control bg-light comma-format" placeholder="25,000">
+                            <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                            <input type="text" name="current_revenue" id="id_current_revenue" class="form-control" placeholder="e.g., 25,000 MRR or ARR" value="{{ form.current_revenue.value|default:'0' }}">
                         </div>
+                        {{ form.current_revenue.errors }}
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label for="reason_for_capital">Use of Funds</label>
-                    <textarea id="reason_for_capital" name="reason_for_capital" class="form-control bg-light" rows="3"></textarea>
+                    {{ form.reason_for_capital.label_tag }}
+                    <textarea name="reason_for_capital" id="id_reason_for_capital" class="form-control" rows="3">{{ form.reason_for_capital.value|default:'' }}</textarea>
+                    {{ form.reason_for_capital.errors }}
                 </div>
             </div>
 
-            <div class="text-end mt-4">
-                <button type="submit" class="btn btn-primary shadow-sm">Submit Application</button>
+            <hr class="my-4 opacity-25">
+
+            <!-- PITCH DECK MULTIMEDIA ASSET PIPELINE -->
+            <div class="mb-4">
+                <div class="form-section-title">Pitch Assets</div>
+                <div class="mb-3">
+                    {{ form.pitch_deck.label_tag }}
+                    <div class="p-3 border rounded-3 bg-light text-center">
+                        <input type="file" name="pitch_deck" id="id_pitch_deck" class="form-control">
+                        <div class="form-text mt-2 text-muted small">Supported configurations: Native PDF files (Max 25MB)</div>
+                        {% if form.instance.pitch_deck %}
+                            <div class="form-text text-success fw-semibold mt-1">Currently loaded asset: {{ form.instance.pitch_deck.name }}</div>
+                        {% endif %}
+                    </div>
+                    {{ form.pitch_deck.errors }}
+                </div>
+            </div>
+
+            <!-- FORM ACTIONS -->
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mt-5">
+                <a href="{% url 'accounts:profile_self' %}" class="btn btn-link text-muted text-decoration-none order-2 order-sm-1 px-0">
+                    <i class="bi bi-arrow-left me-1"></i> Cancel changes
+                </a>
+                <button type="submit" class="btn btn-success px-5 shadow-sm order-1 order-sm-2">
+                    {% if form.instance.pk %}Save Platform Matrix{% else %}Deploy Pitch Vector{% endif %}
+                </button>
             </div>
 
         </div>
     </form>
-    {% else %}
-    <div class="card shadow-sm border-0 text-center py-5">
-        <div class="card-body">
-            <h4 class="fw-bold">Ready to Scale?</h4>
-            <p class="text-muted mb-4">Please log in to submit your application.</p>
-            <a href="{% url 'login' %}" class="btn btn-primary px-5">Login to Apply</a>
-        </div>
-    </div>
-    {% endif %}
 </div>
-
-<!-- JavaScript to handle Comma Formatting -->
-<script>
-    document.querySelectorAll('.comma-format').forEach(input => {
-        input.addEventListener('input', function(e) {
-            // Remove all non-digits
-            let value = this.value.replace(/\D/g, '');
-            
-            // Format with commas
-            if (value !== "") {
-                this.value = Number(value).toLocaleString('en-US');
-            } else {
-                this.value = "";
-            }
-        });
-    });
-
-    // Strip commas before submitting to Django
-    document.querySelector('form').addEventListener('submit', function() {
-        document.querySelectorAll('.comma-format').forEach(input => {
-            input.value = input.value.replace(/,/g, '');
-        });
-    });
-</script>
-
 {% endblock %}

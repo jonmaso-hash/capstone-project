@@ -2,20 +2,29 @@ from django.urls import path
 from django.contrib.auth.views import LogoutView
 from . import views
 
+# Application namespace utilized by {% url 'accounts:...' %} template tags
 app_name = 'accounts'
 
 urlpatterns = [
-    # --- Authentication ---
+    # ==========================================
+    # AUTHENTICATION ENGINE ROUTES
+    # ==========================================
     path('signup/', views.signup_view, name='signup'),
     path('login/', views.login_view, name='login'),
     path('logout/', LogoutView.as_view(next_page='pages:home'), name='logout'),
 
-    # --- Profile & Redirection ---
+    # ==========================================
+    # USER PROFILE DISPATCH LAYER
+    # ==========================================
     path('profile/', views.redirect_to_own_profile, name='profile_self'),
     path('profile/<str:username>/', views.profile, name='profile'),
 
-    # --- Matchmaking Application Flow ---
-    # Named 'apply' to fix the NoReverseMatch error in your profile template
+    # ==========================================
+    # WORKSPACE MATCHMAKING ONBOARDING FLOWS
+    # ==========================================
+    # Maintained named path mapping to safely prevent NoReverseMatch template compile errors
     path('apply/', views.seeking_investment, name='seeking_investment'),
-    path('investor-form/', views.investor_form, name='investor'),
+    path('investor-form/', views.investor_form, name='investor_form'),
+
+    path('api/stream-token/', views.get_stream_token, name='stream_token'),
 ]

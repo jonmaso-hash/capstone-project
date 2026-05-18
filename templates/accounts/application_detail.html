@@ -1,51 +1,75 @@
 {% if application %}
+    <div class="mb-4 d-flex align-items-center">
+        <h5 class="mb-0 fw-bold text-dark">Application Configuration Matrix</h5>
+        <div class="ms-3 flex-grow-1 border-bottom opacity-25"></div>
+    </div>
 
-<h5 class="mb-3">Application Details</h5>
+    <div class="card border-0 bg-light rounded-4 p-4">
+        <div class="row g-4">
+            <!-- Core Meta Details -->
+            <div class="col-md-6">
+                <small class="text-uppercase text-muted fw-bold d-block mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px;">Company Venture</small>
+                <span class="text-dark fw-semibold">{{ application.company_name|default:"-" }}</span>
+            </div>
 
-<ul class="list-group">
+            <div class="col-md-6">
+                <small class="text-uppercase text-muted fw-bold d-block mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px;">HQ Communications</small>
+                <span class="text-dark">{{ application.phone_number|default:"-" }}</span>
+            </div>
 
-    <li class="list-group-item">
-        <strong>Company:</strong> {{ application.company_name|default:"-" }}
-    </li>
+            <div class="col-md-4">
+                <small class="text-uppercase text-muted fw-bold d-block mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px;">Market Sector</small>
+                <span class="badge bg-secondary-subtle text-secondary-emphasis border px-2.5 py-1.5 rounded-2">{{ application.sector|default:"-" }}</span>
+            </div>
 
-    <li class="list-group-item">
-        <strong>Phone:</strong> {{ application.phone_number|default:"-" }}
-    </li>
+            <div class="col-md-4">
+                <small class="text-uppercase text-muted fw-bold d-block mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px;">Scale (Team Size)</small>
+                <span class="text-dark">{{ application.company_size|default:"-" }}</span>
+            </div>
 
-    <li class="list-group-item">
-        <strong>Sector:</strong> {{ application.sector|default:"-" }}
-    </li>
+            <div class="col-md-4">
+                <small class="text-uppercase text-muted fw-bold d-block mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px;">Market Vintage</small>
+                <span class="text-dark">{{ application.years_in_business }} Year{{ application.years_in_business|pluralize }}</span>
+            </div>
 
-    <li class="list-group-item">
-        <strong>Years in Business:</strong> {{ application.years_in_business|default:"-" }}
-    </li>
+            <!-- Financial Metrics Grid -->
+            <div class="col-md-6">
+                <div class="bg-white border rounded-3 p-3 shadow-sm">
+                    <small class="text-uppercase text-muted fw-bold d-block mb-1" style="font-size: 0.75rem;">Prior Capital Secured</small>
+                    <span class="fs-5 fw-bold text-dark">
+                        {% if application.prior_amount_raised and "$" not in application.prior_amount_raised %}${% endif %}{{ application.prior_amount_raised|default:"0" }}
+                    </span>
+                </div>
+            </div>
 
-    <li class="list-group-item">
-        <strong>Company Size:</strong> {{ application.company_size|default:"-" }}
-    </li>
+            <div class="col-md-6">
+                <div class="bg-white border rounded-3 p-3 shadow-sm">
+                    <small class="text-uppercase text-muted fw-bold d-block mb-1" style="font-size: 0.75rem;">Target Vector Raise</small>
+                    <span class="fs-5 fw-bold text-success">
+                        {% if application.raising_amount and "$" not in application.raising_amount %}${% endif %}{{ application.raising_amount|default:"-" }}
+                    </span>
+                </div>
+            </div>
 
-    <li class="list-group-item">
-        <strong>Amount Raised:</strong> ${{ application.amount_raised|default:"-" }}
-    </li>
+            <!-- Text Content Blocks -->
+            <div class="col-12">
+                <div class="border-top pt-3">
+                    <small class="text-uppercase text-muted fw-bold d-block mb-2" style="font-size: 0.75rem; letter-spacing: 0.5px;">Core Product & Business Description</small>
+                    <p class="text-dark mb-0 bg-white p-3 rounded-3 border small" style="white-space: pre-line;">{{ application.description|default:"No description provided." }}</p>
+                </div>
+            </div>
 
-    <li class="list-group-item">
-        <strong>Target Raise:</strong> ${{ application.raising_amount|default:"-" }}
-    </li>
-
-    <li class="list-group-item">
-        <strong>Reason for Capital:</strong><br>
-        {{ application.reason_for_capital|default:"-" }}
-    </li>
-
-    <li class="list-group-item">
-        <strong>Business Description:</strong><br>
-        {{ application.business_description|default:"-" }}
-    </li>
-
-</ul>
-
+            <div class="col-12">
+                <div class="pt-2">
+                    <small class="text-uppercase text-muted fw-bold d-block mb-2" style="font-size: 0.75rem; letter-spacing: 0.5px;">Allocation / Capital Use Case</small>
+                    <p class="text-secondary mb-0 bg-white p-3 rounded-3 border small fst-italic" style="white-space: pre-line;">{{ application.reason_for_capital|default:"No capitalization strategy declared." }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
 {% else %}
-    <div class="alert alert-warning">
-        No application submitted yet.
+    <div class="alert alert-light border rounded-4 p-4 text-center">
+        <i class="bi bi-file-earmark-x text-muted fs-2 d-block mb-2"></i>
+        <span class="text-muted small d-block">No active ecosystem application instances submitted yet.</span>
     </div>
 {% endif %}

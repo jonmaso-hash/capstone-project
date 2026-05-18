@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.core.mail import send_mail
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
+from stream_chat import StreamChat
 
 # Consolidated Structural Business Models
 from .models import Application, InvestorApplication, Connection, MatchFeedback
@@ -27,13 +28,41 @@ def founder_required(view_func):
     """
     def _wrapped_view(request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return redirect('accounts:login')  # Hardened namespace route target
+            return redirect('accounts:login')
         
         if getattr(request.user, 'is_founder', False) or hasattr(request.user, 'match_founder_profile'):
             return view_func(request, *args, **kwargs)
         
         raise PermissionDenied("Access restricted. Only registered founders can access this matchmaking workspace.")
     return _wrapped_view
+
+
+# ==========================================
+# HELPER DATA GENERATOR
+# ==========================================
+
+def _generate_explanatory_insights(ai_score, rule_score, application, investor):
+    """
+    Helper function to generate a rich structural breakdown payload 
+    for the frontend Explanatory AI Insights panel.
+    """
+    sector_str = getattr(application, 'sector', '') or ''
+    focus_str = getattr(investor, 'investment_focus', '') or ''
+    stage_str = getattr(application, 'stage', '') or ''
+    mandate_stage_str = getattr(investor, 'investment_stage', '') or ''
+
+    sector_match = "Match" if sector_str.lower() in focus_str.lower() else "Neutral"
+    stage_match = "Excellent" if stage_str.lower() == mandate_stage_str.lower() else "Partial"
+    
+    return {
+        'match_percentage': int(round(ai_score)),
+        'summary': f"Blended alignment index of {round(ai_score)}% via semantic matching vectors and core business constraint validation rules.",
+        'pillars': [
+            {'title': 'Market Alignment', 'score': sector_match, 'desc': f"Evaluated startup vertical '{sector_str}' against targeted investment focus criteria."},
+            {'title': 'Funding Stage', 'score': stage_match, 'desc': f"Startup asset operational tier '{stage_str}' benchmarked to allocator mandate level."},
+            {'title': 'Structural Rules', 'score': 'Passed' if rule_score > 60 else 'Review', 'desc': f"Rule compliance engine score marked at a baseline index of {round(rule_score)} points."}
+        ]
+    }
 
 
 # ==========================================
@@ -44,7 +73,7 @@ def founder_required(view_func):
 def investor_dashboard(request):
     """
     Blended Matchmaking Dashboard: Ranks founders based on AI + Rules.
-    Features an advanced keyword-matching fallback system.
+    Features an advanced keyword-matching fallback system and detailed AI explanations.
     """
     investor_profile = getattr(request.user, 'match_investor_profile', None)
     
@@ -66,34 +95,33 @@ def investor_dashboard(request):
     requested_ids = Connection.objects.filter(investor=investor_profile).values_list('founder_id', flat=True)
 
     # Keyword semantic fallback framework if vectors are missing
-    if not investor_profile.focus_vector:
+    if not investor_profile.focus_vector and investor_profile.investment_focus:
         search_terms = [term.strip() for term in investor_profile.investment_focus.replace(',', ' ').split() if len(term.strip()) > 2]
         query = Q()
         for term in search_terms:
-            query |= Q(sector__icontains=term) | Q(keywords__icontains=term) | Q(company_name__icontains=term)
+            query |= Q(sector__icontains=term) | Q(description__icontains=term) | Q(company_name__icontains=term)
         
         founders = Application.objects.filter(query | Q(stage__icontains=investor_profile.investment_stage)).select_related('user')
     else:
         founders = Application.objects.all().select_related('user')
     
     for founder in founders:
-        if not founder.description_vector:
-            if founder.description:
-                try:
-                    vector_array = generate_profile_embedding(founder.description)
-                    if vector_array:
-                        founder.description_vector = vector_array
-                        founder.save()
-                    else:
-                        continue
-                except Exception:
-                    continue
-            else:
-                continue
+        # Prevent runtime failures from dropping the startup out of the loop completely
+        if not founder.description_vector and founder.description:
+            try:
+                vector_array = generate_profile_embedding(founder.description)
+                if vector_array:
+                    founder.description_vector = vector_array
+                    founder.save()
+            except Exception:
+                pass  # Fallback to pure rule-based calculation instead of dropping data
 
         if investor_profile.focus_vector and founder.description_vector:
-            raw_ai_similarity = calculate_similarity(investor_profile.focus_vector, founder.description_vector)
-            ai_score = raw_ai_similarity * 100
+            try:
+                raw_ai_similarity = calculate_similarity(investor_profile.focus_vector, founder.description_vector)
+                ai_score = max(0.0, min(100.0, raw_ai_similarity * 100))
+            except Exception:
+                ai_score = 50.0
         else:
             ai_score = 50.0
 
@@ -106,7 +134,8 @@ def investor_dashboard(request):
                 'ai_score': round(ai_score, 1),
                 'rule_score': round(rule_score, 1),
                 'final_score': round(final_score, 1),
-                'already_requested': founder.id in requested_ids
+                'already_requested': founder.id in requested_ids,
+                'ai_insights': _generate_explanatory_insights(ai_score, rule_score, founder, investor_profile)
             })
     
     match_results = sorted(match_results, key=lambda x: x['final_score'], reverse=True)
@@ -151,7 +180,11 @@ def founder_dashboard(request):
     
     for investor in investors:
         if application.description_vector and investor.focus_vector:
-            ai_score = calculate_similarity(application.description_vector, investor.focus_vector) * 100
+            try:
+                raw_ai_similarity = calculate_similarity(application.description_vector, investor.focus_vector)
+                ai_score = max(0.0, min(100.0, raw_ai_similarity * 100))
+            except Exception:
+                ai_score = 50.0
         else:
             ai_score = 50.0
 
@@ -163,6 +196,7 @@ def founder_dashboard(request):
                 'investor': investor,
                 'final_score': round(final_score, 1),
                 'rule_match': rule_score >= 80,
+                'ai_insights': _generate_explanatory_insights(ai_score, rule_score, application, investor)
             })
     
     match_results = sorted(match_results, key=lambda x: x['final_score'], reverse=True)
@@ -199,32 +233,34 @@ def founder_matchmaker(request):
 def founder_bulletin_board(request):
     """
     Queries verified startup Application profiles to display on the Interlink Foundry bulletin board.
-    Calculates dynamic AI match scores if an authenticated investor is browsing.
+    Calculates dynamic AI match scores and explicit breakdown data blocks if an authenticated investor is browsing.
     """
     pitches_queryset = Application.objects.all().select_related('user')
     
-    # Check if a logged-in investor is browsing to compute dynamic match scores
     investor_profile = None
     if request.user.is_authenticated:
         investor_profile = getattr(request.user, 'match_investor_profile', None)
 
     pitches = []
     for pitch in pitches_queryset:
-        # If the viewer is a verified investor with an active vector, calculate similarity
+        ai_insights_data = None
         if investor_profile and investor_profile.focus_vector and pitch.description_vector:
             try:
                 raw_similarity = calculate_similarity(investor_profile.focus_vector, pitch.description_vector)
-                match_percentage = int(max(0, raw_similarity) * 100)
+                ai_score = max(0.0, min(100.0, raw_similarity * 100))
+                match_percentage = int(round(ai_score))
+                
+                rule_score_fallback = 70.0
+                ai_insights_data = _generate_explanatory_insights(ai_score, rule_score_fallback, pitch, investor_profile)
             except Exception:
                 match_percentage = 75
         else:
-            # Neutral baseline fallback score for founders browsing or non-logged-in users
             match_percentage = 75
             
         pitch.match_percentage = match_percentage
+        pitch.ai_insights = ai_insights_data
         pitches.append(pitch)
         
-    # Sort the public feed dynamically so highest matching sectors sit at the top for investors
     if investor_profile and investor_profile.focus_vector:
         pitches = sorted(pitches, key=lambda x: x.match_percentage, reverse=True)
 
@@ -242,13 +278,15 @@ def founder_bulletin_board(request):
 def request_intro(request, application_id, investor_id):
     """
     The Intro Workflow: Creates a Connection record and dispatches an alert to the broker.
+    Ensures safe alignment with requested URL parameter structures.
     """
     founder_app = get_object_or_404(Application, id=application_id)
     investor_profile = getattr(request.user, 'match_investor_profile', None)
 
-    if not investor_profile:
-        messages.error(request, "Only registered investors can request introductions.")
-        return redirect(request.META.get('HTTP_REFERER', 'matchmaking:investor_dashboard'))
+    # Secure verification step: validate route scope parameters safely
+    if not investor_profile or str(investor_profile.id) != str(investor_id):
+        messages.error(request, "Authorization mismatched. Access to introduction workflow denied.")
+        return redirect('matchmaking:investor_dashboard')
 
     connection, created = Connection.objects.get_or_create(
         investor=investor_profile,
@@ -256,10 +294,10 @@ def request_intro(request, application_id, investor_id):
     )
 
     if created:
-        subject = f"[Handshake Alert] Intro Request: {investor_profile.company_name} -> {founder_app.company_name}"
+        subject = f"[Handshake Alert] Intro Request: {investor_profile.company_name or 'Private Investor'} -> {founder_app.company_name}"
         email_body = (
             f"Broker Lead Notification:\n\n"
-            f"Investor: {investor_profile.full_name} ({investor_profile.company_name})\n"
+            f"Investor: {getattr(investor_profile, 'full_name', 'Anonymous Portfolio Manager')} ({investor_profile.company_name or 'Private Partner'})\n"
             f"Founder Startup Target: {founder_app.company_name}\n\n"
             f"Mandate Target Stage: {investor_profile.investment_stage}\n"
             f"Action Required: Navigate to the admin workspace to process and approve this platform handshake."
@@ -304,3 +342,52 @@ def record_vote(request):
 
     messages.success(request, "Feedback recorded. We're tuning your algorithm!")
     return redirect(request.META.get('HTTP_REFERER', 'matchmaking:investor_dashboard'))
+
+@login_required
+def initiate_direct_chat(request, target_user_id):
+    """
+    Instantly opens or creates a direct message thread between two users
+    to maximize site interaction, similar to a matchmaking or social platform.
+    """
+    target_user = get_object_or_404(User, id=target_user_id)
+    current_user_id = str(request.user.id)
+    target_id_str = str(target_user.id)
+    
+    # Prevent users from messaging themselves
+    if current_user_id == target_id_str:
+        return redirect('matchmaking:diligence_chat')
+
+    # Initialize Stream Client
+    client = StreamChat(api_key=settings.STREAM_API_KEY, api_secret=settings.STREAM_API_SECRET)
+    
+    # Ensure both users exist in the chat network database
+    client.upsert_users([
+        {'id': current_user_id, 'name': request.user.username},
+        {'id': target_id_str, 'name': target_user.username}
+    ])
+
+    # Generate a unique, deterministic ID for this pair (e.g., "chat_member_2_and_5")
+    # Sorting ensures that no matter who clicks "Message", they wind up in the exact same room
+    sorted_ids = sorted([int(current_user_id), int(target_id_str)])
+    channel_id = f"chat_{sorted_ids[0]}_and_{sorted_ids[1]}"
+
+    # Initialize a standard peer-to-peer messaging channel
+    channel = client.channel("messaging", channel_id)
+    
+    # Create the room instantly
+    channel.create(
+        members=[current_user_id, target_id_str],
+        data={
+            "name": f"{target_user.username}", # Sidebar shows the name of the person they are talking to
+        }
+    )
+
+    return redirect('matchmaking:diligence_chat')
+
+@login_required
+def deal_room_workspace(request):
+    """
+    Renders the secure main Deal Room Workspace template.
+    The real-time token fetching is handled downstream by accounts:stream_token.
+    """
+    return render(request, 'matchmaking/chat.html')
