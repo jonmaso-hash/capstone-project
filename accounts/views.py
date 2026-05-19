@@ -1,19 +1,20 @@
+import logging
 import os
 import re
 import urllib.parse
-import logging
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_GET
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth import login as auth_login
-from django.contrib import messages 
-from django.http import JsonResponse
+from django.apps import apps
 from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth import login as auth_login
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.models import User
 from django.db.models import Q
-from django.apps import apps 
-
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import NoReverseMatch, reverse
+from django.views.decorators.http import require_GET
 from stream_chat import StreamChat
 
 # Gemini Automated Deal Screening Orchestration Service
@@ -21,7 +22,7 @@ from matchmaking.services.deal_screener import index_founder_pitch_deck
 
 # Syncing with the models defined for the matching engine
 from matchmaking.models import Application, InvestorApplication
-from .forms import ApplicationForm, InvestorForm 
+from .forms import ApplicationForm, InvestorForm
 
 # 🔑 Dynamic lookups prevent NameError failures if external apps aren't active
 Job = None
@@ -48,6 +49,7 @@ logger = logging.getLogger(__name__)
 def signup_view(request):
     if request.user.is_authenticated:
         return redirect("accounts:profile", username=request.user.username)
+        
     if request.method == "POST":
         form = UserCreationForm(request.POST)
         if form.is_valid():
@@ -63,6 +65,7 @@ def signup_view(request):
 def login_view(request):
     if request.user.is_authenticated:
         return redirect("accounts:profile", username=request.user.username)
+        
     if request.method == "POST":
         form = AuthenticationForm(data=request.POST)
         if form.is_valid():
@@ -148,12 +151,10 @@ def profile(request, username):
     """
     Main User Hub: Displays the profile cards built for Interlink Foundry.
     """
-    from django.contrib.auth.models import User  # Kept inside local scope to minimize global lookup footprint
     viewed_user = get_object_or_404(User, username=username)
     
     application = getattr(viewed_user, "match_founder_profile", None)
     investor_application = getattr(viewed_user, "match_investor_profile", None)
-
     show_welcome_prompt = not application and not investor_application
 
     return render(request, "accounts/profile.html", {
@@ -187,7 +188,6 @@ def get_stream_token(request):
                 'error': 'Configuration Error',
                 'details': 'STREAM_API_KEY or STREAM_API_SECRET missing from settings.py or .env configuration.'
             }, status=500)
-            
             
         server_client = StreamChat(api_key=api_key, api_secret=api_secret)
         
@@ -232,7 +232,11 @@ def search_api(request):
     user_query = request.GET.get('q', '').strip()
 
     if not user_query:
-        return JsonResponse({'status': 'success', 'response': "What kind of matches are we hunting down today?", 'results': []})
+        return JsonResponse({
+            'status': 'success', 
+            'response': "What kind of matches are we hunting down today?", 
+            'results': []
+        })
 
     # Read front-end boundary toggle options
     search_founders = request.GET.get('founders', 'true').lower() == 'true'
@@ -244,6 +248,60 @@ def search_api(request):
     query_lower = user_query.lower()
 
     try:
+        # -----------------------------------------------------------------
+        # 0. INJECT ENGINE CORE APPLICATION FEATURES (Match Radar, Jobs, Blog)
+        # -----------------------------------------------------------------
+        if search_bulletins:
+            # Safe defensive resolution strategies to prevent 500 routing faults
+            try:
+                match_radar_url = reverse('founder_matchmaker')
+            except NoReverseMatch:
+                match_radar_url = "/matchmaking/founder/matches/"
+
+            try:
+                jobs_url = reverse('jobs_index')
+            except NoReverseMatch:
+                jobs_url = "/jobs/"
+
+            try:
+                blog_url = reverse('blog_view')
+            except NoReverseMatch:
+                blog_url = "/blog/"
+
+            core_platform_features = [
+                {
+                    "title": "Match Radar (AI Vectors)",
+                    "url": match_radar_url,
+                    "type": "Application Feature",
+                    "description": "Compute dynamic semantic vector similarity scores across founder pitches and investor target mandates.",
+                    "keywords": ["match radar", "radar", "matches", "vectors", "similarity", "ai matching", "vector engine"]
+                },
+                {
+                    "title": "Job Board Engine",
+                    "url": jobs_url,
+                    "type": "Marketplace Platform",
+                    "description": "Discover current open hiring roles, startup talent requirements, technical employment positions, and work tracks.",
+                    "keywords": ["job", "jobs", "hiring", "careers", "employment", "positions", "work", "talent", "opportunities"]
+                },
+                {
+                    "title": "Venture Insights Blog",
+                    "url": blog_url,
+                    "type": "Community Hub",
+                    "description": "Read platform data updates, shared ecosystem articles, founder stories, and community user posting logs.",
+                    "keywords": ["blog", "insights", "articles", "stories", "posts", "comments", "likes", "writing", "new"]
+                }
+            ]
+
+            for feature in core_platform_features:
+                if query_lower in feature['title'].lower() or any(query_lower in kw for kw in feature['keywords']):
+                    results.append({
+                        'type': feature['type'],
+                        'title': feature['title'],
+                        'description': feature['description'],
+                        'url': feature['url']
+                    })
+                    seen_urls.add(feature['url'])
+
         # -----------------------------------------------------------------
         # 1. DATABASE REGISTRY DEEP CRAWL
         # -----------------------------------------------------------------
@@ -257,7 +315,13 @@ def search_api(request):
             ).select_related('user')[:5]
 
             for app in founder_matches:
-                url = f"/accounts/profile/{app.user.username}/"
+                try:
+                    url = reverse('accounts:profile', kwargs={'username': app.user.username})
+                except NoReverseMatch:
+                    url = f"/accounts/profile/{app.user.username}/"
+                    
+                if url in seen_urls:
+                    continue
                 bio_text = app.description or ""
                 snippet = bio_text[:120] + '...' if len(bio_text) > 120 else bio_text
                 results.append({
@@ -277,7 +341,13 @@ def search_api(request):
             ).select_related('user')[:5]
 
             for inv in investor_matches:
-                url = f"/accounts/profile/{inv.user.username}/"
+                try:
+                    url = reverse('accounts:profile', kwargs={'username': inv.user.username})
+                except NoReverseMatch:
+                    url = f"/accounts/profile/{inv.user.username}/"
+                    
+                if url in seen_urls:
+                    continue
                 focus_text = inv.investment_focus or ""
                 snippet = focus_text[:120] + '...' if len(focus_text) > 120 else focus_text
                 display_name = inv.company_name or inv.full_name or "Institutional Investor"
@@ -299,6 +369,8 @@ def search_api(request):
                 )[:5]
                 for job in job_matches:
                     url = f"/jobs/{job.id}/"
+                    if url in seen_urls:
+                        continue
                     desc_text = job.description or ""
                     results.append({
                         'type': 'Career Opening',
@@ -315,7 +387,9 @@ def search_api(request):
                     Q(content__icontains=user_query)
                 )[:5]
                 for post in blog_matches:
-                    url = getattr(post, 'get_absolute_url', lambda: f"/blog/")()
+                    url = getattr(post, 'get_absolute_url', lambda: "/blog/")()
+                    if url in seen_urls:
+                        continue
                     content_text = getattr(post, 'content', '') or getattr(post, 'summary', '') or ""
                     results.append({
                         'type': 'Venture Insights',
@@ -337,9 +411,7 @@ def search_api(request):
             'investor_form.html': ('Investor Mandate Portal', '/accounts/investor-form/'),
             'ai_search.html': ('Zelda UI Workspace Canvas', '/accounts/ai_search/'),
             'profile.html': ('User Metrics Engine Profiles', '/accounts/profile/'),
-            
-            # ✅ VERIFIED & RUNNING: Clean mapping to the new matchmaking namespace structure
-            'bulletin_board.html': ('Venture Bulletin Board', '/matchmaking/bulletin/'),
+            'bulletin_board.html': ('Venture Bulletin Board', '/matchmaking/bulletin-board/'),
             'deal_room.html': ('Ecosystem Deal Room Space', '/matchmaking/deal-room/'),
         }
 
@@ -411,7 +483,10 @@ def search_api(request):
 
     except Exception as e:
         logger.error(f"Zelda Full-System Exploration Pipeline dropped: {str(e)}")
-        return JsonResponse({'status': 'error', 'message': 'The search system pipeline encountered an unexpected validation drop.'}, status=500)
+        return JsonResponse({
+            'status': 'error', 
+            'message': 'The search system pipeline encountered an unexpected validation drop.'
+        }, status=500)
 
 
 def perform_database_lookup(query):
