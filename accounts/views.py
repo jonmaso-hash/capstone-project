@@ -149,12 +149,9 @@ def investor_form(request):
 
 @login_required
 def profile(request, username):
-    # Fetch the model inside the function
     User = get_user_model()
     viewed_user = get_object_or_404(User, username=username)
-    # ... rest of your code
     
-    # Existing matchmaking logic
     application = getattr(viewed_user, "match_founder_profile", None)
     investor_application = getattr(viewed_user, "match_investor_profile", None)
     show_welcome_prompt = not application and not investor_application
@@ -167,13 +164,25 @@ def profile(request, username):
         "application": application,
         "investor_application": investor_application,
         "show_welcome_prompt": show_welcome_prompt,
-        "user_articles": user_articles,  # Pass this to the template
+        "user_articles": user_articles,
     })
 
 
 @login_required
 def redirect_to_own_profile(request):
     return redirect("accounts:profile", username=request.user.username)
+
+
+@login_required
+def profile_view(request, pk):
+    User = get_user_model()
+    profile_user = get_object_or_404(User, pk=pk)
+    user_articles = Article.objects.filter(author=profile_user)
+    
+    return render(request, 'accounts/profile.html', {
+        'profile_user': profile_user,
+        'user_articles': user_articles
+    })
 
 
 # =====================================================================
@@ -251,14 +260,55 @@ def search_api(request):
 
     results = []
     seen_urls = set()  # Deduplication layer to prevent structural layout pollution
+    
+    # 🔍 Clean up query string if users search explicitly for an '@handle' string
+    clean_username_query = user_query[1:] if user_query.startswith('@') else user_query
     query_lower = user_query.lower()
 
     try:
         # -----------------------------------------------------------------
+        # USERNAME ACCOUNT DRILLDOWN REGISTRY CHECK
+        # -----------------------------------------------------------------
+        UserClass = get_user_model()
+        user_matches = UserClass.objects.filter(
+            Q(username__icontains=clean_username_query) |
+            Q(first_name__icontains=clean_username_query) |
+            Q(last_name__icontains=clean_username_query)
+        ).distinct()[:5]
+
+        for matched_user in user_matches:
+            try:
+                url = reverse('accounts:profile', kwargs={'username': matched_user.username})
+            except NoReverseMatch:
+                url = f"/accounts/profile/{matched_user.username}/"
+
+            if url in seen_urls:
+                continue
+
+            # Figure out what kind of profile they maintain on Interlink Foundry
+            if hasattr(matched_user, 'match_investor_profile'):
+                role_label = "Investor Profile Account"
+                desc = f"Verified Investor mandate profile for @{matched_user.username}."
+            elif hasattr(matched_user, 'match_founder_profile'):
+                role_label = "Founder Profile Account"
+                founder_app = matched_user.match_founder_profile
+                desc = f"Founder profile for @{matched_user.username} managing {founder_app.company_name or 'a registered venture'}."
+            else:
+                role_label = "User Network Profile"
+                desc = f"Community member profile page for @{matched_user.username}."
+
+            results.append({
+                'type': role_label,
+                'title': f"User Profile: {matched_user.get_full_name() or matched_user.username}",
+                'description': desc,
+                'url': url
+            })
+            seen_urls.add(url)
+
+        # -----------------------------------------------------------------
         # 0. INJECT ENGINE CORE APPLICATION FEATURES (Match Radar, Jobs, Blog)
         # -----------------------------------------------------------------
         if search_bulletins:
-            # Safe defensive resolution strategies to prevent 500 routing faults
             try:
                 match_radar_url = reverse('founder_matchmaker')
             except NoReverseMatch:
@@ -300,13 +350,14 @@ def search_api(request):
 
             for feature in core_platform_features:
                 if query_lower in feature['title'].lower() or any(query_lower in kw for kw in feature['keywords']):
-                    results.append({
-                        'type': feature['type'],
-                        'title': feature['title'],
-                        'description': feature['description'],
-                        'url': feature['url']
-                    })
-                    seen_urls.add(feature['url'])
+                    if feature['url'] not in seen_urls:
+                        results.append({
+                            'type': feature['type'],
+                            'title': feature['title'],
+                            'description': feature['description'],
+                            'url': feature['url']
+                        })
+                        seen_urls.add(feature['url'])
 
         # -----------------------------------------------------------------
         # 1. DATABASE REGISTRY DEEP CRAWL
@@ -367,7 +418,6 @@ def search_api(request):
 
         # Scan Bulletins, Career Openings, and Blogs
         if search_bulletins:
-            # Dynamic Job Lookups
             if Job:
                 job_matches = Job.objects.filter(
                     Q(title__icontains=user_query) | 
@@ -386,7 +436,6 @@ def search_api(request):
                     })
                     seen_urls.add(url)
 
-            # Dynamic Venture Insights Blog Lookups
             if BlogPost:
                 blog_matches = BlogPost.objects.filter(
                     Q(title__icontains=user_query) |
@@ -526,14 +575,36 @@ def perform_database_lookup(query):
         
     return context_data
 
-def profile_view(request, pk):
-    User = get_user_model() # Get the model dynamically
-    profile_user = get_object_or_404(User, pk=pk)
+def extract_and_enrich_usernames(user_input_text):
+    """
+    Scans Zelda input for usernames and returns systemic data 
+    context snippets for any valid accounts discovered.
+    """
+    # Pattern to find words starting with '@' or isolated handle formats
+    usernames_found = re.findall(r'@([\w-]+)', user_input_text)
     
-    # Fetch all articles authored by that user
-    user_articles = Article.objects.filter(author=profile_user)
+    # Also grab fallback phrases like "find user X" or "search profile X"
+    phrase_match = re.search(r'(?:find user|search profile|look up)\s+([\w-]+)', user_input_text, re.IGNORECASE)
+    if phrase_match:
+        usernames_found.append(phrase_match.group(1))
+        
+    context_injection = ""
     
-    return render(request, 'accounts/profile.html', {
-        'profile_user': profile_user,
-        'user_articles': user_articles
-    })
+    if usernames_found:
+        # Deduplicate list
+        usernames_found = list(set(usernames_found))
+        
+        matched_users = User.objects.filter(username__in=usernames_found)
+        if matched_users.exists():
+            context_injection += "\n[Zelda System Override: Found matching user database entities]\n"
+            for u in matched_users:
+                context_injection += f"- User Handle: @{u.username}\n"
+                context_injection += f"  Profile URL Path: /accounts/profile/{u.username}/\n"
+                # If they have specific roles on your platform, tell Zelda
+                if hasattr(u, 'investor_profile'):
+                    context_injection += "  Platform Status: Verified Investor\n"
+                elif hasattr(u, 'founder_profile'):
+                    context_injection += "  Platform Status: Startup Founder\n"
+                    
+    return context_injection
+

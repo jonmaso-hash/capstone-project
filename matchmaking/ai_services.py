@@ -50,3 +50,29 @@ def analyze_pitch_deck(file_path):
     except Exception as e:
         logger.error(f"Failed to extract payload insights from Gemini API: {str(e)}")
         return None
+    
+def ai_search_endpoint(request):
+    if request.method == "POST":
+        user_prompt = request.POST.get('prompt', '')
+        
+        # 1. Query traditional vector database embeddings for articles/bulletins
+        vector_context = get_vector_embeddings_context(user_prompt) 
+        
+        # 2. Run our precision username lookup check
+        user_database_context = extract_and_enrich_usernames(user_prompt)
+        
+        # Combined baseline prompt instructions for Zelda
+        system_instructions = (
+            "You are Zelda, the platform assistant for Interlink Foundry. "
+            "Your job is to match founders and investors and direct users perfectly. "
+            "If database context provides a 'Profile URL Path', ALWAYS present it to the "
+            "user as a clean absolute Markdown link: [@username](/accounts/profile/username/) "
+            "so they can click it instantly.\n"
+        )
+        
+        final_context_feed = system_instructions + vector_context + user_database_context
+        
+        # Send `final_context_feed` along with `user_prompt` to your LLM API generation layer...
+        # response = call_llm(final_context_feed, user_prompt)
+        
+        # return JsonResponse({'response': response})
