@@ -234,3 +234,32 @@ def ai_search_page(request):
     Renders the standalone workspace canvas workspace for Zelda query tracking.
     """
     return render(request, "accounts/ai_search.html")
+
+def account_search_api(request):
+    """
+    GET /accounts/search-api/?q=Sector:Status
+    Parses vector matchmaking parameters to screen user profile attributes.
+    """
+    query_param = request.GET.get('q', '').strip()
+    
+    # Simple extraction block for testing:
+    sector = "All"
+    status_filter = None
+    
+    if ":" in query_param:
+        sector, status_filter = query_param.split(":", 1)
+        
+    # Placeholder query logic: Filter your profiles or users based on the criteria
+    # users = User.objects.filter(profile__sector__icontains=sector)
+    
+    return JsonResponse({
+        "status": "success",
+        "parsed_criteria": {
+            "raw_query": query_param,
+            "target_sector": sector,
+            "status_flag": status_filter
+        },
+        "results": [
+            # Your serialized profiles array goes here
+        ]
+    }, safe=False)

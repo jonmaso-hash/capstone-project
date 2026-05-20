@@ -1,9 +1,9 @@
+# accounts/urls.py
 from django.urls import path
 from django.contrib.auth.views import LogoutView
 from . import views
 
-# Application namespace utilized by {% url 'accounts:...' %} template tags
-app_name = 'accounts'
+app_name = 'accounts' # 👈 Your namespace
 
 urlpatterns = [
     # ==========================================
@@ -30,10 +30,12 @@ urlpatterns = [
     # ==========================================
     path('api/stream-token/', views.get_stream_token, name='stream_token'),
     
+    # 🎯 ADD THIS NEW LINE RIGHT HERE:
+    path('search-api/', views.account_search_api, name='search_api'), 
+    
     # ==========================================
     # AI ASSISTANCE SEARCH ENGINE CANVAS
     # ==========================================
-    # Fixed naming collision: Explicit route paths for the UI workspaces
     path('ai_search/', views.ai_search_page, name='ai_search_page'),
     path('assistant/', views.ai_search_page, name='ai_assistant_page'),
 ]
