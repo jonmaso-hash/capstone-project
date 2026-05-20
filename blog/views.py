@@ -6,7 +6,7 @@ from .forms import ArticleUploadForm
 
 def blog_view(request):
     """
-    Handles displaying the blog feed and processing new article submissions.
+    Handles displaying the blog feed with sorting options and processing new article submissions.
     """
     if request.method == 'POST':
         if request.user.is_authenticated:
@@ -15,19 +15,31 @@ def blog_view(request):
                 article = form.save(commit=False)
                 article.author = request.user
                 article.save()
-                return redirect('blog_view')
+                # Use the app namespace 'blog:blog_view' to avoid NoReverseMatch warnings
+                return redirect('blog:blog_view')
         else:
-            # Redirect unauthenticated users trying to POST to login
             return redirect('login')
     else:
         form = ArticleUploadForm()
 
-    # Order by newest first
-    all_articles = Article.objects.all().order_by('-created_on')
+    # 1. Get the sorting strategy from the URL parameters (e.g., /blog/?sort=company)
+    sort_by = request.GET.get('sort', 'newest')
+
+    # 2. Match the parameter string with actual Django QuerySet lookup keys
+    if sort_by == 'username':
+        all_articles = Article.objects.all().order_by('author__username')
+    elif sort_by == 'company':
+        # Mix in fallback sorting by creation date if company name is blank
+        all_articles = Article.objects.all().order_by('company_name', '-created_on')
+    elif sort_by == 'oldest':
+        all_articles = Article.objects.all().order_by('created_on')
+    else:  # Default to 'newest'
+        all_articles = Article.objects.all().order_by('-created_on')
     
     context = {
         'blog': all_articles, 
-        'form': form
+        'form': form,
+        'current_sort': sort_by  # Sent to template to style the active sort option
     }
     return render(request, 'blog/article.html', context)
 
@@ -75,12 +87,12 @@ def add_comment(request, pk):
     return redirect('blog_view')
 
 def like_article(request, pk):
-    article = get_object_or_404(Article, id=pk)
+    article = get_object_or_404(Article, pk=pk) 
     if article.likes.filter(id=request.user.id).exists():
         article.likes.remove(request.user)
     else:
         article.likes.add(request.user)
-    return redirect('blog_view') 
+    return redirect('blog:blog_view') 
 
 @login_required
 def favorites_list(request):

@@ -3,11 +3,9 @@ from django.contrib.auth.models import User
 from django.conf import settings
 
 class Article(models.Model):
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='articles')
-    title = models.CharField(max_length=200)
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='articles', null=True, blank=True)
-    title = models.CharField(max_length=128)
-    company_name = models.CharField(max_length=128, blank=True, null=True) 
+    title = models.CharField(max_length=200)
+    company_name = models.CharField(max_length=128, blank=True, null=True)
     body = models.TextField()
     image = models.ImageField(upload_to='imgProject/')
     created_on = models.DateTimeField(auto_now_add=True)
