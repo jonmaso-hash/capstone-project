@@ -62,7 +62,41 @@ INSTALLED_APPS = [
     #marketing_ API 
     'marketing_api',
 
+    #legal_ API 
+    'legal_api',
+
+    #banking_ API 
+    'banking_api',
+
+    #energy_ API 
+    'energy_api',
+
+    #articles_ API 
+    'articles_api',
+
+    #automotive_ API 
+    'automotive_api',
+
+    #hotel_ API 
+    'hotel_api',
+
+    #insurance_ API 
+    'insurance_api',
+
+    #jobs_ API 
+    'jobs_api',
+
+    #logistics_ API 
+    'logistics_api',
+
+    #marketplace_ API 
+    'marketplace_api',
+
+    #messaging_ API 
+    'messaging_api'
 ]
+
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
