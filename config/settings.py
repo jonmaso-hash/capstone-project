@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "jobs.apps.JobsConfig",
+    "rest_framework",
 
     # Third-Party Infrastructure Layout Extensions
     "crispy_forms",
@@ -51,6 +52,15 @@ INSTALLED_APPS = [
     "pages",
     "accounts",
     "matchmaking",
+
+    #Zelda API 
+    "zelda_api",
+
+    #Real_estate_ API 
+    'real_estate_api',
+
+    #marketing_ API 
+    'marketing_api',
 
 ]
 

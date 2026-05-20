@@ -30,9 +30,6 @@ urlpatterns = [
     # ==========================================
     path('api/stream-token/', views.get_stream_token, name='stream_token'),
     
-    # ADDED: This registers the endpoint your live-typing global search is hitting
-    path('search-api/', views.search_api, name='search-api'), 
-
     # ==========================================
     # AI ASSISTANCE SEARCH ENGINE CANVAS
     # ==========================================

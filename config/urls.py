@@ -12,9 +12,11 @@ urlpatterns = [
     path('matchmaking/', include('matchmaking.urls')), 
     path('jobs/', include('jobs.urls', namespace='jobs')),
     path('search/', global_search, name='global_search'),
-    
-    # Keep only this single clean route configuration for the blog app
     path('blog/', include('blog.urls')),
+    path('api/v1/zelda/', include('zelda_api.urls')),
+    path('api/v1/real-estate/', include('real_estate_api.urls')),
+    path('api/v1/marketing/', include('marketing_api.urls')),
+    path('api/v1/legal/', include('legal_api.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
