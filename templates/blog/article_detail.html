@@ -17,7 +17,7 @@
             
             <!-- Breadcrumbs / Back Button -->
             <nav aria-label="breadcrumb" class="mb-4 d-flex justify-content-between align-items-center">
-                <a href="{% url 'blog_view' %}" class="text-decoration-none text-muted small">
+                <a href="{% url 'blog:blog_view' %}" class="text-decoration-none text-muted small">
                     <i class="bi bi-arrow-left me-1"></i> Back to Venture Insights
                 </a>
                 <!-- Quick Favorite Toggle -->
@@ -70,7 +70,7 @@
                 <!-- Comment Form -->
                 {% if user.is_authenticated %}
                 <div class="card border-0 bg-light rounded-4 p-4 mb-5 shadow-sm">
-                    <form method="post" action="{% url 'add_comment' article.pk %}">
+                    <form method="post" action="{% url 'blog:add_comment' article.pk %}">
                         {% csrf_token %}
                         <div class="mb-3">
                             <label class="form-label fw-bold">Add to the discussion</label>

@@ -1,5 +1,7 @@
 from django import forms
 from matchmaking.models import Application, InvestorApplication
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 # -----------------------------
 # Founder Application Form
@@ -64,3 +66,8 @@ class InvestorForm(forms.ModelForm):
         widgets = {
             "investment_focus": forms.Textarea(attrs={"rows": 4, "class": "form-control"}),
         }
+
+class CustomUserCreationForm(forms.ModelForm):
+    class Meta:
+        model = User  # This is perfectly safe here
+        fields = ('username', 'email')

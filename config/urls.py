@@ -15,6 +15,7 @@ urlpatterns = [
     path('', include('blog.urls')),
     path('jobs/', include('jobs.urls', namespace='jobs')),
     path('search/', global_search, name='global_search'),
+    path('blog/', include('blog.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

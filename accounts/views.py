@@ -6,7 +6,7 @@ import urllib.parse
 from django.apps import apps
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import login as auth_login
+from django.contrib.auth import get_user_model, login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
@@ -16,6 +16,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import NoReverseMatch, reverse
 from django.views.decorators.http import require_GET
 from stream_chat import StreamChat
+from blog.models import Article
 
 # Gemini Automated Deal Screening Orchestration Service
 from matchmaking.services.deal_screener import index_founder_pitch_deck
@@ -148,20 +149,25 @@ def investor_form(request):
 
 @login_required
 def profile(request, username):
-    """
-    Main User Hub: Displays the profile cards built for Interlink Foundry.
-    """
+    # Fetch the model inside the function
+    User = get_user_model()
     viewed_user = get_object_or_404(User, username=username)
+    # ... rest of your code
     
+    # Existing matchmaking logic
     application = getattr(viewed_user, "match_founder_profile", None)
     investor_application = getattr(viewed_user, "match_investor_profile", None)
     show_welcome_prompt = not application and not investor_application
+
+    # Blog integration: Fetch articles authored by this specific user
+    user_articles = Article.objects.filter(author=viewed_user)
 
     return render(request, "accounts/profile.html", {
         "profile_user": viewed_user,
         "application": application,
         "investor_application": investor_application,
-        "show_welcome_prompt": show_welcome_prompt, 
+        "show_welcome_prompt": show_welcome_prompt,
+        "user_articles": user_articles,  # Pass this to the template
     })
 
 
@@ -519,3 +525,15 @@ def perform_database_lookup(query):
         logger.error(f"Safe Job contextual execution runtime dropped: {str(e)}")
         
     return context_data
+
+def profile_view(request, pk):
+    User = get_user_model() # Get the model dynamically
+    profile_user = get_object_or_404(User, pk=pk)
+    
+    # Fetch all articles authored by that user
+    user_articles = Article.objects.filter(author=profile_user)
+    
+    return render(request, 'accounts/profile.html', {
+        'profile_user': profile_user,
+        'user_articles': user_articles
+    })
