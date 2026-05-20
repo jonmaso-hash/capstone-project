@@ -76,23 +76,21 @@
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <span class="text-muted small fw-medium">{{ blog|length }} Posts Found</span>
     
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <span class="text-muted small fw-medium">{{ blog|length }} Posts Found</span>
+    
     <div class="d-flex align-items-center gap-2">
-        <span class="text-muted small"><i class="bi bi-sort-down"></i> Sort by:</span>
-        <div class="btn-group shadow-sm rounded-3" role="group" aria-label="Sort options">
-            <a href="?sort=newest" class="btn btn-sm {% if current_sort == 'newest' %}btn-primary{% else %}btn-outline-secondary bg-white text-dark{% endif %}">
-                Newest Date
+        <span class="text-muted small"><i class="bi bi-calendar3"></i> Order by:</span>
+        <div class="btn-group shadow-sm rounded-3" role="group" aria-label="Date sorting">
+            <a href="?sort=newest" class="btn btn-sm {% if current_sort == 'newest' or not current_sort %}btn-primary{% else %}btn-outline-secondary bg-white text-dark{% endif %}">
+                Newest First
             </a>
             <a href="?sort=oldest" class="btn btn-sm {% if current_sort == 'oldest' %}btn-primary{% else %}btn-outline-secondary bg-white text-dark{% endif %}">
-                Oldest Date
-            </a>
-            <a href="?sort=username" class="btn btn-sm {% if current_sort == 'username' %}btn-primary{% else %}btn-outline-secondary bg-white text-dark{% endif %}">
-                Username
-            </a>
-            <a href="?sort=company" class="btn btn-sm {% if current_sort == 'company' %}btn-primary{% else %}btn-outline-secondary bg-white text-dark{% endif %}">
-                Company
+                Oldest First
             </a>
         </div>
     </div>
+</div>
 </div>
             {% for article in blog %}
             <article class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">

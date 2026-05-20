@@ -16,7 +16,7 @@
                         {% csrf_token %}
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-danger btn-lg">Delete Permanently</button>
-                            <a href="{% url 'blog_view' %}" class="btn btn-outline-secondary">Cancel</a>
+                            <a href="{% url 'blog:blog_view' %}" class="btn btn-outline-secondary">Cancel</a>
                         </div>
                     </form>
                 </div>
