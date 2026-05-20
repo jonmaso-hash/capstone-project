@@ -4,10 +4,6 @@ from .models import Article, Comment
 from .forms import ArticleUploadForm
 
 def blog_view(request):
-    """
-    Handles displaying the blog feed with date sorting options 
-    and processing new article submissions.
-    """
     if request.method == 'POST':
         if request.user.is_authenticated:
             form = ArticleUploadForm(request.POST, request.FILES)
@@ -15,16 +11,15 @@ def blog_view(request):
                 article = form.save(commit=False)
                 article.author = request.user
                 article.save()
-                return redirect('blog:blog_view')
+                return redirect('blog:blog_view') # Fixed namespace
         else:
-            return redirect('login')
+            return redirect('accounts:login') # Fixed namespace
     else:
         form = ArticleUploadForm()
 
-    # 1. Fetch the date sorting preference (?sort=...)
+    # Capture the sorting query string parameter
     sort_by = request.GET.get('sort', 'newest')
 
-    # 2. Toggle strictly between newest and oldest
     if sort_by == 'oldest':
         all_articles = Article.objects.all().order_by('created_on')
     else:
@@ -39,34 +34,23 @@ def blog_view(request):
 
 @login_required
 def edit_article(request, pk):
-    """
-    Allows the author to update an existing article.
-    """
     article = get_object_or_404(Article, pk=pk, author=request.user)
-    
     if request.method == "POST":
         form = ArticleUploadForm(request.POST, request.FILES, instance=article)
         if form.is_valid():
             form.save()
-            return redirect('blog:blog_view')
+            return redirect('blog:blog_view') # Fixed namespace
     else:
         form = ArticleUploadForm(instance=article)
         
-    return render(request, 'blog/edit_article.html', {
-        'form': form, 
-        'article': article
-    })
+    return render(request, 'blog/edit_article.html', {'form': form, 'article': article})
 
 @login_required
 def delete_article(request, pk):
-    """
-    Allows the author to delete their article after a POST confirmation.
-    """
     article = get_object_or_404(Article, pk=pk, author=request.user)
-    
     if request.method == "POST":
         article.delete()
-        return redirect('blog:blog_view')
+        return redirect('blog:blog_view') # Fixed namespace
         
     return render(request, 'blog/delete_confirm.html', {'article': article})
 
@@ -76,28 +60,25 @@ def add_comment(request, pk):
         body = request.POST.get('body')
         if body:
             Comment.objects.create(article=article, author=request.user, body=body)
-    return redirect('blog:blog_view')
+    return redirect('blog:blog_view') # Fixed namespace
 
 def like_article(request, pk):
-    # Changed from id=pk to pk=pk for consistency
-    article = get_object_or_404(Article, pk=pk)
+    article = get_object_or_404(Article, pk=pk) # Fixed id to pk lookup
     if article.likes.filter(id=request.user.id).exists():
         article.likes.remove(request.user)
     else:
         article.likes.add(request.user)
-    return redirect('blog:blog_view') 
+    return redirect('blog:blog_view') # Fixed namespace
 
 @login_required
 def favorites_list(request):
-    favorite_posts = Article.objects.filter(likes=request.user).order_by('-created_on')
+    # This filters by articles the user explicitly favorited
+    favorite_posts = Article.objects.filter(favorites=request.user).order_by('-created_on')
     return render(request, 'blog/favorites.html', {'favorite_posts': favorite_posts})
 
 def article_detail(request, pk):
     article = get_object_or_404(Article, pk=pk)
-    context = {
-        'article': article,
-    }
-    return render(request, 'blog/article_detail.html', context)
+    return render(request, 'blog/article_detail.html', {'article': article})
 
 @login_required
 def toggle_favorite(request, pk):
@@ -106,4 +87,4 @@ def toggle_favorite(request, pk):
         article.favorites.remove(request.user)
     else:
         article.favorites.add(request.user)
-    return redirect('blog:article_detail', pk=pk)
+    return redirect('blog:article_detail', pk=pk) # Fixed namespace

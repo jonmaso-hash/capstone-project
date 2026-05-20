@@ -1,11 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.conf import settings
 
 class Article(models.Model):
+    # Use standard User model relation, allow null/blank for safety
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='articles', null=True, blank=True)
     title = models.CharField(max_length=200)
-    company_name = models.CharField(max_length=128, blank=True, null=True)
+    company_name = models.CharField(max_length=128, blank=True, null=True) 
     body = models.TextField()
     image = models.ImageField(upload_to='imgProject/')
     created_on = models.DateTimeField(auto_now_add=True)
