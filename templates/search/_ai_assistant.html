@@ -148,43 +148,55 @@
             statusDot.className = "position-absolute bottom-0 end-0 p-1 bg-warning border border-2 border-dark rounded-circle m-1";
 
             // Asynchronous query dispatching against API routes
-            fetch(`/accounts/search-api/?q=${encodeURIComponent(query)}`)
-                .then(res => res.json())
-                .then(data => {
-                    thinking.classList.add('d-none');
-                    output.classList.remove('d-none');
+            // Use POST and send JSON payload
+fetch('/accounts/search-api/', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+    },
+    body: JSON.stringify({ q: query })
+})
+.then(res => res.json())
+.then(data => {
+    thinking.classList.add('d-none');
+    output.classList.remove('d-none');
 
-                    // Revert Zelda back to Standby Monitoring Identity
-                    faceIcon.className = "fa-solid fa-wand-magic-sparkles fs-4 dynamic-glow";
-                    faceIcon.style.color = "#fbbf24";
-                    statusDot.className = "position-absolute bottom-0 end-0 p-1 bg-success border border-2 border-dark rounded-circle m-1";
+    // UI Reset
+    faceIcon.className = "fa-solid fa-wand-magic-sparkles fs-4 dynamic-glow";
+    faceIcon.style.color = "#fbbf24";
+    statusDot.className = "position-absolute bottom-0 end-0 p-1 bg-success border border-2 border-dark rounded-circle m-1";
 
-                    if (data.results.length === 0) {
-                        output.innerHTML = `<div class="text-center text-muted py-4 small">No system vectors matched that expression.</div>`;
-                        return;
-                    }
+    // Ensure results key exists (matches views.py response)
+    const items = data.results || [];
+    
+    if (items.length === 0) {
+        output.innerHTML = `<div class="text-center text-muted py-4 small">No matches found.</div>`;
+        return;
+    }
 
-                    data.results.forEach(item => {
-                        const row = document.createElement('div');
-                        row.className = 'p-3 mb-2 border rounded-3 bg-white shadow-sm transition';
-                        row.innerHTML = `
-                            <h6 class="fw-bold text-dark mb-1 small">${item.title}</h6>
-                            <p class="text-muted mb-2" style="font-size: 12px; line-height: 1.4;">${item.snippet}</p>
-                            <a href="${item.url}" class="btn btn-sm btn-light border w-100 fw-medium" style="font-size: 11px;">Inspect Asset</a>
-                        `;
-                        output.appendChild(row);
-                    });
-                })
-                .catch(() => {
-                    thinking.classList.add('d-none');
-                    output.classList.remove('d-none');
-                    output.innerHTML = `<div class="text-center text-danger py-4 small">Handshake execution dropped.</div>`;
-                    
-                    // Revert UI to Default Safe Configuration on Connection Failures
-                    faceIcon.className = "fa-solid fa-wand-magic-sparkles fs-4 dynamic-glow";
-                    faceIcon.style.color = "#fbbf24";
-                    statusDot.className = "position-absolute bottom-0 end-0 p-1 bg-danger border border-2 border-dark rounded-circle m-1";
-                });
+    items.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'p-3 mb-2 border rounded-3 bg-white shadow-sm transition';
+        row.innerHTML = `
+            <h6 class="fw-bold text-dark mb-1 small">${item.title}</h6>
+            <p class="text-muted mb-2" style="font-size: 12px; line-height: 1.4;">${item.description}</p>
+            <a href="${item.url}" class="btn btn-sm btn-light border w-100 fw-medium" style="font-size: 11px;">Inspect Asset</a>
+        `;
+        output.appendChild(row);
+    });
+})
+.catch(err => {
+    console.error(err);
+    thinking.classList.add('d-none');
+    output.classList.remove('d-none');
+    output.innerHTML = `<div class="text-center text-danger py-4 small">Handshake execution dropped.</div>`;
+    
+    faceIcon.className = "fa-solid fa-wand-magic-sparkles fs-4 dynamic-glow";
+    faceIcon.style.color = "#fbbf24";
+    statusDot.className = "position-absolute bottom-0 end-0 p-1 bg-danger border border-2 border-dark rounded-circle m-1";
+});
+
         }
     });
 </script>

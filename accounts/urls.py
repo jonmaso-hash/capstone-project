@@ -2,8 +2,9 @@
 from django.urls import path
 from django.contrib.auth.views import LogoutView
 from . import views
+from zelda_api.views import ZeldaGlobalSearchAPIView
 
-app_name = 'accounts' # 👈 Your namespace
+app_name = 'accounts' 
 
 urlpatterns = [
     # ==========================================
@@ -31,7 +32,7 @@ urlpatterns = [
     path('api/stream-token/', views.get_stream_token, name='stream_token'),
     
     # 🎯 ADD THIS NEW LINE RIGHT HERE:
-    path('search-api/', views.account_search_api, name='search_api'), 
+    path('search-api/', ZeldaGlobalSearchAPIView.as_view(), name='search_api'),
     
     # ==========================================
     # AI ASSISTANCE SEARCH ENGINE CANVAS

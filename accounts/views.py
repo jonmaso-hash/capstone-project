@@ -14,9 +14,11 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import NoReverseMatch, reverse
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 from stream_chat import StreamChat
 from blog.models import Article
+import json 
+from django.http import JsonResponse 
 
 # Gemini Automated Deal Screening Orchestration Service
 from matchmaking.services.deal_screener import index_founder_pitch_deck
@@ -235,31 +237,40 @@ def ai_search_page(request):
     """
     return render(request, "accounts/ai_search.html")
 
+@require_POST
 def account_search_api(request):
-    """
-    GET /accounts/search-api/?q=Sector:Status
-    Parses vector matchmaking parameters to screen user profile attributes.
-    """
-    query_param = request.GET.get('q', '').strip()
-    
-    # Simple extraction block for testing:
-    sector = "All"
-    status_filter = None
-    
-    if ":" in query_param:
-        sector, status_filter = query_param.split(":", 1)
-        
-    # Placeholder query logic: Filter your profiles or users based on the criteria
-    # users = User.objects.filter(profile__sector__icontains=sector)
-    
+    try:
+        data = json.loads(request.body)
+        query_param = data.get('q', '').strip()
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    if not query_param:
+        return JsonResponse({"results": []})
+
+    # 1. Define the search query using Q objects
+    # This searches across the company_name, description, and sector fields
+    search_query = (
+        Q(company_name__icontains=query_param) | 
+        Q(description__icontains=query_param) |
+        Q(sector__icontains=query_param)
+    )
+
+    # 2. Filter the model and execute the query
+    # We limit to the top 10 results for performance
+    results_queryset = Application.objects.filter(search_query)[:10]
+
+    # 3. Serialize the data into a list of dictionaries
+    serialized_results = [
+        {
+            "title": app.company_name or "Untitled Application",
+            "snippet": app.description[:100] + "..." if app.description else "No description available.",
+            "url": reverse("accounts:profile", kwargs={"username": app.user.username})
+        }
+        for app in results_queryset
+    ]
+
     return JsonResponse({
         "status": "success",
-        "parsed_criteria": {
-            "raw_query": query_param,
-            "target_sector": sector,
-            "status_flag": status_filter
-        },
-        "results": [
-            # Your serialized profiles array goes here
-        ]
-    }, safe=False)
+        "results": serialized_results
+    })
