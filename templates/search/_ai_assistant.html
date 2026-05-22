@@ -109,94 +109,90 @@
 
 <!-- Script Controller Architecture -->
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const sidebarEl = document.getElementById('aiAgentSidebar');
-        const sidebar = new bootstrap.Offcanvas(sidebarEl);
-        
-        // Bind floating trigger button
-        document.getElementById('ai-agent-toggle').addEventListener('click', () => sidebar.show());
-
-        const form = document.getElementById('global-agent-form');
+    // 1. DEFINE GLOBAL FUNCTIONS (Accessible to HTML onclick attributes)
+    window.runQuickSearch = function(keyword) {
         const input = document.getElementById('globalAgentQuery');
-        const emptyState = document.getElementById('agent-empty-state');
+        if (input) {
+            input.value = keyword;
+            if (typeof window.executeGlobalQuery === 'function') {
+                window.executeGlobalQuery(keyword);
+            }
+        }
+    };
+
+    window.executeGlobalQuery = function(query) {
         const thinking = document.getElementById('global-agent-thinking');
         const output = document.getElementById('global-results-output');
-        
-        // Face Node Element Targets
         const faceIcon = document.getElementById('zelda-face-icon');
         const statusDot = document.getElementById('zelda-status-dot');
 
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (input.value.trim()) executeGlobalQuery(input.value.trim());
+        if (!thinking || !output) return;
+
+        thinking.classList.remove('d-none');
+        output.classList.add('d-none');
+        output.innerHTML = '';
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+
+        fetch('/api/v1/zelda/search/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                'Authorization': 'Token ' + (localStorage.getItem('auth_token') || '')
+            },
+            body: JSON.stringify({ q: query })
+        })
+        .then(res => {
+            if (res.status === 401) throw new Error('Unauthorized');
+            return res.json();
+        })
+        .then(data => {
+            thinking.classList.add('d-none');
+            output.classList.remove('d-none');
+            
+            const items = data.results || [];
+            if (items.length === 0) {
+                output.innerHTML = `<div class="text-center text-muted py-4 small">No matches found.</div>`;
+                return;
+            }
+
+            items.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'p-3 mb-2 border rounded-3 bg-white shadow-sm';
+                row.innerHTML = `
+                    <h6 class="fw-bold text-dark mb-1 small">${item.title}</h6>
+                    <p class="text-muted mb-2" style="font-size: 12px;">${item.description}</p>
+                    <a href="${item.url}" class="btn btn-sm btn-light border w-100">Inspect</a>
+                `;
+                output.appendChild(row);
+            });
+        })
+        .catch(err => {
+            console.error("Zelda API Error:", err);
+            thinking.classList.add('d-none');
+            output.classList.remove('d-none');
+            output.innerHTML = `<div class="text-center text-danger py-4">Search failed. Please ensure you are logged in.</div>`;
         });
+    };
 
-        window.runQuickSearch = function(keyword) {
-            input.value = keyword;
-            executeGlobalQuery(keyword);
-        };
+    // 2. INITIALIZE DOM ELEMENTS
+    document.addEventListener('DOMContentLoaded', () => {
+        const sidebarEl = document.getElementById('aiAgentSidebar');
+        const toggleBtn = document.getElementById('ai-agent-toggle');
+        const form = document.getElementById('global-agent-form');
+        const input = document.getElementById('globalAgentQuery');
 
-        function executeGlobalQuery(query) {
-            emptyState.classList.add('d-none');
-            output.classList.add('d-none');
-            thinking.classList.remove('d-none');
-            output.innerHTML = '';
+        if (sidebarEl) {
+            const sidebar = new bootstrap.Offcanvas(sidebarEl);
+            if (toggleBtn) toggleBtn.addEventListener('click', () => sidebar.show());
+        }
 
-            // Transition Zelda to Active Processing State
-            faceIcon.className = "fa-solid fa-compass-drafting fs-4 fa-spin";
-            faceIcon.style.color = "#ffffff";
-            statusDot.className = "position-absolute bottom-0 end-0 p-1 bg-warning border border-2 border-dark rounded-circle m-1";
-
-            // Asynchronous query dispatching against API routes
-            // Use POST and send JSON payload
-fetch('/accounts/search-api/', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-    },
-    body: JSON.stringify({ q: query })
-})
-.then(res => res.json())
-.then(data => {
-    thinking.classList.add('d-none');
-    output.classList.remove('d-none');
-
-    // UI Reset
-    faceIcon.className = "fa-solid fa-wand-magic-sparkles fs-4 dynamic-glow";
-    faceIcon.style.color = "#fbbf24";
-    statusDot.className = "position-absolute bottom-0 end-0 p-1 bg-success border border-2 border-dark rounded-circle m-1";
-
-    // Ensure results key exists (matches views.py response)
-    const items = data.results || [];
-    
-    if (items.length === 0) {
-        output.innerHTML = `<div class="text-center text-muted py-4 small">No matches found.</div>`;
-        return;
-    }
-
-    items.forEach(item => {
-        const row = document.createElement('div');
-        row.className = 'p-3 mb-2 border rounded-3 bg-white shadow-sm transition';
-        row.innerHTML = `
-            <h6 class="fw-bold text-dark mb-1 small">${item.title}</h6>
-            <p class="text-muted mb-2" style="font-size: 12px; line-height: 1.4;">${item.description}</p>
-            <a href="${item.url}" class="btn btn-sm btn-light border w-100 fw-medium" style="font-size: 11px;">Inspect Asset</a>
-        `;
-        output.appendChild(row);
-    });
-})
-.catch(err => {
-    console.error(err);
-    thinking.classList.add('d-none');
-    output.classList.remove('d-none');
-    output.innerHTML = `<div class="text-center text-danger py-4 small">Handshake execution dropped.</div>`;
-    
-    faceIcon.className = "fa-solid fa-wand-magic-sparkles fs-4 dynamic-glow";
-    faceIcon.style.color = "#fbbf24";
-    statusDot.className = "position-absolute bottom-0 end-0 p-1 bg-danger border border-2 border-dark rounded-circle m-1";
-});
-
+        if (form && input) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (input.value.trim()) window.executeGlobalQuery(input.value.trim());
+            });
         }
     });
 </script>

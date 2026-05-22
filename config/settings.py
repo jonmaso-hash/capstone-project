@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "jobs.apps.JobsConfig",
     "rest_framework",
+    "rest_framework.authtoken",
 
     # Third-Party Infrastructure Layout Extensions
     "crispy_forms",
@@ -95,6 +96,15 @@ INSTALLED_APPS = [
     #messaging_ API 
     'messaging_api'
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
 
 
 

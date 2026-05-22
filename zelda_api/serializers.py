@@ -24,5 +24,12 @@ class MarketAnalyticsSerializer(serializers.Serializer):
     include_sector_breakdown = serializers.BooleanField(default=True)
 
 class MemoGenerationSerializer(serializers.Serializer):
-    founder_id = serializers.IntegerField(required=True)
-    tone = serializers.ChoiceField(choices=['analytical', 'venture_partner', 'concise'], default='venture_partner')
+    founder_id = serializers.CharField()  # Change from IntegerField to CharField
+    tone = serializers.CharField(default="professional")
+
+    def validate_founder_id(self, value):
+        # Strip "#F-" if present to get the internal integer ID
+        clean_id = value.replace("#F-", "")
+        if not clean_id.isdigit():
+            raise serializers.ValidationError("Founder ID must be a valid numeric ID or formatted as #F-<number>")
+        return int(clean_id)

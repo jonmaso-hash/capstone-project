@@ -22,5 +22,5 @@ urlpatterns = [
     # Advanced Institutional Layer Features
     path('documents/scrape/', DocumentDirectScraperAPIView.as_view(), name='document_direct_scraper'),
     path('analytics/market/', MarketHealthAnalyticsAPIView.as_view(), name='market_analytics'),
-    path('memo/generate/', InvestmentMemoGeneratorAPIView.as_view(), name='memo_generation'),
+    path('memo/generate/', InvestmentMemoGeneratorAPIView.as_view(), name='memo_generate'),
 ]

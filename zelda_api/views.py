@@ -496,11 +496,6 @@ class MarketHealthAnalyticsAPIView(APIView):
 
 
 class InvestmentMemoGeneratorAPIView(APIView):
-    """
-    POST /api/v1/zelda/memo/generate/
-    Compiles full structured internal text briefs leveraging deep data lookups 
-    and web crawling pipelines for institutional diligence records.
-    """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -508,10 +503,11 @@ class InvestmentMemoGeneratorAPIView(APIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
+        # The serializer has already converted "#F-1" to 1
         founder_id = serializer.validated_data['founder_id']
         tone = serializer.validated_data['tone']
         
-        # Fetch target founder metrics context
+        # Lookup is now safe and uses the integer
         founder_app = get_object_or_404(Application, id=founder_id)
         
         # --- GENERATE SYNTHESIZED INVESTMENT MEMO PAYLOAD ---
@@ -529,8 +525,7 @@ class InvestmentMemoGeneratorAPIView(APIView):
         
         return Response({
             "status": "compiled",
-            "target_founder_id": founder_id,
+            "target_founder_id": founder_input,
             "format": "markdown",
             "investment_memo_payload": memo_markdown
         }, status=status.HTTP_200_OK)
-    
