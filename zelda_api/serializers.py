@@ -10,6 +10,10 @@ class DocumentAnalysisSerializer(serializers.Serializer):
     document_url = serializers.URLField(required=False, allow_blank=True)
     file_type = serializers.ChoiceField(choices=['pdf', 'docx', 'txt'], default='pdf')
     extract_financials = serializers.BooleanField(default=True)
+    
+    current_revenue = serializers.DecimalField(max_digits=15, decimal_places=2, required=False)
+    company_size = serializers.IntegerField(required=False)
+    years_in_business = serializers.IntegerField(required=False)
 
 class WebCrawlSerializer(serializers.Serializer):
     target_url = serializers.URLField(required=True)
@@ -18,6 +22,10 @@ class WebCrawlSerializer(serializers.Serializer):
 class DirectUploadDocumentSerializer(serializers.Serializer):
     file = serializers.FileField(required=True)
     document_type = serializers.ChoiceField(choices=['pitch_deck', 'cap_table', 'financial_model'], default='pitch_deck')
+    
+    current_revenue = serializers.DecimalField(max_digits=15, decimal_places=2, required=False)
+    company_size = serializers.IntegerField(required=False)
+    years_in_business = serializers.IntegerField(required=False)
 
 class MarketAnalyticsSerializer(serializers.Serializer):
     timeframe_days = serializers.IntegerField(default=30, min_value=7, max_value=365)

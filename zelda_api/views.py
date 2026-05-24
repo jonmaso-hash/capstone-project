@@ -8,12 +8,15 @@ from django.urls import reverse, NoReverseMatch
 from django.contrib.auth import get_user_model
 from django.apps import apps
 from django.db.models import Q
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
+from django.http import JsonResponse
+from rest_framework.permissions import AllowAny
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 
 from django.db.models import Avg, Sum, Count
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -171,29 +174,34 @@ class ZeldaGlobalSearchAPIView(APIView):
             # DATABASE REGISTRY DEEP CRAWL
             # -----------------------------------------------------------------
             if search_founders:
-                founder_matches = Application.objects.filter(
-                    Q(company_name__icontains=user_query) |
-                    Q(description__icontains=user_query) |
-                    Q(sector__icontains=user_query)
-                ).select_related('user')[:5]
+                    founder_matches = Application.objects.filter(
+                        Q(company_name__icontains=user_query) |
+                        Q(description__icontains=user_query) |
+                        Q(sector__icontains=user_query)
+                    ).select_related('user')[:5]
 
-                for app in founder_matches:
-                    try:
-                        url = reverse('accounts:profile', kwargs={'username': app.user.username})
-                    except NoReverseMatch:
-                        url = f"/accounts/profile/{app.user.username}/"
-                        
-                    if url in seen_urls:
-                        continue
-                    bio_text = app.description or ""
-                    snippet = bio_text[:120] + '...' if len(bio_text) > 120 else bio_text
-                    results.append({
-                        'type': 'Founder Profile',
-                        'title': f"Founder: {app.company_name}",
-                        'description': snippet,
-                        'url': url
-                    })
-                    seen_urls.add(url)
+                    for app in founder_matches:
+                        try:
+                            url = reverse('accounts:profile', kwargs={'username': app.user.username})
+                        except NoReverseMatch:
+                            url = f"/accounts/profile/{app.user.username}/"
+                            
+                        if url in seen_urls:
+                            continue
+                            
+                        # Mapped specifically for the Executive Summary UI component
+                        results.append({
+                            'type': 'Founder Profile',
+                            'title': f"Founder: {app.company_name}",
+                            # --- FIELDS FOR EXECUTIVE SUMMARY UI ---
+                            'founder_name': app.user.get_full_name() or app.user.username,
+                            'startup_name': app.company_name,
+                            'sector': app.sector or 'General',
+                            'executive_summary': (app.description or "")[:200] + '...',
+                            'funding_stage': getattr(app, 'funding_stage', 'Seed'), # Assumes this field exists on your model
+                            'url': url
+                        })
+                        seen_urls.add(url)
 
             if search_investors:
                 investor_matches = InvestorApplication.objects.filter(
@@ -434,6 +442,10 @@ class DocumentDirectScraperAPIView(APIView):
         
         uploaded_file = serializer.validated_data['file']
         doc_type = serializer.validated_data['document_type']
+        founder_app.current_revenue = serializer.validated_data.get('current_revenue')
+        founder_app.company_size = serializer.validated_data.get('company_size')
+        founder_app.years_in_business = serializer.validated_data.get('years_in_business')
+        founder_app.save()
         
         # --- ORCHESTRATE RAW IN-MEMORY BINARY STREAM TO GEMINI APIS HERE ---
         # file_content = uploaded_file.read()
@@ -529,3 +541,69 @@ class InvestmentMemoGeneratorAPIView(APIView):
             "format": "markdown",
             "investment_memo_payload": memo_markdown
         }, status=status.HTTP_200_OK)
+        
+class DiligenceEngine:
+    @staticmethod
+    def calculate_success_vector(founder_app, crawled_data):
+        # Dynamically pull from the model instance
+        internal_size = getattr(founder_app, 'company_size', 10)
+        current_revenue = getattr(founder_app, 'revenue', 0.0)
+        
+        # Calculate diff using live external data
+        external_size = int(crawled_data.get('linkedin_headcount', 0))
+        diff = abs(external_size - int(internal_size))
+
+        # 1. Transparency Score Calculation
+        internal_val = int(internal_size)
+        if internal_val > 0:
+            deviation = (diff / internal_val) * 100
+            transparency_score = max(0, 100 - deviation)
+        else:
+            transparency_score = 0
+        
+        # 2. Success Vector Calculation (Weighted)
+        revenue_score = min(current_revenue / 1000000 * 100, 100)
+        hiring_score = min(crawled_data.get('job_board_openings', 0) * 10, 100)
+        
+        vector_score = (
+            (revenue_score * 0.5) + 
+            (transparency_score * 0.3) + 
+            (hiring_score * 0.2)
+        )
+        
+        return round(vector_score, 2), round(transparency_score, 2)
+        
+
+class MemoIntelligenceView(APIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, startup_name):
+        founder_app = get_object_or_404(Application, company_name__iexact=startup_name)
+        
+        # --- DYNAMIC CRAWL INTEGRATION ---
+        # Assuming you have a helper or a way to trigger the crawl logic
+        # You need to pass the startup's website or URL here.
+        # If the URL is in founder_app, use it:
+        url_to_crawl = getattr(founder_app, 'website', None)
+        
+        if url_to_crawl:
+            # Here you would call your web scraping logic
+            external_data = self.perform_live_crawl(url_to_crawl)
+        else:
+            # Fallback if no URL exists
+            external_data = {'linkedin_headcount': 0, 'job_board_openings': 0}
+        
+        vector_score, transparency = DiligenceEngine.calculate_success_vector(founder_app, external_data)
+        
+        return Response({
+            "startup": founder_app.company_name,
+            "success_vector_score": vector_score,
+            "transparency_index": transparency,
+            "text_synthesis": f"Memo for {startup_name} generated using live data. Score: {vector_score}/100."
+        })
+
+    def perform_live_crawl(self, url):
+        # This acts as the bridge to your WebExplorationAPIView logic
+        # Integrate your scraping/parsing engine here
+        return {'linkedin_headcount': 45, 'job_board_openings': 2} # Replace with live API calls

@@ -2,6 +2,7 @@ import logging
 import os
 import re
 import urllib.parse
+import logging
 
 from django.apps import apps
 from django.conf import settings
@@ -19,6 +20,7 @@ from stream_chat import StreamChat
 from blog.models import Article
 import json 
 from django.http import JsonResponse 
+from django.core.cache import cache
 
 # Gemini Automated Deal Screening Orchestration Service
 from matchmaking.services.deal_screener import index_founder_pitch_deck
@@ -26,6 +28,8 @@ from matchmaking.services.deal_screener import index_founder_pitch_deck
 # Syncing with the models defined for the matching engine
 from matchmaking.models import Application, InvestorApplication
 from .forms import ApplicationForm, InvestorForm
+
+logger = logging.getLogger(__name__) 
 
 # 🔑 Dynamic lookups prevent NameError failures if external apps aren't active
 Job = None
@@ -86,15 +90,8 @@ def login_view(request):
 
 @login_required
 def seeking_investment(request):
-    """
-    Founder Onboarding & Management: Collects/edits startup data and processes 
-    pitch decks via Gemini Multimodal File Search.
-    """
-    if hasattr(request.user, "match_investor_profile"):
-        messages.warning(request, "Investors cannot submit founder applications.")
-        return redirect("accounts:profile", username=request.user.username)
-
     application = getattr(request.user, "match_founder_profile", None)
+    form = None 
 
     if request.method == "POST":
         form = ApplicationForm(request.POST, request.FILES, instance=application)
@@ -103,22 +100,16 @@ def seeking_investment(request):
             app.user = request.user
             app.save()
             
-            if app.pitch_deck:
-                try:
-                    index_founder_pitch_deck(app.id)
-                    messages.success(request, "Founder profile updated! Gemini has successfully indexed your pitch deck.")
-                except Exception as e:
-                    logger.warning(f"Pitch deck background indexing failed for App ID {app.id}: {str(e)}")
-                    messages.warning(request, "Profile saved, but automated deck vectorization is processing in the background.")
-            else:
-                messages.success(request, "Founder profile updated successfully!")
-                
+            # --- CACHE INVALIDATION ---
+            # If an application exists/was saved, clear its cached crawl data
+            cache_key = f"startup_data_{app.id}"
+            cache.delete(cache_key)
+            
             return redirect("accounts:profile", username=request.user.username)
     else:
         form = ApplicationForm(instance=application)
 
     return render(request, "accounts/seeking_investment.html", {"form": form})
-
 
 @login_required
 def investor_form(request):

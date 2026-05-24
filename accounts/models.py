@@ -32,6 +32,27 @@ class InvestorApplication(models.Model):
     focus_vector = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    years_in_business = models.PositiveIntegerField(
+        default=0, 
+        help_text="Years firm has been active"
+    )
+    
+class FounderApplication(models.Model):
+    # NEW FIELDS FOR DILIGENCE ENGINE
+    current_revenue = models.DecimalField(
+        max_digits=15, decimal_places=2, 
+        null=True, blank=True, 
+        help_text="Current Annual Recurring Revenue (ARR)"
+    )
+    company_size = models.PositiveIntegerField(
+        null=True, blank=True, 
+        help_text="Number of full-time employees"
+    )
+    years_in_business = models.PositiveIntegerField(
+        default=0, 
+        help_text="Years since incorporation"
+    )
 
     def __str__(self):
         return f"{self.company_name} ({self.user.username})"

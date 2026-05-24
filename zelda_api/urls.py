@@ -7,7 +7,8 @@ from .views import (
     WebExplorationAPIView,
     DocumentDirectScraperAPIView,
     MarketHealthAnalyticsAPIView,
-    InvestmentMemoGeneratorAPIView
+    InvestmentMemoGeneratorAPIView,
+    MemoIntelligenceView,
 )
 
 app_name = 'zelda_api'
@@ -23,4 +24,5 @@ urlpatterns = [
     path('documents/scrape/', DocumentDirectScraperAPIView.as_view(), name='document_direct_scraper'),
     path('analytics/market/', MarketHealthAnalyticsAPIView.as_view(), name='market_analytics'),
     path('memo/generate/', InvestmentMemoGeneratorAPIView.as_view(), name='memo_generate'),
+    path('<str:startup_name>/', MemoIntelligenceView.as_view(), name='memo-intelligence'),
 ]

@@ -109,7 +109,7 @@
 
 <!-- Script Controller Architecture -->
 <script>
-    // 1. DEFINE GLOBAL FUNCTIONS (Accessible to HTML onclick attributes)
+    // 1. GLOBAL UTILITIES
     window.runQuickSearch = function(keyword) {
         const input = document.getElementById('globalAgentQuery');
         if (input) {
@@ -120,37 +120,41 @@
         }
     };
 
-    window.executeGlobalQuery = function(query) {
+    // 2. CORE QUERY HANDLER
+    window.executeGlobalQuery = async function(query) {
+        const cleanQuery = query.trim();
+        
+        // Interceptor for Intelligence Dashboards
+        if (cleanQuery.toLowerCase().endsWith('.memo')) {
+            const startupName = cleanQuery.replace(/\.memo$/i, '').trim();
+            window.location.href = `/memo-dashboard/${encodeURIComponent(startupName)}/`;
+            return;
+        }
+
         const thinking = document.getElementById('global-agent-thinking');
         const output = document.getElementById('global-results-output');
-        const faceIcon = document.getElementById('zelda-face-icon');
-        const statusDot = document.getElementById('zelda-status-dot');
-
-        if (!thinking || !output) return;
 
         thinking.classList.remove('d-none');
         output.classList.add('d-none');
-        output.innerHTML = '';
 
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+        try {
+            const response = await fetch('/api/v1/zelda/search/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                    'Authorization': 'Token ' + (localStorage.getItem('auth_token') || '')
+                },
+                body: JSON.stringify({ q: cleanQuery })
+            });
 
-        fetch('/api/v1/zelda/search/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken,
-                'Authorization': 'Token ' + (localStorage.getItem('auth_token') || '')
-            },
-            body: JSON.stringify({ q: query })
-        })
-        .then(res => {
-            if (res.status === 401) throw new Error('Unauthorized');
-            return res.json();
-        })
-        .then(data => {
+            if (response.status === 401) throw new Error('Unauthorized');
+            const data = await response.json();
+
             thinking.classList.add('d-none');
             output.classList.remove('d-none');
-            
+            output.innerHTML = ''; // Clear previous results
+
             const items = data.results || [];
             if (items.length === 0) {
                 output.innerHTML = `<div class="text-center text-muted py-4 small">No matches found.</div>`;
@@ -159,34 +163,59 @@
 
             items.forEach(item => {
                 const row = document.createElement('div');
-                row.className = 'p-3 mb-2 border rounded-3 bg-white shadow-sm';
-                row.innerHTML = `
-                    <h6 class="fw-bold text-dark mb-1 small">${item.title}</h6>
-                    <p class="text-muted mb-2" style="font-size: 12px;">${item.description}</p>
-                    <a href="${item.url}" class="btn btn-sm btn-light border w-100">Inspect</a>
-                `;
+                row.className = 'p-4 mb-3 border rounded-4 bg-white shadow-sm';
+                row.innerHTML = renderSearchResult(item);
                 output.appendChild(row);
             });
-        })
-        .catch(err => {
+        } catch (err) {
             console.error("Zelda API Error:", err);
             thinking.classList.add('d-none');
             output.classList.remove('d-none');
-            output.innerHTML = `<div class="text-center text-danger py-4">Search failed. Please ensure you are logged in.</div>`;
-        });
+            output.innerHTML = `<div class="text-center text-danger py-4">Search failed. Please try again.</div>`;
+        }
     };
 
-    // 2. INITIALIZE DOM ELEMENTS
+    // 3. UI RENDERING LOGIC
+    function renderSearchResult(item) {
+        if (item.type === 'Founder Profile') {
+            return `
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                        ${(item.founder_name || 'F').charAt(0)}
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="fw-bold mb-0">${item.founder_name || 'Founder'}</h6>
+                        <small class="text-muted">${item.startup_name || 'Startup'} | ${item.sector || 'Sector'}</small>
+                    </div>
+                </div>
+                <div class="small mb-3">
+                    <p class="mb-1 fw-semibold text-primary">Executive Summary</p>
+                    <p class="text-muted mb-2">${item.executive_summary || 'No summary available.'}</p>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="badge bg-light text-dark border">${item.funding_stage || 'Seed'}</span>
+                    <a href="${item.url || '#'}" class="btn btn-sm btn-dark px-3">View Profile</a>
+                </div>
+            `;
+        }
+        return `
+            <h6 class="fw-bold mb-1">${item.title}</h6>
+            <p class="small text-muted mb-2">${item.description}</p>
+            <a href="${item.url || '#'}" class="btn btn-sm text-uppercase fw-bold shadow-sm" style="background: linear-gradient(135deg, #312e81, #4f46e5); color: white; border-radius: 8px; padding: 6px 20px;">
+                Reveal
+            </a>
+        `;
+    }
+
+    // 4. INITIALIZATION
     document.addEventListener('DOMContentLoaded', () => {
-        const sidebarEl = document.getElementById('aiAgentSidebar');
         const toggleBtn = document.getElementById('ai-agent-toggle');
         const form = document.getElementById('global-agent-form');
         const input = document.getElementById('globalAgentQuery');
+        const sidebarEl = document.getElementById('aiAgentSidebar');
 
-        if (sidebarEl) {
-            const sidebar = new bootstrap.Offcanvas(sidebarEl);
-            if (toggleBtn) toggleBtn.addEventListener('click', () => sidebar.show());
-        }
+        if (sidebarEl) new bootstrap.Offcanvas(sidebarEl);
+        if (toggleBtn) toggleBtn.addEventListener('click', () => new bootstrap.Offcanvas(sidebarEl).show());
 
         if (form && input) {
             form.addEventListener('submit', (e) => {

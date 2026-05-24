@@ -1,4 +1,3 @@
-import math
 import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -9,14 +8,18 @@ from django.db.models import Q
 from django.core.mail import send_mail
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from stream_chat import StreamChat
+from django.core.cache import cache
+from .tasks import crawl_startup_data_task
 
-# Consolidated Structural Business Models
-from .models import Application, InvestorApplication, Connection, MatchFeedback
 
-# AI Vector Pipeline & Rule-Based Match Core Engine
+
+# Internal Services & Logic
+from matchmaking.services.web_crawling import get_live_startup_data
 from matchmaking.services.ai_engine import generate_profile_embedding, calculate_similarity
-from .logic import calculate_rule_based_score, get_blended_match
+from matchmaking.models import Application
 
 logger = logging.getLogger(__name__)
 
@@ -25,18 +28,12 @@ logger = logging.getLogger(__name__)
 # ==========================================
 
 def founder_required(view_func):
-    """
-    Decorator for views that checks if the logged-in user contains
-    a valid founder badge/profile application record.
-    """
     def _wrapped_view(request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect('accounts:login')
-        
         if getattr(request.user, 'is_founder', False) or hasattr(request.user, 'match_founder_profile'):
             return view_func(request, *args, **kwargs)
-        
-        raise PermissionDenied("Access restricted. Only registered founders can access this matchmaking workspace.")
+        raise PermissionDenied("Access restricted.")
     return _wrapped_view
 
 
@@ -409,3 +406,27 @@ def deal_room_workspace(request):
 def global_search(request):
     # Your search view code here...
     pass
+
+class MemoIntelligenceView(APIView):
+    def get(self, request, startup_name):
+        founder_app = get_object_or_404(Application, company_name__iexact=startup_name)
+        cache_key = f"startup_data_{founder_app.id}"
+        
+        external_data = cache.get(cache_key)
+        
+        if external_data is None:
+            # TRIGGER THE ASYNC TASK
+            # This is non-blocking! The website returns instantly.
+            crawl_startup_data_task.delay(founder_app.id)
+            
+            return Response({
+                "status": "processing",
+                "message": "Data is being fetched in the background. Please refresh in a moment."
+            })
+        
+        # If cache exists, process it
+        return Response({
+            "startup": founder_app.company_name,
+            "data": external_data,
+            "cached": True
+        })

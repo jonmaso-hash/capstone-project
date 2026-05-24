@@ -94,7 +94,9 @@ INSTALLED_APPS = [
     'marketplace_api',
 
     #messaging_ API 
-    'messaging_api'
+    'messaging_api',
+    
+    'django_extensions',
 ]
 
 REST_FRAMEWORK = {
@@ -149,6 +151,14 @@ DATABASES = {
     }
 }
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
+
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
@@ -167,6 +177,8 @@ LOGIN_REDIRECT_URL = "accounts:profile_self"
 LOGOUT_REDIRECT_URL = "accounts:login"
 LOGIN_URL = "accounts:login"
 
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
 # --- THIRD-PARTY INTERFACE DESIGN CONFIGURATION ---
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
