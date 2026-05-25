@@ -1,3 +1,4 @@
+# energy_api/models.py
 from django.db import models
 
 class PowerGridAsset(models.Model):
@@ -30,19 +31,32 @@ class PowerGridAsset(models.Model):
 
 class GenerationLog(models.Model):
     """
-    Logs instantaneous generation telemetry data parsed and recorded 
-    by Zelda's edge monitoring layers.
+    Logs instantaneous generation telemetry data.
     """
-    asset = models.ForeignKey(PowerGridAsset, on_delete=models.CASCADE, related_name='telemetry_logs')
+    # NO IMPORT NEEDED: PowerGridAsset is defined above in this same file.
+    asset = models.ForeignKey(
+        PowerGridAsset, 
+        on_delete=models.CASCADE, 
+        related_name='telemetry_logs'
+    )
     current_output_mw = models.FloatField(help_text="Instantaneous output in Megawatts.")
-    grid_frequency_hz = models.FloatField(default=60.00, help_text="Monitored local grid line variance frequency.")
-    carbon_offset_intensity = models.FloatField(help_text="Estimated metric tons of CO2 avoided per MWh generated.")
+    grid_frequency_hz = models.FloatField(default=60.00)
+    carbon_offset_intensity = models.FloatField()
     recorded_at = models.DateTimeField(auto_now_add=True)
+    
+    idempotency_key = models.UUIDField(
+        unique=True, 
+        null=True, 
+        blank=True
+    )
 
     class Meta:
         verbose_name = "Generation Log"
         verbose_name_plural = "Generation Logs"
-        ordering = ['-recorded_at']
+        indexes = [
+            models.Index(fields=['asset', 'recorded_at']),
+            models.Index(fields=['idempotency_key']),
+        ]
 
     def __str__(self):
-        return f"{self.asset.asset_name} Telemetry: {self.current_output_mw} MW at {self.recorded_at.strftime('%H:%M:%S')}"
+        return f"Log {self.id} | {self.asset.asset_name} | {self.recorded_at}"

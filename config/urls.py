@@ -25,7 +25,7 @@ urlpatterns = [
     path('api/v1/marketing/', include('marketing_api.urls')),
     path('api/v1/legal/', include('legal_api.urls')),
     path('api/v1/banking/', include('banking_api.urls')),
-    path('api/v1/energy/', include('energy_api.urls')),
+    path('api/v1/energy/', include('energy_api.urls')),    
     path('api/v1/articles/', include('articles_api.urls')),
     path('api/v1/automotive/', include('automotive_api.urls')),
     path('api/v1/hotel/', include('hotel_api.urls')),

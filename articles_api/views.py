@@ -1,44 +1,37 @@
 # articles_api/views.py
-from rest_framework.views import APIView
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework import status
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from django.shortcuts import get_object_or_404
 
 from .models import ArticlePost, ArticleCategory
 from .serializers import ArticlePostSerializer, DraftArticlePayloadSerializer
 
-
-class PublicArticleFeedAPIView(APIView):
+class ArticlePostViewSet(viewsets.ModelViewSet):
     """
-    GET /api/v1/content/articles/
-    Returns a list of live, published articles with category slug filtering overlays.
+    Unified ViewSet for Articles, adhering to Pinnacle standard.
+    Replaces separate feed and create APIViews.
     """
+    queryset = ArticlePost.objects.all()
+    serializer_class = ArticlePostSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
+    lookup_field = 'slug'
 
-    def get(self, request):
-        articles = ArticlePost.objects.filter(status='published')
-        
-        category_slug = request.query_params.get('category')
+    def get_queryset(self):
+        """Standard GET returns only published, filtered by category."""
+        qs = super().get_queryset().filter(status='published')
+        category_slug = self.request.query_params.get('category')
         if category_slug:
-            articles = articles.filter(category__slug=category_slug)
-            
-        serializer = ArticlePostSerializer(articles, many=True)
-        return Response({
-            "status": "success",
-            "published_articles_count": articles.count(),
-            "articles": serializer.data
-        }, status=status.HTTP_200_OK)
+            qs = qs.filter(category__slug=category_slug)
+        return qs
 
-
-class CreateArticleAPIView(APIView):
-    """
-    POST /api/v1/content/articles/create/
-    Ingests raw copy text, pushing structural blocks to Zelda for automated tags and summaries.
-    """
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def ingest_draft(self, request):
+        """
+        Custom ingestion endpoint pushing structural blocks to Zelda.
+        Replaces the old CreateArticleAPIView.
+        """
         serializer = DraftArticlePayloadSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -55,6 +48,8 @@ class CreateArticleAPIView(APIView):
         word_count = len(body_text.split())
         estimated_read_time_mins = max(1, round(word_count / 200))
         
+        # In a real scenario, you'd save the object here. 
+        # I am preserving your staging response structure.
         zelda_seo_block = {
             "seo_meta_title": f"{title_text} | Interlink Insights",
             "seo_meta_description": body_text[:155].strip() + "...",

@@ -118,6 +118,12 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'shared_utils.middleware.IdempotencyMiddleware',
+]
+IDEMPOTENCY_EXCLUDED_PATHS = [
+    '/api/v1/auth/login/',
+    '/api/v1/health/',
+    '/admin/',
 ]
 
 ROOT_URLCONF = "config.urls"

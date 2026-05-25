@@ -4,8 +4,11 @@ from .models import JobListing, JobApplication
 class JobListingSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobListing
-        fields = ['id', 'title', 'company_name', 'location', 'job_type', 'experience_level', 'description_text', 'skills_required', 'is_active', 'created_at']
-
+        fields = [
+            'id', 'title', 'company_name', 'location', 'job_type', 
+            'experience_level', 'description_text', 'skills_required', 
+            'is_active', 'created_at'
+        ]
 
 class SubmitApplicationSerializer(serializers.Serializer):
     job_id = serializers.IntegerField(required=True)

@@ -2,6 +2,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils.text import slugify
+from zelda_api.protocol import FoundryStandardMixin
 
 User = get_user_model()
 
@@ -22,8 +23,10 @@ class ArticleCategory(models.Model):
     def __str__(self):
         return self.name
 
+# Pinnacle Standard Implemented
+class ArticlePost(FoundryStandardMixin, models.Model):
+    source_name = "articles_api" # Protocol Identity
 
-class ArticlePost(models.Model):
     STATUS_CHOICES = [
         ('draft', 'Draft Work in Progress'),
         ('review', 'Pending Zelda AI Review'),
@@ -38,7 +41,6 @@ class ArticlePost(models.Model):
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='draft')
     view_count = models.PositiveIntegerField(default=0)
     
-    # Structured AI enrichment blocks calculated by Zelda
     zelda_seo_analytics = models.JSONField(
         default=dict, 
         blank=True, 
@@ -61,3 +63,14 @@ class ArticlePost(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.get_status_display()})"
+
+    # Pinnacle contract fulfilled
+    def get_serialized_data(self):
+        """Standardized interface for Zelda Orchestrator to ingest content."""
+        return {
+            "title": self.title,
+            "category": self.category.name if self.category else "Uncategorized",
+            "status": self.status,
+            "analytics": self.zelda_seo_analytics,
+            "view_count": self.view_count
+        }

@@ -1,57 +1,59 @@
+# accounts/models.py
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 
 class InvestorApplication(models.Model):
-    # Core Relationship
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='accounts_investor_profile')
+    # Fixed: Removed duplicate 'user' field. Keeping OneToOneField as the primary link.
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='accounts_investor_profile')
     
     # Firm Details
     company_name = models.CharField(max_length=255)
+    full_name = models.CharField(max_length=255)
     website = models.URLField(max_length=500, blank=True, null=True)
-    full_name = models.CharField(max_length=255) # For the profile header we built
     phone = models.CharField(max_length=20, blank=True, null=True)
     
-    # The Mandate (The "Rules" for the engine)
-    investment_focus = models.CharField(max_length=255) # e.g., "SaaS, AI, FinTech"
-    investment_stage = models.CharField(max_length=50)  # e.g., "Seed, Series A"
+    # The Mandate
+    sector = models.CharField(max_length=100)
+    investment_focus = models.CharField(max_length=255) 
+    investment_stage = models.CharField(max_length=50) 
+    funding_stage = models.CharField(max_length=50)
     
     # Financials
-    # Rename to 'target_ticket_size' or keep 'investment_amount'
     investment_amount = models.DecimalField(max_digits=15, decimal_places=2, help_text="Average check size")
     min_check = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     max_check = models.DecimalField(max_digits=15, decimal_places=2, default=0)
 
-    # Geographic Focus (Vital for many investors)
-    location_preference = models.CharField(max_length=255, default="Global") # e.g., "North America", "San Diego"
-
-    # Social Proof / Trust
-    is_verified = models.BooleanField(default=False) # Manual flag for you to set
+    # Metadata & Social
+    location_preference = models.CharField(max_length=255, default="Global")
+    is_verified = models.BooleanField(default=False)
     linkedin_url = models.URLField(blank=True, null=True)
-
-    # AI & Metadata
     focus_vector = models.JSONField(null=True, blank=True)
+    years_in_business = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
-    years_in_business = models.PositiveIntegerField(
-        default=0, 
-        help_text="Years firm has been active"
-    )
-    
+
+    def __str__(self):
+        return f"{self.company_name} - {self.user.username}"
+
 class FounderApplication(models.Model):
-    # NEW FIELDS FOR DILIGENCE ENGINE
+    # Core Relationship
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='founder_applications')
+    
+    # Added fields to resolve (admin.E108) errors
+    company_name = models.CharField(max_length=255)
+    sector = models.CharField(max_length=100)
+    funding_stage = models.CharField(max_length=50)
+
+    # Diligence fields
     current_revenue = models.DecimalField(
-        max_digits=15, decimal_places=2, 
-        null=True, blank=True, 
+        max_digits=15, decimal_places=2, null=True, blank=True, 
         help_text="Current Annual Recurring Revenue (ARR)"
     )
     company_size = models.PositiveIntegerField(
-        null=True, blank=True, 
-        help_text="Number of full-time employees"
+        null=True, blank=True, help_text="Number of full-time employees"
     )
     years_in_business = models.PositiveIntegerField(
-        default=0, 
-        help_text="Years since incorporation"
+        default=0, help_text="Years since incorporation"
     )
 
     def __str__(self):

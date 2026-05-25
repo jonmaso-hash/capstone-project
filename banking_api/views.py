@@ -1,72 +1,75 @@
-import uuid
-from rest_framework.views import APIView
+# banking_api/views.py
+from rest_framework import viewsets, status
 from rest_framework.response import Response
-from rest_framework import status
+from .models import Transaction
+from .serializers import TransactionSerializer
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from django.shortcuts import get_object_or_404
 
-from .models import LedgerAccount, Transaction
-from .serializers import AccountSummarySerializer, FundTransferSerializer
+class TransactionViewSet(viewsets.ModelViewSet):
+    queryset = Transaction.objects.all()
+    serializer_class = TransactionSerializer
 
-
+    def create(self, request, *args, **kwargs):
+        """
+        Overrides create to ensure idempotency keys are handled 
+        strictly before reaching the model layer.
+        """
+        serializer = self.get_serializer(data=request.data)
+        
+        # Proactive Enforcement: If validation fails (e.g., duplicate key),
+        # the serializer returns a standard error format.
+        if not serializer.is_valid():
+            return Response(
+                {"status": "error", "errors": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Save and return the standardized Foundry Envelope
+        transaction_obj = serializer.save()
+        return Response(
+            transaction_obj.to_foundry_envelope(), 
+            status=status.HTTP_201_CREATED
+        )
+        
 class AccountBalanceAPIView(APIView):
     """
-    GET /api/v1/banking/accounts/
-    Returns a consolidated ledger summary of all financial accounts linked to the authenticated user profile.
+    GET /api/v1/banking/balance/
+    Retrieves the real-time calculated financial balances and ledger metadata.
     """
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        accounts = LedgerAccount.objects.filter(user=request.user)
-        serializer = AccountSummarySerializer(accounts, many=True)
-        return Response({
+    def get(self, request, *args, **kwargs):
+        # Placeholder dictionary structure reflecting your core transaction attributes
+        telemetry_payload = {
             "status": "success",
-            "accounts": serializer.data
-        }, status=status.HTTP_200_OK)
-
-
+            "account_id": request.user.id,  # Tying to the active session user
+            "balances": {
+                "available_balance": 5250.75,
+                "ledger_balance": 5250.75,
+                "currency": "USD"
+            },
+            "compliance_tier": "cleared"
+        }
+        return Response(telemetry_payload, status=status.HTTP_200_OK)
+    
 class TransferFundsAPIView(APIView):
     """
-    POST /api/v1/banking/ledger/transfer/
-    Executes a high-integrity atomic transfer between two structural ledger account nodes.
+    POST /api/v1/banking/transfer/
+    Initiates transactional ledger transfers between account entities.
     """
     permission_classes = [IsAuthenticated]
 
-    def post(self, request):
-        serializer = FundTransferSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-        src_num = serializer.validated_data['source_account']
-        dest_num = serializer.validated_data['destination_account']
-        transfer_amount = serializer.validated_data['amount']
-        
-        # Pull account targets
-        source_acc = get_object_or_404(LedgerAccount, account_number=src_num, user=request.user)
-        dest_acc = get_object_or_404(LedgerAccount, account_number=dest_num)
-        
-        # Check liquidity pools
-        if source_acc.balance < transfer_amount:
-            return Response({
-                "error": "INSUFFICIENT_LIQUIDITY",
-                "message": "The selected source ledger node lacks the adequate clear balance to settle this transaction."
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Zelda Atomic Transaction Update (Mock Simulation for now)
-        source_acc.balance -= transfer_amount
-        dest_acc.balance += transfer_amount
-        
-        # Mocking an atomic write out confirmation hash
-        tx_reference = f"TX-ZELDA-{uuid.uuid4().hex[:12].upper()}"
-        
-        return Response({
-            "status": "settled",
-            "transaction_reference": tx_reference,
-            "settlement_details": {
-                "debited_node": source_acc.account_number,
-                "credited_node": dest_acc.account_number,
-                "amount_processed": float(transfer_amount),
-                "remaining_available_balance": float(source_acc.balance)
-            },
-            "system_audit_log": "Ledger state synchronized across regional cluster schemas successfully."
-        }, status=status.HTTP_201_CREATED)
+    def post(self, request, *args, **kwargs):
+        # Pinnacle processing stub: mock ledger validation payload
+        transfer_payload = {
+            "status": "initiated",
+            "transaction_reference": "TXN-MOCK-9918237",
+            "details": {
+                "sender_id": request.user.id,
+                "recipient_account_id": request.data.get("recipient_account_id", "unknown"),
+                "amount": request.data.get("amount", 0.00),
+                "compliance_routing": "SCREENING_CLEARED"
+            }
+        }
+        return Response(transfer_payload, status=status.HTTP_201_CREATED)

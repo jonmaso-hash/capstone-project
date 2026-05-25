@@ -1,17 +1,22 @@
 from django.contrib import admin
-from .models import LedgerAccount, Transaction
+from .models import Transaction
 
-@admin.register(LedgerAccount)
-class LedgerAccountAdmin(admin.ModelAdmin):
-    list_display = ('account_number', 'user', 'account_type', 'balance', 'currency', 'created_at')
-    list_filter = ('account_type', 'currency')
-    search_fields = ('account_number', 'user__username')
-    ordering = ('-created_at',)
+# MUTED UNTIL WE LOCATE/BUILD THE MODEL (Do not delete)
+# from accounts.models import LedgerAccount
 
+# @admin.register(LedgerAccount)
+# class LedgerAccountAdmin(admin.ModelAdmin):
+#     list_display = (...)
+#     ... (add a # in front of every line of this specific class)
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ('reference_id', 'account', 'transaction_type', 'amount', 'status', 'execution_timestamp')
-    list_filter = ('transaction_type', 'status', 'execution_timestamp')
-    search_fields = ('reference_id', 'account__account_number', 'description')
+    # Added 'idempotency_key', 'compliance_status' for visibility
+    list_display = (
+        'reference_id', 'account', 'amount', 'transaction_type', 
+        'status', 'compliance_status', 'idempotency_key', 'execution_timestamp'
+    )
+    list_filter = ('transaction_type', 'status', 'compliance_status', 'execution_timestamp')
+    search_fields = ('reference_id', 'account__account_number', 'description', 'idempotency_key')
+    readonly_fields = ('idempotency_key',) # Protecting integrity
     ordering = ('-execution_timestamp',)

@@ -1,18 +1,35 @@
+# banking_api/serializers.py
 from rest_framework import serializers
-from .models import LedgerAccount
+from .models import Transaction
 
-class AccountSummarySerializer(serializers.ModelSerializer):
+class TransactionSerializer(serializers.ModelSerializer):
+    # 1. Enforcement: Mandatory fields for compliance
+    idempotency_key = serializers.UUIDField(required=True)
+    
+    # 2. Exposure: Expose the standardized Foundry Envelope
+    foundry_envelope = serializers.SerializerMethodField()
+
     class Meta:
-        model = LedgerAccount
-        fields = ['account_number', 'account_type', 'balance', 'currency', 'created_at']
-
-class FundTransferSerializer(serializers.Serializer):
-    source_account = serializers.CharField(max_length=32, required=True)
-    destination_account = serializers.CharField(max_length=32, required=True)
-    amount = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=0.01)
-    memo = serializers.CharField(max_length=255, required=False, default="Zelda Automated Ledger Transfer")
+        model = Transaction
+        fields = [
+            'id', 'account_id', 'amount', 'currency', 
+            'idempotency_key', 'foundry_envelope'
+        ]
 
     def validate(self, data):
-        if data['source_account'] == data['destination_account']:
-            raise serializers.ValidationError("Source and destination accounts cannot be identical.")
+        """
+        Proactive Enforcement: Check for duplicate transactions 
+        before any processing begins.
+        """
+        if Transaction.objects.filter(idempotency_key=data.get('idempotency_key')).exists():
+            raise serializers.ValidationError({
+                "idempotency_key": "This transaction has already been processed."
+            })
         return data
+
+    def get_foundry_envelope(self, obj):
+        """
+        Interface: Delegates normalization to the Protocol.
+        This keeps the serializer clean and decoupled.
+        """
+        return obj.to_foundry_envelope()

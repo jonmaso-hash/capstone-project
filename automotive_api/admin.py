@@ -18,6 +18,21 @@ class VehicleAssetAdmin(admin.ModelAdmin):
 
 @admin.register(TestDriveBooking)
 class TestDriveBookingAdmin(admin.ModelAdmin):
-    list_display = ('confirmation_token', 'customer', 'vehicle', 'scheduled_timestamp', 'status')
-    list_filter = ('status', 'scheduled_timestamp')
-    search_fields = ('confirmation_token', 'customer__username', 'vehicle__vin')
+    # Added reservation_expires_at to the list_display for monitoring inventory lifecycle
+    list_display = (
+        'confirmation_token', 
+        'customer', 
+        'vehicle', 
+        'scheduled_timestamp', 
+        'status', 
+        'reservation_expires_at'
+    )
+    
+    # Enabled filtering by expiration date
+    list_filter = ('status', 'scheduled_timestamp', 'reservation_expires_at')
+    
+    # Added idempotency_key to search_fields for debugging specific requests
+    search_fields = ('confirmation_token', 'customer__username', 'vehicle__vin', 'idempotency_key')
+    
+    # Idempotency key should never be edited manually once the booking is generated
+    readonly_fields = ('idempotency_key', 'created_at')
