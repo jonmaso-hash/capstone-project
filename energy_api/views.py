@@ -59,7 +59,7 @@ def ingest_telemetry(request):
     # 2. Process POST request
     try:
         data = json.loads(request.body)
-        idempotency_key = request.META.get('HTTP_IDEMPOTENCY_KEY')
+        idempotency_key = request.META.get('HTTP_X_IDEMPOTENCY_KEY')
         
         if GenerationLog.objects.filter(idempotency_key=idempotency_key).exists():
             return JsonResponse({"error": "Duplicate request"}, status=409)

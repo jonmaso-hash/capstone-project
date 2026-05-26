@@ -31,6 +31,10 @@ class InvestorApplication(models.Model):
     years_in_business = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    stated_thesis = models.TextField(blank=True, null=True, help_text="What they typed in the form")
+    portfolio_raw_text = models.TextField(blank=True, null=True, help_text="Scraped from their uploaded PDF/Deck")
+    historical_vector_embedding = models.JSONField(blank=True, null=True, help_text="Mathematical representation of past deals")
 
     def __str__(self):
         return f"{self.company_name} - {self.user.username}"

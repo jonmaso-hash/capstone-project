@@ -1,4 +1,5 @@
 from .models import Application, InvestorApplication
+from matchmaking.utils import get_blended_match
 
 def calculate_rule_based_score(application, investor):
     """

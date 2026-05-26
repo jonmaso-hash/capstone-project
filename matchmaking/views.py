@@ -13,13 +13,13 @@ from rest_framework.response import Response
 from stream_chat import StreamChat
 from django.core.cache import cache
 from .tasks import crawl_startup_data_task
-
-
+from .models import InvestorApplication, Connection
 
 # Internal Services & Logic
 from matchmaking.services.web_crawling import get_live_startup_data
 from matchmaking.services.ai_engine import generate_profile_embedding, calculate_similarity
-from matchmaking.models import Application
+from matchmaking.models import Application, InvestorApplication, MatchFeedback
+from matchmaking.utils import get_blended_match
 
 logger = logging.getLogger(__name__)
 
@@ -125,6 +125,8 @@ def investor_dashboard(request):
                 ai_score = 50.0
         else:
             ai_score = 50.0
+            
+        rule_score = calculate_rule_based_score(application=founder, investor=investor_profile)        
 
         rule_score = calculate_rule_based_score(application=founder, investor=investor_profile)
         final_score = get_blended_match(ai_score, rule_score, application=founder, investor=investor_profile)
@@ -191,6 +193,7 @@ def founder_dashboard(request):
 
         rule_score = calculate_rule_based_score(application=application, investor=investor)
         final_score = get_blended_match(ai_score, rule_score, application=application, investor=investor)
+        return (ai_score * 0.7) + (rule_score * 0.3)
         
         if final_score > 15:
             match_results.append({
@@ -430,3 +433,26 @@ class MemoIntelligenceView(APIView):
             "data": external_data,
             "cached": True
         })
+        
+def calculate_rule_based_score(application, investor):
+    score = 0
+    
+    # 1. Access the startup's sector (already fixed)
+    app_sector = getattr(application, 'sector', None)
+    
+    # 2. Access the investor's target industry using the CORRECT field name
+    # Replace 'investment_focus' with the actual field name found in models.py
+    investor_target = getattr(investor, 'investment_focus', None)
+    
+    if app_sector and investor_target and app_sector == investor_target:
+        score += 50
+        
+    # Ensure 'funding_stage' is also correct for both models
+    app_stage = getattr(application, 'funding_stage', None)
+    investor_stage = getattr(investor, 'investment_stage', None)
+    
+    if app_stage and investor_stage and app_stage == investor_stage:
+        score += 50
+        
+    return min(score, 100)
+

@@ -121,9 +121,12 @@ MIDDLEWARE = [
     'shared_utils.middleware.IdempotencyMiddleware',
 ]
 IDEMPOTENCY_EXCLUDED_PATHS = [
-    '/api/v1/auth/login/',
-    '/api/v1/health/',
-    '/admin/',
+    "/accounts/seeking-investment/",
+    "/accounts/logout/",
+    "/accounts/login",
+    "/api/v1/auth/login/",
+    "/api/v1/health/",
+    "/admin/",
 ]
 
 ROOT_URLCONF = "config.urls"

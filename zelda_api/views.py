@@ -25,7 +25,7 @@ from .serializers import (
 )
 
 # Core Deal Flow Utilities
-from .utils import scan_pitch_deck, AnalyzedPitch
+from .utils import scan_pitch_deck, AnalyzedPitch, compile_executive_intelligence_memo
 
 # Syncing with the models defined for the matching engine
 from matchmaking.models import Application, InvestorApplication
@@ -36,26 +36,10 @@ from .registry import PinnacleRegistry
 UserClass = get_user_model()
 logger = logging.getLogger(__name__)
 
-# Dynamic lookups prevent NameError failures if external apps aren't active
-Job = None
-if apps.is_installed('jobs'):
-    try:
-        from jobs.models import Job
-    except ImportError:
-        pass
-
-BlogPost = None
-if apps.is_installed('blog'):
-    try:
-        from blog.models import BlogPost
-    except ImportError:
-        pass
-
-
 class ZeldaGlobalSearchAPIView(APIView):
     """
     POST /api/v1/zelda/search/
-    Zelda Core True Global Search Engine API
+    Zelda Core Global Search Engine API
     """
     permission_classes = [IsAuthenticated]
 
@@ -222,36 +206,6 @@ class ZeldaGlobalSearchAPIView(APIView):
                     })
                     seen_urls.add(url)
 
-            if search_bulletins:
-                if Job:
-                    job_matches = Job.objects.filter(Q(title__icontains=user_query) | Q(description__icontains=user_query))[:5]
-                    for job in job_matches:
-                        url = f"/jobs/{job.id}/"
-                        if url in seen_urls:
-                            continue
-                        results.append({
-                            'type': 'Career Opening',
-                            'title': f"Job: {job.title}",
-                            'description': (job.description or "")[:120] + '...',
-                            'url': url
-                        })
-                        seen_urls.add(url)
-
-                if BlogPost:
-                    blog_matches = BlogPost.objects.filter(Q(title__icontains=user_query) | Q(content__icontains=user_query))[:5]
-                    for post in blog_matches:
-                        url = getattr(post, 'get_absolute_url', lambda: "/blog/")()
-                        if url in seen_urls:
-                            continue
-                        content_text = getattr(post, 'content', '') or getattr(post, 'summary', '') or ""
-                        results.append({
-                            'type': 'Venture Insights',
-                            'title': f"Blog: {post.title}",
-                            'description': content_text[:120] + '...',
-                            'url': url
-                        })
-                        seen_urls.add(url)
-
             # 4. RAW TEMPLATE ARCHITECTURE FILE SEARCH
             template_route_map = {
                 'home.html': ('Main Landing Page', '/home/'),
@@ -308,29 +262,16 @@ class ZeldaGlobalSearchAPIView(APIView):
                                 except IOError:
                                     pass
 
-            # 5. CONSTRUCT NARRATION CONTEXT
-            if results:
-                ai_narration = (
-                    f"I processed a comprehensive cross-registry sweep for **'{user_query}'** and uncovered "
-                    f"**{len(results)} distinct entry points** matching your criteria!"
-                )
-            else:
-                ai_narration = f"I evaluated every data directory across the foundry for '{user_query}' but couldn't locate a hit."
-
             return Response({
                 'status': 'success',
                 'query': user_query,
-                'response': ai_narration,
+                'response': f"I processed a comprehensive cross-registry sweep for '{user_query}' and uncovered {len(results)} entry points matching your criteria!",
                 'results': results
             }, status=status.HTTP_200_OK)
 
         except Exception as e:
             logger.error(f"Zelda Exploration Pipeline dropped: {str(e)}")
-            return Response({
-                'status': 'error', 
-                'message': 'The search system pipeline encountered an unexpected validation drop.'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+            return Response({'status': 'error', 'message': 'The search system pipeline encountered an unexpected validation drop.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class MatchRadarAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -341,33 +282,13 @@ class MatchRadarAPIView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         mock_matches = [
-            {
-                "username": "alpha_ventures",
-                "role": "investor",
-                "match_score": 0.94,
-                "alignment_rationale": "Strong overlap in B2B SaaS infrastructure focus."
-            },
-            {
-                "username": "nexus_seed",
-                "role": "investor",
-                "match_score": 0.87,
-                "alignment_rationale": "Matches early-stage pre-revenue metrics framework."
-            }
+            {"username": "alpha_ventures", "role": "investor", "match_score": 0.94, "alignment_rationale": "Strong overlap in B2B SaaS infrastructure focus."},
+            {"username": "nexus_seed", "role": "investor", "match_score": 0.87, "alignment_rationale": "Matches early-stage pre-revenue metrics framework."}
         ]
-        
-        return Response({
-            "status": "success",
-            "engine": "Zelda-Vector-v1",
-            "results_count": len(mock_matches),
-            "matches": mock_matches
-        }, status=status.HTTP_200_OK)
+        return Response({"status": "success", "engine": "Zelda-Vector-v1", "results_count": len(mock_matches), "matches": mock_matches}, status=status.HTTP_200_OK)
 
 
 class SandboxScanView(APIView):
-    """
-    Temporary sandbox for testing the Interlink Foundry pitch deck scanner.
-    Bypasses auth for rapid iteration on PDF extraction.
-    """
     permission_classes = [AllowAny]
     parser_classes = [MultiPartParser, FormParser]
 
@@ -388,37 +309,23 @@ class SandboxScanView(APIView):
 class DocumentIntakeAPIView(APIView):
     """
     POST /api/v1/zelda/documents/analyze/
-    
-    The Unified Interlink Foundry Pipeline:
-    1. Extracts unstructured text from multi-part file uploads (.pdf, .pptx, .pptm).
-    2. Dynamically builds a structured Markdown Investment Memo.
-    3. Cross-references the founder metrics against an investor mandate to calculate vector affinity.
-    4. Guarantees output delivery inside a standardized Foundry Envelope.
+    The Unified Interlink Foundry Pipeline for Founders.
     """
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request, format=None):
-        # Ensure multipart payload includes the target pitch deck file
         uploaded_file = request.FILES.get('file')
         if not uploaded_file:
-            return Response(
-                {"error": "No file uploaded. Use the form-data key 'file'."}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "No file uploaded. Use the form-data key 'file'."}, status=status.HTTP_400_BAD_REQUEST)
             
-        # Target an investor profile ID to generate the custom vector alignment score
-        # Fallback to the first available investor if no explicit ID is provided
         target_investor_id = request.data.get('investor_id')
         if target_investor_id:
             investor_app = get_object_or_404(InvestorApplication, id=target_investor_id)
         else:
             investor_app = InvestorApplication.objects.first()
             if not investor_app:
-                return Response(
-                    {"error": "No active investor profiles found in registry to compute vector matches against."},
-                    status=status.HTTP_404_NOT_FOUND
-                )
+                return Response({"error": "No active investor profiles found in registry to compute vector matches against."}, status=status.HTTP_404_NOT_FOUND)
 
         try:
             # Step 1: Core File Scraping Engine Pipeline
@@ -438,41 +345,27 @@ class DocumentIntakeAPIView(APIView):
                 }
             )
             
-            # If the application already existed, update its description track with the fresh layout text
             if not created and raw_text_summary:
                 founder_app.description = raw_text_summary[:500]
                 founder_app.save()
 
-            # Step 3: Compile Standardized Investment Memo Markdown Architecture
-            memo_markdown = (
-                f"# INTEL MEMO: {founder_app.company_name or 'Unclassified Venture'}\n"
-                f"**Classification:** Institutional Diligence Review\n"
-                f"**Target Allocation Track:** {investor_app.company_name or 'Ecosystem Capital'}\n\n"
-                f"## Extracted Executive Summary Layout\n"
-                f"{raw_text_summary or 'No text layout context extracted.'}\n\n"
-                f"## Registry Data Parameters\n"
-                f"- **Sector Density Tag:** {founder_app.sector or 'General Analytics'}\n"
-                f"- **Assigned Owner Node:** @{request.user.username}\n"
-                f"- **Investor Target Focus:** {investor_app.investment_focus or 'Generalist Thesis'}"
-            )
+            # Step 3: Run Cross-Registry Matching via Triangulated DiligenceEngine
+            mock_crawl_telemetry = {'linkedin_headcount': getattr(founder_app, 'company_size', 15) or 15, 'job_board_openings': 3}
+            vector_score, transparency_index = DiligenceEngine.calculate_success_vector(founder_app, investor_app, mock_crawl_telemetry)
 
-            # Step 4: Run Cross-Registry Matching via DiligenceEngine
-            # Mocking a live crawled payload block to satisfy the dynamic vector calculation engine
-            mock_crawl_telemetry = {
-                'linkedin_headcount': getattr(founder_app, 'company_size', 15) or 15, 
-                'job_board_openings': 3
-            }
-            
-            vector_score, transparency_index = DiligenceEngine.calculate_success_vector(
-                founder_app, 
-                mock_crawl_telemetry
+            # Step 4: Compile Standardized Investment Memo Markdown Architecture via Utility
+            memo_markdown = compile_executive_intelligence_memo(
+                founder_app=founder_app,
+                investor_app=investor_app,
+                extracted_deck_data=raw_extracted_data,
+                vector_score=vector_score,
+                transparency_index=transparency_index
             )
 
             # Step 5: Encapsulate and Flatten parameters directly into a Protocol Foundry Envelope
-            # Fulfills your Pinnacle Architecture data contract constraints cleanly
             foundry_envelope = {
                 "origin": "pitch_deck_scanner",
-                "timestamp": "2026-05-25T12:00:00Z",  # Can use django.utils.timezone.now().isoformat()
+                "timestamp": "2026-05-25T12:00:00Z",
                 "intelligence_score": vector_score,
                 "payload": {
                     "summary": raw_text_summary[:500],
@@ -491,10 +384,51 @@ class DocumentIntakeAPIView(APIView):
 
         except Exception as e:
             logger.error(f"Unified intake pipeline execution failed: {str(e)}")
-            return Response(
-                {"error": f"Intake pipeline structural error: {str(e)}"}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response({"error": f"Intake pipeline structural error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class InvestorPortfolioIntakeAPIView(APIView):
+    """
+    POST /api/v1/zelda/investors/portfolio/
+    Ingests and scrapes an investor's historical fund data or portfolio reviews to enrich vector matching.
+    """
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request, format=None):
+        uploaded_file = request.FILES.get('file')
+        if not uploaded_file:
+            return Response({"error": "No file uploaded. Use the form-data key 'file'."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        investor_app = get_object_or_404(InvestorApplication, user=request.user)
+
+        try:
+            # Scrape incoming portfolio telemetry via standard file pipeline
+            raw_extracted_data = scan_pitch_deck(uploaded_file)
+            if "error" in raw_extracted_data:
+                return Response(raw_extracted_data, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+                
+            raw_portfolio_summary = raw_extracted_data.get("summary", "")
+            
+            # Persist raw text to database model layout tracking attribute
+            if hasattr(investor_app, 'portfolio_raw_text') or True:
+                investor_app.portfolio_raw_text = raw_portfolio_summary
+                investor_app.save()
+
+            foundry_envelope = {
+                "origin": "investor_portfolio_scanner",
+                "timestamp": "2026-05-25T12:00:00Z",
+                "payload": {
+                    "investor_node": investor_app.company_name or "Institutional Allocator",
+                    "extracted_portfolio_telemetry": raw_portfolio_summary[:300],
+                    "status": "Dual-sided investment history successfully cataloged into database layer."
+                }
+            }
+            return Response(foundry_envelope, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            logger.error(f"Investor portfolio ingestion failed: {str(e)}")
+            return Response({"error": f"Investor intake drop: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class WebExplorationAPIView(APIView):
@@ -506,14 +440,9 @@ class WebExplorationAPIView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         target_url = serializer.validated_data['target_url']
-        
-        return Response({
-            "status": "crawled",
-            "url": target_url,
-            "synthesized_summary": "Clean text payload ready for investment memo formatting.",
-            "verification_status": "Matches deck parameters"
-        }, status=status.HTTP_200_OK)
+        return Response({"status": "crawled", "url": target_url, "synthesized_summary": "Clean text payload ready for investment memo formatting.", "verification_status": "Matches deck parameters"}, status=status.HTTP_200_OK)
     
+
 class DocumentDirectScraperAPIView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
@@ -526,7 +455,6 @@ class DocumentDirectScraperAPIView(APIView):
         uploaded_file = serializer.validated_data['file']
         doc_type = serializer.validated_data['document_type']
         
-        # FIX: Explicitly fetch the application associated with the user before saving
         founder_app = get_object_or_404(Application, user=request.user)
         founder_app.current_revenue = serializer.validated_data.get('current_revenue')
         founder_app.company_size = serializer.validated_data.get('company_size')
@@ -535,11 +463,7 @@ class DocumentDirectScraperAPIView(APIView):
         
         return Response({
             "status": "success",
-            "file_meta": {
-                "filename": uploaded_file.name,
-                "size_bytes": uploaded_file.size,
-                "content_type": uploaded_file.content_type
-            },
+            "file_meta": {"filename": uploaded_file.name, "size_bytes": uploaded_file.size, "content_type": uploaded_file.content_type},
             "document_classification": doc_type,
             "extraction_payload": {
                 "detected_problem_statement": "Fragmented financial communication protocols across distributed venture teams.",
@@ -560,25 +484,13 @@ class MarketHealthAnalyticsAPIView(APIView):
         
         total_founders = Application.objects.count()
         total_investors = InvestorApplication.objects.count()
-        
-        sector_breakdown = (
-            Application.objects.values('sector')
-            .annotate(count=Count('id'))
-            .order_by('-count')
-        )
+        sector_breakdown = Application.objects.values('sector').annotate(count=Count('id')).order_by('-count')
         
         return Response({
             "status": "success",
             "metrics_timestamp": "2026-05-20T09:55:00Z",
-            "ecosystem_depth": {
-                "registered_founders": total_founders,
-                "active_capital_allocators": total_investors,
-                "total_platform_ratio": f"{total_founders}:{total_investors}"
-            },
-            "macro_financial_aggregates": {
-                "average_target_raise": 1850000,
-                "dominant_geography": "San Diego, California"
-            },
+            "ecosystem_depth": {"registered_founders": total_founders, "active_capital_allocators": total_investors, "total_platform_ratio": f"{total_founders}:{total_investors}"},
+            "macro_financial_aggregates": {"average_target_raise": 1850000, "dominant_geography": "San Diego, California"},
             "sector_density_map": {item['sector'] or 'Unclassified': item['count'] for item in sector_breakdown}
         }, status=status.HTTP_200_OK)
 
@@ -608,41 +520,43 @@ class InvestmentMemoGeneratorAPIView(APIView):
             f"- **System Verification Ring:** Digital footprints match deck specifications."
         )
         
-        return Response({
-            "status": "compiled",
-            # FIX: Corrected variable reference from `founder_input` to `founder_id`
-            "target_founder_id": founder_id, 
-            "format": "markdown",
-            "investment_memo_payload": memo_markdown
-        }, status=status.HTTP_200_OK)
-        
+        return Response({"status": "compiled", "target_founder_id": founder_id, "format": "markdown", "investment_memo_payload": memo_markdown}, status=status.HTTP_200_OK)
+
+
 class DiligenceEngine:
     @staticmethod
-    def calculate_success_vector(founder_app, crawled_data):
-        internal_size = getattr(founder_app, 'company_size', 10)
-        current_revenue = getattr(founder_app, 'revenue', 0.0)
+    def calculate_success_vector(founder_app, investor_app, crawled_data):
+        internal_size = getattr(founder_app, 'company_size', 10) or 10
+        current_revenue = getattr(founder_app, 'revenue', 0.0) or 0.0
         
-        external_size = int(crawled_data.get('linkedin_headcount', 0))
+        external_size = int(crawled_data.get('linkedin_headcount', 0) or 0)
         diff = abs(external_size - int(internal_size))
 
         internal_val = int(internal_size)
-        if internal_val > 0:
-            deviation = (diff / internal_val) * 100
-            transparency_score = max(0, 100 - deviation)
-        else:
-            transparency_score = 0
+        transparency_score = max(0, 100 - ((diff / internal_val) * 100)) if internal_val > 0 else 0
         
         revenue_score = min(current_revenue / 1000000 * 100, 100)
         hiring_score = min(crawled_data.get('job_board_openings', 0) * 10, 100)
         
+        # DUAL-SIDED AFFINITY BOOSTER ENGINE LOGIC
+        investor_history_raw = getattr(investor_app, 'portfolio_raw_text', '') or ''
+        portfolio_affinity_boost = 0.0
+        
+        if investor_history_raw.strip():
+            # Check for keyword sector density overlap between founder sector and investor portfolio text
+            founder_sector = (founder_app.sector or '').lower()
+            if founder_sector and founder_sector in investor_history_raw.lower():
+                portfolio_affinity_boost = 15.0  # Boost score if data traces align
+        
         vector_score = (
-            (revenue_score * 0.5) + 
+            (revenue_score * 0.4) + 
             (transparency_score * 0.3) + 
-            (hiring_score * 0.2)
+            (hiring_score * 0.1) + 
+            portfolio_affinity_boost
         )
         
-        return round(vector_score, 2), round(transparency_score, 2)
-        
+        return round(min(vector_score, 100.0), 2), round(transparency_score, 2)
+
 
 class MemoIntelligenceView(APIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
@@ -650,6 +564,7 @@ class MemoIntelligenceView(APIView):
 
     def get(self, request, startup_name):
         founder_app = get_object_or_404(Application, company_name__iexact=startup_name)
+        investor_app = InvestorApplication.objects.first()
         url_to_crawl = getattr(founder_app, 'website', None)
         
         if url_to_crawl:
@@ -657,7 +572,7 @@ class MemoIntelligenceView(APIView):
         else:
             external_data = {'linkedin_headcount': 0, 'job_board_openings': 0}
         
-        vector_score, transparency = DiligenceEngine.calculate_success_vector(founder_app, external_data)
+        vector_score, transparency = DiligenceEngine.calculate_success_vector(founder_app, investor_app, external_data)
         
         return Response({
             "startup": founder_app.company_name,
@@ -670,47 +585,181 @@ class MemoIntelligenceView(APIView):
         return {'linkedin_headcount': 45, 'job_board_openings': 2}
 
 
-# ==============================================================================
-# PINNACLE ARCHITECTURE: THE ZELDA GATEWAY
-# ==============================================================================
 class ZeldaGatewayAPIView(APIView):
     """
     GET /api/v1/zelda/gateway/{source_name}/
-    
-    The universal orchestration endpoint. Routes requests dynamically to the 
-    correct API model across the ecosystem and guarantees the output is formatted 
-    as a Foundry Envelope.
+    The universal orchestration endpoint.
     """
     permission_classes = [IsAuthenticated]
     
     def get(self, request, source_name):
-        # 1. Dynamic Routing: Find the correct API model via the Registry
         model_class = PinnacleRegistry.get_model_for_source(source_name)
-        
         if not model_class:
             return Response({
                 "status": "error",
                 "message": f"Source '{source_name}' is not registered with the Pinnacle architecture.",
                 "available_sources": list(PinnacleRegistry.get_adapters().keys())
-            }, status=status.HTTP_404_NOT_FOUND)
+            }, status=source.HTTP_404_NOT_FOUND)
 
-        # 2. Query execution (Supports single ID or bulk fetch)
         object_id = request.query_params.get('id')
-        
         if object_id:
-            # Fetch a specific entity
             instance = get_object_or_404(model_class, id=object_id)
-            return Response(
-                instance.to_foundry_envelope(), 
-                status=status.HTTP_200_OK
-            )
+            return Response(instance.to_foundry_envelope(), status=status.HTTP_200_OK)
         else:
-            # Fetch recent telemetry
             instances = model_class.objects.all().order_by('-id')[:50]
             envelopes = [inst.to_foundry_envelope() for inst in instances]
+            return Response({"status": "success", "source_engine": source_name, "orchestration_payload": envelopes}, status=status.HTTP_200_OK)
+
+class InvestorPortfolioIntakeAPIView(APIView):
+    """
+    POST /api/v1/zelda/investors/portfolio/
+    Ingests and scrapes an investor's historical fund data or portfolio reviews to enrich vector matching.
+    """
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request, format=None):
+        uploaded_file = request.FILES.get('file')
+        if not uploaded_file:
+            return Response(
+                {"error": "No file uploaded. Use the form-data key 'file'."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
             
-            return Response({
-                "status": "success",
-                "source_engine": source_name,
-                "orchestration_payload": envelopes
-            }, status=status.HTTP_200_OK)
+        # Guarantee the authenticated user has an investor account profile node
+        investor_app = get_object_or_404(InvestorApplication, user=request.user)
+
+        try:
+            # Step 1: Run file through your core multi-format layout parser
+            raw_extracted_data = scan_pitch_deck(uploaded_file)
+            if "error" in raw_extracted_data:
+                return Response(raw_extracted_data, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+                
+            raw_portfolio_summary = raw_extracted_data.get("summary", "")
+            
+            if not raw_portfolio_summary.strip():
+                return Response(
+                    {"error": "Scraper engine failed to parse viable textual semantic parameters from this asset format."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Step 2: Persist raw text token layout payload directly to the database tracker
+            investor_app.portfolio_raw_text = raw_portfolio_summary
+            investor_app.save()
+
+            # Step 3: Structure output as an enterprise-grade Foundry Protocol Envelope
+            foundry_envelope = {
+                "origin": "investor_portfolio_scanner",
+                "timestamp": "2026-05-26T06:00:00Z",
+                "payload": {
+                    "investor_node": investor_app.company_name or "Verified Allocator Account",
+                    "extracted_portfolio_telemetry": raw_portfolio_summary[:300] + "...",
+                    "status": "Dual-sided investment history successfully cataloged into database layer."
+                }
+            }
+            return Response(foundry_envelope, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            logger.error(f"Investor portfolio ingestion pipeline failed: {str(e)}")
+            return Response(
+                {"error": f"Investor intake drop: {str(e)}"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            
+class FounderMatchRadarAPIView(APIView):
+    """
+    POST /api/v1/zelda/founder/match-radar/
+    Calculates competitive intelligence positioning for a founder against anonymized peer networks
+    using geographic, sector, and target capital telemetry vectors.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # 1. Identify the target founder app context
+        target_founder_app = get_object_or_404(Application, user=request.user)
+        
+        # Pull baseline vectors from target founder
+        my_sector = target_founder_app.sector or "General Tech"
+        my_geography = getattr(target_founder_app, 'geography', 'San Diego, California') or 'San Diego, California'
+        my_raise = float(getattr(target_founder_app, 'target_raise', 0.0) or 0.0)
+        
+        # 2. Extract runtime filter adjustments from payload if provided
+        filter_sector = request.data.get('sector', my_sector)
+        filter_geography = request.data.get('geography', my_geography)
+        
+        # 3. Base Query Set for Rivals (Exclude self, protect privacy)
+        peer_query = Application.objects.exclude(id=target_founder_app.id)
+        
+        if filter_sector:
+            peer_query = peer_query.filter(sector__iexact=filter_sector)
+        if filter_geography:
+            peer_query = peer_query.filter(geography__icontains=filter_geography)
+
+        # 4. Generate Macroeconomic Aggregations
+        total_peers = peer_query.count()
+        aggregates = peer_query.aggregate(
+            avg_raise=Avg('target_raise'),
+            total_raise_pool=Sum('target_raise'),
+            avg_size=Avg('company_size')
+        )
+        
+        avg_peer_raise = float(aggregates.get('avg_raise') or 0.0)
+        avg_peer_size = float(aggregates.get('avg_size') or 0.0)
+        
+        # Generate macro narrative summary dynamic text
+        macro_insight_narrative = (
+            f"{total_peers} ventures in {filter_geography or 'your region'} within the {filter_sector or 'matching'} "
+            f"track are actively scaling. On average, peers in this cluster are raising "
+            f"${avg_peer_raise:,.2f} with an active operations headcount node of {int(avg_peer_size)} members."
+        )
+
+        # 5. Build Anonymized Peer Match Vectors List
+        anonymized_competitors = []
+        peer_instances = peer_query.order_by('-id')[:25] # Cap matrix depth for efficiency
+        
+        for idx, peer in enumerate(peer_instances, start=1):
+            peer_raise = float(getattr(peer, 'target_raise', 0.0) or 0.0)
+            peer_size = int(getattr(peer, 'company_size', 10) or 10)
+            
+            # Compute a synthetic, lightweight competitive matrix variance distance
+            # This measures distance from the baseline founder track
+            raise_delta = abs(my_raise - peer_raise)
+            max_possible_delta = max(my_raise, peer_raise, 1.0)
+            similarity_vector = max(0.0, 100.0 - ((raise_delta / max_possible_delta) * 100.0))
+            
+            # Strict Privacy Shielding: Never return company names or descriptions
+            anonymized_competitors.append({
+                "peer_node_id": f"PEER-TRACK-NX{idx:03d}", 
+                "proximity_vector_score": round(similarity_vector, 2),
+                "metrics_comparison": {
+                    "target_raise": peer_raise,
+                    "company_size": peer_size,
+                    "funding_stage": getattr(peer, 'funding_stage', 'Seed'),
+                    "is_higher_capital_target": peer_raise > my_raise
+                }
+            })
+
+        # Sort array by closest vector proximity
+        anonymized_competitors = sorted(anonymized_competitors, key=lambda x: x['proximity_vector_score'], reverse=True)
+
+        # 6. Encapsulate inside the standard Protocol Envelope
+        foundry_envelope = {
+            "origin": "founder_competitive_match_radar",
+            "timestamp": "2026-05-26T08:00:00Z",
+            "payload": {
+                "subject_venture": target_founder_app.company_name,
+                "active_filters": {
+                    "sector": filter_sector,
+                    "geography": filter_geography
+                },
+                "macro_insights": {
+                    "peer_cluster_count": total_peers,
+                    "average_market_raise": round(avg_peer_raise, 2),
+                    "total_capital_velocity_pool": round(float(aggregates.get('total_raise_pool') or 0.0), 2),
+                    "market_density_statement": macro_insight_narrative
+                },
+                "competitive_positioning_matrix": anonymized_competitors
+            }
+        }
+        
+        return Response(foundry_envelope, status=status.HTTP_200_OK)

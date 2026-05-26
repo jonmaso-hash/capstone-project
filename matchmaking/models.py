@@ -118,6 +118,12 @@ class InvestorApplication(models.Model):
         on_delete=models.CASCADE,
         related_name="match_investor_profile"
     )
+    
+    portfolio_raw_text = models.TextField(
+        blank=True, 
+        null=True, 
+        help_text="Scraped textual layout telemetry from historical fund portfolio data uploads."
+    )
 
     # Personal Profile & Location Section
     full_name = models.CharField(max_length=255)
@@ -141,7 +147,8 @@ class InvestorApplication(models.Model):
     )
 
     # Deployment Parameters 
-    investment_focus = models.TextField(help_text="Detailed summary of targeted industry criteria or fund investment thesis.") 
+    # Deployment Parameters 
+    investment_focus = models.TextField(help_text="Detailed summary of targeted industry criteria or fund investment thesis.")
     investment_stage = models.CharField(max_length=255, help_text="Target stages (e.g., Seed, Series A)") 
     
     # Text choice array configuration

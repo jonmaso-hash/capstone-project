@@ -16,7 +16,7 @@ def generate_profile_embedding(text_content: str) -> list[float]:
         
         # Invoke Google's native embedding standard layer model
         response = client.models.embed_content(
-            model='text-embedding-004',
+            model_name = "models/text-embedding-004", # Replace this with a valid string,
             contents=text_content.strip()
         )
         

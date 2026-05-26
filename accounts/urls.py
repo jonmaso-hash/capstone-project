@@ -39,4 +39,5 @@ urlpatterns = [
     # ==========================================
     path('ai_search/', views.ai_search_page, name='ai_search_page'),
     path('assistant/', views.ai_search_page, name='ai_assistant_page'),
+    
 ]
