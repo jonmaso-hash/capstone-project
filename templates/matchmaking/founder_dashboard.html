@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Founder Dashboard | Interlink Foundry{% endblock title %}
 
@@ -28,16 +29,23 @@
     .tracking-wider {
         letter-spacing: 0.05em;
     }
+    .animate-pulse {
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
 </style>
 {% endblock css %}
 
 {% block content %}
 <div class="container py-5">
     
-    <!-- Top Workspace Header Brand Strip -->
-    <div class="row align-items-center mb-5">
+    <div class="row align-items-center mb-4">
         <div class="col-md-8">
-            <h1 class="h2 fw-bold mb-1 text-dark">Investor Matchmaking</h1>
+            <h1 class="h2 fw-bold mb-1 text-dark">Investor Matchmaking Portal</h1>
             <p class="text-secondary mb-0">
                 Optimizing matches for your <span class="badge bg-light text-dark border px-2 py-1.5">{{ application.stage|default:"Active" }}</span> stage and <span class="badge bg-light text-dark border px-2 py-1.5">{{ application.sector }}</span> sector profile.
             </p>
@@ -49,7 +57,29 @@
         </div>
     </div>
 
-    <!-- Incoming Inbound Connection Handshakes Component Segment -->
+    <div class="card bg-light border border-light-subtle rounded-3 shadow-sm mb-5">
+        <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-white rounded-circle p-2.5 border shadow-sm d-none d-sm-block text-primary">
+                    <i class="bi bi-cpu-fill fs-4"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold text-dark mb-1">Autonomous Profile Optimization Protocol</h5>
+                    <p class="text-muted small mb-0">Force a background data-crawler scan of your public web footprints to synchronize your algorithmic matching vector records.</p>
+                </div>
+            </div>
+            <div class="d-flex flex-column flex-md-row align-items-md-center gap-2">
+                <button class="btn btn-sm btn-success px-4 py-2 rounded-pill fw-semibold text-nowrap"
+                        data-startup-name="{{ application.company_name|default:request.user.username }}"
+                        data-startup-id="{{ application.id|default:'0' }}"
+                        onclick="triggerAutonomousScraper(this)">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Optimize Match Vector
+                </button>
+                <small id="scraper-status-global" class="fw-semibold text-muted text-center ms-1"></small>
+            </div>
+        </div>
+    </div>
+
     <div class="mb-5">
         <div class="d-flex align-items-center gap-2 mb-3">
             <h3 class="h5 fw-bold mb-0 text-dark">Pending Inbound Requests</h3>
@@ -94,9 +124,8 @@
 
     <hr class="my-5 opacity-25">
 
-    <!-- Outbound Dynamic Algorithm Matches Result Grid -->
     <h3 class="h5 fw-bold mb-4 text-dark d-flex align-items-center gap-2">
-        <i class="bi bi-cpu-fill text-primary"></i> AI Algorithmic Mandate Pipeline
+        <i class="bi bi-radar text-primary"></i> Neural Mandate Pipeline Allocators
     </h3>
 
     <div class="row g-4">
@@ -121,7 +150,6 @@
                         {{ match.investor.investment_focus|default:"Focusing on cross-sector automation, enterprise frameworks, and infrastructure software layers." }}
                     </p>
 
-                    <!-- Target Mandate Structural Metadata Meta-tags -->
                     <div class="mb-4">
                         <label class="d-block small text-uppercase text-muted fw-bold mb-2 smallest tracking-wider">Target Mandate Focus</label>
                         <div class="d-flex flex-wrap gap-1.5">
@@ -131,12 +159,11 @@
                         </div>
                     </div>
 
-                    <!-- Injected Explanatory AI Insights Sub-Panel Container -->
                     {% if match.ai_insights %}
                     <div class="p-3 bg-light rounded-3 mb-3 border border-light-subtle">
                         <div class="d-flex align-items-center mb-2">
-                            <i class="bi bi-cpu text-primary me-2"></i>
-                            <span class="smallest text-uppercase fw-bold text-dark tracking-wider">Match Pillars Rationale</span>
+                            <i class="bi bi-bezier2 text-primary me-2"></i>
+                            <span class="smallest text-uppercase fw-bold text-dark tracking-wider">Alignment Rationale Matrix</span>
                         </div>
                         <div class="vstack gap-2">
                             {% for pillar in match.ai_insights.pillars %}
@@ -179,3 +206,61 @@
     </div>
 </div>
 {% endblock content %}
+
+{% block scripts %}
+<script>
+async function triggerAutonomousScraper(buttonElement) {
+    const startupName = buttonElement.getAttribute('data-startup-name');
+    const statusDiv = document.getElementById('scraper-status-global');
+    
+    if (!startupName || !statusDiv) return;
+
+    // 1. Enter Loading State
+    buttonElement.disabled = true;
+    const originalContent = buttonElement.innerHTML;
+    buttonElement.innerHTML = '<span class="spinner-border spinner-border-sm text-white me-1" role="status" aria-hidden="true"></span> Syncing...';
+    
+    statusDiv.className = "small fw-semibold text-warning ms-md-2 d-block mt-2 mt-md-0 animate-pulse";
+    statusDiv.innerText = "Spawning worker micro-tasks...";
+
+    try {
+        // 2. Query matching URL rule configured in urls.py
+        const targetUrl = `/api/v1/zelda/memo/${encodeURIComponent(startupName)}/`;
+        const response = await fetch(targetUrl, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Pipeline returned error code status: ${response.status}`);
+        }
+        
+        const responseData = await response.json();
+        
+        // 3. Process lifecycle results gracefully
+        if (responseData.status === 'processing') {
+            statusDiv.className = "small fw-semibold text-info ms-md-2 d-block mt-2 mt-md-0";
+            statusDiv.innerText = "Tasks running in background. Please refresh page in 15 seconds.";
+        } else if (responseData.cached) {
+            statusDiv.className = "small fw-semibold text-success ms-md-2 d-block mt-2 mt-md-0";
+            statusDiv.innerText = "Vector space updated successfully! Reloading workspace...";
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        }
+    } catch (error) {
+        console.error("Autonomous Scraper Execution Failure Extension:", error);
+        statusDiv.className = "small fw-semibold text-danger ms-md-2 d-block mt-2 mt-md-0";
+        statusDiv.innerText = "Data intelligence synchronization failed.";
+    } finally {
+        // 4. Release execution lock
+        buttonElement.disabled = false;
+        buttonElement.innerHTML = originalContent;
+    }
+}
+</script>
+{% endblock scripts %}

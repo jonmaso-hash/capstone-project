@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Results - Interlink Foundry{% endblock title %}
+
+{% block content %}
+<div class="container py-2">
+    <!-- Breadcrumb & Header Mapping -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+            <h1 class="h3 fw-bold text-dark mb-1">
+                <i class="bi bi-search text-primary me-2"></i> Deal Flow Analysis
+            </h1>
+            <p class="text-muted small mb-0">
+                Found <span class="badge bg-primary px-2 py-1 fs-6">{{ results|length }}</span> matchmaking profiles corresponding to your active filter settings.
+            </p>
+        </div>
+        <div>
+            <!-- Trigger button to recall the sidebar directly from the results page -->
+            <button class="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-sm d-flex align-items-center gap-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#globalSearchSidebar">
+                <i class="bi bi-sliders"></i> Modify Parameters
+            </button>
+        </div>
+    </div>
+
+    <!-- Active Filters Badge Row -->
+    <div class="card bg-light border-0 rounded-3 mb-4 p-3 shadow-sm">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <span class="text-secondary small fw-bold me-2"><i class="bi bi-funnel"></i> Active Filters:</span>
+            {% if filters.stage %}
+                <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm">Stage: <strong>{{ filters.stage }}</strong></span>
+            {% endif %}
+            {% if filters.state %}
+                <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm">Location keyword: <strong>"{{ filters.state }}"</strong></span>
+            {% endif %}
+            {% if filters.capital %}
+                <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm">Max Raising: <strong>${{ filters.capital }}</strong></span>
+            {% endif %}
+            {% if filters.revenue %}
+                <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm">Min Revenue: <strong>${{ filters.revenue }}</strong></span>
+            {% endif %}
+            {% if not filters.stage and not filters.state and not filters.capital and not filters.revenue %}
+                <span class="text-muted small italic">None applied (Showing entire database portfolio)</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Portfolio Results Workspace Grid -->
+    {% if results %}
+        <div class="row g-4">
+            {% for app in results %}
+                <div class="col-md-6 col-xl-4">
+                    <div class="card h-100 border shadow-sm rounded-3 hover-shadow-transition bg-white">
+                        <div class="card-body p-4 d-flex flex-column">
+                            
+                            <!-- Company Identity Header -->
+                            <div class="d-flex align-items-start justify-content-between mb-3">
+                                <div>
+                                    <h5 class="card-title fw-bold text-dark mb-0">{{ app.company_name }}</h5>
+                                    {% if app.company_website %}
+                                        <a href="{{ app.company_website }}" target="_blank" class="text-decoration-none small text-primary d-flex align-items-center gap-1 mt-1">
+                                            <i class="bi bi-link-45deg"></i> Visit Website
+                                        </a>
+                                    {% endif %}
+                                </div>
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1.5 rounded-pill font-monospace small">
+                                    {{ app.stage }}
+                                </span>
+                            </div>
+
+                            <!-- Structural Metadata Pills -->
+                            <div class="d-flex flex-wrap gap-1.5 mb-3">
+                                <span class="badge bg-light text-secondary border px-2.5 py-1 rounded"><i class="bi bi-tag-fill me-1"></i> {{ app.sector }}</span>
+                                {% if app.company_size %}
+                                    <span class="badge bg-light text-secondary border px-2.5 py-1 rounded"><i class="bi bi-people-fill me-1"></i> {{ app.company_size }} FTEs</span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Abstract Executive Brief -->
+                            <p class="card-text text-secondary small flex-grow-1 line-clamp-3 mb-4">
+                                {{ app.description|default:"No executive overview provided for this portfolio entry."|truncatewords:35 }}
+                            </p>
+
+                            <!-- Financial Metrics Table Grid -->
+                            <div class="row g-2 border-top pt-3 bg-light rounded-3 px-1 py-2 mx-0 text-center">
+                                <div class="col-6 border-end">
+                                    <span class="text-muted d-block font-monospace small" style="font-size: 0.75rem;">TARGET TARGET</span>
+                                    <strong class="text-dark font-monospace">${{ app.raising_amount|default:"0" }}</strong>
+                                </div>
+                                <div class="col-6">
+                                    <span class="text-muted d-block font-monospace small" style="font-size: 0.75rem;">CURRENT ARR</span>
+                                    <strong class="text-success font-monospace">${{ app.current_revenue|default:"0" }}</strong>
+                                </div>
+                            </div>
+
+                            <!-- Direct Deep-Dive Action Button Links -->
+                            <div class="d-grid mt-3">
+                                <a href="#" class="btn btn-outline-dark btn-sm fw-medium py-2 rounded-2 shadow-sm d-flex align-items-center justify-content-center gap-2">
+                                    <i class="bi bi-folder2-open"></i> Analyze Pipeline Entry
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- Clean State Fallback UX Layout -->
+        <div class="card text-center py-5 px-4 border shadow-sm bg-white rounded-3 mt-4">
+            <div class="card-body">
+                <div class="mb-3">
+                    <i class="bi bi-building-exclamation display-4 text-warning opacity-75"></i>
+                </div>
+                <h4 class="fw-bold text-dark">No Matching Pipeline Entries</h4>
+                <p class="text-muted mx-auto max-width-md small mb-4" style="max-width: 500px;">
+                    We couldn't find any founder profiles that check all your parameters. Try broadening your geographic search term scope or scaling back minimum financial bounds.
+                </p>
+                <button class="btn btn-primary fw-medium rounded-pill px-4 shadow-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#globalSearchSidebar">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Adjust Filters
+                </button>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    /* Clean CSS extension mechanics for dynamic dashboard scaling profiles */
+    .hover-shadow-transition {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    .hover-shadow-transition:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 .5rem 1.5rem rgba(0,0,0,.08)!important;
+    }
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;  
+        overflow: hidden;
+    }
+</style>
+{% endblock content %}

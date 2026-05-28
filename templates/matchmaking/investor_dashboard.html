@@ -1,323 +1,284 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Investor Workspace | Interlink Foundry{% endblock %}
+{% block title %}Investor Matchmaking Dashboard | Interlink Foundry{% endblock title %}
 
 {% block css %}
 <style>
-    /* Professional lift effect on deal cards */
-    .hover-lift {
-        transition: transform 0.3s cubic-bezier(.25,.8,.25,1), box-shadow 0.3s ease;
+    .dashboard-header {
+        background: linear-gradient(135deg, #0f5132 0%, #198754 100%);
+        border-radius: 16px;
     }
-    .hover-lift:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 1rem 3rem rgba(0, 0, 0, .1) !important;
+    .match-card {
+        border-radius: 16px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: 1px solid #e9ecef;
     }
-    
-    /* Multiline summary layout boundary control */
-    .line-clamp {
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        -webkit-overflow: hidden;
-        overflow: hidden;
-        min-height: 4.5rem;
+    .match-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important;
     }
-    
-    .border-dashed {
-        border-style: dashed !important;
-        border-width: 2px !important;
+    .score-badge {
+        font-size: 1.1rem;
+        font-weight: 700;
+        padding: 8px 16px;
+        border-radius: 50px;
     }
-    
-    .smallest {
-        font-size: 0.65rem;
+    .insight-pill {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 700;
     }
-    
-    .tracking-wider {
-        letter-spacing: 0.05em;
+    .form-section-title {
+        font-size: 12px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: #6c757d;
+        margin-bottom: 10px;
     }
 </style>
 {% endblock css %}
 
 {% block content %}
 <div class="container py-5">
-    <!-- Header & Dashboard Stats -->
-    <div class="row align-items-center mb-4">
-        <div class="col-md-7">
-            <h2 class="fw-bold mb-1">Interlink Foundry Matchmaker</h2>
-            <p class="text-secondary mb-0">
-                Personalized deal flow based on your <strong>{{ investor.investment_stage|default:"Active" }}</strong> mandate.
-            </p>
-        </div>
-        <div class="col-md-5 text-md-end mt-3 mt-md-0">
-            {% if investor.investment_focus %}
-            <div class="d-inline-flex align-items-center gap-2 bg-white border rounded-pill px-3 py-2 shadow-sm">
-                <span class="small fw-bold text-uppercase text-muted tracking-wider" style="font-size: 0.7rem;">Sectors:</span>
-                <span class="badge rounded-pill bg-primary-subtle text-primary px-3 py-2 fw-semibold">
-                    {{ investor.investment_focus|truncatechars:30 }}
+    
+    <div class="dashboard-header text-white p-4 p-lg-5 mb-5 shadow-sm">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <span class="badge bg-white bg-opacity-25 text-white mb-2 px-3 py-2 rounded-pill insight-pill">
+                    <i class="bi bi-shield-check me-1"></i> Verified Allocator Mandate
                 </span>
+                <h1 class="fw-bold mb-1">Welcome back, {{ investor.user.username }}</h1>
+                <p class="mb-0 opacity-75">Targeting: <strong class="text-white">{{ investor.investment_stage }}</strong> allocations across <strong class="text-white">{{ investor.investment_focus }}</strong></p>
             </div>
+            <div class="bg-white bg-opacity-10 p-3 rounded-3 border border-white border-opacity-15 text-md-end">
+                <small class="d-block opacity-75 text-uppercase fw-bold small mb-1" style="font-size: 10px; letter-spacing: 1px;">Matching Status</small>
+                <span class="fs-4 fw-bold">Active Engine</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <h4 class="fw-bold mb-4 d-flex align-items-center">
+                <i class="bi bi-lightning-charge-fill text-warning me-2"></i> 
+                Top Algorithmic Venture Matches
+            </h4>
+
+            {% if matches %}
+                {% for match in matches %}
+                    <div class="card match-card shadow-sm mb-4 bg-white overflow-hidden">
+                        <div class="card-body p-4">
+                            
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 border-bottom pb-3 mb-3">
+                                <div>
+                                    <h3 class="fw-bold text-dark mb-1">{{ match.founder.company_name }}</h3>
+                                    <div class="d-flex flex-wrap gap-2 my-2 align-items-center">
+                                        <span class="badge bg-secondary-subtle text-secondary rounded-2 px-2 py-1 small">
+                                            <i class="bi bi-tag-fill me-1"></i>{{ match.founder.sector }}
+                                        </span>
+                                        <span class="badge bg-success-subtle text-success rounded-2 px-2 py-1 small">
+                                            <i class="bi bi-layers-half me-1"></i>Tier: {{ match.founder.stage }}
+                                        </span>
+                                        {% if match.founder.location %}
+                                            <span class="text-muted small ms-1">
+                                                <i class="bi bi-geo-alt-fill me-1"></i>{{ match.founder.location }}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="text-md-end d-flex align-items-center gap-2">
+                                    <div class="text-end">
+                                        <small class="text-muted d-block small fw-bold text-uppercase" style="font-size: 9px; letter-spacing: 0.5px;">Match Index</small>
+                                        <span class="badge bg-success text-white score-badge shadow-sm">
+                                            {{ match.final_score }}%
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p class="text-muted mb-4">{{ match.founder.description }}</p>
+
+                            <div class="bg-light p-3 rounded-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 border">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-white rounded-circle p-2 border shadow-sm d-none d-sm-block">
+                                        <i class="bi bi-cpu-fill text-success fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <strong class="text-dark d-block mb-0">Autonomous Intelligence Scraper Protocol</strong>
+                                        <span class="small text-muted d-block">Query external search vectors dynamically to refresh operational summaries and memos.</span>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <button class="btn btn-sm btn-outline-success py-2 px-3 fw-semibold text-nowrap transition-all" 
+                                            data-startup-name="{{ match.founder.company_name }}" 
+                                            data-startup-id="{{ match.founder.id }}"
+                                            onclick="triggerAutonomousScraper(this)">
+                                        <i class="bi bi-arrow-clockwise me-1"></i> Gather Intelligence Memo
+                                    </button>
+                                    <small id="scraper-status-{{ match.founder.id }}" class="fw-semibold text-muted ms-1"></small>
+                                </div>
+                            </div>
+
+                            <div class="accordion mb-4 border-0 shadow-none" id="accordionInsights-{{ match.founder.id }}">
+                                <div class="accordion-item border rounded-3 overflow-hidden">
+                                    <h2 class="accordion-header" id="heading-{{ match.founder.id }}">
+                                        <button class="accordion-button collapsed bg-light text-dark fw-bold small py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ match.founder.id }}" aria-expanded="false" aria-controls="collapse-{{ match.founder.id }}">
+                                            <i class="bi bi-graph-up-arrow text-success me-2"></i> View Explanatory Alignment Matrix & Match Insights
+                                        </button>
+                                    </h2>
+                                    <div id="collapse-{{ match.founder.id }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ match.founder.id }}" data-bs-parent="#accordionInsights-{{ match.founder.id }}">
+                                        <div class="accordion-body bg-white p-4">
+                                            <div class="form-section-title">Core Alignment Logic Summary</div>
+                                            <p class="small text-muted mb-4">{{ match.ai_insights.summary }}</p>
+                                            
+                                            <div class="form-section-title">Structural Evaluation Vectors</div>
+                                            <div class="row g-3">
+                                                {% for pillar in match.ai_insights.pillars %}
+                                                    <div class="col-md-4">
+                                                        <div class="p-3 border rounded-3 bg-light h-100">
+                                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                                <strong class="small text-dark">{{ pillar.title }}</strong>
+                                                                <span class="badge {% if pillar.score == 'Match' or pillar.score == 'Excellent' or pillar.score == 'Passed' %}bg-success{% else %}bg-warning text-dark{% endif %} px-2 py-1 rounded">
+                                                                    {{ pillar.score }}
+                                                                </span>
+                                                            </div>
+                                                            <span class="small text-muted d-block" style="font-size: 12px; line-height: 1.4;">{{ pillar.desc }}</span>
+                                                        </div>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+
+                                            <div class="row mt-4 pt-3 border-top text-center text-md-start g-2">
+                                                <div class="col-sm-6 col-md-3">
+                                                    <small class="text-muted d-block small">AI Vector Score</small>
+                                                    <strong class="text-success">{{ match.ai_score }}%</strong>
+                                                </div>
+                                                <div class="col-sm-6 col-md-3">
+                                                    <small class="text-muted d-block small">Rule Compliance Matrix</small>
+                                                    <strong class="text-primary">{{ match.rule_score }}/100</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 pt-2">
+                                <form action="{% url 'matchmaking:record_vote' %}" method="post" class="d-flex align-items-center gap-2">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="application_id" value="{{ match.founder.id }}">
+                                    <small class="text-muted me-1 small d-none d-md-inline">Tune Matching Accuracy:</small>
+                                    <button type="submit" name="vote" value="up" class="btn btn-sm btn-outline-secondary px-2 py-1" title="Relevant match parameters">
+                                        <i class="bi bi-hand-thumbs-up"></i>
+                                    </button>
+                                    <button type="submit" name="vote" value="down" class="btn btn-sm btn-outline-secondary px-2 py-1" title="Irrelevant match parameters">
+                                        <i class="bi bi-hand-thumbs-down"></i>
+                                    </button>
+                                </form>
+
+                                <div>
+                                    {% if match.already_requested %}
+                                        <button class="btn btn-secondary px-4 py-2 rounded-2 disabled small fw-semibold" disabled>
+                                            <i class="bi bi-envelope-check me-2"></i> Introduction Requested
+                                        </button>
+                                    {% else %}
+                                        <form action="{% url 'matchmaking:request_intro' match.founder.id investor.id %}" method="post" class="m-0">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-success px-4 py-2 rounded-2 shadow-sm small fw-semibold transition-all w-100">
+                                                <i class="bi bi-envelope-fill me-2"></i> Request Broker Introduction
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="card shadow-sm border-0 text-center p-5 bg-white rounded-4">
+                    <div class="card-body">
+                        <div class="bg-light rounded-circle p-4 display-6 text-muted mx-auto mb-4" style="width: fit-content;">
+                            <i class="bi bi-folder-symlink-fill"></i>
+                        </div>
+                        <h4 class="fw-bold text-dark">No Venture Matches Mapped Currently</h4>
+                        <p class="text-muted mx-auto max-width-md mb-4" style="max-width: 500px;">Our pipeline vector space needs additional context to match parameters. Try updating your investment tags or industry profile keywords to broaden the structural query rules.</p>
+                        <a href="{% url 'accounts:investor_form' %}" class="btn btn-success px-4 rounded-2 small fw-semibold shadow-sm">
+                            <i class="bi bi-pencil-square me-2"></i> Refine Allocation Mandate Profiles
+                        </a>
+                    </div>
+                </div>
             {% endif %}
         </div>
     </div>
-
-    <!-- Professional Status Bar -->
-    <div class="row mb-5">
-        <div class="col-12">
-            <div class="d-flex flex-wrap gap-4 py-3 px-4 bg-dark rounded-4 text-white-50 small shadow-sm">
-                <span><i class="bi bi-shield-check text-success me-1"></i> Brokerage Status: <strong class="text-white">Active</strong></span>
-                <span><i class="bi bi-cpu text-info me-1"></i> AI Analysis: <strong class="text-white">Vector Matching Enabled</strong></span>
-                <span><i class="bi bi-database-fill text-warning me-1"></i> Matches Found: <strong class="text-white">{{ matches|length }}</strong></span>
-            </div>
-        </div>
-    </div>
-
-    {% if investor %}
-        <div class="row g-4">
-            {% for match in matches %}
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden hover-lift d-flex flex-column justify-content-between">
-                        <div>
-                            <!-- Score Header -->
-                            <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
-                                <span class="small text-uppercase fw-bold text-muted tracking-wider" style="font-size: 0.7rem;">Blended Index Match</span>
-                                <span class="h4 mb-0 fw-bold text-primary">{{ match.final_score }}%</span>
-                            </div>
-
-                            <div class="card-body p-4">
-                                <!-- Company Info -->
-                                <h5 class="card-title fw-bold text-dark mb-1">
-                                    {{ match.application.company_name|default:match.founder.company_name }}
-                                </h5>
-                                <h6 class="card-subtitle mb-2 text-secondary small text-uppercase fw-bold tracking-wider" style="font-size: 0.75rem;">
-                                    {{ match.application.sector|default:match.founder.sector|default:"General Tech" }} • {{ match.application.stage|default:match.founder.stage }}
-                                </h6>
-                                
-                                <!-- Injected Location Field -->
-                                <p class="text-muted small mb-3">
-                                    <i class="bi bi-geo-alt-fill text-danger me-1"></i> 
-                                    {{ match.application.location|default:match.founder.location|default:"Global / Remote" }}
-                                </p>
-                                
-                                <p class="card-text text-secondary small mb-4 line-clamp" style="line-height: 1.5;">
-                                    {{ match.application.description|default:match.founder.description|default:"No description has been finalized yet." }}
-                                </p>
-                                
-                                <!-- Core Numerical Score Breakdown Elements -->
-                                {% if match.rule_score or match.ai_score %}
-                                <div class="bg-light rounded-3 p-3 mb-3 d-flex justify-content-around text-center border border-light-subtle">
-                                    <div class="w-100">
-                                        <small class="d-block text-muted text-uppercase fw-bold mb-1 smallest tracking-wider">Rules</small>
-                                        <span class="badge bg-white text-dark border px-2 py-2 w-75 fs-7 fw-medium">{{ match.rule_score|default:"--" }}%</span>
-                                    </div>
-                                    <div class="vr mx-2 opacity-25"></div>
-                                    <div class="w-100">
-                                        <small class="d-block text-muted text-uppercase fw-bold mb-1 smallest tracking-wider">AI Similarity</small>
-                                        <span class="badge bg-white text-dark border px-2 py-2 w-75 fs-7 fw-medium">{{ match.ai_score|default:"--" }}%</span>
-                                    </div>
-                                </div>
-                                {% endif %}
-
-                                <!-- Injected Raising & Target Financial Metrics Layout Frame -->
-                                <div class="row g-2 mb-3">
-                                    <div class="col-6">
-                                        <div class="bg-light p-2 rounded-3 text-center border border-light-subtle">
-                                            <small class="text-muted d-block text-uppercase fw-bold smallest tracking-wider mb-1">Target Raise</small>
-                                            <span class="fw-bold text-success small">
-                                                {% if "$" not in match.application.raising_amount and "$" not in match.founder.raising_amount %}${% endif %}{{ match.application.raising_amount|default:match.founder.raising_amount|default:"--" }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="bg-light p-2 rounded-3 text-center border border-light-subtle">
-                                            <small class="text-muted d-block text-uppercase fw-bold smallest tracking-wider mb-1">Revenue</small>
-                                            <span class="fw-bold text-dark small">
-                                                {% if "$" not in match.application.current_revenue and "$" not in match.founder.current_revenue %}${% endif %}{{ match.application.current_revenue|default:match.founder.current_revenue|default:"--" }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Operational Metadata Meta-Tags Row -->
-                                <div class="mb-4">
-                                    <div class="d-flex flex-wrap gap-1">
-                                        {% if match.application.years_in_business or match.founder.years_in_business %}
-                                        <span class="badge bg-light text-secondary border fw-normal smallest">
-                                            🕒 {{ match.application.years_in_business|default:match.founder.years_in_business }} Years Biz
-                                        </span>
-                                        {% endif %}
-                                        {% if match.application.company_size or match.founder.company_size %}
-                                        <span class="badge bg-light text-secondary border fw-normal smallest">
-                                            👥 {{ match.application.company_size|default:match.founder.company_size }} Headcount
-                                        </span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-
-                                <!-- Injected Explanatory AI Insights Sub-Panel Container -->
-                                {% if match.ai_insights or match.pillars %}
-                                <div class="p-3 bg-light rounded-3 mb-4 border border-light-subtle">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <i class="bi bi-cpu-fill text-primary me-2"></i>
-                                        <span class="smallest text-uppercase fw-bold text-dark tracking-wider">Match Pillars Rationale</span>
-                                    </div>
-                                    <div class="vstack gap-2">
-                                        {% if match.ai_insights.pillars %}
-                                            {% for pillar in match.ai_insights.pillars %}
-                                            <div class="d-flex justify-content-between align-items-center bg-white px-2 py-2 rounded border border-light-subtle">
-                                                <span class="text-secondary fw-medium" style="font-size: 0.75rem;">{{ pillar.title }}</span>
-                                                <span class="badge rounded-pill smallest {% if pillar.score == 'Excellent' or pillar.score == 'Match' or pillar.score == 'Passed' %}bg-success-subtle text-success{% else %}bg-warning-subtle text-warning{% endif %}">
-                                                    {{ pillar.score }}
-                                                </span>
-                                            </div>
-                                            {% endfor %}
-                                        {% elif match.pillars %}
-                                            {% for pillar in match.pillars %}
-                                            <div class="d-flex justify-content-between align-items-center bg-white px-2 py-2 rounded border border-light-subtle">
-                                                <span class="text-secondary fw-medium" style="font-size: 0.75rem;">{{ pillar.title }}</span>
-                                                <span class="badge rounded-pill smallest {% if pillar.score == 'Excellent' or pillar.score == 'Match' or pillar.score == 'Passed' %}bg-success-subtle text-success{% else %}bg-warning-subtle text-warning{% endif %}">
-                                                    {{ pillar.score }}
-                                                </span>
-                                            </div>
-                                            {% endfor %}
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                {% endif %}
-
-                                <!-- Interaction / Quick Optimization Voting Triggers -->
-                                <div class="d-flex gap-2 mb-2">
-                                    <form action="{% url 'matchmaking:record_vote' %}" method="POST" class="flex-grow-1 feedback-form">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="application_id" value="{{ match.application.id|default:match.founder.id }}">
-                                        <input type="hidden" name="vote" value="up">
-                                        <button type="submit" class="btn btn-outline-success btn-sm w-100 py-2 rounded-3" title="Upvote Match Parameters">
-                                            <i class="bi bi-hand-thumbs-up-fill me-1"></i> Relevant
-                                        </button>
-                                    </form>
-                                    
-                                    <form action="{% url 'matchmaking:record_vote' %}" method="POST" class="flex-grow-1 feedback-form">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="application_id" value="{{ match.application.id|default:match.founder.id }}">
-                                        <input type="hidden" name="vote" value="down">
-                                        <button type="submit" class="btn btn-outline-danger btn-sm w-100 py-2 rounded-3" title="Downvote Match Parameters">
-                                            <i class="bi bi-hand-thumbs-down-fill me-1"></i> Hide
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Card Operational CTA Footers -->
-                        <div class="card-footer bg-white border-0 p-4 pt-0">
-                            {% if match.already_requested %}
-                                <button class="btn btn-secondary w-100 py-2 fw-bold rounded-pill shadow-sm disabled" disabled>
-                                    <i class="bi bi-envelope-check me-1"></i> Intro Requested
-                                </button>
-                            {% else %}
-                                <form action="{% url 'matchmaking:request_intro' match.application.id|default:match.founder.id investor.id %}" method="POST">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-dark w-100 py-2 fw-bold rounded-pill shadow-sm">
-                                        Request Introduction
-                                    </button>
-                                </form>
-                            {% endif %}
-                            
-                            {% if match.application.user.username or match.founder.user.username %}
-                            <a href="{% url 'accounts:profile' match.application.user.username|default:match.founder.user.username %}" class="btn btn-link btn-sm w-100 text-decoration-none mt-2 text-muted fw-medium">
-                                <i class="bi bi-file-earmark-bar-graph me-1"></i> View Founder Profile
-                            </a>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            {% empty %}
-                <!-- Empty Dashboard Grid Fallback Context -->
-                <div class="col-12 text-center py-5">
-                    <div class="bg-light p-5 rounded-4 border border-dashed border-secondary-subtle">
-                        <i class="bi bi-radar display-1 text-muted mb-3 d-block"></i>
-                        <h3 class="fw-bold text-dark">No Matches Found Yet</h3>
-                        <p class="text-muted mx-auto mb-4" style="max-width: 500px;">
-                            We are currently vetting and processing inbound founders. You'll receive a real-time notification alert as soon as a company registers that aligns with your active mandate criteria.
-                        </p>
-                        <a href="{% url 'accounts:investor_form' %}" class="btn btn-outline-dark px-4 rounded-pill">Refine Investment Mandate</a>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <!-- Access Blocked: Missing Allocation Profile Layer Context -->
-        <div class="row justify-content-center">
-            <div class="col-md-6 text-center py-5">
-                <div class="card shadow-sm border-0 p-5 rounded-4">
-                    <div class="mb-4">
-                        <i class="bi bi-lock-fill display-4 text-warning"></i>
-                    </div>
-                    <h3 class="fw-bold text-dark">Investor Onboarding Required</h3>
-                    <p class="text-secondary mb-4">Complete your mandate details configuration settings to unlock automated deal flow routing pools and connect with founders.</p>
-                    <a href="{% url 'accounts:investor_form' %}" class="btn btn-primary px-5 py-3 rounded-pill fw-bold">Complete Profile</a>
-                </div>
-            </div>
-        </div>
-    {% endif %}
 </div>
 {% endblock content %}
 
-{% block script %}
+{% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const feedbackForms = document.querySelectorAll('.feedback-form');
+document.addEventListener("DOMContentLoaded", function () {
+    console.log("Matchmaking Layout Pipeline initialized. Ready to execute crawler queries.");
+});
 
-    feedbackForms.forEach(form => {
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
+async function triggerAutonomousScraper(buttonElement) {
+    // 1. Extract parameters safely via decoupled custom HTML5 data-attributes
+    const startupName = buttonElement.getAttribute('data-startup-name');
+    const startupId = buttonElement.getAttribute('data-startup-id');
+    const statusDiv = document.getElementById(`scraper-status-${startupId}`);
+    
+    if (!startupName || !statusDiv) return;
 
-            const submitButton = form.querySelector('button[type="submit"]');
-            const originalContent = submitButton.innerHTML;
-            
-            const formData = new FormData(form);
-            const actionUrl = form.getAttribute('action');
+    // 2. Lock component state and generate layout load indicators
+    buttonElement.disabled = true;
+    const originalContent = buttonElement.innerHTML;
+    buttonElement.innerHTML = '<span class="spinner-border spinner-border-sm text-success me-1" role="status" aria-hidden="true"></span> Initializing...';
+    
+    statusDiv.className = "small fw-semibold text-warning ms-2 animate-pulse";
+    statusDiv.innerText = "Spawning background runner micro-tasks...";
 
-            try {
-                submitButton.disabled = true;
-                submitButton.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...`;
-
-                const response = await fetch(actionUrl, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
-
-                if (response.ok) {
-                    submitButton.classList.add('disabled');
-                    if (formData.get('vote') === 'up') {
-                        submitButton.className = 'btn btn-success btn-sm w-100 py-2 rounded-3 disabled';
-                        submitButton.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> Saved`;
-                        
-                        const card = form.closest('.card-body');
-                        const partnerForm = card.querySelector('input[value="down"]')?.closest('form');
-                        if (partnerForm) partnerForm.querySelector('button').classList.add('opacity-50', 'disabled');
-                    } else {
-                        submitButton.className = 'btn btn-danger btn-sm w-100 py-2 rounded-3 disabled';
-                        submitButton.innerHTML = `<i class="bi bi-eye-slash-fill me-1"></i> Hidden`;
-                        
-                        const dealCard = form.closest('.hover-lift').parentElement;
-                        dealCard.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-                        dealCard.style.opacity = '0.15';
-                        dealCard.style.transform = 'scale(0.95)';
-                    }
-                } else {
-                    throw new Error('Network payload rejection context detected.');
-                }
-            } catch (error) {
-                console.error('Feedback state preservation drop failure:', error);
-                submitButton.disabled = false;
-                submitButton.innerHTML = originalContent;
-                alert('Could not sync feedback parameters. Please try again.');
+    try {
+        // 3. Assemble verified API workspace endpoint path from route configurations
+        const targetUrl = `/api/v1/zelda/memo/${encodeURIComponent(startupName)}/`;
+        const response = await fetch(targetUrl, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             }
         });
-    });
-});
+        
+        if (!response.ok) {
+            throw new Error(`Platform pipeline fault context code: ${response.status}`);
+        }
+        
+        const responseData = await response.json();
+        
+        // 4. Handle asynchronous background worker states returned from backend view layers
+        if (responseData.status === 'processing') {
+            statusDiv.className = "small fw-semibold text-info ms-2";
+            statusDiv.innerText = "Crawler executing background tasks. Please reload dashboard view in 15 seconds.";
+        } else if (responseData.cached) {
+            statusDiv.className = "small fw-semibold text-success ms-2";
+            statusDiv.innerText = "External data synchronized successfully! Reloading workspace...";
+            
+            // Instantly refresh workspace page context mappings to draw new memo panels
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        }
+    } catch (error) {
+        console.error("Autonomous Engine Pipeline Communication Failure Exception:", error);
+        statusDiv.className = "small fw-semibold text-danger ms-2";
+        statusDiv.innerText = "Autonomous collection execution pipeline failed.";
+    } finally {
+        // 5. Release structural locks and re-enable actionable system controls
+        buttonElement.disabled = false;
+        buttonElement.innerHTML = originalContent;
+    }
+}
 </script>
-{% endblock script %}
+{% endblock scripts %}

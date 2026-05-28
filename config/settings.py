@@ -3,30 +3,30 @@ import os
 import environ
 
 # --- BASE DIRECTORY ROUTING ---
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --- ENVIRONMENT VARIABLES ENGINE SETUP ---
-# Initialize django-environ structure with type defaults
+# Initialize django-environ structure with strict, non-leaking defaults
 env = environ.Env(
-    DEBUG=(bool, True),
+    DEBUG=(bool, False),  # Default to False for production safety
     ALLOWED_HOSTS=(list, []),
-    SITE_URL=(str, 'http://127.0.0.1:8000'),
-    ADMIN_EMAIL=(str, 'jonmaso@gmail.com'),
+    SITE_URL=(str, 'https://interlinkfoundry.com'),
+    ADMIN_EMAIL=(str, ''),
+    SECRET_KEY=(str, None),  # Force system to require an env variable
     GEMINI_API_KEY=(str, ''),
     STREAM_API_KEY=(str, ''),
     STREAM_API_SECRET=(str, ''),
-    EMAIL_HOST_USER=(str, 'jonmaso@gmail.com'),
+    EMAIL_HOST_USER=(str, ''),
     EMAIL_HOST_PASSWORD=(str, ''),
 )
 
-# Read environment parameters straight from your secure root .env file
-# FIXED: Consolidated redundant dual-load declarations down to a single clean routing path
+# Read parameters straight from your secure root .env file
 environ.Env.read_env(BASE_DIR / '.env')
 
 
 # --- CORE SECURITY CONFIGURATION ---
-SECRET_KEY = env('SECRET_KEY', default='django-insecure-demo-key')
+# Throws an ImproperlyConfigured error if SECRET_KEY is missing in production
+SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG')
 ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 
@@ -53,47 +53,21 @@ INSTALLED_APPS = [
     "pages",
     "accounts",
     "matchmaking",
-
-    #Zelda API 
     "zelda_api",
 
-    #Real_estate_ API 
+    # Platform Vertical Modules
     'real_estate_api',
-
-    #marketing_ API 
     'marketing_api',
-
-    #legal_ API 
     'legal_api',
-
-    #banking_ API 
     'banking_api',
-
-    #energy_ API 
     'energy_api',
-
-    #articles_ API 
     'articles_api',
-
-    #automotive_ API 
     'automotive_api',
-
-    #hotel_ API 
     'hotel_api',
-
-    #insurance_ API 
     'insurance_api',
-
-    #jobs_ API 
     'jobs_api',
-
-    #logistics_ API 
     'logistics_api',
-
-    #marketplace_ API 
     'marketplace_api',
-
-    #messaging_ API 
     'messaging_api',
     
     'django_extensions',
@@ -108,8 +82,7 @@ REST_FRAMEWORK = {
     ],
 }
 
-
-
+# FIXED: Removed the duplicate 'shared_utils.middleware.IdempotencyMiddleware' entry
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -118,8 +91,11 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    
+    # Your Unique Idempotency Layer
     'shared_utils.middleware.IdempotencyMiddleware',
 ]
+
 IDEMPOTENCY_EXCLUDED_PATHS = [
     "/accounts/seeking-investment/",
     "/accounts/logout/",
@@ -142,7 +118,6 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                # Shared context tracking metrics for navigation layout layers
                 'matchmaking.context_processors.investor_status',
             ],
         },
@@ -167,27 +142,24 @@ CACHES = {
     }
 }
 
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # --- STATIC & MEDIA ASSET STORAGE PIPELINES ---
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
-
-# Active media routes to manage PDF Pitch Deck layout allocations
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 
 # --- CORE PLATFORM SECURITY & AUTH ROUTING ---
-# Redirect paths configured to cleanly navigate users straight to their interactive workspace hubs
 LOGIN_REDIRECT_URL = "accounts:profile_self"
 LOGOUT_REDIRECT_URL = "accounts:login"
 LOGIN_URL = "accounts:login"
 
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+
 
 # --- THIRD-PARTY INTERFACE DESIGN CONFIGURATION ---
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
@@ -200,10 +172,7 @@ ADMIN_EMAIL = env('ADMIN_EMAIL')
 
 
 # --- THIRD-PARTY API INTEGRATIONS & EMBEDDING ENGINES ---
-# Gemini AI Platform Engine (For asynchronous multimodal processing)
 GEMINI_API_KEY = env('GEMINI_API_KEY')
-
-# Stream Chat Engine (For real-time secure diligence matchmaking communication)
 STREAM_API_KEY = env('STREAM_API_KEY')
 STREAM_API_SECRET = env('STREAM_API_SECRET')
 
@@ -217,3 +186,24 @@ EMAIL_USE_SSL = False
 EMAIL_HOST_USER = env('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD') 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+# ==============================================================================
+# PRODUCTION ENVIRONMENT ISOLATION & ENHANCED SECURITY WORKSPACE
+# ==============================================================================
+if not DEBUG:
+    # Route traffic through secure proxy SSL handling mechanisms (Nginx/ALB)
+    SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT', default=True)
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    
+    # HTTP Strict Transport Security (HSTS) configuration layers
+    SECURE_HSTS_SECONDS = env.int('SECURE_HSTS_SECONDS', default=31536000)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    
+    # Cookie security defenses against XSS/Session Hijacking
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    
+    # Client-side validation header safeguards
+    SECURE_CONTENT_TYPE_NOSNIFF = True

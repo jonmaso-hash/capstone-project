@@ -1,37 +1,29 @@
+import json
 import logging
-import os
-import re
-import urllib.parse
-import logging
-
 from django.apps import apps
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
-from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import NoReverseMatch, reverse
-from django.views.decorators.http import require_GET, require_POST
+from django.urls import reverse
+from django.views.decorators.http import require_POST
+
+# External/Third-Party Apps
 from stream_chat import StreamChat
 from blog.models import Article
-import json 
-from django.http import JsonResponse 
-from django.core.cache import cache
 
-# Gemini Automated Deal Screening Orchestration Service
-from matchmaking.services.deal_screener import index_founder_pitch_deck
-
-# Syncing with the models defined for the matching engine
+# Core Matchmaking Engine Models (Restoring alignment across the ecosystem)
 from matchmaking.models import Application, InvestorApplication
 from .forms import ApplicationForm, InvestorForm
 
-logger = logging.getLogger(__name__) 
+logger = logging.getLogger(__name__)
 
-# 🔑 Dynamic lookups prevent NameError failures if external apps aren't active
+# Dynamic lookups prevent NameError failures if optional external apps aren't active
 Job = None
 if apps.is_installed('jobs'):
     try:
@@ -45,8 +37,6 @@ if apps.is_installed('blog'):
         from blog.models import BlogPost
     except ImportError:
         pass
-
-logger = logging.getLogger(__name__)
 
 
 # =====================================================================
@@ -78,7 +68,7 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             auth_login(request, user)
-            return redirect("accounts:profile", username=user.username)
+            return redirect("accounts:profile", username=request.user.username)
     else:
         form = AuthenticationForm()
     return render(request, "accounts/login.html", {"form": form})
@@ -90,6 +80,7 @@ def login_view(request):
 
 @login_required
 def seeking_investment(request):
+    # Pull profile using the correct engine relation attribute
     application = getattr(request.user, "match_founder_profile", None)
     form = None 
 
@@ -101,7 +92,6 @@ def seeking_investment(request):
             app.save()
             
             # --- CACHE INVALIDATION ---
-            # If an application exists/was saved, clear its cached crawl data
             cache_key = f"startup_data_{app.id}"
             cache.delete(cache_key)
             
@@ -111,11 +101,9 @@ def seeking_investment(request):
 
     return render(request, "accounts/seeking_investment.html", {"form": form})
 
+
 @login_required
 def investor_form(request):
-    """
-    Investor Onboarding & Management: Collects/edits investment mandates for the matching engine.
-    """
     if hasattr(request.user, "match_founder_profile"):
         messages.warning(request, "Founders cannot submit investor profiles.")
         return redirect("accounts:profile", username=request.user.username)
@@ -147,9 +135,26 @@ def profile(request, username):
     
     application = getattr(viewed_user, "match_founder_profile", None)
     investor_application = getattr(viewed_user, "match_investor_profile", None)
-    show_welcome_prompt = not application and not investor_application
 
-    # Blog integration: Fetch articles authored by this specific user
+    # 🔒 PRIVACY GATEKEEPER CHECK: Public by default. Only blocks if explicitly True.
+    if viewed_user != request.user:
+        # Evaluate Founder Profile Incognito Status
+        if application and getattr(application, 'is_private', False) is True:
+            if not application.allowed_viewers.filter(id=request.user.id).exists():
+                return render(request, "accounts/profile_private.html", {
+                    "profile_user": viewed_user, 
+                    "profile_type": "Founder Portfolio"
+                })
+        
+        # Evaluate Investor Mandate Incognito Status
+        if investor_application and getattr(investor_application, 'is_private', False) is True:
+            if not investor_application.allowed_viewers.filter(id=request.user.id).exists():
+                return render(request, "accounts/profile_private.html", {
+                    "profile_user": viewed_user, 
+                    "profile_type": "Investor Mandate"
+                })
+
+    show_welcome_prompt = not application and not investor_application
     user_articles = Article.objects.filter(author=viewed_user)
 
     return render(request, "accounts/profile.html", {
@@ -168,14 +173,10 @@ def redirect_to_own_profile(request):
 
 @login_required
 def profile_view(request, pk):
+    """Handles lookups via database keys by safely routing through the unique username pattern."""
     User = get_user_model()
     profile_user = get_object_or_404(User, pk=pk)
-    user_articles = Article.objects.filter(author=profile_user)
-    
-    return render(request, 'accounts/profile.html', {
-        'profile_user': profile_user,
-        'user_articles': user_articles
-    })
+    return redirect("accounts:profile", username=profile_user.username)
 
 
 # =====================================================================
@@ -184,9 +185,6 @@ def profile_view(request, pk):
 
 @login_required
 def get_stream_token(request):
-    """
-    Websocket Handshake API: Generates user authentication payload tokens for GetStream.io
-    """
     try:
         api_key = getattr(settings, 'STREAM_API_KEY', None)
         api_secret = getattr(settings, 'STREAM_API_SECRET', None)
@@ -194,11 +192,10 @@ def get_stream_token(request):
         if not api_key or not api_secret:
             return JsonResponse({
                 'error': 'Configuration Error',
-                'details': 'STREAM_API_KEY or STREAM_API_SECRET missing from settings.py or .env configuration.'
+                'details': 'STREAM_API_KEY or STREAM_API_SECRET missing from settings.py or environment configuration.'
             }, status=500)
             
         server_client = StreamChat(api_key=api_key, api_secret=api_secret)
-        
         user_id = str(request.user.username).lower().strip()
         token = server_client.create_token(user_id)
         
@@ -211,10 +208,7 @@ def get_stream_token(request):
         
     except Exception as e:
         logger.exception("Stream Token Generation Failed")
-        return JsonResponse({
-            'error': 'Internal Server Error',
-            'details': str(e)
-        }, status=500)
+        return JsonResponse({'error': 'Internal Server Error', 'details': str(e)}, status=500)
 
 
 # =====================================================================
@@ -223,12 +217,11 @@ def get_stream_token(request):
 
 @login_required
 def ai_search_page(request):
-    """
-    Renders the standalone workspace canvas workspace for Zelda query tracking.
-    """
     return render(request, "accounts/ai_search.html")
 
+
 @require_POST
+@login_required
 def account_search_api(request):
     try:
         data = json.loads(request.body)
@@ -239,29 +232,51 @@ def account_search_api(request):
     if not query_param:
         return JsonResponse({"results": []})
 
-    # 1. Define the search query using Q objects
-    # This searches across the company_name, description, and sector fields
     search_query = (
         Q(company_name__icontains=query_param) | 
-        Q(description__icontains=query_param) |
-        Q(sector__icontains=query_param)
+        Q(sector__icontains=query_param) |
+        Q(description__icontains=query_param)
     )
 
-    # 2. Filter the model and execute the query
-    # We limit to the top 10 results for performance
-    results_queryset = Application.objects.filter(search_query)[:10]
+    # 🔒 FILTER BOUNDARIES: Enforces public alignment unless the request belongs to the owner
+    results_queryset = Application.objects.filter(search_query).filter(
+        Q(is_private=False) | Q(user=request.user)
+    )[:10]
 
-    # 3. Serialize the data into a list of dictionaries
     serialized_results = [
         {
             "title": app.company_name or "Untitled Application",
-            "snippet": app.description[:100] + "..." if app.description else "No description available.",
+            "snippet": f"Sector: {app.sector} | Stage: {getattr(app, 'stage', '')}",
             "url": reverse("accounts:profile", kwargs={"username": app.user.username})
         }
         for app in results_queryset
     ]
 
-    return JsonResponse({
-        "status": "success",
-        "results": serialized_results
-    })
+    return JsonResponse({"status": "success", "results": serialized_results})
+
+
+# =====================================================================
+# PRIVACY MANAGEMENT LAYER (AJAX ENDPOINT)
+# =====================================================================
+
+@login_required
+@require_POST
+def toggle_privacy_view(request):
+    try:
+        data = json.loads(request.body)
+        is_private_state = bool(data.get('is_private', False))
+        
+        founder_profile = Application.objects.filter(user=request.user).first()
+        if founder_profile:
+            founder_profile.is_private = is_private_state
+            founder_profile.save(update_fields=['is_private'])
+
+        investor_profile = InvestorApplication.objects.filter(user=request.user).first()
+        if investor_profile:
+            investor_profile.is_private = is_private_state
+            investor_profile.save(update_fields=['is_private'])
+
+        return JsonResponse({"status": "success", "is_private": is_private_state})
+    except Exception as e:
+        logger.exception("AJAX privacy toggle update failed.")
+        return JsonResponse({"status": "error", "message": str(e)}, status=400)

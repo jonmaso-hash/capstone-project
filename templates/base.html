@@ -30,67 +30,87 @@
         </button>
 
         <div class="collapse navbar-collapse" id="navbarNav">
-            <div class="navbar-nav ms-auto align-items-center">
-
-                <a class="nav-link" href="{% url 'pages:home' %}">Home</a>
-
-                {% if user.is_authenticated %}
-
-                    {% if global_is_investor %}
-                        <a class="nav-link" href="{% url 'matchmaking:investor_dashboard' %}">
-                            Matchmaker
-                        </a>
-                    {% endif %}
-
-                    {% if user.match_founder_profile or user.is_founder %}
-                        <a class="nav-link text-success fw-bold d-flex align-items-center gap-1"
-                           href="{% url 'matchmaking:founder_matchmaker' %}">
-                            <i class="bi bi-radar"></i> Match Radar
-                        </a>
-                    {% endif %}
-
-                {% endif %}
-
-                <a class="nav-link" href="{% url 'blog:blog_view' %}">Blog</a>
-                <a class="nav-link" href="{% url 'matchmaking:bulletin_board' %}">Bulletin Board</a>
+            <ul class="navbar-nav ms-auto align-items-center mb-0 ps-0" style="list-style: none;">
                 
-                <!-- ✅ New Job Board Link Added to Navbar -->
-                <a class="nav-link" href="{% url 'jobs:index' %}">Jobs</a>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'pages:home' %}">Home</a>
+                </li>
 
                 {% if user.is_authenticated %}
-                    <a class="nav-link text-primary fw-medium d-flex align-items-center gap-1"
-                       href="{% url 'matchmaking:diligence_chat' %}">
-                        <i class="bi bi-briefcase-fill"></i> Chat
-                    </a>
+                    {% if user.is_founder or user.match_founder_profile %}
+                        <li class="nav-item">
+                            <a class="nav-link fw-bold text-primary d-flex align-items-center gap-1" href="{% url 'matchmaking:founder_dashboard' %}">
+                                <i class="bi bi-speedometer2"></i> Founder Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-success fw-semibold d-flex align-items-center gap-1" href="{% url 'matchmaking:founder_matchmaker' %}">
+                                <i class="bi bi-radar"></i> Match Radar
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link fw-bold text-success d-flex align-items-center gap-1" href="{% url 'matchmaking:investor_dashboard' %}">
+                                <i class="bi bi-shield-shaded"></i> Investor Dashboard
+                            </a>
+                        </li>
+                    {% endif %}
                 {% endif %}
 
-                <a class="nav-link" href="{% url 'pages:contact' %}">Contact</a>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'blog:blog_view' %}">Blog</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'matchmaking:bulletin_board' %}">Bulletin Board</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'jobs:index' %}">Jobs</a>
+                </li>
 
                 {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link text-primary fw-medium d-flex align-items-center gap-1" href="{% url 'matchmaking:diligence_chat' %}">
+                            <i class="bi bi-briefcase-fill"></i> Chat
+                        </a>
+                    </li>
+                {% endif %}
 
-                    <div class="ms-lg-3">
-                        <a href="/accounts/profile/"
-                           class="nav-link d-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-light border">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'pages:contact' %}">Contact</a>
+                </li>
+
+                <li class="nav-item ms-lg-3 mt-2 mt-lg-0 border-start ps-lg-3">
+                    <button class="btn btn-light border btn-sm px-3 rounded-pill d-flex align-items-center gap-2 shadow-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#globalSearchSidebar">
+                        <i class="bi bi-search text-primary"></i> 
+                        <span class="fw-medium text-secondary">Smart Filter</span>
+                    </button>
+                </li>
+
+                {% if user.is_authenticated %}
+                    <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
+                        <a href="/accounts/profile/" class="nav-link d-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-light border">
                             <i class="bi bi-person-circle fs-5 text-primary"></i>
                             <span class="fw-medium text-dark small">{{ user.username }}</span>
                         </a>
-                    </div>
-
-                    <form action="{% url 'logout' %}" method="post" class="ms-lg-2 mb-0">
-                        {% csrf_token %}
-                        <button type="submit" class="nav-link border-0 bg-transparent">
-                            Logout
-                        </button>
-                    </form>
-
+                    </li>
+                    <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+                        <form action="{% url 'logout' %}" method="post" class="mb-0">
+                            {% csrf_token %}
+                            <button type="submit" class="nav-link border-0 bg-transparent text-secondary py-1">
+                                Logout
+                            </button>
+                        </form>
+                    </li>
                 {% else %}
-                    <div class="d-flex ms-lg-3 gap-2">
-                        <a href="{% url 'login' %}" class="btn btn-outline-dark btn-sm px-3">Login</a>
-                        <a href="{% url 'accounts:signup' %}" class="btn btn-primary btn-sm">Sign Up</a>
-                    </div>
+                    <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'login' %}" class="btn btn-outline-dark btn-sm px-3 rounded-pill">Sign In</a>
+                            <a href="{% url 'accounts:signup' %}" class="btn btn-primary btn-sm px-3 rounded-pill">Get Started</a>
+                        </div>
+                    </li>
                 {% endif %}
 
-            </div>
+            </ul>
         </div>
     </nav>
 </header>
@@ -106,65 +126,62 @@
         <div class="row">
 
             <div class="col-md-3 col-sm-6 mb-4">
-                <h5 class="text-warning">Interlink Foundry</h5>
-                <p class="small text-secondary">
+                <h5 class="text-warning mb-3">Interlink Foundry</h5>
+                <p class="small text-secondary" style="line-height: 1.6;">
                     Connecting investors with high-quality opportunities.
                 </p>
             </div>
 
-            <div class="col-md-2 col-sm-6 mb-4">
-                <h5 class="text-warning">Explore</h5>
-
-                <p><a href="{% url 'pages:home' %}" class="text-light small">Home</a></p>
-
-                {% if user.is_authenticated and global_is_investor %}
-                    <p><a href="{% url 'matchmaking:investor_dashboard' %}" class="text-light small">Matchmaker</a></p>
-                {% endif %}
-
-                {% if user.is_authenticated and user.match_founder_profile or user.is_founder %}
-                    <p><a href="{% url 'matchmaking:founder_matchmaker' %}" class="text-success fw-bold small">
-                        Match Radar
-                    </a></p>
-                {% endif %}
-
-                {% if user.is_authenticated %}
-                    <p><a href="{% url 'matchmaking:diligence_chat' %}" class="text-primary small">
-                        Chat
-                    </a></p>
-                {% endif %}
-
-                <!-- ✅ New Job Board Link Added to Footer Explore Section -->
-                <p><a href="{% url 'jobs:index' %}" class="text-light small">Job Board</a></p>
-
+            <div class="col-md-3 col-sm-6 mb-4">
+                <h5 class="text-warning mb-3">Explore</h5>
+                <ul class="list-unstyled d-flex flex-column gap-2 small">
+                    <li><a href="{% url 'pages:home' %}" class="text-secondary text-decoration-none">Home</a></li>
+                    
+                    {% if user.is_authenticated %}
+                        {% if user.is_founder or user.match_founder_profile %}
+                            <li><a href="{% url 'matchmaking:founder_dashboard' %}" class="text-secondary text-decoration-none">Founder Dashboard</a></li>
+                            <li><a href="{% url 'matchmaking:founder_matchmaker' %}" class="text-success fw-bold text-decoration-none">Match Radar</a></li>
+                        {% else %}
+                            <li><a href="{% url 'matchmaking:investor_dashboard' %}" class="text-secondary text-decoration-none">Investor Dashboard</a></li>
+                        {% endif %}
+                        <li><a href="{% url 'matchmaking:diligence_chat' %}" class="text-primary text-decoration-none">Chat Workspace</a></li>
+                    {% endif %}
+                    
+                    <li><a href="{% url 'jobs:index' %}" class="text-secondary text-decoration-none">Job Board</a></li>
+                </ul>
             </div>
 
-            <div class="col-md-3 col-sm-6 mb-4">
-                <h5 class="text-warning">Get Started</h5>
-                <p><a href="{% url 'pages:contact' %}" class="text-light small">Contact</a></p>
+            <div class="col-md-2 col-sm-6 mb-4">
+                <h5 class="text-warning mb-3">Get Started</h5>
+                <ul class="list-unstyled d-flex flex-column gap-2 small">
+                    <li><a href="{% url 'pages:contact' %}" class="text-secondary text-decoration-none">Contact Team</a></li>
+                    {% if not user.is_authenticated %}
+                        <li><a href="{% url 'login' %}" class="text-secondary text-decoration-none">Account Login</a></li>
+                        <li><a href="{% url 'accounts:signup' %}" class="text-secondary text-decoration-none">Register</a></li>
+                    {% endif %}
+                </ul>
             </div>
 
             <div class="col-md-4 col-sm-6 mb-4">
-                <h5 class="text-warning">Contact</h5>
-                <p class="small text-secondary">San Diego, California</p>
-                <p class="small text-secondary">jonmaso@gmail.com</p>
+                <h5 class="text-warning mb-3">Location</h5>
+                <p class="small text-secondary mb-1"><i class="bi bi-geo-alt me-1"></i> San Diego, California</p>
+                <p class="small text-secondary"><i class="bi bi-envelope me-1"></i> jonmaso@gmail.com</p>
             </div>
 
         </div>
 
-        <hr class="border-secondary">
+        <hr class="border-secondary my-4 opacity-25">
 
         <div class="text-center small text-secondary">
-            © 2026 Interlink Foundry
+            © 2026 Interlink Foundry. All rights reserved.
         </div>
     </div>
 </footer>
 
-<!-- Modern Bootstrap Bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 {% block javascript %}{% endblock javascript %}
 
-<!-- Global Core Security Utilities -->
 <script>
     /**
      * Extracts Django's CSRF secure cookie runtime key token.
@@ -186,7 +203,61 @@
     }
 </script>
 
-<!-- Floating AI Assistant Layout Component Injection -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="globalSearchSidebar" aria-labelledby="globalSearchSidebarLabel">
+    <div class="offcanvas-header border-bottom bg-light">
+        <h5 class="offcanvas-title fw-bold" id="globalSearchSidebarLabel">
+            <i class="bi bi-funnel-fill text-primary me-2"></i> Deal Flow Filters
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    
+    <div class="offcanvas-body bg-white">
+        <form action="{% url 'global_search' %}" method="GET">
+            
+            <div class="mb-4">
+                <label class="form-label fw-semibold text-secondary small mb-1">Funding Stage</label>
+                <select name="stage" class="form-select bg-light border-0 shadow-sm">
+                    <option value="">All Stages</option>
+                    <option value="Pre-Seed">Pre-Seed</option>
+                    <option value="Seed">Seed</option>
+                    <option value="Series A">Series A</option>
+                    <option value="Series B">Series B</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold text-secondary small mb-1">State / Region</label>
+                <div class="input-group shadow-sm">
+                    <span class="input-group-text bg-light border-0"><i class="bi bi-geo-alt text-muted"></i></span>
+                    <input type="text" name="state" class="form-control bg-light border-0" placeholder="e.g. California, NY">
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold text-secondary small mb-1">Max Capital Requested ($)</label>
+                <div class="input-group shadow-sm">
+                    <span class="input-group-text bg-light border-0"><i class="bi bi-currency-dollar text-muted"></i></span>
+                    <input type="number" name="capital" class="form-control bg-light border-0" placeholder="e.g. 1500000" step="50000">
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold text-secondary small mb-1">Min Current Revenue ($)</label>
+                <div class="input-group shadow-sm">
+                    <span class="input-group-text bg-light border-0"><i class="bi bi-graph-up-arrow text-muted"></i></span>
+                    <input type="number" name="revenue" class="form-control bg-light border-0" placeholder="e.g. 250000" step="10000">
+                </div>
+            </div>
+
+            <div class="d-grid mt-5 gap-2">
+                <button type="submit" class="btn btn-primary fw-bold shadow-sm py-2">Apply Filters</button>
+                <button type="reset" class="btn btn-light border text-muted fw-medium py-2">Clear Parameters</button>
+            </div>
+            
+        </form>
+    </div>
+</div>
+
 {% include 'search/_ai_assistant.html' %}
 
 </body>

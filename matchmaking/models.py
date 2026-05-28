@@ -16,6 +16,12 @@ class Application(models.Model):
         on_delete=models.CASCADE,
         related_name="match_founder_profile"
     )
+    
+    # --- ADD THIS PRIVACY FIELD LAYER ---
+    is_private = models.BooleanField(
+        default=False, 
+        help_text="Hides your startup profile from the global search directory and the public board."
+    )
 
     # Founder Personal & Location Data
     founder_name = models.CharField(max_length=255)

@@ -1,27 +1,31 @@
+import json
 import logging
-from django.shortcuts import render, redirect, get_object_or_404
+
+from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib import messages
-from django.views.decorators.http import require_POST
-from django.db.models import Q
-from django.core.mail import send_mail
-from django.conf import settings
-from django.core.exceptions import PermissionDenied
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from stream_chat import StreamChat
 from django.core.cache import cache
-from .tasks import crawl_startup_data_task
-from .models import InvestorApplication, Connection
+from django.core.exceptions import PermissionDenied
+from django.core.mail import send_mail
+from django.db.models import Q
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
+
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from stream_chat import StreamChat
 
 # Internal Services & Logic
+from matchmaking.models import Application, Connection, InvestorApplication, MatchFeedback
+from matchmaking.services.ai_engine import calculate_similarity, generate_profile_embedding
 from matchmaking.services.web_crawling import get_live_startup_data
-from matchmaking.services.ai_engine import generate_profile_embedding, calculate_similarity
-from matchmaking.models import Application, InvestorApplication, MatchFeedback
-from matchmaking.utils import get_blended_match
+from matchmaking.utils import calculate_rule_based_score, get_blended_match
+from .tasks import crawl_startup_data_task
 
 logger = logging.getLogger(__name__)
+
 
 # ==========================================
 # CUSTOM SECURITY DECORATORS
@@ -73,7 +77,7 @@ def _generate_explanatory_insights(ai_score, rule_score, application, investor):
 def investor_dashboard(request):
     """
     Blended Matchmaking Dashboard: Ranks founders based on AI + Rules.
-    Features an advanced keyword-matching fallback system and detailed AI explanations.
+    Filters out private founder profiles explicitly by default.
     """
     investor_profile = getattr(request.user, 'match_investor_profile', None)
     
@@ -95,19 +99,20 @@ def investor_dashboard(request):
     match_results = []
     requested_ids = Connection.objects.filter(investor=investor_profile).values_list('founder_id', flat=True)
 
-    # Keyword semantic fallback framework if vectors are missing
+    # Privacy Gatekeeper: Only select records where is_private=False
     if not investor_profile.focus_vector and investor_profile.investment_focus:
         search_terms = [term.strip() for term in investor_profile.investment_focus.replace(',', ' ').split() if len(term.strip()) > 2]
         query = Q()
         for term in search_terms:
             query |= Q(sector__icontains=term) | Q(description__icontains=term) | Q(company_name__icontains=term)
         
-        founders = Application.objects.filter(query | Q(stage__icontains=investor_profile.investment_stage)).select_related('user')
+        founders = Application.objects.filter(is_private=False).filter(
+            query | Q(stage__icontains=investor_profile.investment_stage)
+        ).select_related('user')
     else:
-        founders = Application.objects.all().select_related('user')
+        founders = Application.objects.filter(is_private=False).select_related('user')
     
     for founder in founders:
-        # Prevent runtime failures from dropping the startup out of the loop completely
         if not founder.description_vector and founder.description:
             try:
                 vector_array = generate_profile_embedding(founder.description)
@@ -127,8 +132,6 @@ def investor_dashboard(request):
             ai_score = 50.0
             
         rule_score = calculate_rule_based_score(application=founder, investor=investor_profile)        
-
-        rule_score = calculate_rule_based_score(application=founder, investor=investor_profile)
         final_score = get_blended_match(ai_score, rule_score, application=founder, investor=investor_profile)
         
         if final_score > 10:
@@ -150,18 +153,18 @@ def investor_dashboard(request):
 
 
 @login_required
+@founder_required
 def founder_dashboard(request):
     """
     Founder-facing dashboard: View matching investors ranked by a blended 
-    AI + Rule algorithm, and manage incoming handshake requests.
+    AI + Rule algorithm. Filters out private investor mandates explicitly by default.
     """
-    application = getattr(request.user, 'match_founder_profile', None)
+    application = getattr(request.user, 'match_founder_profile', None) or Application.objects.filter(user=request.user).first()
     
     if not application:
         messages.info(request, "Complete your founder profile to see investor matches.")
         return redirect('accounts:seeking_investment')
 
-    # Lazy-generation engine using unified vectorization pipeline
     if not application.description_vector and application.description:
         try:
             vector_array = generate_profile_embedding(application.description)
@@ -171,14 +174,13 @@ def founder_dashboard(request):
         except Exception as e:
             logger.warning(f"Failed lazy-generation embedding for founder application {application.id}: {str(e)}")
 
-    # Extract pending inbound handshake records optimized via select_related
     pending_requests = Connection.objects.filter(
         founder=application, 
-        status='PENDING'
+        status__iexact='pending'
     ).select_related('investor__user')
 
-    # Query allocators (pulling related user records to eliminate N+1 data hits)
-    investors = InvestorApplication.objects.all().select_related('user')
+    # Privacy Gatekeeper: Only fetch allocators where is_private=False
+    investors = InvestorApplication.objects.filter(is_private=False).select_related('user')
     match_results = []
     
     for investor in investors:
@@ -193,7 +195,6 @@ def founder_dashboard(request):
 
         rule_score = calculate_rule_based_score(application=application, investor=investor)
         final_score = get_blended_match(ai_score, rule_score, application=application, investor=investor)
-        return (ai_score * 0.7) + (rule_score * 0.3)
         
         if final_score > 15:
             match_results.append({
@@ -236,13 +237,11 @@ def founder_matchmaker(request):
 
 def founder_bulletin_board(request):
     """
-    Queries verified startup Application profiles to display on the Interlink Foundry bulletin board.
-    Calculates dynamic AI match scores and explicit breakdown data blocks if an authenticated investor is browsing.
-    Supports GET request parameters for industry filtering tags.
+    Queries verified public startup Application profiles to display on the Interlink Foundry bulletin board.
     """
-    pitches_queryset = Application.objects.all().select_related('user')
+    # Privacy Gatekeeper: Only pull applications where is_private is explicitly False
+    pitches_queryset = Application.objects.filter(is_private=False).select_related('user')
     
-    # Process sector query string parameters safely
     selected_sector = request.GET.get('sector', '').strip()
     if selected_sector:
         pitches_queryset = pitches_queryset.filter(sector__iexact=selected_sector)
@@ -261,7 +260,6 @@ def founder_bulletin_board(request):
                 ai_score = max(0.0, min(100.0, raw_similarity * 100))
                 match_percentage = int(round(ai_score))
                 
-                # Dynamic validation via rule engine instead of a static score fallback
                 rule_score = calculate_rule_based_score(application=pitch, investor=investor_profile)
                 ai_insights_data = _generate_explanatory_insights(ai_score, rule_score, pitch, investor_profile)
             except Exception:
@@ -291,16 +289,14 @@ def founder_bulletin_board(request):
 def request_intro(request, application_id, investor_id):
     """
     The Intro Workflow: Creates a Connection record and dispatches an alert to the broker.
-    Ensures safe alignment with requested URL parameter structures.
     """
     founder_app = get_object_or_404(Application, id=application_id)
     investor_profile = getattr(request.user, 'match_investor_profile', None)
 
-    # Secure verification step: validate route scope parameters safely
     if not investor_profile or str(investor_profile.id) != str(investor_id):
         messages.error(request, "Authorization mismatched. Access to introduction workflow denied.")
         return redirect('matchmaking:investor_dashboard')
-
+        
     connection, created = Connection.objects.get_or_create(
         investor=investor_profile,
         founder=founder_app
@@ -360,34 +356,26 @@ def record_vote(request):
 @login_required
 def initiate_direct_chat(request, target_user_id):
     """
-    Instantly opens or creates a direct message thread between two users
-    to maximize site interaction, similar to a matchmaking or social platform.
+    Instantly opens or creates a direct message thread between two users via Stream Chat.
     """
     target_user = get_object_or_404(User, id=target_user_id)
     current_user_id = str(request.user.id)
     target_id_str = str(target_user.id)
     
-    # Prevent users from messaging themselves
     if current_user_id == target_id_str:
         return redirect('matchmaking:diligence_chat')
 
-    # Initialize Stream Client
     client = StreamChat(api_key=settings.STREAM_API_KEY, api_secret=settings.STREAM_API_SECRET)
     
-    # Ensure both users exist in the chat network database
     client.upsert_users([
         {'id': current_user_id, 'name': request.user.username},
         {'id': target_id_str, 'name': target_user.username}
     ])
 
-    # Generate a unique, deterministic ID for this pair
     sorted_ids = sorted([int(current_user_id), int(target_id_str)])
     channel_id = f"chat_{sorted_ids[0]}_and_{sorted_ids[1]}"
 
-    # Initialize a standard peer-to-peer messaging channel
     channel = client.channel("messaging", channel_id)
-    
-    # Create the room instantly
     channel.create(
         members=[current_user_id, target_id_str],
         data={
@@ -402,13 +390,47 @@ def initiate_direct_chat(request, target_user_id):
 def deal_room_workspace(request):
     """
     Renders the secure main Deal Room Workspace template.
-    The real-time token fetching is handled downstream by accounts:stream_token.
     """
     return render(request, 'matchmaking/chat.html')
 
+
 def global_search(request):
-    # Your search view code here...
-    pass
+    """
+    Advanced Search & Smart Filtering Engine.
+    Excludes private applications strictly down the filtering stream.
+    """
+    state = request.GET.get('state', '').strip()
+    stage = request.GET.get('stage', '').strip()
+    max_capital = request.GET.get('capital', '').strip()
+    min_revenue = request.GET.get('revenue', '').strip()
+
+    # Privacy Gatekeeper: Public matching index only
+    queryset = Application.objects.select_related('user').filter(is_private=False)
+    
+    if state:
+        queryset = queryset.filter(
+            Q(description__icontains=state) | Q(extra_info__icontains=state)
+        )
+    
+    if stage:
+        queryset = queryset.filter(stage__iexact=stage)
+        
+    if max_capital and max_capital.isdigit():
+        queryset = queryset.filter(raising_amount__lte=int(max_capital))
+        
+    if min_revenue and min_revenue.isdigit():
+        queryset = queryset.filter(current_revenue__gte=int(min_revenue))
+        
+    return render(request, 'matchmaking/search_results.html', {
+        'results': queryset,
+        'filters': {
+            'state': state,
+            'stage': stage,
+            'capital': max_capital,
+            'revenue': min_revenue
+        }
+    })
+
 
 class MemoIntelligenceView(APIView):
     def get(self, request, startup_name):
@@ -418,8 +440,6 @@ class MemoIntelligenceView(APIView):
         external_data = cache.get(cache_key)
         
         if external_data is None:
-            # TRIGGER THE ASYNC TASK
-            # This is non-blocking! The website returns instantly.
             crawl_startup_data_task.delay(founder_app.id)
             
             return Response({
@@ -427,32 +447,32 @@ class MemoIntelligenceView(APIView):
                 "message": "Data is being fetched in the background. Please refresh in a moment."
             })
         
-        # If cache exists, process it
         return Response({
             "startup": founder_app.company_name,
             "data": external_data,
             "cached": True
         })
-        
-def calculate_rule_based_score(application, investor):
-    score = 0
-    
-    # 1. Access the startup's sector (already fixed)
-    app_sector = getattr(application, 'sector', None)
-    
-    # 2. Access the investor's target industry using the CORRECT field name
-    # Replace 'investment_focus' with the actual field name found in models.py
-    investor_target = getattr(investor, 'investment_focus', None)
-    
-    if app_sector and investor_target and app_sector == investor_target:
-        score += 50
-        
-    # Ensure 'funding_stage' is also correct for both models
-    app_stage = getattr(application, 'funding_stage', None)
-    investor_stage = getattr(investor, 'investment_stage', None)
-    
-    if app_stage and investor_stage and app_stage == investor_stage:
-        score += 50
-        
-    return min(score, 100)
 
+
+@login_required
+@require_POST
+def toggle_privacy_view(request):
+    try:
+        payload = json.loads(request.body)
+        is_private_state = bool(payload.get('is_private', False))
+        
+        # 1. Update Founder Pitch Application if it exists
+        founder_profile = Application.objects.filter(user=request.user).first()
+        if founder_profile:
+            founder_profile.is_private = is_private_state
+            founder_profile.save(update_fields=['is_private'])
+
+        # 2. Update Investor Mandate Profile if it exists
+        investor_profile = InvestorApplication.objects.filter(user=request.user).first()
+        if investor_profile:
+            investor_profile.is_private = is_private_state
+            investor_profile.save(update_fields=['is_private'])
+
+        return JsonResponse({"status": "success", "is_private": is_private_state})
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=400)

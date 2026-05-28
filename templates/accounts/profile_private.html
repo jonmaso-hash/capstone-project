@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Private Record - Interlink Foundry{% endblock title %}
+
+{% block content %}
+<div class="container py-5 my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6 text-center">
+            <div class="mb-4">
+                <span class="p-4 bg-light rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm border">
+                    <i class="bi bi-eye-slash display-5 text-secondary"></i>
+                </span>
+            </div>
+            
+            <h2 class="fw-bold text-dark mb-2">Asymmetric Privacy Protected</h2>
+            <p class="text-muted small mb-4">
+                The entry profile for <strong class="text-dark">@{{ profile_user.username }}</strong> is currently operating in Incognito Mode. Their underlying metrics, sector analytics, and performance memos are restricted.
+            </p>
+
+            <div class="card border border-light shadow-sm rounded-3 bg-white mb-4">
+                <div class="card-body p-4 text-start">
+                    <h6 class="fw-bold text-dark d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-shield-lock-fill text-primary"></i> Access Verification Required
+                    </h6>
+                    <p class="text-secondary small mb-0">
+                        To unlock this account's {{ profile_type }} details, you must issue a formal identity connection. You will be granted view access immediately upon validation.
+                    </p>
+                </div>
+            </div>
+
+            <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+                <a href="{% url 'matchmaking:bulletin_board' %}" class="btn btn-outline-secondary px-4 py-2 rounded-pill small">
+                    <i class="bi bi-arrow-left"></i> Return to Board
+                </a>
+                <button class="btn btn-primary px-4 py-2 rounded-pill shadow-sm small d-flex align-items-center justify-content-center gap-2" type="button" id="requestAccessBtn">
+                    <i class="bi bi-envelope-plus"></i> Request Access Invite
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

@@ -25,12 +25,15 @@ class ApplicationForm(forms.ModelForm):
             "company_size",
             "reason_for_capital",
             "extra_info",
+            "is_private",
+            
         ]
         # Adding Bootstrap classes for consistent UI
         widgets = {
             "description": forms.Textarea(attrs={"rows": 4, "class": "form-control"}),
             "reason_for_capital": forms.Textarea(attrs={"rows": 3, "class": "form-control"}),
             "extra_info": forms.Textarea(attrs={"rows": 2, "class": "form-control"}),
+            "is_private": forms.CheckboxInput(attrs={"class": "form-check-input", "role": "switch"}),
         }
 
 # -----------------------------

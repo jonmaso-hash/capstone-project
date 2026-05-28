@@ -20,7 +20,8 @@ urlpatterns = [
     path('jobs/', include('jobs.urls', namespace='jobs')),
     path('search/', global_search, name='global_search'),
     path('blog/', include('blog.urls')),
-    path('api/v1/zelda/', include('zelda_api.urls')),
+    path('api/v1/zelda/', include(('zelda_api.urls', 'zelda_api'), namespace='zelda_api_endpoints')),
+    path('memo-dashboard/', include(('zelda_api.urls', 'zelda_api'), namespace='zelda_api_dashboard')),
     path('api/v1/marketing/', include('marketing_api.urls')),
     path('api/v1/legal/', include('legal_api.urls')),
     path('api/v1/banking/', include('banking_api.urls')),
@@ -33,7 +34,6 @@ urlpatterns = [
     path('api/v1/logistics/', include('logistics_api.urls')), 
     path('api/v1/marketplace/', include('marketplace_api.urls')), 
     path('api/v1/messaging/', include('messaging_api.urls')), 
-    path('memo-dashboard/', include('zelda_api.urls')),
     path('<str:startup_name>/', views.MemoIntelligenceView.as_view(), name='memo-intelligence'),
     
 ]

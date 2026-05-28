@@ -18,6 +18,10 @@ urlpatterns = [
     # USER PROFILE DISPATCH LAYER
     # ==========================================
     path('profile/', views.redirect_to_own_profile, name='profile_self'),
+    
+    # 👑 FIXED: Exact matches must live ABOVE dynamic parameters
+    path('profile/toggle-privacy/', views.toggle_privacy_view, name='toggle_privacy'),
+    
     path('profile/<str:username>/', views.profile, name='profile'),
 
     # ==========================================
@@ -39,5 +43,4 @@ urlpatterns = [
     # ==========================================
     path('ai_search/', views.ai_search_page, name='ai_search_page'),
     path('assistant/', views.ai_search_page, name='ai_assistant_page'),
-    
 ]

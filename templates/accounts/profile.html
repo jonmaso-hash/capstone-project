@@ -8,7 +8,7 @@
     <div class="row justify-content-center">
         <div class="col-lg-10">
 
-            <!-- SECTION: One-Time Welcome Alert -->
+            <!-- Welcome Prompt Alert Context -->
             {% if show_welcome_prompt %}
             <div class="alert alert-dark shadow-lg border-0 p-5 mb-5 text-center rounded-4">
                 <h2 class="fw-bold text-white mb-3">Welcome to Interlink Foundry</h2>
@@ -26,7 +26,31 @@
             </div>
             {% endif %}
 
-            <!-- SECTION: User Identity Header -->
+            <!-- Dynamic Privacy Engine Workspace -->
+            {% if request.user == profile_user %}
+            <div class="card border-danger mb-4 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <h5 class="card-title text-danger fw-bold mb-1">
+                        <i class="bi bi-eye-slash me-1"></i> Profile Visibility
+                    </h5>
+                    <p class="small text-secondary mb-3">
+                        Control your network visibility. When incognito mode is active, your profile metadata, traction values, and deal details are completely omitted from global lookup filters and Zelda AI engine tools.
+                    </p>
+                    
+                    <div class="form-check form-switch fs-5">
+                        <input class="form-check-input" type="checkbox" role="switch" id="profilePrivacyToggle"
+                            {% if application.is_private or investor_application.is_private %}checked{% endif %}>
+                        <label class="form-check-label small text-dark fw-semibold ms-1" for="profilePrivacyToggle">
+                            Enable Incognito Mode
+                        </label>
+                    </div>
+                    
+                    <div id="privacyToastFeedback" class="small mt-2 fw-medium d-none"></div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Profile Info Top Banner Header -->
             <div class="card shadow-sm border-0 mb-5 rounded-4 overflow-hidden">
                 <div class="card-body bg-dark text-white p-4">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
@@ -36,7 +60,7 @@
                             </div>
                             <div>
                                 <h3 class="mb-0 fw-bold">User Profile</h3>
-                                <p class="text-white-50 mb-0">{{ user.email }}</p>
+                                <p class="text-white-50 mb-0">{{ profile_user.email }}</p>
                             </div>
                         </div>
                         <div class="d-flex align-items-center gap-3">
@@ -60,9 +84,8 @@
                 </div>
             </div>
 
-            <!-- SECTION: Content Display -->
+            <!-- Founder Interface Module Layout -->
             {% if application %}
-                <!-- FOUNDER VIEW -->
                 <div class="section-title mb-4 d-flex align-items-center">
                     <h3 class="fw-bold mb-0">Company Details</h3>
                     <div class="ms-3 flex-grow-1 border-bottom"></div>
@@ -74,30 +97,28 @@
                             <div class="col-md-7">
                                 <h2 class="text-success fw-bold display-6 mb-1">{{ application.company_name }}</h2>
                                 <p class="text-muted mb-4">
-                                    <i class="bi bi-tag me-1"></i> {{ application.sector }} | {{ application.stage }}
+                                    <i class="bi bi-tag me-1"></i> {{ application.sector }} | {{ application.funding_stage }}
                                 </p>
                                 
-                                <!-- Company Description & Core Details -->
                                 <div class="mb-4">
                                     <h6 class="text-uppercase fw-bold text-muted small mb-2">Executive Summary</h6>
                                     <p class="text-dark mb-3">{{ application.description }}</p>
                                     
-                                    <!-- Operational Micro-Metrics Row -->
                                     <div class="row g-2 mb-3">
                                         <div class="col-sm-4">
-                                            <div class="bg-light p-2.5 rounded border small">
+                                            <div class="bg-light p-2 rounded border small">
                                                 <span class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.65rem;">Years in Business</span>
                                                 <span class="text-dark fw-bold">{{ application.years_in_business|default:"--" }}</span>
                                             </div>
                                         </div>
                                         <div class="col-sm-4">
-                                            <div class="bg-light p-2.5 rounded border small">
+                                            <div class="bg-light p-2 rounded border small">
                                                 <span class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.65rem;">Company Size</span>
                                                 <span class="text-dark fw-bold">{{ application.company_size|default:"--" }}</span>
                                             </div>
                                         </div>
                                         <div class="col-sm-4">
-                                            <div class="bg-light p-2.5 rounded border small">
+                                            <div class="bg-light p-2 rounded border small">
                                                 <span class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.65rem;">Prior Raised</span>
                                                 <span class="text-dark fw-bold">
                                                     {% if application.prior_amount_raised %}
@@ -111,13 +132,11 @@
                                     </div>
                                 </div>
 
-                                <!-- Growth & Reason for Capital Strategy -->
                                 <div class="p-3 bg-light rounded-3 border-start border-4 border-success mb-4">
                                     <h6 class="fw-bold text-muted text-uppercase small mb-2">Growth Strategy & Capital Deployment</h6>
                                     <p class="text-secondary mb-0 small fst-italic">{{ application.reason_for_capital|default:"No capitalization strategy declared yet." }}</p>
                                 </div>
 
-                                <!-- Pitch Deck File Access -->
                                 <div class="mb-4 mb-md-0">
                                     <h6 class="text-uppercase fw-bold text-muted small mb-2">Pitch Assets</h6>
                                     {% if application.pitch_deck %}
@@ -136,25 +155,22 @@
                                 </div>
                             </div>
                             
-                            <!-- Contact sidebar panel -->
                             <div class="col-md-5 mt-4 mt-md-0">
                                 <div class="bg-light p-4 rounded-4 border">
                                     <h6 class="text-uppercase fw-bold text-muted small mb-3">Contact & Links</h6>
                                     <ul class="list-unstyled mb-0">
-                                        <li class="mb-2.5"><i class="bi bi-person-circle me-2 text-success"></i> <strong>{{ application.founder_name }}</strong></li>
-                                        <li class="mb-2.5"><i class="bi bi-envelope me-2 text-muted"></i> {{ application.email }}</li>
+                                        <li class="mb-2"><i class="bi bi-person-circle me-2 text-success"></i> <strong>{{ application.founder_name }}</strong></li>
+                                        <li class="mb-2"><i class="bi bi-envelope me-2 text-muted"></i> {{ application.email }}</li>
                                         {% if application.phone_number %}
-                                        <li class="mb-2.5"><i class="bi bi-telephone me-2 text-muted"></i> {{ application.phone_number }}</li>
+                                        <li class="mb-2"><i class="bi bi-telephone me-2 text-muted"></i> {{ application.phone_number }}</li>
                                         {% endif %}
                                         
-                                        <!-- Dynamic Location Node -->
-                                        <li class="mb-2.5"><i class="bi bi-geo-alt me-2 text-danger"></i> {{ application.location|default:"Global / Remote" }}</li>
+                                        <li class="mb-2"><i class="bi bi-geo-alt me-2 text-danger"></i> {{ application.location|default:"Global / Remote" }}</li>
                                         
                                         {% if application.company_website %}
-                                        <li class="mb-2.5"><i class="bi bi-globe me-2 text-primary"></i> <a href="{{ application.company_website }}" target="_blank" class="text-decoration-none fw-bold">{{ application.company_website|cut:"https://"|cut:"http://" }}</a></li>
+                                        <li class="mb-2"><i class="bi bi-globe me-2 text-primary"></i> <a href="{{ application.company_website }}" target="_blank" class="text-decoration-none fw-bold">{{ application.company_website|cut:"https://"|cut:"http://" }}</a></li>
                                         {% endif %}
 
-                                        <!-- LinkedIn Dynamic Node -->
                                         {% if application.linkedin_url %}
                                         <li class="mb-0"><i class="bi bi-linkedin me-2 text-primary"></i> <a href="{{ application.linkedin_url }}" target="_blank" class="text-decoration-none fw-bold">LinkedIn Profile</a></li>
                                         {% else %}
@@ -186,8 +202,8 @@
                     </div>
                 </div>
 
+            <!-- Investor Interface Module Layout -->
             {% elif investor_application %}
-                <!-- INVESTOR VIEW -->
                 <div class="section-title mb-4 d-flex align-items-center">
                     <h3 class="fw-bold mb-0">Investment Profile</h3>
                     <div class="ms-3 flex-grow-1 border-bottom"></div>
@@ -236,54 +252,103 @@
                     </div>
                 </div>
 
-           {% else %}
-                <!-- EMPTY STATE -->
-                <div class="card border-0 shadow-sm rounded-4 text-center p-5 mt-4">
-                    <div class="card-body">
-                        <div class="bg-light rounded-circle d-inline-block p-4 mb-4">
-                            <i class="bi bi-compass text-secondary display-4"></i>
-                        </div>
-                        <h4 class="fw-bold">Explore Interlink Foundry</h4>
-                        <p class="text-muted mx-auto mb-4" style="max-width: 450px;">
-                            While our ecosystem alignment engines map your network credentials, dive directly into active deal flow updates and network insights.
-                        </p>
-                        <div class="d-flex justify-content-center gap-3 flex-wrap">
-                            <a href="{% url 'matchmaking:bulletin_board' %}" class="btn btn-dark rounded-pill px-4">
-                                <i class="bi bi-grid-3x3-gap me-2"></i> Browse Bulletin Board
-                            </a>
-                            <a href="{% url 'blog:blog_view' %}" class="btn btn-outline-secondary rounded-pill px-4">
-                                <i class="bi bi-newspaper me-2"></i> Read Network Blog
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            {% endif %}
+            <!-- Ecosystem Fallback Screen Layout -->
+            {% else %}
+    <div class="card border-0 shadow-sm rounded-4 text-center p-5 mt-4">
+        <div class="card-body">
+            <div class="bg-light rounded-circle d-inline-block p-4 mb-4">
+                <i class="bi bi-compass text-secondary display-4"></i>
+            </div>
+            <h4 class="fw-bold">Explore Interlink Foundry</h4>
+            <p class="text-muted mx-auto mb-4" style="max-width: 450px;">
+                While our ecosystem alignment engines map your network credentials, dive directly into active deal flow updates and network insights.
+            </p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="{% url 'matchmaking:bulletin_board' %}" class="btn btn-dark rounded-pill px-4">
+                    <i class="bi bi-grid-3x3-gap me-2"></i> Browse Bulletin Board
+                </a>
+                <!-- CHANGED FROM blog:article_list BACK TO blog:blog_view -->
+                <a href="{% url 'blog:blog_view' %}" class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="bi bi-newspaper me-2"></i> Read Network Blog
+                </a>
+            </div>
+        </div>
+    </div>
+{% endif %}
 
-        <div class="blog-section mb-5">
-    <h3 class="fw-bold mb-4">Articles by {{ profile_user.username }}</h3>
-    
-    {% if user_articles %}
-        <div class="row row-cols-1 g-3">
-            {% for article in user_articles %}
-                <div class="col">
-                    <div class="card h-100 border-0 shadow-sm rounded-4">
-                        <div class="card-body">
-                            <a href="{% url 'blog:article_detail' article.pk %}" class="text-decoration-none text-dark">
-                                <h5 class="card-title fw-bold mb-1">{{ article.title }}</h5>
-                            </a>
-                            <small class="text-muted">Published on {{ article.created_on|date:"F d, Y" }}</small>
-                        </div>
+            <!-- Editorial Matrix Architecture Layer -->
+            <div class="blog-section mb-5">
+                <h3 class="fw-bold mb-4">Articles by {{ profile_user.username }}</h3>
+                
+                {% if user_articles %}
+                    <div class="row row-cols-1 g-3">
+                        {% for article in user_articles %}
+                            <div class="col">
+                                <div class="card h-100 border-0 shadow-sm rounded-4">
+                                    <div class="card-body">
+                                        <a href="{% url 'blog:article_detail' article.pk %}" class="text-decoration-none text-dark">
+                                            <h5 class="card-title fw-bold mb-1">{{ article.title }}</h5>
+                                        </a>
+                                        <small class="text-muted">Published on {{ article.created_on|date:"F d, Y" }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
                     </div>
-                </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="p-4 text-center border rounded-4 bg-light">
-            <p class="text-muted mb-0">This user hasn't published any articles yet.</p>
-        </div>
-    {% endif %}
-</div>
+                {% else %}
+                    <div class="p-4 text-center border rounded-4 bg-light">
+                        <p class="text-muted mb-0">This user hasn't published any articles yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+
         </div>
     </div>
 </div>
 {% endblock %}
+
+{% block javascript %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const privacyToggle = document.getElementById("profilePrivacyToggle");
+    const feedbackMsg = document.getElementById("privacyToastFeedback");
+
+    if (privacyToggle) {
+        privacyToggle.addEventListener("change", function () {
+            const isPrivate = this.checked;
+
+            // Trigger background patch request matching accounts namespace routes
+            fetch("{% url 'accounts:toggle_privacy' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ is_private: isPrivate })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    feedbackMsg.className = "small mt-2 fw-medium text-success animate__animated animate__fadeIn";
+                    feedbackMsg.textContent = isPrivate 
+                        ? "✓ Incognito mode activated. Your profile is now hidden." 
+                        : "✓ Profile visibility set to public.";
+                } else {
+                    throw new Error(data.message || "Update failed.");
+                }
+            })
+            .catch(error => {
+                privacyToggle.checked = !isPrivate;
+                feedbackMsg.className = "small mt-2 fw-medium text-danger animate__animated animate__fadeIn";
+                feedbackMsg.textContent = "⚠ Failed to update privacy settings. Try again.";
+            });
+
+            feedbackMsg.classList.remove("d-none");
+            setTimeout(() => {
+                feedbackMsg.classList.add("d-none");
+            }, 3500);
+        });
+    }
+});
+</script>
+{% endblock javascript %}

@@ -4,6 +4,7 @@ from . import views
 app_name = 'matchmaking'
 
 urlpatterns = [
+    path('profile/toggle-privacy/', views.toggle_privacy_view, name='toggle_privacy'),
     # =====================================================================
     # ECOSYSTEM DASHBOARDS
     # =====================================================================
@@ -28,4 +29,5 @@ urlpatterns = [
     # =====================================================================
     path('deal-room/', views.deal_room_workspace, name='diligence_chat'),
     path('chat/initiate/<int:target_user_id>/', views.initiate_direct_chat, name='initiate_direct_chat'),
+    
 ]
