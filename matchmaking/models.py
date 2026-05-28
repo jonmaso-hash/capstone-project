@@ -170,6 +170,12 @@ class InvestorApplication(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # --- INCOGNITO & PRIVACY LAYER ---
+    is_private = models.BooleanField(
+        default=False, 
+        help_text="Incognito Mode: Hides your profile from public visibility boards, global metrics grids, and Zelda AI."
+    )
 
     def __str__(self):
         return f"{self.company_name} ({self.full_name})"
