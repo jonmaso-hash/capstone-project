@@ -46,10 +46,24 @@ class InvestorApplication(models.Model):
         related_name='permitted_investor_profiles',
         help_text="Users granted direct access via accepted invitation paths."
     )
+    
+    @property
+    def completion_percentage(self):
+        """Calculates setup completeness across institutional mandate parameters."""
+        tracked_fields = [
+            self.company_name,
+            self.investment_focus,
+            self.investment_stage,
+            self.investment_amount,
+            self.full_name,
+            self.email,
+            self.phone,
+        ]
+        filled_count = sum(1 for field in tracked_fields if field not in (None, "", 0))
+        return int((filled_count / len(tracked_fields)) * 100)
 
     def __str__(self):
         return f"{self.company_name} - {self.user.username}"
-
 
 class FounderApplication(models.Model):
     user = models.OneToOneField(
@@ -85,6 +99,25 @@ class FounderApplication(models.Model):
         related_name='permitted_founder_profiles',
         help_text="Investors authorized to audit this company via invite workflow matches."
     )
+    
+    @property
+    def completion_percentage(self):
+        """Calculates setup completeness across core startup metrics."""
+        tracked_fields = [
+            self.company_name,
+            self.sector,
+            self.funding_stage,
+            self.description,
+            self.founder_name,
+            self.email,
+            self.raising_amount,
+            self.current_revenue,
+            self.company_website,
+            self.pitch_deck,
+        ]
+        # Evaluates fields that are not None, empty strings, or 0
+        filled_count = sum(1 for field in tracked_fields if field not in (None, "", 0))
+        return int((filled_count / len(tracked_fields)) * 100)
 
     def __str__(self):
         return f"{self.company_name} ({self.user.username})"

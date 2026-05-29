@@ -8,7 +8,6 @@
     <div class="row justify-content-center">
         <div class="col-lg-10">
 
-            <!-- Welcome Prompt Alert Context -->
             {% if show_welcome_prompt %}
             <div class="alert alert-dark shadow-lg border-0 p-5 mb-5 text-center rounded-4">
                 <h2 class="fw-bold text-white mb-3">Welcome to Interlink Foundry</h2>
@@ -26,7 +25,6 @@
             </div>
             {% endif %}
 
-            <!-- Dynamic Privacy Engine Workspace -->
             {% if request.user == profile_user %}
             <div class="card border-danger mb-4 shadow-sm rounded-4">
                 <div class="card-body p-4">
@@ -50,8 +48,7 @@
             </div>
             {% endif %}
 
-            <!-- Profile Info Top Banner Header -->
-            <div class="card shadow-sm border-0 mb-5 rounded-4 overflow-hidden">
+            <div class="card shadow-sm border-0 mb-4 rounded-4 overflow-hidden">
                 <div class="card-body bg-dark text-white p-4">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                         <div class="d-flex align-items-center">
@@ -84,7 +81,6 @@
                 </div>
             </div>
 
-            <!-- Founder Interface Module Layout -->
             {% if application %}
                 <div class="section-title mb-4 d-flex align-items-center">
                     <h3 class="fw-bold mb-0">Company Details</h3>
@@ -97,7 +93,7 @@
                             <div class="col-md-7">
                                 <h2 class="text-success fw-bold display-6 mb-1">{{ application.company_name }}</h2>
                                 <p class="text-muted mb-4">
-                                    <i class="bi bi-tag me-1"></i> {{ application.sector }} | {{ application.funding_stage }}
+                                    <i class="bi bi-tag me-1"></i> {{ application.sector }}{% if application.funding_stage %} | {{ application.funding_stage }}{% endif %}
                                 </p>
                                 
                                 <div class="mb-4">
@@ -124,7 +120,7 @@
                                                     {% if application.prior_amount_raised %}
                                                         {% if "$" not in application.prior_amount_raised %}${% endif %}{{ application.prior_amount_raised }}
                                                     {% else %}
-                                                        $0
+                                                        --
                                                     {% endif %}
                                                 </span>
                                             </div>
@@ -135,6 +131,11 @@
                                 <div class="p-3 bg-light rounded-3 border-start border-4 border-success mb-4">
                                     <h6 class="fw-bold text-muted text-uppercase small mb-2">Growth Strategy & Capital Deployment</h6>
                                     <p class="text-secondary mb-0 small fst-italic">{{ application.reason_for_capital|default:"No capitalization strategy declared yet." }}</p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="id_pitch_deck" class="form-label fw-bold">Pitch Deck (PDF or PPTX required)</label>
+                                    <input type="file" name="pitch_deck" id="id_pitch_deck" class="form-control" required>
                                 </div>
 
                                 <div class="mb-4 mb-md-0">
@@ -202,7 +203,6 @@
                     </div>
                 </div>
 
-            <!-- Investor Interface Module Layout -->
             {% elif investor_application %}
                 <div class="section-title mb-4 d-flex align-items-center">
                     <h3 class="fw-bold mb-0">Investment Profile</h3>
@@ -252,31 +252,28 @@
                     </div>
                 </div>
 
-            <!-- Ecosystem Fallback Screen Layout -->
             {% else %}
-    <div class="card border-0 shadow-sm rounded-4 text-center p-5 mt-4">
-        <div class="card-body">
-            <div class="bg-light rounded-circle d-inline-block p-4 mb-4">
-                <i class="bi bi-compass text-secondary display-4"></i>
+            <div class="card border-0 shadow-sm rounded-4 text-center p-5 mt-4">
+                <div class="card-body">
+                    <div class="bg-light rounded-circle d-inline-block p-4 mb-4">
+                        <i class="bi bi-compass text-secondary display-4"></i>
+                    </div>
+                    <h4 class="fw-bold">Explore Interlink Foundry</h4>
+                    <p class="text-muted mx-auto mb-4" style="max-width: 450px;">
+                        While our ecosystem alignment engines map your network credentials, dive directly into active deal flow updates and network insights.
+                    </p>
+                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                        <a href="{% url 'matchmaking:bulletin_board' %}" class="btn btn-dark rounded-pill px-4">
+                            <i class="bi bi-grid-3x3-gap me-2"></i> Browse Bulletin Board
+                        </a>
+                        <a href="{% url 'blog:blog_view' %}" class="btn btn-outline-secondary rounded-pill px-4">
+                            <i class="bi bi-newspaper me-2"></i> Read Network Blog
+                        </a>
+                    </div>
+                </div>
             </div>
-            <h4 class="fw-bold">Explore Interlink Foundry</h4>
-            <p class="text-muted mx-auto mb-4" style="max-width: 450px;">
-                While our ecosystem alignment engines map your network credentials, dive directly into active deal flow updates and network insights.
-            </p>
-            <div class="d-flex justify-content-center gap-3 flex-wrap">
-                <a href="{% url 'matchmaking:bulletin_board' %}" class="btn btn-dark rounded-pill px-4">
-                    <i class="bi bi-grid-3x3-gap me-2"></i> Browse Bulletin Board
-                </a>
-                <!-- CHANGED FROM blog:article_list BACK TO blog:blog_view -->
-                <a href="{% url 'blog:blog_view' %}" class="btn btn-outline-secondary rounded-pill px-4">
-                    <i class="bi bi-newspaper me-2"></i> Read Network Blog
-                </a>
-            </div>
-        </div>
-    </div>
-{% endif %}
+            {% endif %}
 
-            <!-- Editorial Matrix Architecture Layer -->
             <div class="blog-section mb-5">
                 <h3 class="fw-bold mb-4">Articles by {{ profile_user.username }}</h3>
                 
@@ -317,7 +314,6 @@ document.addEventListener("DOMContentLoaded", function () {
         privacyToggle.addEventListener("change", function () {
             const isPrivate = this.checked;
 
-            // Trigger background patch request matching accounts namespace routes
             fetch("{% url 'accounts:toggle_privacy' %}", {
                 method: "POST",
                 headers: {

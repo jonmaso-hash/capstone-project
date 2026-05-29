@@ -20,8 +20,9 @@ def analyze_pitch_deck(file_path):
     extracts target structural parameters using schema constraints, and purges the file.
     """
     try:
-        # Client automatically reads the GEMINI_API_KEY environment variable
-        client = genai.Client()
+        client = genai.Client()  # Automatically defaults to stable v1 pathways
+        
+        # REMOVED: Redundant text-embedding-004 test block that was overwriting response
         
         # Upload the presentation document safely via the Files Engine
         logger.info(f"Uploading document to Gemini File Engine: {file_path}")
@@ -37,14 +38,13 @@ def analyze_pitch_deck(file_path):
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
                 response_schema=ExtractedStartupProfile,
-                temperature=0.1,  # Lower values keep the extraction factual and grounded
+                temperature=0.1,
             ),
         )
         
-        # Clean up the file storage object from Google's temporary servers immediately after execution
+        # Clean up the file storage object from Google's temporary servers immediately
         client.files.delete(name=uploaded_file.name)
         
-        # Return cleanly parsed JSON output data matching our Pydantic schema
         return json.loads(response.text)
         
     except Exception as e:

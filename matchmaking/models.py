@@ -2,286 +2,177 @@ from django.db import models
 from django.conf import settings
 from django.core.validators import FileExtensionValidator
 
-# =================================================
-# APPLICATION (FOUNDERS)
-# =================================================
+
 class Application(models.Model):
     """
-    Founder Venture Profile Matrix.
-    Tracks personal details, physical HQ location bounds, financial targets,
-    and Gemini AI multimodal context files.
+    Founder Application Profile Engine
+    Stores institutional and deck credentials for startup ventures.
     """
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="match_founder_profile"
+        related_name="match_founder_profile"  # Matches views.py getattr lookups
     )
-    
-    # --- ADD THIS PRIVACY FIELD LAYER ---
-    is_private = models.BooleanField(
-        default=False, 
-        help_text="Hides your startup profile from the global search directory and the public board."
-    )
-
-    # Founder Personal & Location Data
-    founder_name = models.CharField(max_length=255)
-    email = models.EmailField()
-    phone_number = models.CharField(max_length=50, blank=True, null=True)
-    linkedin_url = models.URLField(max_length=500, blank=True, null=True, verbose_name="Founder LinkedIn Profile")
-    location = models.CharField(
-        max_length=255, 
-        blank=True, 
-        null=True, 
-        help_text="HQ Operating Location (e.g., San Francisco, CA or London, UK)"
-    )
-    
-    # Company Metrics
     company_name = models.CharField(max_length=255)
     company_website = models.URLField(max_length=500, blank=True, null=True)
-    company_size = models.CharField(max_length=100, blank=True, null=True, help_text="e.g., 1-10, 11-50 employees")
-    years_in_business = models.CharField(max_length=100, blank=True, null=True, help_text="e.g., Less than 1 year, 1–2 years, 3–5 years")
+    founder_name = models.CharField(max_length=255)
+    email = models.EmailField(max_length=254)
+    phone_number = models.CharField(max_length=50, blank=True, null=True)
     
-    # AI Processing Inputs
-    description = models.TextField(help_text="One-sentence pitch or short technical summary.") 
-    sector = models.CharField(max_length=255, blank=True, null=True, help_text="Primary vertical index (e.g., SaaS, FinTech, AI)") 
-    stage = models.CharField(max_length=100, blank=True, null=True, help_text="Current fundraising round stage (e.g., Pre-Seed, Seed)")   
-
-    # Multimodal Gemini File Processing Store Pipelines
-    pitch_deck = models.FileField(
-        upload_to='pitch_decks/%Y/%m/', 
-        null=True, 
-        blank=True,
-        validators=[FileExtensionValidator(allowed_extensions=['pdf'])],
-        help_text="Founder pitch deck file (PDF) used for multimodal Gemini analysis."
-    )
-    file_search_store_id = models.CharField(
-        max_length=255, 
-        null=True, 
-        blank=True,
-        help_text="The native Gemini managed vector file identifier used for grounding queries."
-    )
-
-    # Fallback Indexing System
-    keywords = models.CharField(
-        max_length=500, 
-        blank=True, 
-        null=True, 
-        help_text="Comma-separated tokens for matching algorithms (e.g., saas, b2b, ai)."
-    )
-
-    # Financial Configurations (Tolerates structural conversion or direct numeric inputs)
-    raising_amount = models.CharField(
-        max_length=100, 
-        blank=True, 
-        null=True, 
-        help_text="Target fundraising target metric (e.g., 200,000 or 1.5M)."
-    )
-    prior_amount_raised = models.CharField(
-        max_length=100, 
-        default="0", 
-        blank=True, 
-        null=True, 
-        help_text="Aggregate capital raised previously."
-    )
-    current_revenue = models.CharField(
-        max_length=100, 
-        default="0", 
-        blank=True, 
-        null=True, 
-        help_text="Annual or Monthly Recurring Revenue breakdown metric."
-    )
-
-    # Qualitative Breakdowns
+    # Text Analysis Blocks (Fed directly into Zelda AI vector matching engine)
+    description = models.TextField(verbose_name="Executive Summary")
     reason_for_capital = models.TextField(blank=True, null=True)
     extra_info = models.TextField(blank=True, null=True)
-
-    # High-Dimensional Core Storage Block
-    description_vector = models.JSONField(null=True, blank=True, help_text="System multi-modal float embedding matrix array.")
     
-    # Platform Governance Control System
-    is_verified = models.BooleanField(
-        default=False, 
-        help_text="Designates whether this startup has been vetted by the team to appear in general investor bulletin boards."
+    # Traction Matrix Fields
+    sector = models.CharField(max_length=100, default='Other')
+    stage = models.CharField(max_length=100, default='Seed', verbose_name="Funding Stage")
+    raising_amount = models.IntegerField(default=0, help_text="Numeric value for search filtering")
+    current_revenue = models.IntegerField(default=0, help_text="Numeric value for search filtering")
+    prior_amount_raised = models.CharField(max_length=100, blank=True, null=True)
+    years_in_business = models.CharField(max_length=50, blank=True, null=True)
+    company_size = models.CharField(max_length=50, blank=True, null=True)
+    
+    # Secure Asset Upload Engine supporting documents and slide decks
+    pitch_deck = models.FileField(
+        upload_to="pitch_decks/",
+        validators=[FileExtensionValidator(allowed_extensions=["pdf", "pptx", "ppt"])],
+        blank=True,
+        null=True
     )
-
+    
+    # Zelda AI Cache Layer Vectors
+    description_vector = models.JSONField(blank=True, null=True, help_text="Stores embeddings array")
+    
+    # System Visibility Control State Switches
+    is_private = models.BooleanField(
+        default=False, 
+        help_text="Enable incognito mode to omit your application from global filters and automated AI indexing."
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name = "Founder Application"
+        verbose_name_plural = "Founder Applications"
+        ordering = ["-created_at"]
+
     def __str__(self):
-        return self.company_name if self.company_name else self.founder_name
+        return f"{self.company_name} ({self.founder_name})"
+    
+    @property
+    def funding_stage(self):
+        return self.stage
+
+    @property
+    def completion_percentage(self):
+        """Dynamically computes the data density score for the Zelda AI matrix."""
+        tracked_fields = [
+            self.company_name, self.company_website, self.founder_name,
+            self.email, self.phone_number, self.description, self.sector,
+            self.stage, self.raising_amount, self.current_revenue, self.pitch_deck
+        ]
+        filled_fields = sum(1 for field in tracked_fields if field)
+        return int((filled_fields / len(tracked_fields)) * 100)
+
+    @property
+    def funding_stage(self):
+        """Alias property to ensure seamless template compatibility across app contexts."""
+        return self.stage
 
 
-# =================================================
-# INVESTOR APPLICATION (Matchmaking Profile)
-# =================================================
 class InvestorApplication(models.Model):
     """
-    Investor Deployment Mandate Profile.
-    Maps check sizes, geographical criteria, and target investment strategies.
+    Investor Profile Mandate Engine
+    Manages search priority targets and ticket capacities for venture funds and angels.
     """
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="match_investor_profile"
+        related_name="match_investor_profile"  # Matches views.py getattr lookups
     )
-    
-    portfolio_raw_text = models.TextField(
-        blank=True, 
-        null=True, 
-        help_text="Scraped textual layout telemetry from historical fund portfolio data uploads."
-    )
-
-    # Personal Profile & Location Section
     full_name = models.CharField(max_length=255)
-    email = models.EmailField()
+    email = models.EmailField(max_length=254)
     phone = models.CharField(max_length=50, blank=True, null=True)
-    company_name = models.CharField(max_length=255, verbose_name="Firm / Fund Name")
+    company_name = models.CharField(max_length=255)
     website = models.URLField(max_length=500, blank=True, null=True)
-    linkedin_url = models.URLField(max_length=500, blank=True, null=True, verbose_name="Investor LinkedIn Profile")
-    location = models.CharField(
-        max_length=255, 
-        blank=True, 
-        null=True, 
-        help_text="Operating Hub Base (e.g., New York, NY or Toronto, ON)"
-    )
     
-    # Geolocation Radius Mandate Filtering Field
-    target_distance_range = models.CharField(
-        max_length=100,
-        default="GLOBAL",
-        help_text="Target radial allocation limit (e.g., Local, Regional, National, GLOBAL)"
-    )
+    # Focus Metrics for Similarity Processing Layouts
+    investment_focus = models.TextField()
+    investment_stage = models.CharField(max_length=100)
+    investment_amount = models.CharField(max_length=100, default='Unspecified', verbose_name="Target Ticket Size")    
+    # Zelda AI Cache Layer Vectors
+    focus_vector = models.JSONField(blank=True, null=True, help_text="Stores embeddings array")
 
-    # Deployment Parameters 
-    # Deployment Parameters 
-    investment_focus = models.TextField(help_text="Detailed summary of targeted industry criteria or fund investment thesis.")
-    investment_stage = models.CharField(max_length=255, help_text="Target stages (e.g., Seed, Series A)") 
-    
-    # Text choice array configuration
-    investment_amount = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True,
-        help_text="Target ticket check size range metric deployment limit (e.g., 250,000-500,000)."
-    )
-
-    # Vector Storage Core
-    focus_vector = models.JSONField(null=True, blank=True, help_text="System vector embedding cache array representing investment thesis strategy.")
-
+    # Visibility and Log Infrastructure
+    is_private = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
-    # --- INCOGNITO & PRIVACY LAYER ---
-    is_private = models.BooleanField(
-        default=False, 
-        help_text="Incognito Mode: Hides your profile from public visibility boards, global metrics grids, and Zelda AI."
-    )
+
+    class Meta:
+        verbose_name = "Investor Profile"
+        verbose_name_plural = "Investor Profiles"
+        ordering = ["-created_at"]
+        
+    @property
+    def completion_percentage(self):
+        """Dynamically computes the mandate specification density for recommendations."""
+        tracked_fields = [
+            self.full_name, self.email, self.phone, self.company_name,
+            self.website, self.investment_focus, self.investment_stage,
+            self.investment_amount
+        ]
+        filled_fields = sum(1 for field in tracked_fields if field)
+        return int((filled_fields / len(tracked_fields)) * 100)
 
     def __str__(self):
-        return f"{self.company_name} ({self.full_name})"
+        return f"{self.company_name} Investment Mandate ({self.full_name})"
 
 
-# =================================================
-# INTRODUCTIONS & CONNECTIONS (The Handshake)
-# =================================================
 class Connection(models.Model):
     """
-    Platform Introduction Request Tracker.
-    Logs direct handshake requests made by investors to founders.
+    Handshake Request Mapping Architecture
+    Tracks platform introductions between investors and founders.
     """
-    STATUS_CHOICES = [
-        ('PENDING', 'Pending Review'),
-        ('APPROVED', 'Intro Sent'),
-        ('DECLINED', 'Declined'),
-        ('ARCHIVED', 'Archived'),
-    ]
-
-    investor = models.ForeignKey(InvestorApplication, on_delete=models.CASCADE, related_name='sent_intros')
-    founder = models.ForeignKey(Application, on_delete=models.CASCADE, related_name='received_intros')
-    
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
-    investor_note = models.TextField(blank=True, help_text="Optional note provided by the investor to facilitate the introduction.")
-    
+    investor = models.ForeignKey(InvestorApplication, on_delete=models.CASCADE, related_name="connections")
+    founder = models.ForeignKey(Application, on_delete=models.CASCADE, related_name="connections")
+    status = models.CharField(max_length=50, default="pending")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ('investor', 'founder')
-
-    def __str__(self):
-        return f"{self.investor.company_name} -> {self.founder.company_name} [{self.status}]"
-
-
-# =================================================
-# AI SCORING & FEEDBACK
-# =================================================
-class AIMatch(models.Model):
-    """
-    Automated Matching Score Index.
-    Records system score calculations computed via vector logic or deal_screener.py metrics.
-    """
-    investor = models.ForeignKey(InvestorApplication, on_delete=models.CASCADE, related_name="ai_matches")
-    founder = models.ForeignKey(Application, on_delete=models.CASCADE, related_name="ai_matches")
-    
-    score = models.FloatField(help_text="Calculated match index score spanning 0.0 to 100.0") 
-    reasons = models.JSONField(default=list, help_text="Array listing specific context justifications generated by Gemini.") 
-    hidden = models.BooleanField(default=False, help_text="Allows users to archive this match configuration from active view feeds.")
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['-score']
-        unique_together = ('investor', 'founder')
-
-    def __str__(self):
-        return f"AI Match: {self.investor.company_name} <-> {self.founder.company_name} ({self.score}%)"
+        unique_together = ("investor", "founder")
+        verbose_name = "Platform Connection"
+        verbose_name_plural = "Platform Connections"
 
 
 class MatchFeedback(models.Model):
     """
-    Reinforcement Data Feedback Engine.
-    Captures explicit upvotes and downvotes to fine-tune vector routing behaviors over time.
+    Engagement Logging Matrix
+    Stores user interaction votes (upvotes/downvotes) to fine-tune recommendation systems.
     """
-    VOTE_CHOICES = [
-        (1, 'Upvote'),
-        (-1, 'Downvote'),
-    ]
-
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    application = models.ForeignKey(Application, on_delete=models.CASCADE)
-    investor = models.ForeignKey(InvestorApplication, on_delete=models.CASCADE)
-    
-    vote = models.SmallIntegerField(choices=VOTE_CHOICES)
-    feedback_text = models.TextField(blank=True, null=True, help_text="User descriptive commentary explaining vote rationale.")
-    
+    application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name="feedback")
+    investor = models.ForeignKey(InvestorApplication, on_delete=models.CASCADE, related_name="feedback")
+    vote = models.IntegerField(choices=[(1, "Upvote"), (-1, "Downvote")])
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'application', 'investor')
+        verbose_name = "Match Feedback"
+        verbose_name_plural = "Match Feedbacks"
 
-    def __str__(self):
-        return f"Feedback by {self.user.username} on Match ({self.get_vote_display()})"
 
-from django import forms
-from .models import Application, InvestorApplication
-
-class AdvancedFounderForm(forms.ModelForm):
-    YEARS_CHOICES = [
-        ('<1', 'Less than 1 year'),
-        ('1-2', '1–2 years'),
-        ('3-5', '3–5 years'),
-        ('5+', '5+ years'),
-    ]
-    SIZE_CHOICES = [
-        ('1-10', '1–10 employees'),
-        ('11-50', '11–50 employees'),
-        ('51-200', '51–200 employees'),
-        ('201+', '201+ employees'),
-    ]
-    
-    years_in_business = forms.ChoiceField(choices=YEARS_CHOICES, widget=forms.Select(attrs={'class': 'form-select'}))
-    company_size = forms.ChoiceField(choices=SIZE_CHOICES, widget=forms.Select(attrs={'class': 'form-select'}))
+class AIMatch(models.Model):
+    """
+    Pre-calculated AI Scoring Manifest
+    Saves computed vector matrix weights for reporting, admin panels, or async processes.
+    """
+    investor = models.ForeignKey(InvestorApplication, on_delete=models.CASCADE, related_name="ai_matches")
+    application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name="ai_matches")
+    score = models.FloatField()
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        model = Application
-        fields = ['years_in_business', 'company_size', 'prior_amount_raised', 'location', 'current_revenue']
+        verbose_name = "AI Match Log"
+        verbose_name_plural = "AI Match Logs"
+        ordering = ["-score"]
