@@ -176,3 +176,13 @@ class AIMatch(models.Model):
         verbose_name = "AI Match Log"
         verbose_name_plural = "AI Match Logs"
         ordering = ["-score"]
+        
+class ConnectionRequest(models.Model):
+    founder = models.ForeignKey('Application', on_delete=models.CASCADE, related_name='inbound_requests')
+    investor = models.ForeignKey('InvestorApplication', on_delete=models.CASCADE, related_name='outbound_requests')
+    status = models.CharField(
+        max_length=20, 
+        choices=[('PENDING', 'Pending'), ('ACCEPTED', 'Accepted'), ('DECLINED', 'Declined')],
+        default='PENDING'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)

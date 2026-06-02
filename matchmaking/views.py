@@ -9,22 +9,47 @@ from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
 from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
-from django.http import JsonResponse
-
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from stream_chat import StreamChat
 
-# Internal Services & Logic
-from matchmaking.models import Application, Connection, InvestorApplication, MatchFeedback
+# Internal Services & Models
+from matchmaking.models import Application, Connection, InvestorApplication, MatchFeedback, ConnectionRequest
 from matchmaking.services.ai_engine import calculate_similarity, generate_profile_embedding
-from matchmaking.services.web_crawling import get_live_startup_data
 from matchmaking.utils import calculate_rule_based_score, get_blended_match
 from .tasks import crawl_startup_data_task
 
 logger = logging.getLogger(__name__)
+
+def handle_connection_action(request):
+    """
+    Handles PENDING -> ACCEPTED/DECLINED transitions for connection requests.
+    Supports asynchronous frontend triggers.
+    """
+    try:
+        data = json.loads(request.body)
+        request_id = data.get('id')
+        action = data.get('action') # Expected: 'ACCEPTED' or 'DECLINED'
+
+        if action not in ['ACCEPTED', 'DECLINED']:
+            return JsonResponse({'status': 'error', 'message': 'Invalid action'}, status=400)
+
+        conn_req = get_object_or_404(ConnectionRequest, id=request_id)
+        
+        # Ensure user has permission to act on this request
+        if conn_req.founder.user != request.user and conn_req.investor.user != request.user:
+            return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+
+        conn_req.status = action
+        conn_req.save(update_fields=['status'])
+        
+        return JsonResponse({'status': 'success', 'new_status': action})
+    except Exception as e:
+        logger.error(f"Connection action error: {str(e)}")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 
 # ==========================================

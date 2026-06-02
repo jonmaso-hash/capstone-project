@@ -5,44 +5,20 @@
 
 {% block css %}
 <style>
-    .hover-lift {
-        transition: transform 0.3s cubic-bezier(.25,.8,.25,1), box-shadow 0.3s ease;
-    }
-    .hover-lift:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.08) !important;
-    }
-    .line-clamp-3 {
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        min-height: 3.6rem;
-    }
-    .border-dashed {
-        border-style: dashed !important;
-        border-width: 2px !important;
-    }
-    .smallest {
-        font-size: 0.65rem;
-    }
-    .tracking-wider {
-        letter-spacing: 0.05em;
-    }
-    .animate-pulse {
-        animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-        0% { opacity: 1; }
-        50% { opacity: 0.5; }
-        100% { opacity: 1; }
-    }
+    .hover-lift { transition: transform 0.3s cubic-bezier(.25,.8,.25,1), box-shadow 0.3s ease; }
+    .hover-lift:hover { transform: translateY(-6px); box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.08) !important; }
+    .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; min-height: 3.6rem; }
+    .border-dashed { border-style: dashed !important; border-width: 2px !important; }
+    .smallest { font-size: 0.65rem; }
+    .tracking-wider { letter-spacing: 0.05em; }
+    .animate-pulse { animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    .match-card { transition: opacity 0.3s ease; }
 </style>
 {% endblock css %}
 
 {% block content %}
 <div class="container py-5">
-    
     <div class="row align-items-center mb-4">
         <div class="col-md-8">
             <h1 class="h2 fw-bold mb-1 text-dark">Investor Matchmaking Portal</h1>
@@ -65,7 +41,7 @@
                 </div>
                 <div>
                     <h5 class="fw-bold text-dark mb-1">Autonomous Profile Optimization Protocol</h5>
-                    <p class="text-muted small mb-0">Force a background data-crawler scan of your public web footprints to synchronize your algorithmic matching vector records.</p>
+                    <p class="text-muted small mb-0">Force a background data-crawler scan to synchronize your algorithmic matching vector records.</p>
                 </div>
             </div>
             <div class="d-flex flex-column flex-md-row align-items-md-center gap-2">
@@ -84,42 +60,34 @@
         <div class="d-flex align-items-center gap-2 mb-3">
             <h3 class="h5 fw-bold mb-0 text-dark">Pending Inbound Requests</h3>
             {% if pending_requests %}
-                <span class="badge bg-danger rounded-pill small px-2.5 py-1 fw-semibold">{{ pending_requests|length }} New</span>
+                <span id="request-count" class="badge bg-danger rounded-pill small px-2.5 py-1 fw-semibold">{{ pending_requests|length }} New</span>
             {% endif %}
         </div>
         
-        {% if pending_requests %}
-            <div class="row g-3">
-                {% for request in pending_requests %}
-                    <div class="col-12">
-                        <div class="card bg-light border border-light-subtle shadow-sm rounded-3">
-                            <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-                                <div>
-                                    <div class="d-flex align-items-center gap-2 mb-1">
-                                        <h5 class="mb-0 fw-bold text-dark">{{ request.investor.company_name|default:"Private Venture Partner" }}</h5>
-                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle small px-2 py-1 rounded">Connection Requested</span>
-                                    </div>
-                                    <p class="text-muted small mb-0">Received on: {{ request.created_at|date:"M d, Y"|default:"Recently" }}</p>
-                                </div>
-                                <div>
-                                    <a href="{% url 'pages:contact' %}" class="btn btn-dark btn-sm px-4 rounded-pill fw-medium">
-                                        Accept & Review Message
-                                    </a>
-                                </div>
+        <div id="pending-requests-container" class="row g-3">
+            {% for conn in pending_requests %}
+                <div class="col-12" id="card-{{ conn.id }}">
+                    <div class="card bg-light border border-light-subtle shadow-sm rounded-3">
+                        <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                            <div>
+                                <h5 class="mb-0 fw-bold text-dark">{{ conn.investor.company_name|default:"Private Venture Partner" }}</h5>
+                                <p class="text-muted small mb-0">Received: {{ conn.created_at|date:"M d, Y" }}</p>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button onclick="updateConnection({{ conn.id }}, 'ACCEPTED')" class="btn btn-success btn-sm px-3 rounded-pill">Accept</button>
+                                <button onclick="updateConnection({{ conn.id }}, 'DECLINED')" class="btn btn-outline-danger btn-sm px-3 rounded-pill">Decline</button>
                             </div>
                         </div>
                     </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="card border border-dashed border-secondary-subtle py-4 text-center bg-white rounded-3">
-                <div class="card-body py-2">
-                    <p class="text-muted small mb-0">
-                        <i class="bi bi-envelope-open me-2 text-secondary"></i>No pending inbound allocator requests. Your real-time outbound pipeline is generated below.
-                    </p>
                 </div>
-            </div>
-        {% endif %}
+            {% empty %}
+                <div id="no-requests-msg" class="col-12">
+                    <div class="card border border-dashed border-secondary-subtle py-4 text-center bg-white rounded-3">
+                        <p class="text-muted small mb-0"><i class="bi bi-envelope-open me-2"></i>No pending inbound allocator requests.</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
     </div>
 
     <hr class="my-5 opacity-25">
@@ -131,77 +99,7 @@
     <div class="row g-4">
         {% for match in matches %}
         <div class="col-md-6 col-lg-4">
-            <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden hover-lift d-flex flex-column justify-content-between">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div style="max-width: 70%;">
-                            <h5 class="card-title fw-bold mb-1 text-dark text-truncate">{{ match.investor.company_name|default:"Institutional Partner" }}</h5>
-                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle small fw-semibold">
-                                {{ match.investor.investment_stage|default:"Growth" }}
-                            </span>
-                        </div>
-                        <div class="text-end">
-                            <div class="h4 mb-0 fw-bold text-primary">{{ match.final_score }}%</div>
-                            <small class="text-muted text-uppercase fw-bold smallest tracking-wider">Match Index</small>
-                        </div>
-                    </div>
-
-                    <p class="card-text small text-secondary mb-4 line-clamp-3" style="line-height: 1.5;">
-                        {{ match.investor.investment_focus|default:"Focusing on cross-sector automation, enterprise frameworks, and infrastructure software layers." }}
-                    </p>
-
-                    <div class="mb-4">
-                        <label class="d-block small text-uppercase text-muted fw-bold mb-2 smallest tracking-wider">Target Mandate Focus</label>
-                        <div class="d-flex flex-wrap gap-1.5">
-                            <span class="badge bg-light text-dark fw-medium border px-2 py-1.5 small">
-                                {{ match.investor.investment_stage|default:"Multi-stage" }} Allocation
-                            </span>
-                        </div>
-                    </div>
-
-                    {% if match.ai_insights %}
-                    <div class="p-3 bg-light rounded-3 mb-3 border border-light-subtle">
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="bi bi-bezier2 text-primary me-2"></i>
-                            <span class="smallest text-uppercase fw-bold text-dark tracking-wider">Alignment Rationale Matrix</span>
-                        </div>
-                        <div class="vstack gap-2">
-                            {% for pillar in match.ai_insights.pillars %}
-                            <div class="d-flex justify-content-between align-items-center bg-white px-2 py-1.5 rounded border border-light-subtle">
-                                <span class="text-secondary fw-medium" style="font-size: 0.75rem;">{{ pillar.title }}</span>
-                                <span class="badge rounded-pill smallest {% if pillar.score == 'Excellent' or pillar.score == 'Match' or pillar.score == 'Passed' %}bg-success-subtle text-success{% else %}bg-warning-subtle text-warning{% endif %}">
-                                    {{ pillar.score }}
-                                </span>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    {% if match.rule_match %}
-                        <div class="alert alert-success py-2 px-3 border-0 small d-flex align-items-center mb-0 rounded-3 fw-medium text-success-emphasis">
-                            <i class="bi bi-patch-check-fill text-success me-2"></i> Perfect Mandate Fit
-                        </div>
-                    {% endif %}
-                </div>
-                
-                <div class="card-footer bg-white border-0 p-4 pt-0">
-                    <a href="{% url 'pages:contact' %}" class="btn btn-dark w-100 py-2 rounded-pill fw-bold shadow-sm small">
-                        Express Introduction Interest
-                    </a>
-                </div>
             </div>
-        </div>
-        {% empty %}
-        <div class="col-12 text-center py-5">
-            <div class="bg-light p-5 rounded-4 border border-dashed border-secondary-subtle">
-                <i class="bi bi-radar display-2 text-muted mb-3 d-block"></i>
-                <h3 class="fw-bold text-dark h5">Scanning the Foundry Engine Matrix...</h3>
-                <p class="text-muted small mx-auto mb-0" style="max-width: 480px; line-height: 1.6;">
-                    No high-probability institutional investor matches have been mapped to your exact parameters at this hour. Your application remains dynamically cached inside our neural match array, and updates will render instantly here as active allocators query records.
-                </p>
-            </div>
-        </div>
         {% endfor %}
     </div>
 </div>
@@ -209,6 +107,31 @@
 
 {% block scripts %}
 <script>
+async function updateConnection(id, action) {
+    const response = await fetch('/matchmaking/action/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ id: id, action: action })
+    });
+
+    const data = await response.json();
+    if (data.status === 'success') {
+        const card = document.getElementById(`card-${id}`);
+        card.style.opacity = '0';
+        setTimeout(() => {
+            card.remove();
+            if (document.getElementById('pending-requests-container').children.length === 0) {
+                location.reload();
+            }
+        }, 300);
+    } else {
+        alert("Action failed: " + (data.message || "Unknown error"));
+    }
+}
+
 async function triggerAutonomousScraper(buttonElement) {
     const startupName = buttonElement.getAttribute('data-startup-name');
     const statusDiv = document.getElementById('scraper-status-global');
