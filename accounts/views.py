@@ -17,7 +17,7 @@ from django.views.decorators.http import require_POST
 from stream_chat import StreamChat
 from blog.models import Article
 
-# Core Matchmaking Engine Models (Restoring alignment across the ecosystem)
+# Core Matchmaking Engine Models
 from matchmaking.models import Application, InvestorApplication
 from .forms import ApplicationForm, InvestorForm
 
@@ -82,7 +82,6 @@ def login_view(request):
 def seeking_investment(request):
     # Pull profile using the correct engine relation attribute
     application = getattr(request.user, "match_founder_profile", None)
-    form = None 
 
     if request.method == "POST":
         form = ApplicationForm(request.POST, request.FILES, instance=application)
@@ -195,19 +194,27 @@ def get_stream_token(request):
                 'details': 'STREAM_API_KEY or STREAM_API_SECRET missing from settings.py or environment configuration.'
             }, status=500)
             
-        server_client = StreamChat(api_key=api_key, api_secret=api_secret)
-        user_id = str(request.user.username).lower().strip()
-        token = server_client.create_token(user_id)
+        client = StreamChat(api_key=api_key, api_secret=api_secret)
+        
+        # IMPORTANT: Use the user's integer ID as a string, because JS passes integer targetIDs
+        user_id = str(request.user.id)
+        username = request.user.username
+        
+        # 1. Create the token
+        token = client.create_token(user_id)
+        
+        # 2. CRITICAL FIX: Upsert the user into Stream's database immediately
+        client.upsert_user({"id": user_id, "name": username})
         
         return JsonResponse({
             'api_key': api_key,
             'token': token,
             'user_id': user_id,
-            'username': request.user.get_full_name() or request.user.username
+            'username': username
         })
         
     except Exception as e:
-        logger.exception("Stream Token Generation Failed")
+        logger.exception("Stream Token Generation & Upsert Failed")
         return JsonResponse({'error': 'Internal Server Error', 'details': str(e)}, status=500)
 
 

@@ -1,0 +1,155 @@
+/* Container */
+.contact-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+    min-height: 80vh;
+    background: #f4f6f9;
+}
+
+/* Card */
+.contact-card {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* Title */
+.contact-card h1 {
+    margin-bottom: 10px;
+    font-size: 28px;
+    text-align: center;
+}
+
+/* Subtitle */
+.contact-subtitle {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #666;
+    font-size: 14px;
+}
+
+/* Form groups */
+.form-group {
+    margin-bottom: 18px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Labels */
+.form-group label {
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: #333;
+}
+
+/* Inputs */
+.form-group input,
+.form-group textarea,
+.form-group select {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+/* Focus state */
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: #4a90e2;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+/* Help text */
+.help-text {
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+}
+
+/* Errors */
+.error {
+    color: #e74c3c;
+    font-size: 13px;
+    margin-top: 5px;
+}
+
+/* Non-field errors */
+.form-errors {
+    background: #fdecea;
+    color: #c0392b;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+/* Messages */
+.alert {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+/* Buttons */
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.btn-send {
+    background: #4a90e2;
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s ease;
+}
+
+.btn-send:hover {
+    background: #357abd;
+}
+
+.btn-reset {
+    background: #ecf0f1;
+    color: #333;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-reset:hover {
+    background: #d0d7de;
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+    .contact-card {
+        padding: 20px;
+    }
+
+    .form-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .btn-send,
+    .btn-reset {
+        width: 100%;
+    }
+}

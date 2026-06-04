@@ -1,120 +1,78 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}Deal Room Pipeline | Interlink Foundry{% endblock %}
+{% block title %}Deal Room | Interlink Foundry{% endblock %}
 
 {% block css %}
 <style>
-.deal-room-wrapper {
-    height: calc(100vh - 180px);
-    min-height: 550px;
-    max-height: 750px;
+.deal-room-wrapper { 
+    height: calc(100vh - 180px); 
+    min-height: 550px; 
+    max-height: 750px; 
 }
-
-.thread-sidebar {
-    background: #f8f9fa;
-    border-right: 1px solid #e3e6f0;
+.thread-sidebar { 
+    background: #f8f9fa; 
+    border-right: 1px solid #e3e6f0; 
 }
-
-.thread-scroll-area {
-    overflow-y: auto;
-    height: calc(100% - 60px);
+.thread-scroll-area { 
+    overflow-y: auto; 
+    height: calc(100% - 60px); 
 }
-
-.message-stream-log {
-    overflow-y: auto;
-    height: calc(100% - 140px);
-    padding: 1.5rem;
-    background: #fafbfe;
+.message-stream-log { 
+    overflow-y: auto; 
+    height: calc(100% - 140px); 
+    padding: 1.5rem; 
+    background: #fafbfe; 
 }
-
-.channel-row.active-thread-card {
-    background: #fff;
-    border-left: 4px solid #0d6efd;
+.channel-row { 
+    cursor: pointer; 
 }
-
-.unread-count-badge {
-    font-size: 0.7rem;
+.channel-row:hover { 
+    background-color: #f1f3f5; 
 }
-
+.channel-row.active-thread-card { 
+    background: #fff; 
+    border-left: 4px solid #0d6efd; 
+}
+.unread-count-badge { 
+    font-size: 0.7rem; 
+}
 </style>
-{% endblock %}
+{% endblock css %}
 
 {% block content %}
 <div class="container-fluid px-4 py-3">
-
     <div class="card shadow-sm border-0 deal-room-wrapper">
         <div class="row g-0 h-100">
-
-            <!-- SIDEBAR -->
             <div class="col-md-4 thread-sidebar d-flex flex-column">
-
-                <div class="p-3 border-bottom bg-white fw-bold small">
-                    Active Conversations
-                </div>
-
+                <div class="p-3 border-bottom bg-white fw-bold small">Active Conversations</div>
                 <div id="channels-target" class="thread-scroll-area p-2">
                     <div class="text-center text-muted py-5">
-                        Loading conversations...
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                        Loading connections...
                     </div>
                 </div>
             </div>
 
-            <!-- CHAT -->
             <div class="col-md-8 d-flex flex-column">
-
-                <div id="active-room-header" class="p-3 border-bottom bg-white fw-bold">
-                    Channel Offline
-                </div>
-
-                <div id="message-stream-target" class="message-stream-log flex-grow-1">
-                    <div class="text-center text-muted">
-                        Select a conversation
-                    </div>
-                </div>
-
-                <div id="typing-indicators-tray" class="px-3 pb-1"></div>
+                <div id="active-room-header" class="p-3 border-bottom bg-white fw-bold">Select a Conversation</div>
+                
+                <div id="message-stream-target" class="message-stream-log flex-grow-1"></div>
 
                 <form id="chat-form" class="p-3 border-top bg-light d-flex gap-2">
-                    <input id="message-input" class="form-control" disabled placeholder="Type message...">
-                    <button id="send-btn" class="btn btn-primary" disabled>Send</button>
+                    <input id="message-input" class="form-control" disabled placeholder="Type a message...">
+                    <button id="send-btn" type="submit" class="btn btn-primary" disabled>Send</button>
                 </form>
-
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block javascript %}
-<!-- Stream Chat UMD (Reliable browser build) -->
-<script src="https://cdn.jsdelivr.net/npm/stream-chat@11.0.1/dist/browser.min.js"></script>
 
 <script>
-let client;
-let activeChannel;
-let typingTimeout;
-
-function el(id) {
-    return document.getElementById(id);
-}
+const el = (id) => document.getElementById(id);
 
 function escapeHtml(text = "") {
-    return String(text)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
-
-function getStreamChat() {
-    if (window.StreamChat?.StreamChat) {
-        return window.StreamChat.StreamChat;
-    }
-    if (typeof window.StreamChat === "function") {
-        return window.StreamChat;
-    }
-    return null;
+    return String(text).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
 
 function formatTime(dateString) {
@@ -125,20 +83,15 @@ function formatTime(dateString) {
 
 function renderMessages(messages = []) {
     const box = el("message-stream-target");
-    if (!box || !client) return;
+    if (!box || !StreamChatController.client) return;
 
     box.innerHTML = "";
-
     messages.forEach(m => {
-        const mine = m.user?.id === client.userID;
-
+        const mine = m.user?.id === StreamChatController.client.userID;
         const div = document.createElement("div");
         div.className = `mb-3 ${mine ? "text-end" : "text-start"}`;
-
         div.innerHTML = `
-            <div class="d-inline-block p-2 rounded ${
-                mine ? "bg-primary text-white" : "bg-light text-dark"
-            }" style="max-width:75%">
+            <div class="d-inline-block p-2 rounded shadow-sm ${mine ? "bg-primary text-white" : "bg-white text-dark border"}" style="max-width:75%">
                 ${escapeHtml(m.text || "")}
             </div>
             <div class="text-muted mt-1 d-flex ${mine ? 'justify-content-end' : 'justify-content-start'}" style="font-size: 0.7rem; gap: 6px;">
@@ -147,221 +100,73 @@ function renderMessages(messages = []) {
                 <span>${formatTime(m.created_at)}</span>
             </div>
         `;
-
         box.appendChild(div);
     });
-
     box.scrollTop = box.scrollHeight;
 }
 
-function updateUnreadBadges() {
-    if (!client) return;
+document.addEventListener("DOMContentLoaded", async () => {
+    const sidebar = el("channels-target");
+    const chatForm = el("chat-form");
+    const messageInput = el("message-input");
     
-    document.querySelectorAll(".channel-row").forEach(row => {
-        const cid = row.getAttribute("data-cid");
-        if (!cid) return;
-
-        const channel = client.activeChannels[cid];
-        const badge = row.querySelector(".unread-count-badge");
-        
-        if (channel && badge) {
-            const count = channel.unreadCount || 0;
-            if (count === 0 || (activeChannel && activeChannel.cid === cid)) {
-                badge.classList.add("d-none");
-                badge.innerText = "0";
-            } else {
-                badge.classList.remove("d-none");
-                badge.innerText = count > 99 ? "99+" : count;
-            }
-        }
-    });
-}
-
-async function initDealRoom() {
     try {
-        console.log("Initializing Deal Room Engine...");
+        const client = await StreamChatController.connect();
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetCid = urlParams.get('cid');
 
-        const StreamChatSDK = getStreamChat();
-        if (!StreamChatSDK) {
-            throw new Error("StreamChat SDK check failed inside initialization engine execution context.");
-        }
+        const channels = await client.queryChannels({ members: { $in: [client.userID] } }, { last_message_at: -1 }, { watch: true, state: true });
 
-        const res = await fetch("{% url 'accounts:stream_token' %}");
-        const data = await res.json();
-
-        client = StreamChatSDK.getInstance
-            ? StreamChatSDK.getInstance(data.api_key)
-            : new StreamChatSDK(data.api_key);
-
-        await client.connectUser(
-            {
-                id: String(data.user_id),
-                name: data.username
-            },
-            data.token
-        );
-
-        const channels = await client.queryChannels(
-            { members: { $in: [String(data.user_id)] } },
-            { last_message_at: -1 },
-            { watch: true, state: true }
-        );
-
-        const sidebar = el("channels-target");
         if (!sidebar) return;
-        sidebar.innerHTML = "";
+        sidebar.innerHTML = channels.length ? "" : '<div class="p-3 text-muted">No conversations.</div>';
 
-        if (!channels.length) {
-            sidebar.innerHTML = `
-                <div class="text-center text-muted py-4 small">
-                    No active conversations found
-                </div>`;
-            return;
-        }
-
+        let autoSelect = null;
         channels.forEach(ch => {
-            const other = Object.values(ch.state.members || {})
-                .find(m => m.user?.id !== client.userID);
-
-            const name = other?.user?.name || other?.user?.id || "Direct Chat";
-            const currentUnread = ch.unreadCount || 0;
-
             const item = document.createElement("div");
-            item.className = "p-2 mb-2 border rounded bg-white channel-row d-flex justify-content-between align-items-center";
-            item.style.cursor = "pointer";
+            item.className = "p-2 mb-2 border rounded channel-row";
             item.setAttribute("data-cid", ch.cid);
+            item.innerHTML = `<div class="fw-medium">${ch.data.name || 'Chat'}</div>`;
             
-            item.innerHTML = `
-                <div class="text-truncate me-2">${escapeHtml(name)}</div>
-                <span class="badge rounded-pill bg-danger unread-count-badge ${currentUnread === 0 ? 'd-none' : ''}">
-                    ${currentUnread}
-                </span>
-            `;
-
             item.onclick = async () => {
-                document.querySelectorAll(".channel-row")
-                    .forEach(c => c.classList.remove("active-thread-card"));
-
+                StreamChatController.activeChannel = ch;
+                el("active-room-header").textContent = ch.data.name || "Deal Room";
+                
+                document.querySelectorAll(".channel-row").forEach(r => r.classList.remove("active-thread-card"));
                 item.classList.add("active-thread-card");
 
-                activeChannel = ch;
-
-                const header = el("active-room-header");
-                if (header) {
-                    header.innerHTML = `
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-chat-dots text-primary"></i>
-                            <strong>${escapeHtml(name)}</strong>
-                        </div>
-                    `;
-                }
-
                 await ch.watch();
-                await ch.markRead();
-                updateUnreadBadges();
-
-                renderMessages(ch.state.messages || []);
-
-                const indicators = el("typing-indicators-tray");
-                if (indicators) indicators.innerHTML = "";
-
-                el("message-input").disabled = false;
+                renderMessages(ch.state.messages);
+                
+                messageInput.disabled = false;
                 el("send-btn").disabled = false;
-                el("message-input").focus();
+                messageInput.focus();
 
-                ch.off("message.new");
-                ch.on("message.new", () => {
-                    if (activeChannel && activeChannel.id === ch.id) {
-                        renderMessages(activeChannel.state.messages);
-                        activeChannel.markRead();
-                    }
-                    updateUnreadBadges();
-                });
-
-                ch.off("typing.start");
-                ch.on("typing.start", (event) => {
-                    if (event.user?.id === client.userID) return;
-                    
-                    const tray = el("typing-indicators-tray");
-                    if (tray && activeChannel && activeChannel.id === ch.id) {
-                        tray.innerHTML = `<span class="text-muted small fst-italic">${escapeHtml(event.user?.name || event.user?.id)} is typing...</span>`;
-                    }
-                });
-
-                ch.off("typing.stop");
-                ch.on("typing.stop", (event) => {
-                    if (event.user?.id === client.userID) return;
-                    
-                    const tray = el("typing-indicators-tray");
-                    if (tray && activeChannel && activeChannel.id === ch.id) {
-                        tray.innerHTML = "";
-                    }
+                ch.on('message.new', event => {
+                    renderMessages(ch.state.messages);
                 });
             };
-
             sidebar.appendChild(item);
+            
+            if (targetCid === ch.cid || (!targetCid && autoSelect === null)) {
+                autoSelect = item;
+            }
         });
 
-        client.on("notification.message_new", updateUnreadBadges);
-        console.log("Deal Room Loaded Successfully");
+        if (autoSelect) autoSelect.click();
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = messageInput.value.trim();
+            if (!text || !StreamChatController.activeChannel) return;
+            
+            messageInput.value = "";
+            await StreamChatController.activeChannel.sendMessage({ text: text });
+        });
 
     } catch (err) {
-        console.error("Deal Room Initialization Error:", err);
-        const sidebar = el("channels-target");
-        if (sidebar) {
-            sidebar.innerHTML = `
-                <div class="text-center text-danger py-4 small">
-                    Stream connection failed — check console
-                </div>`;
-        }
+        console.error("Initialization failed:", err);
+        sidebar.innerHTML = `<div class="text-danger p-3">Connection failed. Refresh page.</div>`;
     }
-}
-
-function verifyAndRun() {
-    if (getStreamChat()) {
-        initDealRoom();
-    } else {
-        console.warn("SDK namespaces not fully bound yet, scheduling validation retry...");
-        setTimeout(verifyAndRun, 100);
-    }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-    const form = el("chat-form");
-    const input = el("message-input");
-
-    form?.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        if (!activeChannel) return;
-
-        const text = input.value.trim();
-        if (!text) return;
-
-        try {
-            await activeChannel.sendMessage({ text });
-            input.value = "";
-        } catch (err) {
-            console.error("Send failed:", err);
-        }
-    });
-
-    input?.addEventListener("keydown", () => {
-        if (!activeChannel) return;
-        
-        activeChannel.keystroke();
-
-        clearTimeout(typingTimeout);
-        typingTimeout = setTimeout(() => {
-            if (activeChannel) {
-                const tray = el("typing-indicators-tray");
-                if (tray) tray.innerHTML = "";
-            }
-        }, 2500);
-    });
-
-    // Run verification polling loop purely safely
-    verifyAndRun();
 });
 </script>
-{% endblock %}
+{% endblock content %}

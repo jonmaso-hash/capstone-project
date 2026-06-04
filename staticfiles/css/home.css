@@ -1,0 +1,162 @@
+/* Form section */
+.home {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding: 40px;
+}
+
+/* smaller, tighter cards */
+.home-card {
+    border: 2px solid #333;
+    padding: 15px;              /* reduced from 20px */
+    border-radius: 8px;
+    background-color: #f9f9f9;
+
+    max-width: 280px;           /* controls card size */
+    margin: 0 auto;             /* centers each card */
+}
+
+/* compact header row */
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+}
+
+/* smaller title */
+.card-header h1 {
+    margin: 0;
+    font-size: 18px;
+}
+
+/* smaller button */
+.card-header button {
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+
+    border: none;
+    border-radius: 8px;
+
+    background: #4F46E5;
+    color: #ffffff;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease,
+        transform 0.15s ease,
+        box-shadow 0.2s ease;
+
+    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+}
+
+.card-header button:hover {
+    background: #4338CA;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+}
+
+.card-header button:active {
+    transform: translateY(0);
+}
+
+.card-header button:focus-visible {
+    outline: 3px solid rgba(79, 70, 229, 0.35);
+    outline-offset: 2px;
+}
+
+/* optional spacing cleanup */
+.home-card h5 {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #666;
+}
+
+.button-link {
+  display: inline-block;
+  padding: 3px 3px;
+  background-color: #2563eb; /* A nice modern blue */
+  color: #ffffff !important; /* Ensures text stays white */
+  text-decoration: none;     /* Removes the link underline */
+  border-radius: 8px;        /* Rounded corners */
+  font-weight: 600;
+  font-family: system-ui, sans-serif;
+  transition: transform 0.1s, background-color 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+/* Hover effect */
+.button-link:hover {
+  background-color: #1d4ed8;
+  text-decoration: none;
+}
+
+/* Click effect */
+.button-link:active {
+  transform: scale(0.98);
+}
+
+.tagline{
+    text-align: center;
+}
+
+.service-div{
+    text-align: center;
+}
+
+.home {
+  position: relative;
+  background-image: url('/media/img/business2.jpg');
+  background-size: cover;
+  background-position: center;
+  z-index: 1;
+}
+
+/* service section */
+
+/* Container for the items */
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.service-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  transition: all 0.25s ease;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.service-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+}
+
+.service-card .icon {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+.service-card h5 {
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #1e3a5f;
+}
+
+.service-card p {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.services-section {
+  background: #f8f9fb;
+}

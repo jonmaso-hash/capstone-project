@@ -14,7 +14,7 @@ def memo_dashboard_view(request, startup_name):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('pages.urls')),
-    path('accounts/', include('accounts.urls')),
+    path('accounts/', include('accounts.urls', namespace='accounts')),
     path('accounts/', include('django.contrib.auth.urls')),
     path('matchmaking/', include('matchmaking.urls')), 
     path('jobs/', include('jobs.urls', namespace='jobs')),
@@ -37,5 +37,5 @@ urlpatterns = [
     path('<str:startup_name>/', views.MemoIntelligenceView.as_view(), name='memo-intelligence'),
     
 ]
-
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

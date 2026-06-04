@@ -147,10 +147,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # --- STATIC & MEDIA ASSET STORAGE PIPELINES ---
 STATIC_URL = "static/"
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_DIRS = [BASE_DIR / "static", os.path.join(BASE_DIR, 'static'),]
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+import os
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # --- CORE PLATFORM SECURITY & AUTH ROUTING ---
 LOGIN_REDIRECT_URL = "accounts:profile_self"

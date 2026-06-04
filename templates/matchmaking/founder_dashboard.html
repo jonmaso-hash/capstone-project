@@ -73,10 +73,12 @@
                                 <h5 class="mb-0 fw-bold text-dark">{{ conn.investor.company_name|default:"Private Venture Partner" }}</h5>
                                 <p class="text-muted small mb-0">Received: {{ conn.created_at|date:"M d, Y" }}</p>
                             </div>
-                            <div class="d-flex gap-2">
-                                <button onclick="updateConnection({{ conn.id }}, 'ACCEPTED')" class="btn btn-success btn-sm px-3 rounded-pill">Accept</button>
-                                <button onclick="updateConnection({{ conn.id }}, 'DECLINED')" class="btn btn-outline-danger btn-sm px-3 rounded-pill">Decline</button>
-                            </div>
+                        <div class="d-flex gap-2">
+                            <button onclick="updateConnection({{ conn.id }}, 'ACCEPTED', '{{ conn.investor.user.id }}', '{{ conn.investor.company_name|escapejs }}')" 
+                                class="btn btn-success btn-sm">Accept
+                            </button>
+                            <button onclick="updateConnection({{ conn.id }}, 'DECLINED', null, null)" class="btn btn-outline-danger btn-sm px-3 rounded-pill">Decline</button>
+                        </div>
                         </div>
                     </div>
                 </div>
@@ -105,85 +107,4 @@
 </div>
 {% endblock content %}
 
-{% block scripts %}
-<script>
-async function updateConnection(id, action) {
-    const response = await fetch('/matchmaking/action/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token }}'
-        },
-        body: JSON.stringify({ id: id, action: action })
-    });
 
-    const data = await response.json();
-    if (data.status === 'success') {
-        const card = document.getElementById(`card-${id}`);
-        card.style.opacity = '0';
-        setTimeout(() => {
-            card.remove();
-            if (document.getElementById('pending-requests-container').children.length === 0) {
-                location.reload();
-            }
-        }, 300);
-    } else {
-        alert("Action failed: " + (data.message || "Unknown error"));
-    }
-}
-
-async function triggerAutonomousScraper(buttonElement) {
-    const startupName = buttonElement.getAttribute('data-startup-name');
-    const statusDiv = document.getElementById('scraper-status-global');
-    
-    if (!startupName || !statusDiv) return;
-
-    // 1. Enter Loading State
-    buttonElement.disabled = true;
-    const originalContent = buttonElement.innerHTML;
-    buttonElement.innerHTML = '<span class="spinner-border spinner-border-sm text-white me-1" role="status" aria-hidden="true"></span> Syncing...';
-    
-    statusDiv.className = "small fw-semibold text-warning ms-md-2 d-block mt-2 mt-md-0 animate-pulse";
-    statusDiv.innerText = "Spawning worker micro-tasks...";
-
-    try {
-        // 2. Query matching URL rule configured in urls.py
-        const targetUrl = `/api/v1/zelda/memo/${encodeURIComponent(startupName)}/`;
-        const response = await fetch(targetUrl, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error(`Pipeline returned error code status: ${response.status}`);
-        }
-        
-        const responseData = await response.json();
-        
-        // 3. Process lifecycle results gracefully
-        if (responseData.status === 'processing') {
-            statusDiv.className = "small fw-semibold text-info ms-md-2 d-block mt-2 mt-md-0";
-            statusDiv.innerText = "Tasks running in background. Please refresh page in 15 seconds.";
-        } else if (responseData.cached) {
-            statusDiv.className = "small fw-semibold text-success ms-md-2 d-block mt-2 mt-md-0";
-            statusDiv.innerText = "Vector space updated successfully! Reloading workspace...";
-            
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-        }
-    } catch (error) {
-        console.error("Autonomous Scraper Execution Failure Extension:", error);
-        statusDiv.className = "small fw-semibold text-danger ms-md-2 d-block mt-2 mt-md-0";
-        statusDiv.innerText = "Data intelligence synchronization failed.";
-    } finally {
-        // 4. Release execution lock
-        buttonElement.disabled = false;
-        buttonElement.innerHTML = originalContent;
-    }
-}
-</script>
-{% endblock scripts %}

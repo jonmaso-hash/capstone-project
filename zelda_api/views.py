@@ -217,7 +217,7 @@ class ZeldaGlobalSearchAPIView(APIView):
                 'ai_search.html': ('Zelda UI Workspace Canvas', '/accounts/ai_search/'),
                 'profile.html': ('User Metrics Engine Profiles', '/accounts/profile/'),
                 'bulletin_board.html': ('Venture Bulletin Board', '/matchmaking/bulletin-board/'),
-                'deal_room.html': ('Ecosystem Deal Room Space', '/matchmaking/deal-room/'),
+                'chat.html.html': ('Ecosystem Deal Room Space', '/matchmaking/deal-room/'),
             }
 
             search_roots = []

@@ -33,7 +33,7 @@ urlpatterns = [
     # ==========================================
     # DATA & COMMUNICATIONS ENDPOINTS (APIs)
     # ==========================================
-    path('api/stream-token/', views.get_stream_token, name='stream_token'),
+    path('stream-token/', views.get_stream_token, name='stream_token'),
     
     # 🎯 ADD THIS NEW LINE RIGHT HERE:
     path('search-api/', ZeldaGlobalSearchAPIView.as_view(), name='search_api'),
@@ -43,4 +43,6 @@ urlpatterns = [
     # ==========================================
     path('ai_search/', views.ai_search_page, name='ai_search_page'),
     path('assistant/', views.ai_search_page, name='ai_assistant_page'),
+    
+    path('stream-token/', views.get_stream_token, name='stream_token'),
 ]

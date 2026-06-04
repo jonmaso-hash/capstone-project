@@ -1,5 +1,6 @@
 import json
 import logging
+import jwt
 
 from django.conf import settings
 from django.contrib import messages
@@ -24,7 +25,7 @@ from .tasks import crawl_startup_data_task
 
 logger = logging.getLogger(__name__)
 
-def handle_connection_action(request):
+def connection_action_view(request):
     """
     Handles PENDING -> ACCEPTED/DECLINED transitions for connection requests.
     Supports asynchronous frontend triggers.
@@ -37,8 +38,7 @@ def handle_connection_action(request):
         if action not in ['ACCEPTED', 'DECLINED']:
             return JsonResponse({'status': 'error', 'message': 'Invalid action'}, status=400)
 
-        conn_req = get_object_or_404(ConnectionRequest, id=request_id)
-        
+        conn_req = get_object_or_404(Connection, id=request_id)        
         # Ensure user has permission to act on this request
         if conn_req.founder.user != request.user and conn_req.investor.user != request.user:
             return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
@@ -412,12 +412,12 @@ def initiate_direct_chat(request, target_user_id):
 
 
 @login_required
-def deal_room_workspace(request):
+def deal_room_view(request):
     """
-    Renders the secure main Deal Room Workspace template.
+    Renders the empty chat shell. The frontend StreamChatController 
+    handles all data fetching, authentication, and UI population.
     """
     return render(request, 'matchmaking/chat.html')
-
 
 def global_search(request):
     """
@@ -501,3 +501,27 @@ def toggle_privacy_view(request):
         return JsonResponse({"status": "success", "is_private": is_private_state})
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=400)
+    
+@login_required
+def get_stream_token(request):
+    """
+    Generates a secure token using the official Stream SDK.
+    Provides all necessary data for StreamChatController.connect()
+    """
+    try:
+        client = StreamChat(api_key=settings.STREAM_API_KEY, api_secret=settings.STREAM_API_SECRET)
+        user_id = str(request.user.id)
+        
+        # Use Stream's native token generator, not custom JWT
+        token = client.create_token(user_id)
+        
+        return JsonResponse({
+            'api_key': settings.STREAM_API_KEY,
+            'token': token,
+            'user_id': user_id,
+            'username': request.user.username
+        })
+    except Exception as e:
+        logger.error(f"Failed to generate Stream Token: {str(e)}")
+        return JsonResponse({'error': 'Authentication server error'}, status=500)
+
