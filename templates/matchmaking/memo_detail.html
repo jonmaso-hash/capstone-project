@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Intelligence Memo: {{ founder_app.company_name }} | Interlink Foundry{% endblock %}
+
+{% block css %}
+<style>
+    .memo-badge-premium { background: linear-gradient(135deg, #0d6efd, #0a58ca); color: white; }
+    .metric-card { border-radius: 12px; background: #ffffff; border: 1px solid #e3e6f0; }
+    .chart-container-canvas { position: relative; width: 100%; height: 220px; }
+    .log-stream-box { max-height: 350px; font-size: 0.85rem; background-color: #212529; color: #f8f9fa; font-family: monospace; }
+</style>
+{% endblock css %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb Navigation -->
+    <div class="mb-4">
+        <a href="{% url 'matchmaking:investor_dashboard' %}" class="text-decoration-none small text-muted">
+            <i class="bi bi-arrow-left"></i> Back to Match Terminal
+        </a>
+    </div>
+
+    <!-- Active Intelligence Memo Report Header -->
+    <div class="row align-items-center mb-4 g-4">
+        <div class="col-md-8">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <h1 class="fw-bold m-0 text-dark" id="startup-title">{{ founder_app.company_name }}</h1>
+                <span class="badge rounded-pill memo-badge-premium px-3 py-2 fs-6">
+                    <i class="bi bi-cpu-fill me-1"></i> Alignment: {{ match_percentage }}%
+                </span>
+            </div>
+            <p class="text-muted fs-5 mt-2 mb-0">Sector: {{ founder_app.sector }} | Stage: {{ founder_app.stage }}</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'matchmaking:diligence_chat' %}" class="btn btn-primary px-4 py-2 rounded-pill">
+                <i class="bi bi-chat-square-text-fill me-2"></i> Enter Active Deal Room
+            </a>
+        </div>
+    </div>
+
+    <!-- Live Status Async Banner Notification -->
+    <div id="async-status-banner" class="alert alert-info d-flex align-items-center gap-3 border-0 shadow-sm mb-4 {% if not is_processing %}d-none{% endif %}" role="alert">
+        <div class="spinner-border spinner-border-sm text-info flex-shrink-0" role="status"></div>
+        <div>
+            <strong>Assembling Data Streams:</strong> Zelda AI is currently crawling public registry indexes and compiling vector alignments. Charts and external logs below will auto-populate live.
+        </div>
+    </div>
+
+    <!-- Main Report Body Grid Split -->
+    <div class="row g-4">
+        <!-- Left Analysis Column -->
+        <div class="col-lg-7">
+            <!-- Core Summary -->
+            <div class="card card-body shadow-sm border-0 p-4 mb-4 metric-card">
+                <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Executive Baseline Description</h5>
+                <p class="text-secondary lh-lg mb-0">{{ founder_app.description }}</p>
+            </div>
+
+            <!-- Visualization Engine Analytics Panel -->
+            <div class="card card-body shadow-sm border-0 p-4 mb-4 metric-card">
+                <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Data Metrics & Market Synthesis</h5>
+                <div id="charts-loading-placeholder" class="text-center py-4 {% if not is_processing %}d-none{% endif %}">
+                    <p class="text-muted small mb-0"><i class="bi bi-graph-up me-2"></i>Awaiting backend synthesis completion to populate visualization models...</p>
+                </div>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="chart-container-canvas">
+                            <canvas id="barChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="chart-container-canvas">
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-12 mt-3">
+                        <div class="chart-container-canvas" style="height: 250px;">
+                            <canvas id="scatterChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Algorithmic Validation Pillars Column -->
+        <div class="col-lg-5">
+            <!-- Algorithmic Insights -->
+            {% if ai_insights %}
+            <div class="card card-body shadow-sm border-0 p-4 metric-card bg-white mb-4">
+                <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Matching Explanatory Breakdown</h5>
+                <p class="small text-muted mb-4">{{ ai_insights.summary }}</p>
+                
+                <div class="d-flex flex-column gap-3">
+                    {% for pillar in ai_insights.pillars %}
+                    <div class="p-3 bg-light rounded border-start border-4 {% if pillar.score == 'Match' or pillar.score == 'Excellent' or pillar.score == 'Passed' %}border-success{% else %}border-warning{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold small text-dark">{{ pillar.title }}</span>
+                            <span class="badge {% if pillar.score == 'Match' or pillar.score == 'Excellent' or pillar.score == 'Passed' %}bg-success-subtle text-success{% else %}bg-warning-subtle text-warning{% endif %} px-2 py-1">{{ pillar.score }}</span>
+                        </div>
+                        <p class="small text-muted mb-0">{{ pillar.desc }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Deal Execution Metrics -->
+            <div class="card card-body shadow-sm border-0 p-4 metric-card mb-4">
+                <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Core Operational Variables</h5>
+                <table class="table table-borderless mb-0 align-middle">
+                    <tbody>
+                        <tr>
+                            <td class="text-muted ps-0 py-2 small">Target Capitalization:</td>
+                            <td class="text-end fw-semibold text-dark py-2">${{ founder_app.raising_amount }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted ps-0 py-2 small">Current Baseline Trailing Revenue:</td>
+                            <td class="text-end fw-semibold text-dark py-2">${{ founder_app.current_revenue }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted ps-0 py-2 small">Data Asset Tracking State:</td>
+                            <td class="text-end py-2">
+                                <span id="sync-badge" class="badge {% if is_processing %}bg-warning-subtle text-warning{% else %}bg-info-subtle text-info{% endif %} px-2 py-1">
+                                    {% if is_processing %}Processing{% else %}Synced{% endif %}
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Scraped Background Engine Insights Box -->
+            <div class="card card-body shadow-sm border-0 p-4 metric-card">
+                <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Aggregated External Intelligence Feed</h5>
+                <div id="log-feed-container">
+                    {% if external_data %}
+                        <pre class="p-3 rounded overflow-auto log-stream-box mb-0">{{ external_data }}</pre>
+                    {% else %}
+                        <div id="log-empty-fallback" class="text-muted p-4 text-center">
+                            <i class="bi bi-terminal fs-3 d-block mb-2 text-secondary"></i>
+                            <span id="log-fallback-text">No active log entries found for this entity.</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Load Chart JS Dependencies -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Context properties mapping safely from backend variables
+    const companySlugName = "{{ founder_app.company_name|slugify }}";
+    const userAuthToken = localStorage.getItem('auth_token'); 
+    
+    let chartInstances = {};
+
+    // Handles smart background data execution loops
+    async function evaluateIntelligenceTelemetry() {
+        try {
+            const response = await fetch(`/api/v1/zelda/memo/${companySlugName}/`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Token ' + userAuthToken 
+                }
+            });
+
+            if (!response.ok) throw new Error(`HTTP network context failure state: ${response.status}`);
+            const payload = await response.json();
+
+            if (payload.status === 'processing') {
+                console.log("Telemetry aggregation in progress. Re-evaluating engine stack frame in 3000ms...");
+                setTimeout(evaluateIntelligenceTelemetry, 3000);
+            } else {
+                // UI Management Update: Normalize Status Elements
+                document.getElementById('async-status-banner').classList.add('d-none');
+                document.getElementById('charts-loading-placeholder').classList.add('d-none');
+                
+                const syncBadge = document.getElementById('sync-badge');
+                syncBadge.className = "badge bg-info-subtle text-info px-2 py-1";
+                syncBadge.innerText = "Synced";
+
+                // Hydrate the External Aggregated Intelligence Raw Logs
+                if (payload.data || payload.text_synthesis) {
+                    const fallbackBox = document.getElementById('log-empty-fallback');
+                    if (fallbackBox) fallbackBox.remove();
+                    
+                    let targetContainer = document.getElementById('log-feed-container');
+                    let logContent = payload.data || payload.text_synthesis;
+                    
+                    targetContainer.innerHTML = `<pre class="p-3 rounded overflow-auto log-stream-box mb-0">${logContent}</pre>`;
+                }
+
+                // Initialize Graph Visualization Engine mapping context data structures
+                renderDynamicAnalyticsCharts(payload); 
+            }
+        } catch (err) {
+            console.error("Telemetry Processing Interrupted Exception:", err);
+            const fallbackText = document.getElementById('log-fallback-text');
+            if (fallbackText) fallbackText.innerText = "Server side task tracking connectivity dropped. Re-polling metrics.";
+        }
+    }
+
+    function renderDynamicAnalyticsCharts(data) {
+        // Safe check to avoid drawing onto active graphs if already tracking
+        if (chartInstances.bar && chartInstances.pie && chartInstances.scatter) return;
+
+        // Custom Fallback Datasets if target backend data sets are sparse
+        const sampleBarData = data.chart_bar_payload || [65, 59, 80, 81, 56];
+        const samplePieData = data.chart_pie_payload || [12, 19, 3];
+
+        // 1. Bar Chart Setup
+        const ctxBar = document.getElementById('barChart').getContext('2d');
+        chartInstances.bar = new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: ['Market', 'Team', 'Product', 'Scale', 'Rules'],
+                datasets: [{
+                    label: 'Match Confidence Index',
+                    data: sampleBarData,
+                    backgroundColor: 'rgba(13, 110, 253, 0.2)',
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // 2. Pie Chart Setup
+        const ctxPie = document.getElementById('pieChart').getContext('2d');
+        chartInstances.pie = new Chart(ctxPie, {
+            type: 'pie',
+            data: {
+                labels: ['Core Alignment', 'Peripheral', 'Mismatched'],
+                datasets: [{
+                    data: samplePieData,
+                    backgroundColor: ['#0d6efd', '#ffc107', '#dc3545']
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // 3. Scatter Chart Setup
+        const ctxScatter = document.getElementById('scatterChart').getContext('2d');
+        chartInstances.scatter = new Chart(ctxScatter, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Market Vector Quadrant Distribution',
+                    data: data.chart_scatter_payload || [
+                        {x: -10, y: 0}, {x: 0, y: 10}, {x: 10, y: 5}, {x: 5, y: -5}
+                    ],
+                    backgroundColor: '#0a58ca'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { grid: { color: '#e3e6f0' } },
+                    y: { grid: { color: '#e3e6f0' } }
+                }
+            }
+        });
+    }
+
+    // Instantly begin asset evaluation tracking upon viewport rendering completion
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', evaluateIntelligenceTelemetry);
+    } else {
+        evaluateIntelligenceTelemetry();
+    }
+</script>
+{% endblock content %}

@@ -524,4 +524,54 @@ def get_stream_token(request):
     except Exception as e:
         logger.error(f"Failed to generate Stream Token: {str(e)}")
         return JsonResponse({'error': 'Authentication server error'}, status=500)
+    
+@login_required
+def standalone_memo_view(request, company_slug):
+    """
+    Renders a secure, institutional-grade evaluation brief for an asset profile.
+    Synchronizes with background scrapers if cache records are missing.
+    """
+    # 1. Reverse the URL slug format back to a standard string lookup
+    formatted_name = company_slug.replace('-', ' ')
+    founder_app = get_object_or_404(Application, company_name__iexact=formatted_name)
+    
+    # 2. Security Check: Restrict access to valid investor profiles
+    investor_profile = getattr(request.user, 'match_investor_profile', None)
+    if not investor_profile and not request.user.is_staff:
+        raise PermissionDenied("Access to proprietary asset intelligence reports is restricted.")
+
+    # 3. Synchronize with the Asynchronous Cache/Task Engine
+    cache_key = f"startup_data_{founder_app.id}"
+    external_data = cache.get(cache_key)
+    is_processing = False
+    
+    if external_data is None:
+        # Trigger your background crawler task if cache is cold
+        crawl_startup_data_task.delay(founder_app.id)
+        is_processing = True
+
+    # 4. Generate alignment calculations if profile metrics are present
+    match_percentage = 75
+    ai_insights_data = None
+    if investor_profile and investor_profile.focus_vector and founder_app.description_vector:
+        try:
+            raw_similarity = calculate_similarity(investor_profile.focus_vector, founder_app.description_vector)
+            ai_score = max(0.0, min(100.0, raw_similarity * 100))
+            match_percentage = int(round(ai_score))
+            
+            rule_score = calculate_rule_based_score(application=founder_app, investor=investor_profile)
+            ai_insights_data = _generate_explanatory_insights(ai_score, rule_score, founder_app, investor_profile)
+        except Exception:
+            pass
+
+    context = {
+        'founder_app': founder_app,
+        'external_data': external_data,
+        'is_processing': is_processing,
+        'match_percentage': match_percentage,
+        'ai_insights': ai_insights_data,
+        'investor': investor_profile
+    }
+    
+    return render(request, 'matchmaking/memo_detail.html', context)
 

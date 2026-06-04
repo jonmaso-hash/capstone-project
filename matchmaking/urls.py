@@ -30,4 +30,5 @@ urlpatterns = [
     path('deal-room/', views.deal_room_view, name='diligence_chat'),    path('chat/initiate/<int:target_user_id>/', views.initiate_direct_chat, name='initiate_direct_chat'),
     path('action/', views.connection_action_view, name='connection_action'),
     path('stream-token/', views.get_stream_token, name='stream_token'),    
+    path('memo/<str:company_slug>/', views.standalone_memo_view, name='standalone_memo'),
 ]

@@ -75,6 +75,13 @@
                             <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 border-bottom pb-3 mb-3">
                                 <div>
                                     <h3 class="fw-bold text-dark mb-1">{{ match.founder.company_name }}</h3>
+                                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 border-bottom pb-3 mb-3">
+                            <!-- NEW: Added Intelligence Brief Button Here -->
+        <a href="{% url 'matchmaking:standalone_memo' company_slug=match.founder.company_name|slugify %}" class="btn btn-sm btn-outline-primary mt-2">
+            <i class="bi bi-file-earmark-text me-1"></i> Intelligence Brief
+        </a>
+        <div class="d-flex flex-wrap gap-2 my-2 align-items-center">
+            <!-- ... your existing sector and stage badges ... -->
                                     <div class="d-flex flex-wrap gap-2 my-2 align-items-center">
                                         <span class="badge bg-secondary-subtle text-secondary rounded-2 px-2 py-1 small">
                                             <i class="bi bi-tag-fill me-1"></i>{{ match.founder.sector }}
@@ -207,9 +214,6 @@
                         </div>
                         <h4 class="fw-bold text-dark">No Venture Matches Mapped Currently</h4>
                         <p class="text-muted mx-auto max-width-md mb-4" style="max-width: 500px;">Our pipeline vector space needs additional context to match parameters. Try updating your investment tags or industry profile keywords to broaden the structural query rules.</p>
-                        <a href="{% url 'accounts:investor_form' %}" class="btn btn-success px-4 rounded-2 small fw-semibold shadow-sm">
-                            <i class="bi bi-pencil-square me-2"></i> Refine Allocation Mandate Profiles
-                        </a>
                     </div>
                 </div>
             {% endif %}

@@ -12,8 +12,7 @@ def crawl_startup_data_task(application_id):
     try:
         app = Application.objects.get(id=application_id)
         # Assuming your service function exists as imported
-        data = get_live_startup_data(app.linkedin_url)
-        
+        target_url = getattr(application, 'website', None)        
         # Cache the result for 1 hour (3600 seconds)
         cache_key = f"startup_data_{app.id}"
         cache.set(cache_key, data, 3600)
