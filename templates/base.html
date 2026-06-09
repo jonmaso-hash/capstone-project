@@ -23,44 +23,45 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center mb-0 ps-0">
-                    <li class="nav-item"><a class="nav-link" href="{% url 'pages:home' %}">Home</a></li>
-                    
-                    {% if user.is_authenticated %}
-                        {% if user.is_founder or user.match_founder_profile %}
-                            <li class="nav-item"><a class="nav-link fw-bold text-primary" href="{% url 'matchmaking:founder_dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-                            <li class="nav-item"><a class="nav-link text-success fw-semibold" href="{% url 'matchmaking:founder_matchmaker' %}"><i class="bi bi-radar"></i> Match Radar</a></li>
-                        {% else %}
-                            <li class="nav-item"><a class="nav-link fw-bold text-success" href="{% url 'matchmaking:investor_dashboard' %}"><i class="bi bi-shield-shaded"></i> Investor Dashboard</a></li>
-                        {% endif %}
-                        <li class="nav-item"><a class="nav-link text-primary fw-medium" href="{% url 'matchmaking:diligence_chat' %}"><i class="bi bi-briefcase-fill"></i> Chat</a></li>
-                    {% endif %}
+    <ul class="navbar-nav ms-auto align-items-center mb-0 ps-0">
+        <li class="nav-item"><a class="nav-link" href="{% url 'pages:home' %}">Home</a></li>
+        
+        {% if user.is_authenticated %}
+            {% if user.is_founder or user.match_founder_profile %}
+                <li class="nav-item"><a class="nav-link fw-bold text-primary" href="{% url 'matchmaking:founder_dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link text-success fw-semibold" href="{% url 'matchmaking:founder_matchmaker' %}"><i class="bi bi-radar"></i> Match Radar</a></li>
+            {% else %}
+                <li class="nav-item"><a class="nav-link fw-bold text-success" href="{% url 'matchmaking:investor_dashboard' %}"><i class="bi bi-shield-shaded"></i> Investor Dashboard</a></li>
+            {% endif %}
+            <li class="nav-item"><a class="nav-link text-primary fw-medium" href="{% url 'matchmaking:diligence_chat' %}"><i class="bi bi-briefcase-fill"></i> Chat</a></li>
+        {% endif %}
 
-                    <li class="nav-item"><a class="nav-link" href="{% url 'blog:blog_view' %}">Blog</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'matchmaking:bulletin_board' %}">Bulletin Board</a></li>
-                    
-                    <li class="nav-item ms-lg-3">
-                        <button class="btn btn-light border btn-sm px-3 rounded-pill" data-bs-toggle="offcanvas" data-bs-target="#globalSearchSidebar">
-                            <i class="bi bi-search text-primary"></i> Smart Filter
-                        </button>
-                    </li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'blog:blog_view' %}">Blog</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'matchmaking:bulletin_board' %}">Bulletin Board</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'jobs:index' %}">Job Board</a></li>
+        
+        <li class="nav-item ms-lg-3">
+            <button class="btn btn-light border btn-sm px-3 rounded-pill" data-bs-toggle="offcanvas" data-bs-target="#globalSearchSidebar">
+                <i class="bi bi-search text-primary"></i> Smart Filter
+            </button>
+        </li>
 
-                    {% if user.is_authenticated %}
-                        <li class="nav-item ms-lg-2"><a href="/accounts/profile/" class="nav-link">Profile</a></li>
-                        <li class="nav-item">
-                            <form action="{% url 'logout' %}" method="post">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-link text-secondary text-decoration-none">Logout</button>
-                            </form>
-                        </li>
-                    {% else %}
-                        <li class="nav-item ms-lg-3">
-                            <a href="{% url 'login' %}" class="btn btn-outline-dark btn-sm rounded-pill">Sign In</a>
-                            <a href="{% url 'accounts:signup' %}" class="btn btn-primary btn-sm rounded-pill">Get Started</a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
+        {% if user.is_authenticated %}
+            <li class="nav-item ms-lg-2"><a href="/accounts/profile/" class="nav-link">Profile</a></li>
+            <li class="nav-item">
+                <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-link text-secondary text-decoration-none">Logout</button>
+                </form>
+            </li>
+        {% else %}
+            <li class="nav-item ms-lg-3">
+                <a href="{% url 'login' %}" class="btn btn-outline-dark btn-sm rounded-pill">Sign In</a>
+                <a href="{% url 'accounts:signup' %}" class="btn btn-primary btn-sm rounded-pill">Get Started</a>
+            </li>
+        {% endif %}
+    </ul>
+</div>
         </nav>
     </header>
 
