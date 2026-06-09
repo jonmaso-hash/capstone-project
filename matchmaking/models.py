@@ -4,61 +4,50 @@ from django.core.validators import FileExtensionValidator
 
 
 class Application(models.Model):
-    """
-    Founder Application Profile Engine
-    Stores institutional and deck credentials for startup ventures.
-    """
+    
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="match_founder_profile"  # Matches views.py getattr lookups
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='match_founder_profile'
     )
+    
+    description_vector = models.JSONField(blank=True, null=True)
+    
+    # Basic Info
     company_name = models.CharField(max_length=255)
     company_website = models.URLField(max_length=500, blank=True, null=True)
     founder_name = models.CharField(max_length=255)
     email = models.EmailField(max_length=254)
     phone_number = models.CharField(max_length=50, blank=True, null=True)
     
-    # Text Analysis Blocks (Fed directly into Zelda AI vector matching engine)
+    # Fields causing FieldError
     description = models.TextField(verbose_name="Executive Summary")
     reason_for_capital = models.TextField(blank=True, null=True)
     extra_info = models.TextField(blank=True, null=True)
+    pitch_deck = models.FileField(upload_to='decks/', validators=[FileExtensionValidator(['pdf', 'pptx'])], blank=True, null=True)
+    prior_amount_raised = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    company_size = models.PositiveIntegerField(null=True, blank=True) # Alias to fix FieldError
     
-    # Traction Matrix Fields
+    # Zelda AI Engine Fields
     sector = models.CharField(max_length=100, default='Other')
-    stage = models.CharField(max_length=100, default='Seed', verbose_name="Funding Stage")
-    raising_amount = models.IntegerField(default=0, help_text="Numeric value for search filtering")
-    current_revenue = models.IntegerField(default=0, help_text="Numeric value for search filtering")
-    prior_amount_raised = models.CharField(max_length=100, blank=True, null=True)
-    years_in_business = models.CharField(max_length=50, blank=True, null=True)
-    company_size = models.CharField(max_length=50, blank=True, null=True)
+    stage = models.CharField(max_length=100, default='Seed')
+    raising_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    current_revenue = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    monthly_burn_rate = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    team_size = models.PositiveIntegerField(null=True, blank=True)
+    years_in_business = models.PositiveIntegerField(default=0)
     
-    # Secure Asset Upload Engine supporting documents and slide decks
-    pitch_deck = models.FileField(
-        upload_to="pitch_decks/",
-        validators=[FileExtensionValidator(allowed_extensions=["pdf", "pptx", "ppt"])],
-        blank=True,
-        null=True
-    )
-    
-    # Zelda AI Cache Layer Vectors
-    description_vector = models.JSONField(blank=True, null=True, help_text="Stores embeddings array")
-    
-    # System Visibility Control State Switches
-    is_private = models.BooleanField(
-        default=False, 
-        help_text="Enable incognito mode to omit your application from global filters and automated AI indexing."
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
+    # Metadata
+    is_private = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True) # Fixes Admin E035
     updated_at = models.DateTimeField(auto_now=True)
+    
+    zelda_score = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    runway_months = models.DecimalField(max_digits=5, decimal_places=1, default=0.0)
 
-    class Meta:
-        verbose_name = "Founder Application"
-        verbose_name_plural = "Founder Applications"
-        ordering = ["-created_at"]
-
-    def __str__(self):
-        return f"{self.company_name} ({self.founder_name})"
+    def save(self, *args, **kwargs):
+        # Optional: Auto-run calculation on save if you want it to be instant
+        super().save(*args, **kwargs)
     
     @property
     def funding_stage(self):
@@ -186,3 +175,15 @@ class ConnectionRequest(models.Model):
         default='PENDING'
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    
+class DealRoom(models.Model):
+    # Linked to a specific Connection between Founder and Investor
+    connection = models.OneToOneField('Connection', on_delete=models.CASCADE, related_name='deal_room')
+    is_active = models.BooleanField(default=False) # Access is locked until founder approves
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class Document(models.Model):
+    deal_room = models.ForeignKey(DealRoom, on_delete=models.CASCADE, related_name='documents')
+    title = models.CharField(max_length=255)
+    file = models.FileField(upload_to='deal_rooms/%Y/%m/%d/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)

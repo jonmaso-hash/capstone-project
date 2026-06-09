@@ -1,4 +1,5 @@
 import requests
+import re
 
 def calculate_match_score(investor, founder):
     """
@@ -85,3 +86,22 @@ def get_blended_match(ai_score, rule_score, application, investor):
             return base_score * 0.5
             
     return round(base_score, 2)
+
+def clean_financial_input(raw_value):
+    if not raw_value:
+        return 0
+    
+    # Cast to string to handle potential Decimal objects or existing clean integers
+    raw_str = str(raw_value)
+    
+    # Handle ranges
+    if '-' in raw_str:
+        raw_str = raw_str.split('-')[0]
+        
+    # Remove everything except digits
+    clean_str = re.sub(r'[^\d]', '', raw_str)
+    
+    try:
+        return int(clean_str)
+    except ValueError:
+        return 0

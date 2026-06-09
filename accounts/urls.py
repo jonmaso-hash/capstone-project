@@ -45,4 +45,8 @@ urlpatterns = [
     path('assistant/', views.ai_search_page, name='ai_assistant_page'),
     
     path('stream-token/', views.get_stream_token, name='stream_token'),
+    
+    path('update-metrics/', views.update_criteria, name='update_metrics'),   
+    path('update-criteria/', views.update_criteria, name='update_criteria'),
+    path('dashboard/', views.zelda_dashboard_view, name='zelda_dashboard'),
 ]

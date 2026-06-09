@@ -5,6 +5,8 @@ from django.conf import settings
 from google import genai
 from google.genai import errors
 from google.genai import types
+from matchmaking.utils import clean_financial_input
+from decimal import Decimal
 
 # Initialize production logging channel
 logger = logging.getLogger(__name__)
@@ -24,12 +26,6 @@ def _get_client():
         return None
 
 def generate_profile_embedding(text_content: str) -> list[float]:
-    """
-    Transforms a raw description block into a 768-dimensional semantic vector 
-    array using the modern unified Google GenAI client layer.
-    
-    FIXED: Changed 'model_name' to 'model' to eliminate TypeErrors.
-    """
     if not text_content or not text_content.strip():
         return []
 
@@ -38,20 +34,17 @@ def generate_profile_embedding(text_content: str) -> list[float]:
         return []
 
     try:
-        # CORRECT METHOD SIGNATURE: Rely strictly on 'model' keyword argument
+        # Use a recognized embedding model instead of a generative model
         response = client.models.embed_content(
-            model="models/text-embedding-004",
+            model="models/gemini-embedding-2", 
             contents=text_content.strip()
         )
         
-        # Safely extract the vector floating-point sequence
         if response and response.embeddings:
             return response.embeddings[0].values
             
-    except errors.APIError as e:
-        logger.error(f"[Gemini API Exception]: Matrix generation failure: {e}")
     except Exception as e:
-        logger.error(f"[Embedding Pipeline Error]: Vector processing caught unhandled runtime: {e}")
+        logger.error(f"[Embedding Pipeline Error]: {e}")
         
     return []
 
@@ -97,9 +90,9 @@ def generate_zelda_summary(page_text: str) -> str:
     
     try:
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt
-        )
+    model="gemini-3.5-flash", 
+    contents=f"User Query: {user_prompt}. Context: {final_context_feed}"
+    )
         return response.text.strip() if response.text else "Failed to capture summary transmission values."
     except Exception as e:
         logger.error(f"[Zelda Assistant Exception]: Executive page parsing collapsed: {e}")
@@ -157,3 +150,27 @@ def verify_truth_delta(claimed_metrics: dict, portfolio_raw_text: str) -> dict:
             "success_vector_score": 70,
             "summary": f"Diligence verification processing safely recovered from execution exception: {str(e)}"
         }
+        
+        
+def calculate_zelda_advantage(application):
+    # Retrieve sanitized values
+    revenue = float(clean_financial_input(application.current_revenue) or 0)
+    ask = float(clean_financial_input(application.raising_amount) or 0)
+    burn = float(clean_financial_input(application.monthly_burn_rate) or 1)
+    team_size = int(clean_financial_input(application.team_size) or 1)
+    years = int(clean_financial_input(application.years_in_business) or 0)
+
+    # 1. Efficiency Score (Higher revenue/team = better)
+    efficiency = revenue / team_size if team_size > 0 else 0
+    eff_pts = min(25, (efficiency / 250000) * 25)
+
+    # 2. Runway Calculation (Formula: Cash on hand / Burn)
+    runway = ((revenue / 12) + ask) / burn if burn > 0 else 0
+    application.runway_months = min(round(runway, 1), 999.9)
+
+    # 3. Final Weighted Score
+    # Stability (3pts/year) + Runway Score + Efficiency
+    total_score = 40 + eff_pts + min(20, (runway / 36) * 20) + min(15, years * 3)
+    application.zelda_score = int(max(1, min(99, total_score)))
+    
+    application.save()

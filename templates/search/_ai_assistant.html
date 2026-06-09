@@ -20,207 +20,176 @@
     }
 </style>
 
-<!-- Floating Action Button (FAB) -->
 <button id="ai-agent-toggle" class="btn btn-primary rounded-circle position-fixed bottom-0 end-0 m-4 d-flex align-items-center justify-content-center shadow-lg" style="width: 60px; height: 60px; z-index: 1050; background: linear-gradient(135deg, #1e1b4b, #312e81); border: 2px solid #fbbf24;">
-    <i class="fa-solid fa-wand-magic-sparkles fs-4" style="color: #fbbf24;"></i>
+    <i class="bi bi-robot text-warning fs-3 dynamic-glow"></i>
 </button>
 
-<!-- Offcanvas Sidebar Panel -->
-<div class="offcanvas offcanvas-end shadow-lg border-0" tabindex="-1" id="aiAgentSidebar" aria-labelledby="aiAgentSidebarLabel" style="width: 400px; border-top-left-radius: 16px; border-bottom-left-radius: 16px;">
-    
-    <!-- Zelda Visual Persona Header Layout -->
-    <div class="offcanvas-header text-white p-4 flex-column align-items-start position-relative" style="background: linear-gradient(135deg, #0f172a, #1e1b4b); border-left: 4px solid #fbbf24; overflow: hidden;">
-        
-        <!-- Ambient Background Vector Graphic Grid -->
-        <div class="position-absolute end-0 top-0 opacity-10 pointer-events-none mt-n2 me-n2" style="font-size: 140px; color: #fbbf24; transform: rotate(15deg);">
-            <i class="fa-solid fa-shapes"></i>
-        </div>
-
-        <!-- Upper Action Control Context -->
-        <div class="d-flex w-100 justify-content-between align-items-center mb-3 position-relative" style="z-index: 2;">
-            <span class="badge text-dark fw-bold px-2.5 py-1" style="background-color: #fbbf24; font-size: 10px; letter-spacing: 1px;">AI CORE ACTIVE</span>
-            <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-
-        <!-- Identity Frame Stack -->
-        <div class="d-flex align-items-center gap-3 w-100 position-relative" style="z-index: 2;">
-            
-            <!-- Zelda Visual Avatar Core Component -->
-            <div class="position-relative d-flex align-items-center justify-content-center rounded-3 shadow-inner pivot-avatar" style="width: 60px; height: 60px; border: 2px solid #fbbf24; background: radial-gradient(circle, #1e1b4b 0%, #020617 100%);">
-                <div class="position-absolute translate-middle top-50 start-50 text-center w-100 h-100 d-flex align-items-center justify-content-center">
-                    <i class="fa-solid fa-shield-halved position-absolute fs-3 opacity-20 dynamic-pulse" style="color: #fbbf24; animation-duration: 3s;"></i>
-                    <i id="zelda-face-icon" class="fa-solid fa-wand-magic-sparkles fs-4 dynamic-glow" style="color: #fbbf24; transition: all 0.3s ease;"></i>
-                </div>
-                <!-- Status Processing Dot -->
-                <span id="zelda-status-dot" class="position-absolute bottom-0 end-0 p-1 bg-success border border-2 border-dark rounded-circle m-1"></span>
+<div class="offcanvas offcanvas-end border-0 shadow-lg" tabindex="-1" id="aiAgentSidebar" aria-labelledby="aiAgentSidebarLabel" style="width: 400px; background: #f8fafc;">
+    <div class="offcanvas-header bg-dark text-white p-4">
+        <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle bg-warning p-2 d-flex align-items-center justify-content-center position-relative" style="width: 45px; height: 45px;">
+                <div class="position-absolute w-100 h-100 rounded-circle bg-warning dynamic-pulse"></div>
+                <i class="bi bi-cpu text-dark fs-4 z-1"></i>
             </div>
-
-            <!-- Descriptive Typography -->
             <div>
-                <h4 class="offcanvas-title fw-bold text-white mb-0 tracking-tight" id="aiAgentSidebarLabel">Zelda</h4>
-                <p class="mb-0" style="font-size: 12px; color: rgba(251, 191, 36, 0.85); font-weight: 500; letter-spacing: 0.5px;">
-                    <i class="fa-solid fa-network-wired me-1" style="font-size: 10px;"></i> Platform Intelligence Guide
-                </p>
+                <h5 class="offcanvas-title fw-bold m-0" id="aiAgentSidebarLabel">Zelda Intelligence</h5>
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-0.5 mt-1" style="font-size: 10px;">Agent Node Active</span>
             </div>
         </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-submit="offcanvas" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
-
-    <!-- Body Layout -->
-    <div class="offcanvas-body d-flex flex-column p-4">
-        <!-- Search Execution Box -->
-        <form id="global-agent-form" autocomplete="off" class="mb-3">
-            <div class="input-group border rounded-3 p-1 bg-light">
-                <span class="input-group-text bg-transparent border-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
-                <input type="text" id="globalAgentQuery" class="form-control bg-transparent border-0 shadow-none" placeholder="Ask Zelda to find matches, stacks, or data...">
-                <button type="submit" class="btn btn-dark btn-sm rounded-2 px-3">Seek</button>
+    
+    <div class="offcanvas-body p-4 d-flex flex-column h-100">
+        <div class="card card-body shadow-sm border-0 rounded-4 p-3 mb-4 bg-white">
+            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                <i class="bi bi-file-earmark-text text-primary me-2"></i>Page Summary Assistant
+            </h6>
+            <div id="zelda-content" class="text-secondary small mb-3">
+                Extract execution traction, technology stack indicators, and structural funding asks dynamically from this active window viewport context.
             </div>
-        </form>
-
-        <!-- Quick Shortcuts -->
-        <div class="mb-4">
-            <div class="d-flex flex-wrap gap-1">
-                <span class="badge bg-secondary-subtle text-secondary p-2 rounded-pill small-badge" style="cursor: pointer;" onclick="runQuickSearch('Python')">#Python</span>
-                <span class="badge bg-secondary-subtle text-secondary p-2 rounded-pill small-badge" style="cursor: pointer;" onclick="runQuickSearch('SaaS')">#SaaS</span>
-                <span class="badge bg-secondary-subtle text-secondary p-2 rounded-pill small-badge" style="cursor: pointer;" onclick="runQuickSearch('Fintech')">#Fintech</span>
-            </div>
+            <button onclick="runZeldaSummarizer()" class="btn btn-sm btn-outline-primary rounded-pill w-100">
+                <i class="bi bi-lightning-charge-fill me-1"></i>Analyze Current Page
+            </button>
         </div>
 
-        <hr class="text-muted opacity-25 mt-0">
+        <div class="card card-body shadow-sm border-0 rounded-4 p-3 mb-4 bg-white">
+            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                <i class="bi bi-terminal text-indigo me-2"></i>Global Engine Routing Query
+            </h6>
+            <form id="global-agent-form" class="mb-0">
+                <div class="input-group">
+                    <input type="text" id="globalAgentQuery" class="form-control rounded-start-pill bg-light border-0 px-3" placeholder="Ask Zelda engine mapping parameters..." required>
+                    <button class="btn btn-dark rounded-end-pill px-3" type="submit">
+                        <i class="bi bi-arrow-right"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
 
-        <!-- Async Dynamic Response Container -->
-        <div class="flex-grow-1 overflow-y-auto" id="global-agent-viewport">
-            <div class="text-center text-muted py-5" id="agent-empty-state">
-                <i class="fa-regular fa-compass fs-1 mb-3 opacity-25"></i>
-                <p class="small mb-0">"What links are we looking for today?"</p>
-                <small class="text-muted opacity-75 d-block mt-1" style="font-size: 11px;">Ask me to scan profiles, mandates, or postings across Interlink.</small>
+        <div class="flex-grow-1 overflow-auto bg-dark rounded-4 p-3 shadow-inner d-flex flex-column" style="min-height: 200px;">
+            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-secondary border-opacity-25 text-muted" style="font-size: 11px;">
+                <span>EXECUTION STREAM</span>
+                <i class="bi bi-circle-fill text-success" style="font-size: 6px;"></i>
             </div>
-
-            <!-- Thinking Indicator -->
-            <div id="global-agent-thinking" class="text-center py-4 d-none">
-                <div class="spinner-border spinner-border-sm" style="color: #312e81;" role="status"></div>
-                <small class="text-muted ms-2 d-block mt-2">Zelda is navigating data clusters...</small>
+            <div id="agent-response-log" class="text-light flex-grow-1 overflow-auto" style="font-family: monospace; font-size: 0.8rem; max-height: 280px;">
+                <span class="text-secondary">[Ready] Waiting for operational stack instruction sequence data payload framework allocation...</span>
             </div>
-
-            <!-- Result Injection Node -->
-            <div id="global-results-output" class="d-none"></div>
         </div>
     </div>
 </div>
 
-<!-- Script Controller Architecture -->
 <script>
-    // 1. GLOBAL UTILITIES
-    window.runQuickSearch = function(keyword) {
-        const input = document.getElementById('globalAgentQuery');
-        if (input) {
-            input.value = keyword;
-            if (typeof window.executeGlobalQuery === 'function') {
-                window.executeGlobalQuery(keyword);
-            }
-        }
-    };
+    // 1. GLOBAL SEARCH ENGINE HANDLERS (Fixed case-sensitive variable definitions)
+    window.executeGlobalQuery = async function(queryString) {
+    const logDisplay = document.getElementById('agent-response-log');
+    if (!logDisplay) return;
 
-    // 2. CORE QUERY HANDLER
-    window.executeGlobalQuery = async function(query) {
-        const cleanQuery = query.trim();
+    logDisplay.innerHTML = `<span class="text-warning">[Running] Routing query to Zelda intelligence layer...</span>`;
+
+    try {
+        const response = await fetch('/api/v1/zelda/search/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': window.CSRF_TOKEN
+            },
+            // Note: Sending as 'prompt' to align with your ai_services.py
+            body: JSON.stringify({ prompt: queryString }) 
+        });
+
+        if (!response.ok) throw new Error(`HTTP System Fault: ${response.status}`);
+        const data = await response.json();
+
+        logDisplay.innerHTML = '';
+
+        // PATH 1: Handle Conversational Response (LLM text)
+        if (data.response) {
+            const responseDiv = document.createElement('div');
+            responseDiv.className = "p-3 text-white mb-3 bg-dark border border-secondary rounded-3";
+            responseDiv.innerHTML = data.response; // Zelda's markdown/text output
+            logDisplay.appendChild(responseDiv);
+        }
+
+        // PATH 2: Handle Structured Search Results (if provided alongside response)
+        if (data.results && data.results.length > 0) {
+            data.results.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = "p-3 bg-secondary bg-opacity-25 rounded-3 mb-2 border border-secondary border-opacity-25";
+                card.innerHTML = `
+                    <div class="small fw-bold text-warning mb-1">[Result #${index + 1}]</div>
+                    <div class="fw-semibold text-white mb-1">${item.company_name || item.title || 'Asset Record'}</div>
+                    <p class="text-muted small mb-0">${item.description || 'No descriptive payload telemetry.'}</p>
+                `;
+                logDisplay.appendChild(card);
+            });
+        } 
         
-        // Interceptor for Intelligence Dashboards
-        if (cleanQuery.toLowerCase().endsWith('.memo')) {
-            const startupName = cleanQuery.replace(/\.memo$/i, '').trim();
-            window.location.href = `/memo-dashboard/${encodeURIComponent(startupName)}/`;
-            return;
+        // Final fallback if nothing returned
+        if (!data.response && (!data.results || data.results.length === 0)) {
+            logDisplay.innerHTML = `<span class="text-muted">[Empty] No architectural data elements found for: "${queryString}"</span>`;
         }
 
-        const thinking = document.getElementById('global-agent-thinking');
-        const output = document.getElementById('global-results-output');
+    } catch (err) {
+        console.error("Zelda API Error:", err);
+        logDisplay.innerHTML = `<span class="text-danger">[Error] Pipeline routing failed: ${err.message}</span>`;
+    }
+};
 
-        thinking.classList.remove('d-none');
-        output.classList.add('d-none');
+    // 2. PAGE SUMMARY ASSISTANT LIFECYCLE PIPELINES
+    async function runZeldaSummarizer() {
+        const content = document.body.innerText.substring(0, 5000);
+        const display = document.getElementById('zelda-content');
+        if (!display) return;
+        
+        display.innerHTML = '<div class="spinner-border spinner-border-sm text-primary mb-2"></div> Running semantic page analysis...';
 
         try {
-            const response = await fetch('/api/v1/zelda/search/', {
+            const response = await fetch('/api/v1/zelda/summarize/', {
                 method: 'POST',
-                headers: {
+                headers: { 
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken,
-                    'Authorization': 'Token ' + (localStorage.getItem('auth_token') || '')
+                    'X-CSRFToken': window.CSRF_TOKEN // Fixed from csrfToken to window.CSRF_TOKEN
                 },
-                body: JSON.stringify({ q: cleanQuery })
+                body: JSON.stringify({ page_text: content })
             });
 
-            if (response.status === 401) throw new Error('Unauthorized');
+            if (!response.ok) throw new Error('API processing pipeline exception caught.');
             const data = await response.json();
-
-            thinking.classList.add('d-none');
-            output.classList.remove('d-none');
-            output.innerHTML = ''; // Clear previous results
-
-            const items = data.results || [];
-            if (items.length === 0) {
-                output.innerHTML = `<div class="text-center text-muted py-4 small">No matches found.</div>`;
-                return;
-            }
-
-            items.forEach(item => {
-                const row = document.createElement('div');
-                row.className = 'p-4 mb-3 border rounded-4 bg-white shadow-sm';
-                row.innerHTML = renderSearchResult(item);
-                output.appendChild(row);
-            });
-        } catch (err) {
-            console.error("Zelda API Error:", err);
-            thinking.classList.add('d-none');
-            output.classList.remove('d-none');
-            output.innerHTML = `<div class="text-center text-danger py-4">Search failed. Please try again.</div>`;
-        }
-    };
-
-    // 3. UI RENDERING LOGIC
-    function renderSearchResult(item) {
-        if (item.type === 'Founder Profile') {
-            return `
-                <div class="d-flex align-items-center mb-3">
-                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
-                        ${(item.founder_name || 'F').charAt(0)}
-                    </div>
-                    <div class="ms-3">
-                        <h6 class="fw-bold mb-0">${item.founder_name || 'Founder'}</h6>
-                        <small class="text-muted">${item.startup_name || 'Startup'} | ${item.sector || 'Sector'}</small>
-                    </div>
-                </div>
-                <div class="small mb-3">
-                    <p class="mb-1 fw-semibold text-primary">Executive Summary</p>
-                    <p class="text-muted mb-2">${item.executive_summary || 'No summary available.'}</p>
-                </div>
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="badge bg-light text-dark border">${item.funding_stage || 'Seed'}</span>
-                    <a href="${item.url || '#'}" class="btn btn-sm btn-dark px-3">View Profile</a>
-                </div>
+            
+            display.innerHTML = `
+                <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+                    <li><i class="bi bi-graph-up-arrow text-success me-1"></i> <strong>Traction:</strong> ${data.traction}</li>
+                    <li><i class="bi bi-cpu text-primary me-1"></i> <strong>Tech:</strong> ${data.tech}</li>
+                    <li><i class="bi bi-cash-stack text-warning me-1"></i> <strong>Ask:</strong> ${data.ask}</li>
+                </ul>
             `;
+        } catch (error) {
+            console.error("Zelda Summary Fault:", error);
+            display.innerHTML = `<span class="text-danger small"><i class="bi bi-exclamation-triangle-fill me-1"></i> Error: Could not reach Zelda AI parsing layer endpoints.</span>`;
         }
-        return `
-            <h6 class="fw-bold mb-1">${item.title}</h6>
-            <p class="small text-muted mb-2">${item.description}</p>
-            <a href="${item.url || '#'}" class="btn btn-sm text-uppercase fw-bold shadow-sm" style="background: linear-gradient(135deg, #312e81, #4f46e5); color: white; border-radius: 8px; padding: 6px 20px;">
-                Reveal
-            </a>
-        `;
     }
 
-    // 4. INITIALIZATION
+    // 3. EVENT LISTENER REGISTRATION BINDINGS
     document.addEventListener('DOMContentLoaded', () => {
         const toggleBtn = document.getElementById('ai-agent-toggle');
         const form = document.getElementById('global-agent-form');
         const input = document.getElementById('globalAgentQuery');
         const sidebarEl = document.getElementById('aiAgentSidebar');
 
-        if (sidebarEl) new bootstrap.Offcanvas(sidebarEl);
-        if (toggleBtn) toggleBtn.addEventListener('click', () => new bootstrap.Offcanvas(sidebarEl).show());
+        if (sidebarEl && window.bootstrap) {
+            const offcanvasInstance = new bootstrap.Offcanvas(sidebarEl);
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => offcanvasInstance.show());
+            }
+        }
 
         if (form && input) {
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
-                if (input.value.trim()) window.executeGlobalQuery(input.value.trim());
+                const cleanQuery = input.value.trim();
+                if (cleanQuery) {
+                    window.executeGlobalQuery(cleanQuery);
+                }
             });
         }
     });

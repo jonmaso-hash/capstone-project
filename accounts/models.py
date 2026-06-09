@@ -74,7 +74,16 @@ class FounderApplication(models.Model):
     
     company_name = models.CharField(max_length=255)
     sector = models.CharField(max_length=100)
-    funding_stage = models.CharField(max_length=50)
+    stage = models.CharField(max_length=50, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    
+    monthly_burn_rate = models.DecimalField(
+        max_digits=15, decimal_places=2, null=True, blank=True,
+        help_text="Average monthly cash burn in USD"
+    )
+    team_size = models.PositiveIntegerField(
+        null=True, blank=True, help_text="Total number of full-time employees"
+    )
 
     # Diligence fields
     current_revenue = models.DecimalField(
@@ -83,6 +92,14 @@ class FounderApplication(models.Model):
     )
     company_size = models.PositiveIntegerField(
         null=True, blank=True, help_text="Number of full-time employees"
+    )
+    years_in_business = models.PositiveIntegerField(
+        default=0, help_text="Years since incorporation"
+    )
+    
+    # Raising Amount is critical for the runway calculation
+    raising_amount = models.DecimalField(
+        max_digits=15, decimal_places=2, null=True, blank=True
     )
     years_in_business = models.PositiveIntegerField(
         default=0, help_text="Years since incorporation"
@@ -99,6 +116,8 @@ class FounderApplication(models.Model):
         related_name='permitted_founder_profiles',
         help_text="Investors authorized to audit this company via invite workflow matches."
     )
+    
+    funding_stage = models.CharField(max_length=50, blank=True, null=True)
     
     @property
     def completion_percentage(self):

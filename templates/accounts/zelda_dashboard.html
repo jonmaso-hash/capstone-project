@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Zelda Executive Dashboard</h2>
+        <a href="{% url 'accounts:profile_self' %}" class="btn btn-outline-secondary">← Back to Profile</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card p-4 bg-primary text-white shadow-sm border-0 mb-3">
+                <small class="text-white-50">ZELDA SCORE</small>
+                <h1 class="display-4 fw-bold" id="score-display">{{ application.zelda_score|default:0 }}%</h1>
+            </div>
+            <div class="card p-4 bg-dark text-white shadow-sm border-0">
+                <small class="text-white-50">RUNWAY</small>
+                <h1 class="display-4 fw-bold" id="runway-display">{{ application.runway_months|default:0 }} Months</h1>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+        <form id="zelda-form" method="POST" action="{% url 'accounts:update_criteria' %}" class="card p-4 shadow-sm border-0">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary w-100 mt-3">Calculate Projections</button>
+</form>
+        </div>
+
+        <div class="col-12">
+            <div class="card p-4 shadow-sm border-0">
+                <canvas id="projectionChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const founderData = JSON.parse('{{ founder_data_json|escapejs }}');
+    const ctx = document.getElementById('projectionChart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Year 0', 'Year 1', 'Year 2', 'Year 3'],
+            datasets: [{ label: 'Revenue', data: [founderData.revenue, founderData.revenue * 1.5, founderData.revenue * 2.2, founderData.revenue * 3.5], borderColor: '#0d6efd' }]
+        }
+    });
+
+    // 1. AJAX Submission (No page reload)
+    document.getElementById('zelda-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        fetch(this.action, { method: 'POST', body: new FormData(this), headers: {'X-CSRFToken': '{{ csrf_token }}'} })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('score-display').innerText = data.zelda_score + '%';
+            document.getElementById('runway-display').innerText = data.runway_months + ' Months';
+        });
+    });
+
+    // 2. Real-time Chart Update
+    document.querySelectorAll('input[type=range]').forEach(s => {
+        s.addEventListener('input', () => {
+            const rev = parseFloat(document.querySelector('[name="revenue"]').value) || 0;
+            if(event.target.name === 'revenue') {
+                chart.data.datasets[0].data = [rev, rev * 1.5, rev * 2.2, rev * 3.5];
+                chart.update();
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

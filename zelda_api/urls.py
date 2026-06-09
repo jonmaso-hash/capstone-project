@@ -14,12 +14,14 @@ from .views import (
     MemoIntelligenceView,
     ZeldaGatewayAPIView,
     SandboxScanView,  
+    SummarizeView,
 )
 
 app_name = 'zelda_api'
 
 urlpatterns = [
     # Core Engine Architecture
+    path('summarize/', SummarizeView.as_view(), name='zelda-summarize'),  
     path('search/', ZeldaGlobalSearchAPIView.as_view(), name='global_search'),
     path('match/', MatchRadarAPIView.as_view(), name='match_radar'),
     path('crawl/', WebExplorationAPIView.as_view(), name='web_exploration'),
@@ -35,5 +37,5 @@ urlpatterns = [
     path('api/v1/zelda/documents/analyze/', DocumentIntakeAPIView.as_view(), name='founder_document_intake'),
     path('api/v1/zelda/investors/portfolio/', InvestorPortfolioIntakeAPIView.as_view(), name='investor_portfolio_intake'),
     path('api/v1/zelda/founder/match-radar/', FounderMatchRadarAPIView.as_view(), name='founder_competitive_match_radar'),
-path('<str:startup_name>/', views.MemoIntelligenceView.as_view(), name='memo-intelligence'),    
+    path('<str:startup_name>/', views.MemoIntelligenceView.as_view(), name='memo-intelligence'),  
 ]

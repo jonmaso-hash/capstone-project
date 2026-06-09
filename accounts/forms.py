@@ -18,15 +18,16 @@ class ApplicationForm(forms.ModelForm):
             "phone_number",
             "description",
             "current_revenue",
+            "monthly_burn_rate",  # Added for Zelda Engine
+            "team_size",          # Renamed from company_size
+            "years_in_business",
             "sector",
             "stage",
             "raising_amount",
             "prior_amount_raised",
-            "years_in_business",
-            "company_size",
             "reason_for_capital",
             "extra_info",
-            "pitch_deck",  # FIXED: Added field back so asset uploads save to your DB pipeline
+            "pitch_deck",
             "is_private",
         ]
         widgets = {
@@ -39,40 +40,17 @@ class ApplicationForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Explicitly declare fields that are allowed to bypass validation
-        optional_fields = ["extra_info", "is_private", "phone_number", "company_website", "prior_amount_raised", "years_in_business", "company_size"]
-        
+        # Apply Bootstrap classes to all fields automatically
         for field_name, field in self.fields.items():
-            # Apply uniform Bootstrap design patterns
             if isinstance(field.widget, forms.CheckboxInput):
                 field.widget.attrs["class"] = "form-check-input"
             else:
                 field.widget.attrs["class"] = "form-control"
-            
-            # Enforce hard validation blocks natively in the HTML render
-            if field_name not in optional_fields:
-                field.widget.attrs["required"] = "required"
-                field.required = True
-
 
 # -----------------------------
 # Investor Application Form
 # -----------------------------
 class InvestorForm(forms.ModelForm):
-    INVESTMENT_STAGE_CHOICES = [
-        ("Pre-Seed", "Pre-Seed"),
-        ("Seed", "Seed"),
-        ("Series-A", "Series-A"),
-        ("Series-B", "Series-B"),
-        ("Series-C+", "Series-C+"),
-        ("other", "Other"),
-    ]
-
-    investment_stage = forms.ChoiceField(
-        choices=INVESTMENT_STAGE_CHOICES,
-        widget=forms.Select()
-    )
-
     class Meta:
         model = InvestorApplication
         fields = [
@@ -105,7 +83,6 @@ class InvestorForm(forms.ModelForm):
                 field.widget.attrs["required"] = "required"
                 field.required = True
 
-
 # -----------------------------
 # System User Creation Form
 # -----------------------------
@@ -118,4 +95,3 @@ class CustomUserCreationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs["class"] = "form-control"
-            field.widget.attrs["required"] = "required"

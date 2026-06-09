@@ -16,11 +16,14 @@ from django.views.decorators.http import require_POST
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from stream_chat import StreamChat
+from .utils import clean_financial_input
+from .models import Application
+from django.http import FileResponse, Http404
 
 # Internal Services & Models
 from matchmaking.models import Application, Connection, InvestorApplication, MatchFeedback, ConnectionRequest
 from matchmaking.services.ai_engine import calculate_similarity, generate_profile_embedding
-from matchmaking.utils import calculate_rule_based_score, get_blended_match
+from matchmaking.utils import calculate_rule_based_score, get_blended_match, clean_financial_input
 from .tasks import crawl_startup_data_task
 
 logger = logging.getLogger(__name__)
@@ -311,6 +314,32 @@ def founder_bulletin_board(request):
 
 @login_required
 @require_POST
+def submit_founder_application(request):
+    """
+    Handles the submission of the founder profile form and sanitizes financial inputs
+    before hitting the database and vector generation.
+    """
+    # 1. Get the raw string from the frontend form
+    raw_amount = request.POST.get('raising_amount')
+    
+    # 2. Clean it using your utility function
+    clean_amount = clean_financial_input(raw_amount)
+    
+    # 3. Create or update the application with the safe integer
+    application, created = Application.objects.get_or_create(user=request.user)
+    application.raising_amount = clean_amount
+    
+    # NOTE: Add any other fields you are saving from the POST request here 
+    # (e.g., application.description = request.POST.get('description'))
+    
+    application.save()
+    
+    messages.success(request, "Founder profile successfully updated and indexed.")
+    return redirect('matchmaking:founder_dashboard')
+
+
+@login_required
+@require_POST
 def request_intro(request, application_id, investor_id):
     """
     The Intro Workflow: Creates a Connection record and dispatches an alert to the broker.
@@ -573,5 +602,63 @@ def standalone_memo_view(request, company_slug):
         'investor': investor_profile
     }
     
+    founder_app = get_object_or_404(Application, company_name__iexact=formatted_name)
+    investor_profile = getattr(request.user, 'match_investor_profile', None)
+    
+    # --- PRIVACY GATEKEEPER ---
+    zelda_score = None
+    has_advantage_access = False
+
+    # Condition 1: The user looking is the Founder who owns the profile
+    if request.user == founder_app.user:
+        has_advantage_access = True
+        
+    # Condition 2: The user is an Investor with an ACCEPTED connection
+    elif investor_profile:
+        has_access = Connection.objects.filter(
+            investor=investor_profile,
+            founder=founder_app,
+            status='ACCEPTED' # Must match exactly how you save it in connection_action_view
+        ).exists()
+        
+        if has_access:
+            has_advantage_access = True
+
+    # Only calculate if authorized to save server resources
+    if has_advantage_access:
+        zelda_score = calculate_zelda_advantage(founder_app)
+
+    context = {
+        'founder_app': founder_app,
+        'investor': investor_profile,
+        'zelda_score': zelda_score, # Passes None if unauthorized
+        # ... your other context variables ...
+    }
+    
     return render(request, 'matchmaking/memo_detail.html', context)
 
+@login_required
+@require_POST
+def submit_founder_application(request):
+    raw_amount = request.POST.get('raising_amount')
+    clean_amount = clean_financial_input(raw_amount)
+    
+    # CORRECT: Use 'Application', not 'FounderApplication'
+    application, created = Application.objects.get_or_create(user=request.user)
+    application.raising_amount = clean_amount
+    
+    application.save()
+    
+    messages.success(request, "Founder profile successfully updated and indexed.")
+    return redirect('matchmaking:founder_dashboard')
+
+@login_required
+def download_document(request, doc_id):
+    doc = get_object_or_404(Document, id=doc_id)
+    room = doc.deal_room
+    
+    # Security Check: Is the user the investor in this connection?
+    if request.user == room.connection.investor.user and room.is_active:
+        return FileResponse(doc.file.open('rb'), as_attachment=True)
+    
+    raise Http404("Access Denied")

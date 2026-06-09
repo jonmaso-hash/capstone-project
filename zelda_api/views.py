@@ -1,4 +1,5 @@
 import os
+import tempfile
 import re
 import logging
 import urllib.parse
@@ -25,8 +26,7 @@ from .serializers import (
 )
 
 # Core Deal Flow Utilities
-from .utils import scan_pitch_deck, AnalyzedPitch, compile_executive_intelligence_memo
-
+from .utils import scan_pitch_deck, AnalyzedPitch, compile_executive_intelligence_memo, analyze_web_text
 # Syncing with the models defined for the matching engine
 from matchmaking.models import Application, InvestorApplication
 
@@ -42,6 +42,8 @@ class ZeldaGlobalSearchAPIView(APIView):
     Zelda Core Global Search Engine API
     """
     permission_classes = [IsAuthenticated]
+
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
 
     def post(self, request):
         user_query = request.data.get('q', '').strip()
@@ -763,3 +765,31 @@ class FounderMatchRadarAPIView(APIView):
         }
         
         return Response(foundry_envelope, status=status.HTTP_200_OK)
+    
+class SummarizeView(APIView):
+    """
+    Accepts raw page content and returns a structured AI summary.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+
+    def post(self, request):
+        page_text = request.data.get('page_text', '')
+        
+        if not page_text:
+            return Response({"error": "No page content provided."}, status=400)
+
+        try:
+            # DIRECTORY PASS: Hand the raw string directly to your new function
+            analysis = analyze_web_text(page_text)
+
+            # Return the structured payload
+            return Response({
+                "traction": analysis.get('traction', 'No specific traction metrics detected.'),
+                "tech": analysis.get('tech_stack', 'Standard technology framework detected.'),
+                "ask": analysis.get('investment_ask', 'Target funding details not explicitly stated.')
+            })
+
+        except Exception as e:
+            logger.error(f"Zelda Summarizer Engine Failure: {str(e)}")
+            return Response({"error": "Semantic processing failed."}, status=500)

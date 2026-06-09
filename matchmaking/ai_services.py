@@ -55,24 +55,32 @@ def ai_search_endpoint(request):
     if request.method == "POST":
         user_prompt = request.POST.get('prompt', '')
         
-        # 1. Query traditional vector database embeddings for articles/bulletins
+        # 1. Retrieval Layer (Your existing functions)
         vector_context = get_vector_embeddings_context(user_prompt) 
-        
-        # 2. Run our precision username lookup check
         user_database_context = extract_and_enrich_usernames(user_prompt)
         
-        # Combined baseline prompt instructions for Zelda
+        # 2. Generative Layer
+        client = genai.Client()
+        
         system_instructions = (
-            "You are Zelda, the platform assistant for Interlink Foundry. "
-            "Your job is to match founders and investors and direct users perfectly. "
-            "If database context provides a 'Profile URL Path', ALWAYS present it to the "
-            "user as a clean absolute Markdown link: [@username](/accounts/profile/username/) "
-            "so they can click it instantly.\n"
+            "You are Zelda, the Interlink Foundry assistant. Match founders/investors. "
+            "Use the provided vector context and database context to answer the user's prompt. "
+            "If a user asks for a profile, always provide the link in this format: "
+            "[@username](/accounts/profile/username/)."
         )
         
-        final_context_feed = system_instructions + vector_context + user_database_context
+        final_context_feed = f"{system_instructions}\n\nContext:\n{vector_context}\n{user_database_context}\n\nUser Query: {user_prompt}"
         
-        # Send `final_context_feed` along with `user_prompt` to your LLM API generation layer...
-        # response = call_llm(final_context_feed, user_prompt)
-        
-        # return JsonResponse({'response': response})
+        try:
+            # Use the model confirmed in your diagnostic list
+            response = client.models.generate_content(
+                model="models/gemini-2.0-flash", 
+                contents=final_context_feed
+            )
+            
+            # Parsing logic: Zelda returns the generated text and the links
+            return JsonResponse({'response': response.text})
+            
+        except Exception as e:
+            logger.error(f"Zelda Generative Search Error: {e}")
+            return JsonResponse({'response': "I am currently calibrating my search vectors. Please try again."}, status=500)

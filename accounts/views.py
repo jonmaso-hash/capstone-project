@@ -12,12 +12,15 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
+from matchmaking.services.ai_engine import calculate_zelda_advantage
+from matchmaking.utils import clean_financial_input
+from matchmaking.models import Connection
 
 # External/Third-Party Apps
 from stream_chat import StreamChat
 from blog.models import Article
 
-# Core Matchmaking Engine Models
+# Core Matchmaking Engine Models (Added Connection for Authorization)
 from matchmaking.models import Application, InvestorApplication
 from .forms import ApplicationForm, InvestorForm
 
@@ -135,33 +138,45 @@ def profile(request, username):
     application = getattr(viewed_user, "match_founder_profile", None)
     investor_application = getattr(viewed_user, "match_investor_profile", None)
 
-    # 🔒 PRIVACY GATEKEEPER CHECK: Public by default. Only blocks if explicitly True.
+    # 🔒 PRIVACY GATEKEEPER
     if viewed_user != request.user:
-        # Evaluate Founder Profile Incognito Status
-        if application and getattr(application, 'is_private', False) is True:
+        if application and getattr(application, 'is_private', False):
             if not application.allowed_viewers.filter(id=request.user.id).exists():
-                return render(request, "accounts/profile_private.html", {
-                    "profile_user": viewed_user, 
-                    "profile_type": "Founder Portfolio"
-                })
-        
-        # Evaluate Investor Mandate Incognito Status
-        if investor_application and getattr(investor_application, 'is_private', False) is True:
-            if not investor_application.allowed_viewers.filter(id=request.user.id).exists():
-                return render(request, "accounts/profile_private.html", {
-                    "profile_user": viewed_user, 
-                    "profile_type": "Investor Mandate"
-                })
+                return render(request, "accounts/profile_private.html", {"profile_user": viewed_user})
 
-    show_welcome_prompt = not application and not investor_application
-    user_articles = Article.objects.filter(author=viewed_user)
+    # --- ZELDA EXECUTIVE ADVANTAGE & DYNAMIC DATA ---
+    zelda_score = None
+    founder_data_json = None
+    
+    if application:
+        # Check authorization (Owner or Connected Investor)
+        has_advantage_access = (viewed_user == request.user)
+        if not has_advantage_access:
+            viewer_investor = getattr(request.user, 'match_investor_profile', None)
+            if viewer_investor:
+                has_access = Connection.objects.filter(
+                    investor=viewer_investor, founder=application, status='ACCEPTED'
+                ).exists()
+                if has_access:
+                    has_advantage_access = True
+
+        if has_advantage_access:
+            zelda_score = calculate_zelda_advantage(application)
+            data_dict = {
+                'revenue': float(clean_financial_input(application.current_revenue) or 0),
+                'ask': float(clean_financial_input(application.raising_amount) or 0),
+                'burn': float(clean_financial_input(application.monthly_burn_rate) or 1),
+                'team_size': int(clean_financial_input(application.team_size) or 1),
+                'years': int(clean_financial_input(application.years_in_business) or 0),
+            }
+            founder_data_json = json.dumps(data_dict)
 
     return render(request, "accounts/profile.html", {
         "profile_user": viewed_user,
         "application": application,
         "investor_application": investor_application,
-        "show_welcome_prompt": show_welcome_prompt,
-        "user_articles": user_articles,
+        "zelda_score": zelda_score,
+        "founder_data_json": founder_data_json
     })
 
 
@@ -287,3 +302,46 @@ def toggle_privacy_view(request):
     except Exception as e:
         logger.exception("AJAX privacy toggle update failed.")
         return JsonResponse({"status": "error", "message": str(e)}, status=400)
+    
+@login_required
+def zelda_dashboard_view(request):
+    # 1. Use the exact same lookup method as your profile view
+    application = getattr(request.user, "match_founder_profile", None)
+    
+    # 2. If it is STILL None, the database record genuinely doesn't exist for this user.
+    if not application:
+        messages.warning(request, "Please initialize your founder profile to access the Zelda Dashboard.")
+        return redirect('accounts:seeking_investment')
+    
+    # 3. Safely pass the data to the template
+    context = {
+        'application': application,
+        'founder_data_json': json.dumps({
+            'revenue': float(application.current_revenue or 0),
+            'ask': float(application.raising_amount or 0),
+            'burn': float(application.monthly_burn_rate or 1),
+            'team': int(application.team_size or 1)
+        })
+    }
+    return render(request, "accounts/zelda_dashboard.html", context)
+
+@login_required
+def update_criteria(request):
+    if request.method == "POST":
+        app = Application.objects.get(user=request.user)
+        
+        # Update inputs
+        app.current_revenue = request.POST.get('revenue')
+        app.monthly_burn_rate = request.POST.get('burn')
+        app.team_size = request.POST.get('team')
+        app.save()
+        
+        # Run the engine
+        calculate_zelda_advantage(app)
+        
+        # Return JSON instead of redirecting
+        return JsonResponse({
+            'status': 'success',
+            'zelda_score': app.zelda_score,
+            'runway_months': float(app.runway_months)
+        })

@@ -4,10 +4,14 @@ from .models import Application, InvestorApplication, AIMatch, Connection, Match
 
 @admin.register(Application)
 class ApplicationAdmin(admin.ModelAdmin):
-    list_display = ("company_name", "founder_name", "sector", "stage", "raising_amount", "is_private", "created_at")
-    list_filter = ("stage", "sector", "is_private")
-    search_fields = ("company_name", "founder_name", "email", "description")
-    readonly_fields = ("created_at", "updated_at")
+    # This will now work because we are referencing the model directly
+    list_display = ('user', 'company_name', 'sector', 'stage', 'created_at')
+    
+    # Optional: If you want to see the email in the admin list
+    list_filter = ('sector', 'stage', 'is_private')
+    search_fields = ('company_name', 'user__username', 'email')
+    
+    readonly_fields = ('created_at', 'updated_at')
 
 
 @admin.register(InvestorApplication)
