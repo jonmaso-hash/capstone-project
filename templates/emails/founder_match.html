@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
+    <div style="background: #1a1a1a; padding: 20px; text-align: center; color: white;">
+        <h1 style="margin: 0; letter-spacing: 2px;">INTERLINK FOUNDRY</h1>
+        <p style="margin: 5px 0 0; font-size: 12px; text-transform: uppercase; opacity: 0.8;">Confidential Founder Profile</p>
+    </div>
+
+    <div style="padding: 20px; border: 1px solid #eee;">
+        <p>Interlink Foundry has identified a new high-conviction opportunity for your portfolio.</p>
+
+        <h3 style="border-bottom: 2px solid #007bff; padding-bottom: 5px;">Founder Information</h3>
+        <p><strong>Founder Name:</strong> {{ founder.founder_name }}<br>
+           <strong>Email:</strong> {{ founder.email }}<br>
+           <strong>Phone:</strong> {{ founder.phone_number }}</p>
+
+        <h3 style="border-bottom: 2px solid #007bff; padding-bottom: 5px;">Business Details</h3>
+        <p><strong>Company Name:</strong> {{ founder.company_name }}<br>
+           <strong>Industry/Sector:</strong> {{ founder.sector }}<br>
+           <strong>Company Size:</strong> {{ founder.company_size }} | <strong>Stage:</strong> {{ founder.stage }}<br>
+           <strong> Business Description:</strong> {{ founder.description }}</p>
+
+        <h3 style="border-bottom: 2px solid #007bff; padding-bottom: 5px;">Investment Metrics</h3>
+        <p><strong>Raising Amount:</strong> ${{ founder.raising_amount }}<br>
+           <strong>Current Revenue:</strong> ${{ founder.current_revenue }}<br>
+           <strong>Prior Capital Raised:</strong> ${{ founder.prior_amount_raised }}</p>
+
+        <h3 style="border-bottom: 2px solid #007bff; padding-bottom: 5px;">Reason for Funds</h3>
+        <p>{{ founder.reason_for_capital }}</p>
+    </div>
+
+    <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; text-align: center; font-size: 11px; color: #777;">
+        &copy; 2026 Interlink Foundry. Confidential Investment Memo.<br>
+        San Diego, California | <a href="https://interlinkfoundry.com">interlinkfoundry.com</a>
+    </div>
+</body>
+</html>

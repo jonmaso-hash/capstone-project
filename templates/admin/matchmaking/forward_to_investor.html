@@ -1,0 +1,46 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<!-- Changed background to #1e1e1e and text to #f8f9fa -->
+<div style="padding: 20px; background: #1e1e1e; color: #f8f9fa; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 1px solid #333;">
+    <h2 style="color: #fff; border-bottom: 1px solid #333; padding-bottom: 10px;">Send Founder Profiles to Investor</h2>
+    <p style="color: #bbb;">You are about to send the following founder(s):</p>
+    
+    <ul style="margin-bottom: 20px; color: #fff;">
+        {% for founder in founders %}
+            <li><strong>{{ founder.company_name }}</strong> ({{ founder.sector }})</li>
+        {% endfor %}
+    </ul>
+
+    <form action="" method="post">
+        {% csrf_token %}
+        
+        <!-- Hidden inputs to keep track of the selected founders -->
+        {% for founder in founders %}
+            <input type="hidden" name="{{ action_checkbox_name }}" value="{{ founder.pk }}">
+        {% endfor %}
+        <input type="hidden" name="action" value="forward_to_investor">
+
+        <div style="margin-bottom: 20px;">
+            <label for="investor" style="font-weight: bold; display: block; margin-bottom: 8px; color: #bbb;">Select Investor:</label>
+            <!-- Made the dropdown dark to match -->
+            <select name="investor" id="investor" required style="padding: 8px; width: 100%; max-width: 400px; background: #2d2d2d; color: #fff; border: 1px solid #444; border-radius: 4px;">
+                <option value="" disabled selected>-- Choose an Investor --</option>
+                {% for investor in investors %}
+                    <option value="{{ investor.id }}">{{ investor.user.username|default:investor.full_name }} - {{ investor.investment_focus }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <button type="submit" name="apply" style="background: #2C3E50; color: #fff; padding: 10px 20px; border: 1px solid #34495E; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                Send to Investor
+            </button>
+            <a href="#" onclick="window.history.back(); return false;" class="button cancel-link" style="margin-left: 15px; color: #ff6b6b; text-decoration: none;">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
