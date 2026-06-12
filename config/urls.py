@@ -7,6 +7,7 @@ from django.views.generic import TemplateView
 from django.shortcuts import render
 from zelda_api import views
 
+
 def memo_dashboard_view(request, startup_name):
     # This ensures startup_name is available in the template context
     return render(request, 'search/memo_dashboard.html', {'startup_name': startup_name})
@@ -35,7 +36,7 @@ urlpatterns = [
     path('api/v1/marketplace/', include('marketplace_api.urls')), 
     path('api/v1/messaging/', include('messaging_api.urls')), 
     path('<str:startup_name>/', views.MemoIntelligenceView.as_view(), name='memo-intelligence'),
-    
+    path('notifications/', include('notifications.urls')),
 ]
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

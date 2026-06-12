@@ -2,6 +2,7 @@ from pathlib import Path
 import os
 import environ
 
+
 # --- BASE DIRECTORY ROUTING ---
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -71,6 +72,7 @@ INSTALLED_APPS = [
     'messaging_api',
     
     'django_extensions',
+    'notifications',
 ]
 
 REST_FRAMEWORK = {
@@ -119,6 +121,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 'matchmaking.context_processors.investor_status',
+                'notifications.context_processors.notifications',
             ],
         },
     },

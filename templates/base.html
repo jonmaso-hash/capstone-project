@@ -10,6 +10,7 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     {% block css %}{% endblock css %}
@@ -27,12 +28,26 @@
         <li class="nav-item"><a class="nav-link" href="{% url 'pages:home' %}">Home</a></li>
         
         {% if user.is_authenticated %}
+            <li class="nav-item position-relative mx-2">
+                <a id="notification-toggle" class="nav-link" href="#" style="cursor: pointer;">
+                    <i class="fas fa-bell" style="color: #333; font-size: 1.2rem;"></i>
+                    <span id="badge" class="badge bg-danger rounded-pill" 
+                          style="font-size: 0.6rem; position: absolute; top: 5px; right: 0px; display: none;">0</span>
+                </a>
+                <div id="notification-dropdown" class="dropdown-menu dropdown-menu-end shadow" 
+                     style="display: none; position: absolute; right: 0; min-width: 280px; z-index: 1050; border-radius: 8px;">
+                    <ul id="notification-list" class="list-unstyled mb-0">
+                        <li class="p-3 text-center text-muted small">Loading...</li>
+                    </ul>
+                </div>
+            </li>
+            
             {% if user.is_founder or user.match_founder_profile %}
                 <li class="nav-item"><a class="nav-link fw-bold text-primary" href="{% url 'matchmaking:founder_dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link text-success fw-semibold" href="{% url 'matchmaking:founder_matchmaker' %}"><i class="bi bi-radar"></i> Match Radar</a></li>
             {% else %}
                 <li class="nav-item"><a class="nav-link fw-bold text-success" href="{% url 'matchmaking:investor_dashboard' %}"><i class="bi bi-shield-shaded"></i> Investor Dashboard</a></li>
             {% endif %}
+
             <li class="nav-item"><a class="nav-link text-primary fw-medium" href="{% url 'matchmaking:diligence_chat' %}"><i class="bi bi-briefcase-fill"></i> Chat</a></li>
         {% endif %}
 
@@ -92,8 +107,77 @@
     </script>
 
     <script>
-        window.CSRF_TOKEN = "{{ csrf_token }}";
-    </script>
+document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = document.getElementById('notification-toggle');
+    const dropdown = document.getElementById('notification-dropdown');
+    const listContainer = document.getElementById('notification-list');
+    const badge = document.getElementById('badge');
+
+    // 1. Toggle Dropdown
+    if (toggleBtn && dropdown) {
+        toggleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const isVisible = dropdown.style.display === 'block';
+            dropdown.style.display = isVisible ? 'none' : 'block';
+
+            if (!isVisible) fetchNotifications();
+        });
+    }
+
+    // 2. Close on outside click
+    document.addEventListener('click', (e) => {
+        if (dropdown && !dropdown.contains(e.target) && e.target !== toggleBtn) {
+            dropdown.style.display = 'none';
+        }
+    });
+
+    // 3. Fetch Notifications
+    async function fetchNotifications() {
+        if (!listContainer) return;
+        try {
+            const res = await fetch('/notifications/api/list/');
+            const data = await res.json();
+            
+            listContainer.innerHTML = '';
+            if (data.length === 0) {
+                listContainer.innerHTML = '<li class="dropdown-item text-muted">No new alerts</li>';
+            } else {
+                data.forEach(n => {
+                    const li = document.createElement('li');
+                    // Ensure the key matches your API response: 'target_url'
+                    li.innerHTML = `<a class="dropdown-item py-2" href="${n.target_url || '#'}">${n.message}</a>`;
+                    listContainer.appendChild(li);
+                });
+                if (badge) badge.style.display = 'none';
+            }
+        } catch (err) {
+            console.error("Fetch error:", err);
+        }
+    }
+
+    // 4. Badge Polling
+    function pollBadge() {
+        if (!badge) return;
+        fetch('/notifications/api/unread-count/')
+            .then(res => res.json())
+            .then(data => {
+                const count = data.count || 0;
+                if (count > 0) {
+                    badge.innerText = count;
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            })
+            .catch(err => console.error('Badge poll error:', err));
+    }
+
+    pollBadge();
+    setInterval(pollBadge, 10000);
+});
+</script>
 
     <script src="{% static 'js/matchmaking.js' %}"></script>
 

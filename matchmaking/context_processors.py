@@ -12,3 +12,4 @@ def investor_status(request):
         return {'global_is_investor': is_investor}
     
     return {'global_is_investor': False}
+

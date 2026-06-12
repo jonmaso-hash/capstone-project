@@ -662,3 +662,6 @@ def download_document(request, doc_id):
         return FileResponse(doc.file.open('rb'), as_attachment=True)
     
     raise Http404("Access Denied")
+
+
+

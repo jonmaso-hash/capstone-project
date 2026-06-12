@@ -2,11 +2,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.conf import settings
-
-# Updated model names matching Interlink Foundry models
 from .models import Application, InvestorApplication, Connection
-
-# Verified Google GenAI unified pipeline integration
 from matchmaking.services.ai_engine import generate_profile_embedding
 
 # --- 1. AI VECTOR AUTOMATION ---
@@ -36,39 +32,23 @@ def update_investor_vector(sender, instance, created, **kwargs):
 
 # --- 2. CONNECTION WORKFLOW AUTOMATION ---
 
-@receiver(post_save, sender=Connection)
 def handle_connection_lifecycle(sender, instance, created, **kwargs):
-    """
-    Automates the 'Brokerage' part of Interlink Foundry:
-    1. Alert Admin when an intro is requested.
-    2. Alert Investor when Admin approves the intro.
-    """
-    # Safe settings evaluation to ensure local development configurations don't throw Errors
     site_url = getattr(settings, 'SITE_URL', 'http://127.0.0.1:8000')
     admin_recipient = getattr(settings, 'ADMIN_EMAIL', settings.DEFAULT_FROM_EMAIL)
 
     if created:
-        # Step A: Notify the Admin that a lead database match was requested
-        subject = f"🚀 New Intro Request: {instance.founder.company_name}"
-        message = (
-            f"Investor '{instance.investor.company_name}' has requested an intro to '{instance.founder.company_name}'.\n\n"
-            f"Review/Approve in Admin: {site_url}/admin/matchmaking/connection/{instance.id}/change/"
-        )
+        # Notify Admin
         send_mail(
-            subject=subject,
-            message=message,
+            subject=f"🚀 New Intro Request: {instance.founder.company_name}",
+            message=f"Investor '{instance.investor.company_name}' requested intro to '{instance.founder.company_name}'.",
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[admin_recipient],
             fail_silently=True
         )
 
-    else:
-        # Step B: Check for 'APPROVED' status changes
-        # Keeps from emailing the investor multiple times on edits
-        if instance.status == 'APPROVED' and not getattr(instance, '_match_email_sent', False):
-            send_investor_match_email(instance)
-            # Flag instance state during request lifecycle
-            instance._match_email_sent = True
+    elif instance.status == 'APPROVED' and not getattr(instance, '_match_email_sent', False):
+        send_investor_match_email(instance)
+        instance._match_email_sent = True
 
 
 def send_investor_match_email(instance):
@@ -93,3 +73,4 @@ def send_investor_match_email(instance):
         recipient_list=[instance.investor.email],
         fail_silently=True
     )
+    

@@ -187,3 +187,4 @@ class Document(models.Model):
     title = models.CharField(max_length=255)
     file = models.FileField(upload_to='deal_rooms/%Y/%m/%d/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    

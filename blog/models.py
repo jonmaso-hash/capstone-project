@@ -1,8 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.urls import reverse
 
 class Article(models.Model):
-    # Use standard User model relation, allow null/blank for safety
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='articles', null=True, blank=True)
     title = models.CharField(max_length=200)
     company_name = models.CharField(max_length=128, blank=True, null=True) 
@@ -14,6 +14,9 @@ class Article(models.Model):
 
     def total_likes(self):
         return self.likes.count()
+    
+    def get_absolute_url(self):
+        return reverse('blog:article_detail', kwargs={'pk': self.pk})
 
     def __str__(self):
         return f'{self.title} -- {self.created_on}'
