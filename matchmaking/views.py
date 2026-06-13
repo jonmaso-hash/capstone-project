@@ -2,6 +2,7 @@ import json
 import logging
 import jwt
 
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -20,6 +21,7 @@ from .utils import clean_financial_input
 from .models import Application
 from django.http import FileResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
+from django.urls import reverse
 
 # Internal Services & Models
 from matchmaking.models import Application, Connection, InvestorApplication, MatchFeedback, ConnectionRequest
@@ -28,6 +30,9 @@ from matchmaking.utils import calculate_rule_based_score, get_blended_match, cle
 from .tasks import crawl_startup_data_task
 
 logger = logging.getLogger(__name__)
+
+print("--- I AM THE ACTIVE VIEWS.PY ---")
+
 
 @csrf_exempt
 def connection_action_view(request):
@@ -315,30 +320,6 @@ def founder_bulletin_board(request):
 # INTERACTION & TRANSACTION HANDLERS
 # ==========================================
 
-@login_required
-@require_POST
-def submit_founder_application(request):
-    """
-    Handles the submission of the founder profile form and sanitizes financial inputs
-    before hitting the database and vector generation.
-    """
-    # 1. Get the raw string from the frontend form
-    raw_amount = request.POST.get('raising_amount')
-    
-    # 2. Clean it using your utility function
-    clean_amount = clean_financial_input(raw_amount)
-    
-    # 3. Create or update the application with the safe integer
-    application, created = Application.objects.get_or_create(user=request.user)
-    application.raising_amount = clean_amount
-    
-    # NOTE: Add any other fields you are saving from the POST request here 
-    # (e.g., application.description = request.POST.get('description'))
-    
-    application.save()
-    
-    messages.success(request, "Founder profile successfully updated and indexed.")
-    return redirect('matchmaking:founder_dashboard')
 
 
 @login_required
@@ -665,6 +646,31 @@ def download_document(request, doc_id):
         return FileResponse(doc.file.open('rb'), as_attachment=True)
     
     raise Http404("Access Denied")
+
+@login_required
+@require_POST
+def submit_founder_application(request):
+    application, created = Application.objects.get_or_create(user=request.user)
+    
+    # Process inputs
+    if 'raising_amount' in request.POST:
+        application.raising_amount = clean_financial_input(request.POST.get('raising_amount'))
+    if 'description' in request.POST:
+        application.description = request.POST.get('description')
+    if 'company_name' in request.POST:
+        application.company_name = request.POST.get('company_name')
+
+    # Process media
+    if 'pitch_video' in request.FILES:
+        application.pitch_video = request.FILES['pitch_video']
+    if 'pitch_deck' in request.FILES:
+        application.pitch_deck = request.FILES['pitch_deck']
+        
+    application.save()
+    
+    # Stay on the same page
+    return redirect(request.META.get('HTTP_REFERER', 'matchmaking:founder_dashboard'))
+
 
 
 

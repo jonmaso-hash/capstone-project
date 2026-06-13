@@ -133,25 +133,52 @@
                                     <p class="text-secondary mb-0 small fst-italic">{{ application.reason_for_capital|default:"No capitalization strategy declared yet." }}</p>
                                 </div>
 
-                                <div class="mb-3">
-                                    <label for="id_pitch_deck" class="form-label fw-bold">Pitch Deck (PDF or PPTX required)</label>
-                                    <input type="file" name="pitch_deck" id="id_pitch_deck" class="form-control" required>
-                                </div>
-
                                 <div class="mb-4 mb-md-0">
-                                    <h6 class="text-uppercase fw-bold text-muted small mb-2">Pitch Assets</h6>
+                                    <h6 class="text-uppercase fw-bold text-muted small mb-3">Pitch Assets</h6>
+                                    
+                                    {% if application.pitch_video %}
+                                        <div class="card border-0 shadow-sm mb-4 rounded-4 overflow-hidden">
+                                            <div class="ratio ratio-16x9">
+                                                <video controls controlsList="nodownload" preload="metadata">
+                                                    <source src="{{ application.pitch_video.url }}" type="video/mp4">
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="card border-0 shadow-sm mb-4 rounded-4 bg-light p-4 text-center">
+                                            <p class="text-muted small mb-0"><i class="bi bi-camera-video-off"></i> No pitch video uploaded yet.</p>
+                                        </div>
+                                    {% endif %}
+                                
                                     {% if application.pitch_deck %}
-                                        <a href="{{ application.pitch_deck.url }}" download class="btn btn-sm btn-outline-dark px-3 py-2 rounded-3 d-inline-flex align-items-center bg-white shadow-sm">
+                                        <a href="{{ application.pitch_deck.url }}" download class="btn btn-sm btn-outline-dark px-3 py-2 rounded-3 d-inline-flex align-items-center bg-white shadow-sm mb-4">
                                             <i class="bi bi-file-earmark-pdf-fill text-danger fs-5 me-2"></i>
                                             <div class="text-start">
                                                 <span class="d-block fw-semibold" style="font-size: 0.75rem;">Download Pitch Deck</span>
-                                                <small class="text-muted" style="font-size: 0.65rem;">Secure PDF Artifact</small>
                                             </div>
                                         </a>
-                                    {% else %}
-                                        <span class="text-muted small fst-italic bg-light d-inline-block p-2 rounded border border-dashed">
-                                            <i class="bi bi-exclamation-circle me-1"></i> No pitch deck asset uploaded.
-                                        </span>
+                                    {% endif %}
+                                
+                                    {% if request.user == profile_user %}
+                                    <div class="p-4 bg-light border rounded-4 mt-3">
+                                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-cloud-arrow-up text-primary me-2"></i>Manage Pitch Assets</h6>
+                                        <form method="POST" action="{% url 'matchmaking:submit_founder_application' %}" enctype="multipart/form-data">
+                                            {% csrf_token %}
+                                            
+                                            <div class="mb-3">
+                                                <label for="pitch_video" class="form-label fw-bold small text-muted">Update Pitch Video</label>
+                                                <input type="file" class="form-control form-control-sm" id="pitch_video" name="pitch_video" accept="video/mp4,video/quicktime,video/webm">
+                                            </div>
+                                
+                                            <div class="mb-3">
+                                                <label for="id_pitch_deck" class="form-label fw-bold small text-muted">Update Pitch Deck</label>
+                                                <input type="file" class="form-control form-control-sm" name="pitch_deck" id="id_pitch_deck" accept=".pdf,.pptx">
+                                            </div>
+                                            
+                                            <button type="submit" class="btn btn-primary btn-sm px-4 rounded-pill">Save Assets</button>
+                                        </form>
+                                    </div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -253,10 +280,10 @@
                 </div>
 
                 <div class="mb-4 text-end">
-    <a href="{% url 'accounts:zelda_dashboard' %}" class="btn btn-warning rounded-pill">
-        <i class="bi bi-speedometer2"></i> Open Zelda Dashboard
-    </a>
-</div>
+                    <a href="{% url 'accounts:zelda_dashboard' %}" class="btn btn-warning rounded-pill">
+                        <i class="bi bi-speedometer2"></i> Open Zelda Dashboard
+                    </a>
+                </div>
 
             {% else %}
             <div class="card border-0 shadow-sm rounded-4 text-center p-5 mt-4">

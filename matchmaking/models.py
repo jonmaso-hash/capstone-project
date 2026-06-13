@@ -4,11 +4,18 @@ from django.core.validators import FileExtensionValidator
 
 
 class Application(models.Model):
-    
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE, 
         related_name='match_founder_profile'
+    )
+    
+    pitch_video = models.FileField(
+        upload_to='pitch_videos/%Y/%m/', 
+        blank=True, 
+        null=True,
+        validators=[FileExtensionValidator(allowed_extensions=['mp4', 'mov', 'webm'])],
+        help_text="Upload a short 1-3 minute video pitch (MP4, MOV, WEBM)."
     )
     
     description_vector = models.JSONField(blank=True, null=True)
