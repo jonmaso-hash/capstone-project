@@ -2,10 +2,8 @@ const StreamChatController = {
     client: null,
 
     async getSDK() {
-        // 1. Check if it's already there
         if (window.StreamChat) return window.StreamChat;
 
-        // 2. If not, wait for it with a retry loop
         return new Promise((resolve, reject) => {
             let attempts = 0;
             const interval = setInterval(() => {
@@ -14,7 +12,7 @@ const StreamChatController = {
                     resolve(window.StreamChat);
                 }
                 attempts++;
-                if (attempts > 50) { // 5 seconds
+                if (attempts > 50) { 
                     clearInterval(interval);
                     reject(new Error("StreamChat SDK failed to load."));
                 }
@@ -26,7 +24,6 @@ const StreamChatController = {
         if (this.client) return this.client;
         const SDK = await this.getSDK();
 
-        // Update this URL to hit the matchmaking app route
         const res = await fetch("/matchmaking/stream-token/");
         
         if (!res.ok) {
@@ -52,48 +49,58 @@ const StreamChatController = {
                 members: members,
             });
             
-            // Try to create the channel
             await channel.create();
             await channel.watch();
             window.location.href = `/matchmaking/deal-room/?cid=${channel.cid}`;
             
         } catch (error) {
             console.error("Channel creation failed:", error);
-            
-            // Check if it's the missing user error
             if (error.message && error.message.includes("don't exist")) {
-                alert(`Cannot open Deal Room yet. User ${targetUsername} has not initialized their chat profile. They must log in and view their dashboard first.`);
+                alert(`Cannot open Deal Room yet. User ${targetUsername} has not initialized their chat profile.`);
             } else {
                 alert("Failed to create Deal Room. Please try again later.");
             }
         }
     }
-}; // <-- StreamChatController object is cleanly closed here
+}; 
 
-/**
- * Updates connection status and initiates chat if accepted
- * Placed OUTSIDE the object so it can be called globally by HTML buttons
- */
-async function updateConnection(connectionId, action, targetUserId, targetUsername) {
+// FIX: Updated function signature to match your HTML buttons
+async function updateConnection(requestId, actionStatus, targetUserId, targetUsername) {
+    const csrftoken = getCookie('csrftoken'); 
+    
+    // Safely package the data
+    const requestData = {
+        id: requestId,
+        action: actionStatus,
+        targetUserId: targetUserId || null,
+        targetUsername: targetUsername || "User"
+    };
+    
     try {
-        console.log("DEBUG: Updating connection...");
+        // FIX: Hardcoded the correct Django endpoint here
         const response = await fetch('/matchmaking/action/', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': window.CSRF_TOKEN 
+                'X-CSRFToken': csrftoken, 
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ id: connectionId, action: action })
+            body: JSON.stringify(requestData) 
         });
 
-        const data = await response.json(); // Capture server response
-        console.log("DEBUG: Server response:", data);
+        const responseData = await response.json(); 
+        console.log("DEBUG: Server response:", responseData);
 
-        if (response.ok && action === 'ACCEPTED') {
-            await StreamChatController.createDealRoom(targetUserId, targetUsername);
+        if (response.ok && actionStatus === 'ACCEPTED') {
+            if (targetUserId) {
+                await StreamChatController.createDealRoom(targetUserId, targetUsername);
+            } else {
+                window.location.reload();
+            }
+        } else if (response.ok) {
+            window.location.reload();
         } else {
-            alert("Error: " + (data.error || "Action failed."));
-            location.reload();
+            alert("Error: " + (responseData.error || "Action failed."));
+            window.location.reload();
         }
     } catch (err) {
         console.error("Connection update failed:", err);
@@ -101,3 +108,17 @@ async function updateConnection(connectionId, action, targetUserId, targetUserna
     }
 }
 
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}

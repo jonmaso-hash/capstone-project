@@ -19,6 +19,7 @@ from stream_chat import StreamChat
 from .utils import clean_financial_input
 from .models import Application
 from django.http import FileResponse, Http404
+from django.views.decorators.csrf import csrf_exempt
 
 # Internal Services & Models
 from matchmaking.models import Application, Connection, InvestorApplication, MatchFeedback, ConnectionRequest
@@ -28,7 +29,9 @@ from .tasks import crawl_startup_data_task
 
 logger = logging.getLogger(__name__)
 
+@csrf_exempt
 def connection_action_view(request):
+    print("Received Action Request:", request.body)
     """
     Handles PENDING -> ACCEPTED/DECLINED transitions for connection requests.
     Supports asynchronous frontend triggers.
