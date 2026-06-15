@@ -22,6 +22,7 @@ from .models import Application
 from django.http import FileResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse
+from .models import Follow
 
 # Internal Services & Models
 from matchmaking.models import Application, Connection, InvestorApplication, MatchFeedback, ConnectionRequest
@@ -671,6 +672,24 @@ def submit_founder_application(request):
     # Stay on the same page
     return redirect(request.META.get('HTTP_REFERER', 'matchmaking:founder_dashboard'))
 
-
+@login_required
+@require_POST
+def toggle_follow(request, username):
+    target_user = get_object_or_404(User, username=username)
+    
+    # Prevent self-following
+    if target_user == request.user:
+        return JsonResponse({'status': 'error', 'message': 'Cannot follow yourself'}, status=400)
+    
+    # Toggle logic
+    follow, created = Follow.objects.get_or_create(follower=request.user, following=target_user)
+    
+    if not created:
+        follow.delete()
+        is_following = False
+    else:
+        is_following = True
+        
+    return JsonResponse({'status': 'success', 'is_following': is_following})
 
 

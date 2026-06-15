@@ -23,6 +23,8 @@ urlpatterns = [
     path('profile/toggle-privacy/', views.toggle_privacy_view, name='toggle_privacy'),
     
     path('profile/<str:username>/', views.profile, name='profile'),
+    
+    path('profile/id/<int:pk>/', views.profile_view, name='profile_by_id'),
 
     # ==========================================
     # WORKSPACE MATCHMAKING ONBOARDING FLOWS

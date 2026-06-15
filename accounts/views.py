@@ -15,6 +15,7 @@ from django.views.decorators.http import require_POST
 from matchmaking.services.ai_engine import calculate_zelda_advantage
 from matchmaking.utils import clean_financial_input
 from matchmaking.models import Connection
+from matchmaking.models import Follow
 
 # External/Third-Party Apps
 from stream_chat import StreamChat
@@ -186,11 +187,33 @@ def redirect_to_own_profile(request):
 
 
 @login_required
-def profile_view(request, pk):
-    """Handles lookups via database keys by safely routing through the unique username pattern."""
+def profile_view(request, username=None, pk=None):
     User = get_user_model()
-    profile_user = get_object_or_404(User, pk=pk)
-    return redirect("accounts:profile", username=profile_user.username)
+    
+    # 1. Handle lookup by PK (redirect to username)
+    if pk:
+        profile_user = get_object_or_404(User, pk=pk)
+        return redirect("accounts:profile", username=profile_user.username)
+    
+    # 2. Handle lookup by username
+    profile_user = get_object_or_404(User, username=username)
+    
+    # 3. Calculate Follow Status
+    is_following = False
+    if request.user.is_authenticated:
+        is_following = Follow.objects.filter(
+            follower=request.user, 
+            following=profile_user
+        ).exists()
+    
+    # 4. Assemble Context
+    context = {
+        'profile_user': profile_user,
+        'is_following': is_following,
+        # ... include your existing context here
+    }
+    
+    return render(request, 'profile.html', context)
 
 
 # =====================================================================

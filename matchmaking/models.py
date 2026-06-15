@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.core.validators import FileExtensionValidator
+from django.contrib.auth.models import User
 
 
 class Application(models.Model):
@@ -194,4 +195,12 @@ class Document(models.Model):
     title = models.CharField(max_length=255)
     file = models.FileField(upload_to='deal_rooms/%Y/%m/%d/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    
+class Follow(models.Model):
+    follower = models.ForeignKey(User, related_name='following', on_delete=models.CASCADE)
+    following = models.ForeignKey(User, related_name='followers', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('follower', 'following')
     

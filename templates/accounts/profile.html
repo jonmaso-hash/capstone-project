@@ -65,7 +65,7 @@
                                 <i class="bi bi-bookmark-heart-fill me-1"></i> Favorites
                             </a>
 
-                            {% if application %}
+                           {% if application %}
                                 <a href="{% url 'accounts:seeking_investment' %}" class="btn btn-success btn-sm px-3 rounded-pill">
                                     <i class="bi bi-pencil-square me-1"></i> Edit Founder Profile
                                 </a>
@@ -75,6 +75,15 @@
                                     <i class="bi bi-pencil-square me-1"></i> Edit Investor Profile
                                 </a>
                                 <span class="badge bg-primary-subtle text-primary border border-primary px-3 py-2 rounded-pill">Investor</span>
+                            {% endif %}
+                            
+                            {% if request.user != profile_user %}
+                                <button type="button" id="followBtn" 
+                                    class="btn btn-sm {% if is_following %}btn-outline-secondary{% else %}btn-primary{% endif %} px-3 rounded-pill"
+                                    data-url="{% url 'matchmaking:toggle_follow' profile_user.username %}">
+                                    <i id="followIcon" class="bi {% if is_following %}bi-check-lg{% else %}bi-person-plus{% endif %} me-1"></i>
+                                    <span id="followText">{% if is_following %}Following{% else %}Follow{% endif %}</span>
+                                </button>
                             {% endif %}
                         </div>
                     </div>
@@ -335,11 +344,20 @@
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block javascript %}
+{# ── CSRF token: must be INSIDE {% block content %} so Django renders it ── #}
+<form style="display: none;">{% csrf_token %}</form>
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+
+    // Read CSRF token from the hidden form above
+    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    const csrftoken = csrfInput ? csrfInput.value : '';
+
+    // ==========================================
+    // Profile Privacy Toggle Logic
+    // ==========================================
     const privacyToggle = document.getElementById("profilePrivacyToggle");
     const feedbackMsg = document.getElementById("privacyToastFeedback");
 
@@ -351,7 +369,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-CSRFToken": "{{ csrf_token }}"
+                    "X-CSRFToken": csrftoken,
+                    "X-Requested-With": "XMLHttpRequest"
                 },
                 body: JSON.stringify({ is_private: isPrivate })
             })
@@ -359,8 +378,8 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(data => {
                 if (data.status === "success") {
                     feedbackMsg.className = "small mt-2 fw-medium text-success animate__animated animate__fadeIn";
-                    feedbackMsg.textContent = isPrivate 
-                        ? "✓ Incognito mode activated. Your profile is now hidden." 
+                    feedbackMsg.textContent = isPrivate
+                        ? "✓ Incognito mode activated. Your profile is now hidden."
                         : "✓ Profile visibility set to public.";
                 } else {
                     throw new Error(data.message || "Update failed.");
@@ -373,11 +392,63 @@ document.addEventListener("DOMContentLoaded", function () {
             });
 
             feedbackMsg.classList.remove("d-none");
-            setTimeout(() => {
-                feedbackMsg.classList.add("d-none");
-            }, 3500);
+            setTimeout(() => feedbackMsg.classList.add("d-none"), 3500);
+        });
+    }
+
+    // ==========================================
+    // Follow Button Toggle Logic
+    // ==========================================
+    const followBtn = document.getElementById('followBtn');
+
+    if (followBtn) {
+        followBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const url = this.getAttribute('data-url');
+            if (!url) {
+                console.error("Follow button is missing data-url attribute");
+                return;
+            }
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => {
+                if (!response.ok) throw new Error("HTTP " + response.status);
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    const btn  = document.getElementById('followBtn');
+                    const text = document.getElementById('followText');
+                    const icon = document.getElementById('followIcon');
+
+                    if (data.is_following) {
+                        btn.className = 'btn btn-sm btn-outline-secondary px-3 rounded-pill';
+                        text.textContent = 'Following';
+                        if (icon) icon.className = 'bi bi-check-lg me-1';
+                    } else {
+                        btn.className = 'btn btn-sm btn-primary px-3 rounded-pill';
+                        text.textContent = 'Follow';
+                        if (icon) icon.className = 'bi bi-person-plus me-1';
+                    }
+                } else {
+                    console.error("Server refused follow toggle:", data.message);
+                }
+            })
+            .catch(error => {
+                console.error("Follow request failed:", error);
+            });
         });
     }
 });
 </script>
-{% endblock javascript %}
+
+{% endblock %}
