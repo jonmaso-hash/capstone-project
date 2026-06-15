@@ -12,7 +12,6 @@ class JobListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        # Only fetch unexpired, active job roles
         return JobListing.objects.filter(is_active=True, expires_at__gt=timezone.now())
 
 class JobDetailView(DetailView):
@@ -23,7 +22,6 @@ class JobDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if self.request.user.is_authenticated:
-            # Check if current user already submitted an application
             context['already_applied'] = JobApplication.objects.filter(
                 job=self.object, applicant=self.request.user
             ).exists()
@@ -36,23 +34,20 @@ class JobCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('jobs:index')
 
     def form_valid(self, form):
-        # Automatically assign the poster to the current log-in session user
+        # Assign the poster to the current user
         form.instance.poster = self.request.user
         return super().form_valid(form)
 
 class JobApplyView(LoginRequiredMixin, View):
     def post(self, request, pk):
         job = get_object_or_404(JobListing, pk=pk, is_active=True)
-        cover_letter = request.POST.get('cover_letter', '')
-        resume = request.FILES.get('resume_attachment')
-
-        # Prevent duplicate submissions safely
+        # Prevent duplicate submissions
         JobApplication.objects.get_or_create(
             job=job,
             applicant=request.user,
             defaults={
-                'cover_letter': cover_letter,
-                'resume_attachment': resume
+                'cover_letter': request.POST.get('cover_letter', ''),
+                'resume_attachment': request.FILES.get('resume_attachment')
             }
         )
         return redirect('jobs:detail', pk=pk)

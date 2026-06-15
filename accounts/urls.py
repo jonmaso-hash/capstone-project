@@ -24,7 +24,7 @@ urlpatterns = [
     
     path('profile/<str:username>/', views.profile, name='profile'),
     
-    path('profile/id/<int:pk>/', views.profile_view, name='profile_by_id'),
+    path('profile/id/<int:pk>/', views.profile, name='profile_by_id'),
 
     # ==========================================
     # WORKSPACE MATCHMAKING ONBOARDING FLOWS

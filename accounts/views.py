@@ -12,33 +12,30 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
+
+# Core Matchmaking Engine Models
 from matchmaking.services.ai_engine import calculate_zelda_advantage
 from matchmaking.utils import clean_financial_input
-from matchmaking.models import Connection
-from matchmaking.models import Follow
+from matchmaking.models import Application, InvestorApplication, Connection, Follow
+from .forms import ApplicationForm, InvestorForm
 
 # External/Third-Party Apps
 from stream_chat import StreamChat
-from blog.models import Article
-
-# Core Matchmaking Engine Models (Added Connection for Authorization)
-from matchmaking.models import Application, InvestorApplication, Follow
-from .forms import ApplicationForm, InvestorForm
 
 logger = logging.getLogger(__name__)
 
 # Dynamic lookups prevent NameError failures if optional external apps aren't active
-Job = None
+JobListing = None
 if apps.is_installed('jobs'):
     try:
-        from jobs.models import Job
+        from jobs.models import JobListing
     except ImportError:
         pass
 
-BlogPost = None
+Article = None
 if apps.is_installed('blog'):
     try:
-        from blog.models import BlogPost
+        from blog.models import Article
     except ImportError:
         pass
 
@@ -148,6 +145,15 @@ def profile(request, username=None, pk=None):
     application = getattr(viewed_user, "match_founder_profile", None)
     investor_application = getattr(viewed_user, "match_investor_profile", None)
 
+    # Fetch optional modules safely
+    user_jobs = []
+    if JobListing:
+        user_jobs = JobListing.objects.filter(poster=viewed_user).order_by('-created_at')
+
+    user_articles = []
+    if Article:
+        user_articles = Article.objects.filter(author=viewed_user).order_by('-created_on')
+
     # 3. Follow System
     is_following = False
     if request.user.is_authenticated:
@@ -187,8 +193,8 @@ def profile(request, username=None, pk=None):
         "founder_data_json": founder_data_json,
         "is_following": is_following,
         "following_list": following_list,
-        # Don't forget your article query!
-        "user_articles": Article.objects.filter(author=viewed_user).order_by('-created_on'),
+        "user_articles": user_articles,
+        "user_jobs": user_jobs,
     }
 
     return render(request, "accounts/profile.html", context)
@@ -196,49 +202,6 @@ def profile(request, username=None, pk=None):
 @login_required
 def redirect_to_own_profile(request):
     return redirect("accounts:profile", username=request.user.username)
-
-
-@login_required
-def profile_view(request, username=None, pk=None):
-    """
-    Renders user profile, calculates follow status, and fetches 'following' list.
-    """
-    User = get_user_model()
-    
-    # 1. Handle lookup by PK (redirect to canonical username URL)
-    if pk:
-        profile_user = get_object_or_404(User, pk=pk)
-        return redirect("accounts:profile", username=profile_user.username)
-    
-    # 2. Handle lookup by username
-    profile_user = get_object_or_404(User, username=username)
-    
-    # 3. Calculate 'is_following' (Does current user follow this profile?)
-    is_following = False
-    if request.user.is_authenticated:
-        is_following = Follow.objects.filter(
-            follower=request.user, 
-            following=profile_user
-        ).exists()
-    
-    # 4. Fetch the 'following_list' (Who does THIS profile follow?)
-    following_list = Follow.objects.filter(follower=profile_user).select_related('following')
-    
-    # 5. RESTORE CRITICAL CONTEXT VARIABLES 
-    # (These pull the actual founder/investor data. Without them, the page breaks.)
-    application = Application.objects.filter(user=profile_user).first()
-    investor_application = InvestorApplication.objects.filter(user=profile_user).first()
-    
-    # 6. Assemble Context
-    context = {
-        'profile_user': profile_user,
-        'is_following': is_following,
-        'following_list': following_list,
-        'application': application,
-        'investor_application': investor_application,
-    }
-    
-    return render(request, 'profile.html', context)
 
 
 # =====================================================================

@@ -340,6 +340,34 @@
                     </div>
                 {% endif %}
             </div>
+
+            <!-- Jobs Section -->
+<div class="jobs-section mb-5">
+    <h3 class="fw-bold mb-4">Job Postings by {{ profile_user.username }}</h3>
+    
+    {% if user_jobs %}
+        <div class="row row-cols-1 g-3">
+            {% for job in user_jobs %}
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm rounded-4">
+                        <div class="card-body">
+                            <a href="{% url 'jobs:detail' job.pk %}" class="text-decoration-none text-dark">
+                                <h5 class="card-title fw-bold mb-1">{{ job.title }}</h5>
+                            </a>
+                            <p class="text-muted small mb-0">
+                                <i class="bi bi-geo-alt-fill me-1"></i> {{ job.location }} | {{ job.job_type }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="p-4 text-center border rounded-4 bg-light">
+            <p class="text-muted mb-0">This user has not posted any jobs yet.</p>
+        </div>
+    {% endif %}
+</div>
             
 <div class="card shadow-sm border-0 rounded-4 mt-5 mb-5">
     <div class="card-body p-4">
