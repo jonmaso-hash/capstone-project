@@ -179,7 +179,7 @@ def profile(request, username=None, pk=None):
                 "years": int(clean_financial_input(application.years_in_business) or 0),
             })
 
-    return render(request, "accounts/profile.html", {
+    context = {
         "profile_user": viewed_user,
         "application": application,
         "investor_application": investor_application,
@@ -187,8 +187,11 @@ def profile(request, username=None, pk=None):
         "founder_data_json": founder_data_json,
         "is_following": is_following,
         "following_list": following_list,
-    })
+        # Don't forget your article query!
+        "user_articles": Article.objects.filter(author=viewed_user).order_by('-created_on'),
+    }
 
+    return render(request, "accounts/profile.html", context)
 
 @login_required
 def redirect_to_own_profile(request):
