@@ -22,7 +22,7 @@ from stream_chat import StreamChat
 from blog.models import Article
 
 # Core Matchmaking Engine Models (Added Connection for Authorization)
-from matchmaking.models import Application, InvestorApplication
+from matchmaking.models import Application, InvestorApplication, Follow
 from .forms import ApplicationForm, InvestorForm
 
 logger = logging.getLogger(__name__)
@@ -132,52 +132,61 @@ def investor_form(request):
 # =====================================================================
 
 @login_required
-def profile(request, username):
+def profile(request, username=None, pk=None):
+    """
+    Renders user profile, calculates follow status, and fetches connections.
+    """
     User = get_user_model()
-    viewed_user = get_object_or_404(User, username=username)
     
+    # 1. Resolve User
+    if pk:
+        viewed_user = get_object_or_404(User, pk=pk)
+        return redirect("accounts:profile", username=viewed_user.username)
+    viewed_user = get_object_or_404(User, username=username)
+
+    # 2. Data Retrieval
     application = getattr(viewed_user, "match_founder_profile", None)
     investor_application = getattr(viewed_user, "match_investor_profile", None)
 
-    # 🔒 PRIVACY GATEKEEPER
-    if viewed_user != request.user:
-        if application and getattr(application, 'is_private', False):
-            if not application.allowed_viewers.filter(id=request.user.id).exists():
-                return render(request, "accounts/profile_private.html", {"profile_user": viewed_user})
-
-    # --- ZELDA EXECUTIVE ADVANTAGE & DYNAMIC DATA ---
-    zelda_score = None
-    founder_data_json = None
+    # 3. Follow System
+    is_following = False
+    if request.user.is_authenticated:
+        is_following = Follow.objects.filter(follower=request.user, following=viewed_user).exists()
     
+    following_list = Follow.objects.filter(follower=viewed_user).select_related("following")
+
+    # 4. Privacy Gatekeeper
+    if viewed_user != request.user and application and getattr(application, "is_private", False):
+        if not application.allowed_viewers.filter(id=request.user.id).exists():
+            return render(request, "accounts/profile_private.html", {"profile_user": viewed_user})
+
+    # 5. Zelda Advantage Engine
+    zelda_score, founder_data_json = None, None
     if application:
-        # Check authorization (Owner or Connected Investor)
         has_advantage_access = (viewed_user == request.user)
         if not has_advantage_access:
-            viewer_investor = getattr(request.user, 'match_investor_profile', None)
-            if viewer_investor:
-                has_access = Connection.objects.filter(
-                    investor=viewer_investor, founder=application, status='ACCEPTED'
-                ).exists()
-                if has_access:
-                    has_advantage_access = True
-
+            viewer_investor = getattr(request.user, "match_investor_profile", None)
+            if viewer_investor and Connection.objects.filter(investor=viewer_investor, founder=application, status="ACCEPTED").exists():
+                has_advantage_access = True
+        
         if has_advantage_access:
             zelda_score = calculate_zelda_advantage(application)
-            data_dict = {
-                'revenue': float(clean_financial_input(application.current_revenue) or 0),
-                'ask': float(clean_financial_input(application.raising_amount) or 0),
-                'burn': float(clean_financial_input(application.monthly_burn_rate) or 1),
-                'team_size': int(clean_financial_input(application.team_size) or 1),
-                'years': int(clean_financial_input(application.years_in_business) or 0),
-            }
-            founder_data_json = json.dumps(data_dict)
+            founder_data_json = json.dumps({
+                "revenue": float(clean_financial_input(application.current_revenue) or 0),
+                "ask": float(clean_financial_input(application.raising_amount) or 0),
+                "burn": float(clean_financial_input(application.monthly_burn_rate) or 1),
+                "team_size": int(clean_financial_input(application.team_size) or 1),
+                "years": int(clean_financial_input(application.years_in_business) or 0),
+            })
 
     return render(request, "accounts/profile.html", {
         "profile_user": viewed_user,
         "application": application,
         "investor_application": investor_application,
         "zelda_score": zelda_score,
-        "founder_data_json": founder_data_json
+        "founder_data_json": founder_data_json,
+        "is_following": is_following,
+        "following_list": following_list,
     })
 
 
@@ -188,9 +197,12 @@ def redirect_to_own_profile(request):
 
 @login_required
 def profile_view(request, username=None, pk=None):
+    """
+    Renders user profile, calculates follow status, and fetches 'following' list.
+    """
     User = get_user_model()
     
-    # 1. Handle lookup by PK (redirect to username)
+    # 1. Handle lookup by PK (redirect to canonical username URL)
     if pk:
         profile_user = get_object_or_404(User, pk=pk)
         return redirect("accounts:profile", username=profile_user.username)
@@ -198,7 +210,7 @@ def profile_view(request, username=None, pk=None):
     # 2. Handle lookup by username
     profile_user = get_object_or_404(User, username=username)
     
-    # 3. Calculate Follow Status
+    # 3. Calculate 'is_following' (Does current user follow this profile?)
     is_following = False
     if request.user.is_authenticated:
         is_following = Follow.objects.filter(
@@ -206,11 +218,21 @@ def profile_view(request, username=None, pk=None):
             following=profile_user
         ).exists()
     
-    # 4. Assemble Context
+    # 4. Fetch the 'following_list' (Who does THIS profile follow?)
+    following_list = Follow.objects.filter(follower=profile_user).select_related('following')
+    
+    # 5. RESTORE CRITICAL CONTEXT VARIABLES 
+    # (These pull the actual founder/investor data. Without them, the page breaks.)
+    application = Application.objects.filter(user=profile_user).first()
+    investor_application = InvestorApplication.objects.filter(user=profile_user).first()
+    
+    # 6. Assemble Context
     context = {
         'profile_user': profile_user,
         'is_following': is_following,
-        # ... include your existing context here
+        'following_list': following_list,
+        'application': application,
+        'investor_application': investor_application,
     }
     
     return render(request, 'profile.html', context)

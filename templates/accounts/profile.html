@@ -340,6 +340,50 @@
                     </div>
                 {% endif %}
             </div>
+            
+<div class="card shadow-sm border-0 rounded-4 mt-5 mb-5">
+    <div class="card-body p-4">
+        <div class="d-flex align-items-center mb-4">
+            <h5 class="fw-bold mb-0">Business Connections</h5>
+            <span class="badge bg-secondary rounded-pill ms-2">{{ following_list.count }}</span>
+        </div>
+        
+        {% if following_list %}
+            <div class="row row-cols-1 row-cols-md-2 g-3">
+                {% for follow in following_list %}
+                    <div class="col">
+                        <a href="{% url 'accounts:profile' follow.following.username %}" class="text-decoration-none text-dark">
+                            <div class="d-flex align-items-center p-3 bg-light rounded-3 border border-2 border-transparent profile-hover-card">
+                                
+                                <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 45px; height: 45px;">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                
+                                <div>
+                                    <h6 class="mb-1 fw-bold">{{ follow.following.username }}</h6>
+                                    <small class="text-secondary fw-medium d-block">
+                                        {% if follow.following.match_founder_profile %}
+                                            <i class="bi bi-rocket-takeoff me-1 text-success"></i> {{ follow.following.match_founder_profile.company_name }}
+                                        {% elif follow.following.accounts_investor_profile %}
+                                            <i class="bi bi-graph-up-arrow me-1 text-primary"></i> {{ follow.following.accounts_investor_profile.company_name }}
+                                        {% else %}
+                                            <i class="bi bi-person-badge me-1"></i> Network Member
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="p-4 text-center border rounded-4 bg-light">
+                <p class="text-muted mb-0"><i class="bi bi-link-45deg me-2"></i>This user has not established any business connections yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
 
         </div>
     </div>
@@ -449,6 +493,21 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 });
+
+
 </script>
+
+
+<style>
+.profile-hover-card {
+    transition: all 0.2s ease-in-out;
+}
+.profile-hover-card:hover {
+    border-color: #0d6efd !important;
+    background-color: #fff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 .25rem .75rem rgba(0,0,0,.08);
+}
+</style>
 
 {% endblock %}

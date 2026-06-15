@@ -140,3 +140,4 @@ class FounderApplication(models.Model):
 
     def __str__(self):
         return f"{self.company_name} ({self.user.username})"
+    

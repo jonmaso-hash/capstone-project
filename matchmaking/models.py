@@ -203,4 +203,26 @@ class Follow(models.Model):
 
     class Meta:
         unique_together = ('follower', 'following')
+        
+class Follow(models.Model):
+    # The person clicking the follow button
+    follower = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        related_name='following_relationships', 
+        on_delete=models.CASCADE
+    )
+    # The person being followed
+    following = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        related_name='follower_relationships', 
+        on_delete=models.CASCADE
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        # Prevents duplicate follow records in the database
+        unique_together = ('follower', 'following')
+
+    def __str__(self):
+        return f"{self.follower.username} follows {self.following.username}"
     
