@@ -51,4 +51,5 @@ urlpatterns = [
     path('update-metrics/', views.update_criteria, name='update_metrics'),   
     path('update-criteria/', views.update_criteria, name='update_criteria'),
     path('dashboard/', views.zelda_dashboard_view, name='zelda_dashboard'),
+    path('toggle-dm/', views.toggle_dm_view, name='toggle_dm'),
 ]

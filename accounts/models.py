@@ -47,6 +47,7 @@ class InvestorApplication(models.Model):
         help_text="Users granted direct access via accepted invitation paths."
     )
     
+    
     @property
     def completion_percentage(self):
         """Calculates setup completeness across institutional mandate parameters."""

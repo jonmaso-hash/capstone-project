@@ -46,6 +46,27 @@
                     <div id="privacyToastFeedback" class="small mt-2 fw-medium d-none"></div>
                 </div>
             </div>
+
+            <div class="card border-primary mb-4 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <h5 class="card-title text-primary fw-bold mb-1">
+                        <i class="bi bi-chat-left-text me-1"></i> Direct Messaging
+                    </h5>
+                    <p class="small text-secondary mb-3">
+                        Allow verified users to bypass the AI matching loop and message you directly in the Deal Room.
+                    </p>
+                    
+                    <div class="form-check form-switch fs-5">
+                        <input class="form-check-input" type="checkbox" role="switch" id="dmToggle"
+                            {% if dm_enabled %}checked{% endif %}>
+                        <label class="form-check-label small text-dark fw-semibold ms-1" for="dmToggle">
+                            Accept Direct Messages
+                        </label>
+                    </div>
+                    
+                    <div id="dmToastFeedback" class="small mt-2 fw-medium d-none"></div>
+                </div>
+            </div>
             {% endif %}
 
             <div class="card shadow-sm border-0 mb-4 rounded-4 overflow-hidden">
@@ -60,24 +81,36 @@
                                 <p class="text-white-50 mb-0">{{ profile_user.email }}</p>
                             </div>
                         </div>
+                        
+                        <!-- HEADER BUTTONS BLOCK -->
                         <div class="d-flex align-items-center gap-3">
                             <a href="{% url 'blog:favorites_list' %}" class="btn btn-outline-light border-0 btn-sm px-3">
                                 <i class="bi bi-bookmark-heart-fill me-1"></i> Favorites
                             </a>
 
-                           {% if application %}
-                                <a href="{% url 'accounts:seeking_investment' %}" class="btn btn-success btn-sm px-3 rounded-pill">
-                                    <i class="bi bi-pencil-square me-1"></i> Edit Founder Profile
-                                </a>
+                            {% if application %}
+                                {% if request.user == profile_user %}
+                                    <a href="{% url 'accounts:seeking_investment' %}" class="btn btn-success btn-sm px-3 rounded-pill">
+                                        <i class="bi bi-pencil-square me-1"></i> Edit Founder Profile
+                                    </a>
+                                {% endif %}
                                 <span class="badge bg-success-subtle text-success border border-success px-3 py-2 rounded-pill">Founder</span>
                             {% elif investor_application %}
-                                <a href="{% url 'accounts:investor_form' %}" class="btn btn-primary btn-sm px-3 rounded-pill">
-                                    <i class="bi bi-pencil-square me-1"></i> Edit Investor Profile
-                                </a>
+                                {% if request.user == profile_user %}
+                                    <a href="{% url 'accounts:investor_form' %}" class="btn btn-primary btn-sm px-3 rounded-pill">
+                                        <i class="bi bi-pencil-square me-1"></i> Edit Investor Profile
+                                    </a>
+                                {% endif %}
                                 <span class="badge bg-primary-subtle text-primary border border-primary px-3 py-2 rounded-pill">Investor</span>
                             {% endif %}
-                            
+
                             {% if request.user != profile_user %}
+                                {% if dm_enabled %}
+                                <a href="{% url 'matchmaking:initiate_direct_chat' profile_user.id %}" class="btn btn-sm btn-light px-3 rounded-pill text-dark fw-semibold shadow-sm">
+                                    <i class="bi bi-chat-dots-fill me-1"></i> Message
+                                </a>
+                                {% endif %}
+
                                 <button type="button" id="followBtn" 
                                     class="btn btn-sm {% if is_following %}btn-outline-secondary{% else %}btn-primary{% endif %} px-3 rounded-pill"
                                     data-url="{% url 'matchmaking:toggle_follow' profile_user.username %}">
@@ -86,6 +119,8 @@
                                 </button>
                             {% endif %}
                         </div>
+                        <!-- END HEADER BUTTONS BLOCK -->
+
                     </div>
                 </div>
             </div>
@@ -467,6 +502,48 @@ document.addEventListener("DOMContentLoaded", function () {
             setTimeout(() => feedbackMsg.classList.add("d-none"), 3500);
         });
     }
+
+    // ==========================================
+    // Direct Messaging Toggle Logic
+    // ==========================================
+    const dmToggle = document.getElementById("dmToggle");
+    const dmFeedback = document.getElementById("dmToastFeedback");
+
+    if (dmToggle) {
+        dmToggle.addEventListener("change", function () {
+            const isEnabled = this.checked;
+
+            fetch("{% url 'accounts:toggle_dm' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrftoken,
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body: JSON.stringify({ dm_enabled: isEnabled })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    dmFeedback.className = "small mt-2 fw-medium text-success animate__animated animate__fadeIn";
+                    dmFeedback.textContent = isEnabled
+                        ? "✓ Direct messaging is now open."
+                        : "✓ Direct messaging disabled. Closed-loop matchmaking only.";
+                } else {
+                    throw new Error(data.message || "Update failed.");
+                }
+            })
+            .catch(error => {
+                dmToggle.checked = !isEnabled;
+                dmFeedback.className = "small mt-2 fw-medium text-danger animate__animated animate__fadeIn";
+                dmFeedback.textContent = "⚠ Failed to update messaging settings. Try again.";
+            });
+
+            dmFeedback.classList.remove("d-none");
+            setTimeout(() => dmFeedback.classList.add("d-none"), 3500);
+        });
+    }
+
 
     // ==========================================
     // Follow Button Toggle Logic

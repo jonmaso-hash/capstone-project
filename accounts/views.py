@@ -144,6 +144,12 @@ def profile(request, username=None, pk=None):
     # 2. Data Retrieval
     application = getattr(viewed_user, "match_founder_profile", None)
     investor_application = getattr(viewed_user, "match_investor_profile", None)
+    
+    dm_enabled = False
+    if application and application.allow_direct_messages:
+        dm_enabled = True
+    elif investor_application and investor_application.allow_direct_messages:
+        dm_enabled = True
 
     # Fetch optional modules safely
     user_jobs = []
@@ -195,6 +201,7 @@ def profile(request, username=None, pk=None):
         "following_list": following_list,
         "user_articles": user_articles,
         "user_jobs": user_jobs,
+        "dm_enabled": dm_enabled,
     }
 
     return render(request, "accounts/profile.html", context)
@@ -356,3 +363,25 @@ def update_criteria(request):
             'zelda_score': app.zelda_score,
             'runway_months': float(app.runway_months)
         })
+        
+@login_required
+@require_POST
+def toggle_dm_view(request):
+    try:
+        data = json.loads(request.body)
+        is_enabled = bool(data.get('dm_enabled', False))
+        
+        founder_profile = Application.objects.filter(user=request.user).first()
+        if founder_profile:
+            founder_profile.allow_direct_messages = is_enabled
+            founder_profile.save(update_fields=['allow_direct_messages'])
+
+        investor_profile = InvestorApplication.objects.filter(user=request.user).first()
+        if investor_profile:
+            investor_profile.allow_direct_messages = is_enabled
+            investor_profile.save(update_fields=['allow_direct_messages'])
+
+        return JsonResponse({"status": "success", "dm_enabled": is_enabled})
+    except Exception as e:
+        logger.exception("AJAX DM toggle update failed.")
+        return JsonResponse({"status": "error", "message": str(e)}, status=400)

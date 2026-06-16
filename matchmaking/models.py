@@ -19,6 +19,11 @@ class Application(models.Model):
         help_text="Upload a short 1-3 minute video pitch (MP4, MOV, WEBM)."
     )
     
+    allow_direct_messages = models.BooleanField(
+        default=False, 
+        help_text="If True, verified users can bypass the matchmaking radar to initiate a Deal Room chat."
+    )
+    
     description_vector = models.JSONField(blank=True, null=True)
     
     # Basic Info
@@ -87,6 +92,10 @@ class InvestorApplication(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="match_investor_profile"  # Matches views.py getattr lookups
+    )
+    allow_direct_messages = models.BooleanField(
+        default=False,
+        help_text="If True, verified users can bypass the matchmaking radar to initiate a Deal Room chat."
     )
     full_name = models.CharField(max_length=255)
     email = models.EmailField(max_length=254)

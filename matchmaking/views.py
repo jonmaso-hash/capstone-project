@@ -1,8 +1,6 @@
 import json
 import logging
 import jwt
-
-
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -104,7 +102,6 @@ def _generate_explanatory_insights(ai_score, rule_score, application, investor):
             {'title': 'Structural Rules', 'score': 'Passed' if rule_score > 60 else 'Review', 'desc': f"Rule compliance engine score marked at a baseline index of {round(rule_score)} points."}
         ]
     }
-
 
 # ==========================================
 # MATCHMAKING CORE VIEWS
@@ -316,12 +313,9 @@ def founder_bulletin_board(request):
         'selected_sector': selected_sector,
     })
 
-
 # ==========================================
 # INTERACTION & TRANSACTION HANDLERS
 # ==========================================
-
-
 
 @login_required
 @require_POST
@@ -364,7 +358,6 @@ def request_intro(request, application_id, investor_id):
 
     return redirect('matchmaking:investor_dashboard')
 
-
 @login_required
 @require_POST
 def record_vote(request):
@@ -394,34 +387,36 @@ def record_vote(request):
 
 @login_required
 def initiate_direct_chat(request, target_user_id):
-    """
-    Instantly opens or creates a direct message thread between two users via Stream Chat.
-    """
     target_user = get_object_or_404(User, id=target_user_id)
     current_user_id = str(request.user.id)
     target_id_str = str(target_user.id)
     
     if current_user_id == target_id_str:
-        return redirect('matchmaking:diligence_chat')
+        return redirect('matchmaking:deal_room_view')
 
     client = StreamChat(api_key=settings.STREAM_API_KEY, api_secret=settings.STREAM_API_SECRET)
     
+    # 1. Ensure both users exist in Stream
     client.upsert_users([
         {'id': current_user_id, 'name': request.user.username},
         {'id': target_id_str, 'name': target_user.username}
     ])
 
+    # 2. Deterministic Channel ID
     sorted_ids = sorted([int(current_user_id), int(target_id_str)])
     channel_id = f"chat_{sorted_ids[0]}_and_{sorted_ids[1]}"
 
+    # 3. Create the channel with explicit server-side creator mapping
     channel = client.channel("messaging", channel_id)
+    
     channel.create(
-        members=[current_user_id, target_id_str],
+        user_id=current_user_id,
         data={
-            "name": f"{target_user.username}",
+            "created_by_id": current_user_id,  # <-- THIS IS THE MISSING KEY
+            "members": [current_user_id, target_id_str],
+            "name": f"{request.user.username} & {target_user.username}"
         }
     )
-
     return redirect('matchmaking:diligence_chat')
 
 
