@@ -24,6 +24,32 @@ class Application(models.Model):
         help_text="If True, verified users can bypass the matchmaking radar to initiate a Deal Room chat."
     )
     
+    geography = models.CharField(
+    max_length=255,
+    blank=True,
+    null=True
+    )
+
+    description_embedding = models.JSONField(
+    blank=True,
+    null=True
+    )
+    
+    zelda_summary = models.TextField(
+    blank=True,
+    null=True
+)
+
+    zelda_risk_assessment = models.TextField(
+    blank=True,
+    null=True
+)
+
+    zelda_last_analysis = models.DateTimeField(
+    blank=True,
+    null=True
+)
+    
     description_vector = models.JSONField(blank=True, null=True)
     
     # Basic Info
@@ -32,6 +58,7 @@ class Application(models.Model):
     founder_name = models.CharField(max_length=255)
     email = models.EmailField(max_length=254)
     phone_number = models.CharField(max_length=50, blank=True, null=True)
+    
     
     # Fields causing FieldError
     description = models.TextField(verbose_name="Executive Summary")
@@ -62,9 +89,6 @@ class Application(models.Model):
         # Optional: Auto-run calculation on save if you want it to be instant
         super().save(*args, **kwargs)
     
-    @property
-    def funding_stage(self):
-        return self.stage
 
     @property
     def completion_percentage(self):
@@ -81,6 +105,23 @@ class Application(models.Model):
     def funding_stage(self):
         """Alias property to ensure seamless template compatibility across app contexts."""
         return self.stage
+    
+    @property
+    def location(self):
+        return self.geography
+    
+    def to_foundry_envelope(self):
+        return {
+        "origin": "application",
+        "timestamp": self.updated_at.isoformat(),
+        "payload": {
+            "company_name": self.company_name,
+            "sector": self.sector,
+            "stage": self.stage,
+            "raising_amount": float(self.raising_amount),
+            "completion_percentage": self.completion_percentage,
+        }
+    }
 
 
 class InvestorApplication(models.Model):
@@ -97,6 +138,32 @@ class InvestorApplication(models.Model):
         default=False,
         help_text="If True, verified users can bypass the matchmaking radar to initiate a Deal Room chat."
     )
+    portfolio_raw_text = models.TextField(
+    blank=True,
+    null=True
+    )
+
+    focus_embedding = models.JSONField(
+    blank=True,
+    null=True
+    )
+    
+    investment_thesis_summary = models.TextField(
+    blank=True,
+    null=True
+    )
+
+    last_portfolio_analysis = models.DateTimeField(
+    blank=True,
+    null=True
+    )
+    
+    location = models.CharField(
+    max_length=255,
+    blank=True,
+    null=True
+    )
+    
     full_name = models.CharField(max_length=255)
     email = models.EmailField(max_length=254)
     phone = models.CharField(max_length=50, blank=True, null=True)
@@ -119,6 +186,19 @@ class InvestorApplication(models.Model):
         verbose_name = "Investor Profile"
         verbose_name_plural = "Investor Profiles"
         ordering = ["-created_at"]
+        
+    def to_foundry_envelope(self):
+        return {
+        "origin": "investor_application",
+        "timestamp": self.updated_at.isoformat(),
+        "payload": {
+            "company_name": self.company_name,
+            "investment_focus": self.investment_focus,
+            "investment_stage": self.investment_stage,
+            "investment_amount": self.investment_amount,
+            "completion_percentage": self.completion_percentage,
+        }
+    }
         
     @property
     def completion_percentage(self):
@@ -175,7 +255,29 @@ class AIMatch(models.Model):
     """
     investor = models.ForeignKey(InvestorApplication, on_delete=models.CASCADE, related_name="ai_matches")
     application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name="ai_matches")
-    score = models.FloatField()
+    score = models.DecimalField(
+    max_digits=6,
+    decimal_places=3
+)
+    match_reason = models.TextField(
+    blank=True,
+    null=True
+)
+    geography = models.CharField(
+
+    max_length=255,
+
+    blank=True,
+
+    null=True
+
+)
+
+    confidence_score = models.DecimalField(
+    max_digits=5,
+    decimal_places=2,
+    default=0
+)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -205,13 +307,6 @@ class Document(models.Model):
     file = models.FileField(upload_to='deal_rooms/%Y/%m/%d/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
     
-class Follow(models.Model):
-    follower = models.ForeignKey(User, related_name='following', on_delete=models.CASCADE)
-    following = models.ForeignKey(User, related_name='followers', on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ('follower', 'following')
         
 class Follow(models.Model):
     # The person clicking the follow button
@@ -234,4 +329,6 @@ class Follow(models.Model):
 
     def __str__(self):
         return f"{self.follower.username} follows {self.following.username}"
+    
+
     

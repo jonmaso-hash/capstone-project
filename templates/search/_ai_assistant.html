@@ -79,8 +79,18 @@
 </div>
 
 <script>
-    // 1. GLOBAL SEARCH ENGINE HANDLERS (Fixed case-sensitive variable definitions)
-    window.executeGlobalQuery = async function(queryString) {
+    // CSRF utility — reads csrftoken directly from browser cookie
+function getCookie(name) {
+    const cookies = document.cookie.split(';');
+    for (let c of cookies) {
+        c = c.trim();
+        if (c.startsWith(name + '=')) return decodeURIComponent(c.slice(name.length + 1));
+    }
+    return null;
+}
+
+// 1. GLOBAL SEARCH ENGINE HANDLERS
+window.executeGlobalQuery = async function(queryString) {
     const logDisplay = document.getElementById('agent-response-log');
     if (!logDisplay) return;
 
@@ -89,12 +99,12 @@
     try {
         const response = await fetch('/api/v1/zelda/search/', {
             method: 'POST',
+            credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': window.CSRF_TOKEN
+                'X-CSRFToken': getCookie('csrftoken'),
             },
-            // Note: Sending as 'prompt' to align with your ai_services.py
-            body: JSON.stringify({ prompt: queryString }) 
+            body: JSON.stringify({ prompt: queryString })
         });
 
         if (!response.ok) throw new Error(`HTTP System Fault: ${response.status}`);
@@ -106,11 +116,11 @@
         if (data.response) {
             const responseDiv = document.createElement('div');
             responseDiv.className = "p-3 text-white mb-3 bg-dark border border-secondary rounded-3";
-            responseDiv.innerHTML = data.response; // Zelda's markdown/text output
+            responseDiv.innerHTML = data.response;
             logDisplay.appendChild(responseDiv);
         }
 
-        // PATH 2: Handle Structured Search Results (if provided alongside response)
+        // PATH 2: Handle Structured Search Results
         if (data.results && data.results.length > 0) {
             data.results.forEach((item, index) => {
                 const card = document.createElement('div');
@@ -122,8 +132,8 @@
                 `;
                 logDisplay.appendChild(card);
             });
-        } 
-        
+        }
+
         // Final fallback if nothing returned
         if (!data.response && (!data.results || data.results.length === 0)) {
             logDisplay.innerHTML = `<span class="text-muted">[Empty] No architectural data elements found for: "${queryString}"</span>`;
@@ -135,62 +145,63 @@
     }
 };
 
-    // 2. PAGE SUMMARY ASSISTANT LIFECYCLE PIPELINES
-    async function runZeldaSummarizer() {
-        const content = document.body.innerText.substring(0, 5000);
-        const display = document.getElementById('zelda-content');
-        if (!display) return;
-        
-        display.innerHTML = '<div class="spinner-border spinner-border-sm text-primary mb-2"></div> Running semantic page analysis...';
+// 2. PAGE SUMMARY ASSISTANT LIFECYCLE PIPELINES
+async function runZeldaSummarizer() {
+    const content = document.body.innerText.substring(0, 5000);
+    const display = document.getElementById('zelda-content');
+    if (!display) return;
 
-        try {
-            const response = await fetch('/api/v1/zelda/summarize/', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': window.CSRF_TOKEN // Fixed from csrfToken to window.CSRF_TOKEN
-                },
-                body: JSON.stringify({ page_text: content })
-            });
+    display.innerHTML = '<div class="spinner-border spinner-border-sm text-primary mb-2"></div> Running semantic page analysis...';
 
-            if (!response.ok) throw new Error('API processing pipeline exception caught.');
-            const data = await response.json();
-            
-            display.innerHTML = `
-                <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
-                    <li><i class="bi bi-graph-up-arrow text-success me-1"></i> <strong>Traction:</strong> ${data.traction}</li>
-                    <li><i class="bi bi-cpu text-primary me-1"></i> <strong>Tech:</strong> ${data.tech}</li>
-                    <li><i class="bi bi-cash-stack text-warning me-1"></i> <strong>Ask:</strong> ${data.ask}</li>
-                </ul>
-            `;
-        } catch (error) {
-            console.error("Zelda Summary Fault:", error);
-            display.innerHTML = `<span class="text-danger small"><i class="bi bi-exclamation-triangle-fill me-1"></i> Error: Could not reach Zelda AI parsing layer endpoints.</span>`;
+    try {
+        const response = await fetch('/api/v1/zelda/summarize/', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify({ text: content })
+        });
+
+        if (!response.ok) throw new Error('API processing pipeline exception caught.');
+        const data = await response.json();
+
+        display.innerHTML = `
+            <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+                <li><i class="bi bi-graph-up-arrow text-success me-1"></i> <strong>Traction:</strong> ${data.analysis?.traction || 'N/A'}</li>
+                <li><i class="bi bi-cpu text-primary me-1"></i> <strong>Tech:</strong> ${data.analysis?.tech_stack || 'N/A'}</li>
+                <li><i class="bi bi-cash-stack text-warning me-1"></i> <strong>Ask:</strong> ${data.analysis?.investment_ask || 'N/A'}</li>
+            </ul>
+        `;
+    } catch (error) {
+        console.error("Zelda Summary Fault:", error);
+        display.innerHTML = `<span class="text-danger small"><i class="bi bi-exclamation-triangle-fill me-1"></i> Error: Could not reach Zelda AI parsing layer endpoints.</span>`;
+    }
+}
+
+// 3. EVENT LISTENER REGISTRATION BINDINGS
+document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = document.getElementById('ai-agent-toggle');
+    const form = document.getElementById('global-agent-form');
+    const input = document.getElementById('globalAgentQuery');
+    const sidebarEl = document.getElementById('aiAgentSidebar');
+
+    if (sidebarEl && window.bootstrap) {
+        const offcanvasInstance = new bootstrap.Offcanvas(sidebarEl);
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => offcanvasInstance.show());
         }
     }
 
-    // 3. EVENT LISTENER REGISTRATION BINDINGS
-    document.addEventListener('DOMContentLoaded', () => {
-        const toggleBtn = document.getElementById('ai-agent-toggle');
-        const form = document.getElementById('global-agent-form');
-        const input = document.getElementById('globalAgentQuery');
-        const sidebarEl = document.getElementById('aiAgentSidebar');
-
-        if (sidebarEl && window.bootstrap) {
-            const offcanvasInstance = new bootstrap.Offcanvas(sidebarEl);
-            if (toggleBtn) {
-                toggleBtn.addEventListener('click', () => offcanvasInstance.show());
+    if (form && input) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const cleanQuery = input.value.trim();
+            if (cleanQuery) {
+                window.executeGlobalQuery(cleanQuery);
             }
-        }
-
-        if (form && input) {
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const cleanQuery = input.value.trim();
-                if (cleanQuery) {
-                    window.executeGlobalQuery(cleanQuery);
-                }
-            });
-        }
-    });
+        });
+    }
+});
 </script>

@@ -1,65 +1,43 @@
 # zelda_api/protocol.py
-from django.utils import timezone
-import logging
+"""
+Foundry Standard Protocol Mixin
+Ensures all models follow the Interlink Foundry envelope standard for AI responses.
+"""
+from datetime import datetime
+from django.db import models
 
-logger = logging.getLogger(__name__)
 
 class FoundryStandardMixin:
     """
-    Pinnacle-standard Mixin: Enforces strict data normalization and
-    validates the 'Zelda' language contract across all 13 Provider APIs.
+    Mixin that adds Foundry Protocol compliance to any model.
+    Standardizes data serialization into the Foundry Envelope format.
     """
+    source_name = "unknown"  # Override in child classes
     
-    # Must be overridden by the child class
-    source_name = "undefined_source"
-
-    def to_foundry_envelope(self):
+    def to_foundry_envelope(self, include_risk_flags=False):
         """
-        Normalizes provider object into the standard Zelda AI format.
-        Includes pre-flight validation to ensure data integrity.
-        """
-        # 1. Pre-flight check: Ensure source_name is defined
-        if self.source_name == "undefined_source":
-            logger.warning(f"Protocol Warning: {self.__class__.__name__} has not defined a source_name.")
-
-        try:
-            # 2. Construct the envelope
-            envelope = {
-                "origin": self.source_name,
-                "timestamp": getattr(self, 'updated_at', timezone.now()),
-                "intelligence_score": getattr(self, 'zelda_score', 0.0),
-                "payload": self.get_serialized_data(),
-                "risk_flags": getattr(self, 'ai_risk_assessment_flags', {})
-            }
-            
-            # 3. Post-construction validation
-            return self._validate_envelope(envelope)
-
-        except Exception as e:
-            logger.error(f"Foundry Protocol Violation for {self.source_name}: {e}")
-            return {"error": "Normalization failed", "origin": self.source_name}
-
-    def _validate_envelope(self, envelope):
-        """Internal helper to ensure the envelope meets minimum requirements."""
-        if not envelope.get("payload"):
-            logger.error(f"Validation Error: Empty payload detected for {self.source_name}")
-        return envelope
-
-    def get_serialized_data(self):
-        """
-        Each API model MUST implement this. 
-        If not, the Foundry Protocol will explicitly raise an error.
-        """
-        raise NotImplementedError(
-            f"Pinnacle Error: {self.__class__.__name__} must implement 'get_serialized_data()'."
-        )
+        Wraps model data into the standard Foundry Protocol Envelope.
         
-    def to_foundry_envelope(self, include_full_data=False):
-        # Business Flow Improvement: 
-        # Only return the "essential" payload unless explicitly asked for more.
-        payload = self.get_serialized_data() if include_full_data else self.get_essential_summary()
+        Returns:
+            dict: Standardized envelope format for all Zelda API responses
+        """
         return {
             "origin": self.source_name,
-            "payload": payload,
-            "status": "optimized"
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "payload": self.get_serialized_data(),
+            "risk_flags": self.get_risk_flags() if include_risk_flags else {}
         }
+    
+    def get_serialized_data(self):
+        """
+        Override in child classes to return model-specific payload.
+        Should return a dictionary of key data points.
+        """
+        return {"id": self.id}
+    
+    def get_risk_flags(self):
+        """
+        Override in child classes to return validation/risk data.
+        Used for data quality scoring.
+        """
+        return {}

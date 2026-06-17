@@ -2,8 +2,8 @@
 from django.db import models
 from django.conf import settings
 from django.utils.text import slugify
-from zelda_api.protocol import FoundryStandardMixin 
-from jobs_api.models import JobListing, JobApplication
+from datetime import datetime
+from .protocol import FoundryStandardMixin 
 
 
 # ==========================================
@@ -58,8 +58,12 @@ class ArticlePost(FoundryStandardMixin, models.Model):
 
     def get_serialized_data(self):
         return {
+            "id": self.id,
             "title": self.title,
+            "author": self.author.username,
+            "category": self.category.name if self.category else None,
             "status": self.status,
+            "created_at": self.created_at.isoformat(),
             "seo_analytics": self.zelda_seo_analytics
         }
 

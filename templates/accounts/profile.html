@@ -105,11 +105,17 @@
                             {% endif %}
 
                             {% if request.user != profile_user %}
-                                {% if dm_enabled %}
-                                <a href="{% url 'matchmaking:initiate_direct_chat' profile_user.id %}" class="btn btn-sm btn-light px-3 rounded-pill text-dark fw-semibold shadow-sm">
-                                    <i class="bi bi-chat-dots-fill me-1"></i> Message
-                                </a>
-                                {% endif %}
+                            {% if dm_enabled %}
+                            <!-- Active Message Button -->
+                            <a href="{% url 'matchmaking:initiate_direct_chat' profile_user.id %}" class="btn btn-sm btn-light px-3 rounded-pill text-dark fw-semibold shadow-sm">
+                            <i class="bi bi-chat-dots-fill me-1"></i> Message
+                            </a>
+                            {% else %}
+                            <!-- Disabled Message Button (Triggers Alert) -->
+                            <button type="button" onclick="alert('{{ profile_user.username }} has Direct Messages turned off.')" class="btn btn-sm btn-light px-3 rounded-pill text-dark fw-semibold shadow-sm">
+                        <i class="bi bi-chat-dots-fill me-1"></i> Message
+                        </button>
+                        {% endif %}
 
                                 <button type="button" id="followBtn" 
                                     class="btn btn-sm {% if is_following %}btn-outline-secondary{% else %}btn-primary{% endif %} px-3 rounded-pill"
