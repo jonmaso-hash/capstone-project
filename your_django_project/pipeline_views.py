@@ -12,7 +12,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
-from .truth_delta_tasks import verify_document_truth_delta as initiate_truth_delta_verification
+
 from .vector_models import DocumentSource, IntelligenceMemo, IntelligenceInsight, DocumentChunk
 from .intelligence_pipeline import intelligence_pipeline
 from .retrieval import retriever, context_assembler
@@ -25,8 +25,10 @@ class DocumentIngestView(APIView):
     """
     POST /api/v1/zelda/documents/ingest/
     
-    Ingest a document, queue for Zelada intelligence processing,
-    and trigger the Truth Delta verification engine.
+    Ingest a document and queue for intelligence pipeline processing.
+    Handles PDF, PPTX, TXT files and extracts text automatically.
+    
+    Returns DocumentSource with processing status and polling endpoint.
     """
     permission_classes = [IsAuthenticated]
     authentication_classes = [SessionAuthentication, TokenAuthentication]
@@ -44,7 +46,7 @@ class DocumentIngestView(APIView):
         document_type = request.data.get('document_type', 'other')
         
         try:
-            # Extract text from file
+            # Extract text from file (using existing utils)
             from .utils import extract_text_from_file
             extracted_text = extract_text_from_file(uploaded_file)
             
@@ -54,7 +56,7 @@ class DocumentIngestView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # 1. Create DocumentSource record
+            # Create DocumentSource record
             doc = DocumentSource.objects.create(
                 filename=uploaded_file.name,
                 document_type=document_type,
@@ -65,12 +67,8 @@ class DocumentIngestView(APIView):
                 status='ingested'
             )
             
-            # 2. Queue for standard Zelda pipeline processing (async)
+            # Queue for pipeline processing (async)
             process_document_pipeline.delay(doc.id, extracted_text)
-            
-            # 3. BRIDGE: Trigger Truth Delta verification engine (async)
-            # This makes the connection you requested.
-            initiate_truth_delta_verification.delay(doc.id)
             
             return Response({
                 'status': 'ingested',
@@ -79,8 +77,7 @@ class DocumentIngestView(APIView):
                 'source_entity': doc.source_entity,
                 'polling_url': f'/api/v1/zelda/documents/{doc.id}/status/',
                 'memo_url': f'/api/v1/zelda/documents/{doc.id}/memo/',
-                'verification_url': f'/api/v1/zelda/documents/{doc.id}/truth-delta/', # Added for UI
-                'message': 'Document queued for both Zelda Intelligence and Truth Delta verification.'
+                'message': 'Document queued for intelligent analysis. Check polling_url for status.'
             }, status=status.HTTP_201_CREATED)
         
         except Exception as e:

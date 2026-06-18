@@ -80,6 +80,9 @@
         <a href="{% url 'matchmaking:standalone_memo' company_slug=match.founder.company_name|slugify %}" class="btn btn-sm btn-outline-primary mt-2">
             <i class="bi bi-file-earmark-text me-1"></i> Intelligence Brief
         </a>
+        <a href="{% url 'zelda_api:truth_delta_ui' document_id=match.founder.id %}" class="btn btn-sm btn-outline-dark" target="_blank">
+                <i class="bi bi-shield-check me-1"></i> Truth Delta Report
+            </a>
         <div class="d-flex flex-wrap gap-2 my-2 align-items-center">
             <!-- ... your existing sector and stage badges ... -->
                                     <div class="d-flex flex-wrap gap-2 my-2 align-items-center">
@@ -246,14 +249,17 @@ async function triggerAutonomousScraper(buttonElement) {
 
     try {
         // 3. Assemble verified API workspace endpoint path from route configurations
-        const targetUrl = `/api/v1/zelda/memo/${encodeURIComponent(startupName)}/`;
-        const response = await fetch(targetUrl, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
+    const targetUrl = `/api/v1/zelda/documents/${startupId}/truth-delta/verify/`;
+
+// And update the fetch method to POST (as defined in your truth_delta_views.py)
+const response = await fetch(targetUrl, {
+    method: 'POST', // TruthDeltaVerifyView requires POST
+    headers: {
+        'Accept': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken'), // Necessary for POST
+        'Content-Type': 'application/json'
+    }
+});
         
         if (!response.ok) {
             throw new Error(`Platform pipeline fault context code: ${response.status}`);

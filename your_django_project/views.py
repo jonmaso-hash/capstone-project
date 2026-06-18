@@ -898,14 +898,3 @@ class SummarizePageAPIView(APIView):
 
         analysis = analyze_web_text(page_text)
         return Response({"status": "success", "analysis": analysis}, status=status.HTTP_200_OK)
-    
-@login_required
-def truth_delta_ui_view(request, document_id):
-    # Fetch the document to ensure it exists and to pass its ID to the template
-    document = get_object_or_404(DocumentSource, id=document_id)
-    
-    context = {
-        'document': document
-    }
-    # Ensure the template name matches what you saved the HTML file as
-    return render(request, 'truth_delta_dashboard.html', context)

@@ -1,0 +1,944 @@
+<!-- Zelda Truth Delta Verification UI - Complete Dashboard -->
+
+
+<style>
+    /* ──────────────────────────────────────────────────────────────────────── */
+    /* TRUTH DELTA COLOR SCHEME */
+    /* ──────────────────────────────────────────────────────────────────────── */
+    :root {
+        --td-green: #10b981;      /* Verified ✅ */
+        --td-yellow: #f59e0b;     /* Caution ⚠️ */
+        --td-orange: #f97316;     /* Warning 🟠 */
+        --td-red: #ef4444;        /* Critical 🚨 */
+        --td-bg: #f8fafc;
+        --td-text: #1e293b;
+    }
+
+    /* Main Truth Delta Container */
+    .truth-delta-container {
+        background: linear-gradient(135deg, #f0f9ff 0%, #f8fafc 100%);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        margin-top: 1.5rem;
+        border: 2px solid #e0e7ff;
+    }
+
+    /* Header Section */
+    .truth-delta-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 2px solid #e0e7ff;
+    }
+
+    .truth-delta-title {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .truth-delta-title h2 {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--td-text);
+    }
+
+    .truth-delta-icon {
+        font-size: 2rem;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    /* Score Display */
+    .truth-delta-score-box {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        border: 2px solid #e0e7ff;
+        min-width: 250px;
+    }
+
+    .score-value {
+        font-size: 3rem;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+
+    .score-value.low-risk {
+        color: var(--td-green);
+    }
+
+    .score-value.medium-risk {
+        color: var(--td-yellow);
+    }
+
+    .score-value.high-risk {
+        color: var(--td-orange);
+    }
+
+    .score-value.critical-risk {
+        color: var(--td-red);
+    }
+
+    .score-label {
+        font-size: 0.875rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 600;
+    }
+
+    .score-risk {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #e0e7ff;
+    }
+
+    .risk-low {
+        color: var(--td-green);
+    }
+
+    .risk-medium {
+        color: var(--td-yellow);
+    }
+
+    .risk-high {
+        color: var(--td-orange);
+    }
+
+    .risk-critical {
+        color: var(--td-red);
+    }
+
+    /* Stats Grid */
+    .truth-delta-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin: 1.5rem 0;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        border: 1px solid #e0e7ff;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--td-text);
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Flag Breakdown */
+    .flag-breakdown {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .flag-item {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        border-left: 4px solid #e0e7ff;
+    }
+
+    .flag-item.verified {
+        border-left-color: var(--td-green);
+        background: rgba(16, 185, 129, 0.05);
+    }
+
+    .flag-item.caution {
+        border-left-color: var(--td-yellow);
+        background: rgba(245, 158, 11, 0.05);
+    }
+
+    .flag-item.warning {
+        border-left-color: var(--td-orange);
+        background: rgba(249, 115, 22, 0.05);
+    }
+
+    .flag-item.critical {
+        border-left-color: var(--td-red);
+        background: rgba(239, 68, 68, 0.05);
+    }
+
+    .flag-icon {
+        font-size: 1.5rem;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .flag-count {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--td-text);
+        margin-bottom: 0.25rem;
+    }
+
+    .flag-label {
+        font-size: 0.85rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Flagged Claims Section */
+    .flagged-claims {
+        background: white;
+        border-radius: 1rem;
+        overflow: hidden;
+        border: 2px solid #e0e7ff;
+    }
+
+    .claims-header {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        color: white;
+        padding: 1.5rem;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .claims-list {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .claim-item {
+        padding: 1.5rem;
+        border-bottom: 1px solid #e0e7ff;
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .claim-item:hover {
+        background: #f8fafc;
+    }
+
+    .claim-item:last-child {
+        border-bottom: none;
+    }
+
+    .claim-flag-icon {
+        font-size: 1.75rem;
+        flex-shrink: 0;
+        margin-top: 0.25rem;
+    }
+
+    .claim-content {
+        flex-grow: 1;
+    }
+
+    .claim-category {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: var(--td-text);
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .claim-comparison {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin: 0.75rem 0;
+        font-size: 0.9rem;
+    }
+
+    .comparison-value {
+        background: #f1f5f9;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+    }
+
+    .comparison-label {
+        font-size: 0.75rem;
+        color: #64748b;
+        text-transform: uppercase;
+        margin-bottom: 0.25rem;
+        font-weight: 600;
+    }
+
+    .comparison-text {
+        font-weight: 600;
+        color: var(--td-text);
+    }
+
+    .discrepancy-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.25rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin: 0.75rem 0;
+    }
+
+    .discrepancy-badge.low {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--td-yellow);
+    }
+
+    .discrepancy-badge.medium {
+        background: rgba(249, 115, 22, 0.1);
+        color: var(--td-orange);
+    }
+
+    .discrepancy-badge.high {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--td-red);
+    }
+
+    .claim-explanation {
+        color: #475569;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        margin-top: 0.75rem;
+    }
+
+    /* Summary Box */
+    .truth-delta-summary {
+        background: #f8fafc;
+        border-left: 4px solid #1e293b;
+        padding: 1.5rem;
+        border-radius: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .summary-title {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: var(--td-text);
+        margin-bottom: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .summary-text {
+        color: #475569;
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+
+    /* Action Buttons */
+    .truth-delta-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-top: 1.5rem;
+    }
+
+    .truth-delta-btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.75rem;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .truth-delta-btn.primary {
+        background: #1e293b;
+        color: white;
+    }
+
+    .truth-delta-btn.primary:hover {
+        background: #0f172a;
+        transform: translateY(-2px);
+    }
+
+    .truth-delta-btn.secondary {
+        background: white;
+        color: #1e293b;
+        border: 2px solid #e0e7ff;
+    }
+
+    .truth-delta-btn.secondary:hover {
+        border-color: #1e293b;
+        background: #f8fafc;
+    }
+
+    /* Loading State */
+    .truth-delta-loading {
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .spinner {
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border: 4px solid #e0e7ff;
+        border-top-color: #1e293b;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+        margin-top: 1rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    /* Empty State */
+    .truth-delta-empty {
+        text-align: center;
+        padding: 2rem;
+        color: #64748b;
+    }
+
+    .empty-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Recommendation Adjustment */
+    .recommendation-adjustment {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border-left: 4px solid #f59e0b;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        margin: 1rem 0;
+    }
+
+    .recommendation-adjustment.warning {
+        background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+        border-left-color: var(--td-orange);
+    }
+
+    .recommendation-adjustment.critical {
+        background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+        border-left-color: var(--td-red);
+    }
+
+    .adjustment-title {
+        font-weight: 700;
+        color: #92400e;
+        margin-bottom: 0.5rem;
+    }
+
+    .adjustment-text {
+        color: #78350f;
+        font-size: 0.9rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .truth-delta-header {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .flag-breakdown {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .claim-comparison {
+            grid-template-columns: 1fr;
+        }
+
+        .truth-delta-actions {
+            flex-direction: column;
+        }
+
+        .truth-delta-btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<!-- TRUTH DELTA VERIFICATION DASHBOARD -->
+<div id="truthDeltaContainer" data-document-id="{{ document.id }}" style="display: none;">
+    
+    <!-- Header with Score -->
+    <div class="truth-delta-container">
+        <div class="truth-delta-header">
+            <div class="truth-delta-title">
+                <div class="truth-delta-icon">🔍</div>
+                <h2>Truth Delta Verification</h2>
+            </div>
+            <div class="truth-delta-score-box">
+                <div class="score-label">Credibility Score</div>
+                <div class="score-value" id="truthScoreValue">—</div>
+                <div class="score-label">/100</div>
+                <div class="score-risk" id="truthScoreRisk">—</div>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="truth-delta-summary">
+            <div class="summary-title">Overall Assessment</div>
+            <div class="summary-text" id="truthSummaryText">Loading verification data...</div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="truth-delta-stats">
+            <div class="stat-card">
+                <div class="stat-value" id="claimsAnalyzed">—</div>
+                <div class="stat-label">Claims Analyzed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="claimsVerified">—</div>
+                <div class="stat-label">Verified ✅</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="claimsFlagged">—</div>
+                <div class="stat-label">Flagged ⚠️</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="verificationRate">—</div>
+                <div class="stat-label">Verification Rate</div>
+            </div>
+        </div>
+
+        <!-- Flag Breakdown -->
+        <div class="flag-breakdown">
+            <div class="flag-item verified">
+                <span class="flag-icon">✅</span>
+                <div class="flag-count" id="flagGreen">0</div>
+                <div class="flag-label">Verified</div>
+            </div>
+            <div class="flag-item caution">
+                <span class="flag-icon">⚠️</span>
+                <div class="flag-count" id="flagYellow">0</div>
+                <div class="flag-label">Caution (5-20%)</div>
+            </div>
+            <div class="flag-item warning">
+                <span class="flag-icon">🟠</span>
+                <div class="flag-count" id="flagOrange">0</div>
+                <div class="flag-label">Warning (20-50%)</div>
+            </div>
+            <div class="flag-item critical">
+                <span class="flag-icon">🚨</span>
+                <div class="flag-count" id="flagRed">0</div>
+                <div class="flag-label">Critical (>50%)</div>
+            </div>
+        </div>
+
+        <!-- Recommendation Adjustment (if applicable) -->
+        <div id="recommendationAdjustmentBox" style="display: none;">
+            <div class="recommendation-adjustment" id="recommendationAdjustmentContent">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Flagged Claims Section -->
+        <div class="flagged-claims" id="flaggedClaimsSection" style="display: none;">
+            <div class="claims-header">
+                🚩 Flagged Claims & Discrepancies
+            </div>
+            <div class="claims-list" id="flaggedClaimsList">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="truthDeltaLoading" class="truth-delta-loading" style="display: none;">
+            <div class="spinner"></div>
+            <div class="loading-text">Verifying claims against external data...</div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="truthDeltaEmpty" class="truth-delta-empty" style="display: none;">
+            <div class="empty-icon">🔍</div>
+            <h3>Verification Not Available</h3>
+            <p>Truth Delta verification hasn't been run yet for this document.</p>
+        </div>
+
+        <!-- Actions -->
+        <div class="truth-delta-actions">
+            <button class="truth-delta-btn primary" onclick="runTruthDeltaVerification()">
+                <span id="verifyButtonText">▶ Run Verification</span>
+            </button>
+            <button class="truth-delta-btn secondary" onclick="exportTruthDeltaReport()">
+                📥 Download Report
+            </button>
+            <button class="truth-delta-btn secondary" onclick="toggleTruthDeltaDetails()">
+                📊 View Details
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- JAVASCRIPT ENGINE FOR TRUTH DELTA UI -->
+<script>
+    const TRUTH_DELTA_API = '/api/v1/zelda';
+
+    /**
+     * Load and display Truth Delta verification data
+     */
+    async function loadTruthDeltaData(documentId) {
+        const container = document.getElementById('truthDeltaContainer');
+        const loading = document.getElementById('truthDeltaLoading');
+        const empty = document.getElementById('truthDeltaEmpty');
+
+        if (!container) return;
+
+        // Show loading state
+        loading.style.display = 'block';
+        container.style.display = 'block';
+
+        try {
+            // Fetch Truth Delta score
+            const response = await fetch(
+                `${TRUTH_DELTA_API}/documents/${documentId}/truth-delta/`,
+                {
+                    credentials: 'include', // <-- ADDED FOR AUTHENTICATION
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                }
+            );
+
+            if (response.status === 202) {
+                // Not ready yet
+                loading.innerHTML = `
+                    <div class="spinner"></div>
+                    <div class="loading-text">Verification in progress...</div>
+                    <p style="margin-top: 1rem; color: #64748b; font-size: 0.9rem;">
+                        The system is analyzing claimed data against external sources.
+                        Check back in a moment.
+                    </p>
+                `;
+                return;
+            }
+
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+            const data = await response.json();
+            loading.style.display = 'none';
+
+            // Render Truth Delta UI
+            renderTruthDeltaUI(data);
+
+        } catch (error) {
+            console.error('Truth Delta load error:', error);
+            loading.style.display = 'none';
+            empty.style.display = 'block';
+            empty.innerHTML = `
+                <div class="empty-icon">⚠️</div>
+                <h3>Verification Unavailable</h3>
+                <p>${error.message}</p>
+            `;
+        }
+    }
+
+    /**
+     * Render Truth Delta verification UI with data
+     */
+    function renderTruthDeltaUI(data) {
+        // Score and risk
+        const scoreElement = document.getElementById('truthScoreValue');
+        const riskElement = document.getElementById('truthScoreRisk');
+
+        scoreElement.textContent = Math.round(data.overall_truth_score);
+        scoreElement.className = `score-value ${getRiskClass(data.credibility_risk)}`;
+        riskElement.textContent = data.credibility_risk.toUpperCase();
+        riskElement.className = `score-risk risk-${data.credibility_risk}`;
+
+        // Summary
+        document.getElementById('truthSummaryText').textContent = data.summary;
+
+        // Stats
+        document.getElementById('claimsAnalyzed').textContent = data.claims_analyzed;
+        document.getElementById('claimsVerified').textContent = data.claims_verified;
+        document.getElementById('claimsFlagged').textContent = data.claims_flagged;
+        document.getElementById('verificationRate').textContent = 
+            `${Math.round((data.claims_verified / data.claims_analyzed) * 100)}%`;
+
+        // Flag breakdown
+        document.getElementById('flagGreen').textContent = data.flag_breakdown.verified;
+        document.getElementById('flagYellow').textContent = data.flag_breakdown.caution;
+        document.getElementById('flagOrange').textContent = data.flag_breakdown.warning;
+        document.getElementById('flagRed').textContent = data.flag_breakdown.critical;
+
+        // Recommendation adjustment (if applicable)
+        if (data.recommendation_impact?.adjusted && data.recommendation_impact.adjusted !== 'None') {
+            const adjustmentBox = document.getElementById('recommendationAdjustmentBox');
+            const riskLevel = data.credibility_risk === 'critical' ? 'critical' : 
+                             data.credibility_risk === 'high' ? 'warning' : '';
+            
+            adjustmentBox.querySelector('.recommendation-adjustment').className = 
+                `recommendation-adjustment ${riskLevel}`;
+            adjustmentBox.querySelector('.adjustment-title').textContent = '⚠️ Recommendation Adjusted';
+            adjustmentBox.querySelector('.adjustment-text').textContent = 
+                data.recommendation_impact.adjusted;
+            adjustmentBox.style.display = 'block';
+        }
+
+        // Load flagged claims
+        if (data.claims_flagged > 0) {
+            loadFlaggedClaims(data.document_id);
+        } else {
+            document.getElementById('flaggedClaimsSection').style.display = 'none';
+        }
+    }
+
+    /**
+     * Load and display flagged claims
+     */
+    async function loadFlaggedClaims(documentId) {
+        try {
+            const response = await fetch(
+                `${TRUTH_DELTA_API}/documents/${documentId}/truth-delta/flags/`,
+                {
+                    credentials: 'include', // <-- ADDED FOR AUTHENTICATION
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                }
+            );
+
+            if (!response.ok) return;
+
+            const data = await response.json();
+            const claimsList = document.getElementById('flaggedClaimsList');
+            const section = document.getElementById('flaggedClaimsSection');
+
+            if (data.flags && data.flags.length > 0) {
+                claimsList.innerHTML = data.flags.map(flag => `
+                    <div class="claim-item">
+                        <div class="claim-flag-icon">${flag.flag_icon}</div>
+                        <div class="claim-content">
+                            <div class="claim-category">${flag.category}</div>
+                            
+                            <div class="claim-comparison">
+                                <div class="comparison-value">
+                                    <div class="comparison-label">Claimed</div>
+                                    <div class="comparison-text">${flag.claimed}</div>
+                                </div>
+                                <div class="comparison-value">
+                                    <div class="comparison-label">Observed</div>
+                                    <div class="comparison-text">${flag.observed}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="discrepancy-badge ${getDiscrepancyClass(flag.discrepancy)}">
+                                ${flag.discrepancy} Discrepancy
+                            </div>
+                            
+                            <div class="claim-explanation">
+                                ${flag.explanation}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                section.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error loading flagged claims:', error);
+        }
+    }
+
+    /**
+     * Trigger Truth Delta verification
+     */
+    async function runTruthDeltaVerification() {
+        const docId = document.querySelector('[data-document-id]')?.dataset.documentId;
+        if (!docId) {
+            alert('Document ID not found');
+            return;
+        }
+
+        const button = event.target.closest('button');
+        button.disabled = true;
+        button.textContent = '⏳ Verifying...';
+
+        try {
+            const response = await fetch(
+                `${TRUTH_DELTA_API}/documents/${docId}/truth-delta/verify/`,
+                {
+                    method: 'POST',
+                    credentials: 'include', // <-- ADDED FOR AUTHENTICATION
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+            document.getElementById('truthDeltaLoading').style.display = 'block';
+            
+            // Poll for completion
+            pollTruthDeltaStatus(docId, button);
+
+        } catch (error) {
+            console.error('Verification error:', error);
+            button.disabled = false;
+            button.textContent = '▶ Run Verification';
+            alert('Failed to start verification');
+        }
+    }
+
+    /**
+     * Poll for verification completion
+     */
+    function pollTruthDeltaStatus(documentId, button, maxAttempts = 30) {
+        let attempts = 0;
+
+        const pollInterval = setInterval(async () => {
+            attempts++;
+
+            try {
+                const response = await fetch(
+                    `${TRUTH_DELTA_API}/documents/${documentId}/truth-delta/`,
+                    {
+                        credentials: 'include', // <-- ADDED FOR AUTHENTICATION
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    }
+                );
+
+                if (response.ok) {
+                    const data = await response.json();
+                    clearInterval(pollInterval);
+                    
+                    // Data ready
+                    document.getElementById('truthDeltaLoading').style.display = 'none';
+                    renderTruthDeltaUI(data);
+                    
+                    button.disabled = false;
+                    button.textContent = '✅ Verification Complete';
+                }
+            } catch (error) {
+                console.error('Poll error:', error);
+            }
+
+            // Timeout after 30 attempts (5 minutes)
+            if (attempts >= maxAttempts) {
+                clearInterval(pollInterval);
+                button.disabled = false;
+                button.textContent = '▶ Run Verification';
+                alert('Verification is taking longer than expected. Please check back in a moment.');
+            }
+        }, 10000); // Poll every 10 seconds
+    }
+
+    /**
+     * Export Truth Delta report
+     */
+    async function exportTruthDeltaReport() {
+        const docId = document.querySelector('[data-document-id]')?.dataset.documentId;
+        if (!docId) return;
+
+        try {
+            const response = await fetch(
+                `${TRUTH_DELTA_API}/documents/${docId}/truth-delta/report/`,
+                {
+                    credentials: 'include', // <-- ADDED FOR AUTHENTICATION
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                }
+            );
+
+            if (!response.ok) throw new Error('Failed to fetch report');
+
+            const data = await response.json();
+
+            // Create and download file
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/markdown;charset=utf-8,' + 
+                encodeURIComponent(data.report));
+            element.setAttribute('download', `truth-delta-report-${docId}.md`);
+            element.style.display = 'none';
+            
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+
+        } catch (error) {
+            console.error('Report export error:', error);
+            alert('Failed to export report');
+        }
+    }
+
+    /**
+     * Toggle detailed view
+     */
+    function toggleTruthDeltaDetails() {
+        const section = document.getElementById('flaggedClaimsSection');
+        section.style.display = section.style.display === 'none' ? 'block' : 'none';
+    }
+
+    /**
+     * Helper: Get risk class
+     */
+    function getRiskClass(risk) {
+        const classes = {
+            'low': 'low-risk',
+            'medium': 'medium-risk',
+            'high': 'high-risk',
+            'critical': 'critical-risk'
+        };
+        return classes[risk] || 'medium-risk';
+    }
+
+    /**
+     * Helper: Get discrepancy class
+     */
+    function getDiscrepancyClass(discrepancy) {
+        if (discrepancy.includes('%')) {
+            const percent = parseFloat(discrepancy);
+            if (percent <= 5) return 'low';
+            if (percent <= 20) return 'low';
+            if (percent <= 50) return 'medium';
+            return 'high';
+        }
+        return 'medium';
+    }
+
+    /**
+     * Helper: Get CSRF token
+     */
+    function getCookie(name) {
+        const cookies = document.cookie.split(';');
+        for (let c of cookies) {
+            c = c.trim();
+            if (c.startsWith(name + '=')) {
+                return decodeURIComponent(c.slice(name.length + 1));
+            }
+        }
+        return null;
+    }
+
+    // Auto-load if data attribute present
+    document.addEventListener('DOMContentLoaded', () => {
+        const docId = document.querySelector('[data-document-id]')?.dataset.documentId;
+        if (docId) {
+            loadTruthDeltaData(docId);
+        }
+    });
+</script>

@@ -107,4 +107,88 @@
 </div>
 {% endblock content %}
 
+{% block scripts %}
+<script>
+// 1. GETCOOKIE FUNCTION (Required for Django POST requests)
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// 2. TRIGGER AUTONOMOUS SCRAPER FUNCTION
+window.triggerAutonomousScraper = async function(buttonElement) {
+    const startupName = buttonElement.getAttribute('data-startup-name');
+    const startupId = buttonElement.getAttribute('data-startup-id');
+    const statusDiv = document.getElementById(`scraper-status-${startupId}`);
+    
+    // Fallback to global status div if specific one isn't found
+    const targetStatusDiv = statusDiv || document.getElementById('scraper-status-global');
+    
+    if (!startupName || !targetStatusDiv) {
+        console.error("Missing startup name or status div.");
+        return;
+    }
+
+    // Lock component state and generate layout load indicators
+    buttonElement.disabled = true;
+    const originalContent = buttonElement.innerHTML;
+    buttonElement.innerHTML = '<span class="spinner-border spinner-border-sm text-success me-1" role="status" aria-hidden="true"></span> Initializing...';
+    
+    targetStatusDiv.className = "small fw-semibold text-warning ms-2 animate-pulse";
+    targetStatusDiv.innerText = "Spawning background runner micro-tasks...";
+
+    try {
+        // Assemble verified API workspace endpoint path
+        const targetUrl = `/api/v1/zelda/documents/${startupId}/truth-delta/verify/`;
+
+        const response = await fetch(targetUrl, {
+            method: 'POST',
+            credentials: 'include', // <-- Added to ensure session authentication passes
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const responseData = await response.json();
+
+        if (!response.ok) {
+            throw new Error(responseData.error || `Platform pipeline fault context code: ${response.status}`);
+        }
+        
+        // Handle asynchronous background worker states returned from backend
+        if (responseData.status === 'verification_queued') {
+            targetStatusDiv.className = "small fw-semibold text-info ms-2";
+            targetStatusDiv.innerText = "Truth Delta verification queued! Please reload dashboard in 15 seconds.";
+        } else {
+            targetStatusDiv.className = "small fw-semibold text-success ms-2";
+            targetStatusDiv.innerText = "Verification complete! Reloading workspace...";
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        }
+    } catch (error) {
+        console.error("Autonomous Engine Pipeline Communication Failure Exception:", error);
+        targetStatusDiv.className = "small fw-semibold text-danger ms-2";
+        targetStatusDiv.innerText = `Error: ${error.message}`;
+    } finally {
+        // Release structural locks
+        buttonElement.disabled = false;
+        buttonElement.innerHTML = originalContent;
+    }
+}
+</script>
+{% endblock scripts %}
 
