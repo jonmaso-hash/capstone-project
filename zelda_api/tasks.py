@@ -9,6 +9,7 @@ from celery import shared_task
 from django.utils import timezone
 from .vector_models import DocumentSource
 from .intelligence_pipeline import intelligence_pipeline
+from .vector_models import DocumentChunk
 
 logger = logging.getLogger(__name__)
 
@@ -18,17 +19,19 @@ def process_document_pipeline(self, document_id: int, raw_text: str):
     """
     Main async task: Process a document through the complete Zelda Intelligence Pipeline.
     Handles chunking → embedding → analysis → memo generation.
-    
-    Args:
-        document_id: The DocumentSource ID
-        raw_text: The extracted text from the document
     """
     try:
         logger.info(f"[Celery] Starting pipeline processing for document {document_id}")
         
         document = DocumentSource.objects.get(id=document_id)
         
-        # Run the complete pipeline
+        # 1. CLEANUP: Wipe existing chunks for this document before processing
+        # This prevents the UNIQUE constraint error on re-runs or retries
+        deleted_count, _ = DocumentChunk.objects.filter(document_id=document_id).delete()
+        if deleted_count > 0:
+            logger.info(f"[Celery] Purged {deleted_count} existing chunks for document {document_id}")
+        
+        # 2. Run the complete pipeline
         result = intelligence_pipeline.process_document(document, raw_text)
         
         if result['status'] == 'success':

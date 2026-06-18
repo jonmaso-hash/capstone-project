@@ -31,6 +31,7 @@ class DocumentIngestView(APIView):
     Returns DocumentSource with processing status and polling endpoint.
     """
     permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
     parser_classes = [MultiPartParser, FormParser]
     
     def post(self, request):
@@ -152,6 +153,7 @@ class DocumentMemoView(APIView):
     Only available after pipeline completes successfully.
     """
     permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
     
     def get(self, request, document_id):
         try:

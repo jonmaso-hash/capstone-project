@@ -14,7 +14,6 @@ from .retrieval import retriever, context_assembler
 
 logger = logging.getLogger(__name__)
 
-
 class ZeldaIntelligencePipeline:
     """
     The complete Zelda Intelligence Pipeline.
@@ -273,17 +272,19 @@ class ZeldaIntelligencePipeline:
             insights = IntelligenceInsight.objects.filter(document=document_source)
             
             # Build memo sections
-            memo = IntelligenceMemo.objects.create(
-                document=document_source,
-                executive_summary=self._build_executive_summary(document_source, insights),
-                problem_solution=self._build_problem_solution(insights),
-                market_analysis=self._build_market_analysis(insights),
-                team_assessment=self._build_team_assessment(insights),
-                financial_analysis=self._build_financial_analysis(insights),
-                risk_assessment=self._build_risk_assessment(insights),
-                investment_thesis=self._build_investment_thesis(document_source, insights),
-                completeness_score=analysis_result['confidence'],
-                citations_count=sum(i.source_chunks.count() for i in insights),
+            memo, created = IntelligenceMemo.objects.update_or_create(
+                document=document_source, # Use the document instance to uniquely identify the memo
+                defaults={
+                    'executive_summary': self._build_executive_summary(document_source, insights),
+                    'problem_solution': self._build_problem_solution(insights),
+                    'market_analysis': self._build_market_analysis(insights),
+                    'team_assessment': self._build_team_assessment(insights),
+                    'financial_analysis': self._build_financial_analysis(insights),
+                    'risk_assessment': self._build_risk_assessment(insights),
+                    'investment_thesis': self._build_investment_thesis(document_source, insights),
+                    'completeness_score': analysis_result['confidence'],
+                    'citations_count': sum(i.source_chunks.count() for i in insights),
+                }
             )
             
             # Link insights
@@ -316,10 +317,37 @@ class ZeldaIntelligencePipeline:
                 chunk.save()
     
     def _simple_extract(self, category: str, context: str) -> Optional[str]:
-        """Simple rule-based extraction (can be replaced with Claude API)."""
-        # Take first substantial sentence from context
-        sentences = [s.strip() for s in context.split('\n') if s.strip() and len(s) > 20]
-        return sentences[0] if sentences else None
+        """Improved heuristic extraction: Finds sentences containing category-specific keywords."""
+        # Map categories to keywords that should be present in the text
+        keywords = {
+            'TAM': ['market', 'opportunity', 'addressable', 'size'],
+            'SAM': ['serviceable', 'addressable'],
+            'Revenue': ['revenue', 'income', '$', 'million', 'growth'],
+            'Team': ['founder', 'CEO', 'team', 'experience', 'background'],
+            'Product': ['platform', 'solution', 'features', 'technology', 'system'],
+            'Traction': ['customers', 'users', 'growth', 'momentum'],
+            'Funding': ['funding', 'raise', 'capital', 'series', 'runway'],
+            'Risk': ['risk', 'challenges', 'competition', 'inefficiencies']
+        }
+        
+        # Get keywords for current category (default to empty list)
+        category_keywords = keywords.get(category, [])
+        
+        # Split into sentences
+        sentences = [s.strip() for s in context.split('.') if len(s) > 20]
+        
+        # Find the sentence that best matches the category keywords
+        best_sentence = None
+        max_matches = 0
+        
+        for s in sentences:
+            match_count = sum(1 for kw in category_keywords if kw.lower() in s.lower())
+            if match_count > max_matches:
+                max_matches = match_count
+                best_sentence = s
+        
+        # Fallback to first sentence if no keyword matches found
+        return best_sentence if best_sentence else sentences[0] if sentences else None
     
     def _build_executive_summary(self, document: DocumentSource, insights) -> str:
         """Build executive summary from insights."""

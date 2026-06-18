@@ -378,3 +378,13 @@ def _calculate_completeness(app) -> int:
     ]
     filled = sum(1 for field in tracked_fields if getattr(app, field, None))
     return int((filled / len(tracked_fields)) * 100)
+
+def extract_text_from_file(file_obj):
+    """
+    Generic text extractor. If you are using PyPDF2 or python-pptx, 
+    this is where that logic lives.
+    """
+    # For now, you can wrap your existing scan_pitch_deck to satisfy the import:
+    from .utils import scan_pitch_deck
+    data = scan_pitch_deck(file_obj)
+    return data.get('summary', '')

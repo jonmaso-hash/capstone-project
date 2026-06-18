@@ -6,8 +6,10 @@ import urllib.parse
 from django.conf import settings
 from django.urls import reverse, NoReverseMatch
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Avg, Sum, Count
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
+from .vector_models import DocumentSource
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -77,7 +79,41 @@ class DiligenceEngine:
         return round(min(vector_score, 100.0), 2), round(transparency_score, 2)
 
 
-# ── Views ─────────────────────────────────────────────────────────────────────
+# ── Django Template Render Views ──────────────────────────────────────────────
+
+@login_required
+def zelda_intelligence_dashboard(request):
+    """
+    Renders the frontend HTML dashboard for monitoring the data ingestion pipelines.
+    """
+    documents = DocumentSource.objects.all().order_by('-created_at')[:10]
+    return render(request, 'dashboard/zelda_pipeline_dashboard.html', {'documents': documents})
+
+
+@login_required
+def zelda_search_view(request):
+    """
+    Renders the hybrid search workspace canvas, combining global queries 
+    with context-aware results.
+    """
+    query = request.GET.get('q', '').strip()
+    
+    # Ready for integration with your matching, blog, and job apps lookups
+    pitch_results = []
+    blog_results = []
+    job_results = []
+    
+    context = {
+        'query': query,
+        'pitch_results': pitch_results,
+        'blog_results': blog_results,
+        'job_results': job_results,
+        'total_results': len(pitch_results) + len(blog_results) + len(job_results),
+    }
+    return render(request, 'search/zelda_search_results.html', context)
+
+
+# ── REST Framework API Views ──────────────────────────────────────────────────
 
 class ZeldaHealthCheckAPIView(APIView):
     permission_classes = []
@@ -466,6 +502,7 @@ class WebExplorationAPIView(APIView):
 
 class DocumentDirectScraperAPIView(APIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request, format=None):
@@ -635,7 +672,7 @@ class InvestorPortfolioIntakeAPIView(APIView):
 
     def post(self, request, format=None):
         if not _MATCHMAKING_AVAILABLE:
-            return Response({"error": "Matchmaking module is not installed."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            return Response({"error": "Matchmaking module is not installed."}, status=status.HTTP_503_SERVICE_UNunavailable)
 
         uploaded_file = request.FILES.get('file')
         if not uploaded_file:
@@ -680,6 +717,7 @@ class FounderMatchRadarAPIView(APIView):
     POST /api/v1/zelda/founder/match-radar/
     """
     permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
 
     def post(self, request):
         if not _MATCHMAKING_AVAILABLE:
@@ -791,6 +829,7 @@ class PitchDeckAnalysisAPIView(APIView):
     Accepts a pitch deck file and returns structured AI analysis.
     """
     permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
 
     def post(self, request):
         uploaded_file = request.FILES.get('pitch_deck')
@@ -830,6 +869,7 @@ class IntelligenceMemoAPIView(APIView):
     model instance. Now fetches the founder Application first.
     """
     permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
 
     def get(self, request):
         if not _MATCHMAKING_AVAILABLE:

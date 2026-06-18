@@ -1,0 +1,829 @@
+<!-- Zelda Intelligence Pipeline UI - Main Assistant Sidebar -->
+<!-- Integrates with /api/v1/zelda/ endpoints -->
+<style>
+    /* ──────────────────────────────────────────────────────────────────────── */
+    /* ZELDA DESIGN SYSTEM */
+    /* ──────────────────────────────────────────────────────────────────────── */
+    :root {
+        --zelda-primary: #1e1b4b;
+        --zelda-accent: #fbbf24;
+        --zelda-success: #10b981;
+        --zelda-danger: #ef4444;
+        --zelda-dark: #0f172a;
+        --zelda-light: #f8fafc;
+    }
+
+    /* Animations */
+    @keyframes subtlePulse {
+        0% { transform: scale(0.96); opacity: 0.15; }
+        50% { transform: scale(1.04); opacity: 0.35; }
+        100% { transform: scale(0.96); opacity: 0.15; }
+    }
+    
+    @keyframes shimmer {
+        0% { background-position: -1000px 0; }
+        100% { background-position: 1000px 0; }
+    }
+    
+    @keyframes slideInRight {
+        from { transform: translateX(400px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes glowPulse {
+        0%, 100% { filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.4)); }
+        50% { filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.8)); }
+    }
+
+    .dynamic-pulse { animation: subtlePulse 4s infinite ease-in-out; }
+    .dynamic-glow { animation: glowPulse 2s infinite ease-in-out; }
+    .zelda-shimmer { 
+        background: linear-gradient(90deg, transparent, rgba(251,191,36,0.2), transparent);
+        animation: shimmer 2s infinite;
+    }
+
+    /* Button - Toggle */
+    #ai-agent-toggle {
+        transition: all 0.3s ease;
+        background: linear-gradient(135deg, var(--zelda-primary), #312e81) !important;
+        border: 2px solid var(--zelda-accent) !important;
+    }
+
+    #ai-agent-toggle:hover {
+        transform: scale(1.1) translateY(-5px);
+        box-shadow: 0 8px 24px rgba(251, 191, 36, 0.3) !important;
+    }
+
+    /* Sidebar */
+    #aiAgentSidebar {
+        animation: slideInRight 0.4s ease-out;
+    }
+
+    .zelda-sidebar-header {
+        background: linear-gradient(135deg, var(--zelda-primary), #312e81);
+        color: white;
+    }
+
+    /* Cards */
+    .zelda-card {
+        background: white;
+        border-radius: 1rem;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .zelda-card:hover {
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        border-color: var(--zelda-accent);
+    }
+
+    /* Log Display */
+    .zelda-log {
+        background: #0f172a;
+        border-radius: 1rem;
+        padding: 1rem;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        font-size: 0.8rem;
+        color: #e2e8f0;
+        overflow-y: auto;
+        max-height: 400px;
+        position: relative;
+    }
+
+    .zelda-log::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 20px;
+        background: linear-gradient(to bottom, rgba(15,23,42,0.8), transparent);
+        pointer-events: none;
+        border-radius: 1rem 1rem 0 0;
+    }
+
+    .log-entry {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.1);
+        animation: slideInRight 0.3s ease-out;
+    }
+
+    .log-entry.success { color: var(--zelda-success); }
+    .log-entry.warning { color: #f59e0b; }
+    .log-entry.error { color: var(--zelda-danger); }
+    .log-entry.info { color: #60a5fa; }
+
+    /* Status Badge */
+    .zelda-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-active { background: rgba(16, 185, 129, 0.1); color: var(--zelda-success); border: 1px solid var(--zelda-success); }
+    .status-processing { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid #f59e0b; }
+    .status-error { background: rgba(239, 68, 68, 0.1); color: var(--zelda-danger); border: 1px solid var(--zelda-danger); }
+
+    /* Tabs */
+    .zelda-tabs {
+        display: flex;
+        gap: 0.5rem;
+        border-bottom: 2px solid #e2e8f0;
+        margin-bottom: 1rem;
+        padding-bottom: 0;
+    }
+
+    .zelda-tab {
+        padding: 0.75rem 1.25rem;
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-weight: 500;
+        color: #64748b;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .zelda-tab.active {
+        color: var(--zelda-accent);
+        border-bottom-color: var(--zelda-accent);
+    }
+
+    .zelda-tab:hover {
+        color: var(--zelda-primary);
+    }
+
+    /* Form Elements */
+    .zelda-input {
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+    }
+
+    .zelda-input:focus {
+        outline: none;
+        background: white;
+        border-color: var(--zelda-accent);
+        box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+    }
+
+    .zelda-button {
+        background: linear-gradient(135deg, var(--zelda-primary), #312e81);
+        color: white;
+        border: none;
+        border-radius: 0.75rem;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .zelda-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(30, 27, 75, 0.3);
+    }
+
+    .zelda-button:active {
+        transform: translateY(0);
+    }
+
+    .zelda-button.secondary {
+        background: white;
+        color: var(--zelda-primary);
+        border: 2px solid var(--zelda-primary);
+    }
+
+    /* Progress */
+    .zelda-progress {
+        background: #e2e8f0;
+        border-radius: 9999px;
+        height: 6px;
+        overflow: hidden;
+    }
+
+    .zelda-progress-bar {
+        background: linear-gradient(90deg, var(--zelda-accent), #f59e0b);
+        height: 100%;
+        transition: width 0.3s ease;
+        border-radius: 9999px;
+    }
+
+    /* Upload Zone */
+    .zelda-dropzone {
+        border: 2px dashed #cbd5e1;
+        border-radius: 1rem;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: #f8fafc;
+    }
+
+    .zelda-dropzone:hover,
+    .zelda-dropzone.dragover {
+        border-color: var(--zelda-accent);
+        background: rgba(251, 191, 36, 0.05);
+    }
+
+    .zelda-dropzone.loading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+</style>
+
+<!-- ZELDA AI ASSISTANT BUTTON -->
+<button 
+    id="ai-agent-toggle" 
+    class="btn btn-primary rounded-circle position-fixed bottom-0 end-0 m-4 d-flex align-items-center justify-content-center shadow-lg" 
+    style="width: 70px; height: 70px; z-index: 1050;" 
+    title="Open Zelda Intelligence Panel">
+    <div style="position: relative; width: 40px; height: 40px;">
+        <div class="position-absolute w-100 h-100 rounded-circle bg-warning dynamic-pulse"></div>
+        <i class="bi bi-robot text-warning fs-2 dynamic-glow position-relative z-3"></i>
+    </div>
+</button>
+
+<!-- ZELDA INTELLIGENCE SIDEBAR -->
+<div 
+    class="offcanvas offcanvas-end border-0 shadow-lg" 
+    tabindex="-1" 
+    id="aiAgentSidebar" 
+    aria-labelledby="aiAgentSidebarLabel" 
+    style="width: 500px; background: var(--zelda-light);">
+    
+    <!-- Header -->
+    <div class="offcanvas-header zelda-sidebar-header p-4">
+        <div class="d-flex align-items-center gap-3 w-100">
+            <div class="rounded-circle bg-warning p-2 d-flex align-items-center justify-content-center position-relative" style="width: 50px; height: 50px; flex-shrink: 0;">
+                <div class="position-absolute w-100 h-100 rounded-circle bg-warning dynamic-pulse"></div>
+                <i class="bi bi-cpu text-dark fs-3 position-relative z-3"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h5 class="fw-bold m-0 text-white">Zelda Intelligence</h5>
+                <div class="zelda-status status-active" style="margin-top: 0.5rem;">
+                    <span class="d-inline-block" style="width: 8px; height: 8px; background: var(--zelda-success); border-radius: 50%; animation: glowPulse 1s infinite;"></span>
+                    Pipeline Active
+                </div>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    
+    <!-- Body -->
+    <div class="offcanvas-body p-4 d-flex flex-column h-100">
+        
+        <!-- TAB NAVIGATION -->
+        <div class="zelda-tabs" style="margin: -1rem -1rem 0 -1rem; padding: 0 1rem;">
+            <button class="zelda-tab active" data-tab="search">
+                <i class="bi bi-search me-2"></i>Search
+            </button>
+            <button class="zelda-tab" data-tab="upload">
+                <i class="bi bi-cloud-upload me-2"></i>Upload
+            </button>
+            <button class="zelda-tab" data-tab="memo">
+                <i class="bi bi-file-text me-2"></i>Memos
+            </button>
+        </div>
+
+        <!-- TAB: SEARCH -->
+        <div id="tab-search" class="tab-content active" style="display: flex; flex-direction: column; gap: 1rem;">
+            
+            <!-- Global Search -->
+            <div class="zelda-card p-4">
+                <h6 class="fw-bold text-dark mb-3">
+                    <i class="bi bi-search text-primary me-2"></i>Global Platform Search
+                </h6>
+                <form id="global-agent-form">
+                    <div class="input-group" style="gap: 0.5rem;">
+                        <input 
+                            type="text" 
+                            id="globalAgentQuery" 
+                            class="zelda-input flex-grow-1" 
+                            placeholder="Search founders, investors, pitches..."
+                            autocomplete="off">
+                        <button type="submit" class="zelda-button" style="padding: 0.75rem 1.25rem;">
+                            <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Vector Search (Document-specific) -->
+            <div class="zelda-card p-4">
+                <h6 class="fw-bold text-dark mb-3">
+                    <i class="bi bi-lightning text-warning me-2"></i>Vector Search Document
+                </h6>
+                <div class="mb-3">
+                    <label class="small text-muted d-block mb-2">Document ID</label>
+                    <input 
+                        type="number" 
+                        id="searchDocId" 
+                        class="zelda-input w-100" 
+                        placeholder="Enter document ID"
+                        min="1">
+                </div>
+                <form id="vector-search-form">
+                    <div class="input-group" style="gap: 0.5rem;">
+                        <input 
+                            type="text" 
+                            id="vectorQuery" 
+                            class="zelda-input flex-grow-1" 
+                            placeholder="Search within document..."
+                            autocomplete="off">
+                        <button type="submit" class="zelda-button" style="padding: 0.75rem 1.25rem;">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB: UPLOAD -->
+        <div id="tab-upload" class="tab-content" style="display: none; flex-direction: column; gap: 1rem;">
+            
+            <div class="zelda-card p-4">
+                <h6 class="fw-bold text-dark mb-3">
+                    <i class="bi bi-cloud-upload text-success me-2"></i>Upload Document
+                </h6>
+                
+                <!-- Upload Form -->
+                <form id="document-upload-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                    
+                    <!-- Drop Zone -->
+                    <div class="zelda-dropzone" id="upload-dropzone">
+                        <i class="bi bi-cloud-upload" style="font-size: 2rem; color: var(--zelda-accent); display: block; margin-bottom: 0.5rem;"></i>
+                        <p class="mb-1 fw-bold text-dark">Drop files here or click to upload</p>
+                        <p class="text-muted small mb-0">PDF, PPTX, or TXT (Max 10MB)</p>
+                        <input type="file" id="document-file" style="display: none;" accept=".pdf,.pptx,.txt">
+                    </div>
+
+                    <!-- File Info -->
+                    <div id="file-info" style="display: none; padding: 1rem; background: #f0fdf4; border-radius: 0.75rem; border: 1px solid var(--zelda-success);">
+                        <div class="small text-dark">
+                            <strong>File:</strong> <span id="file-name"></span> 
+                            (<span id="file-size"></span>)
+                        </div>
+                    </div>
+
+                    <!-- Fields -->
+                    <div>
+                        <label class="small text-muted d-block mb-2">Source Entity (Company/Investor)</label>
+                        <input 
+                            type="text" 
+                            id="source-entity" 
+                            class="zelda-input w-100" 
+                            placeholder="e.g., Acme Corp"
+                            required>
+                    </div>
+
+                    <div>
+                        <label class="small text-muted d-block mb-2">Document Type</label>
+                        <select id="document-type" class="zelda-input w-100" required>
+                            <option value="">Select type...</option>
+                            <option value="pitch_deck">Pitch Deck</option>
+                            <option value="financial_model">Financial Model</option>
+                            <option value="business_plan">Business Plan</option>
+                            <option value="whitepaper">Whitepaper</option>
+                            <option value="research">Research Report</option>
+                            <option value="portfolio">Investor Portfolio</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" class="zelda-button" style="width: 100%;">
+                        <i class="bi bi-upload me-2"></i>Upload & Analyze
+                    </button>
+                </form>
+            </div>
+
+            <!-- Upload Status -->
+            <div class="zelda-card p-4" id="upload-status-card" style="display: none;">
+                <h6 class="fw-bold text-dark mb-3">Upload Status</h6>
+                <div id="upload-progress">
+                    <div class="mb-3">
+                        <div class="small text-muted mb-2">
+                            <span id="status-text">Initializing...</span>
+                        </div>
+                        <div class="zelda-progress">
+                            <div class="zelda-progress-bar" id="upload-progress-bar" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                    <div id="upload-message" class="small text-muted"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: MEMOS -->
+        <div id="tab-memo" class="tab-content" style="display: none; flex-direction: column; gap: 1rem;">
+            
+            <div class="zelda-card p-4">
+                <h6 class="fw-bold text-dark mb-3">
+                    <i class="bi bi-file-text text-info me-2"></i>View Generated Memos
+                </h6>
+
+                <div>
+                    <label class="small text-muted d-block mb-2">Document ID</label>
+                    <div class="input-group" style="gap: 0.5rem;">
+                        <input 
+                            type="number" 
+                            id="memo-doc-id" 
+                            class="zelda-input flex-grow-1" 
+                            placeholder="Enter document ID"
+                            min="1">
+                        <button type="button" class="zelda-button" onclick="loadMemo()">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Memo Display -->
+            <div id="memo-display" style="display: none; flex-direction: column; gap: 1rem; flex-grow: 1;">
+                <div class="zelda-card p-4" style="flex-grow: 1; overflow-y: auto;">
+                    <div id="memo-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EXECUTION LOG -->
+        <div class="zelda-log" id="agent-response-log">
+            <div style="padding-right: 1rem; position: relative; z-index: 10;">
+                <div class="log-entry info">
+                    <strong>[System]</strong> Zelda Intelligence Pipeline Ready
+                </div>
+                <div class="log-entry info">
+                    <strong>[Ready]</strong> Awaiting input... Global search, document upload, or memo retrieval
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ZELDA JAVASCRIPT ENGINE -->
+<script>
+    const ZELDA_API = '/api/v1/zelda';
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // UTILITY FUNCTIONS
+    // ──────────────────────────────────────────────────────────────────────────
+
+    function getCookie(name) {
+        const cookies = document.cookie.split(';');
+        for (let c of cookies) {
+            c = c.trim();
+            if (c.startsWith(name + '=')) return decodeURIComponent(c.slice(name.length + 1));
+        }
+        return null;
+    }
+
+    function addLogEntry(message, type = 'info') {
+        const log = document.getElementById('agent-response-log');
+        const entry = document.createElement('div');
+        entry.className = `log-entry ${type}`;
+        const timestamp = new Date().toLocaleTimeString();
+        entry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+        log.appendChild(entry);
+        log.scrollTop = log.scrollHeight;
+    }
+
+    function formatBytes(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // TAB NAVIGATION
+    // ──────────────────────────────────────────────────────────────────────────
+
+    document.querySelectorAll('.zelda-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabName = this.dataset.tab;
+            
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            // Deactivate all tabs
+            document.querySelectorAll('.zelda-tab').forEach(t => {
+                t.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(`tab-${tabName}`).style.display = 'flex';
+            this.classList.add('active');
+        });
+    });
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // GLOBAL SEARCH
+    // ──────────────────────────────────────────────────────────────────────────
+
+    document.getElementById('global-agent-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const query = document.getElementById('globalAgentQuery').value.trim();
+        if (!query) return;
+
+        addLogEntry(`Searching for: "${query}"`, 'info');
+
+        try {
+            const response = await fetch(`${ZELDA_API}/search/`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({ q: query })
+            });
+
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+
+            if (data.response) {
+                addLogEntry(data.response, 'success');
+            }
+
+            if (data.results && data.results.length > 0) {
+                addLogEntry(`Found ${data.results.length} results`, 'success');
+                data.results.slice(0, 3).forEach((result, i) => {
+                    addLogEntry(`${i+1}. ${result.title || result.company_name} - ${result.description || ''}`, 'info');
+                });
+            } else {
+                addLogEntry('No results found', 'warning');
+            }
+
+        } catch (err) {
+            addLogEntry(`Error: ${err.message}`, 'error');
+        }
+
+        document.getElementById('globalAgentQuery').value = '';
+    });
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // DOCUMENT UPLOAD
+    // ──────────────────────────────────────────────────────────────────────────
+
+    const dropzone = document.getElementById('upload-dropzone');
+    const fileInput = document.getElementById('document-file');
+
+    dropzone.addEventListener('click', () => fileInput.click());
+
+    dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('dragover');
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+        fileInput.files = e.dataTransfer.files;
+        updateFileInfo();
+    });
+
+    fileInput.addEventListener('change', updateFileInfo);
+
+    function updateFileInfo() {
+        const file = fileInput.files[0];
+        if (file) {
+            document.getElementById('file-info').style.display = 'block';
+            document.getElementById('file-name').textContent = file.name;
+            document.getElementById('file-size').textContent = formatBytes(file.size);
+        }
+    }
+
+    document.getElementById('document-upload-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const file = fileInput.files[0];
+        const sourceEntity = document.getElementById('source-entity').value.trim();
+        const documentType = document.getElementById('document-type').value;
+
+        if (!file || !sourceEntity || !documentType) {
+            addLogEntry('Please fill all fields and select a file', 'error');
+            return;
+        }
+
+        // Show upload status
+        document.getElementById('upload-status-card').style.display = 'block';
+        document.getElementById('upload-progress-bar').style.width = '0%';
+        document.getElementById('status-text').textContent = 'Uploading file...';
+
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('source_entity', sourceEntity);
+            formData.append('document_type', documentType);
+
+            const response = await fetch(`${ZELDA_API}/documents/ingest/`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: formData
+            });
+
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+
+            document.getElementById('upload-progress-bar').style.width = '100%';
+            document.getElementById('status-text').textContent = 'Upload complete! Processing...';
+            document.getElementById('upload-message').innerHTML = `
+                <strong>Document Ingested!</strong><br>
+                ID: <strong>${data.document_id}</strong><br>
+                <a href="javascript:loadMemoById(${data.document_id})" style="color: var(--zelda-accent); text-decoration: none;">View progress →</a>
+            `;
+
+            addLogEntry(`Document uploaded: ${file.name} (ID: ${data.document_id})`, 'success');
+
+            // Reset form
+            setTimeout(() => {
+                document.getElementById('document-upload-form').reset();
+                document.getElementById('file-info').style.display = 'none';
+            }, 2000);
+
+        } catch (err) {
+            addLogEntry(`Upload error: ${err.message}`, 'error');
+            document.getElementById('upload-message').innerHTML = `<span style="color: var(--zelda-danger);">Error: ${err.message}</span>`;
+        }
+    });
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // VECTOR SEARCH
+    // ──────────────────────────────────────────────────────────────────────────
+
+    document.getElementById('vector-search-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const docId = document.getElementById('searchDocId').value;
+        const query = document.getElementById('vectorQuery').value.trim();
+
+        if (!docId || !query) {
+            addLogEntry('Please enter document ID and search query', 'error');
+            return;
+        }
+
+        addLogEntry(`Vector searching document ${docId}: "${query}"`, 'info');
+
+        try {
+            const response = await fetch(`${ZELDA_API}/documents/${docId}/search/`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({ query: query })
+            });
+
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+
+            addLogEntry(`Found ${data.results_count} relevant chunks`, 'success');
+            data.results.slice(0, 3).forEach((result, i) => {
+                const text = result.text.substring(0, 80) + '...';
+                addLogEntry(`${i+1}. [${result.section}] ${text}`, 'info');
+            });
+
+        } catch (err) {
+            addLogEntry(`Search error: ${err.message}`, 'error');
+        }
+
+        document.getElementById('vectorQuery').value = '';
+    });
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // MEMO VIEWER
+    // ──────────────────────────────────────────────────────────────────────────
+
+    function loadMemoById(docId) {
+        document.getElementById('memo-doc-id').value = docId;
+        loadMemo();
+    }
+
+    async function loadMemo() {
+        const docId = document.getElementById('memo-doc-id').value;
+        if (!docId) {
+            addLogEntry('Please enter a document ID', 'error');
+            return;
+        }
+
+        addLogEntry(`Loading memo for document ${docId}...`, 'info');
+
+        try {
+            const response = await fetch(`${ZELDA_API}/documents/${docId}/memo/`, {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                }
+            });
+
+            if (!response.ok) {
+                if (response.status === 202) {
+                    addLogEntry('Memo still being generated. Please wait...', 'warning');
+                    return;
+                }
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            document.getElementById('memo-display').style.display = 'flex';
+
+            let memoHTML = `
+                <div class="mb-4">
+                    <h5 class="fw-bold text-dark mb-3">${data.document_name}</h5>
+                    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                        <div>
+                            <div class="small text-muted">Recommendation</div>
+                            <strong style="color: var(--zelda-accent);">${data.recommendation.replace('_', ' ').toUpperCase()}</strong>
+                        </div>
+                        <div>
+                            <div class="small text-muted">Completeness</div>
+                            <strong>${Math.round(data.completeness_score * 100)}%</strong>
+                        </div>
+                        <div>
+                            <div class="small text-muted">Citations</div>
+                            <strong>${data.citations_count}</strong>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Sections
+            const sections = [
+                { key: 'executive_summary', label: 'Executive Summary' },
+                { key: 'problem_solution', label: 'Problem & Solution' },
+                { key: 'market_analysis', label: 'Market Analysis' },
+                { key: 'team_assessment', label: 'Team Assessment' },
+                { key: 'financial_analysis', label: 'Financial Analysis' },
+                { key: 'risk_assessment', label: 'Risk Assessment' },
+                { key: 'investment_thesis', label: 'Investment Thesis' },
+            ];
+
+            sections.forEach(section => {
+                if (data.sections[section.key]) {
+                    memoHTML += `
+                        <div class="mb-3">
+                            <h6 class="fw-bold text-dark">${section.label}</h6>
+                            <p class="text-secondary small">${data.sections[section.key]}</p>
+                        </div>
+                    `;
+                }
+            });
+
+            // Insights
+            if (data.insights_cited && data.insights_cited.length > 0) {
+                memoHTML += '<h6 class="fw-bold text-dark mt-4 mb-3">Key Insights</h6>';
+                data.insights_cited.forEach(insight => {
+                    memoHTML += `
+                        <div class="small mb-2 p-2 bg-light rounded">
+                            <strong>${insight.category}</strong>: ${insight.text}
+                            <br><span class="text-muted" style="font-size: 0.75rem;">Confidence: ${Math.round(insight.confidence*100)}%</span>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('memo-content').innerHTML = memoHTML;
+            addLogEntry(`Memo loaded successfully for document ${docId}`, 'success');
+
+        } catch (err) {
+            addLogEntry(`Memo load error: ${err.message}`, 'error');
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // INITIALIZE SIDEBAR
+    // ──────────────────────────────────────────────────────────────────────────
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const toggleBtn = document.getElementById('ai-agent-toggle');
+        const sidebarEl = document.getElementById('aiAgentSidebar');
+
+        if (sidebarEl && window.bootstrap) {
+            const offcanvasInstance = new bootstrap.Offcanvas(sidebarEl);
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => offcanvasInstance.show());
+            }
+        }
+
+        addLogEntry('Zelda Intelligence initialized', 'success');
+    });
+</script>

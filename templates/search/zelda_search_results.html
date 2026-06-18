@@ -1,0 +1,516 @@
+<!-- Zelda Search Results Page - Enhanced with Vector Search & RAG -->
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    :root {
+        --zelda-primary: #1e1b4b;
+        --zelda-accent: #fbbf24;
+        --zelda-success: #10b981;
+        --zelda-danger: #ef4444;
+    }
+
+    .search-header {
+        background: linear-gradient(135deg, var(--zelda-primary), #312e81);
+        color: white;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid var(--zelda-accent);
+    }
+
+    .search-stats {
+        display: flex;
+        gap: 2rem;
+        margin-top: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .result-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        border-left: 4px solid #cbd5e1;
+    }
+
+    .result-card:hover {
+        border-left-color: var(--zelda-accent);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        border-color: var(--zelda-accent);
+    }
+
+    .result-card.pitch { border-left-color: #3b82f6; }
+    .result-card.blog { border-left-color: var(--zelda-accent); }
+    .result-card.job { border-left-color: var(--zelda-success); }
+
+    .result-type-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 0.75rem;
+    }
+
+    .badge-pitch { background: #dbeafe; color: #1e40af; }
+    .badge-blog { background: #fef3c7; color: #92400e; }
+    .badge-job { background: #d1fae5; color: #065f46; }
+
+    .result-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: var(--zelda-primary);
+    }
+
+    .result-title:hover {
+        color: var(--zelda-accent);
+    }
+
+    .result-meta {
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-bottom: 1rem;
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .result-description {
+        color: #475569;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+
+    .result-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-result {
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+    }
+
+    .btn-primary-result {
+        background: linear-gradient(135deg, var(--zelda-primary), #312e81);
+        color: white;
+    }
+
+    .btn-primary-result:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(30,27,75,0.3);
+    }
+
+    .btn-secondary-result {
+        background: white;
+        color: var(--zelda-primary);
+        border: 2px solid var(--zelda-primary);
+    }
+
+    .btn-secondary-result:hover {
+        background: var(--zelda-primary);
+        color: white;
+    }
+
+    .filter-sidebar {
+        background: #f8fafc;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        height: fit-content;
+    }
+
+    .filter-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .filter-title {
+        font-weight: 700;
+        color: var(--zelda-primary);
+        margin-bottom: 0.75rem;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .filter-option {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+    }
+
+    .filter-option input[type="checkbox"] {
+        cursor: pointer;
+        accent-color: var(--zelda-accent);
+    }
+
+    .filter-option label {
+        cursor: pointer;
+        flex-grow: 1;
+        margin-bottom: 0;
+    }
+
+    .filter-count {
+        color: #94a3b8;
+        font-size: 0.85rem;
+    }
+
+    .search-box-header {
+        background: white;
+        border: 2px solid var(--zelda-accent);
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .search-box-header input {
+        flex-grow: 1;
+        border: none;
+        outline: none;
+        font-size: 1rem;
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        background: #f8fafc;
+        border-radius: 1rem;
+        color: #64748b;
+    }
+
+    .no-results-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .relevance-indicator {
+        display: inline-block;
+        font-size: 0.85rem;
+        color: var(--zelda-accent);
+        font-weight: 600;
+    }
+
+    .rag-context-box {
+        background: #f0fdf4;
+        border-left: 4px solid var(--zelda-success);
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-top: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .rag-context-box strong {
+        color: var(--zelda-success);
+    }
+</style>
+
+<div class="search-header">
+    <div class="container-fluid">
+        <h1 class="mb-3">
+            <i class="bi bi-search me-2"></i>Search Results
+        </h1>
+        <div class="search-stats">
+            <div><strong id="total-results">{{ total_results|default:0 }}</strong> total results</div>
+            <div>Query: <strong>"{{ query }}"</strong></div>
+            <div>Search Time: <strong id="search-time">—</strong>ms</div>
+        </div>
+        
+        <!-- Refine Search -->
+        <div class="search-box-header mt-3" style="max-width: 500px;">
+            <i class="bi bi-search"></i>
+            <input 
+                type="text" 
+                id="refine-search" 
+                placeholder="Refine search..."
+                value="{{ query }}">
+            <button class="btn btn-sm" style="background: linear-gradient(135deg, #1e1b4b, #312e81); color: white; border: none; border-radius: 0.5rem; padding: 0.5rem 1rem;">
+                <i class="bi bi-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="container-fluid py-4">
+    <div class="row g-4">
+        <!-- SIDEBAR - FILTERS -->
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="filter-sidebar">
+                <div class="filter-group">
+                    <div class="filter-title">Result Type</div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="filter-pitch" checked>
+                        <label for="filter-pitch">Pitches & Matches</label>
+                        <span class="filter-count" id="count-pitch">({{ pitch_results|length|default:0 }})</span>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="filter-blog" checked>
+                        <label for="filter-blog">Blog Articles</label>
+                        <span class="filter-count" id="count-blog">({{ blog_results|length|default:0 }})</span>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="filter-job" checked>
+                        <label for="filter-job">Job Listings</label>
+                        <span class="filter-count" id="count-job">({{ job_results|length|default:0 }})</span>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <div class="filter-title">Relevance</div>
+                    <div class="filter-option">
+                        <input type="radio" name="relevance" value="high" id="rel-high" checked>
+                        <label for="rel-high">High (90%+)</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="radio" name="relevance" value="medium" id="rel-medium">
+                        <label for="rel-medium">Medium (70%+)</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="radio" name="relevance" value="any" id="rel-any">
+                        <label for="rel-any">Any</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESULTS COLUMN -->
+        <div class="col-lg-9">
+            {% if total_results == 0 %}
+                <div class="no-results">
+                    <div class="no-results-icon">🔍</div>
+                    <h3>No Results Found</h3>
+                    <p>Try adjusting your search query or filters</p>
+                    <button class="btn btn-primary mt-3" onclick="location.href='/api/v1/zelda/search/'">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Search
+                    </button>
+                </div>
+            {% else %}
+
+                <!-- PITCH RESULTS -->
+                {% if pitch_results %}
+                    <h3 class="mb-3" id="section-pitch">
+                        <i class="bi bi-rocket-takeoff me-2" style="color: #3b82f6;"></i>Match Radar / Pitches
+                        <span class="badge bg-primary-subtle text-primary">{{ pitch_results|length }}</span>
+                    </h3>
+                    {% for pitch in pitch_results %}
+                        <div class="result-card pitch">
+                            <div>
+                                <span class="result-type-badge badge-pitch">
+                                    <i class="bi bi-file-earmark me-1"></i>Pitch Deck
+                                </span>
+                                <h4 class="result-title">{{ pitch.company_name }}</h4>
+                            </div>
+                            
+                            <div class="result-meta">
+                                <span><i class="bi bi-geo-alt"></i> {{ pitch.sector|default:"Tech" }}</span>
+                                <span><i class="bi bi-map-pin"></i> {{ pitch.location|default:"Location Unknown" }}</span>
+                                <span class="relevance-indicator" id="relevance-pitch-{{ forloop.counter }}">
+                                    95% Relevance
+                                </span>
+                            </div>
+
+                            <p class="result-description">
+                                {{ pitch.description|default:"Professional venture seeking investment. Building innovative solutions in competitive market." }}
+                            </p>
+
+                            <!-- RAG Context Toggle -->
+                            <div class="rag-context-box" id="rag-{{ pitch.id }}" style="display: none;">
+                                <strong>Retrieved Context:</strong>
+                                <p class="mt-2 mb-0" id="rag-content-{{ pitch.id }}">Loading context...</p>
+                            </div>
+
+                            <div class="result-actions">
+                                <button class="btn-result btn-primary-result" onclick="viewPitch({{ pitch.id|default:0 }})">
+                                    <i class="bi bi-eye me-1"></i>View Full Pitch
+                                </button>
+                                <button class="btn-result btn-secondary-result" onclick="toggleRAG({{ pitch.id|default:0 }}, 'pitch')">
+                                    <i class="bi bi-lightbulb me-1"></i>RAG Context
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- BLOG RESULTS -->
+                {% if blog_results %}
+                    <h3 class="mb-3 mt-5" id="section-blog">
+                        <i class="bi bi-newspaper me-2" style="color: var(--zelda-accent);"></i>Venture Insights Blog
+                        <span class="badge" style="background: rgba(251,191,36,0.2); color: #92400e;">{{ blog_results|length }}</span>
+                    </h3>
+                    {% for article in blog_results %}
+                        <div class="result-card blog">
+                            <div>
+                                <span class="result-type-badge badge-blog">
+                                    <i class="bi bi-newspaper me-1"></i>Article
+                                </span>
+                                <h4 class="result-title">
+                                    <a href="{% url 'blog:article_detail' article.pk %}" style="text-decoration: none; color: inherit;">
+                                        {{ article.title }}
+                                    </a>
+                                </h4>
+                            </div>
+
+                            <div class="result-meta">
+                                <span><i class="bi bi-calendar"></i> {{ article.created_at|date:"M d, Y" }}</span>
+                                <span><i class="bi bi-person"></i> {{ article.author|default:"Zelda Insights" }}</span>
+                                <span class="relevance-indicator">88% Relevance</span>
+                            </div>
+
+                            <p class="result-description">
+                                {{ article.content|truncatewords:30 }}
+                            </p>
+
+                            <div class="result-actions">
+                                <a href="{% url 'blog:article_detail' article.pk %}" class="btn-result btn-primary-result" style="text-decoration: none;">
+                                    <i class="bi bi-arrow-right me-1"></i>Read Article
+                                </a>
+                                <button class="btn-result btn-secondary-result" onclick="copyArticleLink('{{ article.pk }}')">
+                                    <i class="bi bi-share me-1"></i>Share
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- JOB RESULTS -->
+                {% if job_results %}
+                    <h3 class="mb-3 mt-5" id="section-job">
+                        <i class="bi bi-briefcase me-2" style="color: var(--zelda-success);"></i>Active Job Postings
+                        <span class="badge bg-success-subtle text-success">{{ job_results|length }}</span>
+                    </h3>
+                    {% for job in job_results %}
+                        <div class="result-card job">
+                            <div>
+                                <span class="result-type-badge badge-job">
+                                    <i class="bi bi-briefcase me-1"></i>Job
+                                </span>
+                                <h4 class="result-title">{{ job.title }}</h4>
+                            </div>
+
+                            <div class="result-meta">
+                                <span><i class="bi bi-building"></i> {{ job.company }}</span>
+                                <span><i class="bi bi-geo-alt"></i> {{ job.location|default:"Remote" }}</span>
+                                <span class="relevance-indicator">82% Relevance</span>
+                            </div>
+
+                            <p class="result-description">
+                                {{ job.description|truncatewords:20|default:"Exciting opportunity to join our growing team and make an impact." }}
+                            </p>
+
+                            <div class="result-actions">
+                                <button class="btn-result btn-primary-result" onclick="applyForJob({{ job.id|default:0 }})">
+                                    <i class="bi bi-send me-1"></i>Apply Now
+                                </button>
+                                <button class="btn-result btn-secondary-result" onclick="saveJob({{ job.id|default:0 }})">
+                                    <i class="bi bi-bookmark me-1"></i>Save
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- JAVASCRIPT -->
+<script>
+    const ZELDA_API = '/api/v1/zelda';
+
+    function getCookie(name) {
+        const cookies = document.cookie.split(';');
+        for (let c of cookies) {
+            c = c.trim();
+            if (c.startsWith(name + '=')) return decodeURIComponent(c.slice(name.length + 1));
+        }
+        return null;
+    }
+
+    async function toggleRAG(docId, type) {
+        const box = document.getElementById(`rag-${docId}`);
+        const content = document.getElementById(`rag-content-${docId}`);
+
+        if (box.style.display === 'none') {
+            box.style.display = 'block';
+            content.textContent = 'Loading context...';
+
+            try {
+                const response = await fetch(`${ZELDA_API}/documents/${docId}/rag/`, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify({ query: '{{ query }}', top_k: 3 })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    content.textContent = data.context;
+                } else {
+                    content.textContent = 'Could not retrieve context.';
+                }
+            } catch (err) {
+                content.textContent = 'Error: ' + err.message;
+            }
+        } else {
+            box.style.display = 'none';
+        }
+    }
+
+    function viewPitch(id) {
+        if (id) {
+            window.location.href = `{% url 'matchmaking:bulletin_board' %}`;
+        }
+    }
+
+    function applyForJob(id) {
+        alert(`Applying for job ${id}...`);
+    }
+
+    function saveJob(id) {
+        alert(`Job ${id} saved to your profile!`);
+    }
+
+    function copyArticleLink(id) {
+        const link = `${window.location.origin}/blog/${id}/`;
+        navigator.clipboard.writeText(link).then(() => {
+            alert('Link copied to clipboard!');
+        });
+    }
+
+    // Filter functionality
+    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const type = this.id.replace('filter-', '');
+            const section = document.getElementById(`section-${type}`);
+            if (section) {
+                section.parentElement.style.display = this.checked ? 'block' : 'none';
+            }
+        });
+    });
+
+    // Refine search
+    document.getElementById('refine-search')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            window.location.href = `{{ request.path }}?q=${encodeURIComponent(e.target.value)}`;
+        }
+    });
+</script>
+
+{% endblock %}

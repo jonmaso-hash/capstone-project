@@ -40,7 +40,7 @@ urlpatterns = [
     # LEGACY ENDPOINTS (BACKWARD COMPATIBILITY)
     # ──────────────────────────────────────────────────────────────────────────
     # Search & Discovery
-    path('search/', views.ZeldaGlobalSearchAPIView.as_view(), name='global_search'),
+    path('api/v1/zelda/search/', views.ZeldaGlobalSearchAPIView.as_view(), name='global_search_api'),
     
     # Document Analysis
     path('pitch-analysis/', views.PitchDeckAnalysisAPIView.as_view(), name='pitch_analysis'),
@@ -60,4 +60,10 @@ urlpatterns = [
     
     # Gateway (universal orchestration)
     path('gateway/<str:source_name>/', views.ZeldaGatewayAPIView.as_view(), name='gateway'),
+    
+    path('dashboard/intelligence/', views.zelda_intelligence_dashboard, name='intelligence_dashboard'),
+    
+    path('search/', views.zelda_search_view, name='zelda_search'),
+    
+    path('ui/search/', views.zelda_search_view, name='zelda_search_ui'),
 ]
