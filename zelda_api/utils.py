@@ -379,12 +379,24 @@ def _calculate_completeness(app) -> int:
     filled = sum(1 for field in tracked_fields if getattr(app, field, None))
     return int((filled / len(tracked_fields)) * 100)
 
-def extract_text_from_file(file_obj):
+def extract_text_from_file(uploaded_file) -> str:
     """
-    Generic text extractor. If you are using PyPDF2 or python-pptx, 
-    this is where that logic lives.
+    Extracts raw text from an uploaded file as a plain string.
+    Used by the DocumentIngestView to get raw text for the pipeline.
     """
-    # For now, you can wrap your existing scan_pitch_deck to satisfy the import:
-    from .utils import scan_pitch_deck
-    data = scan_pitch_deck(file_obj)
-    return data.get('summary', '')
+    try:
+        filename = uploaded_file.name.lower()
+        
+        if filename.endswith('.pdf'):
+            return _extract_pdf_text(uploaded_file)
+        elif filename.endswith('.pptx'):
+            return _extract_pptx_text(uploaded_file)
+        elif filename.endswith('.txt'):
+            uploaded_file.seek(0)
+            return uploaded_file.read().decode('utf-8', errors='ignore')
+        else:
+            logger.error(f"Unsupported file format for extraction: {filename}")
+            return ""
+    except Exception as e:
+        logger.error(f"Failed to extract text: {str(e)}")
+        return ""

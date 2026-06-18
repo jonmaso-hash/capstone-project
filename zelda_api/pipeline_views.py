@@ -417,4 +417,3 @@ class DocumentRAGView(APIView):
                 {"error": "Document not found"},
                 status=status.HTTP_404_NOT_FOUND
             )
-            
