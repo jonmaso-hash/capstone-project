@@ -35,62 +35,23 @@ class DocumentChunker:
         self.chunk_size_words = int(chunk_size_tokens / self.TOKENS_PER_WORD)
         self.overlap_words = int(overlap_tokens / self.TOKENS_PER_WORD)
     
-    def chunk(self, text: str) -> List[Tuple[str, int, str]]:
-        """
-        Chunk text into overlapping semantic chunks.
+    def chunk(self, text: str):
+        """Split on slide boundaries for PPTX content."""
+        # Split on 'Qibby Saves LLC' or any repeated title line acting as slide separator
+        slides = re.split(r'\n(?=Qibby Saves LLC\n|(?:[A-Z][a-z]+ ){1,4}LLC\n)', text)
         
-        Returns:
-            List of (chunk_text, page_number, section_title)
-        """
-        if not text or not text.strip():
-            return []
-        
-        # Clean text
-        text = self._clean_text(text)
-        
-        # Detect sections with confidence
-        sections = self._detect_sections(text)
-        
-        # Break text into sentences for flexible boundaries
-        sentences = self._split_into_sentences(text)
-        
+        # Fallback: if only 1 chunk, split on any ALL-CAPS or Title Case line
+        if len(slides) <= 1:
+            slides = re.split(r'\n(?=[A-Z][^\n]{2,40}\n)', text)
+    
         chunks = []
-        current_chunk = []
-        current_chunk_words = 0
-        current_section = "General"
-        page_number = 0
-        chunk_index = 0
-        
-        for sentence in sentences:
-            sentence_words = len(sentence.split())
-            
-            # Check if this sentence starts a new section
-            for section_match, section_title in sections:
-                if sentence.startswith(section_match[:20]):  # Match first 20 chars
-                    current_section = section_title
-                    break
-            
-            # If adding this sentence exceeds chunk size, save current chunk and start new
-            if current_chunk_words + sentence_words > self.chunk_size_words and current_chunk:
-                chunk_text = ' '.join(current_chunk)
-                if len(chunk_text.split()) >= self.MIN_CHUNK_TOKENS / self.TOKENS_PER_WORD:
-                    chunks.append((chunk_text, page_number, current_section))
-                    chunk_index += 1
-                
-                # Start new chunk with overlap
-                # Keep last few sentences for context
-                overlap_sentences = self._get_overlap_sentences(current_chunk, self.overlap_words)
-                current_chunk = overlap_sentences + [sentence]
-                current_chunk_words = len(' '.join(current_chunk).split())
-            else:
-                current_chunk.append(sentence)
-                current_chunk_words += sentence_words
-        
-        # Add final chunk
-        if current_chunk:
-            chunk_text = ' '.join(current_chunk)
-            if len(chunk_text.split()) >= self.MIN_CHUNK_TOKENS / self.TOKENS_PER_WORD:
-                chunks.append((chunk_text, page_number, current_section))
+        for idx, slide_text in enumerate(slides):
+            slide_text = slide_text.strip()
+            if len(slide_text) < 20:
+                continue
+            lines = slide_text.split('\n')
+            title = lines[0].strip() if lines else f"Slide {idx+1}"
+            chunks.append((slide_text, idx + 1, title))
         
         return chunks
     

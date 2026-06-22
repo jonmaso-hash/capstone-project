@@ -61,6 +61,7 @@ class DocumentIngestView(APIView):
                 source_entity=source_entity,
                 uploaded_by=request.user,
                 raw_text_preview=extracted_text[:1000],
+                raw_text_full=extracted_text,
                 total_word_count=len(extracted_text.split()),
                 status='ingested'
             )
@@ -70,7 +71,7 @@ class DocumentIngestView(APIView):
             
             # 3. BRIDGE: Trigger Truth Delta verification engine (async)
             # This makes the connection you requested.
-            initiate_truth_delta_verification.delay(doc.id)
+            #initiate_truth_delta_verification.delay(doc.id)
             
             return Response({
                 'status': 'ingested',

@@ -7,74 +7,11 @@ import logging
 from celery import shared_task
 from django.utils import timezone
 from .vector_models import DocumentSource
-from .truth_delta_engine import TruthDeltaOrchestrator
+from .truth_delta_engine import TruthDeltaOrchestrator, TruthDeltaEngine
 from .truth_delta_sources import DataSourceManager
 from .truth_delta_models import ClaimedDatapoint
 
 logger = logging.getLogger(__name__)
-
-
-@shared_task(bind=True, max_retries=3)
-def verify_document_truth_delta(self, document_id: int):
-    """
-    Main async task: Run complete Truth Delta verification.
-    
-    Process:
-    1. Fetch company data from all sources (Crunchbase, LinkedIn, etc)
-    2. Create ObservedDatapoint records
-    3. Compare claimed vs observed
-    4. Calculate Truth Delta score
-    5. Flag discrepancies
-    
-    Args:
-        document_id: The DocumentSource ID to verify
-    """
-    try:
-        logger.info(f"[Truth Delta] Starting verification for document {document_id}")
-        
-        document = DocumentSource.objects.get(id=document_id)
-        
-        # Get company name from document
-        company_name = document.source_entity
-        
-        # Step 1: Fetch observed data from all sources
-        logger.info(f"[Truth Delta] Fetching data for {company_name}")
-        observed_points = DataSourceManager.create_observed_datapoints(
-            document,
-            company_name
-        )
-        logger.info(f"[Truth Delta] Created {len(observed_points)} observed datapoints")
-        
-        # Step 2: Run full verification
-        logger.info(f"[Truth Delta] Running analysis for document {document_id}")
-        orchestrator = TruthDeltaOrchestrator(document)
-        result = orchestrator.run_full_verification()
-        
-        logger.info(f"[Truth Delta] Verification complete: {result}")
-        
-        # Return result
-        return {
-            'status': 'success',
-            'document_id': document_id,
-            'company_name': company_name,
-            'result': result,
-        }
-    
-    except DocumentSource.DoesNotExist:
-        logger.error(f"Document {document_id} not found")
-        return {'status': 'error', 'error': 'Document not found'}
-    
-    except Exception as exc:
-        logger.error(f"Truth Delta verification error: {str(exc)}")
-        
-        # Retry with exponential backoff
-        retry_count = self.request.retries
-        if retry_count < self.max_retries:
-            countdown = 2 ** retry_count  # 2, 4, 8 seconds
-            self.retry(exc=exc, countdown=countdown)
-        else:
-            logger.error(f"Truth Delta verification failed after {self.max_retries} retries")
-            return {'status': 'error', 'error': str(exc), 'retries_exhausted': True}
 
 
 @shared_task
@@ -273,3 +210,18 @@ def _extract_numeric_value(text: str) -> float:
                 continue
     
     return None
+
+@shared_task
+def verify_document_truth_delta(document_id):
+    engine = TruthDeltaEngine()
+    result = engine.verify_document(document_id)
+    
+    # Return JSON-serializable dict, not a Django model object
+    if result is None:
+        return {'status': 'no_claims', 'document_id': document_id}
+    
+    return {
+        'status': 'success',
+        'document_id': document_id,
+        'report_id': result.id if hasattr(result, 'id') else None,
+    }

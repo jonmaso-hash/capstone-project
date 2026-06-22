@@ -233,7 +233,7 @@ def batch_process_unprocessed_documents():
         processed_count = 0
         for doc in unprocessed:
             # Queue for processing
-            process_document_pipeline.delay(doc.id, doc.raw_text_preview)
+            process_document_pipeline.delay(doc.id, doc.raw_text_full or doc.raw_text_preview)
             processed_count += 1
         
         logger.info(f"Queued {processed_count} documents for batch processing")

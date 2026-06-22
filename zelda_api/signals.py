@@ -16,29 +16,14 @@ logger = logging.getLogger(__name__)
 def trigger_document_processing(sender, instance, created, **kwargs):
     """
     Signal handler: When a DocumentSource is created, queue it for pipeline processing.
-    
-    This automatically transforms:
-    - Uploaded file → DocumentSource instance (created=True)
-    - Triggers → Async pipeline processing
+    Pipeline is triggered explicitly by pipeline_views.py to avoid double processing.
     """
     if created:
         logger.info(f"DocumentSource created: {instance.filename}")
-        
-        # Only auto-process if we have extracted text
-        if instance.raw_text_preview:
-            logger.info(f"Queuing {instance.filename} for pipeline processing")
-            
-            # Queue async task
-            # Note: raw_text_preview is only 1000 chars. For full processing,
-            # we'd need to pass the complete extracted text.
-            # This is a simplified example - in practice, pass full_text from the view
-            process_document_pipeline.delay(
-                document_id=instance.id,
-                raw_text=instance.raw_text_preview
-            )
-        else:
-            logger.warning(f"No text preview for {instance.filename}, skipping processing")
-
+        # NOTE: Pipeline is intentionally NOT queued here.
+        # pipeline_views.py calls process_document_pipeline.delay() directly
+        # after extracting the full text from the uploaded file.
+        # Queuing here would cause double processing.
 
 @receiver(post_save, sender=DocumentSource)
 def handle_document_error(sender, instance, created, update_fields, **kwargs):

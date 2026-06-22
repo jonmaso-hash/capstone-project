@@ -126,7 +126,6 @@ class EmbeddingEngine:
         words = text.lower().split()
         word_freq = Counter(words)
         
-        # Create a feature vector based on common words
         common_words = [
             'money', 'revenue', 'customers', 'market', 'team', 'product',
             'technology', 'growth', 'scale', 'invest', 'founder', 'problem',
@@ -135,21 +134,18 @@ class EmbeddingEngine:
         
         features = [word_freq.get(word, 0) for word in common_words]
         
-        # Hash for additional dimensions
         hash_obj = hashlib.sha256(text.encode())
         hash_bytes = hash_obj.digest()
-        hash_features = list(np.frombuffer(hash_bytes, dtype=np.float32))
+        # Convert numpy float32 to native Python float — fixes JSON serialization
+        hash_features = [float(x) for x in np.frombuffer(hash_bytes, dtype=np.float32)]
         
-        # Combine
         embedding = features + hash_features
         
-        # Ensure correct dimension
         if len(embedding) < self.EMBEDDING_DIMENSION:
             embedding += [0.0] * (self.EMBEDDING_DIMENSION - len(embedding))
         else:
             embedding = embedding[:self.EMBEDDING_DIMENSION]
         
-        # Normalize
         norm = sum(x**2 for x in embedding) ** 0.5
         if norm > 0:
             embedding = [x / norm for x in embedding]

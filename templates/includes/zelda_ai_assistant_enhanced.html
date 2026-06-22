@@ -746,26 +746,26 @@
             const data = await response.json();
             document.getElementById('memo-display').style.display = 'flex';
 
-            let memoHTML = `
-                <div class="mb-4">
-                    <h5 class="fw-bold text-dark mb-3">${data.document_name}</h5>
-                    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
-                        <div>
-                            <div class="small text-muted">Recommendation</div>
-                            <strong style="color: var(--zelda-accent);">${data.recommendation.replace('_', ' ').toUpperCase()}</strong>
-                        </div>
-                        <div>
-                            <div class="small text-muted">Completeness</div>
-                            <strong>${Math.round(data.completeness_score * 100)}%</strong>
-                        </div>
-                        <div>
-                            <div class="small text-muted">Citations</div>
-                            <strong>${data.citations_count}</strong>
-                        </div>
-                    </div>
-                </div>
-            `;
-
+            console.log('[Zelda] Memo data received:', JSON.stringify(data, null, 2));
+        let memoHTML = `
+    <div class="mb-4">
+        <h5 class="fw-bold text-dark mb-3">${data.document_name || 'Untitled'}</h5>
+        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+            <div>
+                <div class="small text-muted">Recommendation</div>
+                <strong style="color: var(--zelda-accent);">${(data.recommendation || 'pending').replace('_', ' ').toUpperCase()}</strong>
+            </div>
+            <div>
+                <div class="small text-muted">Completeness</div>
+                <strong>${data.completeness_score != null ? Math.round(data.completeness_score * 100) + '%' : 'N/A'}</strong>
+            </div>
+            <div>
+                <div class="small text-muted">Citations</div>
+                <strong>${data.citations_count ?? '—'}</strong>
+            </div>
+        </div>
+    </div>
+`;
             // Sections
             const sections = [
                 { key: 'executive_summary', label: 'Executive Summary' },
@@ -795,7 +795,7 @@
                     memoHTML += `
                         <div class="small mb-2 p-2 bg-light rounded">
                             <strong>${insight.category}</strong>: ${insight.text}
-                            <br><span class="text-muted" style="font-size: 0.75rem;">Confidence: ${Math.round(insight.confidence*100)}%</span>
+                            <br><span class="text-muted" style="font-size: 0.75rem;">Confidence: ${Math.round(insight.confidence)}%</span>
                         </div>
                     `;
                 });

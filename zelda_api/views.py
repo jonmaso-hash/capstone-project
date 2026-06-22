@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Avg, Sum, Count
 from django.shortcuts import get_object_or_404, render
 from .vector_models import DocumentSource
+from django.urls import path
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -901,11 +902,42 @@ class SummarizePageAPIView(APIView):
     
 @login_required
 def truth_delta_ui_view(request, document_id):
-    # Fetch the document to ensure it exists and to pass its ID to the template
+    from .truth_delta_models import TruthDeltaReport, ClaimedDatapoint
+    
     document = get_object_or_404(DocumentSource, id=document_id)
     
+    # Get latest report for this document
+    report = TruthDeltaReport.objects.filter(
+        document=document
+    ).order_by('-created_at').first()
+    
+    # Get claims that were extracted
+    claims = ClaimedDatapoint.objects.filter(document=document)
+    
     context = {
-        'document': document
+        'document': document,
+        'report': report,
+        'claims': claims,
+        'has_report': report is not None,
+        'truth_score': round(report.overall_truth_score) if report else None,
+        'credibility_risk': report.credibility_risk if report else 'pending',
+        'summary': report.summary if report else 'Verification pending.',
+        'claims_count': claims.count(),
     }
-    # Ensure the template name matches what you saved the HTML file as
+    
     return render(request, 'truth_delta_dashboard.html', context)
+
+def get_memo(request, doc_id):
+    try:
+        doc = ZeldaDocument.objects.get(id=doc_id)
+        return JsonResponse({
+            "status": "ok",
+            "memo": doc.memo_text or "",   # never None
+            "doc_id": doc_id,
+        })
+    except ZeldaDocument.DoesNotExist:
+        return JsonResponse({
+            "status": "not_found",
+            "memo": "",
+            "doc_id": doc_id,
+        }, status=404)

@@ -39,6 +39,8 @@ class DocumentSource(FoundryStandardMixin, models.Model):
         ('error', 'Error'),
     ]
     
+
+    
     # Metadata
     filename = models.CharField(max_length=255)
     document_type = models.CharField(max_length=20, choices=SOURCE_TYPES, default='pitch_deck')
@@ -47,6 +49,7 @@ class DocumentSource(FoundryStandardMixin, models.Model):
     
     # Content summary
     raw_text_preview = models.TextField(blank=True, help_text="First 1000 chars for reference")
+    raw_text_full = models.TextField(blank=True, default='')
     total_pages = models.IntegerField(default=0)
     total_word_count = models.IntegerField(default=0)
     

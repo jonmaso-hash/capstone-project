@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from .fact_assertion_models import ContradictionAlert, FactAssertion
 
 from .vector_models import DocumentSource
 from .truth_delta_models import (
@@ -374,3 +375,48 @@ class CredibilityReportView(APIView):
 *Generated: {score.analyzed_at.strftime('%Y-%m-%d %H:%M:%S UTC')}*
 """
         return report
+    
+class TruthDeltaScoreView(APIView):
+    def get(self, request, document_id):
+        try:
+            report = TruthDeltaReport.objects.get(document_id=document_id)
+            return Response({"overall_truth_score": report.overall_truth_score})
+        except TruthDeltaReport.DoesNotExist:
+            return Response({"error": "Report not found"}, status=404)
+        
+class ContradictionAlertListView(APIView):
+    """Lists unresolved alerts and allows updating assertion status."""
+
+    def get(self, request):
+        alerts = ContradictionAlert.objects.filter(resolved_at__isnull=True)
+        data = [
+            {
+                "id": a.id,
+                "assertion_id": a.fact_assertion.id,
+                "attribute": a.fact_assertion.attribute,
+                "claimed": a.claimed_value,
+                "observed": a.observed_value,
+                "alert_level": a.alert_level
+            } for a in alerts
+        ]
+        return Response(data)
+
+    def post(self, request):
+        """Updates the verification status of a FactAssertion."""
+        assertion_id = request.data.get('assertion_id')
+        new_status = request.data.get('status') # e.g., 'verified'
+        notes = request.data.get('notes', '')
+
+        try:
+            assertion = FactAssertion.objects.get(id=assertion_id)
+            assertion.verification_status = new_status
+            assertion.manual_review_notes = notes
+            assertion.manual_review_required = False
+            assertion.save()
+            
+            # Resolve the alert
+            ContradictionAlert.objects.filter(fact_assertion=assertion).update(resolved_at=timezone.now())
+            
+            return Response({"message": "Status updated successfully"}, status=status.HTTP_200_OK)
+        except FactAssertion.DoesNotExist:
+            return Response({"error": "Assertion not found"}, status=status.HTTP_404_NOT_FOUND)

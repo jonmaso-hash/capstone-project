@@ -1,6 +1,7 @@
 # zelda_api/urls.py
 from django.urls import path
 from . import views as standard_views
+from .truth_delta_views import ContradictionAlertListView
 from .pipeline_views import (
     DocumentIngestView,
     DocumentStatusView,
@@ -55,4 +56,6 @@ urlpatterns = [
     path('search/', standard_views.zelda_search_view, name='zelda_search'),
     path('ui/search/', standard_views.zelda_search_view, name='zelda_search_ui'),
     path('documents/<int:document_id>/verification/', standard_views.truth_delta_ui_view, name='truth_delta_ui'),
+    path('alerts/', ContradictionAlertListView.as_view(), name='contradiction-alerts'),
+
 ]

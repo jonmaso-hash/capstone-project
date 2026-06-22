@@ -299,3 +299,14 @@ class VerificationAuditLog(models.Model):
     
     def __str__(self):
         return f"{self.action} on {self.document.filename} at {self.created_at}"
+    
+
+class TruthDeltaReport(models.Model):
+    document = models.ForeignKey('DocumentSource', on_delete=models.CASCADE)
+    overall_truth_score = models.FloatField(default=0.0)
+    credibility_risk = models.CharField(max_length=20, default='unknown')
+    summary = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = 'zelda_api'

@@ -4,6 +4,8 @@ from django.conf import settings
 from django.utils.text import slugify
 from datetime import datetime
 from .protocol import FoundryStandardMixin 
+from .truth_delta_models import ClaimedDatapoint, TruthDeltaReport
+from .fact_assertion_models import FactAssertion, ContradictionAlert
 
 
 # ==========================================

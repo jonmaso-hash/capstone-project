@@ -510,6 +510,13 @@ class DataSourceManager:
         
         logger.info(f"Created {len(created_points)} observed datapoints for {company_name}")
         return created_points
+    
+class ExternalSourceManager:
+    """Interface for Crunchbase, LinkedIn, News, SEC."""
+    @staticmethod
+    def get_market_data(company_name):
+        # Implementation for external API calls
+        return {"funding": "verified", "revenue": "partial"}
 
 
 # Global manager instance

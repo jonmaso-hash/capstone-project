@@ -1,6 +1,8 @@
 from pathlib import Path
 import os
 import environ
+from dotenv import load_dotenv
+load_dotenv()
 
 
 # --- BASE DIRECTORY ROUTING ---
@@ -9,12 +11,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # --- ENVIRONMENT VARIABLES ENGINE SETUP ---
 # Initialize django-environ structure with strict, non-leaking defaults
 env = environ.Env(
-    DEBUG=(bool, False),  # Default to False for production safety
+    DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, []),
     SITE_URL=(str, 'https://interlinkfoundry.com'),
     ADMIN_EMAIL=(str, ''),
-    SECRET_KEY=(str, None),  # Force system to require an env variable
+    SECRET_KEY=(str, None),
     GEMINI_API_KEY=(str, ''),
+    ANTHROPIC_API_KEY=(str, ''),   
     STREAM_API_KEY=(str, ''),
     STREAM_API_SECRET=(str, ''),
     EMAIL_HOST_USER=(str, ''),
@@ -23,6 +26,8 @@ env = environ.Env(
 
 # Read parameters straight from your secure root .env file
 environ.Env.read_env(BASE_DIR / '.env')
+
+
 
 
 # --- CORE SECURITY CONFIGURATION ---
@@ -164,11 +169,11 @@ LOGIN_URL = "accounts:login"
 
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 # COMMENT OUT THE LINE BELOW:
-# CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
 # UPDATE THESE TWO LINES:
-CELERY_TASK_ALWAYS_EAGER = True
-CELERY_TASK_STORE_EAGER_RESULT = False
+CELERY_TASK_ALWAYS_EAGER = False
+CELERY_TASK_STORE_EAGER_RESULT = 'redis://localhost:6379/0'
 
 
 # --- THIRD-PARTY INTERFACE DESIGN CONFIGURATION ---
@@ -185,6 +190,7 @@ ADMIN_EMAIL = env('ADMIN_EMAIL')
 GEMINI_API_KEY = env('GEMINI_API_KEY')
 STREAM_API_KEY = env('STREAM_API_KEY')
 STREAM_API_SECRET = env('STREAM_API_SECRET')
+ANTHROPIC_API_KEY = env('ANTHROPIC_API_KEY') 
 
 
 # --- EMAIL TRANSMISSION LAYERS (SMTP GMAIL PIPELINES) ---
