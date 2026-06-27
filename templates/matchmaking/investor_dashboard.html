@@ -77,13 +77,15 @@
                                     <h3 class="fw-bold text-dark mb-1">{{ match.founder.company_name }}</h3>
                                     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 border-bottom pb-3 mb-3">
                             <!-- NEW: Added Intelligence Brief Button Here -->
-        <a href="{% url 'matchmaking:standalone_memo' company_slug=match.founder.company_name|slugify %}" class="btn btn-sm btn-outline-primary mt-2">
-            <i class="bi bi-file-earmark-text me-1"></i> Intelligence Brief
-        </a>
-        <a href="{% url 'zelda_api:truth_delta_ui' document_id=match.founder.id %}" class="btn btn-sm btn-outline-dark" target="_blank">
-                <i class="bi bi-shield-check me-1"></i> Truth Delta Report
-            </a>
-        <div class="d-flex flex-wrap gap-2 my-2 align-items-center">
+                                <button onclick="openZeldaIntelligence('{{ match.founder.id }}', 'intelligence')"
+                                class="btn btn-sm btn-outline-primary mt-2">
+                            <i class="bi bi-file-earmark-text me-1"></i> Intelligence Brief
+                        </button>
+                        <button onclick="openZeldaIntelligence('{{ match.founder.id }}', 'truth-delta')"
+                                class="btn btn-sm btn-outline-dark mt-2">
+                            <i class="bi bi-shield-check me-1"></i> Truth Delta Report
+                        </button>
+            <div class="d-flex flex-wrap gap-2 my-2 align-items-center">
             <!-- ... your existing sector and stage badges ... -->
                                     <div class="d-flex flex-wrap gap-2 my-2 align-items-center">
                                         <span class="badge bg-secondary-subtle text-secondary rounded-2 px-2 py-1 small">
@@ -117,18 +119,16 @@
                                     <div class="bg-white rounded-circle p-2 border shadow-sm d-none d-sm-block">
                                         <i class="bi bi-cpu-fill text-success fs-4"></i>
                                     </div>
-                                    <div>
-                                        <strong class="text-dark d-block mb-0">Autonomous Intelligence Scraper Protocol</strong>
-                                        <span class="small text-muted d-block">Query external search vectors dynamically to refresh operational summaries and memos.</span>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <button class="btn btn-sm btn-outline-success py-2 px-3 fw-semibold text-nowrap transition-all" 
-                                            data-startup-name="{{ match.founder.company_name }}" 
-                                            data-startup-id="{{ match.founder.id }}"
-                                            onclick="triggerAutonomousScraper(this)">
-                                        <i class="bi bi-arrow-clockwise me-1"></i> Gather Intelligence Memo
-                                    </button>
+                                <div>
+    <strong class="text-dark d-block mb-0">Zelda Intelligence Analysis</strong>
+    <span class="small text-muted d-block">Open Zelda to view the intelligence brief, Truth Delta report, or run a new analysis.</span>
+</div>
+</div>
+<div class="d-flex align-items-center gap-2">
+    <button onclick="openZeldaIntelligence('{{ match.founder.id }}', 'analyze')"
+            class="btn btn-sm btn-outline-success py-2 px-3 fw-semibold text-nowrap">
+        <i class="bi bi-cpu me-1"></i> Analyze with Zelda
+    </button>
                                     <small id="scraper-status-{{ match.founder.id }}" class="fw-semibold text-muted ms-1"></small>
                                 </div>
                             </div>

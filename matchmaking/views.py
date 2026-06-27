@@ -284,8 +284,19 @@ def founder_bulletin_board(request):
     pitches_queryset = Application.objects.filter(is_private=False).select_related('user')
     
     selected_sector = request.GET.get('sector', '').strip()
+    search_query = request.GET.get('q', '').strip()
+
     if selected_sector:
         pitches_queryset = pitches_queryset.filter(sector__iexact=selected_sector)
+
+    if search_query:
+        from django.db.models import Q
+        pitches_queryset = pitches_queryset.filter(
+            Q(company_name__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(sector__icontains=search_query) |
+            Q(extra_info__icontains=search_query)
+        )
 
     investor_profile = None
     if request.user.is_authenticated:
@@ -663,25 +674,25 @@ def download_document(request, doc_id):
 @require_POST
 def submit_founder_application(request):
     application, created = Application.objects.get_or_create(user=request.user)
-    
-    # Process inputs
-    if 'raising_amount' in request.POST:
-        application.raising_amount = clean_financial_input(request.POST.get('raising_amount'))
-    if 'description' in request.POST:
-        application.description = request.POST.get('description')
-    if 'company_name' in request.POST:
-        application.company_name = request.POST.get('company_name')
 
-    # Process media
-    if 'pitch_video' in request.FILES:
-        application.pitch_video = request.FILES['pitch_video']
-    if 'pitch_deck' in request.FILES:
-        application.pitch_deck = request.FILES['pitch_deck']
-        
-    application.save()
-    
-    # Stay on the same page
-    return redirect(request.META.get('HTTP_REFERER', 'matchmaking:founder_dashboard'))
+    # ── Match vector fields — 30-day lock (lock enforcement to be added later) ──
+    vector_fields = ['description', 'sector', 'stage', 'extra_info', 'reason_for_capital']
+    for field in vector_fields:
+        val = request.POST.get(field, '').strip()
+        if val:
+            setattr(application, field, val)
+
+    # ── Display fields — always editable, no match vector impact ──
+    display_fields = ['company_name', 'company_website', 'linkedin_url', 'phone_number']
+    for field in display_fields:
+        val = request.POST.get(field, '').strip()
+        if val:
+            setattr(application, field, val)
+
+    # ── Geography — locked, affects match vector ──
+    geography_val = request.POST.get('geography', '').strip()
+    if geography_val:
+        application.geography = geography_val
 
 @login_required
 @require_POST

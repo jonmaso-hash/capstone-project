@@ -16,68 +16,102 @@
     {% block css %}{% endblock css %}
 </head>
 <body class="d-flex flex-column min-vh-100">
+
     <header class="bg-white border-bottom sticky-top">
         <nav class="navbar navbar-expand-lg navbar-light container" aria-label="Main Navigation">
             <a class="navbar-brand fw-bold text-dark" href="{% url 'pages:home' %}">Interlink Foundry</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarNav" aria-controls="navbarNav"
+                aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
             <div class="collapse navbar-collapse" id="navbarNav">
-    <ul class="navbar-nav ms-auto align-items-center mb-0 ps-0">
-        <li class="nav-item"><a class="nav-link" href="{% url 'pages:home' %}">Home</a></li>
-        
-        {% if user.is_authenticated %}
-            <li class="nav-item position-relative mx-2">
-                <a id="notification-toggle" class="nav-link" href="#" style="cursor: pointer;">
-                    <i class="fas fa-bell" style="color: #333; font-size: 1.2rem;"></i>
-                    <span id="badge" class="badge bg-danger rounded-pill" 
-                          style="font-size: 0.6rem; position: absolute; top: 5px; right: 0px; display: none;">0</span>
-                </a>
-                <div id="notification-dropdown" class="dropdown-menu dropdown-menu-end shadow" 
-                     style="display: none; position: absolute; right: 0; min-width: 280px; z-index: 1050; border-radius: 8px;">
-                    <ul id="notification-list" class="list-unstyled mb-0">
-                        <li class="p-3 text-center text-muted small">Loading...</li>
-                    </ul>
-                </div>
-            </li>
-            
-            {% if user.is_founder or user.match_founder_profile %}
-                <li class="nav-item"><a class="nav-link fw-bold text-primary" href="{% url 'matchmaking:founder_dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-            {% else %}
-                <li class="nav-item"><a class="nav-link fw-bold text-success" href="{% url 'matchmaking:investor_dashboard' %}"><i class="bi bi-shield-shaded"></i> Investor Dashboard</a></li>
-            {% endif %}
+                <ul class="navbar-nav ms-auto align-items-center mb-0 ps-0">
 
-            <li class="nav-item"><a class="nav-link text-primary fw-medium" href="{% url 'matchmaking:diligence_chat' %}"><i class="bi bi-briefcase-fill"></i> Chat</a></li>
-        {% endif %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'pages:home' %}">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'blog:blog_view' %}">Blog</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'jobs:index' %}">Job Board</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'pages:contact' %}">Contact</a></li>
 
-        <li class="nav-item"><a class="nav-link" href="{% url 'blog:blog_view' %}">Blog</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'matchmaking:founder_matchmaker' %}">Match Radar</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'matchmaking:bulletin_board' %}">Bulletin Board</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'jobs:index' %}">Job Board</a></li>
-        
-        <li class="nav-item ms-lg-3">
-            <button class="btn btn-light border btn-sm px-3 rounded-pill" data-bs-toggle="offcanvas" data-bs-target="#globalSearchSidebar">
-                <i class="bi bi-search text-primary"></i> Smart Filter
-            </button>
-        </li>
 
-        {% if user.is_authenticated %}
-            <li class="nav-item ms-lg-2"><a href="/accounts/profile/" class="nav-link">Profile</a></li>
-            <li class="nav-item">
-                <form action="{% url 'logout' %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-link text-secondary text-decoration-none">Logout</button>
-                </form>
-            </li>
-        {% else %}
-            <li class="nav-item ms-lg-3">
-                <a href="{% url 'login' %}" class="btn btn-outline-dark btn-sm rounded-pill">Sign In</a>
-                <a href="{% url 'accounts:signup' %}" class="btn btn-primary btn-sm rounded-pill">Get Started</a>
-            </li>
-        {% endif %}
-    </ul>
-</div>
+                    {% if user.is_authenticated %}
+
+                        {% if user.match_founder_profile %}
+                            {# ── FOUNDER NAV ── #}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'matchmaking:founder_matchmaker' %}">
+                                    <i class="bi bi-radar me-1"></i>Match Radar
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'matchmaking:bulletin_board' %}">
+                                    <i class="bi bi-megaphone me-1"></i>Founder/Investor Bulletin
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'matchmaking:diligence_chat' %}">
+                                    <i class="bi bi-chat-dots me-1"></i>Chat
+                                </a>
+                            </li>
+                            <li class="nav-item ms-1">
+                                <button class="btn btn-light border btn-sm px-3 rounded-pill"
+                                    data-bs-toggle="offcanvas" data-bs-target="#globalSearchSidebar">
+                                    <i class="bi bi-search text-primary"></i> Smart Filter
+                                </button>
+                            </li>
+
+                        {% elif user.accounts_investor_profile %}
+                            {# ── INVESTOR NAV ── #}
+                            <li class="nav-item">
+                                <a class="nav-link fw-bold text-success" href="{% url 'matchmaking:investor_dashboard' %}">
+                                    <i class="bi bi-shield-shaded me-1"></i>Investor Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'matchmaking:bulletin_board' %}">
+                                <i class="bi bi-megaphone me-1"></i>Founder/Investor Bulletin
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'matchmaking:diligence_chat' %}">
+                                    <i class="bi bi-chat-dots me-1"></i>Chat
+                                </a>
+                            </li>
+                            
+                        {% else %}
+                            {# ── NEW USER — NO PROFILE YET ── #}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'matchmaking:bulletin_board' %}">
+                                    <i class="bi bi-megaphone me-1"></i>Bulletin Board
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        <li class="nav-item ms-lg-2">
+                            <a href="/accounts/profile/" class="nav-link">
+                                <i class="bi bi-person-circle me-1"></i>Profile
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <form action="{% url 'logout' %}" method="post" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-link text-secondary text-decoration-none">
+                                    Logout
+                                </button>
+                            </form>
+                        </li>
+
+                    {% else %}
+                        {# ── LOGGED OUT ── #}
+                        <li class="nav-item ms-lg-3">
+                            <a href="{% url 'login' %}" class="btn btn-outline-dark btn-sm rounded-pill">Sign In</a>
+                            <a href="{% url 'accounts:signup' %}" class="btn btn-primary btn-sm rounded-pill ms-1">Get Started</a>
+                        </li>
+                    {% endif %}
+
+                </ul>
+            </div>
         </nav>
     </header>
 
@@ -85,7 +119,6 @@
         <div class="container">{% block content %}{% endblock content %}</div>
     </main>
 
-    <!-- Professional Utility Footer -->
     <footer class="bg-light border-top mt-auto py-4">
         <div class="container text-center">
             <div class="small text-muted mb-2">
@@ -95,11 +128,14 @@
                 <span class="mx-2">San Diego, CA</span>
             </div>
             <div class="text-muted" style="font-size: 0.75rem;">
-                &copy; 2026 Interlink Foundry. All Rights Reserved. Build v2.4.1 
+                &copy; 2026 Interlink Foundry. All Rights Reserved. Build v2.4.1
             </div>
         </div>
     </footer>
+
     
+
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script type="module">
@@ -107,82 +143,65 @@
         window.StreamChat = StreamChat;
     </script>
 
-    <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const toggleBtn = document.getElementById('notification-toggle');
-    const dropdown = document.getElementById('notification-dropdown');
-    const listContainer = document.getElementById('notification-list');
-    const badge = document.getElementById('badge');
-
-    // 1. Toggle Dropdown
-    if (toggleBtn && dropdown) {
-        toggleBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const isVisible = dropdown.style.display === 'block';
-            dropdown.style.display = isVisible ? 'none' : 'block';
-
-            if (!isVisible) fetchNotifications();
-        });
-    }
-
-    // 2. Close on outside click
-    document.addEventListener('click', (e) => {
-        if (dropdown && !dropdown.contains(e.target) && e.target !== toggleBtn) {
-            dropdown.style.display = 'none';
-        }
-    });
-
-    // 3. Fetch Notifications
-    async function fetchNotifications() {
-        if (!listContainer) return;
-        try {
-            const res = await fetch('/notifications/api/list/');
-            const data = await res.json();
-            
-            listContainer.innerHTML = '';
-            if (data.length === 0) {
-                listContainer.innerHTML = '<li class="dropdown-item text-muted">No new alerts</li>';
-            } else {
-                data.forEach(n => {
-                    const li = document.createElement('li');
-                    // Ensure the key matches your API response: 'target_url'
-                    li.innerHTML = `<a class="dropdown-item py-2" href="${n.target_url || '#'}">${n.message}</a>`;
-                    listContainer.appendChild(li);
-                });
-                if (badge) badge.style.display = 'none';
-            }
-        } catch (err) {
-            console.error("Fetch error:", err);
-        }
-    }
-
-    // 4. Badge Polling
-    function pollBadge() {
-        if (!badge) return;
-        fetch('/notifications/api/unread-count/')
-            .then(res => res.json())
-            .then(data => {
-                const count = data.count || 0;
-                if (count > 0) {
-                    badge.innerText = count;
-                    badge.style.display = 'inline-block';
-                } else {
-                    badge.style.display = 'none';
-                }
-            })
-            .catch(err => console.error('Badge poll error:', err));
-    }
-
-    pollBadge();
-    setInterval(pollBadge, 10000);
-});
-</script>
-
     <script src="{% static 'js/matchmaking.js' %}"></script>
 
     {% include "includes/zelda_ai_assistant_enhanced.html" %}
     {% block scripts %}{% endblock scripts %}
+
+    {# ── Global Search Sidebar ── #}
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="globalSearchSidebar" style="width: 420px;">
+        <div class="offcanvas-header bg-dark text-white">
+            <h5 class="offcanvas-title fw-bold">
+                <i class="bi bi-search me-2"></i>Smart Filter
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-4">
+            <form method="GET" action="{% url 'matchmaking:global_search' %}">
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-muted">Keywords</label>
+                    <input type="text" name="state" class="form-control rounded-3"
+                        placeholder="e.g. healthcare, AI, fintech...">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-muted">Stage</label>
+                    <select name="stage" class="form-select rounded-3">
+                        <option value="">All Stages</option>
+                        <option value="Pre-Seed">Pre-Seed</option>
+                        <option value="Seed">Seed</option>
+                        <option value="Series A">Series A</option>
+                        <option value="Series B">Series B</option>
+                        <option value="Series C">Series C</option>
+                        <option value="Growth">Growth</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-muted">Max Capital Raising ($)</label>
+                    <input type="number" name="capital" class="form-control rounded-3"
+                        placeholder="e.g. 5000000">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-muted">Min Revenue ($)</label>
+                    <input type="number" name="revenue" class="form-control rounded-3"
+                        placeholder="e.g. 100000">
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold">
+                    <i class="bi bi-search me-2"></i>Search Founders
+                </button>
+            </form>
+
+            <hr class="my-4">
+
+            <a href="{% url 'accounts:ai_search_page' %}" class="btn btn-outline-dark w-100 rounded-pill">
+                <i class="bi bi-cpu-fill me-2"></i>Open Zelda AI Search
+            </a>
+        </div>
+    </div>
+
 </body>
 </html>

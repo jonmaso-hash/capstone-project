@@ -1,62 +1,527 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Job Board | Interlink Foundry{% endblock %}
+
+{% block css %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=IM+Fell+English&display=swap');
+
+    /* ── Newspaper Background ── */
+    .newspaper-bg {
+        min-height: 100vh;
+        background-color: #f2e8d5;
+        background-image:
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+        padding: 0 0 4rem;
+    }
+
+    /* ── Now Hiring Banner (kept from original) ── */
+    .now-hiring-banner {
+        background: linear-gradient(135deg, #8b0000 0%, #cc0000 50%, #8b0000 100%);
+        text-align: center;
+        padding: 1.5rem 2rem;
+        position: relative;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+        border-bottom: 4px solid #ffcc00;
+    }
+
+    .now-hiring-banner::before,
+    .now-hiring-banner::after {
+        content: '★';
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #ffcc00;
+        font-size: 1.5rem;
+    }
+
+    .now-hiring-banner::before { left: 2rem; }
+    .now-hiring-banner::after  { right: 2rem; }
+
+    .now-hiring-text {
+        font-size: 2rem;
+        font-weight: 900;
+        color: #ffcc00;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        font-family: 'Georgia', serif;
+        margin: 0;
+    }
+
+    .now-hiring-sub {
+        color: rgba(255,220,100,0.85);
+        font-size: 0.82rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        margin: 0.25rem 0 0;
+    }
+
+    /* ── Masthead / Newspaper Title ── */
+    .paper-masthead {
+        background: #f2e8d5;
+        border-bottom: 3px double #2c1a0e;
+        padding: 1rem 2rem 0.75rem;
+        text-align: center;
+    }
+
+    .paper-masthead h2 {
+        font-family: 'Playfair Display', 'Georgia', serif;
+        font-size: 1.4rem;
+        font-weight: 900;
+        color: #1a0e00;
+        letter-spacing: 0.08em;
+        margin: 0 0 0.25rem;
+        text-transform: uppercase;
+    }
+
+    .paper-date-line {
+        font-size: 0.72rem;
+        color: #6b4e2a;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        border-top: 1px solid #c8a87a;
+        border-bottom: 1px solid #c8a87a;
+        padding: 3px 0;
+        display: inline-block;
+        min-width: 300px;
+    }
+
+    /* ── Main Layout ── */
+    .board-layout {
+        display: grid;
+        grid-template-columns: 240px 1fr;
+        gap: 2rem;
+        padding: 1.5rem 2rem 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    @media (max-width: 900px) {
+        .board-layout { grid-template-columns: 1fr; }
+    }
+
+    /* ── Filter Panel ── */
+    .filter-panel {
+        background: #ede0c4;
+        border: 1px solid #c8a87a;
+        border-radius: 4px;
+        padding: 1.25rem;
+        height: fit-content;
+        position: sticky;
+        top: 80px;
+        box-shadow: 2px 2px 6px rgba(0,0,0,0.08);
+    }
+
+    .filter-panel h6 {
+        font-family: 'Playfair Display', 'Georgia', serif;
+        font-size: 0.85rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #2c1a0e;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #c8a87a;
+    }
+
+    .paper-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #6b4e2a;
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+
+    .paper-input {
+        background: #faf4e8;
+        border: 1px solid #c8a87a;
+        color: #2c1a0e;
+        border-radius: 3px;
+        padding: 0.4rem 0.6rem;
+        font-size: 0.82rem;
+        width: 100%;
+        margin-bottom: 0.85rem;
+        font-family: 'Georgia', serif;
+    }
+
+    .paper-input:focus {
+        outline: none;
+        border-color: #8b0000;
+        box-shadow: 0 0 0 2px rgba(139,0,0,0.1);
+    }
+
+    .filter-apply-btn {
+        background: #2c1a0e;
+        color: #f2e8d5;
+        border: none;
+        width: 100%;
+        padding: 0.5rem;
+        border-radius: 3px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        cursor: pointer;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-family: 'Georgia', serif;
+        transition: background 0.15s;
+    }
+
+    .filter-apply-btn:hover { background: #4a2e14; }
+
+    .filter-clear {
+        display: block;
+        text-align: center;
+        color: #8b6914;
+        font-size: 0.72rem;
+        margin-top: 0.5rem;
+        text-decoration: none;
+        font-style: italic;
+    }
+
+    .filter-clear:hover { color: #2c1a0e; text-decoration: underline; }
+
+    .post-job-btn {
+        display: block;
+        background: #8b0000;
+        color: #f2e8d5;
+        text-align: center;
+        padding: 0.5rem 1rem;
+        border-radius: 3px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        text-decoration: none;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        margin-top: 0.75rem;
+        transition: background 0.15s;
+        font-family: 'Georgia', serif;
+    }
+
+    .post-job-btn:hover { background: #aa0000; color: #fff; }
+
+    /* ── Classifieds Section Header ── */
+    .classifieds-header {
+        font-family: 'Playfair Display', 'Georgia', serif;
+        font-size: 1.1rem;
+        font-weight: 900;
+        color: #1a0e00;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        border-bottom: 3px double #2c1a0e;
+        padding-bottom: 0.4rem;
+        margin-bottom: 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+    }
+
+    .classifieds-count {
+        font-family: 'Georgia', serif;
+        font-size: 0.75rem;
+        font-weight: 400;
+        color: #6b4e2a;
+        font-style: italic;
+        text-transform: none;
+        letter-spacing: 0;
+    }
+
+    /* ── Job Cards — Classified Ad Style ── */
+    .job-card {
+        background: #faf4e8;
+        border: 1px solid #d4b483;
+        border-radius: 3px;
+        padding: 1.1rem 1.25rem;
+        margin-bottom: 0.85rem;
+        position: relative;
+        box-shadow: 1px 2px 4px rgba(0,0,0,0.06);
+        transition: box-shadow 0.15s, transform 0.1s;
+    }
+
+    .job-card:hover {
+        box-shadow: 2px 4px 10px rgba(0,0,0,0.1);
+        transform: translateY(-1px);
+    }
+
+    .job-card.featured {
+        border-left: 4px solid #8b0000;
+        background: #fef8ee;
+    }
+
+    .featured-badge {
+        position: absolute;
+        top: 0.85rem;
+        right: 1rem;
+        background: #8b0000;
+        color: #ffcc00;
+        font-size: 0.62rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        padding: 2px 8px;
+        border-radius: 2px;
+        font-family: 'Georgia', serif;
+    }
+
+    /* Classified ad column rule between cards */
+    .job-card + .job-card {
+        border-top: 1px solid #c8a87a;
+    }
+
+    .job-company {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #8b0000;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 0.2rem;
+        font-family: 'Georgia', serif;
+    }
+
+    .job-title-link {
+        font-family: 'Playfair Display', 'Georgia', serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1a0e00;
+        text-decoration: none;
+        display: block;
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+    }
+
+    .job-title-link:hover {
+        color: #8b0000;
+        text-decoration: underline;
+    }
+
+    .job-description-snippet {
+        font-family: 'Georgia', serif;
+        font-size: 0.8rem;
+        color: #4a3520;
+        line-height: 1.55;
+        margin-bottom: 0.6rem;
+        font-style: italic;
+    }
+
+    .job-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .job-meta span {
+        font-size: 0.75rem;
+        color: #6b4e2a;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-family: 'Georgia', serif;
+    }
+
+    .job-meta i { color: #8b0000; font-size: 0.7rem; }
+
+    .job-type-badge {
+        font-size: 0.65rem;
+        background: rgba(139,0,0,0.08);
+        color: #8b0000;
+        border: 1px solid rgba(139,0,0,0.2);
+        padding: 1px 8px;
+        border-radius: 2px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-family: 'Georgia', serif;
+    }
+
+    .view-role-btn {
+        background: #2c1a0e;
+        color: #f2e8d5;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 4px 14px;
+        border-radius: 2px;
+        text-decoration: none;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        font-family: 'Georgia', serif;
+        transition: background 0.15s;
+        display: inline-block;
+    }
+
+    .view-role-btn:hover { background: #4a2e14; color: #f2e8d5; }
+
+    /* ── Divider ── */
+    .paper-divider {
+        border: none;
+        border-top: 1px solid #c8a87a;
+        margin: 0.75rem 0;
+    }
+
+    /* ── Empty State ── */
+    .empty-classifieds {
+        text-align: center;
+        padding: 3rem;
+        color: #8b6914;
+        font-family: 'Georgia', serif;
+        font-style: italic;
+        border: 1px dashed #c8a87a;
+        border-radius: 4px;
+        background: #faf4e8;
+    }
+
+    .empty-classifieds h4 {
+        font-family: 'Playfair Display', 'Georgia', serif;
+        color: #2c1a0e;
+        font-size: 1.1rem;
+    }
+</style>
+{% endblock css %}
 
 {% block content %}
-<div class="container my-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-1">Ecosystem Talent Board</h1>
-            <p class="text-muted">Discover roles at funded, vetted startups inside Interlink Foundry.</p>
-        </div>
-        {% if user.is_authenticated %}
-            <a href="{% url 'jobs:create' %}" class="btn btn-primary">
-                <i class="bi bi-plus-lg me-1"></i> Post a Job 
-            </a>
-        {% endif %}
+<div class="newspaper-bg mx-n3" style="margin-top: -1.5rem;">
+
+    {# ── Now Hiring Banner ── #}
+    <div class="now-hiring-banner">
+        <p class="now-hiring-text">★ Now Hiring ★</p>
+        <p class="now-hiring-sub">Ecosystem Talent Board — Startups & Companies Inside Interlink Foundry</p>
     </div>
 
-    <div class="row">
-        <div class="col-lg-12">
-            {% for job in jobs %}
-                <!-- Highlight background conditionally if the listing is paid/featured -->
-                <div class="card mb-3 {% if job.is_featured %}border-primary bg-light-subtle shadow-sm{% else %}border-light-subtle{% endif %}">
-                    <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                        <div>
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <span class="fw-bold text-dark">{{ job.company_name }}</span>
-                                {% if job.is_featured %}
-                                    <span class="badge bg-primary text-uppercase" style="font-size: 0.65rem;">Featured</span>
-                                {% endif %}
-                                <span class="badge bg-secondary-subtle text-secondary small">{{ job.get_job_type_display }}</span>
-                            </div>
-                            <h5 class="card-title mb-1">
-                                <a href="{% url 'jobs:detail' job.pk %}" class="text-decoration-none text-dark fw-semibold hover-primary">
-                                    {{ job.title }}
-                                </a>
-                            </h5>
-                            <div class="text-muted small d-flex flex-wrap gap-3 mt-2">
-                                <span><i class="bi bi-geo-alt me-1"></i>{{ job.location }}</span>
-                                {% if job.salary_range %}
-                                    <span><i class="bi bi-cash me-1"></i>{{ job.salary_range }}</span>
-                                {% endif %}
-                                {% if job.equity_range %}
-                                    <span><i class="bi bi-pie-chart me-1"></i>{{ job.equity_range }} equity</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div>
-                            <a href="{% url 'jobs:detail' job.pk %}" class="btn btn-outline-dark btn-sm px-4">
-                                View Role
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            {% empty %}
-                <div class="text-center py-5 border rounded bg-white">
-                    <i class="bi bi-briefcase text-muted" style="font-size: 2.5rem;"></i>
-                    <p class="text-muted mt-3">No jobs posted yet. Check back soon!</p>
-                </div>
-            {% endfor %}
+    {# ── Newspaper Masthead ── #}
+    <div class="paper-masthead">
+        <h2>The Foundry Employment Gazette</h2>
+        <div class="paper-date-line">
+            Interlink Foundry Job Board &nbsp;•&nbsp; {% now "F j, Y" %} Edition
         </div>
     </div>
-</div>
-{% endblock %}
+
+    {# ── Main Layout ── #}
+    <div class="board-layout">
+
+        {# ── Filter Sidebar ── #}
+        <aside class="filter-panel">
+            <h6>Search Classifieds</h6>
+            <form method="GET" action="{% url 'jobs:index' %}">
+
+                <label class="paper-label">Keywords</label>
+                <input type="text" name="q" class="paper-input"
+                    placeholder="Role, skill, company..."
+                    value="{{ request.GET.q|default:'' }}">
+
+                <label class="paper-label">Position Type</label>
+                <select name="job_type" class="paper-input">
+                    <option value="">All Positions</option>
+                    <option value="FT" {% if request.GET.job_type == 'FT' %}selected{% endif %}>Full-Time</option>
+                    <option value="PT" {% if request.GET.job_type == 'PT' %}selected{% endif %}>Part-Time</option>
+                    <option value="C"  {% if request.GET.job_type == 'C'  %}selected{% endif %}>Contract</option>
+                    <option value="I"  {% if request.GET.job_type == 'I'  %}selected{% endif %}>Internship</option>
+                </select>
+
+                <label class="paper-label">Location</label>
+                <input type="text" name="location" class="paper-input"
+                    placeholder="Remote, San Diego..."
+                    value="{{ request.GET.location|default:'' }}">
+
+                <label class="paper-label">Minimum Salary</label>
+                <input type="text" name="salary" class="paper-input"
+                    placeholder="e.g. $80k"
+                    value="{{ request.GET.salary|default:'' }}">
+
+                <button type="submit" class="filter-apply-btn">Search Listings</button>
+                <a href="{% url 'jobs:index' %}" class="filter-clear">Clear all filters</a>
+            </form>
+
+            <hr class="paper-divider">
+
+            {% if user.is_authenticated %}
+            <a href="{% url 'jobs:create' %}" class="post-job-btn">
+                + Place an Ad
+            </a>
+            {% else %}
+            <a href="{% url 'accounts:signup' %}" class="post-job-btn">
+                Sign Up to Post
+            </a>
+            {% endif %}
+
+            <hr class="paper-divider">
+
+            <div style="font-family:'Georgia',serif;font-size:0.72rem;color:#8b6914;font-style:italic;text-align:center;line-height:1.6;">
+                "Opportunity is everywhere.<br>You just have to know where to look."
+            </div>
+        </aside>
+
+        {# ── Classifieds Main Column ── #}
+        <main>
+            <div class="classifieds-header">
+                <span>Help Wanted</span>
+                <span class="classifieds-count">
+                    {{ jobs|length }} listing{{ jobs|length|pluralize }} found
+                    {% if request.GET.q or request.GET.job_type or request.GET.location %}
+                    &mdash; <a href="{% url 'jobs:index' %}" style="color:#8b0000;font-style:italic;">clear filters</a>
+                    {% endif %}
+                </span>
+            </div>
+
+            {% for job in jobs %}
+            {% if not job.is_expired and job.is_active %}
+            <div class="job-card {% if job.is_featured %}featured{% endif %}">
+
+                {% if job.is_featured %}
+                <span class="featured-badge">★ Featured</span>
+                {% endif %}
+
+                <div class="job-company">{{ job.company_name }}</div>
+
+                <a href="{% url 'jobs:detail' job.pk %}" class="job-title-link">
+                    {{ job.title }}
+                </a>
+
+                {% if job.description %}
+                <p class="job-description-snippet">
+                    {{ job.description|truncatewords:20 }}
+                </p>
+                {% endif %}
+
+                <div class="job-meta">
+                    <span><i class="bi bi-geo-alt-fill"></i>{{ job.location }}</span>
+                    {% if job.salary_range %}
+                    <span><i class="bi bi-cash-stack"></i>{{ job.salary_range }}</span>
+                    {% endif %}
+                    {% if job.equity_range %}
+                    <span><i class="bi bi-pie-chart-fill"></i>{{ job.equity_range }} equity</span>
+                    {% endif %}
+                    <span><i class="bi bi-calendar3"></i>{{ job.created_at|date:"M d, Y" }}</span>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+                    <span class="job-type-badge">{{ job.get_job_type_display }}</span>
+                    <a href="{% url 'jobs:detail' job.pk %}" class="view-role-btn">
+                        Apply / View →
+                    </a>
+                </div>
+
+            </div>
+            {% endif %}
+            {% empty %}
+            <div class="empty-classifieds">
+                <h4>No Positions Available</h4>
+                <p>No listings have been placed yet.<br>
+                Check back soon — the ecosystem is always hiring.</p>
+                {% if user.is_authenticated %}
+                <a href="{% url 'jobs:create' %}" class="post-job-btn d-inline-block mt-3"
+                   style="width:auto;padding:0.5rem 1.5rem;">
+                    Place the First Ad
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+        </main>
+
+    </div>{# /board-layout #}
+
+</div>{# /newspaper-bg #}
+{% endblock content %}

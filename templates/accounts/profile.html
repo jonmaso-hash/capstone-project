@@ -211,6 +211,142 @@
                                     {% endif %}
                                 
                                     {% if request.user == profile_user %}
+                                    <div class="p-4 bg-white border rounded-4 mt-3">
+                                        <h6 class="fw-bold text-dark mb-3">
+                                            <i class="bi bi-person-fill text-success me-2"></i>Update Profile
+                                        </h6>
+                                        <form method="POST" action="{% url 'matchmaking:submit_founder_application' %}" enctype="multipart/form-data">
+                                            {% csrf_token %}
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold small text-muted">Company Name</label>
+                                                <input type="text" class="form-control form-control-sm" name="company_name"
+                                                    value="{{ application.company_name|default:'' }}">
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold small text-muted">Executive Summary</label>
+                                                <textarea class="form-control form-control-sm" name="description" rows="3">{{ application.description|default:'' }}</textarea>
+                                            </div>
+
+                                            <div class="row g-2 mb-3">
+                                                <div class="col-6">
+                                                    <label class="form-label fw-bold small text-muted">Sector</label>
+                                                    <input type="text" class="form-control form-control-sm" name="sector"
+                                                        value="{{ application.sector|default:'' }}">
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="form-label fw-bold small text-muted">Stage</label>
+                                                    <select class="form-select form-select-sm" name="stage">
+                                                        <option value="">-- Select --</option>
+                                                        <option value="Pre-Seed" {% if application.stage == "Pre-Seed" %}selected{% endif %}>Pre-Seed</option>
+                                                        <option value="Seed" {% if application.stage == "Seed" %}selected{% endif %}>Seed</option>
+                                                        <option value="Series A" {% if application.stage == "Series A" %}selected{% endif %}>Series A</option>
+                                                        <option value="Series B" {% if application.stage == "Series B" %}selected{% endif %}>Series B</option>
+                                                        <option value="Series C" {% if application.stage == "Series C" %}selected{% endif %}>Series C</option>
+                                                        <option value="Growth" {% if application.stage == "Growth" %}selected{% endif %}>Growth</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="row g-2 mb-3">
+                                                <div class="col-6">
+                                                    <label class="form-label fw-bold small text-muted">Raising ($)</label>
+                                                    <input type="number" class="form-control form-control-sm" name="raising_amount"
+                                                        value="{{ application.raising_amount|default:'' }}">
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="form-label fw-bold small text-muted">Revenue ($)</label>
+                                                    <input type="number" class="form-control form-control-sm" name="current_revenue"
+                                                        value="{{ application.current_revenue|default:'' }}">
+                                                </div>
+                                            </div>
+
+                                            <div class="row g-2 mb-3">
+                                                <div class="col-6">
+                                                    <label class="form-label fw-bold small text-muted">Team Size</label>
+                                                    <input type="number" class="form-control form-control-sm" name="team_size"
+                                                        value="{{ application.team_size|default:'' }}">
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="form-label fw-bold small text-muted">Years in Business</label>
+                                                    <input type="number" class="form-control form-control-sm" name="years_in_business"
+                                                        value="{{ application.years_in_business|default:'' }}">
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold small text-muted">Additional Info</label>
+                                                <textarea class="form-control form-control-sm" name="extra_info" rows="2">{{ application.extra_info|default:'' }}</textarea>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold small text-muted">Pitch Deck (.pdf, .pptx)</label>
+                                                <input type="file" class="form-control form-control-sm" name="pitch_deck"
+                                                    id="id_pitch_deck" accept=".pdf,.pptx">
+                                                {% if application.pitch_deck %}
+                                                <small class="text-success mt-1 d-block">
+                                                    <i class="bi bi-check-circle me-1"></i>Current: {{ application.pitch_deck.name }}
+                                                </small>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold small text-muted">Pitch Video</label>
+                                                <input type="file" class="form-control form-control-sm" name="pitch_video"
+                                                    accept="video/mp4,video/quicktime,video/webm">
+                                            </div>
+
+                                            {# ── Display fields — always editable ── #}
+                                            <div class="border-top pt-3 mt-2 mb-3">
+                                                <p class="small text-muted fw-bold text-uppercase mb-2" style="font-size:0.65rem;">
+                                                    Contact & Links — Always Editable
+                                                </p>
+
+                                                <div class="mb-2">
+                                                    <label class="form-label fw-bold small text-muted">LinkedIn URL</label>
+                                                    <input type="url" class="form-control form-control-sm" name="linkedin_url"
+                                                        value="{{ application.linkedin_url|default:'' }}"
+                                                        placeholder="https://linkedin.com/in/yourname">
+                                                </div>
+
+                                                <div class="mb-2">
+                                                    <label class="form-label fw-bold small text-muted">Company Website</label>
+                                                    <input type="url" class="form-control form-control-sm" name="company_website"
+                                                        value="{{ application.company_website|default:'' }}"
+                                                        placeholder="https://yourcompany.com">
+                                                </div>
+
+                                                <div class="mb-2">
+                                                    <label class="form-label fw-bold small text-muted">Phone Number</label>
+                                                    <input type="text" class="form-control form-control-sm" name="phone_number"
+                                                        value="{{ application.phone_number|default:'' }}"
+                                                        placeholder="+1 (555) 000-0000">
+                                                </div>
+                                            </div>
+
+                                            {# ── Geography — locked (affects match vector) ── #}
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold small text-muted">
+                                                    Location
+                                                    <span class="badge bg-warning text-dark ms-1" style="font-size:0.6rem;">
+                                                        🔒 Match Vector Field
+                                                    </span>
+                                                </label>
+                                                <input type="text" class="form-control form-control-sm" name="geography"
+                                                    value="{{ application.geography|default:'' }}"
+                                                    placeholder="e.g. San Diego, CA">
+                                                <small class="text-muted" style="font-size:0.7rem;">
+                                                    Location affects investor matching. Updates limited to once every 30 days.
+                                                </small>
+                                            </div>
+
+                                            <button type="submit" class="btn btn-success btn-sm px-4 rounded-pill w-100">
+                                                <i class="bi bi-save me-1"></i> Save Profile
+                                            </button>
+                                        </form>
+                                    </div>
+
                                     <div class="p-4 bg-light border rounded-4 mt-3">
                                         <h6 class="fw-bold text-dark mb-3"><i class="bi bi-cloud-arrow-up text-primary me-2"></i>Manage Pitch Assets</h6>
                                         <form method="POST" action="{% url 'matchmaking:submit_founder_application' %}" enctype="multipart/form-data">
@@ -229,7 +365,7 @@
                                             <button type="submit" class="btn btn-primary btn-sm px-4 rounded-pill">Save Assets</button>
                                         </form>
                                     </div>
-                                    {% endif %}
+                                {% endif %}
                                 </div>
                             </div>
                             

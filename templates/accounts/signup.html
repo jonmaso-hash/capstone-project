@@ -1,15 +1,95 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
 
-{% block title %}
-    Sign up
-{% endblock %}
+{% block title %}Join Interlink Foundry{% endblock %}
 
 {% block content %}
-    <h1>Sign Up</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form|crispy }}
-        <input type="submit" value="Sign up" class="btn btn-primary">
-    </form>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5">
+            
+            <div class="text-center mb-4">
+                <h2 class="fw-bold">Join Interlink Foundry</h2>
+                <p class="text-muted">Create your account to get started</p>
+            </div>
+
+            <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+                <h6 class="fw-bold text-muted text-uppercase small mb-3">I am joining as a...</h6>
+                <div class="row g-2 mb-4" id="roleSelector">
+                    <div class="col-6">
+                        <div class="role-card border rounded-3 p-3 text-center cursor-pointer" 
+                             data-role="founder" onclick="selectRole('founder', this)">
+                            <div class="fs-2 mb-1">🚀</div>
+                            <div class="fw-bold small">Founder</div>
+                            <div class="text-muted" style="font-size:0.75rem;">Raising capital</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="role-card border rounded-3 p-3 text-center cursor-pointer" 
+                             data-role="investor" onclick="selectRole('investor', this)">
+                            <div class="fs-2 mb-1">💼</div>
+                            <div class="fw-bold small">Investor</div>
+                            <div class="text-muted" style="font-size:0.75rem;">Deploying capital</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="role-card border rounded-3 p-3 text-center cursor-pointer" 
+                             data-role="buyer" onclick="selectRole('buyer', this)">
+                            <div class="fs-2 mb-1">🛒</div>
+                            <div class="fw-bold small">Buyer</div>
+                            <div class="text-muted" style="font-size:0.75rem;">Acquiring businesses</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="role-card border rounded-3 p-3 text-center cursor-pointer" 
+                             data-role="seller" onclick="selectRole('seller', this)">
+                            <div class="fs-2 mb-1">🏷️</div>
+                            <div class="fw-bold small">Seller</div>
+                            <div class="text-muted" style="font-size:0.75rem;">Exiting a business</div>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="role" id="selectedRole" value="">
+                    {{ form|crispy }}
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold py-2 mt-2">
+                        Create Account
+                    </button>
+                </form>
+            </div>
+
+            <div class="text-center text-muted small">
+                Already have an account? 
+                <a href="{% url 'login' %}" class="text-decoration-none fw-bold">Sign In</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.role-card {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-color: #dee2e6 !important;
+}
+.role-card:hover {
+    border-color: #0d6efd !important;
+    background: #f0f7ff;
+}
+.role-card.selected {
+    border-color: #0d6efd !important;
+    background: #e8f0fe;
+    box-shadow: 0 0 0 2px #0d6efd33;
+}
+</style>
+
+<script>
+function selectRole(role, el) {
+    document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('selectedRole').value = role;
+}
+</script>
 {% endblock %}

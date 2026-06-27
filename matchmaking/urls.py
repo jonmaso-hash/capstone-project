@@ -34,4 +34,6 @@ urlpatterns = [
     path('memo/<str:company_slug>/', views.standalone_memo_view, name='standalone_memo'),
     path('founder/application/submit/', views.submit_founder_application, name='submit_founder_application'),
     path('follow/<str:username>/', toggle_follow, name='toggle_follow'),
+    
+    path('search/', views.global_search, name='global_search'),
 ]

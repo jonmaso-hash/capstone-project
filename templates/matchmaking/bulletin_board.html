@@ -1,203 +1,625 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Venture Bulletin | Interlink Foundry{% endblock %}
+{% block title %}Founder/Investor Bulletin | Interlink Foundry{% endblock %}
 
 {% block css %}
-<link rel="stylesheet" href="{% static 'css/bulletin_board.css' %}">
 <style>
-    /* Professional lift effect on cards */
-    .hover-lift {
-        transition: transform 0.3s cubic-bezier(.25,.8,.25,1), box-shadow 0.3s ease;
-        background-color: #ffffff;
-    }
-    .hover-lift:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,.06) !important;
+    /* ── Cork Board Background ── */
+    .corkboard-bg {
+        min-height: 100vh;
+        background-color: #b5834a;
+        background-image:
+            radial-gradient(ellipse at 20% 30%, rgba(180,120,60,0.4) 0%, transparent 60%),
+            radial-gradient(ellipse at 80% 70%, rgba(140,90,40,0.3) 0%, transparent 50%),
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Ccircle cx='1' cy='1' r='0.6' fill='rgba(0,0,0,0.08)'/%3E%3C/svg%3E");
+        padding: 2rem 0 4rem;
     }
 
-    /* Premium Match Score Numeric Circular Indicator */
-    .match-score-badge {
-        width: 46px;
-        height: 46px;
-        border: 3px solid;
+    /* ── Board Header Strip ── */
+    .board-header {
+        background: #2c1a0e;
+        color: #f5e6c8;
+        padding: 1.25rem 2rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    .board-header h1 {
+        font-size: 1.6rem;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        margin: 0;
+        color: #f5e6c8;
+    }
+
+    .board-header p {
+        margin: 0;
+        font-size: 0.85rem;
+        color: #c8a87a;
+    }
+
+    /* ── Search + Filter Toolbar ── */
+    .filter-toolbar {
+        background: rgba(44,26,14,0.85);
+        backdrop-filter: blur(4px);
+        border-radius: 12px;
+        padding: 0.85rem 1.25rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .search-input-wrap {
+        position: relative;
+        flex: 1;
+        min-width: 200px;
+        max-width: 320px;
+    }
+
+    .search-input-wrap i {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #c8a87a;
+        font-size: 0.85rem;
+        pointer-events: none;
+    }
+
+    .cork-search {
+        background: rgba(245,230,200,0.12);
+        border: 1px solid rgba(245,230,200,0.3);
+        color: #f5e6c8;
+        border-radius: 20px;
+        padding: 5px 14px 5px 32px;
+        font-size: 0.82rem;
+        width: 100%;
+        outline: none;
+        transition: border-color 0.15s;
+    }
+
+    .cork-search::placeholder { color: rgba(245,230,200,0.45); }
+    .cork-search:focus { border-color: #c8a87a; }
+
+    .filter-divider {
+        color: rgba(245,230,200,0.25);
+        font-size: 1.2rem;
+        line-height: 1;
+    }
+
+    .btn-filter {
+        background: rgba(245,230,200,0.12);
+        color: #f5e6c8;
+        border: 1px solid rgba(245,230,200,0.25);
+        font-size: 0.75rem;
+        padding: 4px 12px;
+        border-radius: 20px;
+        transition: all 0.15s;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .btn-filter:hover,
+    .btn-filter.active {
+        background: #f5e6c8;
+        color: #2c1a0e;
+        border-color: #f5e6c8;
+    }
+
+    /* ── Pinned Note Cards ── */
+    .pin-card {
+        background: #fef9e7;
+        border: 1px solid #e8d5a3;
+        border-radius: 4px;
+        padding: 1.5rem 1.25rem 1.25rem;
+        position: relative;
+        box-shadow: 3px 4px 12px rgba(0,0,0,0.25), 1px 1px 3px rgba(0,0,0,0.15);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        transform: rotate(-0.8deg);
+        margin-top: 18px;
+    }
+
+    .pin-card:nth-child(even) { transform: rotate(0.6deg); }
+    .pin-card:nth-child(3n)   { transform: rotate(-0.4deg); }
+    .pin-card:nth-child(4n)   { transform: rotate(1.0deg); }
+
+    .pin-card:hover {
+        transform: rotate(0deg) translateY(-4px) scale(1.01);
+        box-shadow: 6px 8px 20px rgba(0,0,0,0.3);
+        z-index: 10;
+        background: #fffdf0;
+    }
+
+    /* ── Investor mandate card variant ── */
+    .pin-card.investor-card {
+        background: #eef4ff;
+        border-color: #b8d0f0;
+    }
+
+    .pin-card.investor-card:hover { background: #f0f6ff; }
+
+    /* ── Pushpin ── */
+    .pushpin {
+        position: absolute;
+        top: -14px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 22px;
+        height: 22px;
+        z-index: 5;
+    }
+
+    .pushpin-head {
+        width: 16px;
+        height: 16px;
         border-radius: 50%;
+        margin: 0 auto;
+        box-shadow: inset -2px -2px 4px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .pushpin-stem {
+        width: 3px;
+        height: 8px;
+        background: #888;
+        margin: 0 auto;
+        border-radius: 0 0 2px 2px;
+    }
+
+    .pin-red .pushpin-head    { background: radial-gradient(circle at 35% 35%, #ff6b6b, #cc0000); }
+    .pin-blue .pushpin-head   { background: radial-gradient(circle at 35% 35%, #6bceff, #0066cc); }
+    .pin-green .pushpin-head  { background: radial-gradient(circle at 35% 35%, #6bff9e, #00aa44); }
+    .pin-yellow .pushpin-head { background: radial-gradient(circle at 35% 35%, #fff176, #f9a825); }
+    .pin-purple .pushpin-head { background: radial-gradient(circle at 35% 35%, #ce93d8, #7b1fa2); }
+
+    /* ── Card Typography ── */
+    .card-type-label {
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-weight: 800;
+        padding: 2px 8px;
+        border-radius: 3px;
+        display: inline-block;
+        margin-bottom: 0.5rem;
+    }
+
+    .card-type-label.founder-label {
+        background: rgba(25,135,84,0.12);
+        color: #0a6640;
+    }
+
+    .card-type-label.investor-label {
+        background: rgba(13,110,253,0.12);
+        color: #0a4ab5;
+    }
+
+    .company-name {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #1a1a1a;
+        margin-bottom: 0.25rem;
+        font-family: 'Georgia', serif;
+    }
+
+    .sector-tag {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 700;
+        color: #8b6914;
+        background: rgba(184,134,11,0.12);
+        padding: 2px 8px;
+        border-radius: 3px;
+        display: inline-block;
+        margin-bottom: 0.5rem;
+    }
+
+    .pitch-text {
+        font-size: 0.82rem;
+        color: #444;
+        line-height: 1.55;
+        border-left: 3px solid #e8c97a;
+        padding-left: 0.6rem;
+        margin: 0.6rem 0 0.8rem;
+        font-family: 'Georgia', serif;
+    }
+
+    .pin-card.investor-card .pitch-text {
+        border-left-color: #90b8e8;
+    }
+
+    .meta-row {
+        font-size: 0.72rem;
+        color: #6b5533;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .seeking-chip {
+        background: #2c7a2c;
+        color: #fff;
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 20px;
+        display: inline-block;
+    }
+
+    .investing-chip {
+        background: #1a4fa0;
+        color: #fff;
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 20px;
+        display: inline-block;
+    }
+
+    /* ── Match Score Badge ── */
+    .match-ring {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: 3px solid;
         display: flex;
         align-items: center;
         justify-content: center;
-        background-color: #ffffff;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
-    }
-    .match-score-badge span {
         font-weight: 800;
-        letter-spacing: -0.02em;
+        font-size: 0.78rem;
+        background: #fef9e7;
+        flex-shrink: 0;
     }
 
-    /* Typography Tweaks */
-    .smallest {
-        font-size: 0.62rem;
+    .match-ring.fire   { border-color: #e53e3e; color: #e53e3e; }
+    .match-ring.muscle { border-color: #38a169; color: #38a169; }
+    .match-ring.thumb  { border-color: #3182ce; color: #3182ce; }
+    .match-ring.radar  { border-color: #805ad5; color: #805ad5; }
+    .match-ring.ok     { border-color: #d69e2e; color: #d69e2e; }
+    .match-ring.low    { border-color: #a0aec0; color: #a0aec0; }
+
+    .match-emoji { font-size: 1rem; }
+
+    /* ── Thumbs Row (investor only, on founder cards) ── */
+    .thumbs-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px dashed #d4b483;
     }
-    .tracking-widest {
-        letter-spacing: 0.1em;
+
+    .thumb-btn {
+        border: none;
+        background: transparent;
+        font-size: 1.1rem;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 6px;
+        transition: background 0.15s, transform 0.1s;
+        line-height: 1;
     }
-    .max-width-600 {
-        max-width: 600px;
+
+    .thumb-btn:hover { background: rgba(0,0,0,0.08); transform: scale(1.15); }
+    .thumb-btn.active-up   { background: rgba(39,174,96,0.15); }
+    .thumb-btn.active-down { background: rgba(231,76,60,0.12); }
+
+    /* ── View Profile Button ── */
+    .view-btn {
+        font-size: 0.75rem;
+        font-weight: 700;
+        background: #2c1a0e;
+        color: #f5e6c8;
+        border: none;
+        padding: 5px 14px;
+        border-radius: 20px;
+        text-decoration: none;
+        transition: background 0.15s;
+        letter-spacing: 0.03em;
+    }
+
+    .view-btn:hover { background: #4a2e14; color: #f5e6c8; }
+
+    .view-btn.investor-view {
+        background: #1a4fa0;
+    }
+
+    .view-btn.investor-view:hover { background: #0a3a80; }
+
+    /* ── Investor "Pin Mandate" Button ── */
+    .pin-mandate-btn {
+        background: #1a4fa0;
+        color: #fff;
+        border: none;
+        padding: 5px 14px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: background 0.15s;
+        letter-spacing: 0.03em;
+    }
+
+    .pin-mandate-btn:hover { background: #0a3a80; color: #fff; }
+
+    /* ── Empty State ── */
+    .empty-note {
+        background: #fef9e7;
+        border: 2px dashed #d4b483;
+        border-radius: 8px;
+        padding: 3rem;
+        text-align: center;
+        color: #8b6914;
+        font-family: 'Georgia', serif;
+        transform: rotate(-0.5deg);
+    }
+
+    /* ── Logged-out footer strip ── */
+    .guest-strip {
+        background: rgba(44,26,14,0.9);
+        color: #c8a87a;
+        text-align: center;
+        padding: 1.25rem 2rem;
+        margin-top: 3rem;
+        font-size: 0.88rem;
+        border-radius: 8px;
+    }
+
+    .guest-strip a {
+        color: #f5e6c8;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .guest-strip a:hover { color: #fff; text-decoration: underline; }
+
+    @media (max-width: 768px) {
+        .board-header { flex-direction: column; }
+        .filter-toolbar { justify-content: center; }
+        .search-input-wrap { max-width: 100%; }
     }
 </style>
 {% endblock css %}
 
 {% block content %}
-<div class="container py-5">
-    <!-- Header Section -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-3">
+<div class="corkboard-bg mx-n3 px-3" style="margin-top: -1.5rem;">
+
+    {# ── Board Header ── #}
+    <div class="board-header">
         <div>
-            <h1 class="fw-bold text-dark mb-1">Venture Bulletin</h1>
-            <p class="text-muted mb-0">Explore active founder pitches in the Interlink Foundry database network.</p>
+            <h1>📌 Founder/Investor Bulletin</h1>
+            <p>Active pitches and mandates pinned to the Interlink Foundry board.</p>
         </div>
-        
-        <div class="dropdown">
-            <button class="btn btn-outline-secondary dropdown-toggle rounded-pill px-4" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-funnel me-1"></i> Filter by Industry
-            </button>
-            <ul class="dropdown-menu shadow border-0 mt-2">
-                <!-- ✅ Safely mapping parameters through the namespaced matching engine tag -->
-                <li><a class="dropdown-item" href="{% url 'matchmaking:bulletin_board' %}?sector=SaaS">SaaS</a></li>
-                <li><a class="dropdown-item" href="{% url 'matchmaking:bulletin_board' %}?sector=FinTech">FinTech</a></li>
-                <li><a class="dropdown-item" href="{% url 'matchmaking:bulletin_board' %}?sector=HealthTech">HealthTech</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="{% url 'matchmaking:bulletin_board' %}">Clear Filters</a></li>
-            </ul>
-        </div>
+        {# Investors can pin their mandate (optional visibility) #}
+        {% if user.is_authenticated and user.accounts_investor_profile %}
+        <a href="{% url 'accounts:investor_form' %}" class="pin-mandate-btn">
+            <i class="bi bi-pin-angle me-1"></i> Pin My Mandate
+        </a>
+        {% endif %}
     </div>
 
-    <!-- Pitches Grid -->
-    <div class="row g-4">
-        {% for pitch in pitches %}
-        <div class="col-12 {% if pitch.ai_insights %}col-lg-12{% else %}col-md-6 col-lg-4{% endif %}">
-            <div class="card h-100 border-0 shadow-sm rounded-4 hover-lift d-flex flex-column justify-content-between">
-                <div class="card-body p-4">
-                    
-                    <div class="row {% if pitch.ai_insights %}g-4 align-items-start{% endif %}">
-                        <!-- Main Pitch Content Body Column -->
-                        <div class="{% if pitch.ai_insights %}col-12 col-lg-7{% else %}col-12{% endif %}">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <!-- Dynamic Match Badges via Native Subtle Framework Bootstrap Rules -->
-                                {% if user.is_authenticated and user.match_investor_profile and pitch.match_percentage >= 90 %}
-                                    <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2">
-                                        <i class="bi bi-lightning-charge-fill me-1"></i> Strong Match
-                                    </span>
-                                {% elif user.is_authenticated and user.match_investor_profile and pitch.match_percentage >= 75 %}
-                                    <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2">
-                                        <i class="bi bi-check-circle-fill me-1"></i> Good Match
-                                    </span>
-                                {% else %}
-                                    <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-2">
-                                        {{ pitch.sector|default:"General Tech" }}
-                                    </span>
-                                {% endif %}
-                                
-                                <!-- Premium Visual Match Score Ring Component (Only for Registered Investors) -->
-                                {% if user.is_authenticated and user.match_investor_profile %}
-                                <div class="d-flex align-items-center">
-                                    <div class="match-score-badge {% if pitch.match_percentage >= 90 %}border-success text-success{% else %}border-primary text-primary{% endif %}" title="AI Match Score Metric">
-                                        <span class="fs-6">{{ pitch.match_percentage }}%</span>
-                                    </div>
-                                </div>
-                                {% endif %}
-                            </div>
-                            
-                            <!-- Structural Content Mapping -->
-                            <h4 class="fw-bold text-dark mb-1">{{ pitch.company_name }}</h4>
-                            
-                            <!-- Geospatial & Industry Meta Summary -->
-                            <div class="d-flex align-items-center gap-2 mb-3">
-                                <span class="smallest text-uppercase tracking-widest text-muted fw-bold">{{ pitch.sector|default:"General Tech" }}</span>
-                                <span class="text-muted opacity-50">•</span>
-                                <span class="smallest text-muted fw-semibold">
-                                    <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ pitch.location|default:"Global / Remote" }}
-                                </span>
-                            </div>
-                            
-                            <p class="text-secondary small mb-4" style="line-height: 1.6;">
-                                {{ pitch.description|truncatewords:45|default:"No pitch description has been finalized yet." }}
-                            </p>
+    <div class="container">
 
-                            <!-- Identity & Financial Metric Row Split -->
-                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 pt-3 border-top">
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-light rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                        <i class="bi bi-person text-secondary"></i>
-                                    </div>
-                                    <div>
-                                        <p class="mb-0 small fw-bold text-dark">
-                                            {{ pitch.user.get_full_name|default:pitch.user.username }}
-                                        </p>
-                                        <p class="mb-0 smallest text-uppercase text-muted tracking-widest">Founder</p>
-                                    </div>
-                                </div>
+        {# ── Search + Filter Toolbar ── #}
+        <div class="filter-toolbar">
+            {# Keyword search #}
+            <form method="GET" action="{% url 'matchmaking:bulletin_board' %}" class="d-flex align-items-center gap-2" style="flex:1;min-width:200px;max-width:340px;">
+                {% if selected_sector %}
+                <input type="hidden" name="sector" value="{{ selected_sector }}">
+                {% endif %}
+                <div class="search-input-wrap" style="flex:1;">
+                    <i class="bi bi-search"></i>
+                    <input type="text" name="q" class="cork-search"
+                        placeholder="Search pitches..."
+                        value="{{ request.GET.q|default:'' }}">
+                </div>
+            </form>
 
-                                <!-- Financial Seeking Indicator Element -->
-                                <div class="bg-light px-3 py-2 rounded-3 border">
-                                    <small class="text-muted d-block text-uppercase fw-bold smallest tracking-wider mb-0" style="line-height: 1;">Seeking</small>
-                                    <span class="fw-bold text-success small">
-                                        {% if "$" not in pitch.raising_amount %}${% endif %}{{ pitch.raising_amount|default:"--" }}
-                                    </span>
-                                </div>
+            <span class="filter-divider">|</span>
+
+            {# Sector quick filters #}
+            <span style="color:#c8a87a;font-size:0.75rem;font-weight:700;white-space:nowrap;">
+                <i class="bi bi-funnel me-1"></i>Sector:
+            </span>
+            <a href="{% url 'matchmaking:bulletin_board' %}{% if request.GET.q %}?q={{ request.GET.q }}{% endif %}"
+               class="btn-filter {% if not selected_sector %}active{% endif %}">All</a>
+            <a href="{% url 'matchmaking:bulletin_board' %}?sector=SaaS{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+               class="btn-filter {% if selected_sector == 'SaaS' %}active{% endif %}">SaaS</a>
+            <a href="{% url 'matchmaking:bulletin_board' %}?sector=FinTech{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+               class="btn-filter {% if selected_sector == 'FinTech' %}active{% endif %}">FinTech</a>
+            <a href="{% url 'matchmaking:bulletin_board' %}?sector=HealthTech{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+               class="btn-filter {% if selected_sector == 'HealthTech' %}active{% endif %}">HealthTech</a>
+            <a href="{% url 'matchmaking:bulletin_board' %}?sector=AI{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+               class="btn-filter {% if selected_sector == 'AI' %}active{% endif %}">AI</a>
+            <a href="{% url 'matchmaking:bulletin_board' %}?sector=CleanTech{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+               class="btn-filter {% if selected_sector == 'CleanTech' %}active{% endif %}">CleanTech</a>
+            <a href="{% url 'matchmaking:bulletin_board' %}?sector=EdTech{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+               class="btn-filter {% if selected_sector == 'EdTech' %}active{% endif %}">EdTech</a>
+        </div>
+
+        {# ── Pitch Cards Grid ── #}
+        {% if pitches %}
+        <div class="row g-4">
+            {% for pitch in pitches %}
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="pin-card {% cycle 'pin-red' 'pin-blue' 'pin-green' 'pin-yellow' 'pin-purple' %}">
+
+                    {# Pushpin #}
+                    <div class="pushpin">
+                        <div class="pushpin-head"></div>
+                        <div class="pushpin-stem"></div>
+                    </div>
+
+                    {# Card type label #}
+                    <span class="card-type-label founder-label">
+                        🚀 Founder's Bulletin
+                    </span>
+
+                    {# Header: sector tag + match ring (investors only) #}
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="sector-tag">{{ pitch.sector|default:"General Tech" }}</span>
+
+                        {% if user.is_authenticated and user.accounts_investor_profile %}
+                        {% with score=pitch.match_percentage|default:0 %}
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="match-emoji">
+                                {% if score >= 90 %}🔥
+                                {% elif score >= 80 %}💪
+                                {% elif score >= 70 %}👍
+                                {% elif score >= 60 %}📡
+                                {% elif score >= 50 %}🆗
+                                {% else %}🔻{% endif %}
+                            </span>
+                            <div class="match-ring
+                                {% if score >= 90 %}fire
+                                {% elif score >= 80 %}muscle
+                                {% elif score >= 70 %}thumb
+                                {% elif score >= 60 %}radar
+                                {% elif score >= 50 %}ok
+                                {% else %}low{% endif %}">
+                                {{ score }}%
                             </div>
                         </div>
-
-                        <!-- Explanatory AI Insights Container Column Layer (Only shows if populated by matching loops) -->
-                        {% if pitch.ai_insights %}
-                        <div class="col-12 col-lg-5">
-                            <div class="card border-0 bg-light p-3 h-100" style="border-radius: 12px;">
-                                <div class="d-flex align-items-center mb-2">
-                                    <i class="bi bi-cpu text-primary me-2 fs-5"></i>
-                                    <h6 class="fw-bold mb-0 text-dark">Match Explanations</h6>
-                                </div>
-                                <p class="smallest text-muted mb-3">{{ pitch.ai_insights.summary }}</p>
-                                
-                                <div class="vstack gap-2">
-                                    {% for pillar in pitch.ai_insights.pillars %}
-                                    <div class="bg-white p-2 rounded border border-light-subtle">
-                                        <div class="d-flex justify-content-between align-items-center mb-1">
-                                            <span class="smallest fw-bold text-secondary text-uppercase tracking-wider">{{ pillar.title }}</span>
-                                            <span class="badge rounded-pill smallest {% if pillar.score == 'Excellent' or pillar.score == 'Match' or pillar.score == 'Passed' %}bg-success-subtle text-success{% else %}bg-warning-subtle text-warning{% endif %}">
-                                                {{ pillar.score }}
-                                            </span>
-                                        </div>
-                                        <p class="mb-0 text-muted" style="font-size: 0.75rem;">{{ pillar.desc }}</p>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        </div>
+                        {% endwith %}
                         {% endif %}
                     </div>
 
-                </div>
-                
-                <div class="card-footer bg-transparent border-0 p-4 pt-0">
-                    <a href="{% url 'accounts:profile' pitch.user.username %}" class="btn btn-dark w-100 rounded-pill py-2">
-                        Review Pitch
-                    </a>
+                    {# Company name #}
+                    <div class="company-name">{{ pitch.company_name|default:"Unnamed Company" }}</div>
+
+                    {# Location + stage #}
+                    <div class="meta-row">
+                        <i class="bi bi-geo-alt-fill text-danger"></i>
+                        {{ pitch.location|default:"Global / Remote" }}
+                        <span class="opacity-50 mx-1">•</span>
+                        <i class="bi bi-bar-chart-steps"></i>
+                        {{ pitch.stage|default:"Seed" }}
+                    </div>
+
+                    {# Pitch description #}
+                    <p class="pitch-text">
+                        {{ pitch.description|truncatewords:30|default:"No description provided." }}
+                    </p>
+
+                    {# Seeking + view button #}
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <div>
+                            <div class="meta-row mb-1">
+                                <i class="bi bi-person-fill"></i>
+                                {{ pitch.user.get_full_name|default:pitch.user.username }}
+                            </div>
+                            <span class="seeking-chip">
+                                Seeking {% if "$" not in pitch.raising_amount|stringformat:"s" %}${% endif %}{{ pitch.raising_amount|default:"--" }}
+                            </span>
+                        </div>
+                        <a href="{% url 'accounts:profile' pitch.user.username %}" class="view-btn">
+                            View Profile →
+                        </a>
+                    </div>
+
+                    {# Thumbs up/down — investors only, for match vector tuning #}
+                    {% if user.is_authenticated and user.accounts_investor_profile %}
+                    <div class="thumbs-row">
+                        <span style="font-size:0.7rem;color:#8b6914;font-weight:700;">Tune match:</span>
+                        <button class="thumb-btn" onclick="recordVote({{ pitch.id }}, 'up', this)"
+                                title="Interested — boost match score">👍</button>
+                        <button class="thumb-btn" onclick="recordVote({{ pitch.id }}, 'down', this)"
+                                title="Pass — lower match score">👎</button>
+                        <span id="vote-status-{{ pitch.id }}" class="ms-1"
+                              style="font-size:0.7rem;color:#8b6914;"></span>
+                    </div>
+                    {% endif %}
+
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% empty %}
-        <!-- Empty Grid State -->
-        <div class="col-12 text-center py-5">
-            <div class="card p-5 bg-light border-0 rounded-4 max-width-600 mx-auto">
-                <div class="d-inline-block rounded-circle bg-white shadow-sm p-4 mb-3">
-                    <i class="bi bi-clipboard-x display-4 text-muted"></i>
-                </div>
-                <h3 class="fw-bold text-dark">No Pitches Yet</h3>
-                <p class="text-muted mb-4">There are currently no active applications matching your database filters.</p>
-                <a href="{% url 'accounts:seeking_investment' %}" class="btn btn-primary rounded-pill px-4 py-2">
-                    Submit a Pitch
-                </a>
-            </div>
+
+        {% else %}
+        <div class="empty-note mx-auto mt-5" style="max-width:500px;">
+            <div style="font-size:2.5rem;">📋</div>
+            <h4 class="mt-3 mb-1">The board is empty.</h4>
+            <p class="mb-0">
+                {% if request.GET.q or selected_sector %}
+                    No pitches match your search. <a href="{% url 'matchmaking:bulletin_board' %}" style="color:#8b0000;">Clear filters</a>
+                {% else %}
+                    No pitches have been pinned yet.
+                {% endif %}
+            </p>
         </div>
-        {% endfor %}
-    </div>
-</div>
+        {% endif %}
+
+        {# ── Guest Strip — logged-out users only ── #}
+        {% if not user.is_authenticated %}
+        <div class="guest-strip mt-4">
+            <strong>Join Interlink Foundry</strong> to see match scores, tune your deal flow, and connect with founders and investors.
+            &nbsp;
+            <a href="{% url 'accounts:signup' %}">Create Account</a>
+            &nbsp;or&nbsp;
+            <a href="{% url 'login' %}">Sign In</a>
+        </div>
+        {% endif %}
+
+    </div>{# /container #}
+
+</div>{# /corkboard-bg #}
+
+<script>
+function getCookie(name) {
+    const cookies = document.cookie.split(';');
+    for (let c of cookies) {
+        c = c.trim();
+        if (c.startsWith(name + '=')) return decodeURIComponent(c.slice(name.length + 1));
+    }
+    return null;
+}
+
+function recordVote(pitchId, direction, btn) {
+    const statusEl = document.getElementById(`vote-status-${pitchId}`);
+    const csrftoken = getCookie('csrftoken');
+
+    fetch("{% url 'matchmaking:record_vote' %}", {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({ application_id: pitchId, vote: direction })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'success' || data.status === 'ok') {
+            if (direction === 'up') {
+                btn.classList.add('active-up');
+                btn.closest('.thumbs-row').querySelector('[title^="Pass"]').classList.remove('active-down');
+                if (statusEl) statusEl.textContent = '✓ Interested';
+            } else {
+                btn.classList.add('active-down');
+                btn.closest('.thumbs-row').querySelector('[title^="Interested"]').classList.remove('active-up');
+                if (statusEl) statusEl.textContent = '✓ Passed';
+            }
+        }
+    })
+    .catch(err => {
+        if (statusEl) statusEl.textContent = 'Error — try again';
+        console.error('Vote error:', err);
+    });
+}
+
+// Auto-submit search on Enter
+document.querySelector('.cork-search')?.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') this.closest('form').submit();
+});
+</script>
 {% endblock content %}

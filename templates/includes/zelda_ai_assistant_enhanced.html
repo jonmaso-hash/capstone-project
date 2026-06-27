@@ -237,6 +237,50 @@
         opacity: 0.6;
         pointer-events: none;
     }
+
+    /* ── Zelda Fullscreen Mode ── */
+    #aiAgentSidebar {
+        transition: width 0.3s ease, height 0.3s ease, top 0.3s ease;
+    }
+
+    #aiAgentSidebar.zelda-fullscreen {
+        width: 100vw !important;
+        height: 100vh !important;
+        top: 0 !important;
+        right: 0 !important;
+        border-radius: 0 !important;
+        max-width: 100vw !important;
+    }
+
+    #aiAgentSidebar.zelda-fullscreen .offcanvas-body {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        gap: 0;
+        overflow: hidden;
+    }
+
+    #aiAgentSidebar.zelda-fullscreen .zelda-tabs {
+        flex-direction: column;
+        border-right: 1px solid rgba(255,255,255,0.1);
+        border-bottom: none;
+        padding: 1rem 0.5rem;
+        margin: 0;
+        min-width: 220px;
+        height: 100%;
+    }
+
+    #aiAgentSidebar.zelda-fullscreen .zelda-tab {
+        text-align: left;
+        border-bottom: none;
+        border-left: 3px solid transparent;
+        border-radius: 6px;
+        margin-bottom: 0.25rem;
+    }
+
+    #aiAgentSidebar.zelda-fullscreen .zelda-tab.active {
+        border-left-color: var(--zelda-accent, #f59e0b);
+        border-bottom-color: transparent;
+    }
 </style>
 
 <!-- ZELDA AI ASSISTANT BUTTON -->
@@ -274,7 +318,18 @@
                 </div>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    <div class="d-flex align-items-center gap-2">
+            <button 
+                type="button" 
+                id="zelda-expand-btn"
+                onclick="toggleZeldaFullscreen()"
+                class="btn btn-sm btn-outline-light border-0 rounded-circle d-flex align-items-center justify-content-center"
+                style="width:32px;height:32px;"
+                title="Expand Zelda">
+                <i class="bi bi-fullscreen" style="font-size:0.85rem;"></i>
+            </button>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
     </div>
     
     <!-- Body -->
@@ -291,6 +346,14 @@
             <button class="zelda-tab" data-tab="memo">
                 <i class="bi bi-file-text me-2"></i>Memos
             </button>
+            <button class="zelda-tab" data-tab="intelligence">
+                <i class="bi bi-cpu me-2"></i>Intelligence
+            </button>
+            <button class="zelda-tab" data-tab="truth-delta">
+                <i class="bi bi-shield-check me-2"></i>Truth Delta
+            </button>
+        </div>
+
         </div>
 
         <!-- TAB: SEARCH -->
@@ -455,6 +518,44 @@
         </div>
 
         <!-- EXECUTION LOG -->
+        <!-- TAB: INTELLIGENCE -->
+        <div id="tab-intelligence" class="tab-content" style="display: none; flex-direction: column; gap: 1rem; flex-grow: 1;">
+            <div class="zelda-card p-4">
+                <h6 class="fw-bold text-dark mb-3">
+                    <i class="bi bi-file-earmark-text text-primary me-2"></i>Intelligence Brief
+                </h6>
+                <div id="intelligence-loading" class="text-center py-4" style="display:none;">
+                    <div class="spinner-border spinner-border-sm text-warning me-2"></div>
+                    <span class="small text-muted">Loading intelligence brief...</span>
+                </div>
+                <div id="intelligence-empty" class="text-center py-4 text-muted small">
+                    <i class="bi bi-cpu fs-2 d-block mb-2 opacity-25"></i>
+                    Select a founder from the Investor Dashboard to load their Intelligence Brief.
+                </div>
+                <div id="intelligence-content" style="display:none;"></div>
+            </div>
+        </div>
+
+        <!-- TAB: TRUTH DELTA -->
+        <div id="tab-truth-delta" class="tab-content" style="display: none; flex-direction: column; gap: 1rem; flex-grow: 1;">
+            <div class="zelda-card p-4">
+                <h6 class="fw-bold text-dark mb-3">
+                    <i class="bi bi-shield-check text-success me-2"></i>Truth Delta Verification
+                </h6>
+                <div id="truth-delta-loading" class="text-center py-4" style="display:none;">
+                    <div class="spinner-border spinner-border-sm text-warning me-2"></div>
+                    <span class="small text-muted">Loading verification report...</span>
+                </div>
+                <div id="truth-delta-empty" class="text-center py-4 text-muted small">
+                    <i class="bi bi-shield fs-2 d-block mb-2 opacity-25"></i>
+                    Select a founder from the Investor Dashboard to load their Truth Delta report.
+                </div>
+                <div id="truth-delta-content" style="display:none;"></div>
+            </div>
+        </div>
+
+        <!-- EXECUTION LOG -->
+        <div class="zelda-log" id="agent-response-log">
         <div class="zelda-log" id="agent-response-log">
             <div style="padding-right: 1rem; position: relative; z-index: 10;">
                 <div class="log-entry info">
@@ -826,4 +927,176 @@
 
         addLogEntry('Zelda Intelligence initialized', 'success');
     });
+
+// ── Zelda Fullscreen Toggle ──
+    function toggleZeldaFullscreen() {
+        const sidebar = document.getElementById('aiAgentSidebar');
+        const btn = document.getElementById('zelda-expand-btn');
+        const icon = btn.querySelector('i');
+
+        if (sidebar.classList.contains('zelda-fullscreen')) {
+            sidebar.classList.remove('zelda-fullscreen');
+            icon.className = 'bi bi-fullscreen';
+            icon.style.fontSize = '0.85rem';
+            btn.title = 'Expand Zelda';
+        } else {
+            sidebar.classList.add('zelda-fullscreen');
+            icon.className = 'bi bi-fullscreen-exit';
+            icon.style.fontSize = '0.85rem';
+            btn.title = 'Collapse Zelda';
+        }
+    }
+
+    // Reset fullscreen when sidebar is closed
+    document.getElementById('aiAgentSidebar')?.addEventListener('hide.bs.offcanvas', function() {
+        this.classList.remove('zelda-fullscreen');
+        const btn = document.getElementById('zelda-expand-btn');
+        if (btn) {
+            btn.querySelector('i').className = 'bi bi-fullscreen';
+            btn.title = 'Expand Zelda';
+        }
+    });
+// ── Open Zelda to a specific tab with founder context ──
+    function openZeldaIntelligence(founderId, tab) {
+        // Open the sidebar
+        const sidebarEl = document.getElementById('aiAgentSidebar');
+        if (sidebarEl && window.bootstrap) {
+            const offcanvas = bootstrap.Offcanvas.getOrCreateInstance(sidebarEl);
+            offcanvas.show();
+        }
+
+        // Switch to the requested tab
+        const tabName = tab === 'truth-delta' ? 'truth-delta' : 'intelligence';
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        document.querySelectorAll('.zelda-tab').forEach(t => t.classList.remove('active'));
+        const targetTab = document.getElementById(`tab-${tabName}`);
+        const targetBtn = document.querySelector(`[data-tab="${tabName}"]`);
+        if (targetTab) targetTab.style.display = 'flex';
+        if (targetBtn) targetBtn.classList.add('active');
+
+        addLogEntry(`Loading ${tab} for founder ID ${founderId}...`, 'info');
+
+        if (tab === 'intelligence') {
+            loadIntelligenceBrief(founderId);
+        } else if (tab === 'truth-delta') {
+            loadTruthDelta(founderId);
+        } else if (tab === 'analyze') {
+            // Switch to memo tab and load
+            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+            document.querySelectorAll('.zelda-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-memo').style.display = 'flex';
+            document.querySelector('[data-tab="memo"]').classList.add('active');
+            document.getElementById('memo-doc-id').value = founderId;
+            loadMemo();
+        }
+    }
+
+    async function loadIntelligenceBrief(founderId) {
+        const loading = document.getElementById('intelligence-loading');
+        const empty = document.getElementById('intelligence-empty');
+        const content = document.getElementById('intelligence-content');
+
+        loading.style.display = 'block';
+        empty.style.display = 'none';
+        content.style.display = 'none';
+
+        try {
+            const response = await fetch(`${ZELDA_API}/documents/${founderId}/memo/`, {
+                credentials: 'include',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            });
+
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+
+            let html = `<div class="mb-3">
+                <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill mb-3">
+                    ${data.document_name || 'Intelligence Brief'}
+                </span>`;
+
+            if (data.sections) {
+                const sections = [
+                    { key: 'executive_summary', label: 'Executive Summary' },
+                    { key: 'market_opportunity', label: 'Market Opportunity' },
+                    { key: 'product_analysis', label: 'Product Analysis' },
+                    { key: 'traction_metrics', label: 'Traction & Metrics' },
+                    { key: 'team_assessment', label: 'Team Assessment' },
+                    { key: 'financial_overview', label: 'Financial Overview' },
+                    { key: 'risk_factors', label: 'Risk Factors' },
+                    { key: 'investment_thesis', label: 'Investment Thesis' },
+                ];
+                sections.forEach(s => {
+                    if (data.sections[s.key]) {
+                        html += `<div class="mb-3 p-3 bg-light rounded-3">
+                            <h6 class="fw-bold text-dark mb-1" style="font-size:0.82rem;">${s.label}</h6>
+                            <p class="text-secondary small mb-0" style="line-height:1.6;">${data.sections[s.key]}</p>
+                        </div>`;
+                    }
+                });
+            }
+
+            html += '</div>';
+            content.innerHTML = html;
+            content.style.display = 'block';
+            addLogEntry(`Intelligence brief loaded for document ${founderId}`, 'success');
+
+        } catch (err) {
+            content.innerHTML = `<div class="text-danger small p-3">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Could not load brief: ${err.message}
+            </div>`;
+            content.style.display = 'block';
+            addLogEntry(`Intelligence brief error: ${err.message}`, 'error');
+        } finally {
+            loading.style.display = 'none';
+        }
+    }
+
+    async function loadTruthDelta(founderId) {
+        const loading = document.getElementById('truth-delta-loading');
+        const empty = document.getElementById('truth-delta-empty');
+        const content = document.getElementById('truth-delta-content');
+
+        loading.style.display = 'block';
+        empty.style.display = 'none';
+        content.style.display = 'none';
+
+        try {
+            const response = await fetch(`${ZELDA_API}/documents/${founderId}/verification/`, {
+                credentials: 'include',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            });
+
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const html = await response.text();
+
+            // Extract just the truth delta container from the full page response
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const container = doc.getElementById('truthDeltaContainer');
+
+            if (container) {
+                content.innerHTML = container.outerHTML;
+            } else {
+                content.innerHTML = `<div class="text-center py-4 text-muted small">
+                    <i class="bi bi-shield fs-2 d-block mb-2 opacity-25"></i>
+                    No Truth Delta report found for this founder.
+                    <br><small>Upload a pitch deck to generate verification.</small>
+                </div>`;
+            }
+
+            content.style.display = 'block';
+            addLogEntry(`Truth Delta loaded for document ${founderId}`, 'success');
+
+        } catch (err) {
+            content.innerHTML = `<div class="text-danger small p-3">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Could not load Truth Delta: ${err.message}
+            </div>`;
+            content.style.display = 'block';
+            addLogEntry(`Truth Delta error: ${err.message}`, 'error');
+        } finally {
+            loading.style.display = 'none';
+        }
+    }
 </script>

@@ -21,7 +21,7 @@
                     <div class="card-body">
                         <h5 class="card-title">{{ article.title }}</h5>
                         <p class="card-text text-muted small">{{ article.body|truncatewords:20 }}</p>
-                        <a href="{% url 'article_detail' article.pk %}" class="btn btn-sm btn-outline-primary">Read More</a>
+                        <a href="{% url 'blog:article_detail' article.pk %}" class="btn btn-sm btn-outline-primary">Read More</a>
                     </div>
                 </div>
             </div>

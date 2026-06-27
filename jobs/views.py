@@ -4,15 +4,36 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.utils import timezone
 from .models import JobListing, JobApplication
+from django.db import models
 
 class JobListView(ListView):
     model = JobListing
     template_name = 'jobs/job_list.html'
     context_object_name = 'jobs'
-    paginate_by = 10
+    paginate_by = 20
 
     def get_queryset(self):
-        return JobListing.objects.filter(is_active=True, expires_at__gt=timezone.now())
+        qs = JobListing.objects.filter(
+            is_active=True,
+            expires_at__gt=timezone.now()
+        )
+
+        q = self.request.GET.get('q', '').strip()
+        job_type = self.request.GET.get('job_type', '').strip()
+        location = self.request.GET.get('location', '').strip()
+
+        if q:
+            qs = qs.filter(
+                models.Q(title__icontains=q) |
+                models.Q(company_name__icontains=q) |
+                models.Q(description__icontains=q)
+            )
+        if job_type:
+            qs = qs.filter(job_type=job_type)
+        if location:
+            qs = qs.filter(location__icontains=location)
+
+        return qs
 
 class JobDetailView(DetailView):
     model = JobListing

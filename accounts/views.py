@@ -54,7 +54,16 @@ def signup_view(request):
             user = form.save()
             auth_login(request, user)
             messages.success(request, f"Welcome to Interlink Foundry, {user.username}!")
-            return redirect("accounts:profile", username=user.username)
+            
+            # Route to appropriate onboarding based on selected role
+            role = request.POST.get('role', '')
+            if role == 'founder':
+                return redirect('accounts:seeking_investment')
+            elif role == 'investor':
+                return redirect('accounts:investor_form')
+            else:
+                # buyer/seller — go to profile with welcome prompt
+                return redirect("accounts:profile", username=user.username)
     else:
         form = UserCreationForm()
     return render(request, "accounts/signup.html", {"form": form})
