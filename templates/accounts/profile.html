@@ -96,13 +96,25 @@
                                 {% endif %}
                                 <span class="badge bg-success-subtle text-success border border-success px-3 py-2 rounded-pill">Founder</span>
                             {% elif investor_application %}
-                                {% if request.user == profile_user %}
-                                    <a href="{% url 'accounts:investor_form' %}" class="btn btn-primary btn-sm px-3 rounded-pill">
-                                        <i class="bi bi-pencil-square me-1"></i> Edit Investor Profile
-                                    </a>
-                                {% endif %}
-                                <span class="badge bg-primary-subtle text-primary border border-primary px-3 py-2 rounded-pill">Investor</span>
+                            {% if request.user == profile_user %}
+                                <a href="{% url 'accounts:investor_form' %}" class="btn btn-primary btn-sm px-3 rounded-pill">
+                                    <i class="bi bi-pencil-square me-1"></i> Edit Investor Profile
+                                </a>
                             {% endif %}
+                            <span class="badge bg-primary-subtle text-primary border border-primary px-3 py-2 rounded-pill">Investor</span>
+                        {% endif %}
+
+                        {# ── Track 1: Analyze with Zelda (investors only, on founder profiles) ── #}
+                        {% if request.user != profile_user and application and viewer_is_investor %}
+                        <button 
+                            onclick="analyzeFounderWithZelda('{{ profile_user.username }}', '{{ application.company_name|default:profile_user.username }}')"
+                            class="btn btn-warning btn-sm px-3 rounded-pill fw-bold shadow-sm"
+                            id="zelda-analyze-btn"
+                            title="Run Zelda Intelligence Analysis on this founder">
+                            <i class="bi bi-cpu-fill me-1"></i> Analyze with Zelda
+                        </button>
+                        <span id="zelda-analyze-status" class="small text-muted ms-1"></span>
+                        {% endif %}
 
                             {% if request.user != profile_user %}
                             {% if dm_enabled %}
@@ -740,6 +752,66 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 });
+
+async function analyzeFounderWithZelda(founderUsername, companyName) {
+    const btn = document.getElementById('zelda-analyze-btn');
+    const status = document.getElementById('zelda-analyze-status');
+
+    // Lock button
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Analyzing...';
+    if (status) status.textContent = 'Connecting to Zelda...';
+
+    try {
+        const response = await fetch(`/api/v1/zelda/analyze/founder/${founderUsername}/`, {
+            credentials: 'include',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') }
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'ready') {
+            // Memo exists — open Zelda directly to intelligence tab
+            if (status) status.textContent = `✓ Loading ${companyName} brief...`;
+            openZeldaIntelligence(data.document_id, 'intelligence');
+            btn.innerHTML = '<i class="bi bi-cpu-fill me-1"></i> View in Zelda';
+            btn.disabled = false;
+
+        } else if (data.status === 'processing') {
+            // Pipeline just started
+            if (status) status.textContent = '⚙ Analysis queued — opening Zelda...';
+            btn.innerHTML = '<i class="bi bi-cpu-fill me-1"></i> Processing...';
+            btn.disabled = false;
+
+            // Open Zelda memo tab and show the document ID
+            openZeldaIntelligence(data.document_id, 'analyze');
+
+        } else if (data.status === 'no_deck') {
+            if (status) status.textContent = '⚠ No pitch deck uploaded yet.';
+            btn.innerHTML = '<i class="bi bi-cpu-fill me-1"></i> Analyze with Zelda';
+            btn.disabled = false;
+
+        } else {
+            if (status) status.textContent = `✗ ${data.message}`;
+            btn.innerHTML = '<i class="bi bi-cpu-fill me-1"></i> Analyze with Zelda';
+            btn.disabled = false;
+        }
+
+    } catch (err) {
+        if (status) status.textContent = `✗ Error: ${err.message}`;
+        btn.innerHTML = '<i class="bi bi-cpu-fill me-1"></i> Analyze with Zelda';
+        btn.disabled = false;
+    }
+}
+
+function getCookie(name) {
+    const cookies = document.cookie.split(';');
+    for (let c of cookies) {
+        c = c.trim();
+        if (c.startsWith(name + '=')) return decodeURIComponent(c.slice(name.length + 1));
+    }
+    return null;
+}
 
 
 </script>

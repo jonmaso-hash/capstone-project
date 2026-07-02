@@ -199,6 +199,15 @@ def profile(request, username=None, pk=None):
                 "team_size": int(clean_financial_input(application.team_size) or 1),
                 "years": int(clean_financial_input(application.years_in_business) or 0),
             })
+    viewer_is_investor = (
+    getattr(request.user, 'accounts_investor_profile', None) is not None or
+    getattr(request.user, 'match_investor_profile', None) is not None
+    ) if request.user.is_authenticated else False
+
+    # Silent outcome tracking — investor viewing a founder's profile
+    if viewer_is_investor and application and viewed_user != request.user:
+        from matchmaking.models import log_investor_event
+        log_investor_event(request.user, application, 'view')
 
     context = {
         "profile_user": viewed_user,
@@ -211,6 +220,8 @@ def profile(request, username=None, pk=None):
         "user_articles": user_articles,
         "user_jobs": user_jobs,
         "dm_enabled": dm_enabled,
+        "viewer_is_investor": viewer_is_investor,
+
     }
 
     return render(request, "accounts/profile.html", context)

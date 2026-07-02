@@ -164,7 +164,13 @@ class DocumentMemoView(APIView):
             doc = DocumentSource.objects.get(id=document_id)
             
             # Check authorization
-            if doc.uploaded_by != request.user and not request.user.is_staff:
+            # Check authorization
+            # Allow: document owner, staff, or any authenticated investor
+            viewer_is_investor = (
+                getattr(request.user, 'accounts_investor_profile', None) is not None or
+                getattr(request.user, 'match_investor_profile', None) is not None
+            )
+            if doc.uploaded_by != request.user and not request.user.is_staff and not viewer_is_investor:
                 return Response(
                     {"error": "Not authorized"},
                     status=status.HTTP_403_FORBIDDEN

@@ -57,5 +57,6 @@ urlpatterns = [
     path('ui/search/', standard_views.zelda_search_view, name='zelda_search_ui'),
     path('documents/<int:document_id>/verification/', standard_views.truth_delta_ui_view, name='truth_delta_ui'),
     path('alerts/', ContradictionAlertListView.as_view(), name='contradiction-alerts'),
+    path('analyze/founder/<str:founder_username>/', standard_views.analyze_founder_profile, name='analyze_founder'),
 
 ]

@@ -120,3 +120,10 @@ class ConnectionAdmin(admin.ModelAdmin):
 class MatchFeedbackAdmin(admin.ModelAdmin):
     list_display = ("user", "application", "investor", "vote", "created_at")
     list_filter = ("vote", "created_at")
+    
+@admin.register(InvestorInterestEvent)
+class InvestorInterestEventAdmin(admin.ModelAdmin):
+    list_display = ['investor', 'founder', 'event_type', 'created_at']
+    list_filter = ['event_type', 'created_at']
+    search_fields = ['investor__username', 'founder__company_name']
+    readonly_fields = ['created_at']

@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Avg, Sum, Count
 from django.shortcuts import get_object_or_404, render
+from django.http import JsonResponse
 from .vector_models import DocumentSource
 from django.urls import path
 
@@ -18,6 +19,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.parsers import MultiPartParser, FormParser
+
 
 from .serializers import (
     DirectUploadDocumentSerializer, MarketAnalyticsSerializer,
@@ -926,6 +928,101 @@ def truth_delta_ui_view(request, document_id):
     }
     
     return render(request, 'truth_delta_dashboard.html', context)
+
+@login_required
+def analyze_founder_profile(request, founder_username):
+    """
+    Track 1: Investor clicks 'Analyze with Zelda' on a founder profile.
+    Finds the founder's existing pitch deck DocumentSource and returns
+    the document ID so Zelda can load the memo directly.
+    If no document exists but founder has a pitch deck, creates one and
+    triggers the pipeline.
+    """
+    from django.contrib.auth import get_user_model
+    from matchmaking.models import Application
+    from .vector_models import DocumentSource
+    from .tasks import process_document_pipeline
+
+    User = get_user_model()
+
+    # Must be an investor to use this
+    investor_profile = (
+        getattr(request.user, 'accounts_investor_profile', None) or
+        getattr(request.user, 'match_investor_profile', None)
+    )
+    if not investor_profile:
+        return JsonResponse({'status': 'error', 'message': 'Investor access required'}, status=403)
+
+    # Find the founder
+    founder_user = get_object_or_404(User, username=founder_username)
+    application = getattr(founder_user, 'match_founder_profile', None)
+    if not application:
+        return JsonResponse({'status': 'error', 'message': 'No founder profile found'}, status=404)
+
+    # Silent outcome tracking — investor triggered Zelda analysis
+    from matchmaking.models import log_investor_event
+    log_investor_event(request.user, application, 'analyze')
+
+    # Look for existing DocumentSource for this founder
+    doc = DocumentSource.objects.filter(
+        uploaded_by=founder_user,
+        document_type='pitch_deck'
+    ).order_by('-created_at').first()
+
+    if doc:
+        # Document already exists — return it directly
+        return JsonResponse({
+            'status': 'ready',
+            'document_id': doc.id,
+            'filename': doc.filename,
+            'company': application.company_name or founder_user.username,
+            'has_memo': doc.status == 'completed',
+        })
+
+    # No document yet — check if founder has a pitch deck file on their profile
+    if application.pitch_deck:
+        try:
+            from .utils import _extract_pptx_text, _extract_pdf_text
+            deck_path = application.pitch_deck.path
+
+            if deck_path.lower().endswith('.pptx'):
+                with open(deck_path, 'rb') as pdf_file:
+                    raw_text = _extract_pdf_text(pdf_file)
+            else:
+                with open(deck_path, 'rb') as pdf_file:
+                    raw_text = _extract_pdf_text(pdf_file)
+
+            doc = DocumentSource.objects.create(
+                uploaded_by=founder_user,
+                filename=application.pitch_deck.name,
+                source_entity=application.company_name or founder_user.username,
+                document_type='pitch_deck',
+                raw_text_preview=raw_text[:1000],
+                raw_text_full=raw_text,
+                status='pending',
+            )
+            process_document_pipeline.delay(doc.id, raw_text)
+
+            return JsonResponse({
+                'status': 'processing',
+                'document_id': doc.id,
+                'company': application.company_name or founder_user.username,
+                'message': 'Analysis started — check back in 30 seconds.',
+            })
+
+        except Exception as e:
+            logger.warning(f"Track 1 pipeline trigger failed: {str(e)}")
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Pipeline error: {str(e)}'
+            }, status=500)
+
+    # No pitch deck at all
+    return JsonResponse({
+        'status': 'no_deck',
+        'message': 'This founder has not uploaded a pitch deck yet.',
+        'company': application.company_name or founder_user.username,
+    })
 
 def get_memo(request, doc_id):
     try:

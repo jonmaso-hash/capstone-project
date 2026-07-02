@@ -331,5 +331,68 @@ class Follow(models.Model):
     def __str__(self):
         return f"{self.follower.username} follows {self.following.username}"
     
+class InvestorInterestEvent(models.Model):
+    """
+    Silent background tracking of investor-founder interactions.
+    Costs nothing to log now, becomes the foundation for Success
+    Vector Score and outcome-based predictions later.
+    """
+    EVENT_TYPES = [
+        ('view',              'Profile View'),
+        ('thumbs_up',         'Thumbs Up'),
+        ('thumbs_down',       'Thumbs Down'),
+        ('analyze',           'Analyzed with Zelda'),
+        ('memo_view',         'Viewed Intelligence Memo'),
+        ('truth_delta_view',  'Viewed Truth Delta'),
+        ('intro_request',     'Requested Introduction'),
+        ('message_sent',      'Sent Direct Message'),
+    ]
+
+    investor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='investor_events'
+    )
+    founder = models.ForeignKey(
+        'matchmaking.Application',
+        on_delete=models.CASCADE,
+        related_name='interest_events'
+    )
+    event_type = models.CharField(max_length=20, choices=EVENT_TYPES)
+    created_at = models.DateTimeField(auto_now_add=True)
+    metadata = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['founder', '-created_at']),
+            models.Index(fields=['investor', '-created_at']),
+            models.Index(fields=['event_type']),
+        ]
+
+    def __str__(self):
+        return f"{self.investor.username} → {self.founder.company_name} [{self.get_event_type_display()}]"
+
+
+def log_investor_event(investor_user, founder_application, event_type, metadata=None):
+    """
+    Fire-and-forget event logger. Never breaks the calling view,
+    even if logging itself fails.
+    """
+    if not investor_user or not getattr(investor_user, 'is_authenticated', False):
+        return
+    if not founder_application:
+        return
+    try:
+        InvestorInterestEvent.objects.create(
+            investor=investor_user,
+            founder=founder_application,
+            event_type=event_type,
+            metadata=metadata or {}
+        )
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Failed to log investor event: {str(e)}")
+    
 
     

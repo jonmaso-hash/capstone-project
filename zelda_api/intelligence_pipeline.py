@@ -18,6 +18,7 @@ from .embeddings import embedding_engine
 from .retrieval import retriever
 from .truth_synthesis_engine import TruthSynthesisEngine
 import json
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -490,147 +491,273 @@ class ZeldaIntelligencePipelineV2:
             return "Market adoption timeline dependent on customer education."
         return "Execution risk on product roadmap and market expansion."
     
+    # --- Memo builders ---
+    
     def _generate_memo(self, document_source: DocumentSource, analysis_result: Dict) -> Dict:
-        """Step 4: Generate intelligence memo"""
+        """Step 4: Generate intelligence memo using Claude with evidence-grounded prompt"""
         try:
-        # DELETE stale memo
             IntelligenceMemo.objects.filter(document=document_source).delete()
-        
-            insights = IntelligenceInsight.objects.filter(document=document_source)
-            
+
+            insights = IntelligenceInsight.objects.filter(
+                document=document_source
+            ).order_by('-confidence_score')
+
+            structured_context = self._build_structured_context(document_source, insights)
+            memo_sections = self._call_claude_for_memo(document_source, structured_context, insights)
+
             memo, created = IntelligenceMemo.objects.update_or_create(
                 document=document_source,
                 defaults={
-                    'executive_summary': self._build_executive_summary(document_source, insights),
-                    'problem_solution': self._build_problem_solution(insights),
-                    'market_analysis': self._build_market_analysis(insights),
-                    'team_assessment': self._build_team_assessment(insights),
-                    'financial_analysis': self._build_financial_analysis(insights),
-                    'risk_assessment': self._build_risk_assessment(insights),
-                    'investment_thesis': self._build_investment_thesis(document_source, insights),
-                    'completeness_score': analysis_result['confidence'],
-                    'citations_count': sum(i.source_chunks.count() for i in insights),
+                    'executive_summary':  memo_sections.get('executive_summary', 'Not generated.'),
+                    'problem_solution':   memo_sections.get('problem_solution', 'Not disclosed in pitch deck.'),
+                    'market_analysis':    memo_sections.get('market_analysis', 'Not disclosed in pitch deck.'),
+                    'team_assessment':    memo_sections.get('team_assessment', 'Not disclosed in pitch deck.'),
+                    'financial_analysis': memo_sections.get('financial_analysis', 'Not disclosed in pitch deck.'),
+                    'risk_assessment':    memo_sections.get('risk_assessment', 'Not disclosed in pitch deck.'),
+                    'investment_thesis':  memo_sections.get('investment_thesis', 'Insufficient data.'),
+                    'completeness_score': analysis_result.get('confidence', 0),
+                    'citations_count':    sum(i.source_chunks.count() for i in insights),
                 }
             )
-            
+
             memo.insights_used.set(insights)
-            memo.recommendation = self._determine_recommendation(insights, analysis_result['confidence'])
+            memo.recommendation = memo_sections.get('recommendation', 'NEEDS_REVIEW')
             memo.save()
-            
-            logger.info(f"Generated memo for {document_source.id}")
-            
+
+            logger.info(f"Claude memo generated for document {document_source.id}")
+
             return {
                 'memo_id': memo.id,
                 'sections_count': 7,
                 'completeness_score': memo.completeness_score,
             }
-        
+
         except Exception as e:
             logger.error(f"Memo generation error: {str(e)}")
             return {'error': f'Memo error: {str(e)}'}
     
-    def _trigger_truth_delta(self, document_source: DocumentSource):
+    def _build_structured_context(self, doc: DocumentSource, insights) -> dict:
+        """Extract structured facts from insights for Claude context"""
+        import re
+
+        facts = {
+            'company': doc.source_entity,
+            'document_type': doc.get_document_type_display(),
+            'revenue': None,
+            'arr': None,
+            'mrr': None,
+            'raise_amount': None,
+            'team_size': None,
+            'customers': None,
+            'retention': None,
+            'growth_rate': None,
+            'burn_rate': None,
+            'market_size': None,
+            'use_of_proceeds': None,
+            'traction_signals': [],
+            'missing_fields': [],
+        }
+
+        # Try to pull from Application model if linked
         try:
-            from .truth_delta_tasks import verify_document_truth_delta, extract_claims_from_insights
-            from celery import chain
-            
-            # Chain: extract THEN verify, guaranteed order
-            task_chain = chain(
-                extract_claims_from_insights.s(document_source.id),
-                verify_document_truth_delta.si(document_source.id)
+            from matchmaking.models import Application
+            app = Application.objects.filter(user=doc.uploaded_by).first()
+            if app:
+                if app.current_revenue:
+                    facts['revenue'] = str(app.current_revenue)
+                if app.raising_amount:
+                    facts['raise_amount'] = str(app.raising_amount)
+                if app.team_size:
+                    facts['team_size'] = str(app.team_size)
+                if app.monthly_burn_rate:
+                    facts['burn_rate'] = str(app.monthly_burn_rate)
+        except Exception:
+            pass
+
+        # Extract from insights via regex
+        revenue_pattern = re.compile(
+            r'\$[\d,]+(?:\.\d+)?[KMBkm]?\s*(?:ARR|MRR|revenue|recurring)?|'
+            r'(?:ARR|MRR|revenue)\s*(?:of\s*)?\$[\d,]+(?:\.\d+)?[KMBkm]?',
+            re.IGNORECASE
+        )
+        customer_pattern = re.compile(
+            r'(\d+)\s*(?:paying\s*)?(?:customers|clients|users|clinics|practices|hospitals)',
+            re.IGNORECASE
+        )
+        retention_pattern = re.compile(r'(\d+(?:\.\d+)?%)\s*(?:retention|churn)', re.IGNORECASE)
+        growth_pattern = re.compile(r'(\d+(?:\.\d+)?%)\s*(?:growth|MoM|YoY|month)', re.IGNORECASE)
+
+        for insight in insights:
+            text = insight.insight_text or ''
+
+            if not facts['arr']:
+                m = revenue_pattern.search(text)
+                if m:
+                    facts['arr'] = m.group(0).strip()
+
+            m = customer_pattern.search(text)
+            if m:
+                facts['traction_signals'].append(m.group(0).strip())
+
+            if not facts['retention']:
+                m = retention_pattern.search(text)
+                if m:
+                    facts['retention'] = m.group(1)
+
+            if not facts['growth_rate']:
+                m = growth_pattern.search(text)
+                if m:
+                    facts['growth_rate'] = m.group(1)
+
+        # Identify missing fields
+        checks = {
+            'arr':             'Revenue / ARR / MRR',
+            'raise_amount':    'Raise amount',
+            'market_size':     'Total addressable market size',
+            'use_of_proceeds': 'Use of proceeds',
+            'burn_rate':       'Monthly burn rate',
+            'retention':       'Customer retention / churn rate',
+            'growth_rate':     'Growth rate',
+        }
+        for field, label in checks.items():
+            if not facts[field]:
+                facts['missing_fields'].append(label)
+
+        return facts
+    
+    def _call_claude_for_memo(self, doc: DocumentSource, facts: dict, insights) -> dict:
+        """Call Claude API to generate evidence-grounded investment memo"""
+        import anthropic
+        import json
+
+        client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+
+        # Format insights as numbered evidence list
+        insights_list = "\n".join([
+            f"{i+1}. [{ins.category} | {ins.confidence_score:.0f}% confidence] {ins.insight_text}"
+            for i, ins in enumerate(insights[:25])
+        ])
+
+        missing = "\n".join([f"• {m}" for m in facts.get('missing_fields', [])]) or "• None identified"
+        traction = "\n".join([f"• {t}" for t in facts.get('traction_signals', [])]) or "• None extracted"
+
+        facts_display = json.dumps({
+            k: v for k, v in facts.items()
+            if k not in ('missing_fields', 'traction_signals') and v is not None
+        }, indent=2)
+
+        system_prompt = """You are a senior analyst at a top-tier venture capital firm preparing 
+    an institutional-quality investment memo for a partner meeting.
+
+    ABSOLUTE RULES:
+    1. Every factual claim MUST come from the extracted facts or insights provided below.
+    2. Never invent numbers, projections, or metrics not present in the source data.
+    3. Never use vague phrases like "strong opportunity", "experienced team", or 
+    "significant market" without immediately citing specific evidence.
+    4. If information is missing, write exactly: "Not disclosed in pitch deck."
+    5. Never write "Assessment based on 0 business factors" or any placeholder text.
+    6. Write as a skeptical but fair analyst — evidence-driven, not promotional.
+    7. Every section must be grounded in the provided insights or facts."""
+
+        user_prompt = f"""Prepare an investment memo for {facts['company']}.
+
+    ## STRUCTURED FACTS (extracted from pitch deck)
+    {facts_display}
+
+    ## TRACTION SIGNALS DETECTED
+    {traction}
+
+    ## ZELDA INSIGHTS (extracted with confidence scores)
+    {insights_list}
+
+    ## INFORMATION NOT FOUND IN DECK
+    {missing}
+
+    ---
+
+    Write the memo using ONLY the above information. Return a JSON object with these exact keys:
+    executive_summary, problem_solution, market_analysis, team_assessment, 
+    financial_analysis, risk_assessment, investment_thesis, investment_readiness,
+    questions_for_management, recommendation
+
+    For recommendation use exactly one of: STRONG_INVEST, INVEST, NEEDS_REVIEW, PASS
+
+    ### Instructions per section:
+
+    executive_summary: 2-3 sentences. Company name, what they do, stage, raise amount. 
+    Cite specific numbers. No editorializing.
+
+    problem_solution: What problem do they solve? Who is the customer? 
+    If not clear from deck, say so explicitly.
+
+    market_analysis: What market? What size did they claim? 
+    If no market size stated: "Market size not disclosed in pitch deck."
+
+    team_assessment: Name founders if mentioned. State only credentials cited in deck.
+    Do not invent experience. If thin on team detail, say so.
+
+    financial_analysis: Current revenue, burn, raise amount, use of proceeds.
+    Format as bullet points. For any missing item write "Not disclosed in pitch deck."
+
+    risk_assessment: List 3-5 specific risks based on what the deck reveals AND omits.
+    Omissions are risk signals. Be specific to this company, not generic.
+
+    investment_thesis: Bull case in 2-3 sentences using only disclosed facts.
+    If insufficient data: "Insufficient disclosed data to form a complete investment thesis."
+
+    investment_readiness: Score 0-100 and list strengths/weaknesses based only on 
+    what IS and IS NOT in the deck. Format:
+    Score: XX/100
+    Strengths: [bullet list]
+    Needs Validation: [bullet list]
+    Recommendation: [one sentence]
+
+    questions_for_management: List every important question this deck does NOT answer.
+    Make each question specific to THIS company, not generic.
+    Base on the missing fields listed above plus analytical gaps you identify.
+    Return as a bullet list. Quality over quantity.
+
+    Return ONLY valid JSON. No markdown, no backticks, no preamble."""
+
+        try:
+            response = client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=4000,
+                system=system_prompt,
+                messages=[{"role": "user", "content": user_prompt}]
             )
-            task_chain.delay()
-            logger.info(f"Truth Delta chain queued for {document_source.id}")
-        
+
+            raw = response.content[0].text.strip()
+
+            # Strip markdown fences if present
+            if raw.startswith('```'):
+                raw = re.sub(r'^```(?:json)?\n?', '', raw)
+                raw = re.sub(r'\n?```$', '', raw)
+
+            return json.loads(raw)
+
+        except json.JSONDecodeError as e:
+            logger.error(f"Claude memo JSON parse error: {str(e)}")
+            return {
+                'executive_summary': f'Memo generation encountered a parsing error: {str(e)}',
+                'recommendation': 'NEEDS_REVIEW'
+            }
         except Exception as e:
-            logger.warning(f"Failed to queue Truth Delta: {str(e)}")
+            logger.error(f"Claude API error in memo generation: {str(e)}")
+            return {
+                'executive_summary': f'Memo generation failed: {str(e)}',
+                'recommendation': 'NEEDS_REVIEW'
+            }
     
-    # --- Memo builders ---
-    
-    def _build_executive_summary(self, doc: DocumentSource, insights) -> str:
-        summary = f"Document: {doc.source_entity}\n"
-        summary += f"Type: {doc.get_document_type_display()}\n\n"
-        summary += "Analysis Summary (High Confidence Insights):\n"
-        
-        high_confidence = insights.filter(confidence_score__gte=70).order_by('-confidence_score')[:3]
-        
-        for insight in high_confidence:
-            summary += f"• [{insight.confidence_score:.0f}%] {insight.category}: {insight.insight_text[:200]}\n"
-        
-        return summary if summary else "Executive summary: Comprehensive analysis complete."
-    
-    def _build_problem_solution(self, insights) -> str:
-        problem_insights = insights.filter(category='Problem').order_by('-confidence_score')
-        if problem_insights.exists():
-            return problem_insights.first().insight_text
-        return "Problem/Solution: The document outlines core challenges and solutions."
-    
-    def _build_market_analysis(self, insights) -> str:
-        market_insights = insights.filter(category='Market').order_by('-confidence_score')
-        if market_insights.exists():
-            return market_insights.first().insight_text
-        return "Market Analysis: Significant addressable opportunity identified."
-    
-    def _build_team_assessment(self, insights) -> str:
-        team_insights = insights.filter(category='Team').order_by('-confidence_score')
-        if team_insights.exists():
-            return team_insights.first().insight_text
-        return "Team Assessment: Qualified leadership with industry expertise."
-    
-    def _build_financial_analysis(self, insights) -> str:
-        financial = "Financial Analysis:\n"
-        
-        revenue_insights = insights.filter(category='Revenue').order_by('-confidence_score')
-        if revenue_insights.exists():
-            financial += f"Revenue: {revenue_insights.first().insight_text}\n"
-        else:
-            financial += "Revenue model is defined in financial projections.\n"
-        
-        funding_insights = insights.filter(category='Funding').order_by('-confidence_score')
-        if funding_insights.exists():
-            financial += f"Funding: {funding_insights.first().insight_text}"
-        else:
-            financial += "Capitalization and funding specified."
-        
-        return financial
-    
-    def _build_risk_assessment(self, insights) -> str:
-        risk_insights = insights.filter(category='Risk').order_by('-confidence_score')
-        if risk_insights.exists():
-            return risk_insights.first().insight_text
-        return "Risk Assessment: Market and execution risks identified."
-    
-    def _build_investment_thesis(self, doc: DocumentSource, insights) -> str:
-        thesis = f"Investment Thesis for {doc.source_entity}:\n\n"
-        thesis += "The company presents a compelling opportunity:\n"
-        
-        problem = insights.filter(category='Problem').first()
-        market = insights.filter(category='Market').first()
-        traction = insights.filter(category='Traction').first()
-        
-        if problem:
-            thesis += f"• Clear problem: {problem.insight_text[:80]}\n"
-        if market:
-            thesis += f"• Large market: {market.insight_text[:80]}\n"
-        if traction:
-            thesis += f"• Proven traction: {traction.insight_text[:80]}\n"
-        
-        thesis += f"\nAssessment based on analysis of {insights.count()} business factors."
-        return thesis
     
     def _determine_recommendation(self, insights, confidence: float) -> str:
-        red_flags = insights.filter(category='Risk', confidence_score__gte=70).count()
-        strong_points = insights.filter(
-            category__in=['Revenue', 'Traction', 'Funding'],
-            confidence_score__gte=70
-        ).count()
-        
-        if red_flags > strong_points or confidence < 0.5:
-            return 'pass'
-        elif strong_points >= 2 and confidence >= 0.7:
-            return 'strong_interest'
-        else:
-            return 'consider'
-
-# Global instance
+        """Kept for backwards compatibility — now set by Claude directly"""
+        if confidence >= 80:
+            return 'STRONG_INVEST'
+        elif confidence >= 65:
+            return 'INVEST'
+        elif confidence >= 45:
+            return 'NEEDS_REVIEW'
+        return 'PASS'
+    # Global instance
 intelligence_pipeline = ZeldaIntelligencePipelineV2()
