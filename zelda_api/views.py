@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Avg, Sum, Count
 from django.shortcuts import get_object_or_404, render
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from .vector_models import DocumentSource
 from django.urls import path
 
@@ -29,9 +29,6 @@ from .serializers import (
 
 # Core Deal Flow Utilities
 from .utils import scan_pitch_deck, AnalyzedPitch, compile_executive_intelligence_memo, analyze_web_text
-
-# Pinnacle Architecture Registry
-from .registry import PinnacleRegistry
 
 UserClass = get_user_model()
 logger = logging.getLogger(__name__)
@@ -244,11 +241,13 @@ class ZeldaGlobalSearchAPIView(APIView):
             # 3. Database deep crawl (matchmaking models)
             if _MATCHMAKING_AVAILABLE:
                 if search_founders and Application:
+                    # Privacy Gatekeeper: same rule as matchmaking._filtered_public_applications
+                    # — Zelda search must never surface private or denied founder profiles.
                     founder_matches = Application.objects.filter(
                         Q(company_name__icontains=user_query)
                         | Q(description__icontains=user_query)
                         | Q(sector__icontains=user_query)
-                    ).select_related('user')[:5]
+                    ).filter(is_private=False).exclude(review_status='DENIED').select_related('user')[:5]
 
                     for app in founder_matches:
                         try:
@@ -263,10 +262,12 @@ class ZeldaGlobalSearchAPIView(APIView):
                             'type': 'Founder Profile',
                             'title': f"Founder: {app.company_name}",
                             'founder_name': app.user.get_full_name() or app.user.username,
+                            'username': app.user.username,
                             'startup_name': app.company_name,
                             'sector': app.sector or 'General',
                             'executive_summary': (app.description or "")[:200] + '...',
                             'funding_stage': getattr(app, 'funding_stage', 'Seed'),
+                            'has_pitch_deck': bool(app.pitch_deck),
                             'url': url,
                         })
                         seen_urls.add(url)
@@ -304,8 +305,8 @@ class ZeldaGlobalSearchAPIView(APIView):
                 'about.html': ('About Us', '/about/'),
                 'services.html': ('Platform Services Overview', '/services/'),
                 'contact.html': ('Contact & Support', '/contact/'),
-                'seeking_investment.html': ('Founder Onboarding Hub', '/accounts/seeking-investment/'),
-                'investor_form.html': ('Investor Mandate Portal', '/accounts/investor-form/'),
+                'edit_founder_profile.html': ('Founder Onboarding Hub', '/settings/profile/founder/'),
+                'edit_investor_profile.html': ('Investor Mandate Portal', '/settings/profile/investor/'),
                 'ai_search.html': ('Zelda UI Workspace Canvas', '/accounts/ai_search/'),
                 'profile.html': ('User Metrics Engine Profiles', '/accounts/profile/'),
                 'bulletin_board.html': ('Venture Bulletin Board', '/matchmaking/bulletin-board/'),
@@ -369,6 +370,7 @@ class ZeldaGlobalSearchAPIView(APIView):
 
 class MatchRadarAPIView(APIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
 
     def post(self, request):
         serializer = VectorMatchSerializer(data=request.data)
@@ -408,6 +410,7 @@ class DocumentIntakeAPIView(APIView):
     FIX: Removed orphaned second post() method that was hidden inside a docstring.
     """
     permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request, format=None):
@@ -488,6 +491,7 @@ class DocumentIntakeAPIView(APIView):
 
 class WebExplorationAPIView(APIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
 
     def post(self, request):
         serializer = WebCrawlSerializer(data=request.data)
@@ -544,6 +548,7 @@ class DocumentDirectScraperAPIView(APIView):
 
 class MarketHealthAnalyticsAPIView(APIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
 
     def get(self, request):
         serializer = MarketAnalyticsSerializer(data=request.query_params)
@@ -575,6 +580,7 @@ class MarketHealthAnalyticsAPIView(APIView):
 
 class InvestmentMemoGeneratorAPIView(APIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
 
     def post(self, request):
         serializer = MemoGenerationSerializer(data=request.data)
@@ -639,38 +645,12 @@ class MemoIntelligenceView(APIView):
         return {'linkedin_headcount': 45, 'job_board_openings': 2}
 
 
-class ZeldaGatewayAPIView(APIView):
-    """
-    GET /api/v1/zelda/gateway/{source_name}/
-    The universal orchestration endpoint.
-    FIX: PinnacleRegistry.get_model_for_source() and .get_adapters() now exist.
-    """
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, source_name):
-        model_class = PinnacleRegistry.get_model_for_source(source_name)
-        if not model_class:
-            return Response({
-                "status": "error",
-                "message": f"Source '{source_name}' is not registered with the Pinnacle architecture.",
-                "available_sources": list(PinnacleRegistry.get_adapters().keys()),
-            }, status=status.HTTP_404_NOT_FOUND)
-
-        object_id = request.query_params.get('id')
-        if object_id:
-            instance = get_object_or_404(model_class, id=object_id)
-            return Response(instance.to_foundry_envelope(), status=status.HTTP_200_OK)
-        else:
-            instances = model_class.objects.all().order_by('-id')[:50]
-            envelopes = [inst.to_foundry_envelope() for inst in instances]
-            return Response({"status": "success", "source_engine": source_name, "orchestration_payload": envelopes}, status=status.HTTP_200_OK)
-
-
 class InvestorPortfolioIntakeAPIView(APIView):
     """
     POST /api/v1/zelda/investors/portfolio/
     """
     permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request, format=None):
@@ -890,6 +870,7 @@ class SummarizePageAPIView(APIView):
     Accepts raw page text and returns structured startup intelligence analysis.
     """
     permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
 
     def post(self, request):
         page_text = request.data.get('text', '')
@@ -907,7 +888,18 @@ def truth_delta_ui_view(request, document_id):
     from .truth_delta_models import TruthDeltaReport, ClaimedDatapoint
     
     document = get_object_or_404(DocumentSource, id=document_id)
-    
+
+    if document.uploaded_by != request.user:
+        viewer_is_investor = (
+            getattr(request.user, 'accounts_investor_profile', None) is not None or
+            getattr(request.user, 'match_investor_profile', None) is not None
+        )
+        if viewer_is_investor:
+            from matchmaking.models import Application, log_investor_event
+            founder_app = Application.objects.filter(user=document.uploaded_by).first()
+            if founder_app:
+                log_investor_event(request.user, founder_app, 'truth_delta_view')
+
     # Get latest report for this document
     report = TruthDeltaReport.objects.filter(
         document=document
@@ -976,7 +968,7 @@ def analyze_founder_profile(request, founder_username):
             'document_id': doc.id,
             'filename': doc.filename,
             'company': application.company_name or founder_user.username,
-            'has_memo': doc.status == 'completed',
+            'has_memo': hasattr(doc, 'memo'),
         })
 
     # No document yet — check if founder has a pitch deck file on their profile
@@ -999,7 +991,7 @@ def analyze_founder_profile(request, founder_username):
                 document_type='pitch_deck',
                 raw_text_preview=raw_text[:1000],
                 raw_text_full=raw_text,
-                status='pending',
+                status='ingested',
             )
             process_document_pipeline.delay(doc.id, raw_text)
 
@@ -1038,3 +1030,107 @@ def get_memo(request, doc_id):
             "memo": "",
             "doc_id": doc_id,
         }, status=404)
+
+
+@login_required
+def valuation_request_view(request):
+    """Upload form for the Business Valuation feature — any authenticated
+    user, no founder/investor role required (standalone self-service tool)."""
+    return render(request, 'zelda_valuation_request.html')
+
+
+@login_required
+def valuation_report_view(request, document_id):
+    """
+    Report page for a business valuation request. Owner-or-staff only,
+    matching DocumentValuationView's API-level gate.
+    """
+    from .vector_models import DocumentSource
+    document = get_object_or_404(DocumentSource, id=document_id, document_type='business_valuation')
+
+    if document.uploaded_by != request.user and not request.user.is_staff:
+        raise Http404("Not found.")
+
+    return render(request, 'zelda_valuation_report.html', {
+        'document': document,
+    })
+
+
+class JourneyStatusAPIView(APIView):
+    """
+    GET /api/v1/zelda/journey-status/
+
+    Powers the state-aware Zelda icon: computes the caller's onboarding/
+    engagement stage (founder or investor) and folds in their unread
+    notification count, so the icon only needs one fetch per page load.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+
+    def get(self, request):
+        from notifications.models import Notification
+        from matchmaking.utils import (
+            compute_founder_journey_stage, compute_investor_journey_stage,
+            compute_seller_journey_stage, compute_buyer_journey_stage,
+        )
+
+        user = request.user
+        is_investor = getattr(user, 'match_investor_profile', None) is not None
+        is_seller = getattr(user, 'match_seller_profile', None) is not None
+        is_buyer = getattr(user, 'match_buyer_profile', None) is not None
+
+        if is_investor:
+            stage = compute_investor_journey_stage(user)
+            url_by_label = {
+                'Create your investor profile': 'usersettings:edit_investor_profile',
+                'Complete every mandate field': 'usersettings:edit_investor_profile',
+                'Upload your portfolio for a similarity match': 'usersettings:edit_investor_profile',
+            }
+        elif is_seller:
+            stage = compute_seller_journey_stage(user)
+            url_by_label = {
+                'Create your business listing': 'usersettings:edit_seller_profile',
+                'Upload a CIM document': 'usersettings:edit_seller_profile',
+                'Get a Zelda valuation to price your asking price with confidence': 'zelda_api:valuation_request',
+                'Connect with other businesses': 'matchmaking:acquisition_bulletin_board',
+            }
+        elif is_buyer:
+            stage = compute_buyer_journey_stage(user)
+            url_by_label = {
+                'Create your buyer profile': 'usersettings:edit_buyer_profile',
+                'Complete every mandate field': 'usersettings:edit_buyer_profile',
+            }
+        else:
+            # Founders, and users with no role picked yet, both land on the
+            # founder track — matching the "(after sign up) -> create
+            # profile" first step described for new signups.
+            stage = compute_founder_journey_stage(user)
+            url_by_label = {
+                'Create your founder profile': 'usersettings:edit_founder_profile',
+                'Upload a pitch deck or pitch video': 'usersettings:edit_founder_profile',
+                'Publish a blog post to boost visibility': 'blog:blog_view',
+                "Post a job to show you're growing": 'jobs:create',
+                'Connect with other businesses': 'matchmaking:bulletin_board',
+                'Upload your business plan to Zelda for a competitiveness match': 'zelda_api:valuation_request',
+            }
+
+        next_action_url = None
+        for item in stage['checklist']:
+            if not item['done']:
+                url_name = url_by_label.get(item['label'])
+                if url_name:
+                    try:
+                        next_action_url = reverse(url_name)
+                    except NoReverseMatch:
+                        next_action_url = None
+                break
+
+        unread_notifications = Notification.objects.filter(recipient=user, is_read=False).count()
+
+        return Response({
+            'stage_color': stage['stage_color'],
+            'headline': stage['headline'],
+            'checklist': stage['checklist'],
+            'unread_notifications': unread_notifications,
+            'next_action_url': next_action_url,
+        })

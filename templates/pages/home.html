@@ -12,6 +12,10 @@
     <p class="lead text-muted">
         Discover startups raising capital or connect with investors actively seeking new opportunities.
     </p>
+    <div class="d-flex justify-content-center gap-4 mt-3">
+        <span class="text-muted"><strong class="text-dark">{{ founder_count }}</strong> Founders</span>
+        <span class="text-muted"><strong class="text-dark">{{ investor_count }}</strong> Investors</span>
+    </div>
 </div>
 
 <!-- Primary Portals -->
@@ -24,7 +28,7 @@
                 <div class="card h-100 shadow-sm border-0 p-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h2 class="h3 mb-0">For Investors</h2>
-                        <a href="{% url 'accounts:investor_form' %}" class="btn btn-primary btn-sm">Join Network</a>
+                        <a href="{% url 'usersettings:edit_investor_profile' %}" class="btn btn-primary btn-sm">Join Network</a>
                     </div>
                     <h5 class="text-muted mb-4">Curated Deal Flow & Execution</h5>
                     <ul class="list-unstyled">
@@ -49,7 +53,7 @@
                 <div class="card h-100 shadow-sm border-0 p-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h2 class="h3 mb-0">For Founders</h2>
-                        <a href="{% url 'accounts:seeking_investment' %}" class="btn btn-outline-primary btn-sm">Submit Venture</a>
+                        <a href="{% url 'usersettings:edit_founder_profile' %}" class="btn btn-outline-primary btn-sm">Submit Venture</a>
                     </div>
                     <h5 class="text-muted mb-4">Capital Acquisition & Strategy</h5>
                     <ul class="list-unstyled">

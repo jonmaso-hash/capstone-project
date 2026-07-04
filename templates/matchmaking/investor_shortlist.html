@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{% block title %}My Shortlist | Interlink Foundry{% endblock title %}
+
+{% block css %}
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #0f5132 0%, #198754 100%);
+        border-radius: 16px;
+    }
+    .match-card {
+        border-radius: 16px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: 1px solid #e9ecef;
+    }
+    .match-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important;
+    }
+    .score-badge {
+        font-size: 1.1rem;
+        font-weight: 700;
+        padding: 8px 16px;
+        border-radius: 50px;
+    }
+</style>
+{% endblock css %}
+
+{% block content %}
+<div class="container py-5">
+
+    <div class="dashboard-header text-white p-4 p-lg-5 mb-5 shadow-sm">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <h1 class="fw-bold mb-1"><i class="bi bi-hand-thumbs-up-fill me-2"></i>My Shortlist</h1>
+                <p class="mb-0 opacity-75">Founders you've thumbs-up'd on the bulletin board.</p>
+            </div>
+            <a href="{% url 'matchmaking:investor_dashboard' %}" class="btn btn-outline-light rounded-pill px-4">
+                <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    {% if shortlist %}
+        {% for entry in shortlist %}
+        <div class="card match-card shadow-sm mb-4 bg-white overflow-hidden">
+            <div class="card-body p-4">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
+                    <div>
+                        <h3 class="fw-bold text-dark mb-1">{{ entry.founder.company_name }}</h3>
+                        <div class="d-flex flex-wrap gap-2 my-2 align-items-center">
+                            <span class="badge bg-secondary-subtle text-secondary rounded-2 px-2 py-1 small">
+                                <i class="bi bi-tag-fill me-1"></i>{{ entry.founder.sector }}
+                            </span>
+                            <span class="badge bg-success-subtle text-success rounded-2 px-2 py-1 small">
+                                <i class="bi bi-layers-half me-1"></i>{{ entry.founder.stage }}
+                            </span>
+                            {% if entry.founder.location %}
+                            <span class="text-muted small ms-1">
+                                <i class="bi bi-geo-alt-fill me-1"></i>{{ entry.founder.location }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <p class="text-muted mb-3">{{ entry.founder.description|truncatewords:40 }}</p>
+                        <span class="badge bg-light text-dark border">
+                            Seeking {% if entry.founder.raising_amount %}${{ entry.founder.raising_amount|floatformat:0|intcomma }}{% else %}--{% endif %}
+                        </span>
+                    </div>
+
+                    <div class="text-md-end d-flex flex-column align-items-md-end gap-2">
+                        <div class="text-end">
+                            <small class="text-muted d-block small fw-bold text-uppercase" style="font-size: 9px; letter-spacing: 0.5px;">Match Index</small>
+                            <span class="badge bg-success text-white score-badge shadow-sm">{{ entry.final_score }}%</span>
+                        </div>
+                        <a href="{% url 'accounts:profile' entry.founder.user.username %}" class="btn btn-sm btn-outline-dark rounded-pill">
+                            View Profile
+                        </a>
+                        {% if entry.already_requested %}
+                        <span class="badge bg-info-subtle text-info border border-info px-3 py-2 rounded-pill">Introduction Requested</span>
+                        {% else %}
+                        <form method="post" action="{% url 'matchmaking:request_intro' entry.founder.id investor.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-success rounded-pill px-3">
+                                <i class="bi bi-hand-index-thumb me-1"></i> Request Intro
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-hand-thumbs-up display-1 text-light mb-4 d-block"></i>
+            <h3 class="fw-bold">No shortlisted founders yet</h3>
+            <p class="text-muted">Thumbs-up a founder's pitch card on the <a href="{% url 'matchmaking:bulletin_board' %}">Bulletin Board</a> to add them here.</p>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

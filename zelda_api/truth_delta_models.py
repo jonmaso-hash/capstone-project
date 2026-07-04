@@ -68,7 +68,7 @@ class ClaimedDatapoint(models.Model):
     ]
     
     document = models.ForeignKey(DocumentSource, on_delete=models.CASCADE, related_name='claimed_datapoints')
-    
+
     # The claim itself
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
     claimed_value = models.CharField(max_length=255, help_text="E.g., '500', '$1M', '200%'")
@@ -76,7 +76,12 @@ class ClaimedDatapoint(models.Model):
     unit = models.CharField(max_length=50, blank=True, help_text="E.g., 'customers', '$', '%'")
     time_period = models.CharField(max_length=100, blank=True, help_text="E.g., 'YoY', 'Q3 2024'")
     source_chunk = models.CharField(max_length=255, blank=True, help_text="Which slide/section in deck")
-    
+
+    # Provenance — full traceability back to the source chunk this claim came from
+    page_number = models.IntegerField(null=True, blank=True, help_text="Page this claim's source chunk came from")
+    text_excerpt = models.TextField(blank=True, help_text="Full source chunk text this claim was extracted from")
+    chunk_hash = models.CharField(max_length=128, blank=True, help_text="Hash of the source chunk, for change detection/dedup")
+
     # Extraction metadata
     confidence_in_extraction = models.FloatField(default=0.7, help_text="How confident are we we extracted this correctly")
     extraction_notes = models.TextField(blank=True)
@@ -134,172 +139,6 @@ class ObservedDatapoint(models.Model):
     def __str__(self):
         return f"{self.category}: {self.observed_value}"
 
-
-class TruthDeltaAnalysis(models.Model):
-    """
-    Comparison between claimed and observed data.
-    Calculates discrepancy and flags suspicious claims.
-    """
-    
-    DISCREPANCY_LEVELS = [
-        ('none', 'None (0-5%)'),
-        ('low', 'Low (5-20%)'),
-        ('medium', 'Medium (20-50%)'),
-        ('high', 'High (50-100%)'),
-        ('critical', 'Critical (>100%)'),
-    ]
-    
-    FLAG_LEVELS = [
-        ('green', 'Verified - Matches Data'),
-        ('yellow', 'Caution - Minor Discrepancy'),
-        ('orange', 'Warning - Significant Discrepancy'),
-        ('red', 'Alert - Major Red Flag'),
-    ]
-    
-    document = models.ForeignKey(DocumentSource, on_delete=models.CASCADE, related_name='truth_delta_analyses')
-    
-    # The comparison
-    claimed = models.ForeignKey(ClaimedDatapoint, on_delete=models.CASCADE, related_name='truth_analyses')
-    observed = models.ForeignKey(ObservedDatapoint, on_delete=models.SET_NULL, null=True, related_name='truth_analyses')
-    
-    # Discrepancy calculation
-    discrepancy_percent = models.FloatField(help_text="Absolute % difference between claimed and observed")
-    discrepancy_level = models.CharField(max_length=20, choices=DISCREPANCY_LEVELS)
-    
-    # Direction of discrepancy
-    is_inflated = models.BooleanField(help_text="Is claimed value higher than observed?")
-    is_deflated = models.BooleanField(help_text="Is claimed value lower than observed?")
-    
-    # Flagging
-    flag_level = models.CharField(max_length=20, choices=FLAG_LEVELS, default='yellow')
-    explanation = models.TextField(help_text="Why this is flagged")
-    
-    # Weighting
-    importance_weight = models.FloatField(
-        default=1.0,
-        help_text="How important is this metric? Revenue=1.0, Team=0.6, etc"
-    )
-    
-    # Manual review
-    is_verified = models.BooleanField(default=False)
-    verified_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='verified_analyses'
-    )
-    verified_notes = models.TextField(blank=True)
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        app_label = 'zelda_api'
-        ordering = ['-flag_level', '-discrepancy_percent']
-    
-    def __str__(self):
-        return f"{self.claimed.category}: {self.discrepancy_percent:.1f}% discrepancy"
-
-
-class TruthDeltaScore(models.Model):
-    """
-    Overall Truth Delta Score for a document.
-    Combines all individual analyses into one credibility metric.
-    """
-    
-    document = models.OneToOneField(DocumentSource, on_delete=models.CASCADE, related_name='truth_delta_score')
-    
-    # Aggregate metrics
-    overall_truth_score = models.FloatField(help_text="0-100: Overall credibility score")
-    claims_analyzed = models.IntegerField(default=0, help_text="How many claims were analyzed")
-    claims_verified = models.IntegerField(default=0, help_text="How many claims matched external data")
-    claims_flagged = models.IntegerField(default=0, help_text="How many claims have discrepancies")
-    
-    # Breakdown by severity
-    green_count = models.IntegerField(default=0)  # No discrepancy
-    yellow_count = models.IntegerField(default=0)  # Minor (<20%)
-    orange_count = models.IntegerField(default=0)  # Medium (20-50%)
-    red_count = models.IntegerField(default=0)    # Critical (>50%)
-    
-    # Risk calculation
-    credibility_risk = models.CharField(
-        max_length=20,
-        choices=[
-            ('low', 'Low Risk'),
-            ('medium', 'Medium Risk'),
-            ('high', 'High Risk'),
-            ('critical', 'Critical Risk'),
-        ]
-    )
-    
-    # Investment recommendation impact
-    recommendation_adjustment = models.CharField(
-        max_length=50,
-        blank=True,
-        help_text="E.g., 'downgrade_from_consider_to_pass'"
-    )
-    
-    # Report
-    summary = models.TextField(help_text="Human-readable summary of findings")
-    key_findings = models.TextField(help_text="Bullet points of main discrepancies")
-    
-    # Metadata
-    analyzed_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        app_label = 'zelda_api'
-    
-    def __str__(self):
-        return f"Truth Delta Score: {self.overall_truth_score:.1f}% - {self.document.filename}"
-    
-    @property
-    def verification_rate(self):
-        """Percentage of claims that were verified"""
-        if self.claims_analyzed == 0:
-            return 0.0
-        return (self.claims_verified / self.claims_analyzed) * 100
-    
-    @property
-    def discrepancy_rate(self):
-        """Percentage of claims with discrepancies"""
-        if self.claims_analyzed == 0:
-            return 0.0
-        return (self.claims_flagged / self.claims_analyzed) * 100
-
-
-class VerificationAuditLog(models.Model):
-    """
-    Audit trail of all verification activities.
-    For compliance and transparency.
-    """
-    
-    document = models.ForeignKey(DocumentSource, on_delete=models.CASCADE, related_name='audit_logs')
-    
-    ACTION_TYPES = [
-        ('claimed_created', 'Claim Created'),
-        ('observed_created', 'Observed Data Added'),
-        ('analysis_created', 'Analysis Performed'),
-        ('flag_updated', 'Flag Level Changed'),
-        ('verified', 'Manually Verified'),
-        ('score_calculated', 'Score Calculated'),
-    ]
-    
-    action = models.CharField(max_length=50, choices=ACTION_TYPES)
-    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
-    
-    details = models.TextField()
-    change_summary = models.CharField(max_length=255, blank=True)
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        app_label = 'zelda_api'
-        ordering = ['-created_at']
-    
-    def __str__(self):
-        return f"{self.action} on {self.document.filename} at {self.created_at}"
-    
 
 class TruthDeltaReport(models.Model):
     document = models.ForeignKey('DocumentSource', on_delete=models.CASCADE)

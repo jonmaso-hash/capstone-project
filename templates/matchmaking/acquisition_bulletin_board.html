@@ -1,0 +1,383 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Business Marketplace | Interlink Foundry{% endblock %}
+
+{% block css %}
+<style>
+    .marketplace-header {
+        background: #2c2410;
+        color: #f5e6c8;
+        padding: 1.25rem 2rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+        border-radius: 12px;
+    }
+
+    .marketplace-header h1 {
+        font-size: 1.6rem;
+        font-weight: 800;
+        margin: 0;
+        color: #f5e6c8;
+    }
+
+    .marketplace-header p {
+        margin: 0;
+        font-size: 0.85rem;
+        color: #d4b483;
+    }
+
+    .filter-toolbar {
+        background: #f8f5ee;
+        border: 1px solid #e8d5a3;
+        border-radius: 12px;
+        padding: 0.85rem 1.25rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-filter {
+        background: #fff;
+        color: #6b5533;
+        border: 1px solid #e8d5a3;
+        font-size: 0.75rem;
+        padding: 4px 12px;
+        border-radius: 20px;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .btn-filter:hover, .btn-filter.active {
+        background: #8b6914;
+        color: #fff;
+        border-color: #8b6914;
+    }
+
+    .listing-card {
+        background: #fff;
+        border: 1px solid #e8d5a3;
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        height: 100%;
+    }
+
+    .listing-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+
+    .industry-tag {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 700;
+        color: #8b6914;
+        background: rgba(184,134,11,0.12);
+        padding: 2px 8px;
+        border-radius: 3px;
+        display: inline-block;
+        margin-bottom: 0.5rem;
+    }
+
+    .company-name {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #1a1a1a;
+        margin-bottom: 0.25rem;
+    }
+
+    .listing-text {
+        font-size: 0.82rem;
+        color: #444;
+        line-height: 1.55;
+        margin: 0.6rem 0 0.8rem;
+    }
+
+    .asking-chip {
+        background: #8b6914;
+        color: #fff;
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 20px;
+        display: inline-block;
+    }
+
+    .match-ring {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: 3px solid;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.78rem;
+        background: #fff;
+        flex-shrink: 0;
+    }
+
+    .match-ring.fire   { border-color: #e53e3e; color: #e53e3e; }
+    .match-ring.muscle { border-color: #38a169; color: #38a169; }
+    .match-ring.thumb  { border-color: #3182ce; color: #3182ce; }
+    .match-ring.radar  { border-color: #805ad5; color: #805ad5; }
+    .match-ring.ok     { border-color: #d69e2e; color: #d69e2e; }
+    .match-ring.low    { border-color: #a0aec0; color: #a0aec0; }
+
+    .thumbs-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px dashed #d4b483;
+    }
+
+    .thumb-btn {
+        border: none;
+        background: transparent;
+        font-size: 1.1rem;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 6px;
+        transition: background 0.15s, transform 0.1s;
+    }
+
+    .thumb-btn:hover { background: rgba(0,0,0,0.08); transform: scale(1.15); }
+    .thumb-btn.active-up   { background: rgba(39,174,96,0.15); }
+    .thumb-btn.active-down { background: rgba(231,76,60,0.12); }
+
+    .view-btn {
+        font-size: 0.75rem;
+        font-weight: 700;
+        background: #2c2410;
+        color: #f5e6c8;
+        border: none;
+        padding: 5px 14px;
+        border-radius: 20px;
+        text-decoration: none;
+    }
+
+    .view-btn:hover { background: #4a3d1a; color: #f5e6c8; }
+
+    .empty-note {
+        background: #f8f5ee;
+        border: 2px dashed #d4b483;
+        border-radius: 8px;
+        padding: 3rem;
+        text-align: center;
+        color: #8b6914;
+    }
+
+    .guest-strip {
+        background: #2c2410;
+        color: #d4b483;
+        text-align: center;
+        padding: 1.25rem 2rem;
+        margin-top: 3rem;
+        font-size: 0.88rem;
+        border-radius: 8px;
+    }
+
+    .guest-strip a { color: #f5e6c8; font-weight: 700; text-decoration: none; }
+    .guest-strip a:hover { color: #fff; text-decoration: underline; }
+</style>
+{% endblock css %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="marketplace-header">
+        <div>
+            <h1><i class="bi bi-shop me-2"></i>Business Marketplace</h1>
+            <p>Businesses for sale, matched to acquirer mandates by deal economics.</p>
+        </div>
+        {% if user.is_authenticated and user.match_seller_profile %}
+        <a href="{% url 'usersettings:edit_seller_profile' %}" class="btn btn-warning btn-sm rounded-pill px-3">
+            <i class="bi bi-pencil-square me-1"></i> Edit My Listing
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="filter-toolbar">
+        <form method="GET" action="{% url 'matchmaking:acquisition_bulletin_board' %}" class="d-flex align-items-center gap-2" style="flex:1;min-width:200px;max-width:340px;">
+            {% if selected_industry %}
+            <input type="hidden" name="industry" value="{{ selected_industry }}">
+            {% endif %}
+            <input type="text" name="q" class="form-control form-control-sm rounded-pill"
+                placeholder="Search listings..." value="{{ request.GET.q|default:'' }}">
+        </form>
+
+        <span style="color:#8b6914;font-size:0.75rem;font-weight:700;white-space:nowrap;">
+            <i class="bi bi-funnel me-1"></i>Industry:
+        </span>
+        <a href="{% url 'matchmaking:acquisition_bulletin_board' %}{% if request.GET.q %}?q={{ request.GET.q }}{% endif %}"
+           class="btn-filter {% if not selected_industry %}active{% endif %}">All</a>
+        <a href="{% url 'matchmaking:acquisition_bulletin_board' %}?industry=Manufacturing{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+           class="btn-filter {% if selected_industry == 'Manufacturing' %}active{% endif %}">Manufacturing</a>
+        <a href="{% url 'matchmaking:acquisition_bulletin_board' %}?industry=SaaS{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+           class="btn-filter {% if selected_industry == 'SaaS' %}active{% endif %}">SaaS</a>
+        <a href="{% url 'matchmaking:acquisition_bulletin_board' %}?industry=Retail{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+           class="btn-filter {% if selected_industry == 'Retail' %}active{% endif %}">Retail</a>
+        <a href="{% url 'matchmaking:acquisition_bulletin_board' %}?industry=Services{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+           class="btn-filter {% if selected_industry == 'Services' %}active{% endif %}">Services</a>
+    </div>
+
+    {% if listings %}
+    <div class="row g-4">
+        {% for listing in listings %}
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="listing-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="industry-tag">{{ listing.industry|default:"Other" }}</span>
+
+                    {% if user.is_authenticated and user.match_buyer_profile %}
+                    {% with score=listing.match_percentage|default:0 %}
+                    <div class="d-flex flex-column align-items-end gap-1" id="match-wrap-{{ listing.id }}">
+                        <div class="match-ring
+                            {% if score >= 90 %}fire
+                            {% elif score >= 80 %}muscle
+                            {% elif score >= 70 %}thumb
+                            {% elif score >= 60 %}radar
+                            {% elif score >= 50 %}ok
+                            {% else %}low{% endif %}"
+                            id="match-ring-{{ listing.id }}"
+                            data-base-score="{{ listing.base_match_percentage }}"
+                            data-vote="{{ listing.buyer_vote }}">
+                            {{ score }}%
+                        </div>
+                    </div>
+                    {% endwith %}
+                    {% endif %}
+                </div>
+
+                <div class="company-name">{{ listing.company_name|default:"Unnamed Business" }}</div>
+
+                <div class="small text-muted">
+                    <i class="bi bi-geo-alt-fill text-danger"></i> {{ listing.geography|default:"Location undisclosed" }}
+                </div>
+
+                <p class="listing-text">
+                    {{ listing.description|truncatewords:30|default:"No description provided." }}
+                </p>
+
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <span class="asking-chip">
+                        Asking {% if listing.asking_price %}${{ listing.asking_price|floatformat:0|intcomma }}{% else %}--{% endif %}
+                    </span>
+                    <a href="{% url 'accounts:profile' listing.user.username %}" class="view-btn">
+                        View Listing &rarr;
+                    </a>
+                </div>
+
+                {% if user.is_authenticated and user.match_buyer_profile %}
+                <div class="thumbs-row">
+                    <span style="font-size:0.7rem;color:#8b6914;font-weight:700;">Tune match:</span>
+                    <button class="thumb-btn" onclick="recordDealVote({{ listing.id }}, 'up', this)"
+                            title="Interested — boost match score">👍</button>
+                    <button class="thumb-btn" onclick="recordDealVote({{ listing.id }}, 'down', this)"
+                            title="Pass — lower match score">👎</button>
+                    <span id="vote-status-{{ listing.id }}" class="ms-1" style="font-size:0.7rem;color:#8b6914;"></span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-note mx-auto mt-5" style="max-width:500px;">
+        <div style="font-size:2.5rem;">🏪</div>
+        <h4 class="mt-3 mb-1">No listings found.</h4>
+        <p class="mb-0">
+            {% if request.GET.q or selected_industry %}
+                No listings match your search. <a href="{% url 'matchmaking:acquisition_bulletin_board' %}" style="color:#8b0000;">Clear filters</a>
+            {% else %}
+                No businesses have been listed yet.
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+
+    {% if not user.is_authenticated %}
+    <div class="guest-strip mt-4">
+        <strong>Join Interlink Foundry</strong> to see match scores and connect with buyers and sellers.
+        &nbsp;
+        <a href="{% url 'accounts:signup' %}">Create Account</a>
+        &nbsp;or&nbsp;
+        <a href="{% url 'login' %}">Sign In</a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function getCookie(name) {
+    const cookies = document.cookie.split(';');
+    for (let c of cookies) {
+        c = c.trim();
+        if (c.startsWith(name + '=')) return decodeURIComponent(c.slice(name.length + 1));
+    }
+    return null;
+}
+
+function tierForScore(score) {
+    if (score >= 90) return { cls: 'fire' };
+    if (score >= 80) return { cls: 'muscle' };
+    if (score >= 70) return { cls: 'thumb' };
+    if (score >= 60) return { cls: 'radar' };
+    if (score >= 50) return { cls: 'ok' };
+    return { cls: 'low' };
+}
+
+function updateMatchRing(listingId, direction) {
+    const ring = document.getElementById(`match-ring-${listingId}`);
+    if (!ring) return;
+    const baseScore = parseInt(ring.dataset.baseScore, 10) || 0;
+    const newVote = direction === 'up' ? 1 : -1;
+    const newScore = Math.max(0, Math.min(100, baseScore + (newVote * 10)));
+    const tier = tierForScore(newScore);
+    ring.textContent = `${newScore}%`;
+    ring.dataset.vote = newVote;
+    ring.className = `match-ring ${tier.cls}`;
+}
+
+function recordDealVote(listingId, direction, btn) {
+    const statusEl = document.getElementById(`vote-status-${listingId}`);
+    fetch("{% url 'matchmaking:record_deal_vote' %}", {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ seller_id: listingId, vote: direction })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'success') {
+            if (direction === 'up') {
+                btn.classList.add('active-up');
+                if (statusEl) statusEl.textContent = '✓ Interested';
+            } else {
+                btn.classList.add('active-down');
+                if (statusEl) statusEl.textContent = '✓ Passed';
+            }
+            updateMatchRing(listingId, direction);
+        }
+    })
+    .catch(err => {
+        if (statusEl) statusEl.textContent = 'Error — try again';
+        console.error('Vote error:', err);
+    });
+}
+</script>
+{% endblock content %}

@@ -12,9 +12,3 @@ from .admin_intelligence import (  # noqa: F401
     IntelligenceMemoAdmin,
 )
 
-# Try to import jobs models if available
-try:
-    from jobs_api.models import JobListing, JobApplication
-except ImportError:
-    JobListing = None
-    JobApplication = None

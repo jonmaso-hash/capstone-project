@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}Dashboard | Interlink Foundry{% endblock title %}
 
@@ -14,10 +15,10 @@
                 <p class="text-white-50 mb-4 fs-5">To get started, please select your primary role in our network.</p>
                 
                 <div class="d-flex justify-content-center gap-3 flex-wrap">
-                    <a href="{% url 'accounts:seeking_investment' %}" class="btn btn-success btn-lg px-5 rounded-pill shadow-sm">
+                    <a href="{% url 'usersettings:edit_founder_profile' %}" class="btn btn-success btn-lg px-5 rounded-pill shadow-sm">
                         <i class="bi bi-rocket-takeoff me-2"></i> I am a Founder
                     </a>
-                    <a href="{% url 'accounts:investor_form' %}" class="btn btn-primary btn-lg px-5 rounded-pill shadow-sm">
+                    <a href="{% url 'usersettings:edit_investor_profile' %}" class="btn btn-primary btn-lg px-5 rounded-pill shadow-sm">
                         <i class="bi bi-graph-up-arrow me-2"></i> I am an Investor
                     </a>
                 </div>
@@ -26,47 +27,26 @@
             {% endif %}
 
             {% if request.user == profile_user %}
-            <div class="card border-danger mb-4 shadow-sm rounded-4">
-                <div class="card-body p-4">
-                    <h5 class="card-title text-danger fw-bold mb-1">
-                        <i class="bi bi-eye-slash me-1"></i> Profile Visibility
-                    </h5>
-                    <p class="small text-secondary mb-3">
-                        Control your network visibility. When incognito mode is active, your profile metadata, traction values, and deal details are completely omitted from global lookup filters and Zelda AI engine tools.
-                    </p>
-                    
-                    <div class="form-check form-switch fs-5">
-                        <input class="form-check-input" type="checkbox" role="switch" id="profilePrivacyToggle"
-                            {% if application.is_private or investor_application.is_private %}checked{% endif %}>
-                        <label class="form-check-label small text-dark fw-semibold ms-1" for="profilePrivacyToggle">
-                            Enable Incognito Mode
-                        </label>
-                    </div>
-                    
-                    <div id="privacyToastFeedback" class="small mt-2 fw-medium d-none"></div>
-                </div>
+            <div class="alert alert-light border shadow-sm rounded-4 d-flex justify-content-between align-items-center mb-4">
+                <span class="small text-secondary">
+                    <i class="bi bi-gear me-1"></i> Privacy, messaging, and visibility toggles have moved to your
+                    <a href="{% url 'usersettings:home' %}" class="fw-semibold">Settings</a> page.
+                </span>
+                <a href="{% url 'usersettings:home' %}" class="btn btn-sm btn-outline-dark rounded-pill">
+                    <i class="bi bi-gear-fill me-1"></i> Settings
+                </a>
             </div>
 
-            <div class="card border-primary mb-4 shadow-sm rounded-4">
-                <div class="card-body p-4">
-                    <h5 class="card-title text-primary fw-bold mb-1">
-                        <i class="bi bi-chat-left-text me-1"></i> Direct Messaging
-                    </h5>
-                    <p class="small text-secondary mb-3">
-                        Allow verified users to bypass the AI matching loop and message you directly in the Deal Room.
-                    </p>
-                    
-                    <div class="form-check form-switch fs-5">
-                        <input class="form-check-input" type="checkbox" role="switch" id="dmToggle"
-                            {% if dm_enabled %}checked{% endif %}>
-                        <label class="form-check-label small text-dark fw-semibold ms-1" for="dmToggle">
-                            Accept Direct Messages
-                        </label>
-                    </div>
-                    
-                    <div id="dmToastFeedback" class="small mt-2 fw-medium d-none"></div>
-                </div>
+            {% with denied_profile=application|default:investor_application %}
+            {% if denied_profile.review_status == 'DENIED' %}
+            <div class="alert alert-danger border shadow-sm rounded-4 mb-4">
+                <strong><i class="bi bi-exclamation-triangle-fill me-1"></i> Your profile is not currently visible to other users.</strong>
+                {% if denied_profile.denial_reason %}
+                <p class="mb-0 mt-2">{{ denied_profile.denial_reason }}</p>
+                {% endif %}
             </div>
+            {% endif %}
+            {% endwith %}
             {% endif %}
 
             <div class="card shadow-sm border-0 mb-4 rounded-4 overflow-hidden">
@@ -79,6 +59,9 @@
                             <div>
                                 <h3 class="mb-0 fw-bold">User Profile</h3>
                                 <p class="text-white-50 mb-0">{{ profile_user.email }}</p>
+                                {% if profile_view_count is not None %}
+                                <p class="text-white-50 mb-0 small"><i class="bi bi-eye me-1"></i>{{ profile_view_count }} profile view{{ profile_view_count|pluralize }}</p>
+                                {% endif %}
                             </div>
                         </div>
                         
@@ -89,31 +72,30 @@
                             </a>
 
                             {% if application %}
-                                {% if request.user == profile_user %}
-                                    <a href="{% url 'accounts:seeking_investment' %}" class="btn btn-success btn-sm px-3 rounded-pill">
-                                        <i class="bi bi-pencil-square me-1"></i> Edit Founder Profile
-                                    </a>
-                                {% endif %}
                                 <span class="badge bg-success-subtle text-success border border-success px-3 py-2 rounded-pill">Founder</span>
                             {% elif investor_application %}
-                            {% if request.user == profile_user %}
-                                <a href="{% url 'accounts:investor_form' %}" class="btn btn-primary btn-sm px-3 rounded-pill">
-                                    <i class="bi bi-pencil-square me-1"></i> Edit Investor Profile
-                                </a>
-                            {% endif %}
                             <span class="badge bg-primary-subtle text-primary border border-primary px-3 py-2 rounded-pill">Investor</span>
+                        {% elif seller_application %}
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning px-3 py-2 rounded-pill">Seller</span>
+                        {% elif buyer_application %}
+                            <span class="badge bg-info-subtle text-info-emphasis border border-info px-3 py-2 rounded-pill">Buyer</span>
                         {% endif %}
 
                         {# ── Track 1: Analyze with Zelda (investors only, on founder profiles) ── #}
                         {% if request.user != profile_user and application and viewer_is_investor %}
                         <button 
-                            onclick="analyzeFounderWithZelda('{{ profile_user.username }}', '{{ application.company_name|default:profile_user.username }}')"
+                            onclick="analyzeFounderWithZelda(this, '{{ profile_user.username }}', '{{ application.company_name|default:profile_user.username }}', {statusElementId: 'zelda-analyze-status'})"
                             class="btn btn-warning btn-sm px-3 rounded-pill fw-bold shadow-sm"
                             id="zelda-analyze-btn"
                             title="Run Zelda Intelligence Analysis on this founder">
                             <i class="bi bi-cpu-fill me-1"></i> Analyze with Zelda
                         </button>
                         <span id="zelda-analyze-status" class="small text-muted ms-1"></span>
+                        <a href="{% url 'matchmaking:find_similar_startups' application.id %}"
+                            class="btn btn-outline-primary btn-sm px-3 rounded-pill fw-bold shadow-sm"
+                            title="Find startups with a similar profile">
+                            <i class="bi bi-diagram-3-fill me-1"></i> Find Similar
+                        </a>
                         {% endif %}
 
                             {% if request.user != profile_user %}
@@ -154,6 +136,9 @@
                         <div class="row">
                             <div class="col-md-7">
                                 <h2 class="text-success fw-bold display-6 mb-1">{{ application.company_name }}</h2>
+                                {% if application.is_verified %}
+                                <p class="text-success mb-2"><i class="bi bi-patch-check-fill me-1"></i> Verified Founder</p>
+                                {% endif %}
                                 <p class="text-muted mb-4">
                                     <i class="bi bi-tag me-1"></i> {{ application.sector }}{% if application.funding_stage %} | {{ application.funding_stage }}{% endif %}
                                 </p>
@@ -180,7 +165,7 @@
                                                 <span class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.65rem;">Prior Raised</span>
                                                 <span class="text-dark fw-bold">
                                                     {% if application.prior_amount_raised %}
-                                                        {% if "$" not in application.prior_amount_raised %}${% endif %}{{ application.prior_amount_raised }}
+                                                        ${{ application.prior_amount_raised|floatformat:0|intcomma }}
                                                     {% else %}
                                                         --
                                                     {% endif %}
@@ -214,174 +199,28 @@
                                     {% endif %}
                                 
                                     {% if application.pitch_deck %}
-                                        <a href="{{ application.pitch_deck.url }}" download class="btn btn-sm btn-outline-dark px-3 py-2 rounded-3 d-inline-flex align-items-center bg-white shadow-sm mb-4">
+                                        <a href="{% url 'matchmaking:view_pitch_deck' application.id %}" class="btn btn-sm btn-outline-dark px-3 py-2 rounded-3 d-inline-flex align-items-center bg-white shadow-sm mb-4">
                                             <i class="bi bi-file-earmark-pdf-fill text-danger fs-5 me-2"></i>
                                             <div class="text-start">
-                                                <span class="d-block fw-semibold" style="font-size: 0.75rem;">Download Pitch Deck</span>
+                                                <span class="d-block fw-semibold" style="font-size: 0.75rem;">View Pitch Deck</span>
                                             </div>
                                         </a>
+                                        {% if request.user == profile_user %}
+                                        <a href="{% url 'matchmaking:deck_analytics' application.id %}" class="btn btn-sm btn-outline-primary px-3 py-2 rounded-3 d-inline-flex align-items-center bg-white shadow-sm mb-4 ms-2">
+                                            <i class="bi bi-bar-chart-fill me-2"></i>
+                                            <span class="d-block fw-semibold" style="font-size: 0.75rem;">Deck Analytics</span>
+                                        </a>
+                                        {% endif %}
+                                    {% else %}
+                                        <div class="card border-0 shadow-sm mb-4 rounded-4 bg-light p-4 text-center">
+                                            <p class="text-muted small mb-0"><i class="bi bi-file-earmark-pdf"></i> No pitch deck uploaded yet.</p>
+                                        </div>
                                     {% endif %}
-                                
-                                    {% if request.user == profile_user %}
-                                    <div class="p-4 bg-white border rounded-4 mt-3">
-                                        <h6 class="fw-bold text-dark mb-3">
-                                            <i class="bi bi-person-fill text-success me-2"></i>Update Profile
-                                        </h6>
-                                        <form method="POST" action="{% url 'matchmaking:submit_founder_application' %}" enctype="multipart/form-data">
-                                            {% csrf_token %}
-
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold small text-muted">Company Name</label>
-                                                <input type="text" class="form-control form-control-sm" name="company_name"
-                                                    value="{{ application.company_name|default:'' }}">
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold small text-muted">Executive Summary</label>
-                                                <textarea class="form-control form-control-sm" name="description" rows="3">{{ application.description|default:'' }}</textarea>
-                                            </div>
-
-                                            <div class="row g-2 mb-3">
-                                                <div class="col-6">
-                                                    <label class="form-label fw-bold small text-muted">Sector</label>
-                                                    <input type="text" class="form-control form-control-sm" name="sector"
-                                                        value="{{ application.sector|default:'' }}">
-                                                </div>
-                                                <div class="col-6">
-                                                    <label class="form-label fw-bold small text-muted">Stage</label>
-                                                    <select class="form-select form-select-sm" name="stage">
-                                                        <option value="">-- Select --</option>
-                                                        <option value="Pre-Seed" {% if application.stage == "Pre-Seed" %}selected{% endif %}>Pre-Seed</option>
-                                                        <option value="Seed" {% if application.stage == "Seed" %}selected{% endif %}>Seed</option>
-                                                        <option value="Series A" {% if application.stage == "Series A" %}selected{% endif %}>Series A</option>
-                                                        <option value="Series B" {% if application.stage == "Series B" %}selected{% endif %}>Series B</option>
-                                                        <option value="Series C" {% if application.stage == "Series C" %}selected{% endif %}>Series C</option>
-                                                        <option value="Growth" {% if application.stage == "Growth" %}selected{% endif %}>Growth</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div class="row g-2 mb-3">
-                                                <div class="col-6">
-                                                    <label class="form-label fw-bold small text-muted">Raising ($)</label>
-                                                    <input type="number" class="form-control form-control-sm" name="raising_amount"
-                                                        value="{{ application.raising_amount|default:'' }}">
-                                                </div>
-                                                <div class="col-6">
-                                                    <label class="form-label fw-bold small text-muted">Revenue ($)</label>
-                                                    <input type="number" class="form-control form-control-sm" name="current_revenue"
-                                                        value="{{ application.current_revenue|default:'' }}">
-                                                </div>
-                                            </div>
-
-                                            <div class="row g-2 mb-3">
-                                                <div class="col-6">
-                                                    <label class="form-label fw-bold small text-muted">Team Size</label>
-                                                    <input type="number" class="form-control form-control-sm" name="team_size"
-                                                        value="{{ application.team_size|default:'' }}">
-                                                </div>
-                                                <div class="col-6">
-                                                    <label class="form-label fw-bold small text-muted">Years in Business</label>
-                                                    <input type="number" class="form-control form-control-sm" name="years_in_business"
-                                                        value="{{ application.years_in_business|default:'' }}">
-                                                </div>
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold small text-muted">Additional Info</label>
-                                                <textarea class="form-control form-control-sm" name="extra_info" rows="2">{{ application.extra_info|default:'' }}</textarea>
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold small text-muted">Pitch Deck (.pdf, .pptx)</label>
-                                                <input type="file" class="form-control form-control-sm" name="pitch_deck"
-                                                    id="id_pitch_deck" accept=".pdf,.pptx">
-                                                {% if application.pitch_deck %}
-                                                <small class="text-success mt-1 d-block">
-                                                    <i class="bi bi-check-circle me-1"></i>Current: {{ application.pitch_deck.name }}
-                                                </small>
-                                                {% endif %}
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold small text-muted">Pitch Video</label>
-                                                <input type="file" class="form-control form-control-sm" name="pitch_video"
-                                                    accept="video/mp4,video/quicktime,video/webm">
-                                            </div>
-
-                                            {# ── Display fields — always editable ── #}
-                                            <div class="border-top pt-3 mt-2 mb-3">
-                                                <p class="small text-muted fw-bold text-uppercase mb-2" style="font-size:0.65rem;">
-                                                    Contact & Links — Always Editable
-                                                </p>
-
-                                                <div class="mb-2">
-                                                    <label class="form-label fw-bold small text-muted">LinkedIn URL</label>
-                                                    <input type="url" class="form-control form-control-sm" name="linkedin_url"
-                                                        value="{{ application.linkedin_url|default:'' }}"
-                                                        placeholder="https://linkedin.com/in/yourname">
-                                                </div>
-
-                                                <div class="mb-2">
-                                                    <label class="form-label fw-bold small text-muted">Company Website</label>
-                                                    <input type="url" class="form-control form-control-sm" name="company_website"
-                                                        value="{{ application.company_website|default:'' }}"
-                                                        placeholder="https://yourcompany.com">
-                                                </div>
-
-                                                <div class="mb-2">
-                                                    <label class="form-label fw-bold small text-muted">Phone Number</label>
-                                                    <input type="text" class="form-control form-control-sm" name="phone_number"
-                                                        value="{{ application.phone_number|default:'' }}"
-                                                        placeholder="+1 (555) 000-0000">
-                                                </div>
-                                            </div>
-
-                                            {# ── Geography — locked (affects match vector) ── #}
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold small text-muted">
-                                                    Location
-                                                    <span class="badge bg-warning text-dark ms-1" style="font-size:0.6rem;">
-                                                        🔒 Match Vector Field
-                                                    </span>
-                                                </label>
-                                                <input type="text" class="form-control form-control-sm" name="geography"
-                                                    value="{{ application.geography|default:'' }}"
-                                                    placeholder="e.g. San Diego, CA">
-                                                <small class="text-muted" style="font-size:0.7rem;">
-                                                    Location affects investor matching. Updates limited to once every 30 days.
-                                                </small>
-                                            </div>
-
-                                            <button type="submit" class="btn btn-success btn-sm px-4 rounded-pill w-100">
-                                                <i class="bi bi-save me-1"></i> Save Profile
-                                            </button>
-                                        </form>
-                                    </div>
-
-                                    <div class="p-4 bg-light border rounded-4 mt-3">
-                                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-cloud-arrow-up text-primary me-2"></i>Manage Pitch Assets</h6>
-                                        <form method="POST" action="{% url 'matchmaking:submit_founder_application' %}" enctype="multipart/form-data">
-                                            {% csrf_token %}
-                                            
-                                            <div class="mb-3">
-                                                <label for="pitch_video" class="form-label fw-bold small text-muted">Update Pitch Video</label>
-                                                <input type="file" class="form-control form-control-sm" id="pitch_video" name="pitch_video" accept="video/mp4,video/quicktime,video/webm">
-                                            </div>
-                                
-                                            <div class="mb-3">
-                                                <label for="id_pitch_deck" class="form-label fw-bold small text-muted">Update Pitch Deck</label>
-                                                <input type="file" class="form-control form-control-sm" name="pitch_deck" id="id_pitch_deck" accept=".pdf,.pptx">
-                                            </div>
-                                            
-                                            <button type="submit" class="btn btn-primary btn-sm px-4 rounded-pill">Save Assets</button>
-                                        </form>
-                                    </div>
-                                {% endif %}
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-5 mt-4 mt-md-0">
+                                {% if request.user == profile_user or show_contact_info %}
                                 <div class="bg-light p-4 rounded-4 border">
                                     <h6 class="text-uppercase fw-bold text-muted small mb-3">Contact & Links</h6>
                                     <ul class="list-unstyled mb-0">
@@ -390,9 +229,9 @@
                                         {% if application.phone_number %}
                                         <li class="mb-2"><i class="bi bi-telephone me-2 text-muted"></i> {{ application.phone_number }}</li>
                                         {% endif %}
-                                        
+
                                         <li class="mb-2"><i class="bi bi-geo-alt me-2 text-danger"></i> {{ application.location|default:"Global / Remote" }}</li>
-                                        
+
                                         {% if application.company_website %}
                                         <li class="mb-2"><i class="bi bi-globe me-2 text-primary"></i> <a href="{{ application.company_website }}" target="_blank" class="text-decoration-none fw-bold">{{ application.company_website|cut:"https://"|cut:"http://" }}</a></li>
                                         {% endif %}
@@ -404,18 +243,29 @@
                                         {% endif %}
                                     </ul>
                                 </div>
+                                {% else %}
+                                <div class="bg-light p-4 rounded-4 border text-center text-muted small">
+                                    <i class="bi bi-eye-slash me-1"></i> This user has hidden their contact info.
+                                </div>
+                                {% endif %}
                                 
                                 <div class="row g-2 mt-2">
-                                    <div class="col-6">
+                                    <div class="col-4">
                                         <div class="bg-white border rounded-3 p-3 text-center h-100 shadow-sm">
                                             <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem;">Raising</small>
-                                            <span class="fw-bold text-success">{% if "$" not in application.raising_amount %}${% endif %}{{ application.raising_amount }}</span>
+                                            <span class="fw-bold text-success">${{ application.raising_amount|floatformat:0|intcomma }}</span>
                                         </div>
                                     </div>
-                                    <div class="col-6">
+                                    <div class="col-4">
                                         <div class="bg-white border rounded-3 p-3 text-center h-100 shadow-sm">
                                             <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem;">Revenue</small>
-                                            <span class="fw-bold text-dark">{% if "$" not in application.current_revenue %}${% endif %}{{ application.current_revenue }}</span>
+                                            <span class="fw-bold text-dark">{% if application.current_revenue %}${{ application.current_revenue|floatformat:0|intcomma }}{% else %}--{% endif %}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="bg-white border rounded-3 p-3 text-center h-100 shadow-sm">
+                                            <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem;">Burn Rate</small>
+                                            <span class="fw-bold text-danger">{% if application.monthly_burn_rate %}${{ application.monthly_burn_rate|floatformat:0|intcomma }}/mo{% else %}--{% endif %}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -439,7 +289,9 @@
                         <div class="row align-items-center">
                             <div class="col-md-8">
                                 <h2 class="text-primary fw-bold display-6 mb-1">{{ investor_application.company_name }}</h2>
-                                <p class="text-muted mb-4"><i class="bi bi-shield-check me-1"></i> Verified Network Investor</p>
+                                {% if investor_application.is_verified %}
+                                <p class="text-success mb-4"><i class="bi bi-patch-check-fill me-1"></i> Verified Network Investor</p>
+                                {% endif %}
                                 
                                 <div class="row g-4">
                                     <div class="col-sm-6">
@@ -472,6 +324,17 @@
                                 <div class="col-md-4">
                                     <i class="bi bi-phone me-2 text-primary"></i> <strong>Phone:</strong> {{ investor_application.phone|default:"--" }}
                                 </div>
+                                <div class="col-md-4">
+                                    <i class="bi bi-geo-alt me-2 text-danger"></i> <strong>Location:</strong> {{ investor_application.location|default:"Global / Remote" }}
+                                </div>
+                                <div class="col-md-4">
+                                    <i class="bi bi-linkedin me-2 text-primary"></i> <strong>LinkedIn:</strong>
+                                    {% if investor_application.linkedin_url %}
+                                        <a href="{{ investor_application.linkedin_url }}" target="_blank" class="text-decoration-none fw-bold">Profile</a>
+                                    {% else %}
+                                        <span class="text-muted fst-italic">Not linked</span>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -481,6 +344,146 @@
                     <a href="{% url 'accounts:zelda_dashboard' %}" class="btn btn-warning rounded-pill">
                         <i class="bi bi-speedometer2"></i> Open Zelda Dashboard
                     </a>
+                </div>
+
+            {% elif seller_application %}
+                <div class="section-title mb-4 d-flex align-items-center">
+                    <h3 class="fw-bold mb-0">Business Listing</h3>
+                    <div class="ms-3 flex-grow-1 border-bottom"></div>
+                </div>
+
+                <div class="card shadow-sm border-0 rounded-4 mb-5">
+                    <div class="card-body p-4 p-md-5">
+                        <div class="row">
+                            <div class="col-md-7">
+                                <h2 class="text-warning-emphasis fw-bold display-6 mb-1">{{ seller_application.company_name }}</h2>
+                                {% if seller_application.is_verified %}
+                                <p class="text-success mb-2"><i class="bi bi-patch-check-fill me-1"></i> Verified Listing</p>
+                                {% endif %}
+                                <p class="text-muted mb-4">
+                                    <i class="bi bi-tag me-1"></i> {{ seller_application.industry }}{% if seller_application.geography %} | {{ seller_application.geography }}{% endif %}
+                                </p>
+
+                                <div class="mb-4">
+                                    <h6 class="text-uppercase fw-bold text-muted small mb-2">Business Overview</h6>
+                                    <p class="text-dark mb-3">{{ seller_application.description }}</p>
+
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-sm-4">
+                                            <div class="bg-light p-2 rounded border small">
+                                                <span class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.65rem;">Years in Business</span>
+                                                <span class="text-dark fw-bold">{{ seller_application.years_in_business|default:"--" }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <div class="bg-light p-2 rounded border small">
+                                                <span class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.65rem;">Team Size</span>
+                                                <span class="text-dark fw-bold">{{ seller_application.team_size|default:"--" }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <div class="bg-light p-2 rounded border small">
+                                                <span class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.65rem;">Deal Structure</span>
+                                                <span class="text-dark fw-bold">{{ seller_application.get_deal_structure_display }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="p-3 bg-light rounded-3 border-start border-4 border-warning mb-4">
+                                    <h6 class="fw-bold text-muted text-uppercase small mb-2">Reason for Sale</h6>
+                                    <p class="text-secondary mb-0 small fst-italic">{{ seller_application.reason_for_sale|default:"Not disclosed." }}</p>
+                                </div>
+                            </div>
+
+                            <div class="col-md-5">
+                                <div class="bg-warning-subtle p-4 rounded-4 border border-warning text-center mb-3">
+                                    <small class="text-warning-emphasis text-uppercase fw-bold d-block mb-1">Asking Price</small>
+                                    <h3 class="fw-bold text-warning-emphasis mb-0">${{ seller_application.asking_price|floatformat:0|intcomma }}</h3>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <div class="bg-light p-2 rounded border small text-center">
+                                            <span class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.65rem;">Annual Revenue</span>
+                                            <span class="fw-bold text-dark">{% if seller_application.annual_revenue %}${{ seller_application.annual_revenue|floatformat:0|intcomma }}{% else %}--{% endif %}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="bg-light p-2 rounded border small text-center">
+                                            <span class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.65rem;">EBITDA</span>
+                                            <span class="fw-bold text-dark">{% if seller_application.ebitda %}${{ seller_application.ebitda|floatformat:0|intcomma }}{% else %}--{% endif %}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% if seller_application.cim_document %}
+                                <a href="{{ seller_application.cim_document.url }}" class="btn btn-outline-warning btn-sm w-100 mt-3" target="_blank">
+                                    <i class="bi bi-file-earmark-text me-1"></i> Download CIM
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            {% elif buyer_application %}
+                <div class="section-title mb-4 d-flex align-items-center">
+                    <h3 class="fw-bold mb-0">Acquisition Mandate</h3>
+                    <div class="ms-3 flex-grow-1 border-bottom"></div>
+                </div>
+
+                <div class="card shadow-sm border-0 rounded-4 mb-5">
+                    <div class="card-body p-4 p-md-5">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h2 class="text-info-emphasis fw-bold display-6 mb-1">{{ buyer_application.company_name }}</h2>
+                                {% if buyer_application.is_verified %}
+                                <p class="text-success mb-4"><i class="bi bi-patch-check-fill me-1"></i> Verified Acquirer</p>
+                                {% endif %}
+
+                                <div class="row g-4">
+                                    <div class="col-sm-12">
+                                        <h6 class="text-uppercase fw-bold text-muted small mb-2">Acquisition Thesis</h6>
+                                        <p class="fw-bold text-dark">{{ buyer_application.acquisition_thesis }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mt-4 mt-md-0 text-center">
+                                <div class="bg-info-subtle p-4 rounded-4 border border-info">
+                                    <small class="text-info-emphasis text-uppercase fw-bold d-block mb-1">Acquisition Budget</small>
+                                    <h4 class="fw-bold text-info-emphasis mb-0">${{ buyer_application.budget_min|floatformat:0|intcomma }} &ndash; ${{ buyer_application.budget_max|floatformat:0|intcomma }}</h4>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 p-4 bg-light rounded-4">
+                            <h6 class="text-uppercase fw-bold text-muted small mb-3">Professional Information</h6>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <i class="bi bi-person-vcard me-2 text-info"></i> <strong>Name:</strong> {{ buyer_application.full_name }}
+                                </div>
+                                <div class="col-md-4">
+                                    <i class="bi bi-envelope-at me-2 text-info"></i> <strong>Email:</strong> {{ buyer_application.email }}
+                                </div>
+                                <div class="col-md-4">
+                                    <i class="bi bi-phone me-2 text-info"></i> <strong>Phone:</strong> {{ buyer_application.phone|default:"--" }}
+                                </div>
+                                <div class="col-md-4">
+                                    <i class="bi bi-geo-alt me-2 text-danger"></i> <strong>Location:</strong> {{ buyer_application.location|default:"Global / Remote" }}
+                                </div>
+                                <div class="col-md-4">
+                                    <i class="bi bi-diagram-3 me-2 text-info"></i> <strong>Preferred Structure:</strong> {{ buyer_application.get_preferred_deal_structure_display }}
+                                </div>
+                                <div class="col-md-4">
+                                    <i class="bi bi-linkedin me-2 text-info"></i> <strong>LinkedIn:</strong>
+                                    {% if buyer_application.linkedin_url %}
+                                        <a href="{{ buyer_application.linkedin_url }}" target="_blank" class="text-decoration-none fw-bold">Profile</a>
+                                    {% else %}
+                                        <span class="text-muted fst-italic">Not linked</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             {% else %}
@@ -557,14 +560,66 @@
         </div>
     {% endif %}
 </div>
-            
+
+{% if application %}
+<div class="milestones-section mb-5">
+    <h3 class="fw-bold mb-4">Milestones</h3>
+
+    {% if founder_milestones %}
+        <div class="row row-cols-1 g-3">
+            {% for milestone in founder_milestones %}
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm rounded-4">
+                        <div class="card-body d-flex align-items-start gap-3">
+                            <div class="bg-success-subtle text-success rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 42px; height: 42px;">
+                                {% if milestone.milestone_type == 'revenue' %}
+                                    <i class="bi bi-graph-up-arrow"></i>
+                                {% elif milestone.milestone_type == 'customers' %}
+                                    <i class="bi bi-people-fill"></i>
+                                {% elif milestone.milestone_type == 'product_launch' %}
+                                    <i class="bi bi-rocket-takeoff"></i>
+                                {% elif milestone.milestone_type == 'hiring' %}
+                                    <i class="bi bi-person-plus"></i>
+                                {% elif milestone.milestone_type == 'funding' %}
+                                    <i class="bi bi-cash-coin"></i>
+                                {% else %}
+                                    <i class="bi bi-flag"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <span class="badge bg-light text-secondary border small mb-1">{{ milestone.get_milestone_type_display }}</span>
+                                <h5 class="card-title fw-bold mb-1">{{ milestone.title }}</h5>
+                                {% if milestone.description %}<p class="text-muted small mb-1">{{ milestone.description }}</p>{% endif %}
+                                <small class="text-muted">{{ milestone.created_at|date:"F d, Y" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="p-4 text-center border rounded-4 bg-light">
+            <p class="text-muted mb-0">No milestones posted yet.</p>
+        </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if request.user != profile_user and mutual_connections %}
+<div class="alert alert-light border shadow-sm rounded-4 mt-5 mb-0 small">
+    <i class="bi bi-people-fill me-1 text-primary"></i>
+    You have {{ mutual_connections.count }} mutual connection{{ mutual_connections.count|pluralize }} with {{ profile_user.username }}:
+    {% for mutual_user in mutual_connections %}<a href="{% url 'accounts:profile' mutual_user.username %}" class="fw-semibold text-decoration-none">{{ mutual_user.username }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
+</div>
+{% endif %}
+
 <div class="card shadow-sm border-0 rounded-4 mt-5 mb-5">
     <div class="card-body p-4">
         <div class="d-flex align-items-center mb-4">
             <h5 class="fw-bold mb-0">Business Connections</h5>
             <span class="badge bg-secondary rounded-pill ms-2">{{ following_list.count }}</span>
         </div>
-        
+
         {% if following_list %}
             <div class="row row-cols-1 row-cols-md-2 g-3">
                 {% for follow in following_list %}
@@ -581,8 +636,12 @@
                                     <small class="text-secondary fw-medium d-block">
                                         {% if follow.following.match_founder_profile %}
                                             <i class="bi bi-rocket-takeoff me-1 text-success"></i> {{ follow.following.match_founder_profile.company_name }}
-                                        {% elif follow.following.accounts_investor_profile %}
-                                            <i class="bi bi-graph-up-arrow me-1 text-primary"></i> {{ follow.following.accounts_investor_profile.company_name }}
+                                        {% elif follow.following.match_investor_profile %}
+                                            <i class="bi bi-graph-up-arrow me-1 text-primary"></i> {{ follow.following.match_investor_profile.company_name }}
+                                        {% elif follow.following.match_seller_profile %}
+                                            <i class="bi bi-shop me-1 text-warning"></i> {{ follow.following.match_seller_profile.company_name }}
+                                        {% elif follow.following.match_buyer_profile %}
+                                            <i class="bi bi-briefcase-fill me-1 text-info"></i> {{ follow.following.match_buyer_profile.company_name }}
                                         {% else %}
                                             <i class="bi bi-person-badge me-1"></i> Network Member
                                         {% endif %}
@@ -617,89 +676,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const csrftoken = csrfInput ? csrfInput.value : '';
 
     // ==========================================
-    // Profile Privacy Toggle Logic
-    // ==========================================
-    const privacyToggle = document.getElementById("profilePrivacyToggle");
-    const feedbackMsg = document.getElementById("privacyToastFeedback");
-
-    if (privacyToggle) {
-        privacyToggle.addEventListener("change", function () {
-            const isPrivate = this.checked;
-
-            fetch("{% url 'accounts:toggle_privacy' %}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrftoken,
-                    "X-Requested-With": "XMLHttpRequest"
-                },
-                body: JSON.stringify({ is_private: isPrivate })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === "success") {
-                    feedbackMsg.className = "small mt-2 fw-medium text-success animate__animated animate__fadeIn";
-                    feedbackMsg.textContent = isPrivate
-                        ? "✓ Incognito mode activated. Your profile is now hidden."
-                        : "✓ Profile visibility set to public.";
-                } else {
-                    throw new Error(data.message || "Update failed.");
-                }
-            })
-            .catch(error => {
-                privacyToggle.checked = !isPrivate;
-                feedbackMsg.className = "small mt-2 fw-medium text-danger animate__animated animate__fadeIn";
-                feedbackMsg.textContent = "⚠ Failed to update privacy settings. Try again.";
-            });
-
-            feedbackMsg.classList.remove("d-none");
-            setTimeout(() => feedbackMsg.classList.add("d-none"), 3500);
-        });
-    }
-
-    // ==========================================
-    // Direct Messaging Toggle Logic
-    // ==========================================
-    const dmToggle = document.getElementById("dmToggle");
-    const dmFeedback = document.getElementById("dmToastFeedback");
-
-    if (dmToggle) {
-        dmToggle.addEventListener("change", function () {
-            const isEnabled = this.checked;
-
-            fetch("{% url 'accounts:toggle_dm' %}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrftoken,
-                    "X-Requested-With": "XMLHttpRequest"
-                },
-                body: JSON.stringify({ dm_enabled: isEnabled })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === "success") {
-                    dmFeedback.className = "small mt-2 fw-medium text-success animate__animated animate__fadeIn";
-                    dmFeedback.textContent = isEnabled
-                        ? "✓ Direct messaging is now open."
-                        : "✓ Direct messaging disabled. Closed-loop matchmaking only.";
-                } else {
-                    throw new Error(data.message || "Update failed.");
-                }
-            })
-            .catch(error => {
-                dmToggle.checked = !isEnabled;
-                dmFeedback.className = "small mt-2 fw-medium text-danger animate__animated animate__fadeIn";
-                dmFeedback.textContent = "⚠ Failed to update messaging settings. Try again.";
-            });
-
-            dmFeedback.classList.remove("d-none");
-            setTimeout(() => dmFeedback.classList.add("d-none"), 3500);
-        });
-    }
-
-
-    // ==========================================
     // Follow Button Toggle Logic
     // ==========================================
     const followBtn = document.getElementById('followBtn');
@@ -723,10 +699,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 },
                 body: JSON.stringify({})
             })
-            .then(response => {
-                if (!response.ok) throw new Error("HTTP " + response.status);
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
                     const btn  = document.getElementById('followBtn');
@@ -743,7 +716,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (icon) icon.className = 'bi bi-person-plus me-1';
                     }
                 } else {
-                    console.error("Server refused follow toggle:", data.message);
+                    alert(data.message || "Unable to follow this user right now.");
                 }
             })
             .catch(error => {
@@ -752,57 +725,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 });
-
-async function analyzeFounderWithZelda(founderUsername, companyName) {
-    const btn = document.getElementById('zelda-analyze-btn');
-    const status = document.getElementById('zelda-analyze-status');
-
-    // Lock button
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Analyzing...';
-    if (status) status.textContent = 'Connecting to Zelda...';
-
-    try {
-        const response = await fetch(`/api/v1/zelda/analyze/founder/${founderUsername}/`, {
-            credentials: 'include',
-            headers: { 'X-CSRFToken': getCookie('csrftoken') }
-        });
-
-        const data = await response.json();
-
-        if (data.status === 'ready') {
-            // Memo exists — open Zelda directly to intelligence tab
-            if (status) status.textContent = `✓ Loading ${companyName} brief...`;
-            openZeldaIntelligence(data.document_id, 'intelligence');
-            btn.innerHTML = '<i class="bi bi-cpu-fill me-1"></i> View in Zelda';
-            btn.disabled = false;
-
-        } else if (data.status === 'processing') {
-            // Pipeline just started
-            if (status) status.textContent = '⚙ Analysis queued — opening Zelda...';
-            btn.innerHTML = '<i class="bi bi-cpu-fill me-1"></i> Processing...';
-            btn.disabled = false;
-
-            // Open Zelda memo tab and show the document ID
-            openZeldaIntelligence(data.document_id, 'analyze');
-
-        } else if (data.status === 'no_deck') {
-            if (status) status.textContent = '⚠ No pitch deck uploaded yet.';
-            btn.innerHTML = '<i class="bi bi-cpu-fill me-1"></i> Analyze with Zelda';
-            btn.disabled = false;
-
-        } else {
-            if (status) status.textContent = `✗ ${data.message}`;
-            btn.innerHTML = '<i class="bi bi-cpu-fill me-1"></i> Analyze with Zelda';
-            btn.disabled = false;
-        }
-
-    } catch (err) {
-        if (status) status.textContent = `✗ Error: ${err.message}`;
-        btn.innerHTML = '<i class="bi bi-cpu-fill me-1"></i> Analyze with Zelda';
-        btn.disabled = false;
-    }
-}
 
 function getCookie(name) {
     const cookies = document.cookie.split(';');

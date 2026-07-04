@@ -22,6 +22,14 @@ env = environ.Env(
     STREAM_API_SECRET=(str, ''),
     EMAIL_HOST_USER=(str, ''),
     EMAIL_HOST_PASSWORD=(str, ''),
+    ADMIN_URL_PATH=(str, 'admin/'),
+    CELERY_BROKER_URL=(str, 'redis://localhost:6379/0'),
+    CELERY_RESULT_BACKEND=(str, 'redis://localhost:6379/0'),
+    AWS_STORAGE_BUCKET_NAME=(str, ''),
+    AWS_ACCESS_KEY_ID=(str, ''),
+    AWS_SECRET_ACCESS_KEY=(str, ''),
+    AWS_S3_REGION_NAME=(str, 'us-east-1'),
+    SENTRY_DSN=(str, ''),
 )
 
 # Read parameters straight from your secure root .env file
@@ -36,6 +44,12 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG')
 ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 
+# Non-default admin path — defaults to 'admin/' for local dev convenience,
+# but production should set ADMIN_URL_PATH in .env to something unguessable.
+ADMIN_URL_PATH = env('ADMIN_URL_PATH')
+if not ADMIN_URL_PATH.endswith('/'):
+    ADMIN_URL_PATH += '/'
+
 
 # --- APPLICATION DEFINITION ---
 INSTALLED_APPS = [
@@ -46,11 +60,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.humanize",
     "jobs.apps.JobsConfig",
     "rest_framework",
     "rest_framework.authtoken",
 
     # Third-Party Infrastructure Layout Extensions
+    "storages",
     "crispy_forms",
     "crispy_bootstrap5",
 
@@ -60,25 +76,16 @@ INSTALLED_APPS = [
     "accounts",
     "matchmaking",
     "zelda_api",
+    "usersettings",
 
-    # Platform Vertical Modules
-    'real_estate_api',
-    'marketing_api',
-    'legal_api',
-    'banking_api',
-    'energy_api',
-    'articles_api',
-    'automotive_api',
-    'hotel_api',
-    'insurance_api',
-    'jobs_api',
-    'logistics_api',
-    'marketplace_api',
-    'messaging_api',
-    
     'django_extensions',
     'notifications',
 ]
+
+from django.contrib.messages import constants as message_constants
+MESSAGE_TAGS = {
+    message_constants.ERROR: 'danger',
+}
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -87,11 +94,15 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_THROTTLE_RATES': {
+        'enterprise_api': '100/hour',
+    },
 }
 
 # FIXED: Removed the duplicate 'shared_utils.middleware.IdempotencyMiddleware' entry
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -136,11 +147,15 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 
 # --- DATABASE LAYER ---
+# Reads DATABASE_URL from .env when present (e.g. postgres://user:pass@host:5432/dbname)
+# for production; falls back to local SQLite so dev setups need no config at all.
+import dj_database_url
+
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+    )
 }
 
 CACHES = {
@@ -150,30 +165,96 @@ CACHES = {
     }
 }
 
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': 10},
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # --- STATIC & MEDIA ASSET STORAGE PIPELINES ---
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static", os.path.join(BASE_DIR, 'static'),]
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
-import os
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
+AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
+AWS_S3_REGION_NAME = env('AWS_S3_REGION_NAME')
+
+# Local filesystem storage is fine for dev, but doesn't survive container
+# restarts or work across multiple app instances in production. When
+# AWS_STORAGE_BUCKET_NAME is set in .env, uploads (pitch decks, pitch
+# videos, CIMs, Zelda documents) go to S3 instead — nothing else in the
+# app needs to change since all uploads already go through Django's
+# default_storage / FileField API.
+if AWS_STORAGE_BUCKET_NAME:
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL = None
+    AWS_QUERYSTRING_AUTH = True
+
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {"location": "media"},
+        },
+        "staticfiles": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {"location": "static"},
+        },
+    }
+    MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/media/"
+else:
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
+
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
 
 # --- CORE PLATFORM SECURITY & AUTH ROUTING ---
 LOGIN_REDIRECT_URL = "accounts:profile_self"
 LOGOUT_REDIRECT_URL = "accounts:login"
 LOGIN_URL = "accounts:login"
 
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-# COMMENT OUT THE LINE BELOW:
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+# Reads from .env in production; falls back to localhost Redis for dev.
+CELERY_BROKER_URL = env('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND')
 
-# UPDATE THESE TWO LINES:
 CELERY_TASK_ALWAYS_EAGER = False
-CELERY_TASK_STORE_EAGER_RESULT = 'redis://localhost:6379/0'
+
+from celery.schedules import crontab
+CELERY_BEAT_SCHEDULE = {
+    'send-weekly-digests': {
+        'task': 'matchmaking.tasks.send_weekly_digests',
+        'schedule': crontab(day_of_week='monday', hour=9, minute=0),
+    },
+    'snapshot-investor-predictions': {
+        'task': 'matchmaking.tasks.snapshot_investor_predictions',
+        'schedule': crontab(day_of_week='wednesday', hour=9, minute=0),
+    },
+    'snapshot-buyer-predictions': {
+        'task': 'matchmaking.tasks.snapshot_buyer_predictions',
+        'schedule': crontab(day_of_week='thursday', hour=9, minute=0),
+    },
+}
 
 
 # --- THIRD-PARTY INTERFACE DESIGN CONFIGURATION ---
@@ -202,6 +283,76 @@ EMAIL_USE_SSL = False
 EMAIL_HOST_USER = env('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD') 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+# ==============================================================================
+# LOGGING — console (always) + a rotating file so logs survive restarts.
+# Without this, every log line this app already emits via logger.error()/
+# logger.warning() throughout matchmaking/zelda_api only ever went to
+# console output, which vanishes the moment the process restarts.
+# ==============================================================================
+LOGS_DIR = BASE_DIR / 'logs'
+os.makedirs(LOGS_DIR, exist_ok=True)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{asctime} {levelname} {name} - {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'django.log',
+            'maxBytes': 10 * 1024 * 1024,  # 10 MB per file
+            'backupCount': 5,
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+
+# --- ERROR TRACKING (Sentry) ---
+# No-op until SENTRY_DSN is set in .env — sign up at sentry.io, create a
+# project, and paste its DSN in to actually start receiving error reports.
+SENTRY_DSN = env('SENTRY_DSN')
+if SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    from sentry_sdk.integrations.celery import CeleryIntegration
+    from sentry_sdk.integrations.logging import LoggingIntegration
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[
+            DjangoIntegration(),
+            CeleryIntegration(),
+            # Mirrors the LOGGING config above — anything logged at ERROR
+            # or above also gets reported to Sentry as an event.
+            LoggingIntegration(level=None, event_level='ERROR'),
+        ],
+        traces_sample_rate=0.1,
+        send_default_pii=False,
+    )
 
 
 # ==============================================================================

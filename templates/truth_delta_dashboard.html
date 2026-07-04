@@ -499,67 +499,6 @@
             <div class="summary-text" id="truthSummaryText">Loading verification data...</div>
         </div>
 
-        <!-- Stats Grid -->
-        <div class="truth-delta-stats">
-            <div class="stat-card">
-                <div class="stat-value" id="claimsAnalyzed">—</div>
-                <div class="stat-label">Claims Analyzed</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="claimsVerified">—</div>
-                <div class="stat-label">Verified ✅</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="claimsFlagged">—</div>
-                <div class="stat-label">Flagged ⚠️</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="verificationRate">—</div>
-                <div class="stat-label">Verification Rate</div>
-            </div>
-        </div>
-
-        <!-- Flag Breakdown -->
-        <div class="flag-breakdown">
-            <div class="flag-item verified">
-                <span class="flag-icon">✅</span>
-                <div class="flag-count" id="flagGreen">0</div>
-                <div class="flag-label">Verified</div>
-            </div>
-            <div class="flag-item caution">
-                <span class="flag-icon">⚠️</span>
-                <div class="flag-count" id="flagYellow">0</div>
-                <div class="flag-label">Caution (5-20%)</div>
-            </div>
-            <div class="flag-item warning">
-                <span class="flag-icon">🟠</span>
-                <div class="flag-count" id="flagOrange">0</div>
-                <div class="flag-label">Warning (20-50%)</div>
-            </div>
-            <div class="flag-item critical">
-                <span class="flag-icon">🚨</span>
-                <div class="flag-count" id="flagRed">0</div>
-                <div class="flag-label">Critical (>50%)</div>
-            </div>
-        </div>
-
-        <!-- Recommendation Adjustment (if applicable) -->
-        <div id="recommendationAdjustmentBox" style="display: none;">
-            <div class="recommendation-adjustment" id="recommendationAdjustmentContent">
-                <!-- Populated by JS -->
-            </div>
-        </div>
-
-        <!-- Flagged Claims Section -->
-        <div class="flagged-claims" id="flaggedClaimsSection" style="display: none;">
-            <div class="claims-header">
-                🚩 Flagged Claims & Discrepancies
-            </div>
-            <div class="claims-list" id="flaggedClaimsList">
-                <!-- Populated by JS -->
-            </div>
-        </div>
-
         <!-- Loading State -->
         <div id="truthDeltaLoading" class="truth-delta-loading" style="display: none;">
             <div class="spinner"></div>
@@ -577,12 +516,6 @@
         <div class="truth-delta-actions">
             <button class="truth-delta-btn primary" onclick="runTruthDeltaVerification()">
                 <span id="verifyButtonText">▶ Run Verification</span>
-            </button>
-            <button class="truth-delta-btn secondary" onclick="exportTruthDeltaReport()">
-                📥 Download Report
-            </button>
-            <button class="truth-delta-btn secondary" onclick="toggleTruthDeltaDetails()">
-                📊 View Details
             </button>
         </div>
     </div>
@@ -695,98 +628,6 @@ const SERVER_TRUTH_DATA = {
         document.getElementById('truthSummaryText').textContent = data.summary || 
             'Verification pending — no public data found for this company.';
 
-        // Stats
-        document.getElementById('claimsAnalyzed').textContent = data.claims_analyzed || 0;
-        document.getElementById('claimsVerified').textContent = data.claims_verified || 0;
-        document.getElementById('claimsFlagged').textContent = data.claims_flagged || 0;
-        const rate = data.claims_analyzed > 0 
-            ? Math.round((data.claims_verified / data.claims_analyzed) * 100) 
-            : 0;
-        document.getElementById('verificationRate').textContent = `${rate}%`;
-
-        // Flag breakdown
-        document.getElementById('flagGreen').textContent = data.flag_breakdown.verified;
-        document.getElementById('flagYellow').textContent = data.flag_breakdown.caution;
-        document.getElementById('flagOrange').textContent = data.flag_breakdown.warning;
-        document.getElementById('flagRed').textContent = data.flag_breakdown.critical;
-
-        // Recommendation adjustment (if applicable)
-        if (data.recommendation_impact?.adjusted && data.recommendation_impact.adjusted !== 'None') {
-            const adjustmentBox = document.getElementById('recommendationAdjustmentBox');
-            const riskLevel = data.credibility_risk === 'critical' ? 'critical' : 
-                             data.credibility_risk === 'high' ? 'warning' : '';
-            
-            adjustmentBox.querySelector('.recommendation-adjustment').className = 
-                `recommendation-adjustment ${riskLevel}`;
-            adjustmentBox.querySelector('.adjustment-title').textContent = '⚠️ Recommendation Adjusted';
-            adjustmentBox.querySelector('.adjustment-text').textContent = 
-                data.recommendation_impact.adjusted;
-            adjustmentBox.style.display = 'block';
-        }
-
-        // Load flagged claims
-        if (data.claims_flagged > 0) {
-            loadFlaggedClaims(data.document_id);
-        } else {
-            document.getElementById('flaggedClaimsSection').style.display = 'none';
-        }
-    }
-
-    /**
-     * Load and display flagged claims
-     */
-    async function loadFlaggedClaims(documentId) {
-        try {
-            const response = await fetch(
-                `${TRUTH_DELTA_API}/documents/${documentId}/truth-delta/flags/`,
-                {
-                    credentials: 'include', // <-- ADDED FOR AUTHENTICATION
-                    headers: {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                }
-            );
-
-            if (!response.ok) return;
-
-            const data = await response.json();
-            const claimsList = document.getElementById('flaggedClaimsList');
-            const section = document.getElementById('flaggedClaimsSection');
-
-            if (data.flags && data.flags.length > 0) {
-                claimsList.innerHTML = data.flags.map(flag => `
-                    <div class="claim-item">
-                        <div class="claim-flag-icon">${flag.flag_icon}</div>
-                        <div class="claim-content">
-                            <div class="claim-category">${flag.category}</div>
-                            
-                            <div class="claim-comparison">
-                                <div class="comparison-value">
-                                    <div class="comparison-label">Claimed</div>
-                                    <div class="comparison-text">${flag.claimed}</div>
-                                </div>
-                                <div class="comparison-value">
-                                    <div class="comparison-label">Observed</div>
-                                    <div class="comparison-text">${flag.observed}</div>
-                                </div>
-                            </div>
-                            
-                            <div class="discrepancy-badge ${getDiscrepancyClass(flag.discrepancy)}">
-                                ${flag.discrepancy} Discrepancy
-                            </div>
-                            
-                            <div class="claim-explanation">
-                                ${flag.explanation}
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
-                
-                section.style.display = 'block';
-            }
-        } catch (error) {
-            console.error('Error loading flagged claims:', error);
-        }
     }
 
     /**
@@ -877,53 +718,6 @@ const SERVER_TRUTH_DATA = {
     }
 
     /**
-     * Export Truth Delta report
-     */
-    async function exportTruthDeltaReport() {
-        const docId = document.querySelector('[data-document-id]')?.dataset.documentId;
-        if (!docId) return;
-
-        try {
-            const response = await fetch(
-                `${TRUTH_DELTA_API}/documents/${docId}/truth-delta/report/`,
-                {
-                    credentials: 'include', // <-- ADDED FOR AUTHENTICATION
-                    headers: {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                }
-            );
-
-            if (!response.ok) throw new Error('Failed to fetch report');
-
-            const data = await response.json();
-
-            // Create and download file
-            const element = document.createElement('a');
-            element.setAttribute('href', 'data:text/markdown;charset=utf-8,' + 
-                encodeURIComponent(data.report));
-            element.setAttribute('download', `truth-delta-report-${docId}.md`);
-            element.style.display = 'none';
-            
-            document.body.appendChild(element);
-            element.click();
-            document.body.removeChild(element);
-
-        } catch (error) {
-            console.error('Report export error:', error);
-            alert('Failed to export report');
-        }
-    }
-
-    /**
-     * Toggle detailed view
-     */
-    function toggleTruthDeltaDetails() {
-        const section = document.getElementById('flaggedClaimsSection');
-        section.style.display = section.style.display === 'none' ? 'block' : 'none';
-    }
-
-    /**
      * Helper: Get risk class
      */
     function getRiskClass(risk) {
@@ -934,20 +728,6 @@ const SERVER_TRUTH_DATA = {
             'critical': 'critical-risk'
         };
         return classes[risk] || 'medium-risk';
-    }
-
-    /**
-     * Helper: Get discrepancy class
-     */
-    function getDiscrepancyClass(discrepancy) {
-        if (discrepancy.includes('%')) {
-            const percent = parseFloat(discrepancy);
-            if (percent <= 5) return 'low';
-            if (percent <= 20) return 'low';
-            if (percent <= 50) return 'medium';
-            return 'high';
-        }
-        return 'medium';
     }
 
     /**

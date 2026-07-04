@@ -12,15 +12,33 @@ import logging
 import re
 from typing import Dict, List, Optional, Tuple
 from django.utils import timezone
-from .vector_models import DocumentSource, DocumentChunk, IntelligenceInsight, IntelligenceMemo
+from .vector_models import DocumentSource, DocumentChunk, IntelligenceInsight, IntelligenceMemo, BusinessValuationReport
 from .chunking import DocumentChunker
 from .embeddings import embedding_engine
 from .retrieval import retriever
-from .truth_synthesis_engine import TruthSynthesisEngine
 import json
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
+
+
+def _log_anthropic_usage(response, document_source, call_type):
+    """
+    Logs input/output token counts for a successful Anthropic call — token
+    counts rather than a hardcoded $/token estimate, since pricing changes
+    over time and a stale hardcoded number would be worse than no number.
+    Flows into the persistent log file (logs/django.log) automatically.
+    """
+    try:
+        usage = getattr(response, 'usage', None)
+        if usage:
+            logger.info(
+                f"[Anthropic usage] {call_type} for document {document_source.id}: "
+                f"input_tokens={usage.input_tokens}, output_tokens={usage.output_tokens}"
+            )
+    except Exception as e:
+        logger.warning(f"Failed to log Anthropic usage: {str(e)}")
+
 
 class ZeldaIntelligencePipelineV2:
     """Zelda Intelligence Pipeline v2 - Production Ready"""
@@ -76,11 +94,6 @@ class ZeldaIntelligencePipelineV2:
             if 'error' in analysis_result:
                 raise Exception(analysis_result['error'])
             
-            # TRUTH SYNTHESIS ENGINE ANALYSIS
-            logger.info("Running Truth Synthesis Engine...")
-            engine = TruthSynthesisEngine()
-            engine.run_full_analysis(document_source)
-            
             # STEP 4: MEMO GENERATION
             logger.info(f"Generating memo: {document_source.filename}")
             memo_result = self._generate_memo(document_source, analysis_result)
@@ -114,7 +127,81 @@ class ZeldaIntelligencePipelineV2:
             document_source.error_message = str(e)
             document_source.save()
             return {'status': 'error', 'error': str(e)}
- 
+
+    def process_valuation_document(self, document_source: DocumentSource, raw_text: str) -> Dict:
+        """
+        Parallel path for document_type='business_valuation': reuses the
+        generic chunk/embed/analyze steps, then generates a
+        BusinessValuationReport instead of a fundraising-shaped
+        IntelligenceMemo. No Truth Delta trigger — valuation isn't a
+        fundraising claim to verify.
+        """
+        logger.info(f"Starting valuation pipeline for {document_source.filename}")
+
+        try:
+            document_source.raw_text_preview = raw_text[:1000]
+            document_source.raw_text_full = raw_text
+            document_source.total_word_count = len(raw_text.split())
+            document_source.save()
+
+            logger.info(f"Chunking: {document_source.filename}")
+            document_source.status = 'chunking'
+            document_source.save()
+
+            chunks_result = self._chunk_document(document_source, raw_text)
+            if 'error' in chunks_result:
+                raise Exception(chunks_result['error'])
+
+            document_source.status = 'chunked'
+            document_source.save()
+
+            logger.info(f"Embedding: {document_source.filename}")
+            document_source.status = 'embedding'
+            document_source.save()
+
+            embedding_result = self._embed_chunks(document_source)
+            if 'error' in embedding_result:
+                raise Exception(embedding_result['error'])
+
+            document_source.status = 'embedded'
+            document_source.save()
+
+            logger.info(f"Analyzing: {document_source.filename}")
+            document_source.status = 'analyzing'
+            document_source.save()
+
+            self.used_chunks = set()
+            analysis_result = self._analyze_document(document_source, raw_text)
+            if 'error' in analysis_result:
+                raise Exception(analysis_result['error'])
+
+            logger.info(f"Generating valuation report: {document_source.filename}")
+            valuation_result = self._generate_valuation_report(document_source, analysis_result)
+            if 'error' in valuation_result:
+                raise Exception(valuation_result['error'])
+
+            document_source.status = 'analyzed'
+            document_source.confidence_score = valuation_result.get('confidence_score', 0)
+            document_source.processed_at = timezone.now()
+            document_source.save()
+
+            logger.info(f"Valuation pipeline complete for {document_source.filename}")
+
+            return {
+                'status': 'success',
+                'document_id': document_source.id,
+                'chunks_created': chunks_result.get('chunk_count', 0),
+                'insights_extracted': len(analysis_result.get('insights', [])),
+                'valuation_report_id': valuation_result.get('report_id'),
+            }
+
+        except Exception as e:
+            logger.error(f"Valuation pipeline error: {str(e)}")
+            document_source.status = 'error'
+            document_source.error_message = str(e)
+            document_source.save()
+            return {'status': 'error', 'error': str(e)}
+
     # --- Pipeline Methods ---
     
     def _chunk_document(self, document_source: DocumentSource, raw_text: str) -> Dict:
@@ -505,6 +592,14 @@ class ZeldaIntelligencePipelineV2:
             structured_context = self._build_structured_context(document_source, insights)
             memo_sections = self._call_claude_for_memo(document_source, structured_context, insights)
 
+            if 'error' in memo_sections:
+                # Without this check, the update_or_create below would use
+                # its .get(..., default) fallbacks and silently write a
+                # "successful" memo full of placeholder text — the caller
+                # (process_document) already checks for this key and marks
+                # the document status='error', but only if we raise here.
+                raise Exception(memo_sections['error'])
+
             memo, created = IntelligenceMemo.objects.update_or_create(
                 document=document_source,
                 defaults={
@@ -515,6 +610,8 @@ class ZeldaIntelligencePipelineV2:
                     'financial_analysis': memo_sections.get('financial_analysis', 'Not disclosed in pitch deck.'),
                     'risk_assessment':    memo_sections.get('risk_assessment', 'Not disclosed in pitch deck.'),
                     'investment_thesis':  memo_sections.get('investment_thesis', 'Insufficient data.'),
+                    'investment_readiness':     memo_sections.get('investment_readiness', 'Not assessed.'),
+                    'questions_for_management': memo_sections.get('questions_for_management', 'Not assessed.'),
                     'completeness_score': analysis_result.get('confidence', 0),
                     'citations_count':    sum(i.source_chunks.count() for i in insights),
                 }
@@ -528,14 +625,170 @@ class ZeldaIntelligencePipelineV2:
 
             return {
                 'memo_id': memo.id,
-                'sections_count': 7,
+                'sections_count': 9,
                 'completeness_score': memo.completeness_score,
             }
 
         except Exception as e:
             logger.error(f"Memo generation error: {str(e)}")
             return {'error': f'Memo error: {str(e)}'}
-    
+
+    def _trigger_truth_delta(self, document_source: DocumentSource) -> None:
+        """
+        Step 5: Queue Truth Delta claim extraction + verification for this document.
+        Runs async via Celery — failure here must not fail the pipeline, since the
+        memo has already been generated successfully by this point.
+        """
+        try:
+            from .truth_delta_tasks import extract_claims_from_insights
+            extract_claims_from_insights.delay(document_source.id)
+            logger.info(f"Truth Delta queued for document {document_source.id}")
+        except Exception as e:
+            logger.warning(f"Truth Delta trigger failed for document {document_source.id}: {str(e)}")
+
+    def _generate_valuation_report(self, document_source: DocumentSource, analysis_result: Dict) -> Dict:
+        """Parallel to _generate_memo: generates a BusinessValuationReport instead."""
+        try:
+            insights = IntelligenceInsight.objects.filter(
+                document=document_source
+            ).order_by('-confidence_score')
+
+            structured_context = self._build_structured_context(document_source, insights)
+            sections = self._call_claude_for_valuation(document_source, structured_context, insights)
+
+            if 'error' in sections:
+                # Same reasoning as _generate_memo's identical check — without
+                # this, update_or_create's .get(..., default) fallbacks would
+                # silently write a "successful" report full of placeholder text.
+                raise Exception(sections['error'])
+
+            report, created = BusinessValuationReport.objects.update_or_create(
+                document=document_source,
+                defaults={
+                    'business_overview':  sections.get('business_overview', 'Not generated.'),
+                    'financial_summary':  sections.get('financial_summary', 'Not disclosed in submitted documents.'),
+                    'risk_report':        sections.get('risk_report', 'Not disclosed in submitted documents.'),
+                    'valuation_summary':  sections.get('valuation_summary', 'Insufficient data to estimate a valuation.'),
+                    'valuation_low':      sections.get('valuation_low'),
+                    'valuation_high':     sections.get('valuation_high'),
+                    'confidence_score':   analysis_result.get('confidence', 0),
+                }
+            )
+
+            logger.info(f"Claude valuation report generated for document {document_source.id}")
+
+            return {
+                'report_id': report.id,
+                'confidence_score': report.confidence_score,
+            }
+
+        except Exception as e:
+            logger.error(f"Valuation report generation error: {str(e)}")
+            return {'error': f'Valuation report error: {str(e)}'}
+
+    def _call_claude_for_valuation(self, doc: DocumentSource, facts: dict, insights) -> dict:
+        """Call Claude API to generate an evidence-grounded business valuation report."""
+        import anthropic
+        import json
+
+        client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+
+        insights_list = "\n".join([
+            f"{i+1}. [{ins.category} | {ins.confidence_score:.0f}% confidence] {ins.insight_text}"
+            for i, ins in enumerate(insights[:25])
+        ])
+
+        missing = "\n".join([f"• {m}" for m in facts.get('missing_fields', [])]) or "• None identified"
+        traction = "\n".join([f"• {t}" for t in facts.get('traction_signals', [])]) or "• None extracted"
+
+        facts_display = json.dumps({
+            k: v for k, v in facts.items()
+            if k not in ('missing_fields', 'traction_signals') and v is not None
+        }, indent=2)
+
+        system_prompt = """You are a senior M&A analyst preparing an evidence-grounded business
+    valuation report for a business owner considering a sale.
+
+    ABSOLUTE RULES:
+    1. Every factual claim MUST come from the extracted facts or insights provided below.
+    2. Never invent numbers, projections, or metrics not present in the source data.
+    3. Never use vague phrases like "healthy business" or "strong potential" without
+    immediately citing specific evidence.
+    4. If information is missing, write exactly: "Not disclosed in submitted documents."
+    5. Write as a skeptical but fair analyst — evidence-driven, not promotional.
+    6. Every section must be grounded in the provided insights or facts.
+    7. valuation_low and valuation_high MUST be plain numbers (no currency symbols, no commas)
+    derived from standard valuation methods (revenue multiple, EBITDA multiple, etc.) applied
+    to the disclosed financials — never guess a number with no basis in the source data."""
+
+        user_prompt = f"""Prepare a business valuation report for {facts['company']}.
+
+    ## STRUCTURED FACTS (extracted from submitted financial documents)
+    {facts_display}
+
+    ## TRACTION SIGNALS DETECTED
+    {traction}
+
+    ## ZELDA INSIGHTS (extracted with confidence scores)
+    {insights_list}
+
+    ## INFORMATION NOT FOUND IN SUBMITTED DOCUMENTS
+    {missing}
+
+    ---
+
+    Write the report using ONLY the above information. Return a JSON object with these exact keys:
+    business_overview, financial_summary, risk_report, valuation_summary, valuation_low,
+    valuation_high, confidence
+
+    ### Instructions per section:
+
+    business_overview: 2-3 sentences. What the business does, its stage/maturity, and its market.
+    Cite specific numbers. No editorializing.
+
+    financial_summary: Current revenue, margins, growth rate, and any other disclosed
+    financial metrics. Format as bullet points. For any missing item write
+    "Not disclosed in submitted documents."
+
+    risk_report: List 3-5 specific risks based on what the documents reveal AND omit.
+    Omissions are risk signals. Be specific to this business, not generic.
+
+    valuation_summary: Explain the valuation method(s) used (e.g. revenue multiple) and how
+    they were applied to the disclosed financials to reach the low/high range. If insufficient
+    data exists to estimate a valuation, say so explicitly and explain what's missing.
+
+    valuation_low / valuation_high: plain numbers (e.g. 250000), not strings with currency
+    symbols. Use null for both if there isn't enough disclosed financial data to estimate a range.
+
+    confidence: integer 0-100 reflecting how much of the valuation is grounded in real disclosed
+    numbers versus assumption.
+
+    Return ONLY valid JSON. No markdown, no backticks, no preamble."""
+
+        try:
+            response = client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=4000,
+                system=system_prompt,
+                messages=[{"role": "user", "content": user_prompt}]
+            )
+            _log_anthropic_usage(response, doc, 'valuation report')
+
+            raw = response.content[0].text.strip()
+
+            if raw.startswith('```'):
+                raw = re.sub(r'^```(?:json)?\n?', '', raw)
+                raw = re.sub(r'\n?```$', '', raw)
+
+            return json.loads(raw)
+
+        except json.JSONDecodeError as e:
+            logger.error(f"Claude valuation JSON parse error: {str(e)}")
+            return {'error': f'Valuation report encountered a parsing error: {str(e)}'}
+        except Exception as e:
+            logger.error(f"Claude API error in valuation report generation: {str(e)}")
+            return {'error': f'Valuation report generation failed: {str(e)}'}
+
     def _build_structured_context(self, doc: DocumentSource, insights) -> dict:
         """Extract structured facts from insights for Claude context"""
         import re
@@ -726,6 +979,7 @@ class ZeldaIntelligencePipelineV2:
                 system=system_prompt,
                 messages=[{"role": "user", "content": user_prompt}]
             )
+            _log_anthropic_usage(response, doc, 'memo')
 
             raw = response.content[0].text.strip()
 
@@ -738,16 +992,10 @@ class ZeldaIntelligencePipelineV2:
 
         except json.JSONDecodeError as e:
             logger.error(f"Claude memo JSON parse error: {str(e)}")
-            return {
-                'executive_summary': f'Memo generation encountered a parsing error: {str(e)}',
-                'recommendation': 'NEEDS_REVIEW'
-            }
+            return {'error': f'Memo generation encountered a parsing error: {str(e)}'}
         except Exception as e:
             logger.error(f"Claude API error in memo generation: {str(e)}")
-            return {
-                'executive_summary': f'Memo generation failed: {str(e)}',
-                'recommendation': 'NEEDS_REVIEW'
-            }
+            return {'error': f'Memo generation failed: {str(e)}'}
     
     
     def _determine_recommendation(self, insights, confidence: float) -> str:

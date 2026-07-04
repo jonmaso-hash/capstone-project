@@ -31,7 +31,7 @@
                 Application Submitted
             </h1>
 
-            <h1>Thank you, {{ profile.founder_name }}!</h1>
+            <h2 class="h4">Thank you, {{ applicant_name }}!</h2>
 
             <p class="text-muted mb-4">
                 Thank you for applying. We’ve successfully received your founder application.
@@ -60,7 +60,7 @@
             <!-- Buttons -->
             <div class="d-grid gap-2">
 
-                <a href="{% url 'accounts:profile' %}"
+                <a href="{% url 'accounts:profile_self' %}"
                    class="btn btn-primary rounded-pill">
                     View Your Profile
                 </a>

@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Settings | Interlink Foundry{% endblock title %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+
+        {# ── Left sidebar: section anchors ── #}
+        <div class="col-lg-3 mb-4">
+            <div class="list-group shadow-sm rounded-4 overflow-hidden sticky-top" style="top: 90px;">
+                {% if request.user.match_founder_profile %}
+                <a href="{% url 'usersettings:edit_founder_profile' %}" class="list-group-item list-group-item-action fw-semibold bg-success-subtle">
+                    <i class="bi bi-pencil-square me-2"></i>Edit Profile
+                </a>
+                {% elif request.user.match_investor_profile %}
+                <a href="{% url 'usersettings:edit_investor_profile' %}" class="list-group-item list-group-item-action fw-semibold bg-primary-subtle">
+                    <i class="bi bi-pencil-square me-2"></i>Edit Profile
+                </a>
+                {% elif request.user.match_seller_profile %}
+                <a href="{% url 'usersettings:edit_seller_profile' %}" class="list-group-item list-group-item-action fw-semibold bg-warning-subtle">
+                    <i class="bi bi-pencil-square me-2"></i>Edit Listing
+                </a>
+                {% elif request.user.match_buyer_profile %}
+                <a href="{% url 'usersettings:edit_buyer_profile' %}" class="list-group-item list-group-item-action fw-semibold bg-info-subtle">
+                    <i class="bi bi-pencil-square me-2"></i>Edit Profile
+                </a>
+                {% endif %}
+                <a href="#privacy" class="list-group-item list-group-item-action fw-semibold">
+                    <i class="bi bi-eye-slash me-2"></i>Privacy
+                </a>
+                <a href="#messaging" class="list-group-item list-group-item-action fw-semibold">
+                    <i class="bi bi-chat-left-text me-2"></i>Messaging
+                </a>
+                <a href="#invitations" class="list-group-item list-group-item-action fw-semibold">
+                    <i class="bi bi-envelope-paper me-2"></i>Invitation Requests
+                </a>
+                <a href="#follow" class="list-group-item list-group-item-action fw-semibold">
+                    <i class="bi bi-person-plus me-2"></i>Follow Requests
+                </a>
+                <a href="#blog" class="list-group-item list-group-item-action fw-semibold">
+                    <i class="bi bi-file-earmark-text me-2"></i>Blog
+                </a>
+                <a href="#visibility" class="list-group-item list-group-item-action fw-semibold">
+                    <i class="bi bi-person-badge me-2"></i>Profile Visibility
+                </a>
+            </div>
+        </div>
+
+        {# ── Right: grouped toggle cards ── #}
+        <div class="col-lg-9">
+            <h2 class="fw-bold mb-4">Settings</h2>
+
+            <div class="card border-danger mb-4 shadow-sm rounded-4" id="privacy">
+                <div class="card-body p-4">
+                    <h5 class="card-title text-danger fw-bold mb-1">
+                        <i class="bi bi-eye-slash me-1"></i> Privacy
+                    </h5>
+                    <p class="small text-secondary mb-3">
+                        Control your network visibility. When incognito mode is active, your profile metadata, traction values, and deal details are completely omitted from global lookup filters and Zelda AI engine tools.
+                    </p>
+                    <div class="form-check form-switch fs-5">
+                        <input class="form-check-input settings-switch" type="checkbox" role="switch" id="privacyToggle"
+                            data-url="{% url 'accounts:toggle_privacy' %}"
+                            data-body-key="is_private"
+                            data-feedback="fb-privacy"
+                            data-on-msg="✓ Incognito mode activated. Your profile is now hidden."
+                            data-off-msg="✓ Profile visibility set to public."
+                            {% if is_private %}checked{% endif %}>
+                        <label class="form-check-label small text-dark fw-semibold ms-1" for="privacyToggle">
+                            Enable Incognito Mode
+                        </label>
+                    </div>
+                    <div id="fb-privacy" class="small mt-2 fw-medium d-none"></div>
+                </div>
+            </div>
+
+            <div class="card border-primary mb-4 shadow-sm rounded-4" id="messaging">
+                <div class="card-body p-4">
+                    <h5 class="card-title text-primary fw-bold mb-1">
+                        <i class="bi bi-chat-left-text me-1"></i> Messaging
+                    </h5>
+                    <p class="small text-secondary mb-3">
+                        Allow verified users to bypass the AI matching loop and message you directly in the Deal Room.
+                    </p>
+                    <div class="form-check form-switch fs-5">
+                        <input class="form-check-input settings-switch" type="checkbox" role="switch" id="dmToggle"
+                            data-url="{% url 'accounts:toggle_dm' %}"
+                            data-body-key="dm_enabled"
+                            data-feedback="fb-dm"
+                            data-on-msg="✓ Direct messaging is now open."
+                            data-off-msg="✓ Direct messaging disabled. Closed-loop matchmaking only."
+                            {% if dm_enabled %}checked{% endif %}>
+                        <label class="form-check-label small text-dark fw-semibold ms-1" for="dmToggle">
+                            Accept Direct Messages
+                        </label>
+                    </div>
+                    <div id="fb-dm" class="small mt-2 fw-medium d-none"></div>
+                </div>
+            </div>
+
+            <div class="card mb-4 shadow-sm border-0 rounded-4" id="invitations">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-1">
+                        <i class="bi bi-envelope-paper me-1"></i> Invitation Requests
+                    </h5>
+                    <p class="small text-secondary mb-3">
+                        Control whether investors can send you an introduction request from your pitch card.
+                    </p>
+                    <div class="form-check form-switch fs-5">
+                        <input class="form-check-input settings-switch" type="checkbox" role="switch" id="invitationsToggle"
+                            data-url="{% url 'usersettings:toggle_setting' %}"
+                            data-field="accept_invitation_requests"
+                            data-feedback="fb-invitations"
+                            data-on-msg="✓ Now accepting introduction requests."
+                            data-off-msg="✓ Introduction requests are now turned off."
+                            {% if user_settings.accept_invitation_requests %}checked{% endif %}>
+                        <label class="form-check-label small text-dark fw-semibold ms-1" for="invitationsToggle">
+                            Accept Invitation Requests
+                        </label>
+                    </div>
+                    <div id="fb-invitations" class="small mt-2 fw-medium d-none"></div>
+                </div>
+            </div>
+
+            <div class="card mb-4 shadow-sm border-0 rounded-4" id="follow">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-1">
+                        <i class="bi bi-person-plus me-1"></i> Follow Requests
+                    </h5>
+                    <p class="small text-secondary mb-3">
+                        Control whether other users can follow you from your profile.
+                    </p>
+                    <div class="form-check form-switch fs-5">
+                        <input class="form-check-input settings-switch" type="checkbox" role="switch" id="followToggle"
+                            data-url="{% url 'usersettings:toggle_setting' %}"
+                            data-field="accept_follow_requests"
+                            data-feedback="fb-follow"
+                            data-on-msg="✓ Now accepting new followers."
+                            data-off-msg="✓ Follow requests are now turned off."
+                            {% if user_settings.accept_follow_requests %}checked{% endif %}>
+                        <label class="form-check-label small text-dark fw-semibold ms-1" for="followToggle">
+                            Accept Follow Requests
+                        </label>
+                    </div>
+                    <div id="fb-follow" class="small mt-2 fw-medium d-none"></div>
+                </div>
+            </div>
+
+            <div class="card mb-4 shadow-sm border-0 rounded-4" id="blog">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-1">
+                        <i class="bi bi-file-earmark-text me-1"></i> Blog
+                    </h5>
+                    <p class="small text-secondary mb-3">
+                        Control interactions on the articles you publish.
+                    </p>
+                    <div class="form-check form-switch fs-5 mb-3">
+                        <input class="form-check-input settings-switch" type="checkbox" role="switch" id="blogLikesToggle"
+                            data-url="{% url 'usersettings:toggle_setting' %}"
+                            data-field="blog_likes_enabled"
+                            data-feedback="fb-blog-likes"
+                            data-on-msg="✓ Likes are now enabled on your articles."
+                            data-off-msg="✓ Likes are now turned off on your articles."
+                            {% if user_settings.blog_likes_enabled %}checked{% endif %}>
+                        <label class="form-check-label small text-dark fw-semibold ms-1" for="blogLikesToggle">
+                            Allow Likes
+                        </label>
+                        <div id="fb-blog-likes" class="small mt-2 fw-medium d-none"></div>
+                    </div>
+                    <div class="form-check form-switch fs-5">
+                        <input class="form-check-input settings-switch" type="checkbox" role="switch" id="blogCommentsToggle"
+                            data-url="{% url 'usersettings:toggle_setting' %}"
+                            data-field="blog_comments_enabled"
+                            data-feedback="fb-blog-comments"
+                            data-on-msg="✓ Comments are now enabled on your articles."
+                            data-off-msg="✓ Comments are now turned off on your articles."
+                            {% if user_settings.blog_comments_enabled %}checked{% endif %}>
+                        <label class="form-check-label small text-dark fw-semibold ms-1" for="blogCommentsToggle">
+                            Allow Comments
+                        </label>
+                        <div id="fb-blog-comments" class="small mt-2 fw-medium d-none"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4 shadow-sm border-0 rounded-4" id="visibility">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-1">
+                        <i class="bi bi-person-badge me-1"></i> Profile Visibility
+                    </h5>
+                    <p class="small text-secondary mb-3">
+                        Control which sections of your profile are visible to other users.
+                    </p>
+                    <div class="form-check form-switch fs-5 mb-3">
+                        <input class="form-check-input settings-switch" type="checkbox" role="switch" id="jobsToggle"
+                            data-url="{% url 'usersettings:toggle_setting' %}"
+                            data-field="show_job_postings"
+                            data-feedback="fb-jobs"
+                            data-on-msg="✓ Job postings are now visible on your profile."
+                            data-off-msg="✓ Job postings are now hidden from your profile."
+                            {% if user_settings.show_job_postings %}checked{% endif %}>
+                        <label class="form-check-label small text-dark fw-semibold ms-1" for="jobsToggle">
+                            Show Job Postings
+                        </label>
+                        <div id="fb-jobs" class="small mt-2 fw-medium d-none"></div>
+                    </div>
+                    <div class="form-check form-switch fs-5 mb-3">
+                        <input class="form-check-input settings-switch" type="checkbox" role="switch" id="articlesToggle"
+                            data-url="{% url 'usersettings:toggle_setting' %}"
+                            data-field="show_articles"
+                            data-feedback="fb-articles"
+                            data-on-msg="✓ Articles are now visible on your profile."
+                            data-off-msg="✓ Articles are now hidden from your profile."
+                            {% if user_settings.show_articles %}checked{% endif %}>
+                        <label class="form-check-label small text-dark fw-semibold ms-1" for="articlesToggle">
+                            Show Articles
+                        </label>
+                        <div id="fb-articles" class="small mt-2 fw-medium d-none"></div>
+                    </div>
+                    <div class="form-check form-switch fs-5 mb-3">
+                        <input class="form-check-input settings-switch" type="checkbox" role="switch" id="milestonesToggle"
+                            data-url="{% url 'usersettings:toggle_setting' %}"
+                            data-field="show_milestones"
+                            data-feedback="fb-milestones"
+                            data-on-msg="✓ Milestones are now visible on your profile."
+                            data-off-msg="✓ Milestones are now hidden from your profile."
+                            {% if user_settings.show_milestones %}checked{% endif %}>
+                        <label class="form-check-label small text-dark fw-semibold ms-1" for="milestonesToggle">
+                            Show Milestones
+                        </label>
+                        <div id="fb-milestones" class="small mt-2 fw-medium d-none"></div>
+                    </div>
+                    <div class="form-check form-switch fs-5 mb-3">
+                        <input class="form-check-input settings-switch" type="checkbox" role="switch" id="connectionsToggle"
+                            data-url="{% url 'usersettings:toggle_setting' %}"
+                            data-field="show_business_connections"
+                            data-feedback="fb-connections"
+                            data-on-msg="✓ Business connections are now visible on your profile."
+                            data-off-msg="✓ Business connections are now hidden from your profile."
+                            {% if user_settings.show_business_connections %}checked{% endif %}>
+                        <label class="form-check-label small text-dark fw-semibold ms-1" for="connectionsToggle">
+                            Show Business Connections
+                        </label>
+                        <div id="fb-connections" class="small mt-2 fw-medium d-none"></div>
+                    </div>
+                    <div class="form-check form-switch fs-5">
+                        <input class="form-check-input settings-switch" type="checkbox" role="switch" id="contactInfoToggle"
+                            data-url="{% url 'usersettings:toggle_setting' %}"
+                            data-field="show_contact_info"
+                            data-feedback="fb-contact-info"
+                            data-on-msg="✓ Contact info is now visible on your profile."
+                            data-off-msg="✓ Contact info is now hidden from your profile."
+                            {% if user_settings.show_contact_info %}checked{% endif %}>
+                        <label class="form-check-label small text-dark fw-semibold ms-1" for="contactInfoToggle">
+                            Show Contact &amp; Links
+                        </label>
+                        <div id="fb-contact-info" class="small mt-2 fw-medium d-none"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{# ── CSRF token: must be INSIDE {% block content %} so Django renders it ── #}
+<form style="display: none;">{% csrf_token %}</form>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    const csrftoken = csrfInput ? csrfInput.value : '';
+
+    function postToggle(switchEl) {
+        const isOn = switchEl.checked;
+        const feedbackEl = document.getElementById(switchEl.dataset.feedback);
+        const body = switchEl.dataset.field
+            ? { field: switchEl.dataset.field, value: isOn }
+            : { [switchEl.dataset.bodyKey]: isOn };
+
+        fetch(switchEl.dataset.url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrftoken,
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: JSON.stringify(body)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status !== "success") throw new Error(data.message || "Update failed.");
+            feedbackEl.className = "small mt-2 fw-medium text-success animate__animated animate__fadeIn";
+            feedbackEl.textContent = isOn ? switchEl.dataset.onMsg : switchEl.dataset.offMsg;
+        })
+        .catch(error => {
+            switchEl.checked = !isOn;
+            feedbackEl.className = "small mt-2 fw-medium text-danger animate__animated animate__fadeIn";
+            feedbackEl.textContent = "⚠ Failed to update. Try again.";
+        });
+
+        feedbackEl.classList.remove("d-none");
+        setTimeout(() => feedbackEl.classList.add("d-none"), 3500);
+    }
+
+    document.querySelectorAll('.settings-switch').forEach(function (switchEl) {
+        switchEl.addEventListener("change", function () {
+            postToggle(switchEl);
+        });
+    });
+});
+</script>
+{% endblock content %}

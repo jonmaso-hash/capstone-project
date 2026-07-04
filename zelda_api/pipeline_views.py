@@ -13,10 +13,10 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from .truth_delta_tasks import verify_document_truth_delta as initiate_truth_delta_verification
-from .vector_models import DocumentSource, IntelligenceMemo, IntelligenceInsight, DocumentChunk
+from .vector_models import DocumentSource, IntelligenceMemo, IntelligenceInsight, DocumentChunk, BusinessValuationReport
 from .intelligence_pipeline import intelligence_pipeline
 from .retrieval import retriever, context_assembler
-from .tasks import process_document_pipeline
+from .tasks import process_document_pipeline, process_valuation_document_task
 
 logger = logging.getLogger(__name__)
 
@@ -66,23 +66,34 @@ class DocumentIngestView(APIView):
                 status='ingested'
             )
             
-            # 2. Queue for standard Zelda pipeline processing (async)
-            process_document_pipeline.delay(doc.id, extracted_text)
-            
+            # 2. Queue for processing — valuation requests take a parallel path
+            # (no Truth Delta trigger, different memo shape) from the standard
+            # fundraising pipeline.
+            if document_type == 'business_valuation':
+                process_valuation_document_task.delay(doc.id, extracted_text)
+            else:
+                process_document_pipeline.delay(doc.id, extracted_text)
+
             # 3. BRIDGE: Trigger Truth Delta verification engine (async)
             # This makes the connection you requested.
             #initiate_truth_delta_verification.delay(doc.id)
             
-            return Response({
+            response_data = {
                 'status': 'ingested',
                 'document_id': doc.id,
                 'filename': doc.filename,
                 'source_entity': doc.source_entity,
                 'polling_url': f'/api/v1/zelda/documents/{doc.id}/status/',
-                'memo_url': f'/api/v1/zelda/documents/{doc.id}/memo/',
-                'verification_url': f'/api/v1/zelda/documents/{doc.id}/truth-delta/', # Added for UI
-                'message': 'Document queued for both Zelda Intelligence and Truth Delta verification.'
-            }, status=status.HTTP_201_CREATED)
+            }
+            if document_type == 'business_valuation':
+                response_data['valuation_url'] = f'/api/v1/zelda/documents/{doc.id}/valuation/'
+                response_data['message'] = 'Document queued for business valuation analysis.'
+            else:
+                response_data['memo_url'] = f'/api/v1/zelda/documents/{doc.id}/memo/'
+                response_data['verification_url'] = f'/api/v1/zelda/documents/{doc.id}/truth-delta/'
+                response_data['message'] = 'Document queued for both Zelda Intelligence and Truth Delta verification.'
+
+            return Response(response_data, status=status.HTTP_201_CREATED)
         
         except Exception as e:
             logger.error(f"Document ingestion error: {str(e)}")
@@ -100,7 +111,8 @@ class DocumentStatusView(APIView):
     Provides real-time updates on chunking, embedding, analysis progress.
     """
     permission_classes = [IsAuthenticated]
-    
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+
     def get(self, request, document_id):
         try:
             doc = DocumentSource.objects.get(id=document_id)
@@ -200,6 +212,8 @@ class DocumentMemoView(APIView):
                     'financial_analysis': memo.financial_analysis,
                     'risk_assessment': memo.risk_assessment,
                     'investment_thesis': memo.investment_thesis,
+                    'investment_readiness': memo.investment_readiness,
+                    'questions_for_management': memo.questions_for_management,
                 },
                 'insights_cited': [
                     {
@@ -212,9 +226,70 @@ class DocumentMemoView(APIView):
                 ],
                 'generated_at': memo.created_at.isoformat(),
             }
-            
+
+            if doc.uploaded_by != request.user and viewer_is_investor:
+                from matchmaking.models import Application, log_investor_event
+                founder_app = Application.objects.filter(user=doc.uploaded_by).first()
+                if founder_app:
+                    log_investor_event(request.user, founder_app, 'memo_view')
+
             return Response(response, status=status.HTTP_200_OK)
-        
+
+        except DocumentSource.DoesNotExist:
+            return Response(
+                {"error": "Document not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class DocumentValuationView(APIView):
+    """
+    GET /api/v1/zelda/documents/{document_id}/valuation/
+
+    Retrieve the generated business valuation report. Owner-or-staff only —
+    unlike DocumentMemoView, there's no "any investor" carve-out, since a
+    valuation report is a personal financial document, not matchmaking
+    content meant for a matching audience.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+
+    def get(self, request, document_id):
+        try:
+            doc = DocumentSource.objects.get(id=document_id)
+
+            if doc.uploaded_by != request.user and not request.user.is_staff:
+                return Response(
+                    {"error": "Not authorized"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            if not hasattr(doc, 'valuation_report'):
+                return Response(
+                    {"error": "Valuation report not yet generated. Check status endpoint."},
+                    status=status.HTTP_202_ACCEPTED
+                )
+
+            report = doc.valuation_report
+
+            response = {
+                'report_id': report.id,
+                'document_id': doc.id,
+                'document_name': doc.source_entity,
+                'confidence_score': report.confidence_score,
+                'valuation_low': str(report.valuation_low) if report.valuation_low is not None else None,
+                'valuation_high': str(report.valuation_high) if report.valuation_high is not None else None,
+                'sections': {
+                    'business_overview': report.business_overview,
+                    'financial_summary': report.financial_summary,
+                    'risk_report': report.risk_report,
+                    'valuation_summary': report.valuation_summary,
+                },
+                'generated_at': report.created_at.isoformat(),
+            }
+
+            return Response(response, status=status.HTTP_200_OK)
+
         except DocumentSource.DoesNotExist:
             return Response(
                 {"error": "Document not found"},
@@ -230,7 +305,8 @@ class DocumentChunksView(APIView):
     Useful for debugging and understanding the chunking strategy.
     """
     permission_classes = [IsAuthenticated]
-    
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+
     def get(self, request, document_id):
         try:
             doc = DocumentSource.objects.get(id=document_id)
@@ -280,7 +356,8 @@ class DocumentInsightsView(APIView):
     Each insight links back to the chunks it was derived from.
     """
     permission_classes = [IsAuthenticated]
-    
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+
     def get(self, request, document_id):
         try:
             doc = DocumentSource.objects.get(id=document_id)
@@ -329,7 +406,8 @@ class DocumentSearchView(APIView):
     Returns most relevant chunks with similarity scores.
     """
     permission_classes = [IsAuthenticated]
-    
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+
     def post(self, request, document_id):
         try:
             doc = DocumentSource.objects.get(id=document_id)
@@ -372,7 +450,8 @@ class DocumentRAGView(APIView):
     Returns assembled context with source citations for AI prompting.
     """
     permission_classes = [IsAuthenticated]
-    
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+
     def post(self, request, document_id):
         try:
             doc = DocumentSource.objects.get(id=document_id)

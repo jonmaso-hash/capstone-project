@@ -11,10 +11,27 @@ class Article(models.Model):
     created_on = models.DateTimeField(auto_now_add=True)
     likes = models.ManyToManyField(User, related_name='blog_likes', blank=True)
     favorites = models.ManyToManyField(User, related_name='favorite_articles', blank=True)
+    views = models.PositiveIntegerField(default=0)
 
     def total_likes(self):
         return self.likes.count()
-    
+
+    def _author_settings(self):
+        if not self.author:
+            return None
+        from usersettings.models import UserSettings
+        return UserSettings.for_user(self.author)
+
+    @property
+    def likes_enabled(self):
+        author_settings = self._author_settings()
+        return author_settings.blog_likes_enabled if author_settings else True
+
+    @property
+    def comments_enabled(self):
+        author_settings = self._author_settings()
+        return author_settings.blog_comments_enabled if author_settings else True
+
     def get_absolute_url(self):
         return reverse('blog:article_detail', kwargs={'pk': self.pk})
 

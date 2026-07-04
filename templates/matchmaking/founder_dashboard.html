@@ -26,8 +26,11 @@
                 Optimizing matches for your <span class="badge bg-light text-dark border px-2 py-1.5">{{ application.stage|default:"Active" }}</span> stage and <span class="badge bg-light text-dark border px-2 py-1.5">{{ application.sector }}</span> sector profile.
             </p>
         </div>
-        <div class="col-md-4 text-md-end mt-3 mt-md-0">
-            <a href="{% url 'accounts:seeking_investment' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-medium">
+        <div class="col-md-4 text-md-end mt-3 mt-md-0 d-flex gap-2 justify-content-md-end">
+            <a href="{% url 'matchmaking:fundraising_crm' %}" class="btn btn-success btn-sm rounded-pill px-3 fw-medium">
+                <i class="bi bi-kanban-fill me-1"></i> Fundraising CRM
+            </a>
+            <a href="{% url 'usersettings:edit_founder_profile' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-medium">
                 <i class="bi bi-pencil-square me-1"></i> Edit Pitch Details
             </a>
         </div>
@@ -92,16 +95,168 @@
         </div>
     </div>
 
+    {% if accepted_connections %}
+    <div class="mb-5">
+        <h3 class="h5 fw-bold mb-3 text-dark">Accepted Deals</h3>
+        <div class="row g-3">
+            {% for conn in accepted_connections %}
+            <div class="col-12" id="accepted-card-{{ conn.id }}">
+                <div class="card bg-white border shadow-sm rounded-3">
+                    <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <div>
+                            <h5 class="mb-0 fw-bold text-dark">{{ conn.investor.company_name|default:"Private Venture Partner" }}</h5>
+                            <span class="badge bg-success-subtle text-success border border-success small">Accepted</span>
+                        </div>
+                        <button onclick="updateConnection({{ conn.id }}, 'FUNDED', null, null)" class="btn btn-outline-success btn-sm rounded-pill px-3">
+                            <i class="bi bi-check-circle me-1"></i> Mark as Funded
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="mb-5">
+        <h3 class="h5 fw-bold mb-3 text-dark">Milestones</h3>
+
+        <div class="card bg-white border shadow-sm rounded-3 mb-3">
+            <div class="card-body p-4">
+                <form method="post" action="{% url 'matchmaking:post_milestone' %}">
+                    {% csrf_token %}
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold text-muted">Type</label>
+                            <select name="milestone_type" class="form-select form-select-sm">
+                                <option value="revenue">Revenue Milestone</option>
+                                <option value="customers">Customer Milestone</option>
+                                <option value="product_launch">Product Launch</option>
+                                <option value="hiring">Hiring Update</option>
+                                <option value="funding">Funding Update</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold text-muted">Title</label>
+                            <input type="text" name="title" class="form-control form-control-sm" placeholder="e.g. Crossed $50k MRR" required maxlength="255">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold text-muted">Details (optional)</label>
+                            <input type="text" name="description" class="form-control form-control-sm" placeholder="A sentence or two of context">
+                        </div>
+                        <div class="col-md-1">
+                            <button type="submit" class="btn btn-success btn-sm w-100">Post</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if application.milestones.all %}
+        <div class="row g-3">
+            {% for milestone in application.milestones.all %}
+            <div class="col-12">
+                <div class="card bg-light border border-light-subtle rounded-3">
+                    <div class="card-body p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <span class="badge bg-secondary-subtle text-secondary border small me-2">{{ milestone.get_milestone_type_display }}</span>
+                            <strong class="text-dark">{{ milestone.title }}</strong>
+                            {% if milestone.description %}<p class="text-muted small mb-0 mt-1">{{ milestone.description }}</p>{% endif %}
+                            <small class="text-muted d-block mt-1">{{ milestone.created_at|date:"M d, Y" }}</small>
+                        </div>
+                        <form method="post" action="{% url 'matchmaking:delete_milestone' milestone.id %}" class="m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card border border-dashed border-secondary-subtle py-4 text-center bg-white rounded-3">
+            <p class="text-muted small mb-0"><i class="bi bi-flag me-2"></i>No milestones posted yet.</p>
+        </div>
+        {% endif %}
+    </div>
+
     <hr class="my-5 opacity-25">
 
     <h3 class="h5 fw-bold mb-4 text-dark d-flex align-items-center gap-2">
         <i class="bi bi-radar text-primary"></i> Neural Mandate Pipeline Allocators
     </h3>
 
+    <div class="card bg-light border-0 rounded-3 mb-4 p-3 shadow-sm">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold text-muted mb-1">Stage</label>
+                <input type="text" name="stage" class="form-control form-control-sm" placeholder="e.g. Seed" value="{{ filters.stage }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold text-muted mb-1">Focus</label>
+                <input type="text" name="focus" class="form-control form-control-sm" placeholder="e.g. FinTech" value="{{ filters.focus }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold text-muted mb-1">Location</label>
+                <input type="text" name="location" class="form-control form-control-sm" placeholder="e.g. Austin" value="{{ filters.location }}">
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-success btn-sm flex-grow-1">
+                    <i class="bi bi-funnel me-1"></i> Filter
+                </button>
+                {% if filters.stage or filters.focus or filters.location %}
+                <a href="{% url 'matchmaking:founder_dashboard' %}" class="btn btn-outline-secondary btn-sm">Clear</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
     <div class="row g-4">
         {% for match in matches %}
         <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-0 rounded-3 hover-lift">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="fw-bold text-dark mb-0">{{ match.investor.company_name|default:"Private Venture Partner" }}</h5>
+                        <span class="badge bg-success text-white small">{{ match.final_score }}%</span>
+                    </div>
+                    <p class="text-muted small line-clamp-3 mb-3">{{ match.investor.investment_focus|default:"No stated focus." }}</p>
+                    <div class="mt-auto">
+                        {% if match.connection_status == 'FUNDED' %}
+                            <span class="badge bg-success px-3 py-2 small fw-semibold w-100">
+                                <i class="bi bi-trophy-fill me-1"></i> Funded
+                            </span>
+                        {% elif match.connection_status == 'ACCEPTED' %}
+                            <span class="badge bg-primary px-3 py-2 small fw-semibold w-100">
+                                <i class="bi bi-check-circle-fill me-1"></i> Accepted
+                            </span>
+                        {% elif match.already_requested %}
+                            <button class="btn btn-secondary btn-sm w-100 disabled" disabled>
+                                <i class="bi bi-envelope-check me-1"></i> Requested
+                            </button>
+                        {% else %}
+                            <form method="post" action="{% url 'matchmaking:request_intro_from_founder' match.investor.id %}" class="m-0">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-sm w-100">
+                                    <i class="bi bi-hand-index-thumb me-1"></i> Request Intro
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card border border-dashed border-secondary-subtle py-4 text-center bg-white rounded-3">
+                {% if filters.stage or filters.focus or filters.location %}
+                <p class="text-muted small mb-0"><i class="bi bi-radar me-2"></i>No matches for the current filters. Try broadening or clearing them.</p>
+                {% else %}
+                <p class="text-muted small mb-0"><i class="bi bi-radar me-2"></i>No investor matches yet — update your profile to improve matching.</p>
+                {% endif %}
+            </div>
+        </div>
         {% endfor %}
     </div>
 </div>

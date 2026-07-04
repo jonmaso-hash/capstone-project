@@ -6,7 +6,6 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model, login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
-from django.core.cache import cache
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -17,7 +16,6 @@ from django.views.decorators.http import require_POST
 from matchmaking.services.ai_engine import calculate_zelda_advantage
 from matchmaking.utils import clean_financial_input
 from matchmaking.models import Application, InvestorApplication, Connection, Follow
-from .forms import ApplicationForm, InvestorForm
 
 # External/Third-Party Apps
 from stream_chat import StreamChat
@@ -58,11 +56,14 @@ def signup_view(request):
             # Route to appropriate onboarding based on selected role
             role = request.POST.get('role', '')
             if role == 'founder':
-                return redirect('accounts:seeking_investment')
+                return redirect('usersettings:edit_founder_profile')
             elif role == 'investor':
-                return redirect('accounts:investor_form')
+                return redirect('usersettings:edit_investor_profile')
+            elif role == 'seller':
+                return redirect('usersettings:edit_seller_profile')
+            elif role == 'buyer':
+                return redirect('usersettings:edit_buyer_profile')
             else:
-                # buyer/seller — go to profile with welcome prompt
                 return redirect("accounts:profile", username=user.username)
     else:
         form = UserCreationForm()
@@ -85,55 +86,6 @@ def login_view(request):
 
 
 # =====================================================================
-# WORKSPACE MATCHMAKING ONBOARDING FLOWS
-# =====================================================================
-
-@login_required
-def seeking_investment(request):
-    # Pull profile using the correct engine relation attribute
-    application = getattr(request.user, "match_founder_profile", None)
-
-    if request.method == "POST":
-        form = ApplicationForm(request.POST, request.FILES, instance=application)
-        if form.is_valid():
-            app = form.save(commit=False)
-            app.user = request.user
-            app.save()
-            
-            # --- CACHE INVALIDATION ---
-            cache_key = f"startup_data_{app.id}"
-            cache.delete(cache_key)
-            
-            return redirect("accounts:profile", username=request.user.username)
-    else:
-        form = ApplicationForm(instance=application)
-
-    return render(request, "accounts/seeking_investment.html", {"form": form})
-
-
-@login_required
-def investor_form(request):
-    if hasattr(request.user, "match_founder_profile"):
-        messages.warning(request, "Founders cannot submit investor profiles.")
-        return redirect("accounts:profile", username=request.user.username)
-
-    investor_profile = getattr(request.user, "match_investor_profile", None)
-
-    if request.method == "POST":
-        form = InvestorForm(request.POST, instance=investor_profile)
-        if form.is_valid():
-            app = form.save(commit=False)
-            app.user = request.user
-            app.save()
-            messages.success(request, "Investment mandate updated successfully.")
-            return redirect("matchmaking:bulletin_board")
-    else:
-        form = InvestorForm(instance=investor_profile)
-
-    return render(request, "accounts/investor_form.html", {"form": form})
-
-
-# =====================================================================
 # USER PROFILE DISPATCH LAYER
 # =====================================================================
 
@@ -153,7 +105,9 @@ def profile(request, username=None, pk=None):
     # 2. Data Retrieval
     application = getattr(viewed_user, "match_founder_profile", None)
     investor_application = getattr(viewed_user, "match_investor_profile", None)
-    
+    seller_application = getattr(viewed_user, "match_seller_profile", None)
+    buyer_application = getattr(viewed_user, "match_buyer_profile", None)
+
     dm_enabled = False
     if application and application.allow_direct_messages:
         dm_enabled = True
@@ -171,15 +125,44 @@ def profile(request, username=None, pk=None):
 
     # 3. Follow System
     is_following = False
+    mutual_connections = User.objects.none()
     if request.user.is_authenticated:
         is_following = Follow.objects.filter(follower=request.user, following=viewed_user).exists()
-    
+        if viewed_user != request.user:
+            viewer_following_ids = Follow.objects.filter(follower=request.user).values_list('following_id', flat=True)
+            owner_following_ids = Follow.objects.filter(follower=viewed_user).values_list('following_id', flat=True)
+            mutual_ids = set(viewer_following_ids) & set(owner_following_ids)
+            mutual_connections = User.objects.filter(id__in=mutual_ids)
+
     following_list = Follow.objects.filter(follower=viewed_user).select_related("following")
 
-    # 4. Privacy Gatekeeper
+    founder_milestones = application.milestones.all()[:10] if application else []
+
+    # 3b. Profile Visibility — owner's own choices on which sections show to others
+    show_contact_info = True
+    if viewed_user != request.user:
+        from usersettings.models import UserSettings
+        viewed_user_settings = UserSettings.for_user(viewed_user)
+        if not viewed_user_settings.show_job_postings:
+            user_jobs = []
+        if not viewed_user_settings.show_articles:
+            user_articles = []
+        if not viewed_user_settings.show_business_connections:
+            following_list = Follow.objects.none()
+        if not viewed_user_settings.show_milestones:
+            founder_milestones = []
+        show_contact_info = viewed_user_settings.show_contact_info
+
+    # 4. Privacy Gatekeeper — matchmaking.Application has no allowed_viewers
+    # whitelist (that field only exists on the legacy accounts models and is
+    # never populated anywhere), so a private profile is owner-only for now.
+    # Mirrors the founder-only gate exactly: seller listings get the same
+    # owner-only treatment as founder profiles; buyer/investor mandates do
+    # not (their privacy only affects matching/discovery, not the page itself).
     if viewed_user != request.user and application and getattr(application, "is_private", False):
-        if not application.allowed_viewers.filter(id=request.user.id).exists():
-            return render(request, "accounts/profile_private.html", {"profile_user": viewed_user})
+        return render(request, "accounts/profile_private.html", {"profile_user": viewed_user})
+    if viewed_user != request.user and seller_application and getattr(seller_application, "is_private", False):
+        return render(request, "accounts/profile_private.html", {"profile_user": viewed_user})
 
     # 5. Zelda Advantage Engine
     zelda_score, founder_data_json = None, None
@@ -204,15 +187,34 @@ def profile(request, username=None, pk=None):
     getattr(request.user, 'match_investor_profile', None) is not None
     ) if request.user.is_authenticated else False
 
+    viewer_is_buyer = (
+        getattr(request.user, 'match_buyer_profile', None) is not None
+    ) if request.user.is_authenticated else False
+
     # Silent outcome tracking — investor viewing a founder's profile
     if viewer_is_investor and application and viewed_user != request.user:
         from matchmaking.models import log_investor_event
         log_investor_event(request.user, application, 'view')
 
+    # Same pattern for the Business Marketplace — a buyer viewing a seller listing
+    if viewer_is_buyer and seller_application and viewed_user != request.user:
+        from matchmaking.models import log_buyer_event
+        log_buyer_event(request.user, seller_application, 'view')
+
+    profile_view_count = None
+    if application:
+        from matchmaking.models import InvestorInterestEvent
+        profile_view_count = InvestorInterestEvent.objects.filter(founder=application, event_type='view').count()
+    elif seller_application:
+        from matchmaking.models import AcquisitionInterestEvent
+        profile_view_count = AcquisitionInterestEvent.objects.filter(seller=seller_application, event_type='view').count()
+
     context = {
         "profile_user": viewed_user,
         "application": application,
         "investor_application": investor_application,
+        "seller_application": seller_application,
+        "buyer_application": buyer_application,
         "zelda_score": zelda_score,
         "founder_data_json": founder_data_json,
         "is_following": is_following,
@@ -221,6 +223,11 @@ def profile(request, username=None, pk=None):
         "user_jobs": user_jobs,
         "dm_enabled": dm_enabled,
         "viewer_is_investor": viewer_is_investor,
+        "viewer_is_buyer": viewer_is_buyer,
+        "profile_view_count": profile_view_count,
+        "show_contact_info": show_contact_info,
+        "mutual_connections": mutual_connections,
+        "founder_milestones": founder_milestones,
 
     }
 
@@ -349,7 +356,7 @@ def zelda_dashboard_view(request):
     # 2. If it is STILL None, the database record genuinely doesn't exist for this user.
     if not application:
         messages.warning(request, "Please initialize your founder profile to access the Zelda Dashboard.")
-        return redirect('accounts:seeking_investment')
+        return redirect('usersettings:edit_founder_profile')
     
     # 3. Safely pass the data to the template
     context = {

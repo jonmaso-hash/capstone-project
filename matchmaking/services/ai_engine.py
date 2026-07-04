@@ -90,9 +90,9 @@ def generate_zelda_summary(page_text: str) -> str:
     
     try:
         response = client.models.generate_content(
-    model="gemini-3.5-flash", 
-    contents=f"User Query: {user_prompt}. Context: {final_context_feed}"
-    )
+            model="gemini-3.5-flash",
+            contents=prompt
+        )
         return response.text.strip() if response.text else "Failed to capture summary transmission values."
     except Exception as e:
         logger.error(f"[Zelda Assistant Exception]: Executive page parsing collapsed: {e}")

@@ -14,7 +14,10 @@
                 Found <span class="badge bg-primary px-2 py-1 fs-6">{{ results|length }}</span> matchmaking profiles corresponding to your active filter settings.
             </p>
         </div>
-        <div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'matchmaking:export_search_csv' %}?{{ request.GET.urlencode }}" class="btn btn-outline-success btn-sm rounded-pill px-3 shadow-sm d-flex align-items-center gap-2">
+                <i class="bi bi-file-earmark-spreadsheet"></i> Export CSV
+            </a>
             <!-- Trigger button to recall the sidebar directly from the results page -->
             <button class="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-sm d-flex align-items-center gap-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#globalSearchSidebar">
                 <i class="bi bi-sliders"></i> Modify Parameters
@@ -29,6 +32,12 @@
             {% if filters.stage %}
                 <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm">Stage: <strong>{{ filters.stage }}</strong></span>
             {% endif %}
+            {% if filters.industry %}
+                <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm">Industry: <strong>{{ filters.industry }}</strong></span>
+            {% endif %}
+            {% if filters.location %}
+                <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm">Location: <strong>{{ filters.location }}</strong></span>
+            {% endif %}
             {% if filters.state %}
                 <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm">Location keyword: <strong>"{{ filters.state }}"</strong></span>
             {% endif %}
@@ -38,7 +47,7 @@
             {% if filters.revenue %}
                 <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm">Min Revenue: <strong>${{ filters.revenue }}</strong></span>
             {% endif %}
-            {% if not filters.stage and not filters.state and not filters.capital and not filters.revenue %}
+            {% if not filters.stage and not filters.state and not filters.industry and not filters.location and not filters.capital and not filters.revenue %}
                 <span class="text-muted small italic">None applied (Showing entire database portfolio)</span>
             {% endif %}
         </div>

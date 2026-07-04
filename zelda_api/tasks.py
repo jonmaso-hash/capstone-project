@@ -72,6 +72,56 @@ def process_document_pipeline(self, document_id: int, raw_text: str):
             return {'status': 'error', 'error': str(exc), 'retries_exhausted': True}
 
 
+@shared_task(bind=True, max_retries=3)
+def process_valuation_document_task(self, document_id: int, raw_text: str):
+    """
+    Parallel to process_document_pipeline for document_type='business_valuation':
+    chunking → embedding → analysis → valuation report generation. No Truth
+    Delta trigger — valuation isn't a fundraising claim to verify.
+    """
+    try:
+        logger.info(f"[Celery] Starting valuation pipeline for document {document_id}")
+
+        document = DocumentSource.objects.get(id=document_id)
+
+        deleted_count, _ = DocumentChunk.objects.filter(document_id=document_id).delete()
+        if deleted_count > 0:
+            logger.info(f"[Celery] Purged {deleted_count} existing chunks for document {document_id}")
+
+        result = intelligence_pipeline.process_valuation_document(document, raw_text)
+
+        if result['status'] == 'success':
+            logger.info(f"[Celery] Valuation pipeline complete for document {document_id}")
+            return {
+                'status': 'success',
+                'document_id': document_id,
+                'chunks': result['chunks_created'],
+                'insights': result['insights_extracted'],
+            }
+        else:
+            logger.error(f"[Celery] Valuation pipeline failed for document {document_id}: {result['error']}")
+            raise Exception(result['error'])
+
+    except DocumentSource.DoesNotExist:
+        logger.error(f"Document {document_id} not found")
+        return {'status': 'error', 'error': 'Document not found'}
+
+    except Exception as exc:
+        logger.error(f"Valuation pipeline error for document {document_id}: {str(exc)}")
+
+        retry_count = self.request.retries
+        if retry_count < self.max_retries:
+            countdown = 2 ** retry_count
+            self.retry(exc=exc, countdown=countdown)
+        else:
+            document = DocumentSource.objects.get(id=document_id)
+            document.status = 'error'
+            document.error_message = f"Valuation pipeline failed after {self.max_retries} retries: {str(exc)}"
+            document.save()
+
+            return {'status': 'error', 'error': str(exc), 'retries_exhausted': True}
+
+
 @shared_task
 def process_document_chunking_only(document_id: int, raw_text: str):
     """

@@ -1,7 +1,6 @@
 # zelda_api/serializers.py
 from rest_framework import serializers
 from .models import ArticlePost
-from jobs_api.models import JobListing, JobApplication
 
 # 1. MODEL-BASED SERIALIZERS (Pinnacle-compliant)
 # These now automatically leverage the Foundry protocol via the model method.

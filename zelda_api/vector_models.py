@@ -25,6 +25,7 @@ class DocumentSource(FoundryStandardMixin, models.Model):
         ('whitepaper', 'Whitepaper'),
         ('research', 'Research Report'),
         ('portfolio', 'Investor Portfolio'),
+        ('business_valuation', 'Business Valuation Request'),
         ('other', 'Other'),
     ]
     
@@ -237,6 +238,8 @@ class IntelligenceMemo(FoundryStandardMixin, models.Model):
     financial_analysis = models.TextField(blank=True, help_text="Revenue, burn, runway, unit economics")
     risk_assessment = models.TextField(blank=True, help_text="Key risks and mitigation strategies")
     investment_thesis = models.TextField(help_text="Why this is investable")
+    investment_readiness = models.TextField(blank=True, help_text="0-100 readiness score with strengths/weaknesses")
+    questions_for_management = models.TextField(blank=True, help_text="Open questions the deck does not answer")
     
     # Source tracking
     insights_used = models.ManyToManyField(IntelligenceInsight, related_name='memos')
@@ -282,3 +285,47 @@ class IntelligenceMemo(FoundryStandardMixin, models.Model):
     
     def __str__(self):
         return f"Memo: {self.document.filename}"
+
+
+class BusinessValuationReport(FoundryStandardMixin, models.Model):
+    """
+    Business memo + risk report + valuation summary for a
+    document_type='business_valuation' DocumentSource. A parallel output
+    to IntelligenceMemo (which is fundraising-shaped and OneToOne to
+    DocumentSource, so it can't also hold a valuation report) — generated
+    by ZeldaIntelligencePipelineV2.process_valuation_document() instead of
+    the standard memo path.
+    """
+    source_name = "business_valuation_reports"
+
+    document = models.OneToOneField(DocumentSource, on_delete=models.CASCADE, related_name='valuation_report')
+
+    business_overview = models.TextField(blank=True)
+    financial_summary = models.TextField(blank=True)
+    risk_report = models.TextField(blank=True)
+    valuation_summary = models.TextField(blank=True)
+    valuation_low = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    valuation_high = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    confidence_score = models.FloatField(default=0.0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        app_label = 'zelda_api'
+        verbose_name = "Business Valuation Report"
+        verbose_name_plural = "Business Valuation Reports"
+
+    def get_serialized_data(self):
+        return {
+            "id": self.id,
+            "document_id": self.document.id,
+            "valuation_summary": self.valuation_summary[:500],
+            "valuation_low": str(self.valuation_low) if self.valuation_low is not None else None,
+            "valuation_high": str(self.valuation_high) if self.valuation_high is not None else None,
+            "confidence_score": self.confidence_score,
+            "created_at": self.created_at.isoformat(),
+        }
+
+    def __str__(self):
+        return f"Valuation: {self.document.filename}"

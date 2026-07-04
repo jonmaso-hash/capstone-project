@@ -54,6 +54,39 @@
         box-shadow: 0 8px 24px rgba(251, 191, 36, 0.3) !important;
     }
 
+    /* Journey stage color states — the icon guides founders/investors through
+       onboarding, then rotates ongoing engagement nudges once "green". */
+    #ai-agent-toggle.zelda-stage-red { border-color: var(--zelda-danger) !important; }
+    #ai-agent-toggle.zelda-stage-red .zelda-stage-pulse-dot { background: var(--zelda-danger) !important; }
+    #ai-agent-toggle.zelda-stage-red i.bi-robot { color: var(--zelda-danger) !important; }
+
+    #ai-agent-toggle.zelda-stage-yellow { border-color: var(--zelda-accent) !important; }
+    #ai-agent-toggle.zelda-stage-yellow .zelda-stage-pulse-dot { background: var(--zelda-accent) !important; }
+    #ai-agent-toggle.zelda-stage-yellow i.bi-robot { color: var(--zelda-accent) !important; }
+
+    #ai-agent-toggle.zelda-stage-green { border-color: var(--zelda-success) !important; }
+    #ai-agent-toggle.zelda-stage-green .zelda-stage-pulse-dot { background: var(--zelda-success) !important; }
+    #ai-agent-toggle.zelda-stage-green i.bi-robot { color: var(--zelda-success) !important; }
+
+    #zelda-unread-badge {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        min-width: 20px;
+        height: 20px;
+        border-radius: 999px;
+        background: var(--zelda-danger);
+        color: white;
+        font-size: 0.7rem;
+        font-weight: bold;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 0 4px;
+        border: 2px solid white;
+        z-index: 4;
+    }
+
     /* Sidebar */
     #aiAgentSidebar {
         animation: slideInRight 0.4s ease-out;
@@ -284,15 +317,16 @@
 </style>
 
 <!-- ZELDA AI ASSISTANT BUTTON -->
-<button 
-    id="ai-agent-toggle" 
-    class="btn btn-primary rounded-circle position-fixed bottom-0 end-0 m-4 d-flex align-items-center justify-content-center shadow-lg" 
-    style="width: 70px; height: 70px; z-index: 1050;" 
+<button
+    id="ai-agent-toggle"
+    class="btn btn-primary rounded-circle position-fixed bottom-0 end-0 m-4 d-flex align-items-center justify-content-center shadow-lg"
+    style="width: 70px; height: 70px; z-index: 1050;"
     title="Open Zelda Intelligence Panel">
     <div style="position: relative; width: 40px; height: 40px;">
-        <div class="position-absolute w-100 h-100 rounded-circle bg-warning dynamic-pulse"></div>
+        <div class="position-absolute w-100 h-100 rounded-circle bg-warning dynamic-pulse zelda-stage-pulse-dot"></div>
         <i class="bi bi-robot text-warning fs-2 dynamic-glow position-relative z-3"></i>
     </div>
+    <span id="zelda-unread-badge">0</span>
 </button>
 
 <!-- ZELDA INTELLIGENCE SIDEBAR -->
@@ -352,6 +386,9 @@
             <button class="zelda-tab" data-tab="truth-delta">
                 <i class="bi bi-shield-check me-2"></i>Truth Delta
             </button>
+            <button class="zelda-tab" data-tab="progress">
+                <i class="bi bi-signpost-2 me-2"></i>My Progress
+            </button>
         </div>
 
         </div>
@@ -377,6 +414,14 @@
                         </button>
                     </div>
                 </form>
+            </div>
+
+            <!-- Search Results -->
+            <div class="zelda-card p-4" id="search-results-card" style="display: none;">
+                <h6 class="fw-bold text-dark mb-3">
+                    <i class="bi bi-list-ul text-success me-2"></i>Results
+                </h6>
+                <div id="search-results-list" class="d-flex flex-column gap-2"></div>
             </div>
 
             <!-- Vector Search (Document-specific) -->
@@ -554,6 +599,26 @@
             </div>
         </div>
 
+        <!-- TAB: MY PROGRESS -->
+        <div id="tab-progress" class="tab-content" style="display: none; flex-direction: column; gap: 1rem;">
+            <div class="zelda-card p-4">
+                <h6 class="fw-bold text-dark mb-3">
+                    <i class="bi bi-signpost-2 text-primary me-2"></i>Your Journey
+                </h6>
+                <div id="progress-loading" class="text-center py-4">
+                    <div class="spinner-border spinner-border-sm text-warning me-2"></div>
+                    <span class="small text-muted">Loading your progress...</span>
+                </div>
+                <div id="progress-content" style="display:none;">
+                    <p id="progress-headline" class="text-secondary small mb-3"></p>
+                    <div id="progress-checklist" class="d-flex flex-column gap-2"></div>
+                    <a id="progress-next-action" href="#" class="zelda-button d-inline-block mt-3" style="text-decoration:none; display:none;">
+                        <i class="bi bi-arrow-right-circle me-1"></i><span>Continue</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <!-- EXECUTION LOG -->
         <div class="zelda-log" id="agent-response-log">
         <div class="zelda-log" id="agent-response-log">
@@ -657,11 +722,10 @@
                 addLogEntry(data.response, 'success');
             }
 
+            renderSearchResults(data.results || []);
+
             if (data.results && data.results.length > 0) {
                 addLogEntry(`Found ${data.results.length} results`, 'success');
-                data.results.slice(0, 3).forEach((result, i) => {
-                    addLogEntry(`${i+1}. ${result.title || result.company_name} - ${result.description || ''}`, 'info');
-                });
             } else {
                 addLogEntry('No results found', 'warning');
             }
@@ -672,6 +736,56 @@
 
         document.getElementById('globalAgentQuery').value = '';
     });
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // SEARCH RESULT CARDS — founders get a one-click "Analyze with Zelda" button
+    // instead of forcing a trip to their profile page first.
+    // ──────────────────────────────────────────────────────────────────────────
+
+    function renderSearchResults(results) {
+        const card = document.getElementById('search-results-card');
+        const list = document.getElementById('search-results-list');
+
+        if (!results.length) {
+            card.style.display = 'none';
+            list.innerHTML = '';
+            return;
+        }
+
+        list.innerHTML = results.slice(0, 8).map((result, i) => {
+            const title = result.title || result.company_name || 'Result';
+            const desc = result.executive_summary || result.description || '';
+            const statusId = `search-result-status-${i}`;
+
+            let analyzeBtn = '';
+            if (result.type === 'Founder Profile' && result.username) {
+                if (result.has_pitch_deck) {
+                    analyzeBtn = `
+                        <button class="zelda-button" style="padding: 0.4rem 0.9rem; font-size: 0.8rem;"
+                                onclick="analyzeFounderWithZelda(this, '${result.username}', '${(result.startup_name || title).replace(/'/g, "\\'")}', {statusElementId: '${statusId}', preferredTab: 'intelligence'})">
+                            <i class="bi bi-cpu me-1"></i>Analyze with Zelda
+                        </button>`;
+                } else {
+                    analyzeBtn = `<span class="text-muted small"><i class="bi bi-file-earmark-x me-1"></i>No pitch deck uploaded yet</span>`;
+                }
+            }
+
+            return `
+                <div class="zelda-card p-3">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <div>
+                            <a href="${result.url}" class="fw-bold text-dark text-decoration-none small d-block mb-1">${title}</a>
+                            <p class="text-muted small mb-0">${desc}</p>
+                        </div>
+                    </div>
+                    ${analyzeBtn ? `<div class="mt-2">${analyzeBtn}</div>` : ''}
+                    <div id="${statusId}" class="small text-muted mt-1"></div>
+                </div>
+            `;
+        }).join('');
+
+        card.style.display = 'block';
+    }
 
     // ──────────────────────────────────────────────────────────────────────────
     // DOCUMENT UPLOAD
@@ -810,6 +924,48 @@
     });
 
     // ──────────────────────────────────────────────────────────────────────────
+    // CONFIDENCE GAUGE — shared by memo, intelligence brief, and the standalone
+    // valuation report page. Scores from the API are 0.0-1.0; this renders them
+    // as a filled bar, an "N/10" label, and a one-line explanation.
+    // ──────────────────────────────────────────────────────────────────────────
+
+    function renderConfidenceGauge(containerEl, score0to1, label) {
+        if (!containerEl) return;
+        const pct = Math.max(0, Math.min(100, Math.round((score0to1 || 0) * 100)));
+        const tenScale = (Math.round(pct / 10 * 10) / 10).toFixed(1).replace(/\.0$/, '');
+
+        let color, explanation;
+        if (pct >= 70) {
+            color = '#198754';
+            explanation = 'Strong evidence base — most claims are well-supported by the source documents.';
+        } else if (pct >= 40) {
+            color = '#ffc107';
+            explanation = 'Partial evidence base — some claims are inferred or missing supporting detail.';
+        } else {
+            color = '#dc3545';
+            explanation = 'Limited evidence base — treat this output as a starting point, not a final answer.';
+        }
+
+        containerEl.innerHTML = `
+            <div class="d-flex justify-content-between align-items-baseline mb-1">
+                <span class="small fw-bold text-dark">${label || 'Confidence'}</span>
+                <span class="fw-bold small" style="color: ${color};">${tenScale}/10</span>
+            </div>
+            <div style="height: 8px; background: #e9ecef; border-radius: 999px; overflow: hidden;">
+                <div class="zelda-gauge-fill" style="height: 100%; width: 0%; background: ${color}; border-radius: 999px; transition: width 0.6s ease;"></div>
+            </div>
+            <p class="text-muted mb-0 mt-1" style="font-size: 0.75rem;">${explanation}</p>
+        `;
+
+        // setTimeout (not requestAnimationFrame) so the fill still animates in
+        // backgrounded/unfocused tabs, where rAF callbacks can be paused indefinitely.
+        setTimeout(() => {
+            const fill = containerEl.querySelector('.zelda-gauge-fill');
+            if (fill) fill.style.width = pct + '%';
+        }, 20);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
     // MEMO VIEWER
     // ──────────────────────────────────────────────────────────────────────────
 
@@ -851,20 +1007,17 @@
         let memoHTML = `
     <div class="mb-4">
         <h5 class="fw-bold text-dark mb-3">${data.document_name || 'Untitled'}</h5>
-        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
             <div>
                 <div class="small text-muted">Recommendation</div>
                 <strong style="color: var(--zelda-accent);">${(data.recommendation || 'pending').replace('_', ' ').toUpperCase()}</strong>
-            </div>
-            <div>
-                <div class="small text-muted">Completeness</div>
-                <strong>${data.completeness_score != null ? Math.round(data.completeness_score * 100) + '%' : 'N/A'}</strong>
             </div>
             <div>
                 <div class="small text-muted">Citations</div>
                 <strong>${data.citations_count ?? '—'}</strong>
             </div>
         </div>
+        <div id="memo-confidence-gauge" class="mb-3"></div>
     </div>
 `;
             // Sections
@@ -876,6 +1029,8 @@
                 { key: 'financial_analysis', label: 'Financial Analysis' },
                 { key: 'risk_assessment', label: 'Risk Assessment' },
                 { key: 'investment_thesis', label: 'Investment Thesis' },
+                { key: 'investment_readiness', label: 'Investment Readiness' },
+                { key: 'questions_for_management', label: 'Questions for Management' },
             ];
 
             sections.forEach(section => {
@@ -883,7 +1038,7 @@
                     memoHTML += `
                         <div class="mb-3">
                             <h6 class="fw-bold text-dark">${section.label}</h6>
-                            <p class="text-secondary small">${data.sections[section.key]}</p>
+                            <p class="text-secondary small" style="white-space: pre-line;">${data.sections[section.key]}</p>
                         </div>
                     `;
                 }
@@ -903,10 +1058,68 @@
             }
 
             document.getElementById('memo-content').innerHTML = memoHTML;
+            renderConfidenceGauge(document.getElementById('memo-confidence-gauge'), data.completeness_score, 'Memo Completeness');
             addLogEntry(`Memo loaded successfully for document ${docId}`, 'success');
 
         } catch (err) {
             addLogEntry(`Memo load error: ${err.message}`, 'error');
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // JOURNEY STATUS — colors the Zelda icon by onboarding/engagement stage,
+    // shows an unread-notification badge, and fills the "My Progress" tab.
+    // ──────────────────────────────────────────────────────────────────────────
+
+    async function loadJourneyStatus() {
+        try {
+            const response = await fetch(`${ZELDA_API}/journey-status/`, {
+                credentials: 'same-origin',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            });
+            if (!response.ok) return;
+            const data = await response.json();
+
+            const toggleBtn = document.getElementById('ai-agent-toggle');
+            if (toggleBtn) {
+                toggleBtn.classList.remove('zelda-stage-red', 'zelda-stage-yellow', 'zelda-stage-green');
+                toggleBtn.classList.add(`zelda-stage-${data.stage_color}`);
+            }
+
+            const badge = document.getElementById('zelda-unread-badge');
+            if (badge) {
+                if (data.unread_notifications > 0) {
+                    badge.textContent = data.unread_notifications > 9 ? '9+' : data.unread_notifications;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+
+            document.getElementById('progress-loading').style.display = 'none';
+            const content = document.getElementById('progress-content');
+            document.getElementById('progress-headline').textContent = data.headline;
+
+            const checklist = document.getElementById('progress-checklist');
+            checklist.innerHTML = data.checklist.map(item => `
+                <div class="d-flex align-items-center gap-2 small">
+                    <i class="bi ${item.done ? 'bi-check-circle-fill text-success' : 'bi-circle text-muted'}"></i>
+                    <span class="${item.done ? 'text-muted text-decoration-line-through' : 'text-dark'}">${item.label}</span>
+                </div>
+            `).join('');
+
+            const nextAction = document.getElementById('progress-next-action');
+            if (data.next_action_url) {
+                nextAction.href = data.next_action_url;
+                nextAction.style.display = 'inline-block';
+            } else {
+                nextAction.style.display = 'none';
+            }
+
+            content.style.display = 'block';
+        } catch (err) {
+            // Non-fatal — the icon just keeps its default look if this fails.
+            console.warn('[Zelda] journey status load failed:', err.message);
         }
     }
 
@@ -924,6 +1137,10 @@
                 toggleBtn.addEventListener('click', () => offcanvasInstance.show());
             }
         }
+
+        {% if user.is_authenticated %}
+        loadJourneyStatus();
+        {% endif %}
 
         addLogEntry('Zelda Intelligence initialized', 'success');
     });
@@ -991,6 +1208,46 @@
         }
     }
 
+    // ── Resolve a founder's DocumentSource and open Zelda to the right tab ──
+    // Shared by profile.html (single button) and investor_dashboard.html
+    // (per-match-card buttons) — takes the button element itself so it works
+    // regardless of how many instances are on the page at once.
+    async function analyzeFounderWithZelda(buttonElement, founderUsername, companyName, options = {}) {
+        const statusEl = options.statusElementId ? document.getElementById(options.statusElementId) : null;
+        const preferredTab = options.preferredTab || 'intelligence';
+        const originalHTML = buttonElement.innerHTML;
+
+        buttonElement.disabled = true;
+        buttonElement.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Analyzing...';
+        if (statusEl) statusEl.textContent = 'Connecting to Zelda...';
+
+        try {
+            const response = await fetch(`/api/v1/zelda/analyze/founder/${founderUsername}/`, {
+                credentials: 'include',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            });
+
+            const data = await response.json();
+
+            if (data.status === 'ready') {
+                if (statusEl) statusEl.textContent = `✓ Loading ${companyName} brief...`;
+                openZeldaIntelligence(data.document_id, preferredTab);
+            } else if (data.status === 'processing') {
+                if (statusEl) statusEl.textContent = '⚙ Analysis queued — opening Zelda...';
+                openZeldaIntelligence(data.document_id, 'analyze');
+            } else if (data.status === 'no_deck') {
+                if (statusEl) statusEl.textContent = '⚠ No pitch deck uploaded yet.';
+            } else {
+                if (statusEl) statusEl.textContent = `✗ ${data.message}`;
+            }
+        } catch (err) {
+            if (statusEl) statusEl.textContent = `✗ Error: ${err.message}`;
+        } finally {
+            buttonElement.innerHTML = originalHTML;
+            buttonElement.disabled = false;
+        }
+    }
+
     async function loadIntelligenceBrief(founderId) {
         const loading = document.getElementById('intelligence-loading');
         const empty = document.getElementById('intelligence-empty');
@@ -1012,24 +1269,26 @@
             let html = `<div class="mb-3">
                 <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill mb-3">
                     ${data.document_name || 'Intelligence Brief'}
-                </span>`;
+                </span>
+                <div id="brief-confidence-gauge" class="mt-2 mb-1"></div>`;
 
             if (data.sections) {
                 const sections = [
                     { key: 'executive_summary', label: 'Executive Summary' },
-                    { key: 'market_opportunity', label: 'Market Opportunity' },
-                    { key: 'product_analysis', label: 'Product Analysis' },
-                    { key: 'traction_metrics', label: 'Traction & Metrics' },
+                    { key: 'problem_solution', label: 'Problem & Solution' },
+                    { key: 'market_analysis', label: 'Market Opportunity' },
                     { key: 'team_assessment', label: 'Team Assessment' },
-                    { key: 'financial_overview', label: 'Financial Overview' },
-                    { key: 'risk_factors', label: 'Risk Factors' },
+                    { key: 'financial_analysis', label: 'Financial Overview' },
+                    { key: 'risk_assessment', label: 'Risk Factors' },
                     { key: 'investment_thesis', label: 'Investment Thesis' },
+                    { key: 'investment_readiness', label: 'Investment Readiness' },
+                    { key: 'questions_for_management', label: 'Questions for Management' },
                 ];
                 sections.forEach(s => {
                     if (data.sections[s.key]) {
                         html += `<div class="mb-3 p-3 bg-light rounded-3">
                             <h6 class="fw-bold text-dark mb-1" style="font-size:0.82rem;">${s.label}</h6>
-                            <p class="text-secondary small mb-0" style="line-height:1.6;">${data.sections[s.key]}</p>
+                            <p class="text-secondary small mb-0" style="line-height:1.6; white-space: pre-line;">${data.sections[s.key]}</p>
                         </div>`;
                     }
                 });
@@ -1037,6 +1296,7 @@
 
             html += '</div>';
             content.innerHTML = html;
+            renderConfidenceGauge(document.getElementById('brief-confidence-gauge'), data.completeness_score, 'Analysis Completeness');
             content.style.display = 'block';
             addLogEntry(`Intelligence brief loaded for document ${founderId}`, 'success');
 

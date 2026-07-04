@@ -21,17 +21,28 @@
                     <i class="bi bi-arrow-left me-1"></i> Back to Venture Insights
                 </a>
                 <!-- Quick Favorite Toggle -->
-                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 btn-favorite" title="Save to Favorites">
-                    <i class="bi bi-heart me-1"></i> Favorite
+                {% if article.likes_enabled and user.is_authenticated %}
+                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 btn-favorite" title="Save to Favorites"
+                        id="favBtn" data-pk="{{ article.pk }}"
+                        data-url="{% url 'blog:toggle_favorite' article.pk %}">
+                    <i class="bi {% if user in article.favorites.all %}bi-heart-fill text-danger{% else %}bi-heart{% endif %} me-1" id="favIcon"></i>
+                    <span id="favLabel">{% if user in article.favorites.all %}Favorited{% else %}Favorite{% endif %}</span>
                 </button>
+                {% endif %}
             </nav>
 
             <!-- Article Header -->
             <header class="mb-5">
                 {% if article.company_name %}
-                <span class="badge bg-primary-subtle text-primary mb-3 px-3 py-2 rounded-pill fw-bold">
-                    {{ article.company_name }}
-                </span>
+                    {% if article.author %}
+                    <a href="{% url 'accounts:profile' article.author.username %}" class="text-decoration-none">
+                    {% endif %}
+                    <span class="badge bg-primary-subtle text-primary mb-3 px-3 py-2 rounded-pill fw-bold">
+                        {{ article.company_name }}
+                    </span>
+                    {% if article.author %}
+                    </a>
+                    {% endif %}
                 {% endif %}
                 
                 <h1 class="display-4 fw-bold mb-4">{{ article.title }}</h1>
@@ -42,7 +53,7 @@
                     </div>
                     <div>
                         <p class="mb-0 fw-bold text-dark">{{ article.author.username }}</p>
-                        <small>{{ article.created_on|date:"F d, Y" }} • {{ article.body|wordcount }} words</small>
+                        <small>{{ article.created_on|date:"F d, Y" }} • {{ article.body|wordcount }} words • <i class="bi bi-eye me-1"></i>{{ article.views }} views</small>
                     </div>
                 </div>
             </header>
@@ -68,7 +79,11 @@
                 </div>
 
                 <!-- Comment Form -->
-                {% if user.is_authenticated %}
+                {% if not article.comments_enabled %}
+                <div class="alert alert-secondary rounded-4 text-center py-4 mb-5">
+                    <p class="mb-0">The author has turned off comments on this article.</p>
+                </div>
+                {% elif user.is_authenticated %}
                 <div class="card border-0 bg-light rounded-4 p-4 mb-5 shadow-sm">
                     <form method="post" action="{% url 'blog:add_comment' article.pk %}">
                         {% csrf_token %}
@@ -113,4 +128,42 @@
         </div>
     </div>
 </div>
+
+<form style="display: none;">{% csrf_token %}</form>
 {% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const favBtn = document.getElementById("favBtn");
+    if (!favBtn) return;
+
+    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    const csrftoken = csrfInput ? csrfInput.value : '';
+
+    favBtn.addEventListener("click", function () {
+        fetch(favBtn.dataset.url, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": csrftoken,
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status !== "success") return;
+            const icon = document.getElementById("favIcon");
+            const label = document.getElementById("favLabel");
+            if (data.is_favorited) {
+                icon.className = "bi bi-heart-fill text-danger me-1";
+                label.textContent = "Favorited";
+            } else {
+                icon.className = "bi bi-heart me-1";
+                label.textContent = "Favorite";
+            }
+        })
+        .catch(err => console.error("Favorite toggle failed:", err));
+    });
+});
+</script>
+{% endblock scripts %}

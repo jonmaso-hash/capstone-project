@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "django-dev-server",
+      "runtimeExecutable": "venv/Scripts/python.exe",
+      "runtimeArgs": ["manage.py", "runserver", "8010"],
+      "port": 8010
+    },
+    {
+      "name": "celery-worker",
+      "runtimeExecutable": "venv/Scripts/celery.exe",
+      "runtimeArgs": ["-A", "config", "worker", "--loglevel=info", "--pool=solo"],
+      "port": 0
+    },
+    {
+      "name": "celery-beat",
+      "runtimeExecutable": "venv/Scripts/celery.exe",
+      "runtimeArgs": ["-A", "config", "beat", "--loglevel=info"],
+      "port": 0
+    }
+  ]
+}

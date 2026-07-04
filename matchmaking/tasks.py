@@ -1,7 +1,14 @@
+import logging
 from celery import shared_task
 from django.core.cache import cache
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
 from .models import Application
 from matchmaking.services.web_crawling import get_live_startup_data
+
+logger = logging.getLogger(__name__)
 
 
 @shared_task
@@ -22,3 +29,514 @@ def crawl_startup_data_task(application_id):
         return f"Application with id {application_id} not found."
     except Exception as e:
         return f"Error crawling data: {str(e)}"
+
+
+@shared_task(bind=True, max_retries=3)
+def send_weekly_digests(self):
+    """
+    Weekly summary for investors: new founders in their focus area, and new
+    milestones from founders they follow. Fires an in-app Notification
+    (always works) and best-effort emails it too (dev SMTP may not be
+    configured, so email failures must never break the in-app notification).
+
+    Per-investor notification/email failures are already isolated below
+    (logged, not fatal) — the retry here is for something catastrophic
+    failing the whole batch (e.g. a transient DB error), not per-investor
+    noise.
+    """
+    try:
+        return _send_weekly_digests_body()
+    except Exception as exc:
+        logger.error(f"send_weekly_digests failed: {str(exc)}")
+        retry_count = self.request.retries
+        if retry_count < self.max_retries:
+            self.retry(exc=exc, countdown=2 ** retry_count)
+        else:
+            logger.error(f"send_weekly_digests exhausted {self.max_retries} retries: {str(exc)}")
+            return {'status': 'error', 'error': str(exc), 'retries_exhausted': True}
+
+
+def _send_weekly_digests_body():
+    from .models import InvestorApplication, FounderMilestone, Follow
+    from notifications.models import Notification
+
+    week_ago = timezone.now() - timedelta(days=7)
+    sent_count = 0
+
+    for investor_profile in InvestorApplication.objects.filter(is_private=False).select_related('user'):
+        investor_user = investor_profile.user
+
+        # New founders in the last week matching this investor's stated focus
+        new_founders_qs = Application.objects.filter(
+            created_at__gte=week_ago, is_private=False
+        ).exclude(review_status='DENIED')
+        if investor_profile.investment_focus:
+            terms = [t.strip() for t in investor_profile.investment_focus.replace(',', ' ').split() if len(t.strip()) > 2]
+            if terms:
+                from django.db.models import Q
+                term_query = Q()
+                for term in terms:
+                    term_query |= Q(sector__icontains=term) | Q(description__icontains=term)
+                new_founders_qs = new_founders_qs.filter(term_query)
+        new_founder_count = new_founders_qs.count()
+
+        # New milestones from founders this investor follows
+        followed_user_ids = Follow.objects.filter(follower=investor_user).values_list('following_id', flat=True)
+        new_milestones = FounderMilestone.objects.filter(
+            created_at__gte=week_ago, founder__user_id__in=followed_user_ids
+        ).select_related('founder')
+        milestone_count = new_milestones.count()
+
+        if new_founder_count == 0 and milestone_count == 0:
+            continue  # nothing to report this week
+
+        summary_parts = []
+        if new_founder_count:
+            summary_parts.append(f"{new_founder_count} new founder{'s' if new_founder_count != 1 else ''} matching your focus")
+        if milestone_count:
+            summary_parts.append(f"{milestone_count} new milestone{'s' if milestone_count != 1 else ''} from founders you follow")
+        message = "Your weekly digest: " + " and ".join(summary_parts) + "."
+
+        try:
+            Notification.objects.create(
+                recipient=investor_user,
+                notification_type='WEEKLY_DIGEST',
+                message=message,
+                target_url='/matchmaking/dashboard/investor/'
+            )
+            sent_count += 1
+        except Exception as e:
+            logger.warning(f"Failed to create weekly digest notification for {investor_user.username}: {str(e)}")
+
+        try:
+            if investor_user.email:
+                body_lines = [message, ""]
+                if new_founder_count:
+                    body_lines.append("New founders:")
+                    for f in new_founders_qs[:10]:
+                        body_lines.append(f"- {f.company_name} ({f.sector}, {f.stage})")
+                    body_lines.append("")
+                if milestone_count:
+                    body_lines.append("New milestones:")
+                    for m in new_milestones[:10]:
+                        body_lines.append(f"- {m.founder.company_name}: {m.title}")
+                send_mail(
+                    subject="Your Interlink Foundry weekly digest",
+                    message="\n".join(body_lines),
+                    from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@interlinkfoundry.com'),
+                    recipient_list=[investor_user.email],
+                    fail_silently=True,
+                )
+        except Exception as e:
+            logger.warning(f"Failed to email weekly digest to {investor_user.username}: {str(e)}")
+
+    return {'status': 'success', 'digests_sent': sent_count}
+
+
+@shared_task(bind=True, max_retries=3)
+def snapshot_investor_predictions(self):
+    """
+    Invisible shadow-prediction system (Feature F4). For each investor,
+    reruns the exact scoring already used by investor_dashboard (AI similarity
+    + rule-based score, blended) to guess their next investment, and stashes
+    the top-5 ranked founders as an InvestorPredictionSnapshot. Never shown to
+    users — graded later, once that investor actually funds someone, by
+    grade_investor_prediction_snapshots (triggered from connection_action_view).
+
+    Skips investors with an unresolved snapshot newer than 7 days so this
+    doesn't spam duplicate rows between funding events.
+    """
+    try:
+        return _snapshot_investor_predictions_body()
+    except Exception as exc:
+        logger.error(f"snapshot_investor_predictions failed: {str(exc)}")
+        retry_count = self.request.retries
+        if retry_count < self.max_retries:
+            self.retry(exc=exc, countdown=2 ** retry_count)
+        else:
+            logger.error(f"snapshot_investor_predictions exhausted {self.max_retries} retries: {str(exc)}")
+            return {'status': 'error', 'error': str(exc), 'retries_exhausted': True}
+
+
+def _snapshot_investor_predictions_body():
+    from .models import InvestorApplication, Connection, InvestorPredictionSnapshot, InvestorInterestEvent
+    from .utils import calculate_rule_based_score, get_blended_match
+    from .services.ai_engine import calculate_similarity
+
+    week_ago = timezone.now() - timedelta(days=7)
+    snapshots_created = 0
+
+    for investor_profile in InvestorApplication.objects.filter(is_private=False).exclude(review_status='DENIED'):
+        recent_unresolved = InvestorPredictionSnapshot.objects.filter(
+            investor=investor_profile, is_resolved=False, created_at__gte=week_ago
+        ).exists()
+        if recent_unresolved:
+            continue
+
+        requested_ids = set(
+            Connection.objects.filter(investor=investor_profile).values_list('founder_id', flat=True)
+        )
+        founders = Application.objects.filter(is_private=False).exclude(review_status='DENIED').exclude(id__in=requested_ids)
+
+        ranked = []
+        for founder in founders:
+            if investor_profile.focus_vector and founder.description_vector:
+                try:
+                    ai_score = max(0.0, min(100.0, calculate_similarity(investor_profile.focus_vector, founder.description_vector) * 100))
+                except Exception:
+                    ai_score = 50.0
+            else:
+                ai_score = 50.0
+
+            rule_score = calculate_rule_based_score(application=founder, investor=investor_profile)
+            final_score = get_blended_match(ai_score, rule_score, application=founder, investor=investor_profile)
+            ranked.append((founder, final_score))
+
+        if not ranked:
+            continue
+
+        ranked.sort(key=lambda pair: pair[1], reverse=True)
+        top5 = ranked[:5]
+        predicted_founder, predicted_score = top5[0]
+
+        from django.db.models import Count
+        event_counts = {
+            row['event_type']: row['count']
+            for row in InvestorInterestEvent.objects.filter(investor=investor_profile.user)
+                .values('event_type').annotate(count=Count('id'))
+        }
+
+        InvestorPredictionSnapshot.objects.create(
+            investor=investor_profile,
+            predicted_founder=predicted_founder,
+            predicted_score=predicted_score,
+            runner_up_founders=[
+                {'founder_id': f.id, 'score': score} for f, score in top5[1:]
+            ],
+            snapshot_telemetry={
+                'event_counts': event_counts,
+                'has_portfolio': bool(investor_profile.portfolio_raw_text),
+                'has_focus_vector': bool(investor_profile.focus_vector),
+            },
+        )
+        snapshots_created += 1
+
+    return {'status': 'success', 'snapshots_created': snapshots_created}
+
+
+@shared_task
+def grade_investor_prediction_snapshots(investor_id, actual_funded_founder_id):
+    """
+    Grades every unresolved shadow-prediction snapshot for this investor
+    against the founder they actually just funded — comparable to a credit
+    score's post-hoc grading against real repayment behavior. Triggered from
+    connection_action_view when a deal is marked FUNDED.
+
+    Weighted 0-100: sector (25), stage (20), geography (15), vector
+    similarity (25), identity bonus (15, only if the exact founder predicted
+    was the one funded). An exact match is floored at 90 (A band) even if a
+    secondary field like geography is blank on the founder's profile —
+    "predicted the right founder" should never be graded down by missing data.
+    """
+    from .models import InvestorApplication, InvestorPredictionSnapshot
+    from .utils import _is_adjacent_stage
+    from .services.ai_engine import calculate_similarity
+
+    try:
+        investor_profile = InvestorApplication.objects.get(id=investor_id)
+        actual_founder = Application.objects.get(id=actual_funded_founder_id)
+    except (InvestorApplication.DoesNotExist, Application.DoesNotExist):
+        return {'status': 'error', 'message': 'Investor or founder not found'}
+
+    snapshots = InvestorPredictionSnapshot.objects.filter(investor=investor_profile, is_resolved=False)
+    graded_count = 0
+
+    for snapshot in snapshots:
+        predicted = snapshot.predicted_founder
+        reasons = []
+
+        is_exact_match = predicted.id == actual_founder.id
+        identity_bonus = 15 if is_exact_match else 0
+        if is_exact_match:
+            reasons.append("predicted the exact founder funded")
+
+        pred_sector = (predicted.sector or '').lower()
+        actual_sector = (actual_founder.sector or '').lower()
+        if pred_sector and pred_sector == actual_sector:
+            sector_score = 25
+            reasons.append(f"sector matched ({actual_founder.sector})")
+        else:
+            sector_score = 0
+
+        pred_stage = (predicted.stage or '').lower()
+        actual_stage = (actual_founder.stage or '').lower()
+        if pred_stage and pred_stage == actual_stage:
+            stage_score = 20
+            reasons.append(f"stage matched ({actual_founder.stage})")
+        elif _is_adjacent_stage(pred_stage, actual_stage):
+            stage_score = 10
+            reasons.append(f"stage was adjacent (predicted {predicted.stage}, funded {actual_founder.stage})")
+        else:
+            stage_score = 0
+
+        pred_geo = (predicted.geography or '').lower().strip()
+        actual_geo = (actual_founder.geography or '').lower().strip()
+        if pred_geo and actual_geo and (pred_geo == actual_geo or pred_geo in actual_geo or actual_geo in pred_geo):
+            geo_score = 15
+            reasons.append(f"geography matched ({actual_founder.geography})")
+        else:
+            geo_score = 0
+
+        if predicted.description_vector and actual_founder.description_vector:
+            try:
+                similarity = calculate_similarity(predicted.description_vector, actual_founder.description_vector)
+                vector_score = round(max(0.0, min(1.0, similarity)) * 25, 1)
+            except Exception:
+                vector_score = 12.5
+        else:
+            vector_score = 12.5  # no vectors to compare — neutral midpoint, not a penalty
+
+        total_score = identity_bonus + sector_score + stage_score + geo_score + vector_score
+        if is_exact_match:
+            # Guarantee the A band regardless of incidental gaps (e.g. blank
+            # geography) — correctly predicting the founder is what matters.
+            total_score = max(total_score, 90)
+
+        if total_score >= 90:
+            grade = 'A'
+        elif total_score >= 80:
+            grade = 'B'
+        elif total_score >= 65:
+            grade = 'C'
+        elif total_score >= 50:
+            grade = 'D'
+        else:
+            grade = 'F'
+
+        if not reasons:
+            reasons.append(f"predicted {predicted.company_name}, but actual funded founder shared no tracked signals")
+
+        explanation = (
+            f"Predicted {predicted.company_name} ({round(snapshot.predicted_score, 1)}% blended score); "
+            f"investor actually funded {actual_founder.company_name}. "
+            + "; ".join(reasons) + "."
+        )
+
+        snapshot.is_resolved = True
+        snapshot.resolved_at = timezone.now()
+        snapshot.actual_funded_founder = actual_founder
+        snapshot.grade = grade
+        snapshot.grade_score = round(total_score, 1)
+        snapshot.grade_explanation = explanation
+        snapshot.save(update_fields=[
+            'is_resolved', 'resolved_at', 'actual_funded_founder', 'grade', 'grade_score', 'grade_explanation'
+        ])
+        graded_count += 1
+
+    return {'status': 'success', 'graded_count': graded_count}
+
+
+@shared_task(bind=True, max_retries=3)
+def snapshot_buyer_predictions(self):
+    """
+    Business Marketplace equivalent of snapshot_investor_predictions (Feature
+    F4 extension). For each buyer, reruns the exact scoring already used by
+    buyer_dashboard (AI similarity + deal-economics rule score, blended) to
+    guess their next acquisition, and stashes the top-5 ranked sellers as a
+    BuyerPredictionSnapshot. Never shown to users — graded later, once that
+    buyer actually closes a deal, by grade_buyer_prediction_snapshots
+    (triggered from acquisition_connection_action_view).
+
+    Skips buyers with an unresolved snapshot newer than 7 days so this
+    doesn't spam duplicate rows between closed deals.
+    """
+    try:
+        return _snapshot_buyer_predictions_body()
+    except Exception as exc:
+        logger.error(f"snapshot_buyer_predictions failed: {str(exc)}")
+        retry_count = self.request.retries
+        if retry_count < self.max_retries:
+            self.retry(exc=exc, countdown=2 ** retry_count)
+        else:
+            logger.error(f"snapshot_buyer_predictions exhausted {self.max_retries} retries: {str(exc)}")
+            return {'status': 'error', 'error': str(exc), 'retries_exhausted': True}
+
+
+def _snapshot_buyer_predictions_body():
+    from .models import SellerApplication, BuyerApplication, AcquisitionConnection, BuyerPredictionSnapshot, AcquisitionInterestEvent
+    from .utils import calculate_deal_rule_based_score, get_deal_blended_match
+    from .services.ai_engine import calculate_similarity
+
+    week_ago = timezone.now() - timedelta(days=7)
+    snapshots_created = 0
+
+    for buyer_profile in BuyerApplication.objects.filter(is_private=False).exclude(review_status='DENIED'):
+        recent_unresolved = BuyerPredictionSnapshot.objects.filter(
+            buyer=buyer_profile, is_resolved=False, created_at__gte=week_ago
+        ).exists()
+        if recent_unresolved:
+            continue
+
+        requested_ids = set(
+            AcquisitionConnection.objects.filter(buyer=buyer_profile).values_list('seller_id', flat=True)
+        )
+        sellers = SellerApplication.objects.filter(is_private=False).exclude(review_status='DENIED').exclude(id__in=requested_ids)
+
+        ranked = []
+        for seller in sellers:
+            if buyer_profile.focus_vector and seller.description_vector:
+                try:
+                    ai_score = max(0.0, min(100.0, calculate_similarity(buyer_profile.focus_vector, seller.description_vector) * 100))
+                except Exception:
+                    ai_score = 50.0
+            else:
+                ai_score = 50.0
+
+            rule_score = calculate_deal_rule_based_score(seller=seller, buyer=buyer_profile)
+            final_score = get_deal_blended_match(ai_score, rule_score, seller=seller, buyer=buyer_profile)
+            ranked.append((seller, final_score))
+
+        if not ranked:
+            continue
+
+        ranked.sort(key=lambda pair: pair[1], reverse=True)
+        top5 = ranked[:5]
+        predicted_seller, predicted_score = top5[0]
+
+        from django.db.models import Count
+        event_counts = {
+            row['event_type']: row['count']
+            for row in AcquisitionInterestEvent.objects.filter(buyer=buyer_profile.user)
+                .values('event_type').annotate(count=Count('id'))
+        }
+
+        BuyerPredictionSnapshot.objects.create(
+            buyer=buyer_profile,
+            predicted_seller=predicted_seller,
+            predicted_score=predicted_score,
+            runner_up_sellers=[
+                {'seller_id': s.id, 'score': score} for s, score in top5[1:]
+            ],
+            snapshot_telemetry={
+                'event_counts': event_counts,
+                'has_focus_vector': bool(buyer_profile.focus_vector),
+            },
+        )
+        snapshots_created += 1
+
+    return {'status': 'success', 'snapshots_created': snapshots_created}
+
+
+@shared_task
+def grade_buyer_prediction_snapshots(buyer_id, actual_closed_seller_id):
+    """
+    Grades every unresolved shadow-prediction snapshot for this buyer
+    against the seller listing they actually just closed on — mirrors
+    grade_investor_prediction_snapshots. Triggered from
+    acquisition_connection_action_view when a deal is marked CLOSED.
+
+    Weighted 0-100: industry (25), deal-size fit (20), deal-structure match
+    (15), vector similarity (25), identity bonus (15, only if the exact
+    seller predicted was the one closed). An exact match is floored at 90
+    (A band) even if a secondary field is blank — "predicted the right
+    seller" should never be graded down by missing data.
+    """
+    from .models import BuyerApplication, SellerApplication, BuyerPredictionSnapshot
+    from .services.ai_engine import calculate_similarity
+
+    try:
+        buyer_profile = BuyerApplication.objects.get(id=buyer_id)
+        actual_seller = SellerApplication.objects.get(id=actual_closed_seller_id)
+    except (BuyerApplication.DoesNotExist, SellerApplication.DoesNotExist):
+        return {'status': 'error', 'message': 'Buyer or seller not found'}
+
+    snapshots = BuyerPredictionSnapshot.objects.filter(buyer=buyer_profile, is_resolved=False)
+    graded_count = 0
+
+    for snapshot in snapshots:
+        predicted = snapshot.predicted_seller
+        reasons = []
+
+        is_exact_match = predicted.id == actual_seller.id
+        identity_bonus = 15 if is_exact_match else 0
+        if is_exact_match:
+            reasons.append("predicted the exact seller closed")
+
+        pred_industry = (predicted.industry or '').lower()
+        actual_industry = (actual_seller.industry or '').lower()
+        if pred_industry and pred_industry == actual_industry:
+            industry_score = 25
+            reasons.append(f"industry matched ({actual_seller.industry})")
+        else:
+            industry_score = 0
+
+        pred_price = predicted.asking_price
+        actual_price = actual_seller.asking_price
+        if pred_price is not None and actual_price is not None and actual_price > 0:
+            price_diff_pct = abs(pred_price - actual_price) / actual_price
+            if price_diff_pct <= 0.15:
+                size_score = 20
+                reasons.append("deal size closely matched")
+            elif price_diff_pct <= 0.35:
+                size_score = 10
+                reasons.append("deal size was in the same range")
+            else:
+                size_score = 0
+        else:
+            size_score = 0
+
+        pred_structure = predicted.deal_structure
+        actual_structure = actual_seller.deal_structure
+        if pred_structure and pred_structure == actual_structure:
+            structure_score = 15
+            reasons.append(f"deal structure matched ({actual_seller.get_deal_structure_display()})")
+        else:
+            structure_score = 0
+
+        if predicted.description_vector and actual_seller.description_vector:
+            try:
+                similarity = calculate_similarity(predicted.description_vector, actual_seller.description_vector)
+                vector_score = round(max(0.0, min(1.0, similarity)) * 25, 1)
+            except Exception:
+                vector_score = 12.5
+        else:
+            vector_score = 12.5  # no vectors to compare — neutral midpoint, not a penalty
+
+        total_score = identity_bonus + industry_score + size_score + structure_score + vector_score
+        if is_exact_match:
+            # Guarantee the A band regardless of incidental gaps — correctly
+            # predicting the seller is what matters.
+            total_score = max(total_score, 90)
+
+        if total_score >= 90:
+            grade = 'A'
+        elif total_score >= 80:
+            grade = 'B'
+        elif total_score >= 65:
+            grade = 'C'
+        elif total_score >= 50:
+            grade = 'D'
+        else:
+            grade = 'F'
+
+        if not reasons:
+            reasons.append(f"predicted {predicted.company_name}, but the actual closed seller shared no tracked signals")
+
+        explanation = (
+            f"Predicted {predicted.company_name} ({round(snapshot.predicted_score, 1)}% blended score); "
+            f"buyer actually closed on {actual_seller.company_name}. "
+            + "; ".join(reasons) + "."
+        )
+
+        snapshot.is_resolved = True
+        snapshot.resolved_at = timezone.now()
+        snapshot.actual_closed_seller = actual_seller
+        snapshot.grade = grade
+        snapshot.grade_score = round(total_score, 1)
+        snapshot.grade_explanation = explanation
+        snapshot.save(update_fields=[
+            'is_resolved', 'resolved_at', 'actual_closed_seller', 'grade', 'grade_score', 'grade_explanation'
+        ])
+        graded_count += 1
+
+    return {'status': 'success', 'graded_count': graded_count}

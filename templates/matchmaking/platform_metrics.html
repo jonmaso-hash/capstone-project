@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Platform Metrics | Interlink Foundry{% endblock title %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="fw-bold mb-4"><i class="bi bi-speedometer2 me-2"></i>Platform Metrics</h2>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card p-3 bg-success text-white shadow-sm border-0 h-100">
+                <small class="text-white-50 text-uppercase">Founders</small>
+                <h2 class="fw-bold mb-0">{{ founder_count }}</h2>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 bg-primary text-white shadow-sm border-0 h-100">
+                <small class="text-white-50 text-uppercase">Investors</small>
+                <h2 class="fw-bold mb-0">{{ investor_count }}</h2>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 bg-dark text-white shadow-sm border-0 h-100">
+                <small class="text-white-50 text-uppercase">Active (24h)</small>
+                <h2 class="fw-bold mb-0">{{ active_users_24h }}</h2>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 bg-warning text-dark shadow-sm border-0 h-100">
+                <small class="text-uppercase">Vector Coverage</small>
+                <h2 class="fw-bold mb-0">{{ founder_vector_rate }}% / {{ investor_vector_rate }}%</h2>
+                <small class="opacity-75">Founders / Investors</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 p-4 h-100">
+                <h6 class="fw-bold text-uppercase small text-muted mb-3">Connection Funnel</h6>
+                <ul class="list-unstyled mb-0">
+                    <li class="d-flex justify-content-between border-bottom py-2">
+                        <span>Pending</span><strong>{{ connection_funnel.pending|default:0 }}</strong>
+                    </li>
+                    <li class="d-flex justify-content-between border-bottom py-2">
+                        <span>Accepted</span><strong>{{ connection_funnel.ACCEPTED|default:0 }}</strong>
+                    </li>
+                    <li class="d-flex justify-content-between border-bottom py-2">
+                        <span>Declined</span><strong>{{ connection_funnel.DECLINED|default:0 }}</strong>
+                    </li>
+                    <li class="d-flex justify-content-between py-2">
+                        <span>Funded</span><strong>{{ connection_funnel.FUNDED|default:0 }}</strong>
+                    </li>
+                </ul>
+                <div class="d-flex justify-content-between border-top pt-3 mt-2 small text-muted">
+                    <span>Intro → Accepted</span><strong class="text-dark">{{ intro_to_accept_rate }}%</strong>
+                </div>
+                <div class="d-flex justify-content-between small text-muted">
+                    <span>Intro → Funded</span><strong class="text-dark">{{ intro_to_funded_rate }}%</strong>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 p-4 h-100">
+                <h6 class="fw-bold text-uppercase small text-muted mb-3">Top Sectors</h6>
+                <canvas id="sectorChart" height="180"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <h6 class="fw-bold text-uppercase small text-muted mb-3">AI Usage</h6>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 shadow-sm border-0 h-100">
+                <small class="text-muted text-uppercase">Documents Analyzed</small>
+                <h3 class="fw-bold mb-0">{{ documents_processed }}</h3>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 shadow-sm border-0 h-100">
+                <small class="text-muted text-uppercase">Memos Generated</small>
+                <h3 class="fw-bold mb-0">{{ memos_generated }}</h3>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 shadow-sm border-0 h-100">
+                <small class="text-muted text-uppercase">Truth Delta Runs</small>
+                <h3 class="fw-bold mb-0">{{ truth_delta_runs }}</h3>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 shadow-sm border-0 h-100">
+                <small class="text-muted text-uppercase">Zelda Analyses Triggered</small>
+                <h3 class="fw-bold mb-0">{{ zelda_analyses_triggered }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 p-4">
+        <h6 class="fw-bold text-uppercase small text-muted mb-3">Registrations — Last 30 Days</h6>
+        <canvas id="registrationChart" height="90"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    new Chart(document.getElementById('sectorChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: {{ sector_labels|safe }},
+            datasets: [{ label: 'Founders', data: {{ sector_counts|safe }}, backgroundColor: '#198754' }]
+        },
+        options: { indexAxis: 'y', plugins: { legend: { display: false } } }
+    });
+
+    new Chart(document.getElementById('registrationChart').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: {{ registration_labels|safe }},
+            datasets: [{ label: 'New Registrations', data: {{ registration_counts|safe }}, borderColor: '#0d6efd', tension: 0.3 }]
+        }
+    });
+});
+</script>
+{% endblock scripts %}

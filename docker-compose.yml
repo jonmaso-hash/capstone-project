@@ -1,0 +1,95 @@
+# Production-parity local testing — NOT a replacement for the venv-based
+# `manage.py runserver` dev workflow. Use this to sanity-check the app under
+# real Postgres/Redis/gunicorn before an actual production deploy.
+#
+# Usage: docker compose up --build
+# Requires a .env file in the project root (see config/settings.py's env()
+# defaults for what's expected — SECRET_KEY is the only one with no default
+# and must be set).
+#
+# First run against a fresh Postgres volume has no tables yet — migrations
+# are deliberately not run automatically (see docker-entrypoint.sh), so run:
+#   docker compose run --rm web python manage.py migrate
+# once, before the app will actually work.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: interlink_foundry
+      POSTGRES_USER: interlink
+      POSTGRES_PASSWORD: interlink_dev_only
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U interlink"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://interlink:interlink_dev_only@postgres:5432/interlink_foundry
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      ALLOWED_HOSTS: localhost,127.0.0.1
+      DEBUG: "False"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - media_data:/app/media
+
+  celery-worker:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://interlink:interlink_dev_only@postgres:5432/interlink_foundry
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    entrypoint: []
+    command: celery -A config worker --loglevel=info
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - media_data:/app/media
+
+  celery-beat:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://interlink:interlink_dev_only@postgres:5432/interlink_foundry
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    entrypoint: []
+    command: celery -A config beat --loglevel=info
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  media_data:

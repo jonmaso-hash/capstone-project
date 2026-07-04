@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit Investor Profile{% else %}Investor Mandate Configuration{% endif %} | Interlink Foundry
+{% endblock %}
+
+{% block css %}
+<style>
+    .asteriskField { display: none !important; }
+
+    .form-control, .form-select {
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+    }
+
+    .form-control:focus, .form-select:focus {
+        background-color: #fff !important;
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    }
+
+    .card { border-radius: 16px; }
+
+    label {
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: #495057;
+    }
+
+    .input-group-text {
+        border-radius: 10px 0 0 10px;
+        background-color: #e9ecef;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'usersettings:home' %}" class="text-decoration-none">Settings</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Edit Investor Profile</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+            <div class="card shadow-lg border-0 overflow-hidden">
+
+                <div class="bg-primary text-white px-4 py-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
+                            <i class="bi bi-shield-check fs-3"></i>
+                        </div>
+                        <div>
+                            <h2 class="h4 mb-1 fw-bold tracking-tight">
+                                {% if form.instance.pk %}Edit Investor Profile{% else %}Deployment Mandate Settings{% endif %}
+                            </h2>
+                            <p class="mb-0 opacity-75 small">Calibrate target vertical criteria, check sizes, and allocation parameters.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+
+                    <div class="alert alert-primary-subtle border border-primary-subtle rounded-3 d-flex align-items-start mb-4" role="alert">
+                        <i class="bi bi-funnel-fill text-primary fs-5 me-3 mt-1"></i>
+                        <div>
+                            <strong class="text-primary d-block mb-1">Deal Flow Routing Array</strong>
+                            <span class="small text-muted">Your deployment parameters feed directly into the vector matchmaking array. Adjusting sector focuses or allocation boundaries updates your automated Bulletin Board streams instantly.</span>
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {{ form.full_name|as_crispy_field }}
+                        {{ form.email|as_crispy_field }}
+                        {{ form.phone|as_crispy_field }}
+                        {{ form.company_name|as_crispy_field }}
+                        {{ form.website|as_crispy_field }}
+                        {{ form.linkedin_url|as_crispy_field }}
+                        {{ form.location|as_crispy_field }}
+                        {{ form.investment_focus|as_crispy_field }}
+                        {{ form.investment_stage|as_crispy_field }}
+
+                        <div class="mb-4">
+                            <label for="id_investment_amount" class="form-label">
+                                Target Check Size Range
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                                <input type="text"
+                                       name="investment_amount"
+                                       id="id_investment_amount"
+                                       class="form-control"
+                                       placeholder="e.g., 250,000-500,000 or $1M+"
+                                       value="{{ form.investment_amount.value|default:'' }}">
+                            </div>
+                            {% if form.investment_amount.errors %}
+                                <div class="text-danger small mt-1">{{ form.investment_amount.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+                            <a href="{% url 'accounts:profile_self' %}" class="btn btn-link text-muted text-decoration-none order-2 order-sm-1 px-0">
+                                <i class="bi bi-arrow-left me-1"></i> Cancel changes
+                            </a>
+                            <button type="submit" class="btn btn-primary px-5 py-2.5 rounded-pill fw-semibold order-1 order-sm-2 shadow-sm">
+                                {% if form.instance.pk %}Save Changes{% else %}Activate Capital Engine{% endif %}
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

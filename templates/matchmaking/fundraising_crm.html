@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Fundraising CRM | Interlink Foundry{% endblock title %}
+
+{% block css %}
+<style>
+    .kanban-board {
+        display: flex;
+        gap: 1rem;
+        overflow-x: auto;
+        padding-bottom: 1rem;
+    }
+    .kanban-column {
+        flex: 0 0 260px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 0.75rem;
+        min-height: 400px;
+    }
+    .kanban-column.drag-over {
+        background: #e9f5ff;
+        outline: 2px dashed #0d6efd;
+    }
+    .kanban-card {
+        cursor: grab;
+        background: #fff;
+    }
+    .kanban-card:active { cursor: grabbing; }
+</style>
+{% endblock css %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-0"><i class="bi bi-kanban-fill me-2"></i>Fundraising CRM</h2>
+            <p class="text-muted small mb-0">Track your outreach — drag cards between stages.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-success btn-sm rounded-pill px-3" type="button" data-bs-toggle="collapse" data-bs-target="#addLeadForm">
+                <i class="bi bi-plus-lg me-1"></i> Add Lead
+            </button>
+            <a href="{% url 'matchmaking:founder_dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="bi bi-arrow-left me-1"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="collapse mb-4" id="addLeadForm">
+        <div class="card shadow-sm border-0 p-4">
+            <form method="post" action="{% url 'matchmaking:create_lead' %}" class="row g-3">
+                {% csrf_token %}
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted">Investor / VC Name *</label>
+                    <input type="text" name="investor_name" class="form-control" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted">Firm</label>
+                    <input type="text" name="firm_name" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted">Contact Email</label>
+                    <input type="email" name="contact_email" class="form-control">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-muted">Stage</label>
+                    <select name="stage" class="form-select">
+                        {% for key, label in stage_choices %}
+                        <option value="{{ key }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button type="submit" class="btn btn-success w-100">Add</button>
+                </div>
+                <div class="col-12">
+                    <label class="form-label small fw-bold text-muted">Notes</label>
+                    <textarea name="notes" class="form-control" rows="2"></textarea>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="kanban-board">
+        {% for column in board %}
+        <div class="kanban-column" data-stage="{{ column.key }}" ondragover="allowDrop(event)" ondrop="dropCard(event)" ondragleave="dragLeave(event)">
+            <h6 class="fw-bold small text-uppercase text-muted mb-3 d-flex justify-content-between">
+                <span>{{ column.label }}</span>
+                <span class="badge bg-secondary rounded-pill column-count">{{ column.leads|length }}</span>
+            </h6>
+            <div class="d-flex flex-column gap-2 kanban-cards">
+                {% for lead in column.leads %}
+                <div class="card kanban-card shadow-sm border-0 rounded-3 p-2" draggable="true" data-lead-id="{{ lead.id }}" ondragstart="dragStart(event)">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <strong class="small">{{ lead.investor_name }}</strong>
+                        <form method="post" action="{% url 'matchmaking:delete_lead' lead.id %}" class="m-0" onsubmit="return confirm('Delete this lead?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-link text-danger p-0" title="Delete">
+                                <i class="bi bi-trash small"></i>
+                            </button>
+                        </form>
+                    </div>
+                    {% if lead.firm_name %}<div class="text-muted small">{{ lead.firm_name }}</div>{% endif %}
+                    {% if lead.contact_email %}<div class="text-muted small"><i class="bi bi-envelope me-1"></i>{{ lead.contact_email }}</div>{% endif %}
+                    {% if lead.notes %}<p class="small text-secondary mb-0 mt-1">{{ lead.notes|truncatewords:15 }}</p>{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<form style="display: none;">{% csrf_token %}</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    const csrftoken = csrfInput ? csrfInput.value : '';
+    let draggedCard = null;
+
+    window.dragStart = function (ev) {
+        draggedCard = ev.target.closest('.kanban-card');
+        ev.dataTransfer.setData('text/plain', draggedCard.dataset.leadId);
+    };
+
+    window.allowDrop = function (ev) {
+        ev.preventDefault();
+        ev.currentTarget.classList.add('drag-over');
+    };
+
+    window.dragLeave = function (ev) {
+        ev.currentTarget.classList.remove('drag-over');
+    };
+
+    function updateCount(column) {
+        column.querySelector('.column-count').textContent = column.querySelectorAll('.kanban-card').length;
+    }
+
+    window.dropCard = function (ev) {
+        ev.preventDefault();
+        const column = ev.currentTarget;
+        column.classList.remove('drag-over');
+        if (!draggedCard) return;
+
+        const leadId = draggedCard.dataset.leadId;
+        const newStage = column.dataset.stage;
+        const oldColumn = draggedCard.closest('.kanban-column');
+
+        fetch(`/matchmaking/crm/lead/${leadId}/stage/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+            body: JSON.stringify({ stage: newStage })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                column.querySelector('.kanban-cards').appendChild(draggedCard);
+                if (oldColumn) updateCount(oldColumn);
+                updateCount(column);
+            } else {
+                alert(data.message || 'Could not move this lead.');
+            }
+        })
+        .catch(err => console.error('Stage update failed:', err));
+
+        draggedCard = null;
+    };
+});
+</script>
+{% endblock scripts %}

@@ -384,6 +384,8 @@ class IntelligenceMemoAdmin(admin.ModelAdmin):
                 'financial_analysis',
                 'risk_assessment',
                 'investment_thesis',
+                'investment_readiness',
+                'questions_for_management',
             ),
             'classes': ('collapse',),
         }),

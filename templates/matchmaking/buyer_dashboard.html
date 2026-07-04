@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Buyer Matchmaking Dashboard | Interlink Foundry{% endblock title %}
+
+{% block css %}
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #055160 0%, #0dcaf0 100%);
+        border-radius: 16px;
+    }
+    .match-card {
+        border-radius: 16px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: 1px solid #e9ecef;
+    }
+    .match-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important;
+    }
+    .score-badge {
+        font-size: 1.1rem;
+        font-weight: 700;
+        padding: 8px 16px;
+        border-radius: 50px;
+    }
+    .insight-pill {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 700;
+    }
+    .form-section-title {
+        font-size: 12px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: #6c757d;
+        margin-bottom: 10px;
+    }
+</style>
+{% endblock css %}
+
+{% block content %}
+<div class="container py-5">
+
+    <div class="dashboard-header text-white p-4 p-lg-5 mb-5 shadow-sm">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <span class="badge bg-white bg-opacity-25 text-white mb-2 px-3 py-2 rounded-pill insight-pill">
+                    <i class="bi bi-briefcase-fill me-1"></i> Verified Acquirer Mandate
+                </span>
+                <h1 class="fw-bold mb-1">Welcome back, {{ buyer.user.username }}</h1>
+                <p class="mb-0 opacity-75">Acquisition budget: <strong class="text-white">${{ buyer.budget_min|floatformat:0|intcomma }} &ndash; ${{ buyer.budget_max|floatformat:0|intcomma }}</strong></p>
+            </div>
+            <div class="d-flex flex-column align-items-end gap-2">
+                <div class="bg-white bg-opacity-10 p-3 rounded-3 border border-white border-opacity-15 text-md-end">
+                    <small class="d-block opacity-75 text-uppercase fw-bold small mb-1" style="font-size: 10px; letter-spacing: 1px;">Matching Status</small>
+                    <span class="fs-4 fw-bold">Active Engine</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <h4 class="fw-bold mb-4 d-flex align-items-center">
+                <i class="bi bi-lightning-charge-fill text-warning me-2"></i>
+                Top Algorithmic Business Matches
+            </h4>
+
+            <div class="card bg-light border-0 rounded-3 mb-4 p-3 shadow-sm">
+                <form method="get" class="row g-2 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold text-muted mb-1">Industry</label>
+                        <input type="text" name="industry" class="form-control form-control-sm" placeholder="e.g. Manufacturing" value="{{ filters.industry }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold text-muted mb-1">Deal Structure</label>
+                        <select name="structure" class="form-select form-select-sm">
+                            <option value="">Any</option>
+                            <option value="ASSET_SALE" {% if filters.structure == 'ASSET_SALE' %}selected{% endif %}>Asset Sale</option>
+                            <option value="STOCK_SALE" {% if filters.structure == 'STOCK_SALE' %}selected{% endif %}>Stock Sale</option>
+                            <option value="MERGER" {% if filters.structure == 'MERGER' %}selected{% endif %}>Merger</option>
+                            <option value="OPEN" {% if filters.structure == 'OPEN' %}selected{% endif %}>Open to Either</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold text-muted mb-1">Max Asking Price ($)</label>
+                        <input type="number" name="max_price" class="form-control form-control-sm" placeholder="e.g. 2000000" value="{{ filters.max_price }}">
+                    </div>
+                    <div class="col-md-12 d-flex gap-2 mt-2">
+                        <button type="submit" class="btn btn-info btn-sm">
+                            <i class="bi bi-funnel me-1"></i> Filter
+                        </button>
+                        {% if filters.industry or filters.structure or filters.max_price %}
+                        <a href="{% url 'matchmaking:buyer_dashboard' %}" class="btn btn-outline-secondary btn-sm">Clear</a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+
+            {% if matches %}
+                {% for match in matches %}
+                    <div class="card match-card shadow-sm mb-4 bg-white overflow-hidden">
+                        <div class="card-body p-4">
+
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 border-bottom pb-3 mb-3">
+                                <div>
+                                    <h3 class="fw-bold text-dark mb-1">{{ match.seller.company_name }}</h3>
+                                    <div class="d-flex flex-wrap gap-2 my-2 align-items-center">
+                                        <span class="badge bg-secondary-subtle text-secondary rounded-2 px-2 py-1 small">
+                                            <i class="bi bi-tag-fill me-1"></i>{{ match.seller.industry }}
+                                        </span>
+                                        <span class="badge bg-warning-subtle text-warning-emphasis rounded-2 px-2 py-1 small">
+                                            <i class="bi bi-cash-coin me-1"></i>Asking: ${{ match.seller.asking_price|floatformat:0|intcomma }}
+                                        </span>
+                                        {% if match.seller.geography %}
+                                            <span class="text-muted small ms-1">
+                                                <i class="bi bi-geo-alt-fill me-1"></i>{{ match.seller.geography }}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="text-md-end d-flex align-items-center gap-2">
+                                    <div class="text-end">
+                                        <small class="text-muted d-block small fw-bold text-uppercase" style="font-size: 9px; letter-spacing: 0.5px;">Match Index</small>
+                                        <span class="badge bg-info text-dark score-badge shadow-sm">
+                                            {{ match.final_score }}%
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p class="text-muted mb-4">{{ match.seller.description }}</p>
+
+                            <div class="accordion mb-4 border-0 shadow-none" id="accordionInsights-{{ match.seller.id }}">
+                                <div class="accordion-item border rounded-3 overflow-hidden">
+                                    <h2 class="accordion-header" id="heading-{{ match.seller.id }}">
+                                        <button class="accordion-button collapsed bg-light text-dark fw-bold small py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ match.seller.id }}" aria-expanded="false" aria-controls="collapse-{{ match.seller.id }}">
+                                            <i class="bi bi-graph-up-arrow text-info me-2"></i> View Explanatory Alignment Matrix &amp; Match Insights
+                                        </button>
+                                    </h2>
+                                    <div id="collapse-{{ match.seller.id }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ match.seller.id }}" data-bs-parent="#accordionInsights-{{ match.seller.id }}">
+                                        <div class="accordion-body bg-white p-4">
+                                            <div class="form-section-title">Core Alignment Logic Summary</div>
+                                            <p class="small text-muted mb-4">{{ match.deal_insights.summary }}</p>
+
+                                            <div class="form-section-title">Structural Evaluation Vectors</div>
+                                            <div class="row g-3">
+                                                {% for pillar in match.deal_insights.pillars %}
+                                                    <div class="col-md-4">
+                                                        <div class="p-3 border rounded-3 bg-light h-100">
+                                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                                <strong class="small text-dark">{{ pillar.title }}</strong>
+                                                                <span class="badge {% if pillar.score == 'Match' or pillar.score == 'Excellent' or pillar.score == 'Passed' %}bg-success{% else %}bg-warning text-dark{% endif %} px-2 py-1 rounded">
+                                                                    {{ pillar.score }}
+                                                                </span>
+                                                            </div>
+                                                            <span class="small text-muted d-block" style="font-size: 12px; line-height: 1.4;">{{ pillar.desc }}</span>
+                                                        </div>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+
+                                            <div class="row mt-4 pt-3 border-top text-center text-md-start g-2">
+                                                <div class="col-sm-6 col-md-3">
+                                                    <small class="text-muted d-block small">AI Vector Score</small>
+                                                    <strong class="text-info">{{ match.ai_score }}%</strong>
+                                                </div>
+                                                <div class="col-sm-6 col-md-3">
+                                                    <small class="text-muted d-block small">Rule Compliance Matrix</small>
+                                                    <strong class="text-primary">{{ match.rule_score }}/100</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 pt-2">
+                                <form action="{% url 'matchmaking:record_deal_vote' %}" method="post" class="d-flex align-items-center gap-2">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="seller_id" value="{{ match.seller.id }}">
+                                    <small class="text-muted me-1 small d-none d-md-inline">Tune Matching Accuracy:</small>
+                                    <button type="submit" name="vote" value="up" class="btn btn-sm btn-outline-secondary px-2 py-1" title="Relevant match parameters">
+                                        <i class="bi bi-hand-thumbs-up"></i>
+                                    </button>
+                                    <button type="submit" name="vote" value="down" class="btn btn-sm btn-outline-secondary px-2 py-1" title="Irrelevant match parameters">
+                                        <i class="bi bi-hand-thumbs-down"></i>
+                                    </button>
+                                </form>
+
+                                <div>
+                                    {% if match.connection_status == 'CLOSED' %}
+                                        <span class="badge bg-success px-3 py-2 rounded-2 small fw-semibold">
+                                            <i class="bi bi-trophy-fill me-1"></i> Closed
+                                        </span>
+                                    {% elif match.connection_status == 'ACCEPTED' %}
+                                        <span class="badge bg-primary px-3 py-2 rounded-2 small fw-semibold">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Accepted
+                                        </span>
+                                    {% elif match.already_requested %}
+                                        <button class="btn btn-secondary px-4 py-2 rounded-2 disabled small fw-semibold" disabled>
+                                            <i class="bi bi-envelope-check me-2"></i> Introduction Requested
+                                        </button>
+                                    {% else %}
+                                        <form action="{% url 'matchmaking:request_acquisition_intro' match.seller.id buyer.id %}" method="post" class="m-0">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-info px-4 py-2 rounded-2 shadow-sm small fw-semibold transition-all w-100">
+                                                <i class="bi bi-envelope-fill me-2"></i> Request Introduction
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="card shadow-sm border-0 text-center p-5 bg-white rounded-4">
+                    <div class="card-body">
+                        <div class="bg-light rounded-circle p-4 display-6 text-muted mx-auto mb-4" style="width: fit-content;">
+                            <i class="bi bi-folder-symlink-fill"></i>
+                        </div>
+                        <h4 class="fw-bold text-dark">No Business Matches Found</h4>
+                        {% if filters.industry or filters.structure or filters.max_price %}
+                        <p class="text-muted mx-auto max-width-md mb-4" style="max-width: 500px;">No matches for the current filters. Try broadening or clearing them.</p>
+                        {% else %}
+                        <p class="text-muted mx-auto max-width-md mb-4" style="max-width: 500px;">Update your acquisition thesis or budget range to broaden your matches.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock content %}

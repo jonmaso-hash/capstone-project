@@ -40,6 +40,11 @@
                         {% if user.match_founder_profile %}
                             {# ── FOUNDER NAV ── #}
                             <li class="nav-item">
+                                <a class="nav-link fw-bold text-success" href="{% url 'matchmaking:founder_dashboard' %}">
+                                    <i class="bi bi-shield-shaded me-1"></i>Founder Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link" href="{% url 'matchmaking:founder_matchmaker' %}">
                                     <i class="bi bi-radar me-1"></i>Match Radar
                                 </a>
@@ -61,7 +66,7 @@
                                 </button>
                             </li>
 
-                        {% elif user.accounts_investor_profile %}
+                        {% elif user.match_investor_profile %}
                             {# ── INVESTOR NAV ── #}
                             <li class="nav-item">
                                 <a class="nav-link fw-bold text-success" href="{% url 'matchmaking:investor_dashboard' %}">
@@ -78,7 +83,43 @@
                                     <i class="bi bi-chat-dots me-1"></i>Chat
                                 </a>
                             </li>
-                            
+
+                        {% elif user.match_seller_profile %}
+                            {# ── SELLER NAV ── #}
+                            <li class="nav-item">
+                                <a class="nav-link fw-bold text-warning-emphasis" href="{% url 'matchmaking:seller_dashboard' %}">
+                                    <i class="bi bi-shop me-1"></i>Seller Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'matchmaking:acquisition_bulletin_board' %}">
+                                    <i class="bi bi-megaphone me-1"></i>Business Marketplace
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'matchmaking:diligence_chat' %}">
+                                    <i class="bi bi-chat-dots me-1"></i>Chat
+                                </a>
+                            </li>
+
+                        {% elif user.match_buyer_profile %}
+                            {# ── BUYER NAV ── #}
+                            <li class="nav-item">
+                                <a class="nav-link fw-bold text-info-emphasis" href="{% url 'matchmaking:buyer_dashboard' %}">
+                                    <i class="bi bi-briefcase-fill me-1"></i>Buyer Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'matchmaking:acquisition_bulletin_board' %}">
+                                    <i class="bi bi-megaphone me-1"></i>Business Marketplace
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'matchmaking:diligence_chat' %}">
+                                    <i class="bi bi-chat-dots me-1"></i>Chat
+                                </a>
+                            </li>
+
                         {% else %}
                             {# ── NEW USER — NO PROFILE YET ── #}
                             <li class="nav-item">
@@ -88,9 +129,27 @@
                             </li>
                         {% endif %}
 
+                        {% if user.is_staff %}
+                        <li class="nav-item">
+                            <a href="{% url 'matchmaking:platform_metrics' %}" class="nav-link">
+                                <i class="bi bi-speedometer2 me-1"></i>Platform Metrics
+                            </a>
+                        </li>
+                        {% endif %}
+
                         <li class="nav-item ms-lg-2">
                             <a href="/accounts/profile/" class="nav-link">
                                 <i class="bi bi-person-circle me-1"></i>Profile
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'usersettings:home' %}" class="nav-link">
+                                <i class="bi bi-gear me-1"></i>Settings
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'zelda_api:valuation_request' %}" class="nav-link">
+                                <i class="bi bi-graph-up-arrow me-1"></i>Get a Valuation
                             </a>
                         </li>
                         <li class="nav-item">
@@ -116,6 +175,16 @@
     </header>
 
     <main class="flex-grow-1 py-4">
+        {% if messages %}
+        <div class="container pt-2">
+            {% for message in messages %}
+                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
         <div class="container">{% block content %}{% endblock content %}</div>
     </main>
 
@@ -163,6 +232,18 @@
                     <label class="form-label fw-bold small text-muted">Keywords</label>
                     <input type="text" name="state" class="form-control rounded-3"
                         placeholder="e.g. healthcare, AI, fintech...">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-muted">Industry</label>
+                    <input type="text" name="industry" class="form-control rounded-3"
+                        placeholder="e.g. SaaS, FinTech, AI">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-muted">Location</label>
+                    <input type="text" name="location" class="form-control rounded-3"
+                        placeholder="e.g. San Diego, CA">
                 </div>
 
                 <div class="mb-3">

@@ -27,12 +27,6 @@ urlpatterns = [
     path('profile/id/<int:pk>/', views.profile, name='profile_by_id'),
 
     # ==========================================
-    # WORKSPACE MATCHMAKING ONBOARDING FLOWS
-    # ==========================================
-    path('seeking-investment/', views.seeking_investment, name='seeking_investment'),
-    path('investor-form/', views.investor_form, name='investor_form'),
-
-    # ==========================================
     # DATA & COMMUNICATIONS ENDPOINTS (APIs)
     # ==========================================
     path('stream-token/', views.get_stream_token, name='stream_token'),

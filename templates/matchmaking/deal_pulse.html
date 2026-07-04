@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Deal Pulse | Interlink Foundry{% endblock title %}
+
+{% block css %}
+<style>
+    .pulse-board {
+        display: flex;
+        gap: 1rem;
+        overflow-x: auto;
+        padding-bottom: 1rem;
+    }
+    .pulse-column {
+        flex: 0 0 300px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 0.75rem;
+        min-height: 400px;
+    }
+    .pulse-card {
+        background: #fff;
+    }
+</style>
+{% endblock css %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-0"><i class="bi bi-activity me-2"></i>Deal Pulse</h2>
+            <p class="text-muted small mb-0">Your live pipeline across every founder connection.</p>
+        </div>
+        <a href="{% url 'matchmaking:investor_dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="bi bi-arrow-left me-1"></i> Dashboard
+        </a>
+    </div>
+
+    <div class="pulse-board">
+        {% for column in columns %}
+        <div class="pulse-column">
+            <h6 class="fw-bold small text-uppercase text-muted mb-3 d-flex justify-content-between">
+                <span>{{ column.label }}</span>
+                <span class="badge bg-secondary rounded-pill">{{ column.connections|length }}</span>
+            </h6>
+            <div class="d-flex flex-column gap-2">
+                {% for conn in column.connections %}
+                <div class="card pulse-card shadow-sm border-0 rounded-3 p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <a href="{% url 'accounts:profile' conn.founder.user.username %}" class="fw-bold small text-dark text-decoration-none">
+                            {{ conn.founder.company_name }}
+                        </a>
+                        <span class="badge {% if conn.status == 'FUNDED' %}bg-success{% elif conn.status == 'DECLINED' %}bg-secondary{% elif conn.status == 'ACCEPTED' %}bg-primary{% else %}bg-warning text-dark{% endif %} small">
+                            {{ conn.status|title }}
+                        </span>
+                    </div>
+                    <div class="text-muted small mb-2">{{ conn.founder.sector }} &middot; {{ conn.founder.stage }}</div>
+
+                    <form method="post" action="{% url 'matchmaking:update_deal_notes' conn.id %}" class="mb-2">
+                        {% csrf_token %}
+                        <textarea name="notes" class="form-control form-control-sm" rows="2" placeholder="Working notes...">{{ conn.notes }}</textarea>
+                        <button type="submit" class="btn btn-sm btn-outline-secondary mt-1 w-100">Save Notes</button>
+                    </form>
+
+                    {% if column.key != 'COMPLETED' %}
+                    <form method="post" action="{% url 'matchmaking:toggle_deal_attention' conn.id %}" class="m-0">
+                        {% csrf_token %}
+                        {% if conn.needs_attention %}
+                        <button type="submit" class="btn btn-sm btn-outline-success w-100">
+                            <i class="bi bi-check-lg me-1"></i> Clear Attention Flag
+                        </button>
+                        {% else %}
+                        <button type="submit" class="btn btn-sm btn-outline-warning w-100">
+                            <i class="bi bi-flag me-1"></i> Flag for Attention
+                        </button>
+                        {% endif %}
+                    </form>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="text-center text-muted small py-4">Nothing here.</div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

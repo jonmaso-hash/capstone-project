@@ -102,9 +102,15 @@
                             </h2>
                             <div class="d-flex align-items-center flex-wrap gap-3">
                                 {% if article.company_name %}
-                                <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-semibold">
-                                    <i class="bi bi-building me-1"></i>{{ article.company_name }}
-                                </span>
+                                    {% if article.author %}
+                                    <a href="{% url 'accounts:profile' article.author.username %}" class="text-decoration-none">
+                                    {% endif %}
+                                    <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-semibold">
+                                        <i class="bi bi-building me-1"></i>{{ article.company_name }}
+                                    </span>
+                                    {% if article.author %}
+                                    </a>
+                                    {% endif %}
                                 {% endif %}
                                 <small class="text-muted">
                                     <i class="bi bi-calendar3 me-1"></i> {{ article.created_on|date:"M d, Y" }}
@@ -143,15 +149,18 @@
 
                     <div class="d-flex align-items-center justify-content-between border-top pt-4 mt-4">
                         <div class="d-flex align-items-center gap-4">
-                            {% if user.is_authenticated %}
-                            <a href="{% url 'blog:toggle_favorite' article.pk %}" class="text-decoration-none d-flex align-items-center gap-2">
-                                {% if user in article.favorites.all %}
-                                    <i class="bi bi-heart-fill text-danger fs-4"></i>
-                                {% else %}
-                                    <i class="bi bi-heart text-dark fs-4"></i>
-                                {% endif %}
-                                <span class="fw-bold text-dark">{{ article.favorites.count }}</span>
-                            </a>
+                            {% if not article.likes_enabled %}
+                            <div class="d-flex align-items-center gap-2" title="The author has turned off likes on this article">
+                                <i class="bi bi-heart text-muted fs-4"></i>
+                                <span class="fw-bold text-muted">{{ article.favorites.count }}</span>
+                            </div>
+                            {% elif user.is_authenticated %}
+                            <button type="button" class="btn btn-link text-decoration-none d-flex align-items-center gap-2 p-0 border-0 fav-toggle-btn"
+                                    data-url="{% url 'blog:toggle_favorite' article.pk %}"
+                                    data-pk="{{ article.pk }}">
+                                <i class="bi {% if user in article.favorites.all %}bi-heart-fill text-danger{% else %}bi-heart text-dark{% endif %} fs-4" id="fav-icon-{{ article.pk }}"></i>
+                                <span class="fw-bold text-dark" id="fav-count-{{ article.pk }}">{{ article.favorites.count }}</span>
+                            </button>
                             {% else %}
                             <div class="d-flex align-items-center gap-2">
                                 <i class="bi bi-heart text-muted fs-4"></i>
@@ -204,3 +213,38 @@
     </div>
 </div>
 {% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    const csrftoken = csrfInput ? csrfInput.value : '';
+
+    document.querySelectorAll('.fav-toggle-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const pk = btn.dataset.pk;
+            fetch(btn.dataset.url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status !== 'success') return;
+                const icon = document.getElementById(`fav-icon-${pk}`);
+                const count = document.getElementById(`fav-count-${pk}`);
+                if (data.is_favorited) {
+                    icon.className = 'bi bi-heart-fill text-danger fs-4';
+                } else {
+                    icon.className = 'bi bi-heart text-dark fs-4';
+                }
+                count.textContent = data.count;
+            })
+            .catch(err => console.error('Favorite toggle failed:', err));
+        });
+    });
+});
+</script>
+{% endblock scripts %}

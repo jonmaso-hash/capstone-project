@@ -1,0 +1,21 @@
+# Never bake secrets into the image
+.env
+.env.local
+.env.*
+
+# Local dev environment / dev-only artifacts
+venv/
+__pycache__/
+*.pyc
+*.pyo
+db.sqlite3
+media/
+staticfiles/
+logs/
+
+# VCS / editor / misc
+.git/
+.gitignore
+.claude/
+*.log
+.DS_Store

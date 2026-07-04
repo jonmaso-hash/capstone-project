@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}Founder/Investor Bulletin | Interlink Foundry{% endblock %}
 
@@ -289,6 +290,15 @@
 
     .match-emoji { font-size: 1rem; }
 
+    .match-score-label {
+        font-size: 0.6rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        color: #8b6914;
+        text-align: right;
+    }
+
     /* ── Thumbs Row (investor only, on founder cards) ── */
     .thumbs-row {
         display: flex;
@@ -401,14 +411,34 @@
             <p>Active pitches and mandates pinned to the Interlink Foundry board.</p>
         </div>
         {# Investors can pin their mandate (optional visibility) #}
-        {% if user.is_authenticated and user.accounts_investor_profile %}
-        <a href="{% url 'accounts:investor_form' %}" class="pin-mandate-btn">
+        {% if user.is_authenticated and user.match_investor_profile %}
+        <a href="{% url 'usersettings:edit_investor_profile' %}" class="pin-mandate-btn">
             <i class="bi bi-pin-angle me-1"></i> Pin My Mandate
         </a>
         {% endif %}
     </div>
 
     <div class="container">
+
+        {# ── Foundry Pulse: recent activity widget ── #}
+        {% if pulse_events %}
+        <div class="card border-0 shadow-sm rounded-4 mb-4" style="background: #fffaf0;">
+            <div class="card-body p-3">
+                <h6 class="fw-bold text-uppercase small mb-2" style="color:#8b6914; letter-spacing:0.05em;">
+                    <i class="bi bi-activity me-1"></i> Foundry Pulse
+                </h6>
+                <div style="max-height: 160px; overflow-y: auto;">
+                    {% for event in pulse_events %}
+                    <div class="d-flex align-items-start gap-2 py-1 small">
+                        <i class="bi {{ event.icon }} text-primary mt-1"></i>
+                        <span class="text-dark">{{ event.message }}</span>
+                        <span class="text-muted ms-auto text-nowrap">{{ event.timestamp|timesince }} ago</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
         {# ── Search + Filter Toolbar ── #}
         <div class="filter-toolbar">
@@ -469,25 +499,31 @@
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <span class="sector-tag">{{ pitch.sector|default:"General Tech" }}</span>
 
-                        {% if user.is_authenticated and user.accounts_investor_profile %}
+                        {% if user.is_authenticated and user.match_investor_profile %}
                         {% with score=pitch.match_percentage|default:0 %}
-                        <div class="d-flex align-items-center gap-1">
-                            <span class="match-emoji">
-                                {% if score >= 90 %}🔥
-                                {% elif score >= 80 %}💪
-                                {% elif score >= 70 %}👍
-                                {% elif score >= 60 %}📡
-                                {% elif score >= 50 %}🆗
-                                {% else %}🔻{% endif %}
-                            </span>
-                            <div class="match-ring
-                                {% if score >= 90 %}fire
-                                {% elif score >= 80 %}muscle
-                                {% elif score >= 70 %}thumb
-                                {% elif score >= 60 %}radar
-                                {% elif score >= 50 %}ok
-                                {% else %}low{% endif %}">
-                                {{ score }}%
+                        <div class="d-flex flex-column align-items-end gap-1" id="match-wrap-{{ pitch.id }}">
+                            <span class="match-score-label">Match Score</span>
+                            <div class="d-flex align-items-center gap-1">
+                                <span class="match-emoji" id="match-emoji-{{ pitch.id }}">
+                                    {% if score >= 90 %}🔥
+                                    {% elif score >= 80 %}💪
+                                    {% elif score >= 70 %}👍
+                                    {% elif score >= 60 %}📡
+                                    {% elif score >= 50 %}🆗
+                                    {% else %}🔻{% endif %}
+                                </span>
+                                <div class="match-ring
+                                    {% if score >= 90 %}fire
+                                    {% elif score >= 80 %}muscle
+                                    {% elif score >= 70 %}thumb
+                                    {% elif score >= 60 %}radar
+                                    {% elif score >= 50 %}ok
+                                    {% else %}low{% endif %}"
+                                    id="match-ring-{{ pitch.id }}"
+                                    data-base-score="{{ pitch.base_match_percentage }}"
+                                    data-vote="{{ pitch.investor_vote }}">
+                                    {{ score }}%
+                                </div>
                             </div>
                         </div>
                         {% endwith %}
@@ -519,7 +555,7 @@
                                 {{ pitch.user.get_full_name|default:pitch.user.username }}
                             </div>
                             <span class="seeking-chip">
-                                Seeking {% if "$" not in pitch.raising_amount|stringformat:"s" %}${% endif %}{{ pitch.raising_amount|default:"--" }}
+                                Seeking {% if pitch.raising_amount %}${{ pitch.raising_amount|floatformat:0|intcomma }}{% else %}--{% endif %}
                             </span>
                         </div>
                         <a href="{% url 'accounts:profile' pitch.user.username %}" class="view-btn">
@@ -528,7 +564,7 @@
                     </div>
 
                     {# Thumbs up/down — investors only, for match vector tuning #}
-                    {% if user.is_authenticated and user.accounts_investor_profile %}
+                    {% if user.is_authenticated and user.match_investor_profile %}
                     <div class="thumbs-row">
                         <span style="font-size:0.7rem;color:#8b6914;font-weight:700;">Tune match:</span>
                         <button class="thumb-btn" onclick="recordVote({{ pitch.id }}, 'up', this)"
@@ -584,6 +620,31 @@ function getCookie(name) {
     return null;
 }
 
+function tierForScore(score) {
+    if (score >= 90) return { cls: 'fire', emoji: '🔥' };
+    if (score >= 80) return { cls: 'muscle', emoji: '💪' };
+    if (score >= 70) return { cls: 'thumb', emoji: '👍' };
+    if (score >= 60) return { cls: 'radar', emoji: '📡' };
+    if (score >= 50) return { cls: 'ok', emoji: '🆗' };
+    return { cls: 'low', emoji: '🔻' };
+}
+
+function updateMatchRing(pitchId, direction) {
+    const ring = document.getElementById(`match-ring-${pitchId}`);
+    const emoji = document.getElementById(`match-emoji-${pitchId}`);
+    if (!ring) return;
+
+    const baseScore = parseInt(ring.dataset.baseScore, 10) || 0;
+    const newVote = direction === 'up' ? 1 : -1;
+    const newScore = Math.max(0, Math.min(100, baseScore + (newVote * 10)));
+    const tier = tierForScore(newScore);
+
+    ring.textContent = `${newScore}%`;
+    ring.dataset.vote = newVote;
+    ring.className = `match-ring ${tier.cls}`;
+    if (emoji) emoji.textContent = tier.emoji;
+}
+
 function recordVote(pitchId, direction, btn) {
     const statusEl = document.getElementById(`vote-status-${pitchId}`);
     const csrftoken = getCookie('csrftoken');
@@ -609,6 +670,7 @@ function recordVote(pitchId, direction, btn) {
                 btn.closest('.thumbs-row').querySelector('[title^="Interested"]').classList.remove('active-up');
                 if (statusEl) statusEl.textContent = '✓ Passed';
             }
+            updateMatchRing(pitchId, direction);
         }
     })
     .catch(err => {

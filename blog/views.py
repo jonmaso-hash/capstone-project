@@ -1,6 +1,8 @@
+from django.db import models
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.urls import reverse 
+from django.urls import reverse
 from .models import Article, Comment
 from .forms import ArticleUploadForm
 from notifications.models import Notification
@@ -59,17 +61,17 @@ def add_comment(request, pk):
     article = get_object_or_404(Article, pk=pk)
     if request.method == "POST" and request.user.is_authenticated:
         body = request.POST.get('body')
-        if body:
+        if body and article.comments_enabled:
             Comment.objects.create(article=article, author=request.user, body=body)
     return redirect('blog:blog_view')
 
 @login_required # Added to prevent anonymous user errors when liking
 def like_article(request, pk):
     article = get_object_or_404(Article, pk=pk)
-    
+
     if article.likes.filter(id=request.user.id).exists():
         article.likes.remove(request.user)
-    else:
+    elif article.likes_enabled:
         article.likes.add(request.user)
         # CONSOLIDATED LOGIC: Trigger notification only on "Like" (not unlike)
         if article.author != request.user:
@@ -93,27 +95,37 @@ def favorites_list(request):
 
 def article_detail(request, pk):
     article = get_object_or_404(Article, pk=pk)
+    Article.objects.filter(pk=pk).update(views=models.F('views') + 1)
+    article.refresh_from_db(fields=['views'])
     return render(request, 'blog/article_detail.html', {'article': article})
 
 @login_required
 def toggle_favorite(request, pk):
     article = get_object_or_404(Article, pk=pk)
-    
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
     if article.favorites.filter(id=request.user.id).exists():
         article.favorites.remove(request.user)
-    else:
+    elif article.likes_enabled:
         article.favorites.add(request.user)
         # CONSOLIDATED LOGIC: Trigger notification only on "Favorite" (not unfavorite)
         if article.author != request.user:
             try:
                 Notification.objects.create(
-                    recipient=article.author, 
-                    sender=request.user, 
+                    recipient=article.author,
+                    sender=request.user,
                     notification_type='FAVORITE', # Updated type to differentiate from LIKE
-                    message=f"{request.user.username} favorited your post: {article.title}", 
+                    message=f"{request.user.username} favorited your post: {article.title}",
                     target_url=article.get_absolute_url()
                 )
             except Exception as e:
                 print(f"CRITICAL ERROR creating notification: {e}")
-                
+
+    if is_ajax:
+        return JsonResponse({
+            'status': 'success',
+            'is_favorited': article.favorites.filter(id=request.user.id).exists(),
+            'count': article.favorites.count(),
+        })
+
     return redirect('blog:article_detail', pk=pk)

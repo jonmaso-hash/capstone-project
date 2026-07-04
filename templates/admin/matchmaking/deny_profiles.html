@@ -1,0 +1,40 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<div style="padding: 20px; background: #1e1e1e; color: #f8f9fa; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 1px solid #333;">
+    <h2 style="color: #fff; border-bottom: 1px solid #333; padding-bottom: 10px;">Deny Selected Profile(s)</h2>
+    <p style="color: #bbb;">You are about to deny the following profile(s). They will be hidden from the bulletin board, dashboards, and search until re-approved.</p>
+
+    <ul style="margin-bottom: 20px; color: #fff;">
+        {% for obj in objects %}
+            <li><strong>{{ obj }}</strong></li>
+        {% endfor %}
+    </ul>
+
+    <form action="" method="post">
+        {% csrf_token %}
+
+        {% for obj in objects %}
+            <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk }}">
+        {% endfor %}
+        <input type="hidden" name="action" value="{{ action_name }}">
+
+        <div style="margin-bottom: 20px;">
+            <label for="denial_reason" style="font-weight: bold; display: block; margin-bottom: 8px; color: #bbb;">Reason for denial:</label>
+            <textarea name="denial_reason" id="denial_reason" required rows="4"
+                      style="padding: 8px; width: 100%; max-width: 500px; background: #2d2d2d; color: #fff; border: 1px solid #444; border-radius: 4px;"
+                      placeholder="Shown to the user on their profile."></textarea>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <button type="submit" name="apply" style="background: #a12727; color: #fff; padding: 10px 20px; border: 1px solid #34495E; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                Deny Profile(s)
+            </button>
+            <a href="#" onclick="window.history.back(); return false;" class="button cancel-link" style="margin-left: 15px; color: #ff6b6b; text-decoration: none;">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

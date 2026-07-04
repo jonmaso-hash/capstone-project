@@ -1,11 +1,16 @@
 from django.shortcuts import render, redirect  # Added redirect here
-from django.core.mail import send_mail 
-from django.contrib import messages 
+from django.core.mail import send_mail
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from .forms import contactForm  # Added your form import back
 
 # Create your views here.
 def home_view(request):
-    return render(request, 'pages/home.html')
+    from matchmaking.models import Application, InvestorApplication
+    return render(request, 'pages/home.html', {
+        'founder_count': Application.objects.count(),
+        'investor_count': InvestorApplication.objects.count(),
+    })
 
 def services(request):
     return render(request, 'pages/services.html')
@@ -15,6 +20,14 @@ def about(request):
 
 def bulletin_board(request):
     return render(request, 'pages/bulletin_board.html')
+
+@login_required
+def thank_you_view(request):
+    applicant_name = request.user.get_full_name() or request.user.username
+    application = getattr(request.user, 'match_founder_profile', None)
+    if application and application.founder_name:
+        applicant_name = application.founder_name
+    return render(request, 'pages/thank_you.html', {'applicant_name': applicant_name})
 
 def contact_view(request):
     if request.method == 'POST':
