@@ -14,7 +14,10 @@
 
 services:
   postgres:
-    image: postgres:16-alpine
+    # pgvector/pgvector:pg16 is a drop-in postgres:16 image with the pgvector
+    # extension preinstalled (same base, same env vars/healthcheck) — needed
+    # for the VectorField/HNSW-indexed columns used by find_similar_startups.
+    image: pgvector/pgvector:pg16
     environment:
       POSTGRES_DB: interlink_foundry
       POSTGRES_USER: interlink
@@ -46,6 +49,7 @@ services:
       DATABASE_URL: postgres://interlink:interlink_dev_only@postgres:5432/interlink_foundry
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
+      CACHE_URL: redis://redis:6379/1
       ALLOWED_HOSTS: localhost,127.0.0.1
       DEBUG: "False"
     depends_on:
@@ -65,6 +69,7 @@ services:
       DATABASE_URL: postgres://interlink:interlink_dev_only@postgres:5432/interlink_foundry
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
+      CACHE_URL: redis://redis:6379/1
     entrypoint: []
     command: celery -A config worker --loglevel=info
     depends_on:
@@ -82,6 +87,7 @@ services:
       DATABASE_URL: postgres://interlink:interlink_dev_only@postgres:5432/interlink_foundry
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
+      CACHE_URL: redis://redis:6379/1
     entrypoint: []
     command: celery -A config beat --loglevel=info
     depends_on:

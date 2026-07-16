@@ -1,16 +1,36 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
+{% load socialaccount %}
 
 {% block title %}
     Log in
 {% endblock %}
 
 {% block content %}
-    <h1>Log in</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form|crispy }}
-        <input type="submit" value="Log in" class="btn btn-primary">
-    </form>
-    <a href="{% url 'password_reset' %}" class="btn btn-warning">Reset Password</a>
-{% endblock %} 
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5">
+            <h1 class="fw-bold mb-4">Log in</h1>
+            <form method="post">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <input type="submit" value="Log in" class="btn btn-primary w-100 rounded-pill fw-bold py-2 mt-2">
+            </form>
+            <a href="{% url 'password_reset' %}" class="btn btn-link mt-2">Reset Password</a>
+
+            <div class="text-center text-muted small my-3">— or continue with —</div>
+            <div class="d-flex flex-column gap-2">
+                <a href="{% provider_login_url 'google' %}" class="btn btn-outline-secondary rounded-pill">
+                    <i class="bi bi-google me-2"></i> Continue with Google
+                </a>
+                <a href="{% provider_login_url 'facebook' %}" class="btn btn-outline-secondary rounded-pill">
+                    <i class="bi bi-facebook me-2"></i> Continue with Facebook
+                </a>
+                <a href="{% provider_login_url 'linkedin_oauth2' %}" class="btn btn-outline-secondary rounded-pill">
+                    <i class="bi bi-linkedin me-2"></i> Continue with LinkedIn
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

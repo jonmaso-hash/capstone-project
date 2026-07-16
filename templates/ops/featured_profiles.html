@@ -1,0 +1,44 @@
+{% extends "ops/_ops_base.html" %}
+
+{% block ops_content %}
+<h2 class="fw-bold mb-2"><i class="bi bi-star me-2"></i>Featured Profiles</h2>
+<p class="text-muted mb-4">Independent of paid premium status — featuring here never grants uncapped intros, CRM export, or alerts.</p>
+
+<form method="get" class="mb-4">
+    <input type="text" name="q" class="form-control rounded-pill" style="max-width:320px;" placeholder="Search company name..." value="{{ search_query }}">
+</form>
+
+<h6 class="fw-bold text-uppercase small text-muted mb-2">Founders</h6>
+{% for founder in founders %}
+<div class="card border-0 shadow-sm mb-2 p-3">
+    <div class="d-flex justify-content-between align-items-center">
+        <span>{{ founder.company_name }} {% if founder.is_staff_featured %}<span class="badge bg-warning text-dark ms-1">★ Featured</span>{% endif %}</span>
+        <form method="post" action="{% url 'ops:toggle_featured' 'founder' founder.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm rounded-pill px-3 {% if founder.is_staff_featured %}btn-outline-secondary{% else %}btn-warning{% endif %}">
+                {% if founder.is_staff_featured %}Unfeature{% else %}Feature{% endif %}
+            </button>
+        </form>
+    </div>
+</div>
+{% empty %}
+<p class="text-muted small">No founders found.</p>
+{% endfor %}
+
+<h6 class="fw-bold text-uppercase small text-muted mt-4 mb-2">Sellers</h6>
+{% for seller in sellers %}
+<div class="card border-0 shadow-sm mb-2 p-3">
+    <div class="d-flex justify-content-between align-items-center">
+        <span>{{ seller.company_name }} {% if seller.is_staff_featured %}<span class="badge bg-warning text-dark ms-1">★ Featured</span>{% endif %}</span>
+        <form method="post" action="{% url 'ops:toggle_featured' 'seller' seller.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm rounded-pill px-3 {% if seller.is_staff_featured %}btn-outline-secondary{% else %}btn-warning{% endif %}">
+                {% if seller.is_staff_featured %}Unfeature{% else %}Feature{% endif %}
+            </button>
+        </form>
+    </div>
+</div>
+{% empty %}
+<p class="text-muted small">No sellers found.</p>
+{% endfor %}
+{% endblock ops_content %}

@@ -23,6 +23,7 @@ class UserSettings(models.Model):
     show_business_connections = models.BooleanField(default=True)
     show_contact_info = models.BooleanField(default=True)
     show_milestones = models.BooleanField(default=True)
+    show_profile_view_count = models.BooleanField(default=True)
 
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -36,6 +37,7 @@ class UserSettings(models.Model):
         'show_business_connections',
         'show_contact_info',
         'show_milestones',
+        'show_profile_view_count',
     ]
 
     @classmethod

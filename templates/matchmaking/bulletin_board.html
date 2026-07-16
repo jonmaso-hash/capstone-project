@@ -494,6 +494,9 @@
                     <span class="card-type-label founder-label">
                         🚀 Founder's Bulletin
                     </span>
+                    {% if pitch.is_premium or pitch.is_staff_featured %}
+                    <span class="badge bg-warning text-dark ms-1">★ Featured</span>
+                    {% endif %}
 
                     {# Header: sector tag + match ring (investors only) #}
                     <div class="d-flex justify-content-between align-items-start mb-2">
@@ -573,6 +576,23 @@
                                 title="Pass — lower match score">👎</button>
                         <span id="vote-status-{{ pitch.id }}" class="ms-1"
                               style="font-size:0.7rem;color:#8b6914;"></span>
+                    </div>
+
+                    <div class="mt-2">
+                        {% if pitch.connection_status == 'ACCEPTED' or pitch.connection_status == 'FUNDED' %}
+                            <span class="badge bg-success">{{ pitch.connection_status|title }}</span>
+                        {% elif pitch.already_requested %}
+                            <button class="btn btn-secondary btn-sm w-100 disabled" disabled>
+                                <i class="bi bi-envelope-check me-1"></i> Introduction Requested
+                            </button>
+                        {% else %}
+                            <form action="{% url 'matchmaking:request_intro' pitch.id investor_profile.id %}" method="post" class="m-0">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-sm w-100">
+                                    <i class="bi bi-envelope-fill me-1"></i> Request Broker Introduction
+                                </button>
+                            </form>
+                        {% endif %}
                     </div>
                     {% endif %}
 

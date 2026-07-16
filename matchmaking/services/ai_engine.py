@@ -1,52 +1,49 @@
-import os
-import json
+import hashlib
 import logging
-from django.conf import settings
-from google import genai
-from google.genai import errors
-from google.genai import types
+from django.core.cache import cache
+from matchmaking.services.ai_utils import generate_vector
 from matchmaking.utils import clean_financial_input
-from decimal import Decimal
 
 # Initialize production logging channel
 logger = logging.getLogger(__name__)
 
-def _get_client():
-    """
-    Helper utility to instantiate the modern unified Google GenAI Client cleanly.
-    Prioritizes Django settings securely before falling back to local system environment configurations.
-    """
-    try:
-        api_key = getattr(settings, "GEMINI_API_KEY", None) or os.environ.get("GEMINI_API_KEY")
-        if api_key:
-            return genai.Client(api_key=api_key)
-        return genai.Client()
-    except Exception as e:
-        logger.error(f"[GenAI Client Exception]: System failed to build connection instance: {e}")
-        return None
+EMBEDDING_CACHE_TTL = 60 * 60 * 24 * 30  # 30 days, matches vector_fields_updated_at's staleness window
+SPARSE_SIMILARITY_CACHE_TTL = 60 * 60 * 6  # 6 hours — called once per founder x investor pair on every dashboard render
+
+# Fixed output size of the local all-MiniLM-L6-v2 model (matchmaking/services/ai_utils.py).
+EMBEDDING_DIMENSIONS = 384
+
+
+def _text_hash(text: str) -> str:
+    return hashlib.sha256(text.strip().encode('utf-8')).hexdigest()
 
 def generate_profile_embedding(text_content: str) -> list[float]:
+    """
+    Generates a dense embedding locally via sentence-transformers
+    (matchmaking/services/ai_utils.py) — no external API, no API key,
+    no network call once the model weights are cached.
+    """
     if not text_content or not text_content.strip():
         return []
 
-    client = _get_client()
-    if not client:
-        return []
+    # Content-addressed cache key — naturally invalidates when the text
+    # changes (no explicit invalidation needed), so a re-save with the same
+    # description just gets a cache hit instead of re-running the model.
+    cache_key = f"embedding:{_text_hash(text_content)}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
 
     try:
-        # Use a recognized embedding model instead of a generative model
-        response = client.models.embed_content(
-            model="models/gemini-embedding-2", 
-            contents=text_content.strip()
-        )
-        
-        if response and response.embeddings:
-            return response.embeddings[0].values
-            
+        vector = generate_vector(text_content.strip())
+        if vector is None:
+            return []
+        vector = vector.tolist()
+        cache.set(cache_key, vector, EMBEDDING_CACHE_TTL)
+        return vector
     except Exception as e:
         logger.error(f"[Embedding Pipeline Error]: {e}")
-        
-    return []
+        return []
 
 def calculate_similarity(vector_a: list[float], vector_b: list[float]) -> float:
     """
@@ -65,93 +62,37 @@ def calculate_similarity(vector_a: list[float], vector_b: list[float]) -> float:
         
     return dot_product / (norm_a * norm_b)
 
-def generate_zelda_summary(page_text: str) -> str:
+def calculate_sparse_similarity(text_a: str, text_b: str) -> float:
     """
-    [Phase 3 Feature] Context-Aware Page Summaries (Assistant Expansion)
-    Parses active view records into a 3-bullet point executive TL;DR summary using
-    the 'Zelda' VC advisor identity framework for fast investor assimilation.
+    Sparse/keyword-overlap signal for the hybrid scoring blend — TF-IDF +
+    cosine similarity, fit locally over just this one pair (scikit-learn is
+    already a dependency; no BM25 package needed). This is the exact-term
+    complement to calculate_similarity's conceptual/semantic dense vector
+    match: it catches cases where two texts share the same specific words
+    (a named technology, a specific city) that a dense embedding can blur
+    together with merely-similar concepts.
     """
-    if not page_text or not page_text.strip():
-        return "No descriptive record data visible to compile summary logs."
-        
-    client = _get_client()
-    if not client:
-        return "AI platform pipeline is currently offline or unreachable."
-        
-    prompt = (
-        "You are Zelda, an expert proprietary AI venture capitalist analyst for Interlink Foundry.\n"
-        "Provide a high-signal, professional 3-bullet point TL;DR executive summary focusing exclusively on:\n"
-        "1. The founder's documented operational traction, milestones, or early revenue indicators.\n"
-        "2. The core tech stack, engineering infrastructure, or architectural innovation moats.\n"
-        "3. The explicit capital target requested along with strategic use-of-funds parameters.\n\n"
-        "Keep the output clean, objective, and dense for high-net-worth platform investors.\n\n"
-        f"Target Profile/Post Record Context:\n{page_text}"
-    )
-    
-    try:
-        response = client.models.generate_content(
-            model="gemini-3.5-flash",
-            contents=prompt
-        )
-        return response.text.strip() if response.text else "Failed to capture summary transmission values."
-    except Exception as e:
-        logger.error(f"[Zelda Assistant Exception]: Executive page parsing collapsed: {e}")
-        return "Error synthesizing structural context summary."
+    if not text_a or not text_a.strip() or not text_b or not text_b.strip():
+        return 0.0
 
-def verify_truth_delta(claimed_metrics: dict, portfolio_raw_text: str) -> dict:
-    """
-    [Phase 3 Feature] Truth Delta Verification & Synthesis Engine (.memo Layer)
-    Cross-references self-reported core metrics with background public text crawls.
-    Identifies numerical variance and reports back structured JSON parameters.
-    """
-    client = _get_client()
-    if not client:
-        return {"status": "error", "message": "AI generation engine uninitialized"}
-        
-    prompt = (
-        "You are an analytical venture diligence verification engine for Interlink Foundry.\n"
-        "Evaluate the following self-reported 'Claimed Metrics' against public web footprints or "
-        "scraped company database contexts provided under 'Crawled Public Footprint'.\n\n"
-        f"Claimed Metrics:\n{json.dumps(claimed_metrics, indent=2)}\n\n"
-        f"Crawled Public Footprint:\n{portfolio_raw_text}\n\n"
-        "Task Instructions:\n"
-        "1. Compare metrics such as annual revenue, headcounts, or years in production.\n"
-        "2. Flag any entry where the reported claim overstates reality or diverges from crawled records by >20%.\n"
-        "3. Compute an integer 'success_vector_score' (0-100) evaluating data integrity, transparency, and alignment.\n\n"
-        "You MUST return your output strictly inside a valid JSON format matching this exact schema block:\n"
-        "{\n"
-        "  \"divergence_detected\": true/false,\n"
-        "  \"flagged_metrics\": [\n"
-        "     {\"metric\": \"metric_name\", \"claimed\": \"value\", \"crawled_evidence\": \"value\", \"divergence_pct\": 0.0}\n"
-        "  ],\n"
-        "  \"success_vector_score\": 90,\n"
-        "  \"summary\": \"Short 2-sentence executive synthesis analyzing the verification data state vs web trends.\"\n"
-        "}"
-    )
-    
+    cache_key = f"sparse_sim:{_text_hash(text_a)}:{_text_hash(text_b)}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     try:
-        # Request native JSON configuration from Gemini
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt,
-            config=types.GenerateContentConfig(response_mime_type="application/json")
-        )
-        
-        if response and response.text:
-            return json.loads(response.text.strip())
-        return {"status": "error", "message": "Empty network object returned from verification layers"}
-        
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        from sklearn.metrics.pairwise import cosine_similarity
+
+        vectorizer = TfidfVectorizer(stop_words='english')
+        tfidf_matrix = vectorizer.fit_transform([text_a, text_b])
+        score = float(cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0])
+        cache.set(cache_key, score, SPARSE_SIMILARITY_CACHE_TTL)
+        return score
     except Exception as e:
-        logger.error(f"[Truth Delta Exception]: Diligence metric comparison crashed: {e}")
-        # Graceful validation structure fallback to avoid completely stalling runtime execution loops
-        return {
-            "divergence_detected": False,
-            "flagged_metrics": [],
-            "success_vector_score": 70,
-            "summary": f"Diligence verification processing safely recovered from execution exception: {str(e)}"
-        }
-        
-        
+        logger.error(f"[Sparse Similarity Error]: {e}")
+        return 0.0
+
 def calculate_zelda_advantage(application):
     # Retrieve sanitized values
     revenue = float(clean_financial_input(application.current_revenue) or 0)

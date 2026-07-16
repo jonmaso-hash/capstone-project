@@ -1,0 +1,44 @@
+{% extends "ops/_ops_base.html" %}
+
+{% block ops_content %}
+<h2 class="fw-bold mb-2"><i class="bi bi-hourglass-split me-2"></i>Waitlist</h2>
+<p class="text-muted mb-4">Outreach/tracking only — signup stays fully open. Prospects join at <code>/waitlist/</code>.</p>
+
+<h6 class="fw-bold text-uppercase small text-muted mb-2">Waiting</h6>
+<div class="table-responsive mb-4">
+    <table class="table table-sm">
+        <thead><tr class="text-muted small text-uppercase"><th>Email</th><th>Name</th><th>Joined</th><th></th></tr></thead>
+        <tbody>
+            {% for entry in entries %}
+            <tr>
+                <td>{{ entry.email }}</td>
+                <td>{{ entry.name|default:"—" }}</td>
+                <td class="text-muted small">{{ entry.created_at|date:"M j, Y" }}</td>
+                <td>
+                    <form method="post" action="{% url 'ops:convert_waitlist_to_invite' entry.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary btn-sm rounded-pill">Convert to Invite</button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-muted">Nobody on the waitlist yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<h6 class="fw-bold text-uppercase small text-muted mb-2">Already Invited</h6>
+<div class="table-responsive">
+    <table class="table table-sm">
+        <thead><tr class="text-muted small text-uppercase"><th>Email</th><th>Invited</th></tr></thead>
+        <tbody>
+            {% for entry in invited_entries %}
+            <tr><td>{{ entry.email }}</td><td class="text-muted small">{{ entry.invited_at|date:"M j, Y" }}</td></tr>
+            {% empty %}
+            <tr><td colspan="2" class="text-muted">None yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock ops_content %}

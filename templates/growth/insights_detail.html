@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}{{ report.title }} | Interlink Foundry{% endblock title %}
+
+{% block seo_meta %}
+<meta name="description" content="{{ report.title }} — aggregated deal-flow stats from Interlink Foundry for {{ report.period_label }}.">
+<meta property="og:title" content="{{ report.title }}">
+<meta property="og:description" content="Aggregated deal-flow stats from Interlink Foundry for {{ report.period_label }}.">
+{% endblock seo_meta %}
+
+{% block content %}
+<div class="py-4" style="max-width: 760px; margin: 0 auto;">
+    <a href="{% url 'growth:insights_list' %}" class="text-decoration-none small text-muted">&larr; All Insights</a>
+    <h1 class="fw-bold mt-2 mb-1">{{ report.title }}</h1>
+    <p class="text-muted mb-4">{{ report.period_label }} &middot; Published {{ report.generated_at|date:"M j, Y" }}</p>
+
+    {% for section in report.body_sections %}
+    <div class="mb-4">
+        <h5 class="fw-bold">{{ section.heading }}</h5>
+        <p class="text-secondary">{{ section.text }}</p>
+    </div>
+    {% endfor %}
+
+    <div class="card border-0 bg-primary text-white rounded-4 mt-4">
+        <div class="card-body p-4 text-center">
+            <h5 class="fw-bold mb-2">Want data like this on your own deal flow?</h5>
+            <a href="{% url 'accounts:signup' %}" class="btn btn-light rounded-pill px-4 fw-semibold">Join Interlink Foundry</a>
+        </div>
+    </div>
+</div>
+{% endblock content %}

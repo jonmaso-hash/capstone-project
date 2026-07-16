@@ -1,17 +1,27 @@
+import json
+import tempfile
+from datetime import timedelta
 from unittest import mock
 
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
+from django.urls import reverse
+from django.utils import timezone
 
 from .models import (
     Application, InvestorApplication, MatchFeedback,
     SellerApplication, BuyerApplication, DealFeedback,
+    MatchTrainingExample, log_training_example, Connection,
+    PitchVideoComment, InvestorInterestEvent, AcquisitionInterestEvent,
 )
 from .utils import (
     calculate_rule_based_score, get_blended_match, _is_adjacent_stage,
     calculate_deal_rule_based_score, get_deal_blended_match,
     compute_founder_journey_stage, compute_investor_journey_stage,
     compute_seller_journey_stage, compute_buyer_journey_stage,
+    passes_hard_filters, get_weighted_chunk_score,
 )
 
 User = get_user_model()
@@ -19,11 +29,12 @@ User = get_user_model()
 
 def _mock_embedding_generation(test_case):
     """
-    matchmaking/signals.py auto-generates a real Gemini embedding on every
+    matchmaking/signals.py auto-generates a real embedding (local
+    sentence-transformers model, matchmaking/services/ai_utils.py) on every
     Application/InvestorApplication save via post_save — patched out via
-    this helper (call from setUp) so the test suite never makes live
-    network calls: slow, costs real API quota, and would make CI depend
-    on a working GEMINI_API_KEY just to test pure scoring logic.
+    this helper (call from setUp) so the test suite never pays for loading
+    the ML model: slow on first call and irrelevant to testing pure scoring
+    logic.
     """
     patcher = mock.patch('matchmaking.signals.generate_profile_embedding', return_value=[])
     patcher.start()
@@ -282,6 +293,68 @@ class JourneyStageTests(TestCase):
         stage = compute_buyer_journey_stage(self.user)
         self.assertEqual(stage['stage_color'], 'green')
 
+    @staticmethod
+    def _checklist_done(stage, label):
+        return next(item['done'] for item in stage['checklist'] if item['label'] == label)
+
+    def test_founder_business_verification_item_reflects_is_verified(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        app = Application.objects.create(
+            user=self.user, company_name='Test Co', founder_name='Founder',
+            email='f@test.com', description='A startup.',
+            pitch_deck=SimpleUploadedFile('deck.pdf', b'x' * 100, content_type='application/pdf'),
+        )
+        stage = compute_founder_journey_stage(self.user)
+        self.assertFalse(self._checklist_done(stage, 'Verify your business email'))
+
+        app.is_verified = True
+        app.save(update_fields=['is_verified'])
+        stage = compute_founder_journey_stage(self.user)
+        self.assertTrue(self._checklist_done(stage, 'Verify your business email'))
+
+    def test_investor_business_verification_item_reflects_is_verified(self):
+        investor = InvestorApplication.objects.create(
+            user=self.user, full_name='Investor Name', email='i@test.com', phone='555-0100',
+            company_name='Test VC', website='https://test.vc', linkedin_url='https://linkedin.com/x',
+            location='SF', investment_focus='SaaS', investment_stage='Seed',
+        )
+        stage = compute_investor_journey_stage(self.user)
+        self.assertFalse(self._checklist_done(stage, 'Verify your business email'))
+
+        investor.is_verified = True
+        investor.save(update_fields=['is_verified'])
+        stage = compute_investor_journey_stage(self.user)
+        self.assertTrue(self._checklist_done(stage, 'Verify your business email'))
+
+    def test_seller_business_verification_item_reflects_is_verified(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        seller = SellerApplication.objects.create(
+            user=self.user, company_name='Test Widgets', seller_name='Seller',
+            email='s@test.com', description='A business.',
+            cim_document=SimpleUploadedFile('cim.pdf', b'x' * 100, content_type='application/pdf'),
+        )
+        stage = compute_seller_journey_stage(self.user)
+        self.assertFalse(self._checklist_done(stage, 'Verify your business email'))
+
+        seller.is_verified = True
+        seller.save(update_fields=['is_verified'])
+        stage = compute_seller_journey_stage(self.user)
+        self.assertTrue(self._checklist_done(stage, 'Verify your business email'))
+
+    def test_buyer_business_verification_item_reflects_is_verified(self):
+        buyer = BuyerApplication.objects.create(
+            user=self.user, full_name='Buyer', email='b@test.com', phone='555-0100',
+            company_name='Acquisitions LLC', website='https://test.com',
+            acquisition_thesis='We acquire things.', budget_min=100, budget_max=200,
+        )
+        stage = compute_buyer_journey_stage(self.user)
+        self.assertFalse(self._checklist_done(stage, 'Verify your business email'))
+
+        buyer.is_verified = True
+        buyer.save(update_fields=['is_verified'])
+        stage = compute_buyer_journey_stage(self.user)
+        self.assertTrue(self._checklist_done(stage, 'Verify your business email'))
+
 
 class CeleryRetryRegressionTests(TestCase):
     """
@@ -327,4 +400,2324 @@ class CeleryRetryRegressionTests(TestCase):
 
         self.assertEqual(result['status'], 'error')
         self.assertTrue(result['retries_exhausted'])
-        self.assertIn('simulated DB error', result['error'])
+
+    def test_exhausted_retries_writes_a_failed_task_log(self):
+        """
+        Dead-letter coverage: once retries are exhausted, the failure must
+        be recorded in ops.FailedTaskLog (not just logged) so it's visible
+        and requeueable from the ops dashboard.
+        """
+        from ops.models import FailedTaskLog
+        from .tasks import send_weekly_digests
+
+        with mock.patch('matchmaking.tasks._send_weekly_digests_body', side_effect=Exception('simulated DB error')):
+            send_weekly_digests.apply()
+
+        failure = FailedTaskLog.objects.get()
+        self.assertEqual(failure.task_name, 'matchmaking.tasks.send_weekly_digests')
+        self.assertIn('simulated DB error', failure.exception_message)
+
+
+class EmbeddingAndSparseSimilarityCacheTests(TestCase):
+    """generate_profile_embedding/calculate_sparse_similarity cache hit-vs-miss behavior."""
+
+    def setUp(self):
+        cache.clear()
+
+    def test_embedding_cache_hit_skips_the_model_call(self):
+        from matchmaking.services import ai_engine
+
+        with mock.patch.object(ai_engine, 'generate_vector') as mock_generate_vector:
+            mock_generate_vector.return_value.tolist.return_value = [0.1, 0.2, 0.3]
+
+            first = ai_engine.generate_profile_embedding("a unique test description")
+            second = ai_engine.generate_profile_embedding("a unique test description")
+
+            self.assertEqual(first, [0.1, 0.2, 0.3])
+            self.assertEqual(second, [0.1, 0.2, 0.3])
+            # Second call should be a pure cache hit — model only invoked once.
+            self.assertEqual(mock_generate_vector.call_count, 1)
+
+    def test_different_text_is_a_cache_miss(self):
+        from matchmaking.services import ai_engine
+
+        with mock.patch.object(ai_engine, 'generate_vector') as mock_generate_vector:
+            mock_generate_vector.return_value.tolist.return_value = [0.4, 0.5]
+
+            ai_engine.generate_profile_embedding("text one")
+            ai_engine.generate_profile_embedding("text two")
+
+            self.assertEqual(mock_generate_vector.call_count, 2)
+
+    def test_sparse_similarity_cache_hit_skips_recomputation(self):
+        from matchmaking.services import ai_engine
+
+        with mock.patch('sklearn.feature_extraction.text.TfidfVectorizer') as mock_vectorizer_cls:
+            mock_vectorizer = mock.MagicMock()
+            mock_vectorizer_cls.return_value = mock_vectorizer
+            mock_vectorizer.fit_transform.return_value = mock.MagicMock()
+
+            with mock.patch('sklearn.metrics.pairwise.cosine_similarity', return_value=[[0.42]]):
+                first = ai_engine.calculate_sparse_similarity("SaaS focused fund", "SaaS startup pitch")
+                second = ai_engine.calculate_sparse_similarity("SaaS focused fund", "SaaS startup pitch")
+
+            self.assertEqual(first, 0.42)
+            self.assertEqual(second, 0.42)
+            self.assertEqual(mock_vectorizer_cls.call_count, 1)
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class HardFilterCacheCorrectnessTests(TestCase):
+    """passes_hard_filters caching: same inputs hit the cache, changed inputs recompute."""
+
+    def setUp(self):
+        cache.clear()
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('hfc_founder', password='x')
+        self.investor_user = User.objects.create_user('hfc_investor', password='x')
+        self.investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='I', email='i@t.com', company_name='ICo',
+            investment_focus='SaaS', investment_stage='Seed', ticket_size_min=100000, ticket_size_max=500000,
+        )
+        self.app = Application.objects.create(
+            user=self.founder_user, company_name='FCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed', raising_amount=250000,
+        )
+
+    def test_same_inputs_return_cached_result(self):
+        first = passes_hard_filters(self.app, self.investor)
+        with mock.patch('matchmaking.utils._compute_hard_filters') as mock_compute:
+            second = passes_hard_filters(self.app, self.investor)
+            mock_compute.assert_not_called()  # second call must be a pure cache hit
+        self.assertEqual(first, second)
+        self.assertTrue(first)
+
+    def test_changed_raising_amount_produces_a_different_cache_key_and_result(self):
+        self.assertTrue(passes_hard_filters(self.app, self.investor))
+
+        self.app.raising_amount = 999999  # now outside the investor's ticket range
+        self.app.save(update_fields=['raising_amount'])
+
+        # New raising_amount means a new cache key — must recompute, not
+        # return the stale cached True.
+        self.assertFalse(passes_hard_filters(self.app, self.investor))
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class LogPageEventTests(TestCase):
+    """log_page_event: fires on first view, dedupes same session+type+day."""
+
+    def setUp(self):
+        from django.test import RequestFactory
+        self.factory = RequestFactory()
+
+    def _request_with_session(self):
+        from django.contrib.sessions.middleware import SessionMiddleware
+        request = self.factory.get('/')
+        SessionMiddleware(lambda r: None).process_request(request)
+        request.session.save()
+        return request
+
+    def test_first_call_creates_a_row(self):
+        from .models import PageEvent, log_page_event
+        request = self._request_with_session()
+
+        log_page_event(request, 'landing_view')
+
+        self.assertEqual(PageEvent.objects.filter(event_type='landing_view').count(), 1)
+
+    def test_repeat_call_same_session_same_day_is_deduped(self):
+        from .models import PageEvent, log_page_event
+        request = self._request_with_session()
+
+        log_page_event(request, 'landing_view')
+        log_page_event(request, 'landing_view')
+        log_page_event(request, 'landing_view')
+
+        self.assertEqual(PageEvent.objects.filter(event_type='landing_view').count(), 1)
+
+    def test_different_session_is_not_deduped(self):
+        from .models import PageEvent, log_page_event
+        request_a = self._request_with_session()
+        request_b = self._request_with_session()
+
+        log_page_event(request_a, 'landing_view')
+        log_page_event(request_b, 'landing_view')
+
+        self.assertEqual(PageEvent.objects.filter(event_type='landing_view').count(), 2)
+
+    def test_role_and_user_are_recorded(self):
+        from .models import PageEvent, log_page_event
+        request = self._request_with_session()
+        user = User.objects.create_user('funnel_test_user', password='x')
+
+        log_page_event(request, 'signup_completed', role='founder', user=user)
+
+        event = PageEvent.objects.get(event_type='signup_completed')
+        self.assertEqual(event.role, 'founder')
+        self.assertEqual(event.user, user)
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class FunnelAnalyticsTests(TestCase):
+    """get_founder_investor_funnel/get_seller_buyer_funnel: each stage count
+    reflects the underlying data exactly, against known fixtures."""
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+
+    def test_founder_stage_counts_match_fixtures(self):
+        from .models import Application, InvestorApplication, Connection, InvestorInterestEvent
+        from .analytics import get_founder_investor_funnel
+
+        founder_user = User.objects.create_user('funnel_founder', password='x')
+        founder = Application.objects.create(
+            user=founder_user, founder_name='F', email='f@t.com', company_name='FCo',
+            sector='SaaS', stage='Seed', description='test', is_private=False,
+        )
+        investor_user = User.objects.create_user('funnel_investor', password='x')
+        investor = InvestorApplication.objects.create(
+            user=investor_user, full_name='I', email='i@t.com', company_name='ICo',
+            investment_focus='SaaS', investment_stage='Seed', is_private=False,
+        )
+        InvestorInterestEvent.objects.create(investor=investor_user, founder=founder, event_type='view')
+        Connection.objects.create(investor=investor, founder=founder, status='ACCEPTED', initiated_by='INVESTOR')
+
+        funnel = get_founder_investor_funnel()
+        by_key = {row['key']: row['count'] for row in funnel['founder']}
+
+        self.assertEqual(by_key['signup_completed'], 1)
+        self.assertEqual(by_key['matched'], 1)
+        self.assertEqual(by_key['intro_sent'], 1)
+        self.assertEqual(by_key['intro_accepted'], 1)
+        self.assertEqual(by_key['deal_room'], 0)
+        self.assertEqual(by_key['premium'], 0)
+
+    def test_seller_stage_counts_match_fixtures(self):
+        from .models import SellerApplication, BuyerApplication, AcquisitionConnection
+        from .analytics import get_seller_buyer_funnel
+
+        seller_user = User.objects.create_user('funnel_seller', password='x')
+        SellerApplication.objects.create(
+            user=seller_user, seller_name='S', email='s@t.com', company_name='SCo',
+            description='test biz', is_premium=True,
+        )
+        buyer_user = User.objects.create_user('funnel_buyer', password='x')
+        BuyerApplication.objects.create(
+            user=buyer_user, full_name='B', email='b@t.com', company_name='BCo',
+            acquisition_thesis='test',
+        )
+
+        funnel = get_seller_buyer_funnel()
+        by_key = {row['key']: row['count'] for row in funnel['seller']}
+
+        self.assertEqual(by_key['signup_completed'], 1)
+        self.assertEqual(by_key['intro_sent'], 0)
+        self.assertEqual(by_key['premium'], 1)
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class PassesHardFiltersTests(TestCase):
+    """passes_hard_filters: excludes on ticket-size/stage mismatch, fails open when unset."""
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('hf_founder', password='x')
+        self.investor_user = User.objects.create_user('hf_investor', password='x')
+
+    def _investor(self, ticket_min=None, ticket_max=None, stage=''):
+        return InvestorApplication.objects.create(
+            user=self.investor_user, full_name='I', email='i@t.com', company_name='ICo',
+            investment_focus='SaaS', investment_stage=stage,
+            ticket_size_min=ticket_min, ticket_size_max=ticket_max,
+        )
+
+    def _founder(self, raising_amount=500000, stage='Seed'):
+        return Application.objects.create(
+            user=self.founder_user, company_name='FCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage=stage, raising_amount=raising_amount,
+        )
+
+    def test_no_constraints_declared_passes(self):
+        investor = self._investor()
+        app = self._founder(raising_amount=10_000_000, stage='Series C')
+        self.assertTrue(passes_hard_filters(app, investor))
+
+    def test_raising_amount_below_ticket_min_excluded(self):
+        investor = self._investor(ticket_min=250000, ticket_max=1000000)
+        app = self._founder(raising_amount=50000)
+        self.assertFalse(passes_hard_filters(app, investor))
+
+    def test_raising_amount_above_ticket_max_excluded(self):
+        investor = self._investor(ticket_min=250000, ticket_max=1000000)
+        app = self._founder(raising_amount=5_000_000)
+        self.assertFalse(passes_hard_filters(app, investor))
+
+    def test_raising_amount_within_range_passes(self):
+        investor = self._investor(ticket_min=250000, ticket_max=1000000)
+        app = self._founder(raising_amount=500000)
+        self.assertTrue(passes_hard_filters(app, investor))
+
+    def test_stage_mismatch_excluded(self):
+        investor = self._investor(stage='Seed')
+        app = self._founder(stage='Series C')
+        self.assertFalse(passes_hard_filters(app, investor))
+
+    def test_adjacent_stage_passes(self):
+        investor = self._investor(stage='Seed')
+        app = self._founder(stage='Pre-Seed')
+        self.assertTrue(passes_hard_filters(app, investor))
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class BlendedMatchSparseChunkTests(TestCase):
+    """get_blended_match's new sparse_score term and chunk-score fallback behavior."""
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('bm2_founder', password='x')
+        self.investor_user = User.objects.create_user('bm2_investor', password='x')
+        self.investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='I', email='i@t.com', company_name='ICo',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.app = Application.objects.create(
+            user=self.founder_user, company_name='FCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+
+    def test_sparse_score_none_preserves_old_70_30_blend(self):
+        score = get_blended_match(ai_score=50, rule_score=100, application=self.app, investor=self.investor)
+        self.assertEqual(score, 85.0)  # 100*0.7 + 50*0.3, unchanged from before this feature
+
+    def test_sparse_score_switches_to_3_way_blend(self):
+        # rule=100, ai=50, sparse=20 -> 100*0.5 + 50*0.25 + 20*0.25 = 67.5
+        score = get_blended_match(
+            ai_score=50, rule_score=100, application=self.app, investor=self.investor, sparse_score=20,
+        )
+        self.assertEqual(score, 67.5)
+
+    def test_chunk_score_none_when_no_chunk_vectors_present(self):
+        self.assertIsNone(get_weighted_chunk_score(self.app, self.investor))
+
+    def test_chunk_score_falls_back_to_ai_score_when_absent(self):
+        # No chunk vectors set on either side -> get_blended_match should use
+        # the passed-in whole-profile ai_score untouched, not silently zero it.
+        score_with_chunks_absent = get_blended_match(
+            ai_score=50, rule_score=100, application=self.app, investor=self.investor,
+        )
+        self.assertEqual(score_with_chunks_absent, 85.0)
+
+    def test_chunk_score_used_when_vectors_present_on_both_sides(self):
+        self.app.problem_solution_vector = [1.0, 0.0]
+        self.app.save(update_fields=['problem_solution_vector'])
+        self.investor.thesis_vector = [1.0, 0.0]
+        self.investor.weight_problem_solution = 1.0
+        self.investor.weight_capital_plan = 0.0
+        self.investor.weight_market_context = 0.0
+        self.investor.save(update_fields=['thesis_vector', 'weight_problem_solution', 'weight_capital_plan', 'weight_market_context'])
+
+        chunk_score = get_weighted_chunk_score(self.app, self.investor)
+        self.assertIsNotNone(chunk_score)
+        self.assertAlmostEqual(chunk_score, 100.0, places=2)  # identical vectors -> cosine sim 1.0 -> 100
+
+        # get_blended_match should transparently swap in the chunk score in place of ai_score=50
+        score = get_blended_match(ai_score=50, rule_score=0, application=self.app, investor=self.investor)
+        self.assertAlmostEqual(score, 30.0, places=1)  # rule*0.7 + chunk_score(100)*0.3 = 30
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class LogTrainingExampleTests(TestCase):
+    """log_training_example: fire-and-forget helper, wired into vote/connection endpoints."""
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('lte_founder', password='x')
+        self.investor_user = User.objects.create_user('lte_investor', password='x')
+        self.investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='I', email='i@t.com', company_name='ICo',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.app = Application.objects.create(
+            user=self.founder_user, company_name='FCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+
+    def test_helper_creates_a_row_with_correct_fields(self):
+        log_training_example('INVESTOR', self.investor.id, 'FOUNDER', self.app.id, 'POSITIVE', 'thumbs_up')
+        example = MatchTrainingExample.objects.get()
+        self.assertEqual(example.anchor_type, 'INVESTOR')
+        self.assertEqual(example.anchor_id, self.investor.id)
+        self.assertEqual(example.candidate_type, 'FOUNDER')
+        self.assertEqual(example.candidate_id, self.app.id)
+        self.assertEqual(example.label, 'POSITIVE')
+        self.assertEqual(example.source, 'thumbs_up')
+
+    def test_helper_swallows_errors_instead_of_raising(self):
+        # An invalid choice value would normally raise on full_clean, but
+        # .create() skips validation - this asserts the try/except still
+        # protects the caller even against a lower-level DB error.
+        with mock.patch(
+            'matchmaking.models.MatchTrainingExample.objects.create',
+            side_effect=Exception('db exploded'),
+        ):
+            log_training_example('INVESTOR', self.investor.id, 'FOUNDER', self.app.id, 'POSITIVE', 'thumbs_up')
+        self.assertEqual(MatchTrainingExample.objects.count(), 0)
+
+    def test_thumbs_up_vote_logs_positive_example(self):
+        self.client.force_login(self.investor_user)
+        response = self.client.post(
+            reverse('matchmaking:record_vote'),
+            {'application_id': self.app.id, 'vote': 'up'},
+        )
+        self.assertEqual(response.status_code, 302)
+        example = MatchTrainingExample.objects.get()
+        self.assertEqual(example.label, 'POSITIVE')
+        self.assertEqual(example.source, 'thumbs_up')
+
+    def test_thumbs_down_vote_logs_negative_example(self):
+        self.client.force_login(self.investor_user)
+        self.client.post(
+            reverse('matchmaking:record_vote'),
+            {'application_id': self.app.id, 'vote': 'down'},
+        )
+        example = MatchTrainingExample.objects.get()
+        self.assertEqual(example.label, 'NEGATIVE')
+        self.assertEqual(example.source, 'thumbs_down')
+
+    def test_funded_transition_logs_positive_example(self):
+        from .models import Connection
+
+        conn = Connection.objects.create(
+            founder=self.app, investor=self.investor, status='ACCEPTED', initiated_by='FOUNDER',
+        )
+        self.client.force_login(self.founder_user)
+        self.client.post(
+            reverse('matchmaking:connection_action'),
+            data=json.dumps({'id': conn.id, 'action': 'FUNDED'}),
+            content_type='application/json',
+        )
+        example = MatchTrainingExample.objects.get()
+        self.assertEqual(example.anchor_type, 'INVESTOR')
+        self.assertEqual(example.candidate_type, 'FOUNDER')
+        self.assertEqual(example.label, 'POSITIVE')
+        self.assertEqual(example.source, 'funded')
+
+    def test_declined_transition_logs_negative_example(self):
+        from .models import Connection
+
+        conn = Connection.objects.create(
+            founder=self.app, investor=self.investor, status='PENDING', initiated_by='FOUNDER',
+        )
+        self.client.force_login(self.investor_user)
+        self.client.post(
+            reverse('matchmaking:connection_action'),
+            data=json.dumps({'id': conn.id, 'action': 'DECLINED'}),
+            content_type='application/json',
+        )
+        example = MatchTrainingExample.objects.get()
+        self.assertEqual(example.label, 'NEGATIVE')
+        self.assertEqual(example.source, 'declined')
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class VectorFieldLockGracePeriodTests(TestCase):
+    """
+    vector_fields_locked/vector_fields_unlock_at: a 24h grace window right
+    after a vector-field edit, THEN a 30-day lock — not a 30-day lock
+    starting immediately. Covers Application; SellerApplication uses the
+    identical implementation.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('lock_grace_founder', password='x')
+
+    def _founder(self, updated_at):
+        # All 6 VECTOR_FIELDS filled in — vector_fields_locked now also
+        # requires vector_fields_complete, which is a separate concern from
+        # the grace/lock timing these tests exercise (see
+        # VectorFieldsCompleteGateTests for the completeness gate itself).
+        return Application.objects.create(
+            user=self.founder_user, company_name='FCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed', extra_info='extra',
+            reason_for_capital='reason', geography='Remote', vector_fields_updated_at=updated_at,
+        )
+
+    def test_never_edited_is_not_locked(self):
+        app = Application.objects.create(
+            user=self.founder_user, company_name='FCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed', extra_info='extra',
+            reason_for_capital='reason', geography='Remote',
+        )
+        self.assertFalse(app.vector_fields_locked)
+
+    def test_within_24h_grace_window_is_not_locked(self):
+        from django.utils import timezone
+        app = self._founder(timezone.now() - timedelta(hours=1))
+        self.assertFalse(app.vector_fields_locked)
+
+    def test_past_grace_window_within_30_days_is_locked(self):
+        from django.utils import timezone
+        app = self._founder(timezone.now() - timedelta(hours=25))
+        self.assertTrue(app.vector_fields_locked)
+
+    def test_past_grace_plus_30_days_is_unlocked_again(self):
+        from django.utils import timezone
+        app = self._founder(timezone.now() - timedelta(hours=24, days=31))
+        self.assertFalse(app.vector_fields_locked)
+
+    def test_unlock_at_is_updated_at_plus_grace_plus_lock_duration(self):
+        from django.utils import timezone
+        now = timezone.now()
+        app = self._founder(now)
+        expected = now + timedelta(hours=24) + timedelta(days=30)
+        self.assertAlmostEqual(app.vector_fields_unlock_at, expected, delta=timedelta(seconds=1))
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class VectorFieldsCompleteGateTests(TestCase):
+    """
+    The 30-day lock only protects a *complete* profile from being gamed
+    after the fact — it shouldn't fire on someone still filling the form
+    out for the first time. vector_fields_locked/vector_fields_unlock_at
+    must stay False/None regardless of how far past the grace+lock window
+    vector_fields_updated_at is, as long as any VECTOR_FIELDS entry is
+    still blank. Covers Application; SellerApplication uses the identical
+    implementation against its own VECTOR_FIELDS list.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('complete_gate_founder', password='x')
+
+    def _founder(self, **overrides):
+        from django.utils import timezone
+        defaults = dict(
+            user=self.founder_user, company_name='FCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed', extra_info='extra',
+            reason_for_capital='reason', geography='Remote',
+            # Past the 24h grace window but inside the 30-day lock window —
+            # a complete profile with this timestamp should be locked.
+            vector_fields_updated_at=timezone.now() - timedelta(hours=25),
+        )
+        defaults.update(overrides)
+        return Application.objects.create(**defaults)
+
+    def test_complete_profile_reports_complete(self):
+        app = self._founder()
+        self.assertTrue(app.vector_fields_complete)
+
+    def test_missing_extra_info_is_incomplete(self):
+        app = self._founder(extra_info='')
+        self.assertFalse(app.vector_fields_complete)
+
+    def test_missing_reason_for_capital_is_incomplete(self):
+        app = self._founder(reason_for_capital='')
+        self.assertFalse(app.vector_fields_complete)
+
+    def test_missing_geography_is_incomplete(self):
+        app = self._founder(geography='')
+        self.assertFalse(app.vector_fields_complete)
+
+    def test_incomplete_profile_never_locks_even_long_past_the_lock_window(self):
+        from django.utils import timezone
+        app = self._founder(extra_info='', vector_fields_updated_at=timezone.now() - timedelta(days=100))
+        self.assertFalse(app.vector_fields_locked)
+
+    def test_incomplete_profile_has_no_unlock_at(self):
+        app = self._founder(geography='')
+        self.assertIsNone(app.vector_fields_unlock_at)
+
+    def test_completing_the_profile_makes_it_lockable(self):
+        app = self._founder()
+        self.assertTrue(app.vector_fields_complete)
+        self.assertTrue(app.vector_fields_locked)
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class SellerVectorFieldsCompleteGateTests(TestCase):
+    """SellerApplication's identical implementation against its own VECTOR_FIELDS list."""
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.seller_user = User.objects.create_user('seller_complete_gate', password='x')
+
+    def _seller(self, **overrides):
+        from django.utils import timezone
+        from .models import SellerApplication
+        defaults = dict(
+            user=self.seller_user, company_name='SCo', seller_name='S', email='s@t.com',
+            description='test', industry='SaaS', reason_for_sale='reason',
+            extra_info='extra', geography='Remote',
+            vector_fields_updated_at=timezone.now() - timedelta(hours=25),
+        )
+        defaults.update(overrides)
+        return SellerApplication.objects.create(**defaults)
+
+    def test_complete_profile_is_lockable(self):
+        seller = self._seller()
+        self.assertTrue(seller.vector_fields_complete)
+        self.assertTrue(seller.vector_fields_locked)
+
+    def test_missing_reason_for_sale_never_locks(self):
+        seller = self._seller(reason_for_sale='')
+        self.assertFalse(seller.vector_fields_complete)
+        self.assertFalse(seller.vector_fields_locked)
+        self.assertIsNone(seller.vector_fields_unlock_at)
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class EmbeddingSemanticOrderingTests(TestCase):
+    """
+    Model-agnostic regression guard for the embedding provider itself
+    (currently local sentence-transformers, previously Gemini). Deliberately
+    does NOT mock generate_profile_embedding — it needs a real embedding to
+    say anything meaningful — and deliberately does NOT assert exact
+    similarity scores, since those are expected to shift if the model is
+    ever swapped again. It only asserts that semantically related profiles
+    outrank unrelated ones, which is the one property any embedding
+    provider must preserve for matching to make sense.
+    """
+
+    def setUp(self):
+        self.founder_user = User.objects.create_user('semantic_founder', password='x')
+        self.other_founder_user = User.objects.create_user('semantic_founder2', password='x')
+        self.investor_user = User.objects.create_user('semantic_investor', password='x')
+
+    def test_related_profile_outranks_unrelated_profile(self):
+        from .services.ai_engine import calculate_similarity
+
+        investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='I', email='semantic_i@t.com', company_name='ICo',
+            investment_focus='Healthcare and biotech startups building novel drug therapies and clinical diagnostics',
+            investment_stage='Seed',
+        )
+        healthcare_founder = Application.objects.create(
+            user=self.founder_user, company_name='HealthCo', founder_name='F', email='semantic_f1@t.com',
+            description='We develop novel drug therapies and clinical diagnostics for biotech and pharmaceutical research.',
+            sector='Healthcare', stage='Seed',
+        )
+        manufacturing_founder = Application.objects.create(
+            user=self.other_founder_user, company_name='SteelCo', founder_name='F2', email='semantic_f2@t.com',
+            description='We manufacture industrial steel beams and heavy construction equipment for warehouses.',
+            sector='Manufacturing', stage='Seed',
+        )
+
+        investor.refresh_from_db()
+        healthcare_founder.refresh_from_db()
+        manufacturing_founder.refresh_from_db()
+
+        self.assertIsNotNone(investor.focus_vector)
+        self.assertIsNotNone(healthcare_founder.description_vector)
+        self.assertIsNotNone(manufacturing_founder.description_vector)
+
+        healthcare_score = calculate_similarity(healthcare_founder.description_vector, investor.focus_vector)
+        manufacturing_score = calculate_similarity(manufacturing_founder.description_vector, investor.focus_vector)
+
+        self.assertGreater(healthcare_score, manufacturing_score)
+
+    # Golden dataset — a small, hand-picked set of investor-focus vs.
+    # founder-pitch pairs spanning verticals actually seen on this
+    # marketplace. Not meant to grow into hundreds of cases; the point is a
+    # quick, readable sanity check that survives an embedding model swap.
+    # Add a case here any time a new vertical becomes common enough to
+    # matter, rather than letting the list balloon speculatively.
+    GOLDEN_CASES = [
+        {
+            'investor_focus': 'Healthcare and biotech startups building novel drug therapies and clinical diagnostics',
+            'related_pitch': 'A pharmaceutical startup developing novel drug therapies and clinical diagnostics for patients.',
+            'unrelated_pitch': 'An industrial manufacturer producing steel beams and heavy construction equipment for warehouses.',
+        },
+        {
+            'investor_focus': 'FinTech companies building payment processing and digital banking infrastructure',
+            'related_pitch': 'A payment platform providing digital banking infrastructure and payment processing for merchants.',
+            'unrelated_pitch': 'A restaurant chain serving fast casual dining across regional shopping mall food courts.',
+        },
+        {
+            'investor_focus': 'Industrial automation and robotics for manufacturing and warehouse logistics',
+            'related_pitch': 'An industrial robotics company automating manufacturing lines and warehouse logistics operations.',
+            'unrelated_pitch': 'A health clinic providing outpatient checkups and family medicine consultations for patients.',
+        },
+        {
+            'investor_focus': 'B2B SaaS platforms for enterprise workflow automation and team collaboration',
+            'related_pitch': 'A B2B workflow automation platform helping enterprise teams collaborate and manage projects.',
+            'unrelated_pitch': 'A real estate brokerage helping homebuyers and sellers negotiate residential property deals.',
+        },
+    ]
+
+    def test_golden_dataset_ranks_related_pitches_above_unrelated_ones(self):
+        from .services.ai_engine import calculate_similarity
+
+        for i, case in enumerate(self.GOLDEN_CASES):
+            with self.subTest(case=case['investor_focus'][:40]):
+                investor_user = User.objects.create_user(f'golden_investor_{i}', password='x')
+                related_user = User.objects.create_user(f'golden_related_{i}', password='x')
+                unrelated_user = User.objects.create_user(f'golden_unrelated_{i}', password='x')
+
+                investor = InvestorApplication.objects.create(
+                    user=investor_user, full_name='I', email=f'golden_i{i}@t.com', company_name='ICo',
+                    investment_focus=case['investor_focus'], investment_stage='Seed',
+                )
+                related_founder = Application.objects.create(
+                    user=related_user, company_name='RelatedCo', founder_name='F', email=f'golden_r{i}@t.com',
+                    description=case['related_pitch'], sector='Other', stage='Seed',
+                )
+                unrelated_founder = Application.objects.create(
+                    user=unrelated_user, company_name='UnrelatedCo', founder_name='F2', email=f'golden_u{i}@t.com',
+                    description=case['unrelated_pitch'], sector='Other', stage='Seed',
+                )
+
+                investor.refresh_from_db()
+                related_founder.refresh_from_db()
+                unrelated_founder.refresh_from_db()
+
+                related_score = calculate_similarity(related_founder.description_vector, investor.focus_vector)
+                unrelated_score = calculate_similarity(unrelated_founder.description_vector, investor.focus_vector)
+
+                self.assertGreater(
+                    related_score, unrelated_score,
+                    f"Expected '{case['related_pitch'][:40]}...' to outrank "
+                    f"'{case['unrelated_pitch'][:40]}...' for investor focus '{case['investor_focus'][:40]}...'"
+                )
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class ApproximateFoundingYearTests(TestCase):
+    """Application.approximate_founding_year — derived display value, no schema change."""
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('founding_year_founder', password='x')
+
+    def test_returns_none_when_years_in_business_unset(self):
+        app = Application.objects.create(
+            user=self.founder_user, company_name='FCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        self.assertIsNone(app.approximate_founding_year)
+
+    def test_computes_current_year_minus_years_in_business(self):
+        from django.utils import timezone
+        app = Application.objects.create(
+            user=self.founder_user, company_name='FCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed', years_in_business=5,
+        )
+        self.assertEqual(app.approximate_founding_year, timezone.now().year - 5)
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class VectorSourceTextCoverageTests(TestCase):
+    """
+    extra_info/monthly_burn_rate/prior_amount_raised previously fed no
+    vector at all — signals.py now folds them into problem_solution_vector
+    and capital_plan_vector's source text. Asserts the *text passed to the
+    embedding call* includes this content, with mocked embedding output
+    (no real model call, fast/deterministic) — a regression guard against
+    silently dropping these fields again, not a semantic-quality check
+    (that's EmbeddingSemanticOrderingTests' job).
+    """
+
+    def setUp(self):
+        self.founder_user = User.objects.create_user('vector_coverage_founder', password='x')
+
+    def test_extra_info_included_in_problem_solution_source_text(self):
+        with mock.patch('matchmaking.signals.generate_profile_embedding', return_value=[0.1]) as mock_embed:
+            Application.objects.create(
+                user=self.founder_user, company_name='FCo', founder_name='F', email='f@t.com',
+                description='We build developer tools.', extra_info='Backed by three technical co-founders.',
+                sector='SaaS', stage='Seed',
+            )
+            # description_vector and problem_solution_vector both embed text
+            # containing "developer tools" (one with extra_info folded in,
+            # one without) — find the specific call that combines both.
+            calls = [c.args[0] for c in mock_embed.call_args_list]
+            combined = [text for text in calls if 'developer tools' in text and 'co-founders' in text]
+            self.assertTrue(combined, f"Expected a call embedding description+extra_info combined; got calls: {calls}")
+
+    def test_problem_solution_source_falls_back_to_description_alone_when_extra_info_blank(self):
+        with mock.patch('matchmaking.signals.generate_profile_embedding', return_value=[0.1]) as mock_embed:
+            Application.objects.create(
+                user=self.founder_user, company_name='FCo', founder_name='F', email='f@t.com',
+                description='We build developer tools.', sector='SaaS', stage='Seed',
+            )
+            calls = [c.args[0] for c in mock_embed.call_args_list]
+            matching = [text for text in calls if 'developer tools' in text]
+            self.assertTrue(matching)
+            self.assertEqual(matching[0], 'We build developer tools.')
+
+    def test_burn_rate_and_prior_raised_included_in_capital_plan_source_text(self):
+        with mock.patch('matchmaking.signals.generate_profile_embedding', return_value=[0.1]) as mock_embed:
+            Application.objects.create(
+                user=self.founder_user, company_name='FCo', founder_name='F', email='f@t.com',
+                description='test', sector='SaaS', stage='Seed',
+                reason_for_capital='Hiring two engineers and scaling ad spend.',
+                monthly_burn_rate=45000, prior_amount_raised=200000,
+            )
+            calls = [c.args[0] for c in mock_embed.call_args_list]
+            matching = [text for text in calls if 'Hiring two engineers' in text]
+            self.assertTrue(matching, "Expected a call embedding reason_for_capital")
+            self.assertIn('$45,000', matching[0])
+            self.assertIn('$200,000', matching[0])
+
+    def test_capital_plan_source_falls_back_to_reason_alone_when_financials_blank(self):
+        with mock.patch('matchmaking.signals.generate_profile_embedding', return_value=[0.1]) as mock_embed:
+            Application.objects.create(
+                user=self.founder_user, company_name='FCo', founder_name='F', email='f@t.com',
+                description='test', sector='SaaS', stage='Seed',
+                reason_for_capital='Hiring two engineers and scaling ad spend.',
+            )
+            calls = [c.args[0] for c in mock_embed.call_args_list]
+            matching = [text for text in calls if 'Hiring two engineers' in text]
+            self.assertTrue(matching)
+            self.assertEqual(matching[0], 'Hiring two engineers and scaling ad spend.')
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class MessageThreadTests(TestCase):
+    """
+    MessageThread is the local proxy for "have these two users ever
+    messaged" — Stream Chat holds the actual messages externally, so this
+    just needs one row per unique pair regardless of who initiated or how
+    many times they've since messaged again.
+    """
+
+    def setUp(self):
+        self.user_a = User.objects.create_user('thread_user_a', password='x')
+        self.user_b = User.objects.create_user('thread_user_b', password='x')
+
+    def test_log_thread_creates_one_row(self):
+        from .models import MessageThread
+        MessageThread.log_thread(self.user_a, self.user_b)
+        self.assertEqual(MessageThread.objects.count(), 1)
+
+    def test_log_thread_is_order_independent(self):
+        from .models import MessageThread
+        MessageThread.log_thread(self.user_a, self.user_b)
+        MessageThread.log_thread(self.user_b, self.user_a)
+        self.assertEqual(MessageThread.objects.count(), 1)
+
+    def test_log_thread_ignores_self_pair(self):
+        from .models import MessageThread
+        MessageThread.log_thread(self.user_a, self.user_a)
+        self.assertEqual(MessageThread.objects.count(), 0)
+
+    def test_log_thread_counts_correctly_for_a_given_user(self):
+        from .models import MessageThread
+        from django.db.models import Q
+        user_c = User.objects.create_user('thread_user_c', password='x')
+        MessageThread.log_thread(self.user_a, self.user_b)
+        MessageThread.log_thread(self.user_a, user_c)
+        count = MessageThread.objects.filter(Q(user_a=self.user_a) | Q(user_b=self.user_a)).count()
+        self.assertEqual(count, 2)
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class PitchVideoTelemetryTests(TestCase):
+    """
+    record_video_telemetry ingests sendBeacon payloads tracking the
+    furthest playback position reached per session — mirrors
+    record_deck_telemetry's self-view skip and beacon-with-CSRF pattern.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('video_founder', password='x')
+        self.viewer = User.objects.create_user('video_viewer', password='x')
+        self.application = Application.objects.create(
+            user=self.founder_user, company_name='VidCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+
+    def _post_telemetry(self, user, payload):
+        self.client.force_login(user)
+        return self.client.post(
+            reverse('matchmaking:record_video_telemetry', args=[self.application.id]),
+            {'payload': json.dumps(payload)},
+        )
+
+    def test_creates_a_session_row(self):
+        from .models import PitchVideoView
+        self._post_telemetry(self.viewer, {
+            'client_session_id': 'sess-1', 'watched_seconds': 30, 'video_duration_seconds': 120,
+        })
+        self.assertEqual(PitchVideoView.objects.count(), 1)
+        session = PitchVideoView.objects.first()
+        self.assertEqual(session.max_watched_seconds, 30)
+
+    def test_repeated_beacons_track_furthest_position_only(self):
+        from .models import PitchVideoView
+        self._post_telemetry(self.viewer, {
+            'client_session_id': 'sess-1', 'watched_seconds': 30, 'video_duration_seconds': 120,
+        })
+        self._post_telemetry(self.viewer, {
+            'client_session_id': 'sess-1', 'watched_seconds': 20, 'video_duration_seconds': 120,
+        })
+        session = PitchVideoView.objects.first()
+        self.assertEqual(session.max_watched_seconds, 30, "A later, smaller watched_seconds should not move it backward")
+
+    def test_founder_previewing_own_video_is_skipped(self):
+        from .models import PitchVideoView
+        self._post_telemetry(self.founder_user, {
+            'client_session_id': 'sess-1', 'watched_seconds': 30, 'video_duration_seconds': 120,
+        })
+        self.assertEqual(PitchVideoView.objects.count(), 0)
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class ProfileDurationTelemetryTests(TestCase):
+    """
+    record_profile_duration matches a beacon back to the ProfileView row
+    accounts.views.profile() creates on page load, keyed by
+    viewer+viewed_user+session_key.
+    """
+
+    def setUp(self):
+        self.viewed_user = User.objects.create_user('duration_viewed', password='x')
+        self.viewer = User.objects.create_user('duration_viewer', password='x')
+
+    def test_updates_matching_profile_view_row(self):
+        from .models import ProfileView
+        self.client.force_login(self.viewer)
+        # Visit the profile first so a ProfileView row + session exist.
+        self.client.get(reverse('accounts:profile', args=[self.viewed_user.username]))
+        session_key = self.client.session.session_key
+
+        response = self.client.post(
+            reverse('matchmaking:record_profile_duration', args=[self.viewed_user.username]),
+            {'payload': json.dumps({'duration_seconds': 45})},
+        )
+        self.assertEqual(response.status_code, 200)
+        row = ProfileView.objects.get(viewed_user=self.viewed_user, viewer=self.viewer, session_key=session_key)
+        self.assertEqual(row.duration_seconds, 45)
+
+    def test_self_view_is_skipped(self):
+        self.client.force_login(self.viewed_user)
+        response = self.client.post(
+            reverse('matchmaking:record_profile_duration', args=[self.viewed_user.username]),
+            {'payload': json.dumps({'duration_seconds': 45})},
+        )
+        self.assertEqual(response.json()['status'], 'skipped')
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class SearchEventLoggingTests(TestCase):
+    """
+    SearchEvent powers the Engagement tab's 'searches per user' metric —
+    it should only ever log a real, non-empty search, from either the
+    filter-based global_search page or the Zelda AI sidebar search.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.user = User.objects.create_user('search_event_user', password='x')
+        self.client.force_login(self.user)
+
+    def test_global_search_with_filters_logs_an_event(self):
+        from .models import SearchEvent
+        self.client.get(reverse('matchmaking:global_search'), {'industry': 'SaaS'})
+        self.assertEqual(SearchEvent.objects.filter(source='filter_search').count(), 1)
+
+    def test_global_search_with_no_filters_does_not_log(self):
+        from .models import SearchEvent
+        self.client.get(reverse('matchmaking:global_search'))
+        self.assertEqual(SearchEvent.objects.count(), 0)
+
+    def test_log_search_event_skips_empty_query(self):
+        from django.test import RequestFactory
+        from .models import log_search_event, SearchEvent
+        request = RequestFactory().get('/')
+        request.user = self.user
+        request.session = self.client.session
+        log_search_event(request, 'zelda_ai_search', '')
+        self.assertEqual(SearchEvent.objects.count(), 0)
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class UtmSourceCaptureTests(TestCase):
+    """
+    utm_source is first-touch attribution: captured only on a session's
+    very first PageEvent, never overwritten by a later visit.
+    """
+
+    def _request_with_session(self, url, session_store=None):
+        """
+        Builds a bare request with its own session, entirely via
+        RequestFactory + SessionStore — deliberately avoids self.client.get()
+        for any real page, since pages.views.home_view itself calls
+        log_page_event(request, 'landing_view'), which would silently
+        create the session's first PageEvent before the test's own call.
+        """
+        from django.contrib.sessions.backends.db import SessionStore
+        from django.test import RequestFactory
+        request = RequestFactory().get(url)
+        request.session = session_store if session_store is not None else SessionStore()
+        if not request.session.session_key:
+            request.session.create()
+        return request
+
+    def test_utm_source_captured_on_first_landing_view(self):
+        from .models import log_page_event, PageEvent
+        request = self._request_with_session('/?utm_source=twitter')
+        log_page_event(request, 'landing_view')
+        event = PageEvent.objects.get(event_type='landing_view')
+        self.assertEqual(event.utm_source, 'twitter')
+
+    def test_utm_source_not_overwritten_on_second_session_visit(self):
+        from .models import log_page_event, PageEvent
+        first_request = self._request_with_session('/?utm_source=twitter')
+        log_page_event(first_request, 'landing_view')
+
+        second_request = self._request_with_session('/?utm_source=reddit', session_store=first_request.session)
+        log_page_event(second_request, 'signup_started')
+
+        signup_event = PageEvent.objects.get(event_type='signup_started')
+        self.assertEqual(signup_event.utm_source, '')
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class DashboardViewTrackingTests(TestCase):
+    """dashboard_view PageEvent feeds the Feature Adoption tab's 'viewed match list' row."""
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+
+    def test_founder_dashboard_visit_logs_dashboard_view(self):
+        from .models import PageEvent
+        user = User.objects.create_user('dash_founder', password='x')
+        Application.objects.create(
+            user=user, company_name='Co', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        self.client.force_login(user)
+        self.client.get(reverse('matchmaking:founder_dashboard'))
+        self.assertTrue(PageEvent.objects.filter(event_type='dashboard_view', role='founder', user=user).exists())
+
+    def test_investor_dashboard_visit_logs_dashboard_view(self):
+        from .models import PageEvent
+        user = User.objects.create_user('dash_investor', password='x')
+        InvestorApplication.objects.create(
+            user=user, full_name='I', company_name='Fund', email='i@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.client.force_login(user)
+        self.client.get(reverse('matchmaking:investor_dashboard'))
+        self.assertTrue(PageEvent.objects.filter(event_type='dashboard_view', role='investor', user=user).exists())
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class GrowthMetricsTests(TestCase):
+    """
+    Fixture-driven correctness checks for matchmaking/growth_metrics.py —
+    each function backs one tab on platform_metrics (Acquisition/
+    Activation/Engagement/Value Creation/Feature Adoption).
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+
+    def test_feature_adoption_percentages(self):
+        from . import growth_metrics
+        founder_with_deck = User.objects.create_user('adopt_founder_1', password='x')
+        founder_without_deck = User.objects.create_user('adopt_founder_2', password='x')
+        Application.objects.create(
+            user=founder_with_deck, company_name='WithDeck', founder_name='F', email='f1@t.com',
+            description='test', sector='SaaS', stage='Seed', pitch_deck='decks/x.pdf',
+        )
+        Application.objects.create(
+            user=founder_without_deck, company_name='NoDeck', founder_name='F', email='f2@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+
+        rows = growth_metrics.get_feature_adoption_metrics()
+        deck_row = next(r for r in rows if r['label'] == 'Uploaded pitch deck')
+        self.assertEqual(deck_row['adopted_count'], 1)
+        self.assertEqual(deck_row['eligible_count'], 2)
+        self.assertEqual(deck_row['adoption_pct'], 50.0)
+        self.assertEqual(deck_row['ignored_pct'], 50.0)
+
+    def test_weekly_active_users_excludes_stale_logins(self):
+        from . import growth_metrics
+        recent_user = User.objects.create_user('wau_recent', password='x')
+        stale_user = User.objects.create_user('wau_stale', password='x')
+        Application.objects.create(
+            user=recent_user, company_name='Recent', founder_name='F', email='r@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        Application.objects.create(
+            user=stale_user, company_name='Stale', founder_name='F', email='s@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        recent_user.last_login = timezone.now() - timedelta(days=1)
+        recent_user.save()
+        stale_user.last_login = timezone.now() - timedelta(days=30)
+        stale_user.save()
+
+        metrics = growth_metrics.get_engagement_metrics()
+        self.assertEqual(metrics['wau']['founder'], 1)
+
+    def test_value_creation_counts_funded_and_accepted_connections(self):
+        from . import growth_metrics
+        founder_user = User.objects.create_user('vc_founder', password='x')
+        investor_user = User.objects.create_user('vc_investor', password='x')
+        founder = Application.objects.create(
+            user=founder_user, company_name='VCCo', founder_name='F', email='vc@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        investor = InvestorApplication.objects.create(
+            user=investor_user, full_name='I', company_name='Fund', email='vci@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        Connection.objects.create(investor=investor, founder=founder, status='FUNDED', initiated_by='INVESTOR')
+
+        metrics = growth_metrics.get_value_creation_metrics()
+        self.assertEqual(metrics['completed_deals'], 1)
+        self.assertEqual(metrics['introductions_made'], 1)
+
+
+class ProfileTrustBadgesTests(TestCase):
+    """
+    matchmaking/growth_metrics.py::get_profile_trust_badges — thresholded,
+    distinct-investor-gated booleans only. No raw counts should ever leak
+    into the returned dict, and a single investor spamming events must
+    never flip a badge on.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+
+    def _make_founder(self, username):
+        user = User.objects.create_user(username, password='x')
+        return Application.objects.create(
+            user=user, company_name=f'{username}Co', founder_name='F', email=f'{username}@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+
+    def _make_investor(self, username):
+        user = User.objects.create_user(username, password='x')
+        return user, InvestorApplication.objects.create(
+            user=user, full_name='I', company_name='Fund', email=f'{username}@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+
+    def test_no_badges_with_no_activity(self):
+        from . import growth_metrics
+        founder = self._make_founder('badge_quiet_founder')
+        badges = growth_metrics.get_profile_trust_badges(founder)
+        self.assertEqual(badges, {'trending': False, 'frequently_analyzed': False})
+
+    def test_none_application_returns_false_badges(self):
+        from . import growth_metrics
+        badges = growth_metrics.get_profile_trust_badges(None)
+        self.assertEqual(badges, {'trending': False, 'frequently_analyzed': False})
+
+    def test_single_viewer_does_not_trigger_trending(self):
+        from . import growth_metrics
+        from .models import InvestorInterestEvent
+        founder = self._make_founder('badge_one_viewer_founder')
+        investor_user, _ = self._make_investor('badge_one_viewer_investor')
+        for _ in range(10):
+            InvestorInterestEvent.objects.create(investor=investor_user, founder=founder, event_type='view')
+
+        badges = growth_metrics.get_profile_trust_badges(founder)
+        self.assertFalse(badges['trending'])
+
+    def test_trending_true_once_distinct_viewer_threshold_met(self):
+        from . import growth_metrics
+        from .models import InvestorInterestEvent
+        founder = self._make_founder('badge_trending_founder')
+        for i in range(growth_metrics.TRENDING_MIN_UNIQUE_VIEWERS):
+            investor_user, _ = self._make_investor(f'badge_trending_investor_{i}')
+            InvestorInterestEvent.objects.create(investor=investor_user, founder=founder, event_type='view')
+
+        badges = growth_metrics.get_profile_trust_badges(founder)
+        self.assertTrue(badges['trending'])
+
+    def test_trending_ignores_views_outside_window(self):
+        from . import growth_metrics
+        from .models import InvestorInterestEvent
+        founder = self._make_founder('badge_stale_founder')
+        old_time = timezone.now() - timedelta(days=growth_metrics.TRENDING_WINDOW_DAYS + 1)
+        for i in range(growth_metrics.TRENDING_MIN_UNIQUE_VIEWERS):
+            investor_user, _ = self._make_investor(f'badge_stale_investor_{i}')
+            event = InvestorInterestEvent.objects.create(investor=investor_user, founder=founder, event_type='view')
+            InvestorInterestEvent.objects.filter(pk=event.pk).update(created_at=old_time)
+
+        badges = growth_metrics.get_profile_trust_badges(founder)
+        self.assertFalse(badges['trending'])
+
+    def test_frequently_analyzed_requires_distinct_analysts(self):
+        from . import growth_metrics
+        from .models import InvestorInterestEvent
+        founder = self._make_founder('badge_analyzed_founder')
+        investor_user, _ = self._make_investor('badge_analyzed_investor')
+        for _ in range(10):
+            InvestorInterestEvent.objects.create(investor=investor_user, founder=founder, event_type='analyze')
+
+        badges = growth_metrics.get_profile_trust_badges(founder)
+        self.assertFalse(badges['frequently_analyzed'])
+
+        for i in range(growth_metrics.FREQUENTLY_ANALYZED_MIN_UNIQUE_ANALYSTS - 1):
+            other_investor, _ = self._make_investor(f'badge_analyzed_other_{i}')
+            InvestorInterestEvent.objects.create(investor=other_investor, founder=founder, event_type='analyze')
+
+        badges = growth_metrics.get_profile_trust_badges(founder)
+        self.assertTrue(badges['frequently_analyzed'])
+
+
+class CompanyDomainMatchTests(TestCase):
+    """
+    matchmaking/models.py::company_matches_email_domain — lenient
+    normalized matching for the business-email verification flow.
+    """
+
+    def test_exact_match(self):
+        from .models import company_matches_email_domain
+        self.assertTrue(company_matches_email_domain("Interlink Foundry", "jon@interlinkfoundry.com"))
+
+    def test_case_and_punctuation_insensitive(self):
+        from .models import company_matches_email_domain
+        self.assertTrue(company_matches_email_domain("INTERLINK-Foundry, Inc.", "jon@interlinkfoundry.com"))
+
+    def test_suffix_stripped_from_company_name(self):
+        from .models import company_matches_email_domain
+        self.assertTrue(company_matches_email_domain("Interlink Foundry Inc", "jon@interlinkfoundry.com"))
+
+    def test_domain_is_superset_of_company(self):
+        from .models import company_matches_email_domain
+        self.assertTrue(company_matches_email_domain("Interlink", "jon@interlinkfoundry.com"))
+
+    def test_company_is_superset_of_domain_from_spec_example(self):
+        from .models import company_matches_email_domain
+        self.assertTrue(company_matches_email_domain("Interlink Foundry", "jon@foundryinc.com"))
+
+    def test_non_match(self):
+        from .models import company_matches_email_domain
+        self.assertFalse(company_matches_email_domain("Acme Robotics", "jon@interlinkfoundry.com"))
+
+    def test_empty_or_malformed_input_returns_false_not_exception(self):
+        from .models import company_matches_email_domain
+        self.assertFalse(company_matches_email_domain("", "jon@interlinkfoundry.com"))
+        self.assertFalse(company_matches_email_domain("Interlink Foundry", ""))
+        self.assertFalse(company_matches_email_domain("Interlink Foundry", "not-an-email"))
+        self.assertFalse(company_matches_email_domain(None, "jon@interlinkfoundry.com"))
+        self.assertFalse(company_matches_email_domain("Interlink Foundry", "jon@nodot"))
+
+
+class BusinessEmailVerificationModelTests(TestCase):
+    """matchmaking/models.py::BusinessEmailVerification — code generation and expiry on save()."""
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+
+    def test_code_is_six_digits(self):
+        from .models import BusinessEmailVerification
+        user = User.objects.create_user('bev_code_user', password='x')
+        verification = BusinessEmailVerification.objects.create(user=user, business_email='jon@interlinkfoundry.com')
+        self.assertEqual(len(verification.code), 6)
+        self.assertTrue(verification.code.isdigit())
+
+    def test_codes_are_not_all_identical(self):
+        from .models import BusinessEmailVerification
+        user = User.objects.create_user('bev_random_user', password='x')
+        codes = {
+            BusinessEmailVerification.objects.create(user=user, business_email='jon@interlinkfoundry.com').code
+            for _ in range(5)
+        }
+        self.assertGreater(len(codes), 1)
+
+    def test_expires_at_set_thirty_minutes_out(self):
+        from .models import BusinessEmailVerification
+        user = User.objects.create_user('bev_expiry_user', password='x')
+        verification = BusinessEmailVerification.objects.create(user=user, business_email='jon@interlinkfoundry.com')
+        delta = verification.expires_at - verification.created_at
+        self.assertAlmostEqual(delta.total_seconds(), timedelta(minutes=30).total_seconds(), delta=5)
+
+
+class PlatformInsightsTests(TestCase):
+    """
+    matchmaking/growth_metrics.py::get_platform_insights — cohort-gated,
+    correlational observations. Below-threshold cohorts must produce no
+    insight at all, never a claim computed from a handful of founders.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+
+    def _make_founders(self, count, prefix, **extra_fields):
+        founders = []
+        for i in range(count):
+            user = User.objects.create_user(f'{prefix}_{i}', password='x')
+            founders.append(Application.objects.create(
+                user=user, company_name=f'{prefix}Co{i}', founder_name='F', email=f'{prefix}{i}@t.com',
+                description='test', sector='SaaS', stage='Seed', **extra_fields
+            ))
+        return founders
+
+    def test_no_insights_below_minimum_cohort_size(self):
+        from . import growth_metrics
+        self._make_founders(3, 'tiny_complete', description_vector=[0.1, 0.2])
+        self._make_founders(3, 'tiny_incomplete')
+
+        insights = growth_metrics.get_platform_insights()
+        self.assertEqual(insights, [])
+
+    def test_profile_completeness_insight_appears_once_threshold_met(self):
+        from . import growth_metrics
+        n = growth_metrics.PLATFORM_INSIGHT_MIN_COHORT_SIZE
+        self._make_founders(n, 'complete_founder', description_vector=[0.1, 0.2])
+        self._make_founders(n, 'incomplete_founder')
+
+        insights = growth_metrics.get_platform_insights()
+        self.assertEqual(len(insights), 1)
+        self.assertIn('completed profile', insights[0])
+        self.assertIn(f'{n * 2} founders', insights[0])
+
+    def test_insight_is_framed_as_observation_not_causal_instruction(self):
+        from . import growth_metrics
+        n = growth_metrics.PLATFORM_INSIGHT_MIN_COHORT_SIZE
+        self._make_founders(n, 'complete_founder2', description_vector=[0.1, 0.2])
+        self._make_founders(n, 'incomplete_founder2')
+
+        insights = growth_metrics.get_platform_insights()
+        self.assertIn('so far', insights[0])
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class TimeToValueMetricsTests(TestCase):
+    """
+    get_time_to_value_metrics/get_conversation_speed_retention_insight/
+    get_marketplace_liquidity_funnel — added after the ChatGPT-suggested
+    time-to-value + marketplace-liquidity metrics. Medians specifically
+    (not averages) so one very slow outlier can't drag the whole figure.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+
+    def test_median_resists_outlier_unlike_average(self):
+        from . import growth_metrics
+        from .models import InvestorInterestEvent
+        founder_a = User.objects.create_user('ttv_founder_a', password='x')
+        founder_b = User.objects.create_user('ttv_founder_b', password='x')
+        founder_c = User.objects.create_user('ttv_founder_c', password='x')
+        investor_user = User.objects.create_user('ttv_investor', password='x')
+
+        signup_time = timezone.now() - timedelta(days=200)
+        apps = []
+        for u in (founder_a, founder_b, founder_c):
+            app = Application.objects.create(
+                user=u, company_name='Co', founder_name='F', email=f'{u.username}@t.com',
+                description='test', sector='SaaS', stage='Seed',
+            )
+            Application.objects.filter(pk=app.pk).update(created_at=signup_time)
+            apps.append(app)
+
+        # 2h, 4h, and a 400h outlier — mean would be skewed to ~135h; median should stay at 4h.
+        offsets = [timedelta(hours=2), timedelta(hours=4), timedelta(hours=400)]
+        for app, offset in zip(apps, offsets):
+            event = InvestorInterestEvent.objects.create(investor=investor_user, founder=app, event_type='view')
+            InvestorInterestEvent.objects.filter(pk=event.pk).update(created_at=signup_time + offset)
+
+        rows = growth_metrics.get_time_to_value_metrics()
+        founder_row = next(r for r in rows if r['label'] == 'Founder')
+        match_stage = next(s for s in founder_row['stages'] if s['label'] == 'First Match Viewed')
+        self.assertEqual(match_stage['n'], 3)
+        self.assertEqual(match_stage['median'], 4.0)
+
+    def test_stage_with_no_data_reports_none_not_zero(self):
+        from . import growth_metrics
+        User.objects.create_user('ttv_lonely_founder', password='x')
+        Application.objects.create(
+            user=User.objects.get(username='ttv_lonely_founder'), company_name='Co', founder_name='F',
+            email='lonely@t.com', description='test', sector='SaaS', stage='Seed',
+        )
+        rows = growth_metrics.get_time_to_value_metrics()
+        founder_row = next(r for r in rows if r['label'] == 'Founder')
+        conversation_stage = next(s for s in founder_row['stages'] if s['label'] == 'First Conversation')
+        self.assertIsNone(conversation_stage['median'])
+        self.assertEqual(conversation_stage['n'], 0)
+
+    def test_conversation_speed_retention_splits_cohorts_correctly(self):
+        from . import growth_metrics
+        from .models import InvestorInterestEvent
+        investor_user = User.objects.create_user('ttv_investor2', password='x')
+        fast_returner = User.objects.create_user('ttv_fast_returner', password='x')
+        fast_non_returner = User.objects.create_user('ttv_fast_non_returner', password='x')
+        slow_returner = User.objects.create_user('ttv_slow_returner', password='x')
+
+        signup_time = timezone.now() - timedelta(days=30)
+
+        def _make_founder(user, conversation_offset, last_login_offset):
+            app = Application.objects.create(
+                user=user, company_name='Co', founder_name='F', email=f'{user.username}@t.com',
+                description='test', sector='SaaS', stage='Seed',
+            )
+            Application.objects.filter(pk=app.pk).update(created_at=signup_time)
+            event = InvestorInterestEvent.objects.create(investor=investor_user, founder=app, event_type='message_sent')
+            InvestorInterestEvent.objects.filter(pk=event.pk).update(created_at=signup_time + conversation_offset)
+            if last_login_offset is not None:
+                user.last_login = signup_time + last_login_offset
+                user.save()
+
+        _make_founder(fast_returner, timedelta(hours=10), timedelta(days=10))
+        _make_founder(fast_non_returner, timedelta(hours=20), None)
+        _make_founder(slow_returner, timedelta(hours=72), timedelta(days=10))
+
+        result = growth_metrics.get_conversation_speed_retention_insight()
+        self.assertEqual(result['within_48h']['total'], 2)
+        self.assertEqual(result['within_48h']['returned'], 1)
+        self.assertEqual(result['after_48h']['total'], 1)
+        self.assertEqual(result['after_48h']['returned'], 1)
+
+    def test_liquidity_funnel_percent_of_starting_cohort(self):
+        from . import growth_metrics
+        from .models import InvestorInterestEvent
+        investor_user = User.objects.create_user('liq_investor', password='x')
+        viewed_founder_user = User.objects.create_user('liq_founder_viewed', password='x')
+        unviewed_founder_user = User.objects.create_user('liq_founder_unviewed', password='x')
+
+        viewed_app = Application.objects.create(
+            user=viewed_founder_user, company_name='Viewed', founder_name='F', email='v@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        Application.objects.create(
+            user=unviewed_founder_user, company_name='Unviewed', founder_name='F', email='u@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        InvestorInterestEvent.objects.create(investor=investor_user, founder=viewed_app, event_type='view')
+
+        funnel = growth_metrics.get_marketplace_liquidity_funnel()
+        joined_stage = next(s for s in funnel['founder'] if s['label'] == 'Founders Joined')
+        viewed_stage = next(s for s in funnel['founder'] if s['label'] == 'Were Viewed')
+        self.assertEqual(joined_stage['count'], 2)
+        self.assertEqual(viewed_stage['count'], 1)
+        self.assertEqual(viewed_stage['pct_of_starting_cohort'], 50.0)
+
+
+@override_settings(MEDIA_ROOT=tempfile.mkdtemp())
+class DataRoomModelTests(TestCase):
+    """matchmaking/models.py::DataRoomDocument — validators + storage cleanup on delete()."""
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        founder_user = User.objects.create_user('dr_model_founder', password='x')
+        self.founder = Application.objects.create(
+            user=founder_user, company_name='DR Model Co', founder_name='F', email='drm@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+
+    def test_rejects_bad_extension(self):
+        from django.core.exceptions import ValidationError
+        from .models import DataRoomDocument
+        doc = DataRoomDocument(
+            founder=self.founder, label='Bad File', category='OTHER',
+            file=SimpleUploadedFile('malware.exe', b'x' * 10, content_type='application/octet-stream'),
+        )
+        with self.assertRaises(ValidationError):
+            doc.full_clean()
+
+    def test_rejects_oversized_file(self):
+        from django.core.exceptions import ValidationError
+        from .models import DataRoomDocument
+        doc = DataRoomDocument(
+            founder=self.founder, label='Too Big', category='OTHER',
+            file=SimpleUploadedFile('big.pdf', b'x' * (26 * 1024 * 1024), content_type='application/pdf'),
+        )
+        with self.assertRaises(ValidationError):
+            doc.full_clean()
+
+    def test_delete_removes_file_from_storage(self):
+        from .models import DataRoomDocument
+        doc = DataRoomDocument.objects.create(
+            founder=self.founder, label='Cap Table', category='CAP_TABLE',
+            file=SimpleUploadedFile('captable.csv', b'a,b,c', content_type='text/csv'),
+        )
+        storage, path = doc.file.storage, doc.file.name
+        self.assertTrue(storage.exists(path))
+        doc.delete()
+        self.assertFalse(storage.exists(path))
+
+    def test_cascade_delete_via_founder_also_removes_file_from_storage(self):
+        """
+        Regression test: a model delete() override is skipped when Django's
+        cascade collector bulk-deletes related rows (e.g. deleting the
+        founder Application cascades to DataRoomDocument) — only a
+        post_delete signal (matchmaking/signals.py::delete_data_room_file_from_storage)
+        fires reliably for every deletion path. Caught live during manual
+        verification: deleting a demo founder account left an orphaned file
+        in media/data_room/ before this was switched from delete() to a signal.
+        """
+        from .models import DataRoomDocument
+        doc = DataRoomDocument.objects.create(
+            founder=self.founder, label='Cascade Test', category='OTHER',
+            file=SimpleUploadedFile('cascade.csv', b'x,y,z', content_type='text/csv'),
+        )
+        storage, path = doc.file.storage, doc.file.name
+        self.assertTrue(storage.exists(path))
+
+        self.founder.user.delete()  # cascades: User -> Application -> DataRoomDocument
+
+        self.assertFalse(storage.exists(path))
+
+
+@override_settings(MEDIA_ROOT=tempfile.mkdtemp())
+class UploadedFileStorageCleanupTests(TestCase):
+    """
+    matchmaking/signals.py's post_delete receivers for Application
+    (pitch_deck/pitch_video), Document (deal room), and SellerApplication
+    (cim_document) — the same orphaned-file-on-delete gap found and fixed
+    for DataRoomDocument also existed for these older upload fields, since
+    none of them had any storage cleanup on row delete before this.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+
+    def test_deleting_application_removes_pitch_deck_and_pitch_video(self):
+        user = User.objects.create_user('cleanup_founder', password='x')
+        app = Application.objects.create(
+            user=user, company_name='CleanupCo', founder_name='F', email='cleanup@t.com',
+            description='test', sector='SaaS', stage='Seed',
+            pitch_deck=SimpleUploadedFile('deck.pdf', b'x' * 10, content_type='application/pdf'),
+            pitch_video=SimpleUploadedFile('pitch.mp4', b'x' * 10, content_type='video/mp4'),
+        )
+        deck_storage, deck_path = app.pitch_deck.storage, app.pitch_deck.name
+        video_storage, video_path = app.pitch_video.storage, app.pitch_video.name
+        self.assertTrue(deck_storage.exists(deck_path))
+        self.assertTrue(video_storage.exists(video_path))
+
+        app.delete()
+
+        self.assertFalse(deck_storage.exists(deck_path))
+        self.assertFalse(video_storage.exists(video_path))
+
+    def test_cascade_deleting_user_removes_pitch_deck(self):
+        user = User.objects.create_user('cleanup_founder_cascade', password='x')
+        app = Application.objects.create(
+            user=user, company_name='CleanupCascadeCo', founder_name='F', email='cleanup2@t.com',
+            description='test', sector='SaaS', stage='Seed',
+            pitch_deck=SimpleUploadedFile('deck2.pdf', b'x' * 10, content_type='application/pdf'),
+        )
+        storage, path = app.pitch_deck.storage, app.pitch_deck.name
+        self.assertTrue(storage.exists(path))
+
+        user.delete()  # cascades: User -> Application
+
+        self.assertFalse(storage.exists(path))
+
+    def test_deleting_deal_room_document_removes_file(self):
+        from .models import DealRoom, Document
+        founder_user = User.objects.create_user('cleanup_dr_founder', password='x')
+        investor_user = User.objects.create_user('cleanup_dr_investor', password='x')
+        founder = Application.objects.create(
+            user=founder_user, company_name='DRCo', founder_name='F', email='drf@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        investor = InvestorApplication.objects.create(
+            user=investor_user, full_name='I', email='dri@t.com', company_name='ICo',
+        )
+        connection = Connection.objects.create(investor=investor, founder=founder, status='ACCEPTED')
+        deal_room = DealRoom.objects.create(connection=connection, is_active=True)
+        doc = Document.objects.create(
+            deal_room=deal_room, title='Term Sheet',
+            file=SimpleUploadedFile('terms.pdf', b'x' * 10, content_type='application/pdf'),
+        )
+        storage, path = doc.file.storage, doc.file.name
+        self.assertTrue(storage.exists(path))
+
+        doc.delete()
+
+        self.assertFalse(storage.exists(path))
+
+    def test_deleting_seller_application_removes_cim_document(self):
+        from .models import SellerApplication
+        user = User.objects.create_user('cleanup_seller', password='x')
+        seller = SellerApplication.objects.create(
+            user=user, company_name='SellerCo', seller_name='S', email='seller_cleanup@t.com',
+            description='test', industry='SaaS',
+            cim_document=SimpleUploadedFile('cim.pdf', b'x' * 10, content_type='application/pdf'),
+        )
+        storage, path = seller.cim_document.storage, seller.cim_document.name
+        self.assertTrue(storage.exists(path))
+
+        seller.delete()
+
+        self.assertFalse(storage.exists(path))
+
+
+class FounderDescriptionWordCountTests(TestCase):
+    """
+    matchmaking/models.py::founder_description_meets_word_count and its use
+    as the gate on description_vector generation — "profile complete" is
+    read everywhere as description_vector__isnull=False, so a placeholder
+    one-word description ("test", "TBD") should no longer count as complete.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+
+    def test_helper_rejects_below_threshold(self):
+        from .models import founder_description_meets_word_count, MIN_FOUNDER_DESCRIPTION_WORDS
+        self.assertFalse(founder_description_meets_word_count('test'))
+        self.assertFalse(founder_description_meets_word_count(''))
+        self.assertFalse(founder_description_meets_word_count(None))
+        self.assertFalse(founder_description_meets_word_count('one two three four five'))
+        self.assertEqual(MIN_FOUNDER_DESCRIPTION_WORDS, 10)
+
+    def test_helper_accepts_realistic_short_description(self):
+        from .models import founder_description_meets_word_count
+        self.assertTrue(founder_description_meets_word_count(
+            'We develop novel drug therapies and clinical diagnostics for biotech and pharmaceutical research.'
+        ))
+
+    def test_placeholder_description_does_not_get_a_vector(self):
+        user = User.objects.create_user('wc_placeholder_founder', password='x')
+        app = Application.objects.create(
+            user=user, company_name='PlaceholderCo', founder_name='F', email='wcp@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        app.refresh_from_db()
+        self.assertIsNone(app.description_vector)
+
+    def test_real_description_gets_a_vector(self):
+        # _mock_embedding_generation's return_value=[] is falsy by design (so
+        # other test classes never pay for vector churn), which would mask
+        # the gate actually letting a real description through — so this one
+        # test patches a truthy embedding directly instead of using it.
+        with mock.patch('matchmaking.signals.generate_profile_embedding', return_value=[0.1, 0.2, 0.3]):
+            user = User.objects.create_user('wc_real_founder', password='x')
+            app = Application.objects.create(
+                user=user, company_name='RealCo', founder_name='F', email='wcr@t.com',
+                description='We build infrastructure tooling that helps mid-market SaaS teams automate deploys end to end.',
+                sector='SaaS', stage='Seed',
+            )
+        app.refresh_from_db()
+        self.assertIsNotNone(app.description_vector)
+
+
+class DataRoomAccessControlTests(TestCase):
+    """
+    matchmaking/models.py::can_view_data_room (titles-list gate) and
+    can_download_data_room_document (per-document approval gate) — same
+    access matrix convention as zelda_api's ICMemoTests.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('dr_ac_founder', password='x')
+        self.founder = Application.objects.create(
+            user=self.founder_user, company_name='DR AC Co', founder_name='F', email='drac@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        self.staff_user = User.objects.create_user('dr_ac_staff', password='x', is_staff=True)
+
+        self.accepted_investor_user = User.objects.create_user('dr_ac_accepted_investor', password='x')
+        self.accepted_investor = InvestorApplication.objects.create(
+            user=self.accepted_investor_user, full_name='I', company_name='AcceptedFund', email='draca@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        Connection.objects.create(investor=self.accepted_investor, founder=self.founder, status='ACCEPTED', initiated_by='INVESTOR')
+
+        self.pending_investor_user = User.objects.create_user('dr_ac_pending_investor', password='x')
+        self.pending_investor = InvestorApplication.objects.create(
+            user=self.pending_investor_user, full_name='I', company_name='PendingFund', email='dracp@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        Connection.objects.create(investor=self.pending_investor, founder=self.founder, status='PENDING', initiated_by='INVESTOR')
+
+        self.unrelated_investor_user = User.objects.create_user('dr_ac_unrelated_investor', password='x')
+        InvestorApplication.objects.create(
+            user=self.unrelated_investor_user, full_name='I', company_name='UnrelatedFund', email='dracu@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+
+    def test_can_view_data_room_matrix(self):
+        from .models import can_view_data_room
+        self.assertTrue(can_view_data_room(self.founder_user, self.founder))
+        self.assertTrue(can_view_data_room(self.staff_user, self.founder))
+        self.assertTrue(can_view_data_room(self.accepted_investor_user, self.founder))
+        self.assertFalse(can_view_data_room(self.pending_investor_user, self.founder))
+        self.assertFalse(can_view_data_room(self.unrelated_investor_user, self.founder))
+
+        from django.contrib.auth.models import AnonymousUser
+        self.assertFalse(can_view_data_room(AnonymousUser(), self.founder))
+
+    def test_can_download_requires_approved_request_not_just_connection(self):
+        from .models import DataRoomDocument, DataRoomAccessRequest, can_download_data_room_document
+        document = DataRoomDocument.objects.create(
+            founder=self.founder, label='Financials', category='FINANCIALS',
+            file=SimpleUploadedFile('fin.csv', b'a,b,c', content_type='text/csv'),
+        )
+        # Owner/staff always
+        self.assertTrue(can_download_data_room_document(self.founder_user, document))
+        self.assertTrue(can_download_data_room_document(self.staff_user, document))
+        # Accepted-connection investor still can't download without an APPROVED request
+        self.assertFalse(can_download_data_room_document(self.accepted_investor_user, document))
+
+        DataRoomAccessRequest.objects.create(document=document, investor=self.accepted_investor, status='APPROVED')
+        self.assertTrue(can_download_data_room_document(self.accepted_investor_user, document))
+
+        document.delete()
+
+
+@override_settings(MEDIA_ROOT=tempfile.mkdtemp())
+class DataRoomViewTests(TestCase):
+    """accounts-facing view flow: list, upload, delete, request/decide access, serve."""
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('dr_view_founder', password='x')
+        self.founder = Application.objects.create(
+            user=self.founder_user, company_name='DR View Co', founder_name='F', email='drv@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        self.investor_user = User.objects.create_user('dr_view_investor', password='x')
+        self.investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='I', company_name='ViewFund', email='drvi@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        Connection.objects.create(investor=self.investor, founder=self.founder, status='ACCEPTED', initiated_by='INVESTOR')
+
+        self.stranger_user = User.objects.create_user('dr_view_stranger', password='x')
+
+        from .models import DataRoomDocument
+        self.document = DataRoomDocument.objects.create(
+            founder=self.founder, label='Cap Table', category='CAP_TABLE',
+            file=SimpleUploadedFile('captable.csv', b'a,b,c', content_type='text/csv'),
+        )
+
+    def test_unauthenticated_redirects_to_login(self):
+        response = self.client.get(reverse('matchmaking:data_room', args=[self.founder_user.username]))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/login', response.url)
+
+    def test_stranger_gets_404(self):
+        self.client.force_login(self.stranger_user)
+        response = self.client.get(reverse('matchmaking:data_room', args=[self.founder_user.username]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_owner_sees_upload_form_and_can_upload(self):
+        self.client.force_login(self.founder_user)
+        response = self.client.post(reverse('matchmaking:data_room_upload', args=[self.founder_user.username]), {
+            'category': 'FINANCIALS', 'label': 'Q4 Financials',
+            'file': SimpleUploadedFile('q4.pdf', b'x' * 100, content_type='application/pdf'),
+        })
+        self.assertEqual(response.status_code, 302)
+        from .models import DataRoomDocument
+        self.assertTrue(DataRoomDocument.objects.filter(founder=self.founder, label='Q4 Financials').exists())
+
+    def test_non_owner_cannot_upload(self):
+        self.client.force_login(self.investor_user)
+        response = self.client.post(reverse('matchmaking:data_room_upload', args=[self.founder_user.username]), {
+            'category': 'OTHER', 'label': 'Sneaky', 'file': SimpleUploadedFile('x.pdf', b'x', content_type='application/pdf'),
+        })
+        self.assertEqual(response.status_code, 403)
+
+    def test_non_owner_cannot_delete(self):
+        self.client.force_login(self.investor_user)
+        response = self.client.post(reverse('matchmaking:data_room_delete', args=[self.document.id]))
+        self.assertEqual(response.status_code, 403)
+
+    def test_owner_can_delete(self):
+        self.client.force_login(self.founder_user)
+        response = self.client.post(reverse('matchmaking:data_room_delete', args=[self.document.id]))
+        self.assertEqual(response.status_code, 302)
+        from .models import DataRoomDocument
+        self.assertFalse(DataRoomDocument.objects.filter(id=self.document.id).exists())
+
+    def test_investor_request_access_creates_pending_row(self):
+        from .models import DataRoomAccessRequest
+        self.client.force_login(self.investor_user)
+        self.client.post(reverse('matchmaking:data_room_request_access', args=[self.document.id]))
+        access_request = DataRoomAccessRequest.objects.get(document=self.document, investor=self.investor)
+        self.assertEqual(access_request.status, 'PENDING')
+
+    def test_founder_approve_then_investor_can_download_and_view_logged(self):
+        from .models import DataRoomAccessRequest, DataRoomDocumentView
+        self.client.force_login(self.investor_user)
+        self.client.post(reverse('matchmaking:data_room_request_access', args=[self.document.id]))
+        access_request = DataRoomAccessRequest.objects.get(document=self.document, investor=self.investor)
+
+        self.client.force_login(self.founder_user)
+        self.client.post(reverse('matchmaking:data_room_decide_request', args=[access_request.id]), {'decision': 'APPROVE'})
+        access_request.refresh_from_db()
+        self.assertEqual(access_request.status, 'APPROVED')
+
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('matchmaking:data_room_document_serve', args=[self.document.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(DataRoomDocumentView.objects.filter(document=self.document, viewer=self.investor_user).count(), 1)
+
+    def test_founder_deny_blocks_download(self):
+        from .models import DataRoomAccessRequest
+        self.client.force_login(self.investor_user)
+        self.client.post(reverse('matchmaking:data_room_request_access', args=[self.document.id]))
+        access_request = DataRoomAccessRequest.objects.get(document=self.document, investor=self.investor)
+
+        self.client.force_login(self.founder_user)
+        self.client.post(reverse('matchmaking:data_room_decide_request', args=[access_request.id]), {'decision': 'DENY'})
+
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('matchmaking:data_room_document_serve', args=[self.document.id]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_stranger_cannot_download_even_with_direct_url(self):
+        self.client.force_login(self.stranger_user)
+        response = self.client.get(reverse('matchmaking:data_room_document_serve', args=[self.document.id]))
+        self.assertEqual(response.status_code, 404)
+
+
+@override_settings(MEDIA_ROOT=tempfile.mkdtemp())
+class PitchVideosSectionTests(TestCase):
+    """
+    Pitch Videos section — matchmaking/views.py::pitch_videos_section and
+    the like/save/comment/settings-toggle endpoints. Covers ranking,
+    privacy filtering, the per-video engagement settings, and the
+    comment-notification side effect.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+
+    def _founder(self, username, **kwargs):
+        u = User.objects.create_user(username, password='x')
+        defaults = dict(
+            company_name=f'{username}Co', founder_name='F', email=f'{username}@t.com',
+            description='test', sector='SaaS', stage='Seed',
+            pitch_video=SimpleUploadedFile('pitch.mp4', b'x' * 10, content_type='video/mp4'),
+        )
+        defaults.update(kwargs)
+        return Application.objects.create(user=u, **defaults)
+
+    def _seller(self, username, **kwargs):
+        u = User.objects.create_user(username, password='x')
+        defaults = dict(
+            company_name=f'{username}Co', seller_name='S', email=f'{username}@t.com',
+            description='test', industry='Manufacturing',
+            pitch_video=SimpleUploadedFile('pitch.mp4', b'x' * 10, content_type='video/mp4'),
+        )
+        defaults.update(kwargs)
+        return SellerApplication.objects.create(user=u, **defaults)
+
+    # --- section view ---
+
+    def test_only_profiles_with_a_video_are_listed(self):
+        self._founder('hasvideo')
+        no_video_user = User.objects.create_user('novideo', password='x')
+        Application.objects.create(
+            user=no_video_user, company_name='NoVideoCo', founder_name='F', email='nv@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        response = self.client.get(reverse('matchmaking:pitch_videos'))
+        usernames = [f.user.username for f in response.context['founders']]
+        self.assertIn('hasvideo', usernames)
+        self.assertNotIn('novideo', usernames)
+
+    def test_private_founder_excluded(self):
+        self._founder('privatefounder', is_private=True)
+        response = self.client.get(reverse('matchmaking:pitch_videos'))
+        self.assertNotIn('privatefounder', [f.user.username for f in response.context['founders']])
+
+    def test_null_pitch_video_does_not_crash_the_page(self):
+        """
+        Regression test: pitch_video is null=True, blank=True — a row with
+        an explicit NULL (as opposed to '') used to slip past
+        exclude(pitch_video='') (three-valued SQL logic doesn't match NULL
+        against that comparison) and crash FieldFile.url in the template
+        with "The 'pitch_video' attribute has no file associated with it."
+        Caught live: real rows with NULL pitch_video exist in practice.
+        """
+        self._founder('hasvideonull_control')
+        Application.objects.create(
+            user=User.objects.create_user('nullvideofounder', password='x'),
+            company_name='NullVideoCo', founder_name='F', email='nullvideo@t.com',
+            description='test', sector='SaaS', stage='Seed', pitch_video=None,
+        )
+        response = self.client.get(reverse('matchmaking:pitch_videos'))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn('nullvideofounder', [f.user.username for f in response.context['founders']])
+
+    def test_denied_seller_excluded(self):
+        self._seller('deniedseller', review_status='DENIED')
+        response = self.client.get(reverse('matchmaking:pitch_videos'))
+        self.assertNotIn('deniedseller', [s.user.username for s in response.context['sellers']])
+
+    # --- pitch_video_visibility ---
+
+    def test_site_wide_is_default_and_visible_to_anonymous(self):
+        self._founder('defaultvisfounder')
+        response = self.client.get(reverse('matchmaking:pitch_videos'))
+        self.assertIn('defaultvisfounder', [f.user.username for f in response.context['founders']])
+
+    def test_profile_only_video_excluded_from_section_for_everyone(self):
+        self._founder('profileonlyfounder', pitch_video_visibility='PROFILE_ONLY')
+        investor_user = User.objects.create_user('profileonly_investor', password='x')
+        InvestorApplication.objects.create(
+            user=investor_user, full_name='I', email='poi@t.com', company_name='Fund',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.client.force_login(investor_user)
+        response = self.client.get(reverse('matchmaking:pitch_videos'))
+        self.assertNotIn('profileonlyfounder', [f.user.username for f in response.context['founders']])
+
+    def test_role_only_founder_video_hidden_from_anonymous(self):
+        self._founder('roleonlyfounder', pitch_video_visibility='ROLE_ONLY')
+        response = self.client.get(reverse('matchmaking:pitch_videos'))
+        self.assertNotIn('roleonlyfounder', [f.user.username for f in response.context['founders']])
+
+    def test_role_only_founder_video_hidden_from_non_investor(self):
+        self._founder('roleonlyfounder2', pitch_video_visibility='ROLE_ONLY')
+        plain_user = User.objects.create_user('plainviewer', password='x')
+        self.client.force_login(plain_user)
+        response = self.client.get(reverse('matchmaking:pitch_videos'))
+        self.assertNotIn('roleonlyfounder2', [f.user.username for f in response.context['founders']])
+
+    def test_role_only_founder_video_visible_to_investor(self):
+        self._founder('roleonlyfounder3', pitch_video_visibility='ROLE_ONLY')
+        investor_user = User.objects.create_user('roleonly_investor', password='x')
+        InvestorApplication.objects.create(
+            user=investor_user, full_name='I', email='roi@t.com', company_name='Fund',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.client.force_login(investor_user)
+        response = self.client.get(reverse('matchmaking:pitch_videos'))
+        self.assertIn('roleonlyfounder3', [f.user.username for f in response.context['founders']])
+
+    def test_role_only_seller_video_hidden_from_non_buyer_visible_to_buyer(self):
+        self._seller('roleonlyseller', pitch_video_visibility='ROLE_ONLY')
+
+        anon_response = self.client.get(reverse('matchmaking:pitch_videos'))
+        self.assertNotIn('roleonlyseller', [s.user.username for s in anon_response.context['sellers']])
+
+        buyer_user = User.objects.create_user('roleonly_buyer', password='x')
+        BuyerApplication.objects.create(
+            user=buyer_user, full_name='B', email='rob@t.com', company_name='Acq LLC',
+            acquisition_thesis='We acquire manufacturing businesses',
+            budget_min=100_000, budget_max=1_000_000,
+        )
+        self.client.force_login(buyer_user)
+        buyer_response = self.client.get(reverse('matchmaking:pitch_videos'))
+        self.assertIn('roleonlyseller', [s.user.username for s in buyer_response.context['sellers']])
+
+    def test_featured_founder_ranks_above_higher_match_non_featured(self):
+        self._founder('bettermatch', stage='Series C')
+        self._founder('featured', stage='Seed', is_staff_featured=True)
+
+        investor_user = User.objects.create_user('rank_investor', password='x')
+        InvestorApplication.objects.create(
+            user=investor_user, full_name='I', email='i@t.com', company_name='Fund',
+            investment_focus='SaaS', investment_stage='Series C',
+        )
+        self.client.force_login(investor_user)
+
+        response = self.client.get(reverse('matchmaking:pitch_videos'))
+        usernames = [f.user.username for f in response.context['founders']]
+        self.assertEqual(usernames[0], 'featured')
+
+    def test_anonymous_visitor_can_view_section(self):
+        self._founder('publicfounder')
+        response = self.client.get(reverse('matchmaking:pitch_videos'))
+        self.assertEqual(response.status_code, 200)
+
+    # --- like ---
+
+    def test_toggle_like_adds_then_removes(self):
+        founder = self._founder('likefounder')
+        liker = User.objects.create_user('liker', password='x')
+        self.client.force_login(liker)
+        url = reverse('matchmaking:toggle_pitch_video_like', args=['founder', founder.id])
+
+        response = self.client.post(url)
+        data = response.json()
+        self.assertTrue(data['liked'])
+        self.assertEqual(data['like_count'], 1)
+
+        response = self.client.post(url)
+        self.assertFalse(response.json()['liked'])
+        founder.refresh_from_db()
+        self.assertEqual(founder.pitch_video_likes.count(), 0)
+
+    def test_like_count_hidden_when_show_like_count_disabled(self):
+        founder = self._founder('hiddencount', pitch_video_show_like_count=False)
+        liker = User.objects.create_user('hiddenliker', password='x')
+        self.client.force_login(liker)
+        response = self.client.post(reverse('matchmaking:toggle_pitch_video_like', args=['founder', founder.id]))
+        self.assertIsNone(response.json()['like_count'])
+
+    def test_like_requires_authentication(self):
+        founder = self._founder('anonlikefounder')
+        response = self.client.post(reverse('matchmaking:toggle_pitch_video_like', args=['founder', founder.id]))
+        self.assertIn(response.status_code, (302, 401, 403))
+
+    # --- save ---
+
+    def test_toggle_save_adds_then_removes(self):
+        seller = self._seller('saveseller')
+        saver = User.objects.create_user('saver', password='x')
+        self.client.force_login(saver)
+        url = reverse('matchmaking:toggle_pitch_video_save', args=['seller', seller.id])
+
+        self.assertTrue(self.client.post(url).json()['saved'])
+        self.assertFalse(self.client.post(url).json()['saved'])
+
+    # --- comments ---
+
+    def test_comment_posted_when_enabled(self):
+        founder = self._founder('commentablefounder')
+        commenter = User.objects.create_user('commenter', password='x')
+        self.client.force_login(commenter)
+        response = self.client.post(
+            reverse('matchmaking:post_pitch_video_comment', args=['founder', founder.id]),
+            {'body': 'Great pitch!'},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(PitchVideoComment.objects.filter(founder=founder, author=commenter, body='Great pitch!').exists())
+
+    def test_comment_rejected_when_disabled(self):
+        founder = self._founder('nocommentsfounder', pitch_video_comments_enabled=False)
+        commenter = User.objects.create_user('blockedcommenter', password='x')
+        self.client.force_login(commenter)
+        response = self.client.post(
+            reverse('matchmaking:post_pitch_video_comment', args=['founder', founder.id]),
+            {'body': 'Nice!'},
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(PitchVideoComment.objects.filter(founder=founder).exists())
+
+    def test_empty_comment_rejected(self):
+        founder = self._founder('emptycommentfounder')
+        commenter = User.objects.create_user('emptycommenter', password='x')
+        self.client.force_login(commenter)
+        response = self.client.post(
+            reverse('matchmaking:post_pitch_video_comment', args=['founder', founder.id]),
+            {'body': '   '},
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_comment_notifies_owner_when_enabled(self):
+        from notifications.models import Notification
+        founder = self._founder('notifyfounder', pitch_video_notify_on_comments=True)
+        commenter = User.objects.create_user('notifycommenter', password='x')
+        self.client.force_login(commenter)
+        self.client.post(
+            reverse('matchmaking:post_pitch_video_comment', args=['founder', founder.id]),
+            {'body': 'Interested in this.'},
+        )
+        self.assertTrue(
+            Notification.objects.filter(recipient=founder.user, notification_type='PITCH_VIDEO_COMMENT').exists()
+        )
+
+    def test_comment_does_not_notify_when_disabled(self):
+        from notifications.models import Notification
+        founder = self._founder('nonotifyfounder', pitch_video_notify_on_comments=False)
+        commenter = User.objects.create_user('nonotifycommenter', password='x')
+        self.client.force_login(commenter)
+        self.client.post(
+            reverse('matchmaking:post_pitch_video_comment', args=['founder', founder.id]),
+            {'body': 'Nice work.'},
+        )
+        self.assertFalse(
+            Notification.objects.filter(recipient=founder.user, notification_type='PITCH_VIDEO_COMMENT').exists()
+        )
+
+    def test_comment_author_can_delete_own_comment(self):
+        founder = self._founder('deletecommentfounder')
+        commenter = User.objects.create_user('deletingcommenter', password='x')
+        comment = PitchVideoComment.objects.create(founder=founder, author=commenter, body='delete me')
+        self.client.force_login(commenter)
+        response = self.client.post(reverse('matchmaking:delete_pitch_video_comment', args=[comment.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(PitchVideoComment.objects.filter(id=comment.id).exists())
+
+    def test_video_owner_can_delete_others_comment(self):
+        founder = self._founder('ownerdeletefounder')
+        commenter = User.objects.create_user('strangecommenter', password='x')
+        comment = PitchVideoComment.objects.create(founder=founder, author=commenter, body='delete me too')
+        self.client.force_login(founder.user)
+        response = self.client.post(reverse('matchmaking:delete_pitch_video_comment', args=[comment.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(PitchVideoComment.objects.filter(id=comment.id).exists())
+
+    def test_stranger_cannot_delete_someone_elses_comment(self):
+        founder = self._founder('protectedfounder')
+        commenter = User.objects.create_user('protectedcommenter', password='x')
+        stranger = User.objects.create_user('deletestranger', password='x')
+        comment = PitchVideoComment.objects.create(founder=founder, author=commenter, body='cannot delete')
+        self.client.force_login(stranger)
+        response = self.client.post(reverse('matchmaking:delete_pitch_video_comment', args=[comment.id]))
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(PitchVideoComment.objects.filter(id=comment.id).exists())
+
+    # --- settings toggle ---
+
+    def test_owner_can_disable_comments_via_settings(self):
+        founder = self._founder('settingsfounder')
+        self.client.force_login(founder.user)
+        response = self.client.post(
+            reverse('matchmaking:toggle_pitch_video_setting'),
+            {'setting': 'comments_enabled', 'enabled': 'false'},
+        )
+        self.assertEqual(response.status_code, 200)
+        founder.refresh_from_db()
+        self.assertFalse(founder.pitch_video_comments_enabled)
+
+    def test_settings_toggle_requires_a_founder_or_seller_profile(self):
+        plain_user = User.objects.create_user('noprofileuser', password='x')
+        self.client.force_login(plain_user)
+        response = self.client.post(
+            reverse('matchmaking:toggle_pitch_video_setting'),
+            {'setting': 'comments_enabled', 'enabled': 'false'},
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_unknown_setting_name_rejected(self):
+        founder = self._founder('unknownsettingfounder')
+        self.client.force_login(founder.user)
+        response = self.client.post(
+            reverse('matchmaking:toggle_pitch_video_setting'),
+            {'setting': 'not_a_real_setting', 'enabled': 'true'},
+        )
+        self.assertEqual(response.status_code, 400)
+
+    # --- visibility setting ---
+
+    def test_owner_can_set_visibility_to_role_only(self):
+        founder = self._founder('visibilityfounder')
+        self.client.force_login(founder.user)
+        response = self.client.post(
+            reverse('matchmaking:set_pitch_video_visibility'), {'visibility': 'ROLE_ONLY'},
+        )
+        self.assertEqual(response.status_code, 200)
+        founder.refresh_from_db()
+        self.assertEqual(founder.pitch_video_visibility, 'ROLE_ONLY')
+
+    def test_owner_can_set_visibility_on_seller_profile(self):
+        seller = self._seller('visibilityseller')
+        self.client.force_login(seller.user)
+        response = self.client.post(
+            reverse('matchmaking:set_pitch_video_visibility'), {'visibility': 'PROFILE_ONLY'},
+        )
+        self.assertEqual(response.status_code, 200)
+        seller.refresh_from_db()
+        self.assertEqual(seller.pitch_video_visibility, 'PROFILE_ONLY')
+
+    def test_invalid_visibility_value_rejected(self):
+        founder = self._founder('invalidvisibilityfounder')
+        self.client.force_login(founder.user)
+        response = self.client.post(
+            reverse('matchmaking:set_pitch_video_visibility'), {'visibility': 'NOT_A_REAL_VALUE'},
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_visibility_requires_a_founder_or_seller_profile(self):
+        plain_user = User.objects.create_user('novisibilityprofileuser', password='x')
+        self.client.force_login(plain_user)
+        response = self.client.post(
+            reverse('matchmaking:set_pitch_video_visibility'), {'visibility': 'ROLE_ONLY'},
+        )
+        self.assertEqual(response.status_code, 404)
+
+
+@override_settings(MEDIA_ROOT=tempfile.mkdtemp())
+class PitchVideoPlayLoggingTests(TestCase):
+    """
+    matchmaking/views.py::log_pitch_video_play — top of the Video ->
+    Profile Conversion funnel. Same role-gating as the 'view' event logged
+    in accounts.views.profile: only counts plays by an investor watching a
+    founder's video, or a buyer watching a seller's video, and never counts
+    the owner watching their own video.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+
+    def _founder(self, username):
+        u = User.objects.create_user(username, password='x')
+        return Application.objects.create(
+            user=u, company_name=f'{username}Co', founder_name='F', email=f'{username}@t.com',
+            description='test', sector='SaaS', stage='Seed',
+            pitch_video=SimpleUploadedFile('pitch.mp4', b'x' * 10, content_type='video/mp4'),
+        )
+
+    def _seller(self, username):
+        u = User.objects.create_user(username, password='x')
+        return SellerApplication.objects.create(
+            user=u, company_name=f'{username}Co', seller_name='S', email=f'{username}@t.com',
+            description='test', industry='Manufacturing',
+            pitch_video=SimpleUploadedFile('pitch.mp4', b'x' * 10, content_type='video/mp4'),
+        )
+
+    def _investor(self, username):
+        u = User.objects.create_user(username, password='x')
+        return InvestorApplication.objects.create(
+            user=u, full_name='I', company_name='Fund', email=f'{username}@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+
+    def _buyer(self, username):
+        u = User.objects.create_user(username, password='x')
+        return BuyerApplication.objects.create(
+            user=u, full_name='B', email=f'{username}@t.com', company_name='Acq LLC',
+            acquisition_thesis='We acquire manufacturing businesses',
+            budget_min=100_000, budget_max=1_000_000,
+        )
+
+    def test_investor_playing_founder_video_logs_event(self):
+        founder = self._founder('playfounder')
+        investor = self._investor('playinvestor')
+        self.client.force_login(investor.user)
+        response = self.client.post(reverse('matchmaking:log_pitch_video_play', args=['founder', founder.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            InvestorInterestEvent.objects.filter(founder=founder, event_type='video_play').count(), 1
+        )
+
+    def test_buyer_playing_seller_video_logs_event(self):
+        seller = self._seller('playseller')
+        buyer = self._buyer('playbuyer')
+        self.client.force_login(buyer.user)
+        response = self.client.post(reverse('matchmaking:log_pitch_video_play', args=['seller', seller.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            AcquisitionInterestEvent.objects.filter(seller=seller, event_type='video_play').count(), 1
+        )
+
+    def test_anonymous_play_is_not_logged_but_still_succeeds(self):
+        founder = self._founder('anonplayfounder')
+        response = self.client.post(reverse('matchmaking:log_pitch_video_play', args=['founder', founder.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(InvestorInterestEvent.objects.filter(founder=founder).count(), 0)
+
+    def test_owner_playing_own_video_is_not_logged(self):
+        # Gives the founder an investor profile too, so the role check alone
+        # would pass — this isolates the separate owner-vs-viewer check.
+        founder = self._founder('ownplayfounder')
+        InvestorApplication.objects.create(
+            user=founder.user, full_name='I', company_name='Fund', email='ownplayfounder_inv@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.client.force_login(founder.user)
+        response = self.client.post(reverse('matchmaking:log_pitch_video_play', args=['founder', founder.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(InvestorInterestEvent.objects.filter(founder=founder).count(), 0)
+
+    def test_non_investor_viewer_play_is_not_logged(self):
+        founder = self._founder('peerplayfounder')
+        other_founder = self._founder('peerviewerfounder')
+        self.client.force_login(other_founder.user)
+        response = self.client.post(reverse('matchmaking:log_pitch_video_play', args=['founder', founder.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(InvestorInterestEvent.objects.filter(founder=founder).count(), 0)
+
+    def test_unknown_role_404s(self):
+        response = self.client.post(reverse('matchmaking:log_pitch_video_play', args=['buyer', 1]))
+        self.assertEqual(response.status_code, 404)
+
+
+@override_settings(MEDIA_ROOT=tempfile.mkdtemp())
+class PitchVideoFunnelTests(TestCase):
+    """
+    matchmaking/growth_metrics.py::get_pitch_video_funnel — each stage is
+    the video-viewer cohort intersected with that event type, so a
+    non-viewer's activity (however extensive) must never inflate the
+    funnel, and every percentage must stay within 0-100.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('funnelfounder', password='x')
+        self.founder = Application.objects.create(
+            user=self.founder_user, company_name='FunnelCo', founder_name='F', email='ff@t.com',
+            description='test', sector='SaaS', stage='Seed',
+            pitch_video=SimpleUploadedFile('pitch.mp4', b'x' * 10, content_type='video/mp4'),
+        )
+
+    def _investor(self, username):
+        u = User.objects.create_user(username, password='x')
+        return InvestorApplication.objects.create(
+            user=u, full_name='I', company_name='Fund', email=f'{username}@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+
+    def test_empty_funnel_has_zero_counts_and_no_rates(self):
+        from . import growth_metrics
+        funnel = growth_metrics.get_pitch_video_funnel(self.founder, 'founder')
+        self.assertEqual(funnel['plays'], 0)
+        self.assertIsNone(funnel['profile_open_pct'])
+
+    def test_funnel_only_counts_viewers_who_also_played_the_video(self):
+        from . import growth_metrics
+        i1, i2, i3 = (self._investor(f'funnelinv{n}').user for n in range(3))
+        # i1 played the video and went all the way to an intro request.
+        InvestorInterestEvent.objects.create(investor=i1, founder=self.founder, event_type='video_play')
+        InvestorInterestEvent.objects.create(investor=i1, founder=self.founder, event_type='view')
+        InvestorInterestEvent.objects.create(investor=i1, founder=self.founder, event_type='analyze')
+        InvestorInterestEvent.objects.create(investor=i1, founder=self.founder, event_type='intro_request')
+        # i2 played the video but did nothing further.
+        InvestorInterestEvent.objects.create(investor=i2, founder=self.founder, event_type='video_play')
+        # i3 never played the video, but did everything else — must be excluded entirely.
+        InvestorInterestEvent.objects.create(investor=i3, founder=self.founder, event_type='view')
+        InvestorInterestEvent.objects.create(investor=i3, founder=self.founder, event_type='analyze')
+        InvestorInterestEvent.objects.create(investor=i3, founder=self.founder, event_type='intro_request')
+        InvestorInterestEvent.objects.create(investor=i3, founder=self.founder, event_type='message_sent')
+
+        funnel = growth_metrics.get_pitch_video_funnel(self.founder, 'founder')
+        self.assertEqual(funnel['plays'], 2)
+        self.assertEqual(funnel['profile_opens'], 1)
+        self.assertEqual(funnel['analyses'], 1)
+        self.assertEqual(funnel['intro_requests'], 1)
+        self.assertEqual(funnel['conversations'], 0)
+        self.assertEqual(funnel['profile_open_pct'], 50.0)
+        self.assertEqual(funnel['analysis_pct'], 50.0)
+        self.assertEqual(funnel['intro_request_pct'], 50.0)
+        self.assertEqual(funnel['conversation_pct'], 0.0)
+
+
+@override_settings(MEDIA_ROOT=tempfile.mkdtemp())
+class PitchVideoSocialSignalInsightsTests(TestCase):
+    """
+    matchmaking/growth_metrics.py::get_pitch_video_social_signal_insights —
+    same cohort-gating discipline as PlatformInsightsTests: below-threshold
+    cohorts must never produce a claim.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+
+    def _founder_with_video(self, username, liked=False):
+        u = User.objects.create_user(username, password='x')
+        app = Application.objects.create(
+            user=u, company_name=f'{username}Co', founder_name='F', email=f'{username}@t.com',
+            description='test', sector='SaaS', stage='Seed',
+            pitch_video=SimpleUploadedFile('pitch.mp4', b'x' * 10, content_type='video/mp4'),
+        )
+        if liked:
+            liker = User.objects.create_user(f'{username}_liker', password='x')
+            app.pitch_video_likes.add(liker)
+        return app
+
+    def test_no_insight_below_minimum_cohort_size(self):
+        from . import growth_metrics
+        self._founder_with_video('tinyliked', liked=True)
+        self._founder_with_video('tinyunliked', liked=False)
+
+        insights = growth_metrics.get_pitch_video_social_signal_insights()
+        self.assertEqual(insights, [])
+
+    def test_like_correlation_insight_appears_once_threshold_met(self):
+        from . import growth_metrics
+        n = growth_metrics.PLATFORM_INSIGHT_MIN_COHORT_SIZE
+        liked = [self._founder_with_video(f'likedf{i}', liked=True) for i in range(n)]
+        unliked = [self._founder_with_video(f'unlikedf{i}', liked=False) for i in range(n)]
+
+        # Every liked founder gets an intro request; no unliked founder does.
+        for app in liked:
+            investor_user = User.objects.create_user(f'{app.user.username}_inv', password='x')
+            InvestorInterestEvent.objects.create(investor=investor_user, founder=app, event_type='intro_request')
+
+        insights = growth_metrics.get_pitch_video_social_signal_insights()
+        like_insight = next(i for i in insights if 'like' in i)
+        self.assertIn('100.0%', like_insight)
+        self.assertIn('0.0%', like_insight)
+        self.assertIn('so far', like_insight)

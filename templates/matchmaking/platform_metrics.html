@@ -6,101 +6,538 @@
 <div class="container py-5">
     <h2 class="fw-bold mb-4"><i class="bi bi-speedometer2 me-2"></i>Platform Metrics</h2>
 
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-md-3">
-            <div class="card p-3 bg-success text-white shadow-sm border-0 h-100">
-                <small class="text-white-50 text-uppercase">Founders</small>
-                <h2 class="fw-bold mb-0">{{ founder_count }}</h2>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card p-3 bg-primary text-white shadow-sm border-0 h-100">
-                <small class="text-white-50 text-uppercase">Investors</small>
-                <h2 class="fw-bold mb-0">{{ investor_count }}</h2>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card p-3 bg-dark text-white shadow-sm border-0 h-100">
-                <small class="text-white-50 text-uppercase">Active (24h)</small>
-                <h2 class="fw-bold mb-0">{{ active_users_24h }}</h2>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card p-3 bg-warning text-dark shadow-sm border-0 h-100">
-                <small class="text-uppercase">Vector Coverage</small>
-                <h2 class="fw-bold mb-0">{{ founder_vector_rate }}% / {{ investor_vector_rate }}%</h2>
-                <small class="opacity-75">Founders / Investors</small>
-            </div>
-        </div>
-    </div>
+    <ul class="nav nav-tabs mb-4" id="metricsTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview-pane" type="button" role="tab">Overview</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="funnel-tab" data-bs-toggle="tab" data-bs-target="#funnel-pane" type="button" role="tab">Funnel</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="zelda-tab" data-bs-toggle="tab" data-bs-target="#zelda-pane" type="button" role="tab">Zelda Usage</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="acquisition-tab" data-bs-toggle="tab" data-bs-target="#acquisition-pane" type="button" role="tab">Acquisition</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="activation-tab" data-bs-toggle="tab" data-bs-target="#activation-pane" type="button" role="tab">Activation</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="engagement-tab" data-bs-toggle="tab" data-bs-target="#engagement-pane" type="button" role="tab">Engagement</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="value-tab" data-bs-toggle="tab" data-bs-target="#value-pane" type="button" role="tab">Value Creation</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="adoption-tab" data-bs-toggle="tab" data-bs-target="#adoption-pane" type="button" role="tab">Feature Adoption</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="ttv-tab" data-bs-toggle="tab" data-bs-target="#ttv-pane" type="button" role="tab">Time to Value</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="liquidity-tab" data-bs-toggle="tab" data-bs-target="#liquidity-pane" type="button" role="tab">Marketplace Liquidity</button>
+        </li>
+    </ul>
 
-    <div class="row g-4 mb-4">
-        <div class="col-md-6">
-            <div class="card shadow-sm border-0 p-4 h-100">
-                <h6 class="fw-bold text-uppercase small text-muted mb-3">Connection Funnel</h6>
-                <ul class="list-unstyled mb-0">
-                    <li class="d-flex justify-content-between border-bottom py-2">
-                        <span>Pending</span><strong>{{ connection_funnel.pending|default:0 }}</strong>
-                    </li>
-                    <li class="d-flex justify-content-between border-bottom py-2">
-                        <span>Accepted</span><strong>{{ connection_funnel.ACCEPTED|default:0 }}</strong>
-                    </li>
-                    <li class="d-flex justify-content-between border-bottom py-2">
-                        <span>Declined</span><strong>{{ connection_funnel.DECLINED|default:0 }}</strong>
-                    </li>
-                    <li class="d-flex justify-content-between py-2">
-                        <span>Funded</span><strong>{{ connection_funnel.FUNDED|default:0 }}</strong>
-                    </li>
-                </ul>
-                <div class="d-flex justify-content-between border-top pt-3 mt-2 small text-muted">
-                    <span>Intro → Accepted</span><strong class="text-dark">{{ intro_to_accept_rate }}%</strong>
+    <div class="tab-content" id="metricsTabContent">
+
+        <div class="tab-pane fade show active" id="overview-pane" role="tabpanel">
+
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <div class="card p-3 bg-success text-white shadow-sm border-0 h-100">
+                        <small class="text-white-50 text-uppercase">Founders</small>
+                        <h2 class="fw-bold mb-0">{{ founder_count }}</h2>
+                    </div>
                 </div>
-                <div class="d-flex justify-content-between small text-muted">
-                    <span>Intro → Funded</span><strong class="text-dark">{{ intro_to_funded_rate }}%</strong>
+                <div class="col-6 col-md-3">
+                    <div class="card p-3 bg-primary text-white shadow-sm border-0 h-100">
+                        <small class="text-white-50 text-uppercase">Investors</small>
+                        <h2 class="fw-bold mb-0">{{ investor_count }}</h2>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card p-3 bg-dark text-white shadow-sm border-0 h-100">
+                        <small class="text-white-50 text-uppercase">Active (24h)</small>
+                        <h2 class="fw-bold mb-0">{{ active_users_24h }}</h2>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card p-3 bg-warning text-dark shadow-sm border-0 h-100">
+                        <small class="text-uppercase">Vector Coverage</small>
+                        <h2 class="fw-bold mb-0">{{ founder_vector_rate }}% / {{ investor_vector_rate }}%</h2>
+                        <small class="opacity-75">Founders / Investors</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 p-4 h-100">
+                        <h6 class="fw-bold text-uppercase small text-muted mb-3">Connection Funnel</h6>
+                        <ul class="list-unstyled mb-0">
+                            <li class="d-flex justify-content-between border-bottom py-2">
+                                <span>Pending</span><strong>{{ connection_funnel.pending|default:0 }}</strong>
+                            </li>
+                            <li class="d-flex justify-content-between border-bottom py-2">
+                                <span>Accepted</span><strong>{{ connection_funnel.ACCEPTED|default:0 }}</strong>
+                            </li>
+                            <li class="d-flex justify-content-between border-bottom py-2">
+                                <span>Declined</span><strong>{{ connection_funnel.DECLINED|default:0 }}</strong>
+                            </li>
+                            <li class="d-flex justify-content-between py-2">
+                                <span>Funded</span><strong>{{ connection_funnel.FUNDED|default:0 }}</strong>
+                            </li>
+                        </ul>
+                        <div class="d-flex justify-content-between border-top pt-3 mt-2 small text-muted">
+                            <span>Intro → Accepted</span><strong class="text-dark">{{ intro_to_accept_rate }}%</strong>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>Intro → Funded</span><strong class="text-dark">{{ intro_to_funded_rate }}%</strong>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 p-4 h-100">
+                        <h6 class="fw-bold text-uppercase small text-muted mb-3">Top Sectors</h6>
+                        <canvas id="sectorChart" height="180"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-12">
+                    <h6 class="fw-bold text-uppercase small text-muted mb-3">AI Usage</h6>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card p-3 shadow-sm border-0 h-100">
+                        <small class="text-muted text-uppercase">Documents Analyzed</small>
+                        <h3 class="fw-bold mb-0">{{ documents_processed }}</h3>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card p-3 shadow-sm border-0 h-100">
+                        <small class="text-muted text-uppercase">Memos Generated</small>
+                        <h3 class="fw-bold mb-0">{{ memos_generated }}</h3>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card p-3 shadow-sm border-0 h-100">
+                        <small class="text-muted text-uppercase">Truth Delta Runs</small>
+                        <h3 class="fw-bold mb-0">{{ truth_delta_runs }}</h3>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card p-3 shadow-sm border-0 h-100">
+                        <small class="text-muted text-uppercase">Zelda Analyses Triggered</small>
+                        <h3 class="fw-bold mb-0">{{ zelda_analyses_triggered }}</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 p-4">
+                <h6 class="fw-bold text-uppercase small text-muted mb-3">Registrations — Last 30 Days</h6>
+                <canvas id="registrationChart" height="90"></canvas>
+            </div>
+
+        </div>
+
+        <div class="tab-pane fade" id="funnel-pane" role="tabpanel">
+            <p class="text-muted small mb-4">
+                Landing Page and Signup Started are shared across all four personas (role isn't known yet at that
+                point) — everything from Signup Completed onward is specific to that role. A stage can show a gain
+                rather than a drop when the underlying event data isn't strictly nested (e.g. a founder-initiated
+                introduction with no prior logged "match" interaction).
+            </p>
+            <div class="row g-4">
+                {% for role_key, role_label, funnel in funnel_tables %}
+                <div class="col-md-6 col-xl-3">
+                    <div class="card shadow-sm border-0 p-3 h-100">
+                        <h6 class="fw-bold text-uppercase small text-muted mb-3">{{ role_label }}</h6>
+                        <ul class="list-unstyled mb-0 small">
+                            {% for stage in funnel %}
+                            <li class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                <span>{{ stage.label }}</span>
+                                <span class="text-end">
+                                    <strong>{{ stage.count }}</strong>
+                                    {% if stage.dropoff_pct != None %}
+                                        {% if stage.dropoff_pct > 0 %}
+                                        <span class="text-danger d-block" style="font-size:0.7rem;">-{{ stage.dropoff_pct }}%</span>
+                                        {% elif stage.dropoff_pct < 0 %}
+                                        <span class="text-success d-block" style="font-size:0.7rem;">+{{ stage.dropoff_pct|cut:"-" }}%</span>
+                                        {% else %}
+                                        <span class="text-muted d-block" style="font-size:0.7rem;">0%</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="zelda-pane" role="tabpanel">
+            <p class="text-muted small mb-4">Which Zelda features actually get used, broken out by who triggered them.</p>
+            <div class="card shadow-sm border-0 p-4">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr class="text-muted small text-uppercase">
+                            <th>Feature</th>
+                            <th class="text-end">Investor-side</th>
+                            <th class="text-end">Buyer-side</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in zelda_feature_usage %}
+                        <tr>
+                            <td>{{ row.label }}</td>
+                            <td class="text-end fw-semibold">{{ row.investor }}</td>
+                            <td class="text-end fw-semibold">{{ row.buyer }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="acquisition-pane" role="tabpanel">
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <div class="card p-3 bg-success text-white shadow-sm border-0 h-100">
+                        <small class="text-white-50 text-uppercase">New Registrations (30d)</small>
+                        <h2 class="fw-bold mb-0">{{ acquisition_metrics.total_new_registrations_30d }}</h2>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card p-3 shadow-sm border-0 h-100">
+                        <small class="text-muted text-uppercase">Landing Views</small>
+                        <h3 class="fw-bold mb-0">{{ acquisition_metrics.landing_views }}</h3>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card p-3 shadow-sm border-0 h-100">
+                        <small class="text-muted text-uppercase">Landing &rarr; Signup</small>
+                        <h3 class="fw-bold mb-0">{{ acquisition_metrics.landing_to_signup_rate }}%</h3>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card p-3 shadow-sm border-0 h-100">
+                        <small class="text-muted text-uppercase">Signup &rarr; Completed</small>
+                        <h3 class="fw-bold mb-0">{{ acquisition_metrics.signup_to_completed_rate }}%</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 p-4 h-100">
+                        <h6 class="fw-bold text-uppercase small text-muted mb-3">Referral Source (cold traffic)</h6>
+                        <p class="text-muted small">Captured first-touch from <code>?utm_source=</code> or <code>?ref=</code> on a visitor's very first page view.</p>
+                        {% if acquisition_metrics.referral_source_breakdown %}
+                        <ul class="list-unstyled mb-0">
+                            {% for row in acquisition_metrics.referral_source_breakdown %}
+                            <li class="d-flex justify-content-between border-bottom py-2">
+                                <span>{{ row.utm_source }}</span><strong>{{ row.count }}</strong>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="text-muted small mb-0">No tagged traffic yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 p-4 h-100">
+                        <h6 class="fw-bold text-uppercase small text-muted mb-3">Organic Referrals (user-to-user)</h6>
+                        <p class="text-muted small">Invites sent from the Fundraising CRM or Deal Pulse.</p>
+                        {% if acquisition_metrics.organic_referral_breakdown %}
+                        <table class="table table-sm mb-0">
+                            <thead><tr class="text-muted small text-uppercase"><th>Source</th><th class="text-end">Sent</th><th class="text-end">Accepted</th></tr></thead>
+                            <tbody>
+                                {% for row in acquisition_metrics.organic_referral_breakdown %}
+                                <tr><td>{{ row.source }}</td><td class="text-end">{{ row.sent }}</td><td class="text-end">{{ row.accepted }}</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <p class="text-muted small mb-0">No referral invites sent yet.</p>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card shadow-sm border-0 p-4 h-100">
-                <h6 class="fw-bold text-uppercase small text-muted mb-3">Top Sectors</h6>
-                <canvas id="sectorChart" height="180"></canvas>
-            </div>
-        </div>
-    </div>
 
-    <div class="row g-3 mb-4">
-        <div class="col-12">
-            <h6 class="fw-bold text-uppercase small text-muted mb-3">AI Usage</h6>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card p-3 shadow-sm border-0 h-100">
-                <small class="text-muted text-uppercase">Documents Analyzed</small>
-                <h3 class="fw-bold mb-0">{{ documents_processed }}</h3>
+        <div class="tab-pane fade" id="activation-pane" role="tabpanel">
+            <p class="text-muted small mb-4">
+                "Avg. days to complete" uses <code>vector_fields_updated_at</code> for founders/sellers (the timestamp
+                that specifically means "match-vector fields finished") and <code>updated_at</code> for
+                investors/buyers (who have no separate vector-lock timestamp) — treat the investor/buyer figures as
+                a looser approximation.
+            </p>
+            <div class="card shadow-sm border-0 p-4">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr class="text-muted small text-uppercase">
+                            <th>Role</th>
+                            <th class="text-end">Total</th>
+                            <th class="text-end">Complete</th>
+                            <th class="text-end">Completion Rate</th>
+                            <th class="text-end">Avg. Days to Complete</th>
+                            <th class="text-end">Avg. Days to First Zelda Use</th>
+                            <th class="text-end">Avg. Days to First Match Viewed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in activation_metrics %}
+                        <tr>
+                            <td>{{ row.label }}</td>
+                            <td class="text-end">{{ row.total }}</td>
+                            <td class="text-end">{{ row.complete_count }}</td>
+                            <td class="text-end fw-semibold">{{ row.completion_rate }}%</td>
+                            <td class="text-end">{% if row.avg_days_to_complete != None %}{{ row.avg_days_to_complete }}{% else %}&mdash;{% endif %}</td>
+                            <td class="text-end">{% if row.avg_days_to_first_zelda != None %}{{ row.avg_days_to_first_zelda }}{% else %}&mdash;{% endif %}</td>
+                            <td class="text-end">{% if row.avg_days_to_first_match_viewed != None %}{{ row.avg_days_to_first_match_viewed }}{% else %}&mdash;{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="card p-3 shadow-sm border-0 h-100">
-                <small class="text-muted text-uppercase">Memos Generated</small>
-                <h3 class="fw-bold mb-0">{{ memos_generated }}</h3>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card p-3 shadow-sm border-0 h-100">
-                <small class="text-muted text-uppercase">Truth Delta Runs</small>
-                <h3 class="fw-bold mb-0">{{ truth_delta_runs }}</h3>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card p-3 shadow-sm border-0 h-100">
-                <small class="text-muted text-uppercase">Zelda Analyses Triggered</small>
-                <h3 class="fw-bold mb-0">{{ zelda_analyses_triggered }}</h3>
-            </div>
-        </div>
-    </div>
 
-    <div class="card shadow-sm border-0 p-4">
-        <h6 class="fw-bold text-uppercase small text-muted mb-3">Registrations — Last 30 Days</h6>
-        <canvas id="registrationChart" height="90"></canvas>
+        <div class="tab-pane fade" id="engagement-pane" role="tabpanel">
+            <h6 class="fw-bold text-uppercase small text-muted mb-3">Weekly Active Users</h6>
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <div class="card p-3 bg-success text-white shadow-sm border-0 h-100">
+                        <small class="text-white-50 text-uppercase">Founders</small>
+                        <h2 class="fw-bold mb-0">{{ engagement_metrics.wau.founder }}</h2>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card p-3 bg-primary text-white shadow-sm border-0 h-100">
+                        <small class="text-white-50 text-uppercase">Investors</small>
+                        <h2 class="fw-bold mb-0">{{ engagement_metrics.wau.investor }}</h2>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card p-3 bg-warning text-dark shadow-sm border-0 h-100">
+                        <small class="text-uppercase">Sellers</small>
+                        <h2 class="fw-bold mb-0">{{ engagement_metrics.wau.seller }}</h2>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card p-3 bg-info text-white shadow-sm border-0 h-100">
+                        <small class="text-white-50 text-uppercase">Buyers</small>
+                        <h2 class="fw-bold mb-0">{{ engagement_metrics.wau.buyer }}</h2>
+                    </div>
+                </div>
+            </div>
+
+            <h6 class="fw-bold text-uppercase small text-muted mb-3">Last 7 Days</h6>
+            <div class="row g-3">
+                <div class="col-6 col-md-3">
+                    <div class="card p-3 shadow-sm border-0 h-100">
+                        <small class="text-muted text-uppercase">Searches / Active Searcher</small>
+                        <h3 class="fw-bold mb-0">{{ engagement_metrics.searches_per_user_7d }}</h3>
+                        <small class="text-muted">{{ engagement_metrics.total_searches_7d }} searches, {{ engagement_metrics.distinct_searchers_7d }} searchers</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card p-3 shadow-sm border-0 h-100">
+                        <small class="text-muted text-uppercase">Matches Viewed</small>
+                        <h3 class="fw-bold mb-0">{{ engagement_metrics.matches_viewed_7d }}</h3>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card p-3 shadow-sm border-0 h-100">
+                        <small class="text-muted text-uppercase">Messages Initiated</small>
+                        <h3 class="fw-bold mb-0">{{ engagement_metrics.messages_initiated_7d }}</h3>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card p-3 shadow-sm border-0 h-100">
+                        <small class="text-muted text-uppercase">Messages Initiated (All-Time)</small>
+                        <h3 class="fw-bold mb-0">{{ engagement_metrics.messages_initiated_total }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="value-pane" role="tabpanel">
+            <p class="text-muted small mb-4">
+                "Conversations Started" counts actual <code>message_sent</code> events — there's no calendar/scheduling
+                feature in the app, so this is an honest stand-in for "meetings scheduled" rather than a claim the
+                platform can't back up.
+            </p>
+            <div class="row g-3">
+                <div class="col-6 col-md-4">
+                    <div class="card p-3 bg-success text-white shadow-sm border-0 h-100">
+                        <small class="text-white-50 text-uppercase">Introductions Made</small>
+                        <h2 class="fw-bold mb-0">{{ value_creation_metrics.introductions_made }}</h2>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="card p-3 bg-primary text-white shadow-sm border-0 h-100">
+                        <small class="text-white-50 text-uppercase">Conversations Started</small>
+                        <h2 class="fw-bold mb-0">{{ value_creation_metrics.conversations_started }}</h2>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="card p-3 bg-dark text-white shadow-sm border-0 h-100">
+                        <small class="text-white-50 text-uppercase">Completed Deals</small>
+                        <h2 class="fw-bold mb-0">{{ value_creation_metrics.completed_deals }}</h2>
+                    </div>
+                </div>
+                <div class="col-6 col-md-6">
+                    <div class="card p-3 shadow-sm border-0 h-100">
+                        <small class="text-muted text-uppercase">Funding Conversations</small>
+                        <h3 class="fw-bold mb-0">{{ value_creation_metrics.funding_conversations }}</h3>
+                    </div>
+                </div>
+                <div class="col-6 col-md-6">
+                    <div class="card p-3 shadow-sm border-0 h-100">
+                        <small class="text-muted text-uppercase">Acquisition Conversations</small>
+                        <h3 class="fw-bold mb-0">{{ value_creation_metrics.acquisition_conversations }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="adoption-pane" role="tabpanel">
+            <p class="text-muted small mb-4">Instead of "did they log in" — which features do people actually use, and which do they ignore entirely?</p>
+            <div class="card shadow-sm border-0 p-4">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr class="text-muted small text-uppercase">
+                            <th>Feature</th>
+                            <th class="text-end">Adopted</th>
+                            <th class="text-end">Eligible</th>
+                            <th class="text-end">Adoption</th>
+                            <th class="text-end">Ignored Entirely</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in feature_adoption_metrics %}
+                        <tr>
+                            <td>{{ row.label }}</td>
+                            <td class="text-end">{{ row.adopted_count }}</td>
+                            <td class="text-end">{{ row.eligible_count }}</td>
+                            <td class="text-end fw-semibold text-success">{{ row.adoption_pct }}%</td>
+                            <td class="text-end text-muted">{{ row.ignored_pct }}%</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="ttv-pane" role="tabpanel">
+            <p class="text-muted small mb-4">
+                Medians, not averages — one profile that took six months to finish would otherwise drag the whole
+                figure toward itself. A stage with 0 samples means nobody has reached it yet, not that it took 0 time.
+            </p>
+            <div class="row g-4 mb-4">
+                {% for row in time_to_value_metrics %}
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 p-3 h-100">
+                        <h6 class="fw-bold text-uppercase small text-muted mb-3">{{ row.label }}</h6>
+                        <ul class="list-unstyled mb-0 small">
+                            {% for stage in row.stages %}
+                            <li class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                <span>{{ stage.label }}</span>
+                                <span class="text-end">
+                                    {% if stage.median != None %}
+                                    <strong>{{ stage.median }} {{ stage.unit }}</strong>
+                                    {% else %}
+                                    <strong class="text-muted">&mdash;</strong>
+                                    {% endif %}
+                                    <span class="text-muted d-block" style="font-size:0.7rem;">n={{ stage.n }}</span>
+                                </span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="card shadow-sm border-0 p-4">
+                <h6 class="fw-bold text-uppercase small text-muted mb-2">Does a fast first conversation predict a founder coming back?</h6>
+                <p class="text-muted small mb-3">
+                    "Returned" means logging in again at least 3 days after signup — the closest available signal
+                    without any new tracking. Only counts founders who've had at least one conversation so far.
+                </p>
+                {% if conversation_speed_retention.within_48h.total or conversation_speed_retention.after_48h.total %}
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="card p-3 bg-success text-white shadow-sm border-0 h-100">
+                            <small class="text-white-50 text-uppercase">First Conversation Within 48h</small>
+                            <h3 class="fw-bold mb-0">
+                                {% if conversation_speed_retention.within_48h.return_rate != None %}{{ conversation_speed_retention.within_48h.return_rate }}%{% else %}&mdash;{% endif %}
+                            </h3>
+                            <small class="opacity-75">returned, of {{ conversation_speed_retention.within_48h.total }} founder{{ conversation_speed_retention.within_48h.total|pluralize }}</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card p-3 bg-dark text-white shadow-sm border-0 h-100">
+                            <small class="text-white-50 text-uppercase">First Conversation After 48h</small>
+                            <h3 class="fw-bold mb-0">
+                                {% if conversation_speed_retention.after_48h.return_rate != None %}{{ conversation_speed_retention.after_48h.return_rate }}%{% else %}&mdash;{% endif %}
+                            </h3>
+                            <small class="opacity-75">returned, of {{ conversation_speed_retention.after_48h.total }} founder{{ conversation_speed_retention.after_48h.total|pluralize }}</small>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted small mb-0">Not enough founders have had a first conversation yet to compare the two cohorts.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="liquidity-pane" role="tabpanel">
+            <p class="text-muted small mb-4">
+                Each stage shown as a share of that side's starting cohort — where the marketplace actually leaks
+                users, not just how each stage compares to the one right before it.
+            </p>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 p-3 h-100">
+                        <h6 class="fw-bold text-uppercase small text-muted mb-3">Founder &rarr; Investor Side</h6>
+                        <ul class="list-unstyled mb-0 small">
+                            {% for stage in marketplace_liquidity.founder %}
+                            <li class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                <span>{{ stage.label }}</span>
+                                <span class="text-end">
+                                    <strong>{{ stage.count }}</strong>
+                                    <span class="text-muted d-block" style="font-size:0.7rem;">{{ stage.pct_of_starting_cohort }}% of cohort</span>
+                                </span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 p-3 h-100">
+                        <h6 class="fw-bold text-uppercase small text-muted mb-3">Seller &rarr; Buyer Side</h6>
+                        <ul class="list-unstyled mb-0 small">
+                            {% for stage in marketplace_liquidity.seller %}
+                            <li class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                <span>{{ stage.label }}</span>
+                                <span class="text-end">
+                                    <strong>{{ stage.count }}</strong>
+                                    <span class="text-muted d-block" style="font-size:0.7rem;">{{ stage.pct_of_starting_cohort }}% of cohort</span>
+                                </span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 {% endblock %}

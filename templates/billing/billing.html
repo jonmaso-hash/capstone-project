@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Membership | Interlink Foundry{% endblock title %}
+
+{% block content %}
+<div class="container py-5">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'usersettings:home' %}" class="text-decoration-none">Settings</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Membership</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <h2 class="fw-bold mb-4">Membership</h2>
+
+            {% if subscription and subscription.is_active %}
+            <div class="card border-success shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <span class="badge bg-success mb-2">Active</span>
+                    <h5 class="fw-bold mb-1">{{ subscription.get_plan_display }}</h5>
+                    {% if subscription.current_period_end %}
+                    <p class="text-muted small mb-3">Renews {{ subscription.current_period_end|date:"F j, Y" }}</p>
+                    {% endif %}
+                    <form method="post" action="{% url 'billing:create_billing_portal_session' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-secondary">
+                            <i class="bi bi-credit-card me-1"></i> Manage Membership
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            {% elif subscription and subscription.status == 'past_due' %}
+            <div class="card border-warning shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <span class="badge bg-warning text-dark mb-2">Payment Failed</span>
+                    <h5 class="fw-bold mb-1">{{ subscription.get_plan_display }}</h5>
+                    <p class="text-muted small mb-3">Your last payment didn't go through. Update your card to keep your premium features.</p>
+                    <form method="post" action="{% url 'billing:create_billing_portal_session' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-credit-card me-1"></i> Update Payment Method
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            {% elif plan == 'FOUNDER_PREMIUM' %}
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-1">Founder Premium — $150/mo</h5>
+                    <ul class="text-secondary small mb-3">
+                        <li>Featured Placement on the bulletin board</li>
+                        <li>Priority Match Alerts — notified the moment a new investor mandate fits your pitch</li>
+                        <li>Unlimited Fundraising CRM leads (free tier is capped at 15)</li>
+                    </ul>
+                    <form method="post" action="{% url 'billing:create_checkout_session' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success" {% if not stripe_configured %}disabled{% endif %}>
+                            <i class="bi bi-star-fill me-1"></i> Subscribe
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            {% elif plan == 'INVESTOR_PREMIUM' %}
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-1">Investor Premium — $500/mo</h5>
+                    <ul class="text-secondary small mb-3">
+                        <li>Uncapped introduction requests</li>
+                        <li>Direct CRM export (CSV) of your deal flow</li>
+                        <li>Priority Match Alerts — notified the moment a new founder matches your thesis</li>
+                    </ul>
+                    <form method="post" action="{% url 'billing:create_checkout_session' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary" {% if not stripe_configured %}disabled{% endif %}>
+                            <i class="bi bi-star-fill me-1"></i> Subscribe
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            {% elif plan == 'SELLER_PREMIUM' %}
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-1">Seller Premium — $150/mo</h5>
+                    <ul class="text-secondary small mb-3">
+                        <li>Featured Listing in the business marketplace</li>
+                        <li>Priority Match Alerts — notified when a new buyer mandate fits your listing</li>
+                        <li>Detailed Buyer Interest Analytics — see every view, vote, and touchpoint on your listing</li>
+                    </ul>
+                    <form method="post" action="{% url 'billing:create_checkout_session' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-warning" {% if not stripe_configured %}disabled{% endif %}>
+                            <i class="bi bi-star-fill me-1"></i> Subscribe
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            {% elif plan == 'BUYER_PREMIUM' %}
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-1">Buyer Premium — $500/mo</h5>
+                    <ul class="text-secondary small mb-3">
+                        <li>Uncapped introduction requests</li>
+                        <li>Direct CRM export (CSV) of matching listings</li>
+                        <li>Priority Match Alerts — notified when a new listing matches your acquisition thesis</li>
+                    </ul>
+                    <form method="post" action="{% url 'billing:create_checkout_session' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary" {% if not stripe_configured %}disabled{% endif %}>
+                            <i class="bi bi-star-fill me-1"></i> Subscribe
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            {% else %}
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <p class="text-muted mb-0">Complete your founder, investor, seller, or buyer profile to see premium options.</p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if not stripe_configured %}
+            <p class="text-muted small">Payments aren't fully configured yet — an admin needs to add Stripe API keys.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock content %}

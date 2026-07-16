@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+
+        <div class="col-lg-3 mb-4">
+            <div class="list-group shadow-sm rounded-4 overflow-hidden sticky-top" style="top: 90px;">
+                <a href="{% url 'ops:dashboard' %}" class="list-group-item list-group-item-action fw-semibold {% if ops_section == 'dashboard' %}active{% endif %}">
+                    <i class="bi bi-speedometer2 me-2"></i>Overview
+                </a>
+                <a href="{% url 'ops:verification_queue' %}" class="list-group-item list-group-item-action fw-semibold {% if ops_section == 'verification' %}active{% endif %}">
+                    <i class="bi bi-patch-check me-2"></i>Verification Queue
+                </a>
+                <a href="{% url 'ops:reported_users' %}" class="list-group-item list-group-item-action fw-semibold {% if ops_section == 'reports' %}active{% endif %}">
+                    <i class="bi bi-flag me-2"></i>Reported Users
+                </a>
+                <a href="{% url 'ops:featured_profiles' %}" class="list-group-item list-group-item-action fw-semibold {% if ops_section == 'featured' %}active{% endif %}">
+                    <i class="bi bi-star me-2"></i>Featured Profiles
+                </a>
+                <a href="{% url 'ops:manual_intro_create' %}" class="list-group-item list-group-item-action fw-semibold {% if ops_section == 'manual_intro' %}active{% endif %}">
+                    <i class="bi bi-person-plus me-2"></i>Manual Intro
+                </a>
+                <a href="{% url 'ops:match_override' %}" class="list-group-item list-group-item-action fw-semibold {% if ops_section == 'match_override' %}active{% endif %}">
+                    <i class="bi bi-arrow-left-right me-2"></i>Match Override
+                </a>
+                <a href="{% url 'ops:bulk_email' %}" class="list-group-item list-group-item-action fw-semibold {% if ops_section == 'bulk_email' %}active{% endif %}">
+                    <i class="bi bi-envelope-paper me-2"></i>Bulk Email
+                </a>
+                <a href="{% url 'ops:invite_management' %}" class="list-group-item list-group-item-action fw-semibold {% if ops_section == 'invites' %}active{% endif %}">
+                    <i class="bi bi-ticket-perforated me-2"></i>Beta Invites
+                </a>
+                <a href="{% url 'ops:waitlist_management' %}" class="list-group-item list-group-item-action fw-semibold {% if ops_section == 'waitlist' %}active{% endif %}">
+                    <i class="bi bi-hourglass-split me-2"></i>Waitlist
+                </a>
+                <a href="{% url 'ops:announcements' %}" class="list-group-item list-group-item-action fw-semibold {% if ops_section == 'announcements' %}active{% endif %}">
+                    <i class="bi bi-megaphone me-2"></i>Announcements
+                </a>
+                <a href="{% url 'ops:user_management' %}" class="list-group-item list-group-item-action fw-semibold {% if ops_section == 'users' %}active{% endif %}">
+                    <i class="bi bi-people me-2"></i>User Management
+                </a>
+                <a href="{% url 'ops:document_review' %}" class="list-group-item list-group-item-action fw-semibold {% if ops_section == 'documents' %}active{% endif %}">
+                    <i class="bi bi-file-earmark-lock me-2"></i>Document Review
+                </a>
+                <a href="{% url 'ops:training_data' %}" class="list-group-item list-group-item-action fw-semibold {% if ops_section == 'training_data' %}active{% endif %}">
+                    <i class="bi bi-cpu me-2"></i>Training Data
+                </a>
+                <a href="{% url 'ops:failed_tasks' %}" class="list-group-item list-group-item-action fw-semibold {% if ops_section == 'failed_tasks' %}active{% endif %}">
+                    <i class="bi bi-exclamation-octagon me-2"></i>Failed Tasks
+                </a>
+                <a href="{% url 'ops:insight_reports' %}" class="list-group-item list-group-item-action fw-semibold {% if ops_section == 'insight_reports' %}active{% endif %}">
+                    <i class="bi bi-newspaper me-2"></i>Insight Reports
+                </a>
+            </div>
+        </div>
+
+        <div class="col-lg-9">
+            {% block ops_content %}{% endblock ops_content %}
+        </div>
+    </div>
+</div>
+{% endblock content %}

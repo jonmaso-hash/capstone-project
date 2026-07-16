@@ -42,6 +42,11 @@ class JobDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # Skip the poster viewing their own listing — matches the pattern used
+        # for pitch deck/video telemetry, where owner self-views aren't interest.
+        if not self.request.user.is_authenticated or self.request.user != self.object.poster:
+            JobListing.objects.filter(pk=self.object.pk).update(click_count=models.F('click_count') + 1)
+            self.object.refresh_from_db(fields=['click_count'])
         if self.request.user.is_authenticated:
             context['already_applied'] = JobApplication.objects.filter(
                 job=self.object, applicant=self.request.user

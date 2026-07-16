@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Almost done — Interlink Foundry{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5">
+
+            <div class="text-center mb-4">
+                <h2 class="fw-bold">Almost done — what brings you here?</h2>
+                <p class="text-muted">Pick one to finish setting up your account.</p>
+            </div>
+
+            <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+                {% include "accounts/_role_cards.html" %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="role" id="selectedRole" value="">
+                    <button type="submit" id="roleSubmitBtn" class="btn btn-primary w-100 rounded-pill fw-bold py-2" disabled>
+                        Continue
+                    </button>
+                    <p class="text-muted small text-center mt-2 mb-0">Pick a role above to continue</p>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

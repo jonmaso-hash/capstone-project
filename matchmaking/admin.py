@@ -6,7 +6,9 @@ from .models import (
     Application, InvestorApplication, AIMatch, Connection, MatchFeedback, InvestorInterestEvent,
     APIKey, InvestorPredictionSnapshot,
     SellerApplication, BuyerApplication, AcquisitionConnection, DealFeedback, AcquisitionInterestEvent,
-    BuyerPredictionSnapshot,
+    BuyerPredictionSnapshot, BusinessEmailVerification,
+    DataRoomDocument, DataRoomAccessRequest, DataRoomDocumentView,
+    PitchVideoComment,
 )
 from django.core.mail import EmailMessage
 from django.conf import settings
@@ -169,6 +171,44 @@ class APIKeyAdmin(admin.ModelAdmin):
     def key_preview(self, obj):
         return f"···{obj.key[-4:]}" if obj.key else "—"
     key_preview.short_description = 'Key'
+
+
+@admin.register(BusinessEmailVerification)
+class BusinessEmailVerificationAdmin(admin.ModelAdmin):
+    list_display = ['user', 'business_email', 'status', 'attempts', 'created_at', 'expires_at']
+    list_filter = ['status', 'created_at']
+    search_fields = ['user__username', 'business_email']
+    readonly_fields = ['code', 'created_at', 'verified_at']
+
+
+@admin.register(DataRoomDocument)
+class DataRoomDocumentAdmin(admin.ModelAdmin):
+    list_display = ['label', 'founder', 'category', 'uploaded_at']
+    list_filter = ['category', 'uploaded_at']
+    search_fields = ['label', 'founder__company_name']
+
+
+@admin.register(DataRoomAccessRequest)
+class DataRoomAccessRequestAdmin(admin.ModelAdmin):
+    list_display = ['document', 'investor', 'status', 'requested_at', 'decided_at']
+    list_filter = ['status', 'requested_at']
+    search_fields = ['document__label', 'investor__company_name']
+
+
+@admin.register(DataRoomDocumentView)
+class DataRoomDocumentViewAdmin(admin.ModelAdmin):
+    list_display = ['document', 'viewer', 'created_at']
+    readonly_fields = ['document', 'viewer', 'created_at']
+
+    def has_add_permission(self, request):
+        return False
+
+
+@admin.register(PitchVideoComment)
+class PitchVideoCommentAdmin(admin.ModelAdmin):
+    list_display = ['author', 'founder', 'seller', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['author__username', 'founder__company_name', 'seller__company_name', 'body']
 
 
 @admin.register(InvestorPredictionSnapshot)

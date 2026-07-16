@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}Pitch Videos | Interlink Foundry{% endblock title %}
+
+{% block css %}
+<style>
+    .pv-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    .pv-card:hover { transform: translateY(-2px); box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1) !important; }
+    .pv-video-wrap { background: #0d0d0d; border-radius: 1rem 1rem 0 0; overflow: hidden; }
+    .pv-video-wrap video { width: 100%; max-height: 420px; display: block; background: #000; }
+    .pv-match-badge {
+        position: absolute; top: 0.75rem; right: 0.75rem; z-index: 2;
+        background: rgba(25, 135, 84, 0.92); color: #fff; font-weight: 700;
+        padding: 0.3rem 0.7rem; border-radius: 50px; font-size: 0.8rem;
+    }
+    .pv-action-btn {
+        background: none; border: none; color: #6c757d; font-size: 0.9rem;
+        display: flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.5rem;
+        border-radius: 50px; transition: color 0.15s ease, background 0.15s ease;
+    }
+    .pv-action-btn:hover { background: #f1f3f5; color: #212529; }
+    .pv-action-btn.active { color: #dc3545; font-weight: 600; }
+    .pv-action-btn.active.pv-save { color: #0d6efd; }
+    .pv-comment-panel { display: none; border-top: 1px solid #eee; }
+    .pv-tab-btn { border: none; background: none; padding: 0.6rem 1.25rem; font-weight: 600; color: #6c757d; border-bottom: 3px solid transparent; }
+    .pv-tab-btn.active { color: #212529; border-bottom-color: #0d6efd; }
+    .pv-empty-state { padding: 4rem 1rem; text-align: center; color: #6c757d; }
+</style>
+{% endblock css %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="mb-4">
+        <h1 class="h2 fw-bold mb-1 text-dark"><i class="bi bi-play-btn-fill me-2"></i>Pitch Videos</h1>
+        <p class="text-secondary mb-0">Founders and businesses-for-sale, ranked by how well they match your profile — not a chronological feed.</p>
+    </div>
+
+    <div class="d-flex gap-2 mb-4 border-bottom">
+        <button type="button" class="pv-tab-btn {% if default_tab == 'founders' %}active{% endif %}" data-pv-tab="founders" onclick="pvSwitchTab('founders')">
+            Founders <span class="badge bg-secondary rounded-pill ms-1">{{ founders|length }}</span>
+        </button>
+        <button type="button" class="pv-tab-btn {% if default_tab == 'sellers' %}active{% endif %}" data-pv-tab="sellers" onclick="pvSwitchTab('sellers')">
+            Businesses for Sale <span class="badge bg-secondary rounded-pill ms-1">{{ sellers|length }}</span>
+        </button>
+    </div>
+
+    <div id="pv-panel-founders" class="row g-4" style="{% if default_tab != 'founders' %}display:none;{% endif %}">
+        {% for f in founders %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 pv-card h-100 position-relative">
+                {% if f.match_score is not None %}
+                    <span class="pv-match-badge">{{ f.match_score }}% Match</span>
+                {% endif %}
+                <div class="pv-video-wrap ratio ratio-16x9">
+                    <video controls controlsList="nodownload" preload="metadata" onplay="pvLogPlay(this, 'founder', {{ f.id }})">
+                        <source src="{{ f.pitch_video.url }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-1"><a href="{% url 'accounts:profile' f.user.username %}" class="text-dark text-decoration-none">{{ f.company_name }}</a></h6>
+                    <div class="small text-secondary mb-2">{{ f.sector }} &middot; {{ f.stage }}</div>
+                    <p class="small text-secondary mb-3">{{ f.description|truncatewords:22 }}</p>
+
+                    <div class="d-flex flex-wrap align-items-center gap-1 mb-2">
+                        <button type="button" class="pv-action-btn {% if f.viewer_has_liked %}active{% endif %}" onclick="pvToggleLike(this, 'founder', {{ f.id }})">
+                            <i class="bi {% if f.viewer_has_liked %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                            <span class="pv-like-count">{% if f.like_count is not None %}{{ f.like_count }}{% endif %}</span>
+                        </button>
+                        <button type="button" class="pv-action-btn pv-save {% if f.viewer_has_saved %}active{% endif %}" onclick="pvToggleSave(this, 'founder', {{ f.id }})">
+                            <i class="bi {% if f.viewer_has_saved %}bi-bookmark-fill{% else %}bi-bookmark{% endif %}"></i> Save
+                        </button>
+                        {% if f.pitch_video_comments_enabled %}
+                        <button type="button" class="pv-action-btn" onclick="pvToggleComments(this, 'founder', {{ f.id }})">
+                            <i class="bi bi-chat"></i> <span class="pv-comment-count">{{ f.comment_count }}</span>
+                        </button>
+                        {% endif %}
+                        {% if f.pitch_video_shares_enabled %}
+                        <button type="button" class="pv-action-btn" onclick="pvShare(this, '{% url 'accounts:profile' f.user.username %}')">
+                            <i class="bi bi-share"></i> Share
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        {% if f.pitch_deck %}
+                        <a href="{% url 'matchmaking:view_pitch_deck' f.id %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">Pitch Deck</a>
+                        {% endif %}
+                        {% if request.user.is_authenticated %}
+                        <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="analyzeFounderWithZelda(this, '{{ f.user.username }}', '{{ f.company_name|escapejs }}')">
+                            <i class="bi bi-stars me-1"></i>Analyze with Zelda
+                        </button>
+                        {% endif %}
+                        {% if request.user.is_authenticated and request.user != f.user %}
+                        <a href="{% url 'accounts:profile' f.user.username %}" class="btn btn-primary btn-sm rounded-pill px-3">Request Intro</a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if f.pitch_video_comments_enabled %}
+                <div class="pv-comment-panel p-3" id="pv-comments-founder-{{ f.id }}">
+                    <div class="pv-comment-list small mb-2">
+                        {% for c in f.pitch_video_comments.all|slice:":5" %}
+                        <div class="mb-2"><strong>{{ c.author.get_full_name|default:c.author.username }}</strong> {{ c.body }}</div>
+                        {% endfor %}
+                    </div>
+                    {% if request.user.is_authenticated %}
+                    <form onsubmit="pvPostComment(event, this, 'founder', {{ f.id }})" class="d-flex gap-2">
+                        {% csrf_token %}
+                        <input type="text" name="body" class="form-control form-control-sm rounded-pill" placeholder="Add a comment..." maxlength="1000" required>
+                        <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3">Post</button>
+                    </form>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="pv-empty-state"><i class="bi bi-camera-video display-4 d-block mb-3"></i>No founder pitch videos yet.</div>
+        {% endfor %}
+    </div>
+
+    <div id="pv-panel-sellers" class="row g-4" style="{% if default_tab != 'sellers' %}display:none;{% endif %}">
+        {% for s in sellers %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 pv-card h-100 position-relative">
+                {% if s.match_score is not None %}
+                    <span class="pv-match-badge">{{ s.match_score }}% Match</span>
+                {% endif %}
+                <div class="pv-video-wrap ratio ratio-16x9">
+                    <video controls controlsList="nodownload" preload="metadata" onplay="pvLogPlay(this, 'seller', {{ s.id }})">
+                        <source src="{{ s.pitch_video.url }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-1"><a href="{% url 'accounts:profile' s.user.username %}" class="text-dark text-decoration-none">{{ s.company_name }}</a></h6>
+                    <div class="small text-secondary mb-2">{{ s.industry }} &middot; Asking ${{ s.asking_price|floatformat:0 }}</div>
+                    <p class="small text-secondary mb-3">{{ s.description|truncatewords:22 }}</p>
+
+                    <div class="d-flex flex-wrap align-items-center gap-1 mb-2">
+                        <button type="button" class="pv-action-btn {% if s.viewer_has_liked %}active{% endif %}" onclick="pvToggleLike(this, 'seller', {{ s.id }})">
+                            <i class="bi {% if s.viewer_has_liked %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                            <span class="pv-like-count">{% if s.like_count is not None %}{{ s.like_count }}{% endif %}</span>
+                        </button>
+                        <button type="button" class="pv-action-btn pv-save {% if s.viewer_has_saved %}active{% endif %}" onclick="pvToggleSave(this, 'seller', {{ s.id }})">
+                            <i class="bi {% if s.viewer_has_saved %}bi-bookmark-fill{% else %}bi-bookmark{% endif %}"></i> Save
+                        </button>
+                        {% if s.pitch_video_comments_enabled %}
+                        <button type="button" class="pv-action-btn" onclick="pvToggleComments(this, 'seller', {{ s.id }})">
+                            <i class="bi bi-chat"></i> <span class="pv-comment-count">{{ s.comment_count }}</span>
+                        </button>
+                        {% endif %}
+                        {% if s.pitch_video_shares_enabled %}
+                        <button type="button" class="pv-action-btn" onclick="pvShare(this, '{% url 'accounts:profile' s.user.username %}')">
+                            <i class="bi bi-share"></i> Share
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        {% if s.cim_document %}
+                        <a href="{% url 'accounts:profile' s.user.username %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">CIM</a>
+                        {% endif %}
+                        {% if request.user.is_authenticated and request.user != s.user %}
+                        <a href="{% url 'accounts:profile' s.user.username %}" class="btn btn-primary btn-sm rounded-pill px-3">Request Intro</a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if s.pitch_video_comments_enabled %}
+                <div class="pv-comment-panel p-3" id="pv-comments-seller-{{ s.id }}">
+                    <div class="pv-comment-list small mb-2">
+                        {% for c in s.pitch_video_comments.all|slice:":5" %}
+                        <div class="mb-2"><strong>{{ c.author.get_full_name|default:c.author.username }}</strong> {{ c.body }}</div>
+                        {% endfor %}
+                    </div>
+                    {% if request.user.is_authenticated %}
+                    <form onsubmit="pvPostComment(event, this, 'seller', {{ s.id }})" class="d-flex gap-2">
+                        {% csrf_token %}
+                        <input type="text" name="body" class="form-control form-control-sm rounded-pill" placeholder="Add a comment..." maxlength="1000" required>
+                        <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3">Post</button>
+                    </form>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="pv-empty-state"><i class="bi bi-camera-video display-4 d-block mb-3"></i>No business-for-sale pitch videos yet.</div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+const PV_IS_AUTHENTICATED = {{ request.user.is_authenticated|yesno:"true,false" }};
+
+function pvRequireAuth() {
+    if (PV_IS_AUTHENTICATED) return true;
+    window.location.href = `{% url 'accounts:login' %}?next=${encodeURIComponent(window.location.pathname)}`;
+    return false;
+}
+
+function pvGetCookie(name) {
+    const cookies = document.cookie.split(';');
+    for (let c of cookies) {
+        c = c.trim();
+        if (c.startsWith(name + '=')) return decodeURIComponent(c.slice(name.length + 1));
+    }
+    return null;
+}
+
+function pvLogPlay(videoEl, role, id) {
+    // Top of the funnel — fires once per pageview on first play, no auth
+    // requirement (the endpoint itself no-ops for anonymous/wrong-role
+    // viewers), so this never blocks or redirects the visitor.
+    if (videoEl.dataset.pvPlayLogged) return;
+    videoEl.dataset.pvPlayLogged = '1';
+    fetch(`/matchmaking/pitch-videos/${role}/${id}/play/`, {
+        method: 'POST', credentials: 'same-origin', headers: { 'X-CSRFToken': pvGetCookie('csrftoken') },
+    }).catch(() => {});
+}
+
+function pvSwitchTab(tab) {
+    document.querySelectorAll('.pv-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.pvTab === tab));
+    document.getElementById('pv-panel-founders').style.display = (tab === 'founders') ? '' : 'none';
+    document.getElementById('pv-panel-sellers').style.display = (tab === 'sellers') ? '' : 'none';
+}
+
+async function pvToggleLike(btn, role, id) {
+    if (!pvRequireAuth()) return;
+    const res = await fetch(`/matchmaking/pitch-videos/${role}/${id}/like/`, {
+        method: 'POST', credentials: 'same-origin', headers: { 'X-CSRFToken': pvGetCookie('csrftoken') },
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    btn.classList.toggle('active', data.liked);
+    btn.querySelector('i').className = 'bi ' + (data.liked ? 'bi-heart-fill' : 'bi-heart');
+    const countEl = btn.querySelector('.pv-like-count');
+    if (data.like_count !== null && data.like_count !== undefined) countEl.textContent = data.like_count;
+}
+
+async function pvToggleSave(btn, role, id) {
+    if (!pvRequireAuth()) return;
+    const res = await fetch(`/matchmaking/pitch-videos/${role}/${id}/save/`, {
+        method: 'POST', credentials: 'same-origin', headers: { 'X-CSRFToken': pvGetCookie('csrftoken') },
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    btn.classList.toggle('active', data.saved);
+    btn.querySelector('i').className = 'bi ' + (data.saved ? 'bi-bookmark-fill' : 'bi-bookmark');
+}
+
+function pvToggleComments(btn, role, id) {
+    const panel = document.getElementById(`pv-comments-${role}-${id}`);
+    if (!panel) return;
+    panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+}
+
+async function pvPostComment(e, form, role, id) {
+    e.preventDefault();
+    const input = form.querySelector('input[name="body"]');
+    const body = input.value.trim();
+    if (!body) return;
+
+    const res = await fetch(`/matchmaking/pitch-videos/${role}/${id}/comment/`, {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'X-CSRFToken': pvGetCookie('csrftoken') },
+        body: new URLSearchParams({ body }),
+    });
+    const data = await res.json();
+    if (!res.ok) { alert(data.error || 'Could not post comment.'); return; }
+
+    const list = form.closest('.pv-comment-panel').querySelector('.pv-comment-list');
+    const row = document.createElement('div');
+    row.className = 'mb-2';
+    row.innerHTML = `<strong></strong> `;
+    row.querySelector('strong').textContent = data.comment.author;
+    row.append(document.createTextNode(data.comment.body));
+    list.appendChild(row);
+
+    const card = form.closest('.pv-card');
+    const countEl = card.querySelector('.pv-comment-count');
+    if (countEl) countEl.textContent = parseInt(countEl.textContent || '0', 10) + 1;
+
+    input.value = '';
+}
+
+function pvShare(btn, relativeUrl) {
+    const fullUrl = window.location.origin + relativeUrl;
+    if (navigator.share) {
+        navigator.share({ url: fullUrl }).catch(() => {});
+        return;
+    }
+    navigator.clipboard.writeText(fullUrl).then(() => {
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check2"></i> Copied';
+        setTimeout(() => { btn.innerHTML = original; }, 1500);
+    });
+}
+</script>
+{% endblock content %}

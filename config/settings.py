@@ -16,8 +16,7 @@ env = environ.Env(
     SITE_URL=(str, 'https://interlinkfoundry.com'),
     ADMIN_EMAIL=(str, ''),
     SECRET_KEY=(str, None),
-    GEMINI_API_KEY=(str, ''),
-    ANTHROPIC_API_KEY=(str, ''),   
+    ANTHROPIC_API_KEY=(str, ''),
     STREAM_API_KEY=(str, ''),
     STREAM_API_SECRET=(str, ''),
     EMAIL_HOST_USER=(str, ''),
@@ -25,11 +24,34 @@ env = environ.Env(
     ADMIN_URL_PATH=(str, 'admin/'),
     CELERY_BROKER_URL=(str, 'redis://localhost:6379/0'),
     CELERY_RESULT_BACKEND=(str, 'redis://localhost:6379/0'),
+    # Separate DB index from Celery's /0 above. Empty by default so local
+    # dev keeps using LocMemCache without requiring a Redis instance —
+    # set this (e.g. via docker-compose) to turn on the Redis-backed cache.
+    CACHE_URL=(str, ''),
     AWS_STORAGE_BUCKET_NAME=(str, ''),
     AWS_ACCESS_KEY_ID=(str, ''),
     AWS_SECRET_ACCESS_KEY=(str, ''),
     AWS_S3_REGION_NAME=(str, 'us-east-1'),
     SENTRY_DSN=(str, ''),
+    STRIPE_SECRET_KEY=(str, ''),
+    STRIPE_PUBLISHABLE_KEY=(str, ''),
+    STRIPE_WEBHOOK_SECRET=(str, ''),
+    STRIPE_FOUNDER_PRICE_ID=(str, ''),
+    STRIPE_INVESTOR_PRICE_ID=(str, ''),
+    STRIPE_SELLER_PRICE_ID=(str, ''),
+    STRIPE_BUYER_PRICE_ID=(str, ''),
+    GOOGLE_OAUTH_CLIENT_ID=(str, ''),
+    GOOGLE_OAUTH_SECRET=(str, ''),
+    FACEBOOK_OAUTH_CLIENT_ID=(str, ''),
+    FACEBOOK_OAUTH_SECRET=(str, ''),
+    LINKEDIN_OAUTH_CLIENT_ID=(str, ''),
+    LINKEDIN_OAUTH_SECRET=(str, ''),
+    # Truth Delta external verification sources. SEC EDGAR needs no key
+    # (public data.sec.gov API); these two are optional — Truth Delta
+    # degrades to "no corroborating data found" for a source when its key
+    # is blank, rather than failing.
+    CRUNCHBASE_API_KEY=(str, ''),
+    NEWS_API_KEY=(str, ''),
 )
 
 # Read parameters straight from your secure root .env file
@@ -61,6 +83,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.humanize",
+    "django.contrib.sites",
+    "django.contrib.sitemaps",
     "jobs.apps.JobsConfig",
     "rest_framework",
     "rest_framework.authtoken",
@@ -70,6 +94,14 @@ INSTALLED_APPS = [
     "crispy_forms",
     "crispy_bootstrap5",
 
+    # Social Login (Google, Facebook, LinkedIn)
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+    "allauth.socialaccount.providers.facebook",
+    "allauth.socialaccount.providers.linkedin_oauth2",
+
     # Internal Interlink Foundry Apps
     "blog",
     "pages",
@@ -77,10 +109,15 @@ INSTALLED_APPS = [
     "matchmaking",
     "zelda_api",
     "usersettings",
+    "billing",
+    "ops",
+    "growth",
 
     'django_extensions',
     'notifications',
 ]
+
+SITE_ID = 1
 
 from django.contrib.messages import constants as message_constants
 MESSAGE_TAGS = {
@@ -107,11 +144,17 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    
+
     # Your Unique Idempotency Layer
     'shared_utils.middleware.IdempotencyMiddleware',
+]
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 IDEMPOTENCY_EXCLUDED_PATHS = [
@@ -138,6 +181,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 'matchmaking.context_processors.investor_status',
                 'notifications.context_processors.notifications',
+                'ops.context_processors.active_announcements',
             ],
         },
     },
@@ -158,12 +202,23 @@ DATABASES = {
     )
 }
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
+CACHE_URL = env('CACHE_URL')
+if CACHE_URL:
+    # Django's built-in Redis cache backend (4.0+) — no extra dependency,
+    # `redis` is already required for the Celery broker/backend above.
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': CACHE_URL,
+        }
     }
-}
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'unique-snowflake',
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -254,6 +309,18 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'matchmaking.tasks.snapshot_buyer_predictions',
         'schedule': crontab(day_of_week='thursday', hour=9, minute=0),
     },
+    'send-priority-match-alerts': {
+        'task': 'matchmaking.tasks.send_priority_match_alerts',
+        'schedule': crontab(hour=8, minute=0),
+    },
+    'ensure-next-month-partition': {
+        'task': 'matchmaking.tasks.ensure_next_month_partition',
+        'schedule': crontab(day_of_month=25, hour=3, minute=0),
+    },
+    'generate-quarterly-insight-report': {
+        'task': 'growth.tasks.generate_quarterly_insight_report',
+        'schedule': crontab(day_of_month=1, month_of_year='1,4,7,10', hour=6, minute=0),
+    },
 }
 
 
@@ -262,16 +329,60 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 
+# --- SOCIAL LOGIN (GOOGLE, FACEBOOK, LINKEDIN) ---
+# A brand-new social-login user has no "role" yet (Founder/Investor/Seller/Buyer) —
+# post_login_router (accounts:post_login_router) sends them to the role picker
+# instead of allauth's own generic signup form, so AUTO_SIGNUP stays on.
+SOCIALACCOUNT_AUTO_SIGNUP = True
+LOGIN_REDIRECT_URL = 'accounts:post_login_router'
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            'client_id': env('GOOGLE_OAUTH_CLIENT_ID'),
+            'secret': env('GOOGLE_OAUTH_SECRET'),
+            'key': '',
+        },
+        'SCOPE': ['profile', 'email'],
+    },
+    'facebook': {
+        'APP': {
+            'client_id': env('FACEBOOK_OAUTH_CLIENT_ID'),
+            'secret': env('FACEBOOK_OAUTH_SECRET'),
+            'key': '',
+        },
+        'FIELDS': ['id', 'first_name', 'last_name', 'name', 'email'],
+    },
+    'linkedin_oauth2': {
+        'APP': {
+            'client_id': env('LINKEDIN_OAUTH_CLIENT_ID'),
+            'secret': env('LINKEDIN_OAUTH_SECRET'),
+            'key': '',
+        },
+    },
+}
+
+
 # --- INTERLINK FOUNDRY ENVIRONMENT GLOBALS ---
 SITE_URL = env('SITE_URL')
 ADMIN_EMAIL = env('ADMIN_EMAIL')
 
 
 # --- THIRD-PARTY API INTEGRATIONS & EMBEDDING ENGINES ---
-GEMINI_API_KEY = env('GEMINI_API_KEY')
 STREAM_API_KEY = env('STREAM_API_KEY')
 STREAM_API_SECRET = env('STREAM_API_SECRET')
-ANTHROPIC_API_KEY = env('ANTHROPIC_API_KEY') 
+ANTHROPIC_API_KEY = env('ANTHROPIC_API_KEY')
+CRUNCHBASE_API_KEY = env('CRUNCHBASE_API_KEY')
+NEWS_API_KEY = env('NEWS_API_KEY')
+
+# --- STRIPE PAYMENT PROCESSING ---
+STRIPE_SECRET_KEY = env('STRIPE_SECRET_KEY')
+STRIPE_PUBLISHABLE_KEY = env('STRIPE_PUBLISHABLE_KEY')
+STRIPE_WEBHOOK_SECRET = env('STRIPE_WEBHOOK_SECRET')
+STRIPE_FOUNDER_PRICE_ID = env('STRIPE_FOUNDER_PRICE_ID')
+STRIPE_INVESTOR_PRICE_ID = env('STRIPE_INVESTOR_PRICE_ID')
+STRIPE_SELLER_PRICE_ID = env('STRIPE_SELLER_PRICE_ID')
+STRIPE_BUYER_PRICE_ID = env('STRIPE_BUYER_PRICE_ID')
 
 
 # --- EMAIL TRANSMISSION LAYERS (SMTP GMAIL PIPELINES) ---

@@ -1,0 +1,57 @@
+{% extends "ops/_ops_base.html" %}
+
+{% block ops_content %}
+<h2 class="fw-bold mb-4"><i class="bi bi-tools me-2"></i>Operations</h2>
+<p class="text-muted mb-4">Your control center — nothing here changes the live product unless you act on it.</p>
+
+<div class="row g-3">
+    <div class="col-6 col-md-4">
+        <a href="{% url 'ops:verification_queue' %}" class="text-decoration-none">
+            <div class="card p-3 shadow-sm border-0 h-100">
+                <small class="text-muted text-uppercase">Pending Review</small>
+                <h2 class="fw-bold mb-0">{{ pending_review_count }}</h2>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md-4">
+        <a href="{% url 'ops:reported_users' %}" class="text-decoration-none">
+            <div class="card p-3 shadow-sm border-0 h-100">
+                <small class="text-muted text-uppercase">Open Reports</small>
+                <h2 class="fw-bold mb-0">{{ open_reports_count }}</h2>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md-4">
+        <a href="{% url 'ops:invite_management' %}" class="text-decoration-none">
+            <div class="card p-3 shadow-sm border-0 h-100">
+                <small class="text-muted text-uppercase">Pending Invites</small>
+                <h2 class="fw-bold mb-0">{{ pending_invites_count }}</h2>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md-4">
+        <a href="{% url 'ops:waitlist_management' %}" class="text-decoration-none">
+            <div class="card p-3 shadow-sm border-0 h-100">
+                <small class="text-muted text-uppercase">Waitlist</small>
+                <h2 class="fw-bold mb-0">{{ waitlist_count }}</h2>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md-4">
+        <a href="{% url 'ops:announcements' %}" class="text-decoration-none">
+            <div class="card p-3 shadow-sm border-0 h-100">
+                <small class="text-muted text-uppercase">Active Announcements</small>
+                <h2 class="fw-bold mb-0">{{ active_announcements_count }}</h2>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md-4">
+        <a href="{% url 'matchmaking:platform_metrics' %}" class="text-decoration-none">
+            <div class="card p-3 shadow-sm border-0 h-100">
+                <small class="text-muted text-uppercase">Platform Metrics</small>
+                <h2 class="fw-bold mb-0"><i class="bi bi-arrow-up-right"></i></h2>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock ops_content %}

@@ -53,6 +53,8 @@ def send_weekly_digests(self):
             self.retry(exc=exc, countdown=2 ** retry_count)
         else:
             logger.error(f"send_weekly_digests exhausted {self.max_retries} retries: {str(exc)}")
+            from ops.models import log_failed_task
+            log_failed_task('matchmaking.tasks.send_weekly_digests', [], str(exc))
             return {'status': 'error', 'error': str(exc), 'retries_exhausted': True}
 
 
@@ -155,6 +157,8 @@ def snapshot_investor_predictions(self):
             self.retry(exc=exc, countdown=2 ** retry_count)
         else:
             logger.error(f"snapshot_investor_predictions exhausted {self.max_retries} retries: {str(exc)}")
+            from ops.models import log_failed_task
+            log_failed_task('matchmaking.tasks.snapshot_investor_predictions', [], str(exc))
             return {'status': 'error', 'error': str(exc), 'retries_exhausted': True}
 
 
@@ -359,6 +363,8 @@ def snapshot_buyer_predictions(self):
             self.retry(exc=exc, countdown=2 ** retry_count)
         else:
             logger.error(f"snapshot_buyer_predictions exhausted {self.max_retries} retries: {str(exc)}")
+            from ops.models import log_failed_task
+            log_failed_task('matchmaking.tasks.snapshot_buyer_predictions', [], str(exc))
             return {'status': 'error', 'error': str(exc), 'retries_exhausted': True}
 
 
@@ -540,3 +546,139 @@ def grade_buyer_prediction_snapshots(buyer_id, actual_closed_seller_id):
         graded_count += 1
 
     return {'status': 'success', 'graded_count': graded_count}
+
+
+MATCH_ALERT_THRESHOLD = 80.0
+
+
+@shared_task(bind=True, max_retries=3)
+def send_priority_match_alerts(self):
+    """
+    Priority Match Alerts — Founder/Investor/Seller/Buyer Premium perk.
+    Scans counterpart profiles created in the last 24h and notifies premium
+    users whose vector similarity against one clears MATCH_ALERT_THRESHOLD.
+    Bounded to "new since yesterday" so a daily run never re-scans the whole
+    network — mirrors send_weekly_digests' retry wrapper.
+    """
+    try:
+        return _send_priority_match_alerts_body()
+    except Exception as exc:
+        logger.error(f"send_priority_match_alerts failed: {str(exc)}")
+        retry_count = self.request.retries
+        if retry_count < self.max_retries:
+            self.retry(exc=exc, countdown=2 ** retry_count)
+        else:
+            logger.error(f"send_priority_match_alerts exhausted {self.max_retries} retries: {str(exc)}")
+            from ops.models import log_failed_task
+            log_failed_task('matchmaking.tasks.send_priority_match_alerts', [], str(exc))
+            return {'status': 'error', 'error': str(exc), 'retries_exhausted': True}
+
+
+def _notify_priority_matches(premium_profiles, new_counterparts, vector_field_self, vector_field_other, target_url, label):
+    """
+    For each premium profile, checks its vector against every newly-created
+    counterpart profile; fires one Notification per pair that clears
+    MATCH_ALERT_THRESHOLD. `label` names the counterpart type in the message
+    (e.g. "investor", "founder").
+    """
+    from notifications.models import Notification
+    from .services.ai_engine import calculate_similarity
+
+    alerts_sent = 0
+    for profile in premium_profiles:
+        self_vector = getattr(profile, vector_field_self, None)
+        if not self_vector:
+            continue
+        for counterpart in new_counterparts:
+            other_vector = getattr(counterpart, vector_field_other, None)
+            if not other_vector:
+                continue
+            try:
+                score = max(0.0, min(100.0, calculate_similarity(self_vector, other_vector) * 100))
+            except Exception:
+                continue
+            if score < MATCH_ALERT_THRESHOLD:
+                continue
+
+            counterpart_name = getattr(counterpart, 'company_name', '') or getattr(counterpart, 'full_name', '') or 'a new match'
+            Notification.objects.create(
+                recipient=profile.user,
+                notification_type='PRIORITY_MATCH',
+                message=f"New high-fit {label} match: {counterpart_name} ({round(score)}% fit).",
+                target_url=target_url,
+            )
+            alerts_sent += 1
+    return alerts_sent
+
+
+def _send_priority_match_alerts_body():
+    from .models import Application, InvestorApplication, SellerApplication, BuyerApplication
+
+    day_ago = timezone.now() - timedelta(hours=24)
+    total_alerts = 0
+
+    new_investors = list(InvestorApplication.objects.filter(is_private=False, created_at__gte=day_ago).exclude(review_status='DENIED'))
+    new_founders = list(Application.objects.filter(is_private=False, created_at__gte=day_ago).exclude(review_status='DENIED'))
+    new_buyers = list(BuyerApplication.objects.filter(is_private=False, created_at__gte=day_ago).exclude(review_status='DENIED'))
+    new_sellers = list(SellerApplication.objects.filter(is_private=False, created_at__gte=day_ago).exclude(review_status='DENIED'))
+
+    if new_investors:
+        premium_founders = Application.objects.filter(is_premium=True, is_private=False).exclude(review_status='DENIED')
+        total_alerts += _notify_priority_matches(
+            premium_founders, new_investors, 'description_vector', 'focus_vector',
+            '/matchmaking/dashboard/founder/', 'investor',
+        )
+
+    if new_founders:
+        premium_investors = InvestorApplication.objects.filter(is_premium=True, is_private=False).exclude(review_status='DENIED')
+        total_alerts += _notify_priority_matches(
+            premium_investors, new_founders, 'focus_vector', 'description_vector',
+            '/matchmaking/dashboard/investor/', 'founder',
+        )
+
+    if new_buyers:
+        premium_sellers = SellerApplication.objects.filter(is_premium=True, is_private=False).exclude(review_status='DENIED')
+        total_alerts += _notify_priority_matches(
+            premium_sellers, new_buyers, 'description_vector', 'focus_vector',
+            '/matchmaking/dashboard/seller/', 'buyer',
+        )
+
+    if new_sellers:
+        premium_buyers = BuyerApplication.objects.filter(is_premium=True, is_private=False).exclude(review_status='DENIED')
+        total_alerts += _notify_priority_matches(
+            premium_buyers, new_sellers, 'focus_vector', 'description_vector',
+            '/matchmaking/dashboard/buyer/', 'seller',
+        )
+
+
+@shared_task
+def ensure_next_month_partition():
+    """
+    Creates next month's partition on PageEvent/MatchTrainingExample ahead
+    of time (see migration 0050). Postgres-only — a no-op everywhere else.
+    Safe to fail/skip: rows destined for a missing partition just land in
+    the DEFAULT partition instead (see that migration's docstring), so this
+    is a pure optimization, never a correctness dependency. No retry logic
+    for that reason — unlike the other beat tasks here, a missed run has no
+    user-visible failure mode to guard against.
+    """
+    from django.db import connection
+    if connection.vendor != 'postgresql':
+        return {'status': 'skipped', 'reason': 'not postgresql'}
+
+    today = timezone.now().date()
+    next_month_start = (today.replace(day=1) + timedelta(days=32)).replace(day=1)
+    month_after_start = (next_month_start + timedelta(days=32)).replace(day=1)
+    suffix = next_month_start.strftime('y%Ym%m')
+
+    with connection.cursor() as cursor:
+        for table in ('matchmaking_pageevent', 'matchmaking_matchtrainingexample'):
+            cursor.execute(
+                f"CREATE TABLE IF NOT EXISTS {table}_{suffix} "
+                f"PARTITION OF {table} FOR VALUES FROM (%s) TO (%s);",
+                [next_month_start, month_after_start],
+            )
+
+    return {'status': 'success', 'partition_suffix': suffix}
+
+    return {'status': 'success', 'alerts_sent': total_alerts}

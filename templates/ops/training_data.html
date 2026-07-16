@@ -1,0 +1,54 @@
+{% extends "ops/_ops_base.html" %}
+
+{% block ops_content %}
+<h2 class="fw-bold mb-2"><i class="bi bi-cpu me-2"></i>Training Data</h2>
+<p class="text-muted mb-4">
+    Every thumbs up/down, funded/closed deal, decline, and staff override or manual intro is logged here as a
+    labeled anchor/candidate pair. This is a data pipeline only — nothing here trains a model or feeds a live
+    scoring path yet; it's the dataset an offline re-ranker would eventually train on.
+</p>
+
+<div class="card border-0 shadow-sm mb-4 p-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <span class="text-muted small text-uppercase fw-bold d-block">Total examples logged</span>
+            <span class="fs-2 fw-bold">{{ total_count }}</span>
+        </div>
+        <a href="{% url 'ops:export_training_data' %}" class="btn btn-primary rounded-pill px-4">
+            <i class="bi bi-download me-1"></i>Download JSONL
+        </a>
+    </div>
+</div>
+
+<h6 class="fw-bold text-uppercase small text-muted mb-2">Counts by source and label</h6>
+<div class="card border-0 shadow-sm">
+    <table class="table mb-0 align-middle">
+        <thead>
+            <tr>
+                <th>Source</th>
+                <th>Label</th>
+                <th class="text-end">Count</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in by_source %}
+            <tr>
+                <td>{{ row.source }}</td>
+                <td>
+                    {% if row.label == 'POSITIVE' %}
+                        <span class="badge bg-success-subtle text-success-emphasis">Positive</span>
+                    {% else %}
+                        <span class="badge bg-danger-subtle text-danger-emphasis">Negative</span>
+                    {% endif %}
+                </td>
+                <td class="text-end">{{ row.count }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="text-muted small text-center py-4">No training examples logged yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock ops_content %}

@@ -1,0 +1,41 @@
+{% extends "ops/_ops_base.html" %}
+
+{% block ops_content %}
+<h2 class="fw-bold mb-2"><i class="bi bi-ticket-perforated me-2"></i>Beta Invites</h2>
+<p class="text-muted mb-4">Outreach/tracking only — signup stays fully open regardless of invite status.</p>
+
+<div class="card shadow-sm border-0 p-4 mb-4">
+    <form method="post" class="d-flex gap-2">
+        {% csrf_token %}
+        <input type="email" name="email" class="form-control" placeholder="email@example.com" required>
+        <button type="submit" class="btn btn-primary rounded-pill px-4">Send Invite</button>
+    </form>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-sm">
+        <thead><tr class="text-muted small text-uppercase"><th>Email</th><th>Code</th><th>Status</th><th>Invited By</th><th>When</th><th></th></tr></thead>
+        <tbody>
+            {% for invite in invites %}
+            <tr>
+                <td>{{ invite.email }}</td>
+                <td class="font-monospace small">{{ invite.code }}</td>
+                <td><span class="badge {% if invite.status == 'PENDING' %}bg-warning text-dark{% elif invite.status == 'ACCEPTED' %}bg-success{% else %}bg-secondary{% endif %}">{{ invite.status }}</span></td>
+                <td>{{ invite.invited_by.username }}</td>
+                <td class="text-muted small">{{ invite.created_at|date:"M j, Y" }}</td>
+                <td>
+                    {% if invite.status == 'PENDING' %}
+                    <form method="post" action="{% url 'ops:revoke_invite' invite.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill">Revoke</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-muted">No invites sent yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock ops_content %}

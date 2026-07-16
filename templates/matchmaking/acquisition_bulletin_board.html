@@ -206,6 +206,10 @@
         <a href="{% url 'usersettings:edit_seller_profile' %}" class="btn btn-warning btn-sm rounded-pill px-3">
             <i class="bi bi-pencil-square me-1"></i> Edit My Listing
         </a>
+        {% elif user.is_authenticated and user.match_buyer_profile %}
+        <a href="{% url 'matchmaking:export_acquisition_csv' %}?{{ request.GET.urlencode }}" class="btn btn-outline-light btn-sm rounded-pill px-3">
+            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV
+        </a>
         {% endif %}
     </div>
 
@@ -261,7 +265,12 @@
                     {% endif %}
                 </div>
 
-                <div class="company-name">{{ listing.company_name|default:"Unnamed Business" }}</div>
+                <div class="company-name">
+                    {{ listing.company_name|default:"Unnamed Business" }}
+                    {% if listing.is_premium or listing.is_staff_featured %}
+                    <span class="badge bg-warning text-dark ms-1">★ Featured</span>
+                    {% endif %}
+                </div>
 
                 <div class="small text-muted">
                     <i class="bi bi-geo-alt-fill text-danger"></i> {{ listing.geography|default:"Location undisclosed" }}
@@ -288,6 +297,23 @@
                     <button class="thumb-btn" onclick="recordDealVote({{ listing.id }}, 'down', this)"
                             title="Pass — lower match score">👎</button>
                     <span id="vote-status-{{ listing.id }}" class="ms-1" style="font-size:0.7rem;color:#8b6914;"></span>
+                </div>
+
+                <div class="mt-2">
+                    {% if listing.connection_status == 'ACCEPTED' or listing.connection_status == 'CLOSED' %}
+                        <span class="badge bg-success">{{ listing.connection_status|title }}</span>
+                    {% elif listing.already_requested %}
+                        <button class="btn btn-secondary btn-sm w-100 disabled" disabled>
+                            <i class="bi bi-envelope-check me-1"></i> Introduction Requested
+                        </button>
+                    {% else %}
+                        <form action="{% url 'matchmaking:request_acquisition_intro' listing.id buyer_profile.id %}" method="post" class="m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-warning btn-sm w-100">
+                                <i class="bi bi-envelope-fill me-1"></i> Request Intro
+                            </button>
+                        </form>
+                    {% endif %}
                 </div>
                 {% endif %}
             </div>

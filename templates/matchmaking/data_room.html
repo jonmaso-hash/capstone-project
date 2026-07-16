@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Data Room — {{ founder_application.company_name }} | Interlink Foundry{% endblock title %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+            <h1 class="h2 fw-bold mb-1 text-dark"><i class="bi bi-folder-fill me-2"></i>Data Room</h1>
+            <p class="text-secondary mb-0">{{ founder_application.company_name }}</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="{% url 'accounts:profile' founder_application.user.username %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="bi bi-arrow-left me-1"></i> Back to Profile
+            </a>
+        </div>
+    </div>
+
+    {% if is_owner_or_staff and pending_requests %}
+    <div class="card border-warning shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h6 class="text-uppercase fw-bold text-muted small mb-3">Pending Access Requests</h6>
+            {% for req in pending_requests %}
+            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                <div>
+                    <strong>{{ req.investor.company_name }}</strong>
+                    <span class="text-secondary small"> wants access to "{{ req.document.label }}"</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <form method="post" action="{% url 'matchmaking:data_room_decide_request' req.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="decision" value="APPROVE">
+                        <button type="submit" class="btn btn-success btn-sm rounded-pill px-3">Approve</button>
+                    </form>
+                    <form method="post" action="{% url 'matchmaking:data_room_decide_request' req.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="decision" value="DENY">
+                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">Deny</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if is_owner_or_staff %}
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h6 class="text-uppercase fw-bold text-muted small mb-3">Upload a Document</h6>
+            <form method="post" action="{% url 'matchmaking:data_room_upload' founder_application.user.username %}" enctype="multipart/form-data" class="row g-2 align-items-end">
+                {% csrf_token %}
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">Category</label>
+                    <select name="category" class="form-select">
+                        {% for value, label in category_choices %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Label</label>
+                    <input type="text" name="label" class="form-control" placeholder="e.g. 2026 Cap Table" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">File</label>
+                    <input type="file" name="file" class="form-control" required>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-dark w-100">
+                        <i class="bi bi-upload me-1"></i> Upload
+                    </button>
+                </div>
+            </form>
+            <div class="form-text mt-2">PDF, DOCX, XLSX, CSV, or PPTX. Max 25MB.</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+            {% if not documents %}
+            <p class="text-muted mb-0">No documents in this data room yet.</p>
+            {% else %}
+                {% regroup documents by get_category_display as category_groups %}
+                {% for group in category_groups %}
+                <h6 class="text-uppercase fw-bold text-muted small mb-2 mt-3">{{ group.grouper }}</h6>
+                <ul class="list-unstyled mb-0">
+                    {% for document in group.list %}
+                    <li class="d-flex justify-content-between align-items-center border-bottom py-2">
+                        <div>
+                            <span class="fw-semibold">{{ document.label }}</span>
+                            <span class="text-muted small ms-2">Uploaded {{ document.uploaded_at|date:"M j, Y" }}</span>
+                        </div>
+                        <div class="d-flex gap-2 align-items-center">
+                            {% if is_owner_or_staff %}
+                                <a href="{% url 'matchmaking:data_room_document_serve' document.id %}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                                    <i class="bi bi-download me-1"></i> Download
+                                </a>
+                                <form method="post" action="{% url 'matchmaking:data_room_delete' document.id %}" onsubmit="return confirm('Delete this document?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                                        <i class="bi bi-trash me-1"></i> Delete
+                                    </button>
+                                </form>
+                            {% else %}
+                                {% if document.my_request.status == 'APPROVED' %}
+                                    <a href="{% url 'matchmaking:data_room_document_serve' document.id %}" class="btn btn-success btn-sm rounded-pill px-3">
+                                        <i class="bi bi-download me-1"></i> Download
+                                    </a>
+                                {% elif document.my_request.status == 'PENDING' %}
+                                    <span class="badge bg-secondary-subtle text-secondary border px-3 py-2 rounded-pill">Awaiting founder approval</span>
+                                {% elif document.my_request.status == 'DENIED' %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-2 rounded-pill me-2">Access denied</span>
+                                    <form method="post" action="{% url 'matchmaking:data_room_request_access' document.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-secondary btn-sm rounded-pill px-3">Request again</button>
+                                    </form>
+                                {% else %}
+                                    <form method="post" action="{% url 'matchmaking:data_room_request_access' document.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-dark btn-sm rounded-pill px-3">Request Access</button>
+                                    </form>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% if score is not None %}
+<div class="card border-0 shadow-sm mt-3">
+    <div class="card-body">
+        <h6 class="fw-bold mb-2"><i class="bi bi-patch-check-fill text-primary me-1"></i>Embed your Zelda Readiness badge</h6>
+        <p class="text-muted small mb-2">Copy this onto your own site or pitch deck — it links straight back to your public Interlink Foundry profile.</p>
+        <img src="{% url 'growth:readiness_badge' role=role username=username %}" alt="Zelda Readiness Badge" class="mb-2 d-block">
+        <textarea class="form-control form-control-sm font-monospace" rows="2" readonly onclick="this.select()">&lt;a href="{{ request.scheme }}://{{ request.get_host }}{% url 'accounts:profile' username=username %}"&gt;&lt;img src="{{ request.scheme }}://{{ request.get_host }}{% url 'growth:readiness_badge' role=role username=username %}" alt="Zelda Readiness Badge"&gt;&lt;/a&gt;</textarea>
+    </div>
+</div>
+{% endif %}

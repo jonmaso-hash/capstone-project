@@ -19,41 +19,44 @@ def extract_claims_from_insights(document_id: int):
     """
     Extract claimed datapoints from intelligence insights.
     Called after IntelligenceInsight objects are created.
-    
-    Maps insights to claims that can be verified:
-    - Revenue insight → Claimed revenue
-    - Employee count insight → Claimed employee count
-    - Growth rate insight → Claimed growth rate
-    - etc.
+
+    Maps insights to claims that can be verified. The category names here
+    must match IntelligenceInsight.category exactly as produced by
+    ZeldaIntelligencePipelineV2._analyze_document's analysis_categories
+    dict (Problem/Market/Revenue/Team/Product/Traction/Funding/Risk) —
+    Problem/Product/Risk are deliberately excluded since they're narrative,
+    not numeric, and have nothing for Truth Delta to verify.
+
+    This previously did a fuzzy substring scan against keys ('Customer',
+    'Growth', 'Users') that don't match any category _analyze_document
+    ever actually generates ('Traction', 'Market' are the real names) —
+    so Traction and Market insights, however well-extracted, could never
+    become a ClaimedDatapoint and reach Truth Delta at all. A direct
+    lookup against the real category names is both a fix and a
+    simplification.
     """
     try:
         from .vector_models import IntelligenceInsight
-        
+
         logger.info(f"[Truth Delta] Extracting claims from insights for document {document_id}")
-        
+
         document = DocumentSource.objects.get(id=document_id)
         insights = IntelligenceInsight.objects.filter(document=document)
-        
+
         claims_created = 0
-        
+
         # Map insight categories to claim categories
         category_mapping = {
             'Revenue': 'revenue',
-            'Customer': 'customers',
-            'Growth': 'growth_rate',
+            'Traction': 'customers',
             'Team': 'employees',
             'Funding': 'funding_raised',
-            'Users': 'user_count',
+            'Market': 'market_size',
         }
-        
+
         for insight in insights:
-            # Try to match insight to a claim category
-            matched_category = None
-            for key, category in category_mapping.items():
-                if key.lower() in insight.category.lower():
-                    matched_category = category
-                    break
-            
+            matched_category = category_mapping.get(insight.category)
+
             if not matched_category:
                 continue
             
@@ -99,40 +102,64 @@ def extract_claims_from_insights(document_id: int):
 def _extract_numeric_value(text: str) -> float:
     """
     Extract first numeric value from text.
-    Handles formats like: "$1M", "500 customers", "200% growth", etc.
+    Handles formats like: "$1M", "$416 billion", "500 customers", "200% growth", etc.
+
+    The multiplier is read only from a token immediately adjacent to the
+    matched digits — never from anywhere else in the sentence. Scanning
+    the whole string (an earlier version of this function) meant a
+    sentence merely containing the letter "M" (e.g. "...Marketing spend
+    of $500...") would spuriously multiply an unrelated number by
+    1,000,000.
+
+    Recognizes both the abbreviated form (K/M/B, e.g. "$1M") and the
+    spelled-out word (thousand/million/billion, e.g. "$416 billion") —
+    real prose (SEC filings, investor updates) overwhelmingly uses the
+    spelled-out form, which a K/M/B-only check silently drops: "$416
+    billion" would parse as bare "416" with no multiplier, since the
+    letter right after "billion" always defeats the old single-letter
+    adjacency check. That's not a missing claim (which recall would
+    catch) — it's a claim that looks successful but is off by a factor
+    of a billion, which is worse.
     """
     import re
-    
+
     if not text:
         return None
-    
-    # Try to find numeric value with optional currency/percent
-    patterns = [
-        r'\$?([\d,\.]+)(?:\s*[KkMmBb])?',  # $1M, 1,000, 0.5, etc
-        r'([\d,\.]+)\s*%',                   # 200%, 0.5%, etc
-    ]
-    
-    for pattern in patterns:
-        match = re.search(pattern, text)
-        if match:
-            try:
-                # Remove commas and convert
-                value_str = match.group(1).replace(',', '')
-                numeric_value = float(value_str)
-                
-                # Handle K, M, B multipliers
-                if 'K' in text or 'k' in text:
-                    numeric_value *= 1_000
-                if 'M' in text or 'm' in text:
-                    numeric_value *= 1_000_000
-                if 'B' in text or 'b' in text:
-                    numeric_value *= 1_000_000_000
-                
-                return numeric_value
-            except ValueError:
-                continue
-    
-    return None
+
+    # Percentages first, so "200%" never also picks up a stray multiplier
+    # from elsewhere in the sentence.
+    percent_match = re.search(r'([\d,]*\.?\d+)\s*%', text)
+    if percent_match:
+        try:
+            return float(percent_match.group(1).replace(',', ''))
+        except ValueError:
+            pass
+
+    # Currency/count, with an optional multiplier directly after the
+    # digits — either the single-letter form or the spelled-out word.
+    # The trailing negative lookahead rejects ambiguous adjacent-letter
+    # cases (e.g. "1Mbps", "$50 billionaire") rather than guessing.
+    match = re.search(
+        r'\$?([\d,]*\.?\d+)\s*(thousand\b|million\b|billion\b|[kmb])?(?![a-zA-Z])',
+        text, re.IGNORECASE,
+    )
+    if not match:
+        return None
+
+    try:
+        numeric_value = float(match.group(1).replace(',', ''))
+    except ValueError:
+        return None
+
+    suffix = (match.group(2) or '').lower()
+    if suffix in ('k', 'thousand'):
+        numeric_value *= 1_000
+    elif suffix in ('m', 'million'):
+        numeric_value *= 1_000_000
+    elif suffix in ('b', 'billion'):
+        numeric_value *= 1_000_000_000
+
+    return numeric_value
 
 @shared_task
 def verify_document_truth_delta(document_id):

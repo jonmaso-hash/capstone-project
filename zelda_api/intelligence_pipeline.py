@@ -28,12 +28,15 @@ def _log_anthropic_usage(response, document_source, call_type):
     counts rather than a hardcoded $/token estimate, since pricing changes
     over time and a stale hardcoded number would be worse than no number.
     Flows into the persistent log file (logs/django.log) automatically.
+    document_source is optional — calls not tied to a specific document
+    (e.g. the natural-language query extraction) pass None.
     """
     try:
         usage = getattr(response, 'usage', None)
         if usage:
+            subject = f"document {document_source.id}" if document_source is not None else "ad-hoc request"
             logger.info(
-                f"[Anthropic usage] {call_type} for document {document_source.id}: "
+                f"[Anthropic usage] {call_type} for {subject}: "
                 f"input_tokens={usage.input_tokens}, output_tokens={usage.output_tokens}"
             )
     except Exception as e:
@@ -272,7 +275,14 @@ class ZeldaIntelligencePipelineV2:
                 'Revenue': 'revenue arr mrr pricing monetization income annual recurring subscription',
                 'Team': 'team founder ceo experience background skill leadership',
                 'Product': 'product feature technology platform service offering',
-                'Traction': 'customers users growth adopted retention metric revenue',
+                # 'revenue' deliberately excluded — Revenue already has its
+                # own category, and including it here meant every revenue
+                # sentence ALSO triggered a duplicate Traction insight for
+                # the same figure (invisible until the category_mapping
+                # wiring bug was fixed and Traction claims started reaching
+                # ClaimedDatapoint at all, at which point it surfaced as a
+                # real precision regression in the evaluation harness).
+                'Traction': 'customers users growth adopted retention metric',
                 'Funding': 'funding raise capital investment ask series round raised',
                 'Risk': 'risks challenges competition threats barrier regulatory',
             }
@@ -410,23 +420,46 @@ class ZeldaIntelligencePipelineV2:
 
         if not best_match:
             fallback = self._get_smart_fallback(category, text)
+            if fallback is None:
+                return None, 0.0
             return fallback, 35.0
 
         return best_match, best_confidence
 
     def _extract_clean_value(self, category: str, sentence: str) -> str:
-        """Extract clean, focused value from noisy sentence."""
+        """
+        Extract clean, focused value from noisy sentence. The sentence
+        passed in has already matched this category's keywords in
+        _smart_extract's main loop, so every branch here is narrowing an
+        already-grounded sentence, not introducing new content.
+
+        (An unconditional `return cleaned[:200]` used to sit right after
+        the 'Funding' branch, making every branch below it — Revenue,
+        Traction, Team, Market — permanently unreachable dead code, so
+        every category except Funding silently fell through to the raw
+        200-char sentence truncation regardless of whether a cleaner
+        extraction was available.)
+        """
         cleaned = re.sub(r'^[A-Z][a-z]+\s*:\s*', '', sentence).strip()
 
+        # Shared numeric token: digits (with optional decimal) plus an
+        # optional multiplier — either abbreviated (K/M/B) or spelled out
+        # (thousand/million/billion), since real prose overwhelmingly uses
+        # the latter ("$2.4 million"). The old `[\d,]+[MBK]?` version had
+        # no decimal support at all, so "$2.4 million" matched only as
+        # far as "$2" — truncating both the digits AND the multiplier
+        # word before _extract_numeric_value ever saw it downstream,
+        # silently turning a $2.4M claim into a $2 claim.
+        amount = r'\$[\d,]*\.?\d+\s*(?:thousand|million|billion|[KkMmBb])?'
+
         if category == 'Funding':
-            match = re.search(r'(seeking.{0,40}\$[\d,]+[MBK]?|\$[\d,]+[MBK]?.{0,40}(series|round|raised|funding))', cleaned, re.IGNORECASE)
+            match = re.search(rf'(seeking.{{0,40}}{amount}|{amount}.{{0,40}}(series|round|raised|funding))', cleaned, re.IGNORECASE)
             if match:
                 return match.group().strip()
-        return cleaned[:200]
 
         if category == 'Revenue':
             # Extract: "$5M ARR" or "subscription model"
-            match = re.search(r'(\$[\d,]+[MBK]?)\s*(?:arr|mrr|revenue|recurring)?[^.]{0,80}', cleaned, re.IGNORECASE)
+            match = re.search(rf'({amount})\s*(?:arr|mrr|revenue|recurring)?[^.]{{0,80}}', cleaned, re.IGNORECASE)
             if match:
                 return match.group().strip()
             if 'subscription' in cleaned.lower():
@@ -443,20 +476,15 @@ class ZeldaIntelligencePipelineV2:
             match = re.search(r'(founder.{0,60}|ceo.{0,60}|founded by.{0,60})', cleaned, re.IGNORECASE)
             if match:
                 return match.group().strip()
-            return cleaned[:200]
 
         if category == 'Market':
             # Extract: "$50B TAM" or "large addressable market..."
-            match = re.search(r'(\$[\d,]+[MBK]?)[^.]{0,80}(market|tam|opportunity)', cleaned, re.IGNORECASE)
+            match = re.search(rf'({amount})[^.]{{0,80}}(market|tam|opportunity)', cleaned, re.IGNORECASE)
             if match:
                 return match.group().strip()
-            # Just return the sentence — market descriptions are usually clean
-            return cleaned[:200]
 
-        if category in ['Problem', 'Risk', 'Product']:
-            # These are narrative — return clean sentence up to 200 chars
-            return cleaned[:200]
-
+        # No tighter category-specific pattern matched — fall back to the
+        # real (already keyword-matched) sentence itself, truncated.
         return cleaned[:200]
     
     def _calculate_confidence(self, category: str, sentence: str, full_text: str) -> float:
@@ -504,8 +532,30 @@ class ZeldaIntelligencePipelineV2:
         return 50.0
     
     
-    def _get_smart_fallback(self, category: str, text: str) -> str:
-        """Smart fallbacks — extract actual content rather than generic strings."""
+    def _get_smart_fallback(self, category: str, text: str) -> Optional[str]:
+        """
+        Fallback used only when no sentence anywhere in the document
+        matched this category's keywords at all (the main loop in
+        _smart_extract already exhausted every sentence). Returns None —
+        no claim — unless a narrowly-scoped, literal fact can still be
+        pulled from the text. Never fabricates a generic or
+        cross-contaminated claim.
+
+        This replaces a version that always returned a templated string:
+        several branches grabbed the FIRST dollar figure anywhere in the
+        whole document — regardless of what it actually described — and
+        wrapped it in a category-specific sentence. On a real document
+        whose only dollar figure was a revenue claim, the Funding fallback
+        fabricated "Secured $415 in Series funding from institutional
+        investors" — a funding claim with zero basis in the source text.
+        Other branches had no numeric grounding at all and just returned
+        a fixed generic sentence ("Qualified team with relevant industry
+        experience.") regardless of document content. Both patterns
+        violate the basic rule for a verification system: never assert a
+        fact the source document doesn't support. Precision over recall —
+        it's fine, and expected, for a document with no funding
+        information to produce no funding claim.
+        """
         fallbacks = {
             'Problem': self._extract_problem_fallback(text),
             'Market': self._extract_market_fallback(text),
@@ -516,67 +566,55 @@ class ZeldaIntelligencePipelineV2:
             'Funding': self._extract_funding_fallback(text),
             'Risk': self._extract_risk_fallback(text),
         }
-        return fallbacks.get(category, "Information available in document.")
-    
-    def _extract_problem_fallback(self, text: str) -> str:
-        if 'fragmented' in text.lower():
-            return "Healthcare operations are fragmented, creating inefficiencies."
-        if 'challenge' in text.lower():
-            return "The document identifies significant operational challenges."
-        return "Core problem addressed by the solution."
-    
-    def _extract_market_fallback(self, text: str) -> str:
-        numbers = re.findall(r'\$[\d,]+[MBK]?', text)
-        if numbers:
-            return f"Market opportunity quantified at {numbers[0]}+ addressable market."
-        return "Significant market opportunity identified."
-    
-    def _extract_revenue_fallback(self, text: str) -> str:
-        if 'subscription' in text.lower():
-            return "Recurring subscription model drives predictable revenue."
-        if 'revenue' in text.lower():
-            amounts = re.findall(r'\$[\d,]+[MBK]?', text)
-            if amounts:
-                return f"Revenue at {amounts[0]} with strong growth trajectory."
-        return "Revenue model includes multiple monetization streams."
-    
-    def _extract_team_fallback(self, text: str) -> str:
-        numbers = re.findall(r'(\d+)\s*employees?', text)
-        if numbers:
-            return f"Leadership team of {numbers[0]} with deep industry expertise."
-        if 'founder' in text.lower():
-            return "Experienced founding team with proven track record."
-        return "Qualified team with relevant industry experience."
-    
-    def _extract_product_fallback(self, text: str) -> str:
-        if 'technology' in text.lower() or 'platform' in text.lower():
-            return "Proprietary technology platform solving core inefficiencies."
-        if 'solution' in text.lower():
-            return "Innovative solution with clear competitive advantages."
-        return "Product delivers measurable value to target customers."
-    
-    def _extract_traction_fallback(self, text: str) -> str:
-        numbers = re.findall(r'(\d+)\s*(customers?|users?|companies?)', text)
-        if numbers:
-            return f"Strong traction with {numbers[0][0]} active customers and growing engagement."
-        if 'growth' in text.lower():
-            return "Demonstrating strong customer adoption and retention metrics."
-        return "Customer base growing with positive unit economics."
-    
-    def _extract_funding_fallback(self, text: str) -> str:
-        amounts = re.findall(r'\$[\d,]+[MBK]?', text)
-        if amounts:
-            return f"Secured {amounts[0]} in Series funding from institutional investors."
-        return "Successfully raised capital from top-tier venture investors."
-    
-    def _extract_risk_fallback(self, text: str) -> str:
-        if 'competition' in text.lower():
-            return "Competitive pressure from established incumbents."
-        if 'regulation' in text.lower():
-            return "Regulatory compliance requirements in the sector."
-        if 'adoption' in text.lower():
-            return "Market adoption timeline dependent on customer education."
-        return "Execution risk on product roadmap and market expansion."
+        return fallbacks.get(category)
+
+    @staticmethod
+    def _find_amount_with_context(text: str, context_keywords: List[str]) -> Optional[str]:
+        """
+        Returns the first SENTENCE that contains both a dollar figure and
+        at least one of the given context words — never a dollar figure
+        borrowed from an unrelated sentence elsewhere in the document.
+        Used by the Market/Revenue/Funding fallbacks specifically because
+        a bare number, without knowing what it refers to, isn't a claim
+        that can be safely attributed to any one category.
+        """
+        for sentence in re.split(r'(?<!\d)[.!?](?!\d)|\n', text):
+            if not re.search(r'\$[\d,\.]+[MBK]?', sentence):
+                continue
+            if any(kw in sentence.lower() for kw in context_keywords):
+                return sentence.strip()[:200]
+        return None
+
+    def _extract_problem_fallback(self, text: str) -> Optional[str]:
+        # Purely narrative — no literal fact to extract in isolation, and
+        # the primary keyword-sentence pass already found nothing.
+        return None
+
+    def _extract_market_fallback(self, text: str) -> Optional[str]:
+        return self._find_amount_with_context(text, ['market', 'tam', 'sam', 'addressable', 'opportunity'])
+
+    def _extract_revenue_fallback(self, text: str) -> Optional[str]:
+        return self._find_amount_with_context(text, ['revenue', 'arr', 'mrr', 'recurring'])
+
+    def _extract_team_fallback(self, text: str) -> Optional[str]:
+        # A headcount figure is a self-contained, literal fact when
+        # present — safe to report on its own, unlike a bare dollar
+        # amount which needs context to know what it refers to.
+        match = re.search(r'(\d[\d,]*)\s*employees?', text, re.IGNORECASE)
+        return f"{match.group(1)} employees mentioned in the document." if match else None
+
+    def _extract_product_fallback(self, text: str) -> Optional[str]:
+        return None
+
+    def _extract_traction_fallback(self, text: str) -> Optional[str]:
+        match = re.search(r'([\d,]+)\s*(customers?|users?|companies?|clients?)', text, re.IGNORECASE)
+        return match.group().strip() if match else None
+
+    def _extract_funding_fallback(self, text: str) -> Optional[str]:
+        return self._find_amount_with_context(text, ['raised', 'funding', 'financing', 'round', 'series', 'capital', 'investment'])
+
+    def _extract_risk_fallback(self, text: str) -> Optional[str]:
+        return None
     
     # --- Memo builders ---
     
@@ -765,8 +803,11 @@ class ZeldaIntelligencePipelineV2:
 
     Return ONLY valid JSON. No markdown, no backticks, no preamble."""
 
+        from zelda_api.circuit_breaker import call_with_breaker
+
         try:
-            response = client.messages.create(
+            response = call_with_breaker(
+                'claude_api', client.messages.create,
                 model="claude-sonnet-4-6",
                 max_tokens=4000,
                 system=system_prompt,
@@ -972,8 +1013,11 @@ class ZeldaIntelligencePipelineV2:
 
     Return ONLY valid JSON. No markdown, no backticks, no preamble."""
 
+        from zelda_api.circuit_breaker import call_with_breaker
+
         try:
-            response = client.messages.create(
+            response = call_with_breaker(
+                'claude_api', client.messages.create,
                 model="claude-sonnet-4-6",
                 max_tokens=4000,
                 system=system_prompt,
@@ -1009,3 +1053,271 @@ class ZeldaIntelligencePipelineV2:
         return 'PASS'
     # Global instance
 intelligence_pipeline = ZeldaIntelligencePipelineV2()
+
+
+# --- "ASK ZELDA" NATURAL-LANGUAGE FOUNDER SEARCH ---
+# Standalone (not a pipeline method) — unlike memo/valuation generation, this
+# has no DocumentSource/insights to operate on. Kept in this file anyway so
+# every real Anthropic call site stays discoverable in one place.
+
+ASK_ZELDA_ALLOWED_FIELDS = {
+    'sector': 'string',
+    'stage': 'string',
+    'geography': 'string',
+    'raising_amount': 'number',
+    'monthly_burn_rate': 'number',
+    'years_in_business': 'number',
+    'current_revenue': 'number',
+    'team_size': 'number',
+    'prior_amount_raised': 'number',
+}
+
+# Buyer-side equivalent — the same allowlist/relax/query machinery below
+# works unchanged against SellerApplication once given this field map
+# instead, since it only ever looks up field names by string.
+ASK_ZELDA_SELLER_ALLOWED_FIELDS = {
+    'industry': 'string',
+    'geography': 'string',
+    'asking_price': 'number',
+    'annual_revenue': 'number',
+    'ebitda': 'number',
+    'years_in_business': 'number',
+    'team_size': 'number',
+}
+
+_ASK_ZELDA_EXTRACTION_PROMPTS = {
+    'founder': """You translate a natural-language founder search into
+structured constraints. You do NOT answer the question yourself — you only
+extract what to filter on.
+
+Allowed fields: sector, stage, geography, raising_amount, monthly_burn_rate,
+years_in_business, current_revenue, team_size, prior_amount_raised.
+
+For each fact mentioned, emit one constraint:
+{"field": <allowed field>, "qualifier": "at_least"|"at_most"|"exact"|"about", "value": <number or string>}
+
+Qualifier guidance:
+- "at least X" / "over X" / "above X" / "minimum X" -> at_least
+- "at most X" / "under X" / "only X" / "no more than X" / "maximum X" -> at_most
+- a plain stated amount with no hedge (e.g. "seeking $3,000,000") -> about
+- an exact discrete fact (e.g. "founded 5 years ago", "team of 8") -> exact
+- string fields (sector/stage/geography) always use qualifier "exact" — ignore hedges for these
+
+Never invent a field not in the allowed list, and never invent a value not
+stated or clearly implied by the question.
+
+If the question contains no identifiable founder-search criteria, return
+{"constraints": []}.
+
+Return ONLY valid JSON: {"constraints": [...]}. No markdown, no backticks, no preamble.""",
+
+    'seller': """You translate a natural-language search for a business-for-sale
+listing into structured constraints. You do NOT answer the question yourself
+— you only extract what to filter on.
+
+Allowed fields: industry, geography, asking_price, annual_revenue, ebitda,
+years_in_business, team_size.
+
+For each fact mentioned, emit one constraint:
+{"field": <allowed field>, "qualifier": "at_least"|"at_most"|"exact"|"about", "value": <number or string>}
+
+Qualifier guidance:
+- "at least X" / "over X" / "above X" / "minimum X" -> at_least
+- "at most X" / "under X" / "only X" / "no more than X" / "maximum X" -> at_most
+- a plain stated amount with no hedge (e.g. "priced around $9,500,000") -> about
+- an exact discrete fact (e.g. "founded 8 years ago", "team of 45") -> exact
+- string fields (industry/geography) always use qualifier "exact" — ignore hedges for these
+
+Never invent a field not in the allowed list, and never invent a value not
+stated or clearly implied by the question. Note "EBITDA under $5M" maps to
+field "ebitda", qualifier "at_most" — never invent a "profit" or "earnings"
+field name that isn't in the allowed list.
+
+If the question contains no identifiable business-search criteria, return
+{"constraints": []}.
+
+Return ONLY valid JSON: {"constraints": [...]}. No markdown, no backticks, no preamble.""",
+}
+
+
+def _call_claude_for_query_extraction(question: str, target: str = 'founder') -> dict:
+    """
+    Translate a free-text search into an allowlisted constraint list, for
+    either a founder search (target='founder', the default — what an
+    investor asks) or a seller/business-for-sale search (target='seller'
+    — what a buyer asks). Claude never sees the database and never writes
+    the text shown to the user — it only extracts what to filter on. The
+    actual query results and result count (computed by Django from real
+    data) are what get displayed, so there's nothing here for the model
+    to hallucinate about.
+    """
+    import anthropic
+
+    client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+
+    system_prompt = _ASK_ZELDA_EXTRACTION_PROMPTS.get(target, _ASK_ZELDA_EXTRACTION_PROMPTS['founder'])
+
+    from zelda_api.circuit_breaker import call_with_breaker
+
+    try:
+        response = call_with_breaker(
+            'claude_api', client.messages.create,
+            model="claude-sonnet-4-6",
+            max_tokens=1024,
+            system=system_prompt,
+            messages=[{"role": "user", "content": question}],
+        )
+        _log_anthropic_usage(response, None, 'nl query extraction')
+
+        raw = response.content[0].text.strip()
+
+        if raw.startswith('```'):
+            raw = re.sub(r'^```(?:json)?\n?', '', raw)
+            raw = re.sub(r'\n?```$', '', raw)
+
+        parsed = json.loads(raw)
+        if not isinstance(parsed, dict) or not isinstance(parsed.get('constraints'), list):
+            return {'constraints': []}
+        return parsed
+
+    except json.JSONDecodeError as e:
+        logger.error(f"Ask Zelda JSON parse error: {str(e)}")
+        return {'constraints': []}
+
+
+def _apply_constraints_to_queryset(queryset, constraints, relax=False, allowed_fields=None):
+    """
+    Applies an allowlisted, type-checked constraint list to a queryset.
+    Constraints come from Claude's output — untrusted input, not a trusted
+    internal call — so an unknown field or a value that won't coerce to the
+    expected type is silently skipped rather than raised. Only field names
+    from allowed_fields (defaults to ASK_ZELDA_ALLOWED_FIELDS, the founder
+    schema) ever reach the ORM, and every value goes through Django's
+    normal parameterized filtering — no raw SQL, no way for Claude to name
+    an arbitrary field or inject a query fragment. Pass
+    ASK_ZELDA_SELLER_ALLOWED_FIELDS to run the identical logic against a
+    SellerApplication queryset instead — this function only ever looks
+    fields up by name, so it's schema-agnostic.
+
+    "about" is deliberately resolved to a tolerance band here, on the
+    server, rather than left to Claude — keeps the behavior deterministic
+    and testable independent of what the model returns.
+
+    relax=True widens every numeric band (used by _search_with_relaxation's
+    "closest match" fallback below) — about's +/-15% band widens to +/-30%,
+    at_least/at_most gain a 20% slack margin, and an "exact" numeric value
+    becomes a +/-15% band instead of a hard equality check, so a founder
+    just outside a strict cutoff still surfaces as a close match. String
+    constraints (sector/stage/geography) are never relaxed — widening those
+    would change *what kind* of founder is being searched for, not just
+    how strict the match is.
+    """
+    if allowed_fields is None:
+        allowed_fields = ASK_ZELDA_ALLOWED_FIELDS
+
+    for constraint in constraints:
+        if not isinstance(constraint, dict):
+            continue
+
+        field = constraint.get('field')
+        field_type = allowed_fields.get(field)
+        if field_type is None:
+            continue
+
+        value = constraint.get('value')
+        qualifier = constraint.get('qualifier', 'exact')
+
+        if field_type == 'string':
+            if not isinstance(value, str) or not value.strip():
+                continue
+            queryset = queryset.filter(**{f'{field}__icontains': value.strip()})
+            continue
+
+        # field_type == 'number'
+        try:
+            value = float(value)
+        except (TypeError, ValueError):
+            continue
+
+        slack = 0.20 if relax else 0.0
+        about_band = 0.30 if relax else 0.15
+
+        if qualifier == 'at_least':
+            queryset = queryset.filter(**{f'{field}__gte': value * (1 - slack)})
+        elif qualifier == 'at_most':
+            queryset = queryset.filter(**{f'{field}__lte': value * (1 + slack)})
+        elif qualifier == 'about':
+            queryset = queryset.filter(**{f'{field}__gte': value * (1 - about_band), f'{field}__lte': value * (1 + about_band)})
+        else:  # 'exact', or an unrecognized qualifier — safest fallback
+            if relax:
+                queryset = queryset.filter(**{f'{field}__gte': value * 0.85, f'{field}__lte': value * 1.15})
+            else:
+                queryset = queryset.filter(**{f'{field}__exact': value})
+
+    return queryset
+
+
+def _constraint_label(constraint):
+    """Human-readable description of one constraint, for relaxation messages."""
+    field = constraint.get('field', '').replace('_', ' ')
+    value = constraint.get('value', '')
+    qualifier = constraint.get('qualifier', 'exact')
+    if qualifier == 'at_least':
+        return f"{field} of at least {value}"
+    elif qualifier == 'at_most':
+        return f"{field} of at most {value}"
+    return f"{field} of {value}"
+
+
+def _search_with_relaxation(queryset, constraints, limit=10, allowed_fields=None):
+    """
+    Runs the constraint list as given first. If that returns zero results,
+    progressively relaxes the search instead of just reporting "no
+    matches": first widening numeric tolerances (see relax=True above),
+    then dropping numeric constraints one at a time — most-recently-stated
+    first — and finally dropping string constraints too if nothing else
+    works. String constraints are dropped last because they define *what
+    kind* of founder (or business, for a seller search — pass
+    ASK_ZELDA_SELLER_ALLOWED_FIELDS) was asked for; numeric constraints
+    (burn rate/asking price, years in business, etc.) are what usually
+    over-narrows a search.
+
+    Every relaxation step is reported back so a "closest match" response
+    never silently substitutes a different search than what was asked for.
+
+    Returns (matches, dropped_labels, widened_only):
+    - dropped_labels: human-readable constraints that were removed to find
+      a result (empty if nothing was dropped)
+    - widened_only: True if results came only from widening numeric
+      tolerances, without dropping anything
+    """
+    if allowed_fields is None:
+        allowed_fields = ASK_ZELDA_ALLOWED_FIELDS
+
+    matches = list(_apply_constraints_to_queryset(queryset, constraints, allowed_fields=allowed_fields)[:limit])
+    if matches:
+        return matches, [], False
+
+    matches = list(_apply_constraints_to_queryset(queryset, constraints, relax=True, allowed_fields=allowed_fields)[:limit])
+    if matches:
+        return matches, [], True
+
+    numeric_indices = [
+        i for i, c in enumerate(constraints)
+        if isinstance(c, dict) and allowed_fields.get(c.get('field')) == 'number'
+    ]
+    remaining = list(constraints)
+    dropped = []
+    for idx in reversed(numeric_indices):
+        dropped.append(remaining.pop(idx))
+        matches = list(_apply_constraints_to_queryset(queryset, remaining, relax=True, allowed_fields=allowed_fields)[:limit])
+        if matches:
+            return matches, [_constraint_label(c) for c in dropped], False
+
+    while remaining:
+        dropped.append(remaining.pop())
+        matches = list(_apply_constraints_to_queryset(queryset, remaining, allowed_fields=allowed_fields)[:limit])
+        if matches:
+            return matches, [_constraint_label(c) for c in dropped], False
+
+    return [], [], False

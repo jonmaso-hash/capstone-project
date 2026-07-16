@@ -59,9 +59,9 @@
                         </div>
                         <div>
                             <h2 class="h4 mb-1 fw-bold tracking-tight">
-                                {% if form.instance.pk %}Edit Investor Profile{% else %}Deployment Mandate Settings{% endif %}
+                                {% if form.instance.pk %}Edit Investor Profile{% else %}Investor Profile{% endif %}
                             </h2>
-                            <p class="mb-0 opacity-75 small">Calibrate target vertical criteria, check sizes, and allocation parameters.</p>
+                            <p class="mb-0 opacity-75 small">Tell us what you invest in so we can match you with the right founders.</p>
                         </div>
                     </div>
                 </div>
@@ -71,8 +71,8 @@
                     <div class="alert alert-primary-subtle border border-primary-subtle rounded-3 d-flex align-items-start mb-4" role="alert">
                         <i class="bi bi-funnel-fill text-primary fs-5 me-3 mt-1"></i>
                         <div>
-                            <strong class="text-primary d-block mb-1">Deal Flow Routing Array</strong>
-                            <span class="small text-muted">Your deployment parameters feed directly into the vector matchmaking array. Adjusting sector focuses or allocation boundaries updates your automated Bulletin Board streams instantly.</span>
+                            <strong class="text-primary d-block mb-1">Keep this up to date</strong>
+                            <span class="small text-muted">Your investment focus and check size drive your matches — updating them refreshes your matches right away.</span>
                         </div>
                     </div>
 
@@ -81,11 +81,7 @@
 
                         {{ form.full_name|as_crispy_field }}
                         {{ form.email|as_crispy_field }}
-                        {{ form.phone|as_crispy_field }}
                         {{ form.company_name|as_crispy_field }}
-                        {{ form.website|as_crispy_field }}
-                        {{ form.linkedin_url|as_crispy_field }}
-                        {{ form.location|as_crispy_field }}
                         {{ form.investment_focus|as_crispy_field }}
                         {{ form.investment_stage|as_crispy_field }}
 
@@ -107,12 +103,49 @@
                             {% endif %}
                         </div>
 
-                        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+                        <button class="btn btn-outline-secondary btn-sm rounded-pill mb-4" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#optionalFields" aria-expanded="false" aria-controls="optionalFields">
+                            <i class="bi bi-plus-lg me-1"></i> Add more detail (optional)
+                        </button>
+
+                        <div class="collapse" id="optionalFields">
+                            {{ form.phone|as_crispy_field }}
+                            {{ form.website|as_crispy_field }}
+                            {{ form.linkedin_url|as_crispy_field }}
+                            {{ form.location|as_crispy_field }}
+                        </div>
+
+                        <button class="btn btn-outline-secondary btn-sm rounded-pill mb-4" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#advancedMatching" aria-expanded="false" aria-controls="advancedMatching">
+                            <i class="bi bi-sliders me-1"></i> Advanced matching preferences (optional)
+                        </button>
+
+                        <div class="collapse" id="advancedMatching">
+                            <div class="alert alert-secondary small mb-3">
+                                <strong>Hard filters:</strong> if you set a check-size range, founders raising outside
+                                it are excluded from your matches entirely — not just ranked lower.
+                                <strong class="d-block mt-2">Weights:</strong> control how much each part of a pitch
+                                counts toward your match score. If you care most about a deep technical moat, weigh
+                                Problem/Solution higher; if check size and stage matter most, weigh Market Context higher.
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">{{ form.ticket_size_min|as_crispy_field }}</div>
+                                <div class="col-md-6">{{ form.ticket_size_max|as_crispy_field }}</div>
+                            </div>
+                            {{ form.investment_thesis_summary|as_crispy_field }}
+                            <div class="row">
+                                <div class="col-md-4">{{ form.weight_problem_solution|as_crispy_field }}</div>
+                                <div class="col-md-4">{{ form.weight_capital_plan|as_crispy_field }}</div>
+                                <div class="col-md-4">{{ form.weight_market_context|as_crispy_field }}</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mt-3">
                             <a href="{% url 'accounts:profile_self' %}" class="btn btn-link text-muted text-decoration-none order-2 order-sm-1 px-0">
                                 <i class="bi bi-arrow-left me-1"></i> Cancel changes
                             </a>
                             <button type="submit" class="btn btn-primary px-5 py-2.5 rounded-pill fw-semibold order-1 order-sm-2 shadow-sm">
-                                {% if form.instance.pk %}Save Changes{% else %}Activate Capital Engine{% endif %}
+                                {% if form.instance.pk %}Save Changes{% else %}Save &amp; See My Matches{% endif %}
                             </button>
                         </div>
                     </form>

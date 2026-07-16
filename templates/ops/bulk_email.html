@@ -1,0 +1,48 @@
+{% extends "ops/_ops_base.html" %}
+
+{% block ops_content %}
+<h2 class="fw-bold mb-2"><i class="bi bi-envelope-paper me-2"></i>Bulk Email Announcements</h2>
+<p class="text-muted mb-4">Sends in the background — one bad address never drops the rest of the batch.</p>
+
+<div class="card shadow-sm border-0 p-4 mb-4">
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label small fw-semibold">Audience</label>
+            <select name="audience" class="form-select" required>
+                <option value="">Select audience...</option>
+                {% for value, label in audience_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label small fw-semibold">Subject</label>
+            <input type="text" name="subject" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label small fw-semibold">Body</label>
+            <textarea name="body" class="form-control" rows="5" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary rounded-pill px-4">Send</button>
+    </form>
+</div>
+
+<h6 class="fw-bold text-uppercase small text-muted mb-2">History</h6>
+<div class="table-responsive">
+    <table class="table table-sm">
+        <thead><tr class="text-muted small text-uppercase"><th>Subject</th><th>Audience</th><th>Sent By</th><th>Recipients</th><th>When</th></tr></thead>
+        <tbody>
+            {% for log in history %}
+            <tr>
+                <td>{{ log.subject }}</td>
+                <td>{{ log.get_audience_display }}</td>
+                <td>{{ log.sent_by.username }}</td>
+                <td>{{ log.recipient_count }}</td>
+                <td class="text-muted small">{{ log.sent_at|date:"M j, Y g:i A" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-muted">No emails sent yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock ops_content %}

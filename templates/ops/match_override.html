@@ -1,0 +1,52 @@
+{% extends "ops/_ops_base.html" %}
+
+{% block ops_content %}
+<h2 class="fw-bold mb-2"><i class="bi bi-arrow-left-right me-2"></i>Match Override</h2>
+<p class="text-muted mb-4">Force a connection's status — same status values the platform already uses.</p>
+
+<form method="get" class="mb-4">
+    <input type="text" name="status" class="form-control rounded-pill" style="max-width:240px;" placeholder="Filter by status..." value="{{ status_filter }}">
+</form>
+
+<h6 class="fw-bold text-uppercase small text-muted mb-2">Founder ↔ Investor Connections</h6>
+{% for conn in connections %}
+<div class="card border-0 shadow-sm mb-2 p-3">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span>{{ conn.founder.company_name }} ↔ {{ conn.investor.company_name }} <span class="badge bg-secondary">{{ conn.status }}</span></span>
+        <form method="post" action="{% url 'ops:override_connection_status' 'connection' conn.id %}" class="d-flex gap-1">
+            {% csrf_token %}
+            <select name="status" class="form-select form-select-sm" style="width:150px;">
+                <option value="pending">pending</option>
+                <option value="ACCEPTED">ACCEPTED</option>
+                <option value="DECLINED">DECLINED</option>
+                <option value="FUNDED">FUNDED</option>
+            </select>
+            <button type="submit" class="btn btn-outline-dark btn-sm rounded-pill px-3">Override</button>
+        </form>
+    </div>
+</div>
+{% empty %}
+<p class="text-muted small">No connections found.</p>
+{% endfor %}
+
+<h6 class="fw-bold text-uppercase small text-muted mt-4 mb-2">Seller ↔ Buyer Connections</h6>
+{% for conn in acquisitions %}
+<div class="card border-0 shadow-sm mb-2 p-3">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span>{{ conn.seller.company_name }} ↔ {{ conn.buyer.company_name }} <span class="badge bg-secondary">{{ conn.status }}</span></span>
+        <form method="post" action="{% url 'ops:override_connection_status' 'acquisition' conn.id %}" class="d-flex gap-1">
+            {% csrf_token %}
+            <select name="status" class="form-select form-select-sm" style="width:150px;">
+                <option value="pending">pending</option>
+                <option value="ACCEPTED">ACCEPTED</option>
+                <option value="DECLINED">DECLINED</option>
+                <option value="CLOSED">CLOSED</option>
+            </select>
+            <button type="submit" class="btn btn-outline-dark btn-sm rounded-pill px-3">Override</button>
+        </form>
+    </div>
+</div>
+{% empty %}
+<p class="text-muted small">No acquisition connections found.</p>
+{% endfor %}
+{% endblock ops_content %}

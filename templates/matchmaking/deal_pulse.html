@@ -75,6 +75,18 @@
                         {% endif %}
                     </form>
                     {% endif %}
+
+                    {% if conn.status == 'FUNDED' %}
+                    <form method="post" action="{% url 'growth:create_referral_invite' %}" class="mt-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="invitee_email" value="{{ conn.founder.email }}">
+                        <input type="hidden" name="role_hint" value="FOUNDER">
+                        <input type="hidden" name="source" value="deal_pulse_portfolio">
+                        <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+                            <i class="bi bi-send me-1"></i>Invite Portfolio Company
+                        </button>
+                    </form>
+                    {% endif %}
                 </div>
                 {% empty %}
                 <div class="text-center text-muted small py-4">Nothing here.</div>

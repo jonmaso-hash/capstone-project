@@ -13,6 +13,8 @@ urlpatterns = [
     path('signup/', views.signup_view, name='signup'),
     path('login/', views.login_view, name='login'),
     path('logout/', LogoutView.as_view(next_page='pages:home'), name='logout'),
+    path('post-login/', views.post_login_router, name='post_login_router'),
+    path('choose-role/', views.choose_role, name='choose_role'),
 
     # ==========================================
     # USER PROFILE DISPATCH LAYER
@@ -22,8 +24,14 @@ urlpatterns = [
     # 👑 FIXED: Exact matches must live ABOVE dynamic parameters
     path('profile/toggle-privacy/', views.toggle_privacy_view, name='toggle_privacy'),
     
+    path('profile/<str:username>/analysis/', views.profile_analysis, name='profile_analysis'),
+
+    path('business-verification/', views.business_verification, name='business_verification'),
+    path('business-verification/request/', views.business_verification_request, name='business_verification_request'),
+    path('business-verification/confirm/', views.business_verification_confirm, name='business_verification_confirm'),
+
     path('profile/<str:username>/', views.profile, name='profile'),
-    
+
     path('profile/id/<int:pk>/', views.profile, name='profile_by_id'),
 
     # ==========================================

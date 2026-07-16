@@ -129,3 +129,22 @@ def toggle_favorite(request, pk):
         })
 
     return redirect('blog:article_detail', pk=pk)
+
+@login_required
+def toggle_comment_like(request, pk):
+    comment = get_object_or_404(Comment, pk=pk)
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    if comment.likes.filter(id=request.user.id).exists():
+        comment.likes.remove(request.user)
+    else:
+        comment.likes.add(request.user)
+
+    if is_ajax:
+        return JsonResponse({
+            'status': 'success',
+            'is_liked': comment.likes.filter(id=request.user.id).exists(),
+            'count': comment.total_likes(),
+        })
+
+    return redirect('blog:article_detail', pk=comment.article.pk)

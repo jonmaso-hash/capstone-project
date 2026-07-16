@@ -114,7 +114,16 @@
                                 <span class="fw-bold">{{ comment.author.username }}</span>
                                 <small class="text-muted">{{ comment.created_on|timesince }} ago</small>
                             </div>
-                            <p class="mb-0 text-secondary">{{ comment.body }}</p>
+                            <p class="mb-1 text-secondary">{{ comment.body }}</p>
+                            {% if user.is_authenticated %}
+                            <button class="btn btn-sm btn-link p-0 text-decoration-none comment-like-btn"
+                                    data-url="{% url 'blog:toggle_comment_like' comment.pk %}">
+                                <i class="bi {% if user in comment.likes.all %}bi-heart-fill text-danger{% else %}bi-heart text-muted{% endif %} me-1 comment-like-icon"></i>
+                                <span class="small text-muted comment-like-count">{{ comment.total_likes }}</span>
+                            </button>
+                            {% else %}
+                            <span class="small text-muted"><i class="bi bi-heart me-1"></i>{{ comment.total_likes }}</span>
+                            {% endif %}
                         </div>
                     </div>
                     {% empty %}
@@ -135,12 +144,11 @@
 {% block scripts %}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const favBtn = document.getElementById("favBtn");
-    if (!favBtn) return;
-
     const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
     const csrftoken = csrfInput ? csrfInput.value : '';
 
+    const favBtn = document.getElementById("favBtn");
+    if (favBtn) {
     favBtn.addEventListener("click", function () {
         fetch(favBtn.dataset.url, {
             method: "POST",
@@ -163,6 +171,34 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         })
         .catch(err => console.error("Favorite toggle failed:", err));
+    });
+    }
+
+    // Comment likes — event delegation since there can be many comments,
+    // and the list doesn't get re-rendered after a click.
+    document.querySelectorAll(".comment-like-btn").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            fetch(btn.dataset.url, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrftoken,
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status !== "success") return;
+                const icon = btn.querySelector(".comment-like-icon");
+                const count = btn.querySelector(".comment-like-count");
+                if (data.is_liked) {
+                    icon.className = "bi bi-heart-fill text-danger me-1 comment-like-icon";
+                } else {
+                    icon.className = "bi bi-heart text-muted me-1 comment-like-icon";
+                }
+                count.textContent = data.count;
+            })
+            .catch(err => console.error("Comment like toggle failed:", err));
+        });
     });
 });
 </script>

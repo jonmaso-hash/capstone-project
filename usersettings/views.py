@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from accounts.forms import ApplicationForm, InvestorForm, SellerForm, BuyerForm
+from growth.services import consume_referral_if_pending
 from matchmaking.models import Application, SellerApplication
 from .models import UserSettings
 
@@ -35,10 +36,20 @@ def settings_home(request):
         (investor_application and investor_application.is_private)
     )
 
+    # Pitch Videos section — settings live on whichever profile(s) the user
+    # has (same "field lives on the role model" pattern as allow_direct_messages
+    # above), not on UserSettings, since they're specific to a founder/seller
+    # listing rather than an account-wide preference.
+    seller_application = getattr(request.user, "match_seller_profile", None)
+    pitch_video_profile = application or seller_application
+    pitch_video_role = 'founder' if application else ('seller' if seller_application else None)
+
     return render(request, "usersettings/settings.html", {
         "user_settings": user_settings,
         "dm_enabled": dm_enabled,
         "is_private": is_private,
+        "pitch_video_profile": pitch_video_profile,
+        "pitch_video_role": pitch_video_role,
     })
 
 
@@ -89,6 +100,7 @@ def edit_founder_profile(request):
             cache.delete(f"startup_data_{app.id}")
 
             if is_new_submission:
+                consume_referral_if_pending(request, app)
                 return redirect("pages:thank_you")
 
             messages.success(request, "Founder profile updated.")
@@ -121,6 +133,7 @@ def edit_investor_profile(request):
             app.save()
 
             if is_new_submission:
+                consume_referral_if_pending(request, app)
                 return redirect("pages:thank_you")
 
             messages.success(request, "Investment mandate updated successfully.")
@@ -156,6 +169,7 @@ def edit_seller_profile(request):
             app.save()
 
             if is_new_submission:
+                consume_referral_if_pending(request, app)
                 return redirect("pages:thank_you")
 
             messages.success(request, "Business listing updated.")
@@ -184,6 +198,7 @@ def edit_buyer_profile(request):
             app.save()
 
             if is_new_submission:
+                consume_referral_if_pending(request, app)
                 return redirect("pages:thank_you")
 
             messages.success(request, "Acquisition mandate updated successfully.")

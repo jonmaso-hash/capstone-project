@@ -57,6 +57,9 @@
                 <div class="bg-white bg-opacity-10 p-3 rounded-3 border border-white border-opacity-15 text-md-end">
                     <small class="d-block opacity-75 text-uppercase fw-bold small mb-1" style="font-size: 10px; letter-spacing: 1px;">Matching Status</small>
                     <span class="fs-4 fw-bold">Active Engine</span>
+                    {% if intro_quota_remaining is not None %}
+                        <small class="d-block opacity-75 mt-1">{{ intro_quota_remaining }} of 3 intro requests left today</small>
+                    {% endif %}
                 </div>
                 <div class="d-flex gap-2">
                     <a href="{% url 'matchmaking:investor_shortlist' %}" class="btn btn-outline-light btn-sm rounded-pill px-3">
@@ -69,6 +72,94 @@
             </div>
         </div>
     </div>
+
+    <div class="card bg-light border rounded-3 shadow-sm mb-4">
+        <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-white rounded-circle p-2.5 border shadow-sm d-none d-sm-block text-success">
+                    <i class="bi bi-graph-up-arrow fs-4"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold text-dark mb-1">Get a Zelda Valuation</h5>
+                    <p class="text-muted small mb-0">Upload a founder's financials and get an evidence-grounded valuation range to sanity-check their ask during diligence.</p>
+                </div>
+            </div>
+            <a href="{% url 'zelda_api:valuation_request' %}" class="btn btn-sm btn-success px-4 py-2 rounded-pill fw-semibold text-nowrap">
+                <i class="bi bi-cpu-fill me-1"></i> Get a Valuation
+            </a>
+        </div>
+    </div>
+
+    {% if not accepted_connections %}
+    <div class="alert alert-primary d-flex align-items-center gap-3 mb-4" role="alert">
+        <i class="bi bi-signpost-2-fill fs-4"></i>
+        <div>
+            {% if matches %}
+                <strong>You have {{ matches|length }} founder match{{ matches|pluralize:"es" }}.</strong>
+                Request an introduction below to get started.
+            {% else %}
+                <strong>No matches yet.</strong> Matches appear here as founders join — check back soon, or broaden your investment focus in your profile.
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="mb-5">
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <h3 class="h5 fw-bold mb-0 text-dark">Pending Inbound Requests</h3>
+            {% if pending_requests %}
+                <span class="badge bg-danger rounded-pill small px-2.5 py-1 fw-semibold">{{ pending_requests|length }} New</span>
+            {% endif %}
+        </div>
+
+        <div id="pending-requests-container" class="row g-3">
+            {% for conn in pending_requests %}
+                <div class="col-12" id="card-{{ conn.id }}">
+                    <div class="card bg-light border border-light-subtle shadow-sm rounded-3">
+                        <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                            <div>
+                                <h5 class="mb-0 fw-bold text-dark">{{ conn.founder.company_name|default:"Private Founder" }}</h5>
+                                <p class="text-muted small mb-0">Received: {{ conn.created_at|date:"M d, Y" }}</p>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button onclick="updateConnection({{ conn.id }}, 'ACCEPTED', '{{ conn.founder.user.id }}', '{{ conn.founder.company_name|escapejs }}')"
+                                    class="btn btn-success btn-sm">Accept
+                                </button>
+                                <button onclick="updateConnection({{ conn.id }}, 'DECLINED', null, null)" class="btn btn-outline-danger btn-sm px-3 rounded-pill">Decline</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="card border border-dashed border-secondary-subtle py-4 text-center bg-white rounded-3">
+                        <p class="text-muted small mb-0"><i class="bi bi-envelope-open me-2"></i>No pending inbound requests from founders.</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if accepted_connections %}
+    <div class="mb-5">
+        <h3 class="h5 fw-bold mb-3 text-dark">Accepted Deals</h3>
+        <div class="row g-3">
+            {% for conn in accepted_connections %}
+            <div class="col-12" id="accepted-card-{{ conn.id }}">
+                <div class="card bg-white border shadow-sm rounded-3">
+                    <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <div>
+                            <h5 class="mb-0 fw-bold text-dark">{{ conn.founder.company_name|default:"Private Founder" }}</h5>
+                            <span class="badge bg-success-subtle text-success border border-success small">Accepted</span>
+                        </div>
+                        <span class="text-muted small text-end">Only the founder can mark this deal as Funded.</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 
     <div class="row">
         <div class="col-lg-12">
@@ -262,7 +353,7 @@
                         {% if filters.stage or filters.industry or filters.location %}
                         <p class="text-muted mx-auto max-width-md mb-4" style="max-width: 500px;">No matches for the current filters. Try broadening or clearing them.</p>
                         {% else %}
-                        <p class="text-muted mx-auto max-width-md mb-4" style="max-width: 500px;">Our pipeline vector space needs additional context to match parameters. Try updating your investment tags or industry profile keywords to broaden the structural query rules.</p>
+                        <p class="text-muted mx-auto max-width-md mb-4" style="max-width: 500px;">No founders match your criteria yet. Try broadening your investment focus or stage in your profile.</p>
                         {% endif %}
                     </div>
                 </div>

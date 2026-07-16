@@ -1,0 +1,39 @@
+{% extends "ops/_ops_base.html" %}
+
+{% block ops_content %}
+<h2 class="fw-bold mb-2"><i class="bi bi-megaphone me-2"></i>Platform Announcements</h2>
+<p class="text-muted mb-4">Active announcements render as a dismissible banner on every page.</p>
+
+<div class="card shadow-sm border-0 p-4 mb-4">
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label small fw-semibold">Title</label>
+            <input type="text" name="title" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label small fw-semibold">Body</label>
+            <textarea name="body" class="form-control" rows="3" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary rounded-pill px-4">Post Announcement</button>
+    </form>
+</div>
+
+{% for announcement in announcements %}
+<div class="card border-0 shadow-sm mb-2 p-3">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <strong>{{ announcement.title }}</strong>
+            <span class="badge {% if announcement.is_active %}bg-success{% else %}bg-secondary{% endif %} ms-1">{% if announcement.is_active %}Active{% else %}Inactive{% endif %}</span>
+            <p class="mb-0 text-muted small">{{ announcement.body }}</p>
+        </div>
+        <form method="post" action="{% url 'ops:toggle_announcement' announcement.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-dark btn-sm rounded-pill">{% if announcement.is_active %}Deactivate{% else %}Activate{% endif %}</button>
+        </form>
+    </div>
+</div>
+{% empty %}
+<p class="text-muted">No announcements yet.</p>
+{% endfor %}
+{% endblock ops_content %}

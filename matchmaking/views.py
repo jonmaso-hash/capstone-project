@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
+from django.db import connection
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -24,12 +25,16 @@ from django.utils import timezone
 from .models import Follow
 
 # Internal Services & Models
-from matchmaking.models import Application, Connection, InvestorApplication, MatchFeedback, ConnectionRequest, Document, log_investor_event, PitchDeckViewSession, PitchDeckSlideTime, FundraisingLead, FounderMilestone
-from matchmaking.models import SellerApplication, BuyerApplication, AcquisitionConnection, DealFeedback, log_buyer_event
-from matchmaking.services.ai_engine import calculate_similarity, generate_profile_embedding
-from matchmaking.utils import calculate_rule_based_score, get_blended_match, clean_financial_input
+from matchmaking.models import Application, Connection, InvestorApplication, MatchFeedback, ConnectionRequest, Document, log_investor_event, PitchDeckViewSession, PitchDeckSlideTime, FundraisingLead, FounderMilestone, log_training_example, MessageThread, PitchVideoView, ProfileView, log_page_event, log_search_event, SearchEvent
+from matchmaking.models import DataRoomDocument, DataRoomAccessRequest, DataRoomDocumentView, can_view_data_room, can_download_data_room_document
+from matchmaking.models import founder_description_meets_word_count
+from matchmaking.models import SellerApplication, BuyerApplication, AcquisitionConnection, DealFeedback, log_buyer_event, AcquisitionInterestEvent
+from matchmaking.models import PitchVideoComment
+from matchmaking.services.ai_engine import calculate_similarity, generate_profile_embedding, calculate_sparse_similarity
+from matchmaking.utils import calculate_rule_based_score, get_blended_match, clean_financial_input, passes_hard_filters
 from matchmaking.utils import calculate_deal_rule_based_score, get_deal_blended_match
 from .tasks import crawl_startup_data_task
+from .forms import DataRoomDocumentForm
 
 # Zelda AI alignment — import DiligenceEngine for vector scoring in memo views
 try:
@@ -78,8 +83,11 @@ def connection_action_view(request):
 
         if action == 'FUNDED':
             log_investor_event(conn_req.investor.user, conn_req.founder, 'funded')
+            log_training_example('INVESTOR', conn_req.investor.id, 'FOUNDER', conn_req.founder.id, 'POSITIVE', 'funded')
             from .tasks import grade_investor_prediction_snapshots
             grade_investor_prediction_snapshots.delay(conn_req.investor.id, conn_req.founder.id)
+        elif action == 'DECLINED':
+            log_training_example('INVESTOR', conn_req.investor.id, 'FOUNDER', conn_req.founder.id, 'NEGATIVE', 'declined')
 
         return JsonResponse({'status': 'success', 'new_status': action})
     except Exception as e:
@@ -120,8 +128,11 @@ def acquisition_connection_action_view(request):
 
         if action == 'CLOSED':
             log_buyer_event(conn_req.buyer.user, conn_req.seller, 'closed')
+            log_training_example('BUYER', conn_req.buyer.id, 'SELLER', conn_req.seller.id, 'POSITIVE', 'closed')
             from .tasks import grade_buyer_prediction_snapshots
             grade_buyer_prediction_snapshots.delay(conn_req.buyer.id, conn_req.seller.id)
+        elif action == 'DECLINED':
+            log_training_example('BUYER', conn_req.buyer.id, 'SELLER', conn_req.seller.id, 'NEGATIVE', 'declined')
 
         return JsonResponse({'status': 'success', 'new_status': action})
     except Exception as e:
@@ -209,10 +220,12 @@ def investor_dashboard(request):
     Filters out private founder profiles explicitly by default.
     """
     investor_profile = getattr(request.user, 'match_investor_profile', None)
-    
+
     if not investor_profile:
         messages.info(request, "Please complete your investor profile to view matches.")
         return redirect('usersettings:edit_investor_profile')
+
+    log_page_event(request, 'dashboard_view', role='investor', user=request.user)
 
     # Lazy-generation framework utilizing the unified vector pipeline
     if not investor_profile.focus_vector and investor_profile.investment_focus:
@@ -224,6 +237,17 @@ def investor_dashboard(request):
         except Exception as e:
             logger.error(f"Failed to generate investor focus vector: {str(e)}")
             investor_profile.focus_vector = None
+
+    pending_requests = Connection.objects.filter(
+        investor=investor_profile,
+        status__iexact='pending',
+        initiated_by='FOUNDER'
+    ).select_related('founder__user')
+
+    accepted_connections = Connection.objects.filter(
+        investor=investor_profile,
+        status='ACCEPTED'
+    ).select_related('founder__user')
 
     match_results = []
     connection_status_map = dict(
@@ -259,6 +283,11 @@ def investor_dashboard(request):
         founders = founders.filter(geography__icontains=filter_location)
 
     for founder in founders:
+        # Hard-filter gate: excluded entirely rather than down-ranked — see
+        # passes_hard_filters' docstring in matchmaking/utils.py.
+        if not passes_hard_filters(founder, investor_profile):
+            continue
+
         if not founder.description_vector and founder.description:
             try:
                 vector_array = generate_profile_embedding(founder.description)
@@ -276,10 +305,12 @@ def investor_dashboard(request):
                 ai_score = 50.0
         else:
             ai_score = 50.0
-            
-        rule_score = calculate_rule_based_score(application=founder, investor=investor_profile)        
-        final_score = get_blended_match(ai_score, rule_score, application=founder, investor=investor_profile)
-        
+
+        sparse_score = calculate_sparse_similarity(investor_profile.investment_focus, founder.description) * 100
+
+        rule_score = calculate_rule_based_score(application=founder, investor=investor_profile)
+        final_score = get_blended_match(ai_score, rule_score, application=founder, investor=investor_profile, sparse_score=sparse_score)
+
         if final_score > 10:
             match_results.append({
                 'founder': founder,
@@ -293,9 +324,16 @@ def investor_dashboard(request):
     
     match_results = sorted(match_results, key=lambda x: x['final_score'], reverse=True)
 
+    intro_quota_remaining = None
+    if not investor_profile.is_premium:
+        intro_quota_remaining = max(0, DAILY_INTRO_REQUEST_LIMIT - count_investor_intro_requests_today(investor_profile))
+
     return render(request, 'matchmaking/investor_dashboard.html', {
         'matches': match_results,
         'investor': investor_profile,
+        'pending_requests': pending_requests,
+        'accepted_connections': accepted_connections,
+        'intro_quota_remaining': intro_quota_remaining,
         'filters': {
             'stage': filter_stage,
             'industry': filter_industry,
@@ -327,6 +365,17 @@ def buyer_dashboard(request):
         except Exception as e:
             logger.error(f"Failed to generate buyer focus vector: {str(e)}")
             buyer_profile.focus_vector = None
+
+    pending_requests = AcquisitionConnection.objects.filter(
+        buyer=buyer_profile,
+        status__iexact='pending',
+        initiated_by='SELLER'
+    ).select_related('seller__user')
+
+    accepted_connections = AcquisitionConnection.objects.filter(
+        buyer=buyer_profile,
+        status='ACCEPTED'
+    ).select_related('seller__user')
 
     match_results = []
     connection_status_map = dict(
@@ -387,9 +436,16 @@ def buyer_dashboard(request):
 
     match_results = sorted(match_results, key=lambda x: x['final_score'], reverse=True)
 
+    intro_quota_remaining = None
+    if not buyer_profile.is_premium:
+        intro_quota_remaining = max(0, DAILY_INTRO_REQUEST_LIMIT - count_buyer_intro_requests_today(buyer_profile))
+
     return render(request, 'matchmaking/buyer_dashboard.html', {
         'matches': match_results,
         'buyer': buyer_profile,
+        'pending_requests': pending_requests,
+        'accepted_connections': accepted_connections,
+        'intro_quota_remaining': intro_quota_remaining,
         'filters': {
             'industry': filter_industry,
             'structure': filter_structure,
@@ -456,12 +512,14 @@ def founder_dashboard(request):
     AI + Rule algorithm. Filters out private investor mandates explicitly by default.
     """
     application = getattr(request.user, 'match_founder_profile', None) or Application.objects.filter(user=request.user).first()
-    
+
     if not application:
         messages.info(request, "Complete your founder profile to see investor matches.")
         return redirect('usersettings:edit_founder_profile')
 
-    if not application.description_vector and application.description:
+    log_page_event(request, 'dashboard_view', role='founder', user=request.user)
+
+    if not application.description_vector and founder_description_meets_word_count(application.description):
         try:
             vector_array = generate_profile_embedding(application.description)
             if vector_array:
@@ -525,11 +583,17 @@ def founder_dashboard(request):
     
     match_results = sorted(match_results, key=lambda x: x['final_score'], reverse=True)
 
+    from .growth_metrics import get_platform_insights, get_pitch_video_social_signal_insights
+    platform_insights = get_platform_insights()
+    if application.pitch_video:
+        platform_insights = platform_insights + get_pitch_video_social_signal_insights()
+
     return render(request, 'matchmaking/founder_dashboard.html', {
         'matches': match_results,
         'application': application,
         'pending_requests': pending_requests,
         'accepted_connections': accepted_connections,
+        'platform_insights': platform_insights,
         'filters': {
             'stage': filter_stage,
             'focus': filter_focus,
@@ -627,17 +691,26 @@ def seller_dashboard(request):
     except Exception as e:
         logger.warning(f"Failed to look up business valuation for seller dashboard: {str(e)}")
 
+    platform_insights = []
+    if seller_profile.pitch_video:
+        from .growth_metrics import get_pitch_video_social_signal_insights
+        platform_insights = get_pitch_video_social_signal_insights()
+
     return render(request, 'matchmaking/seller_dashboard.html', {
         'matches': match_results,
         'seller_profile': seller_profile,
         'pending_requests': pending_requests,
         'accepted_connections': accepted_connections,
         'suggested_valuation': suggested_valuation,
+        'platform_insights': platform_insights,
         'filters': {
             'structure': filter_structure,
             'min_budget': filter_min_budget,
         },
     })
+
+
+FREE_CRM_LEAD_LIMIT = 15
 
 
 @login_required
@@ -655,6 +728,8 @@ def fundraising_crm(request):
     for lead in leads:
         leads_by_stage[lead.stage].append(lead)
 
+    lead_count = leads.count()
+
     # A list of {key, label, leads} dicts — Django templates can't do a
     # variable dict-key lookup (board.key doesn't substitute key's value),
     # so this shape lets the template just iterate straight through.
@@ -667,6 +742,8 @@ def fundraising_crm(request):
         'application': application,
         'board': board,
         'stage_choices': FundraisingLead.STAGE_CHOICES,
+        'lead_count': lead_count,
+        'lead_limit': FREE_CRM_LEAD_LIMIT,
     })
 
 
@@ -676,6 +753,10 @@ def create_lead(request):
     application = getattr(request.user, 'match_founder_profile', None)
     if not application:
         raise Http404("Founder profile required.")
+
+    if not application.is_premium and FundraisingLead.objects.filter(founder=application).count() >= FREE_CRM_LEAD_LIMIT:
+        messages.error(request, f"Free tier is limited to {FREE_CRM_LEAD_LIMIT} CRM leads. Upgrade to Founder Premium for unlimited leads.")
+        return redirect('matchmaking:fundraising_crm')
 
     investor_name = request.POST.get('investor_name', '').strip()
     if not investor_name:
@@ -728,28 +809,6 @@ def delete_lead(request, lead_id):
 
 
 @login_required
-@founder_required
-def founder_matchmaker(request):
-    """
-    Dedicated dashboard for founders to see which specific investors 
-    have explicitly 'liked' or upvoted their startup profile card.
-    """
-    founder_app = get_object_or_404(Application, user=request.user)
-    
-    likes = MatchFeedback.objects.filter(
-        application=founder_app,
-        vote=1
-    ).select_related('investor__user')
-    
-    interested_investors = [like.investor for like in likes]
-    
-    return render(request, 'matchmaking/founder_matchmaker.html', {
-        'founder_app': founder_app,
-        'interested_investors': interested_investors,
-    })
-
-
-@login_required
 def find_similar_startups(request, application_id):
     """
     Exposes the existing embedding infrastructure as a company-to-company
@@ -768,7 +827,24 @@ def find_similar_startups(request, application_id):
             logger.warning(f"Failed lazy-generation embedding for application {source.id}: {str(e)}")
 
     results = []
-    if source.description_vector:
+    if connection.vendor == 'postgresql' and source.description_vector_pg:
+        # ANN fast path — hits the HNSW index (migration 0049) instead of the
+        # O(n) Python cosine scan below. Pull a slightly larger pool than we
+        # need (20) so the score>0.3 filter still has room to work with,
+        # since the DB only orders by distance, it doesn't know our threshold.
+        from pgvector.django import CosineDistance
+        candidates = Application.objects.exclude(id=source.id).filter(
+            is_private=False, description_vector_pg__isnull=False
+        ).exclude(review_status='DENIED').select_related('user').annotate(
+            distance=CosineDistance('description_vector_pg', source.description_vector_pg)
+        ).order_by('distance')[:20]
+
+        for candidate in candidates:
+            score = 1 - candidate.distance  # CosineDistance = 1 - cosine similarity
+            if score > 0.3:
+                results.append({'application': candidate, 'score': round(score * 100, 1)})
+        results = results[:6]
+    elif source.description_vector:
         candidates = Application.objects.exclude(id=source.id).filter(
             is_private=False, description_vector__isnull=False
         ).exclude(review_status='DENIED').select_related('user')
@@ -868,15 +944,26 @@ def founder_bulletin_board(request):
         investor_profile = getattr(request.user, 'match_investor_profile', None)
 
     feedback_map = {}
+    connection_status_map = {}
     if investor_profile:
         feedback_map = dict(
             MatchFeedback.objects.filter(
                 investor=investor_profile, application__in=pitches_queryset
             ).values_list('application_id', 'vote')
         )
+        connection_status_map = dict(
+            Connection.objects.filter(investor=investor_profile).values_list('founder_id', 'status')
+        )
 
     pitches = []
     for pitch in pitches_queryset:
+        # Hard-filter gate: excluded entirely (not shown, not scored) rather
+        # than down-ranked — see passes_hard_filters' docstring. Only
+        # applies when an investor is viewing; anonymous/founder visitors
+        # see the full public board unaffected.
+        if investor_profile and not passes_hard_filters(pitch, investor_profile):
+            continue
+
         ai_insights_data = None
 
         if investor_profile and investor_profile.focus_vector and pitch.description_vector:
@@ -901,15 +988,21 @@ def founder_bulletin_board(request):
 
         pitch.match_percentage = match_percentage
         pitch.ai_insights = ai_insights_data
+        pitch.connection_status = connection_status_map.get(pitch.id)
+        pitch.already_requested = pitch.id in connection_status_map
         pitches.append(pitch)
         
-    if investor_profile and investor_profile.focus_vector:
-        pitches = sorted(pitches, key=lambda x: x.match_percentage, reverse=True)
+    # Founder Premium perk (or a staff-curated feature): Featured Placement —
+    # featured founders sort first, then by match score within each group
+    # (falls back to match_percentage's default of 75 for viewers with no
+    # vector, so this always has a stable order).
+    pitches = sorted(pitches, key=lambda x: (not (x.is_premium or x.is_staff_featured), -x.match_percentage))
 
     return render(request, 'matchmaking/bulletin_board.html', {
         'pitches': pitches,
         'selected_sector': selected_sector,
         'pulse_events': get_foundry_pulse_events(),
+        'investor_profile': investor_profile,
     })
 
 
@@ -942,11 +1035,15 @@ def acquisition_bulletin_board(request):
         buyer_profile = getattr(request.user, 'match_buyer_profile', None)
 
     feedback_map = {}
+    connection_status_map = {}
     if buyer_profile:
         feedback_map = dict(
             DealFeedback.objects.filter(
                 buyer=buyer_profile, seller__in=listings_queryset
             ).values_list('seller_id', 'vote')
+        )
+        connection_status_map = dict(
+            AcquisitionConnection.objects.filter(buyer=buyer_profile).values_list('seller_id', 'status')
         )
 
     listings = []
@@ -974,20 +1071,49 @@ def acquisition_bulletin_board(request):
 
         listing.match_percentage = match_percentage
         listing.deal_insights = deal_insights_data
+        listing.connection_status = connection_status_map.get(listing.id)
+        listing.already_requested = listing.id in connection_status_map
         listings.append(listing)
 
-    if buyer_profile and buyer_profile.focus_vector:
-        listings = sorted(listings, key=lambda x: x.match_percentage, reverse=True)
+    # Seller Premium perk (or a staff-curated feature): Featured Listing —
+    # featured sellers sort first, then by match score within each group
+    # (mirrors founder_bulletin_board's Featured Placement — see that view
+    # for the same pattern).
+    listings = sorted(listings, key=lambda x: (not (x.is_premium or x.is_staff_featured), -x.match_percentage))
 
     return render(request, 'matchmaking/acquisition_bulletin_board.html', {
         'listings': listings,
         'selected_industry': selected_industry,
+        'buyer_profile': buyer_profile,
     })
 
 
 # ==========================================
 # INTERACTION & TRANSACTION HANDLERS
 # ==========================================
+
+DAILY_INTRO_REQUEST_LIMIT = 3
+
+
+def count_investor_intro_requests_today(investor_profile):
+    """Non-premium investors are capped at DAILY_INTRO_REQUEST_LIMIT investor-initiated
+    intro requests per rolling 24h — shared by the rate-limit check in request_intro
+    and the proactive quota display on investor_dashboard."""
+    return Connection.objects.filter(
+        investor=investor_profile,
+        initiated_by='INVESTOR',
+        created_at__gte=timezone.now() - timedelta(hours=24)
+    ).count()
+
+
+def count_buyer_intro_requests_today(buyer_profile):
+    """Buyer-side equivalent of count_investor_intro_requests_today."""
+    return AcquisitionConnection.objects.filter(
+        buyer=buyer_profile,
+        initiated_by='BUYER',
+        created_at__gte=timezone.now() - timedelta(hours=24)
+    ).count()
+
 
 @login_required
 @require_POST
@@ -1003,12 +1129,8 @@ def request_intro(request, application_id, investor_id):
         return redirect('matchmaking:investor_dashboard')
 
     if not investor_profile.is_premium:
-        daily_count = Connection.objects.filter(
-            investor=investor_profile,
-            initiated_by='INVESTOR',
-            created_at__gte=timezone.now() - timedelta(hours=24)
-        ).count()
-        if daily_count >= 3:
+        daily_count = count_investor_intro_requests_today(investor_profile)
+        if daily_count >= DAILY_INTRO_REQUEST_LIMIT:
             messages.error(request, "Free tier is limited to 3 introduction requests per day. Upgrade to Premium for uncapped intros.")
             return redirect('matchmaking:investor_dashboard')
 
@@ -1115,12 +1237,8 @@ def request_acquisition_intro(request, seller_id, buyer_id):
         return redirect('matchmaking:buyer_dashboard')
 
     if not buyer_profile.is_premium:
-        daily_count = AcquisitionConnection.objects.filter(
-            buyer=buyer_profile,
-            initiated_by='BUYER',
-            created_at__gte=timezone.now() - timedelta(hours=24)
-        ).count()
-        if daily_count >= 3:
+        daily_count = count_buyer_intro_requests_today(buyer_profile)
+        if daily_count >= DAILY_INTRO_REQUEST_LIMIT:
             messages.error(request, "Free tier is limited to 3 introduction requests per day. Upgrade to Premium for uncapped intros.")
             return redirect('matchmaking:buyer_dashboard')
 
@@ -1232,6 +1350,11 @@ def record_vote(request):
     )
 
     log_investor_event(request.user, founder_app, 'thumbs_up' if numerical_vote == 1 else 'thumbs_down')
+    log_training_example(
+        'INVESTOR', investor_profile.id, 'FOUNDER', founder_app.id,
+        'POSITIVE' if numerical_vote == 1 else 'NEGATIVE',
+        'thumbs_up' if numerical_vote == 1 else 'thumbs_down',
+    )
 
     if is_json:
         return JsonResponse({'status': 'success'})
@@ -1277,6 +1400,11 @@ def record_deal_vote(request):
     )
 
     log_buyer_event(request.user, seller_app, 'thumbs_up' if numerical_vote == 1 else 'thumbs_down')
+    log_training_example(
+        'BUYER', buyer_profile.id, 'SELLER', seller_app.id,
+        'POSITIVE' if numerical_vote == 1 else 'NEGATIVE',
+        'thumbs_up' if numerical_vote == 1 else 'thumbs_down',
+    )
 
     if is_json:
         return JsonResponse({'status': 'success'})
@@ -1317,6 +1445,11 @@ def initiate_direct_chat(request, target_user_id):
             "name": f"{request.user.username} & {target_user.username}"
         }
     )
+
+    # "Profiles messaged" tracking — Stream Chat holds the actual messages
+    # (external), so this is the local proxy: one row per unique pair,
+    # regardless of role combo, get-or-created every time a channel exists.
+    MessageThread.log_thread(request.user, target_user)
 
     # Outcome tracking: resolve which side is the investor and which is the
     # founder, regardless of who initiated — log_investor_event just needs the pair.
@@ -1395,6 +1528,12 @@ def global_search(request):
     Excludes private applications strictly down the filtering stream.
     """
     queryset, filters = _filtered_public_applications(request)
+
+    non_empty_filters = {k: v for k, v in filters.items() if v}
+    if non_empty_filters:
+        query_summary = '; '.join(f"{k}={v}" for k, v in non_empty_filters.items())
+        log_search_event(request, 'filter_search', query_summary)
+
     return render(request, 'matchmaking/search_results.html', {
         'results': queryset,
         'filters': filters,
@@ -1434,12 +1573,107 @@ def export_search_csv(request):
             app.geography,
             app.raising_amount,
             app.current_revenue,
-            app.company_size,
+            app.team_size,
             app.years_in_business,
             app.company_website,
         ])
 
     return response
+
+
+@login_required
+def export_acquisition_csv(request):
+    """
+    Premium-gated CSV export of the current Business Marketplace search
+    result set — Buyer Premium's mirror of export_search_csv. Same filters
+    as acquisition_bulletin_board (industry, q), same privacy rules.
+    """
+    buyer_profile = getattr(request.user, 'match_buyer_profile', None)
+    if not buyer_profile or not buyer_profile.is_premium:
+        messages.error(request, "CSV export is a premium buyer feature. Upgrade your account to unlock listing exports.")
+        query_string = request.GET.urlencode()
+        redirect_url = reverse('matchmaking:acquisition_bulletin_board')
+        if query_string:
+            redirect_url = f"{redirect_url}?{query_string}"
+        return redirect(redirect_url)
+
+    queryset = SellerApplication.objects.filter(is_private=False).exclude(review_status='DENIED')
+
+    selected_industry = request.GET.get('industry', '').strip()
+    search_query = request.GET.get('q', '').strip()
+    if selected_industry:
+        queryset = queryset.filter(industry__iexact=selected_industry)
+    if search_query:
+        queryset = queryset.filter(
+            Q(company_name__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(industry__icontains=search_query) |
+            Q(extra_info__icontains=search_query)
+        )
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="interlink_foundry_acquisitions_export.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow([
+        'Company Name', 'Industry', 'Location', 'Asking Price',
+        'Annual Revenue', 'EBITDA', 'Deal Structure', 'Years in Business', 'Website',
+    ])
+    for listing in queryset:
+        writer.writerow([
+            listing.company_name,
+            listing.industry,
+            listing.geography,
+            listing.asking_price,
+            listing.annual_revenue,
+            listing.ebitda,
+            listing.get_deal_structure_display(),
+            listing.years_in_business,
+            listing.company_website,
+        ])
+
+    return response
+
+
+@login_required
+def seller_interest_analytics(request):
+    """
+    Seller Premium perk: detailed buyer-interest analytics for a seller's own
+    listing — an event-count breakdown plus a recent-activity feed, both
+    sourced from AcquisitionInterestEvent (silently logged on every buyer
+    interaction already). Mirrors deck_analytics' role as a premium
+    visibility upgrade on top of data that was already being collected.
+    """
+    seller_profile = getattr(request.user, 'match_seller_profile', None)
+    if not seller_profile:
+        messages.info(request, "Complete your business listing first.")
+        return redirect('usersettings:edit_seller_profile')
+
+    if not seller_profile.is_premium:
+        messages.error(request, "Interest analytics is a Seller Premium feature. Upgrade to see who's engaging with your listing.")
+        return redirect('matchmaking:seller_dashboard')
+
+    from django.db.models import Count
+
+    events = AcquisitionInterestEvent.objects.filter(seller=seller_profile).select_related('buyer')
+
+    event_counts = {
+        row['event_type']: row['count']
+        for row in events.values('event_type').annotate(count=Count('id'))
+    }
+    event_labels = dict(AcquisitionInterestEvent.EVENT_TYPES)
+    event_summary = [
+        {'type': event_type, 'label': event_labels.get(event_type, event_type), 'count': event_counts.get(event_type, 0)}
+        for event_type, _ in AcquisitionInterestEvent.EVENT_TYPES
+    ]
+
+    recent_events = events.order_by('-created_at')[:50]
+
+    return render(request, 'matchmaking/seller_interest_analytics.html', {
+        'seller_profile': seller_profile,
+        'event_summary': event_summary,
+        'recent_events': recent_events,
+    })
 
 
 @login_required
@@ -1502,6 +1736,31 @@ def platform_metrics(request):
     truth_delta_runs = TruthDeltaReport.objects.count()
     zelda_analyses_triggered = InvestorInterestEvent.objects.filter(event_type='analyze').count()
 
+    # Full activation funnel (all 4 personas) + Zelda feature-usage breakdown —
+    # see matchmaking/analytics.py for how each stage is computed.
+    from .analytics import get_founder_investor_funnel, get_seller_buyer_funnel, get_zelda_feature_usage
+    founder_investor_funnel = get_founder_investor_funnel()
+    seller_buyer_funnel = get_seller_buyer_funnel()
+    zelda_feature_usage = get_zelda_feature_usage()
+    funnel_tables = [
+        ('founder', 'Founder', founder_investor_funnel['founder']),
+        ('investor', 'Investor', founder_investor_funnel['investor']),
+        ('seller', 'Seller', seller_buyer_funnel['seller']),
+        ('buyer', 'Buyer', seller_buyer_funnel['buyer']),
+    ]
+
+    # Acquisition / Activation / Engagement / Value Creation / Feature
+    # Adoption tabs — see matchmaking/growth_metrics.py for how each is computed.
+    from . import growth_metrics
+    acquisition_metrics = growth_metrics.get_acquisition_metrics()
+    activation_metrics = growth_metrics.get_activation_metrics()
+    engagement_metrics = growth_metrics.get_engagement_metrics()
+    value_creation_metrics = growth_metrics.get_value_creation_metrics()
+    feature_adoption_metrics = growth_metrics.get_feature_adoption_metrics()
+    time_to_value_metrics = growth_metrics.get_time_to_value_metrics()
+    conversation_speed_retention = growth_metrics.get_conversation_speed_retention_insight()
+    marketplace_liquidity = growth_metrics.get_marketplace_liquidity_funnel()
+
     return render(request, 'matchmaking/platform_metrics.html', {
         'founder_count': founder_count,
         'investor_count': investor_count,
@@ -1519,6 +1778,18 @@ def platform_metrics(request):
         'memos_generated': memos_generated,
         'truth_delta_runs': truth_delta_runs,
         'zelda_analyses_triggered': zelda_analyses_triggered,
+        'founder_investor_funnel': founder_investor_funnel,
+        'seller_buyer_funnel': seller_buyer_funnel,
+        'zelda_feature_usage': zelda_feature_usage,
+        'funnel_tables': funnel_tables,
+        'acquisition_metrics': acquisition_metrics,
+        'activation_metrics': activation_metrics,
+        'engagement_metrics': engagement_metrics,
+        'value_creation_metrics': value_creation_metrics,
+        'feature_adoption_metrics': feature_adoption_metrics,
+        'time_to_value_metrics': time_to_value_metrics,
+        'conversation_speed_retention': conversation_speed_retention,
+        'marketplace_liquidity': marketplace_liquidity,
     })
 
 
@@ -1710,9 +1981,13 @@ def download_document(request, doc_id):
 
 
 def _can_view_pitch_deck(request, application):
-    """Same privacy rule as the profile page: private decks are owner/staff-only."""
+    """Same privacy rule as the profile page: private decks are owner/staff-only.
+    A staff-hidden deck (under review) is also owner/staff-only, regardless
+    of the is_private setting."""
     if request.user == application.user or request.user.is_staff:
         return True
+    if application.is_hidden_by_staff:
+        return False
     return not application.is_private
 
 
@@ -1790,6 +2065,217 @@ def record_deck_telemetry(request, application_id):
 
 
 @login_required
+@require_POST
+def record_video_telemetry(request, application_id):
+    """
+    Ingests navigator.sendBeacon() payloads from the pitch video player —
+    same beacon-with-CSRF-as-form-field pattern as record_deck_telemetry.
+    Video has one linear timeline (not per-slide), so this tracks the
+    furthest playback position reached per session directly, rather than
+    accumulating incremental deltas the way slide time does.
+    Skips silently for the founder previewing their own video.
+    """
+    application = get_object_or_404(Application, id=application_id)
+    if request.user == application.user:
+        return JsonResponse({'status': 'skipped'})
+
+    try:
+        payload = json.loads(request.POST.get('payload', '{}'))
+        client_session_id = payload.get('client_session_id', '')[:64]
+        watched_seconds = float(payload.get('watched_seconds', 0))
+        video_duration_seconds = float(payload.get('video_duration_seconds', 0))
+
+        if not client_session_id or video_duration_seconds <= 0:
+            return JsonResponse({'status': 'error', 'message': 'Missing data'}, status=400)
+
+        session, created = PitchVideoView.objects.get_or_create(
+            founder=application,
+            viewer=request.user,
+            client_session_id=client_session_id,
+            defaults={
+                'video_duration_seconds': video_duration_seconds,
+                'max_watched_seconds': watched_seconds,
+            },
+        )
+        if not created:
+            from django.db.models.functions import Greatest
+            from django.db.models import Value
+            PitchVideoView.objects.filter(pk=session.pk).update(
+                max_watched_seconds=Greatest('max_watched_seconds', Value(watched_seconds)),
+                video_duration_seconds=video_duration_seconds,
+            )
+
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        logger.warning(f"Video telemetry ingestion failed: {str(e)}")
+        return JsonResponse({'status': 'error'}, status=400)
+
+
+@login_required
+def data_room(request, username):
+    """
+    Founder due-diligence document room. Titles/categories are visible to
+    any connected investor (can_view_data_room), but downloading a specific
+    file needs the founder's per-document approval (DataRoomAccessRequest) —
+    so the owner/staff view shows all documents plus pending requests to
+    decide on, while an investor view shows a per-document status instead.
+    """
+    founder_application = get_object_or_404(Application, user__username=username)
+    if not can_view_data_room(request.user, founder_application):
+        raise Http404("Access Denied")
+
+    is_owner_or_staff = request.user == founder_application.user or request.user.is_staff
+    documents = list(founder_application.data_room_documents.all())
+
+    pending_requests = []
+    if is_owner_or_staff:
+        pending_requests = DataRoomAccessRequest.objects.filter(
+            document__founder=founder_application, status='PENDING'
+        ).select_related('document', 'investor__user')
+    else:
+        investor_profile = getattr(request.user, 'match_investor_profile', None)
+        my_requests = {
+            r.document_id: r for r in DataRoomAccessRequest.objects.filter(
+                investor=investor_profile, document__founder=founder_application
+            )
+        } if investor_profile else {}
+        for document in documents:
+            document.my_request = my_requests.get(document.id)
+
+    return render(request, 'matchmaking/data_room.html', {
+        'founder_application': founder_application,
+        'documents': documents,
+        'is_owner_or_staff': is_owner_or_staff,
+        'pending_requests': pending_requests,
+        'category_choices': DataRoomDocument.CATEGORY_CHOICES,
+    })
+
+
+@login_required
+@require_POST
+def data_room_upload(request, username):
+    founder_application = get_object_or_404(Application, user__username=username)
+    if not (request.user == founder_application.user or request.user.is_staff):
+        raise PermissionDenied
+
+    form = DataRoomDocumentForm(request.POST, request.FILES)
+    if form.is_valid():
+        document = form.save(commit=False)
+        document.founder = founder_application
+        document.save()
+        messages.success(request, f'"{document.label}" uploaded to the data room.')
+    else:
+        error_text = ' '.join(str(e) for errors in form.errors.values() for e in errors)
+        messages.error(request, error_text or "Upload failed.")
+
+    return redirect('matchmaking:data_room', username=username)
+
+
+@login_required
+@require_POST
+def data_room_delete(request, document_id):
+    document = get_object_or_404(DataRoomDocument, id=document_id)
+    if not (request.user == document.founder.user or request.user.is_staff):
+        raise PermissionDenied
+
+    label = document.label
+    username = document.founder.user.username
+    document.delete()
+    messages.success(request, f'"{label}" deleted.')
+    return redirect('matchmaking:data_room', username=username)
+
+
+@login_required
+@require_POST
+def data_room_request_access(request, document_id):
+    document = get_object_or_404(DataRoomDocument, id=document_id)
+    if not can_view_data_room(request.user, document.founder):
+        raise Http404("Access Denied")
+
+    investor_profile = getattr(request.user, 'match_investor_profile', None)
+    if not investor_profile or request.user == document.founder.user:
+        raise PermissionDenied
+
+    access_request, created = DataRoomAccessRequest.objects.get_or_create(
+        document=document, investor=investor_profile,
+    )
+    if not created and access_request.status == 'DENIED':
+        access_request.status = 'PENDING'
+        access_request.decided_at = None
+        access_request.save(update_fields=['status', 'decided_at'])
+
+    messages.success(request, f'Requested access to "{document.label}".')
+    return redirect('matchmaking:data_room', username=document.founder.user.username)
+
+
+@login_required
+@require_POST
+def data_room_decide_request(request, request_id):
+    access_request = get_object_or_404(DataRoomAccessRequest, id=request_id)
+    founder_application = access_request.document.founder
+    if not (request.user == founder_application.user or request.user.is_staff):
+        raise PermissionDenied
+
+    decision = request.POST.get('decision')
+    if decision not in ('APPROVE', 'DENY'):
+        messages.error(request, "Invalid decision.")
+        return redirect('matchmaking:data_room', username=founder_application.user.username)
+
+    access_request.status = 'APPROVED' if decision == 'APPROVE' else 'DENIED'
+    access_request.decided_at = timezone.now()
+    access_request.save(update_fields=['status', 'decided_at'])
+    messages.success(request, f"Request {'approved' if decision == 'APPROVE' else 'denied'}.")
+    return redirect('matchmaking:data_room', username=founder_application.user.username)
+
+
+@login_required
+def data_room_document_serve(request, document_id):
+    """Never link document.file.url directly — in local FileSystemStorage
+    dev mode that's an unauthenticated, guessable /media/... path. This
+    view is the only authorized way to get the actual file bytes."""
+    document = get_object_or_404(DataRoomDocument, id=document_id)
+    if not can_download_data_room_document(request.user, document):
+        raise Http404("Access Denied")
+
+    DataRoomDocumentView.objects.create(document=document, viewer=request.user)
+    filename = document.file.name.rsplit('/', 1)[-1]
+    return FileResponse(document.file.open('rb'), as_attachment=True, filename=filename)
+
+
+@login_required
+@require_POST
+def record_profile_duration(request, username):
+    """
+    Ingests navigator.sendBeacon() payloads reporting time-on-page for a
+    profile visit, matched back to the ProfileView row accounts.views.profile()
+    created when the page first loaded (same viewer+viewed_user+session_key).
+    """
+    viewed_user = get_object_or_404(User, username=username)
+    if request.user == viewed_user:
+        return JsonResponse({'status': 'skipped'})
+
+    try:
+        payload = json.loads(request.POST.get('payload', '{}'))
+        duration_seconds = float(payload.get('duration_seconds', 0))
+        session_key = request.session.session_key or ''
+
+        if duration_seconds <= 0:
+            return JsonResponse({'status': 'error', 'message': 'Missing data'}, status=400)
+
+        row = ProfileView.objects.filter(
+            viewed_user=viewed_user, viewer=request.user, session_key=session_key,
+        ).order_by('-created_at').first()
+        if row:
+            row.duration_seconds = duration_seconds
+            row.save(update_fields=['duration_seconds'])
+
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        logger.warning(f"Profile duration ingestion failed: {str(e)}")
+        return JsonResponse({'status': 'error'}, status=400)
+
+
+@login_required
 def deal_pulse(request):
     """
     Investor-side pipeline board over their real platform Connections,
@@ -1845,38 +2331,6 @@ def update_deal_notes(request, connection_id):
     return redirect('matchmaking:deal_pulse')
 
 
-@login_required
-def deck_analytics(request, application_id):
-    application = get_object_or_404(Application, id=application_id)
-    if not (request.user == application.user or request.user.is_staff):
-        messages.error(request, "You don't have access to this deck's analytics.")
-        return redirect('accounts:profile', username=application.user.username)
-
-    from django.db.models import Avg, Count
-
-    sessions = PitchDeckViewSession.objects.filter(founder=application)
-    total_sessions = sessions.count()
-    unique_viewers = sessions.values('viewer').distinct().count()
-
-    slide_stats = list(
-        PitchDeckSlideTime.objects.filter(session__founder=application)
-        .values('slide_number')
-        .annotate(avg_duration=Avg('duration_seconds'), views=Count('id'))
-        .order_by('slide_number')
-    )
-
-    total_time = sum(row['avg_duration'] * row['views'] for row in slide_stats)
-    avg_session_time = round(total_time / total_sessions, 1) if total_sessions else 0
-
-    return render(request, 'matchmaking/deck_analytics.html', {
-        'application': application,
-        'total_sessions': total_sessions,
-        'unique_viewers': unique_viewers,
-        'avg_session_time': avg_session_time,
-        'slide_labels': json.dumps([f"Slide {row['slide_number']}" for row in slide_stats]),
-        'slide_durations': json.dumps([round(row['avg_duration'], 1) for row in slide_stats]),
-    })
-
 
 @login_required
 @require_POST
@@ -1896,6 +2350,9 @@ def toggle_follow(request, username):
     from usersettings.models import UserSettings
     if not UserSettings.for_user(target_user).accept_follow_requests:
         return JsonResponse({'status': 'error', 'message': 'This user is not accepting new followers.'}, status=403)
+
+    Follow.objects.create(follower=request.user, following=target_user)
+    return JsonResponse({'status': 'success', 'is_following': True})
 
 
 @login_required
@@ -1948,3 +2405,309 @@ def delete_milestone(request, milestone_id):
 
     Follow.objects.create(follower=request.user, following=target_user)
     return JsonResponse({'status': 'success', 'is_following': True})
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# PITCH VIDEOS SECTION — founder/seller pitch videos, Zelda-ranked (not a
+# chronological/viral feed) with social actions each owner can disable
+# per-video via pitch_video_*_enabled settings.
+# ──────────────────────────────────────────────────────────────────────────
+
+def _rank_pitch_video_profiles(items, score_fn, viewer_partner_profile):
+    """
+    Sorts founders/sellers with a pitch video: staff/premium-featured
+    first (same convention as founder_bulletin_board/acquisition_bulletin_board),
+    then by rule-based match score against the viewer's investor/buyer
+    profile if they have one, then most-recent first. No AI vector call —
+    calculate_rule_based_score/calculate_deal_rule_based_score are pure
+    field comparisons, so ranking a video list stays cheap even without
+    every profile having a computed embedding.
+    """
+    items = list(items)
+    for item in items:
+        if viewer_partner_profile:
+            try:
+                item.match_score = score_fn(item, viewer_partner_profile)
+            except Exception:
+                item.match_score = 0
+        else:
+            item.match_score = None
+
+    items.sort(key=lambda x: (
+        not (x.is_premium or x.is_staff_featured),
+        -(x.match_score if x.match_score is not None else 0),
+        -x.created_at.timestamp() if x.created_at else 0,
+    ))
+    return items
+
+
+def pitch_videos_section(request):
+    """
+    GET /pitch-videos/ — founders and sellers who've uploaded a pitch
+    video, ranked highest-match-first for an authenticated investor/buyer
+    (falls back to featured-then-recency for everyone else). Deliberately
+    not an infinite chronological scroll — see _rank_pitch_video_profiles.
+    """
+    investor_profile = None
+    buyer_profile = None
+    liked_founder_ids = saved_founder_ids = liked_seller_ids = saved_seller_ids = frozenset()
+
+    if request.user.is_authenticated:
+        investor_profile = getattr(request.user, 'match_investor_profile', None)
+        buyer_profile = getattr(request.user, 'match_buyer_profile', None)
+        liked_founder_ids = set(request.user.liked_founder_pitch_videos.values_list('id', flat=True))
+        saved_founder_ids = set(request.user.saved_founder_pitch_videos.values_list('id', flat=True))
+        liked_seller_ids = set(request.user.liked_seller_pitch_videos.values_list('id', flat=True))
+        saved_seller_ids = set(request.user.saved_seller_pitch_videos.values_list('id', flat=True))
+
+    # pitch_video is null=True, blank=True — existing rows may have either
+    # NULL or '' for "no video", and exclude(pitch_video='') alone doesn't
+    # catch NULL (three-valued SQL logic drops those rows from the negation
+    # too, but .exclude() on a nullable field lets NULL rows straight
+    # through unfiltered), which crashes FieldFile.url in the template.
+    # PROFILE_ONLY is always excluded (owner opted the video out of this
+    # section entirely, keeping it on their profile page); ROLE_ONLY is
+    # excluded unless the viewer actually holds the matching role, so
+    # anonymous visitors and same-role peers never see it here either.
+    founder_qs = Application.objects.filter(is_private=False).exclude(
+        review_status='DENIED'
+    ).exclude(pitch_video='').exclude(pitch_video__isnull=True).exclude(
+        pitch_video_visibility='PROFILE_ONLY'
+    ).select_related('user')
+    if not investor_profile:
+        founder_qs = founder_qs.exclude(pitch_video_visibility='ROLE_ONLY')
+
+    seller_qs = SellerApplication.objects.filter(is_private=False).exclude(
+        review_status='DENIED'
+    ).exclude(pitch_video='').exclude(pitch_video__isnull=True).exclude(
+        pitch_video_visibility='PROFILE_ONLY'
+    ).select_related('user')
+    if not buyer_profile:
+        seller_qs = seller_qs.exclude(pitch_video_visibility='ROLE_ONLY')
+
+    founders = _rank_pitch_video_profiles(
+        founder_qs, lambda f, inv: calculate_rule_based_score(application=f, investor=inv), investor_profile
+    )
+    for f in founders:
+        f.viewer_has_liked = f.id in liked_founder_ids
+        f.viewer_has_saved = f.id in saved_founder_ids
+        f.like_count = f.pitch_video_likes.count() if f.pitch_video_show_like_count else None
+        f.comment_count = f.pitch_video_comments.count()
+
+    sellers = _rank_pitch_video_profiles(
+        seller_qs, lambda s, buy: calculate_deal_rule_based_score(seller=s, buyer=buy), buyer_profile
+    )
+    for s in sellers:
+        s.viewer_has_liked = s.id in liked_seller_ids
+        s.viewer_has_saved = s.id in saved_seller_ids
+        s.like_count = s.pitch_video_likes.count() if s.pitch_video_show_like_count else None
+        s.comment_count = s.pitch_video_comments.count()
+
+    # Buyers came here primarily for sellers, everyone else primarily for
+    # founders — just controls which tab is active by default, both lists
+    # are always rendered.
+    default_tab = 'sellers' if buyer_profile and not investor_profile else 'founders'
+
+    return render(request, 'matchmaking/pitch_videos.html', {
+        'founders': founders,
+        'sellers': sellers,
+        'default_tab': default_tab,
+    })
+
+
+def _pitch_video_owner(role, profile_id):
+    """Resolves a (role, id) pair to its Application/SellerApplication instance, or raises Http404."""
+    if role == 'founder':
+        return get_object_or_404(Application, id=profile_id, is_private=False)
+    elif role == 'seller':
+        return get_object_or_404(SellerApplication, id=profile_id, is_private=False)
+    raise Http404("Unknown pitch video role.")
+
+
+@require_POST
+def log_pitch_video_play(request, role, profile_id):
+    """
+    Top of the Video -> Profile Conversion funnel (see
+    growth_metrics.get_pitch_video_funnel). Fired once per session from
+    the Pitch Videos section on first `play`, distinct from the older
+    PitchVideoView/record_video_telemetry watch-depth tracker, which is
+    scoped to a founder's own profile page. Same investor/buyer role
+    gating as the 'view' event logged in accounts.views.profile, so this
+    event log never mixes in plays from anonymous visitors or same-role
+    peers browsing each other's videos.
+    """
+    obj = _pitch_video_owner(role, profile_id)
+
+    if request.user.is_authenticated and request.user.id != obj.user_id:
+        if role == 'founder' and getattr(request.user, 'match_investor_profile', None):
+            log_investor_event(request.user, obj, 'video_play')
+        elif role == 'seller' and getattr(request.user, 'match_buyer_profile', None):
+            log_buyer_event(request.user, obj, 'video_play')
+
+    return JsonResponse({'status': 'success'})
+
+
+@login_required
+@require_POST
+def toggle_pitch_video_like(request, role, profile_id):
+    obj = _pitch_video_owner(role, profile_id)
+
+    if obj.pitch_video_likes.filter(id=request.user.id).exists():
+        obj.pitch_video_likes.remove(request.user)
+        liked = False
+    else:
+        obj.pitch_video_likes.add(request.user)
+        liked = True
+
+    return JsonResponse({
+        'status': 'success',
+        'liked': liked,
+        'like_count': obj.pitch_video_likes.count() if obj.pitch_video_show_like_count else None,
+    })
+
+
+@login_required
+@require_POST
+def toggle_pitch_video_save(request, role, profile_id):
+    obj = _pitch_video_owner(role, profile_id)
+
+    if obj.pitch_video_saves.filter(id=request.user.id).exists():
+        obj.pitch_video_saves.remove(request.user)
+        saved = False
+    else:
+        obj.pitch_video_saves.add(request.user)
+        saved = True
+
+    return JsonResponse({'status': 'success', 'saved': saved})
+
+
+@login_required
+@require_POST
+def post_pitch_video_comment(request, role, profile_id):
+    obj = _pitch_video_owner(role, profile_id)
+
+    if not obj.pitch_video_comments_enabled:
+        return JsonResponse({'error': 'Comments are disabled on this video.'}, status=403)
+
+    body = request.POST.get('body', '').strip()
+    if not body:
+        return JsonResponse({'error': 'Comment cannot be empty.'}, status=400)
+    if len(body) > 1000:
+        return JsonResponse({'error': 'Comment is too long (max 1000 characters).'}, status=400)
+
+    comment = PitchVideoComment.objects.create(
+        founder=obj if role == 'founder' else None,
+        seller=obj if role == 'seller' else None,
+        author=request.user,
+        body=body,
+    )
+
+    if obj.pitch_video_notify_on_comments and obj.user != request.user:
+        try:
+            from notifications.models import Notification
+            Notification.objects.create(
+                recipient=obj.user,
+                sender=request.user,
+                notification_type='PITCH_VIDEO_COMMENT',
+                message=f"{request.user.get_full_name() or request.user.username} commented on your pitch video.",
+                target_url=reverse('matchmaking:pitch_videos'),
+            )
+        except Exception as e:
+            logger.warning(f"Failed to create pitch video comment notification: {str(e)}")
+
+    return JsonResponse({
+        'status': 'success',
+        'comment': {
+            'id': comment.id,
+            'author': request.user.get_full_name() or request.user.username,
+            'body': comment.body,
+            'created_at': comment.created_at.strftime('%b %d, %Y'),
+        },
+    })
+
+
+@login_required
+@require_POST
+def delete_pitch_video_comment(request, comment_id):
+    comment = get_object_or_404(PitchVideoComment, id=comment_id)
+    owner_user = comment.founder.user if comment.founder_id else comment.seller.user
+    if comment.author != request.user and owner_user != request.user and not request.user.is_staff:
+        return JsonResponse({'error': 'Not authorized.'}, status=403)
+    comment.delete()
+    return JsonResponse({'status': 'success'})
+
+
+@login_required
+@require_POST
+def toggle_pitch_video_setting(request):
+    """
+    AJAX toggle for one of the four pitch-video engagement settings,
+    applied to whichever profile(s) the requesting user owns. Mirrors the
+    existing allow_direct_messages AJAX toggle in accounts/views.py.
+    """
+    setting = request.POST.get('setting')
+    enabled = request.POST.get('enabled') == 'true'
+
+    allowed_settings = {
+        'comments_enabled': 'pitch_video_comments_enabled',
+        'shares_enabled': 'pitch_video_shares_enabled',
+        'show_like_count': 'pitch_video_show_like_count',
+        'notify_on_comments': 'pitch_video_notify_on_comments',
+    }
+    field_name = allowed_settings.get(setting)
+    if not field_name:
+        return JsonResponse({'error': 'Unknown setting.'}, status=400)
+
+    updated = False
+    founder_profile = getattr(request.user, 'match_founder_profile', None)
+    if founder_profile:
+        setattr(founder_profile, field_name, enabled)
+        founder_profile.save(update_fields=[field_name])
+        updated = True
+
+    seller_profile = getattr(request.user, 'match_seller_profile', None)
+    if seller_profile:
+        setattr(seller_profile, field_name, enabled)
+        seller_profile.save(update_fields=[field_name])
+        updated = True
+
+    if not updated:
+        return JsonResponse({'error': 'No founder or seller profile found.'}, status=404)
+
+    return JsonResponse({'status': 'success', 'setting': setting, 'enabled': enabled})
+
+
+@login_required
+@require_POST
+def set_pitch_video_visibility(request):
+    """
+    Where a pitch video appears: SITE_WIDE (default, shown to everyone in
+    the Pitch Videos section — see pitch_videos_section), ROLE_ONLY (only
+    to authenticated investors/buyers), or PROFILE_ONLY (pulled from the
+    section entirely, still visible on the owner's own profile page since
+    that page never consults this field). Same owner-profile-lookup
+    pattern as toggle_pitch_video_setting, kept as a separate endpoint
+    since this is a 3-way choice rather than a boolean.
+    """
+    visibility = request.POST.get('visibility')
+    valid_choices = {'SITE_WIDE', 'ROLE_ONLY', 'PROFILE_ONLY'}
+    if visibility not in valid_choices:
+        return JsonResponse({'error': 'Unknown visibility setting.'}, status=400)
+
+    updated = False
+    founder_profile = getattr(request.user, 'match_founder_profile', None)
+    if founder_profile:
+        founder_profile.pitch_video_visibility = visibility
+        founder_profile.save(update_fields=['pitch_video_visibility'])
+        updated = True
+
+    seller_profile = getattr(request.user, 'match_seller_profile', None)
+    if seller_profile:
+        seller_profile.pitch_video_visibility = visibility
+        seller_profile.save(update_fields=['pitch_video_visibility'])
+        updated = True
+
+    if not updated:
+        return JsonResponse({'error': 'No founder or seller profile found.'}, status=404)
+
+    return JsonResponse({'status': 'success', 'visibility': visibility})

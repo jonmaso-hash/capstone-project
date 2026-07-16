@@ -1,5 +1,9 @@
+import hashlib
 import requests
 import re
+from django.core.cache import cache
+
+HARD_FILTER_CACHE_TTL = 60 * 60 * 24 * 7  # 7 days — these fields change rarely
 
 def calculate_match_score(investor, founder):
     """
@@ -70,21 +74,123 @@ def _is_adjacent_stage(stage1, stage2):
     }
     return stage2 in adjacents.get(stage1, [])
 
-def get_blended_match(ai_score, rule_score, application, investor):
+def passes_hard_filters(application, investor):
+    """
+    Hard-constraint gate — the actual fix for the "high semantic score on a
+    legally/logistically nonviable deal" false-positive problem. Unlike
+    calculate_rule_based_score (a SOFT bonus that still lets a mismatch
+    through with partial credit), a failure here excludes the founder from
+    that investor's results entirely — they're never scored, never shown.
+
+    Every check fails OPEN when the investor hasn't declared that
+    constraint, so this can only ever narrow an investor's own existing
+    results — it never retroactively hides matches for investors who never
+    set these fields.
+
+    Result is cached: the key is built directly from every field this
+    function reads, so a changed profile automatically produces a
+    different (uncached) key — there's no separate invalidation logic to
+    write or get wrong.
+    """
+    key_material = (
+        f"{investor.id}:{investor.ticket_size_min}:{investor.ticket_size_max}:"
+        f"{investor.investment_stage}:{application.id}:{application.raising_amount}:{application.stage}"
+    )
+    cache_key = f"hard_filter:{hashlib.sha256(key_material.encode('utf-8')).hexdigest()}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    result = _compute_hard_filters(application, investor)
+    cache.set(cache_key, result, HARD_FILTER_CACHE_TTL)
+    return result
+
+
+def _compute_hard_filters(application, investor):
+    if investor.ticket_size_min is not None or investor.ticket_size_max is not None:
+        raising_amount = application.raising_amount
+        if investor.ticket_size_min is not None and raising_amount < investor.ticket_size_min:
+            return False
+        if investor.ticket_size_max is not None and raising_amount > investor.ticket_size_max:
+            return False
+
+    if investor.investment_stage:
+        app_stage = application.stage.lower() if application.stage else ""
+        inv_stage = investor.investment_stage.lower()
+        if app_stage != inv_stage and not _is_adjacent_stage(app_stage, inv_stage):
+            return False
+
+    return True
+
+def get_weighted_chunk_score(application, investor):
+    """
+    Multi-vector chunked, asymmetrically-weighted alternative to comparing
+    description_vector/focus_vector as monolithic blocks. Compares each
+    founder chunk against the investor chunk it's conceptually paired with,
+    weights each pair by the investor's own declared emphasis, and
+    normalizes by the weight actually used (so a founder/investor pair
+    missing one chunk isn't penalized — it's just excluded from the average,
+    not treated as a zero).
+
+    Returns None (not 0.0) when neither side has any chunk vectors yet, so
+    callers can fall back to the whole-profile ai_score instead of scoring
+    a match on data that doesn't exist.
+    """
+    from matchmaking.services.ai_engine import calculate_similarity
+
+    pairs = [
+        (application.problem_solution_vector, investor.thesis_vector, investor.weight_problem_solution),
+        (application.market_context_vector, investor.focus_vector, investor.weight_market_context),
+        (application.capital_plan_vector, investor.thesis_vector, investor.weight_capital_plan),
+    ]
+
+    weighted_total = 0.0
+    weight_used = 0.0
+    for founder_vector, investor_vector, weight in pairs:
+        if not founder_vector or not investor_vector:
+            continue
+        similarity = calculate_similarity(founder_vector, investor_vector)
+        weighted_total += similarity * weight
+        weight_used += weight
+
+    if weight_used == 0:
+        return None
+
+    return max(0.0, min(100.0, (weighted_total / weight_used) * 100))
+
+def get_blended_match(ai_score, rule_score, application, investor, sparse_score=None):
     """
     Enhanced blended match that incorporates historical thumbs up/down feedback.
+
+    sparse_score is optional and defaults to None so every existing caller
+    keeps its exact prior behavior (70% rule / 30% ai) unchanged. Passing a
+    sparse_score (0-100, from calculate_sparse_similarity) switches to the
+    3-way hybrid blend: 50% rule / 25% dense ai / 25% sparse keyword-overlap.
+
+    ai_score itself is transparently upgraded to the weighted multi-vector
+    chunk score (get_weighted_chunk_score) whenever both sides have chunk
+    vectors — no caller changes needed. Falls back to the passed-in
+    whole-profile ai_score when chunks aren't available yet (e.g. a profile
+    that hasn't been touched/re-saved since the chunking rollout).
     """
-    base_score = (rule_score * 0.7) + (ai_score * 0.3)
-    
+    chunk_score = get_weighted_chunk_score(application, investor)
+    if chunk_score is not None:
+        ai_score = chunk_score
+
+    if sparse_score is not None:
+        base_score = (rule_score * 0.5) + (ai_score * 0.25) + (sparse_score * 0.25)
+    else:
+        base_score = (rule_score * 0.7) + (ai_score * 0.3)
+
     from matchmaking.models import MatchFeedback
     feedback = MatchFeedback.objects.filter(application=application, investor=investor).first()
-    
+
     if feedback:
         if feedback.vote == 1:
             return min(base_score + 15, 100)
         if feedback.vote == -1:
             return base_score * 0.5
-            
+
     return round(base_score, 2)
 
 
@@ -237,6 +343,7 @@ def compute_founder_journey_stage(user):
             {'label': 'Post a job to show you\'re growing', 'done': has_job},
             {'label': 'Connect with other businesses', 'done': has_follow},
             {'label': 'Upload your business plan to Zelda for a competitiveness match', 'done': has_zelda_doc},
+            {'label': 'Verify your business email', 'done': application.is_verified},
         ],
     }
 
@@ -283,6 +390,7 @@ def compute_investor_journey_stage(user):
             {'label': 'Create your investor profile', 'done': True},
             {'label': 'Complete every mandate field', 'done': True},
             {'label': 'Upload your portfolio for a similarity match', 'done': has_portfolio},
+            {'label': 'Verify your business email', 'done': investor_profile.is_verified},
         ],
         'uncontacted_high_matches': uncontacted_count,
     }
@@ -365,6 +473,7 @@ def compute_seller_journey_stage(user):
             {'label': 'Upload a CIM document', 'done': True},
             {'label': 'Get a Zelda valuation to price your asking price with confidence', 'done': has_zelda_doc},
             {'label': 'Connect with other businesses', 'done': has_follow},
+            {'label': 'Verify your business email', 'done': seller_profile.is_verified},
         ],
     }
 
@@ -410,6 +519,7 @@ def compute_buyer_journey_stage(user):
         'checklist': [
             {'label': 'Create your buyer profile', 'done': True},
             {'label': 'Complete every mandate field', 'done': True},
+            {'label': 'Verify your business email', 'done': buyer_profile.is_verified},
         ],
         'uncontacted_high_matches': uncontacted_count,
     }

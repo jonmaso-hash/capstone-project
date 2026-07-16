@@ -1,21 +1,28 @@
 import json
 import logging
+from datetime import timedelta
 from django.apps import apps
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
-from django.db.models import Q
+from django.core.cache import cache
+from django.core.mail import send_mail
+from django.db.models import Avg, Count, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 # Core Matchmaking Engine Models
 from matchmaking.services.ai_engine import calculate_zelda_advantage
 from matchmaking.utils import clean_financial_input
-from matchmaking.models import Application, InvestorApplication, Connection, Follow
+from matchmaking.models import (
+    Application, InvestorApplication, SellerApplication, BuyerApplication, Connection, Follow,
+    log_page_event, BusinessEmailVerification, company_matches_email_domain, _resolve_company_name,
+)
 
 # External/Third-Party Apps
 from stream_chat import StreamChat
@@ -42,38 +49,87 @@ if apps.is_installed('blog'):
 # AUTHENTICATION ENGINE VIEWS
 # =====================================================================
 
+# Shared by signup_view (password signup) and choose_role (social-login
+# completion step) — the one place that maps a role choice to its onboarding URL.
+ROLE_PROFILE_URLS = {
+    'founder': 'usersettings:edit_founder_profile',
+    'investor': 'usersettings:edit_investor_profile',
+    'seller': 'usersettings:edit_seller_profile',
+    'buyer': 'usersettings:edit_buyer_profile',
+}
+
+
 def signup_view(request):
     if request.user.is_authenticated:
         return redirect("accounts:profile", username=request.user.username)
-        
+
+    # Referral loop (growth app) — a link like /accounts/signup/?ref=CODE
+    # stashes the code in session here at GET-time, so it survives through
+    # to whichever role-profile form actually creates the new profile
+    # (usersettings' edit_*_profile views consume it there).
+    ref_code = request.GET.get('ref')
+    if ref_code:
+        request.session['pending_referral_code'] = ref_code
+
     if request.method == "POST":
+        role = request.POST.get('role', '')
+        if role not in ROLE_PROFILE_URLS:
+            messages.error(request, "Please pick Founder, Investor, Seller, or Buyer before creating your account.")
+            return redirect('accounts:signup')
+
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            auth_login(request, user)
+            auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            log_page_event(request, 'signup_completed', role=role, user=user)
             messages.success(request, f"Welcome to Interlink Foundry, {user.username}!")
-            
-            # Route to appropriate onboarding based on selected role
-            role = request.POST.get('role', '')
-            if role == 'founder':
-                return redirect('usersettings:edit_founder_profile')
-            elif role == 'investor':
-                return redirect('usersettings:edit_investor_profile')
-            elif role == 'seller':
-                return redirect('usersettings:edit_seller_profile')
-            elif role == 'buyer':
-                return redirect('usersettings:edit_buyer_profile')
-            else:
-                return redirect("accounts:profile", username=user.username)
+            return redirect(ROLE_PROFILE_URLS[role])
     else:
         form = UserCreationForm()
+        log_page_event(request, 'signup_started')
     return render(request, "accounts/signup.html", {"form": form})
+
+
+@login_required
+def post_login_router(request):
+    """
+    LOGIN_REDIRECT_URL target for every login — password or social. An
+    existing user with a role already picked goes straight to their
+    dashboard; a brand-new social-login user (who never went through
+    signup_view's role cards) lands on choose_role instead.
+    """
+    if getattr(request.user, 'match_founder_profile', None):
+        return redirect('matchmaking:founder_dashboard')
+    if getattr(request.user, 'match_investor_profile', None):
+        return redirect('matchmaking:investor_dashboard')
+    if getattr(request.user, 'match_seller_profile', None):
+        return redirect('matchmaking:seller_dashboard')
+    if getattr(request.user, 'match_buyer_profile', None):
+        return redirect('matchmaking:buyer_dashboard')
+    return redirect('accounts:choose_role')
+
+
+@login_required
+def choose_role(request):
+    """
+    Role-picker for users who are already authenticated but have no
+    Founder/Investor/Seller/Buyer profile yet — the social-login equivalent
+    of signup_view's role cards, minus the username/password fields since
+    the account already exists.
+    """
+    if request.method == "POST":
+        role = request.POST.get('role', '')
+        if role not in ROLE_PROFILE_URLS:
+            messages.error(request, "Please pick Founder, Investor, Seller, or Buyer to continue.")
+            return redirect('accounts:choose_role')
+        return redirect(ROLE_PROFILE_URLS[role])
+    return render(request, "accounts/choose_role.html")
 
 
 def login_view(request):
     if request.user.is_authenticated:
         return redirect("accounts:profile", username=request.user.username)
-        
+
     if request.method == "POST":
         form = AuthenticationForm(data=request.POST)
         if form.is_valid():
@@ -201,6 +257,18 @@ def profile(request, username=None, pk=None):
         from matchmaking.models import log_buyer_event
         log_buyer_event(request.user, seller_application, 'view')
 
+    # Unified view log — founder/seller view counts still come from the event
+    # tables above (they predate this model and already have history), but
+    # investor/buyer had no view tracking at all until now, and nothing
+    # anywhere tracked time-on-page, so ProfileView is logged for every role.
+    if request.user.is_authenticated and viewed_user != request.user:
+        from matchmaking.models import ProfileView
+        if not request.session.session_key:
+            request.session.create()
+        ProfileView.objects.create(
+            viewed_user=viewed_user, viewer=request.user, session_key=request.session.session_key,
+        )
+
     profile_view_count = None
     if application:
         from matchmaking.models import InvestorInterestEvent
@@ -208,10 +276,47 @@ def profile(request, username=None, pk=None):
     elif seller_application:
         from matchmaking.models import AcquisitionInterestEvent
         profile_view_count = AcquisitionInterestEvent.objects.filter(seller=seller_application, event_type='view').count()
+    elif investor_application or buyer_application:
+        from matchmaking.models import ProfileView
+        profile_view_count = ProfileView.objects.filter(viewed_user=viewed_user).count()
+
+    # Owner always sees their own count; other visitors only see it if the
+    # profile owner has left "Show Profile View Count" enabled in Settings.
+    if profile_view_count is not None and viewed_user != request.user:
+        from usersettings.models import UserSettings
+        if not UserSettings.for_user(viewed_user).show_profile_view_count:
+            profile_view_count = None
+
+    # IC Memo entry point — founder-only, gated the same way the memo view
+    # itself is gated (owner, staff, or an accepted-connection investor).
+    ic_memo_document_id = None
+    if application:
+        from zelda_api.ic_memo import can_view_ic_memo
+        if can_view_ic_memo(request.user, application):
+            from zelda_api.vector_models import DocumentSource
+            pitch_deck_doc = DocumentSource.objects.filter(
+                uploaded_by=viewed_user, document_type='pitch_deck', status='analyzed'
+            ).order_by('-created_at').first()
+            if pitch_deck_doc:
+                ic_memo_document_id = pitch_deck_doc.id
+
+    # Privacy-preserving trust badges — thresholded booleans only, never the
+    # underlying view/analyze counts. See matchmaking/growth_metrics.py::get_profile_trust_badges.
+    from matchmaking.growth_metrics import get_profile_trust_badges
+    profile_trust_badges = get_profile_trust_badges(application)
+
+    # Data Room entry point — same gate as the data room page itself
+    # (owner, staff, or an accepted-connection investor); titles are visible
+    # from there, actual downloads need a separate founder-approved request.
+    from matchmaking.models import can_view_data_room
+    can_view_founder_data_room = can_view_data_room(request.user, application) if application else False
 
     context = {
         "profile_user": viewed_user,
         "application": application,
+        "ic_memo_document_id": ic_memo_document_id,
+        "profile_trust_badges": profile_trust_badges,
+        "can_view_founder_data_room": can_view_founder_data_room,
         "investor_application": investor_application,
         "seller_application": seller_application,
         "buyer_application": buyer_application,
@@ -236,6 +341,180 @@ def profile(request, username=None, pk=None):
 @login_required
 def redirect_to_own_profile(request):
     return redirect("accounts:profile", username=request.user.username)
+
+
+@login_required
+def profile_analysis(request, username):
+    """
+    The private analytics home for all four account types — merges what
+    used to be founder-only "Deck Analytics" with profile-view tracking,
+    pitch video retention, blog/job/messaging metrics, and role-specific
+    deal outcomes. Strictly owner-only, unlike the old deck_analytics view
+    which also let staff peek.
+    """
+    viewed_user = get_object_or_404(get_user_model(), username=username)
+    if request.user != viewed_user:
+        messages.error(request, "You can only view your own Profile Analysis.")
+        return redirect('accounts:profile', username=viewed_user.username)
+
+    application = getattr(viewed_user, "match_founder_profile", None)
+    investor_application = getattr(viewed_user, "match_investor_profile", None)
+    seller_application = getattr(viewed_user, "match_seller_profile", None)
+    buyer_application = getattr(viewed_user, "match_buyer_profile", None)
+
+    from matchmaking.models import (
+        ProfileView, PitchVideoView,
+        InvestorInterestEvent, AcquisitionInterestEvent, MessageThread,
+        Connection, AcquisitionConnection,
+    )
+
+    now = timezone.now()
+    time_buckets_def = [
+        ('last_hour', now - timedelta(hours=1)),
+        ('last_day', now - timedelta(days=1)),
+        ('last_month', now - timedelta(days=30)),
+        ('last_year', now - timedelta(days=365)),
+    ]
+
+    # --- Profile Views: founder/seller keep their existing, longer-lived
+    # event tables; investor/buyer only ever had ProfileView to draw from. ---
+    if application:
+        view_qs = InvestorInterestEvent.objects.filter(founder=application, event_type='view')
+    elif seller_application:
+        view_qs = AcquisitionInterestEvent.objects.filter(seller=seller_application, event_type='view')
+    else:
+        view_qs = ProfileView.objects.filter(viewed_user=viewed_user)
+
+    total_views = view_qs.count()
+    view_buckets = {label: view_qs.filter(created_at__gte=cutoff).count() for label, cutoff in time_buckets_def}
+    view_buckets['all_time'] = total_views
+
+    avg_duration_seconds = ProfileView.objects.filter(
+        viewed_user=viewed_user, duration_seconds__isnull=False
+    ).aggregate(avg=Avg('duration_seconds'))['avg']
+
+    # --- Pitch Deck Analytics (founder, has deck) — shared with the IC memo
+    # generator via matchmaking.growth_metrics.get_deck_engagement_stats so
+    # the two surfaces can never disagree on the numbers. ---
+    from matchmaking.growth_metrics import get_deck_engagement_stats
+    deck_stats = get_deck_engagement_stats(application)
+
+    # --- Pitch Video Analytics (founder, has video) ---
+    video_stats = None
+    if application and application.pitch_video:
+        video_sessions = PitchVideoView.objects.filter(founder=application)
+        video_total_sessions = video_sessions.count()
+        retention_pct = None
+        if video_total_sessions:
+            ratios = [
+                row.max_watched_seconds / row.video_duration_seconds
+                for row in video_sessions if row.video_duration_seconds > 0
+            ]
+            if ratios:
+                retention_pct = round(100 * sum(ratios) / len(ratios), 1)
+        video_stats = {'total_sessions': video_total_sessions, 'retention_pct': retention_pct}
+
+    # --- Video -> Profile Conversion Funnel (Pitch Videos section) ---
+    pitch_video_funnel = None
+    from matchmaking.growth_metrics import get_pitch_video_funnel
+    if application and application.pitch_video:
+        pitch_video_funnel = get_pitch_video_funnel(application, 'founder')
+    elif seller_application and seller_application.pitch_video:
+        pitch_video_funnel = get_pitch_video_funnel(seller_application, 'seller')
+
+    # --- Blog Performance ---
+    blog_stats = None
+    if Article:
+        from blog.models import Comment
+        user_articles_qs = Article.objects.filter(author=viewed_user)
+        if user_articles_qs.exists():
+            top_comment = (
+                Comment.objects.filter(article__author=viewed_user)
+                .annotate(like_count=Count('likes'))
+                .order_by('-like_count', '-created_on')
+                .first()
+            )
+            blog_stats = {
+                'total_likes': sum(a.total_likes() for a in user_articles_qs),
+                'total_article_views': sum(a.views for a in user_articles_qs),
+                'top_article': user_articles_qs.order_by('-views').first(),
+                'top_comment': top_comment if top_comment and top_comment.like_count > 0 else None,
+            }
+
+    # --- Job Postings ---
+    job_stats = None
+    if JobListing:
+        user_jobs_qs = JobListing.objects.filter(poster=viewed_user)
+        if user_jobs_qs.exists():
+            job_stats = {
+                'listings': user_jobs_qs.order_by('-click_count'),
+                'total_clicks': sum(j.click_count for j in user_jobs_qs),
+            }
+
+    # --- Messaging ---
+    messaged_count = MessageThread.objects.filter(Q(user_a=viewed_user) | Q(user_b=viewed_user)).count()
+
+    # --- Deal Outcomes ---
+    founders_funded = Connection.objects.filter(investor=investor_application, status='FUNDED').count() if investor_application else None
+    deals_closed = AcquisitionConnection.objects.filter(buyer=buyer_application, status='CLOSED').count() if buyer_application else None
+
+    # --- Engagement Summary — already-logged event types nobody surfaces
+    # today. Founder/seller see engagement targeting them; investor/buyer
+    # see their own outbound activity (they're the actor, not the target). ---
+    engagement = None
+    if application:
+        events = InvestorInterestEvent.objects.filter(founder=application)
+        engagement = {
+            'Intro Requests Received': events.filter(event_type='intro_request').count(),
+            'Thumbs Up Received': events.filter(event_type='thumbs_up').count(),
+            'Memo Views': events.filter(event_type='memo_view').count(),
+            'Truth Delta Views': events.filter(event_type='truth_delta_view').count(),
+            'Times Analyzed': events.filter(event_type='analyze').count(),
+        }
+    elif seller_application:
+        events = AcquisitionInterestEvent.objects.filter(seller=seller_application)
+        engagement = {
+            'Intro Requests Received': events.filter(event_type='intro_request').count(),
+            'Thumbs Up Received': events.filter(event_type='thumbs_up').count(),
+            'Memo Views': events.filter(event_type='memo_view').count(),
+            'Truth Delta Views': events.filter(event_type='truth_delta_view').count(),
+            'Times Analyzed': events.filter(event_type='analyze').count(),
+        }
+    elif investor_application:
+        events = InvestorInterestEvent.objects.filter(investor=viewed_user)
+        engagement = {
+            'Intro Requests Sent': events.filter(event_type='intro_request').count(),
+            'Thumbs Up Given': events.filter(event_type='thumbs_up').count(),
+            'Analyses Run': events.filter(event_type='analyze').count(),
+        }
+    elif buyer_application:
+        events = AcquisitionInterestEvent.objects.filter(buyer=viewed_user)
+        engagement = {
+            'Intro Requests Sent': events.filter(event_type='intro_request').count(),
+            'Thumbs Up Given': events.filter(event_type='thumbs_up').count(),
+            'Analyses Run': events.filter(event_type='analyze').count(),
+        }
+
+    context = {
+        'profile_user': viewed_user,
+        'application': application,
+        'investor_application': investor_application,
+        'seller_application': seller_application,
+        'buyer_application': buyer_application,
+        'total_views': total_views,
+        'view_buckets': view_buckets,
+        'avg_duration_seconds': round(avg_duration_seconds, 1) if avg_duration_seconds else None,
+        'deck_stats': deck_stats,
+        'video_stats': video_stats,
+        'pitch_video_funnel': pitch_video_funnel,
+        'blog_stats': blog_stats,
+        'job_stats': job_stats,
+        'messaged_count': messaged_count,
+        'founders_funded': founders_funded,
+        'deals_closed': deals_closed,
+        'engagement': engagement,
+    }
+    return render(request, 'accounts/profile_analysis.html', context)
 
 
 # =====================================================================
@@ -412,3 +691,128 @@ def toggle_dm_view(request):
     except Exception as e:
         logger.exception("AJAX DM toggle update failed.")
         return JsonResponse({"status": "error", "message": str(e)}, status=400)
+
+
+ROLE_PROFILE_ATTRS = (
+    ('match_founder_profile', 'Founder'),
+    ('match_investor_profile', 'Investor'),
+    ('match_seller_profile', 'Seller'),
+    ('match_buyer_profile', 'Buyer'),
+)
+
+BUSINESS_VERIFICATION_RESEND_COOLDOWN = 60  # seconds
+
+
+@login_required
+def business_verification(request):
+    """
+    Self-serve business-email verification for the existing per-role
+    'Verified' badge. Renders current status: already verified, a pending
+    code awaiting entry, locked out (too many wrong attempts), or the
+    initial request-email form.
+    """
+    already_verified = any(
+        getattr(request.user, attr, None) and getattr(request.user, attr).is_verified
+        for attr, _ in ROLE_PROFILE_ATTRS
+    )
+    resolved_company_name = _resolve_company_name(request.user)
+    current_verification = BusinessEmailVerification.objects.filter(user=request.user).first()
+
+    return render(request, "accounts/business_verification.html", {
+        "already_verified": already_verified,
+        "resolved_company_name": resolved_company_name,
+        "current_verification": current_verification,
+    })
+
+
+@login_required
+@require_POST
+def business_verification_request(request):
+    business_email = (request.POST.get("business_email") or "").strip()
+
+    if not business_email or "@" not in business_email:
+        messages.error(request, "Enter a valid business email address.")
+        return redirect("accounts:business_verification")
+
+    resolved_company_name = _resolve_company_name(request.user)
+    if not resolved_company_name:
+        messages.error(request, "We couldn't find a company name on your account to verify against.")
+        return redirect("accounts:business_verification")
+
+    if not company_matches_email_domain(resolved_company_name, business_email):
+        messages.error(request, "That email domain doesn't match your company name.")
+        return redirect("accounts:business_verification")
+
+    cooldown_key = f"business_verify_cooldown:{request.user.id}"
+    if cache.get(cooldown_key):
+        messages.error(request, "Please wait a bit before requesting another code.")
+        return redirect("accounts:business_verification")
+
+    verification = BusinessEmailVerification.objects.create(
+        user=request.user, business_email=business_email,
+    )
+    cache.set(cooldown_key, True, timeout=BUSINESS_VERIFICATION_RESEND_COOLDOWN)
+
+    try:
+        send_mail(
+            subject="Your Interlink Foundry verification code",
+            message=(
+                f"Your Interlink Foundry business verification code is: {verification.code}\n\n"
+                f"This code expires in 30 minutes. If you didn't request this, you can safely ignore this email."
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[business_email],
+            fail_silently=True,
+        )
+        messages.success(request, f"A verification code was sent to {business_email}.")
+    except Exception:
+        messages.warning(request, "Code created, but the email failed to send.")
+
+    return redirect("accounts:business_verification")
+
+
+@login_required
+@require_POST
+def business_verification_confirm(request):
+    submitted_code = (request.POST.get("code") or "").strip()
+    verification = BusinessEmailVerification.objects.filter(user=request.user, status="PENDING").first()
+
+    if not verification:
+        messages.error(request, "Request a verification code first.")
+        return redirect("accounts:business_verification")
+
+    if timezone.now() > verification.expires_at:
+        verification.status = "EXPIRED"
+        verification.save(update_fields=["status"])
+        messages.error(request, "That code has expired. Request a new one.")
+        return redirect("accounts:business_verification")
+
+    if submitted_code != verification.code:
+        verification.attempts += 1
+        if verification.attempts >= BusinessEmailVerification.MAX_ATTEMPTS:
+            verification.status = "LOCKED"
+            verification.save(update_fields=["attempts", "status"])
+            messages.error(request, "Too many incorrect attempts. Request a new code.")
+        else:
+            verification.save(update_fields=["attempts"])
+            messages.error(request, "That code is incorrect.")
+        return redirect("accounts:business_verification")
+
+    verification.status = "VERIFIED"
+    verification.verified_at = timezone.now()
+    verification.save(update_fields=["status", "verified_at"])
+
+    verified_roles = []
+    for attr, label in ROLE_PROFILE_ATTRS:
+        profile = getattr(request.user, attr, None)
+        if profile:
+            profile.is_verified = True
+            profile.save(update_fields=["is_verified"])
+            verified_roles.append(label)
+
+    if verified_roles:
+        messages.success(request, f"You're now a verified {'/'.join(verified_roles)}!")
+    else:
+        messages.success(request, "Your business email is verified.")
+
+    return redirect("accounts:business_verification")

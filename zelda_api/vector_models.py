@@ -63,7 +63,11 @@ class DocumentSource(FoundryStandardMixin, models.Model):
     
     # Error tracking
     error_message = models.TextField(blank=True)
-    
+
+    # Staff moderation — default False means nothing changes for any
+    # existing document; only takes effect once a staff member hides one.
+    is_hidden_by_staff = models.BooleanField(default=False, help_text="Hides this document from everyone except the owner and staff.")
+
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -282,7 +286,23 @@ class IntelligenceMemo(FoundryStandardMixin, models.Model):
             "citations": self.citations_count,
             "created_at": self.created_at.isoformat(),
         }
-    
+
+    @property
+    def readiness_score(self):
+        """
+        investment_readiness is free text (Claude is prompted to format it
+        as "Score: XX/100\n..."), not a clean numeric field — this parses
+        that out for anything that needs a plain number (e.g. the public
+        readiness badge). Returns None rather than guessing when the text
+        doesn't match the expected format.
+        """
+        import re
+        match = re.search(r'Score:\s*(\d{1,3})', self.investment_readiness or '')
+        if not match:
+            return None
+        score = int(match.group(1))
+        return min(score, 100)
+
     def __str__(self):
         return f"Memo: {self.document.filename}"
 

@@ -47,6 +47,7 @@ urlpatterns = [
     # empty results) instead of this real search API. Fixed: this is now the one
     # at the path the frontend actually calls.
     path('search/', standard_views.ZeldaGlobalSearchAPIView.as_view(), name='global_search_api'),
+    path('ask/', standard_views.ZeldaAskAPIView.as_view(), name='ask'),
     path('journey-status/', standard_views.JourneyStatusAPIView.as_view(), name='journey_status'),
     path('pitch-analysis/', standard_views.PitchDeckAnalysisAPIView.as_view(), name='pitch_analysis'),
     path('documents/analyze/', standard_views.DocumentIntakeAPIView.as_view(), name='document_intake'),
@@ -58,6 +59,8 @@ urlpatterns = [
     path('ui/search/', standard_views.zelda_search_view, name='zelda_search_ui'),
     path('documents/<int:document_id>/verification/', standard_views.truth_delta_ui_view, name='truth_delta_ui'),
     path('analyze/founder/<str:founder_username>/', standard_views.analyze_founder_profile, name='analyze_founder'),
+    path('documents/<int:document_id>/ic-memo/', standard_views.ic_memo_view, name='ic_memo'),
+    path('documents/<int:document_id>/ic-memo/download/', standard_views.ic_memo_download_view, name='ic_memo_download'),
 
     # ──────────────────────────────────────────────────────────────────────────
     # BUSINESS VALUATION

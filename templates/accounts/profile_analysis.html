@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}Profile Analysis | Interlink Foundry{% endblock title %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0"><i class="bi bi-bar-chart-fill me-2"></i>Profile Analysis</h2>
+            <p class="text-muted small mb-0">Only visible to you.</p>
+        </div>
+        <a href="{% url 'accounts:profile' profile_user.username %}" class="btn btn-outline-dark btn-sm rounded-pill">
+            <i class="bi bi-arrow-left me-1"></i> Back to Profile
+        </a>
+    </div>
+
+    <!-- Profile Views -->
+    <div class="card shadow-sm border-0 p-4 mb-4">
+        <h6 class="fw-bold text-uppercase small text-muted mb-3">Profile Views</h6>
+        <div class="row g-3 mb-3">
+            <div class="col-6 col-md-3">
+                <div class="card p-3 bg-success text-white shadow-sm border-0 h-100">
+                    <small class="text-white-50 text-uppercase">Last Hour</small>
+                    <h3 class="fw-bold mb-0">{{ view_buckets.last_hour }}</h3>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card p-3 bg-primary text-white shadow-sm border-0 h-100">
+                    <small class="text-white-50 text-uppercase">Last Day</small>
+                    <h3 class="fw-bold mb-0">{{ view_buckets.last_day }}</h3>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card p-3 bg-info text-white shadow-sm border-0 h-100">
+                    <small class="text-white-50 text-uppercase">Last Month</small>
+                    <h3 class="fw-bold mb-0">{{ view_buckets.last_month }}</h3>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card p-3 bg-dark text-white shadow-sm border-0 h-100">
+                    <small class="text-white-50 text-uppercase">Last Year</small>
+                    <h3 class="fw-bold mb-0">{{ view_buckets.last_year }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="row g-3">
+            <div class="col-6 col-md-3">
+                <div class="card p-3 bg-warning text-dark shadow-sm border-0 h-100">
+                    <small class="text-uppercase">All Time</small>
+                    <h3 class="fw-bold mb-0">{{ total_views }}</h3>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card p-3 bg-light shadow-sm border h-100">
+                    <small class="text-muted text-uppercase">Avg. Time on Profile</small>
+                    <h3 class="fw-bold mb-0">
+                        {% if avg_duration_seconds %}{{ avg_duration_seconds }}s{% else %}&mdash;{% endif %}
+                    </h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if deck_stats %}
+    <!-- Pitch Deck Analytics -->
+    <div class="card shadow-sm border-0 p-4 mb-4">
+        <h6 class="fw-bold text-uppercase small text-muted mb-3">Pitch Deck</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-4">
+                <div class="card p-3 bg-success text-white shadow-sm border-0 h-100">
+                    <small class="text-white-50 text-uppercase">Total Sessions</small>
+                    <h2 class="fw-bold mb-0">{{ deck_stats.total_sessions }}</h2>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="card p-3 bg-primary text-white shadow-sm border-0 h-100">
+                    <small class="text-white-50 text-uppercase">Unique Viewers</small>
+                    <h2 class="fw-bold mb-0">{{ deck_stats.unique_viewers }}</h2>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="card p-3 bg-dark text-white shadow-sm border-0 h-100">
+                    <small class="text-white-50 text-uppercase">Avg. Session Time</small>
+                    <h2 class="fw-bold mb-0">{{ deck_stats.avg_session_time }}s</h2>
+                </div>
+            </div>
+        </div>
+        {% if deck_stats.total_sessions %}
+        <h6 class="fw-bold text-uppercase small text-muted mb-3">Average Time Per Slide</h6>
+        <canvas id="slideChart" height="80"></canvas>
+        {% else %}
+        <p class="text-muted mb-0">No views yet — analytics will appear once investors open this deck.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if video_stats %}
+    <!-- Pitch Video Analytics -->
+    <div class="card shadow-sm border-0 p-4 mb-4">
+        <h6 class="fw-bold text-uppercase small text-muted mb-3">Pitch Video</h6>
+        <div class="row g-3">
+            <div class="col-6 col-md-4">
+                <div class="card p-3 bg-success text-white shadow-sm border-0 h-100">
+                    <small class="text-white-50 text-uppercase">Total Views</small>
+                    <h2 class="fw-bold mb-0">{{ video_stats.total_sessions }}</h2>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="card p-3 bg-primary text-white shadow-sm border-0 h-100">
+                    <small class="text-white-50 text-uppercase">Retention Rate</small>
+                    <h2 class="fw-bold mb-0">
+                        {% if video_stats.retention_pct is not None %}{{ video_stats.retention_pct }}%{% else %}&mdash;{% endif %}
+                    </h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if pitch_video_funnel %}
+    <!-- Video -> Profile Conversion Funnel -->
+    <div class="card shadow-sm border-0 p-4 mb-4">
+        <h6 class="fw-bold text-uppercase small text-muted mb-1">Video &rarr; Profile Conversion</h6>
+        <p class="small text-muted mb-3">Of the people who played your pitch video, how many went further &mdash; each figure is a share of your video's viewers, not of the stage before it.</p>
+        <div class="row g-3 text-center">
+            <div class="col-6 col-md">
+                <div class="card p-3 bg-dark text-white shadow-sm border-0 h-100">
+                    <small class="text-white-50 text-uppercase">Viewers</small>
+                    <h2 class="fw-bold mb-0">{{ pitch_video_funnel.plays }}</h2>
+                </div>
+            </div>
+            <div class="col-6 col-md">
+                <div class="card p-3 bg-success text-white shadow-sm border-0 h-100">
+                    <small class="text-white-50 text-uppercase">Also Opened Profile</small>
+                    <h2 class="fw-bold mb-0">{{ pitch_video_funnel.profile_opens }}</h2>
+                    <small class="text-white-50">{% if pitch_video_funnel.profile_open_pct is not None %}{{ pitch_video_funnel.profile_open_pct }}% of viewers{% else %}&mdash;{% endif %}</small>
+                </div>
+            </div>
+            <div class="col-6 col-md">
+                <div class="card p-3 bg-primary text-white shadow-sm border-0 h-100">
+                    <small class="text-white-50 text-uppercase">Also Ran Zelda Analysis</small>
+                    <h2 class="fw-bold mb-0">{{ pitch_video_funnel.analyses }}</h2>
+                    <small class="text-white-50">{% if pitch_video_funnel.analysis_pct is not None %}{{ pitch_video_funnel.analysis_pct }}% of viewers{% else %}&mdash;{% endif %}</small>
+                </div>
+            </div>
+            <div class="col-6 col-md">
+                <div class="card p-3 bg-warning text-dark shadow-sm border-0 h-100">
+                    <small class="text-uppercase">Also Requested Intro</small>
+                    <h2 class="fw-bold mb-0">{{ pitch_video_funnel.intro_requests }}</h2>
+                    <small>{% if pitch_video_funnel.intro_request_pct is not None %}{{ pitch_video_funnel.intro_request_pct }}% of viewers{% else %}&mdash;{% endif %}</small>
+                </div>
+            </div>
+            <div class="col-6 col-md">
+                <div class="card p-3 bg-info text-white shadow-sm border-0 h-100">
+                    <small class="text-white-50 text-uppercase">Also Messaged</small>
+                    <h2 class="fw-bold mb-0">{{ pitch_video_funnel.conversations }}</h2>
+                    <small class="text-white-50">{% if pitch_video_funnel.conversation_pct is not None %}{{ pitch_video_funnel.conversation_pct }}% of viewers{% else %}&mdash;{% endif %}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if blog_stats %}
+    <!-- Blog Performance -->
+    <div class="card shadow-sm border-0 p-4 mb-4">
+        <h6 class="fw-bold text-uppercase small text-muted mb-3">Blog Performance</h6>
+        <div class="row g-3 mb-3">
+            <div class="col-6 col-md-4">
+                <div class="card p-3 bg-success text-white shadow-sm border-0 h-100">
+                    <small class="text-white-50 text-uppercase">Total Likes</small>
+                    <h2 class="fw-bold mb-0">{{ blog_stats.total_likes }}</h2>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="card p-3 bg-primary text-white shadow-sm border-0 h-100">
+                    <small class="text-white-50 text-uppercase">Total Article Views</small>
+                    <h2 class="fw-bold mb-0">{{ blog_stats.total_article_views }}</h2>
+                </div>
+            </div>
+        </div>
+        {% if blog_stats.top_article %}
+        <p class="small mb-2"><strong>Most popular article:</strong>
+            <a href="{% url 'blog:article_detail' blog_stats.top_article.pk %}">{{ blog_stats.top_article.title }}</a>
+            ({{ blog_stats.top_article.views }} view{{ blog_stats.top_article.views|pluralize }})
+        </p>
+        {% endif %}
+        {% if blog_stats.top_comment %}
+        <p class="small text-muted mb-0"><strong>Most liked comment:</strong>
+            "{{ blog_stats.top_comment.body|truncatechars:120 }}" &mdash; {{ blog_stats.top_comment.author.username }}
+            ({{ blog_stats.top_comment.total_likes }} like{{ blog_stats.top_comment.total_likes|pluralize }})
+        </p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if job_stats %}
+    <!-- Job Postings -->
+    <div class="card shadow-sm border-0 p-4 mb-4">
+        <h6 class="fw-bold text-uppercase small text-muted mb-3">Job Postings</h6>
+        <p class="small mb-3"><strong>Total clicks:</strong> {{ job_stats.total_clicks }}</p>
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead><tr><th>Listing</th><th class="text-end">Clicks</th></tr></thead>
+                <tbody>
+                {% for job in job_stats.listings %}
+                    <tr>
+                        <td><a href="{% url 'jobs:detail' job.pk %}">{{ job.title }}</a></td>
+                        <td class="text-end">{{ job.click_count }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Messaging -->
+    <div class="card shadow-sm border-0 p-4 mb-4">
+        <h6 class="fw-bold text-uppercase small text-muted mb-3">Messaging</h6>
+        <p class="small mb-0"><strong>{{ messaged_count }}</strong> profile{{ messaged_count|pluralize }} messaged.</p>
+    </div>
+
+    {% if founders_funded is not None or deals_closed is not None %}
+    <!-- Deal Outcomes -->
+    <div class="card shadow-sm border-0 p-4 mb-4">
+        <h6 class="fw-bold text-uppercase small text-muted mb-3">Deal Outcomes</h6>
+        {% if founders_funded is not None %}
+        <p class="small mb-0"><strong>{{ founders_funded }}</strong> founder{{ founders_funded|pluralize }} funded.</p>
+        {% endif %}
+        {% if deals_closed is not None %}
+        <p class="small mb-0"><strong>{{ deals_closed }}</strong> deal{{ deals_closed|pluralize }} closed.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if engagement %}
+    <!-- Engagement Summary -->
+    <div class="card shadow-sm border-0 p-4 mb-4">
+        <h6 class="fw-bold text-uppercase small text-muted mb-3">Engagement Summary</h6>
+        <div class="row g-3">
+            {% for label, value in engagement.items %}
+            <div class="col-6 col-md-3">
+                <div class="card p-3 bg-light shadow-sm border h-100">
+                    <small class="text-muted text-uppercase">{{ label }}</small>
+                    <h4 class="fw-bold mb-0">{{ value }}</h4>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if deck_stats.total_sessions %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    new Chart(document.getElementById('slideChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: {{ deck_stats.slide_labels|safe }},
+            datasets: [{ label: 'Avg. seconds', data: {{ deck_stats.slide_durations|safe }}, backgroundColor: '#0d6efd' }]
+        },
+        options: { plugins: { legend: { display: false } } }
+    });
+});
+</script>
+{% endif %}
+{% endblock scripts %}

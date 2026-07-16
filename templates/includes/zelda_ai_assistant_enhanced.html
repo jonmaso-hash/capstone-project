@@ -87,6 +87,31 @@
         z-index: 4;
     }
 
+    /* Explains *why* the Zelda icon just changed color — see
+       showStageChangeToast(). Positioned just above the icon (which sits
+       bottom-0 end-0 m-4, ~70px tall), fades in/out over ~1s. */
+    #zelda-stage-toast {
+        position: fixed;
+        bottom: 100px;
+        right: 24px;
+        z-index: 1051;
+        max-width: 260px;
+        color: #fff;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        line-height: 1.3;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        pointer-events: none;
+    }
+    #zelda-stage-toast.show { opacity: 1; }
+    #zelda-stage-toast.zelda-stage-red { background: var(--zelda-danger); }
+    #zelda-stage-toast.zelda-stage-yellow { background: var(--zelda-accent); color: #1f2937; }
+    #zelda-stage-toast.zelda-stage-green { background: var(--zelda-success); }
+
     /* Sidebar */
     #aiAgentSidebar {
         animation: slideInRight 0.4s ease-out;
@@ -371,6 +396,10 @@
         
         <!-- TAB NAVIGATION -->
         <div class="zelda-tabs" style="margin: -1rem -1rem 0 -1rem; padding: 0 1rem;">
+            <button class="zelda-tab" data-tab="notifications">
+                <i class="bi bi-bell me-2"></i>Notifications
+                <span id="zelda-tab-notif-badge" class="badge bg-danger rounded-pill ms-1" style="display:none; font-size: 0.65rem;"></span>
+            </button>
             <button class="zelda-tab active" data-tab="search">
                 <i class="bi bi-search me-2"></i>Search
             </button>
@@ -393,9 +422,44 @@
 
         </div>
 
+        <!-- TAB: NOTIFICATIONS -->
+        <div id="tab-notifications" class="tab-content" style="display: none; flex-direction: column; gap: 1rem;">
+            <div class="zelda-card p-4">
+                <h6 class="fw-bold text-dark mb-3">
+                    <i class="bi bi-bell text-primary me-2"></i>Notifications
+                </h6>
+                <div id="notifications-loading" class="text-center py-4">
+                    <div class="spinner-border spinner-border-sm text-warning me-2"></div>
+                    <span class="small text-muted">Loading...</span>
+                </div>
+                <div id="notifications-empty" class="text-center py-4 text-muted small" style="display:none;">
+                    <i class="bi bi-bell-slash fs-4 d-block mb-2"></i>
+                    Nothing new.
+                </div>
+                <div id="notifications-list" class="d-flex flex-column gap-2"></div>
+            </div>
+        </div>
+
         <!-- TAB: SEARCH -->
         <div id="tab-search" class="tab-content active" style="display: flex; flex-direction: column; gap: 1rem;">
-            
+
+            <!-- Ask Zelda -->
+            <div class="zelda-card p-4">
+                <h6 class="fw-bold text-dark mb-3">
+                    <i class="bi bi-stars text-primary me-2"></i>Ask Zelda
+                </h6>
+                <form id="zelda-ask-form">
+                    <textarea
+                        id="zeldaAskQuery"
+                        class="zelda-input w-100"
+                        rows="2"
+                        placeholder='e.g. "Series C founder seeking $3M, burn under $40k/mo" — buyers can ask "HVAC business for sale under $5M EBITDA"'></textarea>
+                    <button type="submit" class="zelda-button mt-2">
+                        <i class="bi bi-arrow-right me-1"></i>Ask Zelda
+                    </button>
+                </form>
+            </div>
+
             <!-- Global Search -->
             <div class="zelda-card p-4">
                 <h6 class="fw-bold text-dark mb-3">
@@ -690,7 +754,134 @@
             // Show selected tab
             document.getElementById(`tab-${tabName}`).style.display = 'flex';
             this.classList.add('active');
+
+            if (tabName === 'notifications') {
+                loadNotifications();
+            }
         });
+    });
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // NOTIFICATIONS — the red badge on the Zelda icon reflects unread
+    // Notification rows (intro requests, matches, etc). Viewing this tab is
+    // what actually tells the user what they were notified about; the list
+    // endpoint marks everything read as a side effect of fetching it
+    // (notifications/views.py::notification_list_api), so the badge clears
+    // the moment they look, instead of persisting forever.
+    // ──────────────────────────────────────────────────────────────────────────
+
+    function updateUnreadBadge(count) {
+        const iconBadge = document.getElementById('zelda-unread-badge');
+        const tabBadge = document.getElementById('zelda-tab-notif-badge');
+        const display = count > 0 ? (count > 9 ? '9+' : String(count)) : '';
+        [iconBadge, tabBadge].forEach(el => {
+            if (!el) return;
+            el.textContent = display;
+            el.style.display = count > 0 ? 'flex' : 'none';
+        });
+    }
+
+    // Tells the user why the Zelda icon just changed color — a 1s-visible,
+    // fading message anchored to the icon. Reuses a single DOM node across
+    // calls rather than creating a new one each time, in case this ever
+    // fires twice in quick succession.
+    let zeldaStageToastTimer = null;
+    function showStageChangeToast(color, message) {
+        let toast = document.getElementById('zelda-stage-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'zelda-stage-toast';
+            document.body.appendChild(toast);
+        }
+
+        clearTimeout(zeldaStageToastTimer);
+        toast.classList.remove('zelda-stage-red', 'zelda-stage-yellow', 'zelda-stage-green', 'show');
+        toast.textContent = message;
+        toast.classList.add(`zelda-stage-${color}`);
+
+        // Force a reflow so the browser registers the "no .show" state
+        // before re-adding it — otherwise the opacity transition doesn't
+        // replay on back-to-back calls.
+        void toast.offsetWidth;
+        toast.classList.add('show');
+
+        zeldaStageToastTimer = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 1000);
+    }
+
+    async function loadNotifications() {
+        const loading = document.getElementById('notifications-loading');
+        const empty = document.getElementById('notifications-empty');
+        const list = document.getElementById('notifications-list');
+
+        loading.style.display = 'block';
+        empty.style.display = 'none';
+        list.innerHTML = '';
+
+        try {
+            const response = await fetch('/notifications/api/list/', { credentials: 'same-origin' });
+            const items = await response.json();
+
+            loading.style.display = 'none';
+
+            if (!items.length) {
+                empty.style.display = 'block';
+            } else {
+                list.innerHTML = items.map(item => {
+                    const body = `
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="bi bi-info-circle-fill text-primary mt-1"></i>
+                            <span class="small text-dark flex-grow-1">${item.message}</span>
+                            <button type="button" class="btn-close ms-2 flex-shrink-0 zelda-notif-delete"
+                                    data-id="${item.id}" aria-label="Delete notification"
+                                    title="Delete notification" style="font-size:0.65rem;"></button>
+                        </div>`;
+                    return item.target_url
+                        ? `<a href="${item.target_url}" class="zelda-card p-3 text-decoration-none" style="display:block;">${body}</a>`
+                        : `<div class="zelda-card p-3">${body}</div>`;
+                }).join('');
+            }
+
+            // The list endpoint already marked these rows read server-side —
+            // reflect that immediately instead of waiting for the next
+            // full-page loadJourneyStatus() call.
+            updateUnreadBadge(0);
+        } catch (err) {
+            loading.style.display = 'none';
+            addLogEntry(`Notifications load error: ${err.message}`, 'error');
+        }
+    }
+
+    // Deletes a notification the user has already read but doesn't want to
+    // keep seeing in the list. Card is scoped via .closest('.zelda-card')
+    // since a card may render as either an <a> (has target_url) or a <div>.
+    document.getElementById('notifications-list').addEventListener('click', async (e) => {
+        const delBtn = e.target.closest('.zelda-notif-delete');
+        if (!delBtn) return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        const cardEl = delBtn.closest('.zelda-card');
+        delBtn.disabled = true;
+
+        try {
+            const response = await fetch(`/notifications/api/${delBtn.dataset.id}/delete/`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+            if (cardEl) cardEl.remove();
+            const list = document.getElementById('notifications-list');
+            if (list && !list.children.length) {
+                document.getElementById('notifications-empty').style.display = 'block';
+            }
+        } catch (err) {
+            delBtn.disabled = false;
+            addLogEntry(`Notification delete error: ${err.message}`, 'error');
+        }
     });
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -735,6 +926,51 @@
         }
 
         document.getElementById('globalAgentQuery').value = '';
+    });
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // ASK ZELDA — natural-language founder search. Claude only extracts
+    // filters server-side; the response text and results are always real
+    // query results, so unlike globalAgentQuery's handler we read the JSON
+    // body even on a non-2xx response (429 rate limit, 503 circuit open)
+    // instead of throwing, so the server's actual message reaches the user.
+    // ──────────────────────────────────────────────────────────────────────────
+
+    document.getElementById('zelda-ask-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const question = document.getElementById('zeldaAskQuery').value.trim();
+        if (!question) return;
+
+        addLogEntry(`Asking Zelda: "${question}"`, 'info');
+
+        try {
+            const response = await fetch(`${ZELDA_API}/ask/`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({ q: question })
+            });
+
+            const data = await response.json();
+
+            if (data.status === 'error') {
+                addLogEntry(data.message || `Error: HTTP ${response.status}`, 'error');
+                renderSearchResults([]);
+            } else {
+                if (data.response) {
+                    addLogEntry(data.response, 'success');
+                }
+                renderSearchResults(data.results || []);
+            }
+
+        } catch (err) {
+            addLogEntry(`Error: ${err.message}`, 'error');
+        }
+
+        document.getElementById('zeldaAskQuery').value = '';
     });
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -1086,15 +1322,19 @@
                 toggleBtn.classList.add(`zelda-stage-${data.stage_color}`);
             }
 
-            const badge = document.getElementById('zelda-unread-badge');
-            if (badge) {
-                if (data.unread_notifications > 0) {
-                    badge.textContent = data.unread_notifications > 9 ? '9+' : data.unread_notifications;
-                    badge.style.display = 'flex';
-                } else {
-                    badge.style.display = 'none';
-                }
+            // Explain *why* the icon just changed color — headline is the
+            // same "what this stage means" text already shown in the My
+            // Progress tab, so there's one source of truth for the copy.
+            // Only fires on an actual color change (tracked in
+            // localStorage, not per-page-load) so it doesn't nag on every
+            // navigation once the user has already seen it for this stage.
+            const lastSeenColor = localStorage.getItem('zeldaLastSeenStageColor');
+            if (data.stage_color !== lastSeenColor) {
+                showStageChangeToast(data.stage_color, data.headline);
+                localStorage.setItem('zeldaLastSeenStageColor', data.stage_color);
             }
+
+            updateUnreadBadge(data.unread_notifications);
 
             document.getElementById('progress-loading').style.display = 'none';
             const content = document.getElementById('progress-content');

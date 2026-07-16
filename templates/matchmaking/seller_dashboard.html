@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load humanize %}
+{% load growth_tags %}
 
 {% block title %}Seller Dashboard | Interlink Foundry{% endblock title %}
 
@@ -24,11 +25,35 @@
             </p>
         </div>
         <div class="col-md-4 text-md-end mt-3 mt-md-0 d-flex gap-2 justify-content-md-end">
+            {% if seller_profile.is_premium %}
+            <a href="{% url 'matchmaking:seller_interest_analytics' %}" class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-medium">
+                <i class="bi bi-bar-chart-fill me-1"></i> Interest Analytics
+            </a>
+            {% else %}
+            <a href="{% url 'billing:billing_page' %}" class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-medium">
+                <i class="bi bi-star-fill me-1"></i> Upgrade for Interest Analytics
+            </a>
+            {% endif %}
             <a href="{% url 'usersettings:edit_seller_profile' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-medium">
                 <i class="bi bi-pencil-square me-1"></i> Edit Listing
             </a>
         </div>
     </div>
+
+    {% badge_embed_snippet %}
+
+    {% if platform_insights %}
+    <div class="card border-0 bg-light rounded-4 mb-4">
+        <div class="card-body p-3 p-md-4">
+            <h6 class="text-uppercase fw-bold text-muted small mb-2 tracking-wider"><i class="bi bi-graph-up me-1"></i>Platform Insight</h6>
+            <ul class="mb-0 small text-secondary ps-3">
+                {% for insight in platform_insights %}
+                <li class="mb-1">{{ insight }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
 
     <div class="card bg-warning-subtle border border-warning-subtle rounded-3 shadow-sm mb-5">
         <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
@@ -57,6 +82,20 @@
             </a>
         </div>
     </div>
+
+    {% if not accepted_connections %}
+    <div class="alert alert-warning d-flex align-items-center gap-3 mb-4" role="alert">
+        <i class="bi bi-signpost-2-fill fs-4"></i>
+        <div>
+            {% if matches %}
+                <strong>You have {{ matches|length }} acquirer match{{ matches|pluralize:"es" }}.</strong>
+                Request an introduction below to get started.
+            {% else %}
+                <strong>No matches yet.</strong> Matches appear here as buyers join — check back soon, or broaden your listing details in your profile.
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 
     <div class="mb-5">
         <div class="d-flex align-items-center gap-2 mb-3">

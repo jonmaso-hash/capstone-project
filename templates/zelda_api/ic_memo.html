@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}IC Memo — {{ company_name }} | Interlink Foundry{% endblock title %}
+
+{% block css %}
+<style>
+    @media print {
+        nav, #ai-agent-toggle, #aiAgentSidebar, footer, .no-print {
+            display: none !important;
+        }
+        .container { max-width: 100% !important; }
+        body { padding: 0 !important; }
+    }
+    .ic-memo-section {
+        break-inside: avoid;
+        white-space: pre-line;
+        line-height: 1.6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 800px;">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2 no-print">
+        <a href="{% url 'accounts:profile' application.user.username %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="bi bi-arrow-left me-1"></i> Back to Profile
+        </a>
+        <div class="d-flex gap-2">
+            <a href="{% url 'zelda_api:ic_memo_download' pitch_deck_doc.id %}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                <i class="bi bi-file-earmark-text me-1"></i> Download Markdown
+            </a>
+            <button type="button" class="btn btn-dark btn-sm rounded-pill px-3" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i> Print / Save as PDF
+            </button>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <p class="text-uppercase small text-muted fw-bold mb-1">Investment Committee Memo</p>
+        <h1 class="fw-bold mb-0">{{ company_name }}</h1>
+    </div>
+
+    {% if memo_meta %}
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card p-3 bg-dark text-white shadow-sm border-0 h-100">
+                <small class="text-white-50 text-uppercase">Recommendation</small>
+                <h6 class="fw-bold mb-0">{{ memo_meta.recommendation }}</h6>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 shadow-sm border-0 h-100">
+                <small class="text-muted text-uppercase">Memo Completeness</small>
+                <h6 class="fw-bold mb-0">{{ memo_meta.completeness_score }}%</h6>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 shadow-sm border-0 h-100">
+                <small class="text-muted text-uppercase">Citations</small>
+                <h6 class="fw-bold mb-0">{{ memo_meta.citations_count }}</h6>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 shadow-sm border-0 h-100">
+                <small class="text-muted text-uppercase">Generated</small>
+                <h6 class="fw-bold mb-0">{{ memo_meta.generated_at|date:"M j, Y" }}</h6>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if memo_sections %}
+        {% for section in memo_sections %}
+        <div class="mb-4 ic-memo-section">
+            <h5 class="fw-bold border-bottom pb-2 mb-2">{{ section.label }}</h5>
+            <p class="text-secondary mb-0">{{ section.text }}</p>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="alert alert-secondary">No intelligence memo has been generated for this founder yet.</div>
+    {% endif %}
+
+    {% if truth_delta %}
+    <div class="mb-4 ic-memo-section">
+        <h5 class="fw-bold border-bottom pb-2 mb-2">Truth Delta Signal</h5>
+        <p class="small text-muted fst-italic mb-2">
+            Preliminary signal only — automated claim verification against outside sources isn't fully built yet,
+            so treat this as a starting point for diligence, not a verified fact-check.
+        </p>
+        <p class="mb-1"><strong>Signal Score:</strong> {{ truth_delta.overall_truth_score }}/100</p>
+        {% if truth_delta.summary %}<p class="text-secondary mb-0">{{ truth_delta.summary }}</p>{% endif %}
+    </div>
+    {% endif %}
+
+    {% if valuation %}
+    <div class="mb-4 ic-memo-section">
+        <h5 class="fw-bold border-bottom pb-2 mb-2">Valuation</h5>
+        {% if valuation.valuation_low is not None and valuation.valuation_high is not None %}
+        <p class="mb-1"><strong>Range:</strong> ${{ valuation.valuation_low|floatformat:0|intcomma }} – ${{ valuation.valuation_high|floatformat:0|intcomma }}</p>
+        {% endif %}
+        <p class="mb-1"><strong>Confidence:</strong> {{ valuation.confidence_score|floatformat:0 }}/100</p>
+        {% if valuation.valuation_summary %}<p class="text-secondary mb-0">{{ valuation.valuation_summary }}</p>{% endif %}
+    </div>
+    {% endif %}
+
+    <div class="mb-4 ic-memo-section">
+        <h5 class="fw-bold border-bottom pb-2 mb-2">Financial Snapshot</h5>
+        <ul class="list-unstyled mb-0">
+            <li>Raising: {% if financials.raising_amount %}${{ financials.raising_amount|floatformat:0|intcomma }}{% else %}not disclosed{% endif %}</li>
+            <li>Current revenue: {% if financials.current_revenue is not None %}${{ financials.current_revenue|floatformat:0|intcomma }}{% else %}not disclosed{% endif %}</li>
+            <li>Monthly burn: {% if financials.monthly_burn_rate is not None %}${{ financials.monthly_burn_rate|floatformat:0|intcomma }}{% else %}not disclosed{% endif %}</li>
+            <li>Runway: {% if financials.runway_months %}{{ financials.runway_months }} months{% else %}not calculated{% endif %}</li>
+            <li>Team size: {% if financials.team_size %}{{ financials.team_size }}{% else %}not disclosed{% endif %}</li>
+            <li>Zelda Score: {{ financials.zelda_score }}/99</li>
+        </ul>
+    </div>
+
+    {% if deck_engagement %}
+    <div class="mb-4 ic-memo-section">
+        <h5 class="fw-bold border-bottom pb-2 mb-2">Pitch Deck Engagement</h5>
+        <ul class="list-unstyled mb-2">
+            <li>Total viewing sessions: {{ deck_engagement.total_sessions }}</li>
+            <li>Unique viewers: {{ deck_engagement.unique_viewers }}</li>
+            <li>Average session time: {{ deck_engagement.avg_session_time }}s</li>
+        </ul>
+        {% if deck_engagement.slides %}
+        <table class="table table-sm">
+            <thead><tr class="text-muted small text-uppercase"><th>Slide</th><th class="text-end">Avg. Time (s)</th><th class="text-end">Views</th></tr></thead>
+            <tbody>
+                {% for slide in deck_engagement.slides %}
+                <tr><td>{{ slide.slide_number }}</td><td class="text-end">{{ slide.avg_duration }}</td><td class="text-end">{{ slide.views }}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

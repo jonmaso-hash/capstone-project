@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Interest Analytics — {{ seller_profile.company_name }} | Interlink Foundry{% endblock title %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0"><i class="bi bi-bar-chart-fill me-2"></i>Interest Analytics</h2>
+        <a href="{% url 'matchmaking:seller_dashboard' %}" class="btn btn-outline-dark btn-sm rounded-pill">
+            <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+        </a>
+    </div>
+    <p class="text-muted small mb-4">Every touchpoint a buyer has had with your listing — a Seller Premium perk.</p>
+
+    <div class="row g-3 mb-4">
+        {% for stat in event_summary %}
+        <div class="col-6 col-md-3">
+            <div class="card p-3 shadow-sm border-0 h-100">
+                <small class="text-muted text-uppercase" style="font-size: 0.7rem;">{{ stat.label }}</small>
+                <h3 class="fw-bold mb-0">{{ stat.count }}</h3>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="card shadow-sm border-0 p-4">
+        <h6 class="fw-bold text-uppercase small text-muted mb-3">Recent Activity</h6>
+        {% if recent_events %}
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr class="text-muted small text-uppercase">
+                        <th>Buyer</th>
+                        <th>Action</th>
+                        <th>When</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in recent_events %}
+                    <tr>
+                        <td class="fw-semibold">{{ event.buyer.username }}</td>
+                        <td>{{ event.get_event_type_display }}</td>
+                        <td class="text-muted small">{{ event.created_at|date:"M j, Y g:i A" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No buyer activity yet — analytics will appear as buyers view and engage with your listing.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

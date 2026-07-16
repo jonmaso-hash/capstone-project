@@ -6,11 +6,30 @@ from .forms import contactForm  # Added your form import back
 
 # Create your views here.
 def home_view(request):
-    from matchmaking.models import Application, InvestorApplication
+    from matchmaking.models import log_page_event, Application, SellerApplication
+    log_page_event(request, 'landing_view')
+
+    featured_founders = Application.objects.filter(is_staff_featured=True, is_private=False).exclude(review_status='DENIED')[:6]
+    featured_sellers = SellerApplication.objects.filter(is_staff_featured=True, is_private=False).exclude(review_status='DENIED')[:6]
+
     return render(request, 'pages/home.html', {
-        'founder_count': Application.objects.count(),
-        'investor_count': InvestorApplication.objects.count(),
+        'featured_founders': featured_founders,
+        'featured_sellers': featured_sellers,
     })
+
+def waitlist_join(request):
+    from ops.models import WaitlistEntry
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+        name = request.POST.get('name', '').strip()
+        if not email:
+            messages.error(request, "Email is required.")
+        else:
+            WaitlistEntry.objects.get_or_create(email=email, defaults={'name': name})
+            messages.success(request, "You're on the list — we'll be in touch.")
+        return redirect('pages:waitlist')
+    return render(request, 'pages/waitlist.html')
+
 
 def services(request):
     return render(request, 'pages/services.html')
@@ -27,7 +46,7 @@ def thank_you_view(request):
     application = getattr(request.user, 'match_founder_profile', None)
     if application and application.founder_name:
         applicant_name = application.founder_name
-    return render(request, 'pages/thank_you.html', {'applicant_name': applicant_name})
+    return render(request, 'pages/thank_you.html', {'applicant_name': applicant_name, 'application': application})
 
 def contact_view(request):
     if request.method == 'POST':

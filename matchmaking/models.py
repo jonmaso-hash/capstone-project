@@ -1,9 +1,11 @@
+import re
 from django.db import models
 from django.conf import settings
 from django.core.validators import FileExtensionValidator
 from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import timedelta
+from pgvector.django import VectorField
 from .validators import MaxFileSizeValidator
 
 REVIEW_STATUS_CHOICES = [
@@ -11,6 +13,29 @@ REVIEW_STATUS_CHOICES = [
     ('PENDING', 'Pending Review'),
     ('DENIED', 'Denied'),
 ]
+
+# A founder/seller gets a free 24-hour window to fix typos/refine their
+# vector-field answers right after saving — editing again inside that window
+# just pushes the window out another 24 hours rather than starting the
+# 30-day lock early. The 30-day lock only actually begins once 24 hours
+# pass with no further edits.
+VECTOR_FIELD_EDIT_GRACE_PERIOD = timedelta(hours=24)
+VECTOR_FIELD_LOCK_DURATION = timedelta(days=30)
+
+# "Profile complete" is measured everywhere (analytics.py's funnel,
+# growth_metrics.py's platform insights) as description_vector__isnull=False.
+# Without a floor, a one-word description ("test", "TBD") used to count as
+# complete the instant the post_save signal saw any non-empty text at all.
+# 10 words is deliberately low — just enough to exclude placeholder text
+# without rejecting a real, if brief, one-sentence description.
+MIN_FOUNDER_DESCRIPTION_WORDS = 10
+
+
+def founder_description_meets_word_count(description):
+    """Gates AI match-vector generation for Application.description (and
+    therefore the 'profile complete' signal derived from description_vector
+    everywhere it's read) on a minimum word count."""
+    return bool(description) and len(description.split()) >= MIN_FOUNDER_DESCRIPTION_WORDS
 
 
 class Application(models.Model):
@@ -67,7 +92,26 @@ class Application(models.Model):
 )
     
     description_vector = models.JSONField(blank=True, null=True)
-    
+
+    # Multi-vector chunking — additive, additional to description_vector
+    # above (which stays exactly as-is and keeps serving every existing
+    # call site unchanged). Each chunk is embedded from a specific,
+    # already-existing free-text/structured field rather than an invented
+    # category with no source text. Populated lazily by matchmaking/signals.py,
+    # same pattern as description_vector.
+    problem_solution_vector = models.JSONField(blank=True, null=True, help_text="Embedding of 'description' (Executive Summary).")
+    capital_plan_vector = models.JSONField(blank=True, null=True, help_text="Embedding of 'reason_for_capital'.")
+    market_context_vector = models.JSONField(blank=True, null=True, help_text="Embedding of sector/stage/geography combined.")
+
+    # Postgres-only ANN fast path — a real pgvector column (fixed 768-dim,
+    # separate from the full-size description_vector above) with an HNSW
+    # index, used by find_similar_startups to avoid an O(n) Python cosine
+    # scan at scale. On SQLite this field exists in Django's model state but
+    # has no underlying column (see migration 0049) — nothing outside the
+    # postgres-guarded code path in find_similar_startups/signals.py may
+    # touch it.
+    description_vector_pg = VectorField(dimensions=384, blank=True, null=True)
+
     # Basic Info
     company_name = models.CharField(max_length=255)
     company_website = models.URLField(max_length=500, blank=True, null=True)
@@ -101,11 +145,37 @@ class Application(models.Model):
     # Metadata
     is_private = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
+    is_premium = models.BooleanField(default=False, help_text="Founder Premium: Featured Placement on the bulletin board.")
+    is_staff_featured = models.BooleanField(default=False, help_text="Staff-curated Featured Placement — independent of paid premium status.")
+    is_hidden_by_staff = models.BooleanField(default=False, help_text="Hides this pitch deck/video from everyone except the owner and staff.")
     review_status = models.CharField(max_length=20, choices=REVIEW_STATUS_CHOICES, default='APPROVED')
     denial_reason = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True) # Fixes Admin E035
     updated_at = models.DateTimeField(auto_now=True)
     vector_fields_updated_at = models.DateTimeField(null=True, blank=True)
+
+    # Pitch Videos section — social actions on pitch_video (above), each
+    # independently disable-able by the owner via pitch_video_*_enabled so
+    # a founder can keep the engagement mechanics social-media users expect
+    # without being forced into all of them.
+    pitch_video_likes = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name='liked_founder_pitch_videos', blank=True
+    )
+    pitch_video_saves = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name='saved_founder_pitch_videos', blank=True
+    )
+    pitch_video_comments_enabled = models.BooleanField(default=True)
+    pitch_video_shares_enabled = models.BooleanField(default=True)
+    pitch_video_show_like_count = models.BooleanField(default=True)
+    pitch_video_notify_on_comments = models.BooleanField(default=True)
+    PITCH_VIDEO_VISIBILITY_CHOICES = [
+        ('SITE_WIDE', 'Everyone (Pitch Videos section)'),
+        ('ROLE_ONLY', 'Investors only'),
+        ('PROFILE_ONLY', 'Off — profile page only'),
+    ]
+    pitch_video_visibility = models.CharField(
+        max_length=20, choices=PITCH_VIDEO_VISIBILITY_CHOICES, default='SITE_WIDE'
+    )
 
     zelda_score = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
     runway_months = models.DecimalField(max_digits=5, decimal_places=1, default=0.0)
@@ -115,16 +185,35 @@ class Application(models.Model):
         super().save(*args, **kwargs)
 
     @property
+    def vector_fields_complete(self):
+        """
+        True only when every VECTOR_FIELDS entry has a real value. The lock
+        is meant to keep the matching algorithm stable once an investor can
+        actually see a real, fully-formed profile — locking a half-filled
+        profile just penalizes someone still onboarding and serves no
+        anti-gaming purpose, since there's nothing stable to protect yet.
+        """
+        return all(getattr(self, field) for field in self.VECTOR_FIELDS)
+
+    @property
     def vector_fields_locked(self):
+        if not self.vector_fields_complete:
+            return False
         if not self.vector_fields_updated_at:
             return False
-        return timezone.now() < self.vector_fields_updated_at + timedelta(days=30)
+        grace_ends_at = self.vector_fields_updated_at + VECTOR_FIELD_EDIT_GRACE_PERIOD
+        now = timezone.now()
+        if now < grace_ends_at:
+            return False
+        return now < grace_ends_at + VECTOR_FIELD_LOCK_DURATION
 
     @property
     def vector_fields_unlock_at(self):
+        if not self.vector_fields_complete:
+            return None
         if not self.vector_fields_updated_at:
             return None
-        return self.vector_fields_updated_at + timedelta(days=30)
+        return self.vector_fields_updated_at + VECTOR_FIELD_EDIT_GRACE_PERIOD + VECTOR_FIELD_LOCK_DURATION
 
     @property
     def completion_percentage(self):
@@ -136,6 +225,19 @@ class Application(models.Model):
         ]
         filled_fields = sum(1 for field in tracked_fields if field)
         return int((filled_fields / len(tracked_fields)) * 100)
+
+    @property
+    def approximate_founding_year(self):
+        """
+        years_in_business ("Years Since Founding") stays a plain duration
+        count — no schema change — but the profile display wants an actual
+        year, so this derives one. Approximate because a duration entered at
+        any point during the year rounds to the same value; good enough for
+        display, not used anywhere in scoring.
+        """
+        if not self.years_in_business:
+            return None
+        return timezone.now().year - self.years_in_business
 
     @property
     def funding_stage(self):
@@ -219,9 +321,36 @@ class InvestorApplication(models.Model):
     # Focus Metrics for Similarity Processing Layouts
     investment_focus = models.TextField()
     investment_stage = models.CharField(max_length=100)
-    investment_amount = models.CharField(max_length=100, default='Unspecified', verbose_name="Target Ticket Size")    
+    investment_amount = models.CharField(max_length=100, default='Unspecified', verbose_name="Target Ticket Size")
+    # Structured, optional hard-filter counterpart to investment_amount's free
+    # text above — mirrors BuyerApplication's budget_min/max, which made this
+    # exact tradeoff for the same reason (deal-economics matching needs real
+    # numbers). Null means "not declared", which fails the hard filter open
+    # rather than excluding anyone.
+    ticket_size_min = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, verbose_name="Minimum Check Size")
+    ticket_size_max = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, verbose_name="Maximum Check Size")
     # Zelda AI Cache Layer Vectors
     focus_vector = models.JSONField(blank=True, null=True, help_text="Stores embeddings array")
+
+    # Multi-vector chunking — additive, additional to focus_vector above
+    # (which stays exactly as-is for every existing call site). Embedded
+    # from investment_thesis_summary, falling back to investment_focus when
+    # blank, since not every investor fills in the optional thesis summary.
+    thesis_vector = models.JSONField(blank=True, null=True, help_text="Embedding of investment_thesis_summary (or investment_focus if blank).")
+    # Asymmetric weights an investor sets themselves — "if my profile
+    # emphasizes X, weigh X higher." Not normalized to sum to 1 in the DB;
+    # get_weighted_chunk_score normalizes at scoring time so a partially
+    # filled-in set of weights still behaves sanely.
+    weight_problem_solution = models.FloatField(default=0.334, help_text="How much to weigh problem/solution fit (0-1).")
+    weight_capital_plan = models.FloatField(default=0.333, help_text="How much to weigh capital-plan/use-of-funds fit (0-1).")
+    weight_market_context = models.FloatField(default=0.333, help_text="How much to weigh sector/stage/geography fit (0-1).")
+
+    # Postgres-only ANN twin of focus_vector — see Application.description_vector_pg
+    # for the full rationale. No consumer wired yet (find_similar_startups is
+    # founder-to-founder only); this exists so an investor-to-investor
+    # lookalike search can reuse the same HNSW-indexed column later without
+    # another migration.
+    focus_vector_pg = VectorField(dimensions=384, blank=True, null=True)
 
     # Visibility and Log Infrastructure
     is_private = models.BooleanField(default=False)
@@ -278,7 +407,7 @@ class Connection(models.Model):
     status = models.CharField(max_length=50, default="pending")
     initiated_by = models.CharField(
         max_length=20,
-        choices=[('INVESTOR', 'Investor'), ('FOUNDER', 'Founder')],
+        choices=[('INVESTOR', 'Investor'), ('FOUNDER', 'Founder'), ('STAFF', 'Staff (Manual Intro)')],
         default='INVESTOR',
     )
     created_at = models.DateTimeField(auto_now_add=True)
@@ -394,6 +523,68 @@ class PitchDeckSlideTime(models.Model):
     recorded_at = models.DateTimeField(auto_now_add=True)
 
 
+class PitchVideoView(models.Model):
+    """
+    One row per browser session that played a founder's pitch video —
+    unlike PitchDeckSlideTime (append-only per-slide deltas), video has a
+    single linear timeline, so this tracks the furthest playback position
+    reached per session directly, updated in place as the viewer watches.
+    """
+    founder = models.ForeignKey(Application, on_delete=models.CASCADE, related_name='video_view_sessions')
+    viewer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    client_session_id = models.CharField(max_length=64)
+    video_duration_seconds = models.FloatField()
+    max_watched_seconds = models.FloatField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('founder', 'viewer', 'client_session_id')
+
+
+class ProfileView(models.Model):
+    """
+    Unified profile-view log covering all four account types. Founder/seller
+    profile-view counts still primarily come from InvestorInterestEvent /
+    AcquisitionInterestEvent (which predate this model and already have
+    timestamps), so this exists to close two real gaps: investor/buyer had
+    no view tracking at all, and nothing anywhere tracked time-on-page.
+    """
+    viewed_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile_views_received')
+    viewer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='profile_views_made')
+    session_key = models.CharField(max_length=40, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    duration_seconds = models.FloatField(null=True, blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['viewed_user', '-created_at']),
+            models.Index(fields=['session_key']),
+        ]
+
+
+class MessageThread(models.Model):
+    """
+    Actual messages live in Stream Chat (external), so this is the local
+    proxy for "have these two users ever messaged" — one row per unique
+    pair, get-or-created wherever a chat channel is created. user_a/user_b
+    are always stored in id order so the same pair can't create two rows
+    regardless of who initiated.
+    """
+    user_a = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='message_threads_as_a')
+    user_b = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='message_threads_as_b')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user_a', 'user_b')
+
+    @classmethod
+    def log_thread(cls, user_1, user_2):
+        if not user_1 or not user_2 or user_1.id == user_2.id:
+            return
+        lo, hi = sorted([user_1, user_2], key=lambda u: u.id)
+        cls.objects.get_or_create(user_a=lo, user_b=hi)
+
+
 class FundraisingLead(models.Model):
     """
     A founder's personal outreach tracker — most leads here won't be
@@ -478,6 +669,7 @@ class InvestorInterestEvent(models.Model):
     Vector Score and outcome-based predictions later.
     """
     EVENT_TYPES = [
+        ('video_play',        'Pitch Video Played'),
         ('view',              'Profile View'),
         ('thumbs_up',         'Thumbs Up'),
         ('thumbs_down',       'Thumbs Down'),
@@ -558,6 +750,191 @@ class APIKey(models.Model):
 
     def __str__(self):
         return f"{self.firm_name} ({self.key[:8]}...)"
+
+
+COMPANY_SUFFIXES_RE = re.compile(r'(inc|llc|corp|ltd|co|group|holdings)$')
+
+
+def _normalize_company_string(s):
+    """Lowercase, strip non-alphanumerics, then strip one trailing
+    corporate suffix (Inc/LLC/Corp/etc.) if present. Never returns an
+    empty string when the input had real content — falls back to the
+    un-suffix-stripped form rather than over-stripping to ''."""
+    normalized = re.sub(r'[^a-z0-9]', '', (s or '').lower())
+    stripped = COMPANY_SUFFIXES_RE.sub('', normalized)
+    return stripped if stripped else normalized
+
+
+def company_matches_email_domain(company_name, email):
+    """Lenient business-email check: normalized company name and the
+    email's domain label (before the TLD) must overlap, either direction.
+    "Interlink Foundry" matches interlinkfoundry.com, interlink.com, and
+    foundryinc.com. Never raises on malformed input — just returns False."""
+    if not company_name or not email or '@' not in email:
+        return False
+    domain = email.rsplit('@', 1)[-1]
+    if '.' not in domain:
+        return False
+    domain_label = domain.split('.')[0]
+    normalized_company = _normalize_company_string(company_name)
+    normalized_domain = _normalize_company_string(domain_label)
+    if not normalized_company or not normalized_domain:
+        return False
+    return normalized_domain in normalized_company or normalized_company in normalized_domain
+
+
+def _resolve_company_name(user):
+    """Which profile's company name governs the business-email check, for
+    users who may have more than one role — same founder > investor >
+    seller > buyer priority accounts/views.py::profile() already uses."""
+    for attr in ('match_founder_profile', 'match_investor_profile', 'match_seller_profile', 'match_buyer_profile'):
+        profile = getattr(user, attr, None)
+        if profile:
+            return profile.company_name
+    return None
+
+
+class BusinessEmailVerification(models.Model):
+    """
+    Self-serve verification for the existing per-role 'Verified' badge
+    (Application/InvestorApplication/SellerApplication/BuyerApplication.is_verified,
+    all already BooleanField(default=False)). A user submits a business email
+    whose domain must match their company name, gets a 6-digit code by real
+    email, and typing it back here flips is_verified=True on every role
+    profile they have — 'verified' describes the person/business, not one
+    role view. FK (not OneToOne) so past attempts stay visible to staff for
+    support; the "current" one is the latest PENDING row for a user.
+    """
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('VERIFIED', 'Verified'),
+        ('EXPIRED', 'Expired'),
+        ('LOCKED', 'Locked'),
+    ]
+
+    MAX_ATTEMPTS = 5
+    CODE_EXPIRY = timedelta(minutes=30)
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='business_email_verifications')
+    business_email = models.EmailField(max_length=254)
+    code = models.CharField(max_length=6, editable=False)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
+    attempts = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    verified_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [models.Index(fields=['user', 'status'])]
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            if not self.code:
+                import secrets
+                self.code = f"{secrets.randbelow(1000000):06d}"
+            if not self.expires_at:
+                self.expires_at = timezone.now() + self.CODE_EXPIRY
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.user.username} — {self.business_email} [{self.status}]"
+
+
+class DataRoomDocument(models.Model):
+    """
+    Founder-uploaded due-diligence document (cap table, financials, legal/IP).
+    Deliberately not routed through zelda_api.DocumentSource — that model's
+    status field is a chunking/embedding/analysis pipeline state machine,
+    a poor fit for a document that is never meant to be AI-analyzed. Titles
+    are visible to any connected investor (see can_view_data_room); the file
+    itself requires a separate, founder-approved DataRoomAccessRequest.
+    """
+    CATEGORY_CHOICES = [
+        ('CAP_TABLE', 'Cap Table'),
+        ('FINANCIALS', 'Financials'),
+        ('LEGAL_IP', 'Legal / IP'),
+        ('OTHER', 'Other'),
+    ]
+    founder = models.ForeignKey('matchmaking.Application', on_delete=models.CASCADE, related_name='data_room_documents')
+    file = models.FileField(
+        upload_to='data_room/',
+        validators=[FileExtensionValidator(['pdf', 'docx', 'xlsx', 'csv', 'pptx']), MaxFileSizeValidator(max_mb=25)],
+    )
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='OTHER')
+    label = models.CharField(max_length=255)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['category', '-uploaded_at']
+
+    def __str__(self):
+        return f"{self.label} ({self.get_category_display()}) — {self.founder.company_name}"
+
+
+class DataRoomAccessRequest(models.Model):
+    """
+    Per-(document, investor) approval gate. An investor sees document
+    titles for any founder they're connected to, but downloading a specific
+    file requires the founder to explicitly approve that investor's request
+    for that one document — titles are not an automatic-access grant.
+    Re-requesting after a DENIED resets the same row to PENDING rather than
+    creating a duplicate (see unique_together).
+    """
+    STATUS_CHOICES = [('PENDING', 'Pending'), ('APPROVED', 'Approved'), ('DENIED', 'Denied')]
+
+    document = models.ForeignKey(DataRoomDocument, on_delete=models.CASCADE, related_name='access_requests')
+    investor = models.ForeignKey('matchmaking.InvestorApplication', on_delete=models.CASCADE, related_name='data_room_requests')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
+    requested_at = models.DateTimeField(auto_now_add=True)
+    decided_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ('document', 'investor')
+
+    def __str__(self):
+        return f"{self.investor.company_name} → {self.document.label} [{self.status}]"
+
+
+class DataRoomDocumentView(models.Model):
+    """Append-only access log — every actual file download is a real
+    due-diligence event worth recording distinctly, unlike
+    PitchDeckViewSession's per-session dedup."""
+    document = models.ForeignKey(DataRoomDocument, on_delete=models.CASCADE, related_name='view_log')
+    viewer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='data_room_views_made')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+def can_view_data_room(request_user, founder_application):
+    """Gate for reaching the data room page at all (document titles list) —
+    identical logic/order to zelda_api/ic_memo.py::can_view_ic_memo, the
+    strict gate, not the looser _can_view_pitch_deck rule (any non-private
+    viewer), since cap tables/financials are far more sensitive than a
+    pitch deck."""
+    if not request_user or not request_user.is_authenticated:
+        return False
+    if request_user == founder_application.user or request_user.is_staff:
+        return True
+    investor_profile = getattr(request_user, 'match_investor_profile', None)
+    if not investor_profile:
+        return False
+    return Connection.objects.filter(
+        investor=investor_profile, founder=founder_application, status='ACCEPTED'
+    ).exists()
+
+
+def can_download_data_room_document(request_user, document):
+    """Separate, stricter gate for the actual file bytes — owner/staff
+    always; an investor only after the founder has approved their specific
+    DataRoomAccessRequest for this exact document."""
+    if request_user == document.founder.user or request_user.is_staff:
+        return True
+    investor_profile = getattr(request_user, 'match_investor_profile', None)
+    if not investor_profile:
+        return False
+    return DataRoomAccessRequest.objects.filter(
+        document=document, investor=investor_profile, status='APPROVED'
+    ).exists()
 
 
 class InvestorPredictionSnapshot(models.Model):
@@ -654,26 +1031,71 @@ class SellerApplication(models.Model):
         blank=True, null=True,
         help_text="Confidential Information Memorandum — the standard M&A teaser/info packet. Max 25MB."
     )
+    pitch_video = models.FileField(
+        upload_to='pitch_videos/%Y/%m/',
+        blank=True, null=True,
+        validators=[
+            FileExtensionValidator(allowed_extensions=['mp4', 'mov', 'webm']),
+            MaxFileSizeValidator(max_mb=200),
+        ],
+        help_text="Upload a short 1-3 minute video walking through why you're selling, growth opportunities, and the ideal buyer (MP4, MOV, WEBM). Max 200MB."
+    )
 
     is_private = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
+    is_premium = models.BooleanField(default=False, help_text="Seller Premium: Featured Listing in the business marketplace.")
+    is_staff_featured = models.BooleanField(default=False, help_text="Staff-curated Featured Listing — independent of paid premium status.")
+    is_hidden_by_staff = models.BooleanField(default=False, help_text="Hides this listing's CIM document from everyone except the owner and staff.")
     review_status = models.CharField(max_length=20, choices=REVIEW_STATUS_CHOICES, default='APPROVED')
     denial_reason = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     vector_fields_updated_at = models.DateTimeField(null=True, blank=True)
 
+    # Pitch Videos section — seller-side mirror of Application's fields above.
+    pitch_video_likes = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name='liked_seller_pitch_videos', blank=True
+    )
+    pitch_video_saves = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name='saved_seller_pitch_videos', blank=True
+    )
+    pitch_video_comments_enabled = models.BooleanField(default=True)
+    pitch_video_shares_enabled = models.BooleanField(default=True)
+    pitch_video_show_like_count = models.BooleanField(default=True)
+    pitch_video_notify_on_comments = models.BooleanField(default=True)
+    PITCH_VIDEO_VISIBILITY_CHOICES = [
+        ('SITE_WIDE', 'Everyone (Pitch Videos section)'),
+        ('ROLE_ONLY', 'Buyers only'),
+        ('PROFILE_ONLY', 'Off — profile page only'),
+    ]
+    pitch_video_visibility = models.CharField(
+        max_length=20, choices=PITCH_VIDEO_VISIBILITY_CHOICES, default='SITE_WIDE'
+    )
+
+    @property
+    def vector_fields_complete(self):
+        """See Application.vector_fields_complete — same rationale, seller's own VECTOR_FIELDS list."""
+        return all(getattr(self, field) for field in self.VECTOR_FIELDS)
+
     @property
     def vector_fields_locked(self):
+        if not self.vector_fields_complete:
+            return False
         if not self.vector_fields_updated_at:
             return False
-        return timezone.now() < self.vector_fields_updated_at + timedelta(days=30)
+        grace_ends_at = self.vector_fields_updated_at + VECTOR_FIELD_EDIT_GRACE_PERIOD
+        now = timezone.now()
+        if now < grace_ends_at:
+            return False
+        return now < grace_ends_at + VECTOR_FIELD_LOCK_DURATION
 
     @property
     def vector_fields_unlock_at(self):
+        if not self.vector_fields_complete:
+            return None
         if not self.vector_fields_updated_at:
             return None
-        return self.vector_fields_updated_at + timedelta(days=30)
+        return self.vector_fields_updated_at + VECTOR_FIELD_EDIT_GRACE_PERIOD + VECTOR_FIELD_LOCK_DURATION
 
     def __str__(self):
         return f"{self.company_name} (For Sale)"
@@ -759,7 +1181,7 @@ class AcquisitionConnection(models.Model):
     status = models.CharField(max_length=50, default="pending")
     initiated_by = models.CharField(
         max_length=20,
-        choices=[('BUYER', 'Buyer'), ('SELLER', 'Seller')],
+        choices=[('BUYER', 'Buyer'), ('SELLER', 'Seller'), ('STAFF', 'Staff (Manual Intro)')],
         default='BUYER',
     )
     created_at = models.DateTimeField(auto_now_add=True)
@@ -798,6 +1220,7 @@ class AcquisitionInterestEvent(models.Model):
     the M&A vocabulary ('closed' replaces 'funded').
     """
     EVENT_TYPES = [
+        ('video_play',        'Pitch Video Played'),
         ('view',              'Listing View'),
         ('thumbs_up',         'Thumbs Up'),
         ('thumbs_down',       'Thumbs Down'),
@@ -898,4 +1321,223 @@ class BuyerPredictionSnapshot(models.Model):
     def __str__(self):
         status = f"resolved: {self.grade}" if self.is_resolved else "pending"
         return f"{self.buyer.company_name} → predicted {self.predicted_seller.company_name} ({status})"
+
+
+class PageEvent(models.Model):
+    """
+    Anonymous-friendly funnel event for the pre-signup stages (landing page,
+    signup started) that InvestorInterestEvent/AcquisitionInterestEvent can't
+    cover since there's no authenticated user yet. Session-keyed until a user
+    exists, then optionally linked once known.
+    """
+    EVENT_TYPES = [
+        ('landing_view', 'Landing Page View'),
+        ('signup_started', 'Signup Page Viewed'),
+        ('signup_completed', 'Signup Completed'),
+        ('dashboard_view', 'Dashboard/Match List Viewed'),
+    ]
+
+    session_key = models.CharField(max_length=40, db_index=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='page_events'
+    )
+    event_type = models.CharField(max_length=20, choices=EVENT_TYPES)
+    role = models.CharField(max_length=20, blank=True)
+    utm_source = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['event_type', '-created_at']),
+            models.Index(fields=['session_key']),
+        ]
+
+    def __str__(self):
+        return f"{self.get_event_type_display()} ({self.session_key[:8]})"
+
+
+def log_page_event(request, event_type, role='', user=None):
+    """
+    Fire-and-forget funnel logger for pre-signup traffic — mirrors
+    log_investor_event/log_buyer_event's "never break the calling view"
+    contract. Dedupes per session+event_type+day so a page refresh doesn't
+    spam rows.
+
+    utm_source is captured for first-touch attribution only: read from
+    ?utm_source= or ?ref= and stored only if this session has no PageEvent
+    at all yet, so a later visit (with or without the param) never
+    overwrites how the visitor actually first arrived.
+    """
+    try:
+        if not request.session.session_key:
+            request.session.create()
+        session_key = request.session.session_key
+
+        today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        already_logged = PageEvent.objects.filter(
+            session_key=session_key, event_type=event_type, created_at__gte=today_start
+        ).exists()
+        if not already_logged:
+            utm_source = ''
+            if not PageEvent.objects.filter(session_key=session_key).exists():
+                utm_source = (request.GET.get('utm_source') or request.GET.get('ref') or '')[:100]
+            PageEvent.objects.create(
+                session_key=session_key, event_type=event_type, role=role, user=user, utm_source=utm_source,
+            )
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Failed to log page event: {str(e)}")
+
+
+class SearchEvent(models.Model):
+    """
+    One row per non-empty search — the filter-based global_search page and
+    the Zelda AI sidebar search are two different entry points to "look for
+    a company," so `source` distinguishes them for the Engagement tab's
+    'searches per user' metric.
+    """
+    SOURCE_CHOICES = [
+        ('filter_search', 'Filter Search'),
+        ('zelda_ai_search', 'Zelda AI Search'),
+        ('zelda_ask', 'Ask Zelda (NL Query)'),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='search_events'
+    )
+    session_key = models.CharField(max_length=40, blank=True)
+    source = models.CharField(max_length=20, choices=SOURCE_CHOICES)
+    query_summary = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['-created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.get_source_display()}: {self.query_summary[:40]}"
+
+
+def log_search_event(request, source, query_summary):
+    """
+    Fire-and-forget search logger — never breaks the calling view, same
+    contract as log_page_event/log_investor_event. Skips silently when
+    there's nothing to search on (empty filters/query).
+    """
+    if not query_summary:
+        return
+    try:
+        session_key = request.session.session_key or ''
+        SearchEvent.objects.create(
+            user=request.user if request.user.is_authenticated else None,
+            session_key=session_key,
+            source=source,
+            query_summary=query_summary[:255],
+        )
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Failed to log search event: {str(e)}")
+
+
+class MatchTrainingExample(models.Model):
+    """
+    Data-collection half of the match-feedback loop — logs every organic
+    vote/accept/decline and every staff override/manual-intro as a labeled
+    (anchor, candidate, label) triple. This is deliberately just the
+    pipeline: no training code, no model artifact, no inference path lives
+    here. Once there's enough volume, the ops Training Data page's JSONL
+    export is what an offline training script would consume.
+    """
+    ANCHOR_TYPES = [
+        ('INVESTOR', 'Investor'),
+        ('BUYER', 'Buyer'),
+    ]
+    CANDIDATE_TYPES = [
+        ('FOUNDER', 'Founder'),
+        ('SELLER', 'Seller'),
+    ]
+    LABEL_CHOICES = [
+        ('POSITIVE', 'Positive'),
+        ('NEGATIVE', 'Negative'),
+    ]
+    SOURCE_CHOICES = [
+        ('thumbs_up', 'Thumbs Up'),
+        ('thumbs_down', 'Thumbs Down'),
+        ('funded', 'Deal Funded'),
+        ('closed', 'Deal Closed'),
+        ('declined', 'Declined'),
+        ('ops_override', 'Staff Override'),
+        ('ops_manual_intro', 'Staff Manual Intro'),
+    ]
+
+    anchor_type = models.CharField(max_length=20, choices=ANCHOR_TYPES)
+    anchor_id = models.PositiveIntegerField()
+    candidate_type = models.CharField(max_length=20, choices=CANDIDATE_TYPES)
+    candidate_id = models.PositiveIntegerField()
+    label = models.CharField(max_length=20, choices=LABEL_CHOICES)
+    source = models.CharField(max_length=20, choices=SOURCE_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['anchor_type', 'anchor_id']),
+            models.Index(fields=['label', 'source']),
+        ]
+
+    def __str__(self):
+        return f"{self.anchor_type}:{self.anchor_id} → {self.candidate_type}:{self.candidate_id} ({self.label}/{self.source})"
+
+
+def log_training_example(anchor_type, anchor_id, candidate_type, candidate_id, label, source):
+    """
+    Fire-and-forget — mirrors log_investor_event's "never break the calling
+    view" contract exactly.
+    """
+    try:
+        MatchTrainingExample.objects.create(
+            anchor_type=anchor_type, anchor_id=anchor_id,
+            candidate_type=candidate_type, candidate_id=candidate_id,
+            label=label, source=source,
+        )
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Failed to log training example: {str(e)}")
+
+
+class PitchVideoComment(models.Model):
+    """
+    A comment on a founder's or seller's pitch video — exactly one of
+    founder/seller is set (enforced in the posting view, not a DB
+    constraint, since cross-backend boolean-XOR CheckConstraints are
+    unreliable on SQLite). Kept as one model rather than two parallel
+    FounderPitchVideoComment/SellerPitchVideoComment classes since a
+    comment's shape (author, body, timestamp) has nothing role-specific
+    about it — unlike Connection/AcquisitionConnection, which really do
+    have different lifecycle fields per side.
+    """
+    founder = models.ForeignKey(
+        'matchmaking.Application', on_delete=models.CASCADE, null=True, blank=True,
+        related_name='pitch_video_comments',
+    )
+    seller = models.ForeignKey(
+        'matchmaking.SellerApplication', on_delete=models.CASCADE, null=True, blank=True,
+        related_name='pitch_video_comments',
+    )
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='pitch_video_comments_made')
+    body = models.TextField(max_length=1000)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['founder', '-created_at']),
+            models.Index(fields=['seller', '-created_at']),
+        ]
+
+    def __str__(self):
+        target = self.founder.company_name if self.founder_id else self.seller.company_name
+        return f"{self.author.username} on {target}'s pitch video"
 

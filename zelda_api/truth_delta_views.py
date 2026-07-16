@@ -67,12 +67,16 @@ class TruthDeltaScoreView(APIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
 
     def get(self, request, document_id):
-        try:
-            report = TruthDeltaReport.objects.get(document_id=document_id)
-            return Response({
-                "overall_truth_score": report.overall_truth_score,
-                "credibility_risk": report.credibility_risk,
-                "summary": report.summary,
-            })
-        except TruthDeltaReport.DoesNotExist:
+        # Verification can be re-run (nothing enforces one report per
+        # document), so always take the most recent row rather than a bare
+        # .get() — a bare .get() throws MultipleObjectsReturned and 500s
+        # the endpoint as soon as a document has ever been re-verified.
+        report = TruthDeltaReport.objects.filter(document_id=document_id).order_by('-created_at').first()
+        if report is None:
             return Response({"error": "Report not found"}, status=404)
+        return Response({
+            "overall_truth_score": report.overall_truth_score,
+            "credibility_risk": report.credibility_risk,
+            "summary": report.summary,
+            "details": report.details,
+        })

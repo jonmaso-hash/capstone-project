@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Business Verification | Interlink Foundry{% endblock title %}
+
+{% block content %}
+<div class="container py-5">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'usersettings:home' %}" class="text-decoration-none">Settings</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Business Verification</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <h2 class="fw-bold mb-4">Business Verification</h2>
+
+            {% if already_verified %}
+            <div class="card border-success shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <span class="badge bg-success mb-2"><i class="bi bi-patch-check-fill me-1"></i>Verified</span>
+                    <h5 class="fw-bold mb-1">Your business email is verified</h5>
+                    <p class="text-muted small mb-0">Your profile now shows the Verified badge.</p>
+                </div>
+            </div>
+
+            {% elif current_verification and current_verification.status == 'PENDING' %}
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-1">Enter your code</h5>
+                    <p class="text-muted small mb-3">
+                        We sent a 6-digit code to {{ current_verification.business_email }}. It expires 30 minutes after it was sent.
+                    </p>
+                    <form method="post" action="{% url 'accounts:business_verification_confirm' %}" class="mb-3">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Verification code</label>
+                            <input type="text" name="code" class="form-control" maxlength="6" inputmode="numeric" placeholder="123456" required>
+                        </div>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle me-1"></i> Verify
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'accounts:business_verification_request' %}" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="business_email" value="{{ current_verification.business_email }}">
+                        <button type="submit" class="btn btn-link btn-sm p-0 text-decoration-none">Resend code</button>
+                    </form>
+                </div>
+            </div>
+
+            {% elif current_verification and current_verification.status == 'LOCKED' %}
+            <div class="card border-warning shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <span class="badge bg-warning text-dark mb-2">Too many attempts</span>
+                    <h5 class="fw-bold mb-1">Request a new code</h5>
+                    <p class="text-muted small mb-3">
+                        That code was entered incorrectly too many times. Request a fresh one below.
+                    </p>
+                    <form method="post" action="{% url 'accounts:business_verification_request' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Business email</label>
+                            <input type="email" name="business_email" class="form-control" value="{{ current_verification.business_email }}" required>
+                            {% if resolved_company_name %}
+                            <div class="form-text">The domain must match your company name, "{{ resolved_company_name }}".</div>
+                            {% endif %}
+                        </div>
+                        <button type="submit" class="btn btn-dark">
+                            <i class="bi bi-envelope me-1"></i> Send Code
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            {% else %}
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-1">Verify your business email</h5>
+                    <p class="text-muted small mb-3">
+                        Submit an email at your company's own domain and we'll send a code to confirm it's really you.
+                        Once verified, your profile shows the Verified badge.
+                    </p>
+                    <form method="post" action="{% url 'accounts:business_verification_request' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Business email</label>
+                            <input type="email" name="business_email" class="form-control" placeholder="you@yourcompany.com" required>
+                            {% if resolved_company_name %}
+                            <div class="form-text">The domain must match your company name, "{{ resolved_company_name }}".</div>
+                            {% else %}
+                            <div class="form-text text-warning">Add a company name to your profile before verifying.</div>
+                            {% endif %}
+                        </div>
+                        <button type="submit" class="btn btn-dark" {% if not resolved_company_name %}disabled{% endif %}>
+                            <i class="bi bi-envelope me-1"></i> Send Code
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

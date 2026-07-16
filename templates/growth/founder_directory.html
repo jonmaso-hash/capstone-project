@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}{{ sector_display }} {{ stage_display }} Startups in {{ location_display }} | Interlink Foundry{% endblock title %}
+
+{% block seo_meta %}
+<meta name="description" content="Browse {{ sector_display }} {{ stage_display }}-stage startups in {{ location_display }} on Interlink Foundry.">
+<meta property="og:title" content="{{ sector_display }} {{ stage_display }} Startups in {{ location_display }}">
+<meta property="og:description" content="There are {{ count }} {{ sector_display }} {{ stage_display }}-stage startups raising in {{ location_display }} on Interlink Foundry.">
+{% endblock seo_meta %}
+
+{% block content %}
+<div class="py-4">
+    <h1 class="fw-bold mb-2">{{ sector_display }} {{ stage_display }} Startups in {{ location_display }}</h1>
+    <p class="lead text-muted mb-4">
+        There {{ count|pluralize:"is,are" }} <strong>{{ count }}</strong> {{ stage_display }}-stage
+        {{ sector_display }} startup{{ count|pluralize }} raising in {{ location_display }} on Interlink Foundry.
+    </p>
+
+    <div class="row g-3 mb-4">
+        {% for founder in profiles %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold mb-1">{{ founder.company_name }}</h5>
+                    <p class="text-muted small mb-2">{{ founder.description|truncatechars:80 }}</p>
+                    <a href="{% url 'accounts:profile' username=founder.user.username %}" class="btn btn-sm btn-outline-primary rounded-pill">View Profile</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <p class="text-muted">No public profiles match yet — be the first to join this category.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="card border-0 bg-primary text-white rounded-4">
+        <div class="card-body p-4 text-center">
+            <h4 class="fw-bold mb-2">See the rest of {{ location_display }}'s {{ sector_display }} startups</h4>
+            <p class="mb-3 opacity-75">Join Interlink Foundry to unlock full profiles, pitch decks, and warm introductions.</p>
+            <a href="{% url 'accounts:signup' %}" class="btn btn-light rounded-pill px-4 fw-semibold">Join Free</a>
+        </div>
+    </div>
+</div>
+{% endblock content %}

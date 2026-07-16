@@ -58,6 +58,7 @@ class ClaimedDatapoint(models.Model):
         ('employees', 'Employee Count'),
         ('funding_raised', 'Funding Raised'),
         ('market_share', 'Market Share'),
+        ('market_size', 'Total Addressable Market Size'),
         ('user_count', 'User Count'),
         ('engagement', 'Engagement Metric'),
         ('churn', 'Churn Rate'),
@@ -142,10 +143,19 @@ class ObservedDatapoint(models.Model):
 
 class TruthDeltaReport(models.Model):
     document = models.ForeignKey('DocumentSource', on_delete=models.CASCADE)
-    overall_truth_score = models.FloatField(default=0.0)
+    # Null (not 0.0) specifically means "no external data was found to
+    # compare against" — distinct from an actual low score, since 0.0
+    # would otherwise misleadingly read as "claims are false" rather than
+    # "we couldn't check." See TruthDeltaEngine.verify_document.
+    overall_truth_score = models.FloatField(null=True, blank=True)
     credibility_risk = models.CharField(max_length=20, default='unknown')
     summary = models.TextField(blank=True)
+    # Structured per-claim comparison: {"claims": [...], "per_claim": [...]}
+    # — lets the dashboard eventually render a claimed-vs-observed table
+    # without a new model; empty dict when nothing was computed.
+    details = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         app_label = 'zelda_api'
+        ordering = ['-created_at']

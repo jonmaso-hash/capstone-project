@@ -1,0 +1,64 @@
+{# Role-card selector shared by signup.html (new account) and choose_role.html
+   (social-login completion step) — extracted so both stay in sync. #}
+<div class="row g-2 mb-4" id="roleSelector">
+    <div class="col-6">
+        <div class="role-card border rounded-3 p-3 text-center cursor-pointer"
+             data-role="founder" onclick="selectRole('founder', this)">
+            <div class="fs-2 mb-1">🚀</div>
+            <div class="fw-bold small">Founder</div>
+            <div class="text-muted" style="font-size:0.75rem;">Raising capital</div>
+        </div>
+    </div>
+    <div class="col-6">
+        <div class="role-card border rounded-3 p-3 text-center cursor-pointer"
+             data-role="investor" onclick="selectRole('investor', this)">
+            <div class="fs-2 mb-1">💼</div>
+            <div class="fw-bold small">Investor</div>
+            <div class="text-muted" style="font-size:0.75rem;">Deploying capital</div>
+        </div>
+    </div>
+    <div class="col-6">
+        <div class="role-card border rounded-3 p-3 text-center cursor-pointer"
+             data-role="seller" onclick="selectRole('seller', this)">
+            <div class="fs-2 mb-1">🏪</div>
+            <div class="fw-bold small">Seller</div>
+            <div class="text-muted" style="font-size:0.75rem;">Selling a business</div>
+        </div>
+    </div>
+    <div class="col-6">
+        <div class="role-card border rounded-3 p-3 text-center cursor-pointer"
+             data-role="buyer" onclick="selectRole('buyer', this)">
+            <div class="fs-2 mb-1">💰</div>
+            <div class="fw-bold small">Buyer</div>
+            <div class="text-muted" style="font-size:0.75rem;">Acquiring a business</div>
+        </div>
+    </div>
+</div>
+
+<style>
+.role-card {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-color: #dee2e6 !important;
+}
+.role-card:hover {
+    border-color: #0d6efd !important;
+    background: #f0f7ff;
+}
+.role-card.selected {
+    border-color: #0d6efd !important;
+    background: #e8f0fe;
+    box-shadow: 0 0 0 2px #0d6efd33;
+}
+</style>
+
+<script>
+function selectRole(role, el) {
+    document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    const hidden = document.getElementById('selectedRole');
+    if (hidden) hidden.value = role;
+    const btn = document.getElementById('roleSubmitBtn');
+    if (btn) btn.disabled = false;
+}
+</script>

@@ -68,7 +68,10 @@ def process_document_pipeline(self, document_id: int, raw_text: str):
             document.status = 'error'
             document.error_message = f"Pipeline failed after {self.max_retries} retries: {str(exc)}"
             document.save()
-            
+
+            from ops.models import log_failed_task
+            log_failed_task('zelda_api.tasks.process_document_pipeline', [document_id, raw_text], str(exc))
+
             return {'status': 'error', 'error': str(exc), 'retries_exhausted': True}
 
 
@@ -118,6 +121,9 @@ def process_valuation_document_task(self, document_id: int, raw_text: str):
             document.status = 'error'
             document.error_message = f"Valuation pipeline failed after {self.max_retries} retries: {str(exc)}"
             document.save()
+
+            from ops.models import log_failed_task
+            log_failed_task('zelda_api.tasks.process_valuation_document_task', [document_id, raw_text], str(exc))
 
             return {'status': 'error', 'error': str(exc), 'retries_exhausted': True}
 

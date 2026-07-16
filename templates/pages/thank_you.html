@@ -1,17 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Application Submitted</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+{% extends "base.html" %}
 
-    <!-- Bootstrap (if you’re using it already) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
+{% block title %}Application Submitted | Interlink Foundry{% endblock title %}
 
-<body class="bg-light">
-
-<div class="container d-flex align-items-center justify-content-center min-vh-100">
+{% block content %}
+<div class="d-flex align-items-center justify-content-center" style="min-height: 70vh;">
 
     <div class="col-lg-6">
 
@@ -39,23 +31,8 @@
             </p>
             <br>
             <p>
-                The information you submitted can now be seen on your user profile account 
+                The information you submitted can now be seen on your user profile account
             </p>
-
-
-
-            <!-- Info Box -->
-            <div class="bg-light border rounded-3 p-3 mb-4 text-start">
-
-                <p class="mb-1"><strong>What happens next?</strong></p>
-
-                <ul class="mb-0 text-muted small">
-                    <li>We review your application within 24–72 hours</li>
-                    <li>You may be contacted for additional details</li>
-                    <li>If approved, your founder profile will go live</li>
-                </ul>
-
-            </div>
 
             <!-- Buttons -->
             <div class="d-grid gap-2">
@@ -81,6 +58,55 @@
     </div>
 
 </div>
+{% endblock content %}
 
-</body>
-</html>
+{% block scripts %}
+{{ block.super }}
+{% if application.completion_percentage == 100 %}
+<style>
+    @keyframes zelda-celebrate {
+        0%   { transform: scale(1); }
+        30%  { transform: scale(1.25); box-shadow: 0 0 0 12px rgba(255, 193, 7, 0.35); }
+        60%  { transform: scale(0.95); }
+        100% { transform: scale(1); box-shadow: none; }
+    }
+    #ai-agent-toggle.zelda-celebrating {
+        animation: zelda-celebrate 1s ease-in-out;
+    }
+    #zelda-complete-toast {
+        position: fixed;
+        bottom: 100px;
+        right: 24px;
+        z-index: 1051;
+        background: #198754;
+        color: #fff;
+        padding: 10px 16px;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        pointer-events: none;
+    }
+    #zelda-complete-toast.show { opacity: 1; }
+</style>
+<div id="zelda-complete-toast"><i class="bi bi-check-circle-fill me-1"></i>Application complete!</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const icon = document.getElementById('ai-agent-toggle');
+        const toast = document.getElementById('zelda-complete-toast');
+        if (!icon || !toast) return;
+
+        icon.classList.add('zelda-celebrating');
+        setTimeout(function () { icon.classList.remove('zelda-celebrating'); }, 1000);
+
+        requestAnimationFrame(function () { toast.classList.add('show'); });
+        setTimeout(function () {
+            toast.classList.remove('show');
+            setTimeout(function () { toast.remove(); }, 400);
+        }, 3000);
+    });
+</script>
+{% endif %}
+{% endblock scripts %}

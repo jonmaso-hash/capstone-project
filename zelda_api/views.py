@@ -2,6 +2,7 @@ import os
 import re
 import logging
 import urllib.parse
+from datetime import timedelta
 
 from django.conf import settings
 from django.urls import reverse, NoReverseMatch
@@ -10,6 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Avg, Sum, Count
 from django.shortcuts import get_object_or_404, render
 from django.http import JsonResponse, Http404
+from django.utils import timezone
 from .vector_models import DocumentSource
 from django.urls import path
 
@@ -35,11 +37,12 @@ logger = logging.getLogger(__name__)
 
 # ── Matchmaking models (optional dependency) ─────────────────────────────────
 try:
-    from matchmaking.models import Application, InvestorApplication
+    from matchmaking.models import Application, InvestorApplication, SellerApplication
     _MATCHMAKING_AVAILABLE = True
 except ImportError:
     Application = None
     InvestorApplication = None
+    SellerApplication = None
     _MATCHMAKING_AVAILABLE = False
 
 
@@ -122,6 +125,61 @@ class ZeldaHealthCheckAPIView(APIView):
         return Response({"status": "ok", "service": "zelda_api"})
 
 
+ZELDA_ASK_DAILY_LIMIT = 30
+
+
+def _founder_to_result_dict(app):
+    """
+    Builds the standard founder search-result dict — shared by
+    ZeldaGlobalSearchAPIView and ZeldaAskAPIView so the two search surfaces
+    never drift out of shape.
+    """
+    try:
+        url = reverse('accounts:profile', kwargs={'username': app.user.username})
+    except NoReverseMatch:
+        url = f"/accounts/profile/{app.user.username}/"
+
+    return {
+        'type': 'Founder Profile',
+        'title': f"Founder: {app.company_name}",
+        'founder_name': app.user.get_full_name() or app.user.username,
+        'username': app.user.username,
+        'startup_name': app.company_name,
+        'sector': app.sector or 'General',
+        'executive_summary': (app.description or "")[:200] + '...',
+        'funding_stage': getattr(app, 'funding_stage', 'Seed'),
+        'has_pitch_deck': bool(app.pitch_deck),
+        'url': url,
+    }
+
+
+def _seller_to_result_dict(seller):
+    """
+    Buyer-side mirror of _founder_to_result_dict — same shape convention
+    (type/title/username/executive_summary/url) so the Ask Zelda widget's
+    existing renderSearchResults JS handles both without a special case,
+    with seller-specific fields (industry, asking_price, has_cim) in place
+    of the founder-specific ones (sector, funding_stage, has_pitch_deck).
+    """
+    try:
+        url = reverse('accounts:profile', kwargs={'username': seller.user.username})
+    except NoReverseMatch:
+        url = f"/accounts/profile/{seller.user.username}/"
+
+    return {
+        'type': 'Business Listing',
+        'title': f"Business: {seller.company_name}",
+        'seller_name': seller.user.get_full_name() or seller.user.username,
+        'username': seller.user.username,
+        'company_name': seller.company_name,
+        'industry': seller.industry or 'General',
+        'executive_summary': (seller.description or "")[:200] + '...',
+        'asking_price': str(seller.asking_price) if seller.asking_price else None,
+        'has_cim': bool(seller.cim_document),
+        'url': url,
+    }
+
+
 class ZeldaGlobalSearchAPIView(APIView):
     """
     POST /api/v1/zelda/search/
@@ -139,6 +197,9 @@ class ZeldaGlobalSearchAPIView(APIView):
                 'response': "What kind of matches are we hunting down today?",
                 'results': [],
             }, status=status.HTTP_200_OK)
+
+        from matchmaking.models import log_search_event
+        log_search_event(request, 'zelda_ai_search', user_query)
 
         search_founders = request.data.get('founders', True)
         search_investors = request.data.get('investors', True)
@@ -250,27 +311,12 @@ class ZeldaGlobalSearchAPIView(APIView):
                     ).filter(is_private=False).exclude(review_status='DENIED').select_related('user')[:5]
 
                     for app in founder_matches:
-                        try:
-                            url = reverse('accounts:profile', kwargs={'username': app.user.username})
-                        except NoReverseMatch:
-                            url = f"/accounts/profile/{app.user.username}/"
-
-                        if url in seen_urls:
+                        result = _founder_to_result_dict(app)
+                        if result['url'] in seen_urls:
                             continue
 
-                        results.append({
-                            'type': 'Founder Profile',
-                            'title': f"Founder: {app.company_name}",
-                            'founder_name': app.user.get_full_name() or app.user.username,
-                            'username': app.user.username,
-                            'startup_name': app.company_name,
-                            'sector': app.sector or 'General',
-                            'executive_summary': (app.description or "")[:200] + '...',
-                            'funding_stage': getattr(app, 'funding_stage', 'Seed'),
-                            'has_pitch_deck': bool(app.pitch_deck),
-                            'url': url,
-                        })
-                        seen_urls.add(url)
+                        results.append(result)
+                        seen_urls.add(result['url'])
 
                 if search_investors and InvestorApplication:
                     investor_matches = InvestorApplication.objects.filter(
@@ -364,6 +410,131 @@ class ZeldaGlobalSearchAPIView(APIView):
             logger.error(f"Zelda Exploration Pipeline dropped: {str(e)}")
             return Response(
                 {'status': 'error', 'message': 'The search system pipeline encountered an unexpected validation drop.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class ZeldaAskAPIView(APIView):
+    """
+    POST /api/v1/zelda/ask/
+    Natural-language search, routed by the requester's own role — the
+    "people with money" search for what they'd spend it on: a buyer's
+    question searches sellers-for-sale (SellerApplication); everyone else
+    (investors, and any user without a buyer profile) searches founders
+    (Application), the original/default behavior. Role is read from the
+    requester's own profile, never from the question text, so there's no
+    way to spoof which schema gets queried.
+
+    Claude only translates the question into an allowlisted constraint
+    list for whichever schema applies — it never sees the database and
+    never writes the text shown to the user. The displayed response and
+    results always come from a real Django query, so nothing here can be
+    hallucinated (same discipline as the memo/valuation prompts: only
+    claims grounded in real data ever reach the screen).
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+
+    def post(self, request):
+        question = request.data.get('q', '').strip()
+        is_buyer = getattr(request.user, 'match_buyer_profile', None) is not None
+        target = 'seller' if is_buyer else 'founder'
+        noun_singular = 'business' if target == 'seller' else 'founder'
+        noun_plural = 'businesses for sale' if target == 'seller' else 'founders'
+
+        if not question:
+            return Response({
+                'status': 'success',
+                'response': f"Ask me to find {noun_plural} by industry, size, price, or financials.",
+                'results': [],
+            }, status=status.HTTP_200_OK)
+
+        from matchmaking.models import SearchEvent, log_search_event
+
+        recent_count = SearchEvent.objects.filter(
+            user=request.user,
+            source='zelda_ask',
+            created_at__gte=timezone.now() - timedelta(hours=24),
+        ).count()
+        if recent_count >= ZELDA_ASK_DAILY_LIMIT:
+            return Response(
+                {'status': 'error', 'message': "Daily limit for AI search reached — try again tomorrow."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+
+        log_search_event(request, 'zelda_ask', question)
+
+        try:
+            from zelda_api.circuit_breaker import CircuitOpenError
+            from zelda_api.intelligence_pipeline import (
+                _call_claude_for_query_extraction, _search_with_relaxation,
+                ASK_ZELDA_ALLOWED_FIELDS, ASK_ZELDA_SELLER_ALLOWED_FIELDS,
+            )
+
+            allowed_fields = ASK_ZELDA_SELLER_ALLOWED_FIELDS if target == 'seller' else ASK_ZELDA_ALLOWED_FIELDS
+
+            extraction = _call_claude_for_query_extraction(question, target=target)
+            constraints = [
+                c for c in extraction.get('constraints', [])
+                if isinstance(c, dict) and c.get('field') in allowed_fields
+            ]
+
+            if not constraints:
+                return Response({
+                    'status': 'success',
+                    'response': f"I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for {noun_plural}.",
+                    'results': [],
+                }, status=status.HTTP_200_OK)
+
+            if target == 'seller':
+                base_queryset = SellerApplication.objects.select_related('user').filter(
+                    is_private=False
+                ).exclude(review_status='DENIED')
+                to_result_dict = _seller_to_result_dict
+            else:
+                base_queryset = Application.objects.select_related('user').filter(
+                    is_private=False
+                ).exclude(review_status='DENIED')
+                to_result_dict = _founder_to_result_dict
+
+            matches, dropped_labels, widened = _search_with_relaxation(base_queryset, constraints, allowed_fields=allowed_fields)
+
+            summary = ', '.join(f"{c['field']}={c['value']}" for c in constraints)
+            results = [to_result_dict(obj) for obj in matches]
+            count = len(matches)
+            plural = 'es' if (target == 'seller' and count != 1) else ('s' if count != 1 else '')
+            noun = 'business' if target == 'seller' else 'founder'
+
+            if not matches:
+                response_text = f"No {noun_plural} currently match: {summary}."
+            elif dropped_labels:
+                response_text = (
+                    f"No exact match — showing {count} close {noun}{plural} after dropping "
+                    f"{'; '.join(dropped_labels)}."
+                )
+            elif widened:
+                response_text = (
+                    f"No exact match on {summary} — showing {count} close {noun}{plural} "
+                    f"within a wider range."
+                )
+            else:
+                response_text = f"Found {count} {noun}{plural} matching: {summary}"
+
+            return Response({
+                'status': 'success',
+                'response': response_text,
+                'results': results,
+            }, status=status.HTTP_200_OK)
+
+        except CircuitOpenError:
+            return Response(
+                {'status': 'error', 'message': "AI search is temporarily unavailable — try again shortly."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        except Exception as e:
+            logger.error(f"Ask Zelda pipeline error: {str(e)}")
+            return Response(
+                {'status': 'error', 'message': "Something went wrong processing that question."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
@@ -889,6 +1060,10 @@ def truth_delta_ui_view(request, document_id):
     
     document = get_object_or_404(DocumentSource, id=document_id)
 
+    if document.is_hidden_by_staff and document.uploaded_by != request.user and not request.user.is_staff:
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied("This document is currently under review and isn't visible yet.")
+
     if document.uploaded_by != request.user:
         viewer_is_investor = (
             getattr(request.user, 'accounts_investor_profile', None) is not None or
@@ -913,10 +1088,11 @@ def truth_delta_ui_view(request, document_id):
         'report': report,
         'claims': claims,
         'has_report': report is not None,
-        'truth_score': round(report.overall_truth_score) if report else None,
+        'truth_score': round(report.overall_truth_score) if report and report.overall_truth_score is not None else None,
         'credibility_risk': report.credibility_risk if report else 'pending',
         'summary': report.summary if report else 'Verification pending.',
         'claims_count': claims.count(),
+        'details': report.details if report else {},
     }
     
     return render(request, 'truth_delta_dashboard.html', context)
@@ -1056,6 +1232,51 @@ def valuation_report_view(request, document_id):
     })
 
 
+@login_required
+def ic_memo_view(request, document_id):
+    """
+    Printable Investment Committee memo — synthesizes the existing memo,
+    Truth Delta signal, valuation, deck engagement, and financials for one
+    founder. This is the "PDF": no server-side PDF library, the page is
+    print-styled and the user hits Ctrl/Cmd+P -> Save as PDF.
+    """
+    from .vector_models import DocumentSource
+    from .ic_memo import build_ic_memo_context, can_view_ic_memo
+    from matchmaking.models import Application
+
+    document = get_object_or_404(DocumentSource, id=document_id, document_type='pitch_deck')
+    application = get_object_or_404(Application, user=document.uploaded_by)
+
+    if not can_view_ic_memo(request.user, application):
+        raise Http404("Not found.")
+
+    context = build_ic_memo_context(application)
+    return render(request, 'zelda_api/ic_memo.html', context)
+
+
+@login_required
+def ic_memo_download_view(request, document_id):
+    """Same content and access gate as ic_memo_view, as a plain .md download."""
+    from django.http import HttpResponse
+    from .vector_models import DocumentSource
+    from .ic_memo import build_ic_memo_context, can_view_ic_memo, render_ic_memo_markdown
+    from matchmaking.models import Application
+
+    document = get_object_or_404(DocumentSource, id=document_id, document_type='pitch_deck')
+    application = get_object_or_404(Application, user=document.uploaded_by)
+
+    if not can_view_ic_memo(request.user, application):
+        raise Http404("Not found.")
+
+    context = build_ic_memo_context(application)
+    markdown_text = render_ic_memo_markdown(context)
+
+    response = HttpResponse(markdown_text, content_type='text/markdown')
+    safe_name = (application.company_name or 'company').replace(' ', '-').lower()
+    response['Content-Disposition'] = f'attachment; filename="{safe_name}-ic-memo.md"'
+    return response
+
+
 class JourneyStatusAPIView(APIView):
     """
     GET /api/v1/zelda/journey-status/
@@ -1085,6 +1306,7 @@ class JourneyStatusAPIView(APIView):
                 'Create your investor profile': 'usersettings:edit_investor_profile',
                 'Complete every mandate field': 'usersettings:edit_investor_profile',
                 'Upload your portfolio for a similarity match': 'usersettings:edit_investor_profile',
+                'Verify your business email': 'accounts:business_verification',
             }
         elif is_seller:
             stage = compute_seller_journey_stage(user)
@@ -1093,12 +1315,14 @@ class JourneyStatusAPIView(APIView):
                 'Upload a CIM document': 'usersettings:edit_seller_profile',
                 'Get a Zelda valuation to price your asking price with confidence': 'zelda_api:valuation_request',
                 'Connect with other businesses': 'matchmaking:acquisition_bulletin_board',
+                'Verify your business email': 'accounts:business_verification',
             }
         elif is_buyer:
             stage = compute_buyer_journey_stage(user)
             url_by_label = {
                 'Create your buyer profile': 'usersettings:edit_buyer_profile',
                 'Complete every mandate field': 'usersettings:edit_buyer_profile',
+                'Verify your business email': 'accounts:business_verification',
             }
         else:
             # Founders, and users with no role picked yet, both land on the
@@ -1112,6 +1336,7 @@ class JourneyStatusAPIView(APIView):
                 "Post a job to show you're growing": 'jobs:create',
                 'Connect with other businesses': 'matchmaking:bulletin_board',
                 'Upload your business plan to Zelda for a competitiveness match': 'zelda_api:valuation_request',
+                'Verify your business email': 'accounts:business_verification',
             }
 
         next_action_url = None

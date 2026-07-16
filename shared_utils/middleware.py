@@ -23,19 +23,40 @@ class IdempotencyMiddleware:
             return self.get_response(request)
 
         # 3. Extract key via comprehensive resolution hierarchy
+        # NOTE: X-Requested-With was previously used as a last-resort
+        # fallback key, but that header is sent as the literal string
+        # "XMLHttpRequest" by virtually every AJAX client — it is not
+        # unique per request, so it must never be used as an idempotency
+        # key (it made every unkeyed AJAX POST from every user collide on
+        # the same cache entry).
         idempotency_key = (
             request.POST.get("idempotency_payload_key") or
             request.META.get("HTTP_X_IDEMPOTENCY_KEY") or
             request.META.get("HTTP_IDEMPOTENCY_KEY") or
-            (request.headers.get("Idempotency-Key") if hasattr(request, 'headers') else None) or
-            request.META.get("HTTP_X_REQUESTED_WITH")  # Additional backup fallback
+            (request.headers.get("Idempotency-Key") if hasattr(request, 'headers') else None)
         )
 
         # Graceful fallback: If basic actions don't pass a key, process normally
         if not idempotency_key:
             return self.get_response(request)
 
-        cache_key = f"idempotency:{idempotency_key}"
+        # Scope the cache key to the requester's identity. A client-supplied
+        # idempotency key is only guaranteed unique per-client — without this,
+        # two different users who happen to send the same key (e.g. a shared
+        # client library default) would collide on the same cache entry and
+        # one user could be served the other's cached response.
+        if request.user.is_authenticated:
+            requester_id = f"user:{request.user.pk}"
+        else:
+            session_key = request.session.session_key
+            if not session_key:
+                # No stable identity to scope to yet — skip idempotency
+                # protection rather than bucket every anonymous client
+                # without a session together under the same key.
+                return self.get_response(request)
+            requester_id = f"session:{session_key}"
+
+        cache_key = f"idempotency:{requester_id}:{idempotency_key}"
         cached_data = cache.get(cache_key)
 
         # 4. Handle identical incoming requests (In-Flight lock or Replay response)

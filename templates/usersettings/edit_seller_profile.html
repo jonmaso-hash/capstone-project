@@ -68,7 +68,7 @@
                         <h3 class="mb-1 fw-bold">
                             {% if form.instance.pk %}Edit Business Listing{% else %}List Your Business{% endif %}
                         </h3>
-                        <p class="mb-0">Provide your business details and deal economics for acquirer matchmaking.</p>
+                        <p class="mb-0">Tell buyers what your business does so we can match you with the right acquirers.</p>
                     </div>
                 </div>
             </div>
@@ -87,11 +87,11 @@
                         </span>
                     </div>
                 </div>
-                {% else %}
+                {% elif seller_profile.vector_fields_complete %}
                 <div class="alert alert-warning-subtle border border-warning-subtle rounded-3 d-flex align-items-start mb-5" role="alert">
                     <i class="bi bi-cpu-fill text-warning fs-5 me-3 mt-1"></i>
                     <div>
-                        <strong class="text-warning-emphasis d-block mb-1">AI-Ready Pipeline Execution</strong>
+                        <strong class="text-warning-emphasis d-block mb-1">Heads up: these fields lock for 30 days</strong>
                         <span class="small text-muted">
                             Changing industry, description, reason for sale, extra info, or location re-locks
                             those fields for 30 days once saved — deal economics stay editable anytime.
@@ -99,70 +99,33 @@
                     </div>
                 </div>
                 {% endif %}
+                {# No lock-related banner at all until industry/description/reason_for_sale/extra_info/geography
+                   are all filled in — see edit_founder_profile.html for the same rationale. #}
 
                 {% if form.non_field_errors %}
                 <div class="alert alert-danger">{{ form.non_field_errors }}</div>
                 {% endif %}
 
-                <div class="mb-5">
-                    <div class="form-section-title">Personal Details</div>
-                    <div class="row g-3">
-                        <div class="col-md-4">
+                <div class="mb-4">
+                    <div class="form-section-title">Get Matched — Required</div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
                             {{ form.seller_name.label_tag }}
                             {{ form.seller_name }}
                             {{ form.seller_name.errors }}
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             {{ form.email.label_tag }}
                             {{ form.email }}
                             {{ form.email.errors }}
                         </div>
-                        <div class="col-md-4">
-                            {{ form.phone_number.label_tag }}
-                            {{ form.phone_number }}
-                            {{ form.phone_number.errors }}
-                        </div>
-                    </div>
-                </div>
-
-                <hr class="my-4 opacity-25">
-
-                <div class="mb-5">
-                    <div class="form-section-title">Company Information</div>
-
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-8">
-                            {{ form.company_name.label_tag }}
-                            {{ form.company_name }}
-                            {{ form.company_name.errors }}
-                        </div>
-                        <div class="col-md-4">
-                            {{ form.company_website.label_tag }}
-                            {{ form.company_website }}
-                            {{ form.company_website.errors }}
-                        </div>
                     </div>
 
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            {{ form.team_size.label_tag }}
-                            {{ form.team_size }}
-                            {{ form.team_size.errors }}
-                        </div>
-                        <div class="col-md-6">
-                            {{ form.years_in_business.label_tag }}
-                            {{ form.years_in_business }}
-                            {{ form.years_in_business.errors }}
-                        </div>
-                    </div>
-                </div>
-
-                <hr class="my-4 opacity-25">
-
-                <div class="mb-5">
-                    <div class="form-section-title">
-                        Matching Details
-                        <span class="badge bg-warning text-dark ms-1" style="font-size:0.6rem;">🔒 30-day lock on change</span>
+                    <div class="mb-3">
+                        {{ form.company_name.label_tag }}
+                        {{ form.company_name }}
+                        {{ form.company_name.errors }}
                     </div>
 
                     <div class="mb-3">
@@ -178,82 +141,142 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="{{ form.geography.id_for_label }}">Location</label>
-                        {{ form.geography }}
-                        {{ form.geography.errors }}
-                        <small class="text-muted d-block mt-1" style="font-size:0.75rem;">Affects acquirer matching.</small>
-                    </div>
-
-                    <div class="mb-3">
-                        {{ form.reason_for_sale.label_tag }}
-                        {{ form.reason_for_sale }}
-                        {{ form.reason_for_sale.errors }}
-                    </div>
-
-                    <div class="mb-3">
-                        {{ form.extra_info.label_tag }}
-                        {{ form.extra_info }}
-                        {{ form.extra_info.errors }}
+                        {{ form.asking_price.label_tag }}
+                        {{ form.asking_price }}
+                        {{ form.asking_price.errors }}
                     </div>
                 </div>
 
-                <hr class="my-4 opacity-25">
+                <button class="btn btn-outline-secondary btn-sm rounded-pill mb-4" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#optionalFields" aria-expanded="false" aria-controls="optionalFields">
+                    <i class="bi bi-plus-lg me-1"></i> Add more detail (optional)
+                </button>
 
-                <div class="mb-5">
-                    <div class="form-section-title">Deal Economics — Always Editable</div>
+                <div class="collapse" id="optionalFields">
 
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-4">
-                            {{ form.asking_price.label_tag }}
-                            {{ form.asking_price }}
-                            {{ form.asking_price.errors }}
+                    <hr class="my-4 opacity-25">
+
+                    <div class="mb-5">
+                        <div class="form-section-title">More About You &amp; Your Company</div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                {{ form.phone_number.label_tag }}
+                                {{ form.phone_number }}
+                                {{ form.phone_number.errors }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.company_website.label_tag }}
+                                {{ form.company_website }}
+                                {{ form.company_website.errors }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.team_size.label_tag }}
+                                {{ form.team_size }}
+                                {{ form.team_size.errors }}
+                            </div>
                         </div>
-                        <div class="col-md-4">
-                            {{ form.annual_revenue.label_tag }}
-                            {{ form.annual_revenue }}
-                            {{ form.annual_revenue.errors }}
-                        </div>
-                        <div class="col-md-4">
-                            {{ form.ebitda.label_tag }}
-                            {{ form.ebitda }}
-                            {{ form.ebitda.errors }}
+                        <div class="mb-3">
+                            {{ form.years_in_business.label_tag }}
+                            {{ form.years_in_business }}
+                            {{ form.years_in_business.errors }}
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        {{ form.deal_structure.label_tag }}
-                        {{ form.deal_structure }}
-                        {{ form.deal_structure.errors }}
-                    </div>
-                </div>
+                    <hr class="my-4 opacity-25">
 
-                <hr class="my-4 opacity-25">
-
-                <div class="mb-5">
-                    <div class="form-section-title">Contact &amp; Links — Always Editable</div>
-
-                    <div class="mb-3">
-                        {{ form.linkedin_url.label_tag }}
-                        {{ form.linkedin_url }}
-                        {{ form.linkedin_url.errors }}
-                    </div>
-                </div>
-
-                <hr class="my-4 opacity-25">
-
-                <div class="mb-4">
-                    <div class="form-section-title">Business Documents</div>
-                    <div class="mb-3">
-                        {{ form.cim_document.label_tag }}
-                        <div class="p-3 border rounded-3 bg-light">
-                            {{ form.cim_document }}
-                            <div class="form-text mt-2 text-muted small">PDF or PPTX, up to 25MB — the Confidential Information Memorandum for your business.</div>
-                            {% if form.instance.cim_document %}
-                                <div class="form-text text-success fw-semibold mt-1">Currently loaded: {{ form.instance.cim_document.name }}</div>
-                            {% endif %}
+                    <div class="mb-5">
+                        <div class="form-section-title">
+                            More Matching Details
+                            <span class="badge bg-warning text-dark ms-1" style="font-size:0.6rem;">🔒 30-day lock on change</span>
                         </div>
-                        {{ form.cim_document.errors }}
+
+                        <div class="mb-3">
+                            <label for="{{ form.geography.id_for_label }}">Location</label>
+                            {{ form.geography }}
+                            {{ form.geography.errors }}
+                            <small class="text-muted d-block mt-1" style="font-size:0.75rem;">Affects acquirer matching.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.reason_for_sale.label_tag }}
+                            {{ form.reason_for_sale }}
+                            {{ form.reason_for_sale.errors }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.extra_info.label_tag }}
+                            {{ form.extra_info }}
+                            {{ form.extra_info.errors }}
+                        </div>
                     </div>
+
+                    <hr class="my-4 opacity-25">
+
+                    <div class="mb-5">
+                        <div class="form-section-title">Deal Economics</div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                {{ form.annual_revenue.label_tag }}
+                                {{ form.annual_revenue }}
+                                {{ form.annual_revenue.errors }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.ebitda.label_tag }}
+                                {{ form.ebitda }}
+                                {{ form.ebitda.errors }}
+                                <small class="text-muted d-block mt-1" style="font-size:0.75rem;">Earnings before interest, taxes, depreciation &amp; amortization — a common measure of a business's core profitability.</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.deal_structure.label_tag }}
+                            {{ form.deal_structure }}
+                            {{ form.deal_structure.errors }}
+                            <small class="text-muted d-block mt-1" style="font-size:0.75rem;">Asset Sale = buyer purchases the business's assets; Stock Sale = buyer purchases the company itself; Merger = the businesses combine. Not sure? Leave it open.</small>
+                        </div>
+                    </div>
+
+                    <hr class="my-4 opacity-25">
+
+                    <div class="mb-5">
+                        <div class="form-section-title">Contact &amp; Links</div>
+
+                        <div class="mb-3">
+                            {{ form.linkedin_url.label_tag }}
+                            {{ form.linkedin_url }}
+                            {{ form.linkedin_url.errors }}
+                        </div>
+                    </div>
+
+                    <hr class="my-4 opacity-25">
+
+                    <div class="mb-4">
+                        <div class="form-section-title">Business Documents</div>
+                        <div class="mb-3">
+                            {{ form.cim_document.label_tag }}
+                            <div class="p-3 border rounded-3 bg-light">
+                                {{ form.cim_document }}
+                                <div class="form-text mt-2 text-muted small">PDF or PPTX, up to 25MB — a short packet summarizing your business for buyers. Optional, but helps buyers move faster.</div>
+                                {% if form.instance.cim_document %}
+                                    <div class="form-text text-success fw-semibold mt-1">Currently loaded: {{ form.instance.cim_document.name }}</div>
+                                {% endif %}
+                            </div>
+                            {{ form.cim_document.errors }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.pitch_video.label_tag }}
+                            <div class="p-3 border rounded-3 bg-light">
+                                {{ form.pitch_video }}
+                                <div class="form-text mt-2 text-muted small">MP4, MOV, or WEBM, up to 200MB — a short 1-3 minute video covering why you're selling, growth opportunities, and the ideal buyer. Appears in the Pitch Videos section.</div>
+                                {% if form.instance.pitch_video %}
+                                    <div class="form-text text-success fw-semibold mt-1">Currently loaded: {{ form.instance.pitch_video.name }}</div>
+                                {% endif %}
+                            </div>
+                            {{ form.pitch_video.errors }}
+                        </div>
+                    </div>
+
                 </div>
 
                 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mt-5">
@@ -261,7 +284,7 @@
                         <i class="bi bi-arrow-left me-1"></i> Cancel changes
                     </a>
                     <button type="submit" class="btn btn-warning px-5 shadow-sm order-1 order-sm-2">
-                        {% if form.instance.pk %}Save Listing{% else %}Publish Listing{% endif %}
+                        {% if form.instance.pk %}Save Listing{% else %}Save &amp; See My Matches{% endif %}
                     </button>
                 </div>
 

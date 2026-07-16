@@ -1,0 +1,46 @@
+{% extends "ops/_ops_base.html" %}
+
+{% block ops_content %}
+<h2 class="fw-bold mb-2"><i class="bi bi-flag me-2"></i>Reported Users</h2>
+<p class="text-muted mb-4">Reports submitted by users from someone's profile page.</p>
+
+<h6 class="fw-bold text-uppercase small text-muted mb-2">Open</h6>
+{% for report in open_reports %}
+<div class="card shadow-sm border-0 mb-2 p-3">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+            <strong>{{ report.reported_user.username }}</strong>
+            <span class="text-muted small">reported by {{ report.reporter.username }} on {{ report.created_at|date:"M j, Y" }}</span>
+            <p class="mb-0 mt-1">{{ report.reason }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'ops:user_management' %}?q={{ report.reported_user.username }}" class="btn btn-outline-dark btn-sm rounded-pill">View User</a>
+            <form method="post" action="{% url 'ops:resolve_report' report.id %}" class="d-flex gap-1">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="resolve">
+                <button type="submit" class="btn btn-success btn-sm rounded-pill px-3">Resolve</button>
+            </form>
+            <form method="post" action="{% url 'ops:resolve_report' report.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="dismiss">
+                <button type="submit" class="btn btn-outline-secondary btn-sm rounded-pill px-3">Dismiss</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% empty %}
+<p class="text-muted">No open reports.</p>
+{% endfor %}
+
+<h6 class="fw-bold text-uppercase small text-muted mt-4 mb-2">Recently Resolved</h6>
+{% for report in resolved_reports %}
+<div class="card border-0 mb-2 p-3">
+    <div class="d-flex justify-content-between align-items-center">
+        <span>{{ report.reported_user.username }} — {{ report.reason|truncatechars:80 }}</span>
+        <span class="badge {% if report.status == 'RESOLVED' %}bg-success{% else %}bg-secondary{% endif %}">{{ report.status }}</span>
+    </div>
+</div>
+{% empty %}
+<p class="text-muted small">Nothing resolved yet.</p>
+{% endfor %}
+{% endblock ops_content %}

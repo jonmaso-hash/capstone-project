@@ -18,7 +18,8 @@ urlpatterns = [
     path('like/<int:pk>/', views.like_article, name='like_article'),
     path('favorites/', views.favorites_list, name='favorites_list'),
     path('article/<int:pk>/favorite/', views.toggle_favorite, name='toggle_favorite'),
-    
+    path('comment/<int:pk>/like/', views.toggle_comment_like, name='toggle_comment_like'),
+
     # Detailed focus view wrapper
     path('<int:pk>/', views.article_detail, name='article_detail'), 
 ]

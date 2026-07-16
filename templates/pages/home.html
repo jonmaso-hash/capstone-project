@@ -1,219 +1,217 @@
 {% extends 'base.html' %}
-{% load static %} 
+{% load static %}
 
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/home.css' %}">
 {% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<div class="tagline text-center py-5">
-    <h1 class="display-4 fw-bold">Connecting Startups With Investors</h1>
-    <p class="lead text-muted">
-        Discover startups raising capital or connect with investors actively seeking new opportunities.
-    </p>
-    <div class="d-flex justify-content-center gap-4 mt-3">
-        <span class="text-muted"><strong class="text-dark">{{ founder_count }}</strong> Founders</span>
-        <span class="text-muted"><strong class="text-dark">{{ investor_count }}</strong> Investors</span>
-    </div>
-</div>
 
-<!-- Primary Portals -->
-<section class="marketplace-portal pb-5">
-    <div class="container">
-        <div class="row g-4 justify-content-center">
-            
-            <!-- Investors Column -->
-            <div class="col-md-6 col-lg-5">
-                <div class="card h-100 shadow-sm border-0 p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h2 class="h3 mb-0">For Investors</h2>
-                        <a href="{% url 'usersettings:edit_investor_profile' %}" class="btn btn-primary btn-sm">Join Network</a>
-                    </div>
-                    <h5 class="text-muted mb-4">Curated Deal Flow & Execution</h5>
-                    <ul class="list-unstyled">
-                        <li class="mb-3 d-flex align-items-start">
-                            <i class="bi bi-check-circle-fill text-primary me-2 mt-1"></i>
-                            <span><strong>Enhanced Sourcing:</strong> Algorithmic matching tailored to your investment thesis.</span>
-                        </li>
-                        <li class="mb-3 d-flex align-items-start">
-                            <i class="bi bi-check-circle-fill text-primary me-2 mt-1"></i>
-                            <span><strong>Proprietary Access:</strong> Exclusive entry into oversubscribed rounds.</span>
-                        </li>
-                        <li class="mb-3 d-flex align-items-start">
-                            <i class="bi bi-check-circle-fill text-primary me-2 mt-1"></i>
-                            <span><strong>Diligence Acceleration:</strong> Comprehensive data rooms and reporting.</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Founders Column -->
-            <div class="col-md-6 col-lg-5">
-                <div class="card h-100 shadow-sm border-0 p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h2 class="h3 mb-0">For Founders</h2>
-                        <a href="{% url 'usersettings:edit_founder_profile' %}" class="btn btn-outline-primary btn-sm">Submit Venture</a>
-                    </div>
-                    <h5 class="text-muted mb-4">Capital Acquisition & Strategy</h5>
-                    <ul class="list-unstyled">
-                        <li class="mb-3 d-flex align-items-start">
-                            <i class="bi bi-check-circle-fill text-primary me-2 mt-1"></i>
-                            <span><strong>Strategic Capital:</strong> Exposure to Tier-1 VCs, Family Offices, and Angels.</span>
-                        </li>
-                        <li class="mb-3 d-flex align-items-start">
-                            <i class="bi bi-check-circle-fill text-primary me-2 mt-1"></i>
-                            <span><strong>Narrative Optimization:</strong> Expert guidance on positioning and modeling.</span>
-                        </li>
-                        <li class="mb-3 d-flex align-items-start">
-                            <i class="bi bi-check-circle-fill text-primary me-2 mt-1"></i>
-                            <span><strong>Transaction Support:</strong> Assistance with deal structuring and term sheets.</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
+<!-- Hero -->
+<section class="hero-section text-white text-center">
+    <div class="container py-5">
+        <span class="badge rounded-pill bg-light text-dark px-3 py-2 mb-4 fw-semibold">
+            <i class="bi bi-stars text-primary me-1"></i> Powered by Zelda AI
+        </span>
+        <h1 class="display-4 fw-bold mb-3">Raise capital. Source deals.<br>Buy or sell a business.</h1>
+        <p class="lead text-white-50 mb-4 mx-auto" style="max-width: 620px;">
+            One platform for founders, investors, buyers, and sellers — matched by an AI engine
+            that reads the deal before you do.
+        </p>
+        <div class="d-flex justify-content-center gap-2 flex-wrap">
+            {% if user.is_authenticated %}
+                <a href="{% url 'accounts:post_login_router' %}" class="btn btn-light btn-lg rounded-pill fw-bold px-4">
+                    Go to My Dashboard
+                </a>
+            {% else %}
+                <a href="{% url 'accounts:signup' %}" class="btn btn-light btn-lg rounded-pill fw-bold px-4">
+                    Get Started Free
+                </a>
+                <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg rounded-pill px-4">
+                    Sign In
+                </a>
+            {% endif %}
         </div>
     </div>
 </section>
 
-<!-- Matchmaking Services Grid -->
-<section class="services-section py-5 bg-white">
-  <div class="container">
-    <h2 class="text-uppercase mb-5 font-weight-bold text-center" style="color: #f39c12;">
-      Our Matchmaking Services
-    </h2>
+<!-- Four Personas -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <h2 class="text-center fw-bold mb-2">Built for both sides of the table</h2>
+        <p class="text-center text-muted mb-5">Whichever seat you're in, Zelda matches you with the right counterparty.</p>
 
-    <div class="services-grid">
-      <div class="service-card">
-        <div class="icon">🤝</div>
-        <h5>Investor–Founder Matching</h5>
-        <p>We connect high-potential startups with aligned investors.</p>
-      </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm rounded-4 persona-card">
+                    <div class="card-body p-4">
+                        <span class="badge bg-success-subtle text-success fw-semibold mb-3">Raising Capital</span>
+                        <h5 class="fw-bold mb-3"><i class="bi bi-rocket-takeoff-fill me-2 text-success"></i>Founder</h5>
+                        <ul class="list-unstyled small text-secondary mb-4">
+                            <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i>Matched to investors who fit your stage & sector</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i>Free AI-generated pitch analysis</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i>One CRM to track every conversation</li>
+                        </ul>
+                        <a href="{% url 'accounts:signup' %}" class="btn btn-outline-success rounded-pill w-100 fw-semibold">Join as a Founder</a>
+                    </div>
+                </div>
+            </div>
 
-      <div class="service-card">
-        <div class="icon">💼</div>
-        <h5>Capital Introduction</h5>
-        <p>Access curated deal flow and vetted investment opportunities.</p>
-      </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm rounded-4 persona-card">
+                    <div class="card-body p-4">
+                        <span class="badge bg-primary-subtle text-primary fw-semibold mb-3">Sourcing Deals</span>
+                        <h5 class="fw-bold mb-3"><i class="bi bi-briefcase-fill me-2 text-primary"></i>Investor</h5>
+                        <ul class="list-unstyled small text-secondary mb-4">
+                            <li class="mb-2"><i class="bi bi-check2 text-primary me-1"></i>Deal flow scored by fit, not keyword filters</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-primary me-1"></i>AI due-diligence memo before your first call</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-primary me-1"></i>Direct intro requests, no cold outreach</li>
+                        </ul>
+                        <a href="{% url 'accounts:signup' %}" class="btn btn-outline-primary rounded-pill w-100 fw-semibold">Join as an Investor</a>
+                    </div>
+                </div>
+            </div>
 
-      <div class="service-card">
-        <div class="icon">📊</div>
-        <h5>Funding Readiness</h5>
-        <p>Assess and prepare startups for institutional investment.</p>
-      </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm rounded-4 persona-card">
+                    <div class="card-body p-4">
+                        <span class="badge bg-warning-subtle text-warning-emphasis fw-semibold mb-3">Selling a Business</span>
+                        <h5 class="fw-bold mb-3"><i class="bi bi-shop me-2 text-warning-emphasis"></i>Seller</h5>
+                        <ul class="list-unstyled small text-secondary mb-4">
+                            <li class="mb-2"><i class="bi bi-check2 text-warning-emphasis me-1"></i>List your business for qualified acquirers only</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-warning-emphasis me-1"></i>Free AI valuation report</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-warning-emphasis me-1"></i>Deal-room chat once there's mutual interest</li>
+                        </ul>
+                        <a href="{% url 'accounts:signup' %}" class="btn btn-outline-warning rounded-pill w-100 fw-semibold">Join as a Seller</a>
+                    </div>
+                </div>
+            </div>
 
-      <div class="service-card">
-        <div class="icon">🏦</div>
-        <h5>VC & PE Connections</h5>
-        <p>Direct introductions to venture capital and private equity firms.</p>
-      </div>
-
-      <div class="service-card">
-        <div class="icon">🔗</div>
-        <h5>Strategic Partnerships</h5>
-        <p>Match businesses with complementary growth partners.</p>
-      </div>
-
-      <div class="service-card">
-        <div class="icon">📈</div>
-        <h5>M&A Opportunities</h5>
-        <p>Identify acquisition targets and merger synergies.</p>
-      </div>
-
-      <div class="service-card">
-        <div class="icon">🎯</div>
-        <h5>Targeted Investor Access</h5>
-        <p>Reach investors aligned with your industry and stage.</p>
-      </div>
-
-      <div class="service-card">
-        <div class="icon">⭐</div>
-        <h5>Elite Network Access</h5>
-        <p>Connect with high-net-worth and institutional investors.</p>
-      </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm rounded-4 persona-card">
+                    <div class="card-body p-4">
+                        <span class="badge bg-info-subtle text-info-emphasis fw-semibold mb-3">Acquiring a Business</span>
+                        <h5 class="fw-bold mb-3"><i class="bi bi-cash-coin me-2 text-info-emphasis"></i>Buyer</h5>
+                        <ul class="list-unstyled small text-secondary mb-4">
+                            <li class="mb-2"><i class="bi bi-check2 text-info-emphasis me-1"></i>Matched to sellers within your budget & thesis</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-info-emphasis me-1"></i>Uncapped intro requests with Buyer Premium</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-info-emphasis me-1"></i>Track every deal in one pipeline</li>
+                        </ul>
+                        <a href="{% url 'accounts:signup' %}" class="btn btn-outline-info rounded-pill w-100 fw-semibold">Join as a Buyer</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 </section>
 
-<!-- Stats Pipeline Section -->
-<section class="py-6 bg-white overflow-hidden">
-    <div class="container py-5">
-        
+{% if featured_founders or featured_sellers %}
+<!-- Featured Companies -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="fw-bold mb-2 text-center">Featured on Interlink Foundry</h2>
+        <p class="text-center text-muted mb-5">A hand-picked look at what's on the platform right now.</p>
+
+        <div class="row g-4">
+            {% for founder in featured_founders %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm rounded-4">
+                    <div class="card-body p-4">
+                        <span class="badge bg-success-subtle text-success fw-semibold mb-2">Founder</span>
+                        <h5 class="fw-bold mb-1">{{ founder.company_name }}</h5>
+                        <p class="text-muted small mb-0">{{ founder.sector }} &middot; {{ founder.stage }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% for seller in featured_sellers %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm rounded-4">
+                    <div class="card-body p-4">
+                        <span class="badge bg-warning-subtle text-warning-emphasis fw-semibold mb-2">For Sale</span>
+                        <h5 class="fw-bold mb-1">{{ seller.company_name }}</h5>
+                        <p class="text-muted small mb-0">{{ seller.industry }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Zelda AI Pipeline -->
+<section class="py-5 bg-white overflow-hidden">
+    <div class="container py-4">
+
         <div class="row align-items-center mb-5">
-            <div class="col-lg-6">
+            <div class="col-lg-7">
                 <span class="badge bg-dark text-uppercase tracking-wide mb-3 px-3 py-2 rounded-pill">Proprietary AI Layer</span>
-                <h2 class="display-5 fw-bolder text-dark mb-4" style="letter-spacing: -1px;">The Zelda Engine Pipeline.</h2>
-                <p class="lead text-muted pe-lg-5">
-                    We don't just host data; we synthesize it. Our autonomous pipeline ingests, scores, and summarizes founder profiles so you only see high-conviction matches.
+                <h2 class="display-6 fw-bolder text-dark mb-3" style="letter-spacing: -1px;">Meet the Zelda Engine.</h2>
+                <p class="lead text-muted pe-lg-5 mb-0">
+                    Submit your materials and Zelda reads them like an analyst would — scoring fit, checking claims
+                    against the underlying documents, and writing the memo before you've finished your coffee.
                 </p>
             </div>
         </div>
 
         <div class="row g-0 rounded-4 shadow-lg overflow-hidden border">
-            
-            <!-- LEFT SIDE: The 3-Step Filter -->
+
+            <!-- LEFT: The 3-Step Pipeline -->
             <div class="col-lg-5 bg-light p-5 d-flex flex-column justify-content-center border-end">
-                
-                <!-- Step 1 -->
+
                 <div class="d-flex align-items-start mb-5">
                     <div class="bg-white border rounded-circle d-flex align-items-center justify-content-center shadow-sm me-4" style="width: 48px; height: 48px; flex-shrink: 0;">
-                        <i class="bi bi-hdd-network text-dark fs-5"></i>
+                        <i class="bi bi-file-earmark-arrow-up text-dark fs-5"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-1">1. Autonomous Scraper</h5>
-                        <p class="text-muted small mb-0">Continuously aggregating sector-specific data points into the core index.</p>
+                        <h5 class="fw-bold mb-1">1. Submit Your Materials</h5>
+                        <p class="text-muted small mb-0">Pitch deck, financials, or business listing — ingested securely, no manual data entry.</p>
                     </div>
                 </div>
 
-                <!-- Step 2 -->
                 <div class="d-flex align-items-start mb-5">
                     <div class="bg-white border rounded-circle d-flex align-items-center justify-content-center shadow-sm me-4" style="width: 48px; height: 48px; flex-shrink: 0;">
                         <i class="bi bi-cpu text-primary fs-5"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-1">2. Semantic Vector Alignment</h5>
-                        <p class="text-muted small mb-0">Multi-dimensional scoring engine maps founder intent to exact investor mandates.</p>
+                        <h5 class="fw-bold mb-1">2. Semantic Vector Matching</h5>
+                        <p class="text-muted small mb-0">Embeddings map your profile against the network to surface true-fit counterparties, not keyword hits.</p>
                     </div>
                 </div>
 
-                <!-- Step 3 -->
                 <div class="d-flex align-items-start">
                     <div class="bg-white border rounded-circle d-flex align-items-center justify-content-center shadow-sm me-4" style="width: 48px; height: 48px; flex-shrink: 0;">
                         <i class="bi bi-lightning-charge text-success fs-5"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-1">3. Intelligence Briefs</h5>
-                        <p class="text-muted small mb-0">Instantly generated due diligence memos summarizing deal viability.</p>
+                        <h5 class="fw-bold mb-1">3. Intelligence Memo & Truth Delta</h5>
+                        <p class="text-muted small mb-0">A due-diligence-ready memo and valuation estimate, with claims cross-checked against your source documents.</p>
                     </div>
                 </div>
 
             </div>
 
-            <!-- RIGHT SIDE: The "Live" Terminal -->
+            <!-- RIGHT: The "Live" Terminal -->
             <div class="col-lg-7 bg-dark text-white p-5 position-relative">
-                <!-- Mac-style window dots -->
                 <div class="d-flex gap-2 mb-4">
                     <div class="rounded-circle bg-danger" style="width: 12px; height: 12px;"></div>
                     <div class="rounded-circle bg-warning" style="width: 12px; height: 12px;"></div>
                     <div class="rounded-circle bg-success" style="width: 12px; height: 12px;"></div>
                 </div>
-                
+
                 <h6 class="text-uppercase text-muted small fw-bold mb-4" style="letter-spacing: 2px;">Live Engine Output</h6>
-                
-                <!-- Simulated Console Output -->
+
                 <div class="font-monospace small" style="color: #00ff41; line-height: 1.8;">
-                    <div class="mb-2"><span class="text-secondary">[SYS]</span> Initiating autonomous market scrape...</div>
-                    <div class="mb-2"><span class="text-secondary">[DATA]</span> Synthesizing 14 distinct sector nodes.</div>
-                    <div class="mb-2 text-white"><span class="text-secondary">[VECTOR]</span> Calibrating alignment score for App_ID:492... <span class="badge bg-success ms-2">94.2% MATCH</span></div>
-                    <div class="mb-2"><span class="text-secondary">[MEMO]</span> Generating Intelligence Brief...</div>
-                    <div class="mb-4 text-white"><span class="text-secondary">[SUCCESS]</span> Brief finalized. Ready for investor review.</div>
-                    
-                    <!-- Pulsing cursor effect -->
+                    <div class="mb-2"><span class="text-secondary">[INGEST]</span> Parsing uploaded pitch deck (Founder_App_ID:492)...</div>
+                    <div class="mb-2"><span class="text-secondary">[VECTOR]</span> Embedding profile against 340 active investor mandates.</div>
+                    <div class="mb-2 text-white"><span class="text-secondary">[MATCH]</span> Calibrating alignment score... <span class="badge bg-success ms-2">94.2% MATCH</span></div>
+                    <div class="mb-2"><span class="text-secondary">[MEMO]</span> Generating Intelligence Memo + Truth Delta check...</div>
+                    <div class="mb-4 text-white"><span class="text-secondary">[DONE]</span> Memo ready. Flagged for investor review.</div>
+
                     <div class="d-inline-block bg-success" style="width: 8px; height: 16px; animation: blink 1s step-end infinite;"></div>
                 </div>
 
-                <!-- Optional: Subtle background grid/glow for aesthetics -->
                 <div class="position-absolute top-0 end-0 bottom-0 w-50" style="background: radial-gradient(circle at right, rgba(0, 255, 65, 0.05), transparent); pointer-events: none;"></div>
             </div>
 
@@ -221,44 +219,141 @@
     </div>
 </section>
 
+<!-- What You Get -->
+<section class="services-section py-5">
+  <div class="container">
+    <h2 class="fw-bold mb-2 text-center">What you get</h2>
+    <p class="text-center text-muted mb-5">Every account includes the AI layer — no add-on required.</p>
+
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="icon">🧠</div>
+        <h5>AI Intelligence Memos</h5>
+        <p>Claude synthesizes a due-diligence-ready brief from your materials in minutes.</p>
+      </div>
+
+      <div class="service-card">
+        <div class="icon">🔍</div>
+        <h5>Truth Delta Verification</h5>
+        <p>Claims in the deck are cross-checked against the underlying documents automatically.</p>
+      </div>
+
+      <div class="service-card">
+        <div class="icon">🎯</div>
+        <h5>Semantic Matching</h5>
+        <p>Embeddings surface true-fit counterparties, not just keyword or filter matches.</p>
+      </div>
+
+      <div class="service-card">
+        <div class="icon">📊</div>
+        <h5>Instant Valuation Reports</h5>
+        <p>Upload financials and get an AI-generated business valuation estimate.</p>
+      </div>
+
+      <div class="service-card">
+        <div class="icon">🗂️</div>
+        <h5>Deal Pipeline CRM</h5>
+        <p>Track every conversation from first touch to close on a Kanban board.</p>
+      </div>
+
+      <div class="service-card">
+        <div class="icon">🤝</div>
+        <h5>Direct Deal Room Chat</h5>
+        <p>Message counterparties directly once there's mutual interest — no middleman.</p>
+      </div>
+
+      <div class="service-card">
+        <div class="icon">🏦</div>
+        <h5>Capital Raises & M&amp;A, One Platform</h5>
+        <p>Raise a round or buy/sell a business without switching tools.</p>
+      </div>
+
+      <div class="service-card">
+        <div class="icon">⭐</div>
+        <h5>Membership Perks</h5>
+        <p>Featured placement, uncapped introductions, and CSV exports for power users.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Membership Teaser -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <h2 class="fw-bold mb-2 text-center">Free to join. Upgrade when you're ready.</h2>
+        <p class="text-center text-muted mb-5">Every core feature works on the free tier — Membership adds an edge when you need it.</p>
+
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm rounded-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-1">Founder Premium</h5>
+                        <p class="text-success small fw-semibold mb-3">$150/mo</p>
+                        <ul class="text-secondary small mb-0 ps-3">
+                            <li class="mb-2">Featured Placement on the bulletin board</li>
+                            <li class="mb-2">Priority Match Alerts on new investor fits</li>
+                            <li>Unlimited Fundraising CRM leads</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm rounded-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-1">Investor Premium</h5>
+                        <p class="text-primary small fw-semibold mb-3">$500/mo</p>
+                        <ul class="text-secondary small mb-0 ps-3">
+                            <li class="mb-2">Uncapped introduction requests</li>
+                            <li class="mb-2">Direct CRM export (CSV)</li>
+                            <li>Priority Match Alerts on new founder fits</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm rounded-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-1">Seller Premium</h5>
+                        <p class="small fw-semibold mb-3" style="color:#997404;">$150/mo</p>
+                        <ul class="text-secondary small mb-0 ps-3">
+                            <li class="mb-2">Featured Listing in the marketplace</li>
+                            <li class="mb-2">Priority Match Alerts on new buyer fits</li>
+                            <li>Detailed Buyer Interest Analytics</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm rounded-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-1">Buyer Premium</h5>
+                        <p class="text-info-emphasis small fw-semibold mb-3">$500/mo</p>
+                        <ul class="text-secondary small mb-0 ps-3">
+                            <li class="mb-2">Uncapped introduction requests</li>
+                            <li class="mb-2">Direct CRM export (CSV)</li>
+                            <li>Priority Match Alerts on new listing fits</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-5">
+            <a href="{% url 'accounts:signup' %}" class="btn btn-primary btn-lg rounded-pill fw-bold px-5">Create Your Free Account</a>
+        </div>
+    </div>
+</section>
+
 <style>
+    .hero-section {
+        background: radial-gradient(circle at 30% 20%, #1e293b 0%, #0f172a 55%, #0b1120 100%);
+        padding-top: 2rem;
+    }
     .tracking-wide { letter-spacing: 0.1em; }
     @keyframes blink { 50% { opacity: 0; } }
+
+    .persona-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .persona-card:hover { transform: translateY(-5px); box-shadow: 0 1rem 2rem rgba(0,0,0,0.1) !important; }
 </style>
 
-<style>
-    .hover-shadow:hover { box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; transform: translateY(-5px); }
-    .transition-all { transition: all 0.3s ease; }
-</style>
 {% endblock %}
-
-{% block javascript %}
-
-<script> 
-function getCsrfToken() {
-    const name = 'csrftoken';
-    const cookies = document.cookie.split(';');
-    for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-            return decodeURIComponent(cookie.substring(name.length + 1));
-        }
-    }
-    return document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-}
-
-async function executeGlobalQuery(query) {
-    const token = getCsrfToken(); // Initialize here
-    const response = await fetch('/your-api-endpoint/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': token // Use the token here
-        },
-        body: JSON.stringify({ query: query })
-    });
-    // ...
-}
-</script>
-
-{% endblock javascript %}

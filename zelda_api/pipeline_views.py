@@ -5,6 +5,7 @@ These views use the centralized intelligence pipeline for document processing.
 Replaces old scan_pitch_deck-based endpoints with RAG-powered analysis.
 """
 import logging
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -39,10 +40,22 @@ class DocumentIngestView(APIView):
                 {"error": "No file provided. Use form-data key 'file'."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
+        # Unlike every model-backed upload path (pitch_deck, cim_document,
+        # data_room), this view builds a DocumentSource by hand with no
+        # ModelForm/full_clean() — so MaxFileSizeValidator never ran here,
+        # and an arbitrarily large file would be read entirely into memory
+        # by PyPDF2/python-pptx before anything rejected it. Same 25MB cap
+        # used elsewhere for pitch decks/CIMs.
+        from matchmaking.validators import MaxFileSizeValidator
+        try:
+            MaxFileSizeValidator(max_mb=25)(uploaded_file)
+        except ValidationError as e:
+            return Response({"error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+
         source_entity = request.data.get('source_entity', 'Unknown')
         document_type = request.data.get('document_type', 'other')
-        
+
         try:
             # Extract text from file
             from .utils import extract_text_from_file
@@ -187,7 +200,13 @@ class DocumentMemoView(APIView):
                     {"error": "Not authorized"},
                     status=status.HTTP_403_FORBIDDEN
                 )
-            
+
+            if doc.is_hidden_by_staff and doc.uploaded_by != request.user and not request.user.is_staff:
+                return Response(
+                    {"error": "This document is currently under review and isn't visible yet."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
             if not hasattr(doc, 'memo'):
                 return Response(
                     {"error": "Memo not yet generated. Check status endpoint."},

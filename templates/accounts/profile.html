@@ -4,7 +4,40 @@
 
 {% block title %}Dashboard | Interlink Foundry{% endblock title %}
 
+{% block css %}
+<style>
+    .section-toggle-header {
+        cursor: pointer;
+        user-select: none;
+    }
+    .section-toggle-header .section-toggle-icon {
+        transition: transform 0.2s ease;
+        color: #6c757d;
+    }
+    .section-toggle-header.collapsed .section-toggle-icon {
+        transform: rotate(-90deg);
+    }
+</style>
+{% endblock css %}
+
 {% block content %}
+<script>
+    // Applies a visitor's remembered collapse preference for a profile
+    // section before the browser paints it, to avoid a flash of the
+    // wrong state. The preference is global across every profile this
+    // visitor looks at (not tied to profile_user), matching "I generally
+    // don't care about X" rather than "I collapsed X on this one person".
+    function applyStoredCollapseState(key) {
+        if (localStorage.getItem('profileSection:' + key) !== 'collapsed') return;
+        var el = document.getElementById(key + 'Collapse');
+        var header = document.querySelector('[data-bs-target="#' + key + 'Collapse"]');
+        if (el) el.classList.remove('show');
+        if (header) {
+            header.classList.add('collapsed');
+            header.setAttribute('aria-expanded', 'false');
+        }
+    }
+</script>
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-10">
@@ -49,6 +82,22 @@
             {% endwith %}
             {% endif %}
 
+            {% if request.user.is_authenticated and request.user != profile_user %}
+            <div class="text-end mb-2">
+                <button class="btn btn-link btn-sm text-muted p-0" type="button" data-bs-toggle="collapse" data-bs-target="#reportUserForm">
+                    <i class="bi bi-flag me-1"></i>Report this user
+                </button>
+                <div class="collapse mt-2" id="reportUserForm">
+                    <form method="post" action="{% url 'ops:submit_user_report' profile_user.username %}" class="card card-body shadow-sm border-0 rounded-4 text-start">
+                        {% csrf_token %}
+                        <label class="form-label small fw-semibold">What's going on?</label>
+                        <textarea name="reason" class="form-control mb-2" rows="3" required></textarea>
+                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill align-self-end px-3">Submit Report</button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
             <div class="card shadow-sm border-0 mb-4 rounded-4 overflow-hidden">
                 <div class="card-body bg-dark text-white p-4">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
@@ -70,6 +119,24 @@
                             <a href="{% url 'blog:favorites_list' %}" class="btn btn-outline-light border-0 btn-sm px-3">
                                 <i class="bi bi-bookmark-heart-fill me-1"></i> Favorites
                             </a>
+
+                            {% if request.user == profile_user %}
+                            <a href="{% url 'accounts:profile_analysis' profile_user.username %}" class="btn btn-outline-light border-0 btn-sm px-3">
+                                <i class="bi bi-bar-chart-fill me-1"></i> Profile Analysis
+                            </a>
+                            {% endif %}
+
+                            {% if ic_memo_document_id %}
+                            <a href="{% url 'zelda_api:ic_memo' ic_memo_document_id %}" class="btn btn-outline-light border-0 btn-sm px-3">
+                                <i class="bi bi-file-earmark-text-fill me-1"></i> IC Memo
+                            </a>
+                            {% endif %}
+
+                            {% if can_view_founder_data_room %}
+                            <a href="{% url 'matchmaking:data_room' profile_user.username %}" class="btn btn-outline-light border-0 btn-sm px-3">
+                                <i class="bi bi-folder-fill me-1"></i> Data Room
+                            </a>
+                            {% endif %}
 
                             {% if application %}
                                 <span class="badge bg-success-subtle text-success border border-success px-3 py-2 rounded-pill">Founder</span>
@@ -139,6 +206,16 @@
                                 {% if application.is_verified %}
                                 <p class="text-success mb-2"><i class="bi bi-patch-check-fill me-1"></i> Verified Founder</p>
                                 {% endif %}
+                                {% if profile_trust_badges.trending or profile_trust_badges.frequently_analyzed %}
+                                <div class="mb-2">
+                                    {% if profile_trust_badges.trending %}
+                                    <span class="badge rounded-pill text-bg-warning text-dark me-1"><i class="bi bi-fire me-1"></i>Trending this week</span>
+                                    {% endif %}
+                                    {% if profile_trust_badges.frequently_analyzed %}
+                                    <span class="badge rounded-pill text-bg-light border me-1"><i class="bi bi-star-fill me-1 text-warning"></i>Frequently analyzed</span>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
                                 <p class="text-muted mb-4">
                                     <i class="bi bi-tag me-1"></i> {{ application.sector }}{% if application.funding_stage %} | {{ application.funding_stage }}{% endif %}
                                 </p>
@@ -150,14 +227,17 @@
                                     <div class="row g-2 mb-3">
                                         <div class="col-sm-4">
                                             <div class="bg-light p-2 rounded border small">
-                                                <span class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.65rem;">Years in Business</span>
+                                                <span class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.65rem;">Years Since Founding</span>
                                                 <span class="text-dark fw-bold">{{ application.years_in_business|default:"--" }}</span>
+                                                {% if application.approximate_founding_year %}
+                                                    <span class="text-muted d-block" style="font-size: 0.7rem;">Founded ~{{ application.approximate_founding_year }}</span>
+                                                {% endif %}
                                             </div>
                                         </div>
                                         <div class="col-sm-4">
                                             <div class="bg-light p-2 rounded border small">
-                                                <span class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.65rem;">Company Size</span>
-                                                <span class="text-dark fw-bold">{{ application.company_size|default:"--" }}</span>
+                                                <span class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.65rem;">Team Size</span>
+                                                <span class="text-dark fw-bold">{{ application.team_size|default:"--" }}</span>
                                             </div>
                                         </div>
                                         <div class="col-sm-4">
@@ -186,12 +266,47 @@
                                     {% if application.pitch_video %}
                                         <div class="card border-0 shadow-sm mb-4 rounded-4 overflow-hidden">
                                             <div class="ratio ratio-16x9">
-                                                <video controls controlsList="nodownload" preload="metadata">
+                                                <video controls controlsList="nodownload" preload="metadata" id="pitchVideoPlayer">
                                                     <source src="{{ application.pitch_video.url }}" type="video/mp4">
                                                     Your browser does not support the video tag.
                                                 </video>
                                             </div>
                                         </div>
+                                        {% if request.user != profile_user %}
+                                        <script>
+                                        document.addEventListener("DOMContentLoaded", function () {
+                                            const video = document.getElementById('pitchVideoPlayer');
+                                            if (!video) return;
+                                            const telemetryUrl = "{% url 'matchmaking:record_video_telemetry' application.id %}";
+                                            const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+                                            const csrftoken = csrfInput ? csrfInput.value : '';
+                                            const clientSessionId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random());
+                                            let maxWatched = 0;
+
+                                            video.addEventListener('timeupdate', function () {
+                                                if (video.currentTime > maxWatched) maxWatched = video.currentTime;
+                                            });
+
+                                            function flush() {
+                                                if (!video.duration || !isFinite(video.duration) || maxWatched <= 0) return;
+                                                const body = new URLSearchParams();
+                                                body.append('csrfmiddlewaretoken', csrftoken);
+                                                body.append('payload', JSON.stringify({
+                                                    client_session_id: clientSessionId,
+                                                    watched_seconds: maxWatched,
+                                                    video_duration_seconds: video.duration,
+                                                }));
+                                                navigator.sendBeacon(telemetryUrl, body);
+                                            }
+
+                                            video.addEventListener('ended', flush);
+                                            document.addEventListener('visibilitychange', function () {
+                                                if (document.hidden) flush();
+                                            });
+                                            window.addEventListener('pagehide', flush);
+                                        });
+                                        </script>
+                                        {% endif %}
                                     {% else %}
                                         <div class="card border-0 shadow-sm mb-4 rounded-4 bg-light p-4 text-center">
                                             <p class="text-muted small mb-0"><i class="bi bi-camera-video-off"></i> No pitch video uploaded yet.</p>
@@ -205,12 +320,6 @@
                                                 <span class="d-block fw-semibold" style="font-size: 0.75rem;">View Pitch Deck</span>
                                             </div>
                                         </a>
-                                        {% if request.user == profile_user %}
-                                        <a href="{% url 'matchmaking:deck_analytics' application.id %}" class="btn btn-sm btn-outline-primary px-3 py-2 rounded-3 d-inline-flex align-items-center bg-white shadow-sm mb-4 ms-2">
-                                            <i class="bi bi-bar-chart-fill me-2"></i>
-                                            <span class="d-block fw-semibold" style="font-size: 0.75rem;">Deck Analytics</span>
-                                        </a>
-                                        {% endif %}
                                     {% else %}
                                         <div class="card border-0 shadow-sm mb-4 rounded-4 bg-light p-4 text-center">
                                             <p class="text-muted small mb-0"><i class="bi bi-file-earmark-pdf"></i> No pitch deck uploaded yet.</p>
@@ -535,8 +644,12 @@
 
             <!-- Jobs Section -->
 <div class="jobs-section mb-5">
-    <h3 class="fw-bold mb-4">Job Postings by {{ profile_user.username }}</h3>
-    
+    <div class="d-flex align-items-center justify-content-between mb-4 section-toggle-header" data-bs-toggle="collapse" data-bs-target="#jobsCollapse" role="button" aria-expanded="true" aria-controls="jobsCollapse">
+        <h3 class="fw-bold mb-0">Job Postings by {{ profile_user.username }} <span class="badge bg-secondary rounded-pill ms-1">{{ user_jobs|length }}</span></h3>
+        <i class="bi bi-chevron-down section-toggle-icon"></i>
+    </div>
+
+    <div class="collapse show" id="jobsCollapse">
     {% if user_jobs %}
         <div class="row row-cols-1 g-3">
             {% for job in user_jobs %}
@@ -559,12 +672,18 @@
             <p class="text-muted mb-0">This user has not posted any jobs yet.</p>
         </div>
     {% endif %}
+    </div>
 </div>
+<script>applyStoredCollapseState('jobs');</script>
 
 {% if application %}
 <div class="milestones-section mb-5">
-    <h3 class="fw-bold mb-4">Milestones</h3>
+    <div class="d-flex align-items-center justify-content-between mb-4 section-toggle-header" data-bs-toggle="collapse" data-bs-target="#milestonesCollapse" role="button" aria-expanded="true" aria-controls="milestonesCollapse">
+        <h3 class="fw-bold mb-0">Milestones <span class="badge bg-secondary rounded-pill ms-1">{{ founder_milestones|length }}</span></h3>
+        <i class="bi bi-chevron-down section-toggle-icon"></i>
+    </div>
 
+    <div class="collapse show" id="milestonesCollapse">
     {% if founder_milestones %}
         <div class="row row-cols-1 g-3">
             {% for milestone in founder_milestones %}
@@ -602,7 +721,9 @@
             <p class="text-muted mb-0">No milestones posted yet.</p>
         </div>
     {% endif %}
+    </div>
 </div>
+<script>applyStoredCollapseState('milestones');</script>
 {% endif %}
 
 {% if request.user != profile_user and mutual_connections %}
@@ -615,11 +736,15 @@
 
 <div class="card shadow-sm border-0 rounded-4 mt-5 mb-5">
     <div class="card-body p-4">
-        <div class="d-flex align-items-center mb-4">
-            <h5 class="fw-bold mb-0">Business Connections</h5>
-            <span class="badge bg-secondary rounded-pill ms-2">{{ following_list.count }}</span>
+        <div class="d-flex align-items-center justify-content-between mb-4 section-toggle-header" data-bs-toggle="collapse" data-bs-target="#connectionsCollapse" role="button" aria-expanded="true" aria-controls="connectionsCollapse">
+            <div class="d-flex align-items-center">
+                <h5 class="fw-bold mb-0">Business Connections</h5>
+                <span class="badge bg-secondary rounded-pill ms-2">{{ following_list.count }}</span>
+            </div>
+            <i class="bi bi-chevron-down section-toggle-icon"></i>
         </div>
 
+        <div class="collapse show" id="connectionsCollapse">
         {% if following_list %}
             <div class="row row-cols-1 row-cols-md-2 g-3">
                 {% for follow in following_list %}
@@ -657,8 +782,10 @@
                 <p class="text-muted mb-0"><i class="bi bi-link-45deg me-2"></i>This user has not established any business connections yet.</p>
             </div>
         {% endif %}
+        </div>
     </div>
 </div>
+<script>applyStoredCollapseState('connections');</script>
 
 
         </div>
@@ -724,6 +851,20 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
     }
+
+    // Remember each section's expand/collapse state across every profile
+    // this visitor looks at (see applyStoredCollapseState above, which
+    // applies the stored state before paint on the next page load).
+    ['jobs', 'milestones', 'connections'].forEach(function (key) {
+        const el = document.getElementById(key + 'Collapse');
+        if (!el) return;
+        el.addEventListener('shown.bs.collapse', function () {
+            localStorage.setItem('profileSection:' + key, 'expanded');
+        });
+        el.addEventListener('hidden.bs.collapse', function () {
+            localStorage.setItem('profileSection:' + key, 'collapsed');
+        });
+    });
 });
 
 function getCookie(name) {
@@ -738,6 +879,36 @@ function getCookie(name) {
 
 </script>
 
+{% if request.user.is_authenticated and request.user != profile_user %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Time-on-page for this profile visit — beaconed back to the ProfileView
+    // row accounts.views.profile() created on load. Best-effort, single-shot:
+    // fires on the first tab-hide or page-leave, whichever comes first.
+    const durationUrl = "{% url 'matchmaking:record_profile_duration' profile_user.username %}";
+    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    const csrftoken = csrfInput ? csrfInput.value : '';
+    const startTime = performance.now();
+    let sent = false;
+
+    function sendDuration() {
+        if (sent) return;
+        const duration_seconds = (performance.now() - startTime) / 1000;
+        if (duration_seconds < 1) return;
+        sent = true;
+        const body = new URLSearchParams();
+        body.append('csrfmiddlewaretoken', csrftoken);
+        body.append('payload', JSON.stringify({ duration_seconds: duration_seconds }));
+        navigator.sendBeacon(durationUrl, body);
+    }
+
+    document.addEventListener('visibilitychange', function () {
+        if (document.hidden) sendDuration();
+    });
+    window.addEventListener('pagehide', sendDuration);
+});
+</script>
+{% endif %}
 
 <style>
 .profile-hover-card {

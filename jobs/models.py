@@ -28,7 +28,8 @@ class JobListing(models.Model):
     # Monetization & Status Flags
     is_active = models.BooleanField(default=True)
     is_featured = models.BooleanField(default=False, help_text="Premium paid placement boost")
-    
+    click_count = models.PositiveIntegerField(default=0)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     expires_at = models.DateTimeField(default=default_expiry)

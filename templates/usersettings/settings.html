@@ -27,6 +27,9 @@
                     <i class="bi bi-pencil-square me-2"></i>Edit Profile
                 </a>
                 {% endif %}
+                <a href="{% url 'billing:billing_page' %}" class="list-group-item list-group-item-action fw-semibold">
+                    <i class="bi bi-credit-card me-2"></i>Membership
+                </a>
                 <a href="#privacy" class="list-group-item list-group-item-action fw-semibold">
                     <i class="bi bi-eye-slash me-2"></i>Privacy
                 </a>
@@ -45,6 +48,11 @@
                 <a href="#visibility" class="list-group-item list-group-item-action fw-semibold">
                     <i class="bi bi-person-badge me-2"></i>Profile Visibility
                 </a>
+                {% if pitch_video_profile %}
+                <a href="#pitch-video" class="list-group-item list-group-item-action fw-semibold">
+                    <i class="bi bi-play-btn me-2"></i>Pitch Video
+                </a>
+                {% endif %}
             </div>
         </div>
 
@@ -245,7 +253,7 @@
                         </label>
                         <div id="fb-connections" class="small mt-2 fw-medium d-none"></div>
                     </div>
-                    <div class="form-check form-switch fs-5">
+                    <div class="form-check form-switch fs-5 mb-3">
                         <input class="form-check-input settings-switch" type="checkbox" role="switch" id="contactInfoToggle"
                             data-url="{% url 'usersettings:toggle_setting' %}"
                             data-field="show_contact_info"
@@ -258,8 +266,82 @@
                         </label>
                         <div id="fb-contact-info" class="small mt-2 fw-medium d-none"></div>
                     </div>
+                    <div class="form-check form-switch fs-5">
+                        <input class="form-check-input settings-switch" type="checkbox" role="switch" id="profileViewCountToggle"
+                            data-url="{% url 'usersettings:toggle_setting' %}"
+                            data-field="show_profile_view_count"
+                            data-feedback="fb-profile-view-count"
+                            data-on-msg="✓ Your profile view count is now visible to other visitors."
+                            data-off-msg="✓ Your profile view count is now hidden from other visitors."
+                            {% if user_settings.show_profile_view_count %}checked{% endif %}>
+                        <label class="form-check-label small text-dark fw-semibold ms-1" for="profileViewCountToggle">
+                            Show Profile View Count
+                        </label>
+                        <div id="fb-profile-view-count" class="small mt-2 fw-medium d-none"></div>
+                    </div>
                 </div>
             </div>
+
+            {% if pitch_video_profile %}
+            <div class="card border-primary mb-4 shadow-sm rounded-4" id="pitch-video">
+                <div class="card-body p-4">
+                    <h5 class="card-title text-primary fw-bold mb-1">
+                        <i class="bi bi-play-btn me-1"></i> Pitch Video Settings
+                    </h5>
+                    <p class="small text-secondary mb-3">
+                        Control how people can interact with your pitch video in the Pitch Videos section.
+                    </p>
+
+                    <div class="form-check form-switch fs-5">
+                        <input class="form-check-input pv-settings-switch" type="checkbox" role="switch" id="pvCommentsToggle"
+                            data-field="comments_enabled" data-feedback="fb-pv-comments"
+                            data-on-msg="✓ Comments are now allowed on your pitch video."
+                            data-off-msg="✓ Comments are now disabled on your pitch video."
+                            {% if pitch_video_profile.pitch_video_comments_enabled %}checked{% endif %}>
+                        <label class="form-check-label small text-dark fw-semibold ms-1" for="pvCommentsToggle">Allow comments</label>
+                        <div id="fb-pv-comments" class="small mt-2 fw-medium d-none"></div>
+                    </div>
+                    <div class="form-check form-switch fs-5 mt-2">
+                        <input class="form-check-input pv-settings-switch" type="checkbox" role="switch" id="pvLikeCountToggle"
+                            data-field="show_like_count" data-feedback="fb-pv-like-count"
+                            data-on-msg="✓ Your like count is now shown publicly."
+                            data-off-msg="✓ Your like count is now hidden from other visitors."
+                            {% if pitch_video_profile.pitch_video_show_like_count %}checked{% endif %}>
+                        <label class="form-check-label small text-dark fw-semibold ms-1" for="pvLikeCountToggle">Show like count publicly</label>
+                        <div id="fb-pv-like-count" class="small mt-2 fw-medium d-none"></div>
+                    </div>
+                    <div class="form-check form-switch fs-5 mt-2">
+                        <input class="form-check-input pv-settings-switch" type="checkbox" role="switch" id="pvSharesToggle"
+                            data-field="shares_enabled" data-feedback="fb-pv-shares"
+                            data-on-msg="✓ Sharing is now enabled on your pitch video."
+                            data-off-msg="✓ Sharing is now disabled on your pitch video."
+                            {% if pitch_video_profile.pitch_video_shares_enabled %}checked{% endif %}>
+                        <label class="form-check-label small text-dark fw-semibold ms-1" for="pvSharesToggle">Allow shares</label>
+                        <div id="fb-pv-shares" class="small mt-2 fw-medium d-none"></div>
+                    </div>
+                    <div class="form-check form-switch fs-5 mt-2">
+                        <input class="form-check-input pv-settings-switch" type="checkbox" role="switch" id="pvNotifyToggle"
+                            data-field="notify_on_comments" data-feedback="fb-pv-notify"
+                            data-on-msg="✓ You'll be notified of new comments."
+                            data-off-msg="✓ Comment notifications are now off."
+                            {% if pitch_video_profile.pitch_video_notify_on_comments %}checked{% endif %}>
+                        <label class="form-check-label small text-dark fw-semibold ms-1" for="pvNotifyToggle">Notify me of comments</label>
+                        <div id="fb-pv-notify" class="small mt-2 fw-medium d-none"></div>
+                    </div>
+
+                    <hr class="my-3">
+                    <label for="pvVisibilitySelect" class="form-label small text-dark fw-semibold">Who can see this video</label>
+                    <select class="form-select form-select-sm" id="pvVisibilitySelect" style="max-width: 22rem;">
+                        <option value="SITE_WIDE" {% if pitch_video_profile.pitch_video_visibility == 'SITE_WIDE' %}selected{% endif %}>Everyone (Pitch Videos section) — default</option>
+                        <option value="ROLE_ONLY" {% if pitch_video_profile.pitch_video_visibility == 'ROLE_ONLY' %}selected{% endif %}>
+                            {% if pitch_video_role == 'seller' %}Buyers only{% else %}Investors only{% endif %}
+                        </option>
+                        <option value="PROFILE_ONLY" {% if pitch_video_profile.pitch_video_visibility == 'PROFILE_ONLY' %}selected{% endif %}>Off — profile page only</option>
+                    </select>
+                    <div id="fb-pv-visibility" class="small mt-2 fw-medium d-none"></div>
+                </div>
+            </div>
+            {% endif %}
 
         </div>
     </div>
@@ -310,6 +392,68 @@ document.addEventListener("DOMContentLoaded", function () {
             postToggle(switchEl);
         });
     });
+
+    // Pitch video settings post to their own view (matchmaking app, targets
+    // whichever Application/SellerApplication the user owns) rather than
+    // the generic usersettings:toggle_setting endpoint above, which only
+    // knows about UserSettings fields — form-urlencoded body to match
+    // toggle_pitch_video_setting's request.POST.get() usage.
+    document.querySelectorAll('.pv-settings-switch').forEach(function (switchEl) {
+        switchEl.addEventListener("change", function () {
+            const isOn = switchEl.checked;
+            const feedbackEl = document.getElementById(switchEl.dataset.feedback);
+
+            fetch("{% url 'matchmaking:toggle_pitch_video_setting' %}", {
+                method: "POST",
+                headers: { "X-CSRFToken": csrftoken },
+                body: new URLSearchParams({ setting: switchEl.dataset.field, enabled: isOn }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status !== "success") throw new Error(data.error || "Update failed.");
+                feedbackEl.className = "small mt-2 fw-medium text-success animate__animated animate__fadeIn";
+                feedbackEl.textContent = isOn ? switchEl.dataset.onMsg : switchEl.dataset.offMsg;
+            })
+            .catch(error => {
+                switchEl.checked = !isOn;
+                feedbackEl.className = "small mt-2 fw-medium text-danger animate__animated animate__fadeIn";
+                feedbackEl.textContent = "⚠ Failed to update. Try again.";
+            });
+
+            feedbackEl.classList.remove("d-none");
+            setTimeout(() => feedbackEl.classList.add("d-none"), 3500);
+        });
+    });
+
+    const pvVisibilitySelect = document.getElementById("pvVisibilitySelect");
+    if (pvVisibilitySelect) {
+        let previousValue = pvVisibilitySelect.value;
+        pvVisibilitySelect.addEventListener("change", function () {
+            const feedbackEl = document.getElementById("fb-pv-visibility");
+            const newValue = pvVisibilitySelect.value;
+
+            fetch("{% url 'matchmaking:set_pitch_video_visibility' %}", {
+                method: "POST",
+                headers: { "X-CSRFToken": csrftoken },
+                body: new URLSearchParams({ visibility: newValue }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status !== "success") throw new Error(data.error || "Update failed.");
+                previousValue = newValue;
+                feedbackEl.className = "small mt-2 fw-medium text-success animate__animated animate__fadeIn";
+                feedbackEl.textContent = "✓ Pitch video visibility updated.";
+            })
+            .catch(error => {
+                pvVisibilitySelect.value = previousValue;
+                feedbackEl.className = "small mt-2 fw-medium text-danger animate__animated animate__fadeIn";
+                feedbackEl.textContent = "⚠ Failed to update. Try again.";
+            });
+
+            feedbackEl.classList.remove("d-none");
+            setTimeout(() => feedbackEl.classList.add("d-none"), 3500);
+        });
+    }
 });
 </script>
 {% endblock content %}

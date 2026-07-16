@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Join the Waitlist | Interlink Foundry{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5">
+            <h1 class="fw-bold mb-2">Join the waitlist</h1>
+            <p class="text-muted mb-4">Leave your email and we'll reach out when there's a spot for you.</p>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Name (optional)</label>
+                    <input type="text" name="name" class="form-control rounded-3">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Email</label>
+                    <input type="email" name="email" class="form-control rounded-3" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold py-2">Join the Waitlist</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
