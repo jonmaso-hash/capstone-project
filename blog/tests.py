@@ -141,6 +141,50 @@ class IdempotencyMiddlewareTests(TestCase):
         self.assertFalse(second.json()['is_liked'])
 
 
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class BlogHighlightSortTests(TestCase):
+    """
+    Founder Premium's monthly highlight (matchmaking.models.Application.
+    is_highlighted) sorts a highlighted author's post above the normal
+    newest-first ordering — see blog_view's author_is_highlighted annotate.
+    """
+
+    def _founder_user(self, username, **kwargs):
+        from unittest import mock
+        from matchmaking.models import Application
+        with mock.patch('matchmaking.signals.generate_profile_embedding', return_value=[]):
+            u = User.objects.create_user(username, password='x')
+            defaults = dict(
+                company_name=f'{username}Co', founder_name='F', email=f'{username}@t.com',
+                description='test', sector='SaaS', stage='Seed',
+            )
+            defaults.update(kwargs)
+            Application.objects.create(user=u, **defaults)
+        return u
+
+    def test_highlighted_authors_post_sorts_first_despite_being_older(self):
+        from django.utils import timezone
+        older_author = self._founder_user('bloghlolder')
+        newer_highlighted_author = self._founder_user(
+            'bloghlnewer', is_premium=True, last_highlight_at=timezone.now(),
+        )
+        Article.objects.create(title='Older Post', body='body', author=older_author)
+        Article.objects.create(title='Highlighted Post', body='body', author=newer_highlighted_author)
+
+        response = self.client.get(reverse('blog:blog_view'))
+        titles = [a.title for a in response.context['blog']]
+        self.assertEqual(titles[0], 'Highlighted Post')
+
+    def test_no_highlight_falls_back_to_newest_first(self):
+        author = User.objects.create_user('bloghlplain', password='x')
+        Article.objects.create(title='First Post', body='body', author=author)
+        Article.objects.create(title='Second Post', body='body', author=author)
+
+        response = self.client.get(reverse('blog:blog_view'))
+        titles = [a.title for a in response.context['blog']]
+        self.assertEqual(titles[0], 'Second Post')
+
+
 @override_settings(MEDIA_ROOT=tempfile.mkdtemp())
 class ArticleImageStorageCleanupTests(TestCase):
     """

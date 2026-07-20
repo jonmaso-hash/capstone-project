@@ -1,4 +1,5 @@
 import re
+import uuid
 from django.db import models
 from django.conf import settings
 from django.core.validators import FileExtensionValidator
@@ -13,6 +14,13 @@ REVIEW_STATUS_CHOICES = [
     ('PENDING', 'Pending Review'),
     ('DENIED', 'Denied'),
 ]
+
+# Founder/Seller Premium's monthly highlight perk — a 24-hour visibility
+# boost the owner can trigger once every 30 days, replacing the old "full
+# counterpart identity in digest" benefit (which let founders/sellers
+# identify and solicit investors/buyers directly, off-platform).
+HIGHLIGHT_DURATION = timedelta(hours=24)
+HIGHLIGHT_COOLDOWN = timedelta(days=30)
 
 # A founder/seller gets a free 24-hour window to fix typos/refine their
 # vector-field answers right after saving — editing again inside that window
@@ -148,6 +156,10 @@ class Application(models.Model):
     is_premium = models.BooleanField(default=False, help_text="Founder Premium: Featured Placement on the bulletin board.")
     is_staff_featured = models.BooleanField(default=False, help_text="Staff-curated Featured Placement — independent of paid premium status.")
     is_hidden_by_staff = models.BooleanField(default=False, help_text="Hides this pitch deck/video from everyone except the owner and staff.")
+    last_highlight_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Founder Premium: last time the monthly 24-hour highlight boost was activated.",
+    )
     review_status = models.CharField(max_length=20, choices=REVIEW_STATUS_CHOICES, default='APPROVED')
     denial_reason = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True) # Fixes Admin E035
@@ -247,7 +259,23 @@ class Application(models.Model):
     @property
     def location(self):
         return self.geography
-    
+
+    @property
+    def is_highlighted(self):
+        return bool(self.last_highlight_at) and timezone.now() - self.last_highlight_at < HIGHLIGHT_DURATION
+
+    @property
+    def can_activate_highlight(self):
+        if not self.is_premium:
+            return False
+        if not self.last_highlight_at:
+            return True
+        return timezone.now() - self.last_highlight_at >= HIGHLIGHT_COOLDOWN
+
+    def activate_highlight(self):
+        self.last_highlight_at = timezone.now()
+        self.save(update_fields=['last_highlight_at'])
+
     def to_foundry_envelope(self):
         return {
         "origin": "application",
@@ -442,8 +470,25 @@ class MatchFeedback(models.Model):
 
 class AIMatch(models.Model):
     """
-    Pre-calculated AI Scoring Manifest
-    Saves computed vector matrix weights for reporting, admin panels, or async processes.
+    Cached investor<->founder match score — one row per pair, kept fresh by
+    matchmaking/match_cache.py whenever either side's vector changes or the
+    founder logs a milestone. This is what the weekly digest reads instead
+    of recomputing cosine similarity at send time: match scores are cheap
+    to cache and read, so digest/search/homepage should never pay the cost
+    of a fresh computation, only the compute-triggering event should.
+
+    last_changed_at/change_reason track *why* a score is fresh — separate
+    from created_at, which only reflects when this pair was first scored —
+    so the digest can say "confidence increased" or "founder completed a
+    milestone" instead of just showing a static number.
+
+    score_generated_at is separate again from last_changed_at: it updates
+    on *every* recompute (matchmaking/match_cache.py::upsert_match), even
+    when the score barely moves and last_changed_at deliberately doesn't
+    bump (see SCORE_CHANGE_EPSILON) — so it answers "when was this number
+    last verified against current data," while last_changed_at answers
+    "when did something happen worth telling the user about." Conflating
+    the two would make either question unanswerable.
     """
     investor = models.ForeignKey(InvestorApplication, on_delete=models.CASCADE, related_name="ai_matches")
     application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name="ai_matches")
@@ -471,12 +516,18 @@ class AIMatch(models.Model):
     default=0
 )
     created_at = models.DateTimeField(auto_now_add=True)
+    score_generated_at = models.DateTimeField(null=True, blank=True)
+    last_changed_at = models.DateTimeField(null=True, blank=True)
+    change_reason = models.CharField(max_length=255, blank=True)
 
     class Meta:
-        verbose_name = "AI Match Log"
-        verbose_name_plural = "AI Match Logs"
+        verbose_name = "AI Match"
+        verbose_name_plural = "AI Matches"
         ordering = ["-score"]
-        
+        constraints = [
+            models.UniqueConstraint(fields=['investor', 'application'], name='unique_investor_application_match'),
+        ]
+
 class ConnectionRequest(models.Model):
     founder = models.ForeignKey('Application', on_delete=models.CASCADE, related_name='inbound_requests')
     investor = models.ForeignKey('InvestorApplication', on_delete=models.CASCADE, related_name='outbound_requests')
@@ -841,6 +892,40 @@ class BusinessEmailVerification(models.Model):
         return f"{self.user.username} — {self.business_email} [{self.status}]"
 
 
+class Firm(models.Model):
+    """
+    An investor-side team plan: one $5,000/mo subscription (billing/models
+    .py's Subscription.Plan.INVESTOR_FIRM) covers up to MAX_SEATS investor
+    seats. verified_domain is extracted from the founding member's own
+    verified BusinessEmailVerification — the same self-serve verification
+    pipeline individual users already go through, not a separate one — so
+    a firm is just "everyone who's verified an email on this domain," and
+    joining (see billing/views.py::join_firm) needs no separate approval.
+    Each seat gets Investor Premium's monthly AI-analysis allowance but a
+    higher weekly sub-cap (see zelda_api/quotas.py's FIRM_WEEKLY_CREDIT_
+    FRACTION) since team diligence work is burstier than one person's.
+    """
+    MAX_SEATS = 100
+
+    name = models.CharField(max_length=255)
+    verified_domain = models.CharField(max_length=255, unique=True)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='owned_firm')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.verified_domain})"
+
+
+class FirmMembership(models.Model):
+    """OneToOne on user — one firm per person. See Firm's docstring for the join rules."""
+    firm = models.ForeignKey(Firm, on_delete=models.CASCADE, related_name='memberships')
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='firm_membership')
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} @ {self.firm.name}"
+
+
 class DataRoomDocument(models.Model):
     """
     Founder-uploaded due-diligence document (cap table, financials, legal/IP).
@@ -1046,6 +1131,10 @@ class SellerApplication(models.Model):
     is_premium = models.BooleanField(default=False, help_text="Seller Premium: Featured Listing in the business marketplace.")
     is_staff_featured = models.BooleanField(default=False, help_text="Staff-curated Featured Listing — independent of paid premium status.")
     is_hidden_by_staff = models.BooleanField(default=False, help_text="Hides this listing's CIM document from everyone except the owner and staff.")
+    last_highlight_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Seller Premium: last time the monthly 24-hour highlight boost was activated.",
+    )
     review_status = models.CharField(max_length=20, choices=REVIEW_STATUS_CHOICES, default='APPROVED')
     denial_reason = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -1096,6 +1185,22 @@ class SellerApplication(models.Model):
         if not self.vector_fields_updated_at:
             return None
         return self.vector_fields_updated_at + VECTOR_FIELD_EDIT_GRACE_PERIOD + VECTOR_FIELD_LOCK_DURATION
+
+    @property
+    def is_highlighted(self):
+        return bool(self.last_highlight_at) and timezone.now() - self.last_highlight_at < HIGHLIGHT_DURATION
+
+    @property
+    def can_activate_highlight(self):
+        if not self.is_premium:
+            return False
+        if not self.last_highlight_at:
+            return True
+        return timezone.now() - self.last_highlight_at >= HIGHLIGHT_COOLDOWN
+
+    def activate_highlight(self):
+        self.last_highlight_at = timezone.now()
+        self.save(update_fields=['last_highlight_at'])
 
     def __str__(self):
         return f"{self.company_name} (For Sale)"
@@ -1418,6 +1523,43 @@ class SearchEvent(models.Model):
 
     def __str__(self):
         return f"{self.get_source_display()}: {self.query_summary[:40]}"
+
+
+class DigestEngagementEvent(models.Model):
+    """
+    Funnel instrumentation for the weekly digest email — before this,
+    there was zero visibility past "we called send_mail": the email was
+    plain text with no link at all, so nothing could tell whether anyone
+    opened or clicked it, let alone whether that led anywhere.
+
+    token ties the sent/opened/clicked rows for one digest instance
+    together without a self-referencing FK: _send_weekly_digests_body
+    generates a fresh token and records 'sent'; the pixel/redirect views
+    (matchmaking/views.py::digest_open_pixel/digest_click_redirect) look
+    up the 'sent' row by token to know who to attribute the opened/clicked
+    event to, then record it with that same token.
+    """
+    EVENT_TYPES = [
+        ('sent', 'Digest Sent'),
+        ('opened', 'Digest Opened'),
+        ('clicked', 'Hero Match Clicked'),
+    ]
+
+    recipient = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='digest_engagement_events'
+    )
+    event_type = models.CharField(max_length=10, choices=EVENT_TYPES)
+    token = models.UUIDField(default=uuid.uuid4, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['token', 'event_type']),
+            models.Index(fields=['event_type', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.recipient.username}: {self.get_event_type_display()}"
 
 
 def log_search_event(request, source, query_summary):

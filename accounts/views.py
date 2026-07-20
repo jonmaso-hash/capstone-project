@@ -311,12 +311,72 @@ def profile(request, username=None, pk=None):
     from matchmaking.models import can_view_data_room
     can_view_founder_data_room = can_view_data_room(request.user, application) if application else False
 
+    # Verification History — the trust trend across every Truth Delta run
+    # for this founder/seller's documents over time (e.g. "accurate across
+    # three fundraising rounds"), not just the latest single-document
+    # score. Same viewer gate as the underlying single-document Truth
+    # Delta page itself (any investor/buyer, or the owner) — deliberately
+    # NOT connection-gated like IC Memo, since aggregating something
+    # already viewable one document at a time isn't a bigger disclosure
+    # than an investor just opening each document's page individually.
+    verification_history = []
+    verification_reports_count = 0
+    verification_unlocked = False
+    if application or seller_application:
+        can_view_verification_history = (
+            viewed_user == request.user or viewer_is_investor or viewer_is_buyer or request.user.is_staff
+        )
+        if can_view_verification_history:
+            from zelda_api.truth_delta_models import TruthDeltaReport, diff_verification_reports
+            from zelda_api.truth_delta_models import ClaimedDatapoint
+
+            base_reports_qs = TruthDeltaReport.objects.filter(document__uploaded_by=viewed_user)
+            verification_reports_count = base_reports_qs.count()
+            # Truth Delta content is Premium — same founder/seller-controlled
+            # asset model as the IC Memo: gated on the document owner's own
+            # Premium, not the viewer's, so it's free for any investor/buyer
+            # who can already see this page once the owner unlocks it.
+            verification_unlocked = bool(
+                request.user.is_staff
+                or (application and application.is_premium)
+                or (seller_application and seller_application.is_premium)
+            )
+
+            if verification_unlocked:
+                category_labels = dict(ClaimedDatapoint.CATEGORY_CHOICES)
+
+                def _display_category(code):
+                    return category_labels.get(code, code.replace('_', ' ').title())
+
+                verification_history = list(
+                    base_reports_qs.select_related('document').order_by('-created_at')[:20]
+                )
+                # Attach non-persisted .trend/.stats to each report — in-memory
+                # only, computed fresh from `details` every request rather than
+                # stored, so there's no risk of it drifting stale. Category
+                # codes are mapped to their display labels here (view/template
+                # concern) — diff_verification_reports itself stays in terms
+                # of raw category codes, which is what its own tests assert on.
+                for i, report in enumerate(verification_history):
+                    report.stats = report.verifiability_stats()
+                    trend = (
+                        diff_verification_reports(report, verification_history[i + 1])
+                        if i + 1 < len(verification_history) else None
+                    )
+                    report.trend = trend and {
+                        'newly_verified': [_display_category(c) for c in trend['newly_verified']],
+                        'lost_verification': [_display_category(c) for c in trend['lost_verification']],
+                    }
+
     context = {
         "profile_user": viewed_user,
         "application": application,
         "ic_memo_document_id": ic_memo_document_id,
         "profile_trust_badges": profile_trust_badges,
         "can_view_founder_data_room": can_view_founder_data_room,
+        "verification_history": verification_history,
+        "verification_reports_count": verification_reports_count,
+        "verification_unlocked": verification_unlocked,
         "investor_application": investor_application,
         "seller_application": seller_application,
         "buyer_application": buyer_application,
@@ -341,6 +401,44 @@ def profile(request, username=None, pk=None):
 @login_required
 def redirect_to_own_profile(request):
     return redirect("accounts:profile", username=request.user.username)
+
+
+def _build_insights_engine_context(events, role, role_profile):
+    """
+    Assembles every Premium-gated matchmaking.insights_engine computation
+    for the profile_analysis view — kept out of the view body so the free
+    branch never pays for these extra queries. `role` picks the
+    founder/seller-specific breakdown (get_investor_focus_breakdown vs.
+    get_buyer_deal_structure_breakdown); everything else is symmetric
+    between the two interest-event models.
+    """
+    from matchmaking.insights_engine import (
+        get_funnel_stats, get_conversion_rates, get_trending_stats, get_multi_metric_trends,
+        get_engagement_score, get_strengths_and_improvements, get_interest_timeline,
+        get_ai_insights, get_opportunity_alerts, get_recommendations,
+        get_investor_focus_breakdown, get_buyer_deal_structure_breakdown,
+    )
+
+    funnel_stats = get_funnel_stats(events)
+    trending_stats = get_trending_stats(events)
+    engagement_score = get_engagement_score(funnel_stats, role_profile)
+    context = {
+        'funnel_stats': funnel_stats,
+        'conversion_rates': get_conversion_rates(funnel_stats),
+        'trending_stats': trending_stats,
+        'multi_metric_trends': get_multi_metric_trends(events),
+        'engagement_score': engagement_score,
+        'strengths_and_improvements': get_strengths_and_improvements(engagement_score, role_profile),
+        'interest_timeline': get_interest_timeline(events),
+        'ai_insights': get_ai_insights(funnel_stats, trending_stats),
+        'opportunity_alerts': get_opportunity_alerts(funnel_stats, trending_stats, events, role_profile),
+        'recommendations': get_recommendations(funnel_stats, role_profile),
+    }
+    if role == 'founder':
+        context['focus_breakdown'] = get_investor_focus_breakdown(events)
+    elif role == 'seller':
+        context['focus_breakdown'] = get_buyer_deal_structure_breakdown(events)
+    return context
 
 
 @login_required
@@ -462,6 +560,10 @@ def profile_analysis(request, username):
     # today. Founder/seller see engagement targeting them; investor/buyer
     # see their own outbound activity (they're the actor, not the target). ---
     engagement = None
+    is_premium_insights = False
+    insights_engine_context = {}
+    free_intro_requests = None
+    free_thumbs_up = None
     if application:
         events = InvestorInterestEvent.objects.filter(founder=application)
         engagement = {
@@ -471,6 +573,11 @@ def profile_analysis(request, username):
             'Truth Delta Views': events.filter(event_type='truth_delta_view').count(),
             'Times Analyzed': events.filter(event_type='analyze').count(),
         }
+        is_premium_insights = application.is_premium
+        free_intro_requests = engagement['Intro Requests Received']
+        free_thumbs_up = engagement['Thumbs Up Received']
+        if is_premium_insights:
+            insights_engine_context = _build_insights_engine_context(events, role='founder', role_profile=application)
     elif seller_application:
         events = AcquisitionInterestEvent.objects.filter(seller=seller_application)
         engagement = {
@@ -480,6 +587,11 @@ def profile_analysis(request, username):
             'Truth Delta Views': events.filter(event_type='truth_delta_view').count(),
             'Times Analyzed': events.filter(event_type='analyze').count(),
         }
+        is_premium_insights = seller_application.is_premium
+        free_intro_requests = engagement['Intro Requests Received']
+        free_thumbs_up = engagement['Thumbs Up Received']
+        if is_premium_insights:
+            insights_engine_context = _build_insights_engine_context(events, role='seller', role_profile=seller_application)
     elif investor_application:
         events = InvestorInterestEvent.objects.filter(investor=viewed_user)
         engagement = {
@@ -501,6 +613,12 @@ def profile_analysis(request, username):
         'investor_application': investor_application,
         'seller_application': seller_application,
         'buyer_application': buyer_application,
+        'has_analytics_paywall': bool(application or seller_application),
+        'is_premium_insights': is_premium_insights,
+        'show_full_engagement_summary': is_premium_insights or not (application or seller_application),
+        'free_intro_requests': free_intro_requests,
+        'free_thumbs_up': free_thumbs_up,
+        **insights_engine_context,
         'total_views': total_views,
         'view_buckets': view_buckets,
         'avg_duration_seconds': round(avg_duration_seconds, 1) if avg_duration_seconds else None,

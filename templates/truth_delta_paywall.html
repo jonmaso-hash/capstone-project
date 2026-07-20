@@ -1,0 +1,58 @@
+<!-- Zelda Truth Delta Verification UI - Locked Preview -->
+<style>
+    .truth-delta-paywall {
+        background: linear-gradient(135deg, #fff8e1 0%, #fffdf5 100%);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        margin-top: 1.5rem;
+        border: 2px solid #f5e1a4;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+    .truth-delta-paywall h2 {
+        margin: 0 0 0.75rem;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+    .truth-delta-paywall p {
+        color: #64748b;
+        margin: 0 0 1.25rem;
+        line-height: 1.5;
+    }
+    .truth-delta-paywall .lock-icon {
+        font-size: 1.25rem;
+        margin-right: 0.4rem;
+    }
+    .truth-delta-paywall .upgrade-btn {
+        display: inline-block;
+        background: #f59e0b;
+        color: #1e293b;
+        font-weight: 600;
+        text-decoration: none;
+        padding: 0.6rem 1.5rem;
+        border-radius: 999px;
+        transition: background 0.2s ease;
+    }
+    .truth-delta-paywall .upgrade-btn:hover {
+        background: #e0a800;
+        color: #1e293b;
+    }
+</style>
+
+<div id="truthDeltaContainer" data-document-id="{{ document.id }}">
+    <div class="truth-delta-paywall">
+        <h2><span class="lock-icon">🔒</span>{% if is_owner %}Unlock Your Truth Delta Verification{% else %}Premium Feature{% endif %}</h2>
+        <p>
+            {% if is_owner %}
+            Cross-check your claims against public sources (SEC EDGAR and, where configured, Crunchbase/news) &mdash;
+            a credibility score, claim-by-claim verification, and evidence citations for this document.
+            {% else %}
+            This founder hasn't unlocked Truth Delta verification yet. Once they upgrade to Premium, you'll be
+            able to view it here &mdash; no extra cost to you.
+            {% endif %}
+        </p>
+        {% if is_owner %}
+        <a href="{% url 'billing:billing_page' %}" class="upgrade-btn">View Membership Plans</a>
+        {% endif %}
+    </div>
+</div>

@@ -267,7 +267,9 @@
 
                 <div class="company-name">
                     {{ listing.company_name|default:"Unnamed Business" }}
-                    {% if listing.is_premium or listing.is_staff_featured %}
+                    {% if listing.is_highlighted %}
+                    <span class="badge bg-warning text-dark ms-1"><i class="bi bi-stars"></i> Highlighted</span>
+                    {% elif listing.is_premium or listing.is_staff_featured %}
                     <span class="badge bg-warning text-dark ms-1">★ Featured</span>
                     {% endif %}
                 </div>

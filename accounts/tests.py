@@ -188,7 +188,7 @@ class ProfileAnalysisAccessTests(TestCase):
         self.client.force_login(self.owner)
         response = self.client.get(reverse('accounts:profile_analysis', args=[self.owner.username]))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Profile Analysis')
+        self.assertContains(response, 'Founder Insights')
 
     def test_other_user_is_redirected_away(self):
         self.client.force_login(self.other_user)
@@ -204,6 +204,131 @@ class ProfileAnalysisAccessTests(TestCase):
         response = self.client.get(reverse('accounts:profile_analysis', args=[self.owner.username]))
         self.assertEqual(response.status_code, 302)
         self.assertIn('login', response.url)
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class ProfileAnalysisPaywallTests(TestCase):
+    """
+    Founder/Seller Insights — profile_analysis's Premium-gated funnel,
+    trending, Marketplace Score, Zelda Insights, opportunity alerts,
+    recommendations, and interest timeline (matchmaking.insights_engine).
+    Free tier gets exactly three numbers (Profile Views, Intro Requests,
+    Thumbs Up) and nothing else from the marketplace-interest section;
+    Investor/Buyer's own (much smaller) analytics were never gated and
+    must keep working exactly as before.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+
+    def _founder(self, username, is_premium):
+        user = User.objects.create_user(username, password='x')
+        app = Application.objects.create(
+            user=user, company_name=f'{username}Co', founder_name='F', email=f'{username}@t.com',
+            description='test', sector='SaaS', stage='Seed', is_premium=is_premium,
+        )
+        return user, app
+
+    def test_free_founder_sees_only_three_basic_numbers(self):
+        from matchmaking.models import InvestorInterestEvent
+        user, app = self._founder('paywall_free_founder', is_premium=False)
+        investor = User.objects.create_user('paywall_free_investor', password='x')
+        InvestorInterestEvent.objects.create(investor=investor, founder=app, event_type='view')
+        InvestorInterestEvent.objects.create(investor=investor, founder=app, event_type='memo_view')
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('accounts:profile_analysis', args=[user.username]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['is_premium_insights'])
+        self.assertContains(response, 'Unlock Founder Insights')
+        self.assertNotContains(response, 'Marketplace Score')
+        self.assertNotContains(response, 'Profile Funnel')
+        self.assertNotContains(response, 'Zelda Insights')
+        self.assertNotContains(response, 'Next Best Actions')
+        # Memo Views is a premium-only stat — must not leak into the free view.
+        self.assertNotContains(response, 'Memo Views')
+
+    def test_premium_founder_sees_full_insights_suite(self):
+        from matchmaking.models import InvestorInterestEvent
+        user, app = self._founder('paywall_premium_founder', is_premium=True)
+        investor = User.objects.create_user('paywall_premium_investor', password='x')
+        InvestorInterestEvent.objects.create(investor=investor, founder=app, event_type='view')
+        InvestorInterestEvent.objects.create(investor=investor, founder=app, event_type='memo_view')
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('accounts:profile_analysis', args=[user.username]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['is_premium_insights'])
+        self.assertContains(response, 'Marketplace Score')
+        self.assertContains(response, 'Profile Funnel')
+        self.assertContains(response, 'Conversion Rates')
+        self.assertContains(response, 'Zelda Insights')
+        self.assertContains(response, 'Next Best Actions')
+        self.assertIn('funnel_stats', response.context)
+        self.assertIn('engagement_score', response.context)
+
+    def test_premium_founder_sees_investor_focus_breakdown(self):
+        from matchmaking.models import InvestorInterestEvent
+        user, app = self._founder('paywall_focus_founder', is_premium=True)
+        investor_user = User.objects.create_user('paywall_focus_investor', password='x')
+        InvestorApplication.objects.create(user=investor_user, investment_stage='Seed', investment_focus='SaaS')
+        InvestorInterestEvent.objects.create(investor=investor_user, founder=app, event_type='view')
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('accounts:profile_analysis', args=[user.username]))
+
+        self.assertEqual(response.context['focus_breakdown']['unique_viewers'], 1)
+        self.assertEqual(response.context['focus_breakdown']['by_stage'], {'Seed': 1})
+        self.assertContains(response, "Who's Interested")
+
+    def test_free_seller_sees_only_three_basic_numbers(self):
+        from matchmaking.models import SellerApplication
+        user = User.objects.create_user('paywall_free_seller', password='x')
+        SellerApplication.objects.create(
+            user=user, company_name='SellerCo', seller_name='S', email='s@t.com',
+            description='test business', is_premium=False,
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('accounts:profile_analysis', args=[user.username]))
+
+        self.assertFalse(response.context['is_premium_insights'])
+        self.assertContains(response, 'Unlock Seller Insights')
+        self.assertNotContains(response, 'Marketplace Score')
+
+    def test_premium_seller_sees_full_insights_suite(self):
+        from matchmaking.models import SellerApplication
+        user = User.objects.create_user('paywall_premium_seller', password='x')
+        SellerApplication.objects.create(
+            user=user, company_name='SellerCo', seller_name='S', email='s@t.com',
+            description='test business', is_premium=True,
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('accounts:profile_analysis', args=[user.username]))
+
+        self.assertTrue(response.context['is_premium_insights'])
+        self.assertContains(response, 'Marketplace Score')
+
+    def test_investor_analytics_unaffected_by_paywall(self):
+        """Investor/Buyer's own outbound-activity stats were never gated — must keep rendering exactly as before."""
+        user = User.objects.create_user('paywall_investor_unaffected', password='x')
+        InvestorApplication.objects.create(user=user, investment_stage='Seed', investment_focus='SaaS')
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('accounts:profile_analysis', args=[user.username]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['has_analytics_paywall'])
+        self.assertContains(response, 'Profile Analysis')
+        # Narrower than a bare 'Unlock' substring check — the sidebar's
+        # globally-included Zelda widget script now contains that word in
+        # its own (unrelated) locked-memo-card JS string literal, so a
+        # page-wide substring match isn't a reliable signal anymore.
+        self.assertNotContains(response, 'Unlock Founder Insights')
+        self.assertNotContains(response, 'Unlock Seller Insights')
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
@@ -428,3 +553,162 @@ class BusinessVerificationViewTests(TestCase):
         self.client.force_login(self.founder_user)
         response = self.client.post(reverse('accounts:business_verification_confirm'), {'code': '123456'})
         self.assertEqual(response.status_code, 302)
+
+
+class VerificationHistoryProfileTests(TestCase):
+    """
+    accounts.views.profile()'s verification_history context — the trust
+    trend across every Truth Delta run for a founder/seller's documents,
+    surfaced on their public profile. Same viewer gate as the underlying
+    single-document Truth Delta page (owner, any investor/buyer, or
+    staff) — deliberately not connection-gated like IC Memo, since this
+    aggregates data already viewable one document at a time.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        from zelda_api.vector_models import DocumentSource
+        from zelda_api.truth_delta_models import TruthDeltaReport
+
+        self.founder_user = User.objects.create_user('vh_founder', password='x')
+        self.application = Application.objects.create(
+            user=self.founder_user, company_name='VHCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed', is_premium=True,
+        )
+        doc1 = DocumentSource.objects.create(
+            uploaded_by=self.founder_user, filename='seed_deck.pdf', source_entity='VHCo', document_type='pitch_deck',
+        )
+        doc2 = DocumentSource.objects.create(
+            uploaded_by=self.founder_user, filename='series_a_deck.pdf', source_entity='VHCo', document_type='pitch_deck',
+        )
+        self.older_report = TruthDeltaReport.objects.create(
+            document=doc1, overall_truth_score=90.0, credibility_risk='low', summary='Seed round claims check out.',
+        )
+        self.newer_report = TruthDeltaReport.objects.create(
+            document=doc2, overall_truth_score=82.0, credibility_risk='medium', summary='Series A claims mostly check out.',
+        )
+
+        self.investor_user = User.objects.create_user('vh_investor', password='x')
+        InvestorApplication.objects.create(
+            user=self.investor_user, full_name='I', company_name='Fund', email='i@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.stranger_user = User.objects.create_user('vh_stranger', password='x')
+
+    def test_owner_sees_full_history_most_recent_first(self):
+        self.client.force_login(self.founder_user)
+        response = self.client.get(reverse('accounts:profile', args=[self.founder_user.username]))
+        history = list(response.context['verification_history'])
+        self.assertEqual(history, [self.newer_report, self.older_report])
+
+    def test_investor_viewer_sees_history(self):
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('accounts:profile', args=[self.founder_user.username]))
+        self.assertEqual(len(response.context['verification_history']), 2)
+
+    def test_viewer_with_no_role_sees_no_history(self):
+        """A stranger with no investor/buyer/staff role and not the owner shouldn't see verification data at all."""
+        self.client.force_login(self.stranger_user)
+        response = self.client.get(reverse('accounts:profile', args=[self.founder_user.username]))
+        self.assertEqual(response.context['verification_history'], [])
+
+    def test_trend_and_stats_are_attached_to_each_report(self):
+        """
+        The two reports in setUp have empty `details`, so this exercises
+        the wiring itself (report.stats/.trend exist and are the right
+        shape) — TruthDeltaReportRollupAndTrendTests in zelda_api/tests.py
+        covers the underlying diff/rollup logic with real per_claim data.
+        """
+        self.client.force_login(self.founder_user)
+        response = self.client.get(reverse('accounts:profile', args=[self.founder_user.username]))
+        history = list(response.context['verification_history'])
+        newest, oldest = history[0], history[1]
+        self.assertEqual(newest.stats, {'total': 0, 'verified': 0, 'pct': None})
+        self.assertEqual(newest.trend, {'newly_verified': [], 'lost_verification': []})
+        self.assertIsNone(oldest.trend, "the oldest report has no prior report to diff against")
+
+    def test_anonymous_visitor_is_redirected_to_login(self):
+        """profile() is @login_required — confirms there's no anonymous path that could leak verification_history."""
+        response = self.client.get(reverse('accounts:profile', args=[self.founder_user.username]))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/accounts/login/', response.url)
+
+    def test_founder_with_no_documents_has_empty_history_not_an_error(self):
+        empty_founder = User.objects.create_user('vh_empty_founder', password='x')
+        Application.objects.create(
+            user=empty_founder, company_name='EmptyCo', founder_name='F', email='e@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        self.client.force_login(empty_founder)
+        response = self.client.get(reverse('accounts:profile', args=[empty_founder.username]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['verification_history'], [])
+
+
+class VerificationHistoryPaywallTests(TestCase):
+    """
+    Truth Delta's actual scores/trend are Premium — same founder/seller-
+    controlled-asset model as the IC Memo: gated on the founder's own
+    Premium, not the viewer's, so it's free for any investor/buyer to view
+    once the founder unlocks it. verification_reports_count stays visible
+    either way (proof reports exist), only the detailed list is gated.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        from zelda_api.vector_models import DocumentSource
+        from zelda_api.truth_delta_models import TruthDeltaReport
+
+        self.founder_user = User.objects.create_user('vhp_founder', password='x')
+        self.application = Application.objects.create(
+            user=self.founder_user, company_name='VHPCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        doc = DocumentSource.objects.create(
+            uploaded_by=self.founder_user, filename='deck.pdf', source_entity='VHPCo', document_type='pitch_deck',
+        )
+        TruthDeltaReport.objects.create(document=doc, overall_truth_score=90.0, credibility_risk='low', summary='Checks out.')
+
+        self.investor_user = User.objects.create_user('vhp_investor', password='x')
+        InvestorApplication.objects.create(
+            user=self.investor_user, full_name='I', company_name='Fund', email='i@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.staff_user = User.objects.create_user('vhp_staff', password='x', is_staff=True)
+
+    def test_owner_sees_locked_state_when_not_premium(self):
+        self.client.force_login(self.founder_user)
+        response = self.client.get(reverse('accounts:profile', args=[self.founder_user.username]))
+        self.assertFalse(response.context['verification_unlocked'])
+        self.assertEqual(response.context['verification_history'], [])
+        self.assertEqual(response.context['verification_reports_count'], 1)
+        self.assertContains(response, 'Unlock Your Verification History')
+
+    def test_investor_sees_locked_state_when_founder_not_premium(self):
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('accounts:profile', args=[self.founder_user.username]))
+        self.assertFalse(response.context['verification_unlocked'])
+        self.assertEqual(response.context['verification_history'], [])
+        self.assertContains(response, 'Premium Feature')
+
+    def test_owner_sees_full_history_once_premium(self):
+        self.application.is_premium = True
+        self.application.save(update_fields=['is_premium'])
+        self.client.force_login(self.founder_user)
+        response = self.client.get(reverse('accounts:profile', args=[self.founder_user.username]))
+        self.assertTrue(response.context['verification_unlocked'])
+        self.assertEqual(len(response.context['verification_history']), 1)
+
+    def test_investor_sees_full_history_once_founder_premium_without_own_premium(self):
+        self.application.is_premium = True
+        self.application.save(update_fields=['is_premium'])
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('accounts:profile', args=[self.founder_user.username]))
+        self.assertTrue(response.context['verification_unlocked'])
+        self.assertEqual(len(response.context['verification_history']), 1)
+
+    def test_staff_sees_full_history_regardless_of_premium(self):
+        self.client.force_login(self.staff_user)
+        response = self.client.get(reverse('accounts:profile', args=[self.founder_user.username]))
+        self.assertTrue(response.context['verification_unlocked'])
+        self.assertEqual(len(response.context['verification_history']), 1)

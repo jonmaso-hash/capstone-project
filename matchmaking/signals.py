@@ -5,7 +5,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from .models import (
     Application, InvestorApplication, Connection, DataRoomDocument, Document,
-    SellerApplication, founder_description_meets_word_count,
+    SellerApplication, FounderMilestone, founder_description_meets_word_count,
 )
 from matchmaking.services.ai_engine import generate_profile_embedding
 from shared_utils.file_cleanup import delete_file_field
@@ -79,6 +79,13 @@ def update_founder_vector(sender, instance, created, **kwargs):
         if pg_vector:
             Application.objects.filter(pk=instance.pk).update(description_vector_pg=pg_vector)
 
+    # description_vector is the field AIMatch scores against — a fresh one
+    # means every cached match for this founder is now stale. Async so the
+    # profile-save request never blocks on scanning every investor.
+    if description_vector:
+        from .tasks import refresh_matches_for_founder_task
+        refresh_matches_for_founder_task.delay(instance.pk, "Founder updated their profile")
+
 
 @receiver(post_save, sender=InvestorApplication)
 def update_investor_vector(sender, instance, created, **kwargs):
@@ -105,6 +112,20 @@ def update_investor_vector(sender, instance, created, **kwargs):
         pg_vector = focus_vector if focus_vector is not None else generate_profile_embedding(instance.investment_focus)
         if pg_vector:
             InvestorApplication.objects.filter(pk=instance.pk).update(focus_vector_pg=pg_vector)
+
+    # Same reasoning as update_founder_vector above — a fresh focus_vector
+    # means every cached match for this investor is now stale.
+    if focus_vector:
+        from .tasks import refresh_matches_for_investor_task
+        refresh_matches_for_investor_task.delay(instance.pk, "Investor updated their thesis")
+
+
+@receiver(post_save, sender=FounderMilestone)
+def refresh_match_freshness_on_milestone(sender, instance, created, **kwargs):
+    """A milestone doesn't change the score, but it's a reason to look again."""
+    if created:
+        from .tasks import mark_milestone_change_task
+        mark_milestone_change_task.delay(instance.founder_id, instance.title)
 
 
 # --- 2. CONNECTION WORKFLOW AUTOMATION ---

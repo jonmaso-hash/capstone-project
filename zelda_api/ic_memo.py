@@ -52,6 +52,21 @@ def can_view_ic_memo(request_user, founder_application):
     ).exists()
 
 
+def ic_memo_unlocked(request_user, founder_application):
+    """
+    Separate from can_view_ic_memo's access gate: whether the memo's actual
+    intelligence content is unlocked, vs. just a locked preview. Gated on
+    the FOUNDER's own Premium, not the investor's — this is a founder-
+    controlled asset (their diligence package to share), so gating it on
+    the investor's premium instead would let a founder ask to be connected
+    and have investors keep viewing it for free with no one ever paying.
+    Staff bypass for support purposes.
+    """
+    if request_user.is_staff:
+        return True
+    return founder_application.is_premium
+
+
 def build_ic_memo_context(founder_application):
     """
     Assembles everything an IC memo needs for one founder. Every piece is
@@ -124,6 +139,8 @@ def build_ic_memo_context(founder_application):
         'zelda_score': founder_application.zelda_score,
     }
 
+    from .disclaimers import DUE_DILIGENCE_DISCLAIMER
+
     return {
         'application': founder_application,
         'company_name': founder_application.company_name,
@@ -134,6 +151,7 @@ def build_ic_memo_context(founder_application):
         'valuation': valuation,
         'deck_engagement': deck_engagement,
         'financials': financials,
+        'disclaimer': DUE_DILIGENCE_DISCLAIMER,
     }
 
 

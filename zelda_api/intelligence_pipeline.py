@@ -45,7 +45,62 @@ def _log_anthropic_usage(response, document_source, call_type):
 
 class ZeldaIntelligencePipelineV2:
     """Zelda Intelligence Pipeline v2 - Production Ready"""
-    
+
+    # Categories where a number is a claim ABOUT the subject company —
+    # narrative categories (Problem/Product/Risk) are exempt from the
+    # third-party-attribution check below, since "risk: competition from
+    # larger incumbents" is legitimate content, not a misattributed number.
+    NUMERIC_CATEGORIES = {'Revenue', 'Funding', 'Team', 'Traction', 'Market'}
+
+    # A number attributed to a competitor/rival/peer isn't a claim about
+    # THIS company, however well the sentence otherwise matches a
+    # category's keywords (e.g. "Our competitor reported $200M in
+    # revenue" must never become a revenue claim about us). Pragmatic
+    # phrase-proximity check, not full entity resolution — escalate to
+    # real NER/entity-linking only if false positives persist despite
+    # this (see evaluation_corpus.py's solstice_competitor_revenue_trap).
+    THIRD_PARTY_ATTRIBUTION_PATTERN = re.compile(
+        r'\b(competitor|competitors|rival|rivals|peer|peers|another company|other companies|industry leader|according to \S+)\b',
+        re.IGNORECASE,
+    )
+
+    # 'growth' is a genuine, useful Traction signal on its own (e.g.
+    # "212% YoY growth in customers"), but the same word shows up
+    # constantly in ordinary revenue prose ("$270B... driven by growth
+    # in Azure"). Found via the 98-document evaluation corpus: every
+    # real false positive of this shape was a revenue sentence carrying
+    # a dollar figure that also happened to mention "growth" in passing.
+    # Only suppressed when 'growth' is the SOLE reason a sentence
+    # matched Traction at all — a sentence with a genuine
+    # customer/user-specific word alongside "growth" is unaffected.
+    REVENUE_DOLLAR_CONTEXT_PATTERN = re.compile(
+        r'\brevenue\b.{0,60}\$[\d,\.]|\$[\d,\.]+.{0,60}\brevenue\b',
+        re.IGNORECASE,
+    )
+
+    # The 8 fixed categories every document is analyzed against — hoisted
+    # to a class constant (was a local dict inside _analyze_document) so
+    # confidence_breakdown.py can share the exact same canonical category
+    # list rather than re-deriving or hardcoding its own, which would
+    # silently drift if this list ever changes.
+    ANALYSIS_CATEGORIES = {
+        'Problem': 'problem challenge issue pain solution healthcare fragmented',
+        'Market': 'market tam sam opportunity size addressable healthcare',
+        'Revenue': 'revenue arr mrr pricing monetization income annual recurring subscription',
+        'Team': 'team founder ceo experience background skill leadership',
+        'Product': 'product feature technology platform service offering',
+        # 'revenue' deliberately excluded — Revenue already has its
+        # own category, and including it here meant every revenue
+        # sentence ALSO triggered a duplicate Traction insight for
+        # the same figure (invisible until the category_mapping
+        # wiring bug was fixed and Traction claims started reaching
+        # ClaimedDatapoint at all, at which point it surfaced as a
+        # real precision regression in the evaluation harness).
+        'Traction': 'customers users growth adopted retention metric',
+        'Funding': 'funding raise capital investment ask series round raised',
+        'Risk': 'risks challenges competition threats barrier regulatory',
+    }
+
     def __init__(self):
         self.chunker = DocumentChunker(chunk_size_tokens=400, overlap_tokens=50)
         self.embedding_engine = embedding_engine
@@ -268,39 +323,38 @@ class ZeldaIntelligencePipelineV2:
             
             insights = []
             chunks = list(DocumentChunk.objects.filter(document=document_source).order_by('chunk_index'))
-            
-            analysis_categories = {
-                'Problem': 'problem challenge issue pain solution healthcare fragmented',
-                'Market': 'market tam sam opportunity size addressable healthcare',
-                'Revenue': 'revenue arr mrr pricing monetization income annual recurring subscription',
-                'Team': 'team founder ceo experience background skill leadership',
-                'Product': 'product feature technology platform service offering',
-                # 'revenue' deliberately excluded — Revenue already has its
-                # own category, and including it here meant every revenue
-                # sentence ALSO triggered a duplicate Traction insight for
-                # the same figure (invisible until the category_mapping
-                # wiring bug was fixed and Traction claims started reaching
-                # ClaimedDatapoint at all, at which point it surfaced as a
-                # real precision regression in the evaluation harness).
-                'Traction': 'customers users growth adopted retention metric',
-                'Funding': 'funding raise capital investment ask series round raised',
-                'Risk': 'risks challenges competition threats barrier regulatory',
-            }
-            
-            for category, keywords in analysis_categories.items():
+
+            for category, keywords in self.ANALYSIS_CATEGORIES.items():
                 best_insight = None
                 best_confidence = 0
-                
-                # Search each chunk independently
+
+                # Search each chunk independently. On a tie, prefer whichever
+                # chunk's result has a dollar figure — mirrors _smart_extract's
+                # own within-chunk tie-break (its two candidate sentences
+                # never cross a chunk boundary, so that logic alone doesn't
+                # cover this case). Without it, a qualitative sentence like
+                # "Recurring subscription revenue model." (95 confidence, no
+                # number) permanently wins over a later chunk's "Current
+                # Revenue: $4.5M" (also 95) purely because its chunk happens
+                # to come first — found live when a Qibby Saves valuation
+                # used that qualitative sentence as the Revenue insight and
+                # the actual $4.5M figure never surfaced at all.
                 for chunk in chunks:
-                    result, confidence = self._smart_extract(category, chunk.raw_text, keywords)
-                    if result and confidence > best_confidence:
+                    result, confidence, provenance = self._smart_extract(category, chunk.raw_text, keywords)
+                    if not result:
+                        continue
+                    is_better = confidence > best_confidence or (
+                        confidence == best_confidence and best_insight is not None and
+                        re.search(r'\$[\d,]+[MBK]?', result) and
+                        not re.search(r'\$[\d,]+[MBK]?', best_insight[0])
+                    )
+                    if is_better:
                         best_confidence = confidence
-                        best_insight = (result, confidence, chunk)
-                
+                        best_insight = (result, confidence, chunk, provenance)
+
                 if best_insight:
-                    insight_text, confidence, source_chunk = best_insight
-                    
+                    insight_text, confidence, source_chunk, provenance = best_insight
+
                     insight = IntelligenceInsight.objects.create(
                         document=document_source,
                         insight_type='statement',
@@ -311,12 +365,22 @@ class ZeldaIntelligencePipelineV2:
                     )
                     insight.source_chunks.set([source_chunk])
                     self.used_chunks.add(source_chunk.id)
+                    # In-memory only, never persisted — see _smart_extract's
+                    # docstring. Read by evaluate_claim_extraction --verbose.
+                    insight.extraction_provenance = provenance
                     insights.append(insight)
             
             logger.info(f"Extracted {len(insights)} insights with dynamic confidence")
+            # Local import: confidence_breakdown imports this module at
+            # load time, so importing it back at module scope here would
+            # be circular. Quality-weighted average across all 8 canonical
+            # categories (missing ones count as 0), not just "how many
+            # categories got any insight" — see compute_overall_confidence's
+            # docstring for why that distinction matters.
+            from .confidence_breakdown import compute_overall_confidence
             return {
                 'insights': insights,
-                'confidence': min(len(insights) / 8.0, 1.0),
+                'confidence': compute_overall_confidence(insights),
             }
         
         except Exception as e:
@@ -331,8 +395,8 @@ class ZeldaIntelligencePipelineV2:
     ) -> Optional[IntelligenceInsight]:
         """Extract insight with DYNAMIC confidence scoring"""
         try:
-            insight_text, confidence = self._smart_extract(category, raw_text, keywords)
-            
+            insight_text, confidence, _provenance = self._smart_extract(category, raw_text, keywords)
+
             if not insight_text:
                 return None
             
@@ -364,7 +428,7 @@ class ZeldaIntelligencePipelineV2:
             logger.warning(f"Failed to extract {category}: {str(e)}")
             return None
     
-    def _smart_extract(self, category: str, text: str, keywords: str) -> Tuple[Optional[str], float]:
+    def _smart_extract(self, category: str, text: str, keywords: str) -> Tuple[Optional[str], float, Optional[Dict]]:
         """
         Smart extraction with DYNAMIC confidence scoring.
         Confidence logic:
@@ -372,22 +436,48 @@ class ZeldaIntelligencePipelineV2:
         - Exact phrase match: 85%
         - Keyword match with context: 70%
         - Generic/inferred: 45%
+
+        Also returns a provenance dict — {'rule', 'matched_keywords',
+        'matched_sentence'} — alongside the usual (value, confidence).
+        This is debugging/evaluation metadata, not new production
+        storage: nothing here is written to IntelligenceInsight or any
+        other model field, it only rides along in-memory for
+        evaluate_claim_extraction --verbose to surface. When "Revenue
+        precision dropped" is the only signal a regression gives you,
+        finding the cause means re-deriving which rule fired and on
+        which sentence by hand; carrying that through as it's computed
+        (this function already knows it) is a lot cheaper than that.
         """
         keyword_list = keywords.split()
         sentences = re.split(r'(?<!\d)[.!?](?!\d)|\n', text)
 
         best_match = None
         best_confidence = 0
+        best_provenance = None
 
         for sentence in sentences:
             sentence_lower = sentence.lower()
 
-            matching_keywords = sum(1 for kw in keyword_list if kw.lower() in sentence_lower)
+            # Word-boundary match, not substring containment — the old
+            # `kw in sentence_lower` check meant Team's keyword "team"
+            # matched inside "teams" (e.g. "...for enterprise AI teams"
+            # in a funding sentence, with nothing to do with headcount),
+            # and Funding's short keyword "ask" matched inside unrelated
+            # words like "task"/"basket". Found via the 98-document
+            # evaluation corpus, where precision dropped once sector
+            # diversity exposed how often this fired.
+            matched_keywords = [kw for kw in keyword_list if re.search(rf'\b{re.escape(kw.lower())}\b', sentence_lower)]
 
-            if matching_keywords == 0:
+            if not matched_keywords:
                 continue
 
             clean_sentence = sentence.strip()
+
+            if category in self.NUMERIC_CATEGORIES and self.THIRD_PARTY_ATTRIBUTION_PATTERN.search(clean_sentence):
+                continue
+
+            if category == 'Traction' and matched_keywords == ['growth'] and self.REVENUE_DOLLAR_CONTEXT_PATTERN.search(clean_sentence):
+                continue
 
             # Skip short fragments
             if len(clean_sentence) < 10:
@@ -410,21 +500,24 @@ class ZeldaIntelligencePipelineV2:
             confidence = self._calculate_confidence(category, clean_sentence, text)
 
             if confidence > best_confidence or (
-                confidence == best_confidence and 
-                re.search(r'\$[\d,]+[MBK]?', clean_sentence) and 
+                confidence == best_confidence and
+                re.search(r'\$[\d,]+[MBK]?', clean_sentence) and
                 not re.search(r'\$[\d,]+[MBK]?', best_match or '')
             ):
                 best_confidence = confidence
                 cleaned_value = self._extract_clean_value(category, clean_sentence)
                 best_match = cleaned_value[:500]
+                best_provenance = {
+                    'rule': 'primary_match', 'matched_keywords': matched_keywords, 'matched_sentence': clean_sentence,
+                }
 
         if not best_match:
             fallback = self._get_smart_fallback(category, text)
             if fallback is None:
-                return None, 0.0
-            return fallback, 35.0
+                return None, 0.0, None
+            return fallback, 35.0, {'rule': 'fallback', 'matched_keywords': [], 'matched_sentence': fallback}
 
-        return best_match, best_confidence
+        return best_match, best_confidence, best_provenance
 
     def _extract_clean_value(self, category: str, sentence: str) -> str:
         """
@@ -576,9 +669,13 @@ class ZeldaIntelligencePipelineV2:
         borrowed from an unrelated sentence elsewhere in the document.
         Used by the Market/Revenue/Funding fallbacks specifically because
         a bare number, without knowing what it refers to, isn't a claim
-        that can be safely attributed to any one category.
+        that can be safely attributed to any one category. Also skips any
+        sentence attributing its number to a competitor/rival/peer — see
+        THIRD_PARTY_ATTRIBUTION_PATTERN.
         """
         for sentence in re.split(r'(?<!\d)[.!?](?!\d)|\n', text):
+            if ZeldaIntelligencePipelineV2.THIRD_PARTY_ATTRIBUTION_PATTERN.search(sentence):
+                continue
             if not re.search(r'\$[\d,\.]+[MBK]?', sentence):
                 continue
             if any(kw in sentence.lower() for kw in context_keywords):
@@ -741,7 +838,7 @@ class ZeldaIntelligencePipelineV2:
 
         facts_display = json.dumps({
             k: v for k, v in facts.items()
-            if k not in ('missing_fields', 'traction_signals') and v is not None
+            if k not in ('missing_fields', 'traction_signals', '_provenance') and v is not None
         }, indent=2)
 
         system_prompt = """You are a senior M&A analyst preparing an evidence-grounded business
@@ -830,8 +927,43 @@ class ZeldaIntelligencePipelineV2:
             logger.error(f"Claude API error in valuation report generation: {str(e)}")
             return {'error': f'Valuation report generation failed: {str(e)}'}
 
+    @staticmethod
+    def _values_agree(document_value: str, profile_value: str) -> bool:
+        """
+        Whether a document-extracted string ("$20M", "200 employees") and
+        a profile-sourced string ("20000000.00", "120") represent the same
+        real-world quantity. Reuses truth_delta_tasks' numeric-value parser
+        (already handles "$1M"/"$416 billion"/"500 customers" etc.) rather
+        than a fresh one, so "K/M/B" parsing stays consistent with how the
+        rest of the app already reads these figures. Compared with a small
+        relative tolerance (1%) rather than exact equality, since "$4.5M"
+        parsed against a profile figure of 4,500,001 shouldn't read as a
+        genuine conflict over a rounding artifact.
+        """
+        from .truth_delta_tasks import _extract_numeric_value
+        document_num = _extract_numeric_value(document_value)
+        profile_num = _extract_numeric_value(profile_value)
+        if document_num is None or profile_num is None:
+            return False
+        if profile_num == 0:
+            return document_num == 0
+        return abs(document_num - profile_num) / abs(profile_num) <= 0.01
+
     def _build_structured_context(self, doc: DocumentSource, insights) -> dict:
-        """Extract structured facts from insights for Claude context"""
+        """
+        Extract structured facts from insights for Claude context.
+
+        Provenance precedence: when both the uploader's own (company-
+        matched) founder profile AND the document itself state a value for
+        the same field, the DOCUMENT wins — profile fields can go stale (a
+        founder's saved team_size from months ago) while the deck actually
+        being analyzed right now is the more current source of truth.
+        facts['_provenance'] records, per reconciled field, which source
+        won and — for document-sourced values — the confidence of the
+        insight that backs it, so a claim can be traced to real evidence
+        instead of asserted flatly. Stripped from facts_display before it
+        reaches Claude (see _call_claude_for_valuation/_call_claude_for_memo).
+        """
         import re
 
         facts = {
@@ -850,30 +982,85 @@ class ZeldaIntelligencePipelineV2:
             'use_of_proceeds': None,
             'traction_signals': [],
             'missing_fields': [],
+            '_provenance': {},
         }
 
-        # Try to pull from Application model if linked
+        # Try to pull from the uploader's own Application model — but ONLY
+        # if it's actually about the company this document is analyzing.
+        # A real bug, found live: the uploader's own founder profile fields
+        # were trusted unconditionally, regardless of whose deck they'd
+        # actually just uploaded. An admin account with its own unrelated
+        # "Gmail" founder profile (raising_amount=$50,000) uploaded a
+        # standalone valuation for "Qibby Saves LLC" — the Gmail profile's
+        # $50,000 leaked into the Qibby report as "capital currently being
+        # raised," alongside the correctly-extracted "$20M Series-C" from
+        # the deck's own insight text, a glaring, credibility-damaging
+        # inconsistency. This only matters for third-party/standalone
+        # valuation uploads (an investor or admin analyzing someone else's
+        # company) — a founder uploading their own deck through their own
+        # dashboard still gets their verified fields, since the company
+        # names naturally match there.
+        # Kept separate from `facts` (not written in directly) so the
+        # document-extraction pass below can reconcile the two sources
+        # afterward with a clear precedence rule, rather than the profile
+        # value silently pre-populating `facts` and never being checked
+        # against what the document itself says.
+        profile_values = {}
         try:
-            from matchmaking.models import Application
+            from matchmaking.models import Application, _normalize_company_string
             app = Application.objects.filter(user=doc.uploaded_by).first()
-            if app:
+            normalized_doc_company = _normalize_company_string(doc.source_entity)
+            normalized_app_company = _normalize_company_string(app.company_name) if app else ''
+            company_matches = bool(normalized_doc_company) and bool(normalized_app_company) and (
+                normalized_doc_company in normalized_app_company or normalized_app_company in normalized_doc_company
+            )
+            if app and company_matches:
                 if app.current_revenue:
-                    facts['revenue'] = str(app.current_revenue)
+                    profile_values['revenue'] = str(app.current_revenue)
                 if app.raising_amount:
-                    facts['raise_amount'] = str(app.raising_amount)
+                    profile_values['raise_amount'] = str(app.raising_amount)
                 if app.team_size:
-                    facts['team_size'] = str(app.team_size)
+                    profile_values['team_size'] = str(app.team_size)
                 if app.monthly_burn_rate:
                     facts['burn_rate'] = str(app.monthly_burn_rate)
         except Exception:
             pass
 
-        # Extract from insights via regex
+        # Extract from insights via regex. The keyword is mandatory on both
+        # alternatives — a bare dollar figure with no adjacent revenue
+        # keyword must NOT match, otherwise any dollar amount elsewhere in
+        # the deck (a funding ask, prior capital raised, a use-of-proceeds
+        # line item) gets misread as ARR. This is a real bug that was
+        # caught live: "Current Revenue: $4.5M" alongside "Seeking: $20M
+        # Series-C funding" produced a valuation built on $20M ARR instead
+        # of the deck's actual $4.5M, because the old pattern's trailing
+        # `(?:ARR|MRR|revenue|recurring)?` was optional, so it matched the
+        # unrelated $20M figure first.
         revenue_pattern = re.compile(
-            r'\$[\d,]+(?:\.\d+)?[KMBkm]?\s*(?:ARR|MRR|revenue|recurring)?|'
-            r'(?:ARR|MRR|revenue)\s*(?:of\s*)?\$[\d,]+(?:\.\d+)?[KMBkm]?',
+            r'(?:current\s+)?(?:ARR|MRR|revenue|recurring\s+revenue)\s*(?:of|is|was|:)?\s*\$[\d,]+(?:\.\d+)?[KMBkm]?|'
+            r'\$[\d,]+(?:\.\d+)?[KMBkm]?\s*(?:in\s+)?(?:ARR|MRR|revenue|recurring\s+revenue)',
             re.IGNORECASE
         )
+        # Distinct from revenue_pattern's keyword set on purpose — "seeking
+        # $20M" / "$20M Series-C" describe a raise, not revenue, and must
+        # never satisfy revenue_pattern's own match.
+        raise_amount_pattern = re.compile(
+            r'(?:seeking|raising|ask(?:ing)?)[^\$\n]{0,25}\$[\d,]+(?:\.\d+)?[KMBkm]?|'
+            r'\$[\d,]+(?:\.\d+)?[KMBkm]?[^\n]{0,20}(?:series[\s-][a-z0-9]+|funding\s+round|raise)',
+            re.IGNORECASE
+        )
+        team_size_pattern = re.compile(r'\d+[\s\-]*(?:employees|person\s+team|team\s+members|people|staff)', re.IGNORECASE)
+        # _extract_clean_value's own Revenue branch (see _calculate_confidence
+        # / _extract_clean_value) already strips a Revenue-category insight
+        # down to close to a bare dollar figure (e.g. "Current Revenue:
+        # $4.5M" -> "$4.5M" with no adjacent keyword left at all) before it
+        # ever reaches this function — so requiring the keyword adjacency
+        # revenue_pattern needs for OTHER categories would make a genuine
+        # Revenue-category insight's own figure unmatchable. Safe to use a
+        # bare-figure pattern only when the insight's category already is
+        # 'Revenue' (that's the disambiguator revenue_pattern's keyword
+        # requirement exists to substitute for on other categories).
+        bare_amount_pattern = re.compile(r'\$[\d,]+(?:\.\d+)?[KMBkm]?', re.IGNORECASE)
         customer_pattern = re.compile(
             r'(\d+)\s*(?:paying\s*)?(?:customers|clients|users|clinics|practices|hospitals)',
             re.IGNORECASE
@@ -881,13 +1068,40 @@ class ZeldaIntelligencePipelineV2:
         retention_pattern = re.compile(r'(\d+(?:\.\d+)?%)\s*(?:retention|churn)', re.IGNORECASE)
         growth_pattern = re.compile(r'(\d+(?:\.\d+)?%)\s*(?:growth|MoM|YoY|month)', re.IGNORECASE)
 
-        for insight in insights:
+        # Revenue-category insights first (see _analyze_document's fixed
+        # categories) — a Funding or Traction insight can still mention a
+        # dollar figure alongside an unrelated word the tightened regex
+        # allows through, so preferring the insight actually about revenue
+        # avoids cross-category mismatches even with the stricter pattern.
+        revenue_insights = [i for i in insights if i.category == 'Revenue']
+        other_insights = [i for i in insights if i.category != 'Revenue']
+
+        # Tracks which insight backed each document-extracted value, so the
+        # reconciliation step below can record real provenance (confidence,
+        # not just "yes/no it came from the document").
+        document_source_insight = {}
+
+        for insight in revenue_insights + other_insights:
             text = insight.insight_text or ''
 
             if not facts['arr']:
-                m = revenue_pattern.search(text)
+                pattern = bare_amount_pattern if insight.category == 'Revenue' else revenue_pattern
+                m = pattern.search(text)
                 if m:
                     facts['arr'] = m.group(0).strip()
+                    document_source_insight['revenue'] = insight
+
+            if not facts['raise_amount']:
+                m = raise_amount_pattern.search(text)
+                if m:
+                    facts['raise_amount'] = m.group(0).strip()
+                    document_source_insight['raise_amount'] = insight
+
+            if not facts['team_size']:
+                m = team_size_pattern.search(text)
+                if m:
+                    facts['team_size'] = m.group(0).strip()
+                    document_source_insight['team_size'] = insight
 
             m = customer_pattern.search(text)
             if m:
@@ -902,6 +1116,64 @@ class ZeldaIntelligencePipelineV2:
                 m = growth_pattern.search(text)
                 if m:
                     facts['growth_rate'] = m.group(1)
+
+        # Reconcile document-extracted vs. profile-sourced values for the
+        # three fields that can come from either. Four mutually-exclusive
+        # states, richer than a flat "which source won" flag:
+        #   confirmed      — both sources exist and agree (numerically).
+        #   document_only  — only the document has a value.
+        #   profile_only   — only the profile has a value.
+        #   conflict       — both exist and disagree; document is still
+        #                    selected (see this method's docstring), but
+        #                    the disagreement itself is preserved rather
+        #                    than silently discarded, so a real mismatch
+        #                    (a stale profile field vs. what the deck
+        #                    currently says) is visible for debugging or a
+        #                    future "these sources disagree" warning,
+        #                    rather than only ever being inferable from
+        #                    which single value happened to end up in the
+        #                    prompt. 'revenue' is exposed under its own key
+        #                    but extracted into 'arr' above (kept as a
+        #                    separate field for backward compatibility
+        #                    with existing callers of that name), so it
+        #                    needs the alias below.
+        document_field_alias = {'revenue': 'arr'}
+        for field in ('revenue', 'raise_amount', 'team_size'):
+            document_value = facts[document_field_alias.get(field, field)]
+            profile_value = profile_values.get(field)
+            source_insight = document_source_insight.get(field)
+
+            if document_value and profile_value:
+                facts[field] = document_value
+                status = 'confirmed' if self._values_agree(document_value, profile_value) else 'conflict'
+                facts['_provenance'][field] = {
+                    'status': status,
+                    'source': 'document',
+                    'document_value': document_value,
+                    'profile_value': profile_value,
+                    'document_id': doc.id,
+                    'confidence': source_insight.confidence_score if source_insight else None,
+                }
+            elif document_value:
+                facts[field] = document_value
+                facts['_provenance'][field] = {
+                    'status': 'document_only',
+                    'source': 'document',
+                    'document_value': document_value,
+                    'profile_value': None,
+                    'document_id': doc.id,
+                    'confidence': source_insight.confidence_score if source_insight else None,
+                }
+            elif profile_value:
+                facts[field] = profile_value
+                facts['_provenance'][field] = {
+                    'status': 'profile_only',
+                    'source': 'profile',
+                    'document_value': None,
+                    'profile_value': profile_value,
+                    'document_id': None,
+                    'confidence': None,
+                }
 
         # Identify missing fields
         checks = {
@@ -937,7 +1209,7 @@ class ZeldaIntelligencePipelineV2:
 
         facts_display = json.dumps({
             k: v for k, v in facts.items()
-            if k not in ('missing_fields', 'traction_signals') and v is not None
+            if k not in ('missing_fields', 'traction_signals', '_provenance') and v is not None
         }, indent=2)
 
         system_prompt = """You are a senior analyst at a top-tier venture capital firm preparing 

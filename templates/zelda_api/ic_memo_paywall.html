@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}IC Memo — {{ company_name }} | Interlink Foundry{% endblock title %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 700px;">
+    <a href="{% url 'accounts:profile' application.user.username %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 mb-4">
+        <i class="bi bi-arrow-left me-1"></i> Back to Profile
+    </a>
+
+    <div class="mb-4">
+        <p class="text-uppercase small text-muted fw-bold mb-1">Investment Committee Memo</p>
+        <h1 class="fw-bold mb-0">{{ company_name }}</h1>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4" style="background: linear-gradient(135deg, #fff8e1, #ffffff);">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-2">
+                <i class="bi bi-lock-fill me-1 text-warning"></i>
+                {% if is_owner %}Unlock Your IC Memo{% else %}Premium Feature{% endif %}
+            </h5>
+            <p class="text-muted mb-3">
+                {% if is_owner %}
+                Generate a one-page executive report for investors — your Intelligence Memo, Truth Delta
+                verification, valuation, and pitch engagement combined into one shareable diligence package.
+                {% else %}
+                {{ company_name }} hasn't unlocked IC Memo sharing yet. Once they upgrade to Premium,
+                you'll be able to view it here as a connected investor &mdash; no extra cost to you.
+                {% endif %}
+            </p>
+            <ul class="list-unstyled text-secondary small mb-3">
+                <li class="mb-1"><i class="bi bi-check2 text-success me-2"></i>Company overview</li>
+                <li class="mb-1"><i class="bi bi-check2 text-success me-2"></i>AI intelligence memo</li>
+                <li class="mb-1"><i class="bi bi-check2 text-success me-2"></i>Valuation</li>
+                <li class="mb-1"><i class="bi bi-check2 text-success me-2"></i>Truth Delta verification</li>
+                <li class="mb-0"><i class="bi bi-check2 text-success me-2"></i>Pitch engagement metrics</li>
+            </ul>
+            {% if is_owner %}
+            <a href="{% url 'billing:billing_page' %}" class="btn btn-warning rounded-pill px-4 fw-semibold">
+                View Membership Plans
+            </a>
+            {% else %}
+            <p class="text-muted small fst-italic mb-0">Premium feature — unlocked by the founder, free for you to view once they do.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

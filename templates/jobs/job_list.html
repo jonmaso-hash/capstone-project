@@ -467,9 +467,11 @@
 
             {% for job in jobs %}
             {% if not job.is_expired and job.is_active %}
-            <div class="job-card {% if job.is_featured %}featured{% endif %}">
+            <div class="job-card {% if job.is_featured or job.is_highlighted %}featured{% endif %}">
 
-                {% if job.is_featured %}
+                {% if job.is_highlighted %}
+                <span class="featured-badge"><i class="bi bi-stars"></i> Highlighted</span>
+                {% elif job.is_featured %}
                 <span class="featured-badge">★ Featured</span>
                 {% endif %}
 

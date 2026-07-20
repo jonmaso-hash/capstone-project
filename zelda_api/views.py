@@ -8,8 +8,9 @@ from django.conf import settings
 from django.urls import reverse, NoReverseMatch
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.db.models import Q, Avg, Sum, Count
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse, Http404
 from django.utils import timezone
 from .vector_models import DocumentSource
@@ -1056,8 +1057,8 @@ class SummarizePageAPIView(APIView):
     
 @login_required
 def truth_delta_ui_view(request, document_id):
-    from .truth_delta_models import TruthDeltaReport, ClaimedDatapoint
-    
+    from .truth_delta_models import TruthDeltaReport, ClaimedDatapoint, can_request_clarification, truth_delta_unlocked
+
     document = get_object_or_404(DocumentSource, id=document_id)
 
     if document.is_hidden_by_staff and document.uploaded_by != request.user and not request.user.is_staff:
@@ -1073,16 +1074,43 @@ def truth_delta_ui_view(request, document_id):
             from matchmaking.models import Application, log_investor_event
             founder_app = Application.objects.filter(user=document.uploaded_by).first()
             if founder_app:
+                # Free discovery signal for the founder even when the
+                # content itself is Premium-locked below — "an investor
+                # showed interest" should never be paywalled.
                 log_investor_event(request.user, founder_app, 'truth_delta_view')
+
+    if not truth_delta_unlocked(request.user, document):
+        return render(request, 'truth_delta_paywall.html', {
+            'document': document,
+            'is_owner': document.uploaded_by == request.user,
+        })
 
     # Get latest report for this document
     report = TruthDeltaReport.objects.filter(
         document=document
     ).order_by('-created_at').first()
-    
+
     # Get claims that were extracted
     claims = ClaimedDatapoint.objects.filter(document=document)
-    
+
+    # Clarification requests — grouped by category client-side; serialized
+    # here as a flat list since json_script handles the list shape cleanly.
+    clarification_requests = []
+    if report:
+        clarification_requests = [
+            {
+                'id': cr.id,
+                'category': cr.category,
+                'message': cr.message,
+                'status': cr.status,
+                'response_text': cr.response_text,
+                'requested_by': cr.requested_by.get_full_name() or cr.requested_by.username,
+                'requested_by_id': cr.requested_by_id,
+                'created_at': cr.created_at.strftime('%b %d, %Y'),
+            }
+            for cr in report.clarification_requests.select_related('requested_by').order_by('-created_at')
+        ]
+
     context = {
         'document': document,
         'report': report,
@@ -1093,39 +1121,188 @@ def truth_delta_ui_view(request, document_id):
         'summary': report.summary if report else 'Verification pending.',
         'claims_count': claims.count(),
         'details': report.details if report else {},
+        'clarification_requests': clarification_requests,
+        'can_request_clarification': can_request_clarification(request.user, document),
+        'is_document_owner': document.uploaded_by == request.user,
     }
-    
+    from .disclaimers import DUE_DILIGENCE_DISCLAIMER
+    context['disclaimer'] = DUE_DILIGENCE_DISCLAIMER
+
     return render(request, 'truth_delta_dashboard.html', context)
 
+
 @login_required
-def analyze_founder_profile(request, founder_username):
+@require_POST
+def flag_truth_delta_claim(request, document_id, category):
     """
-    Track 1: Investor clicks 'Analyze with Zelda' on a founder profile.
-    Finds the founder's existing pitch deck DocumentSource and returns
-    the document ID so Zelda can load the memo directly.
-    If no document exists but founder has a pitch deck, creates one and
-    triggers the pipeline.
+    An investor/buyer flags one specific unverified claim and asks the
+    founder/seller to clarify or supply supporting documentation. Mirrors
+    matchmaking.views.post_pitch_video_comment's shape exactly (inline
+    fetch()+JsonResponse, notification fired only on success, wrapped so
+    a notification failure never breaks the actual request).
+    """
+    from .truth_delta_models import TruthDeltaReport, ClaimedDatapoint, ClarificationRequest, can_request_clarification
+
+    document = get_object_or_404(DocumentSource, id=document_id)
+    if not can_request_clarification(request.user, document):
+        return JsonResponse({'error': 'Not authorized.'}, status=403)
+
+    valid_categories = {c[0] for c in ClaimedDatapoint.CATEGORY_CHOICES}
+    if category not in valid_categories:
+        return JsonResponse({'error': 'Unknown claim category.'}, status=400)
+
+    report = TruthDeltaReport.objects.filter(document=document).order_by('-created_at').first()
+    if not report:
+        return JsonResponse({'error': 'No verification report exists for this document yet.'}, status=404)
+
+    message = request.POST.get('message', '').strip()
+    if len(message) > 1000:
+        return JsonResponse({'error': 'Message is too long (max 1000 characters).'}, status=400)
+
+    clarification = ClarificationRequest.objects.create(
+        report=report, category=category, requested_by=request.user, message=message,
+    )
+
+    try:
+        from notifications.models import Notification
+        Notification.objects.create(
+            recipient=document.uploaded_by,
+            sender=request.user,
+            notification_type='CLARIFICATION_REQUEST',
+            message=f"{request.user.get_full_name() or request.user.username} asked for clarification on your {clarification.get_category_display()} claim.",
+            target_url=reverse('zelda_api:truth_delta_ui', args=[document.id]),
+        )
+    except Exception as e:
+        logger.warning(f"Failed to create clarification-request notification: {str(e)}")
+
+    return JsonResponse({
+        'status': 'success',
+        'clarification': {
+            'id': clarification.id,
+            'category': clarification.category,
+            'message': clarification.message,
+            'status': clarification.status,
+            'response_text': '',
+            'requested_by': request.user.get_full_name() or request.user.username,
+            'requested_by_id': request.user.id,
+            'created_at': clarification.created_at.strftime('%b %d, %Y'),
+        },
+    })
+
+
+@login_required
+@require_POST
+def respond_to_clarification_request(request, clarification_id):
+    """Only the document owner (or staff) can respond — the founder/seller answering an investor's/buyer's question."""
+    from .truth_delta_models import ClarificationRequest
+
+    clarification = get_object_or_404(ClarificationRequest, id=clarification_id)
+    owner = clarification.report.document.uploaded_by
+    if request.user != owner and not request.user.is_staff:
+        return JsonResponse({'error': 'Not authorized.'}, status=403)
+
+    response_text = request.POST.get('response_text', '').strip()
+    if not response_text:
+        return JsonResponse({'error': 'Response cannot be empty.'}, status=400)
+    if len(response_text) > 2000:
+        return JsonResponse({'error': 'Response is too long (max 2000 characters).'}, status=400)
+
+    clarification.response_text = response_text
+    clarification.status = 'RESPONDED'
+    clarification.responded_at = timezone.now()
+    clarification.save()
+
+    try:
+        from notifications.models import Notification
+        Notification.objects.create(
+            recipient=clarification.requested_by,
+            sender=request.user,
+            notification_type='CLARIFICATION_RESPONSE',
+            message=f"{owner.get_full_name() or owner.username} responded to your clarification request.",
+            target_url=reverse('zelda_api:truth_delta_ui', args=[clarification.report.document_id]),
+        )
+    except Exception as e:
+        logger.warning(f"Failed to create clarification-response notification: {str(e)}")
+
+    return JsonResponse({'status': 'success', 'response_text': clarification.response_text})
+
+@login_required
+def _founder_investor_context(request, founder_username):
+    """
+    Shared resolution + auth for analyze_founder_profile and its confirm
+    step: investor role check, founder lookup, and the founder's
+    Application. Returns (investor_profile, founder_user, application) or
+    an early JsonResponse on failure.
     """
     from django.contrib.auth import get_user_model
-    from matchmaking.models import Application
-    from .vector_models import DocumentSource
-    from .tasks import process_document_pipeline
-
     User = get_user_model()
 
-    # Must be an investor to use this
     investor_profile = (
         getattr(request.user, 'accounts_investor_profile', None) or
         getattr(request.user, 'match_investor_profile', None)
     )
     if not investor_profile:
-        return JsonResponse({'status': 'error', 'message': 'Investor access required'}, status=403)
+        return None, JsonResponse({'status': 'error', 'message': 'Investor access required'}, status=403)
 
-    # Find the founder
     founder_user = get_object_or_404(User, username=founder_username)
     application = getattr(founder_user, 'match_founder_profile', None)
     if not application:
-        return JsonResponse({'status': 'error', 'message': 'No founder profile found'}, status=404)
+        return None, JsonResponse({'status': 'error', 'message': 'No founder profile found'}, status=404)
+
+    return (investor_profile, founder_user, application), None
+
+
+def _match_reasons(application, investor_profile):
+    """
+    Plain comparisons over fields already on both profiles — no new AI
+    call or scoring model, just surfacing why a match looks promising
+    before an investor decides whether to spend an analysis on it. Reuses
+    the exact sector/stage/ticket-size checks matchmaking/utils.py already
+    uses for scoring (calculate_rule_based_score, passes_hard_filters),
+    rather than re-deriving separate logic that could drift out of sync.
+    """
+    from matchmaking.utils import _is_adjacent_stage
+
+    reasons = []
+    app_sector = (application.sector or '').lower()
+    investor_sectors = [s.strip().lower() for s in (investor_profile.investment_focus or '').split(',') if s.strip()]
+    if app_sector and (app_sector in investor_sectors or any(s and s in app_sector for s in investor_sectors)):
+        reasons.append(f"Sector alignment ({application.sector})")
+
+    app_stage = (application.stage or '').lower()
+    inv_stage = (investor_profile.investment_stage or '').lower()
+    if app_stage and inv_stage and (app_stage == inv_stage or _is_adjacent_stage(app_stage, inv_stage)):
+        reasons.append(f"Stage alignment ({application.stage})")
+
+    if investor_profile.ticket_size_min is not None or investor_profile.ticket_size_max is not None:
+        lo = investor_profile.ticket_size_min or 0
+        hi = investor_profile.ticket_size_max
+        if application.raising_amount >= lo and (hi is None or application.raising_amount <= hi):
+            reasons.append("Raise size fits your check range")
+
+    return reasons
+
+
+def analyze_founder_profile(request, founder_username):
+    """
+    Track 1: Investor clicks 'Analyze with Zelda' on a founder profile.
+    Finds the founder's existing pitch deck DocumentSource and returns the
+    document ID so Zelda can load the memo directly — free, since it's
+    just reading an already-generated memo.
+
+    If no document exists yet, this no longer generates on the spot: it
+    returns 'confirm_required' with the cached match score, plain-language
+    reasons, and the analysis cost, so the investor sees why the match
+    looks promising *before* deciding to spend an analysis. Generation
+    itself only happens via confirm_analyze_founder_profile (POST) — see
+    that view's docstring for why the cost moved off the founder.
+    """
+    from .vector_models import DocumentSource
+
+    resolved, error_response = _founder_investor_context(request, founder_username)
+    if error_response:
+        return error_response
+    investor_profile, founder_user, application = resolved
 
     # Silent outcome tracking — investor triggered Zelda analysis
     from matchmaking.models import log_investor_event
@@ -1149,41 +1326,17 @@ def analyze_founder_profile(request, founder_username):
 
     # No document yet — check if founder has a pitch deck file on their profile
     if application.pitch_deck:
-        try:
-            from .utils import _extract_pptx_text, _extract_pdf_text
-            deck_path = application.pitch_deck.path
+        from .quotas import CREDIT_COSTS
+        from matchmaking.models import AIMatch
 
-            if deck_path.lower().endswith('.pptx'):
-                with open(deck_path, 'rb') as pdf_file:
-                    raw_text = _extract_pdf_text(pdf_file)
-            else:
-                with open(deck_path, 'rb') as pdf_file:
-                    raw_text = _extract_pdf_text(pdf_file)
-
-            doc = DocumentSource.objects.create(
-                uploaded_by=founder_user,
-                filename=application.pitch_deck.name,
-                source_entity=application.company_name or founder_user.username,
-                document_type='pitch_deck',
-                raw_text_preview=raw_text[:1000],
-                raw_text_full=raw_text,
-                status='ingested',
-            )
-            process_document_pipeline.delay(doc.id, raw_text)
-
-            return JsonResponse({
-                'status': 'processing',
-                'document_id': doc.id,
-                'company': application.company_name or founder_user.username,
-                'message': 'Analysis started — check back in 30 seconds.',
-            })
-
-        except Exception as e:
-            logger.warning(f"Track 1 pipeline trigger failed: {str(e)}")
-            return JsonResponse({
-                'status': 'error',
-                'message': f'Pipeline error: {str(e)}'
-            }, status=500)
+        ai_match = AIMatch.objects.filter(investor=investor_profile, application=application).first()
+        return JsonResponse({
+            'status': 'confirm_required',
+            'company': application.company_name or founder_user.username,
+            'score': round(float(ai_match.score)) if ai_match else None,
+            'reasons': _match_reasons(application, investor_profile),
+            'analysis_cost': CREDIT_COSTS['memo'],
+        })
 
     # No pitch deck at all
     return JsonResponse({
@@ -1191,6 +1344,89 @@ def analyze_founder_profile(request, founder_username):
         'message': 'This founder has not uploaded a pitch deck yet.',
         'company': application.company_name or founder_user.username,
     })
+
+
+@require_POST
+def confirm_analyze_founder_profile(request, founder_username):
+    """
+    Explicit second step after analyze_founder_profile's 'confirm_required'
+    — the investor has seen the score/reasons/cost and chosen to generate.
+
+    Charged to the investor (request.user), not the founder: the founder
+    never chose to spend anything here, and generation is idempotent per
+    founder anyway (the first investor to confirm pays once; every later
+    investor hits analyze_founder_profile's 'ready' branch for free — see
+    that view's docstring).
+    """
+    from .vector_models import DocumentSource
+    from .tasks import process_document_pipeline
+
+    resolved, error_response = _founder_investor_context(request, founder_username)
+    if error_response:
+        return error_response
+    investor_profile, founder_user, application = resolved
+
+    if not application.pitch_deck:
+        return JsonResponse({'status': 'no_deck', 'message': 'This founder has not uploaded a pitch deck yet.'}, status=404)
+
+    # Re-check for a race: another investor may have confirmed first.
+    doc = DocumentSource.objects.filter(uploaded_by=founder_user, document_type='pitch_deck').order_by('-created_at').first()
+    if doc:
+        return JsonResponse({
+            'status': 'ready',
+            'document_id': doc.id,
+            'filename': doc.filename,
+            'company': application.company_name or founder_user.username,
+            'has_memo': hasattr(doc, 'memo'),
+        })
+
+    from .quotas import has_credits_for, upgrade_message
+
+    if not has_credits_for(request.user, 'memo'):
+        return JsonResponse({
+            'status': 'error',
+            'message': upgrade_message(request.user),
+        }, status=402)
+
+    try:
+        from .utils import _extract_pptx_text, _extract_pdf_text
+        deck_path = application.pitch_deck.path
+
+        if deck_path.lower().endswith('.pptx'):
+            with open(deck_path, 'rb') as pdf_file:
+                raw_text, page_count = _extract_pdf_text(pdf_file)
+        else:
+            with open(deck_path, 'rb') as pdf_file:
+                raw_text, page_count = _extract_pdf_text(pdf_file)
+
+        doc = DocumentSource.objects.create(
+            uploaded_by=founder_user,
+            filename=application.pitch_deck.name,
+            source_entity=application.company_name or founder_user.username,
+            document_type='pitch_deck',
+            raw_text_preview=raw_text[:1000],
+            raw_text_full=raw_text,
+            total_pages=page_count,
+            status='ingested',
+        )
+        from .models import AnalysisCreditCharge
+        AnalysisCreditCharge.objects.create(document=doc, user=request.user, job_type='memo')
+
+        process_document_pipeline.delay(doc.id, raw_text)
+
+        return JsonResponse({
+            'status': 'processing',
+            'document_id': doc.id,
+            'company': application.company_name or founder_user.username,
+            'message': 'Analysis started — check back in 30 seconds.',
+        })
+
+    except Exception as e:
+        logger.warning(f"Track 1 pipeline trigger failed: {str(e)}")
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Pipeline error: {str(e)}'
+        }, status=500)
 
 def get_memo(request, doc_id):
     try:
@@ -1210,9 +1446,19 @@ def get_memo(request, doc_id):
 
 @login_required
 def valuation_request_view(request):
-    """Upload form for the Business Valuation feature — any authenticated
-    user, no founder/investor role required (standalone self-service tool)."""
-    return render(request, 'zelda_valuation_request.html')
+    """
+    Upload form for the Business Valuation feature — any authenticated
+    user, no founder/investor role required (standalone self-service
+    tool), and uploading is never blocked: everyone can always generate a
+    valuation (see quotas.py::valuation_tier_for_new_upload). `tier_status`
+    only informs the banner shown above the form — whether this upload
+    will render in full (and how much of a plan's monthly allowance is
+    left) or as a free preview.
+    """
+    from .quotas import valuation_tier_status
+    return render(request, 'zelda_valuation_request.html', {
+        'tier_status': valuation_tier_status(request.user),
+    })
 
 
 @login_required
@@ -1233,6 +1479,90 @@ def valuation_report_view(request, document_id):
 
 
 @login_required
+def valuation_history_view(request):
+    """
+    A permanent library of every business valuation the user has generated
+    — purchased-per-report and included-with-a-plan reports side by side,
+    each labeled with how it was paid for and which numbered run it is for
+    that company (a re-upload for the same business is a new version, not
+    a silent overwrite — nothing in the pipeline dedupes uploads).
+    """
+    from .models import ValuationPurchase
+    from .quotas import VALUATION_PURCHASE_TYPE_PRICES
+    from matchmaking.models import _normalize_company_string
+    from billing.models import Subscription
+    from billing.views import _get_role_and_price
+
+    documents = list(
+        DocumentSource.objects.filter(
+            uploaded_by=request.user, document_type='business_valuation',
+        ).exclude(status='error').select_related('valuation_report').order_by('created_at', 'id')
+    )
+
+    purchases_by_document_id = {
+        purchase.redeemed_document_id: purchase
+        for purchase in ValuationPurchase.objects.filter(
+            user=request.user, redeemed_document__in=documents,
+        )
+    }
+
+    has_firm = getattr(request.user, 'firm_membership', None) is not None
+    plan, _ = _get_role_and_price(request.user)
+    if has_firm:
+        included_label = "Included with your Firm plan"
+    elif plan:
+        included_label = f"Included with {Subscription.Plan(plan).label}"
+    else:
+        included_label = "Included with your plan"
+
+    from .valuation_trend import compute_valuation_trend
+
+    version_counts = {}
+    last_full_report_by_company = {}
+    reports = []
+    for document in documents:
+        company_key = _normalize_company_string(document.source_entity)
+        version_counts[company_key] = version_counts.get(company_key, 0) + 1
+        purchase = purchases_by_document_id.get(document.id)
+        if purchase:
+            price = VALUATION_PURCHASE_TYPE_PRICES.get(purchase.purchase_type)
+            provenance_label = f"Purchased — ${price:.2f}" if price is not None else "Purchased"
+        elif document.valuation_tier == 'preview':
+            provenance_label = "Free preview — not yet unlocked"
+        else:
+            provenance_label = included_label
+
+        # Trend vs. the previous FULL-tier version of the same company —
+        # documents arrive in chronological order here, so the dict just
+        # tracks "the last one seen," no re-querying needed. Never
+        # computed against a locked preview (see valuation_trend.py).
+        # Tracks the version NUMBER alongside the report since the
+        # previous full version isn't always simply "version - 1" — a
+        # preview-tier version could sit in between two full ones.
+        trend = None
+        previous_full_version = None
+        current_report = getattr(document, 'valuation_report', None)
+        if document.valuation_tier == 'full' and current_report:
+            previous = last_full_report_by_company.get(company_key)
+            if previous:
+                previous_report, previous_full_version = previous
+                trend = compute_valuation_trend(current_report, previous_report)
+            last_full_report_by_company[company_key] = (current_report, version_counts[company_key])
+
+        reports.append({
+            'document': document,
+            'version': version_counts[company_key],
+            'purchase': purchase,
+            'provenance_label': provenance_label,
+            'trend': trend,
+            'previous_full_version': previous_full_version,
+        })
+
+    reports.reverse()
+    return render(request, 'zelda_valuation_history.html', {'reports': reports})
+
+
+@login_required
 def ic_memo_view(request, document_id):
     """
     Printable Investment Committee memo — synthesizes the existing memo,
@@ -1241,7 +1571,7 @@ def ic_memo_view(request, document_id):
     print-styled and the user hits Ctrl/Cmd+P -> Save as PDF.
     """
     from .vector_models import DocumentSource
-    from .ic_memo import build_ic_memo_context, can_view_ic_memo
+    from .ic_memo import build_ic_memo_context, can_view_ic_memo, ic_memo_unlocked
     from matchmaking.models import Application
 
     document = get_object_or_404(DocumentSource, id=document_id, document_type='pitch_deck')
@@ -1249,6 +1579,13 @@ def ic_memo_view(request, document_id):
 
     if not can_view_ic_memo(request.user, application):
         raise Http404("Not found.")
+
+    if not ic_memo_unlocked(request.user, application):
+        return render(request, 'zelda_api/ic_memo_paywall.html', {
+            'application': application,
+            'company_name': application.company_name or application.user.username,
+            'is_owner': request.user == application.user,
+        })
 
     context = build_ic_memo_context(application)
     return render(request, 'zelda_api/ic_memo.html', context)
@@ -1259,7 +1596,7 @@ def ic_memo_download_view(request, document_id):
     """Same content and access gate as ic_memo_view, as a plain .md download."""
     from django.http import HttpResponse
     from .vector_models import DocumentSource
-    from .ic_memo import build_ic_memo_context, can_view_ic_memo, render_ic_memo_markdown
+    from .ic_memo import build_ic_memo_context, can_view_ic_memo, ic_memo_unlocked, render_ic_memo_markdown
     from matchmaking.models import Application
 
     document = get_object_or_404(DocumentSource, id=document_id, document_type='pitch_deck')
@@ -1267,6 +1604,9 @@ def ic_memo_download_view(request, document_id):
 
     if not can_view_ic_memo(request.user, application):
         raise Http404("Not found.")
+
+    if not ic_memo_unlocked(request.user, application):
+        return redirect('zelda_api:ic_memo', document_id=document_id)
 
     context = build_ic_memo_context(application)
     markdown_text = render_ic_memo_markdown(context)
@@ -1294,6 +1634,7 @@ class JourneyStatusAPIView(APIView):
             compute_founder_journey_stage, compute_investor_journey_stage,
             compute_seller_journey_stage, compute_buyer_journey_stage,
         )
+        from matchmaking.journey_actions import ACTION_INFO, compute_profile_strength
 
         user = request.user
         is_investor = getattr(user, 'match_investor_profile', None) is not None
@@ -1340,6 +1681,7 @@ class JourneyStatusAPIView(APIView):
             }
 
         next_action_url = None
+        next_best_action = None
         for item in stage['checklist']:
             if not item['done']:
                 url_name = url_by_label.get(item['label'])
@@ -1348,9 +1690,22 @@ class JourneyStatusAPIView(APIView):
                         next_action_url = reverse(url_name)
                     except NoReverseMatch:
                         next_action_url = None
+
+                info = ACTION_INFO.get(item['label'])
+                if info:
+                    next_best_action = {
+                        'label': item['label'],
+                        'why_it_matters': info['why_it_matters'],
+                        'estimated_minutes': info['estimated_minutes'],
+                        'action_label': info['action_label'],
+                        'action_url': next_action_url,
+                    }
                 break
 
         unread_notifications = Notification.objects.filter(recipient=user, is_read=False).count()
+
+        from .quotas import usage_nearing_limit, upgrade_message
+        ai_usage_warning = upgrade_message(user) if usage_nearing_limit(user) else None
 
         return Response({
             'stage_color': stage['stage_color'],
@@ -1358,4 +1713,7 @@ class JourneyStatusAPIView(APIView):
             'checklist': stage['checklist'],
             'unread_notifications': unread_notifications,
             'next_action_url': next_action_url,
+            'next_best_action': next_best_action,
+            'profile_strength': compute_profile_strength(stage['checklist']),
+            'ai_usage_warning': ai_usage_warning,
         })

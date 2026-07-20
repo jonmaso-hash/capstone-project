@@ -1,5 +1,6 @@
 import json
 import tempfile
+import uuid
 from datetime import timedelta
 from unittest import mock
 
@@ -354,6 +355,194 @@ class JourneyStageTests(TestCase):
         buyer.save(update_fields=['is_verified'])
         stage = compute_buyer_journey_stage(self.user)
         self.assertTrue(self._checklist_done(stage, 'Verify your business email'))
+
+
+class ProfileStrengthTests(TestCase):
+    """
+    compute_profile_strength buckets a checklist's done/total ratio into a
+    word label (never a raw percentage — see matchmaking/journey_actions.py).
+    """
+
+    def _checklist(self, done_flags):
+        return [{'label': f'item-{i}', 'done': d} for i, d in enumerate(done_flags)]
+
+    def test_empty_checklist_is_just_started(self):
+        from .journey_actions import compute_profile_strength
+        result = compute_profile_strength([])
+        self.assertEqual(result['label'], 'Just Started')
+        self.assertEqual(result['ratio'], 0.0)
+
+    def test_all_done_is_strong(self):
+        from .journey_actions import compute_profile_strength
+        result = compute_profile_strength(self._checklist([True, True, True]))
+        self.assertEqual(result['label'], 'Strong')
+        self.assertEqual(result['ratio'], 1.0)
+
+    def test_majority_done_is_good(self):
+        from .journey_actions import compute_profile_strength
+        result = compute_profile_strength(self._checklist([True, True, True, False, False]))
+        self.assertEqual(result['label'], 'Good')
+
+    def test_minority_done_is_building(self):
+        from .journey_actions import compute_profile_strength
+        result = compute_profile_strength(self._checklist([True, False, False, False, False]))
+        self.assertEqual(result['label'], 'Building')
+
+    def test_nothing_done_is_just_started(self):
+        from .journey_actions import compute_profile_strength
+        result = compute_profile_strength(self._checklist([False, False, False]))
+        self.assertEqual(result['label'], 'Just Started')
+        self.assertEqual(result['ratio'], 0.0)
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class HighlightFeatureTests(TestCase):
+    """
+    Founder/Seller Premium's monthly 24-hour highlight boost (replaces the
+    old "full counterpart identity in digest" perk — see matchmaking/
+    digest.py's module docstring). Covers the model mechanics
+    (is_highlighted/can_activate_highlight/activate_highlight) and the two
+    activation views.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+
+    def _founder(self, username, **kwargs):
+        u = User.objects.create_user(username, password='x')
+        defaults = dict(
+            company_name=f'{username}Co', founder_name='F', email=f'{username}@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        defaults.update(kwargs)
+        return Application.objects.create(user=u, **defaults)
+
+    def _seller(self, username, **kwargs):
+        u = User.objects.create_user(username, password='x')
+        defaults = dict(
+            company_name=f'{username}Co', seller_name='S', email=f'{username}@t.com',
+            description='test', industry='Manufacturing',
+        )
+        defaults.update(kwargs)
+        return SellerApplication.objects.create(user=u, **defaults)
+
+    # -- model mechanics (Application; SellerApplication mirrors it) --
+
+    def test_never_activated_is_not_highlighted(self):
+        app = self._founder('neverhl')
+        self.assertFalse(app.is_highlighted)
+
+    def test_recently_activated_is_highlighted(self):
+        app = self._founder('recenthl', last_highlight_at=timezone.now())
+        self.assertTrue(app.is_highlighted)
+
+    def test_highlight_older_than_24h_is_not_highlighted(self):
+        app = self._founder('stalehl', last_highlight_at=timezone.now() - timedelta(hours=25))
+        self.assertFalse(app.is_highlighted)
+
+    def test_free_user_cannot_activate_highlight(self):
+        app = self._founder('freehl', is_premium=False)
+        self.assertFalse(app.can_activate_highlight)
+
+    def test_premium_user_with_no_prior_highlight_can_activate(self):
+        app = self._founder('premiumhl', is_premium=True)
+        self.assertTrue(app.can_activate_highlight)
+
+    def test_premium_user_within_cooldown_cannot_reactivate(self):
+        app = self._founder('cooldownhl', is_premium=True, last_highlight_at=timezone.now() - timedelta(days=10))
+        self.assertFalse(app.can_activate_highlight)
+
+    def test_premium_user_past_cooldown_can_reactivate(self):
+        app = self._founder('pastcooldownhl', is_premium=True, last_highlight_at=timezone.now() - timedelta(days=31))
+        self.assertTrue(app.can_activate_highlight)
+
+    def test_activate_highlight_sets_timestamp_and_persists(self):
+        app = self._founder('activatehl', is_premium=True)
+        app.activate_highlight()
+        app.refresh_from_db()
+        self.assertTrue(app.is_highlighted)
+
+    # -- founder activation view --
+
+    def test_free_founder_cannot_activate_via_view(self):
+        app = self._founder('viewfreehl', is_premium=False)
+        self.client.force_login(app.user)
+        response = self.client.post(reverse('matchmaking:activate_founder_highlight'), follow=True)
+        self.assertContains(response, "Founder Premium perk")
+        app.refresh_from_db()
+        self.assertFalse(app.is_highlighted)
+
+    def test_premium_founder_activates_via_view(self):
+        app = self._founder('viewpremiumhl', is_premium=True)
+        self.client.force_login(app.user)
+        response = self.client.post(reverse('matchmaking:activate_founder_highlight'), follow=True)
+        self.assertContains(response, "highlighted for the next 24 hours")
+        app.refresh_from_db()
+        self.assertTrue(app.is_highlighted)
+
+    def test_founder_within_cooldown_blocked_via_view(self):
+        app = self._founder('viewcooldownhl', is_premium=True, last_highlight_at=timezone.now() - timedelta(days=5))
+        self.client.force_login(app.user)
+        response = self.client.post(reverse('matchmaking:activate_founder_highlight'), follow=True)
+        self.assertContains(response, "already used this month")
+
+    # -- seller activation view (mirrors founder) --
+
+    def test_premium_seller_activates_via_view(self):
+        seller = self._seller('sellerviewhl', is_premium=True)
+        self.client.force_login(seller.user)
+        response = self.client.post(reverse('matchmaking:activate_seller_highlight'), follow=True)
+        self.assertContains(response, "highlighted for the next 24 hours")
+        seller.refresh_from_db()
+        self.assertTrue(seller.is_highlighted)
+
+    def test_free_seller_cannot_activate_via_view(self):
+        seller = self._seller('sellerviewfreehl', is_premium=False)
+        self.client.force_login(seller.user)
+        response = self.client.post(reverse('matchmaking:activate_seller_highlight'), follow=True)
+        self.assertContains(response, "Seller Premium perk")
+        seller.refresh_from_db()
+        self.assertFalse(seller.is_highlighted)
+
+    # -- bulletin board sort order --
+
+    def test_highlighted_founder_ranks_above_featured_on_bulletin_board(self):
+        self._founder('bbfeatured', is_staff_featured=True, is_private=False)
+        self._founder('bbhighlighted', is_premium=True, last_highlight_at=timezone.now(), is_private=False)
+
+        response = self.client.get(reverse('matchmaking:bulletin_board'))
+        usernames = [p.user.username for p in response.context['pitches']]
+        self.assertEqual(usernames[0], 'bbhighlighted')
+
+    def test_highlighted_seller_ranks_above_featured_on_acquisition_board(self):
+        self._seller('abfeatured', is_staff_featured=True, is_private=False)
+        self._seller('abhighlighted', is_premium=True, last_highlight_at=timezone.now(), is_private=False)
+
+        response = self.client.get(reverse('matchmaking:acquisition_bulletin_board'))
+        usernames = [l.user.username for l in response.context['listings']]
+        self.assertEqual(usernames[0], 'abhighlighted')
+
+    # -- blog / jobs badge properties --
+
+    def test_article_is_highlighted_reflects_founder_highlight(self):
+        from blog.models import Article
+        app = self._founder('blogauthorhl', is_premium=True, last_highlight_at=timezone.now())
+        article = Article.objects.create(author=app.user, title='Post', body='body text')
+        self.assertTrue(article.is_highlighted)
+
+    def test_article_not_highlighted_without_founder_profile(self):
+        from blog.models import Article
+        plain_user = User.objects.create_user('bloguserplain', password='x')
+        article = Article.objects.create(author=plain_user, title='Post', body='body text')
+        self.assertFalse(article.is_highlighted)
+
+    def test_joblisting_is_highlighted_reflects_founder_highlight(self):
+        from jobs.models import JobListing
+        app = self._founder('jobposterhl', is_premium=True, last_highlight_at=timezone.now())
+        job = JobListing.objects.create(
+            poster=app.user, company_name='TestCo', title='Engineer', description='job',
+        )
+        self.assertTrue(job.is_highlighted)
 
 
 class CeleryRetryRegressionTests(TestCase):
@@ -2315,6 +2504,28 @@ class PitchVideosSectionTests(TestCase):
         usernames = [f.user.username for f in response.context['founders']]
         self.assertEqual(usernames[0], 'featured')
 
+    def test_highlighted_founder_ranks_above_featured(self):
+        """An active monthly highlight outranks plain staff/premium Featured — see _rank_pitch_video_profiles."""
+        self._founder('featured2', is_staff_featured=True)
+        highlighted = self._founder('highlighted2', is_premium=True, last_highlight_at=timezone.now())
+
+        response = self.client.get(reverse('matchmaking:pitch_videos'))
+        usernames = [f.user.username for f in response.context['founders']]
+        self.assertEqual(usernames[0], 'highlighted2')
+
+    def test_expired_highlight_does_not_rank_above_featured(self):
+        # stalehighlight is deliberately neither premium nor staff-featured,
+        # so this isolates "does an expired highlight still boost ranking"
+        # from the separate is_premium/is_staff_featured tiebreak — with
+        # both flags set it would tie with featured3 and fall through to
+        # the recency tiebreaker instead, masking what this test checks.
+        self._founder('featured3', is_staff_featured=True)
+        self._founder('stalehighlight', last_highlight_at=timezone.now() - timedelta(hours=25))
+
+        response = self.client.get(reverse('matchmaking:pitch_videos'))
+        usernames = [f.user.username for f in response.context['founders']]
+        self.assertEqual(usernames[0], 'featured3')
+
     def test_anonymous_visitor_can_view_section(self):
         self._founder('publicfounder')
         response = self.client.get(reverse('matchmaking:pitch_videos'))
@@ -2721,3 +2932,831 @@ class PitchVideoSocialSignalInsightsTests(TestCase):
         self.assertIn('100.0%', like_insight)
         self.assertIn('0.0%', like_insight)
         self.assertIn('so far', like_insight)
+
+
+class AIMatchCacheTests(TestCase):
+    """
+    matchmaking/match_cache.py — the cache the weekly digest reads instead
+    of recomputing scores at send time. Covers the pure cache functions
+    directly, plus that profile saves / milestones actually dispatch the
+    refresh tasks. Mocks pass explicit new= rather than letting mock.patch
+    auto-spec off the original — see zelda_api.tests.AICreditsQuotaTests
+    for why: auto-specing off one of these same Celery tasks hung
+    indefinitely in this environment when not given one.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+
+    def _founder(self, username, vector=None):
+        u = User.objects.create_user(username, password='x')
+        app = Application.objects.create(
+            user=u, company_name=f'{username}Co', founder_name='F', email=f'{username}@t.com',
+            description='A sufficiently long description for testing purposes here today.',
+            sector='SaaS', stage='Seed',
+        )
+        if vector is not None:
+            Application.objects.filter(pk=app.pk).update(description_vector=vector)
+            app.refresh_from_db()
+        return app
+
+    def _investor(self, username, vector=None):
+        u = User.objects.create_user(username, password='x')
+        inv = InvestorApplication.objects.create(user=u, investment_focus='SaaS infrastructure')
+        if vector is not None:
+            InvestorApplication.objects.filter(pk=inv.pk).update(focus_vector=vector)
+            inv.refresh_from_db()
+        return inv
+
+    def test_upsert_match_creates_new_row(self):
+        from .match_cache import upsert_match
+        app = self._founder('mcf1', vector=[1.0, 0.0])
+        inv = self._investor('mci1', vector=[1.0, 0.0])
+        match = upsert_match(inv, app, 'test reason')
+        self.assertIsNotNone(match)
+        self.assertAlmostEqual(float(match.score), 100.0, places=1)
+        self.assertEqual(match.change_reason, 'test reason')
+        self.assertIsNotNone(match.last_changed_at)
+
+    def test_upsert_match_skips_pair_without_both_vectors(self):
+        from .match_cache import upsert_match
+        from .models import AIMatch
+        app = self._founder('mcf2')  # no vector
+        inv = self._investor('mci2', vector=[1.0, 0.0])
+        result = upsert_match(inv, app, 'test reason')
+        self.assertIsNone(result)
+        self.assertFalse(AIMatch.objects.exists())
+
+    def test_upsert_match_updates_existing_row_not_duplicate(self):
+        from .match_cache import upsert_match
+        from .models import AIMatch
+        app = self._founder('mcf3', vector=[1.0, 0.0])
+        inv = self._investor('mci3', vector=[1.0, 0.0])
+        upsert_match(inv, app, 'first pass')
+        upsert_match(inv, app, 'second pass')
+        self.assertEqual(AIMatch.objects.filter(investor=inv, application=app).count(), 1)
+
+    def test_small_score_change_does_not_bump_last_changed_at(self):
+        from .match_cache import upsert_match
+        app = self._founder('mcf4', vector=[1.0, 0.0])
+        inv = self._investor('mci4', vector=[1.0, 0.0])
+        first = upsert_match(inv, app, 'first pass')
+        first_changed_at = first.last_changed_at
+
+        # Recomputing the identical pair should produce the identical score
+        # (100.0) — last_changed_at/change_reason must not move.
+        second = upsert_match(inv, app, 'noise pass')
+        second.refresh_from_db()
+        self.assertEqual(second.last_changed_at, first_changed_at)
+        self.assertEqual(second.change_reason, 'first pass')
+
+    def test_score_generated_at_bumps_on_every_recompute_even_without_a_real_change(self):
+        """
+        score_generated_at answers "when was this number last verified,"
+        which is a different question from last_changed_at's "when did
+        something happen worth telling the user about" — it must move
+        every time upsert_match runs, even when the score doesn't.
+        """
+        from .match_cache import upsert_match
+        app = self._founder('mcf4b', vector=[1.0, 0.0])
+        inv = self._investor('mci4b', vector=[1.0, 0.0])
+
+        with mock.patch('matchmaking.match_cache.timezone.now', return_value=timezone.datetime(2026, 1, 1, tzinfo=timezone.get_current_timezone())):
+            first = upsert_match(inv, app, 'first pass')
+
+        with mock.patch('matchmaking.match_cache.timezone.now', return_value=timezone.datetime(2026, 1, 8, tzinfo=timezone.get_current_timezone())):
+            second = upsert_match(inv, app, 'noise pass')
+
+        self.assertEqual(second.last_changed_at, first.last_changed_at)  # unchanged — no real score movement
+        self.assertNotEqual(second.score_generated_at, first.score_generated_at)  # bumped anyway
+        self.assertEqual(second.score_generated_at, timezone.datetime(2026, 1, 8, tzinfo=timezone.get_current_timezone()))
+
+    def test_score_change_above_epsilon_bumps_last_changed_at_and_reason(self):
+        from .match_cache import upsert_match
+        app = self._founder('mcf5', vector=[1.0, 0.0])
+        inv = self._investor('mci5', vector=[1.0, 0.0])
+        first = upsert_match(inv, app, 'first pass')
+        first_changed_at = first.last_changed_at
+
+        # Orthogonal vector -> cosine similarity drops from 100 to 0, well past epsilon.
+        Application.objects.filter(pk=app.pk).update(description_vector=[0.0, 1.0])
+        app.refresh_from_db()
+        second = upsert_match(inv, app, 'vector changed')
+        self.assertNotEqual(second.last_changed_at, first_changed_at)
+        self.assertEqual(second.change_reason, 'vector changed')
+
+    def test_refresh_matches_for_founder_scores_against_every_eligible_investor(self):
+        from .match_cache import refresh_matches_for_founder
+        from .models import AIMatch
+        app = self._founder('mcf6', vector=[1.0, 0.0])
+        self._investor('mci6a', vector=[1.0, 0.0])
+        self._investor('mci6b', vector=[0.0, 1.0])
+        refresh_matches_for_founder(app, 'founder updated')
+        self.assertEqual(AIMatch.objects.filter(application=app).count(), 2)
+
+    def test_refresh_matches_for_investor_scores_against_every_eligible_founder(self):
+        from .match_cache import refresh_matches_for_investor
+        from .models import AIMatch
+        inv = self._investor('mci7', vector=[1.0, 0.0])
+        self._founder('mcf7a', vector=[1.0, 0.0])
+        self._founder('mcf7b', vector=[0.0, 1.0])
+        refresh_matches_for_investor(inv, 'investor updated')
+        self.assertEqual(AIMatch.objects.filter(investor=inv).count(), 2)
+
+    def test_mark_milestone_change_only_touches_existing_pairs(self):
+        from .match_cache import upsert_match, mark_milestone_change
+        app = self._founder('mcf8', vector=[1.0, 0.0])
+        inv = self._investor('mci8', vector=[1.0, 0.0])
+        match = upsert_match(inv, app, 'first pass')
+        original_score = match.score
+
+        mark_milestone_change(app, 'Hit $1M ARR')
+
+        match.refresh_from_db()
+        self.assertEqual(match.change_reason, 'Founder completed a milestone: Hit $1M ARR')
+        self.assertEqual(match.score, original_score)  # milestone doesn't change the score
+
+    def test_founder_save_with_fresh_vector_dispatches_refresh_task(self):
+        with mock.patch('matchmaking.signals.generate_profile_embedding', return_value=[1.0, 0.0]), \
+             mock.patch('matchmaking.tasks.refresh_matches_for_founder_task.delay', new=mock.Mock()) as mock_delay:
+            app = Application.objects.create(
+                user=User.objects.create_user('mcf9', password='x'),
+                company_name='MCF9Co', founder_name='F', email='mcf9@t.com',
+                description='A sufficiently long founder description for vector generation testing purposes.',
+                sector='SaaS', stage='Seed',
+            )
+        mock_delay.assert_called_once_with(app.pk, "Founder updated their profile")
+
+    def test_investor_save_with_fresh_vector_dispatches_refresh_task(self):
+        with mock.patch('matchmaking.signals.generate_profile_embedding', return_value=[1.0, 0.0]), \
+             mock.patch('matchmaking.tasks.refresh_matches_for_investor_task.delay', new=mock.Mock()) as mock_delay:
+            inv = InvestorApplication.objects.create(
+                user=User.objects.create_user('mci9', password='x'),
+                investment_focus='B2B SaaS infrastructure',
+            )
+        mock_delay.assert_called_once_with(inv.pk, "Investor updated their thesis")
+
+    def test_milestone_creation_dispatches_milestone_task(self):
+        from .models import FounderMilestone
+        app = self._founder('mcf10')
+        with mock.patch('matchmaking.tasks.mark_milestone_change_task.delay', new=mock.Mock()) as mock_delay:
+            FounderMilestone.objects.create(founder=app, milestone_type='revenue', title='Hit $1M ARR')
+        mock_delay.assert_called_once_with(app.pk, 'Hit $1M ARR')
+
+
+class WeeklyDigestHeroCardTests(TestCase):
+    """
+    matchmaking/digest.py + the rewired _send_weekly_digests_body — one
+    hero match per side, read from the AIMatch cache, anonymized for free
+    viewers and full detail for Premium, with a freshness line when the
+    cached match changed recently. Replaces the old generic-count digest
+    entirely, so this also covers that a user with no eligible cached
+    match gets nothing (not an empty/generic notification).
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+
+    def _founder(self, username, is_premium=False, raising_amount=0):
+        u = User.objects.create_user(username, password='x')
+        app = Application.objects.create(
+            user=u, company_name=f'{username}Co', founder_name='F', email=f'{username}@t.com',
+            description='A sufficiently long description for testing purposes here today.',
+            sector='SaaS', stage='Seed', raising_amount=raising_amount, is_premium=is_premium,
+        )
+        return app
+
+    def _investor(self, username, is_premium=False, ticket_min=None, ticket_max=None):
+        u = User.objects.create_user(username, password='x', email=f'{username}@t.com')
+        return InvestorApplication.objects.create(
+            user=u, investment_focus='SaaS infrastructure', is_premium=is_premium,
+            ticket_size_min=ticket_min, ticket_size_max=ticket_max,
+        )
+
+    def _match(self, investor, application, score, change_reason='', last_changed_at=None):
+        from .models import AIMatch
+        return AIMatch.objects.create(
+            investor=investor, application=application, score=score, confidence_score=score,
+            change_reason=change_reason, last_changed_at=last_changed_at,
+        )
+
+    # -- pure helpers --
+
+    def test_amount_bucket_thresholds(self):
+        from .digest import _amount_bucket
+        self.assertIsNone(_amount_bucket(0))
+        self.assertEqual(_amount_bucket(100_000), "Under $250K")
+        self.assertEqual(_amount_bucket(500_000), "$250K–$1M")
+        self.assertEqual(_amount_bucket(2_000_000), "$1M–$5M")
+        self.assertEqual(_amount_bucket(10_000_000), "$5M+")
+
+    def test_freshness_reason_omitted_once_stale(self):
+        from .digest import _freshness_reason, FRESHNESS_WINDOW_DAYS
+        app = self._founder('fresh1')
+        inv = self._investor('freshinv1')
+        stale_match = self._match(
+            inv, app, 90.0, change_reason='Founder updated their profile',
+            last_changed_at=timezone.now() - timedelta(days=FRESHNESS_WINDOW_DAYS + 1),
+        )
+        self.assertIsNone(_freshness_reason(stale_match))
+
+        fresh_match = self._match(
+            inv, self._founder('fresh2'), 90.0, change_reason='Founder updated their profile',
+            last_changed_at=timezone.now() - timedelta(days=1),
+        )
+        self.assertEqual(_freshness_reason(fresh_match), 'Founder updated their profile')
+
+    # -- card building / anonymization --
+
+    def test_free_investor_card_omits_company_name(self):
+        from .digest import build_investor_digest_card
+        app = self._founder('divf1', raising_amount=500_000)
+        inv = self._investor('divi1', is_premium=False)
+        self._match(inv, app, 85.0)
+
+        card = build_investor_digest_card(inv)
+        self.assertIsNotNone(card)
+        self.assertNotIn('company_name', card)
+        self.assertEqual(card['sector'], 'SaaS')
+        self.assertEqual(card['raising_bucket'], "$250K–$1M")
+
+    def test_premium_investor_card_includes_company_name(self):
+        from .digest import build_investor_digest_card
+        app = self._founder('divf2', raising_amount=500_000)
+        inv = self._investor('divi2', is_premium=True)
+        self._match(inv, app, 85.0)
+
+        card = build_investor_digest_card(inv)
+        self.assertEqual(card['company_name'], 'divf2Co')
+
+    def test_free_founder_card_omits_investor_name(self):
+        from .digest import build_founder_digest_card
+        app = self._founder('divf3', is_premium=False)
+        inv = self._investor('divi3', ticket_min=250_000, ticket_max=1_000_000)
+        self._match(inv, app, 78.0)
+
+        card = build_founder_digest_card(app)
+        self.assertIsNotNone(card)
+        self.assertNotIn('investor_name', card)
+        self.assertEqual(card['ticket_range'], "$250,000–$1,000,000")
+
+    def test_premium_founder_card_still_omits_investor_name(self):
+        """
+        Asymmetric by design (see digest.py's module docstring): a premium
+        founder still never sees the investor's identity in their digest —
+        unlike the investor side, which does reveal company_name to Premium.
+        Prevents founders from soliciting a specific matched investor
+        directly, off-platform. Founder Premium's perk is the monthly
+        highlight boost instead (see JourneyHighlightTests).
+        """
+        from .digest import build_founder_digest_card
+        app = self._founder('divf4', is_premium=True)
+        inv = self._investor('divi4')
+        self._match(inv, app, 78.0)
+
+        card = build_founder_digest_card(app)
+        self.assertNotIn('investor_name', card)
+
+    def test_no_card_below_digest_min_score(self):
+        from .digest import build_investor_digest_card, DIGEST_MIN_SCORE
+        app = self._founder('divf5')
+        inv = self._investor('divi5')
+        self._match(inv, app, DIGEST_MIN_SCORE - 1)
+
+        self.assertIsNone(build_investor_digest_card(inv))
+
+    def test_message_upsells_free_viewer_not_premium(self):
+        from .digest import build_investor_digest_card, investor_digest_message
+        app = self._founder('divf6')
+        free_inv = self._investor('divi6free')
+        premium_inv = self._investor('divi6prem', is_premium=True)
+        self._match(free_inv, app, 90.0)
+        self._match(premium_inv, app, 90.0)
+
+        free_message = investor_digest_message(build_investor_digest_card(free_inv))
+        premium_message = investor_digest_message(build_investor_digest_card(premium_inv))
+        self.assertIn('Upgrade', free_message)
+        self.assertNotIn('Upgrade', premium_message)
+        self.assertIn('divf6Co', premium_message)
+        self.assertNotIn('divf6Co', free_message)
+
+    # -- integration: the rewired digest task body --
+
+    def test_digest_body_sends_notification_and_email_for_eligible_investor(self):
+        from django.core import mail
+        from notifications.models import Notification
+        from .models import DigestEngagementEvent
+        from .tasks import _send_weekly_digests_body
+
+        app = self._founder('bodyf1')
+        inv = self._investor('bodyi1')
+        self._match(inv, app, 90.0)
+
+        result = _send_weekly_digests_body()
+
+        self.assertGreaterEqual(result['digests_sent'], 1)
+        notif = Notification.objects.get(recipient=inv.user, notification_type='WEEKLY_DIGEST')
+        self.assertIn('90%', notif.message)
+        sent_email = next(m for m in mail.outbox if m.to == [inv.user.email])
+        self.assertIn('best match', sent_email.subject.lower())
+
+        # The HTML alternative carries the click link + open pixel; the
+        # plain-text body stays just the message for clients that can't render HTML.
+        html_body = sent_email.alternatives[0][0]
+        self.assertIn('<img src=', html_body)
+        self.assertIn('View your best match', html_body)
+        self.assertEqual(sent_email.body, notif.message)
+
+        sent_event = DigestEngagementEvent.objects.get(recipient=inv.user, event_type='sent')
+        self.assertIn(str(sent_event.token), html_body)
+
+    def test_digest_body_sends_nothing_for_investor_with_no_eligible_match(self):
+        from notifications.models import Notification
+        from .tasks import _send_weekly_digests_body
+
+        inv = self._investor('bodyi2')  # no AIMatch rows at all
+
+        _send_weekly_digests_body()
+
+        self.assertFalse(Notification.objects.filter(recipient=inv.user, notification_type='WEEKLY_DIGEST').exists())
+
+    def test_digest_body_also_sends_reverse_digest_to_founder(self):
+        """
+        No "Upgrade to see which investor" copy here regardless of premium
+        status — the founder-side digest never reveals investor identity,
+        Premium or not (see digest.py's module docstring for why); Founder
+        Premium's perk is the monthly highlight instead.
+        """
+        from notifications.models import Notification
+        from .tasks import _send_weekly_digests_body
+
+        app = self._founder('bodyf3')
+        inv = self._investor('bodyi3')
+        self._match(inv, app, 82.0)
+
+        _send_weekly_digests_body()
+
+        notif = Notification.objects.get(recipient=app.user, notification_type='WEEKLY_DIGEST')
+        self.assertIn('82%', notif.message)
+        self.assertNotIn('Upgrade', notif.message)
+
+
+class BackfillAIMatchesCommandTests(TestCase):
+    """matchmaking/management/commands/backfill_ai_matches.py — the one-time
+    catch-up so the digest has data on day one instead of waiting for the
+    next organic profile save."""
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+
+    def test_backfill_populates_cache_for_every_eligible_pair(self):
+        from django.core.management import call_command
+        from .models import AIMatch
+
+        founder_user = User.objects.create_user('backfillf', password='x')
+        app = Application.objects.create(
+            user=founder_user, company_name='BackfillCo', founder_name='F', email='bf@t.com',
+            description='A sufficiently long description for testing purposes here today.',
+            sector='SaaS', stage='Seed',
+        )
+        Application.objects.filter(pk=app.pk).update(description_vector=[1.0, 0.0])
+
+        investor_user = User.objects.create_user('backfilli', password='x')
+        inv = InvestorApplication.objects.create(user=investor_user, investment_focus='SaaS infrastructure')
+        InvestorApplication.objects.filter(pk=inv.pk).update(focus_vector=[1.0, 0.0])
+
+        call_command('backfill_ai_matches')
+
+        self.assertTrue(AIMatch.objects.filter(investor_id=inv.pk, application_id=app.pk).exists())
+
+
+class DigestEngagementTrackingTests(TestCase):
+    """
+    matchmaking/views.py::digest_open_pixel/digest_click_redirect +
+    matchmaking/funnel.py — the funnel instrumentation added because the
+    digest email previously had no link at all and no way to know if
+    anyone ever opened it.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+
+    def test_open_pixel_records_event_once_and_returns_image(self):
+        from .models import DigestEngagementEvent
+
+        u = User.objects.create_user('pixeluser', password='x')
+        sent = DigestEngagementEvent.objects.create(recipient=u, event_type='sent')
+
+        response = self.client.get(reverse('matchmaking:digest_open_pixel', args=[sent.token]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'image/png')
+        self.assertTrue(DigestEngagementEvent.objects.filter(token=sent.token, event_type='opened').exists())
+
+        # Hitting the pixel again (e.g. email client re-fetching images) must not double-count.
+        self.client.get(reverse('matchmaking:digest_open_pixel', args=[sent.token]))
+        self.assertEqual(DigestEngagementEvent.objects.filter(token=sent.token, event_type='opened').count(), 1)
+
+    def test_open_pixel_with_unknown_token_still_returns_image(self):
+        response = self.client.get(reverse('matchmaking:digest_open_pixel', args=[uuid.uuid4()]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'image/png')
+
+    def test_click_redirect_records_event_and_redirects_to_investor_dashboard(self):
+        from .models import DigestEngagementEvent
+
+        u = User.objects.create_user('clickinvestor', password='x')
+        sent = DigestEngagementEvent.objects.create(recipient=u, event_type='sent')
+
+        response = self.client.get(reverse('matchmaking:digest_click_redirect', args=[sent.token, 'investor']))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('matchmaking:investor_dashboard'))
+        self.assertTrue(DigestEngagementEvent.objects.filter(token=sent.token, event_type='clicked').exists())
+
+    def test_click_redirect_routes_founder_destination_to_founder_dashboard(self):
+        from .models import DigestEngagementEvent
+
+        u = User.objects.create_user('clickfounder', password='x')
+        sent = DigestEngagementEvent.objects.create(recipient=u, event_type='sent')
+
+        response = self.client.get(reverse('matchmaking:digest_click_redirect', args=[sent.token, 'founder']))
+        self.assertEqual(response.url, reverse('matchmaking:founder_dashboard'))
+
+    def test_click_redirect_does_not_double_count_repeat_clicks(self):
+        from .models import DigestEngagementEvent
+
+        u = User.objects.create_user('clicktwice', password='x')
+        sent = DigestEngagementEvent.objects.create(recipient=u, event_type='sent')
+
+        self.client.get(reverse('matchmaking:digest_click_redirect', args=[sent.token, 'investor']))
+        self.client.get(reverse('matchmaking:digest_click_redirect', args=[sent.token, 'investor']))
+        self.assertEqual(DigestEngagementEvent.objects.filter(token=sent.token, event_type='clicked').count(), 1)
+
+
+class FunnelSummaryTests(TestCase):
+    """matchmaking/funnel.py::funnel_summary — simple aggregate counts per
+    funnel stage over a rolling window, reusing existing models rather than
+    a new parallel event log wherever one already exists."""
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+
+    def test_counts_only_include_events_within_the_window(self):
+        from .models import DigestEngagementEvent
+        from .funnel import funnel_summary
+
+        u = User.objects.create_user('funnelu', password='x')
+        in_window = DigestEngagementEvent.objects.create(recipient=u, event_type='sent')
+        stale = DigestEngagementEvent.objects.create(recipient=u, event_type='sent')
+        DigestEngagementEvent.objects.filter(pk=stale.pk).update(created_at=timezone.now() - timedelta(days=30))
+
+        summary = funnel_summary(days=7)
+        self.assertEqual(summary['digests_sent'], 1)
+
+    def test_open_and_click_rates_computed_against_sent(self):
+        from .models import DigestEngagementEvent
+        from .funnel import funnel_summary
+
+        u1 = User.objects.create_user('funnelu1', password='x')
+        u2 = User.objects.create_user('funnelu2', password='x')
+        DigestEngagementEvent.objects.create(recipient=u1, event_type='sent')
+        s2 = DigestEngagementEvent.objects.create(recipient=u2, event_type='sent')
+        DigestEngagementEvent.objects.create(recipient=u2, event_type='opened', token=s2.token)
+
+        summary = funnel_summary(days=7)
+        self.assertEqual(summary['digests_sent'], 2)
+        self.assertEqual(summary['digests_opened'], 1)
+        self.assertEqual(summary['open_rate_pct'], 50.0)
+
+    def test_rates_are_none_not_a_crash_when_nothing_sent(self):
+        from .funnel import funnel_summary
+        summary = funnel_summary(days=7)
+        self.assertEqual(summary['digests_sent'], 0)
+        self.assertIsNone(summary['open_rate_pct'])
+
+    def test_subscriptions_started_counts_only_active_in_window(self):
+        from billing.models import Subscription
+        from .funnel import funnel_summary
+
+        u = User.objects.create_user('subu', password='x')
+        Subscription.objects.create(
+            user=u, plan=Subscription.Plan.INVESTOR_PREMIUM, stripe_customer_id='cus_1',
+            stripe_subscription_id='sub_1', status=Subscription.Status.ACTIVE,
+        )
+        Subscription.objects.create(
+            user=u, plan=Subscription.Plan.INVESTOR_PREMIUM, stripe_customer_id='cus_2',
+            stripe_subscription_id='sub_2', status=Subscription.Status.CANCELED,
+        )
+
+        summary = funnel_summary(days=7)
+        self.assertEqual(summary['subscriptions_started'], 1)
+
+    def test_intros_sent_counts_connection_not_connection_request(self):
+        """
+        Regression test for a real bug: funnel_summary originally counted
+        ConnectionRequest, a separate model nothing in the app ever
+        creates — request_intro/request_intro_from_founder both create
+        Connection rows, so intros_sent was silently always zero.
+        """
+        from .models import Connection
+        from .funnel import funnel_summary
+
+        founder_user = User.objects.create_user('intro_founder', password='x')
+        app = Application.objects.create(
+            user=founder_user, company_name='IntroCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        investor_user = User.objects.create_user('intro_investor', password='x')
+        inv = InvestorApplication.objects.create(user=investor_user)
+        Connection.objects.create(investor=inv, founder=app, initiated_by='INVESTOR')
+
+        summary = funnel_summary(days=7)
+        self.assertEqual(summary['intros_sent'], 1)
+
+    def test_deal_rooms_created_counts_accepted_connections_in_window(self):
+        """
+        DealRoom is never instantiated outside tests — the real chat
+        channel is created client-side the moment a Connection reaches
+        'ACCEPTED', so that's the closest available proxy.
+        """
+        from .models import Connection
+        from .funnel import funnel_summary
+
+        founder_user = User.objects.create_user('accept_founder', password='x')
+        app = Application.objects.create(
+            user=founder_user, company_name='AcceptCo', founder_name='F', email='f2@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        investor_user = User.objects.create_user('accept_investor', password='x')
+        inv = InvestorApplication.objects.create(user=investor_user)
+        Connection.objects.create(investor=inv, founder=app, initiated_by='INVESTOR', status='pending')
+
+        pending_founder = User.objects.create_user('pending_founder', password='x')
+        pending_app = Application.objects.create(
+            user=pending_founder, company_name='PendingCo', founder_name='F', email='f3@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        Connection.objects.create(investor=inv, founder=pending_app, initiated_by='INVESTOR', status='pending')
+
+        summary_before = funnel_summary(days=7)
+        self.assertEqual(summary_before['deal_rooms_created'], 0)
+
+        Connection.objects.filter(founder=app).update(status='ACCEPTED')
+
+        summary_after = funnel_summary(days=7)
+        self.assertEqual(summary_after['deal_rooms_created'], 1)
+
+
+class RequestIntroEmailCopyTests(TestCase):
+    """
+    matchmaking/views.py::request_intro — regression coverage for a real
+    bug: the admin-facing FYI email (sent to ADMIN_EMAIL, not the founder
+    or investor — the founder's own accurate in-app Notification is
+    separate) used to claim "Action Required: Navigate to the admin
+    workspace to process and approve this platform handshake" even though
+    connection_action_view is a direct two-party accept/decline with no
+    staff step anywhere in the code path.
+
+    Also covers a second, separate real bug found while writing this test:
+    with ADMIN_EMAIL unset (empty string — its actual default), the old
+    `getattr(settings, 'ADMIN_EMAIL', DEFAULT_FROM_EMAIL)` never fell
+    back, since getattr's default only applies when an attribute is
+    *missing*, not when it's falsy. recipient_list ended up as [''],
+    which EmailMessage.recipients() silently filters out — so this email
+    was failing to send with no exception and nothing in the outbox
+    whenever ADMIN_EMAIL wasn't configured. Fixed with `or` instead of
+    getattr's default.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+
+    def test_admin_email_no_longer_implies_manual_approval(self):
+        from django.conf import settings
+        from django.core import mail
+
+        founder_user = User.objects.create_user('emailfounder', password='x')
+        app = Application.objects.create(
+            user=founder_user, company_name='EmailCo', founder_name='F', email='ef@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        investor_user = User.objects.create_user('emailinvestor', password='x')
+        inv = InvestorApplication.objects.create(user=investor_user, investment_stage='Seed')
+        self.client.force_login(investor_user)
+
+        self.assertEqual(settings.ADMIN_EMAIL, '')  # the scenario that was silently broken
+        self.client.post(reverse('matchmaking:request_intro', args=[app.id, inv.id]))
+
+        self.assertEqual(len(mail.outbox), 1)
+        admin_email = mail.outbox[0]
+        self.assertEqual(admin_email.to, [settings.DEFAULT_FROM_EMAIL])  # falls back correctly now
+        self.assertNotIn('admin workspace', admin_email.body.lower())
+        self.assertNotIn('approve this platform handshake', admin_email.body.lower())
+        self.assertIn('no action needed', admin_email.body.lower())
+
+
+class InsightsEngineTests(TestCase):
+    """
+    matchmaking/insights_engine.py — turns the interest-event stream into
+    the Premium-gated Founder/Seller Insights analytics (funnel, trending,
+    Marketplace Score, opportunity alerts, recommendations, timeline, and
+    the investor/buyer focus breakdowns). Pure computation, no view/HTTP
+    layer involved.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('insights_founder', password='x')
+        self.app = Application.objects.create(
+            user=self.founder_user, company_name='InsightsCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed', is_verified=False,
+        )
+
+    def _investor_view(self, event_type='view'):
+        from .models import InvestorInterestEvent
+        investor = User.objects.create_user(f'insights_investor_{InvestorInterestEvent.objects.count()}', password='x')
+        InvestorInterestEvent.objects.create(investor=investor, founder=self.app, event_type=event_type)
+        return investor
+
+    def test_funnel_stats_orders_stages_and_computes_drop_pct(self):
+        from .insights_engine import get_funnel_stats
+        from .models import InvestorInterestEvent
+        for _ in range(10):
+            self._investor_view('view')
+        for _ in range(4):
+            self._investor_view('memo_view')
+
+        events = InvestorInterestEvent.objects.filter(founder=self.app)
+        funnel = get_funnel_stats(events)
+
+        self.assertEqual(funnel[0]['event_type'], 'view')
+        self.assertEqual(funnel[0]['count'], 10)
+        self.assertIsNone(funnel[0]['drop_pct'])
+        self.assertEqual(funnel[1]['event_type'], 'memo_view')
+        self.assertEqual(funnel[1]['count'], 4)
+        self.assertEqual(funnel[1]['drop_pct'], 60)
+
+    def test_conversion_rates_computed_from_funnel_stages(self):
+        from .insights_engine import get_funnel_stats, get_conversion_rates
+        from .models import InvestorInterestEvent
+        for _ in range(10):
+            self._investor_view('view')
+        for _ in range(5):
+            self._investor_view('memo_view')
+        for _ in range(1):
+            self._investor_view('intro_request')
+
+        funnel = get_funnel_stats(InvestorInterestEvent.objects.filter(founder=self.app))
+        rates = get_conversion_rates(funnel)
+
+        self.assertEqual(rates['view_to_memo'], 50)
+        self.assertIsNone(rates['truth_delta_to_intro'])  # zero truth_delta_view base
+
+    def test_conversion_rate_is_none_when_base_stage_is_zero(self):
+        from .insights_engine import get_funnel_stats, get_conversion_rates
+        from .models import InvestorInterestEvent
+        funnel = get_funnel_stats(InvestorInterestEvent.objects.filter(founder=self.app))
+        rates = get_conversion_rates(funnel)
+        self.assertIsNone(rates['view_to_memo'])
+
+    def test_trending_stats_pct_change_none_with_zero_baseline(self):
+        from .insights_engine import get_trending_stats
+        from .models import InvestorInterestEvent
+        self._investor_view('view')
+        trend = get_trending_stats(InvestorInterestEvent.objects.filter(founder=self.app))
+        self.assertEqual(trend['today']['current'], 1)
+        self.assertIsNone(trend['today']['pct_change'])
+
+    def test_trending_stats_pct_change_computed_against_prior_window(self):
+        from .insights_engine import get_trending_stats
+        from .models import InvestorInterestEvent
+        old_investor = self._investor_view('view')
+        old_event = InvestorInterestEvent.objects.get(investor=old_investor)
+        old_event.created_at = timezone.now() - timedelta(days=10)
+        old_event.save(update_fields=['created_at'])
+        for _ in range(2):
+            self._investor_view('view')
+
+        trend = get_trending_stats(InvestorInterestEvent.objects.filter(founder=self.app))
+        self.assertEqual(trend['last_7_days']['current'], 2)
+        self.assertEqual(trend['last_7_days']['pct_change'], 100)  # 2 vs. 1 prior = +100%
+
+    def test_engagement_score_saturates_at_100(self):
+        from .insights_engine import get_funnel_stats, get_engagement_score
+        from .models import InvestorInterestEvent
+        for _ in range(100):
+            self._investor_view('view')
+        self.app.is_verified = True
+        self.app.save()
+
+        funnel = get_funnel_stats(InvestorInterestEvent.objects.filter(founder=self.app))
+        score = get_engagement_score(funnel, self.app)
+        self.assertEqual(score['visibility'], 100)
+
+    def test_engagement_score_zero_with_no_events(self):
+        from .insights_engine import get_funnel_stats, get_engagement_score
+        from .models import InvestorInterestEvent
+        funnel = get_funnel_stats(InvestorInterestEvent.objects.filter(founder=self.app))
+        score = get_engagement_score(funnel, self.app)
+        self.assertEqual(score['visibility'], 0)
+        self.assertEqual(score['interest'], 0)
+        self.assertEqual(score['responsiveness'], 0)
+
+    def test_ai_insights_reports_no_views_when_empty(self):
+        from .insights_engine import get_funnel_stats, get_trending_stats, get_ai_insights
+        from .models import InvestorInterestEvent
+        events = InvestorInterestEvent.objects.filter(founder=self.app)
+        funnel = get_funnel_stats(events)
+        trending = get_trending_stats(events)
+        insights = get_ai_insights(funnel, trending)
+        self.assertEqual(len(insights), 1)
+        self.assertIn("hasn't been viewed yet", insights[0])
+
+    def test_ai_insights_flags_high_memo_drop_off(self):
+        from .insights_engine import get_funnel_stats, get_trending_stats, get_ai_insights
+        from .models import InvestorInterestEvent
+        for _ in range(10):
+            self._investor_view('view')
+        self._investor_view('memo_view')  # 1 of 10 = 90% drop-off
+
+        events = InvestorInterestEvent.objects.filter(founder=self.app)
+        funnel = get_funnel_stats(events)
+        trending = get_trending_stats(events)
+        insights = get_ai_insights(funnel, trending)
+        self.assertTrue(any('drop-off' in insight for insight in insights))
+
+    def test_interest_timeline_excludes_unlisted_event_types(self):
+        from .insights_engine import get_interest_timeline
+        from .models import InvestorInterestEvent
+        self._investor_view('view')
+        self._investor_view('video_play')  # not in TIMELINE_EVENT_TYPES
+        timeline = get_interest_timeline(InvestorInterestEvent.objects.filter(founder=self.app))
+        self.assertEqual(len(timeline), 1)
+        self.assertEqual(timeline[0]['label'], 'Profile viewed')
+
+    def test_opportunity_alert_for_stale_profile(self):
+        from .insights_engine import get_funnel_stats, get_trending_stats, get_opportunity_alerts
+        from .models import InvestorInterestEvent
+        # updated_at is auto_now=True, so a normal .save() always overwrites
+        # it with the current time regardless of what's assigned — bypass
+        # via a queryset .update(), which auto_now doesn't intercept.
+        Application.objects.filter(pk=self.app.pk).update(updated_at=timezone.now() - timedelta(days=50))
+        self.app.refresh_from_db()
+
+        events = InvestorInterestEvent.objects.filter(founder=self.app)
+        funnel = get_funnel_stats(events)
+        trending = get_trending_stats(events)
+        alerts = get_opportunity_alerts(funnel, trending, events, self.app)
+        self.assertTrue(any('50 days' in alert for alert in alerts))
+
+    def test_opportunity_alert_for_unviewed_truth_delta(self):
+        from .insights_engine import get_funnel_stats, get_trending_stats, get_opportunity_alerts
+        from .models import InvestorInterestEvent
+        self._investor_view('view')
+        self._investor_view('memo_view')
+
+        events = InvestorInterestEvent.objects.filter(founder=self.app)
+        funnel = get_funnel_stats(events)
+        trending = get_trending_stats(events)
+        alerts = get_opportunity_alerts(funnel, trending, events, self.app)
+        self.assertTrue(any('Truth Delta' in alert for alert in alerts))
+
+    def test_recommendations_flags_unverified_and_no_pitch_materials(self):
+        from .insights_engine import get_funnel_stats, get_recommendations
+        from .models import InvestorInterestEvent
+        funnel = get_funnel_stats(InvestorInterestEvent.objects.filter(founder=self.app))
+        recs = get_recommendations(funnel, self.app)
+        actions = [r['action'] for r in recs]
+        self.assertIn('Complete Verification', actions)
+        self.assertIn('Upload a Pitch Deck or Video', actions)
+        for rec in recs:
+            self.assertIn(rec['impact'], ('High', 'Medium'))
+
+    def test_investor_focus_breakdown_counts_unique_viewers_by_stage_and_focus(self):
+        from .insights_engine import get_investor_focus_breakdown
+        from .models import InvestorInterestEvent
+        inv1 = self._investor_view('view')
+        InvestorApplication.objects.create(user=inv1, investment_stage='Seed', investment_focus='SaaS')
+        inv2 = self._investor_view('view')
+        InvestorApplication.objects.create(user=inv2, investment_stage='Seed', investment_focus='Healthcare')
+
+        events = InvestorInterestEvent.objects.filter(founder=self.app)
+        breakdown = get_investor_focus_breakdown(events)
+        self.assertEqual(breakdown['unique_viewers'], 2)
+        self.assertEqual(breakdown['by_stage'], {'Seed': 2})
+        self.assertEqual(breakdown['by_focus'], {'SaaS': 1, 'Healthcare': 1})
+
+    def test_buyer_deal_structure_breakdown_counts_unique_viewers(self):
+        from .insights_engine import get_buyer_deal_structure_breakdown
+        from .models import AcquisitionInterestEvent, SellerApplication, BuyerApplication
+        seller_user = User.objects.create_user('insights_seller', password='x')
+        seller = SellerApplication.objects.create(
+            user=seller_user, company_name='SellCo', seller_name='S', email='s@t.com', description='test',
+        )
+        buyer1 = User.objects.create_user('insights_buyer1', password='x')
+        BuyerApplication.objects.create(user=buyer1, full_name='B1', email='b1@t.com', company_name='B1Co', acquisition_thesis='t', preferred_deal_structure='ASSET_PURCHASE')
+        AcquisitionInterestEvent.objects.create(buyer=buyer1, seller=seller, event_type='view')
+
+        events = AcquisitionInterestEvent.objects.filter(seller=seller)
+        breakdown = get_buyer_deal_structure_breakdown(events)
+        self.assertEqual(breakdown['unique_viewers'], 1)
+        self.assertEqual(breakdown['by_deal_structure'], {'ASSET_PURCHASE': 1})

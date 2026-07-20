@@ -69,6 +69,37 @@
     </div>
     {% endif %}
 
+    {% if application.is_premium %}
+    <div class="card border-0 rounded-3 shadow-sm mb-4 {% if application.is_highlighted %}border-warning{% endif %}">
+        <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-warning bg-opacity-10 rounded-circle p-2.5 d-none d-sm-block text-warning">
+                    <i class="bi bi-stars fs-4"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold text-dark mb-1">Monthly Highlight</h5>
+                    {% if application.is_highlighted %}
+                        <p class="text-muted small mb-0">
+                            <span class="badge bg-warning text-dark">Highlighted</span>
+                            You're boosted right now across the bulletin board, pitch videos, blog, and jobs.
+                        </p>
+                    {% else %}
+                        <p class="text-muted small mb-0">A once-a-month, 24-hour visibility boost across your bulletin listing, pitch video, blog posts, and job posts.</p>
+                    {% endif %}
+                </div>
+            </div>
+            <form method="post" action="{% url 'matchmaking:activate_founder_highlight' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-warning px-4 py-2 rounded-pill fw-semibold text-nowrap"
+                        {% if not application.can_activate_highlight %}disabled{% endif %}>
+                    <i class="bi bi-stars me-1"></i>
+                    {% if application.is_highlighted %}Highlight Active{% else %}Use My Highlight{% endif %}
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="card bg-light border border-light-subtle rounded-3 shadow-sm mb-5">
         <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
             <div class="d-flex align-items-center gap-3">

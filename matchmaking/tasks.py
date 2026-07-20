@@ -1,7 +1,6 @@
 import logging
 from celery import shared_task
 from django.core.cache import cache
-from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
@@ -9,6 +8,38 @@ from .models import Application
 from matchmaking.services.web_crawling import get_live_startup_data
 
 logger = logging.getLogger(__name__)
+
+
+@shared_task
+def refresh_matches_for_founder_task(application_id, change_reason):
+    """Async wrapper so a profile-save request never blocks on match recompute."""
+    from .match_cache import refresh_matches_for_founder
+    try:
+        application = Application.objects.get(id=application_id)
+    except Application.DoesNotExist:
+        return
+    refresh_matches_for_founder(application, change_reason)
+
+
+@shared_task
+def refresh_matches_for_investor_task(investor_id, change_reason):
+    from .models import InvestorApplication
+    from .match_cache import refresh_matches_for_investor
+    try:
+        investor_profile = InvestorApplication.objects.get(id=investor_id)
+    except InvestorApplication.DoesNotExist:
+        return
+    refresh_matches_for_investor(investor_profile, change_reason)
+
+
+@shared_task
+def mark_milestone_change_task(application_id, milestone_title):
+    from .match_cache import mark_milestone_change
+    try:
+        application = Application.objects.get(id=application_id)
+    except Application.DoesNotExist:
+        return
+    mark_milestone_change(application, milestone_title)
 
 
 @shared_task
@@ -58,46 +89,63 @@ def send_weekly_digests(self):
             return {'status': 'error', 'error': str(exc), 'retries_exhausted': True}
 
 
+def _send_tracked_digest_email(recipient_user, subject, message, destination):
+    """
+    Wraps the digest email with funnel tracking: records the 'sent'
+    DigestEngagementEvent, then builds an HTML alternative carrying an
+    invisible open-tracking pixel and a click-tracked link to the
+    recipient's dashboard. The plain-text body stays exactly the message
+    text, so clients that can't render HTML still get real content — see
+    DigestEngagementEvent's docstring for how the token later gets picked
+    up by digest_open_pixel/digest_click_redirect. Before this, the digest
+    email had no link and no way to know if anyone ever opened it at all.
+    """
+    from django.core.mail import EmailMultiAlternatives
+    from django.urls import reverse
+    from .models import DigestEngagementEvent
+
+    sent_event = DigestEngagementEvent.objects.create(recipient=recipient_user, event_type='sent')
+    site_url = getattr(settings, 'SITE_URL', 'http://127.0.0.1:8000')
+    pixel_url = f"{site_url}{reverse('matchmaking:digest_open_pixel', args=[sent_event.token])}"
+    click_url = f"{site_url}{reverse('matchmaking:digest_click_redirect', args=[sent_event.token, destination])}"
+
+    html_body = (
+        f"<p>{message}</p>"
+        f'<p><a href="{click_url}">View your best match &rarr;</a></p>'
+        f'<img src="{pixel_url}" width="1" height="1" alt="" style="display:none;">'
+    )
+
+    email = EmailMultiAlternatives(
+        subject=subject,
+        body=message,
+        from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@interlinkfoundry.com'),
+        to=[recipient_user.email],
+    )
+    email.attach_alternative(html_body, "text/html")
+    email.send(fail_silently=True)
+
+
 def _send_weekly_digests_body():
-    from .models import InvestorApplication, FounderMilestone, Follow
+    """
+    One hero match per side, read from the AIMatch cache — never
+    recomputed here. Deliberately not a "Marketplace This Week" dump: a
+    single best-match highlight per user, anonymized for free viewers
+    (sector/stage/amount bucket, no identity) and full detail for
+    Premium, with a freshness line when the cached match changed recently
+    (see matchmaking/digest.py and matchmaking/match_cache.py).
+    """
+    from .models import InvestorApplication
+    from .digest import build_investor_digest_card, build_founder_digest_card, investor_digest_message, founder_digest_message
     from notifications.models import Notification
 
-    week_ago = timezone.now() - timedelta(days=7)
     sent_count = 0
 
-    for investor_profile in InvestorApplication.objects.filter(is_private=False).select_related('user'):
+    for investor_profile in InvestorApplication.objects.filter(is_private=False).exclude(review_status='DENIED').select_related('user'):
         investor_user = investor_profile.user
-
-        # New founders in the last week matching this investor's stated focus
-        new_founders_qs = Application.objects.filter(
-            created_at__gte=week_ago, is_private=False
-        ).exclude(review_status='DENIED')
-        if investor_profile.investment_focus:
-            terms = [t.strip() for t in investor_profile.investment_focus.replace(',', ' ').split() if len(t.strip()) > 2]
-            if terms:
-                from django.db.models import Q
-                term_query = Q()
-                for term in terms:
-                    term_query |= Q(sector__icontains=term) | Q(description__icontains=term)
-                new_founders_qs = new_founders_qs.filter(term_query)
-        new_founder_count = new_founders_qs.count()
-
-        # New milestones from founders this investor follows
-        followed_user_ids = Follow.objects.filter(follower=investor_user).values_list('following_id', flat=True)
-        new_milestones = FounderMilestone.objects.filter(
-            created_at__gte=week_ago, founder__user_id__in=followed_user_ids
-        ).select_related('founder')
-        milestone_count = new_milestones.count()
-
-        if new_founder_count == 0 and milestone_count == 0:
-            continue  # nothing to report this week
-
-        summary_parts = []
-        if new_founder_count:
-            summary_parts.append(f"{new_founder_count} new founder{'s' if new_founder_count != 1 else ''} matching your focus")
-        if milestone_count:
-            summary_parts.append(f"{milestone_count} new milestone{'s' if milestone_count != 1 else ''} from founders you follow")
-        message = "Your weekly digest: " + " and ".join(summary_parts) + "."
+        card = build_investor_digest_card(investor_profile)
+        if card is None:
+            continue  # nothing worth leading with this week
+        message = investor_digest_message(card)
 
         try:
             Notification.objects.create(
@@ -112,25 +160,38 @@ def _send_weekly_digests_body():
 
         try:
             if investor_user.email:
-                body_lines = [message, ""]
-                if new_founder_count:
-                    body_lines.append("New founders:")
-                    for f in new_founders_qs[:10]:
-                        body_lines.append(f"- {f.company_name} ({f.sector}, {f.stage})")
-                    body_lines.append("")
-                if milestone_count:
-                    body_lines.append("New milestones:")
-                    for m in new_milestones[:10]:
-                        body_lines.append(f"- {m.founder.company_name}: {m.title}")
-                send_mail(
-                    subject="Your Interlink Foundry weekly digest",
-                    message="\n".join(body_lines),
-                    from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@interlinkfoundry.com'),
-                    recipient_list=[investor_user.email],
-                    fail_silently=True,
+                _send_tracked_digest_email(
+                    investor_user, "Your best match this week — Interlink Foundry", message, destination='investor',
                 )
         except Exception as e:
             logger.warning(f"Failed to email weekly digest to {investor_user.username}: {str(e)}")
+
+    for application in Application.objects.filter(is_private=False).exclude(review_status='DENIED').select_related('user'):
+        founder_user = application.user
+        card = build_founder_digest_card(application)
+        if card is None:
+            continue  # nothing worth leading with this week
+
+        message = founder_digest_message(card)
+
+        try:
+            Notification.objects.create(
+                recipient=founder_user,
+                notification_type='WEEKLY_DIGEST',
+                message=message,
+                target_url='/matchmaking/dashboard/founder/'
+            )
+            sent_count += 1
+        except Exception as e:
+            logger.warning(f"Failed to create weekly digest notification for {founder_user.username}: {str(e)}")
+
+        try:
+            if founder_user.email:
+                _send_tracked_digest_email(
+                    founder_user, "An investor matched with you this week — Interlink Foundry", message, destination='founder',
+                )
+        except Exception as e:
+            logger.warning(f"Failed to email weekly digest to {founder_user.username}: {str(e)}")
 
     return {'status': 'success', 'digests_sent': sent_count}
 

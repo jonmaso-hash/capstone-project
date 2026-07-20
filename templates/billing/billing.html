@@ -12,8 +12,13 @@
     </nav>
 
     <div class="row justify-content-center">
-        <div class="col-lg-7">
-            <h2 class="fw-bold mb-4">Membership</h2>
+        <div class="col-lg-8">
+            <h2 class="fw-bold mb-1">Membership</h2>
+            <p class="text-muted mb-4">
+                Free gets you discovered — a profile, pitch deck &amp; video, bulletin and pitch-video placement,
+                introductions, and messaging. Premium unlocks Zelda's intelligence on top of that — the full
+                Intelligence Memo, Truth Delta verification, valuations, IC Memo, and profile analytics.
+            </p>
 
             {% if subscription and subscription.is_active %}
             <div class="card border-success shadow-sm rounded-4 mb-4">
@@ -50,12 +55,32 @@
             {% elif plan == 'FOUNDER_PREMIUM' %}
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">
-                    <h5 class="fw-bold mb-1">Founder Premium — $150/mo</h5>
-                    <ul class="text-secondary small mb-3">
+                    <h5 class="fw-bold mb-1">Founder Premium — $99/mo</h5>
+                    <p class="text-muted small mb-3">Get discovered faster, raise with AI-backed diligence, and manage every investor relationship in one place.</p>
+
+                    <h6 class="text-uppercase small fw-bold text-success mb-2 mt-4">Get discovered faster</h6>
+                    <ul class="text-secondary small mb-0">
                         <li>Featured Placement on the bulletin board</li>
+                        <li>Monthly Highlight — a 24-hour visibility boost across your bulletin listing, pitch video, blog posts, and job posts</li>
                         <li>Priority Match Alerts — notified the moment a new investor mandate fits your pitch</li>
-                        <li>Unlimited Fundraising CRM leads (free tier is capped at 15)</li>
                     </ul>
+
+                    <h6 class="text-uppercase small fw-bold text-success mb-2 mt-4">Understand &amp; improve your company</h6>
+                    <ul class="text-secondary small mb-0">
+                        <li>{{ premium_ai_credits }} monthly AI analyses for Zelda memos, valuations, and Truth Delta verification (free tier: {{ free_ai_credits }}/month)
+                            <div class="text-muted" style="font-size:0.78rem;">Each analysis generates new AI diligence — viewing reports you've already generated stays unlimited.</div>
+                        </li>
+                        <li>Full Intelligence Memo — AI business summary, strengths, weaknesses, and improvement recommendations</li>
+                        <li>Truth Delta verification against real external filings, plus your full verification history and trend</li>
+                        <li>Zelda business valuation — ${{ valuation_report_price|floatformat:2 }}/report, pay-per-use (not included in your subscription)</li>
+                        <li>Investment Committee Memo — generate and share a one-page executive report with connected investors, free for them to view</li>
+                    </ul>
+
+                    <h6 class="text-uppercase small fw-bold text-success mb-2 mt-4">Grow relationships</h6>
+                    <ul class="text-secondary small mb-3">
+                        <li>Unlimited Fundraising CRM leads (free tier is capped at {{ free_crm_lead_limit }})</li>
+                    </ul>
+
                     <form method="post" action="{% url 'billing:create_checkout_session' %}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-success" {% if not stripe_configured %}disabled{% endif %}>
@@ -65,15 +90,64 @@
                 </div>
             </div>
 
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">Free vs. Premium</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr class="text-muted small text-uppercase">
+                                    <th scope="col">Feature</th>
+                                    <th scope="col">Free</th>
+                                    <th scope="col">Premium</th>
+                                </tr>
+                            </thead>
+                            <tbody class="small">
+                                <tr><td>Zelda AI analyses</td><td>{{ free_ai_credits }}/month</td><td class="fw-semibold text-success">{{ premium_ai_credits }}/month</td></tr>
+                                <tr><td>Fundraising CRM leads</td><td>{{ free_crm_lead_limit }}</td><td class="fw-semibold text-success">Unlimited</td></tr>
+                                <tr><td>Bulletin board placement</td><td>Standard</td><td class="fw-semibold text-success">Featured</td></tr>
+                                <tr><td>Monthly Highlight boost</td><td>—</td><td class="fw-semibold text-success">24 hrs, once/month</td></tr>
+                                <tr><td>Match alerts</td><td>Standard</td><td class="fw-semibold text-success">Priority</td></tr>
+                                <tr><td>Business valuations</td><td>${{ valuation_report_price|floatformat:2 }}/report</td><td class="fw-semibold text-success">${{ valuation_report_price|floatformat:2 }}/report (pay-per-use, not bundled)</td></tr>
+                                <tr><td>Intelligence Memo</td><td>—</td><td class="fw-semibold text-success">Full memo</td></tr>
+                                <tr><td>Truth Delta verification &amp; history</td><td>—</td><td class="fw-semibold text-success">Included</td></tr>
+                                <tr><td>Investment Committee Memo</td><td>—</td><td class="fw-semibold text-success">Included</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             {% elif plan == 'INVESTOR_PREMIUM' %}
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">
-                    <h5 class="fw-bold mb-1">Investor Premium — $500/mo</h5>
-                    <ul class="text-secondary small mb-3">
-                        <li>Uncapped introduction requests</li>
-                        <li>Direct CRM export (CSV) of your deal flow</li>
+                    <h5 class="fw-bold mb-1">Investor Premium — $250/mo</h5>
+                    <p class="text-muted small mb-3">See the best-fit founders first, move faster on outreach, and run AI diligence at scale.</p>
+
+                    <h6 class="text-uppercase small fw-bold text-primary mb-2 mt-4">See the best opportunities first</h6>
+                    <ul class="text-secondary small mb-0">
+                        <li>See the founder's full identity in your weekly match digest, not just an anonymized teaser</li>
                         <li>Priority Match Alerts — notified the moment a new founder matches your thesis</li>
                     </ul>
+
+                    <h6 class="text-uppercase small fw-bold text-primary mb-2 mt-4">Move faster</h6>
+                    <ul class="text-secondary small mb-0">
+                        <li>Uncapped introduction requests (free tier: {{ daily_intro_limit }}/day)</li>
+                        <li>Direct CRM export (CSV) of your deal flow</li>
+                    </ul>
+
+                    <h6 class="text-uppercase small fw-bold text-primary mb-2 mt-4">AI investment research</h6>
+                    <ul class="text-secondary small mb-3">
+                        <li>{{ premium_ai_credits }} monthly AI analyses for Zelda memos, valuations, and Truth Delta verification (free tier: {{ free_ai_credits }}/month)
+                            <div class="text-muted" style="font-size:0.78rem;">Each analysis generates new AI diligence — viewing reports you've already generated stays unlimited.</div>
+                        </li>
+                        <li>Truth Delta verification against real external filings</li>
+                        <li>Zelda business valuation — {{ valuation_investor_buyer_monthly_limit }} included every month (${{ valuation_overage_price|floatformat:2 }}/report after that)</li>
+                        <li>Full access to any founder's Intelligence Memo, Truth Delta verification, and IC Memo once <em>they've</em> upgraded to Premium
+                            <div class="text-muted" style="font-size:0.78rem;">Free for you to view — that's the founder's subscription unlocking it, not yours.</div>
+                        </li>
+                    </ul>
+
                     <form method="post" action="{% url 'billing:create_checkout_session' %}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-primary" {% if not stripe_configured %}disabled{% endif %}>
@@ -83,15 +157,98 @@
                 </div>
             </div>
 
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">Free vs. Premium</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr class="text-muted small text-uppercase">
+                                    <th scope="col">Feature</th>
+                                    <th scope="col">Free</th>
+                                    <th scope="col">Premium</th>
+                                </tr>
+                            </thead>
+                            <tbody class="small">
+                                <tr><td>Zelda AI analyses</td><td>{{ free_ai_credits }}/month</td><td class="fw-semibold text-primary">{{ premium_ai_credits }}/month</td></tr>
+                                <tr><td>Introduction requests</td><td>{{ daily_intro_limit }}/day</td><td class="fw-semibold text-primary">Uncapped</td></tr>
+                                <tr><td>CRM export (CSV)</td><td>—</td><td class="fw-semibold text-primary">Included</td></tr>
+                                <tr><td>Founder identity in digest</td><td>Anonymized teaser</td><td class="fw-semibold text-primary">Full identity</td></tr>
+                                <tr><td>Match alerts</td><td>Standard</td><td class="fw-semibold text-primary">Priority</td></tr>
+                                <tr><td>Business valuations</td><td>Not available</td><td class="fw-semibold text-primary">{{ valuation_investor_buyer_monthly_limit }}/month included, then ${{ valuation_overage_price|floatformat:2 }}/report</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-1">Investing as a firm? — $5,000/mo</h6>
+                    {% if firm_membership %}
+                        <p class="text-muted small mb-0">
+                            You're part of <strong>{{ firm_membership.firm.name }}</strong>
+                            ({{ firm_membership.firm.memberships.count }}/{{ firm_max_seats }} seats) —
+                            a higher weekly AI-analysis allowance is already active on your account.
+                        </p>
+                    {% else %}
+                        <p class="text-muted small mb-3">
+                            One flat subscription covers up to {{ firm_max_seats }} verified teammates at your firm's
+                            email domain, each with Investor Premium's access and a higher weekly AI-analysis allowance
+                            for burstier team diligence work — plus {{ valuation_firm_monthly_limit }} business
+                            valuations per seat per month (${{ valuation_firm_overage_price|floatformat:2 }}/report after that).
+                            Requires a <a href="{% url 'accounts:business_verification' %}">verified business email</a> first.
+                        </p>
+                        <div class="row g-3">
+                            <div class="col-md-7">
+                                <form method="post" action="{% url 'billing:create_firm_checkout_session' %}" class="d-flex gap-2">
+                                    {% csrf_token %}
+                                    <input type="text" name="firm_name" class="form-control form-control-sm" placeholder="Firm name" required>
+                                    <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap" {% if not stripe_firm_configured %}disabled{% endif %}>
+                                        Start a Firm
+                                    </button>
+                                </form>
+                            </div>
+                            <div class="col-md-5">
+                                <form method="post" action="{% url 'billing:join_firm' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary w-100">
+                                        Join My Firm's Existing Plan
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
             {% elif plan == 'SELLER_PREMIUM' %}
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">
-                    <h5 class="fw-bold mb-1">Seller Premium — $150/mo</h5>
-                    <ul class="text-secondary small mb-3">
+                    <h5 class="fw-bold mb-1">Seller Premium — $99/mo</h5>
+                    <p class="text-muted small mb-3">Get your listing in front of more acquirers, prep with AI diligence, and see exactly who's interested.</p>
+
+                    <h6 class="text-uppercase small fw-bold mb-2 mt-4" style="color:#997404;">Get discovered faster</h6>
+                    <ul class="text-secondary small mb-0">
                         <li>Featured Listing in the business marketplace</li>
+                        <li>Monthly Highlight — a 24-hour visibility boost across your marketplace listing and pitch video</li>
                         <li>Priority Match Alerts — notified when a new buyer mandate fits your listing</li>
+                    </ul>
+
+                    <h6 class="text-uppercase small fw-bold mb-2 mt-4" style="color:#997404;">AI-powered deal prep</h6>
+                    <ul class="text-secondary small mb-0">
+                        <li>{{ premium_ai_credits }} monthly AI analyses for Zelda memos, valuations, and Truth Delta verification (free tier: {{ free_ai_credits }}/month)
+                            <div class="text-muted" style="font-size:0.78rem;">Each analysis generates new AI diligence — viewing reports you've already generated stays unlimited.</div>
+                        </li>
+                        <li>Truth Delta verification against real external filings</li>
+                        <li>Zelda business valuation — ${{ valuation_report_price|floatformat:2 }}/report, pay-per-use (not included in your subscription)</li>
+                    </ul>
+
+                    <h6 class="text-uppercase small fw-bold mb-2 mt-4" style="color:#997404;">Track buyer interest</h6>
+                    <ul class="text-secondary small mb-3">
                         <li>Detailed Buyer Interest Analytics — see every view, vote, and touchpoint on your listing</li>
                     </ul>
+
                     <form method="post" action="{% url 'billing:create_checkout_session' %}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-warning" {% if not stripe_configured %}disabled{% endif %}>
@@ -101,21 +258,83 @@
                 </div>
             </div>
 
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">Free vs. Premium</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr class="text-muted small text-uppercase">
+                                    <th scope="col">Feature</th>
+                                    <th scope="col">Free</th>
+                                    <th scope="col">Premium</th>
+                                </tr>
+                            </thead>
+                            <tbody class="small">
+                                <tr><td>Zelda AI analyses</td><td>{{ free_ai_credits }}/month</td><td class="fw-semibold" style="color:#997404;">{{ premium_ai_credits }}/month</td></tr>
+                                <tr><td>Marketplace listing</td><td>Standard</td><td class="fw-semibold" style="color:#997404;">Featured</td></tr>
+                                <tr><td>Monthly Highlight boost</td><td>—</td><td class="fw-semibold" style="color:#997404;">24 hrs, once/month</td></tr>
+                                <tr><td>Buyer interest analytics</td><td>Basic</td><td class="fw-semibold" style="color:#997404;">Detailed</td></tr>
+                                <tr><td>Match alerts</td><td>Standard</td><td class="fw-semibold" style="color:#997404;">Priority</td></tr>
+                                <tr><td>Business valuations</td><td>${{ valuation_report_price|floatformat:2 }}/report</td><td class="fw-semibold" style="color:#997404;">${{ valuation_report_price|floatformat:2 }}/report (pay-per-use, not bundled)</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             {% elif plan == 'BUYER_PREMIUM' %}
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">
-                    <h5 class="fw-bold mb-1">Buyer Premium — $500/mo</h5>
-                    <ul class="text-secondary small mb-3">
-                        <li>Uncapped introduction requests</li>
+                    <h5 class="fw-bold mb-1">Buyer Premium — $250/mo</h5>
+                    <p class="text-muted small mb-3">Move faster on the deals you want, and run AI diligence at scale.</p>
+
+                    <h6 class="text-uppercase small fw-bold text-info-emphasis mb-2 mt-4">Move faster</h6>
+                    <ul class="text-secondary small mb-0">
+                        <li>Uncapped introduction requests (free tier: {{ daily_intro_limit }}/day)</li>
                         <li>Direct CRM export (CSV) of matching listings</li>
                         <li>Priority Match Alerts — notified when a new listing matches your acquisition thesis</li>
                     </ul>
+
+                    <h6 class="text-uppercase small fw-bold text-info-emphasis mb-2 mt-4">AI acquisition research</h6>
+                    <ul class="text-secondary small mb-3">
+                        <li>{{ premium_ai_credits }} monthly AI analyses for Zelda memos, valuations, and Truth Delta verification (free tier: {{ free_ai_credits }}/month)
+                            <div class="text-muted" style="font-size:0.78rem;">Each analysis generates new AI diligence — viewing reports you've already generated stays unlimited.</div>
+                        </li>
+                        <li>Truth Delta verification against real external filings</li>
+                        <li>Zelda business valuation — {{ valuation_investor_buyer_monthly_limit }} included every month (${{ valuation_overage_price|floatformat:2 }}/report after that)</li>
+                    </ul>
+
                     <form method="post" action="{% url 'billing:create_checkout_session' %}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-primary" {% if not stripe_configured %}disabled{% endif %}>
                             <i class="bi bi-star-fill me-1"></i> Subscribe
                         </button>
                     </form>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">Free vs. Premium</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr class="text-muted small text-uppercase">
+                                    <th scope="col">Feature</th>
+                                    <th scope="col">Free</th>
+                                    <th scope="col">Premium</th>
+                                </tr>
+                            </thead>
+                            <tbody class="small">
+                                <tr><td>Zelda AI analyses</td><td>{{ free_ai_credits }}/month</td><td class="fw-semibold text-info-emphasis">{{ premium_ai_credits }}/month</td></tr>
+                                <tr><td>Introduction requests</td><td>{{ daily_intro_limit }}/day</td><td class="fw-semibold text-info-emphasis">Uncapped</td></tr>
+                                <tr><td>CRM export (CSV)</td><td>—</td><td class="fw-semibold text-info-emphasis">Included</td></tr>
+                                <tr><td>Match alerts</td><td>Standard</td><td class="fw-semibold text-info-emphasis">Priority</td></tr>
+                                <tr><td>Business valuations</td><td>Not available</td><td class="fw-semibold text-info-emphasis">{{ valuation_investor_buyer_monthly_limit }}/month included, then ${{ valuation_overage_price|floatformat:2 }}/report</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 

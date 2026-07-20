@@ -9,56 +9,27 @@
             <h2 class="fw-bold mb-1"><i class="bi bi-graph-up-arrow me-2"></i>Business Valuation Report</h2>
             <p class="text-muted mb-0">{{ document.source_entity }}</p>
         </div>
-        <a href="{% url 'zelda_api:valuation_request' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-            <i class="bi bi-arrow-left me-1"></i> New Valuation
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{% url 'zelda_api:valuation_history' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="bi bi-collection me-1"></i> My Reports
+            </a>
+            <a href="{% url 'zelda_api:valuation_request' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="bi bi-arrow-left me-1"></i> New Valuation
+            </a>
+        </div>
     </div>
 
-    <div id="valuation-loading" class="card border-0 shadow-sm rounded-4 text-center p-5">
-        <div class="spinner-border text-success mx-auto mb-3" role="status"></div>
-        <h5 class="fw-bold">Analyzing your documents...</h5>
-        <p class="text-muted mb-0">This usually takes under a minute. This page will update automatically.</p>
+    <div id="valuation-loading" class="card border-0 shadow-sm rounded-4 p-5">
+        <div class="text-center mb-4">
+            <div class="spinner-border text-success mb-3" role="status"></div>
+            <p class="text-muted mb-0">This usually takes under a minute. This page will update automatically.</p>
+        </div>
+        <ul class="list-unstyled mx-auto" id="valuation-progress-steps" style="max-width: 360px;"></ul>
     </div>
 
     <div id="valuation-error" class="alert alert-danger d-none"></div>
 
-    <div id="valuation-content" class="d-none">
-        <div class="card border-0 shadow-sm rounded-4 mb-4 bg-success-subtle">
-            <div class="card-body p-4 text-center">
-                <h6 class="text-uppercase fw-bold text-muted small mb-2">Estimated Valuation Range</h6>
-                <h2 class="fw-bold text-success mb-0" id="valuation-range">—</h2>
-                <div id="valuation-confidence-gauge" class="mt-3 text-start mx-auto" style="max-width: 320px;"></div>
-            </div>
-        </div>
-
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-            <div class="card-body p-4">
-                <h6 class="fw-bold text-uppercase small text-muted mb-2">Business Overview</h6>
-                <p class="mb-0" id="section-business-overview"></p>
-            </div>
-        </div>
-
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-            <div class="card-body p-4">
-                <h6 class="fw-bold text-uppercase small text-muted mb-2">Financial Summary</h6>
-                <p class="mb-0" style="white-space: pre-line;" id="section-financial-summary"></p>
-            </div>
-        </div>
-
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-            <div class="card-body p-4">
-                <h6 class="fw-bold text-uppercase small text-muted mb-2">Risk Report</h6>
-                <p class="mb-0" style="white-space: pre-line;" id="section-risk-report"></p>
-            </div>
-        </div>
-
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-            <div class="card-body p-4">
-                <h6 class="fw-bold text-uppercase small text-muted mb-2">Valuation Methodology</h6>
-                <p class="mb-0" style="white-space: pre-line;" id="section-valuation-summary"></p>
-            </div>
-        </div>
-    </div>
+    <div id="valuation-content" class="d-none"></div>
 </div>
 {% endblock %}
 
@@ -77,6 +48,42 @@ const documentId = {{ document.id }};
 let pollAttempts = 0;
 const maxPollAttempts = 30;
 
+// Evidence text (full tier) and business overview are extracted from
+// user-uploaded documents, not our own copy — escape before injecting
+// into innerHTML rather than trusting it.
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str == null ? '' : str;
+    return div.innerHTML;
+}
+
+function toggleEvidence(index) {
+    document.getElementById(`evidence-row-${index}`).classList.toggle('d-none');
+}
+
+// Maps the real backend status (DocumentSource.status) onto a 4-step
+// progress checklist. "Analyzing" and "generating the valuation" share one
+// status value ('analyzing') on the backend — there's no finer-grained
+// status to distinguish them, so rather than fabricate a split the code
+// can't actually detect, both show under one active step with the real
+// status name as the live sub-label.
+const PROGRESS_STEPS = ['Uploading & extracting text', 'Analyzing with Zelda', 'Generating valuation', 'Complete'];
+const STATUS_STEP_INDEX = {
+    ingested: 0, chunking: 1, chunked: 1, embedding: 1, embedded: 1, analyzing: 2, analyzed: 3,
+};
+
+function renderProgressSteps(currentStatus) {
+    const container = document.getElementById('valuation-progress-steps');
+    const activeIndex = STATUS_STEP_INDEX[currentStatus] ?? 0;
+    container.innerHTML = PROGRESS_STEPS.map((label, i) => {
+        let icon, cls;
+        if (i < activeIndex) { icon = 'bi-check-circle-fill text-success'; cls = 'text-muted'; }
+        else if (i === activeIndex) { icon = 'bi-arrow-repeat text-primary'; cls = 'fw-semibold text-dark'; }
+        else { icon = 'bi-circle text-muted'; cls = 'text-muted'; }
+        return `<li class="d-flex align-items-center gap-2 mb-2 ${cls}"><i class="bi ${icon}"></i><span>${label}</span></li>`;
+    }).join('');
+}
+
 async function pollStatus() {
     pollAttempts++;
     try {
@@ -85,6 +92,8 @@ async function pollStatus() {
             headers: { 'X-CSRFToken': getCookie('csrftoken') },
         });
         const data = await res.json();
+
+        renderProgressSteps(data.status);
 
         if (data.status === 'analyzed') {
             loadReport();
@@ -98,6 +107,206 @@ async function pollStatus() {
     } catch (err) {
         showError(err.message);
     }
+}
+
+function trustStatsHtml(data) {
+    const stats = data.trust_stats || {};
+    const items = [
+        [stats.pages_analyzed, 'Pages Analyzed'],
+        [stats.chunks_analyzed, 'Sections Searched'],
+        [stats.categories_analyzed, 'Categories Analyzed'],
+        [`${data.confidence_score != null ? (data.confidence_score * 10).toFixed(1) : '—'}/10`, 'Analysis Confidence'],
+    ];
+    return `
+    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-success-subtle">
+        <div class="card-body p-4 text-center">
+            <i class="bi bi-check-circle-fill text-success mb-2 d-block" style="font-size: 1.5rem;"></i>
+            <h5 class="fw-bold mb-3">Your valuation is ready</h5>
+            <div class="row g-3 text-center">
+                ${items.map(([value, label]) => `
+                <div class="col-6 col-md-3">
+                    <div class="fw-bold fs-5 text-success">${value}</div>
+                    <div class="text-muted small">${label}</div>
+                </div>`).join('')}
+            </div>
+        </div>
+    </div>`;
+}
+
+function businessOverviewHtml(data) {
+    return `
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h6 class="fw-bold text-uppercase small text-muted mb-2">Business Overview</h6>
+            <p class="mb-0">${escapeHtml(data.sections.business_overview)}</p>
+        </div>
+    </div>`;
+}
+
+// Preview: sell the ANSWER, not the report's table of contents. Prove
+// Zelda understood the business (business overview, in full) and that
+// analysis finished (trust stats + a plain risk count — never a
+// category-by-category checklist, never any sample finding text), tease
+// the valuation itself (masked, not omitted), then sell the unlock as
+// one complete deliverable. No chopped-up locked sections, no "% visible"
+// framing, no revealed risk excerpt.
+function renderPreview(data) {
+    const riskTeaser = data.risk_count > 0
+        ? `<div class="card border-0 shadow-sm rounded-4 mb-4">
+               <div class="card-body p-4">
+                   <h6 class="fw-bold text-uppercase small text-muted mb-2">Risk Analysis</h6>
+                   <p class="mb-0">Zelda flagged ${data.risk_count} factor${data.risk_count === 1 ? '' : 's'} that shaped your valuation. Unlock to see what they are.</p>
+               </div>
+           </div>`
+        : '';
+    const includes = (data.unlock_includes || []).map(item => `<li class="mb-2"><i class="bi bi-check-lg text-success me-2"></i>${escapeHtml(item)}</li>`).join('');
+
+    document.getElementById('valuation-content').innerHTML = `
+        ${trustStatsHtml(data)}
+        ${businessOverviewHtml(data)}
+        <p class="text-muted small text-center mb-4"><i class="bi bi-shield-check me-1"></i>Generated from your uploaded documents — not generic industry assumptions.</p>
+        ${riskTeaser}
+        <div class="card border-0 shadow-sm rounded-4 mb-4 text-center">
+            <div class="card-body p-4">
+                <h6 class="text-uppercase fw-bold text-muted small mb-2">Estimated Valuation</h6>
+                <h2 class="fw-bold mb-1" style="filter: blur(7px); user-select: none; color: #198754;">$███,███ &ndash; $█,███,███</h2>
+                <p class="text-success small fw-semibold mb-1"><i class="bi bi-check-circle-fill me-1"></i>Calculated successfully</p>
+                <p class="text-muted small mb-0">Unlock to reveal the exact range.</p>
+            </div>
+        </div>
+        <div class="card border-0 shadow-sm rounded-4 mb-4" style="background: linear-gradient(135deg, #fff8e1, #ffffff);">
+            <div class="card-body p-4 text-center">
+                <h5 class="fw-bold mb-3">Your valuation has been generated.</h5>
+                <p class="text-muted mb-3">Unlock the complete report to see:</p>
+                <ul class="list-unstyled mb-4 d-inline-block text-start">${includes}</ul>
+                <p class="text-muted small mb-3">Your report has been securely saved — you can unlock it at any time.</p>
+                <form method="post" action="{% url 'billing:create_valuation_purchase_checkout_session' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="document_id" value="{{ document.id }}">
+                    <button type="submit" class="btn btn-warning btn-lg rounded-pill px-5 fw-semibold d-block mx-auto">
+                        <i class="bi bi-unlock me-1"></i> Unlock Full Report — $${Number(data.unlock_price).toFixed(2)}
+                    </button>
+                </form>
+            </div>
+        </div>
+    `;
+}
+
+function renderFull(data) {
+    const valuationRange = (data.valuation_low && data.valuation_high)
+        ? `$${Number(data.valuation_low).toLocaleString()} – $${Number(data.valuation_high).toLocaleString()}`
+        : 'Not enough data to estimate';
+
+    const confidenceRows = (data.confidence_breakdown || []).map((row, i) => `
+        <tr>
+            <td class="fw-semibold">${row.category}</td>
+            <td>${row.confidence.toFixed(1)}/10</td>
+            <td class="text-muted">${row.why}</td>
+            <td class="text-end">
+                <button type="button" class="btn btn-link btn-sm p-0" onclick="toggleEvidence(${i})">View evidence</button>
+            </td>
+        </tr>
+        <tr id="evidence-row-${i}" class="d-none">
+            <td colspan="4" class="bg-light rounded-3 small">
+                <div class="text-muted mb-1">${escapeHtml(row.source_attribution || 'Source not recorded')}</div>
+                <div class="fst-italic">"${escapeHtml(row.insight_text)}"</div>
+            </td>
+        </tr>
+    `).join('') || '<tr><td colspan="4" class="text-muted">No categories could be analyzed for this document.</td></tr>';
+
+    const financialCompleteness = data.financial_completeness ? `
+        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+            <div>
+                <span class="fw-semibold small">Financial Completeness</span>
+                <span class="badge bg-secondary-subtle text-secondary ms-1" style="font-size: 0.65rem;">Platform-derived, not a model score</span>
+                <p class="text-muted mb-0" style="font-size: 0.75rem;">Share of key financial fields (revenue, burn rate, growth, retention, etc.) actually disclosed in the submitted documents.</p>
+            </div>
+            <strong class="text-nowrap ms-3">${data.financial_completeness.disclosed} of ${data.financial_completeness.total} fields</strong>
+        </div>` : '';
+
+    // Only shown when a PRIOR full-tier valuation exists for the same
+    // company (see zelda_api/valuation_trend.py) — never computed from a
+    // locked preview, since that would leak the very number the paywall
+    // protects. Wording deliberately says "Zelda's estimated valuation",
+    // never "your company" — this compares two model-generated estimates
+    // built from whatever was disclosed each time, not a claim about
+    // objective market value.
+    const trendBadge = data.trend ? (() => {
+        const t = data.trend;
+        const icon = t.direction === 'up' ? 'bi-arrow-up-circle-fill text-success' : t.direction === 'down' ? 'bi-arrow-down-circle-fill text-danger' : 'bi-dash-circle-fill text-muted';
+        const colorClass = t.direction === 'up' ? 'text-success' : t.direction === 'down' ? 'text-danger' : 'text-muted';
+        const sign = t.direction === 'up' ? '+' : '';
+        const previousRange = `$${Number(t.previous_low).toLocaleString()} – $${Number(t.previous_high).toLocaleString()}`;
+        const previousDate = new Date(t.previous_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        const dollarDelta = `${t.midpoint_delta >= 0 ? '+' : '-'}$${Math.abs(Math.round(t.midpoint_delta)).toLocaleString()}`;
+        const verb = t.direction === 'up' ? 'increased' : t.direction === 'down' ? 'decreased' : 'held steady';
+        return `<p class="mb-0 mt-2 ${colorClass}"><i class="bi ${icon} me-1"></i>Zelda's estimated valuation ${verb} ${sign}${t.pct_change}%</p>
+                <p class="text-muted small mb-0">${dollarDelta} vs. your previous valuation on ${previousDate} (${previousRange})</p>`;
+    })() : '';
+
+    const driversCard = (data.valuation_drivers && data.valuation_drivers.length) ? `
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4">
+                <h6 class="fw-bold text-uppercase small text-muted mb-2">Primary Drivers</h6>
+                <p class="text-muted small mb-2" style="font-size: 0.8rem;">What changed since your previous valuation, from the facts each version's documents disclosed.</p>
+                <ul class="list-unstyled mb-0">
+                    ${data.valuation_drivers.map(d => `<li><i class="bi bi-check-circle-fill text-success me-2"></i>${escapeHtml(d)}</li>`).join('')}
+                </ul>
+            </div>
+        </div>` : '';
+
+    document.getElementById('valuation-content').innerHTML = `
+        ${trustStatsHtml(data)}
+        <div class="card border-0 shadow-sm rounded-4 mb-4 bg-success-subtle">
+            <div class="card-body p-4 text-center">
+                <h6 class="text-uppercase fw-bold text-muted small mb-2">Estimated Valuation Range</h6>
+                <h2 class="fw-bold text-success mb-0">${valuationRange}</h2>
+                ${trendBadge}
+                <div id="valuation-confidence-gauge" class="mt-3 text-start mx-auto" style="max-width: 320px;"></div>
+            </div>
+        </div>
+        ${businessOverviewHtml(data)}
+        ${driversCard}
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4">
+                <h6 class="fw-bold text-uppercase small text-muted mb-2">Financial Summary</h6>
+                <p class="mb-0" style="white-space: pre-line;">${escapeHtml(data.sections.financial_summary)}</p>
+            </div>
+        </div>
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4">
+                <h6 class="fw-bold text-uppercase small text-muted mb-2">Risk Report</h6>
+                <p class="mb-0" style="white-space: pre-line;">${escapeHtml(data.sections.risk_report)}</p>
+            </div>
+        </div>
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4">
+                <h6 class="fw-bold text-uppercase small text-muted mb-2">Valuation Methodology</h6>
+                <p class="mb-0" style="white-space: pre-line;">${escapeHtml(data.sections.valuation_summary)}</p>
+            </div>
+        </div>
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4">
+                <h6 class="fw-bold text-uppercase small text-muted mb-1">Confidence by Category</h6>
+                <p class="text-muted mb-3" style="font-size: 0.8rem;">Zelda's per-topic analysis confidence — the overall score above is the average across these.</p>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr class="text-muted small text-uppercase">
+                                <th scope="col">Category</th>
+                                <th scope="col">Confidence</th>
+                                <th scope="col">Why</th>
+                                <th scope="col"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="small">${confidenceRows}</tbody>
+                    </table>
+                </div>
+                ${financialCompleteness}
+            </div>
+        </div>
+    `;
+    renderConfidenceGauge(document.getElementById('valuation-confidence-gauge'), data.confidence_score, 'Valuation Confidence');
 }
 
 async function loadReport() {
@@ -118,18 +327,11 @@ async function loadReport() {
 
         const data = await res.json();
 
-        document.getElementById('section-business-overview').textContent = data.sections.business_overview;
-        document.getElementById('section-financial-summary').textContent = data.sections.financial_summary;
-        document.getElementById('section-risk-report').textContent = data.sections.risk_report;
-        document.getElementById('section-valuation-summary').textContent = data.sections.valuation_summary;
-
-        if (data.valuation_low && data.valuation_high) {
-            document.getElementById('valuation-range').textContent =
-                `$${Number(data.valuation_low).toLocaleString()} – $${Number(data.valuation_high).toLocaleString()}`;
+        if (data.valuation_tier === 'full') {
+            renderFull(data);
         } else {
-            document.getElementById('valuation-range').textContent = 'Not enough data to estimate';
+            renderPreview(data);
         }
-        renderConfidenceGauge(document.getElementById('valuation-confidence-gauge'), data.confidence_score, 'Valuation Confidence');
 
         document.getElementById('valuation-loading').classList.add('d-none');
         document.getElementById('valuation-content').classList.remove('d-none');

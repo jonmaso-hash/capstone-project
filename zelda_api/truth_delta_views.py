@@ -36,6 +36,14 @@ class TruthDeltaVerifyView(APIView):
                     status=status.HTTP_403_FORBIDDEN
                 )
 
+            from .quotas import has_credits_for, upgrade_message
+
+            if not has_credits_for(request.user, 'truth_delta_verify'):
+                return Response(
+                    {"error": upgrade_message(request.user), "code": "quota_exceeded"},
+                    status=status.HTTP_402_PAYMENT_REQUIRED
+                )
+
             logger.info(f"Starting Truth Delta verification for document {document_id}")
 
             # Queue async verification task
@@ -74,6 +82,14 @@ class TruthDeltaScoreView(APIView):
         report = TruthDeltaReport.objects.filter(document_id=document_id).order_by('-created_at').first()
         if report is None:
             return Response({"error": "Report not found"}, status=404)
+
+        from .truth_delta_models import truth_delta_unlocked
+        if not truth_delta_unlocked(request.user, report.document):
+            return Response(
+                {"error": "This founder's Truth Delta report requires Premium to view.", "code": "premium_required"},
+                status=status.HTTP_402_PAYMENT_REQUIRED,
+            )
+
         return Response({
             "overall_truth_score": report.overall_truth_score,
             "credibility_risk": report.credibility_risk,

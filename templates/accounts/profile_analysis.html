@@ -1,12 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}Profile Analysis | Interlink Foundry{% endblock title %}
+{% block title %}
+{% if application %}Founder Insights{% elif seller_application %}Seller Insights{% else %}Profile Analysis{% endif %} | Interlink Foundry
+{% endblock title %}
 
 {% block content %}
 <div class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold mb-0"><i class="bi bi-bar-chart-fill me-2"></i>Profile Analysis</h2>
+            <h2 class="fw-bold mb-0"><i class="bi bi-bar-chart-fill me-2"></i>
+                {% if application %}Founder Insights{% elif seller_application %}Seller Insights{% else %}Profile Analysis{% endif %}
+            </h2>
             <p class="text-muted small mb-0">Only visible to you.</p>
         </div>
         <a href="{% url 'accounts:profile' profile_user.username %}" class="btn btn-outline-dark btn-sm rounded-pill">
@@ -14,7 +18,267 @@
         </a>
     </div>
 
-    <!-- Profile Views -->
+    {% if has_analytics_paywall and not is_premium_insights %}
+    <!-- Free tier: three basic numbers, everything else locked -->
+    <div class="card shadow-sm border-0 p-4 mb-4">
+        <h6 class="fw-bold text-uppercase small text-muted mb-3">Profile Views</h6>
+        <div class="row g-3">
+            <div class="col-6 col-md-4">
+                <div class="card p-3 bg-warning text-dark shadow-sm border-0 h-100">
+                    <small class="text-uppercase">Profile Views</small>
+                    <h3 class="fw-bold mb-0">{{ total_views }}</h3>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="card p-3 bg-light shadow-sm border h-100">
+                    <small class="text-muted text-uppercase">Intro Requests</small>
+                    <h3 class="fw-bold mb-0">{{ free_intro_requests }}</h3>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="card p-3 bg-light shadow-sm border h-100">
+                    <small class="text-muted text-uppercase">Thumbs Up</small>
+                    <h3 class="fw-bold mb-0">{{ free_thumbs_up }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4" style="background: linear-gradient(135deg, #fff8e1, #ffffff);">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-2"><i class="bi bi-unlock me-1 text-warning"></i>Unlock {% if application %}Founder{% else %}Seller{% endif %} Insights</h5>
+            <p class="text-muted mb-3">
+                See who's actually interested, where visitors drop off, and what to do next &mdash;
+                audience breakdown, engagement funnel, trending, a composite performance score,
+                AI-generated insights, opportunity alerts, next-best-action recommendations, and a full interest timeline.
+            </p>
+            <a href="{% url 'billing:billing_page' %}" class="btn btn-warning rounded-pill px-4 fw-semibold">
+                View Membership Plans
+            </a>
+        </div>
+    </div>
+    {% else %}
+
+    {% if engagement_score %}
+    <!-- Marketplace Score — hero card -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-dark text-white">
+        <div class="card-body p-4">
+            <h6 class="text-uppercase small text-white-50 mb-2">Marketplace Score</h6>
+            <h1 class="fw-bold mb-3">{{ engagement_score.overall }}<span class="fs-4 text-white-50">/100</span></h1>
+            <div class="row g-3 mb-3">
+                <div class="col-6 col-md-3">
+                    <small class="text-white-50 text-uppercase d-block">Visibility</small>
+                    <span class="fs-5 fw-bold">{{ engagement_score.visibility }}</span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <small class="text-white-50 text-uppercase d-block">Interest</small>
+                    <span class="fs-5 fw-bold">{{ engagement_score.interest }}</span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <small class="text-white-50 text-uppercase d-block">Trust</small>
+                    <span class="fs-5 fw-bold">{{ engagement_score.trust }}</span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <small class="text-white-50 text-uppercase d-block">Responsiveness</small>
+                    <span class="fs-5 fw-bold">{{ engagement_score.responsiveness }}</span>
+                </div>
+            </div>
+            {% if strengths_and_improvements.strengths or strengths_and_improvements.improvements %}
+            <div class="row g-3 pt-3 border-top border-secondary">
+                {% if strengths_and_improvements.strengths %}
+                <div class="col-md-6">
+                    <small class="text-white-50 text-uppercase d-block mb-1">Top Strengths</small>
+                    <ul class="list-unstyled mb-0 small">
+                        {% for s in strengths_and_improvements.strengths %}<li><i class="bi bi-check-circle-fill text-success me-1"></i>{{ s }}</li>{% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                {% if strengths_and_improvements.improvements %}
+                <div class="col-md-6">
+                    <small class="text-white-50 text-uppercase d-block mb-1">Needs Improvement</small>
+                    <ul class="list-unstyled mb-0 small">
+                        {% for i in strengths_and_improvements.improvements %}<li><i class="bi bi-arrow-up-circle text-warning me-1"></i>{{ i }}</li>{% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if opportunity_alerts %}
+    <!-- Marketplace Alerts -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h6 class="fw-bold text-uppercase small text-muted mb-3"><i class="bi bi-bell-fill text-warning me-1"></i>Marketplace Alerts</h6>
+            <ul class="list-unstyled mb-0">
+                {% for alert in opportunity_alerts %}
+                <li class="mb-2 pb-2 {% if not forloop.last %}border-bottom{% endif %}"><span class="badge bg-warning-subtle text-warning-emphasis me-2">New</span>{{ alert }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if funnel_stats %}
+    <!-- Engagement Funnel -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h6 class="fw-bold text-uppercase small text-muted mb-3">Profile Funnel</h6>
+            <div class="row g-2 text-center">
+                {% for stage in funnel_stats %}
+                <div class="col">
+                    <div class="card p-3 bg-light border h-100">
+                        <small class="text-muted text-uppercase" style="font-size: 0.7rem;">{{ stage.label }}</small>
+                        <h4 class="fw-bold mb-0">{{ stage.count }}</h4>
+                        {% if stage.drop_pct is not None and stage.drop_pct > 0 %}<small class="text-danger">&darr; {{ stage.drop_pct }}%</small>{% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Conversion Rates -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h6 class="fw-bold text-uppercase small text-muted mb-3">Conversion Rates</h6>
+            <div class="row g-3 text-center">
+                <div class="col-6 col-md-3">
+                    <small class="text-muted text-uppercase d-block">View &rarr; Memo</small>
+                    <span class="fs-4 fw-bold text-success">{% if conversion_rates.view_to_memo is not None %}{{ conversion_rates.view_to_memo }}%{% else %}&mdash;{% endif %}</span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <small class="text-muted text-uppercase d-block">Memo &rarr; Truth Delta</small>
+                    <span class="fs-4 fw-bold text-success">{% if conversion_rates.memo_to_truth_delta is not None %}{{ conversion_rates.memo_to_truth_delta }}%{% else %}&mdash;{% endif %}</span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <small class="text-muted text-uppercase d-block">Truth Delta &rarr; Intro</small>
+                    <span class="fs-4 fw-bold text-success">{% if conversion_rates.truth_delta_to_intro is not None %}{{ conversion_rates.truth_delta_to_intro }}%{% else %}&mdash;{% endif %}</span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <small class="text-muted text-uppercase d-block">Intro &rarr; Message</small>
+                    <span class="fs-4 fw-bold text-success">{% if conversion_rates.intro_to_message is not None %}{{ conversion_rates.intro_to_message }}%{% else %}&mdash;{% endif %}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if multi_metric_trends %}
+    <!-- Trending -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h6 class="fw-bold text-uppercase small text-muted mb-3">Trending (vs. previous 7 days)</h6>
+            <div class="row g-3 text-center">
+                {% for event_type, trend in multi_metric_trends.items %}
+                <div class="col-6 col-md-4">
+                    <small class="text-muted text-uppercase d-block">{{ trend.label }}</small>
+                    {% if trend.pct_change is None %}
+                        <span class="fs-5 fw-bold text-muted">&mdash;</span>
+                    {% elif trend.pct_change >= 0 %}
+                        <span class="fs-5 fw-bold text-success"><i class="bi bi-arrow-up"></i> {{ trend.pct_change }}%</span>
+                    {% else %}
+                        <span class="fs-5 fw-bold text-danger"><i class="bi bi-arrow-down"></i> {{ trend.pct_change|slice:"1:" }}%</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if focus_breakdown and focus_breakdown.unique_viewers %}
+    <!-- Investor/Buyer Focus Breakdown -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h6 class="fw-bold text-uppercase small text-muted mb-1">{% if application %}Who's Interested{% else %}Buyer Interest{% endif %}</h6>
+            <p class="text-muted mb-3" style="font-size: 0.8rem;">
+                {{ focus_breakdown.unique_viewers }} unique {% if application %}investor{% else %}buyer{% endif %}{{ focus_breakdown.unique_viewers|pluralize }} viewed your profile.
+            </p>
+            <div class="row g-4">
+                {% if focus_breakdown.by_stage %}
+                <div class="col-md-6">
+                    <small class="text-muted text-uppercase d-block mb-2">By Stage Focus</small>
+                    {% for stage, n in focus_breakdown.by_stage.items %}
+                    <div class="d-flex justify-content-between small mb-1"><span>{{ stage }}</span><strong>{{ n }}</strong></div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% if focus_breakdown.by_focus %}
+                <div class="col-md-6">
+                    <small class="text-muted text-uppercase d-block mb-2">By Sector Focus</small>
+                    {% for focus, n in focus_breakdown.by_focus.items %}
+                    <div class="d-flex justify-content-between small mb-1"><span>{{ focus }}</span><strong>{{ n }}</strong></div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% if focus_breakdown.by_deal_structure %}
+                <div class="col-md-6">
+                    <small class="text-muted text-uppercase d-block mb-2">By Preferred Deal Structure</small>
+                    {% for structure, n in focus_breakdown.by_deal_structure.items %}
+                    <div class="d-flex justify-content-between small mb-1"><span>{{ structure }}</span><strong>{{ n }}</strong></div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if ai_insights %}
+    <!-- Zelda Insights -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h6 class="fw-bold text-uppercase small text-muted mb-3"><i class="bi bi-stars text-primary me-1"></i>Zelda Insights</h6>
+            <ul class="list-unstyled mb-0">
+                {% for insight in ai_insights %}
+                <li class="mb-2 pb-2 {% if not forloop.last %}border-bottom{% endif %}">{{ insight }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if recommendations %}
+    <!-- Next Best Actions -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h6 class="fw-bold text-uppercase small text-muted mb-3">Next Best Actions</h6>
+            {% for rec in recommendations %}
+            <div class="d-flex justify-content-between align-items-start mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+                <div>
+                    <strong>{{ rec.action }}</strong>
+                    <p class="text-muted small mb-0">{{ rec.reason }}</p>
+                </div>
+                <span class="badge {% if rec.impact == 'High' %}bg-danger-subtle text-danger-emphasis{% else %}bg-secondary-subtle text-secondary-emphasis{% endif %} text-nowrap ms-3">
+                    {{ rec.impact }} impact
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if interest_timeline %}
+    <!-- Interest Timeline -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h6 class="fw-bold text-uppercase small text-muted mb-3">Interest Timeline</h6>
+            <ul class="list-unstyled mb-0">
+                {% for event in interest_timeline %}
+                <li class="mb-2 pb-2 {% if not forloop.last %}border-bottom{% endif %} d-flex justify-content-between">
+                    <span>{{ event.label }}</span>
+                    <span class="text-muted small">{{ event.created_at|date:"M j, Y" }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Profile Views (detailed) -->
     <div class="card shadow-sm border-0 p-4 mb-4">
         <h6 class="fw-bold text-uppercase small text-muted mb-3">Profile Views</h6>
         <div class="row g-3 mb-3">
@@ -60,6 +324,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     {% if deck_stats %}
     <!-- Pitch Deck Analytics -->
@@ -234,7 +499,7 @@
     </div>
     {% endif %}
 
-    {% if engagement %}
+    {% if engagement and show_full_engagement_summary %}
     <!-- Engagement Summary -->
     <div class="card shadow-sm border-0 p-4 mb-4">
         <h6 class="fw-bold text-uppercase small text-muted mb-3">Engagement Summary</h6>

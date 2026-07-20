@@ -874,6 +874,51 @@ def requeue_failed_task(request, failure_id):
 
 
 # =====================================================================
+# 15b. STALE DOCUMENTS — documents stuck mid-pipeline with no worker ever
+# having picked them up (an absence, not a Celery exception, so this never
+# reaches FailedTaskLog — see zelda_api/stale_documents.py).
+# =====================================================================
+
+@login_required
+def stale_documents(request):
+    guard = _staff_required(request)
+    if guard:
+        return guard
+
+    from zelda_api.stale_documents import find_stale_documents
+
+    return render(request, 'ops/stale_documents.html', {
+        'stale_docs': find_stale_documents(),
+        'ops_section': 'stale_documents',
+    })
+
+
+@login_required
+@require_POST
+def requeue_stale_document(request, document_id):
+    guard = _staff_required(request)
+    if guard:
+        return guard
+
+    from zelda_api.vector_models import DocumentSource
+
+    doc = get_object_or_404(DocumentSource, id=document_id)
+
+    try:
+        if doc.document_type == 'business_valuation':
+            from zelda_api.tasks import process_valuation_document_task
+            process_valuation_document_task.delay(doc.id, doc.raw_text_full or '')
+        else:
+            from zelda_api.tasks import process_document_pipeline
+            process_document_pipeline.delay(doc.id, doc.raw_text_full or '')
+        messages.success(request, f"Requeued {doc.filename}.")
+    except Exception as e:
+        messages.error(request, f"Requeue failed: {str(e)}")
+
+    return redirect('ops:stale_documents')
+
+
+# =====================================================================
 # 16. INSIGHT REPORTS — review/publish gate for the quarterly aggregated
 # data-drop reports (see growth/tasks.py::generate_quarterly_insight_report).
 # Drafts are unpublished until staff approve them here.

@@ -710,6 +710,55 @@ def seller_dashboard(request):
     })
 
 
+@login_required
+@require_POST
+def activate_founder_highlight(request):
+    """
+    Founder Premium's monthly perk: a 24-hour visibility boost across the
+    bulletin board, pitch video listing, blog posts, and job posts (see
+    Application.is_highlighted and the sort keys in founder_bulletin_board/
+    _rank_pitch_video_profiles/blog.views.blog_view/jobs.views.JobListView).
+    Replaces the old "see investor identity in your digest" perk — see
+    matchmaking/digest.py's module docstring for why.
+    """
+    application = getattr(request.user, 'match_founder_profile', None)
+    if not application:
+        messages.error(request, "Complete your founder profile first.")
+        return redirect('matchmaking:founder_dashboard')
+
+    if not application.can_activate_highlight:
+        if not application.is_premium:
+            messages.error(request, "The monthly highlight is a Founder Premium perk.")
+        else:
+            messages.error(request, "Your highlight was already used this month — check back after your cooldown ends.")
+        return redirect('matchmaking:founder_dashboard')
+
+    application.activate_highlight()
+    messages.success(request, "You're highlighted for the next 24 hours across the bulletin board, pitch videos, blog, and jobs.")
+    return redirect('matchmaking:founder_dashboard')
+
+
+@login_required
+@require_POST
+def activate_seller_highlight(request):
+    """Seller Premium's mirror of activate_founder_highlight — see that view's docstring."""
+    seller_profile = getattr(request.user, 'match_seller_profile', None)
+    if not seller_profile:
+        messages.error(request, "Complete your business listing first.")
+        return redirect('matchmaking:seller_dashboard')
+
+    if not seller_profile.can_activate_highlight:
+        if not seller_profile.is_premium:
+            messages.error(request, "The monthly highlight is a Seller Premium perk.")
+        else:
+            messages.error(request, "Your highlight was already used this month — check back after your cooldown ends.")
+        return redirect('matchmaking:seller_dashboard')
+
+    seller_profile.activate_highlight()
+    messages.success(request, "You're highlighted for the next 24 hours across the business marketplace and pitch videos.")
+    return redirect('matchmaking:seller_dashboard')
+
+
 FREE_CRM_LEAD_LIMIT = 15
 
 
@@ -995,8 +1044,10 @@ def founder_bulletin_board(request):
     # Founder Premium perk (or a staff-curated feature): Featured Placement —
     # featured founders sort first, then by match score within each group
     # (falls back to match_percentage's default of 75 for viewers with no
-    # vector, so this always has a stable order).
-    pitches = sorted(pitches, key=lambda x: (not (x.is_premium or x.is_staff_featured), -x.match_percentage))
+    # vector, so this always has a stable order). An active monthly
+    # highlight (see Application.is_highlighted) outranks plain Featured
+    # Placement — it's the stronger, time-boxed signal.
+    pitches = sorted(pitches, key=lambda x: (not x.is_highlighted, not (x.is_premium or x.is_staff_featured), -x.match_percentage))
 
     return render(request, 'matchmaking/bulletin_board.html', {
         'pitches': pitches,
@@ -1078,8 +1129,9 @@ def acquisition_bulletin_board(request):
     # Seller Premium perk (or a staff-curated feature): Featured Listing —
     # featured sellers sort first, then by match score within each group
     # (mirrors founder_bulletin_board's Featured Placement — see that view
-    # for the same pattern).
-    listings = sorted(listings, key=lambda x: (not (x.is_premium or x.is_staff_featured), -x.match_percentage))
+    # for the same pattern). An active monthly highlight outranks plain
+    # Featured Listing, same as the founder side.
+    listings = sorted(listings, key=lambda x: (not x.is_highlighted, not (x.is_premium or x.is_staff_featured), -x.match_percentage))
 
     return render(request, 'matchmaking/acquisition_bulletin_board.html', {
         'listings': listings,
@@ -1159,23 +1211,37 @@ def request_intro(request, application_id, investor_id):
         except Exception as e:
             logger.warning(f"Failed to create intro-request notification: {str(e)}")
 
-        subject = f"[Handshake Alert] Intro Request: {investor_profile.company_name or 'Private Investor'} -> {founder_app.company_name}"
+        # Admin-facing FYI only — this goes to ADMIN_EMAIL, not to the
+        # founder or investor (the founder's own accurate in-app
+        # Notification is created above). connection_action_view is a
+        # direct two-party accept/decline with no staff step, so this
+        # copy previously implied a manual approval that never happens —
+        # fixed to describe what actually happens instead.
+        subject = f"Intro request: {investor_profile.company_name or 'Private Investor'} -> {founder_app.company_name}"
         email_body = (
-            f"Broker Lead Notification:\n\n"
+            f"New introduction request:\n\n"
             f"Investor: {getattr(investor_profile, 'full_name', 'Anonymous Portfolio Manager')} ({investor_profile.company_name or 'Private Partner'})\n"
-            f"Founder Startup Target: {founder_app.company_name}\n\n"
-            f"Mandate Target Stage: {investor_profile.investment_stage}\n"
-            f"Action Required: Navigate to the admin workspace to process and approve this platform handshake."
+            f"Founder: {founder_app.company_name}\n\n"
+            f"Mandate Target Stage: {investor_profile.investment_stage}\n\n"
+            f"No action needed — the founder can accept or decline this directly from their dashboard."
         )
-        
+
+        # `getattr(settings, 'ADMIN_EMAIL', DEFAULT_FROM_EMAIL)` never
+        # actually falls back: ADMIN_EMAIL is always a defined setting
+        # (django-environ defaults it to ''), so getattr's default only
+        # kicks in when an attribute is *missing*, not when it's falsy.
+        # With ADMIN_EMAIL unset, recipient_list ends up as [''], and
+        # EmailMessage.recipients() silently filters out falsy addresses —
+        # so this email has been failing to send with no error at all
+        # whenever ADMIN_EMAIL isn't configured. `or` actually falls back.
         send_mail(
             subject=subject,
             message=email_body,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[getattr(settings, 'ADMIN_EMAIL', settings.DEFAULT_FROM_EMAIL)],
+            recipient_list=[settings.ADMIN_EMAIL or settings.DEFAULT_FROM_EMAIL],
             fail_silently=True
         )
-        messages.success(request, f"Intro request sent for {founder_app.company_name}! Our team will facilitate the connection.")
+        messages.success(request, f"Intro request sent for {founder_app.company_name}!")
     else:
         messages.info(request, "You have already requested an introduction to this founder.")
 
@@ -2415,10 +2481,11 @@ def delete_milestone(request, milestone_id):
 
 def _rank_pitch_video_profiles(items, score_fn, viewer_partner_profile):
     """
-    Sorts founders/sellers with a pitch video: staff/premium-featured
-    first (same convention as founder_bulletin_board/acquisition_bulletin_board),
-    then by rule-based match score against the viewer's investor/buyer
-    profile if they have one, then most-recent first. No AI vector call —
+    Sorts founders/sellers with a pitch video: active monthly highlight
+    first, then staff/premium-featured (same convention as
+    founder_bulletin_board/acquisition_bulletin_board), then by rule-based
+    match score against the viewer's investor/buyer profile if they have
+    one, then most-recent first. No AI vector call —
     calculate_rule_based_score/calculate_deal_rule_based_score are pure
     field comparisons, so ranking a video list stays cheap even without
     every profile having a computed embedding.
@@ -2434,6 +2501,7 @@ def _rank_pitch_video_profiles(items, score_fn, viewer_partner_profile):
             item.match_score = None
 
     items.sort(key=lambda x: (
+        not x.is_highlighted,
         not (x.is_premium or x.is_staff_featured),
         -(x.match_score if x.match_score is not None else 0),
         -x.created_at.timestamp() if x.created_at else 0,
@@ -2711,3 +2779,44 @@ def set_pitch_video_visibility(request):
         return JsonResponse({'error': 'No founder or seller profile found.'}, status=404)
 
     return JsonResponse({'status': 'success', 'visibility': visibility})
+
+
+# 1x1 transparent PNG — the smallest valid image, served by digest_open_pixel.
+_TRANSPARENT_PIXEL_PNG = (
+    b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01'
+    b'\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01'
+    b'\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82'
+)
+
+
+def digest_open_pixel(request, token):
+    """
+    Embedded as an <img> in the weekly digest email — no auth, no CSRF,
+    must always return a valid (tiny) image regardless of whether the
+    token is recognized, since email clients don't care about our
+    bookkeeping and a broken image would just look like a bug to the user.
+    """
+    from .models import DigestEngagementEvent
+
+    sent_event = DigestEngagementEvent.objects.filter(token=token, event_type='sent').first()
+    if sent_event and not DigestEngagementEvent.objects.filter(token=token, event_type='opened').exists():
+        DigestEngagementEvent.objects.create(recipient=sent_event.recipient, event_type='opened', token=token)
+
+    return HttpResponse(_TRANSPARENT_PIXEL_PNG, content_type='image/png')
+
+
+def digest_click_redirect(request, token, destination):
+    """
+    The weekly digest's hero-match link routes through here before landing
+    on the real dashboard, purely to record the click — same
+    fail-open shape as digest_open_pixel: an unrecognized token still
+    redirects, it just doesn't get credited as a tracked click.
+    """
+    from .models import DigestEngagementEvent
+
+    sent_event = DigestEngagementEvent.objects.filter(token=token, event_type='sent').first()
+    if sent_event and not DigestEngagementEvent.objects.filter(token=token, event_type='clicked').exists():
+        DigestEngagementEvent.objects.create(recipient=sent_event.recipient, event_type='clicked', token=token)
+
+    target = 'matchmaking:founder_dashboard' if destination == 'founder' else 'matchmaking:investor_dashboard'
+    return redirect(target)

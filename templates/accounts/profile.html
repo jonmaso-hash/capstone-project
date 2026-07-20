@@ -617,6 +617,98 @@
             </div>
             {% endif %}
 
+            {% if verification_reports_count %}
+            <div class="verification-history-section mb-5">
+                <div class="section-title mb-4 d-flex align-items-center">
+                    <h3 class="fw-bold mb-0">Verification History</h3>
+                    <div class="ms-3 flex-grow-1 border-bottom"></div>
+                </div>
+                {% if not verification_unlocked %}
+                <div class="card border-0 shadow-sm rounded-4" style="background: linear-gradient(135deg, #fff8e1, #ffffff);">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-2">
+                            <i class="bi bi-lock-fill me-1 text-warning"></i>
+                            {% if request.user == profile_user %}Unlock Your Verification History{% else %}Premium Feature{% endif %}
+                        </h5>
+                        <p class="text-muted mb-3">
+                            {% if request.user == profile_user %}
+                            Zelda has cross-checked {{ verification_reports_count }} document{{ verification_reports_count|pluralize }}
+                            of yours against public sources. Upgrade to see credibility scores, claim-by-claim verification,
+                            and how they've trended across your uploads.
+                            {% else %}
+                            {{ profile_user.username }} hasn't unlocked Truth Delta verification yet. Once they upgrade to
+                            Premium, you'll be able to view their credibility scores and verification history here &mdash;
+                            no extra cost to you.
+                            {% endif %}
+                        </p>
+                        {% if request.user == profile_user %}
+                        <a href="{% url 'billing:billing_page' %}" class="btn btn-warning rounded-pill px-4 fw-semibold">View Membership Plans</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="card shadow-sm border-0 rounded-4">
+                    <div class="card-body p-4">
+                        <p class="text-muted small mb-3">
+                            Truth Delta's cross-check against public sources (SEC EDGAR and, where configured, Crunchbase/news)
+                            for every document {{ profile_user.username }} has submitted, most recent first — a trend across
+                            uploads and fundraising rounds, not just a single deck.
+                        </p>
+                        <div class="list-group list-group-flush">
+                            {% for report in verification_history %}
+                            <div class="list-group-item px-0 py-3 d-flex align-items-start gap-3">
+                                <div class="text-center" style="min-width: 4rem;">
+                                    {% if report.overall_truth_score is not None %}
+                                        <div class="fw-bold fs-5
+                                            {% if report.credibility_risk == 'low' %}text-success
+                                            {% elif report.credibility_risk == 'medium' %}text-warning
+                                            {% elif report.credibility_risk == 'high' or report.credibility_risk == 'critical' %}text-danger
+                                            {% else %}text-muted{% endif %}">
+                                            {{ report.overall_truth_score|floatformat:0 }}
+                                        </div>
+                                        <div class="text-muted" style="font-size: 0.7rem;">/100</div>
+                                    {% else %}
+                                        <div class="fw-bold fs-5 text-muted">—</div>
+                                        <div class="text-muted" style="font-size: 0.7rem;">no data</div>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <span class="badge rounded-pill
+                                            {% if report.credibility_risk == 'low' %}bg-success-subtle text-success
+                                            {% elif report.credibility_risk == 'medium' %}bg-warning-subtle text-warning
+                                            {% elif report.credibility_risk == 'high' or report.credibility_risk == 'critical' %}bg-danger-subtle text-danger
+                                            {% else %}bg-secondary-subtle text-secondary{% endif %}">
+                                            {{ report.credibility_risk|title }}
+                                        </span>
+                                        <span class="text-muted small">{{ report.created_at|date:"M j, Y" }}</span>
+                                        <span class="text-muted small">&middot; {{ report.document.filename }}</span>
+                                        {% if report.stats.pct is not None %}
+                                        <span class="text-muted small">&middot; {{ report.stats.verified }}/{{ report.stats.total }} claims verified ({{ report.stats.pct }}%)</span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="text-secondary small mb-0">{{ report.summary }}</p>
+                                    {% if report.trend.newly_verified or report.trend.lost_verification %}
+                                    <ul class="small mb-1 ps-3">
+                                        {% for category in report.trend.newly_verified %}
+                                        <li class="text-success">+ {{ category }} became verifiable</li>
+                                        {% endfor %}
+                                        {% for category in report.trend.lost_verification %}
+                                        <li class="text-danger">&minus; {{ category }} claim no longer has supporting evidence</li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% endif %}
+                                    <a href="{% url 'zelda_api:truth_delta_ui' report.document_id %}" class="small">View full verification &rarr;</a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
             <div class="blog-section mb-5">
                 <h3 class="fw-bold mb-4">Articles by {{ profile_user.username }}</h3>
                 

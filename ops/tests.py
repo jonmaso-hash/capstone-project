@@ -314,3 +314,90 @@ class TrainingDataPipelineTests(TestCase):
         self.assertIn('[EMAIL]', row['candidate'])
         self.assertIn('[PHONE]', row['candidate'])
         self.assertIn('[URL]', row['candidate'])
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class StaleDocumentDetectionTests(TestCase):
+    """
+    zelda_api/stale_documents.py + ops's Stale Documents page — catches
+    exactly the failure mode that let a real valuation silently never
+    appear: a document queued for processing with no Celery worker ever
+    consuming it. Unlike Failed Tasks, this is never a Celery exception
+    (nothing reaches FailedTaskLog), just an absence, so it needs its own
+    periodic-scan-style detection rather than reusing that dead-letter path.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.staff_user = User.objects.create_user('stale_ops_staff', password='x', is_staff=True)
+        self.uploader = User.objects.create_user('stale_doc_uploader', password='x')
+
+    def _doc(self, status, minutes_ago, document_type='pitch_deck'):
+        from django.utils import timezone
+        from datetime import timedelta
+        from zelda_api.vector_models import DocumentSource
+        doc = DocumentSource.objects.create(
+            filename='deck.pdf', source_entity='Test Co', document_type=document_type,
+            uploaded_by=self.uploader, status=status,
+        )
+        DocumentSource.objects.filter(id=doc.id).update(updated_at=timezone.now() - timedelta(minutes=minutes_ago))
+        doc.refresh_from_db()
+        return doc
+
+    def test_recently_ingested_document_is_not_stale(self):
+        from zelda_api.stale_documents import find_stale_documents
+        self._doc('ingested', minutes_ago=1)
+        self.assertEqual(find_stale_documents().count(), 0)
+
+    def test_document_stuck_past_threshold_is_stale(self):
+        from zelda_api.stale_documents import find_stale_documents
+        self._doc('chunking', minutes_ago=10)
+        self.assertEqual(find_stale_documents().count(), 1)
+
+    def test_analyzed_document_is_never_stale_regardless_of_age(self):
+        from zelda_api.stale_documents import find_stale_documents
+        self._doc('analyzed', minutes_ago=999)
+        self.assertEqual(find_stale_documents().count(), 0)
+
+    def test_errored_document_is_never_stale(self):
+        """A document that actually failed (and is visible via FailedTaskLog / error_message) isn't a silent-absence case."""
+        from zelda_api.stale_documents import find_stale_documents
+        self._doc('error', minutes_ago=999)
+        self.assertEqual(find_stale_documents().count(), 0)
+
+    def test_stale_documents_page_lists_stuck_document(self):
+        doc = self._doc('embedding', minutes_ago=15)
+        self.client.force_login(self.staff_user)
+
+        response = self.client.get(reverse('ops:stale_documents'))
+
+        self.assertContains(response, doc.filename)
+        self.assertContains(response, 'embedding')
+
+    def test_non_staff_cannot_view_stale_documents(self):
+        self._doc('embedding', minutes_ago=15)
+        self.client.force_login(self.uploader)
+
+        response = self.client.get(reverse('ops:stale_documents'), follow=True)
+
+        self.assertContains(response, "restricted to staff")
+
+    def test_requeue_dispatches_valuation_task_for_business_valuation_documents(self):
+        doc = self._doc('embedding', minutes_ago=15, document_type='business_valuation')
+        self.client.force_login(self.staff_user)
+
+        with mock.patch('zelda_api.tasks.process_valuation_document_task.delay') as mock_delay:
+            response = self.client.post(reverse('ops:requeue_stale_document', args=[doc.id]), follow=True)
+
+        mock_delay.assert_called_once_with(doc.id, doc.raw_text_full or '')
+        self.assertContains(response, "Requeued")
+
+    def test_requeue_dispatches_standard_pipeline_for_pitch_deck_documents(self):
+        doc = self._doc('embedding', minutes_ago=15, document_type='pitch_deck')
+        self.client.force_login(self.staff_user)
+
+        with mock.patch('zelda_api.tasks.process_document_pipeline.delay') as mock_delay:
+            response = self.client.post(reverse('ops:requeue_stale_document', args=[doc.id]), follow=True)
+
+        mock_delay.assert_called_once_with(doc.id, doc.raw_text_full or '')
+        self.assertContains(response, "Requeued")

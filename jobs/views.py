@@ -3,6 +3,7 @@ from django.views.generic import ListView, DetailView, CreateView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.utils import timezone
+from django.db.models import Case, When, Value, BooleanField
 from .models import JobListing, JobApplication
 from django.db import models
 
@@ -13,9 +14,21 @@ class JobListView(ListView):
     paginate_by = 20
 
     def get_queryset(self):
+        # Founder Premium's monthly highlight (see matchmaking.models.
+        # Application.is_highlighted) sorts highlighted posters' jobs first,
+        # ahead of the model's default -is_featured/-created_at ordering —
+        # annotated at the DB level so it stays correct under pagination.
+        from matchmaking.models import HIGHLIGHT_DURATION
+        highlight_cutoff = timezone.now() - HIGHLIGHT_DURATION
         qs = JobListing.objects.filter(
             is_active=True,
             expires_at__gt=timezone.now()
+        ).annotate(
+            poster_is_highlighted=Case(
+                When(poster__match_founder_profile__last_highlight_at__gte=highlight_cutoff, then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField(),
+            )
         )
 
         q = self.request.GET.get('q', '').strip()
@@ -33,7 +46,7 @@ class JobListView(ListView):
         if location:
             qs = qs.filter(location__icontains=location)
 
-        return qs
+        return qs.order_by('-poster_is_highlighted', '-is_featured', '-created_at')
 
 class JobDetailView(DetailView):
     model = JobListing

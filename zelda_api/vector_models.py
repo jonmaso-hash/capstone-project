@@ -68,6 +68,16 @@ class DocumentSource(FoundryStandardMixin, models.Model):
     # existing document; only takes effect once a staff member hides one.
     is_hidden_by_staff = models.BooleanField(default=False, help_text="Hides this document from everyone except the owner and staff.")
 
+    # business_valuation only — everyone can always generate a valuation
+    # now (see DocumentIngestView), but only 'full' renders the number,
+    # methodology, and complete risk list; 'preview' redacts those
+    # server-side (see DocumentValuationView) until unlocked via a
+    # per-document purchase or an included plan allowance. Default 'full'
+    # so every other document_type, and every valuation generated before
+    # this field existed, is unaffected.
+    VALUATION_TIER_CHOICES = [('preview', 'Preview'), ('full', 'Full')]
+    valuation_tier = models.CharField(max_length=10, choices=VALUATION_TIER_CHOICES, default='full')
+
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

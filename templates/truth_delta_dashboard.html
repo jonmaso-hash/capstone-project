@@ -319,6 +319,67 @@
         margin-top: 0.75rem;
     }
 
+    /* Clarification Requests */
+    .claim-clarification-ask-btn {
+        background: none;
+        border: 1px solid #cbd5e1;
+        color: #475569;
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 0.35rem 0.85rem;
+        border-radius: 2rem;
+        margin-top: 0.75rem;
+        cursor: pointer;
+    }
+    .claim-clarification-ask-btn:hover {
+        background: #f1f5f9;
+    }
+    .claim-clarification-form {
+        margin-top: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .claim-clarification-form textarea {
+        width: 100%;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.5rem;
+        padding: 0.5rem;
+        font-size: 0.85rem;
+        resize: vertical;
+    }
+    .claim-clarification-list {
+        margin-top: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .claim-clarification-item {
+        background: #f8fafc;
+        border: 1px solid #e0e7ff;
+        border-radius: 0.5rem;
+        padding: 0.75rem;
+        font-size: 0.85rem;
+    }
+    .claim-clarification-status {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        padding: 0.15rem 0.5rem;
+        border-radius: 1rem;
+        margin-left: 0.5rem;
+    }
+    .claim-clarification-status.pending {
+        background: rgba(245, 158, 11, 0.12);
+        color: var(--td-yellow);
+    }
+    .claim-clarification-status.responded {
+        background: rgba(16, 185, 129, 0.12);
+        color: var(--td-green);
+    }
+
     /* Summary Box */
     .truth-delta-summary {
         background: #f8fafc;
@@ -497,6 +558,7 @@
         <div class="truth-delta-summary">
             <div class="summary-title">Overall Assessment</div>
             <div class="summary-text" id="truthSummaryText">Loading verification data...</div>
+            <div class="summary-text" id="truthVerifiabilityRollup" style="display: none; font-size: 0.9rem; opacity: 0.85; margin-top: 0.5rem;"></div>
         </div>
 
         <!-- Loading State -->
@@ -512,35 +574,76 @@
             <p>Truth Delta verification hasn't been run yet for this document.</p>
         </div>
 
+        <!-- Per-Claim Detail — the "why": which claims were checked, what
+             was found (or why nothing was found), and Zelda's reasoning
+             for each. Hidden until there's at least one claim to show. -->
+        <div id="truthDeltaClaimsSection" class="flagged-claims mt-4" style="display: none;">
+            <div class="claims-header">Claim-by-Claim Detail</div>
+            <div class="claims-list" id="truthDeltaClaimsList"></div>
+        </div>
+
         <!-- Actions -->
         <div class="truth-delta-actions">
             <button class="truth-delta-btn primary" onclick="runTruthDeltaVerification()">
                 <span id="verifyButtonText">▶ Run Verification</span>
             </button>
         </div>
+
+        {% if disclaimer %}
+        <div style="font-size: 0.72rem; line-height: 1.5; color: #64748b; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e0e7ff;">
+            <strong>ℹ</strong> {{ disclaimer }}
+        </div>
+        {% endif %}
     </div>
 </div>
+
+{{ details|json_script:"truth-delta-details-json" }}
+{{ summary|default:"Verification pending — no public data found for this company."|json_script:"truth-delta-summary-json" }}
+{{ credibility_risk|default:"pending"|json_script:"truth-delta-risk-json" }}
+{{ clarification_requests|json_script:"truth-delta-clarifications-json" }}
 
 <!-- JAVASCRIPT ENGINE FOR TRUTH DELTA UI -->
 <script>
 const TRUTH_DELTA_API = '/api/v1/zelda';
+const DOCUMENT_ID = {{ document.id }};
+const CAN_REQUEST_CLARIFICATION = {{ can_request_clarification|yesno:"true,false" }};
+const IS_DOCUMENT_OWNER = {{ is_document_owner|yesno:"true,false" }};
+
+function _readJsonScript(id, fallback) {
+    const el = document.getElementById(id);
+    if (!el) return fallback;
+    try {
+        return JSON.parse(el.textContent);
+    } catch (e) {
+        return fallback;
+    }
+}
+
+let CLARIFICATION_REQUESTS = _readJsonScript('truth-delta-clarifications-json', []);
 
 // ── Server-side data injected from Django view — no API call needed ──
+// summary/credibility_risk go through json_script (not raw template-string
+// interpolation) so arbitrary text — including apostrophes — round-trips
+// correctly: Django's default auto-escaping is for HTML context, but a
+// value embedded directly inside a "..." JS string literal needs JS-string
+// escaping instead, and mixing the two turned a literal apostrophe into
+// the literal 6 characters "&#x27;" showing up on the page.
 const SERVER_TRUTH_DATA = {
     document_id: {{ document.id }},
     overall_truth_score: {{ truth_score|default:0 }},
-    credibility_risk: "{{ credibility_risk|default:'pending' }}",
-    summary: "{{ summary|default:'Verification pending — no public data found for this company.' }}",
+    credibility_risk: _readJsonScript('truth-delta-risk-json', 'pending'),
+    summary: _readJsonScript('truth-delta-summary-json', 'Verification pending — no public data found for this company.'),
     claims_analyzed: {{ claims_count|default:0 }},
     claims_verified: {{ claims_count|default:0 }},
     claims_flagged: 0,
     verification_rate: 0,
     discrepancy_rate: 0,
     flag_breakdown: { verified: {{ claims_count|default:0 }}, caution: 0, warning: 0, critical: 0 },
-    key_findings: ["{{ summary|default:'No public verification data available.' }}"],
-    recommendation_impact: { adjusted: null }
+    recommendation_impact: { adjusted: null },
+    details: _readJsonScript('truth-delta-details-json', {})
 };
-    
+SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
+
 
     /**
      * Load and display Truth Delta verification data
@@ -625,9 +728,241 @@ const SERVER_TRUTH_DATA = {
         }
 
         // Summary
-        document.getElementById('truthSummaryText').textContent = data.summary || 
+        document.getElementById('truthSummaryText').textContent = data.summary ||
             'Verification pending — no public data found for this company.';
 
+        renderClaimsSection(data.details || {});
+    }
+
+    /**
+     * Escapes text for safe insertion via innerHTML — claim/summary text
+     * ultimately comes from an uploaded document or a Claude response, so
+     * it's never trusted as raw HTML.
+     */
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str == null ? '' : String(str);
+        return div.innerHTML;
+    }
+
+    /**
+     * Renders the claim-by-claim "why" behind the score — reuses the
+     * per_claim reasoning Zelda already computes (see
+     * TruthDeltaEngine._call_claude_for_verification /
+     * _numeric_fallback) instead of leaving it buried in a JSON field
+     * only visible via Django admin. Falls back to listing the raw
+     * claims plainly when no qualitative per_claim breakdown exists yet
+     * (the "no external data found at all" case).
+     */
+    function renderClaimsSection(details) {
+        const section = document.getElementById('truthDeltaClaimsSection');
+        const list = document.getElementById('truthDeltaClaimsList');
+        const rollup = document.getElementById('truthVerifiabilityRollup');
+        if (!section || !list) return;
+
+        const perClaim = details.per_claim || [];
+        const claims = details.claims || [];
+
+        if (perClaim.length === 0 && claims.length === 0) {
+            section.style.display = 'none';
+            if (rollup) rollup.style.display = 'none';
+            return;
+        }
+
+        list.innerHTML = '';
+        const rows = perClaim.length > 0
+            ? perClaim.map(row => ({
+                category: row.category, claimed: row.claimed, observed: row.observed, assessment: row.assessment,
+            }))
+            : claims.map(c => ({
+                category: c.category, claimed: c.claimed_value, observed: null,
+                assessment: 'Not checked against external data.',
+            }));
+
+        rows.forEach(row => list.appendChild(buildClaimItem(row)));
+        section.style.display = 'block';
+
+        // Rollup — same "was real evidence actually named" check as each
+        // claim-item's ✅/❔ icon, just aggregated. Computed here rather
+        // than trusting a separate server-computed number, so it can
+        // never disagree with the table directly below it.
+        if (rollup) {
+            const verifiedCount = rows.filter(r => r.observed && !/no external data/i.test(r.observed)).length;
+            const pct = Math.round((verifiedCount / rows.length) * 1000) / 10;
+            rollup.textContent = `${verifiedCount}/${rows.length} claims verified against external data (${pct}%)`;
+            rollup.style.display = 'block';
+        }
+    }
+
+    function buildClaimItem(row) {
+        const observedText = row.observed && !/no external data/i.test(row.observed) ? row.observed : null;
+        const icon = observedText ? '✅' : '❔';
+        // 'funding_raised' -> 'Funding raised' — the CSS already
+        // uppercases this label, but the underscore reads oddly
+        // ("FUNDING_RAISED") if not split into words first.
+        const categoryLabel = (row.category || '').replace(/_/g, ' ');
+
+        const div = document.createElement('div');
+        div.className = 'claim-item';
+        div.innerHTML = `
+            <div class="claim-flag-icon">${icon}</div>
+            <div class="claim-content">
+                <div class="claim-category">${escapeHtml(categoryLabel)}</div>
+                <div class="claim-comparison">
+                    <div class="comparison-value">
+                        <div class="comparison-label">Claimed</div>
+                        <div class="comparison-text">${escapeHtml(row.claimed || '—')}</div>
+                    </div>
+                    <div class="comparison-value">
+                        <div class="comparison-label">Observed</div>
+                        <div class="comparison-text">${escapeHtml(observedText || 'No external data found')}</div>
+                    </div>
+                </div>
+                <div class="claim-explanation">${escapeHtml(row.assessment || '')}</div>
+                <div class="claim-clarification-area" data-category="${escapeHtml(row.category || '')}" data-unverified="${!observedText}"></div>
+            </div>
+        `;
+
+        renderClarificationArea(div.querySelector('.claim-clarification-area'));
+        return div;
+    }
+
+    /**
+     * Renders, for one claim category: any existing clarification
+     * requests + responses, an "Ask for Evidence" button for an
+     * investor/buyer viewer (only offered on claims that aren't already
+     * verified — asking for evidence on something already confirmed
+     * isn't the point), and a response form for the document owner on
+     * any still-PENDING request. Always rebuilds from CLARIFICATION_REQUESTS
+     * from scratch (rather than patching the DOM in place), so every
+     * submit handler can just call this again instead of hand-rolling
+     * DOM inserts — the single, harder-to-get-wrong path.
+     */
+    function renderClarificationArea(container) {
+        if (!container) return;
+        const category = container.dataset.category;
+        const isUnverified = container.dataset.unverified === 'true';
+        container.innerHTML = '';
+
+        const existing = CLARIFICATION_REQUESTS.filter(cr => cr.category === category);
+        if (existing.length > 0) {
+            const list = document.createElement('div');
+            list.className = 'claim-clarification-list';
+            existing.forEach(cr => list.appendChild(buildClarificationItem(cr, container)));
+            container.appendChild(list);
+        }
+
+        if (CAN_REQUEST_CLARIFICATION && isUnverified) {
+            const askBtn = document.createElement('button');
+            askBtn.type = 'button';
+            askBtn.className = 'claim-clarification-ask-btn';
+            askBtn.textContent = '🤝 Ask for Evidence';
+            askBtn.onclick = () => showClarificationForm(container);
+            container.appendChild(askBtn);
+        }
+    }
+
+    function buildClarificationItem(cr, container) {
+        const item = document.createElement('div');
+        item.className = 'claim-clarification-item';
+        const statusClass = cr.status === 'RESPONDED' ? 'responded' : 'pending';
+        const statusLabel = cr.status === 'RESPONDED' ? 'Responded' : 'Pending';
+
+        let responseHtml = '';
+        if (cr.status === 'RESPONDED' && cr.response_text) {
+            responseHtml = `<div class="mt-2"><strong>Response:</strong> ${escapeHtml(cr.response_text)}</div>`;
+        } else if (IS_DOCUMENT_OWNER) {
+            responseHtml = `
+                <div class="claim-clarification-form">
+                    <textarea rows="2" placeholder="Respond with clarification or a link to supporting documentation..."></textarea>
+                    <div>
+                        <button type="button" class="truth-delta-btn primary">Send Response</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        item.innerHTML = `
+            <div><strong>${escapeHtml(cr.requested_by)}</strong> asked<span class="claim-clarification-status ${statusClass}">${statusLabel}</span></div>
+            ${cr.message ? `<div class="mt-1">${escapeHtml(cr.message)}</div>` : ''}
+            ${responseHtml}
+        `;
+
+        const responseButton = item.querySelector('.claim-clarification-form button');
+        if (responseButton) {
+            responseButton.onclick = () => submitClarificationResponse(responseButton, cr.id, container);
+        }
+        return item;
+    }
+
+    function showClarificationForm(container) {
+        if (!CAN_REQUEST_CLARIFICATION) return;
+        const askBtn = container.querySelector('.claim-clarification-ask-btn');
+        if (askBtn) askBtn.style.display = 'none';
+
+        const form = document.createElement('div');
+        form.className = 'claim-clarification-form';
+        form.innerHTML = `
+            <textarea rows="2" placeholder="What would you like clarified or documented?"></textarea>
+            <div>
+                <button type="button" class="truth-delta-btn primary">Send Request</button>
+            </div>
+        `;
+        form.querySelector('button').onclick = () => submitClarificationRequest(form, container);
+        container.appendChild(form);
+    }
+
+    async function submitClarificationRequest(form, container) {
+        const category = container.dataset.category;
+        const message = form.querySelector('textarea').value.trim();
+        const button = form.querySelector('button');
+        button.disabled = true;
+        try {
+            const body = new URLSearchParams();
+            body.append('message', message);
+            const response = await fetch(
+                `${TRUTH_DELTA_API}/documents/${DOCUMENT_ID}/truth-delta/claims/${encodeURIComponent(category)}/flag/`,
+                { method: 'POST', credentials: 'include', headers: { 'X-CSRFToken': getCookie('csrftoken') }, body }
+            );
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            CLARIFICATION_REQUESTS.push(data.clarification);
+            renderClarificationArea(container);
+        } catch (error) {
+            console.error('Clarification request error:', error);
+            button.disabled = false;
+            alert('Failed to send request. Please try again.');
+        }
+    }
+
+    async function submitClarificationResponse(button, clarificationId, container) {
+        const form = button.closest('.claim-clarification-form');
+        const responseText = form.querySelector('textarea').value.trim();
+        if (!responseText) {
+            alert('Please enter a response.');
+            return;
+        }
+        button.disabled = true;
+        try {
+            const body = new URLSearchParams();
+            body.append('response_text', responseText);
+            const response = await fetch(
+                `${TRUTH_DELTA_API}/truth-delta/claims/${clarificationId}/respond/`,
+                { method: 'POST', credentials: 'include', headers: { 'X-CSRFToken': getCookie('csrftoken') }, body }
+            );
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            const record = CLARIFICATION_REQUESTS.find(cr => cr.id === clarificationId);
+            if (record) {
+                record.status = 'RESPONDED';
+                record.response_text = data.response_text;
+            }
+            renderClarificationArea(container);
+        } catch (error) {
+            console.error('Clarification response error:', error);
+            button.disabled = false;
+            alert('Failed to send response. Please try again.');
+        }
     }
 
     /**

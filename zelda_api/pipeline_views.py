@@ -56,17 +56,32 @@ class DocumentIngestView(APIView):
         source_entity = request.data.get('source_entity', 'Unknown')
         document_type = request.data.get('document_type', 'other')
 
+        valuation_tier = None
+        if document_type == 'business_valuation':
+            # No upload-time gate — everyone can always generate a
+            # valuation. valuation_tier decides whether DocumentValuationView
+            # renders it in full or redacts it to a free preview.
+            from .quotas import valuation_tier_for_new_upload
+            valuation_tier = valuation_tier_for_new_upload(request.user)
+        else:
+            from .quotas import has_credits_for, upgrade_message
+            if not has_credits_for(request.user, 'memo'):
+                return Response(
+                    {"error": upgrade_message(request.user), "code": "quota_exceeded"},
+                    status=status.HTTP_402_PAYMENT_REQUIRED
+                )
+
         try:
             # Extract text from file
             from .utils import extract_text_from_file
-            extracted_text = extract_text_from_file(uploaded_file)
-            
+            extracted_text, page_count = extract_text_from_file(uploaded_file)
+
             if not extracted_text:
                 return Response(
                     {"error": "Failed to extract text from file"},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
+
             # 1. Create DocumentSource record
             doc = DocumentSource.objects.create(
                 filename=uploaded_file.name,
@@ -76,7 +91,9 @@ class DocumentIngestView(APIView):
                 raw_text_preview=extracted_text[:1000],
                 raw_text_full=extracted_text,
                 total_word_count=len(extracted_text.split()),
-                status='ingested'
+                total_pages=page_count,
+                status='ingested',
+                **({'valuation_tier': valuation_tier} if valuation_tier else {}),
             )
             
             # 2. Queue for processing — valuation requests take a parallel path
@@ -212,14 +229,37 @@ class DocumentMemoView(APIView):
                     {"error": "Memo not yet generated. Check status endpoint."},
                     status=status.HTTP_202_ACCEPTED
                 )
-            
+
             memo = doc.memo
-            
+
+            # Free discovery signal for the founder even when the memo
+            # content itself is Premium-locked below — "an investor showed
+            # interest" should never be paywalled.
+            if doc.uploaded_by != request.user and viewer_is_investor:
+                from matchmaking.models import Application, log_investor_event
+                founder_app = Application.objects.filter(user=doc.uploaded_by).first()
+                if founder_app:
+                    log_investor_event(request.user, founder_app, 'memo_view')
+
+            from .truth_delta_models import _owner_is_premium
+            memo_unlocked = request.user.is_staff or _owner_is_premium(doc.uploaded_by)
+
+            if not memo_unlocked:
+                return Response({
+                    'memo_id': memo.id,
+                    'document_id': doc.id,
+                    'document_name': doc.source_entity,
+                    'locked': True,
+                    'is_owner': doc.uploaded_by == request.user,
+                    'generated_at': memo.created_at.isoformat(),
+                }, status=status.HTTP_200_OK)
+
             # Serialize memo with full citations
             response = {
                 'memo_id': memo.id,
                 'document_id': doc.id,
                 'document_name': doc.source_entity,
+                'locked': False,
                 'recommendation': memo.recommendation,
                 'completeness_score': memo.completeness_score,
                 'citations_count': memo.citations_count,
@@ -245,12 +285,8 @@ class DocumentMemoView(APIView):
                 ],
                 'generated_at': memo.created_at.isoformat(),
             }
-
-            if doc.uploaded_by != request.user and viewer_is_investor:
-                from matchmaking.models import Application, log_investor_event
-                founder_app = Application.objects.filter(user=doc.uploaded_by).first()
-                if founder_app:
-                    log_investor_event(request.user, founder_app, 'memo_view')
+            from .disclaimers import DUE_DILIGENCE_DISCLAIMER
+            response['disclaimer'] = DUE_DILIGENCE_DISCLAIMER
 
             return Response(response, status=status.HTTP_200_OK)
 
@@ -291,21 +327,42 @@ class DocumentValuationView(APIView):
 
             report = doc.valuation_report
 
-            response = {
-                'report_id': report.id,
-                'document_id': doc.id,
-                'document_name': doc.source_entity,
-                'confidence_score': report.confidence_score,
-                'valuation_low': str(report.valuation_low) if report.valuation_low is not None else None,
-                'valuation_high': str(report.valuation_high) if report.valuation_high is not None else None,
-                'sections': {
-                    'business_overview': report.business_overview,
-                    'financial_summary': report.financial_summary,
-                    'risk_report': report.risk_report,
-                    'valuation_summary': report.valuation_summary,
-                },
-                'generated_at': report.created_at.isoformat(),
-            }
+            # Computed fresh from the document's current insights rather
+            # than trusting the stored confidence_score field, so this
+            # works retroactively on reports generated before the
+            # confidence formula/breakdown existed — no reprocessing
+            # (and no extra Claude cost) needed for historical reports.
+            from .confidence_breakdown import compute_confidence_breakdown, compute_overall_confidence, compute_financial_completeness
+            from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+            from .valuation_preview import build_valuation_response
+            insights = list(doc.insights.all())
+            confidence_breakdown = compute_confidence_breakdown(insights)
+            overall_confidence = compute_overall_confidence(insights) if insights else report.confidence_score
+            facts = ZeldaIntelligencePipelineV2()._build_structured_context(doc, insights)
+            financial_completeness = compute_financial_completeness(facts)
+
+            response = build_valuation_response(
+                doc, report, insights, confidence_breakdown, overall_confidence,
+                financial_completeness, doc.valuation_tier,
+            )
+            if doc.valuation_tier == 'preview':
+                from .quotas import valuation_unlock_price
+                purchase_type, price = valuation_unlock_price(request.user)
+                response['unlock_purchase_type'] = purchase_type
+                response['unlock_price'] = price
+            else:
+                from .valuation_trend import get_previous_full_valuation, compute_valuation_trend, compute_valuation_drivers
+                previous_doc, previous_report = get_previous_full_valuation(doc)
+                if previous_report:
+                    trend = compute_valuation_trend(report, previous_report)
+                    if trend:
+                        response['trend'] = trend
+                        previous_facts = ZeldaIntelligencePipelineV2()._build_structured_context(
+                            previous_doc, list(previous_doc.insights.all()),
+                        )
+                        drivers = compute_valuation_drivers(facts, previous_facts)
+                        if drivers:
+                            response['valuation_drivers'] = drivers
 
             return Response(response, status=status.HTTP_200_OK)
 

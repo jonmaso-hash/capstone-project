@@ -194,28 +194,135 @@ class SECFilingsIntegration(DataSourceIntegration):
         """SEC EDGAR is public, always available."""
         return True
 
+    # SEC's company-search does a PREFIX match against its internal
+    # "conformed name," which uses abbreviated legal suffixes ("MICROSOFT
+    # CORP", "STARBUCKS CORP", "COSTCO WHOLESALE CORP /NEW") — a search
+    # for the full legal name ("Microsoft Corporation") returns nothing
+    # at all, since "Corporation" never prefix-matches "CORP". Confirmed
+    # live: only 2 of 6 real companies resolved before this fix.
+    _LEADING_THE_RE = re.compile(r'^the\s+', re.IGNORECASE)
+    _TRAILING_LEGAL_SUFFIXES = [
+        'incorporated', 'inc', 'corporation', 'corp', 'company', 'co',
+        'l\\.l\\.c', 'llc', 'limited', 'ltd', 'l\\.p', 'plc',
+    ]
+
+    @classmethod
+    def _normalize_company_name_for_search(cls, company_name: str) -> str:
+        """
+        Strips a leading "The " and one trailing legal-entity suffix, so
+        the search targets just the distinctive core name — which SEC's
+        prefix match reliably finds regardless of which exact suffix
+        abbreviation ("Corp" vs "Corporation" vs "Inc" vs "Incorporated")
+        the filer's conformed name actually uses.
+        """
+        name = cls._LEADING_THE_RE.sub('', company_name.strip())
+        for suffix in cls._TRAILING_LEGAL_SUFFIXES:
+            pattern = re.compile(rf',?\s*{suffix}\.?\s*$', re.IGNORECASE)
+            if pattern.search(name):
+                name = pattern.sub('', name).strip()
+                break
+        return name or company_name.strip()
+
+    # Brand names that don't share a root with their SEC-registered legal
+    # name at all — suffix-stripping can't fix these since the mismatch
+    # isn't a legal suffix, it's a genuinely different name. Deliberately
+    # small and hand-curated (only cases actually confirmed against SEC),
+    # not a general-purpose company-name database.
+    KNOWN_ALIASES = {
+        'meta': 'Meta Platforms',
+        'facebook': 'Meta Platforms',
+        'google': 'Alphabet',
+        'alphabet inc': 'Alphabet',
+    }
+
+    # CIKs are stable, permanent identifiers — safe to cache for a long
+    # time once found. A "not found" result gets a much shorter TTL,
+    # since it's more likely to reflect a transient SEC issue or a
+    # resolvable gap (e.g. an alias not yet added) than a fact that will
+    # never change.
+    _CACHE_TTL_FOUND = 60 * 60 * 24 * 7
+    _CACHE_TTL_NOT_FOUND = 60 * 60 * 6
+
     def _find_cik(self, company_name: str) -> Optional[str]:
+        """Thin wrapper over resolve_with_diagnostics for callers that only need the CIK."""
+        cik, _reason = self.resolve_with_diagnostics(company_name)
+        return cik
+
+    def resolve_with_diagnostics(self, company_name: str) -> Tuple[Optional[str], Optional[str]]:
         """
         Resolves a company name to a 10-digit zero-padded CIK via SEC's
-        public company-search Atom feed. Returns the first match — SEC's
-        own relevance ranking, not ours.
+        public company-search Atom feed, and — critically — WHY, when it
+        fails: 'not_found' | 'timeout' | 'request_error'. A single "33%
+        verification coverage" number conflates very different situations
+        (a company that's genuinely private and has no SEC filings at
+        all, a resolver bug that missed a real public company, a
+        transient SEC outage) that call for completely different fixes;
+        without this, every miss looks like the same problem. See
+        evaluate_claim_extraction's --check-external-evidence reporting,
+        which cross-references 'not_found' against the corpus's own
+        is_real_public_company annotation to tell "expected, this company
+        is private" apart from "this is a real resolver bug."
+
+        Tries, in order: a known brand alias, the normalized
+        (suffix-stripped) name, then the exact name as given — falling
+        through in case an earlier candidate over-strips or under-matches.
+        Successful (and failed) resolutions are cached so re-running the
+        same document, or the evaluation harness, doesn't re-hit SEC for
+        a name already resolved.
         """
+        from django.core.cache import cache
+
+        cache_key = f"sec_edgar_cik_v2:{company_name.strip().lower()}"
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+        alias = self.KNOWN_ALIASES.get(company_name.strip().lower())
+        candidates = dict.fromkeys(filter(None, [
+            alias,
+            self._normalize_company_name_for_search(company_name),
+            company_name.strip(),
+        ]))
+
+        reason = 'not_found'
+        for candidate in candidates:
+            cik, candidate_reason = self._find_cik_exact(candidate)
+            if cik:
+                result = (cik, None)
+                cache.set(cache_key, result, self._CACHE_TTL_FOUND)
+                return result
+            reason = candidate_reason
+            if reason in ('timeout', 'request_error'):
+                # A real network failure won't be fixed by trying a
+                # differently-worded candidate — stop retrying.
+                break
+
+        result = (None, reason)
+        cache.set(cache_key, result, self._CACHE_TTL_NOT_FOUND)
+        return result
+
+    def _find_cik_exact(self, company_name: str) -> Tuple[Optional[str], Optional[str]]:
+        """Returns (cik, reason) — reason is None exactly when cik is not None."""
         try:
             response = self.session.get(
                 'https://www.sec.gov/cgi-bin/browse-edgar',
                 params={'action': 'getcompany', 'company': company_name, 'type': '10-K', 'owner': 'include', 'count': 10, 'output': 'atom'},
                 timeout=10,
             )
-            if response.status_code != 200:
-                return None
-
-            match = re.search(r'CIK=(\d{10})', response.text) or re.search(r'CIK=(\d+)', response.text)
-            if not match:
-                return None
-            return match.group(1).zfill(10)
-        except Exception as e:
+        except requests.exceptions.Timeout:
+            logger.error(f"SEC CIK lookup timed out for {company_name}")
+            return None, 'timeout'
+        except requests.exceptions.RequestException as e:
             logger.error(f"SEC CIK lookup failed for {company_name}: {e}")
-            return None
+            return None, 'request_error'
+
+        if response.status_code != 200:
+            return None, 'request_error'
+
+        match = re.search(r'<cik>(\d+)</cik>', response.text, re.IGNORECASE)
+        if not match:
+            return None, 'not_found'
+        return match.group(1).zfill(10), None
 
     def fetch_company_data(self, company_name: str, domain: str = None) -> Dict:
         """

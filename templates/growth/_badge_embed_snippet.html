@@ -4,7 +4,36 @@
         <h6 class="fw-bold mb-2"><i class="bi bi-patch-check-fill text-primary me-1"></i>Embed your Zelda Readiness badge</h6>
         <p class="text-muted small mb-2">Copy this onto your own site or pitch deck — it links straight back to your public Interlink Foundry profile.</p>
         <img src="{% url 'growth:readiness_badge' role=role username=username %}" alt="Zelda Readiness Badge" class="mb-2 d-block">
-        <textarea class="form-control form-control-sm font-monospace" rows="2" readonly onclick="this.select()">&lt;a href="{{ request.scheme }}://{{ request.get_host }}{% url 'accounts:profile' username=username %}"&gt;&lt;img src="{{ request.scheme }}://{{ request.get_host }}{% url 'growth:readiness_badge' role=role username=username %}" alt="Zelda Readiness Badge"&gt;&lt;/a&gt;</textarea>
+        <textarea id="zelda-badge-embed-code-{{ username }}" style="position: absolute; left: -9999px;" tabindex="-1" aria-hidden="true">&lt;a href="{{ request.scheme }}://{{ request.get_host }}{% url 'accounts:profile' username=username %}"&gt;&lt;img src="{{ request.scheme }}://{{ request.get_host }}{% url 'growth:readiness_badge' role=role username=username %}" alt="Zelda Readiness Badge"&gt;&lt;/a&gt;</textarea>
+        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyZeldaBadgeEmbed(this, 'zelda-badge-embed-code-{{ username }}')">
+            <i class="bi bi-clipboard me-1"></i>Copy Embed Code
+        </button>
     </div>
 </div>
+<script>
+function copyZeldaBadgeEmbed(button, textareaId) {
+    const textarea = document.getElementById(textareaId);
+    const originalHTML = button.innerHTML;
+    const showResult = (html) => {
+        button.innerHTML = html;
+        setTimeout(() => { button.innerHTML = originalHTML; }, 1500);
+    };
+    const fallbackCopy = () => {
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            showResult('<i class="bi bi-check2 me-1"></i>Copied!');
+        } catch (e) {
+            showResult('<i class="bi bi-x-circle me-1"></i>Copy failed');
+        }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textarea.value)
+            .then(() => showResult('<i class="bi bi-check2 me-1"></i>Copied!'))
+            .catch(fallbackCopy);
+    } else {
+        fallbackCopy();
+    }
+}
+</script>
 {% endif %}

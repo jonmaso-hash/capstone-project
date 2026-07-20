@@ -48,6 +48,9 @@
                 <a href="{% url 'ops:failed_tasks' %}" class="list-group-item list-group-item-action fw-semibold {% if ops_section == 'failed_tasks' %}active{% endif %}">
                     <i class="bi bi-exclamation-octagon me-2"></i>Failed Tasks
                 </a>
+                <a href="{% url 'ops:stale_documents' %}" class="list-group-item list-group-item-action fw-semibold {% if ops_section == 'stale_documents' %}active{% endif %}">
+                    <i class="bi bi-hourglass-split me-2"></i>Stale Documents
+                </a>
                 <a href="{% url 'ops:insight_reports' %}" class="list-group-item list-group-item-action fw-semibold {% if ops_section == 'insight_reports' %}active{% endif %}">
                     <i class="bi bi-newspaper me-2"></i>Insight Reports
                 </a>

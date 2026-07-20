@@ -1,8 +1,10 @@
 from django.db import models
+from django.db.models import Case, When, Value, BooleanField
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
+from django.utils import timezone
 from .models import Article, Comment
 from .forms import ArticleUploadForm
 from notifications.models import Notification
@@ -23,11 +25,24 @@ def blog_view(request):
 
     sort_by = request.GET.get('sort', 'newest')
 
+    # Founder Premium's monthly highlight (see matchmaking.models.Application
+    # .is_highlighted) sorts highlighted authors' posts first, ahead of the
+    # user's chosen newest/oldest ordering — a DB-level annotate rather than
+    # a Python sort so this stays correct if pagination is added later.
+    from matchmaking.models import HIGHLIGHT_DURATION
+    highlight_cutoff = timezone.now() - HIGHLIGHT_DURATION
+    all_articles = Article.objects.annotate(
+        author_is_highlighted=Case(
+            When(author__match_founder_profile__last_highlight_at__gte=highlight_cutoff, then=Value(True)),
+            default=Value(False),
+            output_field=BooleanField(),
+        )
+    )
     if sort_by == 'oldest':
-        all_articles = Article.objects.all().order_by('created_on')
+        all_articles = all_articles.order_by('-author_is_highlighted', 'created_on')
     else:
-        all_articles = Article.objects.all().order_by('-created_on')
-    
+        all_articles = all_articles.order_by('-author_is_highlighted', '-created_on')
+
     context = {
         'blog': all_articles, 
         'form': form,

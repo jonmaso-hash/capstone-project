@@ -49,7 +49,7 @@
                         <h5 class="fw-bold mb-3"><i class="bi bi-rocket-takeoff-fill me-2 text-success"></i>Founder</h5>
                         <ul class="list-unstyled small text-secondary mb-4">
                             <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i>Matched to investors who fit your stage & sector</li>
-                            <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i>Free AI-generated pitch analysis</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i>Upload your pitch deck & video for investors to review</li>
                             <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i>One CRM to track every conversation</li>
                         </ul>
                         <a href="{% url 'accounts:signup' %}" class="btn btn-outline-success rounded-pill w-100 fw-semibold">Join as a Founder</a>
@@ -64,7 +64,7 @@
                         <h5 class="fw-bold mb-3"><i class="bi bi-briefcase-fill me-2 text-primary"></i>Investor</h5>
                         <ul class="list-unstyled small text-secondary mb-4">
                             <li class="mb-2"><i class="bi bi-check2 text-primary me-1"></i>Deal flow scored by fit, not keyword filters</li>
-                            <li class="mb-2"><i class="bi bi-check2 text-primary me-1"></i>AI due-diligence memo before your first call</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-primary me-1"></i>Browse pitch decks & videos directly</li>
                             <li class="mb-2"><i class="bi bi-check2 text-primary me-1"></i>Direct intro requests, no cold outreach</li>
                         </ul>
                         <a href="{% url 'accounts:signup' %}" class="btn btn-outline-primary rounded-pill w-100 fw-semibold">Join as an Investor</a>
@@ -79,7 +79,7 @@
                         <h5 class="fw-bold mb-3"><i class="bi bi-shop me-2 text-warning-emphasis"></i>Seller</h5>
                         <ul class="list-unstyled small text-secondary mb-4">
                             <li class="mb-2"><i class="bi bi-check2 text-warning-emphasis me-1"></i>List your business for qualified acquirers only</li>
-                            <li class="mb-2"><i class="bi bi-check2 text-warning-emphasis me-1"></i>Free AI valuation report</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-warning-emphasis me-1"></i>Free AI valuation preview, with paid unlock for the full report</li>
                             <li class="mb-2"><i class="bi bi-check2 text-warning-emphasis me-1"></i>Deal-room chat once there's mutual interest</li>
                         </ul>
                         <a href="{% url 'accounts:signup' %}" class="btn btn-outline-warning rounded-pill w-100 fw-semibold">Join as a Seller</a>
@@ -223,18 +223,18 @@
 <section class="services-section py-5">
   <div class="container">
     <h2 class="fw-bold mb-2 text-center">What you get</h2>
-    <p class="text-center text-muted mb-5">Every account includes the AI layer — no add-on required.</p>
+    <p class="text-center text-muted mb-5">Free gets you found. Premium unlocks Zelda's full intelligence layer.</p>
 
     <div class="services-grid">
       <div class="service-card">
         <div class="icon">🧠</div>
-        <h5>AI Intelligence Memos</h5>
+        <h5>AI Intelligence Memos <span class="badge bg-warning-subtle text-warning-emphasis" style="font-size: 0.65rem; vertical-align: middle;">Premium</span></h5>
         <p>Claude synthesizes a due-diligence-ready brief from your materials in minutes.</p>
       </div>
 
       <div class="service-card">
         <div class="icon">🔍</div>
-        <h5>Truth Delta Verification</h5>
+        <h5>Truth Delta Verification <span class="badge bg-warning-subtle text-warning-emphasis" style="font-size: 0.65rem; vertical-align: middle;">Premium</span></h5>
         <p>Claims in the deck are cross-checked against the underlying documents automatically.</p>
       </div>
 
@@ -246,8 +246,8 @@
 
       <div class="service-card">
         <div class="icon">📊</div>
-        <h5>Instant Valuation Reports</h5>
-        <p>Upload financials and get an AI-generated business valuation estimate.</p>
+        <h5>Instant Valuation Reports <span class="badge bg-warning-subtle text-warning-emphasis" style="font-size: 0.65rem; vertical-align: middle;">Premium</span></h5>
+        <p>Upload financials and get an AI-generated business valuation estimate — a free preview, full report with Premium.</p>
       </div>
 
       <div class="service-card">
@@ -281,18 +281,22 @@
 <section class="py-5 bg-white">
     <div class="container">
         <h2 class="fw-bold mb-2 text-center">Free to join. Upgrade when you're ready.</h2>
-        <p class="text-center text-muted mb-5">Every core feature works on the free tier — Membership adds an edge when you need it.</p>
+        <p class="text-center text-muted mb-5">Free gets you discovered. Membership unlocks Zelda's intelligence — the full Memo, Truth Delta, and valuations.</p>
 
         <div class="row g-4 justify-content-center">
             <div class="col-md-6 col-lg-3">
                 <div class="card h-100 border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
                         <h5 class="fw-bold mb-1">Founder Premium</h5>
-                        <p class="text-success small fw-semibold mb-3">$150/mo</p>
+                        <p class="text-success small fw-semibold mb-3">$99/mo</p>
                         <ul class="text-secondary small mb-0 ps-3">
                             <li class="mb-2">Featured Placement on the bulletin board</li>
+                            <li class="mb-2">Monthly Highlight — 24 hrs boosted across your listing, video, blog &amp; jobs</li>
                             <li class="mb-2">Priority Match Alerts on new investor fits</li>
-                            <li>Unlimited Fundraising CRM leads</li>
+                            <li class="mb-2">Unlimited Fundraising CRM leads (free: {{ free_crm_lead_limit }})</li>
+                            <li class="mb-2">{{ premium_ai_credits }} monthly Zelda AI analyses (free: {{ free_ai_credits }})</li>
+                            <li class="mb-2">Full Intelligence Memo, Truth Delta verification &amp; history, and IC Memo — free for investors to view once you unlock them</li>
+                            <li>Business valuations for ${{ valuation_report_price|floatformat:2 }}/report (pay-per-use, not bundled)</li>
                         </ul>
                     </div>
                 </div>
@@ -301,11 +305,15 @@
                 <div class="card h-100 border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
                         <h5 class="fw-bold mb-1">Investor Premium</h5>
-                        <p class="text-primary small fw-semibold mb-3">$500/mo</p>
+                        <p class="text-primary small fw-semibold mb-3">$250/mo</p>
                         <ul class="text-secondary small mb-0 ps-3">
-                            <li class="mb-2">Uncapped introduction requests</li>
+                            <li class="mb-2">Uncapped introduction requests (free: {{ daily_intro_limit }}/day)</li>
                             <li class="mb-2">Direct CRM export (CSV)</li>
-                            <li>Priority Match Alerts on new founder fits</li>
+                            <li class="mb-2">Priority Match Alerts on new founder fits</li>
+                            <li class="mb-2">{{ premium_ai_credits }} monthly Zelda AI analyses (free: {{ free_ai_credits }})</li>
+                            <li class="mb-2">Full founder identity in your weekly match digest</li>
+                            <li class="mb-2">{{ valuation_investor_buyer_monthly_limit }} business valuations/month included (${{ valuation_overage_price|floatformat:2 }}/report after that)</li>
+                            <li>Any founder's full Intelligence Memo, Truth Delta &amp; IC Memo, free to view once <em>they've</em> gone Premium</li>
                         </ul>
                     </div>
                 </div>
@@ -314,11 +322,14 @@
                 <div class="card h-100 border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
                         <h5 class="fw-bold mb-1">Seller Premium</h5>
-                        <p class="small fw-semibold mb-3" style="color:#997404;">$150/mo</p>
+                        <p class="small fw-semibold mb-3" style="color:#997404;">$99/mo</p>
                         <ul class="text-secondary small mb-0 ps-3">
                             <li class="mb-2">Featured Listing in the marketplace</li>
+                            <li class="mb-2">Monthly Highlight — 24 hrs boosted across your listing &amp; pitch video</li>
                             <li class="mb-2">Priority Match Alerts on new buyer fits</li>
-                            <li>Detailed Buyer Interest Analytics</li>
+                            <li class="mb-2">Detailed Buyer Interest Analytics</li>
+                            <li class="mb-2">{{ premium_ai_credits }} monthly Zelda AI analyses (free: {{ free_ai_credits }})</li>
+                            <li>Business valuations for ${{ valuation_report_price|floatformat:2 }}/report (pay-per-use, not bundled)</li>
                         </ul>
                     </div>
                 </div>
@@ -327,18 +338,21 @@
                 <div class="card h-100 border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
                         <h5 class="fw-bold mb-1">Buyer Premium</h5>
-                        <p class="text-info-emphasis small fw-semibold mb-3">$500/mo</p>
+                        <p class="text-info-emphasis small fw-semibold mb-3">$250/mo</p>
                         <ul class="text-secondary small mb-0 ps-3">
-                            <li class="mb-2">Uncapped introduction requests</li>
+                            <li class="mb-2">Uncapped introduction requests (free: {{ daily_intro_limit }}/day)</li>
                             <li class="mb-2">Direct CRM export (CSV)</li>
-                            <li>Priority Match Alerts on new listing fits</li>
+                            <li class="mb-2">Priority Match Alerts on new listing fits</li>
+                            <li class="mb-2">{{ premium_ai_credits }} monthly Zelda AI analyses (free: {{ free_ai_credits }})</li>
+                            <li>{{ valuation_investor_buyer_monthly_limit }} business valuations/month included (${{ valuation_overage_price|floatformat:2 }}/report after that)</li>
                         </ul>
                     </div>
                 </div>
             </div>
         </div>
+        <p class="text-center text-muted small mt-4 mb-0">Each AI analysis generates new Zelda intelligence — viewing reports you've already generated stays unlimited.</p>
 
-        <div class="text-center mt-5">
+        <div class="text-center mt-4">
             <a href="{% url 'accounts:signup' %}" class="btn btn-primary btn-lg rounded-pill fw-bold px-5">Create Your Free Account</a>
         </div>
     </div>

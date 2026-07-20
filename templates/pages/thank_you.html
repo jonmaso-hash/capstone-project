@@ -26,13 +26,13 @@
             <h2 class="h4">Thank you, {{ applicant_name }}!</h2>
 
             <p class="text-muted mb-4">
-                Thank you for applying. We’ve successfully received your founder application.
-                Our team will review your profile shortly.
+                Your profile is live and visible in the marketplace right now — no review or approval wait.
             </p>
-            <br>
+            {% if next_step_text %}
             <p>
-                The information you submitted can now be seen on your user profile account
+                {{ next_step_text }}
             </p>
+            {% endif %}
 
             <!-- Buttons -->
             <div class="d-grid gap-2">
@@ -42,7 +42,7 @@
                     View Your Profile
                 </a>
 
-                <a href="/" class="btn btn-outline-secondary rounded-pill">
+                <a href="{% url dashboard_url %}" class="btn btn-outline-secondary rounded-pill">
                     Back to Dashboard
                 </a>
 
@@ -62,7 +62,13 @@
 
 {% block scripts %}
 {{ block.super }}
-{% if application.completion_percentage == 100 %}
+{% if show_celebration %}
+{# Celebrates reaching this page with a real profile — required-field
+   onboarding is done for any of the four roles by the time a user lands
+   here. Previously gated on completion_percentage == 100, a metric that
+   counts several optional fields (phone, website, current_revenue) and so
+   essentially never reached 100 for someone who filled only what's
+   required. #}
 <style>
     @keyframes zelda-celebrate {
         0%   { transform: scale(1); }
@@ -91,7 +97,7 @@
     }
     #zelda-complete-toast.show { opacity: 1; }
 </style>
-<div id="zelda-complete-toast"><i class="bi bi-check-circle-fill me-1"></i>Application complete!</div>
+<div id="zelda-complete-toast"><i class="bi bi-check-circle-fill me-1"></i>Your profile is now live!</div>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const icon = document.getElementById('ai-agent-toggle');

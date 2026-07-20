@@ -8,13 +8,39 @@
         <div class="col-lg-7">
             <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
                 <div class="card-body p-4 p-lg-5">
-                    <h2 class="fw-bold mb-2"><i class="bi bi-graph-up-arrow me-2"></i>Get a Business Valuation</h2>
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+                        <h2 class="fw-bold mb-0"><i class="bi bi-graph-up-arrow me-2"></i>Get a Business Valuation</h2>
+                        <a href="{% url 'zelda_api:valuation_history' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                            <i class="bi bi-collection me-1"></i> My Reports
+                        </a>
+                    </div>
                     <p class="text-muted mb-4">
                         Upload your financial documents and Zelda will generate a business overview,
                         risk report, and an estimated valuation range grounded entirely in what you submit.
                     </p>
 
                     <div id="valuation-error" class="alert alert-danger d-none"></div>
+
+                    {% if tier_status.is_plan_premium %}
+                        {% if tier_status.tier == 'full' %}
+                        <div class="alert alert-success py-2 small mb-4">
+                            <i class="bi bi-check-circle me-1"></i>
+                            {{ tier_status.remaining }} of {{ tier_status.limit }} full valuations remaining this month.
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning py-2 small mb-4">
+                            <i class="bi bi-info-circle me-1"></i>
+                            You've used this month's {{ tier_status.limit }} included valuations — this one will be a free preview, unlockable afterward.
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-secondary py-2 small mb-4">
+                            <i class="bi bi-eye me-1"></i>
+                            Every upload gets a free preview — business overview, financial completeness, and a sample finding.
+                            Unlock the full valuation number, methodology, and risk report afterward, or
+                            <a href="{% url 'billing:billing_page' %}">upgrade to Premium</a> for full reports included every month.
+                        </div>
+                    {% endif %}
 
                     <form id="valuation-upload-form">
                         {% csrf_token %}
@@ -51,43 +77,46 @@ function getCookie(name) {
     return null;
 }
 
-document.getElementById('valuation-upload-form').addEventListener('submit', async function (e) {
-    e.preventDefault();
+const valuationUploadForm = document.getElementById('valuation-upload-form');
+if (valuationUploadForm) {
+    valuationUploadForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
 
-    const btn = document.getElementById('valuation-submit-btn');
-    const errorBox = document.getElementById('valuation-error');
-    errorBox.classList.add('d-none');
+        const btn = document.getElementById('valuation-submit-btn');
+        const errorBox = document.getElementById('valuation-error');
+        errorBox.classList.add('d-none');
 
-    const formData = new FormData();
-    formData.append('file', document.getElementById('valuation-file').files[0]);
-    formData.append('source_entity', document.getElementById('source-entity').value);
-    formData.append('document_type', 'business_valuation');
+        const formData = new FormData();
+        formData.append('file', document.getElementById('valuation-file').files[0]);
+        formData.append('source_entity', document.getElementById('source-entity').value);
+        formData.append('document_type', 'business_valuation');
 
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Uploading...';
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Uploading...';
 
-    try {
-        const response = await fetch('/api/v1/zelda/documents/ingest/', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'X-CSRFToken': getCookie('csrftoken') },
-            body: formData,
-        });
+        try {
+            const response = await fetch('/api/v1/zelda/documents/ingest/', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                body: formData,
+            });
 
-        const data = await response.json();
+            const data = await response.json();
 
-        if (!response.ok) {
-            throw new Error(data.error || 'Upload failed.');
+            if (!response.ok) {
+                throw new Error(data.error || 'Upload failed.');
+            }
+
+            window.location.href = `/api/v1/zelda/valuation/${data.document_id}/`;
+
+        } catch (err) {
+            errorBox.textContent = err.message;
+            errorBox.classList.remove('d-none');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-upload me-1"></i> Generate Valuation';
         }
-
-        window.location.href = `/api/v1/zelda/valuation/${data.document_id}/`;
-
-    } catch (err) {
-        errorBox.textContent = err.message;
-        errorBox.classList.remove('d-none');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-upload me-1"></i> Generate Valuation';
-    }
-});
+    });
+}
 </script>
 {% endblock scripts %}

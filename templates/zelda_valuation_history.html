@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Business Valuation Reports | Interlink Foundry{% endblock title %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-collection me-2"></i>Business Valuation Reports</h2>
+            <p class="text-muted mb-0">Every valuation you've generated, yours to keep.</p>
+        </div>
+        <a href="{% url 'zelda_api:valuation_request' %}" class="btn btn-success btn-sm rounded-pill px-3">
+            <i class="bi bi-plus-lg me-1"></i> New Valuation
+        </a>
+    </div>
+
+    {% if reports %}
+    <div class="row g-3">
+        {% for report in reports %}
+        <div class="col-md-6">
+            <div class="card h-100 border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="fw-bold mb-0">{{ report.document.source_entity }}</h5>
+                        <span class="badge bg-light text-dark border">Version {{ report.version }}</span>
+                    </div>
+
+                    {% if report.document.status == 'analyzed' %}
+                        {% if report.document.valuation_tier == 'preview' %}
+                            <p class="small mb-1"><i class="bi bi-lock-fill text-warning me-1"></i>{{ report.provenance_label }}</p>
+                            <p class="text-muted small mb-3">Generated {{ report.document.created_at|date:"M j, Y" }}</p>
+                            <a href="{% url 'zelda_api:valuation_report' report.document.id %}" class="btn btn-outline-warning btn-sm rounded-pill px-3">
+                                View Preview
+                            </a>
+                        {% else %}
+                            <p class="small mb-1"><i class="bi bi-check-circle-fill text-success me-1"></i>
+                                {% if report.purchase %}
+                                    {{ report.provenance_label }} · {{ report.purchase.paid_at|date:"M j, Y" }}
+                                {% else %}
+                                    {{ report.provenance_label }}
+                                {% endif %}
+                            </p>
+                            {% if report.trend %}
+                            <p class="small mb-1">
+                                {% if report.trend.direction == 'up' %}
+                                    <i class="bi bi-arrow-up-circle-fill text-success me-1"></i><span class="text-success fw-semibold">+{{ report.trend.pct_change }}%</span>
+                                {% elif report.trend.direction == 'down' %}
+                                    <i class="bi bi-arrow-down-circle-fill text-danger me-1"></i><span class="text-danger fw-semibold">{{ report.trend.pct_change }}%</span>
+                                {% else %}
+                                    <i class="bi bi-dash-circle-fill text-muted me-1"></i><span class="text-muted fw-semibold">No change</span>
+                                {% endif %}
+                                since Version {{ report.previous_full_version }}
+                            </p>
+                            {% endif %}
+                            <p class="text-muted small mb-3">Generated {{ report.document.created_at|date:"M j, Y" }}</p>
+                            <a href="{% url 'zelda_api:valuation_report' report.document.id %}" class="btn btn-outline-success btn-sm rounded-pill px-3">
+                                View Report
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <p class="small mb-1"><i class="bi bi-hourglass-split text-muted me-1"></i>
+                            Still processing — {{ report.provenance_label }}
+                        </p>
+                        <p class="text-muted small mb-3">Uploaded {{ report.document.created_at|date:"M j, Y" }}</p>
+                        <a href="{% url 'zelda_api:valuation_report' report.document.id %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                            Check Status
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-5 text-center">
+            <i class="bi bi-graph-up-arrow display-6 text-muted mb-3 d-block"></i>
+            <p class="text-muted mb-3">You haven't generated a business valuation yet.</p>
+            <a href="{% url 'zelda_api:valuation_request' %}" class="btn btn-success rounded-pill px-4">
+                Get Your First Valuation
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock content %}

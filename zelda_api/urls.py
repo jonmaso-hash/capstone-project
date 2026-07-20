@@ -58,7 +58,10 @@ urlpatterns = [
     path('dashboard/intelligence/', standard_views.zelda_intelligence_dashboard, name='intelligence_dashboard'),
     path('ui/search/', standard_views.zelda_search_view, name='zelda_search_ui'),
     path('documents/<int:document_id>/verification/', standard_views.truth_delta_ui_view, name='truth_delta_ui'),
+    path('documents/<int:document_id>/truth-delta/claims/<str:category>/flag/', standard_views.flag_truth_delta_claim, name='truth_delta_claim_flag'),
+    path('truth-delta/claims/<int:clarification_id>/respond/', standard_views.respond_to_clarification_request, name='truth_delta_claim_respond'),
     path('analyze/founder/<str:founder_username>/', standard_views.analyze_founder_profile, name='analyze_founder'),
+    path('analyze/founder/<str:founder_username>/confirm/', standard_views.confirm_analyze_founder_profile, name='analyze_founder_confirm'),
     path('documents/<int:document_id>/ic-memo/', standard_views.ic_memo_view, name='ic_memo'),
     path('documents/<int:document_id>/ic-memo/download/', standard_views.ic_memo_download_view, name='ic_memo_download'),
 
@@ -66,6 +69,7 @@ urlpatterns = [
     # BUSINESS VALUATION
     # ──────────────────────────────────────────────────────────────────────────
     path('valuation/request/', standard_views.valuation_request_view, name='valuation_request'),
+    path('valuation/history/', standard_views.valuation_history_view, name='valuation_history'),
     path('valuation/<int:document_id>/', standard_views.valuation_report_view, name='valuation_report'),
 
 ]

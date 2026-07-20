@@ -57,9 +57,9 @@ def scan_pitch_deck(uploaded_file) -> Dict:
         
         # Read file content
         if filename.endswith('.pdf'):
-            extracted_text = _extract_pdf_text(uploaded_file)
+            extracted_text, _page_count = _extract_pdf_text(uploaded_file)
         elif filename.endswith('.pptx'):
-            extracted_text = _extract_pptx_text(uploaded_file)
+            extracted_text, _page_count = _extract_pptx_text(uploaded_file)
         elif filename.endswith('.txt'):
             extracted_text = uploaded_file.read().decode('utf-8')
         else:
@@ -86,8 +86,8 @@ def scan_pitch_deck(uploaded_file) -> Dict:
         return {"error": f"Failed to parse document: {str(e)}"}
 
 
-def _extract_pdf_text(pdf_file) -> str:
-    """Extract text from PDF files."""
+def _extract_pdf_text(pdf_file):
+    """Extract text from PDF files. Returns (text, page_count)."""
     try:
         import PyPDF2
         pdf_file.seek(0)
@@ -95,17 +95,17 @@ def _extract_pdf_text(pdf_file) -> str:
         text = ""
         for page in reader.pages:
             text += page.extract_text() + "\n"
-        return text
+        return text, len(reader.pages)
     except ImportError:
         logger.warning("PyPDF2 not installed. Returning placeholder text.")
-        return "PDF parsing requires PyPDF2. Install with: pip install PyPDF2"
+        return "PDF parsing requires PyPDF2. Install with: pip install PyPDF2", 0
     except Exception as e:
         logger.error(f"PDF extraction failed: {str(e)}")
-        return ""
+        return "", 0
 
 
-def _extract_pptx_text(pptx_file) -> str:
-    """Extract text from PowerPoint files."""
+def _extract_pptx_text(pptx_file):
+    """Extract text from PowerPoint files. Returns (text, slide_count)."""
     try:
         from pptx import Presentation
         pptx_file.seek(0)
@@ -115,13 +115,13 @@ def _extract_pptx_text(pptx_file) -> str:
             for shape in slide.shapes:
                 if hasattr(shape, "text"):
                     text += shape.text + "\n"
-        return text
+        return text, len(prs.slides)
     except ImportError:
         logger.warning("python-pptx not installed. Returning placeholder text.")
-        return "PPTX parsing requires python-pptx. Install with: pip install python-pptx"
+        return "PPTX parsing requires python-pptx. Install with: pip install python-pptx", 0
     except Exception as e:
         logger.error(f"PPTX extraction failed: {str(e)}")
-        return ""
+        return "", 0
 
 
 def _extract_metrics(text: str) -> Dict:
@@ -379,24 +379,29 @@ def _calculate_completeness(app) -> int:
     filled = sum(1 for field in tracked_fields if getattr(app, field, None))
     return int((filled / len(tracked_fields)) * 100)
 
-def extract_text_from_file(uploaded_file) -> str:
+def extract_text_from_file(uploaded_file):
     """
-    Extracts raw text from an uploaded file as a plain string.
+    Extracts raw text from an uploaded file, plus a page/slide count for
+    display (e.g. the valuation preview's "N Pages Analyzed" stat, which
+    was silently stuck at 0 before this — PyPDF2/python-pptx already know
+    the count, it just wasn't being returned). Returns (text, page_count);
+    .txt has no natural pagination, so it's always 1 "page."
     Used by the DocumentIngestView to get raw text for the pipeline.
     """
     try:
         filename = uploaded_file.name.lower()
-        
+
         if filename.endswith('.pdf'):
             return _extract_pdf_text(uploaded_file)
         elif filename.endswith('.pptx'):
             return _extract_pptx_text(uploaded_file)
         elif filename.endswith('.txt'):
             uploaded_file.seek(0)
-            return uploaded_file.read().decode('utf-8', errors='ignore')
+            text = uploaded_file.read().decode('utf-8', errors='ignore')
+            return text, 1 if text else 0
         else:
             logger.error(f"Unsupported file format for extraction: {filename}")
-            return ""
+            return "", 0
     except Exception as e:
         logger.error(f"Failed to extract text: {str(e)}")
-        return ""
+        return "", 0

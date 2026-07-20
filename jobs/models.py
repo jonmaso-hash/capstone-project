@@ -44,6 +44,12 @@ class JobListing(models.Model):
     def is_expired(self):
         return timezone.now() > self.expires_at
 
+    @property
+    def is_highlighted(self):
+        """True while the poster's Founder Premium monthly highlight is active — see matchmaking.models.Application.is_highlighted."""
+        profile = getattr(self.poster, 'match_founder_profile', None)
+        return bool(profile and profile.is_highlighted)
+
 
 class JobApplication(models.Model):
     job = models.ForeignKey(JobListing, on_delete=models.CASCADE, related_name='applications')

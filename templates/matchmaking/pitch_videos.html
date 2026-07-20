@@ -58,7 +58,10 @@
                     </video>
                 </div>
                 <div class="card-body p-4">
-                    <h6 class="fw-bold mb-1"><a href="{% url 'accounts:profile' f.user.username %}" class="text-dark text-decoration-none">{{ f.company_name }}</a></h6>
+                    <h6 class="fw-bold mb-1">
+                        <a href="{% url 'accounts:profile' f.user.username %}" class="text-dark text-decoration-none">{{ f.company_name }}</a>
+                        {% if f.is_highlighted %}<span class="badge bg-warning text-dark ms-1"><i class="bi bi-stars"></i> Highlighted</span>{% endif %}
+                    </h6>
                     <div class="small text-secondary mb-2">{{ f.sector }} &middot; {{ f.stage }}</div>
                     <p class="small text-secondary mb-3">{{ f.description|truncatewords:22 }}</p>
 
@@ -134,7 +137,10 @@
                     </video>
                 </div>
                 <div class="card-body p-4">
-                    <h6 class="fw-bold mb-1"><a href="{% url 'accounts:profile' s.user.username %}" class="text-dark text-decoration-none">{{ s.company_name }}</a></h6>
+                    <h6 class="fw-bold mb-1">
+                        <a href="{% url 'accounts:profile' s.user.username %}" class="text-dark text-decoration-none">{{ s.company_name }}</a>
+                        {% if s.is_highlighted %}<span class="badge bg-warning text-dark ms-1"><i class="bi bi-stars"></i> Highlighted</span>{% endif %}
+                    </h6>
                     <div class="small text-secondary mb-2">{{ s.industry }} &middot; Asking ${{ s.asking_price|floatformat:0 }}</div>
                     <p class="small text-secondary mb-3">{{ s.description|truncatewords:22 }}</p>
 

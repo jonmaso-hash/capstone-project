@@ -48,6 +48,9 @@ urlpatterns = [
     path('failed-tasks/', views.failed_tasks, name='failed_tasks'),
     path('failed-tasks/<int:failure_id>/requeue/', views.requeue_failed_task, name='requeue_failed_task'),
 
+    path('stale-documents/', views.stale_documents, name='stale_documents'),
+    path('stale-documents/<int:document_id>/requeue/', views.requeue_stale_document, name='requeue_stale_document'),
+
     path('insight-reports/', views.insight_reports, name='insight_reports'),
     path('insight-reports/<int:report_id>/toggle-published/', views.toggle_insight_report_published, name='toggle_insight_report_published'),
 ]

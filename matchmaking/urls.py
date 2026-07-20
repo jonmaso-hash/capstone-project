@@ -14,6 +14,14 @@ urlpatterns = [
     path('dashboard/founder/', views.founder_dashboard, name='founder_dashboard'),
     path('dashboard/buyer/', views.buyer_dashboard, name='buyer_dashboard'),
     path('dashboard/seller/', views.seller_dashboard, name='seller_dashboard'),
+    path('dashboard/founder/highlight/', views.activate_founder_highlight, name='activate_founder_highlight'),
+    path('dashboard/seller/highlight/', views.activate_seller_highlight, name='activate_seller_highlight'),
+
+    # =====================================================================
+    # DIGEST ENGAGEMENT TRACKING (email open pixel / click redirect)
+    # =====================================================================
+    path('digest/pixel/<uuid:token>/', views.digest_open_pixel, name='digest_open_pixel'),
+    path('digest/click/<uuid:token>/<str:destination>/', views.digest_click_redirect, name='digest_click_redirect'),
 
     # =====================================================================
     # MATCHMAKING ENGINE & BULLETIN ROUTING

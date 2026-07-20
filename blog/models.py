@@ -32,6 +32,12 @@ class Article(models.Model):
         author_settings = self._author_settings()
         return author_settings.blog_comments_enabled if author_settings else True
 
+    @property
+    def is_highlighted(self):
+        """True while the author's Founder Premium monthly highlight is active — see matchmaking.models.Application.is_highlighted."""
+        profile = getattr(self.author, 'match_founder_profile', None)
+        return bool(profile and profile.is_highlighted)
+
     def get_absolute_url(self):
         return reverse('blog:article_detail', kwargs={'pk': self.pk})
 

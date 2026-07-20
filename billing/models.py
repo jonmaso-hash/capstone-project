@@ -15,6 +15,7 @@ class Subscription(models.Model):
         INVESTOR_PREMIUM = 'INVESTOR_PREMIUM', 'Investor Premium'
         SELLER_PREMIUM = 'SELLER_PREMIUM', 'Seller Premium'
         BUYER_PREMIUM = 'BUYER_PREMIUM', 'Buyer Premium'
+        INVESTOR_FIRM = 'INVESTOR_FIRM', 'Investor Firm'
 
     class Status(models.TextChoices):
         ACTIVE = 'active', 'Active'
