@@ -14,6 +14,7 @@ from .admin_intelligence import (  # noqa: F401
 from .truth_delta_models import (
     ExternalDataSource, ClaimedDatapoint, ObservedDatapoint, TruthDeltaReport,
 )
+from .entity_verification_models import EntityVerificationReport
 
 
 @admin.register(ExternalDataSource)
@@ -43,5 +44,13 @@ class TruthDeltaReportAdmin(admin.ModelAdmin):
     list_display = ['document', 'overall_truth_score', 'credibility_risk', 'created_at']
     list_filter = ['credibility_risk', 'created_at']
     search_fields = ['document__source_entity']
+    readonly_fields = ['created_at']
+
+
+@admin.register(EntityVerificationReport)
+class EntityVerificationReportAdmin(admin.ModelAdmin):
+    list_display = ['document', 'domain', 'domain_registered_date', 'claimed_founding_year', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['document__source_entity', 'domain']
     readonly_fields = ['created_at']
 

@@ -1128,6 +1128,9 @@ def truth_delta_ui_view(request, document_id):
     from .disclaimers import DUE_DILIGENCE_DISCLAIMER
     context['disclaimer'] = DUE_DILIGENCE_DISCLAIMER
 
+    from .entity_verification_models import EntityVerificationReport
+    context['entity_report'] = EntityVerificationReport.objects.filter(document=document).order_by('-created_at').first()
+
     return render(request, 'truth_delta_dashboard.html', context)
 
 

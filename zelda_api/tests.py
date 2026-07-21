@@ -2755,6 +2755,272 @@ class TruthDeltaReportRollupAndTrendTests(TestCase):
         self.assertEqual(diff, {'newly_verified': [], 'lost_verification': []})
 
 
+class EntityVerificationTests(TestCase):
+    """
+    Entity Integrity v1 (Sprint 1): domain-age lookup + timeline-
+    consistency — a distinct question from Truth Delta's "are the claims
+    internally consistent" ("does this company exist as claimed?").
+    """
+
+    def setUp(self):
+        from matchmaking.tests import _mock_embedding_generation
+        _mock_embedding_generation(self)
+
+    # --- extract_domain ---
+
+    def test_extract_domain_strips_scheme_and_www(self):
+        from .entity_verification import extract_domain
+        self.assertEqual(extract_domain('https://www.example.com/path'), 'example.com')
+
+    def test_extract_domain_handles_bare_domain(self):
+        from .entity_verification import extract_domain
+        self.assertEqual(extract_domain('example.com'), 'example.com')
+
+    def test_extract_domain_strips_port(self):
+        from .entity_verification import extract_domain
+        self.assertEqual(extract_domain('http://example.com:8080'), 'example.com')
+
+    def test_extract_domain_does_not_over_strip_leading_w(self):
+        # A real regression risk with naive prefix stripping (e.g. str.lstrip('www.'))
+        # is eating legitimate leading characters from a domain like 'wex.com'.
+        from .entity_verification import extract_domain
+        self.assertEqual(extract_domain('https://wex.com'), 'wex.com')
+
+    def test_extract_domain_none_for_blank(self):
+        from .entity_verification import extract_domain
+        self.assertIsNone(extract_domain(''))
+        self.assertIsNone(extract_domain(None))
+
+    # --- lookup_domain_creation_date ---
+
+    def test_lookup_returns_error_for_no_domain(self):
+        from .entity_verification import lookup_domain_creation_date
+        result_date, error = lookup_domain_creation_date(None)
+        self.assertIsNone(result_date)
+        self.assertIn('No company website', error)
+
+    def test_lookup_parses_single_creation_date(self):
+        from datetime import datetime
+        from unittest.mock import patch, MagicMock
+        from .entity_verification import lookup_domain_creation_date
+        mock_result = MagicMock(creation_date=datetime(2015, 3, 1))
+        with patch('whois.whois', return_value=mock_result):
+            result_date, error = lookup_domain_creation_date('example.com')
+        self.assertEqual(result_date, datetime(2015, 3, 1).date())
+        self.assertEqual(error, '')
+
+    def test_lookup_parses_list_of_creation_dates(self):
+        # Some WHOIS servers return multiple records; the earliest/first is used.
+        from datetime import datetime
+        from unittest.mock import patch, MagicMock
+        from .entity_verification import lookup_domain_creation_date
+        mock_result = MagicMock(creation_date=[datetime(2015, 3, 1), datetime(2015, 3, 2)])
+        with patch('whois.whois', return_value=mock_result):
+            result_date, error = lookup_domain_creation_date('example.com')
+        self.assertEqual(result_date, datetime(2015, 3, 1).date())
+
+    def test_lookup_handles_no_creation_date_found(self):
+        from unittest.mock import patch, MagicMock
+        from .entity_verification import lookup_domain_creation_date
+        mock_result = MagicMock(creation_date=None)
+        with patch('whois.whois', return_value=mock_result):
+            result_date, error = lookup_domain_creation_date('example.com')
+        self.assertIsNone(result_date)
+        self.assertIn('No registration date found', error)
+
+    def test_lookup_handles_exception_without_leaking_raw_error(self):
+        from unittest.mock import patch
+        from .entity_verification import lookup_domain_creation_date
+        with patch('whois.whois', side_effect=Exception('socket timeout at 10.0.0.1:43')):
+            result_date, error = lookup_domain_creation_date('example.com')
+        self.assertIsNone(result_date)
+        self.assertNotIn('10.0.0.1', error)
+        self.assertIn('unavailable', error)
+
+    # --- compute_timeline_flags ---
+
+    def test_flags_large_gap_between_founding_and_domain(self):
+        from datetime import date
+        from .entity_verification import compute_timeline_flags
+        flags = compute_timeline_flags(2016, date(2025, 1, 1))
+        self.assertEqual(len(flags), 1)
+        self.assertIn('2016', flags[0])
+        self.assertIn('2025', flags[0])
+
+    def test_no_flag_for_small_gap(self):
+        from datetime import date
+        from .entity_verification import compute_timeline_flags
+        flags = compute_timeline_flags(2023, date(2024, 6, 1))
+        self.assertEqual(flags, [])
+
+    def test_no_flag_when_founding_year_missing(self):
+        from datetime import date
+        from .entity_verification import compute_timeline_flags
+        self.assertEqual(compute_timeline_flags(None, date(2024, 1, 1)), [])
+
+    def test_no_flag_when_domain_date_missing(self):
+        from .entity_verification import compute_timeline_flags
+        self.assertEqual(compute_timeline_flags(2016, None), [])
+
+    # --- build_entity_verification_report ---
+
+    def test_build_report_for_founder_with_website_and_history(self):
+        from datetime import date
+        from unittest.mock import patch, MagicMock
+        from matchmaking.models import Application
+        from .entity_verification import build_entity_verification_report
+
+        founder_user = User.objects.create_user('entver_founder', password='x')
+        Application.objects.create(
+            user=founder_user, company_name='EntVerCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed', years_in_business=8,
+            company_website='https://www.entverco.com',
+        )
+        doc = DocumentSource.objects.create(
+            uploaded_by=founder_user, filename='deck.pdf', source_entity='EntVerCo', document_type='pitch_deck',
+        )
+        mock_result = MagicMock(creation_date=date(2024, 1, 1))
+        with patch('whois.whois', return_value=mock_result):
+            report = build_entity_verification_report(doc)
+
+        self.assertEqual(report.domain, 'entverco.com')
+        self.assertEqual(report.domain_registered_date, date(2024, 1, 1))
+        current_year = date.today().year
+        self.assertEqual(report.claimed_founding_year, current_year - 8)
+        self.assertEqual(len(report.timeline_flags), 1)
+
+    def test_build_report_for_seller_uses_seller_profile(self):
+        from datetime import date
+        from unittest.mock import patch, MagicMock
+        from matchmaking.models import SellerApplication
+        from .entity_verification import build_entity_verification_report
+
+        seller_user = User.objects.create_user('entver_seller', password='x')
+        SellerApplication.objects.create(
+            user=seller_user, company_name='SellCo', seller_name='S', email='s@t.com',
+            description='test', industry='Retail', years_in_business=3,
+            company_website='sellco.com',
+        )
+        doc = DocumentSource.objects.create(
+            uploaded_by=seller_user, filename='cim.pdf', source_entity='SellCo', document_type='business_valuation',
+        )
+        mock_result = MagicMock(creation_date=None)
+        with patch('whois.whois', return_value=mock_result):
+            report = build_entity_verification_report(doc)
+
+        self.assertEqual(report.domain, 'sellco.com')
+        current_year = date.today().year
+        self.assertEqual(report.claimed_founding_year, current_year - 3)
+
+    def test_build_report_gracefully_handles_uploader_with_no_profile(self):
+        from .entity_verification import build_entity_verification_report
+
+        bare_user = User.objects.create_user('entver_bare', password='x')
+        doc = DocumentSource.objects.create(
+            uploaded_by=bare_user, filename='deck.pdf', source_entity='Bare', document_type='pitch_deck',
+        )
+        report = build_entity_verification_report(doc)
+
+        self.assertEqual(report.domain, '')
+        self.assertIsNone(report.claimed_founding_year)
+        self.assertEqual(report.timeline_flags, [])
+        self.assertIn('No company website', report.domain_lookup_error)
+
+    # --- verify_entity_integrity task ---
+
+    def test_task_saves_report(self):
+        from datetime import date
+        from unittest.mock import patch, MagicMock
+        from matchmaking.models import Application
+        from .entity_verification_models import EntityVerificationReport
+        from .entity_verification_tasks import verify_entity_integrity
+
+        founder_user = User.objects.create_user('entver_task_founder', password='x')
+        Application.objects.create(
+            user=founder_user, company_name='TaskCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed', years_in_business=1,
+            company_website='taskco.com',
+        )
+        doc = DocumentSource.objects.create(
+            uploaded_by=founder_user, filename='deck.pdf', source_entity='TaskCo', document_type='pitch_deck',
+        )
+        mock_result = MagicMock(creation_date=date(2024, 1, 1))
+        with patch('whois.whois', return_value=mock_result):
+            result = verify_entity_integrity(doc.id)
+
+        self.assertEqual(result['status'], 'success')
+        self.assertTrue(EntityVerificationReport.objects.filter(document=doc).exists())
+
+    def test_task_handles_missing_document(self):
+        from .entity_verification_tasks import verify_entity_integrity
+        result = verify_entity_integrity(999999)
+        self.assertEqual(result['status'], 'error')
+
+    # --- rendered in truth_delta_ui_view ---
+
+    def test_dashboard_shows_entity_integrity_card_when_report_exists(self):
+        from datetime import date
+        from matchmaking.models import Application
+        from .entity_verification_models import EntityVerificationReport
+
+        founder_user = User.objects.create_user('entver_ui_founder', password='x')
+        app = Application.objects.create(
+            user=founder_user, company_name='UICo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed', is_premium=True,
+        )
+        doc = DocumentSource.objects.create(
+            uploaded_by=founder_user, filename='deck.pdf', source_entity='UICo', document_type='pitch_deck',
+        )
+        EntityVerificationReport.objects.create(
+            document=doc, domain='uico.com', domain_registered_date=date(2020, 1, 1),
+            claimed_founding_year=2016, timeline_flags=['Domain registered in 2020, 4 years after the claimed founding year (2016) — may warrant a closer look.'],
+        )
+        self.client.force_login(founder_user)
+        response = self.client.get(reverse('zelda_api:truth_delta_ui', args=[doc.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Entity Integrity')
+        self.assertContains(response, 'uico.com')
+        self.assertContains(response, 'may warrant a closer look')
+
+    def test_dashboard_omits_entity_integrity_card_when_no_report(self):
+        from matchmaking.models import Application
+
+        founder_user = User.objects.create_user('entver_ui_none_founder', password='x')
+        Application.objects.create(
+            user=founder_user, company_name='NoEntCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed', is_premium=True,
+        )
+        doc = DocumentSource.objects.create(
+            uploaded_by=founder_user, filename='deck.pdf', source_entity='NoEntCo', document_type='pitch_deck',
+        )
+        self.client.force_login(founder_user)
+        response = self.client.get(reverse('zelda_api:truth_delta_ui', args=[doc.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Entity Integrity')
+
+    # --- TruthDeltaVerifyView also queues entity verification ---
+
+    def test_verify_view_queues_entity_integrity_task(self):
+        from unittest.mock import patch
+        from matchmaking.models import Application
+
+        founder_user = User.objects.create_user('entver_verify_founder', password='x')
+        Application.objects.create(
+            user=founder_user, company_name='VerifyCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        doc = DocumentSource.objects.create(
+            uploaded_by=founder_user, filename='deck.pdf', source_entity='VerifyCo', document_type='pitch_deck',
+        )
+        self.client.force_login(founder_user)
+        with patch('zelda_api.truth_delta_tasks.verify_document_truth_delta.delay') as mock_td_delay, \
+             patch('zelda_api.entity_verification_tasks.verify_entity_integrity.delay') as mock_ent_delay:
+            response = self.client.post(reverse('zelda_api:truth_delta_verify', args=[doc.id]))
+        self.assertEqual(response.status_code, 202)
+        mock_td_delay.assert_called_once_with(doc.id)
+        mock_ent_delay.assert_called_once_with(doc.id)
+
+
 class SECEdgarIntegrationTests(TestCase):
     """
     SECFilingsIntegration._latest_annual_fact / extract_revenue against a

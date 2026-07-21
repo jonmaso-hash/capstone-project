@@ -224,4 +224,9 @@ def render_ic_memo_markdown(context):
                 lines.append(f"| {slide['slide_number']} | {slide['avg_duration']} | {slide['views']} |")
         lines.append('')
 
+    if context.get('disclaimer'):
+        lines.append('---')
+        lines.append(f"_{context['disclaimer']}_")
+        lines.append('')
+
     return '\n'.join(lines)

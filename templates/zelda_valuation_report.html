@@ -143,6 +143,16 @@ function businessOverviewHtml(data) {
     </div>`;
 }
 
+// Due-diligence disclaimer footer — text comes from the API response
+// (zelda_api/disclaimers.py) so wording can't drift across report types.
+function disclaimerHtml(data) {
+    if (!data.disclaimer) return '';
+    return `
+    <div class="small text-muted mt-4 pt-3 border-top text-center" style="font-size: 0.72rem; line-height: 1.5;">
+        <i class="bi bi-info-circle me-1"></i>${escapeHtml(data.disclaimer)}
+    </div>`;
+}
+
 // Preview: sell the ANSWER, not the report's table of contents. Prove
 // Zelda understood the business (business overview, in full) and that
 // analysis finished (trust stats + a plain risk count — never a
@@ -189,6 +199,7 @@ function renderPreview(data) {
                 </form>
             </div>
         </div>
+        ${disclaimerHtml(data)}
     `;
 }
 
@@ -305,6 +316,7 @@ function renderFull(data) {
                 ${financialCompleteness}
             </div>
         </div>
+        ${disclaimerHtml(data)}
     `;
     renderConfidenceGauge(document.getElementById('valuation-confidence-gauge'), data.confidence_score, 'Valuation Confidence');
 }

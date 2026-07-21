@@ -53,6 +53,8 @@ def build_valuation_response(doc, report, insights, confidence_breakdown, overal
     (never category names, never a sample finding) plus a static list of
     what unlocking includes.
     """
+    from .disclaimers import DUE_DILIGENCE_DISCLAIMER
+
     response = {
         'report_id': report.id,
         'document_id': doc.id,
@@ -69,6 +71,7 @@ def build_valuation_response(doc, report, insights, confidence_breakdown, overal
         'sections': {
             'business_overview': report.business_overview,
         },
+        'disclaimer': DUE_DILIGENCE_DISCLAIMER,
     }
 
     if tier == 'full':

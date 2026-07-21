@@ -5,6 +5,7 @@ from django.utils.text import slugify
 from datetime import datetime
 from .protocol import FoundryStandardMixin 
 from .truth_delta_models import ClaimedDatapoint, TruthDeltaReport
+from .entity_verification_models import EntityVerificationReport  # noqa: F401 - imported so Django registers the model at app load, not via admin.py
 
 
 # ==========================================

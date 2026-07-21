@@ -538,7 +538,39 @@
 
 <!-- TRUTH DELTA VERIFICATION DASHBOARD -->
 <div id="truthDeltaContainer" data-document-id="{{ document.id }}" style="display: none;">
-    
+
+    <!-- Entity Integrity — a distinct question from the score below:
+         "does this company exist as claimed?" rather than "are the
+         claims internally consistent?" Server-rendered directly from
+         context (not part of the JS polling flow the rest of this page
+         uses), since it doesn't depend on the async Truth Delta task. -->
+    {% if entity_report %}
+    <div class="truth-delta-container mb-3" style="margin-top: 0;">
+        <div class="truth-delta-title mb-3">
+            <div class="truth-delta-icon" style="font-size: 1.5rem;">🏛️</div>
+            <h2 style="font-size: 1.25rem;">Entity Integrity</h2>
+        </div>
+        <p class="text-muted" style="font-size: 0.85rem; margin-top: -0.75rem; margin-bottom: 1rem;">
+            Checked against external sources — not a substitute for full corporate/legal diligence.
+        </p>
+        <ul class="list-unstyled mb-0" style="font-size: 0.95rem;">
+            {% if entity_report.domain_registered_date %}
+            <li class="mb-2">✅ Domain <strong>{{ entity_report.domain }}</strong> registered {{ entity_report.domain_registered_date|date:"F Y" }}</li>
+            {% elif entity_report.domain_lookup_error %}
+            <li class="mb-2 text-muted">ℹ️ {{ entity_report.domain_lookup_error }}</li>
+            {% endif %}
+
+            {% if entity_report.timeline_flags %}
+                {% for flag in entity_report.timeline_flags %}
+                <li class="mb-2" style="color: var(--td-yellow);">⚠️ {{ flag }}</li>
+                {% endfor %}
+            {% elif entity_report.claimed_founding_year and entity_report.domain_registered_date %}
+            <li class="mb-2" style="color: var(--td-green);">✅ No timeline inconsistency detected between the claimed founding year and domain registration.</li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
+
     <!-- Header with Score -->
     <div class="truth-delta-container">
         <div class="truth-delta-header">

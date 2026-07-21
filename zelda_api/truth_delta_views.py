@@ -50,6 +50,12 @@ class TruthDeltaVerifyView(APIView):
             from .truth_delta_tasks import verify_document_truth_delta
             task = verify_document_truth_delta.delay(document_id)
 
+            # Entity Integrity runs alongside — same button, same click,
+            # a distinct question ("does this exist?") from Truth Delta's
+            # ("is this internally consistent?").
+            from .entity_verification_tasks import verify_entity_integrity
+            verify_entity_integrity.delay(document_id)
+
             return Response({
                 'status': 'verification_queued',
                 'document_id': document_id,

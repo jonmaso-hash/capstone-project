@@ -138,5 +138,11 @@
     </div>
     {% endif %}
 
+    {% if disclaimer %}
+    <div class="mt-4 pt-3 border-top text-muted" style="font-size: 0.75rem; line-height: 1.5;">
+        <strong>ℹ</strong> {{ disclaimer }}
+    </div>
+    {% endif %}
+
 </div>
 {% endblock %}
