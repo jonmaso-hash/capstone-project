@@ -22,6 +22,7 @@ from matchmaking.utils import clean_financial_input
 from matchmaking.models import (
     Application, InvestorApplication, SellerApplication, BuyerApplication, Connection, Follow,
     log_page_event, BusinessEmailVerification, company_matches_email_domain, _resolve_company_name,
+    ProfileVideo,
 )
 from notifications.models import Notification
 
@@ -549,9 +550,24 @@ def profile(request, username=None, pk=None):
                         'lost_verification': [_display_category(c) for c in trend['lost_verification']],
                     }
 
+    # The <=30s Explore elevator pitch, shown on the profile as the "trailer"
+    # above the full pitch video. Non-owners only see it once it's PUBLISHED;
+    # the owner always sees it (with its review status) so a quarantined clip
+    # isn't silently missing.
+    elevator_pitch = None
+    _ep_owner = application or seller_application
+    if _ep_owner:
+        _ep_role = 'founder' if application else 'seller'
+        _ep = ProfileVideo.objects.filter(
+            kind=ProfileVideo.KIND_ELEVATOR_PITCH, **{_ep_role: _ep_owner},
+        ).first()
+        if _ep and (_ep.status == ProfileVideo.STATUS_PUBLISHED or viewed_user == request.user):
+            elevator_pitch = _ep
+
     context = {
         "profile_user": viewed_user,
         "application": application,
+        "elevator_pitch": elevator_pitch,
         "ic_memo_document_id": ic_memo_document_id,
         "investor_readiness": investor_readiness,
         "profile_trust_badges": profile_trust_badges,

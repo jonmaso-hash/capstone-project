@@ -2,6 +2,7 @@ import csv
 import json
 import logging
 from datetime import timedelta
+from urllib.parse import quote
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -3294,6 +3295,15 @@ def explore_feed(request):
             request.user.interested_profile_videos.values_list('id', flat=True)
         )
 
+    # The profile page is @login_required. For an anonymous viewer the "View
+    # profile" CTA is the conversion point — send them to signup with the
+    # profile as `next` so they land there right after creating an account.
+    def _profile_link(username):
+        path = reverse('accounts:profile', kwargs={'username': username})
+        if request.user.is_authenticated:
+            return path
+        return f"{reverse('accounts:signup')}?next={quote(path)}"
+
     cards = []
     for v in videos:
         p = v.owner_profile
@@ -3312,7 +3322,7 @@ def explore_feed(request):
                 f"{getattr(p, 'industry', '')} · For sale".strip(' ·')
             ),
             'role_label': 'Founder' if is_founder else 'Business for sale',
-            'profile_url': reverse('accounts:profile', kwargs={'username': p.user.username}),
+            'profile_url': _profile_link(p.user.username),
             'interested_count': v.interested_users.count(),
             'viewer_interested': v.id in interested_ids,
         })

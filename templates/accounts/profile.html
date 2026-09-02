@@ -294,7 +294,28 @@
 
                                 <div class="mb-4 mb-md-0">
                                     <h6 class="text-uppercase fw-bold text-muted small mb-3">Pitch Assets</h6>
-                                    
+
+                                    {% if elevator_pitch %}
+                                        <div class="card border-0 shadow-sm mb-3 rounded-4 overflow-hidden">
+                                            <div class="d-flex align-items-center justify-content-between px-3 pt-3">
+                                                <a href="{% url 'explore' %}?v={{ elevator_pitch.id }}" class="badge bg-dark text-white text-decoration-none">
+                                                    <i class="bi bi-lightning-charge-fill me-1"></i>Elevator Pitch · 30s
+                                                </a>
+                                                {% if elevator_pitch.status != 'PUBLISHED' and request.user == profile_user %}
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis">{{ elevator_pitch.get_status_display }}</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="ratio ratio-9x16 mx-auto" style="max-width: 240px;">
+                                                <video controls controlsList="nodownload" playsinline preload="metadata">
+                                                    <source src="{{ elevator_pitch.video.url }}" type="video/mp4">
+                                                </video>
+                                            </div>
+                                            {% if elevator_pitch.caption %}
+                                                <p class="small text-secondary px-3 pb-3 mb-0">{{ elevator_pitch.caption }}</p>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+
                                     {% if application.pitch_video %}
                                         <div class="card border-0 shadow-sm mb-4 rounded-4 overflow-hidden">
                                             <div class="ratio ratio-16x9">
@@ -535,6 +556,27 @@
                                     <h6 class="fw-bold text-muted text-uppercase small mb-2">Reason for Sale</h6>
                                     <p class="text-secondary mb-0 small fst-italic">{{ seller_application.reason_for_sale|default:"Not disclosed." }}</p>
                                 </div>
+
+                                {% if elevator_pitch %}
+                                <div class="card border-0 shadow-sm mb-4 rounded-4 overflow-hidden">
+                                    <div class="d-flex align-items-center justify-content-between px-3 pt-3">
+                                        <a href="{% url 'explore' %}?v={{ elevator_pitch.id }}" class="badge bg-dark text-white text-decoration-none">
+                                            <i class="bi bi-lightning-charge-fill me-1"></i>Elevator Pitch · 30s
+                                        </a>
+                                        {% if elevator_pitch.status != 'PUBLISHED' and request.user == profile_user %}
+                                            <span class="badge bg-warning-subtle text-warning-emphasis">{{ elevator_pitch.get_status_display }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="ratio ratio-9x16 mx-auto" style="max-width: 240px;">
+                                        <video controls controlsList="nodownload" playsinline preload="metadata">
+                                            <source src="{{ elevator_pitch.video.url }}" type="video/mp4">
+                                        </video>
+                                    </div>
+                                    {% if elevator_pitch.caption %}
+                                        <p class="small text-secondary px-3 pb-3 mb-0">{{ elevator_pitch.caption }}</p>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
                             </div>
 
                             <div class="col-md-5">

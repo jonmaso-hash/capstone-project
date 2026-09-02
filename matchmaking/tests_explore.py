@@ -172,6 +172,32 @@ class ExploreFeedTests(TestCase):
         )
         self.assertContains(resp, 'seconds or less')
 
+    # ---- profile page funnel ---------------------------------------
+
+    def test_published_pitch_shows_on_profile(self):
+        self.client.force_login(self.viewer)
+        resp = self.client.get(reverse('accounts:profile', args=[self.founder_user.username]))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'Elevator Pitch')
+        self.assertContains(resp, self.pv.video.url)
+
+    def test_quarantined_pitch_hidden_from_visitors_shown_to_owner(self):
+        self.pv.quarantine()
+        url = reverse('accounts:profile', args=[self.founder_user.username])
+
+        self.client.force_login(self.viewer)  # logged-in non-owner
+        resp = self.client.get(url)
+        self.assertNotContains(resp, self.pv.video.url)
+
+        self.client.force_login(self.founder_user)  # owner
+        resp = self.client.get(url)
+        self.assertContains(resp, self.pv.video.url)
+        self.assertContains(resp, 'under review')
+
+    def test_anonymous_view_profile_cta_points_to_signup(self):
+        resp = self.client.get(reverse('explore'))
+        self.assertContains(resp, '/accounts/signup/?next=')
+
     def test_only_one_elevator_pitch_per_founder(self):
         from django.db import IntegrityError, transaction
         with self.assertRaises(IntegrityError):
