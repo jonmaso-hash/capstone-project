@@ -12,6 +12,11 @@ env:
   SECRET_KEY: ci-only-placeholder-key-not-for-production-use
   DEBUG: "True"
   ALLOWED_HOSTS: localhost,127.0.0.1
+  # DEFAULT_FROM_EMAIL derives from EMAIL_HOST_USER; a couple of tests assert an
+  # admin FYI email actually reaches the outbox, which silently no-ops when the
+  # sender address is empty (EmailMessage drops blank recipients). Tests use the
+  # locmem backend regardless, so nothing is sent off-box.
+  EMAIL_HOST_USER: ci@example.invalid
   # Run Celery tasks in-process during tests: no broker, no worker, and no
   # dependency on Celery's redis transport (whose `.delay()` calls made from a
   # live view hang under this Python/Celery combination — see
