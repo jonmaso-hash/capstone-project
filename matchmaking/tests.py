@@ -16,6 +16,7 @@ from .models import (
     SellerApplication, BuyerApplication, DealFeedback,
     MatchTrainingExample, log_training_example, Connection,
     PitchVideoComment, InvestorInterestEvent, AcquisitionInterestEvent,
+    AcquisitionConnection, log_buyer_event,
 )
 from .utils import (
     calculate_rule_based_score, get_blended_match, _is_adjacent_stage,
@@ -974,23 +975,83 @@ class LogTrainingExampleTests(TestCase):
         self.assertEqual(example.label, 'NEGATIVE')
         self.assertEqual(example.source, 'thumbs_down')
 
-    def test_funded_transition_logs_positive_example(self):
+    def test_founder_funded_claim_alone_does_not_log_example(self):
+        """
+        FUNDED is now a two-sided, verified state — a founder's claim alone
+        (status -> FUNDED_PENDING) must not fabricate a training signal.
+        See test_investor_confirmation_logs_positive_example for the real
+        POSITIVE example, which only fires once the investor confirms.
+        """
         from .models import Connection
 
         conn = Connection.objects.create(
             founder=self.app, investor=self.investor, status='ACCEPTED', initiated_by='FOUNDER',
         )
         self.client.force_login(self.founder_user)
-        self.client.post(
+        response = self.client.post(
             reverse('matchmaking:connection_action'),
             data=json.dumps({'id': conn.id, 'action': 'FUNDED'}),
             content_type='application/json',
         )
+        self.assertEqual(response.json()['new_status'], 'FUNDED_PENDING')
+        conn.refresh_from_db()
+        self.assertEqual(conn.status, 'FUNDED_PENDING')
+        self.assertEqual(MatchTrainingExample.objects.count(), 0)
+
+    def test_investor_confirmation_logs_positive_example(self):
+        from .models import Connection
+
+        conn = Connection.objects.create(
+            founder=self.app, investor=self.investor, status='FUNDED_PENDING', initiated_by='FOUNDER',
+        )
+        self.client.force_login(self.investor_user)
+        response = self.client.post(
+            reverse('matchmaking:connection_action'),
+            data=json.dumps({'id': conn.id, 'action': 'CONFIRM_FUNDED'}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.json()['new_status'], 'FUNDED')
+        conn.refresh_from_db()
+        self.assertEqual(conn.status, 'FUNDED')
         example = MatchTrainingExample.objects.get()
         self.assertEqual(example.anchor_type, 'INVESTOR')
         self.assertEqual(example.candidate_type, 'FOUNDER')
         self.assertEqual(example.label, 'POSITIVE')
         self.assertEqual(example.source, 'funded')
+
+    def test_investor_denial_reverts_to_accepted_without_logging(self):
+        from .models import Connection
+
+        conn = Connection.objects.create(
+            founder=self.app, investor=self.investor, status='FUNDED_PENDING', initiated_by='FOUNDER',
+        )
+        self.client.force_login(self.investor_user)
+        response = self.client.post(
+            reverse('matchmaking:connection_action'),
+            data=json.dumps({'id': conn.id, 'action': 'DENY_FUNDED'}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.json()['new_status'], 'ACCEPTED')
+        conn.refresh_from_db()
+        self.assertEqual(conn.status, 'ACCEPTED')
+        self.assertEqual(MatchTrainingExample.objects.count(), 0)
+
+    def test_founder_cannot_confirm_own_funded_claim(self):
+        """Only the investor can confirm/deny — the founder can't rubber-stamp their own claim."""
+        from .models import Connection
+
+        conn = Connection.objects.create(
+            founder=self.app, investor=self.investor, status='FUNDED_PENDING', initiated_by='FOUNDER',
+        )
+        self.client.force_login(self.founder_user)
+        response = self.client.post(
+            reverse('matchmaking:connection_action'),
+            data=json.dumps({'id': conn.id, 'action': 'CONFIRM_FUNDED'}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 403)
+        conn.refresh_from_db()
+        self.assertEqual(conn.status, 'FUNDED_PENDING')
 
     def test_declined_transition_logs_negative_example(self):
         from .models import Connection
@@ -2054,10 +2115,12 @@ class DataRoomModelTests(TestCase):
 class UploadedFileStorageCleanupTests(TestCase):
     """
     matchmaking/signals.py's post_delete receivers for Application
-    (pitch_deck/pitch_video), Document (deal room), and SellerApplication
-    (cim_document) — the same orphaned-file-on-delete gap found and fixed
-    for DataRoomDocument also existed for these older upload fields, since
-    none of them had any storage cleanup on row delete before this.
+    (pitch_deck/pitch_video) and SellerApplication (cim_document) — the
+    same orphaned-file-on-delete gap found and fixed for DataRoomDocument
+    also existed for these older upload fields, since none of them had
+    any storage cleanup on row delete before this. (A third receiver
+    existed for the old DealRoom-scoped Document model; removed along
+    with that dead model — see DeadDealRoomCleanupTests.)
     """
 
     def setUp(self):
@@ -2092,30 +2155,6 @@ class UploadedFileStorageCleanupTests(TestCase):
         self.assertTrue(storage.exists(path))
 
         user.delete()  # cascades: User -> Application
-
-        self.assertFalse(storage.exists(path))
-
-    def test_deleting_deal_room_document_removes_file(self):
-        from .models import DealRoom, Document
-        founder_user = User.objects.create_user('cleanup_dr_founder', password='x')
-        investor_user = User.objects.create_user('cleanup_dr_investor', password='x')
-        founder = Application.objects.create(
-            user=founder_user, company_name='DRCo', founder_name='F', email='drf@t.com',
-            description='test', sector='SaaS', stage='Seed',
-        )
-        investor = InvestorApplication.objects.create(
-            user=investor_user, full_name='I', email='dri@t.com', company_name='ICo',
-        )
-        connection = Connection.objects.create(investor=investor, founder=founder, status='ACCEPTED')
-        deal_room = DealRoom.objects.create(connection=connection, is_active=True)
-        doc = Document.objects.create(
-            deal_room=deal_room, title='Term Sheet',
-            file=SimpleUploadedFile('terms.pdf', b'x' * 10, content_type='application/pdf'),
-        )
-        storage, path = doc.file.storage, doc.file.name
-        self.assertTrue(storage.exists(path))
-
-        doc.delete()
 
         self.assertFalse(storage.exists(path))
 
@@ -2249,6 +2288,36 @@ class DataRoomAccessControlTests(TestCase):
 
         document.delete()
 
+    def test_match_only_document_downloadable_by_any_accepted_investor_without_a_request(self):
+        """The one visibility tier that bypasses DataRoomAccessRequest
+        entirely — see can_download_data_room_document's docstring."""
+        from .models import DataRoomDocument, can_download_data_room_document
+        document = DataRoomDocument.objects.create(
+            founder=self.founder, label='Pitch Deck', category='OTHER', visibility='MATCH_ONLY',
+            file=SimpleUploadedFile('deck.pdf', b'x', content_type='application/pdf'),
+        )
+        self.assertTrue(can_download_data_room_document(self.accepted_investor_user, document))
+        # Still gated by the room-entry connection requirement, though —
+        # MATCH_ONLY isn't PUBLIC.
+        self.assertFalse(can_download_data_room_document(self.pending_investor_user, document))
+        self.assertFalse(can_download_data_room_document(self.unrelated_investor_user, document))
+        document.delete()
+
+    def test_nda_required_document_needs_approval_and_nda_acceptance(self):
+        from .models import DataRoomDocument, DataRoomAccessRequest, can_download_data_room_document
+        document = DataRoomDocument.objects.create(
+            founder=self.founder, label='Cap Table', category='CAP_TABLE', visibility='NDA_REQUIRED',
+            file=SimpleUploadedFile('cap.csv', b'a,b,c', content_type='text/csv'),
+        )
+        access_request = DataRoomAccessRequest.objects.create(document=document, investor=self.accepted_investor, status='APPROVED')
+        # Approved but never acknowledged the NDA — still blocked.
+        self.assertFalse(can_download_data_room_document(self.accepted_investor_user, document))
+
+        access_request.nda_accepted = True
+        access_request.save(update_fields=['nda_accepted'])
+        self.assertTrue(can_download_data_room_document(self.accepted_investor_user, document))
+        document.delete()
+
 
 @override_settings(MEDIA_ROOT=tempfile.mkdtemp())
 class DataRoomViewTests(TestCase):
@@ -2357,6 +2426,271 @@ class DataRoomViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
 
 
+class DataRoomInformationRequestTests(TestCase):
+    """
+    "Request Information" — an investor asks the founder to provide a
+    category the room has nothing in yet (DataRoomInformationRequest),
+    the mirror of DataRoomAccessRequest (which asks for access to a
+    document that already exists). Covers: creation, notification,
+    auto-fulfillment on matching upload, decline, and re-request.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('dr_info_founder', password='x')
+        self.founder = Application.objects.create(
+            user=self.founder_user, company_name='DR Info Co', founder_name='F', email='dri@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        self.investor_user = User.objects.create_user('dr_info_investor', password='x')
+        self.investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='I', company_name='InfoFund', email='drii@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        Connection.objects.create(investor=self.investor, founder=self.founder, status='ACCEPTED', initiated_by='INVESTOR')
+        self.stranger_user = User.objects.create_user('dr_info_stranger', password='x')
+
+    def test_investor_can_request_multiple_categories_at_once(self):
+        from .models import DataRoomInformationRequest
+        self.client.force_login(self.investor_user)
+        response = self.client.post(
+            reverse('matchmaking:data_room_request_information', args=[self.founder_user.username]),
+            {'categories': ['CAP_TABLE', 'CUSTOMER_METRICS']},
+        )
+        self.assertEqual(response.status_code, 302)
+        requests = DataRoomInformationRequest.objects.filter(founder=self.founder, investor=self.investor)
+        self.assertEqual(requests.count(), 2)
+        self.assertTrue(all(r.status == 'PENDING' for r in requests))
+
+    def test_requesting_notifies_the_founder(self):
+        from notifications.models import Notification
+        self.client.force_login(self.investor_user)
+        self.client.post(
+            reverse('matchmaking:data_room_request_information', args=[self.founder_user.username]),
+            {'categories': ['CAP_TABLE']},
+        )
+        notif = Notification.objects.get(recipient=self.founder_user, notification_type='DATA_ROOM_INFO_REQUEST')
+        self.assertIn('InfoFund', notif.message)
+        self.assertIn('Cap Table', notif.message)
+
+    def test_founder_cannot_request_from_self(self):
+        self.client.force_login(self.founder_user)
+        response = self.client.post(
+            reverse('matchmaking:data_room_request_information', args=[self.founder_user.username]),
+            {'categories': ['CAP_TABLE']},
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_stranger_gets_404(self):
+        self.client.force_login(self.stranger_user)
+        response = self.client.post(
+            reverse('matchmaking:data_room_request_information', args=[self.founder_user.username]),
+            {'categories': ['CAP_TABLE']},
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_invalid_category_is_silently_ignored(self):
+        from .models import DataRoomInformationRequest
+        self.client.force_login(self.investor_user)
+        response = self.client.post(
+            reverse('matchmaking:data_room_request_information', args=[self.founder_user.username]),
+            {'categories': ['NOT_A_REAL_CATEGORY']},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(DataRoomInformationRequest.objects.filter(founder=self.founder).exists())
+
+    def test_uploading_matching_category_auto_fulfills_and_notifies_investor(self):
+        from .models import DataRoomInformationRequest
+        from notifications.models import Notification
+        self.client.force_login(self.investor_user)
+        self.client.post(
+            reverse('matchmaking:data_room_request_information', args=[self.founder_user.username]),
+            {'categories': ['CAP_TABLE']},
+        )
+        info_request = DataRoomInformationRequest.objects.get(founder=self.founder, investor=self.investor, category='CAP_TABLE')
+
+        self.client.force_login(self.founder_user)
+        self.client.post(reverse('matchmaking:data_room_upload', args=[self.founder_user.username]), {
+            'category': 'CAP_TABLE', 'label': '2026 Cap Table',
+            'file': SimpleUploadedFile('captable.csv', b'a,b,c', content_type='text/csv'),
+        })
+
+        info_request.refresh_from_db()
+        self.assertEqual(info_request.status, 'FULFILLED')
+        self.assertEqual(info_request.fulfilled_document.label, '2026 Cap Table')
+        self.assertTrue(Notification.objects.filter(
+            recipient=self.investor_user, notification_type='DATA_ROOM_INFO_FULFILLED'
+        ).exists())
+
+    def test_uploading_unrelated_category_does_not_fulfill_the_request(self):
+        from .models import DataRoomInformationRequest
+        self.client.force_login(self.investor_user)
+        self.client.post(
+            reverse('matchmaking:data_room_request_information', args=[self.founder_user.username]),
+            {'categories': ['CAP_TABLE']},
+        )
+        self.client.force_login(self.founder_user)
+        self.client.post(reverse('matchmaking:data_room_upload', args=[self.founder_user.username]), {
+            'category': 'FINANCIALS', 'label': 'Q4 Financials',
+            'file': SimpleUploadedFile('q4.pdf', b'x' * 10, content_type='application/pdf'),
+        })
+        info_request = DataRoomInformationRequest.objects.get(founder=self.founder, investor=self.investor, category='CAP_TABLE')
+        self.assertEqual(info_request.status, 'PENDING')
+
+    def test_founder_can_decline_a_request(self):
+        from .models import DataRoomInformationRequest
+        from notifications.models import Notification
+        self.client.force_login(self.investor_user)
+        self.client.post(
+            reverse('matchmaking:data_room_request_information', args=[self.founder_user.username]),
+            {'categories': ['CAP_TABLE']},
+        )
+        info_request = DataRoomInformationRequest.objects.get(founder=self.founder, investor=self.investor, category='CAP_TABLE')
+
+        self.client.force_login(self.founder_user)
+        response = self.client.post(reverse('matchmaking:data_room_decline_information_request', args=[info_request.id]))
+        self.assertEqual(response.status_code, 302)
+        info_request.refresh_from_db()
+        self.assertEqual(info_request.status, 'DECLINED')
+        self.assertTrue(Notification.objects.filter(
+            recipient=self.investor_user, notification_type='DATA_ROOM_INFO_DECLINED'
+        ).exists())
+
+    def test_investor_cannot_decline_their_own_request(self):
+        from .models import DataRoomInformationRequest
+        self.client.force_login(self.investor_user)
+        self.client.post(
+            reverse('matchmaking:data_room_request_information', args=[self.founder_user.username]),
+            {'categories': ['CAP_TABLE']},
+        )
+        info_request = DataRoomInformationRequest.objects.get(founder=self.founder, investor=self.investor, category='CAP_TABLE')
+        response = self.client.post(reverse('matchmaking:data_room_decline_information_request', args=[info_request.id]))
+        self.assertEqual(response.status_code, 403)
+
+    def test_reraising_a_declined_request_resets_it_to_pending(self):
+        from .models import DataRoomInformationRequest
+        self.client.force_login(self.investor_user)
+        self.client.post(
+            reverse('matchmaking:data_room_request_information', args=[self.founder_user.username]),
+            {'categories': ['CAP_TABLE']},
+        )
+        info_request = DataRoomInformationRequest.objects.get(founder=self.founder, investor=self.investor, category='CAP_TABLE')
+        self.client.force_login(self.founder_user)
+        self.client.post(reverse('matchmaking:data_room_decline_information_request', args=[info_request.id]))
+
+        self.client.force_login(self.investor_user)
+        self.client.post(
+            reverse('matchmaking:data_room_request_information', args=[self.founder_user.username]),
+            {'categories': ['CAP_TABLE']},
+        )
+        info_request.refresh_from_db()
+        self.assertEqual(info_request.status, 'PENDING')
+        # Still exactly one row per (founder, investor, category) — a
+        # re-request reopens the existing row rather than duplicating it.
+        self.assertEqual(
+            DataRoomInformationRequest.objects.filter(founder=self.founder, investor=self.investor, category='CAP_TABLE').count(), 1
+        )
+
+    def test_data_room_page_shows_request_form_for_investor_and_owner_panel(self):
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('matchmaking:data_room', args=[self.founder_user.username]))
+        self.assertContains(response, 'Request Information')
+
+        self.client.post(
+            reverse('matchmaking:data_room_request_information', args=[self.founder_user.username]),
+            {'categories': ['CAP_TABLE']},
+        )
+
+        self.client.force_login(self.founder_user)
+        response = self.client.get(reverse('matchmaking:data_room', args=[self.founder_user.username]))
+        self.assertContains(response, 'Investor Requests')
+        self.assertContains(response, 'InfoFund')
+        self.assertContains(response, 'Cap Table')
+
+
+@override_settings(MEDIA_ROOT=tempfile.mkdtemp())
+class DataRoomVisibilityTierViewTests(TestCase):
+    """
+    End-to-end request-flow behavior for DataRoomDocument.visibility (see
+    that field's docstring and DataRoomAccessControlTests for the
+    lower-level can_download_data_room_document matrix). Covers all three
+    tiers through the actual views/URLs, not just the gate function.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('dr_vis_founder', password='x')
+        self.founder = Application.objects.create(
+            user=self.founder_user, company_name='DR Vis Co', founder_name='F', email='drv2@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        self.investor_user = User.objects.create_user('dr_vis_investor', password='x')
+        self.investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='I', company_name='VisFund', email='drvi2@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        Connection.objects.create(investor=self.investor, founder=self.founder, status='ACCEPTED', initiated_by='INVESTOR')
+
+    def test_match_only_document_shows_direct_download_no_request_needed(self):
+        from .models import DataRoomDocument
+        DataRoomDocument.objects.create(
+            founder=self.founder, label='Pitch Deck', category='OTHER', visibility='MATCH_ONLY',
+            file=SimpleUploadedFile('deck.pdf', b'x', content_type='application/pdf'),
+        )
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('matchmaking:data_room', args=[self.founder_user.username]))
+        self.assertContains(response, 'No approval needed')
+        self.assertNotContains(response, 'Request Access')
+
+    def test_requesting_a_match_only_document_is_a_no_op(self):
+        from .models import DataRoomDocument, DataRoomAccessRequest
+        document = DataRoomDocument.objects.create(
+            founder=self.founder, label='Pitch Deck', category='OTHER', visibility='MATCH_ONLY',
+            file=SimpleUploadedFile('deck.pdf', b'x', content_type='application/pdf'),
+        )
+        self.client.force_login(self.investor_user)
+        self.client.post(reverse('matchmaking:data_room_request_access', args=[document.id]))
+        self.assertFalse(DataRoomAccessRequest.objects.filter(document=document, investor=self.investor).exists())
+
+    def test_nda_required_document_rejects_request_without_checkbox(self):
+        from .models import DataRoomDocument, DataRoomAccessRequest
+        document = DataRoomDocument.objects.create(
+            founder=self.founder, label='Cap Table', category='CAP_TABLE', visibility='NDA_REQUIRED',
+            file=SimpleUploadedFile('cap.csv', b'a,b,c', content_type='text/csv'),
+        )
+        self.client.force_login(self.investor_user)
+        self.client.post(reverse('matchmaking:data_room_request_access', args=[document.id]))
+        self.assertFalse(DataRoomAccessRequest.objects.filter(document=document, investor=self.investor).exists())
+
+    def test_nda_required_document_accepts_request_with_checkbox(self):
+        from .models import DataRoomDocument, DataRoomAccessRequest
+        document = DataRoomDocument.objects.create(
+            founder=self.founder, label='Cap Table', category='CAP_TABLE', visibility='NDA_REQUIRED',
+            file=SimpleUploadedFile('cap.csv', b'a,b,c', content_type='text/csv'),
+        )
+        self.client.force_login(self.investor_user)
+        self.client.post(reverse('matchmaking:data_room_request_access', args=[document.id]), {'nda_accepted': 'on'})
+        access_request = DataRoomAccessRequest.objects.get(document=document, investor=self.investor)
+        self.assertEqual(access_request.status, 'PENDING')
+        self.assertTrue(access_request.nda_accepted)
+
+    def test_investor_approved_document_behaves_exactly_as_before_this_feature(self):
+        """The default tier — every pre-existing document and every founder
+        who never touches the new field gets identical behavior to before
+        visibility tiers existed."""
+        from .models import DataRoomDocument, DataRoomAccessRequest
+        document = DataRoomDocument.objects.create(
+            founder=self.founder, label='Financials', category='FINANCIALS',
+            file=SimpleUploadedFile('fin.csv', b'a,b,c', content_type='text/csv'),
+        )
+        self.assertEqual(document.visibility, 'INVESTOR_APPROVED')
+        self.client.force_login(self.investor_user)
+        self.client.post(reverse('matchmaking:data_room_request_access', args=[document.id]))
+        access_request = DataRoomAccessRequest.objects.get(document=document, investor=self.investor)
+        self.assertEqual(access_request.status, 'PENDING')
+        self.assertFalse(access_request.nda_accepted)
+
+
 @override_settings(MEDIA_ROOT=tempfile.mkdtemp())
 class PitchVideosSectionTests(TestCase):
     """
@@ -2407,6 +2741,24 @@ class PitchVideosSectionTests(TestCase):
         self._founder('privatefounder', is_private=True)
         response = self.client.get(reverse('matchmaking:pitch_videos'))
         self.assertNotIn('privatefounder', [f.user.username for f in response.context['founders']])
+
+    def test_share_button_renders_with_content_share_call_when_enabled(self):
+        """The internal-share picker replaced the old external-only
+        pvShare() — this pins the new openContentShare() wiring."""
+        founder = self._founder('shareenabled')
+        response = self.client.get(reverse('matchmaking:pitch_videos'))
+        self.assertContains(response, f"openContentShare('VIDEO_FOUNDER', {founder.id}")
+        self.assertNotContains(response, 'pvShare(')
+
+    def test_share_button_hidden_when_owner_disabled_it(self):
+        self._founder('sharedisabled', pitch_video_shares_enabled=False)
+        response = self.client.get(reverse('matchmaking:pitch_videos'))
+        self.assertNotContains(response, "openContentShare('VIDEO_FOUNDER'")
+
+    def test_seller_share_button_uses_video_seller_content_type(self):
+        seller = self._seller('sellershareenabled')
+        response = self.client.get(reverse('matchmaking:pitch_videos'))
+        self.assertContains(response, f"openContentShare('VIDEO_SELLER', {seller.id}")
 
     def test_null_pitch_video_does_not_crash_the_page(self):
         """
@@ -3474,9 +3826,11 @@ class FunnelSummaryTests(TestCase):
 
     def test_deal_rooms_created_counts_accepted_connections_in_window(self):
         """
-        DealRoom is never instantiated outside tests — the real chat
-        channel is created client-side the moment a Connection reaches
-        'ACCEPTED', so that's the closest available proxy.
+        The chat channel is created client-side the moment a Connection
+        reaches 'ACCEPTED' (no server-side row for that event at all — the
+        old DealRoom model that once modeled this was dead code, since
+        removed; see DeadDealRoomCleanupTests), so counting accepted
+        connections in the window is the closest available proxy.
         """
         from .models import Connection
         from .funnel import funnel_summary
@@ -3760,3 +4114,1513 @@ class InsightsEngineTests(TestCase):
         breakdown = get_buyer_deal_structure_breakdown(events)
         self.assertEqual(breakdown['unique_viewers'], 1)
         self.assertEqual(breakdown['by_deal_structure'], {'ASSET_PURCHASE': 1})
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class StandaloneMemoViewTierTests(TestCase):
+    """
+    standalone_memo_view (the "Zelda Intelligence Report") — Zelda Lite/AI
+    split, same monetization model as Truth Delta/IC Memo: gated on the
+    FOUNDER's own Premium. Lite surfaces only what's genuinely real/
+    structured today (Executive Baseline Description, Matching Explanatory
+    Breakdown); the charts panel, Core Operational Variables, and the
+    external intelligence feed are Zelda AI-only.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('smv_founder', password='x')
+        self.founder_app = Application.objects.create(
+            user=self.founder_user, company_name='SMVCo', founder_name='F', email='f@t.com',
+            description='SMVCo builds real intelligence infrastructure for private markets.',
+            sector='SaaS', stage='Seed', raising_amount=500000, current_revenue=100000,
+        )
+        self.investor_user = User.objects.create_user('smv_investor', password='x')
+        InvestorApplication.objects.create(
+            user=self.investor_user, full_name='Inv', company_name='Fund', email='i@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.slug = self.founder_app.company_name.lower().replace(' ', '-')
+
+    def test_investor_sees_lite_tier_when_founder_not_premium(self):
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('matchmaking:standalone_memo', args=[self.slug]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Zelda Lite Report')
+        # Real, existing content stays visible in Lite.
+        self.assertContains(response, 'SMVCo builds real intelligence infrastructure for private markets.')
+        # Zelda AI-only sections are absent, not blurred/locked-looking.
+        self.assertNotContains(response, 'Core Operational Variables')
+        self.assertNotContains(response, 'Aggregated External Intelligence Feed')
+        self.assertNotContains(response, 'Data Metrics &amp; Market Synthesis')
+        self.assertContains(response, 'Zelda AI gives you the complete intelligence report')
+
+    def test_investor_sees_full_tier_when_founder_premium(self):
+        self.founder_app.is_premium = True
+        self.founder_app.save(update_fields=['is_premium'])
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('matchmaking:standalone_memo', args=[self.slug]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Zelda AI — Full Report')
+        self.assertContains(response, 'Core Operational Variables')
+        self.assertContains(response, 'Aggregated External Intelligence Feed')
+        self.assertContains(response, 'Data Metrics & Market Synthesis')
+        self.assertNotContains(response, 'Zelda AI gives you the complete intelligence report')
+
+    def test_staff_sees_full_tier_regardless_of_premium(self):
+        staff_user = User.objects.create_user('smv_staff', password='x', is_staff=True)
+        self.client.force_login(staff_user)
+        response = self.client.get(reverse('matchmaking:standalone_memo', args=[self.slug]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Zelda AI — Full Report')
+        self.assertContains(response, 'Core Operational Variables')
+
+    def test_non_investor_non_staff_still_blocked(self):
+        """Access control is unchanged by the tier split — still investor/staff only."""
+        outsider = User.objects.create_user('smv_outsider', password='x')
+        self.client.force_login(outsider)
+        response = self.client.get(reverse('matchmaking:standalone_memo', args=[self.slug]))
+        self.assertEqual(response.status_code, 403)
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class ArchiveQuerySetTests(TestCase):
+    """
+    ApplicationQuerySet/InvestorApplicationQuerySet/SellerApplicationQuerySet/
+    BuyerApplicationQuerySet.discoverable() — archived profiles disappear
+    from discovery the same way is_private=True already does, across all
+    four marketplace roles.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+
+    def test_application_discoverable_excludes_archived(self):
+        user = User.objects.create_user('aq_founder', password='x')
+        app = Application.objects.create(
+            user=user, company_name='AQCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        self.assertIn(app, Application.objects.discoverable())
+        app.archive()
+        self.assertNotIn(app, Application.objects.discoverable())
+        app.unarchive()
+        self.assertIn(app, Application.objects.discoverable())
+
+    def test_investor_discoverable_excludes_archived(self):
+        user = User.objects.create_user('aq_investor', password='x')
+        inv = InvestorApplication.objects.create(
+            user=user, full_name='I', company_name='Fund', email='i@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.assertIn(inv, InvestorApplication.objects.discoverable())
+        inv.archive()
+        self.assertNotIn(inv, InvestorApplication.objects.discoverable())
+
+    def test_seller_discoverable_excludes_archived(self):
+        user = User.objects.create_user('aq_seller', password='x')
+        seller = SellerApplication.objects.create(
+            user=user, company_name='SellCo', seller_name='S', email='s@t.com', description='test',
+        )
+        self.assertIn(seller, SellerApplication.objects.discoverable())
+        seller.archive()
+        self.assertNotIn(seller, SellerApplication.objects.discoverable())
+
+    def test_buyer_discoverable_excludes_archived(self):
+        user = User.objects.create_user('aq_buyer', password='x')
+        buyer = BuyerApplication.objects.create(
+            user=user, full_name='B', email='b@t.com', company_name='BCo', acquisition_thesis='t',
+        )
+        self.assertIn(buyer, BuyerApplication.objects.discoverable())
+        buyer.archive()
+        self.assertNotIn(buyer, BuyerApplication.objects.discoverable())
+
+    def test_archived_founder_actually_disappears_from_bulletin_board(self):
+        """End-to-end proof, not just the queryset in isolation."""
+        user = User.objects.create_user('aq_bulletin_founder', password='x')
+        app = Application.objects.create(
+            user=user, company_name='BulletinCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        response = self.client.get(reverse('matchmaking:bulletin_board'))
+        self.assertContains(response, 'BulletinCo')
+
+        app.archive()
+        response = self.client.get(reverse('matchmaking:bulletin_board'))
+        self.assertNotContains(response, 'BulletinCo')
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class AcquisitionFundedClosedConfirmationTests(TestCase):
+    """
+    AcquisitionConnection's CLOSED transition — same two-sided verification
+    fix as Connection.FUNDED: the seller's claim (status -> CLOSED_PENDING)
+    is not itself a training signal; only the buyer's confirmation is.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        from .models import SellerApplication, BuyerApplication
+        self.seller_user = User.objects.create_user('acfc_seller', password='x')
+        self.seller = SellerApplication.objects.create(
+            user=self.seller_user, company_name='SellCo', seller_name='S', email='s@t.com', description='test',
+        )
+        self.buyer_user = User.objects.create_user('acfc_buyer', password='x')
+        self.buyer = BuyerApplication.objects.create(
+            user=self.buyer_user, full_name='B', email='b@t.com', company_name='BuyCo', acquisition_thesis='t',
+        )
+
+    def _conn(self, status):
+        from .models import AcquisitionConnection
+        return AcquisitionConnection.objects.create(
+            seller=self.seller, buyer=self.buyer, status=status, initiated_by='SELLER',
+        )
+
+    def test_seller_closed_claim_moves_to_pending_without_logging(self):
+        conn = self._conn('ACCEPTED')
+        self.client.force_login(self.seller_user)
+        response = self.client.post(
+            reverse('matchmaking:acquisition_connection_action'),
+            data=json.dumps({'id': conn.id, 'action': 'CLOSED'}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.json()['new_status'], 'CLOSED_PENDING')
+        conn.refresh_from_db()
+        self.assertEqual(conn.status, 'CLOSED_PENDING')
+        self.assertEqual(MatchTrainingExample.objects.count(), 0)
+
+    def test_buyer_confirmation_closes_and_logs_positive_example(self):
+        conn = self._conn('CLOSED_PENDING')
+        self.client.force_login(self.buyer_user)
+        response = self.client.post(
+            reverse('matchmaking:acquisition_connection_action'),
+            data=json.dumps({'id': conn.id, 'action': 'CONFIRM_CLOSED'}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.json()['new_status'], 'CLOSED')
+        conn.refresh_from_db()
+        self.assertEqual(conn.status, 'CLOSED')
+        example = MatchTrainingExample.objects.get()
+        self.assertEqual(example.anchor_type, 'BUYER')
+        self.assertEqual(example.candidate_type, 'SELLER')
+        self.assertEqual(example.label, 'POSITIVE')
+        self.assertEqual(example.source, 'closed')
+
+    def test_buyer_denial_reverts_to_accepted_without_logging(self):
+        conn = self._conn('CLOSED_PENDING')
+        self.client.force_login(self.buyer_user)
+        response = self.client.post(
+            reverse('matchmaking:acquisition_connection_action'),
+            data=json.dumps({'id': conn.id, 'action': 'DENY_CLOSED'}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.json()['new_status'], 'ACCEPTED')
+        conn.refresh_from_db()
+        self.assertEqual(conn.status, 'ACCEPTED')
+        self.assertEqual(MatchTrainingExample.objects.count(), 0)
+
+    def test_seller_cannot_confirm_own_closed_claim(self):
+        conn = self._conn('CLOSED_PENDING')
+        self.client.force_login(self.seller_user)
+        response = self.client.post(
+            reverse('matchmaking:acquisition_connection_action'),
+            data=json.dumps({'id': conn.id, 'action': 'CONFIRM_CLOSED'}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 403)
+        conn.refresh_from_db()
+        self.assertEqual(conn.status, 'CLOSED_PENDING')
+
+    def test_buyer_cannot_unilaterally_claim_closed(self):
+        """Only the seller can propose CLOSED — same asymmetry as before, just gated earlier now."""
+        conn = self._conn('ACCEPTED')
+        self.client.force_login(self.buyer_user)
+        response = self.client.post(
+            reverse('matchmaking:acquisition_connection_action'),
+            data=json.dumps({'id': conn.id, 'action': 'CLOSED'}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 403)
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class DealPulseFundedPendingTests(TestCase):
+    """A FUNDED_PENDING connection needs the investor's action — it belongs
+    in Deal Pulse's NEEDS_ATTENTION column, not ACTIVE or COMPLETED."""
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.investor_user = User.objects.create_user('dp_investor', password='x')
+        self.investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='I', company_name='Fund', email='i@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.founder_user = User.objects.create_user('dp_founder', password='x')
+        self.founder = Application.objects.create(
+            user=self.founder_user, company_name='DPCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+
+    def test_funded_pending_connection_shows_under_needs_attention(self):
+        from .models import Connection
+        Connection.objects.create(
+            founder=self.founder, investor=self.investor, status='FUNDED_PENDING', initiated_by='FOUNDER',
+        )
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('matchmaking:deal_pulse'))
+        columns = {c['key']: c['connections'] for c in response.context['columns']}
+        self.assertEqual(len(columns['NEEDS_ATTENTION']), 1)
+        self.assertEqual(len(columns['ACTIVE']), 0)
+        self.assertEqual(len(columns['COMPLETED']), 0)
+
+
+class DealRoomNavigationTests(TestCase):
+    """
+    Phase 4 — every accepted-deal surface links into the Deal Room:
+    founder/investor/buyer/seller dashboard cards and Deal Pulse cards.
+    Fixes the gap identified in the Deal Room discovery: chat and the
+    Data Room existed as disconnected surfaces with no shared entry point
+    once a deal moved past acceptance.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('nav_founder', password='x')
+        self.founder = Application.objects.create(
+            user=self.founder_user, company_name='NavCo', founder_name='F', email='navf@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        self.investor_user = User.objects.create_user('nav_investor', password='x')
+        self.investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='I', company_name='NavFund', email='navi@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.connection = Connection.objects.create(founder=self.founder, investor=self.investor, status='ACCEPTED', initiated_by='INVESTOR')
+
+        self.seller_user = User.objects.create_user('nav_seller', password='x')
+        self.seller = SellerApplication.objects.create(
+            user=self.seller_user, company_name='NavSellCo', seller_name='S', email='navs@t.com',
+            description='test', industry='SaaS',
+        )
+        self.buyer_user = User.objects.create_user('nav_buyer', password='x')
+        self.buyer = BuyerApplication.objects.create(
+            user=self.buyer_user, full_name='B', company_name='NavAcquirer', email='navb@t.com',
+        )
+        self.acquisition_connection = AcquisitionConnection.objects.create(seller=self.seller, buyer=self.buyer, status='ACCEPTED', initiated_by='BUYER')
+
+    def test_founder_dashboard_links_to_deal_room(self):
+        self.client.force_login(self.founder_user)
+        response = self.client.get(reverse('matchmaking:founder_dashboard'))
+        self.assertContains(response, reverse('matchmaking:deal_workspace', args=[self.connection.id]))
+
+    def test_investor_dashboard_links_to_deal_room(self):
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('matchmaking:investor_dashboard'))
+        self.assertContains(response, reverse('matchmaking:deal_workspace', args=[self.connection.id]))
+
+    def test_seller_dashboard_links_to_deal_room(self):
+        self.client.force_login(self.seller_user)
+        response = self.client.get(reverse('matchmaking:seller_dashboard'))
+        self.assertContains(response, reverse('matchmaking:acquisition_deal_workspace', args=[self.acquisition_connection.id]))
+
+    def test_buyer_dashboard_links_to_deal_room(self):
+        self.client.force_login(self.buyer_user)
+        response = self.client.get(reverse('matchmaking:buyer_dashboard'))
+        self.assertContains(response, reverse('matchmaking:acquisition_deal_workspace', args=[self.acquisition_connection.id]))
+
+    def test_deal_pulse_links_to_deal_room_for_accepted_connection(self):
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('matchmaking:deal_pulse'))
+        self.assertContains(response, reverse('matchmaking:deal_workspace', args=[self.connection.id]))
+
+    def test_deal_pulse_does_not_link_to_deal_room_for_a_pending_connection(self):
+        """A not-yet-accepted connection has no workspace (can_view_deal_workspace
+        would 404 it) — the link must not even be offered."""
+        pending_founder_user = User.objects.create_user('nav_pending_founder', password='x')
+        pending_founder = Application.objects.create(
+            user=pending_founder_user, company_name='PendingNavCo', founder_name='F', email='pendingnav@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        pending_conn = Connection.objects.create(founder=pending_founder, investor=self.investor, status='pending', initiated_by='INVESTOR')
+
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('matchmaking:deal_pulse'))
+        self.assertNotContains(response, reverse('matchmaking:deal_workspace', args=[pending_conn.id]))
+
+
+class DealWorkspaceAccessTests(TestCase):
+    """
+    matchmaking.models.can_view_deal_workspace — the sole access gate for
+    the Deal Workspace view. Only the two named parties to this exact
+    Connection, or staff; only once the relationship is at least ACCEPTED.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('dw_founder', password='x')
+        self.founder = Application.objects.create(
+            user=self.founder_user, company_name='DWCo', founder_name='F', email='dwf@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        self.investor_user = User.objects.create_user('dw_investor', password='x')
+        self.investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='I', company_name='DWFund', email='dwi@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.staff_user = User.objects.create_user('dw_staff', password='x', is_staff=True)
+        self.stranger_user = User.objects.create_user('dw_stranger', password='x')
+
+    def test_pending_connection_has_no_workspace(self):
+        from .models import Connection, can_view_deal_workspace
+        conn = Connection.objects.create(founder=self.founder, investor=self.investor, status='pending', initiated_by='INVESTOR')
+        self.assertFalse(can_view_deal_workspace(self.founder_user, conn))
+        self.assertFalse(can_view_deal_workspace(self.investor_user, conn))
+
+    def test_declined_connection_has_no_workspace(self):
+        from .models import Connection, can_view_deal_workspace
+        conn = Connection.objects.create(founder=self.founder, investor=self.investor, status='DECLINED', initiated_by='INVESTOR')
+        self.assertFalse(can_view_deal_workspace(self.founder_user, conn))
+
+    def test_accepted_funded_pending_and_funded_all_have_a_workspace(self):
+        from .models import Connection, can_view_deal_workspace
+        for status in ('ACCEPTED', 'FUNDED_PENDING', 'FUNDED'):
+            conn = Connection.objects.create(
+                founder=self.founder, investor=InvestorApplication.objects.create(
+                    user=User.objects.create_user(f'dw_inv_{status}', password='x'),
+                    full_name='I', company_name=f'Fund{status}', email=f'{status}@t.com',
+                    investment_focus='SaaS', investment_stage='Seed',
+                ),
+                status=status, initiated_by='INVESTOR',
+            )
+            self.assertTrue(can_view_deal_workspace(self.founder_user, conn), status)
+            self.assertTrue(can_view_deal_workspace(conn.investor.user, conn), status)
+
+    def test_only_the_two_named_parties_or_staff_can_view(self):
+        from .models import Connection, can_view_deal_workspace
+        conn = Connection.objects.create(founder=self.founder, investor=self.investor, status='ACCEPTED', initiated_by='INVESTOR')
+        self.assertTrue(can_view_deal_workspace(self.founder_user, conn))
+        self.assertTrue(can_view_deal_workspace(self.investor_user, conn))
+        self.assertTrue(can_view_deal_workspace(self.staff_user, conn))
+        self.assertFalse(can_view_deal_workspace(self.stranger_user, conn))
+
+    def test_a_different_investors_workspace_is_not_accessible(self):
+        """Founder A's workspace with Investor 1 isn't reachable by Investor 2,
+        even though Investor 2 also has their own ACCEPTED connection to Founder A."""
+        from .models import Connection, can_view_deal_workspace
+        conn_1 = Connection.objects.create(founder=self.founder, investor=self.investor, status='ACCEPTED', initiated_by='INVESTOR')
+        other_investor_user = User.objects.create_user('dw_investor2', password='x')
+        other_investor = InvestorApplication.objects.create(
+            user=other_investor_user, full_name='I2', company_name='DWFund2', email='dwi2@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        Connection.objects.create(founder=self.founder, investor=other_investor, status='ACCEPTED', initiated_by='INVESTOR')
+        self.assertFalse(can_view_deal_workspace(other_investor_user, conn_1))
+
+    def test_anonymous_user_denied(self):
+        from django.contrib.auth.models import AnonymousUser
+        from .models import Connection, can_view_deal_workspace
+        conn = Connection.objects.create(founder=self.founder, investor=self.investor, status='ACCEPTED', initiated_by='INVESTOR')
+        self.assertFalse(can_view_deal_workspace(AnonymousUser(), conn))
+
+
+@override_settings(MEDIA_ROOT=tempfile.mkdtemp())
+class DealWorkspaceViewTests(TestCase):
+    """
+    End-to-end deal_workspace_view: correct Connection <-> participant
+    mapping, Stream channel id computation, Zelda summary rendering, and
+    Data Room context. See DealWorkspaceAccessTests for the lower-level
+    permission matrix and DealActivityTimelineTests for the activity list.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('dwv_founder', password='x')
+        self.founder = Application.objects.create(
+            user=self.founder_user, company_name='DWVCo', founder_name='F', email='dwvf@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        self.investor_user = User.objects.create_user('dwv_investor', password='x')
+        self.investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='I', company_name='DWVFund', email='dwvi@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.connection = Connection.objects.create(
+            founder=self.founder, investor=self.investor, status='ACCEPTED', initiated_by='INVESTOR',
+        )
+        self.stranger_user = User.objects.create_user('dwv_stranger', password='x')
+
+    def test_unauthenticated_redirects_to_login(self):
+        response = self.client.get(reverse('matchmaking:deal_workspace', args=[self.connection.id]))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/login', response.url)
+
+    def test_stranger_gets_404(self):
+        self.client.force_login(self.stranger_user)
+        response = self.client.get(reverse('matchmaking:deal_workspace', args=[self.connection.id]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_pending_connection_gets_404_at_the_view(self):
+        pending_conn = Connection.objects.create(
+            founder=self.founder,
+            investor=InvestorApplication.objects.create(
+                user=User.objects.create_user('dwv_pending_investor', password='x'),
+                full_name='I', company_name='PendingFund', email='pending@t.com',
+                investment_focus='SaaS', investment_stage='Seed',
+            ),
+            status='pending', initiated_by='INVESTOR',
+        )
+        self.client.force_login(pending_conn.investor.user)
+        response = self.client.get(reverse('matchmaking:deal_workspace', args=[pending_conn.id]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_declined_connection_gets_404_at_the_view(self):
+        declined_conn = Connection.objects.create(
+            founder=self.founder,
+            investor=InvestorApplication.objects.create(
+                user=User.objects.create_user('dwv_declined_investor', password='x'),
+                full_name='I', company_name='DeclinedFund', email='declined@t.com',
+                investment_focus='SaaS', investment_stage='Seed',
+            ),
+            status='DECLINED', initiated_by='INVESTOR',
+        )
+        self.client.force_login(declined_conn.founder.user)
+        response = self.client.get(reverse('matchmaking:deal_workspace', args=[declined_conn.id]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_founder_and_investor_both_reach_the_workspace(self):
+        self.client.force_login(self.founder_user)
+        self.assertEqual(self.client.get(reverse('matchmaking:deal_workspace', args=[self.connection.id])).status_code, 200)
+        self.client.force_login(self.investor_user)
+        self.assertEqual(self.client.get(reverse('matchmaking:deal_workspace', args=[self.connection.id])).status_code, 200)
+
+    def test_correct_founder_investor_pair_resolved_in_context(self):
+        self.client.force_login(self.founder_user)
+        response = self.client.get(reverse('matchmaking:deal_workspace', args=[self.connection.id]))
+        self.assertEqual(response.context['deal_type'], 'investment')
+        self.assertEqual(response.context['company_application'].id, self.founder.id)
+        self.assertEqual(response.context['counterparty_application'].id, self.investor.id)
+        self.assertEqual(response.context['connection'].id, self.connection.id)
+
+    def test_funded_pending_does_not_render_as_verified_funded(self):
+        """A founder's unconfirmed claim must never read as a verified
+        outcome in the workspace — same invariant as the badges/Pulse work."""
+        self.connection.status = 'FUNDED_PENDING'
+        self.connection.save(update_fields=['status'])
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('matchmaking:deal_workspace', args=[self.connection.id]))
+        self.assertEqual(response.status_code, 200)
+        activity_labels = [e['label'] for e in response.context['activity']]
+        self.assertNotIn('Verified Funded', activity_labels)
+
+    def test_confirmed_funded_renders_as_verified_outcome(self):
+        self.connection.status = 'FUNDED'
+        self.connection.funded_at = timezone.now()
+        self.connection.save(update_fields=['status', 'funded_at'])
+        self.client.force_login(self.founder_user)
+        response = self.client.get(reverse('matchmaking:deal_workspace', args=[self.connection.id]))
+        activity_labels = [e['label'] for e in response.context['activity']]
+        self.assertIn('Verified Funded', activity_labels)
+        self.assertContains(response, 'Verified Funded')
+
+    def test_zelda_summary_never_triggers_generation(self):
+        """Read-only: loading the workspace must not call into the memo
+        generation pipeline, only read whatever already exists."""
+        with mock.patch('zelda_api.intelligence_pipeline.ZeldaIntelligencePipelineV2._generate_memo') as mock_generate:
+            self.client.force_login(self.founder_user)
+            response = self.client.get(reverse('matchmaking:deal_workspace', args=[self.connection.id]))
+            self.assertEqual(response.status_code, 200)
+            mock_generate.assert_not_called()
+
+    def test_workspace_document_list_never_exposes_a_direct_download_link(self):
+        """Existing Data Room permissions stay authoritative — the workspace's
+        document summary shows titles only (same as the full Data Room's
+        title-visibility model), never a raw serve/download link that would
+        bypass DataRoomAccessRequest approval."""
+        from .models import DataRoomDocument
+        DataRoomDocument.objects.create(
+            founder=self.founder, label='Sensitive Cap Table', category='CAP_TABLE', visibility='NDA_REQUIRED',
+            file=SimpleUploadedFile('cap.csv', b'a,b,c', content_type='text/csv'),
+        )
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('matchmaking:deal_workspace', args=[self.connection.id]))
+        self.assertContains(response, 'Sensitive Cap Table')
+        self.assertNotContains(response, '/data-room/document/')
+
+    def test_a_different_investors_workspace_shows_isolated_activity(self):
+        """End-to-end version of DealActivityTimelineTests' isolation
+        guarantee — Investor B's rendered workspace for the same founder
+        must not show Investor A's document-view activity."""
+        from .models import DataRoomDocument, DataRoomDocumentView
+        document = DataRoomDocument.objects.create(
+            founder=self.founder, label='Financials', category='FINANCIALS', visibility='MATCH_ONLY',
+            file=SimpleUploadedFile('fin.csv', b'a,b,c', content_type='text/csv'),
+        )
+        DataRoomDocumentView.objects.create(document=document, viewer=self.investor_user)
+
+        other_investor_user = User.objects.create_user('dwv_investor2', password='x')
+        other_investor = InvestorApplication.objects.create(
+            user=other_investor_user, full_name='I2', company_name='DWVFund2', email='dwvi2@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        other_connection = Connection.objects.create(founder=self.founder, investor=other_investor, status='ACCEPTED', initiated_by='INVESTOR')
+
+        self.client.force_login(self.investor_user)
+        my_response = self.client.get(reverse('matchmaking:deal_workspace', args=[self.connection.id]))
+        self.assertContains(my_response, 'Investor viewed &quot;Financials&quot;')
+
+        self.client.force_login(other_investor_user)
+        other_response = self.client.get(reverse('matchmaking:deal_workspace', args=[other_connection.id]))
+        self.assertNotContains(other_response, 'Investor viewed &quot;Financials&quot;')
+
+    def test_chat_channel_id_matches_the_js_deal_room_scheme(self):
+        """Must exactly match StreamChatController.createDealRoom()'s
+        `deal_${members[0]}_${members[1]}` — members sorted as strings
+        (lexicographic, same as JS's default Array.sort())."""
+        self.client.force_login(self.founder_user)
+        response = self.client.get(reverse('matchmaking:deal_workspace', args=[self.connection.id]))
+        expected_members = sorted([str(self.founder_user.id), str(self.investor_user.id)])
+        self.assertEqual(response.context['chat_channel_id'], f"deal_{expected_members[0]}_{expected_members[1]}")
+
+    def test_zelda_summary_with_no_reports_yet(self):
+        self.client.force_login(self.founder_user)
+        response = self.client.get(reverse('matchmaking:deal_workspace', args=[self.connection.id]))
+        summary = response.context['zelda_summary']
+        self.assertIsNone(summary['latest_memo'])
+        self.assertIsNone(summary['latest_truth_delta'])
+        self.assertEqual(summary['completion_percentage'], self.founder.completion_percentage)
+        self.assertContains(response, 'No Investment Memo generated yet.')
+        self.assertContains(response, 'No Truth Delta verification run yet.')
+
+    def test_zelda_summary_reflects_latest_memo_and_truth_delta(self):
+        from zelda_api.vector_models import DocumentSource, IntelligenceMemo
+        from zelda_api.truth_delta_models import TruthDeltaReport
+
+        doc = DocumentSource.objects.create(
+            uploaded_by=self.founder_user, filename='deck.pdf', source_entity='DWVCo', document_type='pitch_deck',
+        )
+        IntelligenceMemo.objects.create(
+            document=doc, executive_summary='x', investment_thesis='x', recommendation='INVEST',
+        )
+        TruthDeltaReport.objects.create(document=doc, overall_truth_score=88.0, credibility_risk='low')
+
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('matchmaking:deal_workspace', args=[self.connection.id]))
+        summary = response.context['zelda_summary']
+        self.assertEqual(summary['latest_memo'].recommendation, 'INVEST')
+        self.assertEqual(summary['latest_truth_delta'].overall_truth_score, 88.0)
+        self.assertContains(response, 'Invest')
+        self.assertContains(response, '88')
+
+    def test_data_room_documents_shown(self):
+        from .models import DataRoomDocument
+        DataRoomDocument.objects.create(
+            founder=self.founder, label='Cap Table', category='CAP_TABLE',
+            file=SimpleUploadedFile('cap.csv', b'a,b,c', content_type='text/csv'),
+        )
+        self.client.force_login(self.founder_user)
+        response = self.client.get(reverse('matchmaking:deal_workspace', args=[self.connection.id]))
+        self.assertContains(response, 'Cap Table')
+
+    def test_funded_investor_reaches_the_deal_room_but_loses_data_room_access(self):
+        """
+        Security/authorization hardening: proves BOTH sides of the boundary
+        between the workspace's own gate (can_view_deal_workspace —
+        deliberately broad, admits FUNDED_PENDING/FUNDED so a deal's Deal
+        Room stays reachable to review history after it closes) and the
+        Data Room's own, narrower gate (can_view_data_room — an investor
+        loses access the instant status leaves exactly 'ACCEPTED').
+
+        Negative side: once FUNDED, this investor must see neither the
+        document itself nor its corresponding 'document'-category
+        activity events (upload/view/request/decision) — those disclose
+        Data Room titles just as much as the document-list panel does.
+
+        Positive side: 'relationship' and 'verified_outcome' events
+        (Connection accepted, Verified Funded) are NOT Data Room
+        information at all and must remain visible regardless — the fix
+        must not overcorrect into hiding the whole timeline.
+
+        Checked at the rendered-HTML level, not just via response.context,
+        since context assertions alone wouldn't catch a template that
+        ignores data_room_accessible and renders the document list anyway.
+        """
+        from .models import DataRoomDocument, can_view_data_room
+        document = DataRoomDocument.objects.create(
+            founder=self.founder, label='Cap Table', category='CAP_TABLE',
+            file=SimpleUploadedFile('cap.csv', b'a,b,c', content_type='text/csv'),
+        )
+        from .models import DataRoomDocumentView
+        DataRoomDocumentView.objects.create(document=document, viewer=self.investor_user)
+
+        self.connection.accepted_at = timezone.now() - timedelta(days=10)
+        self.connection.status = 'FUNDED'
+        self.connection.funded_at = timezone.now()
+        self.connection.save(update_fields=['accepted_at', 'status', 'funded_at'])
+        self.assertFalse(can_view_data_room(self.investor_user, self.founder))  # sanity: the real gate really is stricter here
+
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('matchmaking:deal_workspace', args=[self.connection.id]))
+        self.assertEqual(response.status_code, 200)  # still reaches the Deal Room itself
+
+        activity_categories = {e['label']: e['category'] for e in response.context['activity']}
+        self.assertNotIn('Founder uploaded "Cap Table"', activity_categories)
+        self.assertNotIn('Investor viewed "Cap Table"', activity_categories)
+
+        # Negative side — Data Room information withheld, at the HTML level.
+        self.assertFalse(response.context['data_room_accessible'])
+        self.assertEqual(response.context['documents'], [])
+        self.assertNotContains(response, 'Cap Table')
+        self.assertNotContains(response, 'Full Data Room')
+        self.assertContains(response, 'Data Room access is limited to active accepted connections.')
+
+        # Positive side — non-Data-Room events still render, at the HTML level.
+        self.assertContains(response, 'Connection accepted')
+        self.assertContains(response, 'Verified Funded')
+
+        # The founder, meanwhile, always retains Data Room access
+        # regardless of status (can_view_data_room grants the owner
+        # unconditionally) — same shared template, correctly divergent
+        # authorization per viewer.
+        self.client.force_login(self.founder_user)
+        founder_response = self.client.get(reverse('matchmaking:deal_workspace', args=[self.connection.id]))
+        self.assertTrue(founder_response.context['data_room_accessible'])
+        self.assertContains(founder_response, 'Cap Table')
+        self.assertContains(founder_response, 'Founder uploaded &quot;Cap Table&quot;')
+
+
+class DealActivityTimelineTests(TestCase):
+    """
+    matchmaking.deal_activity.get_deal_activity_timeline — every event must
+    be provably scoped to THIS founder+investor relationship, not merely
+    "something happened involving this founder." See that module's
+    docstring: a document *upload* is a founder-side broadcast (fair to
+    show to any connected investor), but a document *view* or request
+    must name this exact investor on the underlying row.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('dat_founder', password='x')
+        self.founder = Application.objects.create(
+            user=self.founder_user, company_name='DATCo', founder_name='F', email='datf@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        self.investor_user = User.objects.create_user('dat_investor', password='x')
+        self.investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='I', company_name='DATFund', email='dati@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.connection = Connection.objects.create(
+            founder=self.founder, investor=self.investor, status='ACCEPTED', initiated_by='INVESTOR',
+        )
+        self.other_investor_user = User.objects.create_user('dat_investor2', password='x')
+        self.other_investor = InvestorApplication.objects.create(
+            user=self.other_investor_user, full_name='I2', company_name='DATFund2', email='dati2@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        Connection.objects.create(founder=self.founder, investor=self.other_investor, status='ACCEPTED', initiated_by='INVESTOR')
+
+    def test_empty_relationship_has_no_events(self):
+        from .deal_activity import get_deal_activity_timeline
+        self.assertEqual(get_deal_activity_timeline(self.connection), [])
+
+    def test_connection_accepted_event_uses_accepted_at_not_updated_at(self):
+        """Regression guard: updated_at drifts (Deal Pulse notes/attention
+        edits touch it), so this event must come from the dedicated field."""
+        from .deal_activity import get_deal_activity_timeline
+        accepted_time = timezone.now() - timedelta(days=3)
+        self.connection.accepted_at = accepted_time
+        self.connection.notes = 'edited after acceptance'
+        self.connection.save()  # bumps updated_at well past accepted_time
+        self.assertNotEqual(self.connection.updated_at, accepted_time)
+
+        events = get_deal_activity_timeline(self.connection)
+        accepted_events = [e for e in events if e['label'] == 'Connection accepted']
+        self.assertEqual(len(accepted_events), 1)
+        self.assertEqual(accepted_events[0]['timestamp'], accepted_time)
+
+    def test_verified_funded_event_only_appears_once_actually_funded(self):
+        from .deal_activity import get_deal_activity_timeline
+        events = get_deal_activity_timeline(self.connection)
+        self.assertFalse(any(e['label'] == 'Verified Funded' for e in events))
+
+        self.connection.status = 'FUNDED'
+        self.connection.funded_at = timezone.now()
+        self.connection.save()
+        events = get_deal_activity_timeline(self.connection)
+        self.assertTrue(any(e['label'] == 'Verified Funded' for e in events))
+
+    def test_document_upload_appears_for_any_connected_investor(self):
+        from .models import DataRoomDocument
+        from .deal_activity import get_deal_activity_timeline
+        DataRoomDocument.objects.create(
+            founder=self.founder, label='Financials', category='FINANCIALS',
+            file=SimpleUploadedFile('fin.csv', b'a,b,c', content_type='text/csv'),
+        )
+        other_connection = Connection.objects.get(investor=self.other_investor, founder=self.founder)
+        for conn in (self.connection, other_connection):
+            events = get_deal_activity_timeline(conn)
+            self.assertTrue(any('uploaded "Financials"' in e['label'] for e in events))
+
+    def test_document_view_is_isolated_to_the_viewing_investor(self):
+        """The exact leak the feature spec warned about: Investor A viewing
+        a document must never appear in Investor B's deal timeline."""
+        from .models import DataRoomDocument, DataRoomDocumentView
+        from .deal_activity import get_deal_activity_timeline
+        document = DataRoomDocument.objects.create(
+            founder=self.founder, label='Financials', category='FINANCIALS', visibility='MATCH_ONLY',
+            file=SimpleUploadedFile('fin.csv', b'a,b,c', content_type='text/csv'),
+        )
+        DataRoomDocumentView.objects.create(document=document, viewer=self.investor_user)
+
+        my_events = get_deal_activity_timeline(self.connection)
+        self.assertTrue(any('Investor viewed "Financials"' in e['label'] for e in my_events))
+
+        other_connection = Connection.objects.get(investor=self.other_investor, founder=self.founder)
+        other_events = get_deal_activity_timeline(other_connection)
+        self.assertFalse(any('viewed "Financials"' in e['label'] for e in other_events))
+
+    def test_access_request_is_isolated_to_the_requesting_investor(self):
+        from .models import DataRoomDocument, DataRoomAccessRequest
+        from .deal_activity import get_deal_activity_timeline
+        document = DataRoomDocument.objects.create(
+            founder=self.founder, label='Cap Table', category='CAP_TABLE',
+            file=SimpleUploadedFile('cap.csv', b'a,b,c', content_type='text/csv'),
+        )
+        DataRoomAccessRequest.objects.create(document=document, investor=self.investor, status='APPROVED', decided_at=timezone.now())
+
+        my_events = get_deal_activity_timeline(self.connection)
+        self.assertTrue(any('requested "Cap Table"' in e['label'] for e in my_events))
+        self.assertTrue(any('approved access to "Cap Table"' in e['label'] for e in my_events))
+
+        # The document's mere existence ("Founder uploaded Cap Table") is
+        # fair to show to any connected investor — only the *request* and
+        # its *decision* are specific to this investor and must not leak.
+        other_connection = Connection.objects.get(investor=self.other_investor, founder=self.founder)
+        other_events = get_deal_activity_timeline(other_connection)
+        self.assertFalse(any('requested "Cap Table"' in e['label'] for e in other_events))
+        self.assertFalse(any('approved access to "Cap Table"' in e['label'] for e in other_events))
+
+    def test_information_request_is_isolated_to_the_requesting_investor(self):
+        from .models import DataRoomInformationRequest
+        from .deal_activity import get_deal_activity_timeline
+        DataRoomInformationRequest.objects.create(founder=self.founder, investor=self.investor, category='CONTRACTS')
+
+        my_events = get_deal_activity_timeline(self.connection)
+        self.assertTrue(any('requested Contracts' in e['label'] for e in my_events))
+
+        other_connection = Connection.objects.get(investor=self.other_investor, founder=self.founder)
+        other_events = get_deal_activity_timeline(other_connection)
+        self.assertFalse(any('Contracts' in e['label'] for e in other_events))
+
+    def test_pitch_deck_view_is_isolated_to_the_viewing_investor(self):
+        from .models import PitchDeckViewSession
+        from .deal_activity import get_deal_activity_timeline
+        PitchDeckViewSession.objects.create(founder=self.founder, viewer=self.investor_user, client_session_id='abc123')
+
+        my_events = get_deal_activity_timeline(self.connection)
+        self.assertTrue(any(e['label'] == 'Investor viewed the pitch deck' for e in my_events))
+
+        other_connection = Connection.objects.get(investor=self.other_investor, founder=self.founder)
+        other_events = get_deal_activity_timeline(other_connection)
+        self.assertFalse(any(e['label'] == 'Investor viewed the pitch deck' for e in other_events))
+
+    def test_pending_access_request_does_not_produce_a_decision_event(self):
+        from .models import DataRoomDocument, DataRoomAccessRequest
+        from .deal_activity import get_deal_activity_timeline
+        document = DataRoomDocument.objects.create(
+            founder=self.founder, label='Cap Table', category='CAP_TABLE',
+            file=SimpleUploadedFile('cap.csv', b'a,b,c', content_type='text/csv'),
+        )
+        DataRoomAccessRequest.objects.create(document=document, investor=self.investor, status='PENDING')
+
+        events = get_deal_activity_timeline(self.connection)
+        self.assertTrue(any('requested "Cap Table"' in e['label'] for e in events))
+        self.assertFalse(any('approved' in e['label'] or 'denied' in e['label'] for e in events))
+
+    def test_events_are_returned_newest_first(self):
+        from .models import DataRoomDocument
+        from .deal_activity import get_deal_activity_timeline
+        self.connection.accepted_at = timezone.now() - timedelta(days=5)
+        self.connection.save(update_fields=['accepted_at'])
+        DataRoomDocument.objects.create(
+            founder=self.founder, label='Newer Doc', category='OTHER',
+            file=SimpleUploadedFile('newer.pdf', b'x', content_type='application/pdf'),
+        )
+        events = get_deal_activity_timeline(self.connection)
+        timestamps = [e['timestamp'] for e in events]
+        self.assertEqual(timestamps, sorted(timestamps, reverse=True))
+        self.assertEqual(events[0]['label'], 'Founder uploaded "Newer Doc"')
+
+    def test_historical_row_with_terminal_status_but_null_timestamp_fabricates_nothing(self):
+        """Simulates data from before accepted_at/funded_at existed: a
+        Connection can be ACCEPTED or even FUNDED with no timestamp on
+        either field (Connection.objects.create() below never goes through
+        connection_action_view, exactly like a pre-migration row wouldn't
+        have). Both lifecycle events must be silently absent — never
+        backfilled from created_at/updated_at, which is not the same fact."""
+        from .deal_activity import get_deal_activity_timeline
+        historical = Connection.objects.create(
+            founder=self.founder,
+            investor=InvestorApplication.objects.create(
+                user=User.objects.create_user('dat_historical_investor', password='x'),
+                full_name='I', company_name='HistoricalFund', email='hist@t.com',
+                investment_focus='SaaS', investment_stage='Seed',
+            ),
+            status='FUNDED', initiated_by='INVESTOR',
+        )
+        self.assertIsNone(historical.accepted_at)
+        self.assertIsNone(historical.funded_at)
+        events = get_deal_activity_timeline(historical)
+        self.assertEqual(events, [])
+
+
+class AcquisitionDealWorkspaceAccessTests(TestCase):
+    """M&A mirror of DealWorkspaceAccessTests — can_view_acquisition_deal_workspace."""
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.seller_user = User.objects.create_user('adw_seller', password='x')
+        self.seller = SellerApplication.objects.create(
+            user=self.seller_user, company_name='ADWCo', seller_name='S', email='adws@t.com',
+            description='test', industry='SaaS',
+        )
+        self.buyer_user = User.objects.create_user('adw_buyer', password='x')
+        self.buyer = BuyerApplication.objects.create(
+            user=self.buyer_user, full_name='B', company_name='ADWAcquirer', email='adwb@t.com',
+        )
+        self.staff_user = User.objects.create_user('adw_staff', password='x', is_staff=True)
+        self.stranger_user = User.objects.create_user('adw_stranger', password='x')
+
+    def test_pending_connection_has_no_workspace(self):
+        from .models import AcquisitionConnection, can_view_acquisition_deal_workspace
+        conn = AcquisitionConnection.objects.create(seller=self.seller, buyer=self.buyer, status='pending', initiated_by='BUYER')
+        self.assertFalse(can_view_acquisition_deal_workspace(self.seller_user, conn))
+        self.assertFalse(can_view_acquisition_deal_workspace(self.buyer_user, conn))
+
+    def test_declined_connection_has_no_workspace(self):
+        from .models import AcquisitionConnection, can_view_acquisition_deal_workspace
+        conn = AcquisitionConnection.objects.create(seller=self.seller, buyer=self.buyer, status='DECLINED', initiated_by='BUYER')
+        self.assertFalse(can_view_acquisition_deal_workspace(self.seller_user, conn))
+
+    def test_accepted_closed_pending_and_closed_all_have_a_workspace(self):
+        from .models import AcquisitionConnection, can_view_acquisition_deal_workspace
+        for status in ('ACCEPTED', 'CLOSED_PENDING', 'CLOSED'):
+            buyer_user = User.objects.create_user(f'adw_buyer_{status}', password='x')
+            buyer = BuyerApplication.objects.create(
+                user=buyer_user, full_name='B', company_name=f'Acquirer{status}', email=f'{status}@t.com',
+            )
+            conn = AcquisitionConnection.objects.create(seller=self.seller, buyer=buyer, status=status, initiated_by='BUYER')
+            self.assertTrue(can_view_acquisition_deal_workspace(self.seller_user, conn), status)
+            self.assertTrue(can_view_acquisition_deal_workspace(buyer_user, conn), status)
+
+    def test_only_the_two_named_parties_or_staff_can_view(self):
+        from .models import AcquisitionConnection, can_view_acquisition_deal_workspace
+        conn = AcquisitionConnection.objects.create(seller=self.seller, buyer=self.buyer, status='ACCEPTED', initiated_by='BUYER')
+        self.assertTrue(can_view_acquisition_deal_workspace(self.seller_user, conn))
+        self.assertTrue(can_view_acquisition_deal_workspace(self.buyer_user, conn))
+        self.assertTrue(can_view_acquisition_deal_workspace(self.staff_user, conn))
+        self.assertFalse(can_view_acquisition_deal_workspace(self.stranger_user, conn))
+
+    def test_a_different_buyers_workspace_is_not_accessible(self):
+        """Seller A's workspace with Buyer 1 isn't reachable by Buyer 2, even
+        though Buyer 2 also has their own ACCEPTED connection to Seller A."""
+        from .models import AcquisitionConnection, can_view_acquisition_deal_workspace
+        conn_1 = AcquisitionConnection.objects.create(seller=self.seller, buyer=self.buyer, status='ACCEPTED', initiated_by='BUYER')
+        other_buyer_user = User.objects.create_user('adw_buyer2', password='x')
+        other_buyer = BuyerApplication.objects.create(user=other_buyer_user, full_name='B2', company_name='ADWAcquirer2', email='adwb2@t.com')
+        AcquisitionConnection.objects.create(seller=self.seller, buyer=other_buyer, status='ACCEPTED', initiated_by='BUYER')
+        self.assertFalse(can_view_acquisition_deal_workspace(other_buyer_user, conn_1))
+
+    def test_anonymous_user_denied(self):
+        from django.contrib.auth.models import AnonymousUser
+        from .models import AcquisitionConnection, can_view_acquisition_deal_workspace
+        conn = AcquisitionConnection.objects.create(seller=self.seller, buyer=self.buyer, status='ACCEPTED', initiated_by='BUYER')
+        self.assertFalse(can_view_acquisition_deal_workspace(AnonymousUser(), conn))
+
+
+@override_settings(MEDIA_ROOT=tempfile.mkdtemp())
+class AcquisitionDealWorkspaceViewTests(TestCase):
+    """
+    M&A mirror of DealWorkspaceViewTests — same shared
+    templates/matchmaking/deal_workspace.html, sourced from
+    AcquisitionConnection/seller/buyer instead of Connection/founder/
+    investor. The one deliberate asymmetry: data_room_exists is False
+    here (no seller-side Data Room exists — see
+    acquisition_deal_workspace_view's docstring), so those assertions
+    check for the honest "not available" message instead of a document
+    list.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.seller_user = User.objects.create_user('adwv_seller', password='x')
+        self.seller = SellerApplication.objects.create(
+            user=self.seller_user, company_name='ADWVCo', seller_name='S', email='adwvs@t.com',
+            description='test', industry='SaaS',
+        )
+        self.buyer_user = User.objects.create_user('adwv_buyer', password='x')
+        self.buyer = BuyerApplication.objects.create(
+            user=self.buyer_user, full_name='B', company_name='ADWVAcquirer', email='adwvb@t.com',
+        )
+        self.connection = AcquisitionConnection.objects.create(
+            seller=self.seller, buyer=self.buyer, status='ACCEPTED', initiated_by='BUYER',
+        )
+        self.stranger_user = User.objects.create_user('adwv_stranger', password='x')
+
+    def test_unauthenticated_redirects_to_login(self):
+        response = self.client.get(reverse('matchmaking:acquisition_deal_workspace', args=[self.connection.id]))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/login', response.url)
+
+    def test_stranger_gets_404(self):
+        self.client.force_login(self.stranger_user)
+        response = self.client.get(reverse('matchmaking:acquisition_deal_workspace', args=[self.connection.id]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_pending_connection_gets_404_at_the_view(self):
+        pending_conn = AcquisitionConnection.objects.create(
+            seller=self.seller,
+            buyer=BuyerApplication.objects.create(
+                user=User.objects.create_user('adwv_pending_buyer', password='x'),
+                full_name='B', company_name='PendingAcquirer', email='pendingacq@t.com',
+            ),
+            status='pending', initiated_by='BUYER',
+        )
+        self.client.force_login(pending_conn.buyer.user)
+        response = self.client.get(reverse('matchmaking:acquisition_deal_workspace', args=[pending_conn.id]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_seller_and_buyer_both_reach_the_workspace(self):
+        self.client.force_login(self.seller_user)
+        self.assertEqual(self.client.get(reverse('matchmaking:acquisition_deal_workspace', args=[self.connection.id])).status_code, 200)
+        self.client.force_login(self.buyer_user)
+        self.assertEqual(self.client.get(reverse('matchmaking:acquisition_deal_workspace', args=[self.connection.id])).status_code, 200)
+
+    def test_correct_seller_buyer_pair_resolved_in_context(self):
+        self.client.force_login(self.seller_user)
+        response = self.client.get(reverse('matchmaking:acquisition_deal_workspace', args=[self.connection.id]))
+        self.assertEqual(response.context['deal_type'], 'acquisition')
+        self.assertEqual(response.context['company_application'].id, self.seller.id)
+        self.assertEqual(response.context['counterparty_application'].id, self.buyer.id)
+        self.assertEqual(response.context['connection'].id, self.connection.id)
+
+    def test_chat_channel_id_matches_the_js_deal_room_scheme(self):
+        self.client.force_login(self.seller_user)
+        response = self.client.get(reverse('matchmaking:acquisition_deal_workspace', args=[self.connection.id]))
+        expected_members = sorted([str(self.seller_user.id), str(self.buyer_user.id)])
+        self.assertEqual(response.context['chat_channel_id'], f"deal_{expected_members[0]}_{expected_members[1]}")
+
+    def test_closed_pending_does_not_render_as_verified_sold(self):
+        self.connection.status = 'CLOSED_PENDING'
+        self.connection.save(update_fields=['status'])
+        self.client.force_login(self.buyer_user)
+        response = self.client.get(reverse('matchmaking:acquisition_deal_workspace', args=[self.connection.id]))
+        self.assertFalse(response.context['is_verified_outcome'])
+        self.assertNotContains(response, 'Verified Sold')
+
+    def test_confirmed_closed_renders_as_verified_outcome(self):
+        self.connection.status = 'CLOSED'
+        self.connection.closed_at = timezone.now()
+        self.connection.save(update_fields=['status', 'closed_at'])
+        self.client.force_login(self.seller_user)
+        response = self.client.get(reverse('matchmaking:acquisition_deal_workspace', args=[self.connection.id]))
+        self.assertTrue(response.context['is_verified_outcome'])
+        self.assertContains(response, 'Verified Sold')
+
+    def test_zelda_summary_uses_seller_completion_percentage_and_never_generates(self):
+        """SellerApplication has no .completion_percentage property of its
+        own (unlike Application) — this proves the generic helper handles
+        that, and that loading the workspace still never triggers generation."""
+        from matchmaking.insights_engine import _completion_percentage
+        with mock.patch('zelda_api.intelligence_pipeline.ZeldaIntelligencePipelineV2._generate_memo') as mock_generate:
+            self.client.force_login(self.seller_user)
+            response = self.client.get(reverse('matchmaking:acquisition_deal_workspace', args=[self.connection.id]))
+            self.assertEqual(response.status_code, 200)
+            mock_generate.assert_not_called()
+        self.assertEqual(response.context['zelda_summary']['completion_percentage'], _completion_percentage(self.seller))
+        self.assertContains(response, 'No Investment Memo generated yet.')
+        self.assertContains(response, 'No Truth Delta verification run yet.')
+
+    def test_data_room_honestly_reports_unavailable_for_acquisition_deals(self):
+        """The one deliberate asymmetry: no seller-side Data Room exists,
+        so this must say so rather than silently show an empty, working-
+        looking panel or (worse) a broken link."""
+        self.client.force_login(self.buyer_user)
+        response = self.client.get(reverse('matchmaking:acquisition_deal_workspace', args=[self.connection.id]))
+        self.assertFalse(response.context['data_room_exists'])
+        self.assertFalse(response.context['data_room_accessible'])
+        self.assertContains(response, "Document sharing for this deal type isn't available yet.")
+        self.assertNotContains(response, '/data-room/document/')
+        self.assertNotContains(response, 'Open full Data Room')
+
+    def test_a_different_buyers_workspace_shows_isolated_activity(self):
+        """End-to-end version of the M&A isolation guarantee — Buyer B's
+        rendered workspace for the same seller must not show Buyer A's
+        interest-event activity."""
+        log_buyer_event(self.buyer_user, self.seller, 'memo_view')
+
+        other_buyer_user = User.objects.create_user('adwv_buyer2', password='x')
+        other_buyer = BuyerApplication.objects.create(user=other_buyer_user, full_name='B2', company_name='ADWVAcquirer2', email='adwvb2@t.com')
+        other_connection = AcquisitionConnection.objects.create(seller=self.seller, buyer=other_buyer, status='ACCEPTED', initiated_by='BUYER')
+
+        self.client.force_login(self.buyer_user)
+        my_response = self.client.get(reverse('matchmaking:acquisition_deal_workspace', args=[self.connection.id]))
+        self.assertContains(my_response, 'Buyer viewed the Intelligence Memo')
+
+        self.client.force_login(other_buyer_user)
+        other_response = self.client.get(reverse('matchmaking:acquisition_deal_workspace', args=[other_connection.id]))
+        self.assertNotContains(other_response, 'Buyer viewed the Intelligence Memo')
+
+
+class AcquisitionDealActivityTimelineTests(TestCase):
+    """
+    M&A mirror of DealActivityTimelineTests. Deliberately narrower — see
+    get_acquisition_deal_activity_timeline's docstring: there is no
+    seller-side Data Room, so only the two AcquisitionConnection lifecycle
+    timestamps and AcquisitionInterestEvent (which does carry real
+    buyer+seller attribution) are used. Nothing here is inferred from
+    seller-only or buyer-only context.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.seller_user = User.objects.create_user('adt_seller', password='x')
+        self.seller = SellerApplication.objects.create(
+            user=self.seller_user, company_name='ADTCo', seller_name='S', email='adts@t.com',
+            description='test', industry='SaaS',
+        )
+        self.buyer_user = User.objects.create_user('adt_buyer', password='x')
+        self.buyer = BuyerApplication.objects.create(
+            user=self.buyer_user, full_name='B', company_name='ADTAcquirer', email='adtb@t.com',
+        )
+        self.connection = AcquisitionConnection.objects.create(
+            seller=self.seller, buyer=self.buyer, status='ACCEPTED', initiated_by='BUYER',
+        )
+        self.other_buyer_user = User.objects.create_user('adt_buyer2', password='x')
+        self.other_buyer = BuyerApplication.objects.create(
+            user=self.other_buyer_user, full_name='B2', company_name='ADTAcquirer2', email='adtb2@t.com',
+        )
+        AcquisitionConnection.objects.create(seller=self.seller, buyer=self.other_buyer, status='ACCEPTED', initiated_by='BUYER')
+
+    def test_empty_relationship_has_no_events(self):
+        from .deal_activity import get_acquisition_deal_activity_timeline
+        self.assertEqual(get_acquisition_deal_activity_timeline(self.connection), [])
+
+    def test_connection_accepted_event_uses_accepted_at_not_updated_at(self):
+        from .deal_activity import get_acquisition_deal_activity_timeline
+        accepted_time = timezone.now() - timedelta(days=3)
+        self.connection.accepted_at = accepted_time
+        self.connection.notes = 'edited after acceptance'
+        self.connection.save()  # bumps updated_at well past accepted_time
+        self.assertNotEqual(self.connection.updated_at, accepted_time)
+
+        events = get_acquisition_deal_activity_timeline(self.connection)
+        accepted_events = [e for e in events if e['label'] == 'Connection accepted']
+        self.assertEqual(len(accepted_events), 1)
+        self.assertEqual(accepted_events[0]['timestamp'], accepted_time)
+
+    def test_verified_sold_only_appears_once_actually_closed(self):
+        from .deal_activity import get_acquisition_deal_activity_timeline
+        events = get_acquisition_deal_activity_timeline(self.connection)
+        self.assertFalse(any(e['label'] == 'Verified Sold' for e in events))
+
+        self.connection.status = 'CLOSED'
+        self.connection.closed_at = timezone.now()
+        self.connection.save()
+        events = get_acquisition_deal_activity_timeline(self.connection)
+        self.assertTrue(any(e['label'] == 'Verified Sold' for e in events))
+
+    def test_closed_pending_does_not_render_as_verified_sold(self):
+        """A seller's unconfirmed claim must never read as verified here —
+        same invariant as the badges/Pulse work this session."""
+        from .deal_activity import get_acquisition_deal_activity_timeline
+        self.connection.status = 'CLOSED_PENDING'
+        self.connection.save(update_fields=['status'])
+        events = get_acquisition_deal_activity_timeline(self.connection)
+        self.assertFalse(any(e['label'] == 'Verified Sold' for e in events))
+
+    def test_historical_row_with_terminal_status_but_null_timestamp_fabricates_nothing(self):
+        from .deal_activity import get_acquisition_deal_activity_timeline
+        historical = AcquisitionConnection.objects.create(
+            seller=self.seller,
+            buyer=BuyerApplication.objects.create(
+                user=User.objects.create_user('adt_historical_buyer', password='x'),
+                full_name='B', company_name='HistoricalAcquirer', email='histacq@t.com',
+            ),
+            status='CLOSED', initiated_by='BUYER',
+        )
+        self.assertIsNone(historical.accepted_at)
+        self.assertIsNone(historical.closed_at)
+        events = get_acquisition_deal_activity_timeline(historical)
+        self.assertEqual(events, [])
+
+    def test_interest_event_is_isolated_to_the_specific_buyer(self):
+        """The M&A equivalent of the most important isolation test: Buyer A's
+        interest events must never appear in Buyer B's deal timeline for
+        the same seller."""
+        from .models import log_buyer_event
+        from .deal_activity import get_acquisition_deal_activity_timeline
+        log_buyer_event(self.buyer_user, self.seller, 'memo_view')
+
+        my_events = get_acquisition_deal_activity_timeline(self.connection)
+        self.assertTrue(any(e['label'] == 'Buyer viewed the Intelligence Memo' for e in my_events))
+
+        other_connection = AcquisitionConnection.objects.get(seller=self.seller, buyer=self.other_buyer)
+        other_events = get_acquisition_deal_activity_timeline(other_connection)
+        self.assertFalse(any(e['label'] == 'Buyer viewed the Intelligence Memo' for e in other_events))
+
+    def test_closed_event_type_from_interest_log_is_excluded_to_avoid_double_counting(self):
+        """AcquisitionInterestEvent also logs a 'closed' event type
+        (log_buyer_event(..., 'closed')) — excluded here because
+        AcquisitionConnection.closed_at is already the authoritative
+        source for that exact fact; including both would show it twice."""
+        from .models import log_buyer_event
+        from .deal_activity import get_acquisition_deal_activity_timeline
+        log_buyer_event(self.buyer_user, self.seller, 'closed')
+        events = get_acquisition_deal_activity_timeline(self.connection)
+        self.assertEqual(events, [])
+
+    def test_events_are_returned_newest_first(self):
+        from .models import log_buyer_event
+        from .deal_activity import get_acquisition_deal_activity_timeline
+        self.connection.accepted_at = timezone.now() - timedelta(days=5)
+        self.connection.save(update_fields=['accepted_at'])
+        log_buyer_event(self.buyer_user, self.seller, 'view')
+
+        events = get_acquisition_deal_activity_timeline(self.connection)
+        timestamps = [e['timestamp'] for e in events]
+        self.assertEqual(timestamps, sorted(timestamps, reverse=True))
+        self.assertEqual(events[0]['label'], 'Buyer viewed the listing')
+
+
+class VerifiedDealHelperTests(TestCase):
+    """
+    Canonical has_verified_funding/verified_funding_count (Application,
+    InvestorApplication) and has_verified_sale/verified_sale_count
+    (SellerApplication, BuyerApplication) — the single source of truth
+    every badge/profile/pulse surface should read from, rather than each
+    re-deriving its own filter. Only a counterparty-confirmed FUNDED/CLOSED
+    status may produce these — never a profile field, claim, or AI
+    inference (see the properties' docstrings in matchmaking/models.py).
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        from .models import Connection, AcquisitionConnection
+        self.Connection = Connection
+        self.AcquisitionConnection = AcquisitionConnection
+
+        self.founder_user = User.objects.create_user('vd_founder', password='x')
+        self.founder = Application.objects.create(
+            user=self.founder_user, company_name='VDCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        self.investor_user = User.objects.create_user('vd_investor', password='x')
+        self.investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='I', company_name='Fund', email='i@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.seller_user = User.objects.create_user('vd_seller', password='x')
+        self.seller = SellerApplication.objects.create(
+            user=self.seller_user, company_name='VDSellCo', seller_name='S', email='s@t.com',
+            description='test', industry='SaaS',
+        )
+        self.buyer_user = User.objects.create_user('vd_buyer', password='x')
+        self.buyer = BuyerApplication.objects.create(
+            user=self.buyer_user, full_name='B', company_name='VDAcquirer', email='b@t.com',
+        )
+
+    def test_no_deals_means_no_verified_funding_or_sale(self):
+        self.assertFalse(self.founder.has_verified_funding)
+        self.assertEqual(self.founder.verified_funding_count, 0)
+        self.assertFalse(self.investor.has_verified_funding)
+        self.assertFalse(self.seller.has_verified_sale)
+        self.assertFalse(self.buyer.has_verified_sale)
+
+    def test_funded_pending_does_not_count_as_verified(self):
+        """A founder's unconfirmed claim must never inflate these counts."""
+        self.Connection.objects.create(founder=self.founder, investor=self.investor, status='FUNDED_PENDING', initiated_by='FOUNDER')
+        self.assertFalse(self.founder.has_verified_funding)
+        self.assertEqual(self.founder.verified_funding_count, 0)
+        self.assertFalse(self.investor.has_verified_funding)
+
+    def test_funded_connection_counts_for_both_founder_and_investor(self):
+        self.Connection.objects.create(founder=self.founder, investor=self.investor, status='FUNDED', initiated_by='FOUNDER')
+        self.assertTrue(self.founder.has_verified_funding)
+        self.assertEqual(self.founder.verified_funding_count, 1)
+        self.assertTrue(self.investor.has_verified_funding)
+        self.assertEqual(self.investor.verified_funding_count, 1)
+
+    def test_multiple_funded_connections_increment_the_count(self):
+        second_investor_user = User.objects.create_user('vd_investor2', password='x')
+        second_investor = InvestorApplication.objects.create(
+            user=second_investor_user, full_name='I2', company_name='Fund2', email='i2@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.Connection.objects.create(founder=self.founder, investor=self.investor, status='FUNDED', initiated_by='FOUNDER')
+        self.Connection.objects.create(founder=self.founder, investor=second_investor, status='FUNDED', initiated_by='FOUNDER')
+        self.assertEqual(self.founder.verified_funding_count, 2)
+
+    def test_closed_pending_does_not_count_as_verified_sale(self):
+        self.AcquisitionConnection.objects.create(seller=self.seller, buyer=self.buyer, status='CLOSED_PENDING', initiated_by='SELLER')
+        self.assertFalse(self.seller.has_verified_sale)
+        self.assertFalse(self.buyer.has_verified_sale)
+
+    def test_closed_acquisition_counts_for_both_seller_and_buyer(self):
+        self.AcquisitionConnection.objects.create(seller=self.seller, buyer=self.buyer, status='CLOSED', initiated_by='SELLER')
+        self.assertTrue(self.seller.has_verified_sale)
+        self.assertEqual(self.seller.verified_sale_count, 1)
+        self.assertTrue(self.buyer.has_verified_sale)
+        self.assertEqual(self.buyer.verified_sale_count, 1)
+
+
+class FoundryPulseAcquisitionParityTests(TestCase):
+    """get_foundry_pulse_events() covered Connection/FUNDED but was missing
+    the parallel AcquisitionConnection/CLOSED event — this checks parity."""
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.seller_user = User.objects.create_user('fp_seller', password='x')
+        self.seller = SellerApplication.objects.create(
+            user=self.seller_user, company_name='PulseCo', seller_name='S', email='s@t.com',
+            description='test', industry='SaaS',
+        )
+        self.buyer_user = User.objects.create_user('fp_buyer', password='x')
+        self.buyer = BuyerApplication.objects.create(
+            user=self.buyer_user, full_name='B', company_name='PulseAcquirer', email='b@t.com',
+        )
+
+    def test_closed_acquisition_connection_appears_as_a_deal_was_closed_event(self):
+        from .models import AcquisitionConnection
+        from .views import get_foundry_pulse_events
+        AcquisitionConnection.objects.create(seller=self.seller, buyer=self.buyer, status='CLOSED', initiated_by='SELLER')
+        events = get_foundry_pulse_events()
+        messages = [e['message'] for e in events]
+        self.assertTrue(any('PulseAcquirer' in m and 'PulseCo' in m for m in messages))
+
+    def test_closed_pending_acquisition_connection_is_not_reported_as_closed(self):
+        """A seller's unconfirmed claim shouldn't read as a completed deal on Foundry Pulse."""
+        from .models import AcquisitionConnection
+        from .views import get_foundry_pulse_events
+        AcquisitionConnection.objects.create(seller=self.seller, buyer=self.buyer, status='CLOSED_PENDING', initiated_by='SELLER')
+        events = get_foundry_pulse_events()
+        messages = [e['message'] for e in events]
+        self.assertFalse(any('was closed' in m for m in messages))
+
+
+class FoundryPulseVerifiedWordingTests(TestCase):
+    """
+    get_foundry_pulse_events()'s FUNDED/CLOSED labels now say "Verified
+    Funded"/"Verified Sold" explicitly — presentation only, same event
+    architecture, same statuses (see matchmaking/views.py's
+    connection_labels/acquisition_connection_labels). Gives the feed the
+    same public trust contract as the profile and bulletin-card badges.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        from .models import Connection, AcquisitionConnection
+        self.Connection = Connection
+        self.AcquisitionConnection = AcquisitionConnection
+
+        self.founder_user = User.objects.create_user('fpw_founder', password='x')
+        self.founder = Application.objects.create(
+            user=self.founder_user, company_name='WordingCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        self.investor_user = User.objects.create_user('fpw_investor', password='x')
+        self.investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='I', company_name='WordingFund', email='i@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.seller_user = User.objects.create_user('fpw_seller', password='x')
+        self.seller = SellerApplication.objects.create(
+            user=self.seller_user, company_name='WordingSellCo', seller_name='S', email='s@t.com',
+            description='test', industry='SaaS',
+        )
+        self.buyer_user = User.objects.create_user('fpw_buyer', password='x')
+        self.buyer = BuyerApplication.objects.create(
+            user=self.buyer_user, full_name='B', company_name='WordingAcquirer', email='b@t.com',
+        )
+
+    def test_confirmed_funded_produces_verified_funded_wording(self):
+        from .views import get_foundry_pulse_events
+        self.Connection.objects.create(founder=self.founder, investor=self.investor, status='FUNDED', initiated_by='FOUNDER')
+        messages = [e['message'] for e in get_foundry_pulse_events()]
+        self.assertTrue(any('Verified Funded' in m for m in messages))
+
+    def test_confirmed_closed_produces_verified_sold_wording(self):
+        from .views import get_foundry_pulse_events
+        self.AcquisitionConnection.objects.create(seller=self.seller, buyer=self.buyer, status='CLOSED', initiated_by='SELLER')
+        messages = [e['message'] for e in get_foundry_pulse_events()]
+        self.assertTrue(any('Verified Sold' in m for m in messages))
+
+    def test_funded_pending_cannot_produce_verified_wording(self):
+        """A founder's unconfirmed claim must never read as verified on the feed."""
+        from .views import get_foundry_pulse_events
+        self.Connection.objects.create(founder=self.founder, investor=self.investor, status='FUNDED_PENDING', initiated_by='FOUNDER')
+        messages = [e['message'] for e in get_foundry_pulse_events()]
+        self.assertFalse(any('Verified Funded' in m for m in messages))
+        self.assertFalse(any('Verified Sold' in m for m in messages))
+
+    def test_closed_pending_cannot_produce_verified_wording(self):
+        """A seller's unconfirmed claim must never read as verified on the feed."""
+        from .views import get_foundry_pulse_events
+        self.AcquisitionConnection.objects.create(seller=self.seller, buyer=self.buyer, status='CLOSED_PENDING', initiated_by='SELLER')
+        messages = [e['message'] for e in get_foundry_pulse_events()]
+        self.assertFalse(any('Verified Sold' in m for m in messages))
+        self.assertFalse(any('Verified Funded' in m for m in messages))
+
+    def test_pending_and_accepted_wording_unchanged(self):
+        """This wording pass touched only the FUNDED/CLOSED labels — pending
+        and accepted introductions must still read exactly as before."""
+        from .views import get_foundry_pulse_events
+        self.Connection.objects.create(founder=self.founder, investor=self.investor, status='pending', initiated_by='INVESTOR')
+        self.AcquisitionConnection.objects.create(seller=self.seller, buyer=self.buyer, status='ACCEPTED', initiated_by='BUYER')
+        messages = [e['message'] for e in get_foundry_pulse_events()]
+        self.assertTrue(any(m.startswith('A new introduction was requested') for m in messages))
+        self.assertTrue(any(m.startswith('An introduction was accepted') for m in messages))
+
+    def test_icons_and_event_shape_unchanged(self):
+        """Wording-only change: icon, keys, and timestamp field are untouched."""
+        from .views import get_foundry_pulse_events
+        self.Connection.objects.create(founder=self.founder, investor=self.investor, status='FUNDED', initiated_by='FOUNDER')
+        event = next(e for e in get_foundry_pulse_events() if 'Verified Funded' in e['message'])
+        self.assertEqual(set(event.keys()), {'icon', 'message', 'timestamp'})
+        self.assertEqual(event['icon'], 'bi-trophy-fill')
+
+
+class VerifiedBadgeBulletinBoardTests(TestCase):
+    """Verified Funded/Sold badges on bulletin board cards — same terminal,
+    mutually-confirmed statuses as the profile page badges (see
+    accounts.tests / accounts.views.profile). Must only appear for the
+    genuine FUNDED/CLOSED state, never the self-reported _PENDING one."""
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.investor_user = User.objects.create_user('vb_investor', password='x')
+        self.investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='I', company_name='Fund', email='i@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.founder_user = User.objects.create_user('vb_founder', password='x')
+        self.founder = Application.objects.create(
+            user=self.founder_user, company_name='VerifiedCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed', review_status='APPROVED',
+        )
+        self.buyer_user = User.objects.create_user('vb_buyer', password='x')
+        self.buyer = BuyerApplication.objects.create(
+            user=self.buyer_user, full_name='B', company_name='Acquirer', email='b@t.com',
+        )
+        self.seller_user = User.objects.create_user('vb_seller', password='x')
+        self.seller = SellerApplication.objects.create(
+            user=self.seller_user, company_name='SoldCo', seller_name='S', email='s@t.com',
+            description='test', industry='SaaS', review_status='APPROVED',
+        )
+
+    def test_funded_connection_shows_verified_funded_badge_on_bulletin_board(self):
+        Connection.objects.create(founder=self.founder, investor=self.investor, status='FUNDED', initiated_by='FOUNDER')
+        response = self.client.get(reverse('matchmaking:bulletin_board'))
+        pitches = {p.id: p for p in response.context['pitches']}
+        self.assertTrue(pitches[self.founder.id].has_verified_funded)
+        self.assertContains(response, 'Verified Funded')
+
+    def test_funded_pending_connection_does_not_show_badge(self):
+        Connection.objects.create(founder=self.founder, investor=self.investor, status='FUNDED_PENDING', initiated_by='FOUNDER')
+        response = self.client.get(reverse('matchmaking:bulletin_board'))
+        pitches = {p.id: p for p in response.context['pitches']}
+        self.assertFalse(pitches[self.founder.id].has_verified_funded)
+        self.assertNotContains(response, 'Verified Funded')
+
+    def test_closed_acquisition_connection_shows_verified_sold_badge(self):
+        from .models import AcquisitionConnection
+        AcquisitionConnection.objects.create(seller=self.seller, buyer=self.buyer, status='CLOSED', initiated_by='SELLER')
+        response = self.client.get(reverse('matchmaking:acquisition_bulletin_board'))
+        listings = {l.id: l for l in response.context['listings']}
+        self.assertTrue(listings[self.seller.id].has_verified_sold)
+        self.assertContains(response, 'Verified Sold')
+
+    def test_closed_pending_acquisition_connection_does_not_show_badge(self):
+        from .models import AcquisitionConnection
+        AcquisitionConnection.objects.create(seller=self.seller, buyer=self.buyer, status='CLOSED_PENDING', initiated_by='SELLER')
+        response = self.client.get(reverse('matchmaking:acquisition_bulletin_board'))
+        listings = {l.id: l for l in response.context['listings']}
+        self.assertFalse(listings[self.seller.id].has_verified_sold)
+        self.assertNotContains(response, 'Verified Sold')
+
+    def test_multiple_funded_connections_show_count_on_the_badge(self):
+        second_investor_user = User.objects.create_user('vb_investor2', password='x')
+        second_investor = InvestorApplication.objects.create(
+            user=second_investor_user, full_name='I2', company_name='Fund2', email='i2@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        Connection.objects.create(founder=self.founder, investor=self.investor, status='FUNDED', initiated_by='FOUNDER')
+        Connection.objects.create(founder=self.founder, investor=second_investor, status='FUNDED', initiated_by='FOUNDER')
+        response = self.client.get(reverse('matchmaking:bulletin_board'))
+        pitches = {p.id: p for p in response.context['pitches']}
+        self.assertEqual(pitches[self.founder.id].verified_funded_count, 2)
+        self.assertContains(response, 'Verified Funded')
+        self.assertContains(response, '(2)')
+
+
+class InitiateDirectChatAjaxTests(TestCase):
+    """
+    initiate_direct_chat's AJAX branch — added for the content-share picker
+    (sharing app), which needs the channel_id back directly rather than
+    following a full-page redirect. Mocks StreamChat entirely: this view
+    talks to the real Stream Chat cloud API, which tests must never do.
+    """
+
+    def setUp(self):
+        self.user_a = User.objects.create_user('idc_user_a', password='x')
+        self.user_b = User.objects.create_user('idc_user_b', password='x')
+        self.client.force_login(self.user_a)
+
+    def _post_ajax(self, target_user_id):
+        return self.client.get(
+            reverse('matchmaking:initiate_direct_chat', args=[target_user_id]),
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+
+    def test_ajax_request_returns_json_with_the_correct_channel_id(self):
+        """chat_ uses a NUMERIC sort of the two user ids — deliberately
+        different from createDealRoom's lexicographic string sort — so this
+        pins the exact scheme rather than just checking *a* channel_id came back."""
+        with mock.patch('matchmaking.views.StreamChat') as mock_stream_chat_cls:
+            mock_client = mock.MagicMock()
+            mock_stream_chat_cls.return_value = mock_client
+            response = self._post_ajax(self.user_b.id)
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['status'], 'success')
+        expected_sorted = sorted([self.user_a.id, self.user_b.id])
+        self.assertEqual(data['channel_id'], f"chat_{expected_sorted[0]}_and_{expected_sorted[1]}")
+        mock_client.upsert_users.assert_called_once()
+        mock_client.channel.assert_called_once_with('messaging', data['channel_id'])
+
+    def test_ajax_self_message_returns_error_not_a_redirect(self):
+        with mock.patch('matchmaking.views.StreamChat'):
+            response = self._post_ajax(self.user_a.id)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['status'], 'error')
+
+    def test_non_ajax_request_still_redirects_as_before(self):
+        with mock.patch('matchmaking.views.StreamChat') as mock_stream_chat_cls:
+            mock_stream_chat_cls.return_value = mock.MagicMock()
+            response = self.client.get(reverse('matchmaking:initiate_direct_chat', args=[self.user_b.id]))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('matchmaking:diligence_chat'))
+
+    def test_channel_id_is_the_same_regardless_of_who_initiates(self):
+        with mock.patch('matchmaking.views.StreamChat') as mock_stream_chat_cls:
+            mock_stream_chat_cls.return_value = mock.MagicMock()
+            response_a_to_b = self._post_ajax(self.user_b.id)
+
+        self.client.force_login(self.user_b)
+        with mock.patch('matchmaking.views.StreamChat') as mock_stream_chat_cls:
+            mock_stream_chat_cls.return_value = mock.MagicMock()
+            response_b_to_a = self._post_ajax(self.user_a.id)
+
+        self.assertEqual(response_a_to_b.json()['channel_id'], response_b_to_a.json()['channel_id'])

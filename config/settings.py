@@ -119,6 +119,7 @@ INSTALLED_APPS = [
 
     'django_extensions',
     'notifications',
+    'sharing',
 ]
 
 SITE_ID = 1
@@ -346,6 +347,18 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 # instead of allauth's own generic signup form, so AUTO_SIGNUP stays on.
 SOCIALACCOUNT_AUTO_SIGNUP = True
 LOGIN_REDIRECT_URL = 'accounts:post_login_router'
+
+# allauth's default ACCOUNT_SIGNUP_FIELDS includes password1/password2, which
+# blocks true one-click social signup: Google/Facebook/LinkedIn never supply a
+# password, so AUTO_SIGNUP would otherwise fall back to allauth's own signup
+# form asking the brand-new user to set one anyway. Password auth is never
+# offered to social-login users — they always sign back in via the provider.
+ACCOUNT_SIGNUP_FIELDS = ["email*", "username*"]
+
+# Pulls the provider's profile photo into UserSettings.profile_picture on
+# first signup (accounts/adapters.py) — separate from ACCOUNT_ADAPTER, which
+# this app doesn't currently override.
+SOCIALACCOUNT_ADAPTER = 'accounts.adapters.SocialAccountAdapter'
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {

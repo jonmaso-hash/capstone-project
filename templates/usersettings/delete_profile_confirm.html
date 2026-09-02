@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5 text-center">
+                    <h2 class="fw-bold mb-4">Confirm Deletion</h2>
+                    <p class="text-muted mb-4">
+                        Are you sure you want to permanently delete your {{ role_label }}{% if company_name %} for <strong>"{{ company_name }}"</strong>{% endif %}?
+                        This removes your profile, documents, and generated reports — it cannot be undone.
+                        Your account itself stays intact; you can pick a new role afterward.
+                    </p>
+                    <p class="text-muted small mb-4">
+                        Just want to hide it for a while instead? <a href="{% url 'usersettings:home' %}#archive-delete">Archive it</a> — everything stays intact and you can reactivate anytime.
+                    </p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg">Delete Permanently</button>
+                            <a href="{% url 'usersettings:home' %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

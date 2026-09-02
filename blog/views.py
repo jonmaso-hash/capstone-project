@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Case, When, Value, BooleanField
+from django.db.models import Case, When, Value, BooleanField, Q
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -24,6 +24,7 @@ def blog_view(request):
         form = ArticleUploadForm()
 
     sort_by = request.GET.get('sort', 'newest')
+    query = request.GET.get('q', '').strip()
 
     # Founder Premium's monthly highlight (see matchmaking.models.Application
     # .is_highlighted) sorts highlighted authors' posts first, ahead of the
@@ -38,15 +39,23 @@ def blog_view(request):
             output_field=BooleanField(),
         )
     )
+    if query:
+        all_articles = all_articles.filter(
+            Q(title__icontains=query)
+            | Q(body__icontains=query)
+            | Q(company_name__icontains=query)
+            | Q(author__username__icontains=query)
+        )
     if sort_by == 'oldest':
         all_articles = all_articles.order_by('-author_is_highlighted', 'created_on')
     else:
         all_articles = all_articles.order_by('-author_is_highlighted', '-created_on')
 
     context = {
-        'blog': all_articles, 
+        'blog': all_articles,
         'form': form,
-        'current_sort': sort_by
+        'current_sort': sort_by,
+        'search_query': query,
     }
     return render(request, 'blog/article.html', context)
 

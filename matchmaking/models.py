@@ -46,10 +46,24 @@ def founder_description_meets_word_count(description):
     return bool(description) and len(description.split()) >= MIN_FOUNDER_DESCRIPTION_WORDS
 
 
+class ApplicationQuerySet(models.QuerySet):
+    def discoverable(self):
+        """
+        The one place every bulletin board/matchmaking/search surface should
+        filter through — private (incognito) profiles were already excluded
+        everywhere via is_private=False; archived profiles (a founder
+        between ventures, pausing fundraising) now get the same treatment
+        without needing every call site updated by hand.
+        """
+        return self.filter(is_private=False, archived_at__isnull=True)
+
+
 class Application(models.Model):
     # Fields that feed the AI match vector — editing any of these re-locks
     # the group for 30 days (see vector_fields_locked below).
     VECTOR_FIELDS = ['description', 'sector', 'stage', 'extra_info', 'reason_for_capital', 'geography']
+
+    objects = ApplicationQuerySet.as_manager()
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -152,6 +166,11 @@ class Application(models.Model):
     
     # Metadata
     is_private = models.BooleanField(default=False)
+    archived_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Set when the founder archives this profile — hidden from discovery like is_private, "
+                   "but distinct so the owner can tell 'paused' apart from 'incognito' and reactivate it.",
+    )
     is_verified = models.BooleanField(default=False)
     is_premium = models.BooleanField(default=False, help_text="Founder Premium: Featured Placement on the bulletin board.")
     is_staff_featured = models.BooleanField(default=False, help_text="Staff-curated Featured Placement — independent of paid premium status.")
@@ -165,6 +184,9 @@ class Application(models.Model):
     created_at = models.DateTimeField(auto_now_add=True) # Fixes Admin E035
     updated_at = models.DateTimeField(auto_now=True)
     vector_fields_updated_at = models.DateTimeField(null=True, blank=True)
+    # Separate from updated_at (which bumps on any field edit) — investors
+    # care specifically about deck freshness, not "did they touch the form."
+    pitch_deck_uploaded_at = models.DateTimeField(null=True, blank=True)
 
     # Pitch Videos section — social actions on pitch_video (above), each
     # independently disable-able by the owner via pitch_video_*_enabled so
@@ -190,7 +212,7 @@ class Application(models.Model):
     )
 
     zelda_score = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
-    runway_months = models.DecimalField(max_digits=5, decimal_places=1, default=0.0)
+    runway_months = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True, default=None)
 
     def save(self, *args, **kwargs):
         # Optional: Auto-run calculation on save if you want it to be instant
@@ -255,7 +277,7 @@ class Application(models.Model):
     def funding_stage(self):
         """Alias property to ensure seamless template compatibility across app contexts."""
         return self.stage
-    
+
     @property
     def location(self):
         return self.geography
@@ -275,6 +297,36 @@ class Application(models.Model):
     def activate_highlight(self):
         self.last_highlight_at = timezone.now()
         self.save(update_fields=['last_highlight_at'])
+
+    @property
+    def is_archived(self):
+        return self.archived_at is not None
+
+    def archive(self):
+        """Hides from discovery (see ApplicationQuerySet.discoverable) while keeping every
+        document, Zelda report, and Truth Delta history intact — reversible via unarchive()."""
+        self.archived_at = timezone.now()
+        self.save(update_fields=['archived_at'])
+
+    def unarchive(self):
+        self.archived_at = None
+        self.save(update_fields=['archived_at'])
+
+    # Canonical Verified Funded helpers — the ONLY thing allowed to produce
+    # these is a Connection that reached the mutually-confirmed 'FUNDED'
+    # state (see connection_action_view's FUNDED/CONFIRM_FUNDED/DENY_FUNDED
+    # handling). Never derive this from a profile field, user-entered text,
+    # uploaded document, or AI inference — Zelda can analyze a transaction,
+    # but only the counterparty-confirmed status can verify one. Read
+    # straight off the querysets rather than a cached counter so there is
+    # no duplicated state to drift out of sync.
+    @property
+    def verified_funding_count(self):
+        return self.connections.filter(status='FUNDED').count()
+
+    @property
+    def has_verified_funding(self):
+        return self.connections.filter(status='FUNDED').exists()
 
     def to_foundry_envelope(self):
         return {
@@ -299,11 +351,19 @@ class Application(models.Model):
         ]
 
 
+class InvestorApplicationQuerySet(models.QuerySet):
+    def discoverable(self):
+        """See ApplicationQuerySet.discoverable — same is_private/archived_at pattern."""
+        return self.filter(is_private=False, archived_at__isnull=True)
+
+
 class InvestorApplication(models.Model):
     """
     Investor Profile Mandate Engine
     Manages search priority targets and ticket capacities for venture funds and angels.
     """
+    objects = InvestorApplicationQuerySet.as_manager()
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -382,6 +442,11 @@ class InvestorApplication(models.Model):
 
     # Visibility and Log Infrastructure
     is_private = models.BooleanField(default=False)
+    archived_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Set when the investor archives this mandate — hidden from discovery like is_private, "
+                   "but distinct so the owner can tell 'paused' apart from 'incognito' and reactivate it.",
+    )
     is_verified = models.BooleanField(default=False)
     is_premium = models.BooleanField(default=False, help_text="Premium tier: bypasses the daily outreach cap.")
     review_status = models.CharField(max_length=20, choices=REVIEW_STATUS_CHOICES, default='APPROVED')
@@ -421,6 +486,30 @@ class InvestorApplication(models.Model):
         filled_fields = sum(1 for field in tracked_fields if field)
         return int((filled_fields / len(tracked_fields)) * 100)
 
+    @property
+    def is_archived(self):
+        return self.archived_at is not None
+
+    def archive(self):
+        self.archived_at = timezone.now()
+        self.save(update_fields=['archived_at'])
+
+    def unarchive(self):
+        self.archived_at = None
+        self.save(update_fields=['archived_at'])
+
+    # Canonical Verified Funded helpers — mirrors Application's (see that
+    # model's docstring for the invariant: only a counterparty-confirmed
+    # Connection.status == 'FUNDED' may produce these, never a profile
+    # field, claim, or AI inference).
+    @property
+    def verified_funding_count(self):
+        return self.connections.filter(status='FUNDED').count()
+
+    @property
+    def has_verified_funding(self):
+        return self.connections.filter(status='FUNDED').exists()
+
     def __str__(self):
         return f"{self.company_name} Investment Mandate ({self.full_name})"
 
@@ -440,6 +529,16 @@ class Connection(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    # Deliberately separate from updated_at, which is NOT a reliable proxy
+    # for these — Deal Pulse's toggle_deal_attention/update_deal_notes both
+    # explicitly touch updated_at on notes/attention edits that can happen
+    # long after acceptance (or after FUNDED), so updated_at drifts. Only
+    # connection_action_view sets these, exactly once each, at the real
+    # transition — see get_deal_activity_timeline in deal_activity.py,
+    # which needs a genuinely provable timestamp for these two events.
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    funded_at = models.DateTimeField(null=True, blank=True)
 
     # Deal Pulse — investor's own manual triage on top of the connection's
     # actual status, plus private working notes.
@@ -538,18 +637,6 @@ class ConnectionRequest(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     
-class DealRoom(models.Model):
-    # Linked to a specific Connection between Founder and Investor
-    connection = models.OneToOneField('Connection', on_delete=models.CASCADE, related_name='deal_room')
-    is_active = models.BooleanField(default=False) # Access is locked until founder approves
-    created_at = models.DateTimeField(auto_now_add=True)
-
-class Document(models.Model):
-    deal_room = models.ForeignKey(DealRoom, on_delete=models.CASCADE, related_name='documents')
-    title = models.CharField(max_length=255)
-    file = models.FileField(upload_to='deal_rooms/%Y/%m/%d/')
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-
 
 class PitchDeckViewSession(models.Model):
     """One row per browser session that opened a founder's pitch deck viewer."""
@@ -932,14 +1019,33 @@ class DataRoomDocument(models.Model):
     Deliberately not routed through zelda_api.DocumentSource — that model's
     status field is a chunking/embedding/analysis pipeline state machine,
     a poor fit for a document that is never meant to be AI-analyzed. Titles
-    are visible to any connected investor (see can_view_data_room); the file
-    itself requires a separate, founder-approved DataRoomAccessRequest.
+    are visible to any connected investor (see can_view_data_room); whether
+    the file itself needs a separate, founder-approved DataRoomAccessRequest
+    depends on `visibility` (see can_download_data_room_document).
     """
     CATEGORY_CHOICES = [
         ('CAP_TABLE', 'Cap Table'),
         ('FINANCIALS', 'Financials'),
+        ('CUSTOMER_METRICS', 'Customer Metrics'),
+        ('REVENUE_BREAKDOWN', 'Revenue Breakdown'),
+        ('CONTRACTS', 'Contracts'),
         ('LEGAL_IP', 'Legal / IP'),
+        ('PRODUCT_ROADMAP', 'Product Roadmap'),
+        ('TEAM_INFO', 'Team Information'),
         ('OTHER', 'Other'),
+    ]
+    # Per-document trust tier a founder can opt into, independent of
+    # category. Defaults to today's exact behavior (INVESTOR_APPROVED) so
+    # every pre-existing document and every founder who never touches this
+    # field is completely unaffected. There's no separate "Public" tier —
+    # can_view_data_room already gates the whole room to accepted-connection
+    # investors (or owner/staff), so a document visible to anyone who can
+    # see the room at all *is* MATCH_ONLY; a true public tier would mean
+    # loosening that room-level gate, a separate decision.
+    VISIBILITY_CHOICES = [
+        ('MATCH_ONLY', 'Any Connected Investor — no approval needed'),
+        ('INVESTOR_APPROVED', 'Requires Founder Approval'),
+        ('NDA_REQUIRED', 'Requires Approval + NDA Acknowledgment'),
     ]
     founder = models.ForeignKey('matchmaking.Application', on_delete=models.CASCADE, related_name='data_room_documents')
     file = models.FileField(
@@ -947,6 +1053,7 @@ class DataRoomDocument(models.Model):
         validators=[FileExtensionValidator(['pdf', 'docx', 'xlsx', 'csv', 'pptx']), MaxFileSizeValidator(max_mb=25)],
     )
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='OTHER')
+    visibility = models.CharField(max_length=20, choices=VISIBILITY_CHOICES, default='INVESTOR_APPROVED')
     label = models.CharField(max_length=255)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
@@ -959,18 +1066,23 @@ class DataRoomDocument(models.Model):
 
 class DataRoomAccessRequest(models.Model):
     """
-    Per-(document, investor) approval gate. An investor sees document
-    titles for any founder they're connected to, but downloading a specific
-    file requires the founder to explicitly approve that investor's request
-    for that one document — titles are not an automatic-access grant.
-    Re-requesting after a DENIED resets the same row to PENDING rather than
-    creating a duplicate (see unique_together).
+    Per-(document, investor) approval gate — applies to INVESTOR_APPROVED
+    and NDA_REQUIRED documents (MATCH_ONLY skips this entirely; see
+    can_download_data_room_document). An investor sees document titles for
+    any founder they're connected to, but downloading a specific file needs
+    the founder's explicit approval for that one document — titles are not
+    an automatic-access grant. Re-requesting after a DENIED resets the same
+    row to PENDING rather than creating a duplicate (see unique_together).
+    nda_accepted is only meaningful (and only enforced) for NDA_REQUIRED
+    documents — see data_room_request_access, which requires it be set at
+    request time for that tier.
     """
     STATUS_CHOICES = [('PENDING', 'Pending'), ('APPROVED', 'Approved'), ('DENIED', 'Denied')]
 
     document = models.ForeignKey(DataRoomDocument, on_delete=models.CASCADE, related_name='access_requests')
     investor = models.ForeignKey('matchmaking.InvestorApplication', on_delete=models.CASCADE, related_name='data_room_requests')
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
+    nda_accepted = models.BooleanField(default=False)
     requested_at = models.DateTimeField(auto_now_add=True)
     decided_at = models.DateTimeField(null=True, blank=True)
 
@@ -979,6 +1091,41 @@ class DataRoomAccessRequest(models.Model):
 
     def __str__(self):
         return f"{self.investor.company_name} → {self.document.label} [{self.status}]"
+
+
+class DataRoomInformationRequest(models.Model):
+    """
+    Structured "please provide X" request — the mirror image of
+    DataRoomAccessRequest, which asks for access to a document that
+    already exists. An investor instead picks a category the founder
+    hasn't uploaded anything for yet; the founder gets notified and
+    either uploads a matching document (data_room_upload auto-fulfills
+    any PENDING request in that category) or explicitly declines.
+    Fulfilling a request only means the category now has *something* in
+    the room — the investor still goes through the normal
+    DataRoomAccessRequest flow to actually download that specific file.
+    Re-requesting after FULFILLED/DECLINED resets the same row to PENDING
+    rather than creating a duplicate (see unique_together) — covers the
+    "we need updated financials six months later" case without a second
+    row per ask.
+    """
+    STATUS_CHOICES = [('PENDING', 'Pending'), ('FULFILLED', 'Fulfilled'), ('DECLINED', 'Declined')]
+
+    founder = models.ForeignKey('matchmaking.Application', on_delete=models.CASCADE, related_name='data_room_information_requests')
+    investor = models.ForeignKey('matchmaking.InvestorApplication', on_delete=models.CASCADE, related_name='data_room_information_requests')
+    category = models.CharField(max_length=20, choices=DataRoomDocument.CATEGORY_CHOICES)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
+    fulfilled_document = models.ForeignKey(
+        DataRoomDocument, on_delete=models.SET_NULL, null=True, blank=True, related_name='fulfilled_information_requests'
+    )
+    requested_at = models.DateTimeField(auto_now_add=True)
+    decided_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ('founder', 'investor', 'category')
+
+    def __str__(self):
+        return f"{self.investor.company_name} → {self.get_category_display()} [{self.status}]"
 
 
 class DataRoomDocumentView(models.Model):
@@ -1010,16 +1157,86 @@ def can_view_data_room(request_user, founder_application):
 
 def can_download_data_room_document(request_user, document):
     """Separate, stricter gate for the actual file bytes — owner/staff
-    always; an investor only after the founder has approved their specific
-    DataRoomAccessRequest for this exact document."""
+    always. For an investor it depends on document.visibility:
+    MATCH_ONLY skips DataRoomAccessRequest entirely (being allowed into the
+    room — can_view_data_room — is itself the only gate); INVESTOR_APPROVED
+    needs an APPROVED request same as before this tiering existed;
+    NDA_REQUIRED needs an APPROVED request that also has nda_accepted set."""
     if request_user == document.founder.user or request_user.is_staff:
         return True
     investor_profile = getattr(request_user, 'match_investor_profile', None)
     if not investor_profile:
         return False
-    return DataRoomAccessRequest.objects.filter(
+    if document.visibility == 'MATCH_ONLY':
+        return can_view_data_room(request_user, document.founder)
+    access_request = DataRoomAccessRequest.objects.filter(
         document=document, investor=investor_profile, status='APPROVED'
-    ).exists()
+    ).first()
+    if not access_request:
+        return False
+    if document.visibility == 'NDA_REQUIRED' and not access_request.nda_accepted:
+        return False
+    return True
+
+
+def can_view_deal_workspace(request_user, connection):
+    """
+    Deal Workspace gate: the two parties to this specific Connection, or
+    staff — nobody else, regardless of their role elsewhere on the
+    platform. Only meaningful once the relationship is at least ACCEPTED;
+    a bare 'pending' request or a DECLINED one has no workspace (there's
+    nothing to compose — no chat, no data room access, no point).
+    """
+    if not request_user or not request_user.is_authenticated:
+        return False
+    if request_user.is_staff:
+        return True
+    if request_user not in (connection.founder.user, connection.investor.user):
+        return False
+    return connection.status in ('ACCEPTED', 'FUNDED_PENDING', 'FUNDED')
+
+
+def can_view_acquisition_deal_workspace(request_user, acquisition_connection):
+    """M&A mirror of can_view_deal_workspace — the two parties to this
+    specific AcquisitionConnection (seller/buyer), or staff; CLOSED
+    replaces FUNDED as the terminal state, same as everywhere else this
+    marketplace's status vocabulary is mirrored."""
+    if not request_user or not request_user.is_authenticated:
+        return False
+    if request_user.is_staff:
+        return True
+    if request_user not in (acquisition_connection.seller.user, acquisition_connection.buyer.user):
+        return False
+    return acquisition_connection.status in ('ACCEPTED', 'CLOSED_PENDING', 'CLOSED')
+
+
+def can_view_pitch_video(viewer_user, owner_profile):
+    """
+    Single authority for pitch-video visibility — used by BOTH the
+    internal-share resolver and the external-share resolver (sharing/
+    views.py), so a permission change (owner flips visibility, or a
+    profile goes private) takes effect identically everywhere a video
+    might be viewed, not just on the profile page itself. Deliberately
+    evaluates the VIEWER's current standing, never the sharer's — sharing
+    something you can see must never grant someone else access they
+    wouldn't otherwise have (see sharing/views.py's resolve_share).
+
+    Works for either owner type (Application/founder or SellerApplication/
+    seller) — both share the same is_private/is_hidden_by_staff/
+    pitch_video_visibility shape. ROLE_ONLY means "investors only" for a
+    founder's video, "buyers only" for a seller's video.
+    """
+    if not viewer_user or not viewer_user.is_authenticated:
+        return False
+    if viewer_user == owner_profile.user or viewer_user.is_staff:
+        return True
+    if owner_profile.is_hidden_by_staff or owner_profile.is_private:
+        return False
+    if owner_profile.pitch_video_visibility != 'ROLE_ONLY':
+        return True
+    if isinstance(owner_profile, Application):
+        return getattr(viewer_user, 'match_investor_profile', None) is not None
+    return getattr(viewer_user, 'match_buyer_profile', None) is not None
 
 
 class InvestorPredictionSnapshot(models.Model):
@@ -1073,6 +1290,12 @@ DEAL_STRUCTURE_CHOICES = [
 ]
 
 
+class SellerApplicationQuerySet(models.QuerySet):
+    def discoverable(self):
+        """See ApplicationQuerySet.discoverable — same is_private/archived_at pattern."""
+        return self.filter(is_private=False, archived_at__isnull=True)
+
+
 class SellerApplication(models.Model):
     """
     Business-for-Sale Profile — the M&A marketplace's mirror of Application
@@ -1081,6 +1304,8 @@ class SellerApplication(models.Model):
     being sold rather than startups raising capital.
     """
     VECTOR_FIELDS = ['description', 'industry', 'geography', 'reason_for_sale', 'extra_info']
+
+    objects = SellerApplicationQuerySet.as_manager()
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -1127,6 +1352,11 @@ class SellerApplication(models.Model):
     )
 
     is_private = models.BooleanField(default=False)
+    archived_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Set when the seller archives this listing — hidden from discovery like is_private, "
+                   "but distinct so the owner can tell 'paused' apart from 'incognito' and reactivate it.",
+    )
     is_verified = models.BooleanField(default=False)
     is_premium = models.BooleanField(default=False, help_text="Seller Premium: Featured Listing in the business marketplace.")
     is_staff_featured = models.BooleanField(default=False, help_text="Staff-curated Featured Listing — independent of paid premium status.")
@@ -1202,6 +1432,29 @@ class SellerApplication(models.Model):
         self.last_highlight_at = timezone.now()
         self.save(update_fields=['last_highlight_at'])
 
+    @property
+    def is_archived(self):
+        return self.archived_at is not None
+
+    def archive(self):
+        self.archived_at = timezone.now()
+        self.save(update_fields=['archived_at'])
+
+    def unarchive(self):
+        self.archived_at = None
+        self.save(update_fields=['archived_at'])
+
+    # Canonical Verified Sold helpers — mirrors Application.has_verified_funding
+    # (see that model's docstring for the invariant). Only a counterparty-
+    # confirmed AcquisitionConnection.status == 'CLOSED' may produce these.
+    @property
+    def verified_sale_count(self):
+        return self.acquisition_connections.filter(status='CLOSED').count()
+
+    @property
+    def has_verified_sale(self):
+        return self.acquisition_connections.filter(status='CLOSED').exists()
+
     def __str__(self):
         return f"{self.company_name} (For Sale)"
 
@@ -1211,6 +1464,12 @@ class SellerApplication(models.Model):
         ]
 
 
+class BuyerApplicationQuerySet(models.QuerySet):
+    def discoverable(self):
+        """See ApplicationQuerySet.discoverable — same is_private/archived_at pattern."""
+        return self.filter(is_private=False, archived_at__isnull=True)
+
+
 class BuyerApplication(models.Model):
     """
     Acquirer Profile — the M&A marketplace's mirror of InvestorApplication.
@@ -1218,6 +1477,8 @@ class BuyerApplication(models.Model):
     free-text investment_amount) because deal-economics matching needs
     actual numbers to compare against a seller's asking_price.
     """
+    objects = BuyerApplicationQuerySet.as_manager()
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -1247,6 +1508,11 @@ class BuyerApplication(models.Model):
     )
 
     is_private = models.BooleanField(default=False)
+    archived_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Set when the buyer archives this mandate — hidden from discovery like is_private, "
+                   "but distinct so the owner can tell 'paused' apart from 'incognito' and reactivate it.",
+    )
     is_verified = models.BooleanField(default=False)
     is_premium = models.BooleanField(default=False, help_text="Premium tier: bypasses the daily outreach cap.")
     review_status = models.CharField(max_length=20, choices=REVIEW_STATUS_CHOICES, default='APPROVED')
@@ -1271,6 +1537,28 @@ class BuyerApplication(models.Model):
         filled_fields = sum(1 for field in tracked_fields if field)
         return int((filled_fields / len(tracked_fields)) * 100)
 
+    @property
+    def is_archived(self):
+        return self.archived_at is not None
+
+    def archive(self):
+        self.archived_at = timezone.now()
+        self.save(update_fields=['archived_at'])
+
+    def unarchive(self):
+        self.archived_at = None
+        self.save(update_fields=['archived_at'])
+
+    # Canonical Verified Sold helpers — mirrors SellerApplication's (see
+    # that model's docstring for the invariant).
+    @property
+    def verified_sale_count(self):
+        return self.acquisition_connections.filter(status='CLOSED').count()
+
+    @property
+    def has_verified_sale(self):
+        return self.acquisition_connections.filter(status='CLOSED').exists()
+
     def __str__(self):
         return f"{self.company_name} Acquisition Mandate ({self.full_name})"
 
@@ -1291,6 +1579,14 @@ class AcquisitionConnection(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    # Symmetric with Connection.accepted_at/funded_at — same reasoning:
+    # updated_at is touched by notes/attention edits that can happen long
+    # after either transition, so it can't be trusted for "when did this
+    # actually get accepted/closed." Only acquisition_connection_action_view
+    # sets these, exactly once each, at the real transition.
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    closed_at = models.DateTimeField(null=True, blank=True)
 
     needs_attention = models.BooleanField(default=False)
     notes = models.TextField(blank=True)
@@ -1682,4 +1978,258 @@ class PitchVideoComment(models.Model):
     def __str__(self):
         target = self.founder.company_name if self.founder_id else self.seller.company_name
         return f"{self.author.username} on {target}'s pitch video"
+
+
+class ProfileVideoQuerySet(models.QuerySet):
+    def visible_elevator_pitches(self):
+        """
+        The Explore / Elevator Pitches feed source — PUBLISHED elevator
+        pitches whose owning founder/seller profile is itself discoverable
+        (not private, not archived, not staff-hidden, not review-denied).
+        QUARANTINED and REMOVED videos never appear here: a single valid
+        report is enough to pull a video out of this queryset (see
+        ProfileVideo.quarantine). Anonymous visitors get the exact same
+        list — Explore has no role gate.
+        """
+        founder_ok = (
+            models.Q(founder__isnull=False)
+            & models.Q(founder__is_private=False)
+            & models.Q(founder__archived_at__isnull=True)
+            & models.Q(founder__is_hidden_by_staff=False)
+            & ~models.Q(founder__review_status='DENIED')
+        )
+        seller_ok = (
+            models.Q(seller__isnull=False)
+            & models.Q(seller__is_private=False)
+            & models.Q(seller__archived_at__isnull=True)
+            & models.Q(seller__is_hidden_by_staff=False)
+            & ~models.Q(seller__review_status='DENIED')
+        )
+        return self.filter(
+            kind=ProfileVideo.KIND_ELEVATOR_PITCH,
+            status=ProfileVideo.STATUS_PUBLISHED,
+        ).filter(founder_ok | seller_ok).select_related(
+            'founder__user', 'seller__user',
+        )
+
+
+class ProfileVideo(models.Model):
+    """
+    A single typed short-form video attached to a founder (Application) or
+    seller (SellerApplication) profile — exactly one of founder/seller is
+    set (same one-model-two-owners pattern as PitchVideoComment; enforced
+    in the managing view, plus the partial-unique constraints below).
+
+    Phase 1 exposes only ELEVATOR_PITCH: the =<30-second clip that powers
+    the anonymous Explore feed. The `kind` enum exists now so PRODUCT_DEMO
+    / FOUNDER_STORY / CUSTOMER_PROOF can be added later without reworking
+    storage or moderation. This is deliberately SEPARATE from
+    Application.pitch_video / SellerApplication.pitch_video (the existing
+    1-3 min authenticated "Pitch Videos" section), which is left intact.
+
+    Moderation is publish-first: a video is PUBLISHED and publicly
+    discoverable the moment it is uploaded. The first valid report
+    QUARANTINEs it (pulled from Explore, queued for staff) — a report is a
+    temporary takedown, never an automatic guilty verdict. Staff then
+    either restore it (-> PUBLISHED) or remove it (-> REMOVED).
+    """
+    KIND_ELEVATOR_PITCH = 'ELEVATOR_PITCH'
+    KIND_CHOICES = [
+        (KIND_ELEVATOR_PITCH, 'Elevator Pitch (=<30s)'),
+        # Phase 2+: ('PRODUCT_DEMO', ...), ('FOUNDER_STORY', ...), ('CUSTOMER_PROOF', ...)
+    ]
+
+    STATUS_PUBLISHED = 'PUBLISHED'
+    STATUS_QUARANTINED = 'QUARANTINED'
+    STATUS_REMOVED = 'REMOVED'
+    STATUS_CHOICES = [
+        (STATUS_PUBLISHED, 'Published'),
+        (STATUS_QUARANTINED, 'Quarantined - under review'),
+        (STATUS_REMOVED, 'Removed by staff'),
+    ]
+
+    ELEVATOR_MAX_MB = 30
+    ELEVATOR_MAX_SECONDS = 30
+
+    objects = ProfileVideoQuerySet.as_manager()
+
+    founder = models.ForeignKey(
+        'matchmaking.Application', on_delete=models.CASCADE, null=True, blank=True,
+        related_name='profile_videos',
+    )
+    seller = models.ForeignKey(
+        'matchmaking.SellerApplication', on_delete=models.CASCADE, null=True, blank=True,
+        related_name='profile_videos',
+    )
+    kind = models.CharField(max_length=32, choices=KIND_CHOICES, default=KIND_ELEVATOR_PITCH)
+    video = models.FileField(
+        upload_to='elevator_pitches/%Y/%m/',
+        validators=[
+            FileExtensionValidator(allowed_extensions=['mp4', 'mov', 'webm']),
+            MaxFileSizeValidator(max_mb=ELEVATOR_MAX_MB),
+        ],
+        help_text="=<30 seconds. MP4, MOV, or WEBM. Max 30MB.",
+    )
+    caption = models.CharField(
+        max_length=140, blank=True,
+        help_text="One line shown under your video in Explore - the one-sentence version of what you're building.",
+    )
+    duration_seconds = models.FloatField(
+        null=True, blank=True, help_text="Reported by the browser at upload time.",
+    )
+
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_PUBLISHED)
+
+    interested_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name='interested_profile_videos', blank=True,
+    )
+    view_count = models.PositiveIntegerField(default=0)
+    completed_view_count = models.PositiveIntegerField(
+        default=0, help_text="Views that reached >=90% of the clip.",
+    )
+
+    # Denormalised moderation audit trail; per-report detail is on ProfileVideoReport.
+    report_count = models.PositiveIntegerField(default=0)
+    first_reported_at = models.DateTimeField(null=True, blank=True)
+    quarantined_at = models.DateTimeField(null=True, blank=True)
+    last_reviewed_at = models.DateTimeField(null=True, blank=True)
+    last_reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='profile_videos_reviewed',
+    )
+    last_review_decision = models.CharField(max_length=16, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['kind', 'status', '-created_at']),
+            models.Index(fields=['status', 'first_reported_at']),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['founder', 'kind'], condition=models.Q(founder__isnull=False),
+                name='uniq_founder_video_kind',
+            ),
+            models.UniqueConstraint(
+                fields=['seller', 'kind'], condition=models.Q(seller__isnull=False),
+                name='uniq_seller_video_kind',
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.get_kind_display()} - {self.owner_display} ({self.status})"
+
+    @property
+    def owner_profile(self):
+        return self.founder or self.seller
+
+    @property
+    def role(self):
+        return 'founder' if self.founder_id else 'seller'
+
+    @property
+    def owner_display(self):
+        p = self.owner_profile
+        return getattr(p, 'company_name', '') if p else ''
+
+    @property
+    def completion_rate(self):
+        return (self.completed_view_count / self.view_count) if self.view_count else 0.0
+
+    def quarantine(self, *, first_report_at=None):
+        """First valid report pulls the video from Explore into the staff queue."""
+        now = timezone.now()
+        updates = ['status', 'updated_at']
+        self.status = self.STATUS_QUARANTINED
+        if self.quarantined_at is None:
+            self.quarantined_at = now
+            updates.append('quarantined_at')
+        if self.first_reported_at is None:
+            self.first_reported_at = first_report_at or now
+            updates.append('first_reported_at')
+        self.save(update_fields=updates)
+
+    def _record_review(self, staff_user, status, decision):
+        self.status = status
+        self.last_reviewed_at = timezone.now()
+        self.last_reviewed_by = staff_user
+        self.last_review_decision = decision
+        self.save(update_fields=[
+            'status', 'last_reviewed_at', 'last_reviewed_by',
+            'last_review_decision', 'updated_at',
+        ])
+
+    def restore(self, staff_user):
+        """Staff decided the report was not upheld - back onto Explore."""
+        self._record_review(staff_user, self.STATUS_PUBLISHED, 'RESTORED')
+        self.reports.filter(decision=ProfileVideoReport.DECISION_PENDING).update(
+            decision=ProfileVideoReport.DECISION_RESTORED,
+            reviewed_at=timezone.now(), reviewed_by=staff_user,
+        )
+
+    def remove_by_staff(self, staff_user):
+        """Staff upheld the report - permanently off Explore."""
+        self._record_review(staff_user, self.STATUS_REMOVED, 'REMOVED')
+        self.reports.filter(decision=ProfileVideoReport.DECISION_PENDING).update(
+            decision=ProfileVideoReport.DECISION_UPHELD,
+            reviewed_at=timezone.now(), reviewed_by=staff_user,
+        )
+
+
+class ProfileVideoReport(models.Model):
+    """
+    One viewer report against a ProfileVideo. Reporting requires a logged-in
+    account (a deliberate abuse safeguard, since a single report is enough
+    to hide a video). The report immediately quarantines the video but is
+    explicitly a temporary takedown pending staff review, not a verdict -
+    staff resolve each report as RESTORED or UPHELD.
+    """
+    REASON_CHOICES = [
+        ('SCAM', 'Scam / fraudulent claim'),
+        ('IMPERSONATION', 'Impersonation'),
+        ('MISLEADING', 'Misleading information'),
+        ('INAPPROPRIATE', 'Inappropriate content'),
+        ('IP', 'Copyright / IP concern'),
+        ('SPAM', 'Spam'),
+        ('OTHER', 'Other'),
+    ]
+    DECISION_PENDING = 'PENDING'
+    DECISION_RESTORED = 'RESTORED'
+    DECISION_UPHELD = 'UPHELD'
+    DECISION_CHOICES = [
+        (DECISION_PENDING, 'Pending review'),
+        (DECISION_RESTORED, 'Restored - report not upheld'),
+        (DECISION_UPHELD, 'Upheld - video removed'),
+    ]
+
+    video = models.ForeignKey(ProfileVideo, on_delete=models.CASCADE, related_name='reports')
+    reporter = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='profile_video_reports',
+    )
+    reason = models.CharField(max_length=16, choices=REASON_CHOICES)
+    detail = models.TextField(max_length=1000, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    decision = models.CharField(max_length=16, choices=DECISION_CHOICES, default=DECISION_PENDING)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='profile_video_reports_reviewed',
+    )
+
+    class Meta:
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['video', 'reporter'], condition=models.Q(reporter__isnull=False),
+                name='uniq_report_per_user_per_video',
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.get_reason_display()} report on video #{self.video_id}"
 

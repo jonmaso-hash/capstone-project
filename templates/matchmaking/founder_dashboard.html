@@ -169,11 +169,24 @@
                     <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
                         <div>
                             <h5 class="mb-0 fw-bold text-dark">{{ conn.investor.company_name|default:"Private Venture Partner" }}</h5>
+                            {% if conn.status == 'FUNDED_PENDING' %}
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning small">Awaiting Investor Confirmation</span>
+                            {% else %}
                             <span class="badge bg-success-subtle text-success border border-success small">Accepted</span>
+                            {% endif %}
                         </div>
-                        <button onclick="updateConnection({{ conn.id }}, 'FUNDED', null, null)" class="btn btn-outline-success btn-sm rounded-pill px-3">
-                            <i class="bi bi-check-circle me-1"></i> Mark as Funded
-                        </button>
+                        <div class="d-flex align-items-center gap-2">
+                            <a href="{% url 'matchmaking:deal_workspace' conn.id %}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                                <i class="bi bi-briefcase me-1"></i> Open Deal Room
+                            </a>
+                            {% if conn.status == 'FUNDED_PENDING' %}
+                            <span class="text-muted small fst-italic"><i class="bi bi-hourglass-split me-1"></i>Waiting for {{ conn.investor.company_name|default:"the investor" }} to confirm</span>
+                            {% else %}
+                            <button onclick="updateConnection({{ conn.id }}, 'FUNDED', null, null)" class="btn btn-outline-success btn-sm rounded-pill px-3">
+                                <i class="bi bi-check-circle me-1"></i> Mark as Funded
+                            </button>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>

@@ -114,3 +114,24 @@ class ResumeAttachmentStorageCleanupTests(TestCase):
         application.delete()
 
         self.assertFalse(storage.exists(path))
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class JobShareButtonTests(TestCase):
+    """The internal-sharing Share button on the job detail page (sharing app)."""
+
+    def setUp(self):
+        self.poster = User.objects.create_user('jsb_poster', password='x')
+        self.viewer = User.objects.create_user('jsb_viewer', password='x')
+        self.job = JobListing.objects.create(
+            poster=self.poster, company_name='ShareCo', title='Engineer', description='desc',
+        )
+
+    def test_share_button_renders_for_authenticated_user(self):
+        self.client.force_login(self.viewer)
+        response = self.client.get(reverse('jobs:detail', args=[self.job.pk]))
+        self.assertContains(response, f"openContentShare('JOB', {self.job.pk}")
+
+    def test_share_button_hidden_for_anonymous_visitor(self):
+        response = self.client.get(reverse('jobs:detail', args=[self.job.pk]))
+        self.assertNotContains(response, "openContentShare('JOB'")

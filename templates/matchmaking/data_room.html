@@ -44,6 +44,63 @@
     </div>
     {% endif %}
 
+    {% if is_owner_or_staff and pending_information_requests %}
+    <div class="card border-info shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h6 class="text-uppercase fw-bold text-muted small mb-3">Investor Requests</h6>
+            {% for info_req in pending_information_requests %}
+            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                <div>
+                    <strong>{{ info_req.investor.company_name }}</strong>
+                    <span class="text-secondary small"> requested "{{ info_req.get_category_display }}"</span>
+                    <div class="text-muted" style="font-size: 0.78rem;">Upload a matching document below to fulfill this automatically.</div>
+                </div>
+                <form method="post" action="{% url 'matchmaking:data_room_decline_information_request' info_req.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">Decline</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not is_owner_or_staff and category_request_status %}
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h6 class="text-uppercase fw-bold text-muted small mb-1">Request Information</h6>
+            <p class="text-muted small mb-3">Ask the founder to provide a category of document that isn't here yet — a structured alternative to asking in chat.</p>
+            <form method="post" action="{% url 'matchmaking:data_room_request_information' founder_application.user.username %}">
+                {% csrf_token %}
+                <div class="row row-cols-2 row-cols-md-3 g-2 mb-3">
+                    {% for value, label, my_info_request in category_request_status %}
+                    <div class="col">
+                        {% if not my_info_request %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="categories" value="{{ value }}" id="cat-{{ value }}">
+                            <label class="form-check-label small" for="cat-{{ value }}">{{ label }}</label>
+                        </div>
+                        {% elif my_info_request.status == 'PENDING' %}
+                        <span class="badge bg-secondary-subtle text-secondary border px-2 py-1 small">{{ label }} — Requested</span>
+                        {% elif my_info_request.status == 'FULFILLED' %}
+                        <span class="badge bg-success-subtle text-success border border-success px-2 py-1 small">{{ label }} — Provided</span>
+                        {% elif my_info_request.status == 'DECLINED' %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="categories" value="{{ value }}" id="cat-{{ value }}">
+                            <label class="form-check-label small text-danger" for="cat-{{ value }}">{{ label }} — Declined, request again?</label>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="submit" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                    <i class="bi bi-send me-1"></i> Send Request
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
     {% if is_owner_or_staff %}
     <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-body p-4">
@@ -58,17 +115,30 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">
+                        Visibility
+                        <i class="bi bi-info-circle field-info-icon" role="button" tabindex="0"
+                           data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top"
+                           data-bs-content="Any Connected Investor: downloadable immediately, no approval step. Requires Approval: today's default — you decide per investor. Requires Approval + NDA: same, plus the investor must acknowledge confidentiality before requesting."></i>
+                    </label>
+                    <select name="visibility" class="form-select">
+                        {% for value, label in visibility_choices %}
+                        <option value="{{ value }}" {% if value == 'INVESTOR_APPROVED' %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
                     <label class="form-label small fw-semibold">Label</label>
                     <input type="text" name="label" class="form-control" placeholder="e.g. 2026 Cap Table" required>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label small fw-semibold">File</label>
                     <input type="file" name="file" class="form-control" required>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <button type="submit" class="btn btn-dark w-100">
-                        <i class="bi bi-upload me-1"></i> Upload
+                        <i class="bi bi-upload"></i>
                     </button>
                 </div>
             </form>
@@ -91,6 +161,11 @@
                         <div>
                             <span class="fw-semibold">{{ document.label }}</span>
                             <span class="text-muted small ms-2">Uploaded {{ document.uploaded_at|date:"M j, Y" }}</span>
+                            {% if document.visibility == 'MATCH_ONLY' %}
+                            <span class="badge bg-success-subtle text-success border border-success ms-2" style="font-size: 0.68rem;">No approval needed</span>
+                            {% elif document.visibility == 'NDA_REQUIRED' %}
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning ms-2" style="font-size: 0.68rem;">NDA required</span>
+                            {% endif %}
                         </div>
                         <div class="d-flex gap-2 align-items-center">
                             {% if is_owner_or_staff %}
@@ -103,6 +178,10 @@
                                         <i class="bi bi-trash me-1"></i> Delete
                                     </button>
                                 </form>
+                            {% elif document.can_download_directly %}
+                                <a href="{% url 'matchmaking:data_room_document_serve' document.id %}" class="btn btn-success btn-sm rounded-pill px-3">
+                                    <i class="bi bi-download me-1"></i> Download
+                                </a>
                             {% else %}
                                 {% if document.my_request.status == 'APPROVED' %}
                                     <a href="{% url 'matchmaking:data_room_document_serve' document.id %}" class="btn btn-success btn-sm rounded-pill px-3">
@@ -110,6 +189,17 @@
                                     </a>
                                 {% elif document.my_request.status == 'PENDING' %}
                                     <span class="badge bg-secondary-subtle text-secondary border px-3 py-2 rounded-pill">Awaiting founder approval</span>
+                                {% elif document.visibility == 'NDA_REQUIRED' %}
+                                    <form method="post" action="{% url 'matchmaking:data_room_request_access' document.id %}" class="d-flex align-items-center gap-2">
+                                        {% csrf_token %}
+                                        <div class="form-check mb-0">
+                                            <input class="form-check-input" type="checkbox" name="nda_accepted" id="nda-{{ document.id }}" required>
+                                            <label class="form-check-label small" for="nda-{{ document.id }}">I'll keep this confidential</label>
+                                        </div>
+                                        <button type="submit" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                                            {% if document.my_request.status == 'DENIED' %}Request again{% else %}Request Access{% endif %}
+                                        </button>
+                                    </form>
                                 {% elif document.my_request.status == 'DENIED' %}
                                     <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-2 rounded-pill me-2">Access denied</span>
                                     <form method="post" action="{% url 'matchmaking:data_room_request_access' document.id %}">

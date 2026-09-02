@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load humanize %}
 
-{% block title %}IC Memo — {{ company_name }} | Interlink Foundry{% endblock title %}
+{% block title %}AI Investment Committee Memo — {{ company_name }} | Interlink Foundry{% endblock title %}
 
 {% block css %}
 <style>
@@ -28,9 +28,11 @@
             <i class="bi bi-arrow-left me-1"></i> Back to Profile
         </a>
         <div class="d-flex gap-2">
+            {% if ic_memo_tier == 'full' %}
             <a href="{% url 'zelda_api:ic_memo_download' pitch_deck_doc.id %}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
                 <i class="bi bi-file-earmark-text me-1"></i> Download Markdown
             </a>
+            {% endif %}
             <button type="button" class="btn btn-dark btn-sm rounded-pill px-3" onclick="window.print()">
                 <i class="bi bi-printer me-1"></i> Print / Save as PDF
             </button>
@@ -38,12 +40,26 @@
     </div>
 
     <div class="mb-4">
-        <p class="text-uppercase small text-muted fw-bold mb-1">Investment Committee Memo</p>
+        <p class="text-uppercase small text-muted fw-bold mb-1">
+            AI Investment Committee Memo
+            <i class="bi bi-info-circle field-info-icon no-print" role="button" tabindex="0"
+               data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom"
+               data-bs-content="Turns hours of analyst work into minutes. Combines the Intelligence Memo, Truth Delta verification, valuation, and pitch engagement data into one shareable, investor-ready diligence package."></i>
+        </p>
         <h1 class="fw-bold mb-0">{{ company_name }}</h1>
+        {% if ic_memo_tier == 'full' %}
+        <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-2 mt-2 fw-semibold no-print">
+            <i class="bi bi-stars me-1"></i>Zelda AI — Full Memo
+        </span>
+        {% else %}
+        <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-2 mt-2 fw-semibold no-print">
+            <i class="bi bi-lightning-charge-fill me-1"></i>Zelda Lite Memo
+        </span>
+        {% endif %}
     </div>
 
     {% if memo_meta %}
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-2">
         <div class="col-6 col-md-3">
             <div class="card p-3 bg-dark text-white shadow-sm border-0 h-100">
                 <small class="text-white-50 text-uppercase">Recommendation</small>
@@ -52,23 +68,54 @@
         </div>
         <div class="col-6 col-md-3">
             <div class="card p-3 shadow-sm border-0 h-100">
-                <small class="text-muted text-uppercase">Memo Completeness</small>
-                <h6 class="fw-bold mb-0">{{ memo_meta.completeness_score }}%</h6>
+                <small class="text-muted text-uppercase">Section Coverage</small>
+                <h6 class="fw-bold mb-0">{{ memo_meta.section_coverage }}%</h6>
             </div>
         </div>
+        {% if memo_meta.readiness_score is not None %}
+        <div class="col-6 col-md-3">
+            <div class="card p-3 shadow-sm border-0 h-100">
+                <small class="text-muted text-uppercase">Investment Readiness</small>
+                <h6 class="fw-bold mb-0">{{ memo_meta.readiness_score }}/100</h6>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-6 col-md-3">
+            <div class="card p-3 shadow-sm border-0 h-100">
+                <small class="text-muted text-uppercase">Analysis Confidence</small>
+                <h6 class="fw-bold mb-0">{{ memo_meta.analysis_confidence }}%</h6>
+            </div>
+        </div>
+        {% endif %}
         <div class="col-6 col-md-3">
             <div class="card p-3 shadow-sm border-0 h-100">
                 <small class="text-muted text-uppercase">Citations</small>
                 <h6 class="fw-bold mb-0">{{ memo_meta.citations_count }}</h6>
             </div>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="card p-3 shadow-sm border-0 h-100">
-                <small class="text-muted text-uppercase">Generated</small>
-                <h6 class="fw-bold mb-0">{{ memo_meta.generated_at|date:"M j, Y" }}</h6>
-            </div>
+    </div>
+    <p class="small text-muted mb-4">
+        <strong>Section Coverage</strong> is how much of this memo Zelda could generate from available materials.
+        {% if memo_meta.readiness_score is not None %}<strong>Investment Readiness</strong> is Zelda's holistic assessment of how prepared this company is for investment.{% else %}<strong>Analysis Confidence</strong> is Zelda's own confidence in its analysis, not a verification or completeness score.{% endif %}
+        Generated {{ memo_meta.generated_at|date:"M j, Y" }}.
+    </p>
+    <div class="card border-0 shadow-sm rounded-4 mb-4 no-print">
+        <div class="card-body p-4">
+            <div id="ic-memo-confidence-gauge"></div>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const gaugeEl = document.getElementById('ic-memo-confidence-gauge');
+            if (gaugeEl && typeof renderConfidenceGauge === 'function') {
+                {% if memo_meta.readiness_score is not None %}
+                renderConfidenceGauge(gaugeEl, {{ memo_meta.readiness_score }} / 100, 'Investment Readiness');
+                {% else %}
+                renderConfidenceGauge(gaugeEl, {{ memo_meta.analysis_confidence }} / 100, 'Analysis Confidence');
+                {% endif %}
+            }
+        });
+    </script>
     {% endif %}
 
     {% if memo_sections %}
@@ -89,7 +136,9 @@
             Preliminary signal only — automated claim verification against outside sources isn't fully built yet,
             so treat this as a starting point for diligence, not a verified fact-check.
         </p>
-        <p class="mb-1"><strong>Signal Score:</strong> {{ truth_delta.overall_truth_score }}/100</p>
+        <p class="mb-1"><strong>Signal Score:</strong> {{ truth_delta.overall_truth_score }}/100
+            <span class="text-muted small">— reflects only the claims that had external data to check against, not an overall company assessment</span>
+        </p>
         {% if truth_delta.summary %}<p class="text-secondary mb-0">{{ truth_delta.summary }}</p>{% endif %}
     </div>
     {% endif %}
@@ -105,6 +154,7 @@
     </div>
     {% endif %}
 
+    {% if financials %}
     <div class="mb-4 ic-memo-section">
         <h5 class="fw-bold border-bottom pb-2 mb-2">Financial Snapshot</h5>
         <ul class="list-unstyled mb-0">
@@ -113,9 +163,12 @@
             <li>Monthly burn: {% if financials.monthly_burn_rate is not None %}${{ financials.monthly_burn_rate|floatformat:0|intcomma }}{% else %}not disclosed{% endif %}</li>
             <li>Runway: {% if financials.runway_months %}{{ financials.runway_months }} months{% else %}not calculated{% endif %}</li>
             <li>Team size: {% if financials.team_size %}{{ financials.team_size }}{% else %}not disclosed{% endif %}</li>
-            <li>Zelda Score: {{ financials.zelda_score }}/99</li>
+            <li>Zelda Score: {{ financials.zelda_score }}/99
+                <span class="text-muted small">— internal stability/efficiency/runway composite, not a verification or readiness measure</span>
+            </li>
         </ul>
     </div>
+    {% endif %}
 
     {% if deck_engagement %}
     <div class="mb-4 ic-memo-section">
@@ -135,6 +188,26 @@
             </tbody>
         </table>
         {% endif %}
+    </div>
+    {% endif %}
+
+    {% if ic_memo_tier == 'lite' %}
+    <div class="card border-0 shadow-sm rounded-4 mb-4 no-print" style="background: linear-gradient(135deg, #fff8e1, #ffffff);">
+        <div class="card-body p-4 text-center">
+            <h5 class="fw-bold mb-1">Zelda AI unlocks the full memo</h5>
+            <p class="text-muted small mb-3">
+                {% if request.user == application.user %}
+                Every memo section, Truth Delta verification, valuation, financial snapshot, and pitch engagement data — combined into one shareable diligence package.
+                {% else %}
+                {{ company_name }} hasn't upgraded to Zelda AI yet. Once they do, you'll see the full memo here — no extra cost to you.
+                {% endif %}
+            </p>
+            {% if request.user == application.user %}
+            <a href="{% url 'billing:billing_page' %}" class="btn btn-warning rounded-pill px-4 fw-semibold">
+                <i class="bi bi-stars me-1"></i> Upgrade to Zelda AI
+            </a>
+            {% endif %}
+        </div>
     </div>
     {% endif %}
 

@@ -205,3 +205,89 @@ class HomepageMembershipCopyTests(TestCase):
             response,
             f"Business valuations for ${VALUATION_REPORT_PRICE_USD:.2f}/report (pay-per-use, not bundled)",
         )
+
+
+class HomepagePositioningCopyTests(TestCase):
+    """
+    Homepage rewrite from "AI-powered matching marketplace" to "evidence-
+    grounded business intelligence and decision infrastructure" (backlog
+    #10). Locks in the two messaging principles the rewrite was approved
+    on: Truth Delta (claim evaluation) and Verified Funded/Sold
+    (counterparty-confirmed transaction outcome) stay explicitly distinct,
+    and nothing claims a capability that isn't actually shipped (#8
+    competitive benchmarking, #7 expert review).
+    """
+
+    def test_hero_leads_with_decision_making_not_audience_actions(self):
+        """
+        "Make better decisions about businesses." is the primary <h1> —
+        AI/audience-actions language is secondary, not the headline. The
+        "Raise capital. Source deals. Buy or sell a business." line is
+        intentionally still present (per the approved refinement) as a
+        secondary tagline naming what you can actually do here, subordinate
+        to the decision-making headline — so this checks structure (what's
+        IN the h1) rather than the phrase's absence from the page.
+        """
+        import re
+        response = self.client.get(reverse('pages:home'))
+        content = response.content.decode('utf-8')
+        h1_match = re.search(r'<h1[^>]*>(.*?)</h1>', content, re.DOTALL)
+        self.assertIsNotNone(h1_match)
+        h1_text = h1_match.group(1)
+        self.assertIn('Make better decisions', h1_text)
+        self.assertNotIn('Raise capital', h1_text)
+
+        self.assertContains(response, 'evidence-grounded intelligence, semantic matching, and verified deal outcomes')
+        self.assertContains(response, 'Raise capital. Source deals. Buy or sell a business.')
+        self.assertNotContains(response, 'reads the deal before you do')
+
+    def test_zelda_section_positions_intelligence_layer_not_matching_engine(self):
+        response = self.client.get(reverse('pages:home'))
+        self.assertContains(response, 'Meet Zelda.')
+        self.assertContains(response, 'The Intelligence Layer')
+        self.assertNotContains(response, 'Meet the Zelda Engine.')
+        self.assertNotContains(response, 'Proprietary AI Layer')
+
+    def test_four_stage_pipeline_present_in_order(self):
+        response = self.client.get(reverse('pages:home'))
+        self.assertContains(response, 'Information')
+        self.assertContains(response, 'Matching')
+        self.assertContains(response, 'Intelligence')
+        self.assertContains(response, 'Verified Outcomes')
+        self.assertContains(response, '1. Understand the Business')
+        self.assertContains(response, '2. Find the Right Opportunities')
+        self.assertContains(response, '3. Analyze the Evidence')
+        self.assertContains(response, '4. Build a Verified Track Record')
+
+    def test_verified_outcomes_tile_present_in_what_you_get(self):
+        response = self.client.get(reverse('pages:home'))
+        self.assertContains(response, 'Verified Funded / Verified Sold')
+        self.assertContains(response, 'both sides confirm it')
+
+    def test_truth_delta_and_verified_outcomes_stay_distinct_not_blurred(self):
+        """The approved messaging principle: Truth Delta evaluates claims/
+        evidence; Verified Funded/Sold confirms an actual transaction. The
+        page must describe both without merging them into generic "AI
+        verification" language."""
+        response = self.client.get(reverse('pages:home'))
+        content = response.content.decode('utf-8')
+        self.assertIn('Truth Delta separates disclosed claims from verified or unsupported information', content)
+        self.assertIn('both sides confirm the outcome', content)
+
+    def test_no_unshipped_capabilities_advertised(self):
+        """#8 (competitive benchmarking) and #7 (expert review) aren't
+        built yet — the homepage must not claim them."""
+        response = self.client.get(reverse('pages:home'))
+        content = response.content.decode('utf-8')
+        self.assertNotIn('competitor', content.lower())
+        self.assertNotIn('benchmark', content.lower())
+        self.assertNotIn('expert review', content.lower())
+        self.assertNotIn('percentile', content.lower())
+
+    def test_no_role_specific_landing_pages_introduced(self):
+        """Explicitly out of scope for this copy pass — no /founders,
+        /investors, /buyers, /sellers routes."""
+        response = self.client.get(reverse('pages:home'))
+        content = response.content.decode('utf-8')
+        for path in ('href="/founders', 'href="/investors', 'href="/buyers', 'href="/sellers'):
+            self.assertNotIn(path, content)

@@ -1,0 +1,31 @@
+{% extends "socialaccount/base_entrance.html" %}
+{% load i18n %}
+{% load allauth %}
+{% block head_title %}
+    {% trans "Signup" %}
+{% endblock head_title %}
+{% block content %}
+    {% element h1 %}
+        {% trans "Almost done" %}
+    {% endelement %}
+    {% element p %}
+        {% blocktrans with provider_name=account.get_provider.name site_name=site.name %}You're signing in to {{site_name}} with {{provider_name}}.{% endblocktrans %}
+    {% endelement %}
+    {% element p %}
+        {% trans "Pick a username below — it's part of your public profile link (e.g. interlinkfoundry.com/accounts/profile/your-username/), so choose something you're comfortable sharing with investors and founders. You can always change it later in Settings." %}
+    {% endelement %}
+    {% url 'socialaccount_signup' as action_url %}
+    {% element form form=form method="post" action=action_url %}
+        {% slot body %}
+            {% csrf_token %}
+            {% element fields form=form unlabeled=True %}
+            {% endelement %}
+            {{ redirect_field }}
+        {% endslot %}
+        {% slot actions %}
+            {% element button type="submit" %}
+                {% trans "Continue" %}
+            {% endelement %}
+        {% endslot %}
+    {% endelement %}
+{% endblock content %}

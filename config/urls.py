@@ -3,7 +3,7 @@ from django.contrib.sitemaps.views import sitemap
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from matchmaking.views import global_search
+from matchmaking.views import global_search, explore_feed
 from matchmaking.enterprise_views import EnterpriseFounderSearchView, EnterprisePlatformStatsView
 from django.views.generic import TemplateView
 from django.shortcuts import render
@@ -32,7 +32,12 @@ urlpatterns = [
     # allauth's own generic login/signup/logout paths are shadowed by the two
     # includes above (first match wins), same as contrib.auth's already were.
     path('accounts/', include('allauth.urls')),
-    path('matchmaking/', include('matchmaking.urls')), 
+    path('matchmaking/', include('matchmaking.urls')),
+    # Public front door — the anonymous Elevator Pitches feed. Kept top-level
+    # (not under /matchmaking/) because it's the casual entry point for
+    # visitors who haven't picked a role; the action endpoints it calls stay
+    # namespaced under matchmaking:explore_* .
+    path('explore/', explore_feed, name='explore'),
     path('jobs/', include('jobs.urls', namespace='jobs')),
     path('search/', global_search, name='global_search'),
     path('blog/', include('blog.urls')),
@@ -48,6 +53,7 @@ urlpatterns = [
     path('', include('growth.urls', namespace='growth')),
     path('<str:startup_name>/', views.MemoIntelligenceView.as_view(), name='memo-intelligence'),
     path('notifications/', include('notifications.urls')),
+    path('sharing/', include('sharing.urls', namespace='sharing')),
 ]
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

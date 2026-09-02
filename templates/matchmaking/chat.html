@@ -81,26 +81,91 @@ function formatTime(dateString) {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+// Icon/label per content_type — shared_by is deliberately NOT a custom
+// field on the message; Stream's own m.user is already "who sent this,"
+// so it'd just be a second, driftable source of the same fact.
+const SHARE_CARD_META = {
+    PROFILE: { icon: 'bi-person-fill', verb: 'shared a profile with you' },
+    VIDEO_FOUNDER: { icon: 'bi-camera-reels-fill', verb: 'shared a video with you' },
+    VIDEO_SELLER: { icon: 'bi-camera-reels-fill', verb: 'shared a video with you' },
+    BLOG: { icon: 'bi-file-text-fill', verb: 'shared an article with you' },
+    JOB: { icon: 'bi-briefcase-fill', verb: 'shared a job with you' },
+};
+
+// The Stream message only ever carries content_type/content_id — never
+// trusted as proof the viewer can currently see the content. Every
+// render re-resolves against the CURRENT viewer's permissions via
+// /sharing/resolve/, so a permission revoked (or content deleted) after
+// the share was sent shows as unavailable immediately, not the stale
+// state from when it was sent.
+async function resolveShareCard(contentType, contentId, elementId, senderName) {
+    const target = document.getElementById(elementId);
+    if (!target) return;
+    const meta = SHARE_CARD_META[contentType] || { icon: 'bi-link-45deg', verb: 'shared this with you' };
+
+    try {
+        const res = await fetch(`/sharing/resolve/?content_type=${encodeURIComponent(contentType)}&content_id=${encodeURIComponent(contentId)}`, {
+            credentials: 'same-origin',
+        });
+        const data = await res.json();
+
+        if (!data.available) {
+            target.innerHTML = `<div class="small fst-italic opacity-75"><i class="bi bi-exclamation-circle me-1"></i>This content is no longer available.</div>`;
+            return;
+        }
+
+        target.innerHTML = `
+            <div class="small mb-2">${escapeHtml(senderName)} ${meta.verb}</div>
+            <div class="d-flex align-items-center gap-2 p-2 rounded-3 text-dark" style="background: rgba(255,255,255,0.85);">
+                <i class="bi ${meta.icon} fs-4"></i>
+                <div class="flex-grow-1 text-start">
+                    <div class="fw-semibold small">${escapeHtml(data.title)}</div>
+                    ${data.subtitle ? `<div class="text-muted" style="font-size: 0.75rem;">${escapeHtml(data.subtitle)}</div>` : ''}
+                </div>
+            </div>
+            <a href="${data.view_url}" class="btn btn-sm btn-outline-dark w-100 mt-2 bg-white">View</a>
+        `;
+    } catch (err) {
+        target.innerHTML = `<div class="small text-danger">Could not load shared content.</div>`;
+    }
+}
+
 function renderMessages(messages = []) {
     const box = el("message-stream-target");
     if (!box || !StreamChatController.client) return;
 
     box.innerHTML = "";
-    messages.forEach(m => {
+    messages.forEach((m, idx) => {
         const mine = m.user?.id === StreamChatController.client.userID;
         const div = document.createElement("div");
         div.className = `mb-3 ${mine ? "text-end" : "text-start"}`;
-        div.innerHTML = `
-            <div class="d-inline-block p-2 rounded shadow-sm ${mine ? "bg-primary text-white" : "bg-white text-dark border"}" style="max-width:75%">
-                ${escapeHtml(m.text || "")}
-            </div>
+        const senderLabel = `
             <div class="text-muted mt-1 d-flex ${mine ? 'justify-content-end' : 'justify-content-start'}" style="font-size: 0.7rem; gap: 6px;">
                 <span class="fw-semibold">${escapeHtml(m.user?.name || m.user?.id || "")}</span>
                 <span>•</span>
                 <span>${formatTime(m.created_at)}</span>
-            </div>
-        `;
-        box.appendChild(div);
+            </div>`;
+
+        if (m.content_type && m.content_id) {
+            const cardId = `share-card-${idx}`;
+            div.innerHTML = `
+                <div class="d-inline-block p-2 rounded shadow-sm ${mine ? "bg-primary text-white" : "bg-white text-dark border"}" style="max-width:75%; min-width: 240px;">
+                    ${m.text ? `<div class="small mb-2">${escapeHtml(m.text)}</div>` : ''}
+                    <div id="${cardId}"><div class="small"><span class="spinner-border spinner-border-sm me-1"></span>Loading shared content…</div></div>
+                </div>
+                ${senderLabel}
+            `;
+            box.appendChild(div);
+            resolveShareCard(m.content_type, m.content_id, cardId, m.user?.name || m.user?.id || 'Someone');
+        } else {
+            div.innerHTML = `
+                <div class="d-inline-block p-2 rounded shadow-sm ${mine ? "bg-primary text-white" : "bg-white text-dark border"}" style="max-width:75%">
+                    ${escapeHtml(m.text || "")}
+                </div>
+                ${senderLabel}
+            `;
+            box.appendChild(div);
+        }
     });
     box.scrollTop = box.scrollHeight;
 }

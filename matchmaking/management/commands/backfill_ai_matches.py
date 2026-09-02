@@ -14,7 +14,7 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
-        investors = InvestorApplication.objects.filter(is_private=False).exclude(review_status='DENIED')
+        investors = InvestorApplication.objects.discoverable().exclude(review_status='DENIED')
         total = investors.count()
         for i, investor_profile in enumerate(investors, 1):
             refresh_matches_for_investor(investor_profile, "Initial match cache backfill")

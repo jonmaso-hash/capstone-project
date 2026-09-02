@@ -185,6 +185,103 @@ class BlogHighlightSortTests(TestCase):
         self.assertEqual(titles[0], 'Second Post')
 
 
+class BlogSearchTests(TestCase):
+    """
+    blog_view's `q` param — filters across title, body, company_name, and
+    author username (templates/blog/article.html's search box, next to the
+    newest/oldest sort buttons). Verifies the search actually filters the
+    real queryset end to end, not just that the box is present in markup.
+    """
+
+    def setUp(self):
+        self.author = User.objects.create_user('search_author_findme', password='x')
+        self.other_author = User.objects.create_user('search_author_other', password='x')
+        self.title_match = Article.objects.create(
+            title='Raising a Seed Round the Right Way', body='irrelevant body',
+            company_name='Acme Co', author=self.other_author,
+        )
+        self.body_match = Article.objects.create(
+            title='Unrelated Title', body='Some advice about seed fundraising strategy.',
+            company_name='Other Co', author=self.other_author,
+        )
+        self.company_match = Article.objects.create(
+            title='Another Post', body='no keyword here', company_name='SeedCo Industries',
+            author=self.other_author,
+        )
+        self.author_match = Article.objects.create(
+            title='Yet Another Post', body='no keyword here either', company_name='Nothing Special',
+            author=self.author,
+        )
+        self.no_match = Article.objects.create(
+            title='Totally Different', body='nothing relevant', company_name='Whatever Inc',
+            author=self.other_author,
+        )
+
+    def test_search_matches_title(self):
+        response = self.client.get(reverse('blog:blog_view'), {'q': 'Seed Round'})
+        titles = {a.title for a in response.context['blog']}
+        self.assertIn(self.title_match.title, titles)
+        self.assertNotIn(self.no_match.title, titles)
+
+    def test_search_matches_body(self):
+        response = self.client.get(reverse('blog:blog_view'), {'q': 'fundraising strategy'})
+        results = list(response.context['blog'])
+        self.assertEqual(results, [self.body_match])
+
+    def test_search_matches_company_name(self):
+        response = self.client.get(reverse('blog:blog_view'), {'q': 'SeedCo'})
+        results = list(response.context['blog'])
+        self.assertEqual(results, [self.company_match])
+
+    def test_search_matches_author_username(self):
+        response = self.client.get(reverse('blog:blog_view'), {'q': 'findme'})
+        results = list(response.context['blog'])
+        self.assertEqual(results, [self.author_match])
+
+    def test_search_is_case_insensitive(self):
+        response = self.client.get(reverse('blog:blog_view'), {'q': 'seedco'})
+        results = list(response.context['blog'])
+        self.assertEqual(results, [self.company_match])
+
+    def test_no_query_returns_everything(self):
+        response = self.client.get(reverse('blog:blog_view'))
+        self.assertEqual(len(response.context['blog']), 5)
+
+    def test_no_matches_returns_empty_not_an_error(self):
+        response = self.client.get(reverse('blog:blog_view'), {'q': 'zzz_no_such_keyword_zzz'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context['blog']), [])
+
+    def test_search_box_and_results_message_render_on_the_page(self):
+        response = self.client.get(reverse('blog:blog_view'), {'q': 'Seed Round'})
+        self.assertContains(response, 'value="Seed Round"')
+        self.assertContains(response, 'Showing results for')
+        self.assertContains(response, 'clear search')
+
+    def test_search_query_persists_across_sort_links(self):
+        response = self.client.get(reverse('blog:blog_view'), {'q': 'Seed Round', 'sort': 'oldest'})
+        self.assertContains(response, 'sort=newest&q=Seed%20Round')
+        self.assertContains(response, 'sort=oldest&q=Seed%20Round')
+
+
+class BlogShareButtonTests(TestCase):
+    """The internal-sharing Share button on the blog list page (sharing app)."""
+
+    def setUp(self):
+        self.author = User.objects.create_user('bsb_author', password='x')
+        self.viewer = User.objects.create_user('bsb_viewer', password='x')
+        self.article = Article.objects.create(title='Shareable Post', body='body', author=self.author)
+
+    def test_share_button_renders_for_authenticated_user(self):
+        self.client.force_login(self.viewer)
+        response = self.client.get(reverse('blog:blog_view'))
+        self.assertContains(response, f"openContentShare('BLOG', {self.article.pk}")
+
+    def test_share_button_hidden_for_anonymous_visitor(self):
+        response = self.client.get(reverse('blog:blog_view'))
+        self.assertNotContains(response, "openContentShare('BLOG'")
+
+
 @override_settings(MEDIA_ROOT=tempfile.mkdtemp())
 class ArticleImageStorageCleanupTests(TestCase):
     """

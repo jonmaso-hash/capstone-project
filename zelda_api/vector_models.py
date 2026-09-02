@@ -253,8 +253,26 @@ class IntelligenceMemo(FoundryStandardMixin, models.Model):
     risk_assessment = models.TextField(blank=True, help_text="Key risks and mitigation strategies")
     investment_thesis = models.TextField(help_text="Why this is investable")
     investment_readiness = models.TextField(blank=True, help_text="0-100 readiness score with strengths/weaknesses")
+
+    # Zelda Lite section additions — evidence-grounded, same "insufficient
+    # data" discipline as every section above, not free-associated summary
+    # text. Deliberately separate fields (not sub-bullets of an existing
+    # section) so the Lite/AI template split (zelda_api/ic_memo.py's
+    # LITE_MEMO_SECTION_KEYS) can address each independently.
+    key_strengths = models.TextField(blank=True, help_text="2-4 evidence-cited strengths supporting investment")
+    key_concerns = models.TextField(blank=True, help_text="2-4 evidence-cited concerns/gaps against investment")
+    what_would_change_decision = models.TextField(blank=True, help_text="The single most important missing piece of evidence")
+
+    # Zelda AI-only additions (see LITE_MEMO_SECTION_KEYS) — deeper scenario
+    # analysis and an honest note on what evidence-grounding actually added
+    # here, not marketing copy about the platform in general.
+    bull_case = models.TextField(blank=True, help_text="Strongest evidence-grounded case FOR investing")
+    base_case = models.TextField(blank=True, help_text="Most likely outcome given disclosed facts and trajectory")
+    bear_case = models.TextField(blank=True, help_text="Strongest evidence-grounded case AGAINST investing")
+    zelda_advantage = models.TextField(blank=True, help_text="What this evidence-grounded pass surfaced that a generic AI summary would likely miss")
+
     questions_for_management = models.TextField(blank=True, help_text="Open questions the deck does not answer")
-    
+
     # Source tracking
     insights_used = models.ManyToManyField(IntelligenceInsight, related_name='memos')
     retrieved_context = models.TextField(help_text="Raw context assembled from retrieval")
@@ -263,17 +281,26 @@ class IntelligenceMemo(FoundryStandardMixin, models.Model):
     completeness_score = models.FloatField(default=0.0, help_text="0.0-1.0 memo completeness")
     citations_count = models.IntegerField(default=0, help_text="Number of source citations")
     
-    # Recommendations
+    # Recommendations — vocabulary matches exactly what
+    # intelligence_pipeline.py's Claude prompt is actually instructed to
+    # return (_call_claude_for_memo's "For recommendation use exactly one
+    # of: STRONG_INVEST, INVEST, NEEDS_REVIEW, PASS") and what
+    # _determine_recommendation's legacy fallback already used. The
+    # previous choices here (strong_pass/pass/consider/interview/
+    # strong_interest — a hiring-evaluation vocabulary, not an investment
+    # one) never matched what was actually being stored: Claude's real
+    # responses landed as free text outside any defined choice, so
+    # get_recommendation_display() silently fell back to the raw value.
+    # See migration 0020 for the one-time backfill of existing rows.
     recommendation = models.CharField(
         max_length=20,
         choices=[
-            ('strong_pass', 'Strong Pass'),
-            ('pass', 'Pass'),
-            ('consider', 'Consider'),
-            ('interview', 'Schedule Interview'),
-            ('strong_interest', 'Strong Interest'),
+            ('STRONG_INVEST', 'Strong Invest'),
+            ('INVEST', 'Invest'),
+            ('NEEDS_REVIEW', 'Needs Review'),
+            ('PASS', 'Pass'),
         ],
-        default='consider'
+        default='NEEDS_REVIEW'
     )
     
     # Timestamps

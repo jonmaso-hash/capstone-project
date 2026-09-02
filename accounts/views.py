@@ -22,6 +22,17 @@ from matchmaking.utils import clean_financial_input
 from matchmaking.models import (
     Application, InvestorApplication, SellerApplication, BuyerApplication, Connection, Follow,
     log_page_event, BusinessEmailVerification, company_matches_email_domain, _resolve_company_name,
+    ProfileVideo,
+)
+from notifications.models import Notification
+
+# Shown to every user as their first notification — no money is exchanged
+# on Interlink Foundry itself, so this needs to be stated plainly before
+# anyone assumes the platform functions like a broker, escrow, or trust.
+PLATFORM_DISCLAIMER_MESSAGE = (
+    "Welcome to Interlink Foundry. We do not process payments or hold funds — "
+    "Interlink Foundry is not a broker-dealer, escrow agent, or trustee. All "
+    "deals are negotiated and financed directly between parties, off-platform."
 )
 
 # External/Third-Party Apps
@@ -81,6 +92,9 @@ def signup_view(request):
         if form.is_valid():
             user = form.save()
             auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            Notification.objects.create(
+                recipient=user, notification_type='SYSTEM', message=PLATFORM_DISCLAIMER_MESSAGE,
+            )
             log_page_event(request, 'signup_completed', role=role, user=user)
             messages.success(request, f"Welcome to Interlink Foundry, {user.username}!")
             return redirect(ROLE_PROFILE_URLS[role])
@@ -122,6 +136,15 @@ def choose_role(request):
         if role not in ROLE_PROFILE_URLS:
             messages.error(request, "Please pick Founder, Investor, Seller, or Buyer to continue.")
             return redirect('accounts:choose_role')
+        # Social-login signups skip signup_view entirely (no username/
+        # password form to submit), so without this they'd never see the
+        # platform disclaimer password-signup users get there. get_or_create
+        # because, unlike signup_view (fires once, at account creation),
+        # choose_role has no "first time only" guard of its own and is
+        # reachable by URL more than once for the same user.
+        Notification.objects.get_or_create(
+            recipient=request.user, notification_type='SYSTEM', message=PLATFORM_DISCLAIMER_MESSAGE,
+        )
         return redirect(ROLE_PROFILE_URLS[role])
     return render(request, "accounts/choose_role.html")
 
@@ -145,6 +168,88 @@ def login_view(request):
 # USER PROFILE DISPATCH LAYER
 # =====================================================================
 
+def _get_investor_readiness(application):
+    """
+    Founder-side "Investor Readiness Center" (backlog #4's remaining
+    concrete piece — the rest was already satisfied by existing
+    infrastructure: the floating widget's Search/Notifications tabs, the
+    Data Room's structured "Request Information" flow, and the Deal Room).
+
+    Every number here is read from data Zelda (or the founder) has
+    already produced — nothing is computed fresh or invented for this
+    view. A dimension with no underlying data yet returns None ("not yet
+    analyzed"), never a fabricated 0%, which would misreport "assessed
+    and found lacking" for something that was simply never assessed:
+      - Market Evidence: the real 'Market' row from compute_confidence_
+        breakdown, off the founder's most recently analyzed document.
+      - Financial Disclosure: compute_financial_completeness's real
+        disclosed/total ratio, same document.
+      - Company Verification: the founder's most recent real Truth Delta
+        score.
+      - Founder Verification: the real BusinessEmailVerification-backed
+        is_verified flag (binary, so 0%/100% is the correct display, not
+        a "not yet analyzed" case).
+    The materials checklist is built the same way: an item only appears
+    if the corresponding real artifact exists (pitch deck file, a
+    generated IntelligenceMemo, a TruthDeltaReport, or an uploaded
+    DataRoomDocument in that category) — no placeholder/locked rows for
+    things that were never actually produced.
+    """
+    from zelda_api.vector_models import DocumentSource, IntelligenceMemo
+    from zelda_api.truth_delta_models import TruthDeltaReport
+    from zelda_api.confidence_breakdown import compute_confidence_breakdown, compute_financial_completeness
+    from zelda_api.intelligence_pipeline import ZeldaIntelligencePipelineV2
+    from matchmaking.models import DataRoomDocument
+
+    founder_user = application.user
+
+    latest_doc = DocumentSource.objects.filter(
+        uploaded_by=founder_user, status='analyzed'
+    ).order_by('-created_at').first()
+
+    market_evidence_pct = None
+    financial_disclosure_pct = None
+    has_intelligence_report = False
+    if latest_doc:
+        insights = list(latest_doc.insights.all())
+        if insights:
+            breakdown = compute_confidence_breakdown(insights)
+            market_row = next((row for row in breakdown if row['category'] == 'Market'), None)
+            if market_row:
+                market_evidence_pct = round(market_row['confidence'] * 10)
+            facts = ZeldaIntelligencePipelineV2()._build_structured_context(latest_doc, insights)
+            financial_disclosure_pct = round(compute_financial_completeness(facts)['ratio'] * 100)
+        has_intelligence_report = IntelligenceMemo.objects.filter(document=latest_doc).exists()
+
+    latest_truth_delta = TruthDeltaReport.objects.filter(
+        document__uploaded_by=founder_user
+    ).order_by('-created_at').first()
+    company_verification_pct = None
+    if latest_truth_delta and latest_truth_delta.overall_truth_score is not None:
+        company_verification_pct = round(latest_truth_delta.overall_truth_score)
+
+    materials = []
+    if application.pitch_deck:
+        materials.append('Pitch Deck')
+    if has_intelligence_report:
+        materials.append('Zelda Intelligence Report')
+    if latest_truth_delta:
+        materials.append('Truth Delta Verification')
+    for category, label in DataRoomDocument.CATEGORY_CHOICES:
+        if category == 'OTHER':
+            continue
+        if DataRoomDocument.objects.filter(founder=application, category=category).exists():
+            materials.append(label)
+
+    return {
+        'market_evidence_pct': market_evidence_pct,
+        'financial_disclosure_pct': financial_disclosure_pct,
+        'company_verification_pct': company_verification_pct,
+        'founder_verification_pct': 100 if application.is_verified else 0,
+        'materials': materials,
+    }
+
+
 @login_required
 def profile(request, username=None, pk=None):
     """
@@ -163,6 +268,62 @@ def profile(request, username=None, pk=None):
     investor_application = getattr(viewed_user, "match_investor_profile", None)
     seller_application = getattr(viewed_user, "match_seller_profile", None)
     buyer_application = getattr(viewed_user, "match_buyer_profile", None)
+
+    # Verified Track Record — status='FUNDED'/'CLOSED' only reaches this
+    # terminal state via the counterpart's confirmation (see
+    # matchmaking.views.connection_action_view/acquisition_connection_action_view),
+    # never a unilateral self-report, so it's safe to surface as a trust
+    # signal. Always read off the canonical has_verified_funding/
+    # verified_funding_count (Application, InvestorApplication) and
+    # has_verified_sale/verified_sale_count (SellerApplication,
+    # BuyerApplication) properties in matchmaking/models.py — the single
+    # source of truth every surface (profile, bulletin board, Foundry
+    # Pulse) reads from. This can NEVER be derived from a profile field,
+    # user-entered text, an uploaded document, or AI inference — Zelda may
+    # analyze a transaction, but only the counterparty-confirmed status
+    # may verify one.
+    has_verified_funded = bool(
+        (application and application.has_verified_funding) or
+        (investor_application and investor_application.has_verified_funding)
+    )
+    has_verified_sold = bool(
+        (seller_application and seller_application.has_verified_sale) or
+        (buyer_application and buyer_application.has_verified_sale)
+    )
+
+    # Drill-down list backing the "Verified Track Record" section — lets a
+    # visitor inspect the actual transactions behind the badge/count rather
+    # than just trusting the number, per the intended profile claims →
+    # Zelda analysis → verified marketplace outcomes progression.
+    verified_track_record = []
+    if application and application.has_verified_funding:
+        transactions = application.connections.filter(status='FUNDED').select_related('investor').order_by('-updated_at')
+        count = application.verified_funding_count
+        verified_track_record.append({
+            'label': f"Funded by {count} investor{'s' if count != 1 else ''}",
+            'transactions': [{'counterparty': c.investor.company_name, 'date': c.updated_at} for c in transactions],
+        })
+    if investor_application and investor_application.has_verified_funding:
+        transactions = investor_application.connections.filter(status='FUNDED').select_related('founder').order_by('-updated_at')
+        count = investor_application.verified_funding_count
+        verified_track_record.append({
+            'label': f"{count} compan{'y' if count == 1 else 'ies'} funded",
+            'transactions': [{'counterparty': c.founder.company_name, 'date': c.updated_at} for c in transactions],
+        })
+    if seller_application and seller_application.has_verified_sale:
+        transactions = seller_application.acquisition_connections.filter(status='CLOSED').select_related('buyer').order_by('-updated_at')
+        count = seller_application.verified_sale_count
+        verified_track_record.append({
+            'label': f"Sold to {count} buyer{'s' if count != 1 else ''}",
+            'transactions': [{'counterparty': c.buyer.company_name, 'date': c.updated_at} for c in transactions],
+        })
+    if buyer_application and buyer_application.has_verified_sale:
+        transactions = buyer_application.acquisition_connections.filter(status='CLOSED').select_related('seller').order_by('-updated_at')
+        count = buyer_application.verified_sale_count
+        verified_track_record.append({
+            'label': f"{count} compan{'y' if count == 1 else 'ies'} acquired",
+            'transactions': [{'counterparty': c.seller.company_name, 'date': c.updated_at} for c in transactions],
+        })
 
     dm_enabled = False
     if application and application.allow_direct_messages:
@@ -195,10 +356,11 @@ def profile(request, username=None, pk=None):
     founder_milestones = application.milestones.all()[:10] if application else []
 
     # 3b. Profile Visibility — owner's own choices on which sections show to others
+    from usersettings.models import UserSettings
+    viewed_user_settings = UserSettings.for_user(viewed_user)
+
     show_contact_info = True
     if viewed_user != request.user:
-        from usersettings.models import UserSettings
-        viewed_user_settings = UserSettings.for_user(viewed_user)
         if not viewed_user_settings.show_job_postings:
             user_jobs = []
         if not viewed_user_settings.show_articles:
@@ -208,6 +370,19 @@ def profile(request, username=None, pk=None):
         if not viewed_user_settings.show_milestones:
             founder_milestones = []
         show_contact_info = viewed_user_settings.show_contact_info
+
+    # 3c. Founder Activity — an investor's first question is "is this founder
+    # active?"; last_milestone respects the show_milestones gate above by
+    # reading founder_milestones after it's already been zeroed out for
+    # non-owners who opted out, rather than re-querying independently.
+    founder_activity = None
+    if application:
+        founder_activity = {
+            'last_login': viewed_user.last_login,
+            'profile_updated_at': application.updated_at,
+            'deck_uploaded_at': application.pitch_deck_uploaded_at,
+            'last_milestone': founder_milestones[0] if founder_milestones else None,
+        }
 
     # 4. Privacy Gatekeeper — matchmaking.Application has no allowed_viewers
     # whitelist (that field only exists on the legacy accounts models and is
@@ -290,6 +465,7 @@ def profile(request, username=None, pk=None):
     # IC Memo entry point — founder-only, gated the same way the memo view
     # itself is gated (owner, staff, or an accepted-connection investor).
     ic_memo_document_id = None
+    investor_readiness = None
     if application:
         from zelda_api.ic_memo import can_view_ic_memo
         if can_view_ic_memo(request.user, application):
@@ -299,6 +475,12 @@ def profile(request, username=None, pk=None):
             ).order_by('-created_at').first()
             if pitch_deck_doc:
                 ic_memo_document_id = pitch_deck_doc.id
+
+            # Same viewer gate as the IC Memo itself (owner, staff, or an
+            # accepted-connection investor) — the whole point of this panel
+            # is "here's my verified dossier," which only makes sense to
+            # show a founder themselves or an investor already introduced.
+            investor_readiness = _get_investor_readiness(application)
 
     # Privacy-preserving trust badges — thresholded booleans only, never the
     # underlying view/analyze counts. See matchmaking/growth_metrics.py::get_profile_trust_badges.
@@ -368,11 +550,30 @@ def profile(request, username=None, pk=None):
                         'lost_verification': [_display_category(c) for c in trend['lost_verification']],
                     }
 
+    # The <=30s Explore elevator pitch, shown on the profile as the "trailer"
+    # above the full pitch video. Non-owners only see it once it's PUBLISHED;
+    # the owner always sees it (with its review status) so a quarantined clip
+    # isn't silently missing.
+    elevator_pitch = None
+    _ep_owner = application or seller_application
+    if _ep_owner:
+        _ep_role = 'founder' if application else 'seller'
+        _ep = ProfileVideo.objects.filter(
+            kind=ProfileVideo.KIND_ELEVATOR_PITCH, **{_ep_role: _ep_owner},
+        ).first()
+        if _ep and (_ep.status == ProfileVideo.STATUS_PUBLISHED or viewed_user == request.user):
+            elevator_pitch = _ep
+
     context = {
         "profile_user": viewed_user,
         "application": application,
+        "elevator_pitch": elevator_pitch,
         "ic_memo_document_id": ic_memo_document_id,
+        "investor_readiness": investor_readiness,
         "profile_trust_badges": profile_trust_badges,
+        "has_verified_funded": has_verified_funded,
+        "has_verified_sold": has_verified_sold,
+        "verified_track_record": verified_track_record,
         "can_view_founder_data_room": can_view_founder_data_room,
         "verification_history": verification_history,
         "verification_reports_count": verification_reports_count,
@@ -393,6 +594,8 @@ def profile(request, username=None, pk=None):
         "show_contact_info": show_contact_info,
         "mutual_connections": mutual_connections,
         "founder_milestones": founder_milestones,
+        "founder_activity": founder_activity,
+        "profile_picture": viewed_user_settings.profile_picture,
 
     }
 
@@ -704,7 +907,7 @@ def account_search_api(request):
 
     # 🔒 FILTER BOUNDARIES: Enforces public alignment unless the request belongs to the owner
     results_queryset = Application.objects.filter(search_query).filter(
-        Q(is_private=False) | Q(user=request.user)
+        Q(is_private=False, archived_at__isnull=True) | Q(user=request.user)
     )[:10]
 
     serialized_results = [
@@ -785,7 +988,7 @@ def update_criteria(request):
         return JsonResponse({
             'status': 'success',
             'zelda_score': app.zelda_score,
-            'runway_months': float(app.runway_months)
+            'runway_months': float(app.runway_months) if app.runway_months is not None else None
         })
         
 @login_required

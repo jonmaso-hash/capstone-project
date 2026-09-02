@@ -24,6 +24,21 @@
     <!-- Active Intelligence Memo Report Header -->
     <div class="row align-items-center mb-4 g-4">
         <div class="col-md-8">
+            <p class="text-uppercase small text-muted fw-bold mb-1">
+                Zelda Intelligence Report
+                <i class="bi bi-info-circle field-info-icon" role="button" tabindex="0"
+                   data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom"
+                   data-bs-content="Save hours of manual research. Zelda analyzes this company's pitch deck, financials, and available evidence to generate an investor-ready report covering business model, market opportunity, competitive positioning, financial review, risk factors, and key questions for management."></i>
+            </p>
+            {% if memo_tier == 'full' %}
+            <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-2 mb-2 fw-semibold">
+                <i class="bi bi-stars me-1"></i>Zelda AI — Full Report
+            </span>
+            {% else %}
+            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-2 mb-2 fw-semibold">
+                <i class="bi bi-lightning-charge-fill me-1"></i>Zelda Lite Report
+            </span>
+            {% endif %}
             <div class="d-flex align-items-center gap-3 flex-wrap">
                 <h1 class="fw-bold m-0 text-dark" id="startup-title">{{ founder_app.company_name }}</h1>
                 <span class="badge rounded-pill memo-badge-premium px-3 py-2 fs-6">
@@ -54,16 +69,26 @@
             <!-- Core Summary -->
             <div class="card card-body shadow-sm border-0 p-4 mb-4 metric-card">
                 <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Executive Baseline Description</h5>
-                <p class="text-secondary lh-lg mb-0">{{ founder_app.description }}</p>
+                <p class="text-secondary lh-lg mb-3">{{ founder_app.description }}</p>
+                <div id="memo-alignment-gauge"></div>
             </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const gaugeEl = document.getElementById('memo-alignment-gauge');
+                    if (gaugeEl && typeof renderConfidenceGauge === 'function') {
+                        renderConfidenceGauge(gaugeEl, {{ match_percentage }} / 100, 'Alignment');
+                    }
+                });
+            </script>
 
+            {% if memo_tier == 'full' %}
             <!-- Visualization Engine Analytics Panel -->
             <div class="card card-body shadow-sm border-0 p-4 mb-4 metric-card">
                 <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Data Metrics & Market Synthesis</h5>
                 <div id="charts-loading-placeholder" class="text-center py-4 {% if not is_processing %}d-none{% endif %}">
                     <p class="text-muted small mb-0"><i class="bi bi-graph-up me-2"></i>Awaiting backend synthesis completion to populate visualization models...</p>
                 </div>
-                
+
                 <div class="row g-3">
                     <div class="col-md-6">
                         <div class="chart-container-canvas">
@@ -82,6 +107,15 @@
                     </div>
                 </div>
             </div>
+            {% else %}
+            <div class="card card-body shadow-sm border-0 p-4 mb-4 metric-card" style="background: linear-gradient(135deg, #fff8e1, #ffffff);">
+                <h5 class="fw-bold mb-1">Zelda AI unlocks the complete intelligence report</h5>
+                <p class="text-muted small mb-3">Zelda Lite gives you the strategic signal. Zelda AI gives you the complete intelligence report — market synthesis charts, financial metrics, and the full external intelligence feed.</p>
+                <p class="text-muted small mb-0">
+                    {{ founder_app.company_name }} hasn't upgraded to Zelda AI yet. Once they do, you'll see the complete report here — no extra cost to you.
+                </p>
+            </div>
+            {% endif %}
         </div>
 
         <!-- Right Algorithmic Validation Pillars Column -->
@@ -106,6 +140,7 @@
             </div>
             {% endif %}
 
+            {% if memo_tier == 'full' %}
             <!-- Deal Execution Metrics -->
             <div class="card card-body shadow-sm border-0 p-4 metric-card mb-4">
                 <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Core Operational Variables</h5>
@@ -145,6 +180,12 @@
                     {% endif %}
                 </div>
             </div>
+            {% else %}
+            <div class="card card-body shadow-sm border-0 p-4 metric-card text-center">
+                <h5 class="fw-bold mb-1"><i class="bi bi-stars me-1 text-warning"></i>Zelda AI</h5>
+                <p class="text-muted small mb-0">Financial metrics and the external intelligence feed are part of the complete report.</p>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -155,12 +196,16 @@
 <script>
     // Context properties mapping safely from backend variables
     const companySlugName = "{{ founder_app.company_name|slugify }}";
-    const userAuthToken = localStorage.getItem('auth_token'); 
-    
+    const userAuthToken = localStorage.getItem('auth_token');
+    const MEMO_TIER = "{{ memo_tier }}";
+
     let chartInstances = {};
 
     // Handles smart background data execution loops
     async function evaluateIntelligenceTelemetry() {
+        // Chart canvases only exist in the Zelda AI tier's markup — nothing
+        // to poll or render for a Zelda Lite viewer.
+        if (MEMO_TIER !== 'full') return;
         try {
             const response = await fetch(`/api/v1/zelda/memo/${companySlugName}/`, {
                 method: 'GET',

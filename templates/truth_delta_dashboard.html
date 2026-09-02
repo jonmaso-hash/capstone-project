@@ -573,10 +573,23 @@
 
     <!-- Header with Score -->
     <div class="truth-delta-container">
+        {% if truth_delta_tier == 'full' %}
+        <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-2 mb-3 fw-semibold">
+            <i class="bi bi-stars me-1"></i>Zelda AI — Full Verification
+        </span>
+        {% else %}
+        <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-2 mb-3 fw-semibold">
+            <i class="bi bi-lightning-charge-fill me-1"></i>Zelda Lite Verification
+        </span>
+        {% endif %}
         <div class="truth-delta-header">
             <div class="truth-delta-title">
                 <div class="truth-delta-icon">🔍</div>
-                <h2>Truth Delta Verification</h2>
+                <h2>Truth Delta Verification
+                    <i class="bi bi-info-circle field-info-icon" role="button" tabindex="0"
+                       data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom"
+                       data-bs-content="Know what's actually verified before you invest. Truth Delta cross-checks claims against independent public sources (SEC EDGAR, Crunchbase, recent news) to flag what's supported, what's unverified, and what's missing — a diligence accelerator, not a substitute for full due diligence."></i>
+                </h2>
             </div>
             <div class="truth-delta-score-box">
                 <div class="score-label">Credibility Score</div>
@@ -585,6 +598,27 @@
                 <div class="score-risk" id="truthScoreRisk">—</div>
             </div>
         </div>
+
+        {% if report and category_states %}
+        <div class="truth-delta-stats mb-0">
+            <div class="stat-card">
+                <div class="stat-value">{{ claims_count }}</div>
+                <div class="stat-label">Claims Analyzed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: var(--td-green);">{{ verified_count }}</div>
+                <div class="stat-label">Verified</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: var(--td-yellow);">{{ unverified_count }}</div>
+                <div class="stat-label">Unverified</div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if report %}
+        <div class="mt-3 mb-2" id="truthdelta-confidence-gauge" style="max-width: 420px;"></div>
+        {% endif %}
 
         <!-- Summary -->
         <div class="truth-delta-summary">
@@ -613,6 +647,24 @@
             <div class="claims-header">Claim-by-Claim Detail</div>
             <div class="claims-list" id="truthDeltaClaimsList"></div>
         </div>
+
+        {% if truth_delta_tier == 'lite' and report %}
+        <div class="recommendation-adjustment mt-4" style="background: linear-gradient(135deg, #fff8e1, #ffffff); border-left-color: #f59e0b;">
+            <div class="adjustment-title" style="color: #1e293b; font-size: 1.05rem;">Zelda AI unlocks the full breakdown</div>
+            <div class="adjustment-text" style="color: #475569;">
+                {% if is_owner %}
+                Every extracted claim, source-by-source provenance, entity verification (Secretary of State, domain, timeline), and the ability to request evidence from investors — all included once you upgrade.
+                {% else %}
+                {{ document.uploaded_by.username }} hasn't upgraded to Zelda AI yet. Once they do, you'll see the full claim-by-claim breakdown here — no extra cost to you.
+                {% endif %}
+            </div>
+            {% if is_owner %}
+            <a href="{% url 'billing:billing_page' %}" class="truth-delta-btn primary mt-3 d-inline-block text-decoration-none">
+                <i class="bi bi-stars me-1"></i> Upgrade to Zelda AI
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
 
         <!-- Actions -->
         <div class="truth-delta-actions">
@@ -763,6 +815,11 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
         document.getElementById('truthSummaryText').textContent = data.summary ||
             'Verification pending — no public data found for this company.';
 
+        const gaugeEl = document.getElementById('truthdelta-confidence-gauge');
+        if (gaugeEl && typeof renderConfidenceGauge === 'function' && risk !== 'pending') {
+            renderConfidenceGauge(gaugeEl, (data.overall_truth_score || 0) / 100, 'Verification Confidence');
+        }
+
         renderClaimsSection(data.details || {});
     }
 
@@ -821,7 +878,14 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
         if (rollup) {
             const verifiedCount = rows.filter(r => r.observed && !/no external data/i.test(r.observed)).length;
             const pct = Math.round((verifiedCount / rows.length) * 1000) / 10;
-            rollup.textContent = `${verifiedCount}/${rows.length} claims verified against external data (${pct}%)`;
+            let text = `${verifiedCount}/${rows.length} claims verified against external data (${pct}%)`;
+            // SERVER_TRUTH_DATA.claims_analyzed is the TRUE total; rows.length
+            // is capped to 3 for Lite (see truth_delta_ui_view/TruthDeltaScoreView),
+            // so a gap between them means there's more behind Zelda AI.
+            if (typeof SERVER_TRUTH_DATA !== 'undefined' && SERVER_TRUTH_DATA.claims_analyzed > rows.length) {
+                text += ` — showing ${rows.length} of ${SERVER_TRUTH_DATA.claims_analyzed}, upgrade to Zelda AI to see the rest`;
+            }
+            rollup.textContent = text;
             rollup.style.display = 'block';
         }
     }

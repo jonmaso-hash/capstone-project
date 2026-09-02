@@ -90,15 +90,24 @@ class TruthDeltaScoreView(APIView):
             return Response({"error": "Report not found"}, status=404)
 
         from .truth_delta_models import truth_delta_unlocked
-        if not truth_delta_unlocked(request.user, report.document):
-            return Response(
-                {"error": "This founder's Truth Delta report requires Premium to view.", "code": "premium_required"},
-                status=status.HTTP_402_PAYMENT_REQUIRED,
-            )
+        tier = 'full' if truth_delta_unlocked(request.user, report.document) else 'lite'
+
+        details = report.details or {}
+        if tier == 'lite' and details:
+            details = {
+                'claims': details.get('claims', []),
+                'per_claim': (details.get('per_claim') or [])[:3],
+            }
+
+        category_states = report.category_states()
 
         return Response({
+            "tier": tier,
             "overall_truth_score": report.overall_truth_score,
             "credibility_risk": report.credibility_risk,
             "summary": report.summary,
-            "details": report.details,
+            "details": details,
+            "category_states": category_states,
+            "verified_count": sum(1 for s in category_states.values() if s == 'verified'),
+            "unverified_count": sum(1 for s in category_states.values() if s == 'no_data'),
         })

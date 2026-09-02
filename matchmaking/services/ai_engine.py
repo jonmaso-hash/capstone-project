@@ -97,7 +97,7 @@ def calculate_zelda_advantage(application):
     # Retrieve sanitized values
     revenue = float(clean_financial_input(application.current_revenue) or 0)
     ask = float(clean_financial_input(application.raising_amount) or 0)
-    burn = float(clean_financial_input(application.monthly_burn_rate) or 1)
+    burn = float(clean_financial_input(application.monthly_burn_rate) or 0)
     team_size = int(clean_financial_input(application.team_size) or 1)
     years = int(clean_financial_input(application.years_in_business) or 0)
 
@@ -105,9 +105,16 @@ def calculate_zelda_advantage(application):
     efficiency = revenue / team_size if team_size > 0 else 0
     eff_pts = min(25, (efficiency / 250000) * 25)
 
-    # 2. Runway Calculation (Formula: Cash on hand / Burn)
-    runway = ((revenue / 12) + ask) / burn if burn > 0 else 0
-    application.runway_months = min(round(runway, 1), 999.9)
+    # 2. Runway Calculation (Formula: Cash on hand / Burn). Burn was previously
+    # defaulted to $1 when undisclosed, which turned "unknown" into a division
+    # by a near-zero number and produced fabricated figures like "999.9 months"
+    # runway. Leave it unset instead of faking precision the input doesn't support.
+    if burn > 0:
+        runway = ((revenue / 12) + ask) / burn
+        application.runway_months = min(round(runway, 1), 999.9)
+    else:
+        runway = 0
+        application.runway_months = None
 
     # 3. Final Weighted Score
     # Stability (3pts/year) + Runway Score + Efficiency

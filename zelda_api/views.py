@@ -305,11 +305,11 @@ class ZeldaGlobalSearchAPIView(APIView):
                 if search_founders and Application:
                     # Privacy Gatekeeper: same rule as matchmaking._filtered_public_applications
                     # — Zelda search must never surface private or denied founder profiles.
-                    founder_matches = Application.objects.filter(
+                    founder_matches = Application.objects.discoverable().filter(
                         Q(company_name__icontains=user_query)
                         | Q(description__icontains=user_query)
                         | Q(sector__icontains=user_query)
-                    ).filter(is_private=False).exclude(review_status='DENIED').select_related('user')[:5]
+                    ).exclude(review_status='DENIED').select_related('user')[:5]
 
                     for app in founder_matches:
                         result = _founder_to_result_dict(app)
@@ -320,7 +320,10 @@ class ZeldaGlobalSearchAPIView(APIView):
                         seen_urls.add(result['url'])
 
                 if search_investors and InvestorApplication:
-                    investor_matches = InvestorApplication.objects.filter(
+                    # Privacy Gatekeeper: same rule as founder_matches above — this
+                    # previously had no is_private/archived filter at all, letting
+                    # Zelda search surface private and archived investor mandates.
+                    investor_matches = InvestorApplication.objects.discoverable().filter(
                         Q(company_name__icontains=user_query)
                         | Q(investment_focus__icontains=user_query)
                         | Q(location__icontains=user_query)
@@ -488,14 +491,10 @@ class ZeldaAskAPIView(APIView):
                 }, status=status.HTTP_200_OK)
 
             if target == 'seller':
-                base_queryset = SellerApplication.objects.select_related('user').filter(
-                    is_private=False
-                ).exclude(review_status='DENIED')
+                base_queryset = SellerApplication.objects.discoverable().select_related('user').exclude(review_status='DENIED')
                 to_result_dict = _seller_to_result_dict
             else:
-                base_queryset = Application.objects.select_related('user').filter(
-                    is_private=False
-                ).exclude(review_status='DENIED')
+                base_queryset = Application.objects.discoverable().select_related('user').exclude(review_status='DENIED')
                 to_result_dict = _founder_to_result_dict
 
             matches, dropped_labels, widened = _search_with_relaxation(base_queryset, constraints, allowed_fields=allowed_fields)
@@ -1079,11 +1078,8 @@ def truth_delta_ui_view(request, document_id):
                 # showed interest" should never be paywalled.
                 log_investor_event(request.user, founder_app, 'truth_delta_view')
 
-    if not truth_delta_unlocked(request.user, document):
-        return render(request, 'truth_delta_paywall.html', {
-            'document': document,
-            'is_owner': document.uploaded_by == request.user,
-        })
+    is_owner = document.uploaded_by == request.user
+    tier = 'full' if truth_delta_unlocked(request.user, document) else 'lite'
 
     # Get latest report for this document
     report = TruthDeltaReport.objects.filter(
@@ -1093,10 +1089,11 @@ def truth_delta_ui_view(request, document_id):
     # Get claims that were extracted
     claims = ClaimedDatapoint.objects.filter(document=document)
 
-    # Clarification requests — grouped by category client-side; serialized
-    # here as a flat list since json_script handles the list shape cleanly.
+    # Clarification requests (interactive "ask for evidence" diligence) are a
+    # Zelda AI feature — a Lite viewer sees WHETHER something is unverified,
+    # not the tooling to chase it down.
     clarification_requests = []
-    if report:
+    if report and tier == 'full':
         clarification_requests = [
             {
                 'id': cr.id,
@@ -1111,6 +1108,20 @@ def truth_delta_ui_view(request, document_id):
             for cr in report.clarification_requests.select_related('requested_by').order_by('-created_at')
         ]
 
+    details = report.details if report else {}
+    if tier == 'lite' and details:
+        # Lite gets a few representative findings, not the full claim-by-claim
+        # breakdown — "tells you whether there's a problem," not "exactly
+        # where and what to do about it."
+        details = {
+            'claims': details.get('claims', []),
+            'per_claim': (details.get('per_claim') or [])[:3],
+        }
+
+    category_states = report.category_states() if report else {}
+    verified_count = sum(1 for s in category_states.values() if s == 'verified')
+    unverified_count = sum(1 for s in category_states.values() if s == 'no_data')
+
     context = {
         'document': document,
         'report': report,
@@ -1120,16 +1131,27 @@ def truth_delta_ui_view(request, document_id):
         'credibility_risk': report.credibility_risk if report else 'pending',
         'summary': report.summary if report else 'Verification pending.',
         'claims_count': claims.count(),
-        'details': report.details if report else {},
+        'details': details,
         'clarification_requests': clarification_requests,
-        'can_request_clarification': can_request_clarification(request.user, document),
-        'is_document_owner': document.uploaded_by == request.user,
+        'can_request_clarification': can_request_clarification(request.user, document) if tier == 'full' else False,
+        'is_document_owner': is_owner,
+        'truth_delta_tier': tier,
+        'is_owner': is_owner,
+        'category_states': category_states,
+        'verified_count': verified_count,
+        'unverified_count': unverified_count,
     }
     from .disclaimers import DUE_DILIGENCE_DISCLAIMER
     context['disclaimer'] = DUE_DILIGENCE_DISCLAIMER
 
-    from .entity_verification_models import EntityVerificationReport
-    context['entity_report'] = EntityVerificationReport.objects.filter(document=document).order_by('-created_at').first()
+    # Entity Integrity (Secretary of State / domain / timeline checks) is a
+    # Zelda AI feature per the Lite/AI split — Lite proves Zelda ran the
+    # analysis, AI proves the company checks out.
+    if tier == 'full':
+        from .entity_verification_models import EntityVerificationReport
+        context['entity_report'] = EntityVerificationReport.objects.filter(document=document).order_by('-created_at').first()
+    else:
+        context['entity_report'] = None
 
     return render(request, 'truth_delta_dashboard.html', context)
 
@@ -1583,14 +1605,8 @@ def ic_memo_view(request, document_id):
     if not can_view_ic_memo(request.user, application):
         raise Http404("Not found.")
 
-    if not ic_memo_unlocked(request.user, application):
-        return render(request, 'zelda_api/ic_memo_paywall.html', {
-            'application': application,
-            'company_name': application.company_name or application.user.username,
-            'is_owner': request.user == application.user,
-        })
-
-    context = build_ic_memo_context(application)
+    tier = 'full' if ic_memo_unlocked(request.user, application) else 'lite'
+    context = build_ic_memo_context(application, tier=tier)
     return render(request, 'zelda_api/ic_memo.html', context)
 
 

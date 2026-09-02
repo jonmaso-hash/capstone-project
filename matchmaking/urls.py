@@ -79,6 +79,8 @@ urlpatterns = [
     path('data-room/document/<int:document_id>/delete/', views.data_room_delete, name='data_room_delete'),
     path('data-room/document/<int:document_id>/request/', views.data_room_request_access, name='data_room_request_access'),
     path('data-room/request/<int:request_id>/decide/', views.data_room_decide_request, name='data_room_decide_request'),
+    path('data-room/<str:username>/request-information/', views.data_room_request_information, name='data_room_request_information'),
+    path('data-room/information-request/<int:request_id>/decline/', views.data_room_decline_information_request, name='data_room_decline_information_request'),
 
     # =====================================================================
     # PITCH VIDEO & PROFILE DWELL-TIME TELEMETRY
@@ -101,6 +103,8 @@ urlpatterns = [
     # DEAL PULSE (investor CRM)
     # =====================================================================
     path('deal-pulse/', views.deal_pulse, name='deal_pulse'),
+    path('deal-workspace/<int:connection_id>/', views.deal_workspace_view, name='deal_workspace'),
+    path('deal-workspace/acquisition/<int:connection_id>/', views.acquisition_deal_workspace_view, name='acquisition_deal_workspace'),
     path('deal-pulse/<int:connection_id>/toggle-attention/', views.toggle_deal_attention, name='toggle_deal_attention'),
     path('deal-pulse/<int:connection_id>/notes/', views.update_deal_notes, name='update_deal_notes'),
 
@@ -115,4 +119,14 @@ urlpatterns = [
     path('pitch-videos/comment/<int:comment_id>/delete/', views.delete_pitch_video_comment, name='delete_pitch_video_comment'),
     path('pitch-videos/settings/toggle/', views.toggle_pitch_video_setting, name='toggle_pitch_video_setting'),
     path('pitch-videos/settings/visibility/', views.set_pitch_video_visibility, name='set_pitch_video_visibility'),
+
+    # =====================================================================
+    # EXPLORE / ELEVATOR PITCHES — anonymous short-form discovery feed
+    # =====================================================================
+    # The feed page itself is served top-level at /explore/ (see config/urls.py);
+    # these are the action endpoints it posts to.
+    path('explore/<int:video_id>/play/', views.elevator_pitch_play, name='elevator_pitch_play'),
+    path('explore/<int:video_id>/interested/', views.elevator_pitch_interested, name='elevator_pitch_interested'),
+    path('explore/<int:video_id>/report/', views.elevator_pitch_report, name='elevator_pitch_report'),
+    path('explore/manage/', views.manage_elevator_pitch, name='manage_elevator_pitch'),
 ]

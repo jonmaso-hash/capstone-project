@@ -2,18 +2,20 @@ import csv
 import json
 import logging
 from datetime import timedelta
+from urllib.parse import quote
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.cache import cache
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.mail import send_mail
 from django.db import connection
-from django.db.models import Q
+from django.db.models import Q, F
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from stream_chat import StreamChat
@@ -25,8 +27,9 @@ from django.utils import timezone
 from .models import Follow
 
 # Internal Services & Models
-from matchmaking.models import Application, Connection, InvestorApplication, MatchFeedback, ConnectionRequest, Document, log_investor_event, PitchDeckViewSession, PitchDeckSlideTime, FundraisingLead, FounderMilestone, log_training_example, MessageThread, PitchVideoView, ProfileView, log_page_event, log_search_event, SearchEvent
-from matchmaking.models import DataRoomDocument, DataRoomAccessRequest, DataRoomDocumentView, can_view_data_room, can_download_data_room_document
+from matchmaking.models import Application, Connection, InvestorApplication, MatchFeedback, ConnectionRequest, log_investor_event, PitchDeckViewSession, PitchDeckSlideTime, FundraisingLead, FounderMilestone, log_training_example, MessageThread, PitchVideoView, ProfileView, log_page_event, log_search_event, SearchEvent
+from matchmaking.models import DataRoomDocument, DataRoomAccessRequest, DataRoomDocumentView, DataRoomInformationRequest, can_view_data_room, can_download_data_room_document, can_view_deal_workspace
+from matchmaking.deal_activity import get_deal_activity_timeline
 from matchmaking.models import founder_description_meets_word_count
 from matchmaking.models import SellerApplication, BuyerApplication, AcquisitionConnection, DealFeedback, log_buyer_event, AcquisitionInterestEvent
 from matchmaking.models import PitchVideoComment
@@ -53,16 +56,25 @@ logger = logging.getLogger(__name__)
 @require_POST
 def connection_action_view(request):
     """
-    Handles PENDING -> ACCEPTED/DECLINED transitions, and ACCEPTED -> FUNDED.
-    The party who did NOT initiate the connection accepts/declines it;
-    only the founder can mark a deal FUNDED.
+    Handles PENDING -> ACCEPTED/DECLINED, ACCEPTED -> FUNDED_PENDING (the
+    founder's claim), and FUNDED_PENDING -> FUNDED/ACCEPTED (the investor's
+    confirmation or denial).
+
+    FUNDED is a verified, two-sided state, not a self-report — it already
+    feeds real downstream consumers (an investor's public "companies
+    funded" count, quarterly growth-metrics reports, and the match-
+    prediction training/grading pipeline below), so letting the founder
+    alone flip a connection straight to FUNDED let anyone fabricate that
+    signal unilaterally. The founder's action now only proposes it; the
+    side effects (log_investor_event, training example, prediction
+    grading) fire on the investor's confirmation, not the founder's claim.
     """
     try:
         data = json.loads(request.body)
         request_id = data.get('id')
-        action = data.get('action') # Expected: 'ACCEPTED', 'DECLINED', or 'FUNDED'
+        action = data.get('action')  # Expected: 'ACCEPTED', 'DECLINED', 'FUNDED', 'CONFIRM_FUNDED', or 'DENY_FUNDED'
 
-        if action not in ['ACCEPTED', 'DECLINED', 'FUNDED']:
+        if action not in ['ACCEPTED', 'DECLINED', 'FUNDED', 'CONFIRM_FUNDED', 'DENY_FUNDED']:
             return JsonResponse({'status': 'error', 'message': 'Invalid action'}, status=400)
 
         conn_req = get_object_or_404(Connection, id=request_id)
@@ -72,21 +84,62 @@ def connection_action_view(request):
                 return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
             if conn_req.status != 'ACCEPTED':
                 return JsonResponse({'status': 'error', 'message': 'Only accepted connections can be marked funded.'}, status=400)
-        else:
-            # The party who did NOT initiate the connection is the one who accepts/declines it
-            responder_user = conn_req.investor.user if conn_req.initiated_by == 'FOUNDER' else conn_req.founder.user
-            if responder_user != request.user:
+
+            conn_req.status = 'FUNDED_PENDING'
+            conn_req.save(update_fields=['status'])
+
+            from notifications.models import Notification
+            Notification.objects.create(
+                recipient=conn_req.investor.user, sender=request.user, notification_type='FUNDED_CONFIRMATION',
+                message=f"{conn_req.founder.company_name or request.user.username} marked your deal as funded — please confirm.",
+                target_url=reverse('matchmaking:investor_dashboard'),
+            )
+            return JsonResponse({'status': 'success', 'new_status': conn_req.status})
+
+        if action in ('CONFIRM_FUNDED', 'DENY_FUNDED'):
+            if conn_req.investor.user != request.user:
                 return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+            if conn_req.status != 'FUNDED_PENDING':
+                return JsonResponse({'status': 'error', 'message': 'No pending funded claim to respond to.'}, status=400)
+
+            conn_req.status = 'FUNDED' if action == 'CONFIRM_FUNDED' else 'ACCEPTED'
+            update_fields = ['status']
+            if action == 'CONFIRM_FUNDED':
+                conn_req.funded_at = timezone.now()
+                update_fields.append('funded_at')
+            conn_req.save(update_fields=update_fields)
+
+            if action == 'CONFIRM_FUNDED':
+                log_investor_event(conn_req.investor.user, conn_req.founder, 'funded')
+                log_training_example('INVESTOR', conn_req.investor.id, 'FOUNDER', conn_req.founder.id, 'POSITIVE', 'funded')
+                from .tasks import grade_investor_prediction_snapshots
+                grade_investor_prediction_snapshots.delay(conn_req.investor.id, conn_req.founder.id)
+
+            from notifications.models import Notification
+            Notification.objects.create(
+                recipient=conn_req.founder.user, sender=request.user, notification_type='FUNDED_CONFIRMATION',
+                message=(
+                    f"{conn_req.investor.company_name or request.user.username} confirmed the deal as funded."
+                    if action == 'CONFIRM_FUNDED' else
+                    f"{conn_req.investor.company_name or request.user.username} said this deal wasn't funded — marked back as accepted."
+                ),
+                target_url=reverse('matchmaking:founder_dashboard'),
+            )
+            return JsonResponse({'status': 'success', 'new_status': conn_req.status})
+
+        # The party who did NOT initiate the connection is the one who accepts/declines it
+        responder_user = conn_req.investor.user if conn_req.initiated_by == 'FOUNDER' else conn_req.founder.user
+        if responder_user != request.user:
+            return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
 
         conn_req.status = action
-        conn_req.save(update_fields=['status'])
+        update_fields = ['status']
+        if action == 'ACCEPTED':
+            conn_req.accepted_at = timezone.now()
+            update_fields.append('accepted_at')
+        conn_req.save(update_fields=update_fields)
 
-        if action == 'FUNDED':
-            log_investor_event(conn_req.investor.user, conn_req.founder, 'funded')
-            log_training_example('INVESTOR', conn_req.investor.id, 'FOUNDER', conn_req.founder.id, 'POSITIVE', 'funded')
-            from .tasks import grade_investor_prediction_snapshots
-            grade_investor_prediction_snapshots.delay(conn_req.investor.id, conn_req.founder.id)
-        elif action == 'DECLINED':
+        if action == 'DECLINED':
             log_training_example('INVESTOR', conn_req.investor.id, 'FOUNDER', conn_req.founder.id, 'NEGATIVE', 'declined')
 
         return JsonResponse({'status': 'success', 'new_status': action})
@@ -100,15 +153,18 @@ def connection_action_view(request):
 def acquisition_connection_action_view(request):
     """
     Business Marketplace equivalent of connection_action_view. Handles
-    PENDING -> ACCEPTED/DECLINED transitions, and ACCEPTED -> CLOSED (the
-    M&A marketplace's terminal state, equivalent to FUNDED).
+    PENDING -> ACCEPTED/DECLINED, ACCEPTED -> CLOSED_PENDING (the seller's
+    claim), and CLOSED_PENDING -> CLOSED/ACCEPTED (the buyer's confirmation
+    or denial) — same two-sided verification rationale as FUNDED above,
+    since CLOSED already feeds the buyer prediction training/grading
+    pipeline and shouldn't be a unilateral seller claim.
     """
     try:
         data = json.loads(request.body)
         request_id = data.get('id')
-        action = data.get('action')  # Expected: 'ACCEPTED', 'DECLINED', or 'CLOSED'
+        action = data.get('action')  # Expected: 'ACCEPTED', 'DECLINED', 'CLOSED', 'CONFIRM_CLOSED', or 'DENY_CLOSED'
 
-        if action not in ['ACCEPTED', 'DECLINED', 'CLOSED']:
+        if action not in ['ACCEPTED', 'DECLINED', 'CLOSED', 'CONFIRM_CLOSED', 'DENY_CLOSED']:
             return JsonResponse({'status': 'error', 'message': 'Invalid action'}, status=400)
 
         conn_req = get_object_or_404(AcquisitionConnection, id=request_id)
@@ -118,20 +174,61 @@ def acquisition_connection_action_view(request):
                 return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
             if conn_req.status != 'ACCEPTED':
                 return JsonResponse({'status': 'error', 'message': 'Only accepted connections can be marked closed.'}, status=400)
-        else:
-            responder_user = conn_req.buyer.user if conn_req.initiated_by == 'SELLER' else conn_req.seller.user
-            if responder_user != request.user:
+
+            conn_req.status = 'CLOSED_PENDING'
+            conn_req.save(update_fields=['status'])
+
+            from notifications.models import Notification
+            Notification.objects.create(
+                recipient=conn_req.buyer.user, sender=request.user, notification_type='CLOSED_CONFIRMATION',
+                message=f"{conn_req.seller.company_name or request.user.username} marked this deal as closed — please confirm.",
+                target_url=reverse('matchmaking:buyer_dashboard'),
+            )
+            return JsonResponse({'status': 'success', 'new_status': conn_req.status})
+
+        if action in ('CONFIRM_CLOSED', 'DENY_CLOSED'):
+            if conn_req.buyer.user != request.user:
                 return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+            if conn_req.status != 'CLOSED_PENDING':
+                return JsonResponse({'status': 'error', 'message': 'No pending closed claim to respond to.'}, status=400)
+
+            conn_req.status = 'CLOSED' if action == 'CONFIRM_CLOSED' else 'ACCEPTED'
+            update_fields = ['status']
+            if action == 'CONFIRM_CLOSED':
+                conn_req.closed_at = timezone.now()
+                update_fields.append('closed_at')
+            conn_req.save(update_fields=update_fields)
+
+            if action == 'CONFIRM_CLOSED':
+                log_buyer_event(conn_req.buyer.user, conn_req.seller, 'closed')
+                log_training_example('BUYER', conn_req.buyer.id, 'SELLER', conn_req.seller.id, 'POSITIVE', 'closed')
+                from .tasks import grade_buyer_prediction_snapshots
+                grade_buyer_prediction_snapshots.delay(conn_req.buyer.id, conn_req.seller.id)
+
+            from notifications.models import Notification
+            Notification.objects.create(
+                recipient=conn_req.seller.user, sender=request.user, notification_type='CLOSED_CONFIRMATION',
+                message=(
+                    f"{conn_req.buyer.company_name or request.user.username} confirmed the deal as closed."
+                    if action == 'CONFIRM_CLOSED' else
+                    f"{conn_req.buyer.company_name or request.user.username} said this deal wasn't closed — marked back as accepted."
+                ),
+                target_url=reverse('matchmaking:seller_dashboard'),
+            )
+            return JsonResponse({'status': 'success', 'new_status': conn_req.status})
+
+        responder_user = conn_req.buyer.user if conn_req.initiated_by == 'SELLER' else conn_req.seller.user
+        if responder_user != request.user:
+            return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
 
         conn_req.status = action
-        conn_req.save(update_fields=['status'])
+        update_fields = ['status']
+        if action == 'ACCEPTED':
+            conn_req.accepted_at = timezone.now()
+            update_fields.append('accepted_at')
+        conn_req.save(update_fields=update_fields)
 
-        if action == 'CLOSED':
-            log_buyer_event(conn_req.buyer.user, conn_req.seller, 'closed')
-            log_training_example('BUYER', conn_req.buyer.id, 'SELLER', conn_req.seller.id, 'POSITIVE', 'closed')
-            from .tasks import grade_buyer_prediction_snapshots
-            grade_buyer_prediction_snapshots.delay(conn_req.buyer.id, conn_req.seller.id)
-        elif action == 'DECLINED':
+        if action == 'DECLINED':
             log_training_example('BUYER', conn_req.buyer.id, 'SELLER', conn_req.seller.id, 'NEGATIVE', 'declined')
 
         return JsonResponse({'status': 'success', 'new_status': action})
@@ -244,9 +341,12 @@ def investor_dashboard(request):
         initiated_by='FOUNDER'
     ).select_related('founder__user')
 
+    # Includes FUNDED_PENDING so the investor sees the founder's funded
+    # claim here and can confirm/deny it, rather than it only existing as
+    # a notification.
     accepted_connections = Connection.objects.filter(
         investor=investor_profile,
-        status='ACCEPTED'
+        status__in=['ACCEPTED', 'FUNDED_PENDING']
     ).select_related('founder__user')
 
     match_results = []
@@ -255,18 +355,18 @@ def investor_dashboard(request):
     )
     requested_ids = connection_status_map.keys()
 
-    # Privacy Gatekeeper: Only select records where is_private=False
+    # Privacy Gatekeeper: uses Application.objects.discoverable() (is_private=False, not archived)
     if not investor_profile.focus_vector and investor_profile.investment_focus:
         search_terms = [term.strip() for term in investor_profile.investment_focus.replace(',', ' ').split() if len(term.strip()) > 2]
         query = Q()
         for term in search_terms:
             query |= Q(sector__icontains=term) | Q(description__icontains=term) | Q(company_name__icontains=term)
 
-        founders = Application.objects.filter(is_private=False).exclude(review_status='DENIED').filter(
+        founders = Application.objects.discoverable().exclude(review_status='DENIED').filter(
             query | Q(stage__icontains=investor_profile.investment_stage)
         ).select_related('user')
     else:
-        founders = Application.objects.filter(is_private=False).exclude(review_status='DENIED').select_related('user')
+        founders = Application.objects.discoverable().exclude(review_status='DENIED').select_related('user')
 
     # Dashboard filters — narrow the match set on top of whatever the AI/rule
     # engine already surfaced, same free-text icontains approach as global_search
@@ -372,9 +472,12 @@ def buyer_dashboard(request):
         initiated_by='SELLER'
     ).select_related('seller__user')
 
+    # Includes CLOSED_PENDING so the buyer sees the seller's closed claim
+    # here and can confirm/deny it, rather than it only existing as a
+    # notification.
     accepted_connections = AcquisitionConnection.objects.filter(
         buyer=buyer_profile,
-        status='ACCEPTED'
+        status__in=['ACCEPTED', 'CLOSED_PENDING']
     ).select_related('seller__user')
 
     match_results = []
@@ -383,8 +486,8 @@ def buyer_dashboard(request):
     )
     requested_ids = connection_status_map.keys()
 
-    # Privacy Gatekeeper: Only select listings where is_private=False
-    sellers = SellerApplication.objects.filter(is_private=False).exclude(review_status='DENIED').select_related('user')
+    # Privacy Gatekeeper: uses SellerApplication.objects.discoverable() (is_private=False, not archived)
+    sellers = SellerApplication.objects.discoverable().exclude(review_status='DENIED').select_related('user')
 
     # Dashboard filters — deal economics, not sector/stage
     filter_industry = request.GET.get('industry', '').strip()
@@ -469,8 +572,8 @@ def investor_shortlist(request):
         investor=investor_profile, vote=1
     ).values_list('application_id', flat=True)
 
-    founders = Application.objects.filter(
-        id__in=liked_founder_ids, is_private=False
+    founders = Application.objects.discoverable().filter(
+        id__in=liked_founder_ids
     ).exclude(review_status='DENIED').select_related('user')
 
     requested_ids = Connection.objects.filter(investor=investor_profile).values_list('founder_id', flat=True)
@@ -533,13 +636,16 @@ def founder_dashboard(request):
         status__iexact='pending'
     ).select_related('investor__user')
 
+    # Includes FUNDED_PENDING so the founder still sees the deal (with an
+    # "awaiting investor confirmation" state instead of the Mark as Funded
+    # button) rather than it silently disappearing once claimed.
     accepted_connections = Connection.objects.filter(
         founder=application,
-        status='ACCEPTED'
+        status__in=['ACCEPTED', 'FUNDED_PENDING']
     ).select_related('investor__user')
 
-    # Privacy Gatekeeper: Only fetch allocators where is_private=False
-    investors = InvestorApplication.objects.filter(is_private=False).exclude(review_status='DENIED').select_related('user')
+    # Privacy Gatekeeper: uses InvestorApplication.objects.discoverable() (is_private=False, not archived)
+    investors = InvestorApplication.objects.discoverable().exclude(review_status='DENIED').select_related('user')
     match_results = []
     connection_status_map = dict(
         Connection.objects.filter(founder=application).values_list('investor_id', 'status')
@@ -629,13 +735,16 @@ def seller_dashboard(request):
         status__iexact='pending'
     ).select_related('buyer__user')
 
+    # Includes CLOSED_PENDING so the seller still sees the deal (with an
+    # "awaiting buyer confirmation" state instead of the Mark as Closed
+    # button) rather than it silently disappearing once claimed.
     accepted_connections = AcquisitionConnection.objects.filter(
         seller=seller_profile,
-        status='ACCEPTED'
+        status__in=['ACCEPTED', 'CLOSED_PENDING']
     ).select_related('buyer__user')
 
-    # Privacy Gatekeeper: Only fetch acquirers where is_private=False
-    buyers = BuyerApplication.objects.filter(is_private=False).exclude(review_status='DENIED').select_related('user')
+    # Privacy Gatekeeper: uses BuyerApplication.objects.discoverable() (is_private=False, not archived)
+    buyers = BuyerApplication.objects.discoverable().exclude(review_status='DENIED').select_related('user')
     match_results = []
     connection_status_map = dict(
         AcquisitionConnection.objects.filter(seller=seller_profile).values_list('buyer_id', 'status')
@@ -882,8 +991,8 @@ def find_similar_startups(request, application_id):
         # need (20) so the score>0.3 filter still has room to work with,
         # since the DB only orders by distance, it doesn't know our threshold.
         from pgvector.django import CosineDistance
-        candidates = Application.objects.exclude(id=source.id).filter(
-            is_private=False, description_vector_pg__isnull=False
+        candidates = Application.objects.discoverable().exclude(id=source.id).filter(
+            description_vector_pg__isnull=False
         ).exclude(review_status='DENIED').select_related('user').annotate(
             distance=CosineDistance('description_vector_pg', source.description_vector_pg)
         ).order_by('distance')[:20]
@@ -894,8 +1003,8 @@ def find_similar_startups(request, application_id):
                 results.append({'application': candidate, 'score': round(score * 100, 1)})
         results = results[:6]
     elif source.description_vector:
-        candidates = Application.objects.exclude(id=source.id).filter(
-            is_private=False, description_vector__isnull=False
+        candidates = Application.objects.discoverable().exclude(id=source.id).filter(
+            description_vector__isnull=False
         ).exclude(review_status='DENIED').select_related('user')
 
         for candidate in candidates:
@@ -921,7 +1030,7 @@ def get_foundry_pulse_events(limit=15):
 
     events = []
 
-    for app in Application.objects.filter(review_status='APPROVED').order_by('-created_at')[:limit]:
+    for app in Application.objects.filter(review_status='APPROVED', archived_at__isnull=True).order_by('-created_at')[:limit]:
         name = app.company_name if not app.is_private else 'A new founder'
         events.append({
             'icon': 'bi-rocket-takeoff-fill',
@@ -929,7 +1038,7 @@ def get_foundry_pulse_events(limit=15):
             'timestamp': app.created_at,
         })
 
-    for inv in InvestorApplication.objects.filter(review_status='APPROVED').order_by('-created_at')[:limit]:
+    for inv in InvestorApplication.objects.filter(review_status='APPROVED', archived_at__isnull=True).order_by('-created_at')[:limit]:
         name = inv.company_name if not inv.is_private else 'A new investor'
         events.append({
             'icon': 'bi-graph-up-arrow',
@@ -937,15 +1046,32 @@ def get_foundry_pulse_events(limit=15):
             'timestamp': inv.created_at,
         })
 
+    # 'FUNDED'/'CLOSED' say "Verified" explicitly — same public contract as
+    # the profile and bulletin-card badges (see Application.has_verified_funding
+    # / SellerApplication.has_verified_sale in matchmaking/models.py). This
+    # is presentation only: FUNDED_PENDING/CLOSED_PENDING (the self-reported,
+    # unconfirmed claim) fall through to the generic 'A connection was
+    # updated' default below, same as before this wording pass.
     connection_labels = {
         'pending': ('bi-hand-index-thumb', 'A new introduction was requested'),
         'ACCEPTED': ('bi-check-circle-fill', 'An introduction was accepted'),
-        'FUNDED': ('bi-trophy-fill', 'A deal was funded'),
+        'FUNDED': ('bi-trophy-fill', 'A deal was Verified Funded'),
     }
     for conn in Connection.objects.select_related('founder', 'investor').order_by('-updated_at')[:limit]:
         icon, label = connection_labels.get(conn.status, ('bi-hand-index-thumb', 'A connection was updated'))
         if not conn.founder.is_private and not conn.investor.is_private:
             label = f"{label}: {conn.investor.company_name} ↔ {conn.founder.company_name}"
+        events.append({'icon': icon, 'message': label + '.', 'timestamp': conn.updated_at})
+
+    acquisition_connection_labels = {
+        'pending': ('bi-hand-index-thumb', 'A new introduction was requested'),
+        'ACCEPTED': ('bi-check-circle-fill', 'An introduction was accepted'),
+        'CLOSED': ('bi-trophy-fill', 'A deal was Verified Sold'),
+    }
+    for conn in AcquisitionConnection.objects.select_related('seller', 'buyer').order_by('-updated_at')[:limit]:
+        icon, label = acquisition_connection_labels.get(conn.status, ('bi-hand-index-thumb', 'A connection was updated'))
+        if not conn.seller.is_private and not conn.buyer.is_private:
+            label = f"{label}: {conn.buyer.company_name} ↔ {conn.seller.company_name}"
         events.append({'icon': icon, 'message': label + '.', 'timestamp': conn.updated_at})
 
     for article in Article.objects.select_related('author').order_by('-created_on')[:limit]:
@@ -971,7 +1097,7 @@ def founder_bulletin_board(request):
     Queries verified public startup Application profiles to display on the Interlink Foundry bulletin board.
     """
     # Privacy Gatekeeper: Only pull applications where is_private is explicitly False
-    pitches_queryset = Application.objects.filter(is_private=False).exclude(review_status='DENIED').select_related('user')
+    pitches_queryset = Application.objects.discoverable().exclude(review_status='DENIED').select_related('user')
     
     selected_sector = request.GET.get('sector', '').strip()
     search_query = request.GET.get('q', '').strip()
@@ -1003,6 +1129,17 @@ def founder_bulletin_board(request):
         connection_status_map = dict(
             Connection.objects.filter(investor=investor_profile).values_list('founder_id', 'status')
         )
+
+    # Verified Funded badge: same canonical, mutually-confirmed FUNDED status
+    # as Application.has_verified_funding/verified_funding_count (see
+    # matchmaking.models — never a profile field, claim, or AI inference).
+    # Computed as one grouped query for the whole board rather than calling
+    # the per-instance property per-card, to avoid N+1.
+    from django.db.models import Count
+    verified_funded_counts = dict(
+        Connection.objects.filter(founder__in=pitches_queryset, status='FUNDED')
+        .values('founder_id').annotate(n=Count('id')).values_list('founder_id', 'n')
+    )
 
     pitches = []
     for pitch in pitches_queryset:
@@ -1039,6 +1176,8 @@ def founder_bulletin_board(request):
         pitch.ai_insights = ai_insights_data
         pitch.connection_status = connection_status_map.get(pitch.id)
         pitch.already_requested = pitch.id in connection_status_map
+        pitch.verified_funded_count = verified_funded_counts.get(pitch.id, 0)
+        pitch.has_verified_funded = pitch.verified_funded_count > 0
         pitches.append(pitch)
         
     # Founder Premium perk (or a staff-curated feature): Featured Placement —
@@ -1065,7 +1204,7 @@ def acquisition_bulletin_board(request):
     merged into the founder bulletin board) since the two marketplaces
     have different privacy and matching rules.
     """
-    listings_queryset = SellerApplication.objects.filter(is_private=False).exclude(review_status='DENIED').select_related('user')
+    listings_queryset = SellerApplication.objects.discoverable().exclude(review_status='DENIED').select_related('user')
 
     selected_industry = request.GET.get('industry', '').strip()
     search_query = request.GET.get('q', '').strip()
@@ -1097,6 +1236,16 @@ def acquisition_bulletin_board(request):
             AcquisitionConnection.objects.filter(buyer=buyer_profile).values_list('seller_id', 'status')
         )
 
+    # Verified Sold badge — same canonical, mutually-confirmed CLOSED status
+    # as SellerApplication.has_verified_sale/verified_sale_count (see
+    # matchmaking.models); grouped query mirrors verified_funded_counts in
+    # founder_bulletin_board.
+    from django.db.models import Count
+    verified_sold_counts = dict(
+        AcquisitionConnection.objects.filter(seller__in=listings_queryset, status='CLOSED')
+        .values('seller_id').annotate(n=Count('id')).values_list('seller_id', 'n')
+    )
+
     listings = []
     for listing in listings_queryset:
         deal_insights_data = None
@@ -1124,6 +1273,8 @@ def acquisition_bulletin_board(request):
         listing.deal_insights = deal_insights_data
         listing.connection_status = connection_status_map.get(listing.id)
         listing.already_requested = listing.id in connection_status_map
+        listing.verified_sold_count = verified_sold_counts.get(listing.id, 0)
+        listing.has_verified_sold = listing.verified_sold_count > 0
         listings.append(listing)
 
     # Seller Premium perk (or a staff-curated feature): Featured Listing —
@@ -1481,11 +1632,25 @@ def record_deal_vote(request):
 
 @login_required
 def initiate_direct_chat(request, target_user_id):
+    """
+    Creates (or resolves) the deterministic chat_<sorted numeric ids>
+    channel between request.user and target_user_id, same scheme
+    whichever party initiates. Existing callers (the profile page's
+    plain "Message" link) get the original full-page redirect; an AJAX
+    caller (the content-share picker, which needs the channel_id without
+    navigating away — see matchmaking/static/js/matchmaking.js's
+    ContentShare) gets JSON instead. NOT the same channel-id scheme as
+    createDealRoom's deal_<sorted string ids> — this is the plain-DM
+    channel, deal_ is reserved for a specific accepted Connection.
+    """
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     target_user = get_object_or_404(User, id=target_user_id)
     current_user_id = str(request.user.id)
     target_id_str = str(target_user.id)
-    
+
     if current_user_id == target_id_str:
+        if is_ajax:
+            return JsonResponse({'status': 'error', 'message': "You can't message yourself."}, status=400)
         return redirect('matchmaking:deal_room_view')
 
     client = StreamChat(api_key=settings.STREAM_API_KEY, api_secret=settings.STREAM_API_SECRET)
@@ -1530,6 +1695,8 @@ def initiate_direct_chat(request, target_user_id):
     if investor_user and founder_app:
         log_investor_event(investor_user, founder_app, 'message_sent')
 
+    if is_ajax:
+        return JsonResponse({'status': 'success', 'channel_id': channel_id})
     return redirect('matchmaking:diligence_chat')
 
 
@@ -1555,7 +1722,7 @@ def _filtered_public_applications(request):
     min_revenue = request.GET.get('revenue', '').strip()
 
     # Privacy Gatekeeper: Public matching index only
-    queryset = Application.objects.select_related('user').filter(is_private=False).exclude(review_status='DENIED')
+    queryset = Application.objects.discoverable().select_related('user').exclude(review_status='DENIED')
 
     if state:
         queryset = queryset.filter(
@@ -1663,7 +1830,7 @@ def export_acquisition_csv(request):
             redirect_url = f"{redirect_url}?{query_string}"
         return redirect(redirect_url)
 
-    queryset = SellerApplication.objects.filter(is_private=False).exclude(review_status='DENIED')
+    queryset = SellerApplication.objects.discoverable().exclude(review_status='DENIED')
 
     selected_industry = request.GET.get('industry', '').strip()
     search_query = request.GET.get('q', '').strip()
@@ -2022,6 +2189,11 @@ def standalone_memo_view(request, company_slug):
     if has_advantage_access and _ZELDA_AVAILABLE and calculate_zelda_advantage:
         zelda_score = calculate_zelda_advantage(founder_app)
 
+    # Zelda Lite/AI split, same monetization model as Truth Delta/IC Memo:
+    # gated on the FOUNDER's own Premium (this is their report to unlock for
+    # viewing investors), staff bypass for support purposes.
+    memo_tier = 'full' if (request.user.is_staff or founder_app.is_premium) else 'lite'
+
     context = {
         'founder_app': founder_app,
         'external_data': external_data,
@@ -2030,21 +2202,10 @@ def standalone_memo_view(request, company_slug):
         'ai_insights': ai_insights_data,
         'investor': investor_profile,
         'zelda_score': zelda_score,
+        'memo_tier': memo_tier,
     }
 
     return render(request, 'matchmaking/memo_detail.html', context)
-
-@login_required
-def download_document(request, doc_id):
-    doc = get_object_or_404(Document, id=doc_id)
-    room = doc.deal_room
-
-    # Security Check: Is the user the investor in this connection?
-    if request.user == room.connection.investor.user and room.is_active:
-        return FileResponse(doc.file.open('rb'), as_attachment=True)
-
-    raise Http404("Access Denied")
-
 
 def _can_view_pitch_deck(request, application):
     """Same privacy rule as the profile page: private decks are owner/staff-only.
@@ -2194,10 +2355,15 @@ def data_room(request, username):
     documents = list(founder_application.data_room_documents.all())
 
     pending_requests = []
+    pending_information_requests = []
+    category_request_status = []
     if is_owner_or_staff:
         pending_requests = DataRoomAccessRequest.objects.filter(
             document__founder=founder_application, status='PENDING'
         ).select_related('document', 'investor__user')
+        pending_information_requests = DataRoomInformationRequest.objects.filter(
+            founder=founder_application, status='PENDING'
+        ).select_related('investor__user')
     else:
         investor_profile = getattr(request.user, 'match_investor_profile', None)
         my_requests = {
@@ -2207,13 +2373,34 @@ def data_room(request, username):
         } if investor_profile else {}
         for document in documents:
             document.my_request = my_requests.get(document.id)
+            # MATCH_ONLY documents skip the request/approval workflow —
+            # already downloadable to anyone allowed in the room at all.
+            document.can_download_directly = document.visibility == 'MATCH_ONLY'
+
+        # "Request Information" — structured request for a category the
+        # founder hasn't uploaded anything for yet (see
+        # DataRoomInformationRequest's docstring). Excludes 'OTHER' since
+        # that's a catch-all, not a specific ask an investor would name.
+        if investor_profile:
+            my_info_requests = {
+                r.category: r for r in DataRoomInformationRequest.objects.filter(
+                    founder=founder_application, investor=investor_profile
+                )
+            }
+            category_request_status = [
+                (value, label, my_info_requests.get(value))
+                for value, label in DataRoomDocument.CATEGORY_CHOICES if value != 'OTHER'
+            ]
 
     return render(request, 'matchmaking/data_room.html', {
         'founder_application': founder_application,
         'documents': documents,
         'is_owner_or_staff': is_owner_or_staff,
         'pending_requests': pending_requests,
+        'pending_information_requests': pending_information_requests,
+        'category_request_status': category_request_status,
         'category_choices': DataRoomDocument.CATEGORY_CHOICES,
+        'visibility_choices': DataRoomDocument.VISIBILITY_CHOICES,
     })
 
 
@@ -2228,8 +2415,31 @@ def data_room_upload(request, username):
     if form.is_valid():
         document = form.save(commit=False)
         document.founder = founder_application
+        if not document.visibility:
+            document.visibility = 'INVESTOR_APPROVED'
         document.save()
         messages.success(request, f'"{document.label}" uploaded to the data room.')
+
+        # Uploading a document satisfies any investor's outstanding
+        # "please provide X" request for that same category — the founder
+        # doesn't have to separately act on each one. This only marks the
+        # category as covered; the investor still needs a normal
+        # DataRoomAccessRequest (approved separately) to download this file.
+        fulfilled_requests = DataRoomInformationRequest.objects.filter(
+            founder=founder_application, category=document.category, status='PENDING'
+        ).select_related('investor__user')
+        if fulfilled_requests:
+            from notifications.models import Notification
+            for info_request in fulfilled_requests:
+                info_request.status = 'FULFILLED'
+                info_request.decided_at = timezone.now()
+                info_request.fulfilled_document = document
+                info_request.save(update_fields=['status', 'decided_at', 'fulfilled_document'])
+                Notification.objects.create(
+                    recipient=info_request.investor.user, sender=request.user, notification_type='DATA_ROOM_INFO_FULFILLED',
+                    message=f"{founder_application.company_name} uploaded {document.get_category_display()} — your request has been fulfilled.",
+                    target_url=reverse('matchmaking:data_room', kwargs={'username': username}),
+                )
     else:
         error_text = ' '.join(str(e) for errors in form.errors.values() for e in errors)
         messages.error(request, error_text or "Upload failed.")
@@ -2262,13 +2472,33 @@ def data_room_request_access(request, document_id):
     if not investor_profile or request.user == document.founder.user:
         raise PermissionDenied
 
+    # MATCH_ONLY documents skip the approval workflow entirely — being
+    # allowed into the room already grants download (see
+    # can_download_data_room_document) — so there's nothing to request.
+    if document.visibility == 'MATCH_ONLY':
+        messages.info(request, f'"{document.label}" doesn\'t require a request — download it directly.')
+        return redirect('matchmaking:data_room', username=document.founder.user.username)
+
+    nda_accepted = request.POST.get('nda_accepted') == 'on'
+    if document.visibility == 'NDA_REQUIRED' and not nda_accepted:
+        messages.error(request, f'You must acknowledge the NDA to request "{document.label}".')
+        return redirect('matchmaking:data_room', username=document.founder.user.username)
+
     access_request, created = DataRoomAccessRequest.objects.get_or_create(
         document=document, investor=investor_profile,
+        defaults={'nda_accepted': nda_accepted},
     )
-    if not created and access_request.status == 'DENIED':
-        access_request.status = 'PENDING'
-        access_request.decided_at = None
-        access_request.save(update_fields=['status', 'decided_at'])
+    if not created:
+        update_fields = []
+        if access_request.status == 'DENIED':
+            access_request.status = 'PENDING'
+            access_request.decided_at = None
+            update_fields += ['status', 'decided_at']
+        if nda_accepted and not access_request.nda_accepted:
+            access_request.nda_accepted = True
+            update_fields.append('nda_accepted')
+        if update_fields:
+            access_request.save(update_fields=update_fields)
 
     messages.success(request, f'Requested access to "{document.label}".')
     return redirect('matchmaking:data_room', username=document.founder.user.username)
@@ -2291,6 +2521,74 @@ def data_room_decide_request(request, request_id):
     access_request.decided_at = timezone.now()
     access_request.save(update_fields=['status', 'decided_at'])
     messages.success(request, f"Request {'approved' if decision == 'APPROVE' else 'denied'}.")
+    return redirect('matchmaking:data_room', username=founder_application.user.username)
+
+
+@login_required
+@require_POST
+def data_room_request_information(request, username):
+    """Structured "please provide X" request for a category the founder
+    hasn't uploaded anything for yet — see DataRoomInformationRequest's
+    docstring. Distinct from data_room_request_access, which asks for
+    access to a document that already exists."""
+    founder_application = get_object_or_404(Application, user__username=username)
+    if not can_view_data_room(request.user, founder_application):
+        raise Http404("Access Denied")
+
+    investor_profile = getattr(request.user, 'match_investor_profile', None)
+    if not investor_profile or request.user == founder_application.user:
+        raise PermissionDenied
+
+    valid_categories = {value for value, _ in DataRoomDocument.CATEGORY_CHOICES if value != 'OTHER'}
+    requested_categories = [c for c in request.POST.getlist('categories') if c in valid_categories]
+    if not requested_categories:
+        messages.error(request, "Select at least one category to request.")
+        return redirect('matchmaking:data_room', username=username)
+
+    requested_labels = []
+    for category in requested_categories:
+        info_request, created = DataRoomInformationRequest.objects.get_or_create(
+            founder=founder_application, investor=investor_profile, category=category,
+        )
+        if not created and info_request.status != 'PENDING':
+            info_request.status = 'PENDING'
+            info_request.decided_at = None
+            info_request.fulfilled_document = None
+            info_request.save(update_fields=['status', 'decided_at', 'fulfilled_document'])
+        requested_labels.append(info_request.get_category_display())
+
+    from notifications.models import Notification
+    Notification.objects.create(
+        recipient=founder_application.user, sender=request.user, notification_type='DATA_ROOM_INFO_REQUEST',
+        message=f"{investor_profile.company_name} requested: {', '.join(requested_labels)}.",
+        target_url=reverse('matchmaking:data_room', kwargs={'username': username}),
+    )
+    messages.success(request, f"Requested: {', '.join(requested_labels)}.")
+    return redirect('matchmaking:data_room', username=username)
+
+
+@login_required
+@require_POST
+def data_room_decline_information_request(request, request_id):
+    info_request = get_object_or_404(DataRoomInformationRequest, id=request_id)
+    founder_application = info_request.founder
+    if not (request.user == founder_application.user or request.user.is_staff):
+        raise PermissionDenied
+    if info_request.status != 'PENDING':
+        messages.error(request, "This request has already been resolved.")
+        return redirect('matchmaking:data_room', username=founder_application.user.username)
+
+    info_request.status = 'DECLINED'
+    info_request.decided_at = timezone.now()
+    info_request.save(update_fields=['status', 'decided_at'])
+
+    from notifications.models import Notification
+    Notification.objects.create(
+        recipient=info_request.investor.user, sender=request.user, notification_type='DATA_ROOM_INFO_DECLINED',
+        message=f"{founder_application.company_name} declined your request for {info_request.get_category_display()}.",
+        target_url=reverse('matchmaking:data_room', kwargs={'username': founder_application.user.username}),
+    )
+    messages.success(request, "Request declined.")
     return redirect('matchmaking:data_room', username=founder_application.user.username)
 
 
@@ -2362,7 +2660,10 @@ def deal_pulse(request):
     for conn in connections:
         if conn.status in completed_statuses:
             board['COMPLETED'].append(conn)
-        elif conn.needs_attention:
+        elif conn.status == 'FUNDED_PENDING' or conn.needs_attention:
+            # FUNDED_PENDING means the founder claimed this deal closed and
+            # is waiting on this investor to confirm/deny — always actionable
+            # regardless of the investor's own manual needs_attention flag.
             board['NEEDS_ATTENTION'].append(conn)
         else:
             board['ACTIVE'].append(conn)
@@ -2376,6 +2677,163 @@ def deal_pulse(request):
     return render(request, 'matchmaking/deal_pulse.html', {
         'investor': investor_profile,
         'columns': columns,
+    })
+
+
+def _get_deal_zelda_summary(company_application):
+    """
+    Read-only Zelda intelligence summary for the Deal Room — never
+    generates or refreshes anything, only reads whatever already exists.
+    Works for either side of the marketplace: company_application is the
+    founder's Application on an investment deal, the seller's
+    SellerApplication on an acquisition deal — completion_percentage is
+    computed via insights_engine._completion_percentage, which already
+    handles both (SellerApplication has no such property of its own).
+    Safe to show to anyone who reaches the Deal Room at all: being a party
+    to an ACCEPTED relationship with this company already satisfies
+    zelda_api.ic_memo.can_view_ic_memo's gate for a founder, and everything
+    surfaced here (a completion %, a recommendation, a score) is at or
+    below what that Lite-tier preview already discloses.
+    """
+    from zelda_api.vector_models import IntelligenceMemo
+    from zelda_api.truth_delta_models import TruthDeltaReport
+    from matchmaking.insights_engine import _completion_percentage
+
+    company_user = company_application.user
+    latest_memo = IntelligenceMemo.objects.filter(
+        document__uploaded_by=company_user
+    ).select_related('document').order_by('-updated_at').first()
+    latest_truth_delta = TruthDeltaReport.objects.filter(
+        document__uploaded_by=company_user
+    ).order_by('-created_at').first()
+
+    return {
+        'completion_percentage': _completion_percentage(company_application),
+        'latest_memo': latest_memo,
+        'latest_truth_delta': latest_truth_delta,
+    }
+
+
+def _stream_deal_channel_id(user_id_a, user_id_b):
+    """
+    Same deterministic id StreamChatController.createDealRoom() computes
+    client-side (matchmaking/static/js/matchmaking.js) the moment EITHER
+    a Connection or an AcquisitionConnection is accepted — both dashboards'
+    updateConnection()/updateAcquisitionConnection() call the identical JS
+    function, so one formula covers both deal types. Reused here, not
+    recreated, so "Open Chat" always opens the real channel Stream already
+    has for this pair rather than standing up a second, competing one.
+    sorted() on strings is lexicographic, matching JS's default
+    Array.sort() exactly (NOT numeric — e.g. "10" sorts before "9" — but
+    both sides only need to agree with each other, not with numeric
+    ordering).
+    """
+    member_ids = sorted([str(user_id_a), str(user_id_b)])
+    return f"deal_{member_ids[0]}_{member_ids[1]}"
+
+
+@login_required
+def deal_workspace_view(request, connection_id):
+    """
+    Deal Room for one Investor<->Founder relationship. Deliberately owns
+    nothing: composes the existing Stream Chat channel, the existing
+    founder Data Room, and existing read-only Zelda reports, plus a
+    relationship-scoped activity timeline (matchmaking/deal_activity.py).
+    See can_view_deal_workspace's docstring for the access gate. Shares
+    templates/matchmaking/deal_workspace.html with
+    acquisition_deal_workspace_view below — same presentation, deal_type
+    tells the template which terminology/sections apply.
+    """
+    connection = get_object_or_404(Connection, id=connection_id)
+    if not can_view_deal_workspace(request.user, connection):
+        raise Http404("Access Denied")
+
+    founder_application = connection.founder
+    investor_application = connection.investor
+
+    # can_view_deal_workspace is deliberately BROADER than can_view_data_room
+    # — it admits FUNDED_PENDING/FUNDED too, so the Deal Room stays
+    # reachable to review a deal's history after it closes, whereas
+    # can_view_data_room grants an investor access only while status is
+    # exactly 'ACCEPTED'. That gap means "allowed into the Deal Room" must
+    # NEVER be treated as "allowed to see the Data Room's contents" — this
+    # re-checks the Data Room's own authoritative gate explicitly, so a
+    # founded/pending-funded investor never sees document titles here that
+    # the real Data Room page would 404 them on. The presentation is
+    # shared; this authorization check is not.
+    data_room_accessible = can_view_data_room(request.user, founder_application)
+
+    # Same reasoning applies to the activity timeline as to the document
+    # list above: 'document'-category events (uploads, views, requests,
+    # decisions) disclose Data Room titles, so they're withheld the moment
+    # data_room_accessible is False — never let a wider Deal Room gate
+    # leak Data Room-specific information through a different panel.
+    # 'relationship'/'verified_outcome'/'engagement' events are unaffected
+    # (the pitch deck has its own, separate, looser viewing gate).
+    activity = get_deal_activity_timeline(connection)
+    if not data_room_accessible:
+        activity = [event for event in activity if event['category'] != 'document']
+
+    return render(request, 'matchmaking/deal_workspace.html', {
+        'deal_type': 'investment',
+        'connection': connection,
+        'company_application': founder_application,
+        'counterparty_application': investor_application,
+        'company_label': 'Founder',
+        'counterparty_label': 'Investor',
+        'data_room_exists': True,
+        'data_room_accessible': data_room_accessible,
+        'data_room_url': reverse('matchmaking:data_room', kwargs={'username': founder_application.user.username}) if data_room_accessible else None,
+        'chat_channel_id': _stream_deal_channel_id(founder_application.user_id, investor_application.user_id),
+        'zelda_summary': _get_deal_zelda_summary(founder_application),
+        'documents': list(founder_application.data_room_documents.all()[:10]) if data_room_accessible else [],
+        'activity': activity,
+        'is_verified_outcome': connection.status == 'FUNDED',
+        'verified_outcome_label': 'Verified Funded',
+    })
+
+
+@login_required
+def acquisition_deal_workspace_view(request, connection_id):
+    """
+    Deal Room for one Buyer<->Seller relationship — mirrors
+    deal_workspace_view exactly, same shared template. One real gap, not
+    papered over: there is no seller-side Data Room (DataRoomDocument.
+    founder is hard-FK'd to Application, not SellerApplication — confirmed
+    absent, not merely unused; see matchmaking/deal_activity.py's
+    get_acquisition_deal_activity_timeline docstring for the same finding
+    applied to the activity timeline). data_room_exists=False tells the
+    template to render that honestly instead of a broken or empty-looking
+    working panel — distinct from data_room_accessible (see
+    deal_workspace_view), which is about a specific viewer's access to
+    Data Room infrastructure that DOES exist; here neither applies.
+    """
+    from .models import AcquisitionConnection, can_view_acquisition_deal_workspace
+    from .deal_activity import get_acquisition_deal_activity_timeline
+
+    connection = get_object_or_404(AcquisitionConnection, id=connection_id)
+    if not can_view_acquisition_deal_workspace(request.user, connection):
+        raise Http404("Access Denied")
+
+    seller_application = connection.seller
+    buyer_application = connection.buyer
+
+    return render(request, 'matchmaking/deal_workspace.html', {
+        'deal_type': 'acquisition',
+        'connection': connection,
+        'company_application': seller_application,
+        'counterparty_application': buyer_application,
+        'company_label': 'Seller',
+        'counterparty_label': 'Buyer',
+        'data_room_exists': False,
+        'data_room_accessible': False,
+        'data_room_url': None,
+        'chat_channel_id': _stream_deal_channel_id(seller_application.user_id, buyer_application.user_id),
+        'zelda_summary': _get_deal_zelda_summary(seller_application),
+        'documents': [],
+        'activity': get_acquisition_deal_activity_timeline(connection),
+        'is_verified_outcome': connection.status == 'CLOSED',
+        'verified_outcome_label': 'Verified Sold',
     })
 
 
@@ -2537,7 +2995,7 @@ def pitch_videos_section(request):
     # section entirely, keeping it on their profile page); ROLE_ONLY is
     # excluded unless the viewer actually holds the matching role, so
     # anonymous visitors and same-role peers never see it here either.
-    founder_qs = Application.objects.filter(is_private=False).exclude(
+    founder_qs = Application.objects.discoverable().exclude(
         review_status='DENIED'
     ).exclude(pitch_video='').exclude(pitch_video__isnull=True).exclude(
         pitch_video_visibility='PROFILE_ONLY'
@@ -2545,7 +3003,7 @@ def pitch_videos_section(request):
     if not investor_profile:
         founder_qs = founder_qs.exclude(pitch_video_visibility='ROLE_ONLY')
 
-    seller_qs = SellerApplication.objects.filter(is_private=False).exclude(
+    seller_qs = SellerApplication.objects.discoverable().exclude(
         review_status='DENIED'
     ).exclude(pitch_video='').exclude(pitch_video__isnull=True).exclude(
         pitch_video_visibility='PROFILE_ONLY'
@@ -2586,9 +3044,9 @@ def pitch_videos_section(request):
 def _pitch_video_owner(role, profile_id):
     """Resolves a (role, id) pair to its Application/SellerApplication instance, or raises Http404."""
     if role == 'founder':
-        return get_object_or_404(Application, id=profile_id, is_private=False)
+        return get_object_or_404(Application.objects.discoverable(), id=profile_id)
     elif role == 'seller':
-        return get_object_or_404(SellerApplication, id=profile_id, is_private=False)
+        return get_object_or_404(SellerApplication.objects.discoverable(), id=profile_id)
     raise Http404("Unknown pitch video role.")
 
 
@@ -2779,6 +3237,340 @@ def set_pitch_video_visibility(request):
         return JsonResponse({'error': 'No founder or seller profile found.'}, status=404)
 
     return JsonResponse({'status': 'success', 'visibility': visibility})
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# EXPLORE / ELEVATOR PITCHES — the anonymous short-form discovery front door.
+#
+# Deliberately NOT the Pitch Videos section above: that one is a Zelda-ranked
+# grid of 1-3 min videos gated by investor/buyer role. This is a full-screen
+# vertical swipe feed of =<30s ProfileVideo(kind=ELEVATOR_PITCH) clips that
+# anyone — logged out, no role chosen — can watch. The funnel is
+# curiosity -> elevator pitch -> profile -> deck/Zelda -> deal, so every card's
+# primary CTA points at the owner's profile.
+#
+# Moderation is publish-first (see ProfileVideo docstring): a clip is live the
+# moment it uploads; the first viewer report quarantines it and pings staff.
+# ──────────────────────────────────────────────────────────────────────────
+
+from .models import ProfileVideo, ProfileVideoReport
+
+
+def _rank_elevator_pitches(videos):
+    """
+    Featured/highlighted owners first (same bulletin-board convention as
+    _rank_pitch_video_profiles), then a light completion-rate nudge among
+    clips that have enough views to be meaningful, then newest-first.
+    Intentionally simple — no per-viewer personalization or engagement
+    optimization in Phase 1.
+    """
+    def key(v):
+        p = v.owner_profile
+        highlighted = bool(p and getattr(p, 'is_highlighted', False))
+        featured = bool(p and (getattr(p, 'is_premium', False) or getattr(p, 'is_staff_featured', False)))
+        completion = round(v.completion_rate, 2) if v.view_count >= 5 else 0.4
+        return (
+            not highlighted,
+            not featured,
+            -completion,
+            -(v.created_at.timestamp() if v.created_at else 0),
+        )
+    return sorted(videos, key=key)
+
+
+@ensure_csrf_cookie
+def explore_feed(request):
+    """
+    GET /explore/ — the Elevator Pitches feed. No auth, no role selection.
+    ?v=<id> starts the scroll at a specific clip (used by Share links).
+    @ensure_csrf_cookie so the standalone page's play/interested/report
+    fetches have a CSRF token even for a first-time anonymous visitor.
+    """
+    videos = list(ProfileVideo.objects.visible_elevator_pitches())
+    videos = _rank_elevator_pitches(videos)
+
+    interested_ids = frozenset()
+    if request.user.is_authenticated:
+        interested_ids = set(
+            request.user.interested_profile_videos.values_list('id', flat=True)
+        )
+
+    # The profile page is @login_required. For an anonymous viewer the "View
+    # profile" CTA is the conversion point — send them to signup with the
+    # profile as `next` so they land there right after creating an account.
+    def _profile_link(username):
+        path = reverse('accounts:profile', kwargs={'username': username})
+        if request.user.is_authenticated:
+            return path
+        return f"{reverse('accounts:signup')}?next={quote(path)}"
+
+    cards = []
+    for v in videos:
+        p = v.owner_profile
+        if not p:
+            continue
+        is_founder = v.role == 'founder'
+        cards.append({
+            'id': v.id,
+            'video_url': v.video.url,
+            'caption': v.caption,
+            'company_name': getattr(p, 'company_name', ''),
+            'owner_name': getattr(p, 'founder_name', '') or getattr(p, 'seller_name', ''),
+            'context': (
+                f"{getattr(p, 'sector', '')} · {getattr(p, 'stage', '')}".strip(' ·')
+                if is_founder else
+                f"{getattr(p, 'industry', '')} · For sale".strip(' ·')
+            ),
+            'role_label': 'Founder' if is_founder else 'Business for sale',
+            'profile_url': _profile_link(p.user.username),
+            'interested_count': v.interested_users.count(),
+            'viewer_interested': v.id in interested_ids,
+        })
+
+    try:
+        start_id = int(request.GET.get('v', ''))
+    except (TypeError, ValueError):
+        start_id = None
+
+    return render(request, 'matchmaking/explore.html', {
+        'cards': cards,
+        'start_id': start_id,
+        'reason_choices': ProfileVideoReport.REASON_CHOICES,
+    })
+
+
+def _get_published_elevator_pitch(video_id):
+    return ProfileVideo.objects.filter(
+        id=video_id, kind=ProfileVideo.KIND_ELEVATOR_PITCH,
+    ).select_related('founder__user', 'seller__user').first()
+
+
+@require_POST
+def elevator_pitch_play(request, video_id):
+    """
+    Fired by the feed when a clip enters view / finishes. Anonymous-safe:
+    counts are aggregate only (no per-viewer row, no PII), deduped per
+    session so a scroll back up doesn't double-count. Body: {"completed": bool}.
+    """
+    video = _get_published_elevator_pitch(video_id)
+    if not video or video.status != ProfileVideo.STATUS_PUBLISHED:
+        return JsonResponse({'status': 'ignored'})
+
+    try:
+        completed = bool(json.loads(request.body or '{}').get('completed'))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        completed = False
+
+    seen = request.session.get('ep_seen', [])
+    done = request.session.get('ep_done', [])
+    changed = False
+
+    if video_id not in seen:
+        ProfileVideo.objects.filter(id=video_id).update(view_count=F('view_count') + 1)
+        seen.append(video_id)
+        request.session['ep_seen'] = seen[-200:]
+        changed = True
+    if completed and video_id not in done:
+        ProfileVideo.objects.filter(id=video_id).update(
+            completed_view_count=F('completed_view_count') + 1
+        )
+        done.append(video_id)
+        request.session['ep_done'] = done[-200:]
+        changed = True
+
+    if changed:
+        request.session.modified = True
+    return JsonResponse({'status': 'success'})
+
+
+@login_required
+@require_POST
+def elevator_pitch_interested(request, video_id):
+    """'Interested' — a soft signal on the feed, kept deliberately light
+    (no comments/saves in Explore). Anonymous clicks redirect to signup
+    client-side before ever reaching here."""
+    video = _get_published_elevator_pitch(video_id)
+    if not video:
+        return JsonResponse({'error': 'Not found.'}, status=404)
+
+    if video.interested_users.filter(id=request.user.id).exists():
+        video.interested_users.remove(request.user)
+        interested = False
+    else:
+        video.interested_users.add(request.user)
+        interested = True
+        owner_user = video.owner_profile.user
+        if owner_user != request.user:
+            try:
+                from notifications.models import Notification
+                Notification.objects.create(
+                    recipient=owner_user, sender=request.user,
+                    notification_type='ELEVATOR_PITCH_INTEREST',
+                    message=f"{request.user.get_full_name() or request.user.username} is interested in your elevator pitch.",
+                    target_url=reverse('accounts:profile', kwargs={'username': owner_user.username}),
+                )
+            except Exception as e:
+                logger.warning(f"elevator pitch interest notification failed: {e}")
+
+    return JsonResponse({
+        'status': 'success',
+        'interested': interested,
+        'interested_count': video.interested_users.count(),
+    })
+
+
+@login_required
+@require_POST
+def elevator_pitch_report(request, video_id):
+    """
+    A logged-in viewer reports a clip. The first report on a PUBLISHED clip
+    quarantines it (off Explore, into the staff queue) and notifies staff.
+    A report is a temporary takedown pending review, never an automatic
+    verdict — staff restore or remove from the admin.
+    """
+    video = _get_published_elevator_pitch(video_id)
+    if not video:
+        return JsonResponse({'error': 'Not found.'}, status=404)
+
+    reason = (request.POST.get('reason') or '').strip().upper()
+    valid_reasons = {c[0] for c in ProfileVideoReport.REASON_CHOICES}
+    if reason not in valid_reasons:
+        return JsonResponse({'error': 'Pick a reason.'}, status=400)
+    detail = (request.POST.get('detail') or '').strip()[:1000]
+
+    if video.owner_profile.user_id == request.user.id:
+        return JsonResponse({'error': "You can't report your own video."}, status=400)
+
+    report, created = ProfileVideoReport.objects.get_or_create(
+        video=video, reporter=request.user,
+        defaults={'reason': reason, 'detail': detail},
+    )
+    if not created:
+        return JsonResponse({'status': 'success', 'already_reported': True})
+
+    ProfileVideo.objects.filter(id=video.id).update(report_count=F('report_count') + 1)
+    was_published = video.status == ProfileVideo.STATUS_PUBLISHED
+    if was_published:
+        video.quarantine(first_report_at=report.created_at)
+        _notify_staff_of_video_report(video, report)
+
+    return JsonResponse({'status': 'success', 'quarantined': was_published})
+
+
+def _notify_staff_of_video_report(video, report):
+    """In-app Notification for every staff user + an email to ADMINS."""
+    queue_url = reverse('admin:matchmaking_profilevideo_changelist') + '?status__exact=QUARANTINED'
+    try:
+        from notifications.models import Notification
+        staff = User.objects.filter(is_staff=True, is_active=True)
+        Notification.objects.bulk_create([
+            Notification(
+                recipient=s, sender=report.reporter,
+                notification_type='ELEVATOR_PITCH_REPORT',
+                message=f"Elevator pitch by {video.owner_display} was reported ({report.get_reason_display()}) and pulled from Explore.",
+                target_url=queue_url,
+            )
+            for s in staff
+        ])
+    except Exception as e:
+        logger.warning(f"staff report notification failed: {e}")
+
+    try:
+        from django.core.mail import mail_admins
+        mail_admins(
+            subject=f"[Explore] Elevator pitch reported — {video.owner_display}",
+            message=(
+                f"Reason: {report.get_reason_display()}\n"
+                f"Reporter: {report.reporter.username}\n"
+                f"Detail: {report.detail or '(none)'}\n\n"
+                f"The clip has been quarantined (removed from Explore) pending your review.\n"
+                f"Review queue: {queue_url}\n"
+            ),
+            fail_silently=True,
+        )
+    except Exception as e:
+        logger.warning(f"mail_admins for video report failed: {e}")
+
+
+@login_required
+def manage_elevator_pitch(request):
+    """
+    Owner-facing upload/replace/delete for the single ELEVATOR_PITCH clip on
+    the requester's founder or seller profile. Reached from Settings ->
+    Pitch Video. The =<30s / =<30MB / MP4-MOV-WEBM limits are enforced by
+    the model field validators; the browser also checks duration before
+    the file is sent and posts it back as `duration_seconds`.
+    """
+    profile = getattr(request.user, 'match_founder_profile', None)
+    role = 'founder'
+    if profile is None:
+        profile = getattr(request.user, 'match_seller_profile', None)
+        role = 'seller'
+    if profile is None:
+        messages.error(request, "Add a founder or business-for-sale profile first.")
+        return redirect('usersettings:home')
+
+    existing = ProfileVideo.objects.filter(
+        **{role: profile}, kind=ProfileVideo.KIND_ELEVATOR_PITCH,
+    ).first()
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'delete' and existing:
+            existing.video.delete(save=False)
+            existing.delete()
+            messages.success(request, "Elevator pitch removed.")
+            return redirect('usersettings:home')
+
+        caption = (request.POST.get('caption') or '').strip()[:140]
+        duration = request.POST.get('duration_seconds')
+        try:
+            duration = float(duration) if duration else None
+        except ValueError:
+            duration = None
+
+        upload = request.FILES.get('video')
+        if not upload and existing:
+            existing.caption = caption
+            existing.save(update_fields=['caption', 'updated_at'])
+            messages.success(request, "Elevator pitch caption updated.")
+            return redirect('usersettings:home')
+
+        if not upload:
+            messages.error(request, "Choose a video file to upload.")
+            return redirect('matchmaking:manage_elevator_pitch')
+
+        if duration is not None and duration > ProfileVideo.ELEVATOR_MAX_SECONDS + 2:
+            messages.error(
+                request,
+                f"That clip is {duration:.0f}s. Elevator pitches must be {ProfileVideo.ELEVATOR_MAX_SECONDS} seconds or less.",
+            )
+            return redirect('matchmaking:manage_elevator_pitch')
+
+        target = existing or ProfileVideo(**{role: profile}, kind=ProfileVideo.KIND_ELEVATOR_PITCH)
+        if existing and existing.video:
+            existing.video.delete(save=False)
+        target.video = upload
+        target.caption = caption
+        target.duration_seconds = duration
+        # A fresh upload of a previously removed/quarantined clip re-enters review-free.
+        target.status = ProfileVideo.STATUS_PUBLISHED
+        try:
+            target.full_clean(exclude=['founder', 'seller'])
+        except ValidationError as e:
+            messages.error(request, "; ".join(e.messages))
+            return redirect('matchmaking:manage_elevator_pitch')
+        target.save()
+        messages.success(request, "Elevator pitch is live on Explore.")
+        return redirect('usersettings:home')
+
+    return render(request, 'matchmaking/manage_elevator_pitch.html', {
+        'existing': existing,
+        'role': role,
+        'max_seconds': ProfileVideo.ELEVATOR_MAX_SECONDS,
+        'max_mb': ProfileVideo.ELEVATOR_MAX_MB,
+    })
 
 
 # 1x1 transparent PNG — the smallest valid image, served by digest_open_pixel.

@@ -25,6 +25,11 @@ class UserSettings(models.Model):
     show_milestones = models.BooleanField(default=True)
     show_profile_view_count = models.BooleanField(default=True)
 
+    profile_picture = models.ImageField(
+        upload_to='profile_pictures/%Y/%m/', blank=True, null=True,
+        help_text="Populated from Google/Facebook/LinkedIn on first social signup; replaceable anytime from Settings."
+    )
+
     updated_at = models.DateTimeField(auto_now=True)
 
     TOGGLE_FIELDS = [
