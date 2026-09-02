@@ -28,7 +28,7 @@
             <i class="bi bi-arrow-left me-1"></i> Back to Profile
         </a>
         <div class="d-flex gap-2">
-            {% if ic_memo_tier == 'full' %}
+            {% if ic_memo_tier == 'full' and pitch_deck_doc %}
             <a href="{% url 'zelda_api:ic_memo_download' pitch_deck_doc.id %}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
                 <i class="bi bi-file-earmark-text me-1"></i> Download Markdown
             </a>
@@ -133,12 +133,19 @@
     <div class="mb-4 ic-memo-section">
         <h5 class="fw-bold border-bottom pb-2 mb-2">Truth Delta Signal</h5>
         <p class="small text-muted fst-italic mb-2">
-            Preliminary signal only — automated claim verification against outside sources isn't fully built yet,
-            so treat this as a starting point for diligence, not a verified fact-check.
+            An automated cross-check of the deck's claims against SEC EDGAR, Crunchbase, and recent news coverage
+            where available — a real signal, not a substitute for full diligence, since public data is sparse or
+            nonexistent for most early-stage private companies.
         </p>
-        <p class="mb-1"><strong>Signal Score:</strong> {{ truth_delta.overall_truth_score }}/100
+        {% if truth_delta.overall_truth_score is not None %}
+        <p class="mb-1"><strong>Signal Score:</strong> {{ truth_delta.overall_truth_score|floatformat:0 }}/100
             <span class="text-muted small">— reflects only the claims that had external data to check against, not an overall company assessment</span>
         </p>
+        {% else %}
+        <p class="mb-1"><strong>Signal Score:</strong> <span class="text-muted">not scored</span>
+            <span class="text-muted small">— no external data was found to verify or contradict these claims</span>
+        </p>
+        {% endif %}
         {% if truth_delta.summary %}<p class="text-secondary mb-0">{{ truth_delta.summary }}</p>{% endif %}
     </div>
     {% endif %}
