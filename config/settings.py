@@ -297,7 +297,14 @@ LOGIN_URL = "accounts:login"
 CELERY_BROKER_URL = env('CELERY_BROKER_URL')
 CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND')
 
-CELERY_TASK_ALWAYS_EAGER = False
+# Off in prod/dev (tasks go to a real worker). CI/test runs set EAGER True so
+# `.delay()` executes in-process — no broker, no worker, and no dependency on
+# Celery's redis transport (which has hung `.delay()` calls made from inside a
+# live view under this Python/Celery combination). EAGER_PROPAGATES stays off
+# by default so an eager task that raises still surfaces as a failed result
+# rather than a new exception in the caller.
+CELERY_TASK_ALWAYS_EAGER = env.bool('CELERY_TASK_ALWAYS_EAGER', default=False)
+CELERY_TASK_EAGER_PROPAGATES = env.bool('CELERY_TASK_EAGER_PROPAGATES', default=False)
 
 from celery.schedules import crontab
 CELERY_BEAT_SCHEDULE = {
