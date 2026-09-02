@@ -8,7 +8,7 @@ from .models import (
     SellerApplication, BuyerApplication, AcquisitionConnection, DealFeedback, AcquisitionInterestEvent,
     BuyerPredictionSnapshot, BusinessEmailVerification,
     DataRoomDocument, DataRoomAccessRequest, DataRoomDocumentView,
-    PitchVideoComment,
+    PitchVideoComment, ProfileVideo, ProfileVideoReport,
 )
 from django.core.mail import EmailMessage
 from django.conf import settings
@@ -209,6 +209,58 @@ class PitchVideoCommentAdmin(admin.ModelAdmin):
     list_display = ['author', 'founder', 'seller', 'created_at']
     list_filter = ['created_at']
     search_fields = ['author__username', 'founder__company_name', 'seller__company_name', 'body']
+
+
+@admin.action(description="Restore selected video(s) to Explore")
+def restore_profile_videos(modeladmin, request, queryset):
+    n = 0
+    for v in queryset:
+        v.restore(request.user)
+        n += 1
+    modeladmin.message_user(request, f"Restored {n} video(s) to Explore.", messages.SUCCESS)
+
+
+@admin.action(description="Remove selected video(s) from Explore (permanent)")
+def remove_profile_videos(modeladmin, request, queryset):
+    n = 0
+    for v in queryset:
+        v.remove_by_staff(request.user)
+        n += 1
+    modeladmin.message_user(request, f"Removed {n} video(s).", messages.SUCCESS)
+
+
+class ProfileVideoReportInline(admin.TabularInline):
+    model = ProfileVideoReport
+    extra = 0
+    readonly_fields = ('reporter', 'reason', 'detail', 'created_at', 'decision', 'reviewed_at', 'reviewed_by')
+    can_delete = False
+
+
+@admin.register(ProfileVideo)
+class ProfileVideoAdmin(admin.ModelAdmin):
+    """
+    Moderation queue for the Explore feed. Filter status=Quarantined to see
+    videos a viewer reported (auto-pulled from Explore, awaiting a decision).
+    Use the row actions to Restore (report not upheld) or Remove (upheld).
+    """
+    list_display = ('owner_display', 'kind', 'status', 'report_count', 'view_count',
+                    'completed_view_count', 'first_reported_at', 'created_at')
+    list_filter = ('status', 'kind', 'created_at')
+    search_fields = ('founder__company_name', 'seller__company_name',
+                     'founder__user__username', 'seller__user__username', 'caption')
+    readonly_fields = ('founder', 'seller', 'view_count', 'completed_view_count', 'report_count',
+                       'first_reported_at', 'quarantined_at', 'last_reviewed_at', 'last_reviewed_by',
+                       'last_review_decision', 'duration_seconds', 'created_at', 'updated_at')
+    actions = [restore_profile_videos, remove_profile_videos]
+    inlines = [ProfileVideoReportInline]
+
+
+@admin.register(ProfileVideoReport)
+class ProfileVideoReportAdmin(admin.ModelAdmin):
+    list_display = ('video', 'reason', 'reporter', 'decision', 'created_at', 'reviewed_by')
+    list_filter = ('decision', 'reason', 'created_at')
+    search_fields = ('video__founder__company_name', 'video__seller__company_name', 'reporter__username', 'detail')
+    readonly_fields = ('video', 'reporter', 'reason', 'detail', 'created_at')
 
 
 @admin.register(InvestorPredictionSnapshot)

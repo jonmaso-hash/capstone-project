@@ -272,6 +272,14 @@
                     {% elif listing.is_premium or listing.is_staff_featured %}
                     <span class="badge bg-warning text-dark ms-1">★ Featured</span>
                     {% endif %}
+                    {% if listing.has_verified_sold %}
+                    <span class="badge bg-success ms-1" role="button" tabindex="0"
+                          data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top"
+                          data-bs-content="Confirmed by both this seller and a buyer — not a self-reported claim.">
+                        <i class="bi bi-patch-check-fill"></i> Verified Sold
+                        {% if listing.verified_sold_count > 1 %}({{ listing.verified_sold_count }}){% endif %}
+                    </span>
+                    {% endif %}
                 </div>
 
                 <div class="small text-muted">

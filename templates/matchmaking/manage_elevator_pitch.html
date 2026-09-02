@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Your Elevator Pitch | Interlink Foundry{% endblock title %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 640px;">
+    <a href="{% url 'usersettings:home' %}" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Back to settings</a>
+
+    <h1 class="h3 fw-bold mt-3 mb-1">Your Elevator Pitch</h1>
+    <p class="text-secondary">
+        A single <strong>{{ max_seconds }}-second</strong> clip that plays in
+        <a href="{% url 'explore' %}">Explore</a> — the public feed anyone can browse without an account.
+        Problem, product, why it matters, a line people remember. Vertical video works best.
+    </p>
+
+    <div class="card border-0 shadow-sm rounded-4 mt-4">
+        <div class="card-body p-4">
+
+            {% if existing %}
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    {% if existing.status == 'PUBLISHED' %}
+                        <span class="badge bg-success-subtle text-success-emphasis rounded-pill">Live on Explore</span>
+                    {% elif existing.status == 'QUARANTINED' %}
+                        <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill">Under review</span>
+                    {% else %}
+                        <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill">Removed by staff</span>
+                    {% endif %}
+                    {% if existing.report_count %}
+                        <span class="small text-secondary">{{ existing.report_count }} report{{ existing.report_count|pluralize }}</span>
+                    {% endif %}
+                </div>
+
+                {% if existing.status == 'QUARANTINED' %}
+                <div class="alert alert-warning small">
+                    This pitch was reported and is hidden from Explore while our team reviews it.
+                    A report is a temporary hold, not a decision — if it's a genuine pitch it'll be restored.
+                    You can also replace it below.
+                </div>
+                {% elif existing.status == 'REMOVED' %}
+                <div class="alert alert-danger small">
+                    Staff removed this pitch from Explore. Uploading a new clip below starts fresh.
+                </div>
+                {% endif %}
+
+                <div class="ratio ratio-9x16 bg-dark rounded-3 overflow-hidden mb-3" style="max-width: 280px;">
+                    <video src="{{ existing.video.url }}" controls preload="metadata"></video>
+                </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data" id="epUploadForm">
+                {% csrf_token %}
+                <input type="hidden" name="duration_seconds" id="epDuration">
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">
+                        {% if existing %}Replace video{% else %}Video file{% endif %}
+                    </label>
+                    <input type="file" name="video" id="epFile" accept="video/mp4,video/quicktime,video/webm"
+                           class="form-control" {% if not existing %}required{% endif %}>
+                    <div class="form-text">MP4, MOV, or WEBM · max {{ max_mb }}MB · {{ max_seconds }} seconds or less.</div>
+                    <div id="epFileError" class="text-danger small mt-1 d-none"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">Caption <span class="text-secondary fw-normal">(optional)</span></label>
+                    <input type="text" name="caption" maxlength="140" class="form-control"
+                           value="{{ existing.caption|default:'' }}"
+                           placeholder="The one-sentence version of what you're building">
+                    <div class="form-text">Shown under your video in the feed. 140 characters max.</div>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary rounded-pill px-4" id="epSubmit">
+                        {% if existing %}Save changes{% else %}Publish to Explore{% endif %}
+                    </button>
+                    {% if existing %}
+                    <button type="submit" name="action" value="delete" class="btn btn-outline-danger rounded-pill px-4"
+                            onclick="return confirm('Remove your elevator pitch from Explore?');">
+                        Remove
+                    </button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const MAX_SECONDS = {{ max_seconds }};
+    const MAX_MB = {{ max_mb }};
+    const fileInput = document.getElementById('epFile');
+    const durInput = document.getElementById('epDuration');
+    const errBox = document.getElementById('epFileError');
+    const submitBtn = document.getElementById('epSubmit');
+
+    function showErr(msg) { errBox.textContent = msg; errBox.classList.remove('d-none'); submitBtn.disabled = true; }
+    function clearErr() { errBox.textContent = ''; errBox.classList.add('d-none'); submitBtn.disabled = false; }
+
+    fileInput.addEventListener('change', function () {
+        clearErr();
+        durInput.value = '';
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        if (file.size > MAX_MB * 1024 * 1024) {
+            showErr(`That file is ${(file.size / 1024 / 1024).toFixed(1)}MB. Max is ${MAX_MB}MB.`);
+            return;
+        }
+
+        const url = URL.createObjectURL(file);
+        const probe = document.createElement('video');
+        probe.preload = 'metadata';
+        probe.onloadedmetadata = function () {
+            URL.revokeObjectURL(url);
+            const secs = probe.duration;
+            durInput.value = secs ? secs.toFixed(1) : '';
+            if (secs && secs > MAX_SECONDS + 2) {
+                showErr(`That clip is ${Math.round(secs)}s. Elevator pitches must be ${MAX_SECONDS} seconds or less — trim it and try again.`);
+            }
+        };
+        probe.onerror = function () { URL.revokeObjectURL(url); };
+        probe.src = url;
+    });
+})();
+</script>
+{% endblock content %}

@@ -6,7 +6,11 @@
 <div class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <div>
-            <h2 class="fw-bold mb-1"><i class="bi bi-graph-up-arrow me-2"></i>Business Valuation Report</h2>
+            <h2 class="fw-bold mb-1"><i class="bi bi-graph-up-arrow me-2"></i>Business Valuation Report
+                <i class="bi bi-info-circle field-info-icon" role="button" tabindex="0"
+                   data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom"
+                   data-bs-content="Get an estimated valuation range without hiring a valuation firm. Zelda analyzes your company's financials, market position, and stage to produce a valuation range, a confidence assessment, and the key factors driving it."></i>
+            </h2>
             <p class="text-muted mb-0">{{ document.source_entity }}</p>
         </div>
         <div class="d-flex gap-2">
@@ -160,47 +164,86 @@ function disclaimerHtml(data) {
 // the valuation itself (masked, not omitted), then sell the unlock as
 // one complete deliverable. No chopped-up locked sections, no "% visible"
 // framing, no revealed risk excerpt.
+// Bare letter grades only — no explanations, findings, claims, evidence
+// excerpts, "why", checklists, weak-point callouts, or recommendations.
+// Grades confidence/evidence quality, not business quality — see
+// zelda_api/valuation_preview.py::build_valuation_scorecard's docstring.
+// Always shown under this explicit label + subtitle so a grade can't be
+// misread as a verdict on the business itself.
+function scorecardHtml(data) {
+    const rows = data.scorecard || [];
+    if (!rows.length) return '';
+    return `
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h6 class="fw-bold text-uppercase small text-muted mb-1">Zelda Analysis Scorecard</h6>
+            <p class="text-muted mb-3" style="font-size: 0.8rem;">How much evidence Zelda found across key business dimensions.</p>
+            <div class="row g-3 text-center">
+                ${rows.map(row => `
+                <div class="col-6 col-md-3">
+                    <div class="fw-bold fs-4 text-dark">${escapeHtml(row.grade)}</div>
+                    <div class="text-muted small">${escapeHtml(row.category)}</div>
+                </div>`).join('')}
+            </div>
+        </div>
+    </div>`;
+}
+
 function renderPreview(data) {
     const riskTeaser = data.risk_count > 0
         ? `<div class="card border-0 shadow-sm rounded-4 mb-4">
                <div class="card-body p-4">
                    <h6 class="fw-bold text-uppercase small text-muted mb-2">Risk Analysis</h6>
-                   <p class="mb-0">Zelda flagged ${data.risk_count} factor${data.risk_count === 1 ? '' : 's'} that shaped your valuation. Unlock to see what they are.</p>
+                   <p class="mb-0">Zelda flagged ${data.risk_count} factor${data.risk_count === 1 ? '' : 's'} that shaped your valuation. Full breakdown in Zelda AI.</p>
                </div>
            </div>`
         : '';
     const includes = (data.unlock_includes || []).map(item => `<li class="mb-2"><i class="bi bi-check-lg text-success me-2"></i>${escapeHtml(item)}</li>`).join('');
 
     document.getElementById('valuation-content').innerHTML = `
+        <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-2 mb-3 fw-semibold">
+            <i class="bi bi-lightning-charge-fill me-1"></i>Zelda Lite Report
+        </span>
         ${trustStatsHtml(data)}
         ${businessOverviewHtml(data)}
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4">
+                <div id="valuation-lite-confidence-gauge"></div>
+            </div>
+        </div>
         <p class="text-muted small text-center mb-4"><i class="bi bi-shield-check me-1"></i>Generated from your uploaded documents — not generic industry assumptions.</p>
+        ${scorecardHtml(data)}
         ${riskTeaser}
         <div class="card border-0 shadow-sm rounded-4 mb-4 text-center">
             <div class="card-body p-4">
                 <h6 class="text-uppercase fw-bold text-muted small mb-2">Estimated Valuation</h6>
-                <h2 class="fw-bold mb-1" style="filter: blur(7px); user-select: none; color: #198754;">$███,███ &ndash; $█,███,███</h2>
                 <p class="text-success small fw-semibold mb-1"><i class="bi bi-check-circle-fill me-1"></i>Calculated successfully</p>
-                <p class="text-muted small mb-0">Unlock to reveal the exact range.</p>
+                <p class="text-muted mb-0">The exact range is included in the full Zelda AI report.</p>
             </div>
         </div>
         <div class="card border-0 shadow-sm rounded-4 mb-4" style="background: linear-gradient(135deg, #fff8e1, #ffffff);">
             <div class="card-body p-4 text-center">
-                <h5 class="fw-bold mb-3">Your valuation has been generated.</h5>
-                <p class="text-muted mb-3">Unlock the complete report to see:</p>
+                <h5 class="fw-bold mb-1">Zelda Lite Report</h5>
+                <p class="text-muted small mb-3">Free — a real analysis, not a teaser</p>
+                <p class="text-muted mb-3">Upgrade to Zelda AI for the complete report:</p>
                 <ul class="list-unstyled mb-4 d-inline-block text-start">${includes}</ul>
-                <p class="text-muted small mb-3">Your report has been securely saved — you can unlock it at any time.</p>
+                <p class="text-muted small mb-3">Your report has been securely saved — upgrade anytime.</p>
                 <form method="post" action="{% url 'billing:create_valuation_purchase_checkout_session' %}">
                     {% csrf_token %}
                     <input type="hidden" name="document_id" value="{{ document.id }}">
                     <button type="submit" class="btn btn-warning btn-lg rounded-pill px-5 fw-semibold d-block mx-auto">
-                        <i class="bi bi-unlock me-1"></i> Unlock Full Report — $${Number(data.unlock_price).toFixed(2)}
+                        <i class="bi bi-stars me-1"></i> Upgrade to Zelda AI — $${Number(data.unlock_price).toFixed(2)}
                     </button>
                 </form>
             </div>
         </div>
         ${disclaimerHtml(data)}
     `;
+
+    const liteGaugeEl = document.getElementById('valuation-lite-confidence-gauge');
+    if (liteGaugeEl && typeof renderConfidenceGauge === 'function') {
+        renderConfidenceGauge(liteGaugeEl, data.confidence_score, 'Analysis Confidence');
+    }
 }
 
 function renderFull(data) {
@@ -267,6 +310,9 @@ function renderFull(data) {
         </div>` : '';
 
     document.getElementById('valuation-content').innerHTML = `
+        <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-2 mb-3 fw-semibold">
+            <i class="bi bi-stars me-1"></i>Zelda AI — Full Report
+        </span>
         ${trustStatsHtml(data)}
         <div class="card border-0 shadow-sm rounded-4 mb-4 bg-success-subtle">
             <div class="card-body p-4 text-center">

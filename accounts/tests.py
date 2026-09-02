@@ -4,11 +4,13 @@ LOGIN_REDIRECT_URL target allauth's social-login flow consults) and
 choose_role (the role-picker a first-time social-login user with no
 Founder/Investor/Seller/Buyer profile lands on).
 """
+import tempfile
 from datetime import timedelta
 from unittest import mock
 
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -42,6 +44,24 @@ class SignupViewTests(TestCase):
 
         # the real signal auth_login() succeeded — session is tied to this user
         self.assertEqual(self.client.session['_auth_user_id'], str(user.id))
+
+    def test_signup_creates_the_platform_disclaimer_notification(self):
+        """The 'no money changes hands on-platform / not a broker, escrow,
+        or trustee' disclosure must reach every new password-signup user as
+        their first notification — see PLATFORM_DISCLAIMER_MESSAGE."""
+        from accounts.views import PLATFORM_DISCLAIMER_MESSAGE
+        from notifications.models import Notification
+        self.client.post(reverse('accounts:signup'), {
+            'username': 'disclaimer_signup_user',
+            'password1': 'TempAudit!2026xyz',
+            'password2': 'TempAudit!2026xyz',
+            'role': 'founder',
+        })
+        user = User.objects.get(username='disclaimer_signup_user')
+        notif = Notification.objects.get(recipient=user, notification_type='SYSTEM')
+        self.assertEqual(notif.message, PLATFORM_DISCLAIMER_MESSAGE)
+        self.assertIn('not a broker-dealer, escrow agent, or trustee', notif.message)
+        self.assertIn('off-platform', notif.message)
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
@@ -114,6 +134,23 @@ class ChooseRoleTests(TestCase):
         response = self.client.get(reverse('accounts:choose_role'))
         self.assertEqual(response.status_code, 302)
         self.assertIn('/login/', response.url)
+
+    def test_choosing_a_role_creates_the_platform_disclaimer_notification(self):
+        """Social-login signups never go through signup_view (no username/
+        password form), so choose_role is the only place they'd otherwise
+        see the same disclosure password-signup users get — see
+        PLATFORM_DISCLAIMER_MESSAGE and SignupViewTests' equivalent check."""
+        from accounts.views import PLATFORM_DISCLAIMER_MESSAGE
+        from notifications.models import Notification
+        self.client.post(reverse('accounts:choose_role'), {'role': 'founder'})
+        notif = Notification.objects.get(recipient=self.user, notification_type='SYSTEM')
+        self.assertEqual(notif.message, PLATFORM_DISCLAIMER_MESSAGE)
+
+    def test_revisiting_choose_role_does_not_duplicate_the_notification(self):
+        from notifications.models import Notification
+        self.client.post(reverse('accounts:choose_role'), {'role': 'founder'})
+        self.client.post(reverse('accounts:choose_role'), {'role': 'founder'})
+        self.assertEqual(Notification.objects.filter(recipient=self.user, notification_type='SYSTEM').count(), 1)
 
 
 class CommaFormattedNumberInputTests(TestCase):
@@ -645,6 +682,308 @@ class VerificationHistoryProfileTests(TestCase):
         self.assertEqual(response.context['verification_history'], [])
 
 
+class VerifiedFundedSoldBadgeProfileTests(TestCase):
+    """
+    profile()'s has_verified_funded/has_verified_sold context — FUNDED/CLOSED
+    is a two-sided, counterparty-confirmed state (see
+    matchmaking.views.connection_action_view/acquisition_connection_action_view
+    and matchmaking.tests.LogTrainingExampleTests /
+    AcquisitionFundedClosedConfirmationTests for the confirmation flow itself),
+    so it's safe to surface as a trust badge here. This only checks the
+    badge appears for the genuine terminal state, not the self-reported
+    _PENDING one.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        from matchmaking.models import Connection, SellerApplication, BuyerApplication, AcquisitionConnection
+        self.Connection = Connection
+        self.AcquisitionConnection = AcquisitionConnection
+
+        self.founder_user = User.objects.create_user('vfb_founder', password='x')
+        self.application = Application.objects.create(
+            user=self.founder_user, company_name='FundedCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        self.investor_user = User.objects.create_user('vfb_investor', password='x')
+        self.investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='I', company_name='Fund', email='i@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+
+        self.seller_user = User.objects.create_user('vfb_seller', password='x')
+        self.seller = SellerApplication.objects.create(
+            user=self.seller_user, company_name='SoldCo', seller_name='S', email='s@t.com',
+            description='test', industry='SaaS',
+        )
+        self.buyer_user = User.objects.create_user('vfb_buyer', password='x')
+        self.buyer = BuyerApplication.objects.create(
+            user=self.buyer_user, full_name='B', company_name='Acquirer', email='b@t.com',
+        )
+
+    def test_funded_connection_shows_verified_funded_badge(self):
+        self.Connection.objects.create(founder=self.application, investor=self.investor, status='FUNDED', initiated_by='FOUNDER')
+        self.client.force_login(self.founder_user)
+        response = self.client.get(reverse('accounts:profile', args=[self.founder_user.username]))
+        self.assertTrue(response.context['has_verified_funded'])
+        self.assertContains(response, 'Verified Funded')
+
+    def test_funded_pending_connection_does_not_show_badge(self):
+        """A founder's unilateral claim (FUNDED_PENDING) is not yet a verified fact."""
+        self.Connection.objects.create(founder=self.application, investor=self.investor, status='FUNDED_PENDING', initiated_by='FOUNDER')
+        self.client.force_login(self.founder_user)
+        response = self.client.get(reverse('accounts:profile', args=[self.founder_user.username]))
+        self.assertFalse(response.context['has_verified_funded'])
+        self.assertNotContains(response, 'Verified Funded')
+
+    def test_closed_acquisition_connection_shows_verified_sold_badge(self):
+        self.AcquisitionConnection.objects.create(seller=self.seller, buyer=self.buyer, status='CLOSED', initiated_by='SELLER')
+        self.client.force_login(self.seller_user)
+        response = self.client.get(reverse('accounts:profile', args=[self.seller_user.username]))
+        self.assertTrue(response.context['has_verified_sold'])
+        self.assertContains(response, 'Verified Sold')
+
+    def test_closed_pending_acquisition_connection_does_not_show_badge(self):
+        self.AcquisitionConnection.objects.create(seller=self.seller, buyer=self.buyer, status='CLOSED_PENDING', initiated_by='SELLER')
+        self.client.force_login(self.seller_user)
+        response = self.client.get(reverse('accounts:profile', args=[self.seller_user.username]))
+        self.assertFalse(response.context['has_verified_sold'])
+        self.assertNotContains(response, 'Verified Sold')
+
+    def test_founder_with_no_deals_has_no_badge(self):
+        self.client.force_login(self.founder_user)
+        response = self.client.get(reverse('accounts:profile', args=[self.founder_user.username]))
+        self.assertFalse(response.context['has_verified_funded'])
+        self.assertFalse(response.context['has_verified_sold'])
+        self.assertEqual(response.context['verified_track_record'], [])
+        self.assertNotContains(response, 'Verified Track Record')
+
+    def test_founder_track_record_shows_investor_company_and_is_drillable(self):
+        self.Connection.objects.create(founder=self.application, investor=self.investor, status='FUNDED', initiated_by='FOUNDER')
+        self.client.force_login(self.founder_user)
+        response = self.client.get(reverse('accounts:profile', args=[self.founder_user.username]))
+        record = response.context['verified_track_record']
+        self.assertEqual(len(record), 1)
+        self.assertEqual(record[0]['label'], 'Funded by 1 investor')
+        self.assertEqual(record[0]['transactions'][0]['counterparty'], 'Fund')
+        self.assertContains(response, 'Verified Track Record')
+        self.assertContains(response, 'Funded by 1 investor')
+        self.assertContains(response, 'Fund')
+
+    def test_investor_with_funded_connection_shows_verified_funded_badge_and_track_record(self):
+        self.Connection.objects.create(founder=self.application, investor=self.investor, status='FUNDED', initiated_by='FOUNDER')
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('accounts:profile', args=[self.investor_user.username]))
+        self.assertTrue(response.context['has_verified_funded'])
+        self.assertContains(response, 'Verified Funded')
+        record = response.context['verified_track_record']
+        self.assertEqual(record[0]['label'], '1 company funded')
+        self.assertEqual(record[0]['transactions'][0]['counterparty'], 'FundedCo')
+
+    def test_buyer_with_closed_connection_shows_verified_sold_badge_and_track_record(self):
+        self.AcquisitionConnection.objects.create(seller=self.seller, buyer=self.buyer, status='CLOSED', initiated_by='SELLER')
+        self.client.force_login(self.buyer_user)
+        response = self.client.get(reverse('accounts:profile', args=[self.buyer_user.username]))
+        self.assertTrue(response.context['has_verified_sold'])
+        self.assertContains(response, 'Verified Sold')
+        record = response.context['verified_track_record']
+        self.assertEqual(record[0]['label'], '1 company acquired')
+        self.assertEqual(record[0]['transactions'][0]['counterparty'], 'SoldCo')
+
+
+class ProfileShareButtonTests(TestCase):
+    """
+    "Share Profile" — profile.html's fourth ContentShare entry point (see
+    sharing.views._resolve_profile). Visible to any authenticated viewer,
+    including the owner viewing their own page (sharing your own profile
+    externally is the primary acquisition-loop use case) — the live
+    resolver, not this button, is what enforces privacy.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('psb_founder', password='x')
+        self.application = Application.objects.create(
+            user=self.founder_user, company_name='PSBCo', founder_name='F', email='psb@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        self.viewer = User.objects.create_user('psb_viewer', password='x')
+
+    def test_share_button_renders_with_correct_content_type_and_id(self):
+        self.client.force_login(self.viewer)
+        response = self.client.get(reverse('accounts:profile', args=[self.founder_user.username]))
+        self.assertContains(response, f"openContentShare('PROFILE', {self.founder_user.id}")
+        self.assertContains(response, 'Share Profile')
+
+    def test_owner_sees_the_share_button_on_their_own_profile(self):
+        self.client.force_login(self.founder_user)
+        response = self.client.get(reverse('accounts:profile', args=[self.founder_user.username]))
+        self.assertContains(response, 'Share Profile')
+
+
+@override_settings(MEDIA_ROOT=tempfile.mkdtemp())
+class InvestorReadinessCenterTests(TestCase):
+    """
+    accounts.views._get_investor_readiness — every dimension must come from
+    real, already-computed data (confidence_breakdown, TruthDeltaReport,
+    is_verified), never a fabricated score. Gated by the same
+    can_view_ic_memo rule as the IC Memo itself (owner, staff, or an
+    investor with an ACCEPTED Connection) — deliberately reusing that gate
+    rather than inventing a second visibility rule for a closely related
+    panel.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        from matchmaking.models import Connection
+        self.Connection = Connection
+
+        self.founder_user = User.objects.create_user('irc_founder', password='x')
+        self.application = Application.objects.create(
+            user=self.founder_user, company_name='ReadyCo', founder_name='F', email='irc@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        self.investor_user = User.objects.create_user('irc_investor', password='x')
+        self.investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='I', company_name='Fund', email='irci@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.stranger_investor_user = User.objects.create_user('irc_stranger', password='x')
+        InvestorApplication.objects.create(
+            user=self.stranger_investor_user, full_name='S', company_name='OtherFund', email='ircs@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.staff_user = User.objects.create_user('irc_staff', password='x', is_staff=True)
+
+    def _profile_url(self):
+        return reverse('accounts:profile', args=[self.founder_user.username])
+
+    def test_panel_hidden_for_unrelated_investor(self):
+        self.client.force_login(self.stranger_investor_user)
+        response = self.client.get(self._profile_url())
+        self.assertIsNone(response.context['investor_readiness'])
+        self.assertNotContains(response, 'Investor Readiness')
+
+    def test_panel_visible_to_owner(self):
+        self.client.force_login(self.founder_user)
+        response = self.client.get(self._profile_url())
+        self.assertIsNotNone(response.context['investor_readiness'])
+        self.assertContains(response, 'Investor Readiness')
+
+    def test_panel_visible_to_staff(self):
+        self.client.force_login(self.staff_user)
+        response = self.client.get(self._profile_url())
+        self.assertIsNotNone(response.context['investor_readiness'])
+        self.assertContains(response, 'Investor Readiness')
+
+    def test_panel_visible_to_accepted_investor(self):
+        self.Connection.objects.create(founder=self.application, investor=self.investor, status='ACCEPTED', initiated_by='INVESTOR')
+        self.client.force_login(self.investor_user)
+        response = self.client.get(self._profile_url())
+        self.assertIsNotNone(response.context['investor_readiness'])
+        self.assertContains(response, 'Investor Readiness')
+
+    def test_no_analyzed_documents_renders_dashes_not_fabricated_zeros(self):
+        """A founder who's never uploaded anything gets `None` (rendered as —), not a fake 0%."""
+        self.client.force_login(self.founder_user)
+        response = self.client.get(self._profile_url())
+        readiness = response.context['investor_readiness']
+        self.assertIsNone(readiness['market_evidence_pct'])
+        self.assertIsNone(readiness['financial_disclosure_pct'])
+        self.assertIsNone(readiness['company_verification_pct'])
+        self.assertEqual(readiness['founder_verification_pct'], 0)
+        self.assertEqual(readiness['materials'], [])
+        self.assertContains(response, 'No investor materials available yet.')
+
+    def test_is_verified_founder_shows_100_percent_founder_verification(self):
+        self.application.is_verified = True
+        self.application.save(update_fields=['is_verified'])
+        self.client.force_login(self.founder_user)
+        response = self.client.get(self._profile_url())
+        self.assertEqual(response.context['investor_readiness']['founder_verification_pct'], 100)
+
+    def test_market_evidence_pct_derives_from_real_insight_confidence(self):
+        from zelda_api.vector_models import DocumentSource, IntelligenceInsight
+        doc = DocumentSource.objects.create(
+            uploaded_by=self.founder_user, filename='deck.pdf', source_entity='ReadyCo',
+            document_type='pitch_deck', status='analyzed',
+        )
+        IntelligenceInsight.objects.create(
+            document=doc, category='Market', insight_text='TAM is $10B', confidence_score=82,
+        )
+        self.client.force_login(self.founder_user)
+        response = self.client.get(self._profile_url())
+        self.assertEqual(response.context['investor_readiness']['market_evidence_pct'], 82)
+
+    def test_company_verification_pct_derives_from_real_truth_delta_score(self):
+        from zelda_api.vector_models import DocumentSource
+        from zelda_api.truth_delta_models import TruthDeltaReport
+        doc = DocumentSource.objects.create(
+            uploaded_by=self.founder_user, filename='deck.pdf', source_entity='ReadyCo',
+            document_type='pitch_deck', status='analyzed',
+        )
+        TruthDeltaReport.objects.create(document=doc, overall_truth_score=73.4, credibility_risk='medium')
+        self.client.force_login(self.founder_user)
+        response = self.client.get(self._profile_url())
+        self.assertEqual(response.context['investor_readiness']['company_verification_pct'], 73)
+
+    def test_no_truth_delta_report_leaves_company_verification_none(self):
+        from zelda_api.vector_models import DocumentSource
+        DocumentSource.objects.create(
+            uploaded_by=self.founder_user, filename='deck.pdf', source_entity='ReadyCo',
+            document_type='pitch_deck', status='analyzed',
+        )
+        self.client.force_login(self.founder_user)
+        response = self.client.get(self._profile_url())
+        self.assertIsNone(response.context['investor_readiness']['company_verification_pct'])
+
+    def test_financial_disclosure_pct_derives_from_real_structured_facts(self):
+        from zelda_api.vector_models import DocumentSource, IntelligenceInsight
+        from zelda_api.intelligence_pipeline import ZeldaIntelligencePipelineV2
+        doc = DocumentSource.objects.create(
+            uploaded_by=self.founder_user, filename='deck.pdf', source_entity='ReadyCo',
+            document_type='pitch_deck', status='analyzed',
+        )
+        IntelligenceInsight.objects.create(
+            document=doc, category='Revenue', insight_text='ARR is $1M', confidence_score=70,
+        )
+        # 3 of the 7 FINANCIAL_COMPLETENESS_FIELDS disclosed -> 3/7 -> round(42.857) == 43
+        facts = {'arr': '$1M', 'raise_amount': '$5M', 'market_size': '$10B'}
+        with mock.patch.object(ZeldaIntelligencePipelineV2, '_build_structured_context', return_value=facts):
+            self.client.force_login(self.founder_user)
+            response = self.client.get(self._profile_url())
+        self.assertEqual(response.context['investor_readiness']['financial_disclosure_pct'], 43)
+
+    def test_materials_checklist_only_lists_genuinely_existing_artifacts(self):
+        from zelda_api.vector_models import DocumentSource, IntelligenceMemo
+        from zelda_api.truth_delta_models import TruthDeltaReport
+        from matchmaking.models import DataRoomDocument
+        doc = DocumentSource.objects.create(
+            uploaded_by=self.founder_user, filename='deck.pdf', source_entity='ReadyCo',
+            document_type='pitch_deck', status='analyzed',
+        )
+        IntelligenceMemo.objects.create(
+            document=doc, executive_summary='x', investment_thesis='x',
+        )
+        TruthDeltaReport.objects.create(document=doc, overall_truth_score=90.0, credibility_risk='low')
+        DataRoomDocument.objects.create(
+            founder=self.application, category='CAP_TABLE', label='Cap Table',
+            file=SimpleUploadedFile('captable.csv', b'a,b,c', content_type='text/csv'),
+        )
+
+        self.client.force_login(self.founder_user)
+        response = self.client.get(self._profile_url())
+        materials = response.context['investor_readiness']['materials']
+
+        self.assertIn('Zelda Intelligence Report', materials)
+        self.assertIn('Truth Delta Verification', materials)
+        self.assertIn('Cap Table', materials)
+        self.assertNotIn('Pitch Deck', materials)
+        for _, label in DataRoomDocument.CATEGORY_CHOICES:
+            if label not in ('Cap Table',):
+                self.assertNotIn(label, materials)
+
+
 class VerificationHistoryPaywallTests(TestCase):
     """
     Truth Delta's actual scores/trend are Premium — same founder/seller-
@@ -712,3 +1051,30 @@ class VerificationHistoryPaywallTests(TestCase):
         response = self.client.get(reverse('accounts:profile', args=[self.founder_user.username]))
         self.assertTrue(response.context['verification_unlocked'])
         self.assertEqual(len(response.context['verification_history']), 1)
+
+
+class ZeldaWidgetLockedMemoInfoIconTests(TestCase):
+    """
+    templates/includes/zelda_ai_assistant_enhanced.html's renderLockedMemoCard()
+    (the floating widget's locked-state card for the Memo tab and Intelligence
+    brief) got an info icon matching the one on the unlocked report pages
+    (memo_detail.html, ic_memo.html, etc). Since that card is injected via
+    innerHTML after page load, base.html's one-time DOMContentLoaded popover
+    scan can't see it — this checks the initPopovers() helper and its two
+    call sites are actually present in the rendered page, not just the
+    static markup (a popover attribute alone would silently do nothing).
+    The widget is included on every authenticated page via base.html, so
+    any page render exercises this.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user('zwi_user', password='x')
+
+    def test_widget_defines_and_wires_up_popover_init_for_locked_memo_card(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('accounts:profile', args=[self.user.username]))
+        html = response.content.decode('utf-8')
+        self.assertIn('function initPopovers(root)', html)
+        self.assertIn('Save hours of manual research', html)
+        self.assertIn('initPopovers(memoContentEl)', html)
+        self.assertIn('initPopovers(content)', html)

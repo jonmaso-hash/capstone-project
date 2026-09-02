@@ -333,9 +333,7 @@
 {{ block.super }}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('[data-bs-toggle="popover"]').forEach(function (el) {
-            new bootstrap.Popover(el);
-        });
+        // Popover init is now handled globally in base.html.
 
         // Live comma-formatting for currency fields — strips non-digits,
         // reinserts commas as the user types. Server-side parsing happens

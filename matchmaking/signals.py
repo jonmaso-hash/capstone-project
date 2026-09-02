@@ -4,7 +4,7 @@ from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.conf import settings
 from .models import (
-    Application, InvestorApplication, Connection, DataRoomDocument, Document,
+    Application, InvestorApplication, Connection, DataRoomDocument,
     SellerApplication, FounderMilestone, founder_description_meets_word_count,
 )
 from matchmaking.services.ai_engine import generate_profile_embedding
@@ -186,11 +186,6 @@ def delete_data_room_file_from_storage(sender, instance, **kwargs):
 def delete_application_files_from_storage(sender, instance, **kwargs):
     delete_file_field(instance, 'pitch_deck')
     delete_file_field(instance, 'pitch_video')
-
-
-@receiver(post_delete, sender=Document)
-def delete_deal_room_document_file_from_storage(sender, instance, **kwargs):
-    delete_file_field(instance, 'file')
 
 
 @receiver(post_delete, sender=SellerApplication)

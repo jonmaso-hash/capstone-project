@@ -94,6 +94,26 @@ def compute_confidence_breakdown(insights):
     return rows
 
 
+# Deterministic confidence -> letter-grade mapping for the free-preview
+# "Zelda Analysis Scorecard" (zelda_api/valuation_preview.py). This grades
+# CONFIDENCE — how much evidence Zelda found for a category — not the
+# underlying business's quality; a low grade means thin evidence, not a
+# weak team/market/etc. Callers must always present grades under that
+# framing (see build_valuation_scorecard's docstring), never as a
+# standalone verdict.
+CONFIDENCE_GRADE_BANDS = [
+    (9.0, 'A+'), (8.0, 'A'), (7.0, 'B+'), (6.0, 'B'),
+    (5.0, 'C+'), (4.0, 'C'), (3.0, 'D'),
+]
+
+
+def grade_for_confidence(confidence_0_to_10):
+    for threshold, grade in CONFIDENCE_GRADE_BANDS:
+        if confidence_0_to_10 >= threshold:
+            return grade
+    return 'F'
+
+
 def compute_overall_confidence(insights):
     """
     Average confidence across ALL canonical categories, treating a category

@@ -140,7 +140,7 @@ def _send_weekly_digests_body():
 
     sent_count = 0
 
-    for investor_profile in InvestorApplication.objects.filter(is_private=False).exclude(review_status='DENIED').select_related('user'):
+    for investor_profile in InvestorApplication.objects.discoverable().exclude(review_status='DENIED').select_related('user'):
         investor_user = investor_profile.user
         card = build_investor_digest_card(investor_profile)
         if card is None:
@@ -166,7 +166,7 @@ def _send_weekly_digests_body():
         except Exception as e:
             logger.warning(f"Failed to email weekly digest to {investor_user.username}: {str(e)}")
 
-    for application in Application.objects.filter(is_private=False).exclude(review_status='DENIED').select_related('user'):
+    for application in Application.objects.discoverable().exclude(review_status='DENIED').select_related('user'):
         founder_user = application.user
         card = build_founder_digest_card(application)
         if card is None:
@@ -231,7 +231,7 @@ def _snapshot_investor_predictions_body():
     week_ago = timezone.now() - timedelta(days=7)
     snapshots_created = 0
 
-    for investor_profile in InvestorApplication.objects.filter(is_private=False).exclude(review_status='DENIED'):
+    for investor_profile in InvestorApplication.objects.discoverable().exclude(review_status='DENIED'):
         recent_unresolved = InvestorPredictionSnapshot.objects.filter(
             investor=investor_profile, is_resolved=False, created_at__gte=week_ago
         ).exists()
@@ -241,7 +241,7 @@ def _snapshot_investor_predictions_body():
         requested_ids = set(
             Connection.objects.filter(investor=investor_profile).values_list('founder_id', flat=True)
         )
-        founders = Application.objects.filter(is_private=False).exclude(review_status='DENIED').exclude(id__in=requested_ids)
+        founders = Application.objects.discoverable().exclude(review_status='DENIED').exclude(id__in=requested_ids)
 
         ranked = []
         for founder in founders:
@@ -437,7 +437,7 @@ def _snapshot_buyer_predictions_body():
     week_ago = timezone.now() - timedelta(days=7)
     snapshots_created = 0
 
-    for buyer_profile in BuyerApplication.objects.filter(is_private=False).exclude(review_status='DENIED'):
+    for buyer_profile in BuyerApplication.objects.discoverable().exclude(review_status='DENIED'):
         recent_unresolved = BuyerPredictionSnapshot.objects.filter(
             buyer=buyer_profile, is_resolved=False, created_at__gte=week_ago
         ).exists()
@@ -447,7 +447,7 @@ def _snapshot_buyer_predictions_body():
         requested_ids = set(
             AcquisitionConnection.objects.filter(buyer=buyer_profile).values_list('seller_id', flat=True)
         )
-        sellers = SellerApplication.objects.filter(is_private=False).exclude(review_status='DENIED').exclude(id__in=requested_ids)
+        sellers = SellerApplication.objects.discoverable().exclude(review_status='DENIED').exclude(id__in=requested_ids)
 
         ranked = []
         for seller in sellers:
@@ -678,34 +678,34 @@ def _send_priority_match_alerts_body():
     day_ago = timezone.now() - timedelta(hours=24)
     total_alerts = 0
 
-    new_investors = list(InvestorApplication.objects.filter(is_private=False, created_at__gte=day_ago).exclude(review_status='DENIED'))
-    new_founders = list(Application.objects.filter(is_private=False, created_at__gte=day_ago).exclude(review_status='DENIED'))
-    new_buyers = list(BuyerApplication.objects.filter(is_private=False, created_at__gte=day_ago).exclude(review_status='DENIED'))
-    new_sellers = list(SellerApplication.objects.filter(is_private=False, created_at__gte=day_ago).exclude(review_status='DENIED'))
+    new_investors = list(InvestorApplication.objects.discoverable().filter(created_at__gte=day_ago).exclude(review_status='DENIED'))
+    new_founders = list(Application.objects.discoverable().filter(created_at__gte=day_ago).exclude(review_status='DENIED'))
+    new_buyers = list(BuyerApplication.objects.discoverable().filter(created_at__gte=day_ago).exclude(review_status='DENIED'))
+    new_sellers = list(SellerApplication.objects.discoverable().filter(created_at__gte=day_ago).exclude(review_status='DENIED'))
 
     if new_investors:
-        premium_founders = Application.objects.filter(is_premium=True, is_private=False).exclude(review_status='DENIED')
+        premium_founders = Application.objects.discoverable().filter(is_premium=True).exclude(review_status='DENIED')
         total_alerts += _notify_priority_matches(
             premium_founders, new_investors, 'description_vector', 'focus_vector',
             '/matchmaking/dashboard/founder/', 'investor',
         )
 
     if new_founders:
-        premium_investors = InvestorApplication.objects.filter(is_premium=True, is_private=False).exclude(review_status='DENIED')
+        premium_investors = InvestorApplication.objects.discoverable().filter(is_premium=True).exclude(review_status='DENIED')
         total_alerts += _notify_priority_matches(
             premium_investors, new_founders, 'focus_vector', 'description_vector',
             '/matchmaking/dashboard/investor/', 'founder',
         )
 
     if new_buyers:
-        premium_sellers = SellerApplication.objects.filter(is_premium=True, is_private=False).exclude(review_status='DENIED')
+        premium_sellers = SellerApplication.objects.discoverable().filter(is_premium=True).exclude(review_status='DENIED')
         total_alerts += _notify_priority_matches(
             premium_sellers, new_buyers, 'description_vector', 'focus_vector',
             '/matchmaking/dashboard/seller/', 'buyer',
         )
 
     if new_sellers:
-        premium_buyers = BuyerApplication.objects.filter(is_premium=True, is_private=False).exclude(review_status='DENIED')
+        premium_buyers = BuyerApplication.objects.discoverable().filter(is_premium=True).exclude(review_status='DENIED')
         total_alerts += _notify_priority_matches(
             premium_buyers, new_sellers, 'focus_vector', 'description_vector',
             '/matchmaking/dashboard/buyer/', 'seller',

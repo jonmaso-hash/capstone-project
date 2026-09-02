@@ -71,19 +71,36 @@
                     <h2 class="fw-bold mb-0">Latest Posts</h2>
                     <span class="badge bg-secondary ms-3 rounded-pill">{{ blog|length }} Posts</span>
                 </div>
-                
-                <div class="d-flex align-items-center gap-2">
+
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <form method="get" class="d-flex" role="search">
+                        <input type="hidden" name="sort" value="{{ current_sort }}">
+                        <div class="input-group input-group-sm shadow-sm rounded-3 overflow-hidden">
+                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                            <input type="search" name="q" value="{{ search_query }}" class="form-control border-start-0" placeholder="Search title, content, or author…" aria-label="Search posts">
+                            {% if search_query %}
+                            <a href="?sort={{ current_sort }}" class="btn btn-outline-secondary bg-white" title="Clear search"><i class="bi bi-x-lg"></i></a>
+                            {% endif %}
+                        </div>
+                    </form>
+
                     <span class="text-muted small"><i class="bi bi-calendar3"></i> Order by:</span>
                     <div class="btn-group shadow-sm rounded-3" role="group" aria-label="Date sorting">
-                        <a href="?sort=newest" class="btn btn-sm {% if current_sort == 'newest' or not current_sort %}btn-primary{% else %}btn-outline-secondary bg-white text-dark{% endif %}">
+                        <a href="?sort=newest{% if search_query %}&q={{ search_query|urlencode }}{% endif %}" class="btn btn-sm {% if current_sort == 'newest' or not current_sort %}btn-primary{% else %}btn-outline-secondary bg-white text-dark{% endif %}">
                             Newest First
                         </a>
-                        <a href="?sort=oldest" class="btn btn-sm {% if current_sort == 'oldest' %}btn-primary{% else %}btn-outline-secondary bg-white text-dark{% endif %}">
+                        <a href="?sort=oldest{% if search_query %}&q={{ search_query|urlencode }}{% endif %}" class="btn btn-sm {% if current_sort == 'oldest' %}btn-primary{% else %}btn-outline-secondary bg-white text-dark{% endif %}">
                             Oldest First
                         </a>
                     </div>
                 </div>
             </div>
+
+            {% if search_query %}
+            <div class="alert alert-light border small mb-4">
+                Showing results for <strong>&ldquo;{{ search_query }}&rdquo;</strong> &mdash; <a href="?sort={{ current_sort }}">clear search</a>
+            </div>
+            {% endif %}
 
             {% for article in blog %}
             <article class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
@@ -170,9 +187,17 @@
                             {% endif %}
                             
                             <div class="text-muted">
-                                <i class="bi bi-chat-dots me-1"></i> {{ article.comments.count }} 
+                                <i class="bi bi-chat-dots me-1"></i> {{ article.comments.count }}
                                 <span class="d-none d-sm-inline">Comments</span>
                             </div>
+
+                            {% if user.is_authenticated %}
+                            <button type="button" class="btn btn-link text-decoration-none d-flex align-items-center gap-2 p-0 border-0 text-muted"
+                                    onclick="openContentShare('BLOG', {{ article.pk }}, '{{ article.title|escapejs }}', '{{ request.scheme }}://{{ request.get_host }}{% url 'blog:article_detail' article.pk %}')">
+                                <i class="bi bi-share fs-5"></i>
+                                <span class="d-none d-sm-inline">Share</span>
+                            </button>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

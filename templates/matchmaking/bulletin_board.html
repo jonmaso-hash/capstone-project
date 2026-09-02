@@ -499,6 +499,14 @@
                     {% elif pitch.is_premium or pitch.is_staff_featured %}
                     <span class="badge bg-warning text-dark ms-1">★ Featured</span>
                     {% endif %}
+                    {% if pitch.has_verified_funded %}
+                    <span class="badge bg-success ms-1" role="button" tabindex="0"
+                          data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top"
+                          data-bs-content="Confirmed by both this founder and an investor — not a self-reported claim.">
+                        <i class="bi bi-patch-check-fill"></i> Verified Funded
+                        {% if pitch.verified_funded_count > 1 %}({{ pitch.verified_funded_count }}){% endif %}
+                    </span>
+                    {% endif %}
 
                     {# Header: sector tag + match ring (investors only) #}
                     <div class="d-flex justify-content-between align-items-start mb-2">

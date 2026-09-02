@@ -272,6 +272,13 @@ class DocumentMemoView(APIView):
                     'risk_assessment': memo.risk_assessment,
                     'investment_thesis': memo.investment_thesis,
                     'investment_readiness': memo.investment_readiness,
+                    'key_strengths': memo.key_strengths,
+                    'key_concerns': memo.key_concerns,
+                    'what_would_change_decision': memo.what_would_change_decision,
+                    'bull_case': memo.bull_case,
+                    'base_case': memo.base_case,
+                    'bear_case': memo.bear_case,
+                    'zelda_advantage': memo.zelda_advantage,
                     'questions_for_management': memo.questions_for_management,
                 },
                 'insights_cited': [

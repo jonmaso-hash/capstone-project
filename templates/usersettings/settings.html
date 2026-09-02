@@ -30,6 +30,12 @@
                 <a href="{% url 'billing:billing_page' %}" class="list-group-item list-group-item-action fw-semibold">
                     <i class="bi bi-credit-card me-2"></i>Membership
                 </a>
+                <a href="#profile-picture" class="list-group-item list-group-item-action fw-semibold">
+                    <i class="bi bi-person-badge me-2"></i>Profile Picture
+                </a>
+                <a href="#username" class="list-group-item list-group-item-action fw-semibold">
+                    <i class="bi bi-at me-2"></i>Username
+                </a>
                 <a href="#privacy" class="list-group-item list-group-item-action fw-semibold">
                     <i class="bi bi-eye-slash me-2"></i>Privacy
                 </a>
@@ -49,8 +55,16 @@
                     <i class="bi bi-person-badge me-2"></i>Profile Visibility
                 </a>
                 {% if pitch_video_profile %}
+                <a href="#elevator-pitch" class="list-group-item list-group-item-action fw-semibold">
+                    <i class="bi bi-lightning-charge me-2"></i>Elevator Pitch
+                </a>
                 <a href="#pitch-video" class="list-group-item list-group-item-action fw-semibold">
                     <i class="bi bi-play-btn me-2"></i>Pitch Video
+                </a>
+                {% endif %}
+                {% if role_profile %}
+                <a href="#archive-delete" class="list-group-item list-group-item-action fw-semibold text-danger">
+                    <i class="bi bi-archive me-2"></i>Archive / Delete
                 </a>
                 {% endif %}
             </div>
@@ -59,6 +73,53 @@
         {# ── Right: grouped toggle cards ── #}
         <div class="col-lg-9">
             <h2 class="fw-bold mb-4">Settings</h2>
+
+            <div class="card mb-4 shadow-sm border-0 rounded-4" id="profile-picture">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-1">
+                        <i class="bi bi-person-badge me-1"></i> Profile Picture
+                    </h5>
+                    <p class="small text-secondary mb-3">
+                        Shown on your profile and across the marketplace. If you signed up with Google, this started as your Google account photo — upload a different image anytime.
+                    </p>
+                    <div class="d-flex align-items-center gap-4 flex-wrap">
+                        {% if user_settings.profile_picture %}
+                        <img src="{{ user_settings.profile_picture.url }}" alt="Your profile picture"
+                             class="rounded-circle object-fit-cover" style="width: 72px; height: 72px;">
+                        {% else %}
+                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
+                             style="width: 72px; height: 72px;">
+                            <i class="bi bi-person-fill fs-2"></i>
+                        </div>
+                        {% endif %}
+                        <form method="post" enctype="multipart/form-data" action="{% url 'usersettings:update_profile_picture' %}" class="d-flex align-items-center gap-2 flex-wrap">
+                            {% csrf_token %}
+                            <input type="file" name="profile_picture" accept="image/*" class="form-control form-control-sm" style="max-width: 260px;" required>
+                            <button type="submit" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                                <i class="bi bi-pencil-fill me-1"></i>{% if user_settings.profile_picture %}Change{% else %}Upload{% endif %}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4 shadow-sm border-0 rounded-4" id="username">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold mb-1">
+                        <i class="bi bi-at me-1"></i> Username
+                    </h5>
+                    <p class="small text-secondary mb-3">
+                        This is part of your public profile link — <code>interlinkfoundry.com/accounts/profile/{{ request.user.username }}/</code> — pick something you're comfortable sharing with investors and founders.
+                    </p>
+                    <form method="post" action="{% url 'usersettings:update_username' %}" class="d-flex align-items-center gap-2 flex-wrap">
+                        {% csrf_token %}
+                        <input type="text" name="username" value="{{ request.user.username }}" class="form-control form-control-sm" style="max-width: 260px;" required>
+                        <button type="submit" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                            <i class="bi bi-pencil-fill me-1"></i>Save
+                        </button>
+                    </form>
+                </div>
+            </div>
 
             <div class="card border-danger mb-4 shadow-sm rounded-4" id="privacy">
                 <div class="card-body p-4">
@@ -283,6 +344,35 @@
             </div>
 
             {% if pitch_video_profile %}
+            <div class="card border-primary mb-4 shadow-sm rounded-4" id="elevator-pitch">
+                <div class="card-body p-4">
+                    <h5 class="card-title text-primary fw-bold mb-1">
+                        <i class="bi bi-lightning-charge me-1"></i> Elevator Pitch <span class="text-secondary fw-normal">· Explore</span>
+                    </h5>
+                    <p class="small text-secondary mb-3">
+                        A 30-second clip in the public <a href="{% url 'explore' %}">Explore</a> feed —
+                        the front door for visitors who haven't picked a role yet. Separate from your main pitch video below.
+                    </p>
+                    {% if elevator_pitch %}
+                        <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+                            {% if elevator_pitch.status == 'PUBLISHED' %}
+                                <span class="badge bg-success-subtle text-success-emphasis rounded-pill">Live on Explore</span>
+                            {% elif elevator_pitch.status == 'QUARANTINED' %}
+                                <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill">Under review</span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill">Removed by staff</span>
+                            {% endif %}
+                            <span class="small text-secondary">{{ elevator_pitch.view_count }} view{{ elevator_pitch.view_count|pluralize }}</span>
+                        </div>
+                        <a href="{% url 'matchmaking:manage_elevator_pitch' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">Manage elevator pitch</a>
+                    {% else %}
+                        <a href="{% url 'matchmaking:manage_elevator_pitch' %}" class="btn btn-primary btn-sm rounded-pill px-3">
+                            <i class="bi bi-plus-lg me-1"></i>Add your elevator pitch
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
             <div class="card border-primary mb-4 shadow-sm rounded-4" id="pitch-video">
                 <div class="card-body p-4">
                     <h5 class="card-title text-primary fw-bold mb-1">
@@ -339,6 +429,43 @@
                         <option value="PROFILE_ONLY" {% if pitch_video_profile.pitch_video_visibility == 'PROFILE_ONLY' %}selected{% endif %}>Off — profile page only</option>
                     </select>
                     <div id="fb-pv-visibility" class="small mt-2 fw-medium d-none"></div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if role_profile %}
+            <div class="card border-danger mb-4 shadow-sm rounded-4" id="archive-delete">
+                <div class="card-body p-4">
+                    <h5 class="card-title text-danger fw-bold mb-1">
+                        <i class="bi bi-archive me-1"></i> Archive or Delete Your {{ role_label|title }}
+                    </h5>
+                    {% if role_profile.is_archived %}
+                    <p class="small text-secondary mb-3">
+                        Your {{ role_label }} is currently <strong>archived</strong> — hidden from discovery, but every document and report is intact.
+                    </p>
+                    <form method="post" action="{% url 'usersettings:unarchive_profile' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-success rounded-pill px-3">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i> Reactivate
+                        </button>
+                    </form>
+                    {% else %}
+                    <p class="small text-secondary mb-3">
+                        Pausing for now? <strong>Archive</strong> hides your {{ role_label }} from search, matchmaking, and bulletin boards while keeping every document and report intact — reactivate anytime.
+                        <strong>Delete</strong> permanently removes it.
+                    </p>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <form method="post" action="{% url 'usersettings:archive_profile' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-secondary rounded-pill px-3">
+                                <i class="bi bi-archive me-1"></i> Archive
+                            </button>
+                        </form>
+                        <a href="{% url 'usersettings:delete_profile_confirm' %}" class="btn btn-outline-danger rounded-pill px-3">
+                            <i class="bi bi-trash me-1"></i> Delete Permanently
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
             {% endif %}

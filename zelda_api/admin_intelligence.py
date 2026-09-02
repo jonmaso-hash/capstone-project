@@ -409,19 +409,17 @@ class IntelligenceMemoAdmin(admin.ModelAdmin):
     def recommendation_badge(self, obj):
         """Display recommendation as colored badge."""
         colors = {
-            'strong_pass': '#ff6666',
-            'pass': '#ff9999',
-            'consider': '#ffff66',
-            'interview': '#99ccff',
-            'strong_interest': '#66ff66',
+            'STRONG_INVEST': '#66ff66',
+            'INVEST': '#99ccff',
+            'NEEDS_REVIEW': '#ffff66',
+            'PASS': '#ff9999',
         }
         color = colors.get(obj.recommendation, '#cccccc')
         labels = {
-            'strong_pass': '❌ Pass',
-            'pass': '✗ Pass',
-            'consider': '⚠ Consider',
-            'interview': 'Interview',
-            'strong_interest': '✓ Strong',
+            'STRONG_INVEST': '✓ Strong Invest',
+            'INVEST': '✓ Invest',
+            'NEEDS_REVIEW': '⚠ Needs Review',
+            'PASS': '✗ Pass',
         }
         label = labels.get(obj.recommendation, obj.get_recommendation_display())
         

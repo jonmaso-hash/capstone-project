@@ -101,6 +101,57 @@ class AnthropicFailureDetectionTests(TestCase):
         memo = IntelligenceMemo.objects.get(document=doc)
         self.assertEqual(memo.executive_summary, 'Great company.')
 
+    def test_memo_generation_persists_new_structured_fields(self):
+        """intelligence_pipeline.py structured-fields pass: Key Strengths/
+        Concerns/What Would Change the Decision/Bull-Base-Bear/Zelda
+        Advantage all get persisted onto the memo when Claude returns them."""
+        import json
+        payload = {
+            'executive_summary': 'Great company.',
+            'recommendation': 'STRONG_INVEST',
+            'key_strengths': 'Strong ARR growth.',
+            'key_concerns': 'Thin team disclosure.',
+            'what_would_change_decision': 'A signed LOI from an anchor customer.',
+            'bull_case': 'Bull case text.',
+            'base_case': 'Base case text.',
+            'bear_case': 'Bear case text.',
+            'zelda_advantage': 'Cross-checked claim X against Y; consistent.',
+        }
+        fake_response = mock.Mock()
+        fake_response.content = [mock.Mock(text=json.dumps(payload))]
+
+        with mock.patch('anthropic.Anthropic') as mock_anthropic_cls:
+            mock_anthropic_cls.return_value.messages.create.return_value = fake_response
+            doc = self._doc()
+            result = self.pipeline._generate_memo(doc, {'confidence': 0.5})
+
+        self.assertNotIn('error', result)
+        memo = IntelligenceMemo.objects.get(document=doc)
+        self.assertEqual(memo.key_strengths, 'Strong ARR growth.')
+        self.assertEqual(memo.key_concerns, 'Thin team disclosure.')
+        self.assertEqual(memo.what_would_change_decision, 'A signed LOI from an anchor customer.')
+        self.assertEqual(memo.bull_case, 'Bull case text.')
+        self.assertEqual(memo.base_case, 'Base case text.')
+        self.assertEqual(memo.bear_case, 'Bear case text.')
+        self.assertEqual(memo.zelda_advantage, 'Cross-checked claim X against Y; consistent.')
+
+    def test_memo_generation_defaults_new_fields_to_blank_when_claude_omits_them(self):
+        """Backward compatibility: a response missing the new keys (e.g. an
+        older cached response, or a model that ignores the new instructions)
+        must not error — new fields just stay blank, never fabricated."""
+        fake_response = mock.Mock()
+        fake_response.content = [mock.Mock(text='{"executive_summary": "Great company.", "recommendation": "STRONG_INVEST"}')]
+
+        with mock.patch('anthropic.Anthropic') as mock_anthropic_cls:
+            mock_anthropic_cls.return_value.messages.create.return_value = fake_response
+            doc = self._doc()
+            result = self.pipeline._generate_memo(doc, {'confidence': 0.5})
+
+        self.assertNotIn('error', result)
+        memo = IntelligenceMemo.objects.get(document=doc)
+        self.assertEqual(memo.key_strengths, '')
+        self.assertEqual(memo.zelda_advantage, '')
+
     @mock.patch('zelda_api.intelligence_pipeline.logger')
     def test_successful_call_logs_token_usage(self, mock_logger):
         fake_response = mock.Mock()
@@ -221,7 +272,7 @@ class ICMemoTests(TestCase):
                 document=doc,
                 executive_summary='We build developer tools.',
                 investment_thesis='Strong team, growing market.',
-                recommendation='consider',
+                recommendation='NEEDS_REVIEW',
                 completeness_score=0.8,
                 citations_count=3,
             )
@@ -332,13 +383,16 @@ class ICMemoTests(TestCase):
 
     # --- views ---
 
-    def test_html_view_shows_paywall_for_owner_when_not_premium(self):
+    def test_html_view_shows_lite_tier_for_owner_when_not_premium(self):
         doc = self._make_pitch_deck_doc(with_memo=True)
         self.client.force_login(self.founder_user)
         response = self.client.get(reverse('zelda_api:ic_memo', args=[doc.id]))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Unlock Your IC Memo')
-        # The locked view should never leak the actual memo content.
+        self.assertContains(response, 'Zelda Lite Memo')
+        self.assertContains(response, 'Upgrade to Zelda AI')
+        # Investment Thesis is a Lite-tier section...
+        self.assertContains(response, 'Strong team, growing market.')
+        # ...but the deeper sections (Executive Summary, etc.) are Zelda AI-only.
         self.assertNotContains(response, 'We build developer tools.')
 
     def test_html_view_returns_full_memo_for_premium_owner(self):
@@ -350,13 +404,76 @@ class ICMemoTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'We build developer tools.')
 
+    def test_structured_fields_split_between_lite_and_full(self):
+        """
+        Key Strengths/Concerns/What Would Change the Decision are Zelda
+        Lite; Bull/Base/Bear and Zelda Advantage are Zelda AI-only — the
+        intelligence_pipeline.py structured-fields pass.
+
+        Asserts against build_ic_memo_context's section labels directly
+        (not raw HTTP response text) for the exclusion checks — the global
+        Zelda sidebar widget included on every authenticated page carries
+        its own hardcoded loadMemo() section labels (including the literal
+        strings "Bull Case" and "Zelda Advantage"), which would false-
+        positive an HTML-substring assertion regardless of memo tier.
+        """
+        from .ic_memo import build_ic_memo_context
+        doc = self._make_pitch_deck_doc(with_memo=False)
+        IntelligenceMemo.objects.create(
+            document=doc,
+            executive_summary='We build developer tools.',
+            investment_thesis='Strong team, growing market.',
+            key_strengths='Disclosed $2M ARR with 120% net revenue retention.',
+            key_concerns='No customer concentration data disclosed.',
+            what_would_change_decision='Audited financials showing gross margin.',
+            bull_case='If retention holds, this is a durable, capital-efficient business.',
+            base_case='Growth continues at the current disclosed pace.',
+            bear_case='Customer concentration risk is entirely unknown.',
+            zelda_advantage='Cross-checked ARR claim against the disclosed cohort data; no contradiction found.',
+            recommendation='NEEDS_REVIEW', completeness_score=0.8, citations_count=3,
+        )
+
+        lite_context = build_ic_memo_context(self.application, tier='lite')
+        lite_labels = [s['label'] for s in lite_context['memo_sections']]
+        self.assertIn('Key Strengths', lite_labels)
+        self.assertIn('Key Concerns', lite_labels)
+        self.assertIn('What Would Change the Decision', lite_labels)
+        self.assertNotIn('Bull Case', lite_labels)
+        self.assertNotIn('Base Case', lite_labels)
+        self.assertNotIn('Bear Case', lite_labels)
+        self.assertNotIn('Zelda Advantage', lite_labels)
+        self.assertNotIn('Executive Summary', lite_labels)
+
+        full_context = build_ic_memo_context(self.application, tier='full')
+        full_labels = [s['label'] for s in full_context['memo_sections']]
+        self.assertIn('Bull Case', full_labels)
+        self.assertIn('Base Case', full_labels)
+        self.assertIn('Bear Case', full_labels)
+        self.assertIn('Zelda Advantage', full_labels)
+
+        # Content-level check via the real page render — these exact
+        # sentences are unique to this test's fixture data, unlike the
+        # generic section labels above, so a substring match here can't
+        # collide with the sidebar widget's own hardcoded strings.
+        self.client.force_login(self.founder_user)
+        lite_response = self.client.get(reverse('zelda_api:ic_memo', args=[doc.id]))
+        self.assertContains(lite_response, 'Disclosed $2M ARR with 120% net revenue retention.')
+        self.assertNotContains(lite_response, 'If retention holds, this is a durable')
+        self.assertNotContains(lite_response, 'Cross-checked ARR claim')
+
+        self.application.is_premium = True
+        self.application.save(update_fields=['is_premium'])
+        full_response = self.client.get(reverse('zelda_api:ic_memo', args=[doc.id]))
+        self.assertContains(full_response, 'If retention holds, this is a durable')
+        self.assertContains(full_response, 'Cross-checked ARR claim')
+
     def test_html_view_returns_404_for_unrelated_investor(self):
         doc = self._make_pitch_deck_doc(with_memo=True)
         self.client.force_login(self.investor_user)
         response = self.client.get(reverse('zelda_api:ic_memo', args=[doc.id]))
         self.assertEqual(response.status_code, 404)
 
-    def test_html_view_shows_paywall_for_connected_investor_when_founder_not_premium(self):
+    def test_html_view_shows_lite_tier_for_connected_investor_when_founder_not_premium(self):
         from matchmaking.models import Connection
         doc = self._make_pitch_deck_doc(with_memo=True)
         Connection.objects.create(
@@ -365,7 +482,8 @@ class ICMemoTests(TestCase):
         self.client.force_login(self.investor_user)
         response = self.client.get(reverse('zelda_api:ic_memo', args=[doc.id]))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Premium Feature')
+        self.assertContains(response, "hasn't upgraded to Zelda AI yet")
+        self.assertContains(response, 'Strong team, growing market.')
         self.assertNotContains(response, 'We build developer tools.')
 
     def test_html_view_returns_full_memo_for_connected_investor_when_founder_premium(self):
@@ -972,8 +1090,8 @@ class DocumentIngestViewTests(TestCase):
         # Simulate each finishing with its own distinct memo (as two real
         # pipeline runs would) and confirm they don't collide.
         doc1, doc2 = DocumentSource.objects.get(id=id1), DocumentSource.objects.get(id=id2)
-        IntelligenceMemo.objects.create(document=doc1, executive_summary='First run summary.', recommendation='consider')
-        IntelligenceMemo.objects.create(document=doc2, executive_summary='Second run summary.', recommendation='consider')
+        IntelligenceMemo.objects.create(document=doc1, executive_summary='First run summary.', recommendation='NEEDS_REVIEW')
+        IntelligenceMemo.objects.create(document=doc2, executive_summary='Second run summary.', recommendation='NEEDS_REVIEW')
         self.assertEqual(doc1.memo.executive_summary, 'First run summary.')
         self.assertEqual(doc2.memo.executive_summary, 'Second run summary.')
 
@@ -2008,7 +2126,7 @@ class DocumentMemoViewAnalyticsTests(TestCase):
             document_type='pitch_deck', status='analyzed',
         )
         IntelligenceMemo.objects.create(
-            document=self.doc, executive_summary='We build developer tools.', recommendation='consider',
+            document=self.doc, executive_summary='We build developer tools.', recommendation='NEEDS_REVIEW',
         )
         self.client.force_login(self.investor_user)
 
@@ -2056,7 +2174,7 @@ class DocumentMemoViewPaywallTests(TestCase):
             document_type='pitch_deck', status='analyzed',
         )
         IntelligenceMemo.objects.create(
-            document=self.doc, executive_summary='Secret summary text.', recommendation='consider',
+            document=self.doc, executive_summary='Secret summary text.', recommendation='NEEDS_REVIEW',
             completeness_score=0.8, citations_count=3,
         )
         self.investor_user = User.objects.create_user('memo_paywall_investor', password='x')
@@ -2383,7 +2501,12 @@ class TruthDeltaUnlockedTests(TestCase):
 
 
 class TruthDeltaUIViewPaywallTests(TestCase):
-    """truth_delta_ui_view renders the locked preview when the document owner isn't Premium."""
+    """
+    truth_delta_ui_view — Zelda Lite/AI split: a non-Premium owner still sees
+    real content (score, summary, category breakdown, a few sample claims),
+    not a bare paywall. Zelda AI-only pieces (entity report, full claim list,
+    clarification tools) stay gated behind Premium.
+    """
 
     def setUp(self):
         from matchmaking.models import Application
@@ -2400,12 +2523,13 @@ class TruthDeltaUIViewPaywallTests(TestCase):
             document=self.doc, overall_truth_score=90.0, credibility_risk='low', summary='Secret summary text.',
         )
 
-    def test_owner_sees_locked_preview_when_not_premium(self):
+    def test_owner_sees_lite_tier_with_real_content_when_not_premium(self):
         self.client.force_login(self.founder_user)
         response = self.client.get(reverse('zelda_api:truth_delta_ui', args=[self.doc.id]))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Unlock Your Truth Delta Verification')
-        self.assertNotContains(response, 'Secret summary text.')
+        self.assertContains(response, 'Zelda Lite Verification')
+        self.assertContains(response, 'Secret summary text.')
+        self.assertContains(response, 'Upgrade to Zelda AI')
 
     def test_owner_sees_full_dashboard_when_premium(self):
         self.application.is_premium = True
@@ -2414,6 +2538,8 @@ class TruthDeltaUIViewPaywallTests(TestCase):
         response = self.client.get(reverse('zelda_api:truth_delta_ui', args=[self.doc.id]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Secret summary text.')
+        self.assertContains(response, 'Zelda AI — Full Verification')
+        self.assertNotContains(response, 'Upgrade to Zelda AI')
 
     def test_staff_sees_full_dashboard_regardless_of_premium(self):
         staff_user = User.objects.create_user('tdp_staff', password='x', is_staff=True)
@@ -2424,7 +2550,7 @@ class TruthDeltaUIViewPaywallTests(TestCase):
 
 
 class TruthDeltaScoreViewPaywallTests(TestCase):
-    """TruthDeltaScoreView.get() — API defense-in-depth 402 when the document owner isn't Premium."""
+    """TruthDeltaScoreView.get() — Zelda Lite tier (real data, truncated details) when owner isn't Premium."""
 
     def setUp(self):
         from matchmaking.models import Application
@@ -2437,21 +2563,30 @@ class TruthDeltaScoreViewPaywallTests(TestCase):
         self.doc = DocumentSource.objects.create(
             uploaded_by=self.founder_user, filename='deck.pdf', source_entity='TSVCo', document_type='pitch_deck',
         )
-        TruthDeltaReport.objects.create(document=self.doc, overall_truth_score=90.0, credibility_risk='low', summary='Real summary.')
+        TruthDeltaReport.objects.create(
+            document=self.doc, overall_truth_score=90.0, credibility_risk='low', summary='Real summary.',
+            details={'per_claim': [{'category': f'cat{i}', 'claimed': 'x', 'observed': None, 'assessment': 'a'} for i in range(5)]},
+        )
 
-    def test_returns_402_when_owner_not_premium(self):
+    def test_returns_lite_tier_with_truncated_details_when_not_premium(self):
         self.client.force_login(self.founder_user)
         response = self.client.get(reverse('zelda_api:truth_delta_score', args=[self.doc.id]))
-        self.assertEqual(response.status_code, 402)
-        self.assertEqual(response.json()['code'], 'premium_required')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['tier'], 'lite')
+        self.assertEqual(data['summary'], 'Real summary.')
+        self.assertEqual(len(data['details']['per_claim']), 3)
 
-    def test_returns_data_once_premium(self):
+    def test_returns_full_tier_once_premium(self):
         self.application.is_premium = True
         self.application.save(update_fields=['is_premium'])
         self.client.force_login(self.founder_user)
         response = self.client.get(reverse('zelda_api:truth_delta_score', args=[self.doc.id]))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()['summary'], 'Real summary.')
+        data = response.json()
+        self.assertEqual(data['tier'], 'full')
+        self.assertEqual(data['summary'], 'Real summary.')
+        self.assertEqual(len(data['details']['per_claim']), 5)
 
 
 class CanRequestClarificationTests(TestCase):
@@ -4421,8 +4556,9 @@ class DocumentValuationViewTierRedactionTests(TestCase):
     is just hidden client-side, since anyone could read it straight out
     of the network tab. 'full' tier gets everything; 'preview' gets a
     trailer, not a censored document: business_overview in full,
-    financial_completeness, trust_stats, WHICH categories were analyzed
-    (names only — no confidence score, no "why" text, no evidence), and
+    financial_completeness, trust_stats, a bare per-category letter-grade
+    Scorecard (category names + grade only — no confidence score, no
+    "why" text, no evidence; see DocumentValuationViewScorecardTests), and
     HOW MANY risks were found (a count only) — never the valuation range,
     methodology, financial summary, or any sample of the actual risk/
     confidence content itself.
@@ -4500,12 +4636,15 @@ class DocumentValuationViewTierRedactionTests(TestCase):
         self.assertEqual(data['trust_stats']['pages_analyzed'], 12)
         self.assertEqual(data['trust_stats']['categories_analyzed'], 3)
 
-    def test_preview_tier_never_exposes_confidence_breakdown_categories_or_evidence(self):
+    def test_preview_tier_never_exposes_the_detailed_confidence_breakdown(self):
         """
-        Even category NAMES are supporting analysis (they hint at what
-        the report covers) — a preview should only ever answer "was the
-        analysis complete" (trust_stats' plain categories_analyzed COUNT),
-        never which categories or their confidence/why/evidence.
+        The full per-category breakdown (why/insight_text/source_attribution
+        alongside each category's exact confidence score) stays a full-tier
+        exclusive — see UNLOCK_INCLUDES's "Full confidence breakdown". Since
+        revision 3 (build_valuation_scorecard), category NAMES themselves
+        are deliberately shown in preview via the bare-grade Scorecard —
+        see DocumentValuationViewScorecardTests — but never alongside a
+        `why`, an evidence excerpt, or the raw numeric confidence score.
         """
         from matchmaking.models import Application
         user = User.objects.create_user('redact_preview_categories', password='x')
@@ -4519,6 +4658,8 @@ class DocumentValuationViewTierRedactionTests(TestCase):
         self.assertNotIn('confidence_breakdown', data)
         self.assertNotIn('category_findings', data)
         self.assertEqual(data['trust_stats']['categories_analyzed'], 3)
+        for row in data['scorecard']:
+            self.assertEqual(set(row.keys()), {'category', 'grade'})
 
     def test_preview_tier_shows_only_a_risk_count_never_risk_text(self):
         """
@@ -4565,6 +4706,149 @@ class DocumentValuationViewTierRedactionTests(TestCase):
         self.assertIn('Complete risk report', data['unlock_includes'])
         self.assertNotIn('preview_percent_visible', data)
         self.assertNotIn('premium_insights_waiting', data)
+
+
+class ConfidenceGradeBandsTests(TestCase):
+    """
+    zelda_api.confidence_breakdown.grade_for_confidence — the deterministic
+    confidence-to-letter-grade mapping backing the preview Scorecard.
+    Exact boundary values matter here (this is a real product decision,
+    not an implementation detail), so each band edge is tested explicitly.
+    """
+
+    def test_grade_boundaries(self):
+        from zelda_api.confidence_breakdown import grade_for_confidence
+        cases = [
+            (10.0, 'A+'), (9.0, 'A+'), (8.9, 'A'), (8.0, 'A'),
+            (7.9, 'B+'), (7.0, 'B+'), (6.9, 'B'), (6.0, 'B'),
+            (5.9, 'C+'), (5.0, 'C+'), (4.9, 'C'), (4.0, 'C'),
+            (3.9, 'D'), (3.0, 'D'), (2.9, 'F'), (0.0, 'F'),
+        ]
+        for score, expected_grade in cases:
+            self.assertEqual(grade_for_confidence(score), expected_grade, f"score={score}")
+
+
+class BuildValuationScorecardTests(TestCase):
+    """
+    zelda_api.valuation_preview.build_valuation_scorecard — unit-level
+    proof that grades are derived from the actual per-category confidence
+    scores (not hardcoded/random), and that nothing beyond {category,
+    grade} ever comes out of it, regardless of what compute_confidence_
+    breakdown's rows carry.
+    """
+
+    def test_grades_are_derived_from_the_actual_confidence_scores(self):
+        from zelda_api.valuation_preview import build_valuation_scorecard
+        breakdown = [
+            {'category': 'Revenue', 'confidence': 9.5, 'why': 'irrelevant', 'insight_text': 'irrelevant', 'source_attribution': 'irrelevant'},
+            {'category': 'Team', 'confidence': 8.0, 'why': 'irrelevant', 'insight_text': 'irrelevant', 'source_attribution': 'irrelevant'},
+            {'category': 'Market', 'confidence': 7.0, 'why': 'irrelevant', 'insight_text': 'irrelevant', 'source_attribution': 'irrelevant'},
+            {'category': 'Risk', 'confidence': 2.0, 'why': 'irrelevant', 'insight_text': 'irrelevant', 'source_attribution': 'irrelevant'},
+        ]
+        scorecard = build_valuation_scorecard(breakdown)
+        self.assertEqual(scorecard, [
+            {'category': 'Revenue', 'grade': 'A+'},
+            {'category': 'Team', 'grade': 'A'},
+            {'category': 'Market', 'grade': 'B+'},
+            {'category': 'Risk', 'grade': 'F'},
+        ])
+
+    def test_no_underlying_findings_leak_into_the_scorecard(self):
+        """Every row must be exactly {category, grade} — the why/insight_text/
+        source_attribution compute_confidence_breakdown attaches must never
+        survive into the scorecard, regardless of what's in the input rows."""
+        from zelda_api.valuation_preview import build_valuation_scorecard
+        breakdown = [{
+            'category': 'Revenue', 'confidence': 9.0,
+            'why': 'Explicitly reported as "$4.5M ARR" in the Revenue section.',
+            'insight_text': '$4.5M ARR', 'source_attribution': 'Extracted from: Revenue',
+        }]
+        scorecard = build_valuation_scorecard(breakdown)
+        self.assertEqual(scorecard, [{'category': 'Revenue', 'grade': 'A+'}])
+        for row in scorecard:
+            self.assertEqual(set(row.keys()), {'category', 'grade'})
+
+    def test_empty_breakdown_produces_empty_scorecard(self):
+        from zelda_api.valuation_preview import build_valuation_scorecard
+        self.assertEqual(build_valuation_scorecard([]), [])
+
+
+class DocumentValuationViewScorecardTests(TestCase):
+    """
+    End-to-end (view-level) coverage for the preview Scorecard: grades
+    reflect the document's real insights, no underlying findings leak,
+    and the full tier is unaffected (it keeps the real confidence_breakdown
+    with full explanations — the redacted scorecard is a preview-only
+    concept, so it doesn't need to appear in the full response at all).
+    """
+
+    def setUp(self):
+        from matchmaking.tests import _mock_embedding_generation
+        _mock_embedding_generation(self)
+
+    def _doc_with_insights(self, user, valuation_tier):
+        from zelda_api.vector_models import IntelligenceInsight
+        doc = DocumentSource.objects.create(
+            filename='deck.pptx', source_entity='Scorecard Co', document_type='business_valuation',
+            uploaded_by=user, status='analyzed', total_pages=10, valuation_tier=valuation_tier,
+        )
+        BusinessValuationReport.objects.create(
+            document=doc, confidence_score=0.7, business_overview='We build tools.',
+            financial_summary='Revenue: $4.5M.', risk_report='Risk one.\nRisk two.',
+            valuation_summary='Applied a revenue multiple.', valuation_low=1_000_000, valuation_high=2_000_000,
+        )
+        IntelligenceInsight.objects.create(document=doc, category='Revenue', insight_text='$4.5M', confidence_score=95)
+        IntelligenceInsight.objects.create(document=doc, category='Team', insight_text='5 people', confidence_score=80)
+        IntelligenceInsight.objects.create(document=doc, category='Risk', insight_text='Some competition', confidence_score=25)
+        return doc
+
+    def test_preview_scorecard_grades_match_the_documents_real_insights(self):
+        from matchmaking.models import Application
+        user = User.objects.create_user('scorecard_preview_user', password='x')
+        Application.objects.create(user=user, company_name='Scorecard Co')
+        doc = self._doc_with_insights(user, 'preview')
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('zelda_api:document_valuation', args=[doc.id]))
+        data = response.json()
+
+        scorecard_by_category = {row['category']: row['grade'] for row in data['scorecard']}
+        self.assertEqual(scorecard_by_category, {'Revenue': 'A+', 'Team': 'A', 'Risk': 'F'})
+
+    def test_preview_scorecard_contains_no_evidence_or_explanation_fields(self):
+        from matchmaking.models import Application
+        user = User.objects.create_user('scorecard_no_leak_user', password='x')
+        Application.objects.create(user=user, company_name='Scorecard Co')
+        doc = self._doc_with_insights(user, 'preview')
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('zelda_api:document_valuation', args=[doc.id]))
+        data = response.json()
+        content = response.content.decode('utf-8')
+
+        for row in data['scorecard']:
+            self.assertEqual(set(row.keys()), {'category', 'grade'})
+        # The real insight/evidence text must never appear anywhere in the
+        # preview payload, scorecard included.
+        self.assertNotIn('$4.5M', content)
+        self.assertNotIn('5 people', content)
+        self.assertNotIn('Some competition', content)
+
+    def test_full_tier_does_not_need_the_redacted_scorecard(self):
+        """The full tier already gets the real confidence_breakdown (with
+        why/evidence) — the scorecard is a preview-only redaction concept,
+        not an additional thing full-tier users need."""
+        from matchmaking.models import InvestorApplication
+        user = User.objects.create_user('scorecard_full_user', password='x')
+        InvestorApplication.objects.create(user=user, is_premium=True)
+        doc = self._doc_with_insights(user, 'full')
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('zelda_api:document_valuation', args=[doc.id]))
+        data = response.json()
+
+        self.assertNotIn('scorecard', data)
+        self.assertEqual(len(data['confidence_breakdown']), 3)
 
 
 class DocumentValuationViewTrendTests(TestCase):
@@ -4755,3 +5039,64 @@ class JourneyStatusAPIViewNextBestActionTests(TestCase):
         data = response.json()
         self.assertEqual(data['next_best_action']['label'], 'Complete every mandate field')
         self.assertEqual(data['next_best_action']['action_label'], 'Complete Mandate')
+
+
+class ZeldaGlobalSearchInvestorPrivacyTests(TestCase):
+    """
+    ZeldaGlobalSearchAPIView's investor branch previously had no is_private
+    or archived_at filter at all — an inconsistent privacy boundary next to
+    the founder branch's Application.objects.discoverable(). Confirms the
+    fix: private and archived investors are excluded, a normal discoverable
+    one still surfaces.
+    """
+
+    def setUp(self):
+        from matchmaking.models import InvestorApplication
+        self.InvestorApplication = InvestorApplication
+
+        self.searcher = get_user_model().objects.create_user('search_seeker', password='x')
+        self.client.force_login(self.searcher)
+
+        self.public_investor_user = get_user_model().objects.create_user('search_pub_inv', password='x')
+        self.public_investor = InvestorApplication.objects.create(
+            user=self.public_investor_user, full_name='Pub Inv', company_name='SearchableFund',
+            email='pub@t.com', investment_focus='SaaS', investment_stage='Seed',
+        )
+
+        self.private_investor_user = get_user_model().objects.create_user('search_priv_inv', password='x')
+        self.private_investor = InvestorApplication.objects.create(
+            user=self.private_investor_user, full_name='Priv Inv', company_name='SearchablePrivateFund',
+            email='priv@t.com', investment_focus='SaaS', investment_stage='Seed', is_private=True,
+        )
+
+        self.archived_investor_user = get_user_model().objects.create_user('search_arch_inv', password='x')
+        self.archived_investor = InvestorApplication.objects.create(
+            user=self.archived_investor_user, full_name='Arch Inv', company_name='SearchableArchivedFund',
+            email='arch@t.com', investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.archived_investor.archive()
+
+    def _search(self, query):
+        return self.client.post(
+            reverse('zelda_api:global_search_api'),
+            data={'q': query, 'founders': False, 'investors': True, 'bulletins': False},
+            content_type='application/json',
+        )
+
+    def test_public_investor_appears_in_search(self):
+        response = self._search('SearchableFund')
+        self.assertEqual(response.status_code, 200)
+        urls = [r['url'] for r in response.json()['results']]
+        self.assertTrue(any('search_pub_inv' in u for u in urls))
+
+    def test_private_investor_excluded_from_search(self):
+        response = self._search('SearchablePrivateFund')
+        self.assertEqual(response.status_code, 200)
+        urls = [r['url'] for r in response.json()['results']]
+        self.assertFalse(any('search_priv_inv' in u for u in urls))
+
+    def test_archived_investor_excluded_from_search(self):
+        response = self._search('SearchableArchivedFund')
+        self.assertEqual(response.status_code, 200)
+        urls = [r['url'] for r in response.json()['results']]
+        self.assertFalse(any('search_arch_inv' in u for u in urls))

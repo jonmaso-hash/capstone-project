@@ -16,8 +16,8 @@ def home_view(request):
     )
     log_page_event(request, 'landing_view')
 
-    featured_founders = Application.objects.filter(is_staff_featured=True, is_private=False).exclude(review_status='DENIED')[:6]
-    featured_sellers = SellerApplication.objects.filter(is_staff_featured=True, is_private=False).exclude(review_status='DENIED')[:6]
+    featured_founders = Application.objects.discoverable().filter(is_staff_featured=True).exclude(review_status='DENIED')[:6]
+    featured_sellers = SellerApplication.objects.discoverable().filter(is_staff_featured=True).exclude(review_status='DENIED')[:6]
 
     return render(request, 'pages/home.html', {
         'featured_founders': featured_founders,

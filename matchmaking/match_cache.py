@@ -58,7 +58,7 @@ def refresh_matches_for_founder(application, change_reason):
 
     if not application.description_vector:
         return
-    investors = InvestorApplication.objects.filter(is_private=False).exclude(review_status='DENIED')
+    investors = InvestorApplication.objects.discoverable().exclude(review_status='DENIED')
     for investor_profile in investors:
         upsert_match(investor_profile, application, change_reason)
 
@@ -69,7 +69,7 @@ def refresh_matches_for_investor(investor_profile, change_reason):
 
     if not investor_profile.focus_vector:
         return
-    applications = Application.objects.filter(is_private=False).exclude(review_status='DENIED')
+    applications = Application.objects.discoverable().exclude(review_status='DENIED')
     for application in applications:
         upsert_match(investor_profile, application, change_reason)
 

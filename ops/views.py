@@ -220,8 +220,8 @@ def featured_profiles(request):
 
     search_query = request.GET.get('q', '').strip()
 
-    founders = Application.objects.filter(is_private=False).exclude(review_status='DENIED')
-    sellers = SellerApplication.objects.filter(is_private=False).exclude(review_status='DENIED')
+    founders = Application.objects.discoverable().exclude(review_status='DENIED')
+    sellers = SellerApplication.objects.discoverable().exclude(review_status='DENIED')
     if search_query:
         founders = founders.filter(company_name__icontains=search_query)
         sellers = sellers.filter(company_name__icontains=search_query)
@@ -354,7 +354,7 @@ def override_connection_status(request, conn_type, conn_id):
 
     conn = get_object_or_404(model, id=conn_id)
     new_status = request.POST.get('status', '').strip()
-    valid_statuses = {'pending', 'ACCEPTED', 'DECLINED', 'FUNDED', 'CLOSED'}
+    valid_statuses = {'pending', 'ACCEPTED', 'DECLINED', 'FUNDED_PENDING', 'FUNDED', 'CLOSED_PENDING', 'CLOSED'}
     if new_status not in valid_statuses:
         messages.error(request, "Invalid status value.")
     else:

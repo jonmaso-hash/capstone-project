@@ -55,8 +55,8 @@ class EnterprisePlatformStatsView(APIView):
     throttle_classes = [APIKeyRateThrottle]
 
     def get(self, request):
-        founder_count = Application.objects.filter(is_private=False).exclude(review_status='DENIED').count()
-        investor_count = InvestorApplication.objects.filter(is_private=False).exclude(review_status='DENIED').count()
+        founder_count = Application.objects.discoverable().exclude(review_status='DENIED').count()
+        investor_count = InvestorApplication.objects.discoverable().exclude(review_status='DENIED').count()
         return Response({
             'founder_count': founder_count,
             'investor_count': investor_count,

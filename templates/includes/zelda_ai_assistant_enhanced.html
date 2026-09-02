@@ -1265,6 +1265,19 @@
         `;
     }
 
+    // Popovers on content injected via innerHTML after page load aren't
+    // picked up by base.html's DOMContentLoaded scan (it only runs once,
+    // before this content exists) — call this after inserting any HTML
+    // containing a [data-bs-toggle="popover"] element. Idempotent, same
+    // as the site-wide init, so it's safe even if called more than once.
+    function initPopovers(root) {
+        (root || document).querySelectorAll('[data-bs-toggle="popover"]').forEach(function (el) {
+            if (!bootstrap.Popover.getInstance(el)) {
+                new bootstrap.Popover(el);
+            }
+        });
+    }
+
     // Shared locked-state card for the Memo tab and Intelligence brief —
     // the Intelligence Memo itself is Premium (founder/seller-controlled
     // asset, same model as the IC Memo and Truth Delta): free for any
@@ -1282,6 +1295,9 @@
             <div class="card border-0 shadow-sm rounded-4 p-3" style="background: linear-gradient(135deg, #fff8e1, #ffffff);">
                 <h6 class="fw-bold mb-2"><i class="bi bi-lock-fill me-1" style="color: var(--zelda-accent);"></i>
                     ${isOwner ? 'Unlock Your Intelligence Memo' : 'Premium Feature'}
+                    <i class="bi bi-info-circle field-info-icon" role="button" tabindex="0" style="font-size: 0.85rem;"
+                       data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom"
+                       data-bs-content="Save hours of manual research. Zelda analyzes this company's pitch deck, financials, and available evidence to generate an investor-ready report covering business model, market opportunity, competitive positioning, financial review, risk factors, and key questions for management."></i>
                 </h6>
                 <p class="text-muted small mb-3">${message}</p>
                 ${cta}
@@ -1326,7 +1342,9 @@
             console.log('[Zelda] Memo data received:', JSON.stringify(data, null, 2));
 
             if (data.locked) {
-                document.getElementById('memo-content').innerHTML = renderLockedMemoCard(data.document_name, data.is_owner);
+                const memoContentEl = document.getElementById('memo-content');
+                memoContentEl.innerHTML = renderLockedMemoCard(data.document_name, data.is_owner);
+                initPopovers(memoContentEl);
                 addLogEntry(`Memo is Premium-locked for document ${docId}`, 'info');
                 return;
             }
@@ -1357,6 +1375,13 @@
                 { key: 'risk_assessment', label: 'Risk Assessment' },
                 { key: 'investment_thesis', label: 'Investment Thesis' },
                 { key: 'investment_readiness', label: 'Investment Readiness' },
+                { key: 'key_strengths', label: 'Key Strengths' },
+                { key: 'key_concerns', label: 'Key Concerns' },
+                { key: 'what_would_change_decision', label: 'What Would Change the Decision' },
+                { key: 'bull_case', label: 'Bull Case' },
+                { key: 'base_case', label: 'Base Case' },
+                { key: 'bear_case', label: 'Bear Case' },
+                { key: 'zelda_advantage', label: 'Zelda Advantage' },
                 { key: 'questions_for_management', label: 'Questions for Management' },
             ];
 
@@ -1714,6 +1739,7 @@
 
             if (data.locked) {
                 content.innerHTML = renderLockedMemoCard(data.document_name, data.is_owner);
+                initPopovers(content);
                 content.style.display = 'block';
                 return;
             }

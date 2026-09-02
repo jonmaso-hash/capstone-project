@@ -746,6 +746,13 @@ class ZeldaIntelligencePipelineV2:
                     'risk_assessment':    memo_sections.get('risk_assessment', 'Not disclosed in pitch deck.'),
                     'investment_thesis':  memo_sections.get('investment_thesis', 'Insufficient data.'),
                     'investment_readiness':     memo_sections.get('investment_readiness', 'Not assessed.'),
+                    'key_strengths':      memo_sections.get('key_strengths', ''),
+                    'key_concerns':       memo_sections.get('key_concerns', ''),
+                    'what_would_change_decision': memo_sections.get('what_would_change_decision', ''),
+                    'bull_case':          memo_sections.get('bull_case', ''),
+                    'base_case':          memo_sections.get('base_case', ''),
+                    'bear_case':          memo_sections.get('bear_case', ''),
+                    'zelda_advantage':    memo_sections.get('zelda_advantage', ''),
                     'questions_for_management': memo_sections.get('questions_for_management', 'Not assessed.'),
                     'completeness_score': analysis_result.get('confidence', 0),
                     'citations_count':    sum(i.source_chunks.count() for i in insights),
@@ -760,7 +767,7 @@ class ZeldaIntelligencePipelineV2:
 
             return {
                 'memo_id': memo.id,
-                'sections_count': 9,
+                'sections_count': 16,
                 'completeness_score': memo.completeness_score,
             }
 
@@ -1242,21 +1249,23 @@ class ZeldaIntelligencePipelineV2:
     ---
 
     Write the memo using ONLY the above information. Return a JSON object with these exact keys:
-    executive_summary, problem_solution, market_analysis, team_assessment, 
+    executive_summary, problem_solution, market_analysis, team_assessment,
     financial_analysis, risk_assessment, investment_thesis, investment_readiness,
+    key_strengths, key_concerns, what_would_change_decision,
+    bull_case, base_case, bear_case, zelda_advantage,
     questions_for_management, recommendation
 
     For recommendation use exactly one of: STRONG_INVEST, INVEST, NEEDS_REVIEW, PASS
 
     ### Instructions per section:
 
-    executive_summary: 2-3 sentences. Company name, what they do, stage, raise amount. 
+    executive_summary: 2-3 sentences. Company name, what they do, stage, raise amount.
     Cite specific numbers. No editorializing.
 
-    problem_solution: What problem do they solve? Who is the customer? 
+    problem_solution: What problem do they solve? Who is the customer?
     If not clear from deck, say so explicitly.
 
-    market_analysis: What market? What size did they claim? 
+    market_analysis: What market? What size did they claim?
     If no market size stated: "Market size not disclosed in pitch deck."
 
     team_assessment: Name founders if mentioned. State only credentials cited in deck.
@@ -1271,12 +1280,43 @@ class ZeldaIntelligencePipelineV2:
     investment_thesis: Bull case in 2-3 sentences using only disclosed facts.
     If insufficient data: "Insufficient disclosed data to form a complete investment thesis."
 
-    investment_readiness: Score 0-100 and list strengths/weaknesses based only on 
+    investment_readiness: Score 0-100 and list strengths/weaknesses based only on
     what IS and IS NOT in the deck. Format:
     Score: XX/100
     Strengths: [bullet list]
     Needs Validation: [bullet list]
     Recommendation: [one sentence]
+
+    key_strengths: 2-4 bullet points, each citing one specific disclosed fact or insight
+    (not a generic quality like "strong team") that supports investing. If fewer than 2
+    genuine strengths are evidenced, list only what is actually supported — never pad
+    with generic praise.
+
+    key_concerns: 2-4 bullet points, each citing a specific gap, omission, or disclosed
+    weakness relevant to the investment decision. Reuse risk_assessment's evidence but
+    frame each as "why this matters to the decision," not a restated risk list. If two
+    disclosed facts contradict each other, name that contradiction specifically.
+
+    what_would_change_decision: 1-2 sentences naming the single most important missing
+    piece of evidence that, if disclosed and favorable, would most change this
+    recommendation. Be specific ("audited financials showing gross margin" not "more
+    information"). If the deck is already comprehensive, say so explicitly.
+
+    bull_case: 2-3 sentences making the strongest evidence-grounded case FOR investing,
+    using the most favorable reasonable reading of the disclosed facts. Cite only real
+    evidence — never invent upside the deck doesn't support.
+
+    base_case: 2-3 sentences describing the most likely outcome if disclosed facts and
+    current trajectory hold — neither the best nor worst case.
+
+    bear_case: 2-3 sentences making the strongest evidence-grounded case AGAINST
+    investing, citing specific disclosed gaps or weaknesses — not generic startup risk.
+
+    zelda_advantage: 1-2 sentences on what this evidence-grounded pass specifically
+    surfaced (a cross-checked claim, a contradiction, a notable omission) that a plain
+    AI summary of the same deck would likely miss. This is NOT platform marketing — if
+    nothing distinctive was found, say exactly: "No material discrepancies identified
+    beyond what is stated in the deck."
 
     questions_for_management: List every important question this deck does NOT answer.
     Make each question specific to THIS company, not generic.

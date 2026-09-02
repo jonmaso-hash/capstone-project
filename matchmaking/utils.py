@@ -39,11 +39,15 @@ def calculate_match_score(investor, founder):
 
 def calculate_rule_based_score(application, investor):
     """
-    Calculates a compatibility score (0-100) based on hard constraints 
-    like Sector and Investment Stage.
+    Calculates a compatibility score (0-100) based on hard constraints
+    like Sector and Investment Stage, plus two soft founder-side signals
+    (prior funding, capital efficiency) that no investor field states an
+    explicit preference for — they're rewarded generically as risk-reducers
+    rather than "matched" against anything investor-specified. Clamped to
+    100 since sector+stage alone can already reach that ceiling.
     """
     score = 0
-    
+
     # 1. Sector Matching (40% of rule-based score)
     app_sector = application.sector.lower() if application.sector else ""
     investor_sectors = [s.strip().lower() for s in getattr(investor, 'investment_focus', '').split(',') if s.strip()]
@@ -62,7 +66,22 @@ def calculate_rule_based_score(application, investor):
     elif _is_adjacent_stage(app_stage, inv_stage):
         score += 30
 
-    return score
+    # 3. Prior funding raised — having already convinced an outside investor
+    # once is a mild, generic credibility signal regardless of sector/stage fit.
+    if application.prior_amount_raised:
+        score += 5
+
+    # 4. Capital efficiency — rewards an ask that buys at least a year of
+    # runway against disclosed burn. Silent (no bonus, no penalty) when burn
+    # isn't disclosed, since most early founders won't have this yet and
+    # "unknown" shouldn't read as a strike against them.
+    burn = application.monthly_burn_rate
+    if burn and application.raising_amount:
+        implied_runway_months = float(application.raising_amount) / float(burn)
+        if implied_runway_months >= 12:
+            score += 5
+
+    return min(score, 100)
 
 def _is_adjacent_stage(stage1, stage2):
     """Helper to determine if two stages are close enough to be relevant."""
@@ -276,7 +295,7 @@ def get_uncontacted_high_matches(investor_profile, threshold=80):
         Connection.objects.filter(investor=investor_profile).values_list('founder_id', flat=True)
     )
 
-    founders = Application.objects.filter(is_private=False).exclude(review_status='DENIED').exclude(id__in=requested_ids)
+    founders = Application.objects.discoverable().exclude(review_status='DENIED').exclude(id__in=requested_ids)
 
     count = 0
     for founder in founders:
@@ -410,7 +429,7 @@ def get_uncontacted_high_deal_matches(buyer_profile, threshold=80):
         AcquisitionConnection.objects.filter(buyer=buyer_profile).values_list('seller_id', flat=True)
     )
 
-    sellers = SellerApplication.objects.filter(is_private=False).exclude(review_status='DENIED').exclude(id__in=requested_ids)
+    sellers = SellerApplication.objects.discoverable().exclude(review_status='DENIED').exclude(id__in=requested_ids)
 
     count = 0
     for seller in sellers:

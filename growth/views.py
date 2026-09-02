@@ -35,7 +35,7 @@ def _public_queryset(model):
     (founder_bulletin_board, investor_dashboard, etc.) — a pSEO page must
     never surface a profile that toggle wouldn't otherwise show.
     """
-    return model.objects.filter(is_private=False).exclude(review_status='DENIED')
+    return model.objects.discoverable().exclude(review_status='DENIED')
 
 
 def _slug_to_search_text(slug):

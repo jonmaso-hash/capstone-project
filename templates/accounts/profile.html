@@ -102,12 +102,22 @@
                 <div class="card-body bg-dark text-white p-4">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                         <div class="d-flex align-items-center">
+                            {% if profile_picture %}
+                            <img src="{{ profile_picture.url }}" alt="{{ profile_user.username }}"
+                                 class="rounded-circle object-fit-cover me-3 d-none d-md-block" style="width: 64px; height: 64px;">
+                            {% else %}
                             <div class="bg-primary rounded-circle p-3 me-3 d-none d-md-block">
                                 <i class="bi bi-person-fill fs-3"></i>
                             </div>
+                            {% endif %}
                             <div>
                                 <h3 class="mb-0 fw-bold">User Profile</h3>
                                 <p class="text-white-50 mb-0">{{ profile_user.email }}</p>
+                                {% if request.user == profile_user %}
+                                <a href="{% url 'usersettings:home' %}#profile-picture" class="text-white-50 small text-decoration-none">
+                                    <i class="bi bi-pencil-fill me-1"></i>Change photo
+                                </a>
+                                {% endif %}
                                 {% if profile_view_count is not None %}
                                 <p class="text-white-50 mb-0 small"><i class="bi bi-eye me-1"></i>{{ profile_view_count }} profile view{{ profile_view_count|pluralize }}</p>
                                 {% endif %}
@@ -147,6 +157,28 @@
                         {% elif buyer_application %}
                             <span class="badge bg-info-subtle text-info-emphasis border border-info px-3 py-2 rounded-pill">Buyer</span>
                         {% endif %}
+
+                        {% if has_verified_funded %}
+                        <span class="badge bg-success px-3 py-2 rounded-pill">
+                            <i class="bi bi-patch-check-fill me-1"></i>Verified Funded
+                            <i class="bi bi-info-circle field-info-icon text-white" role="button" tabindex="0"
+                               data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom"
+                               data-bs-content="Confirmed by both this founder and an investor on Interlink Foundry — not a self-reported claim."></i>
+                        </span>
+                        {% endif %}
+                        {% if has_verified_sold %}
+                        <span class="badge bg-success px-3 py-2 rounded-pill">
+                            <i class="bi bi-patch-check-fill me-1"></i>Verified Sold
+                            <i class="bi bi-info-circle field-info-icon text-white" role="button" tabindex="0"
+                               data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom"
+                               data-bs-content="Confirmed by both this seller and a buyer on Interlink Foundry — not a self-reported claim."></i>
+                        </span>
+                        {% endif %}
+
+                        <button type="button" class="btn btn-sm btn-outline-secondary px-3 rounded-pill"
+                                onclick="openContentShare('PROFILE', {{ profile_user.id }}, '{% firstof application.company_name investor_application.company_name seller_application.company_name buyer_application.company_name profile_user.username %}', '{{ request.scheme }}://{{ request.get_host }}{% url 'accounts:profile' profile_user.username %}')">
+                            <i class="bi bi-share me-1"></i> Share Profile
+                        </button>
 
                         {# ── Track 1: Analyze with Zelda (investors only, on founder profiles) ── #}
                         {% if request.user != profile_user and application and viewer_is_investor %}
@@ -654,6 +686,14 @@
                             for every document {{ profile_user.username }} has submitted, most recent first — a trend across
                             uploads and fundraising rounds, not just a single deck.
                         </p>
+                        {% if verification_history|length > 1 %}
+                        <div class="mb-4" style="max-width: 480px;">
+                            <canvas id="truthScoreTimelineChart" height="140"></canvas>
+                        </div>
+                        <script id="truth-score-timeline-data" type="application/json">
+                            [{% for report in verification_history reversed %}{"date": "{{ report.created_at|date:'M j, Y' }}", "score": {% if report.overall_truth_score is not None %}{{ report.overall_truth_score }}{% else %}null{% endif %}}{% if not forloop.last %},{% endif %}{% endfor %}]
+                        </script>
+                        {% endif %}
                         <div class="list-group list-group-flush">
                             {% for report in verification_history %}
                             <div class="list-group-item px-0 py-3 d-flex align-items-start gap-3">
@@ -767,6 +807,122 @@
     </div>
 </div>
 <script>applyStoredCollapseState('jobs');</script>
+
+{% if verified_track_record %}
+<div class="verified-track-record-section mb-5">
+    <h3 class="fw-bold mb-3">
+        <i class="bi bi-patch-check-fill text-success me-1"></i>Verified Track Record
+        <i class="bi bi-info-circle field-info-icon" role="button" tabindex="0"
+           data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top"
+           data-bs-content="Built only from transactions both sides confirmed on Interlink Foundry — never a profile claim, uploaded document, or AI inference."></i>
+    </h3>
+    <div class="d-flex flex-column gap-2">
+        {% for entry in verified_track_record %}
+        <details class="border rounded-4 p-3 bg-light">
+            <summary class="fw-semibold" style="cursor: pointer;">
+                <i class="bi bi-check-circle-fill text-success me-1"></i>{{ entry.label }}
+            </summary>
+            <ul class="list-unstyled mt-2 mb-0 ps-3">
+                {% for tx in entry.transactions %}
+                <li class="small text-muted">
+                    <i class="bi bi-arrow-right-short"></i> {{ tx.counterparty }} — {{ tx.date|date:"M j, Y" }}
+                </li>
+                {% endfor %}
+            </ul>
+        </details>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if investor_readiness %}
+<div class="investor-readiness-section mb-5">
+    <h3 class="fw-bold mb-3">
+        Investor Readiness
+        <i class="bi bi-info-circle field-info-icon" role="button" tabindex="0"
+           data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top"
+           data-bs-content="Built from what Zelda has actually analyzed and verified so far — not a self-assessment. A blank dimension means it hasn't been analyzed yet, not that it scored zero."></i>
+    </h3>
+    <div class="row row-cols-2 row-cols-md-4 g-3 mb-3">
+        <div class="col">
+            <div class="card h-100 border-0 shadow-sm rounded-4 p-3">
+                <small class="text-muted text-uppercase">Company Verification</small>
+                <span class="fw-semibold fs-5">{% if investor_readiness.company_verification_pct is not None %}{{ investor_readiness.company_verification_pct }}%{% else %}—{% endif %}</span>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card h-100 border-0 shadow-sm rounded-4 p-3">
+                <small class="text-muted text-uppercase">Financial Disclosure</small>
+                <span class="fw-semibold fs-5">{% if investor_readiness.financial_disclosure_pct is not None %}{{ investor_readiness.financial_disclosure_pct }}%{% else %}—{% endif %}</span>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card h-100 border-0 shadow-sm rounded-4 p-3">
+                <small class="text-muted text-uppercase">Market Evidence</small>
+                <span class="fw-semibold fs-5">{% if investor_readiness.market_evidence_pct is not None %}{{ investor_readiness.market_evidence_pct }}%{% else %}—{% endif %}</span>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card h-100 border-0 shadow-sm rounded-4 p-3">
+                <small class="text-muted text-uppercase">Founder Verification</small>
+                <span class="fw-semibold fs-5">{{ investor_readiness.founder_verification_pct }}%</span>
+            </div>
+        </div>
+    </div>
+
+    {% if investor_readiness.materials %}
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+            <h6 class="text-uppercase fw-bold text-muted small mb-3">Available Investor Materials</h6>
+            <div class="row row-cols-2 row-cols-md-3 g-2">
+                {% for item in investor_readiness.materials %}
+                <div class="col small"><i class="bi bi-check-circle-fill text-success me-1"></i>{{ item }}</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <p class="text-muted small mb-0">No investor materials available yet.</p>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if application and founder_activity %}
+<div class="founder-activity-section mb-5">
+    <h3 class="fw-bold mb-3">
+        Founder Activity
+        <i class="bi bi-info-circle field-info-icon" role="button" tabindex="0"
+           data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top"
+           data-bs-content="Active founders get funded — dormant ones rarely do. This shows how recently this founder has engaged with their profile."></i>
+    </h3>
+    <div class="row row-cols-2 row-cols-md-4 g-3">
+        <div class="col">
+            <div class="card h-100 border-0 shadow-sm rounded-4 p-3">
+                <small class="text-muted text-uppercase">Last Login</small>
+                <span class="fw-semibold">{% if founder_activity.last_login %}{{ founder_activity.last_login|timesince }} ago{% else %}Never{% endif %}</span>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card h-100 border-0 shadow-sm rounded-4 p-3">
+                <small class="text-muted text-uppercase">Updated Profile</small>
+                <span class="fw-semibold">{% if founder_activity.profile_updated_at %}{{ founder_activity.profile_updated_at|timesince }} ago{% else %}—{% endif %}</span>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card h-100 border-0 shadow-sm rounded-4 p-3">
+                <small class="text-muted text-uppercase">Last Uploaded Deck</small>
+                <span class="fw-semibold">{% if founder_activity.deck_uploaded_at %}{{ founder_activity.deck_uploaded_at|timesince }} ago{% else %}—{% endif %}</span>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card h-100 border-0 shadow-sm rounded-4 p-3">
+                <small class="text-muted text-uppercase">Last Milestone</small>
+                <span class="fw-semibold">{% if founder_activity.last_milestone %}{{ founder_activity.last_milestone.created_at|timesince }} ago{% else %}—{% endif %}</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 {% if application %}
 <div class="milestones-section mb-5">
@@ -1015,3 +1171,49 @@ document.addEventListener("DOMContentLoaded", function () {
 </style>
 
 {% endblock %}
+
+{% block scripts %}
+{% if verification_history|length > 1 %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const dataEl = document.getElementById('truth-score-timeline-data');
+    const canvas = document.getElementById('truthScoreTimelineChart');
+    if (!dataEl || !canvas) return;
+
+    let points;
+    try {
+        points = JSON.parse(dataEl.textContent);
+    } catch (e) {
+        return;
+    }
+    // Real, historical scores only — a report with no score yet (null)
+    // shows as a gap in the line rather than a fabricated zero.
+    if (points.filter(p => p.score !== null).length < 2) return;
+
+    new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: points.map(p => p.date),
+            datasets: [{
+                label: 'Truth Delta Score',
+                data: points.map(p => p.score),
+                borderColor: '#198754',
+                backgroundColor: 'rgba(25, 135, 84, 0.08)',
+                spanGaps: true,
+                fill: true,
+                tension: 0.25,
+                pointRadius: 4,
+                pointBackgroundColor: '#198754',
+            }],
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { min: 0, max: 100, ticks: { stepSize: 25 } } },
+        },
+    });
+});
+</script>
+{% endif %}
+{% endblock scripts %}
