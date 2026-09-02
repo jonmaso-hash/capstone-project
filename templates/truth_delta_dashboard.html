@@ -714,7 +714,7 @@ let CLARIFICATION_REQUESTS = _readJsonScript('truth-delta-clarifications-json', 
 // the literal 6 characters "&#x27;" showing up on the page.
 const SERVER_TRUTH_DATA = {
     document_id: {{ document.id }},
-    overall_truth_score: {{ truth_score|default:0 }},
+    overall_truth_score: {% if truth_score is not None %}{{ truth_score }}{% else %}null{% endif %},
     credibility_risk: _readJsonScript('truth-delta-risk-json', 'pending'),
     summary: _readJsonScript('truth-delta-summary-json', 'Verification pending — no public data found for this company.'),
     claims_analyzed: {{ claims_count|default:0 }},
@@ -797,12 +797,20 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
         const riskElement = document.getElementById('truthScoreRisk');
 
         const risk = data.credibility_risk || 'pending';
-        const score = data.overall_truth_score || 0;
+        const score = data.overall_truth_score;
+        const hasScore = score !== null && score !== undefined;
 
-        if (risk === 'pending' || score === 0) {
+        if (risk === 'pending') {
             scoreElement.textContent = '—';
             scoreElement.className = 'score-value medium-risk';
             riskElement.textContent = 'PENDING VERIFICATION';
+            riskElement.className = 'score-risk risk-medium';
+        } else if (!hasScore) {
+            // Verification ran, but no public data was found to score against —
+            // distinct from "pending" and distinct from a low score.
+            scoreElement.textContent = 'N/A';
+            scoreElement.className = 'score-value medium-risk';
+            riskElement.textContent = 'NO EXTERNAL DATA';
             riskElement.className = 'score-risk risk-medium';
         } else {
             scoreElement.textContent = Math.round(score);
@@ -816,8 +824,8 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
             'Verification pending — no public data found for this company.';
 
         const gaugeEl = document.getElementById('truthdelta-confidence-gauge');
-        if (gaugeEl && typeof renderConfidenceGauge === 'function' && risk !== 'pending') {
-            renderConfidenceGauge(gaugeEl, (data.overall_truth_score || 0) / 100, 'Verification Confidence');
+        if (gaugeEl && typeof renderConfidenceGauge === 'function' && risk !== 'pending' && hasScore) {
+            renderConfidenceGauge(gaugeEl, score / 100, 'Verification Confidence');
         }
 
         renderClaimsSection(data.details || {});

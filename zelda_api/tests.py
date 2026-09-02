@@ -2451,6 +2451,63 @@ class TruthDeltaUIViewProvenanceTests(TestCase):
         self.assertEqual(response.context['details'], {})
 
 
+class TruthDeltaNoScoreCoherenceTests(TestCase):
+    """
+    A Truth Delta report with overall_truth_score=None (verification ran but
+    no public data was found) must never render as a number. Regression for
+    two spots that turned None into a misleading value:
+      - ic_memo.html rendered "Signal Score: None/100"
+      - truth_delta_dashboard.html coerced None -> 0 (looks like a failed
+        verification / falls into the "PENDING" branch)
+    """
+
+    def setUp(self):
+        from matchmaking.tests import _mock_embedding_generation
+        _mock_embedding_generation(self)
+        from matchmaking.models import Application
+        from .truth_delta_models import TruthDeltaReport
+
+        self.user = User.objects.create_user('td_noscore_owner', password='x')
+        self.application = Application.objects.create(
+            user=self.user, company_name='NoDataCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed', is_premium=True,
+        )
+        self.doc = DocumentSource.objects.create(
+            filename='deck.pdf', source_entity='NoDataCo', uploaded_by=self.user,
+            document_type='pitch_deck', status='analyzed',
+        )
+        IntelligenceMemo.objects.create(
+            document=self.doc, executive_summary='x', investment_thesis='y',
+            recommendation='NEEDS_REVIEW', completeness_score=0.5, citations_count=0,
+        )
+        self.report = TruthDeltaReport.objects.create(
+            document=self.doc, overall_truth_score=None, credibility_risk='unknown',
+            summary='No public data could be found to independently verify these claims.',
+            details={'claims': [], 'observed': []},
+        )
+        self.client.force_login(self.user)
+
+    def test_ic_memo_html_shows_not_scored_not_none(self):
+        html = self.client.get(reverse('zelda_api:ic_memo', args=[self.doc.id])).content.decode()
+        self.assertIn('Truth Delta Signal', html)
+        self.assertNotIn('Signal Score:</strong> None', html)
+        self.assertNotIn('None/100', html)
+        self.assertIn('not scored', html)
+
+    def test_dashboard_emits_null_score_not_zero(self):
+        html = self.client.get(reverse('zelda_api:truth_delta_ui', args=[self.doc.id])).content.decode()
+        self.assertIn('overall_truth_score: null', html)
+        self.assertNotIn('overall_truth_score: 0,', html)
+
+    def test_real_score_still_renders_as_a_number(self):
+        self.report.overall_truth_score = 74.0
+        self.report.credibility_risk = 'low'
+        self.report.save(update_fields=['overall_truth_score', 'credibility_risk'])
+        html = self.client.get(reverse('zelda_api:ic_memo', args=[self.doc.id])).content.decode()
+        self.assertIn('74/100', html)
+        self.assertNotIn('not scored', html)
+
+
 class TruthDeltaUnlockedTests(TestCase):
     """
     truth_delta_unlocked — Truth Delta content is Premium, gated on the
