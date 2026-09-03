@@ -638,9 +638,10 @@
         </div>
         {% endif %}
 
-        {% if report %}
-        <div class="mt-3 mb-2" id="truthdelta-confidence-gauge" style="max-width: 420px;"></div>
-        {% endif %}
+        {# No confidence gauge here: it was fed the same overall_truth_score
+           as the Credibility Score above, so it only restated the signal.
+           Truth Delta's second-order read is the risk band + Evidence
+           Coverage, not a separate percentage. #}
 
         <!-- Summary -->
         <div class="truth-delta-summary">
@@ -844,11 +845,6 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
         // Summary
         document.getElementById('truthSummaryText').textContent = data.summary ||
             'Verification pending — no public data found for this company.';
-
-        const gaugeEl = document.getElementById('truthdelta-confidence-gauge');
-        if (gaugeEl && typeof renderConfidenceGauge === 'function' && risk !== 'pending' && hasScore) {
-            renderConfidenceGauge(gaugeEl, score / 100, 'Verification Confidence');
-        }
 
         renderClaimsSection(data.details || {});
     }

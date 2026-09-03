@@ -4915,6 +4915,91 @@ class ValuationRangeBarTests(TestCase):
         self.assertNotIn('valuation_high', pdata)
 
 
+class GaugeVocabularyTests(TestCase):
+    """
+    PR: score vocabulary + gauge labels. Each report's confidence widget
+    must carry a name that says what the number is; Truth Delta must not
+    render a second gauge that just restates its Credibility Score.
+    Labels only — no value / calculation / tier / None-state changes.
+    """
+
+    def setUp(self):
+        from matchmaking.tests import _mock_embedding_generation
+        _mock_embedding_generation(self)
+        self.user = User.objects.create_user('gv_owner', password='x')
+        self.client.force_login(self.user)
+
+    # --- Truth Delta: the redundant gauge is gone ---
+
+    def test_truth_delta_has_no_second_gauge_restating_the_score(self):
+        from matchmaking.models import Application
+        from .truth_delta_models import TruthDeltaReport
+        Application.objects.create(
+            user=self.user, company_name='TDGauge', founder_name='F', email='f@t.com',
+            description='x', sector='SaaS', stage='Seed', is_premium=True,
+        )
+        doc = DocumentSource.objects.create(
+            filename='d.pdf', source_entity='TDGauge', uploaded_by=self.user,
+            document_type='pitch_deck', status='analyzed',
+        )
+        TruthDeltaReport.objects.create(
+            document=doc, overall_truth_score=74.0, credibility_risk='low', summary='ok',
+            details={'per_claim': [{'category': 'revenue', 'claimed': 'x',
+                                    'observed': 'SEC EDGAR', 'assessment': 'ok'}],
+                     'claims': [{'category': 'revenue'}]},
+        )
+        html = self.client.get(reverse('zelda_api:truth_delta_ui', args=[doc.id])).content.decode()
+        self.assertIn('Credibility Score', html)             # the signal stays
+        self.assertNotIn('truthdelta-confidence-gauge', html)  # the gauge is gone
+        self.assertNotIn('Verification Confidence', html)
+
+    # --- Business Valuation: one consistent label ---
+
+    def test_valuation_full_render_uses_analysis_confidence_not_valuation_confidence(self):
+        from matchmaking.models import InvestorApplication
+        InvestorApplication.objects.create(user=self.user, is_premium=True)
+        doc = DocumentSource.objects.create(
+            filename='v.pptx', source_entity='ValGauge', uploaded_by=self.user,
+            document_type='business_valuation', status='analyzed', valuation_tier='full',
+        )
+        BusinessValuationReport.objects.create(
+            document=doc, confidence_score=0.7, valuation_low=1_000_000, valuation_high=2_000_000,
+            valuation_summary='x', financial_summary='x', risk_report='x',
+        )
+        html = self.client.get(reverse('zelda_api:valuation_report', args=[doc.id])).content.decode()
+        # the full-render gauge call
+        self.assertIn("getElementById('valuation-confidence-gauge'), data.confidence_score, 'Analysis Confidence'", html)
+        self.assertNotIn("'Valuation Confidence'", html)
+
+    # --- IC Memo: the embedded valuation confidence is named ---
+
+    def test_ic_memo_embedded_valuation_confidence_is_labelled(self):
+        from matchmaking.models import Application
+        Application.objects.create(
+            user=self.user, company_name='MemoGauge', founder_name='F', email='f@t.com',
+            description='x', sector='SaaS', stage='Seed', is_premium=True,
+        )
+        deck = DocumentSource.objects.create(
+            filename='deck.pdf', source_entity='MemoGauge', uploaded_by=self.user,
+            document_type='pitch_deck', status='analyzed',
+        )
+        IntelligenceMemo.objects.create(
+            document=deck, executive_summary='x', investment_thesis='y',
+            recommendation='NEEDS_REVIEW', completeness_score=0.6, citations_count=1,
+        )
+        vdoc = DocumentSource.objects.create(
+            filename='val.pptx', source_entity='MemoGauge', uploaded_by=self.user,
+            document_type='business_valuation', status='analyzed', valuation_tier='full',
+        )
+        BusinessValuationReport.objects.create(
+            document=vdoc, confidence_score=71.0, valuation_low=1_000_000, valuation_high=2_000_000,
+            valuation_summary='Applied a multiple.', financial_summary='x', risk_report='x',
+        )
+        html = self.client.get(reverse('zelda_api:ic_memo', args=[deck.id])).content.decode()
+        self.assertIn('Analysis confidence:', html)
+        self.assertNotIn('<strong>Confidence:</strong>', html)
+
+
 class ConfidenceGradeBandsTests(TestCase):
     """
     zelda_api.confidence_breakdown.grade_for_confidence — the deterministic

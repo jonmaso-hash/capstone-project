@@ -241,7 +241,7 @@ def render_ic_memo_markdown(context):
         lines.append('## Valuation')
         if v['valuation_low'] is not None and v['valuation_high'] is not None:
             lines.append(f"**Range:** ${v['valuation_low']:,.0f} – ${v['valuation_high']:,.0f}")
-        lines.append(f"**Confidence:** {v['confidence_score']:.0f}/100")
+        lines.append(f"**Analysis Confidence:** {v['confidence_score']:.0f}/100 — Zelda's confidence in the valuation analysis, not a bound on the range")
         if v['valuation_summary']:
             lines.append(v['valuation_summary'])
         lines.append('')
