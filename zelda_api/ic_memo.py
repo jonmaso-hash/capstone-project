@@ -194,6 +194,12 @@ def build_ic_memo_context(founder_application, tier='full'):
 
         deck_engagement = get_deck_engagement_stats(founder_application)
 
+        # Application.zelda_score is deliberately NOT surfaced here: it's an
+        # internal stability/efficiency/runway composite used for
+        # matchmaking, and as a "/99" figure next to the memo's
+        # Recommendation, Investment Readiness and Truth Delta coverage it
+        # read as a fourth, competing verdict. The field stays on the model
+        # and in the matching pipeline untouched — this is presentation only.
         financials = {
             'raising_amount': founder_application.raising_amount,
             'current_revenue': founder_application.current_revenue,
@@ -201,7 +207,6 @@ def build_ic_memo_context(founder_application, tier='full'):
             'team_size': founder_application.team_size,
             'years_in_business': founder_application.years_in_business,
             'runway_months': founder_application.runway_months,
-            'zelda_score': founder_application.zelda_score,
         }
 
     from .disclaimers import DUE_DILIGENCE_DISCLAIMER
@@ -289,7 +294,6 @@ def render_ic_memo_markdown(context):
     lines.append(f"- Monthly burn: ${fin['monthly_burn_rate']:,.0f}" if fin['monthly_burn_rate'] is not None else "- Monthly burn: not disclosed")
     lines.append(f"- Runway: {fin['runway_months']} months" if fin['runway_months'] else "- Runway: not calculated")
     lines.append(f"- Team size: {fin['team_size']}" if fin['team_size'] else "- Team size: not disclosed")
-    lines.append(f"- Zelda Score: {fin['zelda_score']}/99 — internal stability/efficiency/runway composite, not a verification or readiness measure")
     lines.append('')
 
     if context['deck_engagement']:
