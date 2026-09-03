@@ -1122,6 +1122,18 @@ def truth_delta_ui_view(request, document_id):
     verified_count = sum(1 for s in category_states.values() if s == 'verified')
     unverified_count = sum(1 for s in category_states.values() if s == 'no_data')
 
+    # Work Done — concrete analysis work on the underlying document.
+    # work_done_summary keeps only genuinely-computed positive integers,
+    # so an early-stage deck with no external corroboration simply shows
+    # fewer stats rather than a row of zeros. "Claims checked" lives in
+    # the verdict stat cards already, so it's not repeated here.
+    from .work_done import work_done_summary
+    work_done = work_done_summary(
+        pages=document.total_pages,
+        sections=document.chunks.count(),
+        datapoints=document.observed_datapoints.count(),
+    )
+
     context = {
         'document': document,
         'report': report,
@@ -1140,6 +1152,7 @@ def truth_delta_ui_view(request, document_id):
         'category_states': category_states,
         'verified_count': verified_count,
         'unverified_count': unverified_count,
+        'work_done': work_done,
     }
     from .disclaimers import DUE_DILIGENCE_DISCLAIMER
     context['disclaimer'] = DUE_DILIGENCE_DISCLAIMER

@@ -21,7 +21,10 @@ from django.test import TestCase
 from django.urls import reverse
 
 from .intelligence_pipeline import ZeldaIntelligencePipelineV2
-from .vector_models import DocumentSource, IntelligenceMemo, BusinessValuationReport
+from .vector_models import (
+    DocumentSource, DocumentChunk, IntelligenceInsight, IntelligenceMemo,
+    BusinessValuationReport,
+)
 from .circuit_breaker import (
     call_with_breaker, is_open, record_failure, record_success,
     CircuitOpenError, FAILURE_THRESHOLD, _opened_until_key,
@@ -236,6 +239,49 @@ class CircuitBreakerTests(TestCase):
         self.assertFalse(is_open('test_circuit_half_open'))
 
 
+class WorkDoneSummaryTests(TestCase):
+    """
+    zelda_api/work_done.py — the single guardrail that a Work Done stat is
+    shown only when its count is a genuinely-computed positive integer.
+    None, 0, and non-ints are dropped, never rendered as a zero.
+    """
+
+    def test_positive_ints_render_in_fixed_order(self):
+        from .work_done import work_done_summary
+        summary = work_done_summary(claims=4, pages=12, sections=30)
+        # declared order is pages -> sections -> ... -> claims, regardless of kwarg order
+        self.assertEqual(
+            summary,
+            [
+                {'value': 12, 'label': 'Pages analyzed'},
+                {'value': 30, 'label': 'Sections searched'},
+                {'value': 4, 'label': 'Claims checked'},
+            ],
+        )
+
+    def test_none_is_omitted(self):
+        from .work_done import work_done_summary
+        self.assertEqual(work_done_summary(pages=10, sections=None), [{'value': 10, 'label': 'Pages analyzed'}])
+
+    def test_zero_is_omitted_not_shown_as_zero(self):
+        from .work_done import work_done_summary
+        self.assertEqual(work_done_summary(pages=10, datapoints=0), [{'value': 10, 'label': 'Pages analyzed'}])
+
+    def test_all_empty_returns_empty_list(self):
+        from .work_done import work_done_summary
+        self.assertEqual(work_done_summary(pages=0, sections=None, claims=0), [])
+        self.assertEqual(work_done_summary(), [])
+
+    def test_booleans_are_not_counts(self):
+        from .work_done import work_done_summary
+        self.assertEqual(work_done_summary(pages=True, sections=False), [])
+
+    def test_unknown_metric_is_a_programming_error(self):
+        from .work_done import work_done_summary
+        with self.assertRaises(TypeError):
+            work_done_summary(hours_saved=5)
+
+
 class ICMemoTests(TestCase):
     """
     IC Memo Generator (zelda_api/ic_memo.py) — a synthesis/export layer
@@ -365,6 +411,60 @@ class ICMemoTests(TestCase):
         # Sections with blank text (never set) should be omitted, not shown empty.
         self.assertNotIn('Problem & Solution', labels)
         self.assertEqual(context['memo_meta']['citations_count'], 3)
+
+    # --- Work Done layer ---
+
+    def _add_analysis_artifacts(self, doc, memo, *, pages, chunks, categories):
+        doc.total_pages = pages
+        doc.save(update_fields=['total_pages'])
+        for i in range(chunks):
+            DocumentChunk.objects.create(
+                document=doc, chunk_index=i, raw_text=f'chunk {i}', token_count=10,
+            )
+        for cat in categories:
+            IntelligenceInsight.objects.create(document=doc, category=cat, insight_text='x')
+        memo.insights_used.set(IntelligenceInsight.objects.filter(document=doc))
+
+    def test_work_done_reports_real_document_analysis_counts(self):
+        from .ic_memo import build_ic_memo_context
+        doc = self._make_pitch_deck_doc(with_memo=True)
+        self._add_analysis_artifacts(
+            doc, doc.memo, pages=11, chunks=24, categories=['Revenue', 'Team', 'Market', 'Revenue'],
+        )
+        work_done = build_ic_memo_context(self.application)['work_done']
+        self.assertEqual(work_done, [
+            {'value': 11, 'label': 'Pages analyzed'},
+            {'value': 24, 'label': 'Sections searched'},
+            {'value': 3, 'label': 'Categories analyzed'},  # distinct categories, not 4
+        ])
+
+    def test_work_done_omits_counts_that_are_zero(self):
+        from .ic_memo import build_ic_memo_context
+        # memo exists but nothing was chunked / no page count / no insights
+        self._make_pitch_deck_doc(with_memo=True)
+        self.assertEqual(build_ic_memo_context(self.application)['work_done'], [])
+
+    def test_work_done_is_empty_when_there_is_no_pitch_deck(self):
+        from .ic_memo import build_ic_memo_context
+        self.assertEqual(build_ic_memo_context(self.application)['work_done'], [])
+
+    def test_work_done_renders_in_the_memo_page(self):
+        doc = self._make_pitch_deck_doc(with_memo=True)
+        self._add_analysis_artifacts(doc, doc.memo, pages=11, chunks=24, categories=['Revenue'])
+        self.application.is_premium = True
+        self.application.save(update_fields=['is_premium'])
+        self.client.force_login(self.staff_user)
+        html = self.client.get(reverse('zelda_api:ic_memo', args=[doc.id])).content.decode()
+        self.assertIn('What Zelda analyzed', html)
+        self.assertIn('Pages analyzed', html)
+
+    def test_work_done_section_absent_when_no_counts(self):
+        doc = self._make_pitch_deck_doc(with_memo=True)
+        self.application.is_premium = True
+        self.application.save(update_fields=['is_premium'])
+        self.client.force_login(self.staff_user)
+        html = self.client.get(reverse('zelda_api:ic_memo', args=[doc.id])).content.decode()
+        self.assertNotIn('What Zelda analyzed', html)
 
     def test_context_includes_truth_delta_when_present(self):
         from .ic_memo import build_ic_memo_context
@@ -2573,6 +2673,41 @@ class TruthDeltaEvidenceCoverageChartTests(TestCase):
         html = self._html()
         self.assertNotIn('id="evidenceCoverageChart"', html)
         self.assertNotIn('No verifiable claims were extracted', html)
+
+    # --- Work Done layer ---
+
+    def test_work_done_shows_real_analysis_counts(self):
+        from .truth_delta_models import ObservedDatapoint
+        self._report(details={'claims': [{'category': 'revenue'}], 'per_claim': []})
+        self.doc.total_pages = 9
+        self.doc.save(update_fields=['total_pages'])
+        for i in range(15):
+            DocumentChunk.objects.create(document=self.doc, chunk_index=i, raw_text='x', token_count=5)
+        ObservedDatapoint.objects.create(document=self.doc, category='revenue', observed_value='$5M')
+        resp = self.client.get(reverse('zelda_api:truth_delta_ui', args=[self.doc.id]))
+        self.assertEqual(resp.context['work_done'], [
+            {'value': 9, 'label': 'Pages analyzed'},
+            {'value': 15, 'label': 'Sections searched'},
+            {'value': 1, 'label': 'External datapoints found'},
+        ])
+        html = resp.content.decode()
+        self.assertIn('What Zelda analyzed', html)
+
+    def test_work_done_omits_zero_datapoints_and_absent_section(self):
+        # Common early-stage case: a deck was chunked, but nothing corroborating
+        # was found online -> datapoints omitted, not shown as "0".
+        self._report(details={'claims': [{'category': 'revenue'}], 'per_claim': []})
+        self.doc.total_pages = 9
+        self.doc.save(update_fields=['total_pages'])
+        DocumentChunk.objects.create(document=self.doc, chunk_index=0, raw_text='x', token_count=5)
+        resp = self.client.get(reverse('zelda_api:truth_delta_ui', args=[self.doc.id]))
+        labels = [s['label'] for s in resp.context['work_done']]
+        self.assertEqual(labels, ['Pages analyzed', 'Sections searched'])
+
+    def test_work_done_section_absent_when_nothing_computed(self):
+        self._report(details={'claims': [], 'observed': []})
+        html = self._html()
+        self.assertNotIn('What Zelda analyzed', html)
 
 
 class TruthDeltaUnlockedTests(TestCase):

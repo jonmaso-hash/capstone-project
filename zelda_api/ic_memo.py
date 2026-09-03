@@ -10,6 +10,7 @@ way a cached/persisted snapshot would.
 """
 from .vector_models import DocumentSource, IntelligenceMemo, BusinessValuationReport
 from .truth_delta_models import TruthDeltaReport
+from .work_done import work_done_summary
 
 # Same ordered section list as loadMemo() in
 # templates/includes/zelda_ai_assistant_enhanced.html (~line 1199) — kept in
@@ -122,6 +123,7 @@ def build_ic_memo_context(founder_application, tier='full'):
     memo_sections = None
     memo_meta = None
     truth_delta = None
+    work_done = []
     if pitch_deck_doc and hasattr(pitch_deck_doc, 'memo'):
         memo = pitch_deck_doc.memo
         section_keys = MEMO_SECTIONS if tier == 'full' else [
@@ -147,6 +149,15 @@ def build_ic_memo_context(founder_application, tier='full'):
             'citations_count': memo.citations_count,
             'generated_at': memo.created_at,
         }
+
+        # Work Done — concrete document-analysis counts, positive integers
+        # only (work_done_summary drops None/0). Distinct from the memo_meta
+        # cards, which report coverage and confidence, not effort.
+        work_done = work_done_summary(
+            pages=pitch_deck_doc.total_pages,
+            sections=pitch_deck_doc.chunks.count(),
+            categories=memo.insights_used.values('category').distinct().count(),
+        )
 
         if tier == 'full':
             report = pitch_deck_doc.truthdeltareport_set.first()
@@ -189,6 +200,7 @@ def build_ic_memo_context(founder_application, tier='full'):
         'pitch_deck_doc': pitch_deck_doc,
         'memo_sections': memo_sections,
         'memo_meta': memo_meta,
+        'work_done': work_done,
         'truth_delta': truth_delta,
         'valuation': valuation,
         'deck_engagement': deck_engagement,
