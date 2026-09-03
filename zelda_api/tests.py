@@ -474,6 +474,86 @@ class ICMemoTests(TestCase):
         context = build_ic_memo_context(self.application)
         self.assertEqual(context['truth_delta']['overall_truth_score'], 85.0)
 
+    # --- Truth Delta evidence-coverage embed ---
+
+    def _truth_delta_report(self, doc, **kwargs):
+        from .truth_delta_models import TruthDeltaReport
+        defaults = dict(document=doc, overall_truth_score=72.0, credibility_risk='low', summary='Mostly holds up.')
+        defaults.update(kwargs)
+        return TruthDeltaReport.objects.create(**defaults)
+
+    def _ic_memo_html(self, doc):
+        self.client.force_login(self.staff_user)  # staff bypass -> full tier
+        return self.client.get(reverse('zelda_api:ic_memo', args=[doc.id])).content.decode()
+
+    def test_coverage_embed_uses_report_stats_not_a_recompute(self):
+        from .ic_memo import build_ic_memo_context
+        from .truth_delta_models import ClaimedDatapoint
+        doc = self._make_pitch_deck_doc(with_memo=True)
+        for cat in ('revenue', 'employees', 'funding_raised'):
+            ClaimedDatapoint.objects.create(document=doc, category=cat, claimed_value='x')
+        self._truth_delta_report(doc, details={
+            'claims': [{'category': 'revenue'}, {'category': 'employees'}],
+            'per_claim': [
+                {'category': 'revenue', 'claimed': '$5M', 'observed': '$5.1M (SEC EDGAR)', 'assessment': 'match'},
+                {'category': 'employees', 'claimed': '40', 'observed': 'no external data', 'assessment': 'unchecked'},
+            ],
+        })
+        td = build_ic_memo_context(self.application)['truth_delta']
+        self.assertEqual(td['claims_checked'], 3)
+        self.assertEqual(td['coverage'], {'total': 2, 'verified': 1, 'pct': 50.0})
+        self.assertEqual(td['no_data_count'], 1)
+        self.assertEqual(td['document_id'], doc.id)
+
+    def test_coverage_embed_renders_bar_and_link_when_populated(self):
+        from .truth_delta_models import ClaimedDatapoint
+        doc = self._make_pitch_deck_doc(with_memo=True)
+        ClaimedDatapoint.objects.create(document=doc, category='revenue', claimed_value='x')
+        self._truth_delta_report(doc, details={
+            'claims': [{'category': 'revenue'}, {'category': 'employees'}],
+            'per_claim': [
+                {'category': 'revenue', 'claimed': '$5M', 'observed': '$5.1M (SEC EDGAR)', 'assessment': 'match'},
+                {'category': 'employees', 'claimed': '40', 'observed': 'no external data', 'assessment': 'unchecked'},
+            ],
+        })
+        html = self._ic_memo_html(doc)
+        self.assertIn('Verified against public sources', html)
+        self.assertIn('No external data', html)
+        self.assertIn('of 2 claim categories', html)
+        self.assertIn(reverse('zelda_api:truth_delta_ui', args=[doc.id]), html)
+
+    def test_coverage_embed_no_external_data_keeps_not_scored_state(self):
+        from .truth_delta_models import ClaimedDatapoint
+        doc = self._make_pitch_deck_doc(with_memo=True)
+        ClaimedDatapoint.objects.create(document=doc, category='revenue', claimed_value='x')
+        # report ran, claims extracted, nothing verifiable -> score None (coherence state)
+        self._truth_delta_report(doc, overall_truth_score=None, credibility_risk='unknown',
+                                 details={'claims': [{'category': 'revenue'}, {'category': 'traction'}], 'per_claim': []})
+        html = self._ic_memo_html(doc)
+        self.assertIn('not scored', html)                 # PR #3 coherence state intact
+        self.assertIn('No external data — 2', html)
+        self.assertIn('of 2 claim categories', html)
+
+    def test_coverage_embed_shows_sentence_when_no_claims_extracted(self):
+        doc = self._make_pitch_deck_doc(with_memo=True)
+        self._truth_delta_report(doc, details={'claims': [], 'observed': []})
+        html = self._ic_memo_html(doc)
+        self.assertIn('No verifiable claims were extracted from the deck', html)
+        self.assertNotIn('claim categories)', html)
+
+    def test_markdown_includes_evidence_coverage(self):
+        from .ic_memo import build_ic_memo_context, render_ic_memo_markdown
+        from .truth_delta_models import ClaimedDatapoint
+        doc = self._make_pitch_deck_doc(with_memo=True)
+        ClaimedDatapoint.objects.create(document=doc, category='revenue', claimed_value='x')
+        self._truth_delta_report(doc, details={
+            'claims': [{'category': 'revenue'}],
+            'per_claim': [{'category': 'revenue', 'claimed': '$5M', 'observed': '$5.1M (SEC EDGAR)', 'assessment': 'match'}],
+        })
+        md = render_ic_memo_markdown(build_ic_memo_context(self.application))
+        self.assertIn('**Claims checked:** 1', md)
+        self.assertIn('1 verified against public sources', md)
+
     def test_markdown_renders_without_error_for_bare_founder(self):
         from .ic_memo import build_ic_memo_context, render_ic_memo_markdown
         context = build_ic_memo_context(self.application)

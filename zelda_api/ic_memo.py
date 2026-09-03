@@ -162,9 +162,21 @@ def build_ic_memo_context(founder_application, tier='full'):
         if tier == 'full':
             report = pitch_deck_doc.truthdeltareport_set.first()
             if report:
+                from .truth_delta_models import ClaimedDatapoint
+                # Coverage numbers come straight from the Truth Delta report's
+                # own methods — the IC memo embeds them, it does not
+                # recompute verification. `coverage` is {total, verified, pct}
+                # over the distinct claim categories that had a public source
+                # to check against; pct is None when total is 0 (no data),
+                # which the template renders as a plain sentence, not a 0% bar.
+                coverage = report.verifiability_stats()
                 truth_delta = {
                     'overall_truth_score': report.overall_truth_score,
                     'summary': report.summary,
+                    'claims_checked': ClaimedDatapoint.objects.filter(document=pitch_deck_doc).count(),
+                    'coverage': coverage,
+                    'no_data_count': coverage['total'] - coverage['verified'],
+                    'document_id': pitch_deck_doc.id,
                 }
 
     valuation = None
@@ -244,8 +256,20 @@ def render_ic_memo_markdown(context):
         )
         if td['overall_truth_score'] is not None:
             lines.append(f"**Signal Score:** {td['overall_truth_score']}/100 — reflects only the claims that had external data to check against, not an overall company assessment")
+        else:
+            lines.append("**Signal Score:** not scored — no external data was found to verify or contradict these claims")
         if td['summary']:
             lines.append(td['summary'])
+        cov = td['coverage']
+        if td['claims_checked']:
+            lines.append(f"**Claims checked:** {td['claims_checked']}  ")
+        if cov['total']:
+            lines.append(
+                f"**Evidence coverage:** {cov['verified']} verified against public sources, "
+                f"{td['no_data_count']} with no external data (of {cov['total']} claim categories)"
+            )
+        else:
+            lines.append("**Evidence coverage:** no verifiable claims were extracted from the deck, so there was nothing to cross-check against public sources")
         lines.append('')
 
     if context['valuation']:
