@@ -4832,6 +4832,89 @@ class DocumentValuationViewTierRedactionTests(TestCase):
         self.assertNotIn('premium_insights_waiting', data)
 
 
+class ValuationRangeBarTests(TestCase):
+    """
+    zelda_valuation_report.html — the supplemental range mark in the
+    "Estimated Valuation Range" card. The bar is rendered client-side from
+    the API response, so these assert the wiring + guards in the page and
+    the API contract it depends on (full tier has the endpoints, preview
+    does not). Behaviour of the JS guard itself (missing / inverted
+    endpoints -> no bar) is covered by asserting the guard expression is
+    present; there is no JS test runner in this project.
+    """
+
+    def setUp(self):
+        from matchmaking.tests import _mock_embedding_generation
+        _mock_embedding_generation(self)
+        self.user = User.objects.create_user('vrb_owner', password='x')
+        self.doc = DocumentSource.objects.create(
+            filename='deck.pptx', source_entity='RangeCo', document_type='business_valuation',
+            uploaded_by=self.user, status='analyzed', valuation_tier='full',
+        )
+        BusinessValuationReport.objects.create(
+            document=self.doc, confidence_score=0.7,
+            valuation_low=2_100_000, valuation_high=4_800_000,
+            valuation_summary='x', financial_summary='x', risk_report='x',
+        )
+        self.client.force_login(self.user)
+
+    def _page(self):
+        return self.client.get(reverse('zelda_api:valuation_report', args=[self.doc.id])).content.decode()
+
+    def test_report_page_wires_the_range_bar_into_the_full_render(self):
+        html = self._page()
+        self.assertIn('function valuationRangeBar', html)
+        self.assertIn('function compactUsd', html)
+        self.assertIn('const rangeBar = valuationRangeBar(data.valuation_low, data.valuation_high)', html)
+        self.assertIn('${rangeBar}', html)
+
+    def test_range_bar_only_appears_in_the_full_render_path(self):
+        # Preview/lite render must not reference it — the token appears once.
+        self.assertEqual(self._page().count('${rangeBar}'), 1)
+
+    def test_range_bar_guards_missing_and_inverted_endpoints(self):
+        html = self._page()
+        self.assertIn('!Number.isFinite(low)', html)
+        self.assertIn('high <= low', html)
+        self.assertIn('low < 0', html)
+        self.assertIn("return ''", html)  # guard bails without rendering a bar
+
+    def test_textual_range_heading_is_unchanged(self):
+        self.assertIn('Estimated Valuation Range', self._page())
+
+    def test_full_tier_api_exposes_endpoints_preview_does_not(self):
+        from matchmaking.models import InvestorApplication, Application
+        # full
+        fu = User.objects.create_user('vrb_full', password='x')
+        InvestorApplication.objects.create(user=fu, is_premium=True)
+        fdoc = DocumentSource.objects.create(
+            filename='d.pptx', source_entity='FullCo', document_type='business_valuation',
+            uploaded_by=fu, status='analyzed', valuation_tier='full',
+        )
+        BusinessValuationReport.objects.create(document=fdoc, confidence_score=0.5,
+            valuation_low=1_000_000, valuation_high=2_000_000,
+            valuation_summary='x', financial_summary='x', risk_report='x')
+        self.client.force_login(fu)
+        fdata = self.client.get(reverse('zelda_api:document_valuation', args=[fdoc.id])).json()
+        self.assertEqual(fdata['valuation_low'], '1000000.00')
+        self.assertEqual(fdata['valuation_high'], '2000000.00')
+
+        # preview
+        pu = User.objects.create_user('vrb_prev', password='x')
+        Application.objects.create(user=pu, company_name='PrevCo')
+        pdoc = DocumentSource.objects.create(
+            filename='d.pptx', source_entity='PrevCo', document_type='business_valuation',
+            uploaded_by=pu, status='analyzed', valuation_tier='preview',
+        )
+        BusinessValuationReport.objects.create(document=pdoc, confidence_score=0.5,
+            valuation_low=1_000_000, valuation_high=2_000_000,
+            valuation_summary='x', financial_summary='x', risk_report='x')
+        self.client.force_login(pu)
+        pdata = self.client.get(reverse('zelda_api:document_valuation', args=[pdoc.id])).json()
+        self.assertNotIn('valuation_low', pdata)
+        self.assertNotIn('valuation_high', pdata)
+
+
 class ConfidenceGradeBandsTests(TestCase):
     """
     zelda_api.confidence_breakdown.grade_for_confidence — the deterministic
