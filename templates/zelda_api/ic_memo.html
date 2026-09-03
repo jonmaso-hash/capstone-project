@@ -97,26 +97,17 @@
     </div>
     <p class="small text-muted mb-4">
         <strong>Section Coverage</strong> is how much of this memo Zelda could generate from available materials.
-        {% if memo_meta.readiness_score is not None %}<strong>Investment Readiness</strong> is Zelda's holistic assessment of how prepared this company is for investment.{% else %}<strong>Analysis Confidence</strong> is Zelda's own confidence in its analysis, not a verification or completeness score.{% endif %}
+        {% if memo_meta.readiness_score is not None %}<strong>Investment Readiness</strong> is Zelda's holistic assessment of how prepared this company is for investment.{% else %}<strong>Analysis Confidence</strong> is how sure Zelda is of its own reading of this deck — not a verification score and not a completeness score.{% endif %}
         Generated {{ memo_meta.generated_at|date:"M j, Y" }}.
     </p>
-    <div class="card border-0 shadow-sm rounded-4 mb-4 no-print">
-        <div class="card-body p-4">
-            <div id="ic-memo-confidence-gauge"></div>
-        </div>
-    </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const gaugeEl = document.getElementById('ic-memo-confidence-gauge');
-            if (gaugeEl && typeof renderConfidenceGauge === 'function') {
-                {% if memo_meta.readiness_score is not None %}
-                renderConfidenceGauge(gaugeEl, {{ memo_meta.readiness_score }} / 100, 'Investment Readiness');
-                {% else %}
-                renderConfidenceGauge(gaugeEl, {{ memo_meta.analysis_confidence }} / 100, 'Analysis Confidence');
-                {% endif %}
-            }
-        });
-    </script>
+    {% comment %}
+    No confidence/readiness gauge here. It rendered the exact number already
+    shown in the metric card above (analysis_confidence or readiness_score,
+    just /10 instead of % or /100) — a second copy of one value, not a
+    second measurement. renderConfidenceGauge still carries the Alignment
+    read on the Zelda Report and the confidence read on the Valuation
+    report, where it isn't a duplicate.
+    {% endcomment %}
     {% endif %}
 
     {% include "includes/work_done.html" %}
@@ -134,18 +125,25 @@
 
     {% if truth_delta %}
     <div class="mb-4 ic-memo-section">
-        <h5 class="fw-bold border-bottom pb-2 mb-2">Truth Delta Signal</h5>
+        <h5 class="fw-bold border-bottom pb-2 mb-2">Truth Delta</h5>
         <p class="small text-muted fst-italic mb-2">
             An automated cross-check of the deck's claims against SEC EDGAR, Crunchbase, and recent news coverage
             where available — a real signal, not a substitute for full diligence, since public data is sparse or
             nonexistent for most early-stage private companies.
         </p>
+        {% comment %}
+        Same number and same name as the full Truth Delta report's own
+        headline ("Credibility Score"): it measures how far the deck's
+        checkable claims held up against outside data — a verification
+        read, not analysis confidence. Was labelled "Signal Score" here,
+        which made one number look like two.
+        {% endcomment %}
         {% if truth_delta.overall_truth_score is not None %}
-        <p class="mb-1"><strong>Signal Score:</strong> {{ truth_delta.overall_truth_score|floatformat:0 }}/100
+        <p class="mb-1"><strong>Credibility Score:</strong> {{ truth_delta.overall_truth_score|floatformat:0 }}/100
             <span class="text-muted small">— reflects only the claims that had external data to check against, not an overall company assessment</span>
         </p>
         {% else %}
-        <p class="mb-1"><strong>Signal Score:</strong> <span class="text-muted">not scored</span>
+        <p class="mb-1"><strong>Credibility Score:</strong> <span class="text-muted">not scored</span>
             <span class="text-muted small">— no external data was found to verify or contradict these claims</span>
         </p>
         {% endif %}
@@ -187,6 +185,14 @@
         {% if valuation.valuation_low is not None and valuation.valuation_high is not None %}
         <p class="mb-1"><strong>Range:</strong> ${{ valuation.valuation_low|floatformat:0|intcomma }} – ${{ valuation.valuation_high|floatformat:0|intcomma }}</p>
         {% endif %}
+        {% comment %}
+        This number comes from the Business Valuation report (vr.confidence_score).
+        Whether it truly measures confidence in the valuation analysis or is
+        closer to an evidence/data-completeness measure is an open question
+        that PR #14 resolves at the source; its label here and the label
+        collision with the memo's own "Analysis Confidence" above are left
+        for that PR. Not renamed now to avoid pre-empting the answer.
+        {% endcomment %}
         <p class="mb-1"><strong>Analysis confidence:</strong> {{ valuation.confidence_score|floatformat:0 }}/100
             <span class="text-muted small">— Zelda's confidence in the valuation analysis, not a bound on the range</span></p>
         {% if valuation.valuation_summary %}<p class="text-secondary mb-0">{{ valuation.valuation_summary }}</p>{% endif %}

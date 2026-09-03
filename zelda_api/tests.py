@@ -2690,7 +2690,7 @@ class TruthDeltaNoScoreCoherenceTests(TestCase):
     A Truth Delta report with overall_truth_score=None (verification ran but
     no public data was found) must never render as a number. Regression for
     two spots that turned None into a misleading value:
-      - ic_memo.html rendered "Signal Score: None/100"
+      - ic_memo.html rendered "Credibility Score: None/100"
       - truth_delta_dashboard.html coerced None -> 0 (looks like a failed
         verification / falls into the "PENDING" branch)
     """
@@ -2723,8 +2723,8 @@ class TruthDeltaNoScoreCoherenceTests(TestCase):
 
     def test_ic_memo_html_shows_not_scored_not_none(self):
         html = self.client.get(reverse('zelda_api:ic_memo', args=[self.doc.id])).content.decode()
-        self.assertIn('Truth Delta Signal', html)
-        self.assertNotIn('Signal Score:</strong> None', html)
+        self.assertIn('>Truth Delta<', html)
+        self.assertNotIn('Credibility Score:</strong> None', html)
         self.assertNotIn('None/100', html)
         self.assertIn('not scored', html)
 
@@ -5186,10 +5186,17 @@ class ValuationRangeBarTests(TestCase):
 
 class GaugeVocabularyTests(TestCase):
     """
-    PR: score vocabulary + gauge labels. Each report's confidence widget
-    must carry a name that says what the number is; Truth Delta must not
-    render a second gauge that just restates its Credibility Score.
-    Labels only — no value / calculation / tier / None-state changes.
+    Score vocabulary + gauge labels (PR #6, extended by PR #13). Each
+    report's confidence-shaped number carries a name that says what the
+    number is; a report never renders a second widget that only restates a
+    number already shown. Labels/presentation only — no value, calculation,
+    tier, or None-state changes.
+
+    PR #13 specifics: the IC Memo's Truth Delta number is "Credibility
+    Score" (not "Signal Score") — the same name the full Truth Delta report
+    uses — and the IC Memo no longer renders a confidence/readiness gauge
+    that just repeats its own metric card. The Business Valuation
+    confidence model and label are deliberately untouched (PR #14).
     """
 
     def setUp(self):
@@ -5197,6 +5204,107 @@ class GaugeVocabularyTests(TestCase):
         _mock_embedding_generation(self)
         self.user = User.objects.create_user('gv_owner', password='x')
         self.client.force_login(self.user)
+
+    # --- IC Memo (PR #13) ---
+
+    def _ic_memo_html(self, *, truth_delta=True, readiness_text=''):
+        from matchmaking.models import Application
+        from .truth_delta_models import TruthDeltaReport, ClaimedDatapoint
+        Application.objects.create(
+            user=self.user, company_name='ICVocab', founder_name='F', email='f@t.com',
+            description='x', sector='SaaS', stage='Seed', is_premium=True,
+        )
+        deck = DocumentSource.objects.create(
+            filename='deck.pdf', source_entity='ICVocab', uploaded_by=self.user,
+            document_type='pitch_deck', status='analyzed',
+        )
+        IntelligenceMemo.objects.create(
+            document=deck, executive_summary='x', investment_thesis='y',
+            investment_readiness=readiness_text,
+            recommendation='NEEDS_REVIEW', completeness_score=0.72, citations_count=3,
+        )
+        if truth_delta:
+            ClaimedDatapoint.objects.create(document=deck, category='revenue', claimed_value='x')
+            TruthDeltaReport.objects.create(
+                document=deck, overall_truth_score=74.0, credibility_risk='low', summary='ok',
+                details={'claims': [{'category': 'revenue'}],
+                         'per_claim': [{'category': 'revenue', 'claimed': '$5M',
+                                        'observed': '$5.1M (EDGAR)', 'assessment': 'match'}]},
+            )
+        return self.client.get(reverse('zelda_api:ic_memo', args=[deck.id])).content.decode()
+
+    def test_ic_memo_truth_delta_number_is_credibility_score_not_signal_score(self):
+        html = self._ic_memo_html()
+        self.assertIn('Credibility Score:', html)
+        self.assertNotIn('Signal Score', html)
+        self.assertIn('>Truth Delta<', html)          # section header, no "Signal"
+        self.assertNotIn('Truth Delta Signal', html)
+
+    def test_ic_memo_has_no_gauge_restating_its_own_metric_card(self):
+        html = self._ic_memo_html(readiness_text='')
+        self.assertNotIn('ic-memo-confidence-gauge', html)
+        # the metric it used to duplicate is still shown, once, as a card
+        self.assertIn('Analysis Confidence', html)
+        self.assertIn('72.0%', html)
+
+    def test_ic_memo_investment_readiness_stays_distinct_from_analysis_confidence(self):
+        html = self._ic_memo_html(readiness_text='Score: 66/100\nSolid metrics, thin pipeline.')
+        self.assertIn('Investment Readiness', html)
+        self.assertIn('66/100', html)
+        # when readiness parses, the memo shows readiness in the slot, not
+        # analysis confidence — they are not the same measurement
+        self.assertNotIn('Analysis Confidence', html)
+        self.assertNotIn('ic-memo-confidence-gauge', html)
+
+    def test_ic_memo_markdown_renames_signal_score_too(self):
+        from matchmaking.models import Application
+        from .ic_memo import build_ic_memo_context, render_ic_memo_markdown
+        from .truth_delta_models import TruthDeltaReport
+        app = Application.objects.create(
+            user=self.user, company_name='ICMd', founder_name='F', email='f@t.com',
+            description='x', sector='SaaS', stage='Seed', is_premium=True,
+        )
+        deck = DocumentSource.objects.create(
+            filename='deck.pdf', source_entity='ICMd', uploaded_by=self.user,
+            document_type='pitch_deck', status='analyzed',
+        )
+        IntelligenceMemo.objects.create(
+            document=deck, executive_summary='x', investment_thesis='y',
+            recommendation='NEEDS_REVIEW', completeness_score=0.6, citations_count=1,
+        )
+        TruthDeltaReport.objects.create(document=deck, overall_truth_score=80.0,
+            credibility_risk='low', summary='ok', details={'claims': [{'category': 'revenue'}]})
+        md = render_ic_memo_markdown(build_ic_memo_context(app, tier='full'))
+        self.assertIn('## Truth Delta', md)
+        self.assertIn('**Credibility Score:**', md)
+        self.assertNotIn('Signal Score', md)
+
+    def test_same_truth_delta_number_one_name_across_three_reports(self):
+        # TD report page, IC Memo, and Zelda Intelligence Report all call
+        # overall_truth_score the same thing: "Credibility Score".
+        from matchmaking.models import Application
+        from .truth_delta_models import TruthDeltaReport
+        founder = User.objects.create_user('onename_founder', password='x')
+        staff = User.objects.create_user('onename_staff', password='x', is_staff=True)
+        Application.objects.create(
+            user=founder, company_name='OneNameCo', founder_name='F', email='f@t.com',
+            description='x', sector='SaaS', stage='Seed', is_premium=True,
+        )
+        deck = DocumentSource.objects.create(
+            filename='deck.pdf', source_entity='OneNameCo', uploaded_by=founder,
+            document_type='pitch_deck', status='analyzed',
+        )
+        IntelligenceMemo.objects.create(document=deck, executive_summary='x', investment_thesis='y',
+            recommendation='NEEDS_REVIEW', completeness_score=0.6, citations_count=1)
+        TruthDeltaReport.objects.create(document=deck, overall_truth_score=77.0,
+            credibility_risk='low', summary='ok', details={'claims': [{'category': 'revenue'}]})
+        self.client.force_login(staff)
+        td_page = self.client.get(reverse('zelda_api:truth_delta_ui', args=[deck.id])).content.decode()
+        ic_memo = self.client.get(reverse('zelda_api:ic_memo', args=[deck.id])).content.decode()
+        zelda_report = self.client.get(reverse('matchmaking:standalone_memo', args=['onenameco'])).content.decode()
+        for html in (td_page, ic_memo, zelda_report):
+            self.assertIn('Credibility Score', html)
+            self.assertNotIn('Signal Score', html)
 
     # --- Truth Delta: the redundant gauge is gone ---
 

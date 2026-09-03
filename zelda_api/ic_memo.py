@@ -271,7 +271,7 @@ def render_ic_memo_markdown(context):
         meta = context['memo_meta']
         lines.append(f"**Recommendation:** {meta['recommendation']}  ")
         lines.append(f"**Section Coverage:** {meta['section_coverage']}% of memo sections generated  ")
-        lines.append(f"**Analysis Confidence:** {meta['analysis_confidence']}% (Zelda's own confidence in its analysis, not a verification score)  ")
+        lines.append(f"**Analysis Confidence:** {meta['analysis_confidence']}% (how sure Zelda is of its own reading of this deck — not a verification score, not a completeness score)  ")
         if meta['readiness_score'] is not None:
             lines.append(f"**Investment Readiness:** {meta['readiness_score']}/100  ")
         lines.append(f"**Citations:** {meta['citations_count']}  ")
@@ -289,16 +289,18 @@ def render_ic_memo_markdown(context):
 
     if context['truth_delta']:
         td = context['truth_delta']
-        lines.append('## Truth Delta Signal')
+        lines.append('## Truth Delta')
         lines.append(
             "_Automated cross-check against SEC EDGAR, Crunchbase, and recent news coverage where "
             "available — a real signal, not a substitute for full diligence, since public data is "
             "sparse or nonexistent for most early-stage private companies._"
         )
+        # "Credibility Score" — same number and name as the full Truth Delta
+        # report's headline; a verification read, not analysis confidence.
         if td['overall_truth_score'] is not None:
-            lines.append(f"**Signal Score:** {td['overall_truth_score']}/100 — reflects only the claims that had external data to check against, not an overall company assessment")
+            lines.append(f"**Credibility Score:** {td['overall_truth_score']}/100 — reflects only the claims that had external data to check against, not an overall company assessment")
         else:
-            lines.append("**Signal Score:** not scored — no external data was found to verify or contradict these claims")
+            lines.append("**Credibility Score:** not scored — no external data was found to verify or contradict these claims")
         if td['summary']:
             lines.append(td['summary'])
         cov = td['coverage']
@@ -318,7 +320,10 @@ def render_ic_memo_markdown(context):
         lines.append('## Valuation')
         if v['valuation_low'] is not None and v['valuation_high'] is not None:
             lines.append(f"**Range:** ${v['valuation_low']:,.0f} – ${v['valuation_high']:,.0f}")
-        lines.append(f"**Analysis Confidence:** {v['confidence_score']:.0f}/100 — Zelda's confidence in the valuation analysis, not a bound on the range")
+        # Label + the collision with the memo's own "Analysis Confidence"
+        # above are left for PR #14 (which resolves what this number means
+        # at the source).
+        lines.append(f"**Analysis confidence:** {v['confidence_score']:.0f}/100 — Zelda's confidence in the valuation analysis, not a bound on the range")
         if v['valuation_summary']:
             lines.append(v['valuation_summary'])
         lines.append('')
