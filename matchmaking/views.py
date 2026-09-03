@@ -36,7 +36,6 @@ from matchmaking.models import PitchVideoComment
 from matchmaking.services.ai_engine import calculate_similarity, generate_profile_embedding, calculate_sparse_similarity
 from matchmaking.utils import calculate_rule_based_score, get_blended_match, clean_financial_input, passes_hard_filters
 from matchmaking.utils import calculate_deal_rule_based_score, get_deal_blended_match
-from .tasks import crawl_startup_data_task
 from .forms import DataRoomDocumentForm
 
 # Zelda AI alignment — import DiligenceEngine for vector scoring in memo views
@@ -2026,62 +2025,6 @@ def platform_metrics(request):
     })
 
 
-class MemoIntelligenceView(APIView):
-    """
-    GET /api/v1/matchmaking/memo/<startup_name>/
-    Aligned with zelda_api MemoIntelligenceView: uses DiligenceEngine vector
-    scoring and perform_live_crawl instead of raw cache-only lookups.
-    Falls back to cache/task pipeline if Zelda is unavailable.
-    """
-    from rest_framework.authentication import SessionAuthentication, TokenAuthentication
-    from rest_framework.permissions import IsAuthenticated
-    authentication_classes = [SessionAuthentication, TokenAuthentication]
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, startup_name):
-        founder_app = get_object_or_404(Application, company_name__iexact=startup_name)
-        investor_app = InvestorApplication.objects.first()
-
-        if _ZELDA_AVAILABLE and DiligenceEngine and investor_app:
-            # Full zelda-aligned path: live crawl + DiligenceEngine vector scoring
-            url_to_crawl = getattr(founder_app, 'website', None)
-            external_data = self.perform_live_crawl(url_to_crawl) if url_to_crawl else {
-                'linkedin_headcount': 0, 'job_board_openings': 0
-            }
-            vector_score, transparency = DiligenceEngine.calculate_success_vector(
-                founder_app, investor_app, external_data
-            )
-            return Response({
-                "startup": founder_app.company_name,
-                "success_vector_score": vector_score,
-                "transparency_index": transparency,
-                "text_synthesis": (
-                    f"Memo for {startup_name} generated using live data. Score: {vector_score}/100."
-                ),
-            })
-        else:
-            # Fallback: cache / background task pipeline
-            cache_key = f"startup_data_{founder_app.id}"
-            external_data = cache.get(cache_key)
-
-            if external_data is None:
-                crawl_startup_data_task.delay(founder_app.id)
-                return Response({
-                    "status": "processing",
-                    "message": "Data is being fetched in the background. Please refresh in a moment."
-                })
-
-            return Response({
-                "startup": founder_app.company_name,
-                "data": external_data,
-                "cached": True
-            })
-
-    def perform_live_crawl(self, url):
-        """Mirrors zelda_api MemoIntelligenceView.perform_live_crawl."""
-        return {'linkedin_headcount': 45, 'job_board_openings': 2}
-
-
 @login_required
 @require_POST
 def toggle_privacy_view(request):
@@ -2131,81 +2074,91 @@ def get_stream_token(request):
 @login_required
 def standalone_memo_view(request, company_slug):
     """
-    Renders a secure, institutional-grade evaluation brief for an asset profile.
-    Synchronizes with background scrapers if cache records are missing.
+    The Zelda Intelligence Report — the orientation layer: "what is this
+    company and what does the available analysis say about it."
+
+    A presentation layer over intelligence data the platform already
+    produces: the founder's IntelligenceMemo (descriptive sections only —
+    the decision-layer sections are the IC Memo's job) and, where it
+    exists, the Truth Delta verification signal. Nothing here generates or
+    recomputes analysis; when the real data isn't ready, the page says so
+    rather than showing a fabricated result.
     """
-    # 1. Reverse the URL slug format back to a standard string lookup
+    from zelda_api.disclaimers import DUE_DILIGENCE_DISCLAIMER
+    from zelda_api.ic_memo import (
+        latest_analyzed_pitch_deck_and_memo, truth_delta_signal,
+        ZELDA_REPORT_SECTIONS, ZELDA_REPORT_LITE_KEYS,
+    )
+    from zelda_api.vector_models import DocumentSource
+
     formatted_name = company_slug.replace('-', ' ')
     founder_app = get_object_or_404(Application, company_name__iexact=formatted_name)
-    
-    # 2. Security Check: Restrict access to valid investor profiles
+
+    # Access: investor profile or staff only (unchanged).
     investor_profile = getattr(request.user, 'match_investor_profile', None)
     if not investor_profile and not request.user.is_staff:
         raise PermissionDenied("Access to proprietary asset intelligence reports is restricted.")
 
-    # 3. Synchronize with the Asynchronous Cache/Task Engine
-    cache_key = f"startup_data_{founder_app.id}"
-    external_data = cache.get(cache_key)
-    is_processing = False
-    
-    if external_data is None:
-        # Trigger your background crawler task if cache is cold
-        crawl_startup_data_task.delay(founder_app.id)
-        is_processing = True
+    # Zelda Lite / Zelda AI split — gated on the FOUNDER's own Premium
+    # (their report to unlock for viewing investors), staff bypass for
+    # support (unchanged).
+    memo_tier = 'full' if (request.user.is_staff or founder_app.is_premium) else 'lite'
 
-    # 4. Generate alignment calculations if profile metrics are present
-    match_percentage = 75
+    # --- Real intelligence data ---------------------------------------
+    pitch_deck_doc, memo = latest_analyzed_pitch_deck_and_memo(founder_app.user)
+
+    # "Processing" means a deck is genuinely in the pipeline but hasn't
+    # produced an analyzed memo yet — not a cache miss.
+    analysis_pending = memo is None and (
+        DocumentSource.objects
+        .filter(uploaded_by=founder_app.user, document_type='pitch_deck')
+        .exclude(status__in=['analyzed', 'error'])
+        .exists()
+    )
+
+    overview_text = (memo.executive_summary if memo and memo.executive_summary
+                     else founder_app.description)
+
+    memo_sections = []
+    if memo:
+        keys = ZELDA_REPORT_SECTIONS if memo_tier == 'full' else [
+            (k, label) for k, label in ZELDA_REPORT_SECTIONS if k in ZELDA_REPORT_LITE_KEYS
+        ]
+        memo_sections = [
+            {'label': label, 'text': getattr(memo, k, '')}
+            for k, label in keys
+            if getattr(memo, k, '')
+        ]
+
+    truth_delta = truth_delta_signal(pitch_deck_doc)
+
+    # --- Investor-specific alignment (independent of the memo) --------
+    match_percentage = None
     ai_insights_data = None
     if investor_profile and investor_profile.focus_vector and founder_app.description_vector:
         try:
             raw_similarity = calculate_similarity(investor_profile.focus_vector, founder_app.description_vector)
             ai_score = max(0.0, min(100.0, raw_similarity * 100))
             match_percentage = int(round(ai_score))
-            
+
             rule_score = calculate_rule_based_score(application=founder_app, investor=investor_profile)
             ai_insights_data = _generate_explanatory_insights(ai_score, rule_score, founder_app, investor_profile)
         except Exception:
-            pass
-
-    # --- PRIVACY GATEKEEPER ---
-    zelda_score = None
-    has_advantage_access = False
-
-    # Condition 1: The user looking is the Founder who owns the profile
-    if request.user == founder_app.user:
-        has_advantage_access = True
-
-    # Condition 2: The user is an Investor with an ACCEPTED connection
-    elif investor_profile:
-        has_access = Connection.objects.filter(
-            investor=investor_profile,
-            founder=founder_app,
-            status='ACCEPTED'
-        ).exists()
-        if has_access:
-            has_advantage_access = True
-
-    # Only calculate if authorized and Zelda is available
-    if has_advantage_access and _ZELDA_AVAILABLE and calculate_zelda_advantage:
-        zelda_score = calculate_zelda_advantage(founder_app)
-
-    # Zelda Lite/AI split, same monetization model as Truth Delta/IC Memo:
-    # gated on the FOUNDER's own Premium (this is their report to unlock for
-    # viewing investors), staff bypass for support purposes.
-    memo_tier = 'full' if (request.user.is_staff or founder_app.is_premium) else 'lite'
-
-    from zelda_api.disclaimers import DUE_DILIGENCE_DISCLAIMER
+            match_percentage = None
+            ai_insights_data = None
 
     context = {
         'founder_app': founder_app,
-        'external_data': external_data,
-        'is_processing': is_processing,
+        'memo_tier': memo_tier,
+        'has_analysis': memo is not None,
+        'analysis_pending': analysis_pending,
+        'overview_text': overview_text,
+        'memo_sections': memo_sections,
+        'truth_delta': truth_delta,
         'match_percentage': match_percentage,
         'ai_insights': ai_insights_data,
         'investor': investor_profile,
-        'zelda_score': zelda_score,
-        'memo_tier': memo_tier,
-        # Same shared string every other intelligence report already carries.
+        # Same shared string every other intelligence report carries.
         'disclaimer': DUE_DILIGENCE_DISCLAIMER,
     }
 

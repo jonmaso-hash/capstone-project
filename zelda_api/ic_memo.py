@@ -87,6 +87,63 @@ LITE_MEMO_SECTION_KEYS = {
     'key_strengths', 'key_concerns', 'what_would_change_decision',
 }
 
+# The Zelda Intelligence Report is the *orientation* layer — "what is this
+# company and what does the analysis say about it." It draws on the same
+# IntelligenceMemo as the IC Memo, but only the descriptive sections; the
+# decision-layer sections (recommendation, thesis, readiness, bull/bear,
+# what-would-change) belong to the IC Memo. Lite shows a two-section
+# teaser; the full report shows all of these.
+ZELDA_REPORT_SECTIONS = [
+    ('problem_solution', 'Problem & solution'),
+    ('market_analysis', 'Market'),
+    ('team_assessment', 'Team'),
+    ('financial_analysis', 'Financial picture'),
+    ('risk_assessment', 'Risks'),
+    ('questions_for_management', 'Questions for the founder'),
+]
+ZELDA_REPORT_LITE_KEYS = {'problem_solution', 'risk_assessment'}
+
+
+def latest_analyzed_pitch_deck_and_memo(founder_user):
+    """
+    The most recent *analyzed* pitch-deck DocumentSource for a founder and
+    its IntelligenceMemo — or (doc_or_None, None). One lookup, shared by
+    the IC Memo and the Zelda Intelligence Report so the two can never
+    disagree about which memo is "the" memo for a founder.
+    """
+    doc = (
+        DocumentSource.objects.filter(
+            uploaded_by=founder_user, document_type='pitch_deck', status='analyzed'
+        )
+        .order_by('-created_at')
+        .first()
+    )
+    return doc, (doc.memo if (doc and hasattr(doc, 'memo')) else None)
+
+
+def truth_delta_signal(pitch_deck_doc):
+    """
+    A read-only, embeddable view of a deck's existing TruthDeltaReport:
+    score, summary, and the verified / no-external-data coverage split
+    (straight from TruthDeltaReport.verifiability_stats() — nothing is
+    recomputed here). Returns None when no report exists. Shared by the IC
+    Memo's Truth Delta section and the Zelda Report's verification card so
+    both embed the *same* numbers and neither duplicates the engine.
+    """
+    report = pitch_deck_doc.truthdeltareport_set.first() if pitch_deck_doc else None
+    if not report:
+        return None
+    from .truth_delta_models import ClaimedDatapoint
+    coverage = report.verifiability_stats()  # {total, verified, pct}; pct None when total 0
+    return {
+        'overall_truth_score': report.overall_truth_score,
+        'summary': report.summary,
+        'claims_checked': ClaimedDatapoint.objects.filter(document=pitch_deck_doc).count(),
+        'coverage': coverage,
+        'no_data_count': coverage['total'] - coverage['verified'],
+        'document_id': pitch_deck_doc.id,
+    }
+
 
 def build_ic_memo_context(founder_application, tier='full'):
     """
@@ -105,13 +162,7 @@ def build_ic_memo_context(founder_application, tier='full'):
 
     founder_user = founder_application.user
 
-    pitch_deck_doc = (
-        DocumentSource.objects.filter(
-            uploaded_by=founder_user, document_type='pitch_deck', status='analyzed'
-        )
-        .order_by('-created_at')
-        .first()
-    )
+    pitch_deck_doc, _ = latest_analyzed_pitch_deck_and_memo(founder_user)
     valuation_doc = (
         DocumentSource.objects.filter(
             uploaded_by=founder_user, document_type='business_valuation', status='analyzed'
@@ -160,24 +211,9 @@ def build_ic_memo_context(founder_application, tier='full'):
         )
 
         if tier == 'full':
-            report = pitch_deck_doc.truthdeltareport_set.first()
-            if report:
-                from .truth_delta_models import ClaimedDatapoint
-                # Coverage numbers come straight from the Truth Delta report's
-                # own methods — the IC memo embeds them, it does not
-                # recompute verification. `coverage` is {total, verified, pct}
-                # over the distinct claim categories that had a public source
-                # to check against; pct is None when total is 0 (no data),
-                # which the template renders as a plain sentence, not a 0% bar.
-                coverage = report.verifiability_stats()
-                truth_delta = {
-                    'overall_truth_score': report.overall_truth_score,
-                    'summary': report.summary,
-                    'claims_checked': ClaimedDatapoint.objects.filter(document=pitch_deck_doc).count(),
-                    'coverage': coverage,
-                    'no_data_count': coverage['total'] - coverage['verified'],
-                    'document_id': pitch_deck_doc.id,
-                }
+            # Same embeddable Truth Delta view the Zelda Intelligence Report
+            # uses — a read of the existing report, not a recomputation.
+            truth_delta = truth_delta_signal(pitch_deck_doc)
 
     valuation = None
     deck_engagement = None

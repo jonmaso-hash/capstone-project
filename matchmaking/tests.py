@@ -4117,14 +4117,15 @@ class InsightsEngineTests(TestCase):
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
 class StandaloneMemoViewTierTests(TestCase):
     """
     standalone_memo_view (the "Zelda Intelligence Report") — Zelda Lite/AI
-    split, same monetization model as Truth Delta/IC Memo: gated on the
-    FOUNDER's own Premium. Lite surfaces only what's genuinely real/
-    structured today (Executive Baseline Description, Matching Explanatory
-    Breakdown); the charts panel, Core Operational Variables, and the
-    external intelligence feed are Zelda AI-only.
+    split, gated on the FOUNDER's own Premium. The report is a
+    presentation layer over the real IntelligenceMemo (orientation
+    sections only) + the Truth Delta signal. Lite shows a two-section
+    teaser; full shows the market/team/financial read + verification
+    coverage + key figures.
     """
 
     def setUp(self):
@@ -4133,7 +4134,7 @@ class StandaloneMemoViewTierTests(TestCase):
         self.founder_app = Application.objects.create(
             user=self.founder_user, company_name='SMVCo', founder_name='F', email='f@t.com',
             description='SMVCo builds real intelligence infrastructure for private markets.',
-            sector='SaaS', stage='Seed', raising_amount=500000, current_revenue=100000,
+            sector='SaaS', stage='Seed', raising_amount=500000, current_revenue=100000, team_size=6,
         )
         self.investor_user = User.objects.create_user('smv_investor', password='x')
         InvestorApplication.objects.create(
@@ -4142,32 +4143,53 @@ class StandaloneMemoViewTierTests(TestCase):
         )
         self.slug = self.founder_app.company_name.lower().replace(' ', '-')
 
+    def _seed_memo(self):
+        from zelda_api.vector_models import DocumentSource, IntelligenceMemo
+        doc = DocumentSource.objects.create(
+            uploaded_by=self.founder_user, filename='deck.pdf', source_entity='SMVCo',
+            document_type='pitch_deck', status='analyzed',
+        )
+        IntelligenceMemo.objects.create(
+            document=doc,
+            executive_summary='SMVCo automates diligence for private-market investors.',
+            problem_solution='Diligence is slow and manual; SMVCo compresses it.',
+            market_analysis='TAM is every active private-market investor.',
+            team_assessment='Domain-expert founders.',
+            financial_analysis='Early revenue, disciplined burn.',
+            risk_assessment='Single-founder key-person risk.',
+            recommendation='NEEDS_REVIEW', completeness_score=0.7, citations_count=4,
+        )
+        return doc
+
     def test_investor_sees_lite_tier_when_founder_not_premium(self):
+        self._seed_memo()
         self.client.force_login(self.investor_user)
         response = self.client.get(reverse('matchmaking:standalone_memo', args=[self.slug]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Zelda Lite Report')
-        # Real, existing content stays visible in Lite.
-        self.assertContains(response, 'SMVCo builds real intelligence infrastructure for private markets.')
-        # Zelda AI-only sections are absent, not blurred/locked-looking.
+        # Lite teaser sections only.
+        self.assertContains(response, 'Problem &amp; solution')
+        self.assertContains(response, 'Risks')
+        # Full-tier sections and figures are absent, not blurred.
+        self.assertNotContains(response, '>Market<')
         self.assertNotContains(response, 'Key figures')
-        self.assertNotContains(response, 'What we found online')
-        self.assertNotContains(response, 'Data Metrics &amp; Market Synthesis')
-        self.assertContains(response, 'Zelda AI unlocks the complete intelligence report')
+        self.assertContains(response, 'Zelda AI unlocks the full report')
 
     def test_investor_sees_full_tier_when_founder_premium(self):
         self.founder_app.is_premium = True
         self.founder_app.save(update_fields=['is_premium'])
+        self._seed_memo()
         self.client.force_login(self.investor_user)
         response = self.client.get(reverse('matchmaking:standalone_memo', args=[self.slug]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Zelda AI — Full Report')
+        self.assertContains(response, '>Market<')
+        self.assertContains(response, '>Team<')
         self.assertContains(response, 'Key figures')
-        self.assertContains(response, 'What we found online')
-        self.assertContains(response, 'Data Metrics & Market Synthesis')
-        self.assertNotContains(response, 'Zelda AI unlocks the complete intelligence report')
+        self.assertNotContains(response, 'Zelda AI unlocks the full report')
 
     def test_staff_sees_full_tier_regardless_of_premium(self):
+        self._seed_memo()
         staff_user = User.objects.create_user('smv_staff', password='x', is_staff=True)
         self.client.force_login(staff_user)
         response = self.client.get(reverse('matchmaking:standalone_memo', args=[self.slug]))
@@ -4176,7 +4198,6 @@ class StandaloneMemoViewTierTests(TestCase):
         self.assertContains(response, 'Key figures')
 
     def test_non_investor_non_staff_still_blocked(self):
-        """Access control is unchanged by the tier split — still investor/staff only."""
         outsider = User.objects.create_user('smv_outsider', password='x')
         self.client.force_login(outsider)
         response = self.client.get(reverse('matchmaking:standalone_memo', args=[self.slug]))
@@ -4188,7 +4209,7 @@ class StandaloneMemoViewTierTests(TestCase):
         self.assertContains(response, 'Interlink')
         self.assertContains(response, 'Intelligence')
         self.assertContains(response, 'Powered')
-        self.assertContains(response, 'Zelda Intelligence Report')  # its own title is unchanged
+        self.assertContains(response, 'Zelda Intelligence Report')
 
     def test_carries_the_shared_due_diligence_disclaimer(self):
         self.client.force_login(self.investor_user)
@@ -4203,65 +4224,160 @@ class StandaloneMemoViewTierTests(TestCase):
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
-class StandaloneMemoLanguageTests(TestCase):
+class StandaloneMemoRealDataTests(TestCase):
     """
-    Zelda Intelligence Report — plain-language section headers, and the
-    "What we found online" feed: plain text when the crawl returned some,
-    a plain empty state otherwise. No claim -> source table, because the
-    crawl output carries no structured provenance to build one from.
+    PR #12: the Zelda Intelligence Report is a truthful presentation of
+    existing intelligence data. It renders the real IntelligenceMemo
+    sections, embeds the real Truth Delta signal (not a recomputation),
+    contains no fabricated chart data or dead polling script, and shows an
+    explicit unavailable/processing state when the analysis isn't ready.
     """
 
     def setUp(self):
-        from django.core.cache import cache
-        cache.clear()
         _mock_embedding_generation(self)
-        self.founder_user = User.objects.create_user('sml_founder', password='x')
+        self.founder_user = User.objects.create_user('smd_founder', password='x')
         self.founder_app = Application.objects.create(
-            user=self.founder_user, company_name='SMLCo', founder_name='F', email='f@t.com',
-            description='SMLCo does a real thing.', sector='SaaS', stage='Seed',
-            raising_amount=500000, current_revenue=100000, is_premium=True,
+            user=self.founder_user, company_name='SMDCo', founder_name='F', email='f@t.com',
+            description='SMDCo profile description.', sector='SaaS', stage='Seed',
+            raising_amount=750000, current_revenue=120000, team_size=8, is_premium=True,
         )
-        self.staff = User.objects.create_user('sml_staff', password='x', is_staff=True)
-        self.slug = 'smlco'
+        self.staff = User.objects.create_user('smd_staff', password='x', is_staff=True)
+        self.slug = 'smdco'
         self.client.force_login(self.staff)
+
+    def _deck(self, status='analyzed'):
+        from zelda_api.vector_models import DocumentSource
+        return DocumentSource.objects.create(
+            uploaded_by=self.founder_user, filename='deck.pdf', source_entity='SMDCo',
+            document_type='pitch_deck', status=status,
+        )
+
+    def _memo(self, doc, **overrides):
+        from zelda_api.vector_models import IntelligenceMemo
+        fields = dict(
+            document=doc,
+            executive_summary='SMDCo is a real analyzed company summary.',
+            market_analysis='The market read from the actual memo.',
+            team_assessment='The team read from the actual memo.',
+            financial_analysis='The financial read from the actual memo.',
+            risk_assessment='The risks read from the actual memo.',
+            recommendation='NEEDS_REVIEW', completeness_score=0.7, citations_count=5,
+        )
+        fields.update(overrides)
+        return IntelligenceMemo.objects.create(**fields)
 
     def _get(self):
         return self.client.get(reverse('matchmaking:standalone_memo', args=[self.slug]))
 
-    def test_headers_are_plain_language(self):
+    def test_renders_real_memo_sections_not_the_profile_description(self):
+        doc = self._deck()
+        self._memo(doc)
         r = self._get()
-        self.assertContains(r, '>Overview<')
-        self.assertContains(r, 'Key figures')          # full tier (staff)
-        self.assertContains(r, 'What we found online')  # full tier (staff)
-        # system-voiced originals gone. ("Why this matched" replaces
-        # "Matching Explanatory Breakdown" but that card only renders with a
-        # real match vector, so we only assert the old string is gone.)
-        self.assertNotContains(r, 'Executive Baseline Description')
-        self.assertNotContains(r, 'Matching Explanatory Breakdown')
-        self.assertNotContains(r, 'Core Operational Variables')
-        self.assertNotContains(r, 'Aggregated External Intelligence Feed')
-        self.assertNotContains(r, 'Data Asset Tracking State')
+        self.assertContains(r, 'SMDCo is a real analyzed company summary.')  # memo executive_summary -> Overview
+        self.assertContains(r, 'The market read from the actual memo.')
+        self.assertContains(r, 'The risks read from the actual memo.')
+        self.assertNotContains(r, 'SMDCo profile description.')  # falls back to this only with no memo
 
-    def test_feed_empty_state_is_plain_and_not_a_terminal_dump(self):
-        r = self._get()
-        self.assertContains(r, "haven't found public web or registry data")
-        self.assertNotContains(r, 'log-stream-box')
+    def test_no_fabricated_charts_or_dead_polling_script(self):
+        self._memo(self._deck())
+        html = self._get().content.decode()
+        # the old hardcoded sample arrays and dead endpoint are gone
+        self.assertNotIn('[65, 59, 80, 81, 56]', html)
+        self.assertNotIn('chart_bar_payload', html)
+        self.assertNotIn('/api/v1/zelda/memo/', html)
+        self.assertNotIn('evaluateIntelligenceTelemetry', html)
+        self.assertNotIn('Couldn\'t reach the analysis service', html)
+        self.assertNotIn('cdn.jsdelivr.net/npm/chart.js', html)
 
-    def test_feed_renders_crawl_text_as_plain_text(self):
-        from django.core.cache import cache
-        cache.set(f'startup_data_{self.founder_app.id}',
-                  'Found a company website and one press mention.', 60)
+    def test_embeds_truth_delta_signal_without_recomputing(self):
+        from zelda_api.truth_delta_models import TruthDeltaReport, ClaimedDatapoint
+        doc = self._deck()
+        self._memo(doc)
+        for cat in ('revenue', 'employees'):
+            ClaimedDatapoint.objects.create(document=doc, category=cat, claimed_value='x')
+        TruthDeltaReport.objects.create(
+            document=doc, overall_truth_score=76.0, credibility_risk='low', summary='Holds up.',
+            details={'claims': [{'category': 'revenue'}, {'category': 'employees'}],
+                     'per_claim': [
+                         {'category': 'revenue', 'claimed': '$5M', 'observed': '$5.1M (EDGAR)', 'assessment': 'match'},
+                         {'category': 'employees', 'claimed': '20', 'observed': 'no external data', 'assessment': 'unchecked'},
+                     ]},
+        )
         r = self._get()
-        self.assertContains(r, 'Found a company website and one press mention.')
-        self.assertNotContains(r, '<pre')          # not a raw dump
-        self.assertNotContains(r, 'log-stream-box')
+        self.assertContains(r, 'Credibility Score')
+        self.assertContains(r, '76/100')
+        self.assertContains(r, 'Verified against public sources — 1')
+        self.assertContains(r, 'No external data — 1')
+        self.assertContains(r, reverse('zelda_api:truth_delta_ui', args=[doc.id]))
 
-    def test_alignment_signal_and_eyebrow_unchanged(self):
+    def test_truth_delta_not_scored_state_preserved(self):
+        from zelda_api.truth_delta_models import TruthDeltaReport
+        doc = self._deck()
+        self._memo(doc)
+        TruthDeltaReport.objects.create(
+            document=doc, overall_truth_score=None, credibility_risk='unknown',
+            summary='No public data found.', details={'claims': [], 'observed': []},
+        )
         r = self._get()
-        self.assertContains(r, "renderConfidenceGauge")
+        self.assertContains(r, 'not scored')
+        self.assertContains(r, 'No external data was found')
+
+    def test_no_verification_state_when_no_truth_delta_report(self):
+        self._memo(self._deck())
+        r = self._get()
+        self.assertContains(r, "hasn't run claim verification")
+
+    def test_processing_state_when_deck_not_yet_analyzed(self):
+        self._deck(status='analyzing')
+        r = self._get()
+        self.assertContains(r, 'Analysis in progress')
+        self.assertContains(r, 'SMDCo profile description.')  # overview falls back to the profile
+
+    def test_no_analysis_state_when_founder_has_no_deck(self):
+        r = self._get()
+        self.assertContains(r, 'No deck analysis yet')
+        self.assertContains(r, 'SMDCo profile description.')
+
+    def test_visual_language_preserved(self):
+        self._memo(self._deck())
+        r = self._get()
+        self.assertContains(r, 'renderConfidenceGauge')  # gauge machinery kept
+        self.assertContains(r, 'Interlink')  # eyebrow
+        self.assertContains(r, 'Powered')
+        self.assertContains(r, 'not a binding representation by Interlink Foundry')  # disclaimer
+        self.assertContains(r, 'field-info-icon')  # single info icon
+
+    def test_alignment_signal_renders_for_a_real_match_vector(self):
+        from matchmaking.models import InvestorApplication
+        inv_user = User.objects.create_user('smd_inv', password='x')
+        inv = InvestorApplication.objects.create(
+            user=inv_user, full_name='I', company_name='F', email='i@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        # Mocked embeddings are empty in tests; force real vectors + a similarity.
+        inv.focus_vector = [0.1, 0.2, 0.3]
+        inv.save(update_fields=['focus_vector'])
+        self.founder_app.description_vector = [0.1, 0.2, 0.3]
+        self.founder_app.save(update_fields=['description_vector'])
+        self._memo(self._deck())
+        with mock.patch('matchmaking.views.calculate_similarity', return_value=0.82):
+            self.client.force_login(inv_user)
+            r = self.client.get(reverse('matchmaking:standalone_memo', args=[self.slug]))
+        self.assertContains(r, 'Alignment: 82%')
         self.assertContains(r, "'Alignment'")
-        self.assertContains(r, 'Interlink')
-        self.assertContains(r, 'not a binding representation by Interlink Foundry')
+
+    def test_alignment_signal_omitted_not_faked_without_a_match_vector(self):
+        # No hardcoded "75%" fallback anymore: staff viewer, no investor vector.
+        self._memo(self._deck())
+        r = self._get()
+        self.assertNotContains(r, 'Alignment:')
+        self.assertNotContains(r, 'match_percentage')
+
+    def test_key_figures_are_formatted_not_raw(self):
+        self._memo(self._deck())
+        r = self._get()
+        self.assertContains(r, '$750,000')
+        self.assertNotContains(r, '$750000.00')
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
