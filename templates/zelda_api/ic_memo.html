@@ -202,9 +202,6 @@
             <li>Monthly burn: {% if financials.monthly_burn_rate is not None %}${{ financials.monthly_burn_rate|floatformat:0|intcomma }}{% else %}not disclosed{% endif %}</li>
             <li>Runway: {% if financials.runway_months %}{{ financials.runway_months }} months{% else %}not calculated{% endif %}</li>
             <li>Team size: {% if financials.team_size %}{{ financials.team_size }}{% else %}not disclosed{% endif %}</li>
-            <li>Zelda Score: {{ financials.zelda_score }}/99
-                <span class="text-muted small">— internal stability/efficiency/runway composite, not a verification or readiness measure</span>
-            </li>
         </ul>
     </div>
     {% endif %}

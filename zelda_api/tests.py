@@ -561,6 +561,60 @@ class ICMemoTests(TestCase):
         self.assertIn('MemoCo', markdown_text)
         self.assertIn('No intelligence memo has been generated', markdown_text)
 
+    # --- Zelda Score is no longer presented in the IC Memo (PR #11) ---
+    # It stays on Application for matchmaking; the memo just doesn't render
+    # it, because a bare "/99" competed with Recommendation / Investment
+    # Readiness / Truth Delta coverage as a fourth verdict.
+
+    def test_html_full_memo_does_not_present_zelda_score(self):
+        doc = self._make_pitch_deck_doc(with_memo=True)
+        self.application.is_premium = True
+        self.application.zelda_score = 77
+        self.application.save(update_fields=['is_premium', 'zelda_score'])
+        self.client.force_login(self.staff_user)
+        response = self.client.get(reverse('zelda_api:ic_memo', args=[doc.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Financial Snapshot')   # section still there
+        self.assertContains(response, 'Team size')             # sibling rows still there
+        self.assertNotContains(response, 'Zelda Score')
+        self.assertNotContains(response, '77/99')
+        self.assertNotContains(response, 'stability/efficiency/runway composite')
+
+    def test_context_financials_drop_zelda_score_but_keep_the_rest(self):
+        from .ic_memo import build_ic_memo_context
+        self._make_pitch_deck_doc(with_memo=True)
+        self.application.zelda_score = 77
+        self.application.save(update_fields=['zelda_score'])
+        financials = build_ic_memo_context(self.application, tier='full')['financials']
+        self.assertNotIn('zelda_score', financials)
+        for key in ('raising_amount', 'current_revenue', 'monthly_burn_rate', 'team_size', 'runway_months'):
+            self.assertIn(key, financials)
+
+    def test_markdown_has_no_zelda_score_line(self):
+        from .ic_memo import build_ic_memo_context, render_ic_memo_markdown
+        self._make_pitch_deck_doc(with_memo=True)
+        self.application.is_premium = True
+        self.application.zelda_score = 77
+        self.application.save(update_fields=['is_premium', 'zelda_score'])
+        md = render_ic_memo_markdown(build_ic_memo_context(self.application, tier='full'))
+        self.assertIn('## Financial Snapshot', md)
+        self.assertNotIn('Zelda Score', md)
+
+    def test_zelda_score_field_untouched_for_matchmaking(self):
+        # The presentation cleanup must not disturb the model field or the
+        # matchmaking calculation that writes it.
+        from matchmaking.services.ai_engine import calculate_zelda_advantage
+        self.application.current_revenue = 600000
+        self.application.raising_amount = 1000000
+        self.application.monthly_burn_rate = 40000
+        self.application.team_size = 4
+        self.application.years_in_business = 3
+        self.application.save()
+        calculate_zelda_advantage(self.application)
+        self.application.refresh_from_db()
+        self.assertGreaterEqual(self.application.zelda_score, 1)
+        self.assertLessEqual(self.application.zelda_score, 99)
+
     # --- views ---
 
     def test_html_view_shows_lite_tier_for_owner_when_not_premium(self):
