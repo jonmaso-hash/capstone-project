@@ -615,14 +615,17 @@
             </div>
         </div>
 
-        {# Evidence Coverage — a visual of the same category_states the stat cards
-           above count, not a recomputed metric. Verified vs. no-external-data
-           across the distinct claim categories Zelda cross-checked. #}
+        {% comment %}
+        Evidence Coverage — a visual of the same category_states the stat cards
+        above count, not a recomputed metric. Verified vs. no-external-data
+        across the distinct claim categories Zelda cross-checked. Canvas has a
+        fixed pixel size + responsive:false because this template is also
+        served as a bare fragment (no <!doctype>, quirks mode) where Chart.js
+        responsive container measurement collapses to 0x0.
+        {% endcomment %}
         <div class="td-evidence-coverage mt-3 mb-2" style="max-width: 420px;">
             <div class="small fw-bold" style="color: var(--td-text);">Evidence Coverage</div>
-            <div style="position: relative; height: 84px;">
-                <canvas id="evidenceCoverageChart"></canvas>
-            </div>
+            <canvas id="evidenceCoverageChart" width="400" height="92" style="max-width: 100%; margin-top: 0.25rem;"></canvas>
             <p class="mb-0 mt-1" style="font-size: 0.75rem; color: #64748b;">
                 Of the claim categories Zelda cross-checked, how many it could confirm against
                 independent public sources (SEC EDGAR, Crunchbase, recent news).
@@ -1250,15 +1253,15 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
         data: {
             labels: ['Claim categories'],
             datasets: [
-                { label: 'Verified against public sources', data: [verified],
+                { label: 'Verified', data: [verified],
                   backgroundColor: GREEN, borderColor: '#ffffff', borderWidth: 2, borderRadius: 4, borderSkipped: false },
-                { label: 'No external data found', data: [noData],
+                { label: 'No external data', data: [noData],
                   backgroundColor: AMBER, borderColor: '#ffffff', borderWidth: 2, borderRadius: 4, borderSkipped: false },
             ],
         },
         options: {
             indexAxis: 'y',
-            responsive: true,
+            responsive: false,   // fixed canvas size; this page also renders as a bare quirks-mode fragment
             maintainAspectRatio: false,
             layout: { padding: { top: 2, bottom: 2 } },
             scales: {
