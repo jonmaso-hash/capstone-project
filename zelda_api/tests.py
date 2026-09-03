@@ -5184,6 +5184,62 @@ class ValuationRangeBarTests(TestCase):
         self.assertNotIn('valuation_high', pdata)
 
 
+class ValuationSectionGuardTests(TestCase):
+    """
+    zelda_valuation_report.html — a section renders only when it has
+    content. The BusinessValuationReport section fields are all blank=True,
+    so before this a report without a financial summary / risk report
+    showed a bare "Financial Summary" / "Risk Report" header with an empty
+    paragraph under it. JS-rendered from the API, so (per the pattern in
+    ValuationRangeBarTests) these assert the guard wiring in the page.
+    """
+
+    def setUp(self):
+        from matchmaking.tests import _mock_embedding_generation
+        _mock_embedding_generation(self)
+        self.user = User.objects.create_user('vsg_owner', password='x')
+        self.doc = DocumentSource.objects.create(
+            filename='d.pptx', source_entity='SecCo', document_type='business_valuation',
+            uploaded_by=self.user, status='analyzed', valuation_tier='full',
+        )
+        self.client.force_login(self.user)
+
+    def _report(self, **fields):
+        defaults = dict(document=self.doc, confidence_score=0.6,
+                        valuation_low=1_000_000, valuation_high=2_000_000)
+        defaults.update(fields)
+        return BusinessValuationReport.objects.create(**defaults)
+
+    def _page(self):
+        return self.client.get(reverse('zelda_api:valuation_report', args=[self.doc.id])).content.decode()
+
+    def test_page_uses_the_content_guarded_section_helper(self):
+        self._report(financial_summary='x', risk_report='x', valuation_summary='x')
+        html = self._page()
+        self.assertIn('function sectionCard(title, text)', html)
+        self.assertIn("if (!text || !String(text).trim()) return ''", html)
+        # every prose section goes through the guard, no unconditional <h6>
+        self.assertIn("sectionCard('Financial Summary', data.sections.financial_summary)", html)
+        self.assertIn("sectionCard('Risk Report', data.sections.risk_report)", html)
+        self.assertIn("sectionCard('Valuation Methodology', data.sections.valuation_summary)", html)
+        self.assertIn("sectionCard('Business Overview', data.sections.business_overview)", html)
+        self.assertNotIn('<h6 class="fw-bold text-uppercase small text-muted mb-2">Financial Summary</h6>', html)
+        self.assertNotIn('<h6 class="fw-bold text-uppercase small text-muted mb-2">Risk Report</h6>', html)
+
+    def test_api_still_sends_the_section_fields_for_the_full_tier(self):
+        self._report(financial_summary='Real financial detail.', risk_report='Real risk detail.',
+                     valuation_summary='Real methodology.')
+        data = self.client.get(reverse('zelda_api:document_valuation', args=[self.doc.id])).json()
+        self.assertEqual(data['sections']['financial_summary'], 'Real financial detail.')
+        self.assertEqual(data['sections']['risk_report'], 'Real risk detail.')
+
+    def test_empty_section_fields_come_through_as_blank(self):
+        self._report()  # section fields default to ''
+        data = self.client.get(reverse('zelda_api:document_valuation', args=[self.doc.id])).json()
+        self.assertEqual(data['sections']['financial_summary'], '')
+        self.assertEqual(data['sections']['risk_report'], '')
+
+
 class GaugeVocabularyTests(TestCase):
     """
     Score vocabulary + gauge labels (PR #6, extended by PR #13). Each
@@ -5330,9 +5386,9 @@ class GaugeVocabularyTests(TestCase):
         self.assertNotIn('truthdelta-confidence-gauge', html)  # the gauge is gone
         self.assertNotIn('Verification Confidence', html)
 
-    # --- Business Valuation: one consistent label ---
+    # --- Business Valuation: the metric is "Disclosure Coverage" (PR #14) ---
 
-    def test_valuation_full_render_uses_analysis_confidence_not_valuation_confidence(self):
+    def test_valuation_full_render_labels_the_number_disclosure_coverage(self):
         from matchmaking.models import InvestorApplication
         InvestorApplication.objects.create(user=self.user, is_premium=True)
         doc = DocumentSource.objects.create(
@@ -5344,13 +5400,18 @@ class GaugeVocabularyTests(TestCase):
             valuation_summary='x', financial_summary='x', risk_report='x',
         )
         html = self.client.get(reverse('zelda_api:valuation_report', args=[doc.id])).content.decode()
-        # the full-render gauge call
-        self.assertIn("getElementById('valuation-confidence-gauge'), data.confidence_score, 'Analysis Confidence'", html)
+        self.assertIn("data.confidence_score, 'Disclosure Coverage'", html)   # both gauge calls
+        self.assertNotIn("'Analysis Confidence'", html)
         self.assertNotIn("'Valuation Confidence'", html)
+        self.assertIn('Disclosure Coverage by dimension', html)               # the per-dimension table header
+        self.assertNotIn('Confidence by Category', html)
+        # the caption makes clear it's a documents measure, not verification
+        self.assertIn('eight business dimensions used in this valuation', html)
+        self.assertIn('not Truth Delta verification, and not confidence in the valuation itself', html)
 
-    # --- IC Memo: the embedded valuation confidence is named ---
+    # --- IC Memo: the embedded valuation number is "Disclosure Coverage" ---
 
-    def test_ic_memo_embedded_valuation_confidence_is_labelled(self):
+    def test_ic_memo_embedded_valuation_number_is_disclosure_coverage(self):
         from matchmaking.models import Application
         Application.objects.create(
             user=self.user, company_name='MemoGauge', founder_name='F', email='f@t.com',
@@ -5369,12 +5430,37 @@ class GaugeVocabularyTests(TestCase):
             document_type='business_valuation', status='analyzed', valuation_tier='full',
         )
         BusinessValuationReport.objects.create(
-            document=vdoc, confidence_score=71.0, valuation_low=1_000_000, valuation_high=2_000_000,
+            document=vdoc, confidence_score=0.71, valuation_low=1_000_000, valuation_high=2_000_000,
             valuation_summary='Applied a multiple.', financial_summary='x', risk_report='x',
         )
         html = self.client.get(reverse('zelda_api:ic_memo', args=[deck.id])).content.decode()
-        self.assertIn('Analysis confidence:', html)
-        self.assertNotIn('<strong>Confidence:</strong>', html)
+        self.assertIn('Disclosure Coverage:</strong> 71/100', html)   # 0.71 stored -> 71/100, not the old "1/100"
+        self.assertNotIn('Analysis confidence:', html)
+
+    def test_ic_memo_markdown_embeds_disclosure_coverage(self):
+        from matchmaking.models import Application
+        from .ic_memo import build_ic_memo_context, render_ic_memo_markdown
+        app = Application.objects.create(
+            user=self.user, company_name='MemoMd', founder_name='F', email='f@t.com',
+            description='x', sector='SaaS', stage='Seed', is_premium=True,
+        )
+        deck = DocumentSource.objects.create(
+            filename='deck.pdf', source_entity='MemoMd', uploaded_by=self.user,
+            document_type='pitch_deck', status='analyzed',
+        )
+        IntelligenceMemo.objects.create(document=deck, executive_summary='x', investment_thesis='y',
+            recommendation='NEEDS_REVIEW', completeness_score=0.6, citations_count=1)
+        vdoc = DocumentSource.objects.create(
+            filename='val.pptx', source_entity='MemoMd', uploaded_by=self.user,
+            document_type='business_valuation', status='analyzed', valuation_tier='full',
+        )
+        BusinessValuationReport.objects.create(
+            document=vdoc, confidence_score=0.71, valuation_low=1_000_000, valuation_high=2_000_000,
+            valuation_summary='x', financial_summary='x', risk_report='x',
+        )
+        md = render_ic_memo_markdown(build_ic_memo_context(app, tier='full'))
+        self.assertIn('**Disclosure Coverage:** 71/100', md)
+        self.assertNotIn('Analysis confidence', md)
 
 
 class IntelligenceHeaderTests(TestCase):

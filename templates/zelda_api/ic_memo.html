@@ -186,15 +186,15 @@
         <p class="mb-1"><strong>Range:</strong> ${{ valuation.valuation_low|floatformat:0|intcomma }} – ${{ valuation.valuation_high|floatformat:0|intcomma }}</p>
         {% endif %}
         {% comment %}
-        This number comes from the Business Valuation report (vr.confidence_score).
-        Whether it truly measures confidence in the valuation analysis or is
-        closer to an evidence/data-completeness measure is an open question
-        that PR #14 resolves at the source; its label here and the label
-        collision with the memo's own "Analysis Confidence" above are left
-        for that PR. Not renamed now to avoid pre-empting the answer.
+        "Disclosure Coverage" — the same measure the full Business Valuation
+        report headlines (PR #14): the average, across the 8 business
+        dimensions the valuation framework uses, of how explicitly the
+        founder's documents describe each. A read on the documents, not on
+        Zelda's confidence in the valuation, and distinct from the memo's
+        own "Analysis Confidence" above.
         {% endcomment %}
-        <p class="mb-1"><strong>Analysis confidence:</strong> {{ valuation.confidence_score|floatformat:0 }}/100
-            <span class="text-muted small">— Zelda's confidence in the valuation analysis, not a bound on the range</span></p>
+        <p class="mb-1"><strong>Disclosure Coverage:</strong> {{ valuation.disclosure_coverage }}/100
+            <span class="text-muted small">— how fully the submitted documents cover the dimensions this valuation uses, not confidence in the valuation itself</span></p>
         {% if valuation.valuation_summary %}<p class="text-secondary mb-0">{{ valuation.valuation_summary }}</p>{% endif %}
     </div>
     {% endif %}

@@ -10,7 +10,7 @@
             <h2 class="fw-bold mb-1"><i class="bi bi-graph-up-arrow me-2"></i>Business Valuation Report
                 <i class="bi bi-info-circle field-info-icon" role="button" tabindex="0"
                    data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom"
-                   data-bs-content="A ballpark valuation range without hiring a firm. Zelda reads the financials, stage and market position in your documents and produces a low–high range, a confidence read, and the factors moving it. It is a model estimate for planning and negotiation — not an appraisal, an audit, or a price."></i>
+                   data-bs-content="A ballpark valuation range without hiring a firm. Zelda reads the financials, stage and market position in your documents and produces a low–high range, a read on how fully those documents cover the dimensions it values against, and the factors moving the number. It is a model estimate for planning and negotiation — not an appraisal, an audit, or a price."></i>
             </h2>
             <p class="text-muted mb-0">{{ document.source_entity }}</p>
         </div>
@@ -120,7 +120,13 @@ function trustStatsHtml(data) {
         [stats.pages_analyzed, 'Pages Analyzed'],
         [stats.chunks_analyzed, 'Sections Searched'],
         [stats.categories_analyzed, 'Categories Analyzed'],
-        [`${data.confidence_score != null ? (data.confidence_score * 10).toFixed(1) : '—'}/10`, 'Analysis Confidence'],
+        // "Disclosure Coverage" (was mislabelled "Analysis Confidence"):
+        // confidence_score is the average, across the 8 fixed business
+        // dimensions, of how explicitly each is described in the submitted
+        // documents (an absent dimension counts as 0). It measures the
+        // documents, not Zelda's confidence in the valuation — see the
+        // caption below and confidence_breakdown.compute_overall_confidence.
+        [`${data.confidence_score != null ? (data.confidence_score * 10).toFixed(1) : '—'}/10`, 'Disclosure Coverage'],
     ];
     return `
     <div class="card border-0 shadow-sm rounded-4 mb-4 bg-success-subtle">
@@ -134,18 +140,32 @@ function trustStatsHtml(data) {
                     <div class="text-muted small">${label}</div>
                 </div>`).join('')}
             </div>
+            <p class="text-muted mt-3 mb-0" style="font-size: 0.75rem;">
+                <strong>Disclosure Coverage</strong> is how completely and specifically the submitted
+                materials describe the eight business dimensions used in this valuation. It is a measure
+                of your documents — not Truth Delta verification, and not confidence in the valuation itself.
+            </p>
+        </div>
+    </div>`;
+}
+
+// A section card that renders only when it actually has content — the
+// BusinessValuationReport section fields are all blank=True, so an
+// unpopulated report otherwise shows a bare "<h6>Risk Report</h6>" with
+// nothing under it.
+function sectionCard(title, text) {
+    if (!text || !String(text).trim()) return '';
+    return `
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h6 class="fw-bold text-uppercase small text-muted mb-2">${escapeHtml(title)}</h6>
+            <p class="mb-0" style="white-space: pre-line;">${escapeHtml(text)}</p>
         </div>
     </div>`;
 }
 
 function businessOverviewHtml(data) {
-    return `
-    <div class="card border-0 shadow-sm rounded-4 mb-4">
-        <div class="card-body p-4">
-            <h6 class="fw-bold text-uppercase small text-muted mb-2">Business Overview</h6>
-            <p class="mb-0">${escapeHtml(data.sections.business_overview)}</p>
-        </div>
-    </div>`;
+    return sectionCard('Business Overview', data.sections.business_overview);
 }
 
 // Due-diligence disclaimer footer — text comes from the API response
@@ -243,7 +263,7 @@ function renderPreview(data) {
 
     const liteGaugeEl = document.getElementById('valuation-lite-confidence-gauge');
     if (liteGaugeEl && typeof renderConfidenceGauge === 'function') {
-        renderConfidenceGauge(liteGaugeEl, data.confidence_score, 'Analysis Confidence');
+        renderConfidenceGauge(liteGaugeEl, data.confidence_score, 'Disclosure Coverage');
     }
 }
 
@@ -363,34 +383,19 @@ function renderFull(data) {
         </div>
         ${businessOverviewHtml(data)}
         ${driversCard}
+        ${sectionCard('Financial Summary', data.sections.financial_summary)}
+        ${sectionCard('Risk Report', data.sections.risk_report)}
+        ${sectionCard('Valuation Methodology', data.sections.valuation_summary)}
         <div class="card border-0 shadow-sm rounded-4 mb-4">
             <div class="card-body p-4">
-                <h6 class="fw-bold text-uppercase small text-muted mb-2">Financial Summary</h6>
-                <p class="mb-0" style="white-space: pre-line;">${escapeHtml(data.sections.financial_summary)}</p>
-            </div>
-        </div>
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-            <div class="card-body p-4">
-                <h6 class="fw-bold text-uppercase small text-muted mb-2">Risk Report</h6>
-                <p class="mb-0" style="white-space: pre-line;">${escapeHtml(data.sections.risk_report)}</p>
-            </div>
-        </div>
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-            <div class="card-body p-4">
-                <h6 class="fw-bold text-uppercase small text-muted mb-2">Valuation Methodology</h6>
-                <p class="mb-0" style="white-space: pre-line;">${escapeHtml(data.sections.valuation_summary)}</p>
-            </div>
-        </div>
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-            <div class="card-body p-4">
-                <h6 class="fw-bold text-uppercase small text-muted mb-1">Confidence by Category</h6>
-                <p class="text-muted mb-3" style="font-size: 0.8rem;">Zelda's per-topic analysis confidence — the overall score above is the average across these.</p>
+                <h6 class="fw-bold text-uppercase small text-muted mb-1">Disclosure Coverage by dimension</h6>
+                <p class="text-muted mb-3" style="font-size: 0.8rem;">How explicitly each of the eight business dimensions is described in your documents. The Disclosure Coverage figure above is the average across all eight (a dimension with nothing to find counts as zero).</p>
                 <div class="table-responsive">
                     <table class="table table-sm align-middle mb-0">
                         <thead>
                             <tr class="text-muted small text-uppercase">
-                                <th scope="col">Category</th>
-                                <th scope="col">Confidence</th>
+                                <th scope="col">Dimension</th>
+                                <th scope="col">Coverage</th>
                                 <th scope="col">Why</th>
                                 <th scope="col"></th>
                             </tr>
@@ -403,11 +408,12 @@ function renderFull(data) {
         </div>
         ${disclaimerHtml(data)}
     `;
-    // "Analysis Confidence" — Zelda's confidence in its own analysis, the
-    // same measure and label as the preview render and the header stat.
-    // Not "Valuation Confidence": it is not a confidence interval on the
-    // dollar range itself.
-    renderConfidenceGauge(document.getElementById('valuation-confidence-gauge'), data.confidence_score, 'Analysis Confidence');
+    // "Disclosure Coverage" (was mislabelled "Analysis Confidence"): the
+    // average, across the 8 fixed business dimensions, of how explicitly
+    // each is described in the submitted documents. A measure of the
+    // documents, not of Zelda's confidence in the valuation, and not a
+    // confidence interval on the dollar range.
+    renderConfidenceGauge(document.getElementById('valuation-confidence-gauge'), data.confidence_score, 'Disclosure Coverage');
 }
 
 async function loadReport() {
