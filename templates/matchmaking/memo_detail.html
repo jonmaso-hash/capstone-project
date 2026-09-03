@@ -8,7 +8,6 @@
     .memo-badge-premium { background: linear-gradient(135deg, #0d6efd, #0a58ca); color: white; }
     .metric-card { border-radius: 12px; background: #ffffff; border: 1px solid #e3e6f0; }
     .chart-container-canvas { position: relative; width: 100%; height: 220px; }
-    .log-stream-box { max-height: 350px; font-size: 0.85rem; background-color: #212529; color: #f8f9fa; font-family: monospace; }
 </style>
 {% endblock css %}
 
@@ -55,11 +54,11 @@
         </div>
     </div>
 
-    <!-- Live Status Async Banner Notification -->
+    <!-- Analysis-in-progress banner -->
     <div id="async-status-banner" class="alert alert-info d-flex align-items-center gap-3 border-0 shadow-sm mb-4 {% if not is_processing %}d-none{% endif %}" role="alert">
         <div class="spinner-border spinner-border-sm text-info flex-shrink-0" role="status"></div>
         <div>
-            <strong>Assembling Data Streams:</strong> Zelda AI is currently crawling public registry indexes and compiling vector alignments. Charts and external logs below will auto-populate live.
+            <strong>Still analysing:</strong> Zelda is working through this company's documents and public footprint. This page updates automatically as results come in.
         </div>
     </div>
 
@@ -69,7 +68,7 @@
         <div class="col-lg-7">
             <!-- Core Summary -->
             <div class="card card-body shadow-sm border-0 p-4 mb-4 metric-card">
-                <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Executive Baseline Description</h5>
+                <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Overview</h5>
                 <p class="text-secondary lh-lg mb-3">{{ founder_app.description }}</p>
                 <div id="memo-alignment-gauge"></div>
             </div>
@@ -111,7 +110,7 @@
             {% else %}
             <div class="card card-body shadow-sm border-0 p-4 mb-4 metric-card" style="background: linear-gradient(135deg, #fff8e1, #ffffff);">
                 <h5 class="fw-bold mb-1">Zelda AI unlocks the complete intelligence report</h5>
-                <p class="text-muted small mb-3">Zelda Lite gives you the strategic signal. Zelda AI gives you the complete intelligence report — market synthesis charts, financial metrics, and the full external intelligence feed.</p>
+                <p class="text-muted small mb-3">Zelda Lite gives you the strategic signal. Zelda AI adds the charts, the key figures, and what Zelda found about the company online.</p>
                 <p class="text-muted small mb-0">
                     {{ founder_app.company_name }} hasn't upgraded to Zelda AI yet. Once they do, you'll see the complete report here — no extra cost to you.
                 </p>
@@ -124,7 +123,7 @@
             <!-- Algorithmic Insights -->
             {% if ai_insights %}
             <div class="card card-body shadow-sm border-0 p-4 metric-card bg-white mb-4">
-                <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Matching Explanatory Breakdown</h5>
+                <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Why this matched</h5>
                 <p class="small text-muted mb-4">{{ ai_insights.summary }}</p>
                 
                 <div class="d-flex flex-column gap-3">
@@ -142,24 +141,24 @@
             {% endif %}
 
             {% if memo_tier == 'full' %}
-            <!-- Deal Execution Metrics -->
+            <!-- Key figures -->
             <div class="card card-body shadow-sm border-0 p-4 metric-card mb-4">
-                <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Core Operational Variables</h5>
+                <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Key figures</h5>
                 <table class="table table-borderless mb-0 align-middle">
                     <tbody>
                         <tr>
-                            <td class="text-muted ps-0 py-2 small">Target Capitalization:</td>
+                            <td class="text-muted ps-0 py-2 small">Raising:</td>
                             <td class="text-end fw-semibold text-dark py-2">${{ founder_app.raising_amount }}</td>
                         </tr>
                         <tr>
-                            <td class="text-muted ps-0 py-2 small">Current Baseline Trailing Revenue:</td>
+                            <td class="text-muted ps-0 py-2 small">Current revenue:</td>
                             <td class="text-end fw-semibold text-dark py-2">${{ founder_app.current_revenue }}</td>
                         </tr>
                         <tr>
-                            <td class="text-muted ps-0 py-2 small">Data Asset Tracking State:</td>
+                            <td class="text-muted ps-0 py-2 small">Analysis status:</td>
                             <td class="text-end py-2">
                                 <span id="sync-badge" class="badge {% if is_processing %}bg-warning-subtle text-warning{% else %}bg-info-subtle text-info{% endif %} px-2 py-1">
-                                    {% if is_processing %}Processing{% else %}Synced{% endif %}
+                                    {% if is_processing %}Analysing…{% else %}Complete{% endif %}
                                 </span>
                             </td>
                         </tr>
@@ -167,16 +166,22 @@
                 </table>
             </div>
 
-            <!-- Scraped Background Engine Insights Box -->
+            <!-- What we found online -->
             <div class="card card-body shadow-sm border-0 p-4 metric-card">
-                <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Aggregated External Intelligence Feed</h5>
+                <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">What we found online</h5>
                 <div id="log-feed-container">
                     {% if external_data %}
-                        <pre class="p-3 rounded overflow-auto log-stream-box mb-0">{{ external_data }}</pre>
+                        {% comment %}
+                        No structured claim/source data reaches this template today
+                        (the crawl returns free text or nothing) — so we show it as
+                        plain readable text, not a claim -> source table we can't
+                        truthfully populate, and not a raw terminal dump.
+                        {% endcomment %}
+                        <p class="text-secondary mb-0" style="white-space: pre-line;">{{ external_data }}</p>
                     {% else %}
-                        <div id="log-empty-fallback" class="text-muted p-4 text-center">
-                            <i class="bi bi-terminal fs-3 d-block mb-2 text-secondary"></i>
-                            <span id="log-fallback-text">No active log entries found for this entity.</span>
+                        <div id="log-empty-fallback" class="text-muted py-3">
+                            <i class="bi bi-search me-2 text-secondary"></i>
+                            <span id="log-fallback-text">We haven't found public web or registry data for this company yet.</span>
                         </div>
                     {% endif %}
                 </div>
@@ -184,7 +189,7 @@
             {% else %}
             <div class="card card-body shadow-sm border-0 p-4 metric-card text-center">
                 <h5 class="fw-bold mb-1"><i class="bi bi-stars me-1 text-warning"></i>Zelda AI</h5>
-                <p class="text-muted small mb-0">Financial metrics and the external intelligence feed are part of the complete report.</p>
+                <p class="text-muted small mb-0">The key figures and what Zelda found online are part of the full report.</p>
             </div>
             {% endif %}
         </div>
@@ -237,15 +242,20 @@
                 syncBadge.className = "badge bg-info-subtle text-info px-2 py-1";
                 syncBadge.innerText = "Synced";
 
-                // Hydrate the External Aggregated Intelligence Raw Logs
+                // Online-findings feed — plain readable text, not a raw log
+                // dump. The payload carries free text (payload.data /
+                // payload.text_synthesis), never structured claim/source rows.
                 if (payload.data || payload.text_synthesis) {
                     const fallbackBox = document.getElementById('log-empty-fallback');
                     if (fallbackBox) fallbackBox.remove();
-                    
-                    let targetContainer = document.getElementById('log-feed-container');
-                    let logContent = payload.data || payload.text_synthesis;
-                    
-                    targetContainer.innerHTML = `<pre class="p-3 rounded overflow-auto log-stream-box mb-0">${logContent}</pre>`;
+
+                    const targetContainer = document.getElementById('log-feed-container');
+                    const feedText = payload.data || payload.text_synthesis;
+                    const p = document.createElement('p');
+                    p.className = 'text-secondary mb-0';
+                    p.style.whiteSpace = 'pre-line';
+                    p.textContent = feedText;
+                    targetContainer.replaceChildren(p);
                 }
 
                 // Initialize Graph Visualization Engine mapping context data structures
@@ -254,7 +264,7 @@
         } catch (err) {
             console.error("Telemetry Processing Interrupted Exception:", err);
             const fallbackText = document.getElementById('log-fallback-text');
-            if (fallbackText) fallbackText.innerText = "Server side task tracking connectivity dropped. Re-polling metrics.";
+            if (fallbackText) fallbackText.innerText = "Couldn't reach the analysis service — retrying.";
         }
     }
 

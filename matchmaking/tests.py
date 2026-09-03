@@ -4150,10 +4150,10 @@ class StandaloneMemoViewTierTests(TestCase):
         # Real, existing content stays visible in Lite.
         self.assertContains(response, 'SMVCo builds real intelligence infrastructure for private markets.')
         # Zelda AI-only sections are absent, not blurred/locked-looking.
-        self.assertNotContains(response, 'Core Operational Variables')
-        self.assertNotContains(response, 'Aggregated External Intelligence Feed')
+        self.assertNotContains(response, 'Key figures')
+        self.assertNotContains(response, 'What we found online')
         self.assertNotContains(response, 'Data Metrics &amp; Market Synthesis')
-        self.assertContains(response, 'Zelda AI gives you the complete intelligence report')
+        self.assertContains(response, 'Zelda AI unlocks the complete intelligence report')
 
     def test_investor_sees_full_tier_when_founder_premium(self):
         self.founder_app.is_premium = True
@@ -4162,10 +4162,10 @@ class StandaloneMemoViewTierTests(TestCase):
         response = self.client.get(reverse('matchmaking:standalone_memo', args=[self.slug]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Zelda AI — Full Report')
-        self.assertContains(response, 'Core Operational Variables')
-        self.assertContains(response, 'Aggregated External Intelligence Feed')
+        self.assertContains(response, 'Key figures')
+        self.assertContains(response, 'What we found online')
         self.assertContains(response, 'Data Metrics & Market Synthesis')
-        self.assertNotContains(response, 'Zelda AI gives you the complete intelligence report')
+        self.assertNotContains(response, 'Zelda AI unlocks the complete intelligence report')
 
     def test_staff_sees_full_tier_regardless_of_premium(self):
         staff_user = User.objects.create_user('smv_staff', password='x', is_staff=True)
@@ -4173,7 +4173,7 @@ class StandaloneMemoViewTierTests(TestCase):
         response = self.client.get(reverse('matchmaking:standalone_memo', args=[self.slug]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Zelda AI — Full Report')
-        self.assertContains(response, 'Core Operational Variables')
+        self.assertContains(response, 'Key figures')
 
     def test_non_investor_non_staff_still_blocked(self):
         """Access control is unchanged by the tier split — still investor/staff only."""
@@ -4200,6 +4200,68 @@ class StandaloneMemoViewTierTests(TestCase):
         response = self.client.get(reverse('matchmaking:standalone_memo', args=[self.slug]))
         self.assertContains(response, 'field-info-icon')
         self.assertContains(response, 'not a recommendation or a substitute for your own diligence')
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class StandaloneMemoLanguageTests(TestCase):
+    """
+    Zelda Intelligence Report — plain-language section headers, and the
+    "What we found online" feed: plain text when the crawl returned some,
+    a plain empty state otherwise. No claim -> source table, because the
+    crawl output carries no structured provenance to build one from.
+    """
+
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('sml_founder', password='x')
+        self.founder_app = Application.objects.create(
+            user=self.founder_user, company_name='SMLCo', founder_name='F', email='f@t.com',
+            description='SMLCo does a real thing.', sector='SaaS', stage='Seed',
+            raising_amount=500000, current_revenue=100000, is_premium=True,
+        )
+        self.staff = User.objects.create_user('sml_staff', password='x', is_staff=True)
+        self.slug = 'smlco'
+        self.client.force_login(self.staff)
+
+    def _get(self):
+        return self.client.get(reverse('matchmaking:standalone_memo', args=[self.slug]))
+
+    def test_headers_are_plain_language(self):
+        r = self._get()
+        self.assertContains(r, '>Overview<')
+        self.assertContains(r, 'Key figures')          # full tier (staff)
+        self.assertContains(r, 'What we found online')  # full tier (staff)
+        # system-voiced originals gone. ("Why this matched" replaces
+        # "Matching Explanatory Breakdown" but that card only renders with a
+        # real match vector, so we only assert the old string is gone.)
+        self.assertNotContains(r, 'Executive Baseline Description')
+        self.assertNotContains(r, 'Matching Explanatory Breakdown')
+        self.assertNotContains(r, 'Core Operational Variables')
+        self.assertNotContains(r, 'Aggregated External Intelligence Feed')
+        self.assertNotContains(r, 'Data Asset Tracking State')
+
+    def test_feed_empty_state_is_plain_and_not_a_terminal_dump(self):
+        r = self._get()
+        self.assertContains(r, "haven't found public web or registry data")
+        self.assertNotContains(r, 'log-stream-box')
+
+    def test_feed_renders_crawl_text_as_plain_text(self):
+        from django.core.cache import cache
+        cache.set(f'startup_data_{self.founder_app.id}',
+                  'Found a company website and one press mention.', 60)
+        r = self._get()
+        self.assertContains(r, 'Found a company website and one press mention.')
+        self.assertNotContains(r, '<pre')          # not a raw dump
+        self.assertNotContains(r, 'log-stream-box')
+
+    def test_alignment_signal_and_eyebrow_unchanged(self):
+        r = self._get()
+        self.assertContains(r, "renderConfidenceGauge")
+        self.assertContains(r, "'Alignment'")
+        self.assertContains(r, 'Interlink')
+        self.assertContains(r, 'not a binding representation by Interlink Foundry')
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
