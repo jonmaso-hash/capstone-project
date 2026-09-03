@@ -2508,6 +2508,73 @@ class TruthDeltaNoScoreCoherenceTests(TestCase):
         self.assertNotIn('not scored', html)
 
 
+class TruthDeltaEvidenceCoverageChartTests(TestCase):
+    """
+    truth_delta_dashboard.html — the Evidence Coverage chart visualises the
+    verified/no-data split the view already derives from
+    report.category_states(); it must not appear (or must show an empty
+    state) when there is nothing to chart, and must never invent a 0% chart.
+    """
+
+    def setUp(self):
+        from matchmaking.tests import _mock_embedding_generation
+        _mock_embedding_generation(self)
+        from matchmaking.models import Application
+        self.user = User.objects.create_user('ec_owner', password='x')
+        Application.objects.create(
+            user=self.user, company_name='EvidenceCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed', is_premium=True,
+        )
+        self.doc = DocumentSource.objects.create(
+            filename='deck.pdf', source_entity='EvidenceCo', uploaded_by=self.user,
+            document_type='pitch_deck', status='analyzed',
+        )
+        self.client.force_login(self.user)
+
+    def _report(self, **kwargs):
+        from .truth_delta_models import TruthDeltaReport
+        defaults = dict(document=self.doc, overall_truth_score=70.0, credibility_risk='low', summary='ok')
+        defaults.update(kwargs)
+        return TruthDeltaReport.objects.create(**defaults)
+
+    def _html(self):
+        return self.client.get(reverse('zelda_api:truth_delta_ui', args=[self.doc.id])).content.decode()
+
+    def test_populated_renders_chart_with_both_counts(self):
+        self._report(details={'per_claim': [
+            {'category': 'revenue', 'claimed': '$5M', 'observed': '$5.1M (SEC EDGAR)', 'assessment': 'match'},
+            {'category': 'employees', 'claimed': '40', 'observed': 'no external data', 'assessment': 'unchecked'},
+        ], 'claims': [{'category': 'revenue'}, {'category': 'employees'}]})
+        html = self._html()
+        self.assertIn('id="evidenceCoverageChart"', html)
+        self.assertIn('chart.js', html)
+        self.assertEqual(self.client.get(reverse('zelda_api:truth_delta_ui', args=[self.doc.id])).context['verified_count'], 1)
+        self.assertEqual(self.client.get(reverse('zelda_api:truth_delta_ui', args=[self.doc.id])).context['unverified_count'], 1)
+
+    def test_no_claims_renders_empty_state_not_chart(self):
+        self._report(details={'claims': [], 'observed': []})
+        html = self._html()
+        self.assertNotIn('id="evidenceCoverageChart"', html)
+        self.assertIn('No verifiable claims were extracted', html)
+
+    def test_no_external_data_none_score_still_charts_as_all_unverified(self):
+        # Report ran, claims extracted, nothing verifiable — score is None
+        # (preserved from the coherence fix) but there ARE categories to show.
+        self._report(overall_truth_score=None, credibility_risk='unknown',
+                     details={'claims': [{'category': 'revenue'}, {'category': 'traction'}], 'per_claim': []})
+        resp = self.client.get(reverse('zelda_api:truth_delta_ui', args=[self.doc.id]))
+        html = resp.content.decode()
+        self.assertIn('id="evidenceCoverageChart"', html)
+        self.assertEqual(resp.context['verified_count'], 0)
+        self.assertEqual(resp.context['unverified_count'], 2)
+        self.assertIn('overall_truth_score: null', html)  # coherence state intact
+
+    def test_no_report_renders_neither_chart_nor_empty_state(self):
+        html = self._html()
+        self.assertNotIn('id="evidenceCoverageChart"', html)
+        self.assertNotIn('No verifiable claims were extracted', html)
+
+
 class TruthDeltaUnlockedTests(TestCase):
     """
     truth_delta_unlocked — Truth Delta content is Premium, gated on the
