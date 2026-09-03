@@ -88,20 +88,10 @@ LITE_MEMO_SECTION_KEYS = {
 }
 
 # The Zelda Intelligence Report is the *orientation* layer — "what is this
-# company and what does the analysis say about it." It draws on the same
-# IntelligenceMemo as the IC Memo, but only the descriptive sections; the
-# decision-layer sections (recommendation, thesis, readiness, bull/bear,
-# what-would-change) belong to the IC Memo. Lite shows a two-section
-# teaser; the full report shows all of these.
-ZELDA_REPORT_SECTIONS = [
-    ('problem_solution', 'Problem & solution'),
-    ('market_analysis', 'Market'),
-    ('team_assessment', 'Team'),
-    ('financial_analysis', 'Financial picture'),
-    ('risk_assessment', 'Risks'),
-    ('questions_for_management', 'Questions for the founder'),
-]
-ZELDA_REPORT_LITE_KEYS = {'problem_solution', 'risk_assessment'}
+# company, why did it surface, what did Zelda notice, where to look next."
+# It no longer reproduces any of the memo's descriptive sections
+# (problem/market/team/financial/risk); those live once, in the IC Memo.
+# See zelda_report_observations() for the synthesis it shows instead.
 
 
 def latest_analyzed_pitch_deck_and_memo(founder_user):
@@ -143,6 +133,114 @@ def truth_delta_signal(pitch_deck_doc):
         'no_data_count': coverage['total'] - coverage['verified'],
         'document_id': pitch_deck_doc.id,
     }
+
+
+def _humanize_list(items):
+    items = [str(i).replace('_', ' ') for i in items]
+    if not items:
+        return ''
+    if len(items) == 1:
+        return items[0]
+    return ', '.join(items[:-1]) + ' and ' + items[-1]
+
+
+def _first_points(text, limit):
+    """
+    Split a free-text memo section (sentences or bullets) into short
+    topic phrases — deterministic: split on sentence enders and newlines,
+    strip list markers, drop fragments, trim long ones. No summarising.
+    """
+    import re
+    if not (text or '').strip():
+        return []
+    parts = re.split(r'(?<=[.?!])\s+|\n+', text.strip())
+    out = []
+    for p in parts:
+        p = re.sub(r'^\s*(?:\d+[.)]|[-•*])\s*', '', p.strip()).rstrip('.').strip()
+        if len(p) < 15:
+            continue
+        out.append(p if len(p) <= 90 else p[:87].rstrip() + '…')
+        if len(out) >= limit:
+            break
+    return out
+
+
+def zelda_report_observations(memo, pitch_deck_doc):
+    """
+    Deterministic, presentation-layer synthesis for the Zelda Intelligence
+    Report's "What Zelda noticed" and "Worth investigating" sections.
+
+    Built ONLY from the existing IntelligenceMemo and TruthDeltaReport —
+    no LLM call, no new score, no new field, no inference beyond what the
+    stored data plainly states. Returns
+    {'noticed': [str, ...], 'worth_investigating': [{'topic', 'target'}]}
+    where target is 'truth_delta' | 'ic_memo' | None (the view resolves it
+    to a URL, honouring IC-memo permissions). Either list is [] when the
+    data can't support a real observation — the caller then omits that
+    section rather than showing an empty one.
+    """
+    from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+
+    noticed = []
+    worth = []
+
+    report = pitch_deck_doc.truthdeltareport_set.first() if pitch_deck_doc else None
+
+    # 1. Verification coverage — straight from the Truth Delta report.
+    if report:
+        stats = report.verifiability_stats()      # {total, verified, pct}
+        states = report.category_states()          # {category: 'verified'|'no_data'}
+        if stats['total']:
+            verified_cats = sorted(c for c, s in states.items() if s == 'verified')
+            no_data_cats = sorted(c for c, s in states.items() if s == 'no_data')
+            if stats['verified']:
+                noticed.append(
+                    f"External data backs {stats['verified']} of {stats['total']} "
+                    f"checkable claim{'s' if stats['total'] != 1 else ''}"
+                    + (f" ({_humanize_list(verified_cats)})." if verified_cats else ".")
+                )
+            if no_data_cats:
+                noticed.append(
+                    f"No public source was found to check {_humanize_list(no_data_cats)}."
+                )
+                for c in no_data_cats[:2]:
+                    worth.append({
+                        'topic': f"{str(c).replace('_', ' ').capitalize()} — not externally verified",
+                        'target': 'truth_delta',
+                    })
+        elif not states:
+            noticed.append("None of the deck's claims had a public source to check against.")
+
+    # 2. Analysis depth — from the memo's own extracted insights.
+    if memo is not None:
+        by_cat = {i.category: i.confidence_score for i in memo.insights_used.all()}
+        canonical = list(ZeldaIntelligencePipelineV2.ANALYSIS_CATEGORIES)
+        strong = [c for c in canonical if by_cat.get(c, 0) >= 85]
+        light = [c for c in canonical if by_cat.get(c, 0) < 60]
+        if strong and light:
+            noticed.append(
+                f"The materials are specific on {_humanize_list(strong)}; "
+                f"{_humanize_list(light)} {'is' if len(light) == 1 else 'are'} only lightly covered."
+            )
+
+    # 3. Worth investigating — the memo's own concern lines, verbatim, as
+    #    clickable topics; the full treatment lives in the IC Memo.
+    if memo is not None:
+        for point in _first_points(memo.key_concerns, 2):
+            worth.append({'topic': point, 'target': 'ic_memo'})
+        if not any(w['target'] == 'ic_memo' for w in worth) and (memo.questions_for_management or '').strip():
+            worth.append({'topic': "Open questions the deck doesn't answer", 'target': 'ic_memo'})
+
+    # dedupe by topic, preserve order
+    seen = set()
+    deduped = []
+    for w in worth:
+        key = w['topic'].lower()
+        if key not in seen:
+            seen.add(key)
+            deduped.append(w)
+
+    return {'noticed': noticed[:3], 'worth_investigating': deduped[:4]}
 
 
 def build_ic_memo_context(founder_application, tier='full'):

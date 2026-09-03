@@ -256,25 +256,65 @@ def founder_required(view_func):
 
 def _generate_explanatory_insights(ai_score, rule_score, application, investor):
     """
-    Helper function to generate a rich structural breakdown payload 
-    for the frontend Explanatory AI Insights panel.
-    """
-    sector_str = getattr(application, 'sector', '') or ''
-    focus_str = getattr(investor, 'investment_focus', '') or ''
-    stage_str = getattr(application, 'stage', '') or ''
-    mandate_stage_str = getattr(investor, 'investment_stage', '') or ''
+    Plain-language explanation of why a founder and an investor were
+    matched — the sector, stage and overall-fit signals behind the score,
+    described for a human rather than for a machine. Rendered on the
+    investor dashboard's match accordion and on the Zelda Intelligence
+    Report ("Why Zelda surfaced this"), so the wording stays conservative
+    enough to read well in a dense list and on a report page alike.
 
-    sector_match = "Match" if sector_str.lower() in focus_str.lower() else "Neutral"
-    stage_match = "Excellent" if stage_str.lower() == mandate_stage_str.lower() else "Partial"
-    
+    `match_percentage` is still returned for callers that rank or badge on
+    it; the copy no longer leads with a number.
+    """
+    sector_str = (getattr(application, 'sector', '') or '').strip()
+    focus_str = (getattr(investor, 'investment_focus', '') or '').strip()
+    stage_str = (getattr(application, 'stage', '') or '').strip()
+    mandate_stage_str = (getattr(investor, 'investment_stage', '') or '').strip()
+
+    sector_hit = bool(sector_str) and sector_str.lower() in focus_str.lower()
+    stage_hit = bool(stage_str) and stage_str.lower() == mandate_stage_str.lower()
+
+    if sector_hit and stage_hit:
+        summary = "The company's sector and raise stage both line up with your stated focus."
+    elif sector_hit:
+        summary = "The company's sector lines up with your stated focus; the raise stage is nearby."
+    elif stage_hit:
+        summary = "The company's raise stage matches your mandate; the sector is adjacent to your focus."
+    else:
+        summary = "The company is close enough to your focus and mandate to be worth a look."
+
     return {
         'match_percentage': int(round(ai_score)),
-        'summary': f"Blended alignment index of {round(ai_score)}% via semantic matching vectors and core business constraint validation rules.",
+        'summary': summary,
         'pillars': [
-            {'title': 'Market Alignment', 'score': sector_match, 'desc': f"Evaluated startup vertical '{sector_str}' against targeted investment focus criteria."},
-            {'title': 'Funding Stage', 'score': stage_match, 'desc': f"Startup asset operational tier '{stage_str}' benchmarked to allocator mandate level."},
-            {'title': 'Structural Rules', 'score': 'Passed' if rule_score > 60 else 'Review', 'desc': f"Rule compliance engine score marked at a baseline index of {round(rule_score)} points."}
-        ]
+            {
+                'title': 'Sector',
+                'score': 'Match' if sector_hit else 'Adjacent',
+                'desc': (
+                    f"{sector_str or 'Sector not stated'} — "
+                    + ("in your stated focus." if sector_hit
+                       else "not an explicit focus area for you, but close enough to surface.")
+                ),
+            },
+            {
+                'title': 'Stage',
+                'score': 'Match' if stage_hit else 'Nearby',
+                'desc': (
+                    f"Raising at {stage_str or 'an unstated stage'} — "
+                    + ("matches your mandate." if stage_hit
+                       else f"your mandate is {mandate_stage_str or 'not set'}.")
+                ),
+            },
+            {
+                'title': 'Overall fit',
+                'score': 'Passed' if rule_score > 60 else 'Partial',
+                'desc': (
+                    "Sector and stage together clear Zelda's match threshold."
+                    if rule_score > 60
+                    else "Sector and stage only partly align, so this is a softer match."
+                ),
+            },
+        ],
     }
 
 def _generate_deal_explanatory_insights(ai_score, rule_score, seller, buyer):
@@ -2074,20 +2114,25 @@ def get_stream_token(request):
 @login_required
 def standalone_memo_view(request, company_slug):
     """
-    The Zelda Intelligence Report — the orientation layer: "what is this
-    company and what does the available analysis say about it."
+    The Zelda Intelligence Report — the 30-second orientation layer.
 
-    A presentation layer over intelligence data the platform already
-    produces: the founder's IntelligenceMemo (descriptive sections only —
-    the decision-layer sections are the IC Memo's job) and, where it
-    exists, the Truth Delta verification signal. Nothing here generates or
-    recomputes analysis; when the real data isn't ready, the page says so
-    rather than showing a fabricated result.
+    It answers, fast: what is this company, why did it surface for this
+    investor, what did Zelda notice, and where to look next. The deep
+    analysis — thesis, scenarios, recommendation, the full
+    problem/market/team/financial/risk write-ups — is the IC Memo's job;
+    this page never reproduces it.
+
+    Everything here is a re-presentation of data the platform already
+    produced: the founder's IntelligenceMemo, the Truth Delta report, the
+    Application fields, and (for a logged-in investor) the match signal.
+    Nothing is generated or recomputed. When the real data isn't there,
+    the page says so.
     """
+    from django.urls import reverse
     from zelda_api.disclaimers import DUE_DILIGENCE_DISCLAIMER
     from zelda_api.ic_memo import (
         latest_analyzed_pitch_deck_and_memo, truth_delta_signal,
-        ZELDA_REPORT_SECTIONS, ZELDA_REPORT_LITE_KEYS,
+        zelda_report_observations, can_view_ic_memo,
     )
     from zelda_api.vector_models import DocumentSource
 
@@ -2119,32 +2164,44 @@ def standalone_memo_view(request, company_slug):
     overview_text = (memo.executive_summary if memo and memo.executive_summary
                      else founder_app.description)
 
-    memo_sections = []
-    if memo:
-        keys = ZELDA_REPORT_SECTIONS if memo_tier == 'full' else [
-            (k, label) for k, label in ZELDA_REPORT_SECTIONS if k in ZELDA_REPORT_LITE_KEYS
-        ]
-        memo_sections = [
-            {'label': label, 'text': getattr(memo, k, '')}
-            for k, label in keys
-            if getattr(memo, k, '')
-        ]
-
     truth_delta = truth_delta_signal(pitch_deck_doc)
 
-    # --- Investor-specific alignment (independent of the memo) --------
-    match_percentage = None
+    # "What Zelda noticed" / "Worth investigating" — deterministic synthesis
+    # of the memo + Truth Delta data, full tier only. Either list comes
+    # back empty when the data can't support a real observation, and the
+    # template then omits that section.
+    observations = {'noticed': [], 'worth_investigating': []}
+    if memo_tier == 'full' and memo is not None:
+        observations = zelda_report_observations(memo, pitch_deck_doc)
+
+    # The funnel: only offer the IC Memo when this viewer can actually open
+    # it; otherwise point them at the connection that unlocks it.
+    can_ic_memo = bool(pitch_deck_doc) and can_view_ic_memo(request.user, founder_app)
+    ic_memo_url = (reverse('zelda_api:ic_memo', args=[pitch_deck_doc.id])
+                   if (pitch_deck_doc and memo is not None) else None)
+    truth_delta_url = (reverse('zelda_api:truth_delta_ui', args=[pitch_deck_doc.id])
+                       if pitch_deck_doc else None)
+    for item in observations['worth_investigating']:
+        if item['target'] == 'ic_memo':
+            item['url'] = ic_memo_url if can_ic_memo else None
+        elif item['target'] == 'truth_delta':
+            item['url'] = truth_delta_url
+        else:
+            item['url'] = None
+
+    # --- Why Zelda surfaced this (investor + match vectors only) ------
+    # The plain-language sector / stage / overall-fit signals. The raw
+    # match percentage is deliberately NOT surfaced on this report — it's
+    # a fourth quasi-score the orientation layer doesn't need. The
+    # calculation is untouched; other surfaces still use it.
     ai_insights_data = None
     if investor_profile and investor_profile.focus_vector and founder_app.description_vector:
         try:
             raw_similarity = calculate_similarity(investor_profile.focus_vector, founder_app.description_vector)
             ai_score = max(0.0, min(100.0, raw_similarity * 100))
-            match_percentage = int(round(ai_score))
-
             rule_score = calculate_rule_based_score(application=founder_app, investor=investor_profile)
             ai_insights_data = _generate_explanatory_insights(ai_score, rule_score, founder_app, investor_profile)
         except Exception:
-            match_percentage = None
             ai_insights_data = None
 
     context = {
@@ -2153,12 +2210,13 @@ def standalone_memo_view(request, company_slug):
         'has_analysis': memo is not None,
         'analysis_pending': analysis_pending,
         'overview_text': overview_text,
-        'memo_sections': memo_sections,
         'truth_delta': truth_delta,
-        'match_percentage': match_percentage,
+        'truth_delta_url': truth_delta_url,
+        'observations': observations,
         'ai_insights': ai_insights_data,
         'investor': investor_profile,
-        # Same shared string every other intelligence report carries.
+        'can_view_ic_memo': can_ic_memo,
+        'ic_memo_url': ic_memo_url,
         'disclaimer': DUE_DILIGENCE_DISCLAIMER,
     }
 
