@@ -4341,13 +4341,14 @@ class StandaloneMemoRealDataTests(TestCase):
     def test_visual_language_preserved(self):
         self._memo(self._deck())
         r = self._get()
-        self.assertContains(r, 'renderConfidenceGauge')  # gauge machinery kept
         self.assertContains(r, 'Interlink')  # eyebrow
         self.assertContains(r, 'Powered')
         self.assertContains(r, 'not a binding representation by Interlink Foundry')  # disclaimer
         self.assertContains(r, 'field-info-icon')  # single info icon
 
-    def test_alignment_signal_renders_for_a_real_match_vector(self):
+    def test_alignment_shown_once_as_a_badge_no_gauge(self):
+        # PR #15: the Alignment value is the "Alignment: N%" badge only.
+        # The renderConfidenceGauge that repeated it on a /10 scale is gone.
         from matchmaking.models import InvestorApplication
         inv_user = User.objects.create_user('smd_inv', password='x')
         inv = InvestorApplication.objects.create(
@@ -4363,15 +4364,21 @@ class StandaloneMemoRealDataTests(TestCase):
         with mock.patch('matchmaking.views.calculate_similarity', return_value=0.82):
             self.client.force_login(inv_user)
             r = self.client.get(reverse('matchmaking:standalone_memo', args=[self.slug]))
-        self.assertContains(r, 'Alignment: 82%')
-        self.assertContains(r, "'Alignment'")
+        self.assertContains(r, 'Alignment: 82%')            # the badge stays
+        # the gauge that repeated the number is gone (renderConfidenceGauge
+        # itself is defined in the always-included AI sidebar, so assert on
+        # this report's own gauge markers, not the function name)
+        self.assertNotContains(r, 'memo-alignment-gauge')
+        self.assertNotContains(r, "'Alignment')")
+        self.assertEqual(r.content.decode().count('Alignment: 82%'), 1)
 
     def test_alignment_signal_omitted_not_faked_without_a_match_vector(self):
-        # No hardcoded "75%" fallback anymore: staff viewer, no investor vector.
+        # No hardcoded "75%" fallback: staff viewer, no investor vector -> no badge, no gauge.
         self._memo(self._deck())
         r = self._get()
         self.assertNotContains(r, 'Alignment:')
         self.assertNotContains(r, 'match_percentage')
+        self.assertNotContains(r, 'memo-alignment-gauge')
 
     def test_key_figures_are_formatted_not_raw(self):
         self._memo(self._deck())

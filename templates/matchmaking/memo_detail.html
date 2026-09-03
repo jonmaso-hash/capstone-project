@@ -78,8 +78,7 @@
         <div class="col-lg-7">
             <div class="card card-body shadow-sm border-0 p-4 mb-4 metric-card">
                 <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Overview</h5>
-                <p class="text-secondary lh-lg mb-3" style="white-space: pre-line;">{{ overview_text }}</p>
-                <div id="memo-alignment-gauge"></div>
+                <p class="text-secondary lh-lg mb-0" style="white-space: pre-line;">{{ overview_text }}</p>
             </div>
 
             {% for section in memo_sections %}
@@ -196,21 +195,12 @@
     </div>
     {% endif %}
 </div>
-
-<script>
-    // The only script this report needs: render the Alignment gauge from
-    // the match signal the view computed. No polling, no background
-    // pipeline — everything else on this page is server-rendered from real
-    // intelligence data or an explicit "not available yet" state.
-    document.addEventListener('DOMContentLoaded', function () {
-        var gaugeEl = document.getElementById('memo-alignment-gauge');
-        {% if match_percentage is not None %}
-        if (gaugeEl && typeof renderConfidenceGauge === 'function') {
-            renderConfidenceGauge(gaugeEl, {{ match_percentage }} / 100, 'Alignment');
-        }
-        {% else %}
-        if (gaugeEl) { gaugeEl.remove(); }
-        {% endif %}
-    });
-</script>
+{% comment %}
+The Alignment value is shown once, as the "Alignment: N%" badge in the
+header. It previously also rendered a renderConfidenceGauge here — the
+same number again, on a /10 scale — which PR #15 removed as part of the
+"one concept, one prominent visual" cleanup (see PR #13). This page now
+needs no client-side script at all: everything is server-rendered from
+real intelligence data or an explicit unavailable/processing state.
+{% endcomment %}
 {% endblock content %}
