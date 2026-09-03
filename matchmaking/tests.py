@@ -4182,6 +4182,25 @@ class StandaloneMemoViewTierTests(TestCase):
         response = self.client.get(reverse('matchmaking:standalone_memo', args=[self.slug]))
         self.assertEqual(response.status_code, 403)
 
+    def test_carries_the_interlink_intelligence_eyebrow(self):
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('matchmaking:standalone_memo', args=[self.slug]))
+        self.assertContains(response, 'Interlink')
+        self.assertContains(response, 'Intelligence')
+        self.assertContains(response, 'Powered')
+        self.assertContains(response, 'Zelda Intelligence Report')  # its own title is unchanged
+
+    def test_carries_the_shared_due_diligence_disclaimer(self):
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('matchmaking:standalone_memo', args=[self.slug]))
+        self.assertContains(response, 'not a binding representation by Interlink Foundry')
+
+    def test_info_icon_states_what_the_report_is_not(self):
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('matchmaking:standalone_memo', args=[self.slug]))
+        self.assertContains(response, 'field-info-icon')
+        self.assertContains(response, 'not a recommendation or a substitute for your own diligence')
+
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
 class ArchiveQuerySetTests(TestCase):

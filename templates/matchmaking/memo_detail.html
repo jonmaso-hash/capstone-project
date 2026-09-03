@@ -24,11 +24,12 @@
     <!-- Active Intelligence Memo Report Header -->
     <div class="row align-items-center mb-4 g-4">
         <div class="col-md-8">
+            {% include "includes/intelligence_eyebrow.html" %}
             <p class="text-uppercase small text-muted fw-bold mb-1">
                 Zelda Intelligence Report
                 <i class="bi bi-info-circle field-info-icon" role="button" tabindex="0"
                    data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom"
-                   data-bs-content="Save hours of manual research. Zelda analyzes this company's pitch deck, financials, and available evidence to generate an investor-ready report covering business model, market opportunity, competitive positioning, financial review, risk factors, and key questions for management."></i>
+                   data-bs-content="A fast orientation on whether a company is worth a closer look. Zelda works through the pitch deck, financials and available evidence and lays out the business, market, competitive position, financial picture, risks and the questions to put to the founder. It is a first-pass read, not a recommendation or a substitute for your own diligence."></i>
             </p>
             {% if memo_tier == 'full' %}
             <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-2 mb-2 fw-semibold">
@@ -188,6 +189,12 @@
             {% endif %}
         </div>
     </div>
+
+    {% if disclaimer %}
+    <div class="mt-4 pt-3 border-top text-muted" style="font-size: 0.75rem; line-height: 1.5;">
+        <strong>&#8505;</strong> {{ disclaimer }}
+    </div>
+    {% endif %}
 </div>
 
 <!-- Load Chart JS Dependencies -->

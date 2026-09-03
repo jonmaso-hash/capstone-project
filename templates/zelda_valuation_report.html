@@ -6,10 +6,11 @@
 <div class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <div>
+            {% include "includes/intelligence_eyebrow.html" %}
             <h2 class="fw-bold mb-1"><i class="bi bi-graph-up-arrow me-2"></i>Business Valuation Report
                 <i class="bi bi-info-circle field-info-icon" role="button" tabindex="0"
                    data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom"
-                   data-bs-content="Get an estimated valuation range without hiring a valuation firm. Zelda analyzes your company's financials, market position, and stage to produce a valuation range, a confidence assessment, and the key factors driving it."></i>
+                   data-bs-content="A ballpark valuation range without hiring a firm. Zelda reads the financials, stage and market position in your documents and produces a low–high range, a confidence read, and the factors moving it. It is a model estimate for planning and negotiation — not an appraisal, an audit, or a price."></i>
             </h2>
             <p class="text-muted mb-0">{{ document.source_entity }}</p>
         </div>

@@ -1,0 +1,11 @@
+{% comment %}
+Interlink Intelligence family eyebrow — one line above the title on every
+intelligence report, so the hierarchy reads:
+  Interlink Foundry  (the marketplace)
+    -> Interlink Intelligence  (this family of reports)
+      -> powered by Zelda  (the engine that produces the analysis)
+Inline styles so it renders identically on the base.html pages (Zelda
+Report, IC Memo, Valuation) and on the Truth Delta bare fragment, which
+has no access to base.css.
+{% endcomment %}
+<p style="font-family:ui-monospace,SFMono-Regular,Menlo,'Liberation Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.13em;text-transform:uppercase;color:#64748b;margin:0 0 10px;line-height:1.4;">Interlink&nbsp;Intelligence <span style="opacity:.5">&middot;</span> Powered&nbsp;by&nbsp;Zelda</p>
