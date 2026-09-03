@@ -225,7 +225,14 @@ def build_ic_memo_context(founder_application, tier='full'):
                 'valuation_low': vr.valuation_low,
                 'valuation_high': vr.valuation_high,
                 'valuation_summary': vr.valuation_summary,
-                'confidence_score': vr.confidence_score,  # already 0-100 scale, unlike memo's completeness_score
+                # "Disclosure Coverage" (was labelled "Analysis confidence"):
+                # BusinessValuationReport.confidence_score is stored 0-1
+                # (compute_overall_confidence — the average across 8 business
+                # dimensions of how explicitly the documents cover each).
+                # Present it 0-100 to sit next to the memo's other figures.
+                # It measures the founder's documents, not confidence in the
+                # valuation. See PR #14.
+                'disclosure_coverage': round((vr.confidence_score or 0) * 100),
             }
 
         deck_engagement = get_deck_engagement_stats(founder_application)
@@ -320,10 +327,10 @@ def render_ic_memo_markdown(context):
         lines.append('## Valuation')
         if v['valuation_low'] is not None and v['valuation_high'] is not None:
             lines.append(f"**Range:** ${v['valuation_low']:,.0f} – ${v['valuation_high']:,.0f}")
-        # Label + the collision with the memo's own "Analysis Confidence"
-        # above are left for PR #14 (which resolves what this number means
-        # at the source).
-        lines.append(f"**Analysis confidence:** {v['confidence_score']:.0f}/100 — Zelda's confidence in the valuation analysis, not a bound on the range")
+        # "Disclosure Coverage" — how fully the founder's documents cover the
+        # 8 business dimensions the valuation uses; a read on the documents,
+        # not confidence in the valuation. Matches the full Valuation report.
+        lines.append(f"**Disclosure Coverage:** {v['disclosure_coverage']}/100 — how fully the submitted documents cover the dimensions this valuation uses, not confidence in the valuation itself")
         if v['valuation_summary']:
             lines.append(v['valuation_summary'])
         lines.append('')
