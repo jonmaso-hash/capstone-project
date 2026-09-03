@@ -282,6 +282,104 @@ class WorkDoneSummaryTests(TestCase):
             work_done_summary(hours_saved=5)
 
 
+class ZeldaReportObservationsTests(TestCase):
+    """
+    zelda_api.ic_memo.zelda_report_observations (PR #16) — deterministic,
+    presentation-layer synthesis for the Zelda Report's "What Zelda
+    noticed" / "Worth investigating". No LLM call, no new score. Both
+    lists come back empty when the underlying data can't support a real
+    observation.
+    """
+
+    def setUp(self):
+        from matchmaking.tests import _mock_embedding_generation
+        _mock_embedding_generation(self)
+        self.user = User.objects.create_user('zro_user', password='x')
+
+    def _deck(self):
+        return DocumentSource.objects.create(
+            uploaded_by=self.user, filename='d.pdf', source_entity='ZRO',
+            document_type='pitch_deck', status='analyzed',
+        )
+
+    def _memo(self, doc, **kw):
+        fields = dict(document=doc, executive_summary='x', recommendation='NEEDS_REVIEW',
+                      completeness_score=0.6, citations_count=0)
+        fields.update(kw)
+        return IntelligenceMemo.objects.create(**fields)
+
+    def test_empty_when_no_truth_delta_and_no_insights_and_no_concerns(self):
+        from .ic_memo import zelda_report_observations
+        doc = self._deck()
+        memo = self._memo(doc)
+        obs = zelda_report_observations(memo, doc)
+        self.assertEqual(obs['noticed'], [])
+        self.assertEqual(obs['worth_investigating'], [])
+
+    def test_verification_coverage_becomes_a_noticed_observation(self):
+        from .ic_memo import zelda_report_observations
+        from .truth_delta_models import TruthDeltaReport
+        doc = self._deck()
+        memo = self._memo(doc)
+        TruthDeltaReport.objects.create(
+            document=doc, overall_truth_score=72.0, credibility_risk='low', summary='ok',
+            details={'claims': [{'category': 'revenue'}, {'category': 'employees'}],
+                     'per_claim': [
+                         {'category': 'revenue', 'claimed': '$5M', 'observed': '$5M (EDGAR)', 'assessment': 'match'},
+                         {'category': 'employees', 'claimed': '20', 'observed': 'no external data', 'assessment': 'unchecked'},
+                     ]},
+        )
+        obs = zelda_report_observations(memo, doc)
+        self.assertTrue(any('backs 1 of 2 checkable claims' in n for n in obs['noticed']))
+        self.assertTrue(any('No public source was found to check employees' in n for n in obs['noticed']))
+        self.assertIn({'topic': 'Employees — not externally verified', 'target': 'truth_delta'},
+                      obs['worth_investigating'])
+
+    def test_analysis_depth_observation_from_insight_confidence(self):
+        from .ic_memo import zelda_report_observations
+        doc = self._deck()
+        memo = self._memo(doc)
+        IntelligenceInsight.objects.create(document=doc, category='Revenue', insight_text='r', confidence_score=95)
+        IntelligenceInsight.objects.create(document=doc, category='Team', insight_text='t', confidence_score=90)
+        IntelligenceInsight.objects.create(document=doc, category='Market', insight_text='m', confidence_score=50)
+        memo.insights_used.set(IntelligenceInsight.objects.filter(document=doc))
+        obs = zelda_report_observations(memo, doc)
+        self.assertTrue(any('specific on' in n and 'lightly covered' in n for n in obs['noticed']))
+
+    def test_worth_investigating_pulls_memo_concern_lines_verbatim(self):
+        from .ic_memo import zelda_report_observations
+        doc = self._deck()
+        memo = self._memo(doc, key_concerns='Customer concentration is high. Runway is under 12 months.')
+        obs = zelda_report_observations(memo, doc)
+        topics = [w['topic'] for w in obs['worth_investigating']]
+        self.assertIn('Customer concentration is high', topics)
+        self.assertIn('Runway is under 12 months', topics)
+        self.assertTrue(all(w['target'] == 'ic_memo' for w in obs['worth_investigating']))
+
+    def test_worth_investigating_points_at_questions_when_no_concerns(self):
+        from .ic_memo import zelda_report_observations
+        doc = self._deck()
+        memo = self._memo(doc, key_concerns='', questions_for_management='What is NRR? What is CAC payback?')
+        obs = zelda_report_observations(memo, doc)
+        self.assertEqual([w['topic'] for w in obs['worth_investigating']],
+                         ["Open questions the deck doesn't answer"])
+
+    def test_caps_at_three_noticed_and_four_worth(self):
+        from .ic_memo import zelda_report_observations
+        from .truth_delta_models import TruthDeltaReport
+        doc = self._deck()
+        memo = self._memo(doc, key_concerns='A. B. C. D. E. F.')
+        TruthDeltaReport.objects.create(
+            document=doc, overall_truth_score=50.0, credibility_risk='low', summary='ok',
+            details={'claims': [{'category': c} for c in ('a', 'b', 'c')],
+                     'per_claim': [{'category': c, 'claimed': 'x', 'observed': 'no external data',
+                                    'assessment': 'unchecked'} for c in ('a', 'b', 'c')]},
+        )
+        obs = zelda_report_observations(memo, doc)
+        self.assertLessEqual(len(obs['noticed']), 3)
+        self.assertLessEqual(len(obs['worth_investigating']), 4)
+
+
 class ICMemoTests(TestCase):
     """
     IC Memo Generator (zelda_api/ic_memo.py) — a synthesis/export layer

@@ -5,8 +5,11 @@
 
 {% block css %}
 <style>
-    .memo-badge-premium { background: linear-gradient(135deg, #0d6efd, #0a58ca); color: white; }
     .metric-card { border-radius: 12px; background: #ffffff; border: 1px solid #e3e6f0; }
+    .zir-col { max-width: 760px; }
+    .fact-strip { display: flex; flex-wrap: wrap; gap: 8px 32px; }
+    .fact-strip .fact small { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: .04em; color: #6c757d; }
+    .fact-strip .fact span { font-weight: 600; color: #1e293b; }
 </style>
 {% endblock css %}
 
@@ -18,189 +21,194 @@
         </a>
     </div>
 
-    <!-- Report header -->
-    <div class="row align-items-center mb-4 g-4">
-        <div class="col-md-8">
-            {% include "includes/intelligence_eyebrow.html" %}
-            <p class="text-uppercase small text-muted fw-bold mb-1">
-                Zelda Intelligence Report
-                <i class="bi bi-info-circle field-info-icon" role="button" tabindex="0"
-                   data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom"
-                   data-bs-content="A fast orientation on whether a company is worth a closer look. Zelda works through the pitch deck, financials and available evidence and lays out the business, market, competitive position, financial picture and risks. It is a first-pass read, not a recommendation or a substitute for your own diligence."></i>
-            </p>
-            {% if memo_tier == 'full' %}
-            <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-2 mb-2 fw-semibold">
-                <i class="bi bi-stars me-1"></i>Zelda AI — Full Report
-            </span>
-            {% else %}
-            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-2 mb-2 fw-semibold">
-                <i class="bi bi-lightning-charge-fill me-1"></i>Zelda Lite Report
-            </span>
-            {% endif %}
-            <div class="d-flex align-items-center gap-3 flex-wrap">
-                <h1 class="fw-bold m-0 text-dark" id="startup-title">{{ founder_app.company_name }}</h1>
-                {% if match_percentage is not None %}
-                <span class="badge rounded-pill memo-badge-premium px-3 py-2 fs-6">
-                    <i class="bi bi-cpu-fill me-1"></i> Alignment: {{ match_percentage }}%
+    <div class="zir-col mx-auto">
+        <!-- Report header -->
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+            <div>
+                {% include "includes/intelligence_eyebrow.html" %}
+                <p class="text-uppercase small text-muted fw-bold mb-1">
+                    Zelda Intelligence Report
+                    <i class="bi bi-info-circle field-info-icon" role="button" tabindex="0"
+                       data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom"
+                       data-bs-content="A 30-second orientation: what this company is, why it surfaced for you, what Zelda noticed, and where to look next. The full analysis — thesis, scenarios, recommendation — is in the IC Memo. This is not a recommendation or a substitute for your own diligence."></i>
+                </p>
+                {% if memo_tier == 'full' %}
+                <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-2 mb-2 fw-semibold">
+                    <i class="bi bi-stars me-1"></i>Zelda AI — Full Report
+                </span>
+                {% else %}
+                <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-2 mb-2 fw-semibold">
+                    <i class="bi bi-lightning-charge-fill me-1"></i>Zelda Lite Report
                 </span>
                 {% endif %}
+                <h1 class="fw-bold m-0 text-dark" id="startup-title">{{ founder_app.company_name }}</h1>
+                <p class="text-muted fs-6 mt-1 mb-0">Sector: {{ founder_app.sector|default:"not specified" }}</p>
             </div>
-            <p class="text-muted fs-5 mt-2 mb-0">Sector: {{ founder_app.sector }} | Stage: {{ founder_app.stage }}</p>
-        </div>
-        <div class="col-md-4 text-md-end">
-            <a href="{% url 'matchmaking:diligence_chat' %}" class="btn btn-primary px-4 py-2 rounded-pill">
-                <i class="bi bi-chat-square-text-fill me-2"></i> Enter Active Deal Room
+            <a href="{% url 'matchmaking:diligence_chat' %}" class="btn btn-primary px-3 py-2 rounded-pill flex-shrink-0">
+                <i class="bi bi-chat-square-text-fill me-1"></i> Enter Active Deal Room
             </a>
         </div>
-    </div>
 
-    <!-- Honest data-state banner -->
-    {% if analysis_pending %}
-    <div class="alert alert-info d-flex align-items-center gap-3 border-0 shadow-sm mb-4" role="alert">
-        <div class="spinner-border spinner-border-sm text-info flex-shrink-0" role="status"></div>
-        <div>
-            <strong>Analysis in progress.</strong> Zelda is still working through {{ founder_app.company_name }}'s
-            pitch deck. The full report appears here once it's ready — reload in a few minutes.
-        </div>
-    </div>
-    {% elif not has_analysis %}
-    <div class="alert alert-secondary d-flex align-items-start gap-2 border-0 shadow-sm mb-4" role="alert">
-        <i class="bi bi-info-circle mt-1 flex-shrink-0"></i>
-        <div>
-            <strong>No deck analysis yet.</strong> {{ founder_app.company_name }} hasn't uploaded a pitch deck
-            for Zelda to analyse. What's below comes from their profile and your match signal.
-        </div>
-    </div>
-    {% endif %}
-
-    <div class="row g-4">
-        <!-- Left: the orientation narrative -->
-        <div class="col-lg-7">
-            <div class="card card-body shadow-sm border-0 p-4 mb-4 metric-card">
-                <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Overview</h5>
-                <p class="text-secondary lh-lg mb-0" style="white-space: pre-line;">{{ overview_text }}</p>
+        <!-- Honest data-state banner -->
+        {% if analysis_pending %}
+        <div class="alert alert-info d-flex align-items-center gap-3 border-0 shadow-sm mb-4" role="alert">
+            <div class="spinner-border spinner-border-sm text-info flex-shrink-0" role="status"></div>
+            <div>
+                <strong>Analysis in progress.</strong> Zelda is still working through {{ founder_app.company_name }}'s
+                pitch deck. This report fills in once it's ready — reload in a few minutes.
             </div>
-
-            {% for section in memo_sections %}
-            <div class="card card-body shadow-sm border-0 p-4 mb-4 metric-card">
-                <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">{{ section.label }}</h5>
-                <p class="text-secondary lh-lg mb-0" style="white-space: pre-line;">{{ section.text }}</p>
+        </div>
+        {% elif not has_analysis %}
+        <div class="alert alert-secondary d-flex align-items-start gap-2 border-0 shadow-sm mb-4" role="alert">
+            <i class="bi bi-info-circle mt-1 flex-shrink-0"></i>
+            <div>
+                <strong>No deck analysis yet.</strong> {{ founder_app.company_name }} hasn't uploaded a pitch deck
+                for Zelda to analyse. What's below comes from their profile and your match signal.
             </div>
-            {% endfor %}
+        </div>
+        {% endif %}
 
-            {% if memo_tier == 'lite' and has_analysis %}
-            <div class="card card-body shadow-sm border-0 p-4 mb-4 metric-card" style="background: linear-gradient(135deg, #fff8e1, #ffffff);">
-                <h5 class="fw-bold mb-1">Zelda AI unlocks the full report</h5>
-                <p class="text-muted small mb-3">Zelda Lite shows the orientation and your match signal. Zelda AI adds the market, team and financial read, plus the full verification detail.</p>
-                <p class="text-muted small mb-0">
-                    {{ founder_app.company_name }} hasn't upgraded to Zelda AI yet. Once they do, you'll see the complete report here — no extra cost to you.
-                </p>
+        {# Overview #}
+        <div class="card card-body shadow-sm border-0 p-4 mb-4 metric-card">
+            <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Overview</h5>
+            <p class="text-secondary lh-lg mb-0" style="white-space: pre-line;">{{ overview_text }}</p>
+            {% if founder_app.stage or founder_app.raising_amount or founder_app.current_revenue is not None or founder_app.team_size %}
+            <div class="fact-strip mt-3 pt-3 border-top">
+                {% if founder_app.stage %}<div class="fact"><small>Stage</small><span>{{ founder_app.stage }}</span></div>{% endif %}
+                {% if founder_app.raising_amount %}<div class="fact"><small>Raising</small><span>${{ founder_app.raising_amount|floatformat:0|intcomma }}</span></div>{% endif %}
+                {% if founder_app.current_revenue is not None %}<div class="fact"><small>Current revenue</small><span>${{ founder_app.current_revenue|floatformat:0|intcomma }}</span></div>{% endif %}
+                {% if founder_app.team_size %}<div class="fact"><small>Team size</small><span>{{ founder_app.team_size }}</span></div>{% endif %}
             </div>
             {% endif %}
         </div>
 
-        <!-- Right: match rationale + verification + figures -->
-        <div class="col-lg-5">
-            {% if ai_insights %}
-            <div class="card card-body shadow-sm border-0 p-4 metric-card bg-white mb-4">
-                <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Why this matched</h5>
-                <p class="small text-muted mb-4">{{ ai_insights.summary }}</p>
-                <div class="d-flex flex-column gap-3">
-                    {% for pillar in ai_insights.pillars %}
-                    <div class="p-3 bg-light rounded border-start border-4 {% if pillar.score == 'Match' or pillar.score == 'Excellent' or pillar.score == 'Passed' %}border-success{% else %}border-warning{% endif %}">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="fw-bold small text-dark">{{ pillar.title }}</span>
-                            <span class="badge {% if pillar.score == 'Match' or pillar.score == 'Excellent' or pillar.score == 'Passed' %}bg-success-subtle text-success{% else %}bg-warning-subtle text-warning{% endif %} px-2 py-1">{{ pillar.score }}</span>
-                        </div>
-                        <p class="small text-muted mb-0">{{ pillar.desc }}</p>
+        {# Why Zelda surfaced this - investor + match vectors only #}
+        {% if ai_insights %}
+        <div class="card card-body shadow-sm border-0 p-4 mb-4 metric-card">
+            <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Why Zelda surfaced this for you</h5>
+            <p class="small text-muted mb-3">{{ ai_insights.summary }}</p>
+            <div class="d-flex flex-column gap-2">
+                {% for pillar in ai_insights.pillars %}
+                <div class="d-flex justify-content-between align-items-start gap-3 p-2 rounded bg-light">
+                    <div>
+                        <span class="fw-semibold small text-dark d-block">{{ pillar.title }}</span>
+                        <span class="small text-muted">{{ pillar.desc }}</span>
                     </div>
-                    {% endfor %}
+                    <span class="badge {% if pillar.score == 'Match' or pillar.score == 'Passed' %}bg-success-subtle text-success{% else %}bg-secondary-subtle text-secondary{% endif %} px-2 py-1 flex-shrink-0">{{ pillar.score }}</span>
                 </div>
+                {% endfor %}
             </div>
-            {% endif %}
+        </div>
+        {% endif %}
 
-            <!-- Claims & verification — a read of the existing Truth Delta report, not a re-check -->
-            <div class="card card-body shadow-sm border-0 p-4 metric-card mb-4">
-                <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Claims &amp; verification</h5>
-                {% if truth_delta %}
-                    {% if truth_delta.overall_truth_score is not None %}
-                    <p class="mb-1"><strong>Credibility Score:</strong> {{ truth_delta.overall_truth_score|floatformat:0 }}/100
-                        <span class="text-muted small d-block">Reflects only the claims that had a public source to check against.</span>
-                    </p>
-                    {% else %}
-                    <p class="mb-1"><strong>Credibility Score:</strong> <span class="text-muted">not scored</span>
-                        <span class="text-muted small d-block">No external data was found to verify or contradict these claims.</span>
-                    </p>
-                    {% endif %}
+        {# What Zelda noticed #}
+        {% if observations.noticed %}
+        <div class="card card-body shadow-sm border-0 p-4 mb-4 metric-card">
+            <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">What Zelda noticed</h5>
+            <ul class="mb-0 text-secondary lh-lg">
+                {% for point in observations.noticed %}<li>{{ point }}</li>{% endfor %}
+            </ul>
+        </div>
+        {% endif %}
 
-                    {% if memo_tier == 'full' %}
-                        {% if truth_delta.claims_checked %}<p class="mb-1 small text-muted">{{ truth_delta.claims_checked }} claim{{ truth_delta.claims_checked|pluralize }} checked</p>{% endif %}
-                        {% if truth_delta.coverage.total %}
-                        <div class="d-flex rounded overflow-hidden mb-1" style="height: 10px; max-width: 320px; background: #e9ecef;">
-                            {% if truth_delta.coverage.verified %}<div style="width: {% widthratio truth_delta.coverage.verified truth_delta.coverage.total 100 %}%; background: #10b981;"></div>{% endif %}
-                            {% if truth_delta.no_data_count %}<div style="width: {% widthratio truth_delta.no_data_count truth_delta.coverage.total 100 %}%; background: #f59e0b;"></div>{% endif %}
-                        </div>
-                        <p class="small text-muted mb-0">
-                            <span style="color: #10b981;">&#9632;</span> Verified against public sources — {{ truth_delta.coverage.verified }}
-                            &nbsp;&middot;&nbsp;
-                            <span style="color: #f59e0b;">&#9632;</span> No external data — {{ truth_delta.no_data_count }}
-                        </p>
-                        {% else %}
-                        <p class="small text-muted mb-0">No verifiable claims were extracted from the deck.</p>
+        {# Worth investigating #}
+        {% if observations.worth_investigating %}
+        <div class="card card-body shadow-sm border-0 p-4 mb-4 metric-card">
+            <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Worth investigating</h5>
+            <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+                {% for item in observations.worth_investigating %}
+                <li class="d-flex align-items-start gap-2">
+                    <i class="bi bi-search text-muted mt-1 flex-shrink-0" style="font-size: 0.8rem;"></i>
+                    <span class="text-secondary">
+                        {{ item.topic }}
+                        {% if item.url %}
+                        <a href="{{ item.url }}" class="small text-decoration-none ms-1">{% if item.target == 'truth_delta' %}check in Truth Delta &rarr;{% else %}see the IC Memo &rarr;{% endif %}</a>
                         {% endif %}
-                    {% endif %}
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
 
-                    <p class="small mb-0 mt-2">
-                        <a href="{% url 'zelda_api:truth_delta_ui' truth_delta.document_id %}">View the full Truth Delta report &rarr;</a>
-                    </p>
+        {# Claims and verification #}
+        <div class="card card-body shadow-sm border-0 p-4 mb-4 metric-card">
+            <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Claims &amp; verification</h5>
+            {% if truth_delta %}
+                {% if truth_delta.overall_truth_score is not None %}
+                <p class="mb-1"><strong>Credibility Score:</strong> {{ truth_delta.overall_truth_score|floatformat:0 }}/100
+                    <span class="text-muted small d-block">Zelda found external support for several of the deck's checkable claims. Reflects only claims that had a public source to check against.</span>
+                </p>
                 {% else %}
-                    <p class="text-muted small mb-0">
-                        <i class="bi bi-search me-1"></i>Zelda hasn't run claim verification for {{ founder_app.company_name }} yet.
-                    </p>
+                <p class="mb-1"><strong>Credibility Score:</strong> <span class="text-muted">not scored</span>
+                    <span class="text-muted small d-block">No external data was found to verify or contradict these claims.</span>
+                </p>
                 {% endif %}
-            </div>
 
-            {% if memo_tier == 'full' %}
-            <div class="card card-body shadow-sm border-0 p-4 metric-card">
-                <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Key figures</h5>
-                <table class="table table-borderless mb-0 align-middle">
-                    <tbody>
-                        <tr>
-                            <td class="text-muted ps-0 py-2 small">Raising:</td>
-                            <td class="text-end fw-semibold text-dark py-2">{% if founder_app.raising_amount %}${{ founder_app.raising_amount|floatformat:0|intcomma }}{% else %}not disclosed{% endif %}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted ps-0 py-2 small">Current revenue:</td>
-                            <td class="text-end fw-semibold text-dark py-2">{% if founder_app.current_revenue is not None %}${{ founder_app.current_revenue|floatformat:0|intcomma }}{% else %}not disclosed{% endif %}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted ps-0 py-2 small">Team size:</td>
-                            <td class="text-end fw-semibold text-dark py-2">{% if founder_app.team_size %}{{ founder_app.team_size }}{% else %}not disclosed{% endif %}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+                {% if memo_tier == 'full' and truth_delta.coverage.total %}
+                <div class="d-flex rounded overflow-hidden mb-1 mt-2" style="height: 10px; max-width: 320px; background: #e9ecef;">
+                    {% if truth_delta.coverage.verified %}<div style="width: {% widthratio truth_delta.coverage.verified truth_delta.coverage.total 100 %}%; background: #10b981;"></div>{% endif %}
+                    {% if truth_delta.no_data_count %}<div style="width: {% widthratio truth_delta.no_data_count truth_delta.coverage.total 100 %}%; background: #f59e0b;"></div>{% endif %}
+                </div>
+                <p class="small text-muted mb-0">
+                    <span style="color: #10b981;">&#9632;</span> Verified — {{ truth_delta.coverage.verified }}
+                    &nbsp;&middot;&nbsp;
+                    <span style="color: #f59e0b;">&#9632;</span> No external data — {{ truth_delta.no_data_count }}
+                </p>
+                {% endif %}
+
+                <p class="small mb-0 mt-2">
+                    <a href="{{ truth_delta_url }}">View the full Truth Delta report &rarr;</a>
+                </p>
             {% else %}
-            <div class="card card-body shadow-sm border-0 p-4 metric-card text-center">
-                <h5 class="fw-bold mb-1"><i class="bi bi-stars me-1 text-warning"></i>Zelda AI</h5>
-                <p class="text-muted small mb-0">The market, team and financial read are part of the full report.</p>
-            </div>
+                <p class="text-muted small mb-0">
+                    <i class="bi bi-search me-1"></i>Zelda hasn't run claim verification for {{ founder_app.company_name }} yet.
+                </p>
             {% endif %}
         </div>
-    </div>
 
-    {% if disclaimer %}
-    <div class="mt-4 pt-3 border-top text-muted" style="font-size: 0.75rem; line-height: 1.5;">
-        <strong>&#8505;</strong> {{ disclaimer }}
+        {# Go deeper #}
+        {% if has_analysis %}
+        <div class="card card-body shadow-sm border-0 p-4 mb-4 metric-card" style="background: linear-gradient(135deg, #eef4ff, #ffffff);">
+            <h5 class="fw-bold mb-1">Go deeper</h5>
+            {% if can_view_ic_memo %}
+            <p class="text-muted small mb-3">The IC Memo has the investment thesis, strengths and concerns, the evidence behind them, Bull / Base / Bear, and what would change the call.</p>
+            <a href="{{ ic_memo_url }}" class="btn btn-primary rounded-pill px-4 fw-semibold">
+                <i class="bi bi-file-earmark-text me-1"></i> Read the full IC Memo
+            </a>
+            {% else %}
+            <p class="text-muted small mb-0">
+                <i class="bi bi-lock me-1"></i>The full IC Memo — thesis, scenarios, recommendation —
+                unlocks once you and {{ founder_app.company_name }} are connected.
+            </p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if memo_tier == 'lite' and has_analysis %}
+        <div class="card card-body shadow-sm border-0 p-4 mb-4 metric-card" style="background: linear-gradient(135deg, #fff8e1, #ffffff);">
+            <h5 class="fw-bold mb-1">Zelda AI unlocks more</h5>
+            <p class="text-muted small mb-0">
+                {{ founder_app.company_name }} is on Zelda Lite. The full report adds what Zelda noticed,
+                the verification coverage breakdown, and the link through to the IC Memo — no extra cost to you
+                once they upgrade.
+            </p>
+        </div>
+        {% endif %}
+
+        {% if disclaimer %}
+        <div class="mt-4 pt-3 border-top text-muted" style="font-size: 0.75rem; line-height: 1.5;">
+            <strong>&#8505;</strong> {{ disclaimer }}
+        </div>
+        {% endif %}
     </div>
-    {% endif %}
 </div>
 {% comment %}
-The Alignment value is shown once, as the "Alignment: N%" badge in the
-header. It previously also rendered a renderConfidenceGauge here — the
-same number again, on a /10 scale — which PR #15 removed as part of the
-"one concept, one prominent visual" cleanup (see PR #13). This page now
-needs no client-side script at all: everything is server-rendered from
-real intelligence data or an explicit unavailable/processing state.
+This report is the 30-second orientation layer and carries no client-side
+script: everything is server-rendered from the IntelligenceMemo, the
+Truth Delta report, and the Application fields, or an explicit
+unavailable/processing state. The full problem/market/team/financial/risk
+analysis lives once, in the IC Memo — this page links to it rather than
+repeating it.
 {% endcomment %}
 {% endblock content %}
