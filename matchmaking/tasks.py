@@ -1,11 +1,9 @@
 import logging
 from celery import shared_task
-from django.core.cache import cache
 from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
 from .models import Application
-from matchmaking.services.web_crawling import get_live_startup_data
 
 logger = logging.getLogger(__name__)
 
@@ -40,26 +38,6 @@ def mark_milestone_change_task(application_id, milestone_title):
     except Application.DoesNotExist:
         return
     mark_milestone_change(application, milestone_title)
-
-
-@shared_task
-def crawl_startup_data_task(application_id):
-    """
-    Background task to fetch data and update the cache.
-    """
-    try:
-        app = Application.objects.get(id=application_id)
-        # Assuming your service function exists as imported
-        target_url = getattr(application, 'website', None)        
-        # Cache the result for 1 hour (3600 seconds)
-        cache_key = f"startup_data_{app.id}"
-        cache.set(cache_key, data, 3600)
-        return f"Successfully cached data for {app.company_name}"
-        
-    except Application.DoesNotExist:
-        return f"Application with id {application_id} not found."
-    except Exception as e:
-        return f"Error crawling data: {str(e)}"
 
 
 @shared_task(bind=True, max_retries=3)
