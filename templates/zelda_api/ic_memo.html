@@ -156,7 +156,8 @@
         {% if valuation.valuation_low is not None and valuation.valuation_high is not None %}
         <p class="mb-1"><strong>Range:</strong> ${{ valuation.valuation_low|floatformat:0|intcomma }} – ${{ valuation.valuation_high|floatformat:0|intcomma }}</p>
         {% endif %}
-        <p class="mb-1"><strong>Confidence:</strong> {{ valuation.confidence_score|floatformat:0 }}/100</p>
+        <p class="mb-1"><strong>Analysis confidence:</strong> {{ valuation.confidence_score|floatformat:0 }}/100
+            <span class="text-muted small">— Zelda's confidence in the valuation analysis, not a bound on the range</span></p>
         {% if valuation.valuation_summary %}<p class="text-secondary mb-0">{{ valuation.valuation_summary }}</p>{% endif %}
     </div>
     {% endif %}

@@ -402,7 +402,11 @@ function renderFull(data) {
         </div>
         ${disclaimerHtml(data)}
     `;
-    renderConfidenceGauge(document.getElementById('valuation-confidence-gauge'), data.confidence_score, 'Valuation Confidence');
+    // "Analysis Confidence" — Zelda's confidence in its own analysis, the
+    // same measure and label as the preview render and the header stat.
+    // Not "Valuation Confidence": it is not a confidence interval on the
+    // dollar range itself.
+    renderConfidenceGauge(document.getElementById('valuation-confidence-gauge'), data.confidence_score, 'Analysis Confidence');
 }
 
 async function loadReport() {
