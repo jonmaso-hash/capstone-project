@@ -614,6 +614,28 @@
                 <div class="stat-label">Unverified</div>
             </div>
         </div>
+
+        {% comment %}
+        Evidence Coverage — a visual of the same category_states the stat cards
+        above count, not a recomputed metric. Verified vs. no-external-data
+        across the distinct claim categories Zelda cross-checked. Canvas has a
+        fixed pixel size + responsive:false because this template is also
+        served as a bare fragment (no <!doctype>, quirks mode) where Chart.js
+        responsive container measurement collapses to 0x0.
+        {% endcomment %}
+        <div class="td-evidence-coverage mt-3 mb-2" style="max-width: 420px;">
+            <div class="small fw-bold" style="color: var(--td-text);">Evidence Coverage</div>
+            <canvas id="evidenceCoverageChart" width="400" height="92" style="max-width: 100%; margin-top: 0.25rem;"></canvas>
+            <p class="mb-0 mt-1" style="font-size: 0.75rem; color: #64748b;">
+                Of the claim categories Zelda cross-checked, how many it could confirm against
+                independent public sources (SEC EDGAR, Crunchbase, recent news).
+            </p>
+        </div>
+        {% elif report %}
+        <div class="mt-3 mb-2 small" style="color: #64748b;">
+            <i class="bi bi-info-circle me-1"></i>No verifiable claims were extracted from this
+            document, so there is nothing to cross-check against public sources yet.
+        </div>
         {% endif %}
 
         {% if report %}
@@ -1203,4 +1225,80 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
             if (docId) loadTruthDeltaData(docId);
         }
     });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Evidence Coverage chart — reads the two counts the Django view already
+// computed from report.category_states() (same numbers as the stat cards);
+// nothing is recalculated here.
+(function () {
+    const el = document.getElementById('evidenceCoverageChart');
+    if (!el || typeof Chart === 'undefined') return;
+
+    const verified = {{ verified_count|default:0 }};
+    const noData = {{ unverified_count|default:0 }};
+    const total = verified + noData;
+
+    const wrap = el.closest('.td-evidence-coverage');
+    if (total === 0) {                 // belt-and-suspenders: the template already
+        if (wrap) wrap.style.display = 'none';   // gates on category_states
+        return;
+    }
+
+    const GREEN = '#10b981', AMBER = '#f59e0b', INK = '#1e293b';
+
+    new Chart(el.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ['Claim categories'],
+            datasets: [
+                { label: 'Verified', data: [verified],
+                  backgroundColor: GREEN, borderColor: '#ffffff', borderWidth: 2, borderRadius: 4, borderSkipped: false },
+                { label: 'No external data', data: [noData],
+                  backgroundColor: AMBER, borderColor: '#ffffff', borderWidth: 2, borderRadius: 4, borderSkipped: false },
+            ],
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: false,   // fixed canvas size; this page also renders as a bare quirks-mode fragment
+            maintainAspectRatio: false,
+            layout: { padding: { top: 2, bottom: 2 } },
+            scales: {
+                // Proportion bar — the legend carries the counts and the tooltip
+                // the exact split, so the numeric axis would only add clutter.
+                x: { stacked: true, min: 0, max: total, display: false },
+                y: { stacked: true, display: false },
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12, boxHeight: 12, padding: 12, color: INK, font: { size: 12 },
+                        generateLabels: function (chart) {
+                            return chart.data.datasets.map(function (ds, i) {
+                                return {
+                                    text: ds.label + ' — ' + ds.data[0],
+                                    fillStyle: ds.backgroundColor,
+                                    strokeStyle: '#ffffff', lineWidth: 1,
+                                    hidden: false, datasetIndex: i,
+                                };
+                            });
+                        },
+                    },
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function () { return ''; },
+                        label: function (ctx) {
+                            const n = ctx.parsed.x;
+                            const pct = Math.round(n / total * 100);
+                            return ' ' + ctx.dataset.label + ': ' + n + ' of ' + total + ' (' + pct + '%)';
+                        },
+                    },
+                },
+            },
+        },
+    });
+})();
 </script>
