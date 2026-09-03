@@ -2194,6 +2194,8 @@ def standalone_memo_view(request, company_slug):
     # viewing investors), staff bypass for support purposes.
     memo_tier = 'full' if (request.user.is_staff or founder_app.is_premium) else 'lite'
 
+    from zelda_api.disclaimers import DUE_DILIGENCE_DISCLAIMER
+
     context = {
         'founder_app': founder_app,
         'external_data': external_data,
@@ -2203,6 +2205,8 @@ def standalone_memo_view(request, company_slug):
         'investor': investor_profile,
         'zelda_score': zelda_score,
         'memo_tier': memo_tier,
+        # Same shared string every other intelligence report already carries.
+        'disclaimer': DUE_DILIGENCE_DISCLAIMER,
     }
 
     return render(request, 'matchmaking/memo_detail.html', context)

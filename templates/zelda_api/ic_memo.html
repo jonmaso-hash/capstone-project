@@ -40,11 +40,12 @@
     </div>
 
     <div class="mb-4">
+        {% include "includes/intelligence_eyebrow.html" %}
         <p class="text-uppercase small text-muted fw-bold mb-1">
             AI Investment Committee Memo
             <i class="bi bi-info-circle field-info-icon no-print" role="button" tabindex="0"
                data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom"
-               data-bs-content="Turns hours of analyst work into minutes. Combines the Intelligence Memo, Truth Delta verification, valuation, and pitch engagement data into one shareable, investor-ready diligence package."></i>
+               data-bs-content="An investment-committee memo drafted for you, ready to share or mark up. It pulls the intelligence summary, Truth Delta verification, valuation and pitch-deck engagement into one document with a thesis, risks, a recommendation and questions for the founder. It is a first draft to react to — the recommendation is Zelda's, not an endorsement by Interlink Foundry."></i>
         </p>
         <h1 class="fw-bold mb-0">{{ company_name }}</h1>
         {% if ic_memo_tier == 'full' %}

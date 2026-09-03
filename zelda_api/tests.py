@@ -5000,6 +5000,68 @@ class GaugeVocabularyTests(TestCase):
         self.assertNotIn('<strong>Confidence:</strong>', html)
 
 
+class IntelligenceHeaderTests(TestCase):
+    """
+    The shared "Interlink Intelligence · Powered by Zelda" eyebrow and the
+    three-part info icon (outcome / what it does / what it isn't) on the
+    three zelda_api reports. The Zelda Intelligence Report (matchmaking) is
+    covered in StandaloneMemoViewTierTests.
+    """
+
+    def setUp(self):
+        from matchmaking.tests import _mock_embedding_generation
+        _mock_embedding_generation(self)
+        self.user = User.objects.create_user('ih_owner', password='x')
+        self.client.force_login(self.user)
+
+    def _assert_eyebrow(self, html):
+        self.assertIn('Interlink', html)
+        self.assertIn('Intelligence', html)
+        self.assertIn('Powered', html)
+        self.assertIn('Zelda', html)
+
+    def test_truth_delta_header(self):
+        from matchmaking.models import Application
+        from .truth_delta_models import TruthDeltaReport
+        Application.objects.create(user=self.user, company_name='IHTD', founder_name='F',
+            email='f@t.com', description='x', sector='SaaS', stage='Seed', is_premium=True)
+        doc = DocumentSource.objects.create(filename='d.pdf', source_entity='IHTD',
+            uploaded_by=self.user, document_type='pitch_deck', status='analyzed')
+        TruthDeltaReport.objects.create(document=doc, overall_truth_score=70.0,
+            credibility_risk='low', summary='ok', details={'claims': [{'category': 'revenue'}]})
+        html = self.client.get(reverse('zelda_api:truth_delta_ui', args=[doc.id])).content.decode()
+        self._assert_eyebrow(html)
+        self.assertIn('field-info-icon', html)
+        self.assertIn('not a background check or a guarantee', html)
+        self.assertIn('Truth Delta Verification', html)  # own title kept
+
+    def test_valuation_header(self):
+        from matchmaking.models import InvestorApplication
+        InvestorApplication.objects.create(user=self.user, is_premium=True)
+        doc = DocumentSource.objects.create(filename='v.pptx', source_entity='IHVAL',
+            uploaded_by=self.user, document_type='business_valuation', status='analyzed', valuation_tier='full')
+        BusinessValuationReport.objects.create(document=doc, confidence_score=0.6,
+            valuation_low=1_000_000, valuation_high=2_000_000,
+            valuation_summary='x', financial_summary='x', risk_report='x')
+        html = self.client.get(reverse('zelda_api:valuation_report', args=[doc.id])).content.decode()
+        self._assert_eyebrow(html)
+        self.assertIn('not an appraisal, an audit, or a price', html)
+        self.assertIn('Business Valuation Report', html)
+
+    def test_ic_memo_header(self):
+        from matchmaking.models import Application
+        Application.objects.create(user=self.user, company_name='IHMEMO', founder_name='F',
+            email='f@t.com', description='x', sector='SaaS', stage='Seed', is_premium=True)
+        deck = DocumentSource.objects.create(filename='deck.pdf', source_entity='IHMEMO',
+            uploaded_by=self.user, document_type='pitch_deck', status='analyzed')
+        IntelligenceMemo.objects.create(document=deck, executive_summary='x', investment_thesis='y',
+            recommendation='NEEDS_REVIEW', completeness_score=0.5, citations_count=0)
+        html = self.client.get(reverse('zelda_api:ic_memo', args=[deck.id])).content.decode()
+        self._assert_eyebrow(html)
+        self.assertIn("not an endorsement by Interlink Foundry", html)
+        self.assertIn('AI Investment Committee Memo', html)
+
+
 class ConfidenceGradeBandsTests(TestCase):
     """
     zelda_api.confidence_breakdown.grade_for_confidence — the deterministic

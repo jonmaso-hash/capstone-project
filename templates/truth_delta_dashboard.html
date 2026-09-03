@@ -573,6 +573,7 @@
 
     <!-- Header with Score -->
     <div class="truth-delta-container">
+        {% include "includes/intelligence_eyebrow.html" %}
         {% if truth_delta_tier == 'full' %}
         <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-2 mb-3 fw-semibold">
             <i class="bi bi-stars me-1"></i>Zelda AI — Full Verification
@@ -588,7 +589,7 @@
                 <h2>Truth Delta Verification
                     <i class="bi bi-info-circle field-info-icon" role="button" tabindex="0"
                        data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom"
-                       data-bs-content="Know what's actually verified before you invest. Truth Delta cross-checks claims against independent public sources (SEC EDGAR, Crunchbase, recent news) to flag what's supported, what's unverified, and what's missing — a diligence accelerator, not a substitute for full due diligence."></i>
+                       data-bs-content="See which of a company's claims hold up against outside records. Truth Delta checks the deck's claims against SEC EDGAR, Crunchbase and recent news, and marks each one supported, unverified, or contradicted. It only covers claims with a public source to check — a diligence accelerator, not a background check or a guarantee."></i>
                 </h2>
             </div>
             <div class="truth-delta-score-box">
@@ -638,10 +639,12 @@
         </div>
         {% endif %}
 
-        {# No confidence gauge here: it was fed the same overall_truth_score
-           as the Credibility Score above, so it only restated the signal.
-           Truth Delta's second-order read is the risk band + Evidence
-           Coverage, not a separate percentage. #}
+        {% comment %}
+        No confidence gauge here: it was fed the same overall_truth_score
+        as the Credibility Score above, so it only restated the signal.
+        Truth Delta's second-order read is the risk band + Evidence
+        Coverage, not a separate percentage.
+        {% endcomment %}
 
         <!-- Summary -->
         <div class="truth-delta-summary">
