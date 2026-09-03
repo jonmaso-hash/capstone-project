@@ -246,10 +246,47 @@ function renderPreview(data) {
     }
 }
 
+// Compact USD for the range-bar endpoint labels ("$2.1M"), so they don't
+// duplicate the full "$2,100,000 – $4,800,000" heading directly above.
+function compactUsd(n) {
+    const abs = Math.abs(n);
+    if (abs >= 1e9) return '$' + (n / 1e9).toFixed(abs >= 1e10 ? 0 : 1).replace(/\.0$/, '') + 'B';
+    if (abs >= 1e6) return '$' + (n / 1e6).toFixed(abs >= 1e7 ? 0 : 1).replace(/\.0$/, '') + 'M';
+    if (abs >= 1e3) return '$' + Math.round(n / 1e3) + 'k';
+    return '$' + Math.round(n);
+}
+
+// Supplemental range mark for the "Estimated Valuation Range" card. The
+// text range above stays authoritative; this is a visual reference only.
+// Midpoint is (low+high)/2 purely as a visual centre marker — not a
+// separate valuation figure and never labelled "most likely". Returns ''
+// (no bar) unless both endpoints are present, finite, and high > low >= 0.
+function valuationRangeBar(lowRaw, highRaw) {
+    const low = Number(lowRaw), high = Number(highRaw);
+    if (!Number.isFinite(low) || !Number.isFinite(high) || low < 0 || high <= low) return '';
+    const mid = (low + high) / 2;
+    const usd0 = (v) => v.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+    const aria = `Estimated valuation range from ${usd0(low)} to ${usd0(high)}; visual midpoint about ${usd0(mid)}.`;
+    return `
+        <figure class="mt-3 mb-0 mx-auto" style="max-width: 340px;" role="img" aria-label="${escapeHtml(aria)}">
+            <div style="position: relative; height: 10px; background: #34d399; border-radius: 999px;">
+                <span aria-hidden="true" style="position:absolute; left:50%; top:-5px; transform:translateX(-50%); width:2px; height:20px; background:#334155; border-radius:1px;"></span>
+                <span aria-hidden="true" style="position:absolute; left:0;  top:50%; transform:translate(-1px,-50%); width:13px; height:13px; border-radius:50%; background:#047857; border:2px solid #fff;"></span>
+                <span aria-hidden="true" style="position:absolute; right:0; top:50%; transform:translate(1px,-50%);  width:13px; height:13px; border-radius:50%; background:#047857; border:2px solid #fff;"></span>
+            </div>
+            <figcaption class="d-flex justify-content-between mt-2" style="font-size:0.72rem; color:#64748b;">
+                <span>Low<br><strong style="color:#1e293b;">${compactUsd(low)}</strong></span>
+                <span class="text-center">Midpoint<br><strong style="color:#1e293b;">${compactUsd(mid)}</strong></span>
+                <span class="text-end">High<br><strong style="color:#1e293b;">${compactUsd(high)}</strong></span>
+            </figcaption>
+        </figure>`;
+}
+
 function renderFull(data) {
     const valuationRange = (data.valuation_low && data.valuation_high)
         ? `$${Number(data.valuation_low).toLocaleString()} – $${Number(data.valuation_high).toLocaleString()}`
         : 'Not enough data to estimate';
+    const rangeBar = valuationRangeBar(data.valuation_low, data.valuation_high);
 
     const confidenceRows = (data.confidence_breakdown || []).map((row, i) => `
         <tr>
@@ -318,6 +355,7 @@ function renderFull(data) {
             <div class="card-body p-4 text-center">
                 <h6 class="text-uppercase fw-bold text-muted small mb-2">Estimated Valuation Range</h6>
                 <h2 class="fw-bold text-success mb-0">${valuationRange}</h2>
+                ${rangeBar}
                 ${trendBadge}
                 <div id="valuation-confidence-gauge" class="mt-3 text-start mx-auto" style="max-width: 320px;"></div>
             </div>
