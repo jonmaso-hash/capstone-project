@@ -5386,7 +5386,7 @@ class GaugeVocabularyTests(TestCase):
         self.assertNotIn('truthdelta-confidence-gauge', html)  # the gauge is gone
         self.assertNotIn('Verification Confidence', html)
 
-    # --- Business Valuation: the metric is "Disclosure Coverage" (PR #14) ---
+    # --- Business Valuation: "Disclosure Coverage" (PR #14), shown once (PR #15) ---
 
     def test_valuation_full_render_labels_the_number_disclosure_coverage(self):
         from matchmaking.models import InvestorApplication
@@ -5400,7 +5400,9 @@ class GaugeVocabularyTests(TestCase):
             valuation_summary='x', financial_summary='x', risk_report='x',
         )
         html = self.client.get(reverse('zelda_api:valuation_report', args=[doc.id])).content.decode()
-        self.assertIn("data.confidence_score, 'Disclosure Coverage'", html)   # both gauge calls
+        # the number lives in the trust-stats card + the caption; the label
+        # never appears as an "Analysis/Valuation Confidence" anywhere
+        self.assertIn("'Disclosure Coverage'", html)
         self.assertNotIn("'Analysis Confidence'", html)
         self.assertNotIn("'Valuation Confidence'", html)
         self.assertIn('Disclosure Coverage by dimension', html)               # the per-dimension table header
@@ -5408,6 +5410,29 @@ class GaugeVocabularyTests(TestCase):
         # the caption makes clear it's a documents measure, not verification
         self.assertIn('eight business dimensions used in this valuation', html)
         self.assertIn('not Truth Delta verification, and not confidence in the valuation itself', html)
+
+    def test_valuation_no_gauge_repeating_the_disclosure_coverage_number(self):
+        # PR #15: Disclosure Coverage shows once (trust-stats card). The
+        # renderConfidenceGauge that repeated it on a /10 scale is gone from
+        # both the full and lite renders.
+        from matchmaking.models import InvestorApplication
+        InvestorApplication.objects.create(user=self.user, is_premium=True)
+        doc = DocumentSource.objects.create(
+            filename='v.pptx', source_entity='ValG2', uploaded_by=self.user,
+            document_type='business_valuation', status='analyzed', valuation_tier='full',
+        )
+        BusinessValuationReport.objects.create(
+            document=doc, confidence_score=0.7, valuation_low=1_000_000, valuation_high=2_000_000,
+            valuation_summary='x', financial_summary='x', risk_report='x',
+        )
+        html = self.client.get(reverse('zelda_api:valuation_report', args=[doc.id])).content.decode()
+        # renderConfidenceGauge is defined in the always-included AI sidebar,
+        # so assert on this report's own gauge markers, not the function name
+        self.assertNotIn('valuation-confidence-gauge', html)
+        self.assertNotIn('valuation-lite-confidence-gauge', html)
+        self.assertNotIn(", 'Disclosure Coverage')", html)   # the removed gauge call
+        # the trust-stats card still computes the number
+        self.assertIn('(data.confidence_score * 10).toFixed(1)', html)
 
     # --- IC Memo: the embedded valuation number is "Disclosure Coverage" ---
 
