@@ -351,11 +351,9 @@ async function updateAcquisitionConnection(connId, action, targetUserId, targetU
         const data = await response.json();
 
         if (response.ok && action === 'ACCEPTED') {
-            if (targetUserId) {
-                await StreamChatController.createDealRoom(targetUserId, targetUsername);
-            } else {
-                window.location.reload();
-            }
+            // Server already recorded the acceptance; never leave the page
+            // showing "pending" because chat provisioning failed.
+            StreamChatController.openDealRoom(data.chat_channel_cid);
         } else if (response.ok) {
             window.location.reload();
         } else {

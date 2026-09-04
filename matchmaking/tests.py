@@ -5085,14 +5085,20 @@ class DealWorkspaceViewTests(TestCase):
         other_response = self.client.get(reverse('matchmaking:deal_workspace', args=[other_connection.id]))
         self.assertNotContains(other_response, 'Investor viewed &quot;Financials&quot;')
 
-    def test_chat_channel_id_matches_the_js_deal_room_scheme(self):
-        """Must exactly match StreamChatController.createDealRoom()'s
-        `deal_${members[0]}_${members[1]}` — members sorted as strings
-        (lexicographic, same as JS's default Array.sort())."""
+    def test_open_chat_link_carries_the_type_prefixed_cid(self):
+        """
+        chat.html selects the open conversation by comparing ?cid= against
+        channel.cid, which Stream always type-prefixes. The link used to
+        pass the bare id, so it could never auto-select the conversation
+        even once the channel existed.
+        """
         self.client.force_login(self.founder_user)
         response = self.client.get(reverse('matchmaking:deal_workspace', args=[self.connection.id]))
         expected_members = sorted([str(self.founder_user.id), str(self.investor_user.id)])
-        self.assertEqual(response.context['chat_channel_id'], f"deal_{expected_members[0]}_{expected_members[1]}")
+        self.assertEqual(
+            response.context['chat_channel_cid'],
+            f"messaging:deal_{expected_members[0]}_{expected_members[1]}",
+        )
 
     def test_zelda_summary_with_no_reports_yet(self):
         self.client.force_login(self.founder_user)
@@ -5518,11 +5524,14 @@ class AcquisitionDealWorkspaceViewTests(TestCase):
         self.assertEqual(response.context['counterparty_application'].id, self.buyer.id)
         self.assertEqual(response.context['connection'].id, self.connection.id)
 
-    def test_chat_channel_id_matches_the_js_deal_room_scheme(self):
+    def test_open_chat_link_carries_the_type_prefixed_cid(self):
         self.client.force_login(self.seller_user)
         response = self.client.get(reverse('matchmaking:acquisition_deal_workspace', args=[self.connection.id]))
         expected_members = sorted([str(self.seller_user.id), str(self.buyer_user.id)])
-        self.assertEqual(response.context['chat_channel_id'], f"deal_{expected_members[0]}_{expected_members[1]}")
+        self.assertEqual(
+            response.context['chat_channel_cid'],
+            f"messaging:deal_{expected_members[0]}_{expected_members[1]}",
+        )
 
     def test_closed_pending_does_not_render_as_verified_sold(self):
         self.connection.status = 'CLOSED_PENDING'
@@ -6037,3 +6046,145 @@ class InitiateDirectChatAjaxTests(TestCase):
             response_b_to_a = self._post_ajax(self.user_a.id)
 
         self.assertEqual(response_a_to_b.json()['channel_id'], response_b_to_a.json()['channel_id'])
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'],
+                   STREAM_API_KEY='test-key', STREAM_API_SECRET='test-secret')
+class AcceptedConnectionOpensAConversationTests(TestCase):
+    """
+    The cold-contact failure: an intro request was sent, accepted, and
+    confirmed ACCEPTED server-side -- and then both parties opened the deal
+    room to "No conversations", while the founder got a native alert saying
+    the counterparty "has not initialized their chat profile".
+
+    One root cause with two faces. The channel was created in the browser,
+    where the SDK acts only as the connected user, so Stream rejected any
+    channel naming a member who had never opened chat. And because
+    updateConnection's only ACCEPTED branch was that creation call -- which
+    swallowed its own failure and returned without navigating -- a
+    successful acceptance also left the page showing "pending".
+
+    The acceptance test is deliberately blunt: investor accepts founder ->
+    both parties can discover and open the same usable conversation.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('conv_founder', password='x')
+        self.investor_user = User.objects.create_user('conv_investor', password='x')
+        self.founder = Application.objects.create(
+            user=self.founder_user, company_name='Northwind Grid', founder_name='F',
+            email='f@t.com', description='Forecasting for community solar.',
+            sector='Climate Tech', stage='Seed', raising_amount=4_000_000,
+        )
+        self.investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='Avery Lund', email='i@t.com',
+            company_name='Tessera Ventures', investment_focus='Climate Tech',
+            investment_stage='Seed',
+        )
+        self.connection = Connection.objects.create(
+            investor=self.investor, founder=self.founder,
+            status='PENDING', initiated_by='FOUNDER',
+        )
+
+    def _accept(self):
+        """The investor accepts, since initiated_by='FOUNDER'."""
+        self.client.force_login(self.investor_user)
+        with mock.patch('matchmaking.stream_provisioning.StreamChat') as cls:
+            client = mock.MagicMock()
+            cls.return_value = client
+            response = self.client.post(
+                reverse('matchmaking:connection_action'),
+                data=json.dumps({'id': self.connection.id, 'action': 'ACCEPTED'}),
+                content_type='application/json',
+            )
+        return response, client
+
+    def _expected_cid(self):
+        members = sorted([str(self.founder_user.id), str(self.investor_user.id)])
+        return f"messaging:deal_{members[0]}_{members[1]}"
+
+    def test_accepting_provisions_the_channel_server_side(self):
+        response, stream = self._accept()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['new_status'], 'ACCEPTED')
+        # Both users upserted before the channel is created -- the step the
+        # browser could not perform and the reason the old path 400'd.
+        stream.upsert_users.assert_called_once()
+        upserted = {u['id'] for u in stream.upsert_users.call_args[0][0]}
+        self.assertEqual(upserted, {str(self.founder_user.id), str(self.investor_user.id)})
+
+    def test_accepting_returns_the_conversation_to_open(self):
+        response, _ = self._accept()
+        self.assertEqual(response.json()['chat_channel_cid'], self._expected_cid())
+
+    def test_both_parties_get_the_same_conversation(self):
+        self._accept()
+        seen = []
+        for user in (self.founder_user, self.investor_user):
+            self.client.force_login(user)
+            with mock.patch('matchmaking.stream_provisioning.StreamChat'):
+                response = self.client.get(
+                    reverse('matchmaking:deal_workspace', args=[self.connection.id]))
+            self.assertEqual(response.status_code, 200)
+            seen.append(response.context['chat_channel_cid'])
+        self.assertEqual(seen[0], seen[1])
+        self.assertEqual(seen[0], self._expected_cid())
+
+    def test_channel_members_are_exactly_the_two_parties(self):
+        _, stream = self._accept()
+        created = stream.channel.return_value.create
+        created.assert_called_once()
+        data = created.call_args.kwargs['data']
+        self.assertEqual(
+            set(data['members']),
+            {str(self.founder_user.id), str(self.investor_user.id)},
+        )
+        # Stream refuses a server-side channel with no creator attributed.
+        self.assertIn('created_by_id', data)
+
+    def test_acceptance_still_lands_when_stream_is_unreachable(self):
+        """
+        A Stream outage must never make an accepted connection look
+        unaccepted. The status is the source of truth; chat is a follow-on.
+        """
+        self.client.force_login(self.investor_user)
+        with mock.patch('matchmaking.stream_provisioning.StreamChat',
+                        side_effect=Exception('Stream down')):
+            response = self.client.post(
+                reverse('matchmaking:connection_action'),
+                data=json.dumps({'id': self.connection.id, 'action': 'ACCEPTED'}),
+                content_type='application/json',
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['new_status'], 'ACCEPTED')
+        self.assertIsNone(response.json()['chat_channel_cid'])
+        self.connection.refresh_from_db()
+        self.assertEqual(self.connection.status, 'ACCEPTED')
+
+    def test_workspace_provisions_a_connection_accepted_before_this_existed(self):
+        """No backfill: opening the workspace provisions the channel."""
+        self.connection.status = 'ACCEPTED'
+        self.connection.save(update_fields=['status'])
+        self.client.force_login(self.investor_user)
+        with mock.patch('matchmaking.stream_provisioning.StreamChat') as cls:
+            client = mock.MagicMock()
+            cls.return_value = client
+            response = self.client.get(
+                reverse('matchmaking:deal_workspace', args=[self.connection.id]))
+        self.assertEqual(response.status_code, 200)
+        client.upsert_users.assert_called_once()
+
+    def test_declining_provisions_nothing(self):
+        self.client.force_login(self.investor_user)
+        with mock.patch('matchmaking.stream_provisioning.StreamChat') as cls:
+            client = mock.MagicMock()
+            cls.return_value = client
+            response = self.client.post(
+                reverse('matchmaking:connection_action'),
+                data=json.dumps({'id': self.connection.id, 'action': 'DECLINED'}),
+                content_type='application/json',
+            )
+        self.assertEqual(response.json()['new_status'], 'DECLINED')
+        self.assertIsNone(response.json()['chat_channel_cid'])
+        client.upsert_users.assert_not_called()

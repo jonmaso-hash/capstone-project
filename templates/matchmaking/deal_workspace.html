@@ -40,7 +40,7 @@
                         Your conversation with {% if request.user == company_application.user %}{{ counterparty_application.company_name }}{% else %}{{ company_application.company_name }}{% endif %}
                         lives in Interlink Foundry Messaging.
                     </p>
-                    <a href="{% url 'matchmaking:diligence_chat' %}?cid={{ chat_channel_id }}" class="btn btn-dark rounded-pill">
+                    <a href="{% url 'matchmaking:diligence_chat' %}?cid={{ chat_channel_cid }}" class="btn btn-dark rounded-pill">
                         <i class="bi bi-box-arrow-up-right me-1"></i> Open Chat
                     </a>
                 </div>

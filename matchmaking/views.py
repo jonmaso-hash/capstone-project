@@ -19,6 +19,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from stream_chat import StreamChat
+from .stream_provisioning import ensure_deal_channel, deal_channel_cid
 from .utils import clean_financial_input
 from .models import Application
 from django.http import FileResponse, Http404
@@ -141,7 +142,20 @@ def connection_action_view(request):
         if action == 'DECLINED':
             log_training_example('INVESTOR', conn_req.investor.id, 'FOUNDER', conn_req.founder.id, 'NEGATIVE', 'declined')
 
-        return JsonResponse({'status': 'success', 'new_status': action})
+        # Stand the conversation up the moment the connection is accepted,
+        # so "you are connected" and "you can talk" become true together.
+        # Best-effort: a Stream failure returns None and the acceptance
+        # still stands -- the caller falls back to reloading the page.
+        chat_channel_cid = None
+        if action == 'ACCEPTED':
+            chat_channel_cid = ensure_deal_channel(
+                conn_req.investor.user, conn_req.founder.user,
+                name=f"{conn_req.founder.company_name or conn_req.founder.user.username}",
+            )
+
+        return JsonResponse({
+            'status': 'success', 'new_status': action, 'chat_channel_cid': chat_channel_cid,
+        })
     except Exception as e:
         logger.error(f"Connection action error: {str(e)}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
@@ -230,7 +244,18 @@ def acquisition_connection_action_view(request):
         if action == 'DECLINED':
             log_training_example('BUYER', conn_req.buyer.id, 'SELLER', conn_req.seller.id, 'NEGATIVE', 'declined')
 
-        return JsonResponse({'status': 'success', 'new_status': action})
+        # Same provisioning as connection_action_view — both deal types
+        # share one accept-then-talk path and one JS handler.
+        chat_channel_cid = None
+        if action == 'ACCEPTED':
+            chat_channel_cid = ensure_deal_channel(
+                conn_req.buyer.user, conn_req.seller.user,
+                name=f"{conn_req.seller.company_name or conn_req.seller.user.username}",
+            )
+
+        return JsonResponse({
+            'status': 'success', 'new_status': action, 'chat_channel_cid': chat_channel_cid,
+        })
     except Exception as e:
         logger.error(f"Acquisition connection action error: {str(e)}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
@@ -2097,9 +2122,17 @@ def get_stream_token(request):
     try:
         client = StreamChat(api_key=settings.STREAM_API_KEY, api_secret=settings.STREAM_API_SECRET)
         user_id = str(request.user.id)
-        
+
         # Use Stream's native token generator, not custom JWT
         token = client.create_token(user_id)
+
+        # A token only authenticates; it does not create the user object.
+        # Upsert here so this user can be named as a channel member before
+        # they have ever opened chat themselves -- the counterparty half of
+        # the problem stream_provisioning.ensure_deal_channel solves from
+        # the other side. accounts.views.get_stream_token already did this;
+        # this is the copy the frontend actually calls.
+        client.upsert_user({"id": user_id, "name": request.user.username})
         
         return JsonResponse({
             'api_key': settings.STREAM_API_KEY,
@@ -2739,24 +2772,6 @@ def _get_deal_zelda_summary(company_application):
     }
 
 
-def _stream_deal_channel_id(user_id_a, user_id_b):
-    """
-    Same deterministic id StreamChatController.createDealRoom() computes
-    client-side (matchmaking/static/js/matchmaking.js) the moment EITHER
-    a Connection or an AcquisitionConnection is accepted — both dashboards'
-    updateConnection()/updateAcquisitionConnection() call the identical JS
-    function, so one formula covers both deal types. Reused here, not
-    recreated, so "Open Chat" always opens the real channel Stream already
-    has for this pair rather than standing up a second, competing one.
-    sorted() on strings is lexicographic, matching JS's default
-    Array.sort() exactly (NOT numeric — e.g. "10" sorts before "9" — but
-    both sides only need to agree with each other, not with numeric
-    ordering).
-    """
-    member_ids = sorted([str(user_id_a), str(user_id_b)])
-    return f"deal_{member_ids[0]}_{member_ids[1]}"
-
-
 @login_required
 def deal_workspace_view(request, connection_id):
     """
@@ -2809,7 +2824,15 @@ def deal_workspace_view(request, connection_id):
         'data_room_exists': True,
         'data_room_accessible': data_room_accessible,
         'data_room_url': reverse('matchmaking:data_room', kwargs={'username': founder_application.user.username}) if data_room_accessible else None,
-        'chat_channel_id': _stream_deal_channel_id(founder_application.user_id, investor_application.user_id),
+        # Provision on open as well as on accept, so a connection accepted
+        # before this path existed gets a real channel simply by someone
+        # visiting the workspace — no backfill needed. Falls back to the
+        # computed cid so the link still points somewhere if Stream is down.
+        'chat_channel_cid': (
+            ensure_deal_channel(investor_application.user, founder_application.user,
+                                name=founder_application.company_name or founder_application.user.username)
+            or deal_channel_cid(founder_application.user_id, investor_application.user_id)
+        ),
         'zelda_summary': _get_deal_zelda_summary(founder_application),
         'documents': list(founder_application.data_room_documents.all()[:10]) if data_room_accessible else [],
         'activity': activity,
@@ -2853,7 +2876,11 @@ def acquisition_deal_workspace_view(request, connection_id):
         'data_room_exists': False,
         'data_room_accessible': False,
         'data_room_url': None,
-        'chat_channel_id': _stream_deal_channel_id(seller_application.user_id, buyer_application.user_id),
+        'chat_channel_cid': (
+            ensure_deal_channel(buyer_application.user, seller_application.user,
+                                name=seller_application.company_name or seller_application.user.username)
+            or deal_channel_cid(seller_application.user_id, buyer_application.user_id)
+        ),
         'zelda_summary': _get_deal_zelda_summary(seller_application),
         'documents': [],
         'activity': get_acquisition_deal_activity_timeline(connection),
