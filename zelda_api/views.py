@@ -9,7 +9,7 @@ from django.urls import reverse, NoReverseMatch
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
-from django.db.models import Q, Avg, Sum, Count
+from django.db.models import Q, Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse, Http404
 from django.utils import timezone
@@ -26,7 +26,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 
 from .serializers import (
     DirectUploadDocumentSerializer, MarketAnalyticsSerializer,
-    MemoGenerationSerializer, VectorMatchSerializer,
+    MemoGenerationSerializer,
     DocumentAnalysisSerializer, WebCrawlSerializer,
 )
 
@@ -251,11 +251,6 @@ class ZeldaGlobalSearchAPIView(APIView):
             # 2. Core application feature links
             if search_bulletins:
                 try:
-                    match_radar_url = reverse('founder_matchmaker')
-                except NoReverseMatch:
-                    match_radar_url = "/matchmaking/founder/matches/"
-
-                try:
                     jobs_url = reverse('jobs_index')
                 except NoReverseMatch:
                     jobs_url = "/jobs/"
@@ -266,13 +261,6 @@ class ZeldaGlobalSearchAPIView(APIView):
                     blog_url = "/blog/"
 
                 core_platform_features = [
-                    {
-                        "title": "Match Radar (AI Vectors)",
-                        "url": match_radar_url,
-                        "type": "Application Feature",
-                        "description": "Compute dynamic semantic vector similarity scores across founder pitches and investor target mandates.",
-                        "keywords": ["match radar", "radar", "matches", "vectors", "similarity", "ai matching", "vector engine"],
-                    },
                     {
                         "title": "Job Board Engine",
                         "url": jobs_url,
@@ -537,22 +525,6 @@ class ZeldaAskAPIView(APIView):
                 {'status': 'error', 'message': "Something went wrong processing that question."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-
-
-class MatchRadarAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [SessionAuthentication, TokenAuthentication]
-
-    def post(self, request):
-        serializer = VectorMatchSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        mock_matches = [
-            {"username": "alpha_ventures", "role": "investor", "match_score": 0.94, "alignment_rationale": "Strong overlap in B2B SaaS infrastructure focus."},
-            {"username": "nexus_seed", "role": "investor", "match_score": 0.87, "alignment_rationale": "Matches early-stage pre-revenue metrics framework."},
-        ]
-        return Response({"status": "success", "engine": "Zelda-Vector-v1", "results_count": len(mock_matches), "matches": mock_matches}, status=status.HTTP_200_OK)
 
 
 class SandboxScanView(APIView):
@@ -864,92 +836,6 @@ class InvestorPortfolioIntakeAPIView(APIView):
         except Exception as e:
             logger.error(f"Investor portfolio ingestion pipeline failed: {str(e)}")
             return Response({"error": f"Investor intake drop: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-class FounderMatchRadarAPIView(APIView):
-    """
-    POST /api/v1/zelda/founder/match-radar/
-    """
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [SessionAuthentication, TokenAuthentication]
-
-    def post(self, request):
-        if not _MATCHMAKING_AVAILABLE:
-            return Response({"error": "Matchmaking module is not installed."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-        target_founder_app = get_object_or_404(Application, user=request.user)
-
-        my_sector = target_founder_app.sector or "General Tech"
-        my_geography = getattr(target_founder_app, 'geography', 'San Diego, California') or 'San Diego, California'
-        my_raise = float(getattr(target_founder_app, 'target_raise', 0.0) or 0.0)
-
-        filter_sector = request.data.get('sector', my_sector)
-        filter_geography = request.data.get('geography', my_geography)
-
-        peer_query = Application.objects.exclude(id=target_founder_app.id)
-
-        if filter_sector:
-            peer_query = peer_query.filter(sector__iexact=filter_sector)
-        if filter_geography:
-            peer_query = peer_query.filter(geography__icontains=filter_geography)
-
-        total_peers = peer_query.count()
-        aggregates = peer_query.aggregate(
-            avg_raise=Avg('target_raise'),
-            total_raise_pool=Sum('target_raise'),
-            avg_size=Avg('company_size'),
-        )
-
-        avg_peer_raise = float(aggregates.get('avg_raise') or 0.0)
-        avg_peer_size = float(aggregates.get('avg_size') or 0.0)
-
-        macro_insight_narrative = (
-            f"{total_peers} ventures in {filter_geography or 'your region'} within the {filter_sector or 'matching'} "
-            f"track are actively scaling. On average, peers in this cluster are raising "
-            f"${avg_peer_raise:,.2f} with an active operations headcount node of {int(avg_peer_size)} members."
-        )
-
-        anonymized_competitors = []
-        peer_instances = peer_query.order_by('-id')[:25]
-
-        for idx, peer in enumerate(peer_instances, start=1):
-            peer_raise = float(getattr(peer, 'target_raise', 0.0) or 0.0)
-            peer_size = int(getattr(peer, 'company_size', 10) or 10)
-
-            raise_delta = abs(my_raise - peer_raise)
-            max_possible_delta = max(my_raise, peer_raise, 1.0)
-            similarity_vector = max(0.0, 100.0 - ((raise_delta / max_possible_delta) * 100.0))
-
-            anonymized_competitors.append({
-                "peer_node_id": f"PEER-TRACK-NX{idx:03d}",
-                "proximity_vector_score": round(similarity_vector, 2),
-                "metrics_comparison": {
-                    "target_raise": peer_raise,
-                    "company_size": peer_size,
-                    "funding_stage": getattr(peer, 'funding_stage', 'Seed'),
-                    "is_higher_capital_target": peer_raise > my_raise,
-                },
-            })
-
-        anonymized_competitors = sorted(anonymized_competitors, key=lambda x: x['proximity_vector_score'], reverse=True)
-
-        foundry_envelope = {
-            "origin": "founder_competitive_match_radar",
-            "timestamp": "2026-05-26T08:00:00Z",
-            "payload": {
-                "subject_venture": target_founder_app.company_name,
-                "active_filters": {"sector": filter_sector, "geography": filter_geography},
-                "macro_insights": {
-                    "peer_cluster_count": total_peers,
-                    "average_market_raise": round(avg_peer_raise, 2),
-                    "total_capital_velocity_pool": round(float(aggregates.get('total_raise_pool') or 0.0), 2),
-                    "market_density_statement": macro_insight_narrative,
-                },
-                "competitive_positioning_matrix": anonymized_competitors,
-            },
-        }
-
-        return Response(foundry_envelope, status=status.HTTP_200_OK)
 
 
 class SummarizeView(APIView):
