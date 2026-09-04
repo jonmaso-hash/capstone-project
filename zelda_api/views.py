@@ -1155,7 +1155,9 @@ def truth_delta_ui_view(request, document_id):
         'work_done': work_done,
     }
     from .disclaimers import DUE_DILIGENCE_DISCLAIMER
+    from .report_nav import build_report_nav, EVIDENCE as REPORT_EVIDENCE
     context['disclaimer'] = DUE_DILIGENCE_DISCLAIMER
+    context['report_nav'] = build_report_nav(request.user, document.uploaded_by, REPORT_EVIDENCE)
 
     # Entity Integrity (Secretary of State / domain / timeline checks) is a
     # Zelda AI feature per the Lite/AI split — Lite proves Zelda ran the
@@ -1511,8 +1513,10 @@ def valuation_report_view(request, document_id):
     if document.uploaded_by != request.user and not request.user.is_staff:
         raise Http404("Not found.")
 
+    from .report_nav import build_report_nav, VALUATION as REPORT_VALUATION
     return render(request, 'zelda_valuation_report.html', {
         'document': document,
+        'report_nav': build_report_nav(request.user, document.uploaded_by, REPORT_VALUATION),
     })
 
 
@@ -1620,6 +1624,10 @@ def ic_memo_view(request, document_id):
 
     tier = 'full' if ic_memo_unlocked(request.user, application) else 'lite'
     context = build_ic_memo_context(application, tier=tier)
+    # Navigation only — added at render time, not in build_ic_memo_context,
+    # so the Markdown export stays a pure document.
+    from .report_nav import build_report_nav, ANALYSIS as REPORT_ANALYSIS
+    context['report_nav'] = build_report_nav(request.user, document.uploaded_by, REPORT_ANALYSIS)
     return render(request, 'zelda_api/ic_memo.html', context)
 
 

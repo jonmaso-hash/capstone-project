@@ -4488,6 +4488,35 @@ class StandaloneMemoRealDataTests(TestCase):
         self.assertNotContains(r, 'Read the full IC Memo')
         self.assertNotContains(r, 'unlocks once you and')
 
+    def test_deal_room_button_only_for_an_investor_with_an_accepted_connection(self):
+        # PR #17: the button used to drop any viewer into a generic chat
+        # shell for a company they weren't connected to.
+        from matchmaking.models import InvestorApplication, Connection
+        self._memo(self._deck())
+
+        # staff viewer, no investor profile -> no button
+        self.assertNotContains(self._get(), 'Enter Active Deal Room')
+
+        inv_user = User.objects.create_user('smd_dealroom', password='x')
+        inv = InvestorApplication.objects.create(
+            user=inv_user, full_name='I', company_name='F', email='d@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.client.force_login(inv_user)
+        url = reverse('matchmaking:standalone_memo', args=[self.slug])
+        self.assertNotContains(self.client.get(url), 'Enter Active Deal Room')  # unconnected
+
+        Connection.objects.create(investor=inv, founder=self.founder_app,
+                                  status='ACCEPTED', initiated_by='INVESTOR')
+        self.assertContains(self.client.get(url), 'Enter Active Deal Room')     # connected
+
+    def test_carries_the_cross_report_navigation_strip(self):
+        self._memo(self._deck())
+        r = self._get()
+        self.assertContains(r, 'Explore the analysis')
+        self.assertContains(r, 'Company overview')
+        self.assertContains(r, 'Check the evidence')
+
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
 class ExplanatoryInsightsCopyTests(TestCase):
