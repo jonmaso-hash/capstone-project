@@ -93,6 +93,25 @@ def _is_adjacent_stage(stage1, stage2):
     }
     return stage2 in adjacents.get(stage1, [])
 
+
+# 'Series A' / 'series-A' / 'Series_A' are the same stage typed three ways,
+# and both sides of the comparison are free text, so the raw .lower() the
+# hard filter used to do excluded pairs that plainly agree. Folded to the
+# spelling _is_adjacent_stage's table already uses.
+_STAGE_ALIASES = {'pre seed': 'pre-seed', 'preseed': 'pre-seed'}
+
+
+def _normalize_stage(value):
+    """
+    Canonical form of a free-text stage label, for comparison only. Never
+    persisted — this exists so a hyphen can't cost a founder an entire
+    investor's deal flow.
+    """
+    if not value:
+        return ''
+    collapsed = re.sub(r'[\s_\-]+', ' ', value.strip().lower())
+    return _STAGE_ALIASES.get(collapsed, collapsed)
+
 def passes_hard_filters(application, investor):
     """
     Hard-constraint gate — the actual fix for the "high semantic score on a
@@ -109,10 +128,11 @@ def passes_hard_filters(application, investor):
     Result is cached: the key is built directly from every field this
     function reads, so a changed profile automatically produces a
     different (uncached) key — there's no separate invalidation logic to
-    write or get wrong.
+    write or get wrong. ticket_size_max is deliberately absent below
+    because the computation no longer reads it; see _compute_hard_filters.
     """
     key_material = (
-        f"{investor.id}:{investor.ticket_size_min}:{investor.ticket_size_max}:"
+        f"v2:{investor.id}:{investor.ticket_size_min}:"
         f"{investor.investment_stage}:{application.id}:{application.raising_amount}:{application.stage}"
     )
     cache_key = f"hard_filter:{hashlib.sha256(key_material.encode('utf-8')).hexdigest()}"
@@ -126,17 +146,44 @@ def passes_hard_filters(application, investor):
 
 
 def _compute_hard_filters(application, investor):
-    if investor.ticket_size_min is not None or investor.ticket_size_max is not None:
-        raising_amount = application.raising_amount
-        if investor.ticket_size_min is not None and raising_amount < investor.ticket_size_min:
-            return False
-        if investor.ticket_size_max is not None and raising_amount > investor.ticket_size_max:
+    """
+    Only genuinely nonviable pairings are excluded here. Anything that is
+    merely a poor fit belongs in ranking, where the investor can still see
+    it and judge for themselves.
+
+    On cheque size: ticket_size_min/max describe the cheque this investor
+    writes into a round; raising_amount is the size of the whole round.
+    They are different quantities, and comparing them directly excluded
+    every well-capitalised founder from every realistically-sized cheque
+    writer — a $250k–$1.5M investor is an ordinary participant in a $4M
+    seed round, not a mismatch for it. The one combination that cannot
+    work is an investor whose SMALLEST cheque exceeds the entire round,
+    since there is no way to deploy it; that is all we exclude on. A
+    cheque smaller than the round is just syndication.
+
+    On an undeclared raise: raising_amount is a non-null DecimalField
+    defaulting to 0, so 0 overwhelmingly means "hasn't said yet" rather
+    than "raising nothing" — and the founders who haven't said yet are
+    exactly the new ones a cold marketplace can least afford to hide.
+    Skipped rather than failed, on the same principle that keeps
+    calculate_rule_based_score silent about an undisclosed burn rate:
+    absent data must not read as a strike against the founder.
+    """
+    raising_amount = application.raising_amount
+    if investor.ticket_size_min is not None and raising_amount:
+        if investor.ticket_size_min > raising_amount:
             return False
 
+    # Adjacency is checked in both directions: the table is one-way (it
+    # lists 'series c' as a neighbour of 'series b' but has no 'series c'
+    # key of its own), and a one-way read of it silently excluded the
+    # later-stage half of every such pair.
     if investor.investment_stage:
-        app_stage = application.stage.lower() if application.stage else ""
-        inv_stage = investor.investment_stage.lower()
-        if app_stage != inv_stage and not _is_adjacent_stage(app_stage, inv_stage):
+        app_stage = _normalize_stage(application.stage)
+        inv_stage = _normalize_stage(investor.investment_stage)
+        if app_stage != inv_stage \
+                and not _is_adjacent_stage(app_stage, inv_stage) \
+                and not _is_adjacent_stage(inv_stage, app_stage):
             return False
 
     return True
