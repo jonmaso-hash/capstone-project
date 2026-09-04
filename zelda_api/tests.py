@@ -239,6 +239,182 @@ class CircuitBreakerTests(TestCase):
         self.assertFalse(is_open('test_circuit_half_open'))
 
 
+class CrossReportNavigationTests(TestCase):
+    """
+    PR #17 — the shared "Explore the analysis" strip. Before it, only the
+    Zelda Report linked anywhere: land on Truth Delta or the Valuation
+    cold and nothing told you the other three reports existed. Navigation
+    only — no report content, scores, or permissions change.
+    """
+
+    def setUp(self):
+        from matchmaking.tests import _mock_embedding_generation
+        from matchmaking.models import Application, InvestorApplication, Connection
+        from .truth_delta_models import TruthDeltaReport
+        _mock_embedding_generation(self)
+
+        self.founder_user = User.objects.create_user('nav_founder', password='x')
+        self.application = Application.objects.create(
+            user=self.founder_user, company_name='NavCo', founder_name='F', email='f@t.com',
+            description='NavCo does a thing.', sector='SaaS', stage='Seed', is_premium=True,
+        )
+        self.deck = DocumentSource.objects.create(
+            uploaded_by=self.founder_user, filename='deck.pdf', source_entity='NavCo',
+            document_type='pitch_deck', status='analyzed',
+        )
+        IntelligenceMemo.objects.create(
+            document=self.deck, executive_summary='NavCo summary.', investment_thesis='y',
+            recommendation='NEEDS_REVIEW', completeness_score=0.6, citations_count=2,
+        )
+        TruthDeltaReport.objects.create(
+            document=self.deck, overall_truth_score=70.0, credibility_risk='low', summary='ok',
+            details={'claims': [{'category': 'revenue'}], 'per_claim': []},
+        )
+        self.val_doc = DocumentSource.objects.create(
+            uploaded_by=self.founder_user, filename='val.pdf', source_entity='NavCo',
+            document_type='business_valuation', status='analyzed', valuation_tier='full',
+        )
+        BusinessValuationReport.objects.create(
+            document=self.val_doc, confidence_score=0.6,
+            valuation_low=1_000_000, valuation_high=2_000_000,
+            valuation_summary='x', financial_summary='x', risk_report='x',
+        )
+
+        self.connected = User.objects.create_user('nav_connected', password='x')
+        inv = InvestorApplication.objects.create(
+            user=self.connected, full_name='C', company_name='Fund', email='c@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        Connection.objects.create(investor=inv, founder=self.application,
+                                  status='ACCEPTED', initiated_by='INVESTOR')
+
+        self.unconnected = User.objects.create_user('nav_unconnected', password='x')
+        InvestorApplication.objects.create(
+            user=self.unconnected, full_name='U', company_name='Fund2', email='u@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.staff = User.objects.create_user('nav_staff', password='x', is_staff=True)
+
+        self.urls = {
+            'overview': reverse('matchmaking:standalone_memo', args=['navco']),
+            'evidence': reverse('zelda_api:truth_delta_ui', args=[self.deck.id]),
+            'analysis': reverse('zelda_api:ic_memo', args=[self.deck.id]),
+            'valuation': reverse('zelda_api:valuation_report', args=[self.val_doc.id]),
+        }
+
+    # --- helpers ---
+
+    def _nav_html(self, page_html):
+        import re
+        m = re.search(r'<nav aria-label="Explore the analysis".*?</nav>', page_html, re.S)
+        return m.group(0) if m else ''
+
+    def _nav_links(self, page_html):
+        import re
+        return re.findall(r'href="([^"]+)"', self._nav_html(page_html))
+
+    def _nav_labels(self, page_html):
+        import re
+        nav = self._nav_html(page_html)
+        return [t.strip() for t in re.findall(r'>([A-Z][^<>&]{4,40})(?:\s*&rarr;)?</(?:a|span)>', nav)]
+
+    # --- the strip is on every report ---
+
+    def test_strip_appears_on_all_four_reports(self):
+        self.client.force_login(self.staff)  # staff can open all four
+        for key, url in self.urls.items():
+            html = self.client.get(url).content.decode()
+            self.assertIn('Explore the analysis', html, f'missing nav on {key}')
+            self.assertIn('Company overview', html, f'missing labels on {key}')
+
+    def test_plain_language_labels_not_internal_terminology(self):
+        self.client.force_login(self.staff)
+        html = self.client.get(self.urls['overview']).content.decode()
+        nav = self._nav_html(html)
+        for label in ('Company overview', 'Check the evidence', 'Investment analysis', 'Valuation range'):
+            self.assertIn(label, nav)
+        self.assertNotIn('Truth Delta', nav)
+        self.assertNotIn('IC Memo', nav)
+        self.assertNotIn('Zelda Intelligence Report', nav)
+
+    def test_current_report_is_shown_but_never_linked(self):
+        self.client.force_login(self.staff)
+        for key, url in self.urls.items():
+            links = self._nav_links(self.client.get(url).content.decode())
+            self.assertNotIn(self.urls[key], links, f'{key} linked to itself')
+
+    def test_other_reports_link_to_the_right_places(self):
+        self.client.force_login(self.staff)
+        links = self._nav_links(self.client.get(self.urls['overview']).content.decode())
+        self.assertIn(self.urls['evidence'], links)
+        self.assertIn(self.urls['analysis'], links)
+        self.assertIn(self.urls['valuation'], links)
+
+    # --- the guarantee: no link in the strip ever 403s / 404s ---
+
+    def test_every_link_the_strip_offers_is_actually_openable(self):
+        for viewer in (self.staff, self.connected, self.unconnected, self.founder_user):
+            self.client.force_login(viewer)
+            for key, url in self.urls.items():
+                page = self.client.get(url)
+                if page.status_code != 200:
+                    continue  # this viewer can't open this report at all
+                for link in self._nav_links(page.content.decode()):
+                    self.assertEqual(
+                        self.client.get(link).status_code, 200,
+                        f'{viewer.username} got a dead nav link {link} from {key}',
+                    )
+
+    def test_gated_destination_is_named_but_not_linked(self):
+        # An investor with no accepted connection can't open the IC Memo.
+        self.client.force_login(self.unconnected)
+        html = self.client.get(self.urls['overview']).content.decode()
+        nav = self._nav_html(html)
+        self.assertIn('Investment analysis', nav)             # they learn it exists
+        self.assertNotIn(self.urls['analysis'], self._nav_links(html))   # but no link
+        self.assertIn('once you and this company are connected', nav)
+
+    def test_valuation_is_owner_or_staff_only_in_the_strip(self):
+        self.client.force_login(self.connected)
+        html = self.client.get(self.urls['overview']).content.decode()
+        self.assertIn('Valuation range', self._nav_html(html))
+        self.assertNotIn(self.urls['valuation'], self._nav_links(html))
+
+    def test_a_report_that_does_not_exist_is_not_listed(self):
+        from matchmaking.models import Application
+        bare_user = User.objects.create_user('nav_bare', password='x')
+        Application.objects.create(
+            user=bare_user, company_name='BareNav', founder_name='B', email='b@t.com',
+            description='x', sector='SaaS', stage='Seed', is_premium=True,
+        )  # no deck, no memo, no valuation
+        self.client.force_login(self.staff)
+        nav = self._nav_html(
+            self.client.get(reverse('matchmaking:standalone_memo', args=['barenav'])).content.decode()
+        )
+        self.assertIn('Company overview', nav)      # the current report
+        self.assertNotIn('Check the evidence', nav)  # never generated
+        self.assertNotIn('Valuation range', nav)
+
+    # --- report content is unchanged ---
+
+    def test_report_content_is_untouched(self):
+        self.client.force_login(self.staff)
+        overview = self.client.get(self.urls['overview']).content.decode()
+        self.assertIn('NavCo summary.', overview)               # Zelda Report overview
+        evidence = self.client.get(self.urls['evidence']).content.decode()
+        self.assertIn('Credibility Score', evidence)            # Truth Delta headline
+        analysis = self.client.get(self.urls['analysis']).content.decode()
+        self.assertIn('AI Investment Committee Memo', analysis)
+        valuation = self.client.get(self.urls['valuation']).content.decode()
+        self.assertIn('Estimated Valuation Range', valuation)
+
+    def test_markdown_export_has_no_navigation(self):
+        from .ic_memo import build_ic_memo_context, render_ic_memo_markdown
+        md = render_ic_memo_markdown(build_ic_memo_context(self.application, tier='full'))
+        self.assertNotIn('Explore the analysis', md)
+        self.assertNotIn('Company overview', md)
+
+
 class WorkDoneSummaryTests(TestCase):
     """
     zelda_api/work_done.py — the single guardrail that a Work Done stat is

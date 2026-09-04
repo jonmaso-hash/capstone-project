@@ -2134,6 +2134,7 @@ def standalone_memo_view(request, company_slug):
         latest_analyzed_pitch_deck_and_memo, truth_delta_signal,
         zelda_report_observations, can_view_ic_memo,
     )
+    from zelda_api.report_nav import build_report_nav, OVERVIEW as REPORT_OVERVIEW
     from zelda_api.vector_models import DocumentSource
 
     formatted_name = company_slug.replace('-', ' ')
@@ -2204,6 +2205,13 @@ def standalone_memo_view(request, company_slug):
         except Exception:
             ai_insights_data = None
 
+    # The deal room is only a real destination once there's an accepted
+    # connection — otherwise the button dropped an investor into an empty
+    # generic chat shell for a company they aren't connected to.
+    has_deal_room = bool(investor_profile) and Connection.objects.filter(
+        investor=investor_profile, founder=founder_app, status='ACCEPTED',
+    ).exists()
+
     context = {
         'founder_app': founder_app,
         'memo_tier': memo_tier,
@@ -2217,6 +2225,8 @@ def standalone_memo_view(request, company_slug):
         'investor': investor_profile,
         'can_view_ic_memo': can_ic_memo,
         'ic_memo_url': ic_memo_url,
+        'has_deal_room': has_deal_room,
+        'report_nav': build_report_nav(request.user, founder_app.user, REPORT_OVERVIEW),
         'disclaimer': DUE_DILIGENCE_DISCLAIMER,
     }
 
