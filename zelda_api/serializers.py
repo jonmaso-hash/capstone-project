@@ -62,21 +62,7 @@ class MarketAnalyticsSerializer(serializers.Serializer):
     lookback_days = serializers.IntegerField(required=False, default=30, min_value=1, max_value=365)
     include_confidence_intervals = serializers.BooleanField(required=False, default=True)
     
-class VectorMatchSerializer(serializers.Serializer):
-    """
-    Validates payload schemas used for deep semantic text array 
-    and vector embeddings comparisons within the Zelda matching pipeline.
-    """
-    source_vector_text = serializers.CharField(required=True, min_length=10)
-    target_skills_keywords = serializers.ListField(child=serializers.CharField(max_length=100), required=True)
-    threshold_cutoff = serializers.FloatField(required=False, default=0.50, min_value=0.0, max_value=1.0)
-    
-# C:\Users\jonathan\Desktop\KCV\zelda_api\serializers.py
 
-# ... keep your existing serializers, including DirectUploadDocumentSerializer, 
-# MarketAnalyticsSerializer, and VectorMatchSerializer ...
-
-# CREATE THIS SERIALIZER TO FIX THE IMPORT ERROR:
 class DocumentAnalysisSerializer(serializers.Serializer):
     """
     Validates input payloads for parsing, keyword scanning, and 
