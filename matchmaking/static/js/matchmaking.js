@@ -39,28 +39,15 @@ const StreamChatController = {
         return this.client;
     },
 
-    async createDealRoom(targetUserId, targetUsername) {
-        await this.connect();
-        const members = [this.client.userID, String(targetUserId)].sort();
-        
-        try {
-            const channel = this.client.channel('messaging', `deal_${members[0]}_${members[1]}`, {
-                name: `Deal Room: ${targetUsername}`,
-                members: members,
-            });
-            
-            await channel.create();
-            await channel.watch();
-            window.location.href = `/matchmaking/deal-room/?cid=${channel.cid}`;
-            
-        } catch (error) {
-            console.error("Channel creation failed:", error);
-            if (error.message && error.message.includes("don't exist")) {
-                alert(`Cannot open Deal Room yet. User ${targetUsername} has not initialized their chat profile.`);
-            } else {
-                alert("Failed to create Deal Room. Please try again later.");
-            }
-        }
+    // The channel is created server-side now (matchmaking/stream_provisioning.py).
+    // It cannot be created here: the client SDK acts only as the connected
+    // user, and Stream rejects a channel whose other member has no user
+    // object yet -- which is every counterparty who has not opened chat
+    // before. This just goes to the conversation the server provisioned.
+    openDealRoom(channelCid) {
+        window.location.href = channelCid
+            ? `/matchmaking/deal-room/?cid=${encodeURIComponent(channelCid)}`
+            : '/matchmaking/deal-room/';
     }
 };
 
@@ -288,15 +275,17 @@ async function updateConnection(requestId, actionStatus, targetUserId, targetUse
             body: JSON.stringify(requestData) 
         });
 
-        const responseData = await response.json(); 
-        console.log("DEBUG: Server response:", responseData);
+        const responseData = await response.json();
 
         if (response.ok && actionStatus === 'ACCEPTED') {
-            if (targetUserId) {
-                await StreamChatController.createDealRoom(targetUserId, targetUsername);
-            } else {
-                window.location.reload();
-            }
+            // The server has already recorded the acceptance, so the page
+            // must never be left showing "pending". Chat is a follow-on: go
+            // to the conversation when there is one, otherwise reload and
+            // show the accepted state. The old code called into client-side
+            // channel creation, which swallowed its own failure and returned
+            // without navigating -- leaving Accept looking like it did
+            // nothing even though it had succeeded.
+            StreamChatController.openDealRoom(responseData.chat_channel_cid);
         } else if (response.ok) {
             window.location.reload();
         } else {
