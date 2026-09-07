@@ -71,7 +71,7 @@
                     <div class="text-md-end d-flex flex-column align-items-md-end gap-2">
                         <div class="text-end">
                             <small class="text-muted d-block small fw-bold text-uppercase" style="font-size: 9px; letter-spacing: 0.5px;">Match Index</small>
-                            <span class="badge bg-success text-white score-badge shadow-sm">{{ entry.final_score }}%</span>
+                            <span class="badge bg-success text-white score-badge shadow-sm">{{ entry.band }}</span>
                         </div>
                         <a href="{% url 'accounts:profile' entry.founder.user.username %}" class="btn btn-sm btn-outline-dark rounded-pill">
                             View Profile

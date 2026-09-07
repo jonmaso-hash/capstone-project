@@ -19,6 +19,7 @@ from .match_score import (
     derive_band, independent_count, internal_score,
 )
 from .models import Application, BuyerApplication, InvestorApplication, SellerApplication
+from .tests import _mock_embedding_generation
 
 User = get_user_model()
 
@@ -277,3 +278,149 @@ class DealComponentTests(TestCase):
         signals = deal_signals(self._seller(), self._buyer())
         self.assertEqual(derive_band(signals), Band.STRONG)
         self.assertEqual(independent_count(signals), 2)
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class FeedbackIsolationTests(TestCase):
+    """
+    A thumbs vote is a statement about the person, not about the pairing.
+
+    It used to add 15 to the blended score (more than the entire semantic
+    signal contributes at its observed maximum of 12.5), shift the number
+    rendered on both bulletin boards by +/-10, and lift every row in the
+    shortlist by 10. Changing a vote must now change nothing canonical.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('fb_founder', password='x')
+        self.investor_user = User.objects.create_user('fb_investor', password='x')
+        self.app = Application.objects.create(
+            user=self.founder_user, company_name='FBCo', founder_name='F', email='f@t.com',
+            description='Forecasting software for community solar operators.',
+            sector='Climate Tech', stage='Seed', raising_amount=4_000_000,
+        )
+        self.investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='I', company_name='Fund', email='i@t.com',
+            investment_focus='Climate Tech, energy software', investment_stage='Seed',
+        )
+
+    def _evaluate(self):
+        from .match_components import evaluate_venture_match
+        return evaluate_venture_match(self.app, self.investor)
+
+    def _vote(self, value):
+        from .models import MatchFeedback
+        MatchFeedback.objects.update_or_create(
+            application=self.app, investor=self.investor,
+            defaults={'vote': value, 'user': self.investor_user})
+
+    def test_a_vote_changes_neither_score_band_nor_basis(self):
+        before = self._evaluate()
+
+        self._vote(1)
+        after_up = self._evaluate()
+        self._vote(-1)
+        after_down = self._evaluate()
+
+        for label, after in (('thumbs up', after_up), ('thumbs down', after_down)):
+            self.assertEqual(after.score, before.score, f'{label} moved the canonical score')
+            self.assertEqual(after.band, before.band, f'{label} moved the band')
+            self.assertEqual(after.basis, before.basis, f'{label} moved the basis')
+            self.assertEqual(after.independent, before.independent,
+                             f'{label} moved the independent-signal count')
+
+    def test_a_vote_does_not_change_alert_eligibility(self):
+        before = self._evaluate().full_basis
+        self._vote(1)
+        self.assertEqual(self._evaluate().full_basis, before)
+
+    def test_a_vote_does_not_change_whether_a_pairing_is_persistable(self):
+        before = self._evaluate().persistable
+        self._vote(-1)
+        self.assertEqual(self._evaluate().persistable, before)
+
+    def test_the_legacy_blend_no_longer_reads_feedback_either(self):
+        # get_blended_match is no longer canonical, but while it exists it
+        # must not reintroduce the nudge through a side door.
+        from .utils import get_blended_match
+        plain = get_blended_match(40.0, 60.0, application=self.app, investor=self.investor)
+        self._vote(1)
+        self.assertEqual(
+            get_blended_match(40.0, 60.0, application=self.app, investor=self.investor), plain)
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class SnapshotVersioningTests(TestCase):
+    """
+    Prediction snapshots are graded for accuracy later, so what they mean
+    has to be recoverable later. The version travels with the artifact,
+    and a pairing with no evidence is never written at all.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        fu = User.objects.create_user('sv_founder', password='x')
+        iu = User.objects.create_user('sv_investor', password='x')
+        self.app = Application.objects.create(
+            user=fu, company_name='SVCo', founder_name='F', email='f@t.com',
+            description='Forecasting software for community solar operators.',
+            sector='Climate Tech', stage='Seed', raising_amount=4_000_000,
+        )
+        self.investor = InvestorApplication.objects.create(
+            user=iu, full_name='I', company_name='Fund', email='i@t.com',
+            investment_focus='Climate Tech, energy software', investment_stage='Seed',
+        )
+
+    def _run(self):
+        from .tasks import _snapshot_investor_predictions_body
+        return _snapshot_investor_predictions_body()
+
+    def test_version_band_and_basis_travel_with_the_snapshot(self):
+        from .models import InvestorPredictionSnapshot
+        self._run()
+        snap = InvestorPredictionSnapshot.objects.filter(investor=self.investor).first()
+        self.assertIsNotNone(snap)
+        self.assertEqual(snap.match_contract_version, CONTRACT_VERSION)
+        self.assertEqual(snap.predicted_band, Band.STRONG.name)
+        self.assertGreater(snap.predicted_basis, 0)
+
+    def test_runner_ups_carry_the_version_too(self):
+        from .models import InvestorPredictionSnapshot
+        other_user = User.objects.create_user('sv_founder2', password='x')
+        Application.objects.create(
+            user=other_user, company_name='SVCo2', founder_name='G', email='g@t.com',
+            description='A different company in the same space entirely.',
+            sector='Climate Tech', stage='Seed', raising_amount=2_000_000,
+        )
+        self._run()
+        snap = InvestorPredictionSnapshot.objects.filter(investor=self.investor).first()
+        for row in snap.runner_up_founders:
+            self.assertEqual(row['match_contract_version'], CONTRACT_VERSION)
+            self.assertIn('band', row)
+            self.assertIn('basis', row)
+
+    def test_a_pairing_with_no_evidence_is_not_persisted(self):
+        from .models import InvestorPredictionSnapshot
+        # An investor who has declared nothing cannot produce evidence
+        # about anyone, so there is no prediction to record.
+        blank_user = User.objects.create_user('sv_blank', password='x')
+        blank = InvestorApplication.objects.create(
+            user=blank_user, full_name='B', company_name='Blank', email='b@t.com',
+            investment_focus='', investment_stage='',
+        )
+        self._run()
+        self.assertFalse(
+            InvestorPredictionSnapshot.objects.filter(investor=blank).exists(),
+            'an empty-basis prediction would corrupt the grading dataset')
+
+    def test_pre_contract_rows_stay_attributable_to_their_own_semantics(self):
+        from .models import InvestorPredictionSnapshot
+        legacy = InvestorPredictionSnapshot.objects.create(
+            investor=self.investor, predicted_founder=self.app, predicted_score=87.0,
+        )
+        # Blank, not "v1" -- a row written on the old blended scale must
+        # never be read as though this contract produced it.
+        self.assertEqual(legacy.match_contract_version, '')
+        self.assertEqual(legacy.predicted_band, '')
+        self.assertIsNone(legacy.predicted_basis)

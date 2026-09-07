@@ -202,9 +202,8 @@ def snapshot_investor_predictions(self):
 
 
 def _snapshot_investor_predictions_body():
+    from .match_components import evaluate_venture_match
     from .models import InvestorApplication, Connection, InvestorPredictionSnapshot, InvestorInterestEvent
-    from .utils import calculate_rule_based_score, get_blended_match
-    from .services.ai_engine import calculate_similarity
 
     week_ago = timezone.now() - timedelta(days=7)
     snapshots_created = 0
@@ -221,26 +220,21 @@ def _snapshot_investor_predictions_body():
         )
         founders = Application.objects.discoverable().exclude(review_status='DENIED').exclude(id__in=requested_ids)
 
+        # A pairing with no evidence has no prediction to record. Writing
+        # one anyway corrupts the dataset this system grades itself on --
+        # which is the whole point of the exercise.
         ranked = []
         for founder in founders:
-            if investor_profile.focus_vector and founder.description_vector:
-                try:
-                    ai_score = max(0.0, min(100.0, calculate_similarity(investor_profile.focus_vector, founder.description_vector) * 100))
-                except Exception:
-                    ai_score = 50.0
-            else:
-                ai_score = 50.0
-
-            rule_score = calculate_rule_based_score(application=founder, investor=investor_profile)
-            final_score = get_blended_match(ai_score, rule_score, application=founder, investor=investor_profile)
-            ranked.append((founder, final_score))
+            result = evaluate_venture_match(founder, investor_profile)
+            if result.persistable:
+                ranked.append((founder, result))
 
         if not ranked:
             continue
 
-        ranked.sort(key=lambda pair: pair[1], reverse=True)
+        ranked.sort(key=lambda pair: (pair[1].band, pair[1].score), reverse=True)
         top5 = ranked[:5]
-        predicted_founder, predicted_score = top5[0]
+        predicted_founder, predicted_result = top5[0]
 
         from django.db.models import Count
         event_counts = {
@@ -252,9 +246,14 @@ def _snapshot_investor_predictions_body():
         InvestorPredictionSnapshot.objects.create(
             investor=investor_profile,
             predicted_founder=predicted_founder,
-            predicted_score=predicted_score,
+            predicted_score=predicted_result.score,
+            predicted_band=predicted_result.band.name,
+            predicted_basis=predicted_result.basis,
+            match_contract_version=predicted_result.contract_version,
             runner_up_founders=[
-                {'founder_id': f.id, 'score': score} for f, score in top5[1:]
+                {'founder_id': f.id, 'score': r.score, 'band': r.band.name,
+                 'basis': r.basis, 'match_contract_version': r.contract_version}
+                for f, r in top5[1:]
             ],
             snapshot_telemetry={
                 'event_counts': event_counts,
@@ -408,9 +407,8 @@ def snapshot_buyer_predictions(self):
 
 
 def _snapshot_buyer_predictions_body():
+    from .match_components import evaluate_deal_match
     from .models import SellerApplication, BuyerApplication, AcquisitionConnection, BuyerPredictionSnapshot, AcquisitionInterestEvent
-    from .utils import calculate_deal_rule_based_score, get_deal_blended_match
-    from .services.ai_engine import calculate_similarity
 
     week_ago = timezone.now() - timedelta(days=7)
     snapshots_created = 0
@@ -429,24 +427,16 @@ def _snapshot_buyer_predictions_body():
 
         ranked = []
         for seller in sellers:
-            if buyer_profile.focus_vector and seller.description_vector:
-                try:
-                    ai_score = max(0.0, min(100.0, calculate_similarity(buyer_profile.focus_vector, seller.description_vector) * 100))
-                except Exception:
-                    ai_score = 50.0
-            else:
-                ai_score = 50.0
-
-            rule_score = calculate_deal_rule_based_score(seller=seller, buyer=buyer_profile)
-            final_score = get_deal_blended_match(ai_score, rule_score, seller=seller, buyer=buyer_profile)
-            ranked.append((seller, final_score))
+            result = evaluate_deal_match(seller, buyer_profile)
+            if result.persistable:
+                ranked.append((seller, result))
 
         if not ranked:
             continue
 
-        ranked.sort(key=lambda pair: pair[1], reverse=True)
+        ranked.sort(key=lambda pair: (pair[1].band, pair[1].score), reverse=True)
         top5 = ranked[:5]
-        predicted_seller, predicted_score = top5[0]
+        predicted_seller, predicted_result = top5[0]
 
         from django.db.models import Count
         event_counts = {
@@ -458,9 +448,14 @@ def _snapshot_buyer_predictions_body():
         BuyerPredictionSnapshot.objects.create(
             buyer=buyer_profile,
             predicted_seller=predicted_seller,
-            predicted_score=predicted_score,
+            predicted_score=predicted_result.score,
+            predicted_band=predicted_result.band.name,
+            predicted_basis=predicted_result.basis,
+            match_contract_version=predicted_result.contract_version,
             runner_up_sellers=[
-                {'seller_id': s.id, 'score': score} for s, score in top5[1:]
+                {'seller_id': s.id, 'score': r.score, 'band': r.band.name,
+                 'basis': r.basis, 'match_contract_version': r.contract_version}
+                for s, r in top5[1:]
             ],
             snapshot_telemetry={
                 'event_counts': event_counts,

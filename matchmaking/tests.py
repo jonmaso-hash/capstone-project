@@ -89,7 +89,13 @@ class RuleBasedScoreTests(TestCase):
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
 class BlendedMatchTests(TestCase):
-    """get_blended_match: rule*0.7 + ai*0.3, plus MatchFeedback thumbs nudge."""
+    """
+    get_blended_match: rule*0.7 + ai*0.3, and NO feedback term.
+
+    This is the legacy blend, no longer read by any consumer. It is kept
+    under test because while it exists it must not reintroduce the thumbs
+    nudge that once let one click outweigh the entire semantic signal.
+    """
 
     def setUp(self):
         _mock_embedding_generation(self)
@@ -109,15 +115,15 @@ class BlendedMatchTests(TestCase):
         score = get_blended_match(ai_score=50, rule_score=100, application=self.app, investor=self.investor)
         self.assertEqual(score, 85.0)
 
-    def test_thumbs_up_adds_15_capped_at_100(self):
+    def test_a_thumbs_up_does_not_raise_the_score(self):
         MatchFeedback.objects.create(user=self.investor_user, application=self.app, investor=self.investor, vote=1)
         score = get_blended_match(ai_score=50, rule_score=100, application=self.app, investor=self.investor)
-        self.assertEqual(score, 100)  # 85 + 15 = 100, capped
+        self.assertEqual(score, 85.0, 'liking a company does not improve the fit')
 
-    def test_thumbs_down_halves_score(self):
+    def test_a_thumbs_down_does_not_lower_the_score(self):
         MatchFeedback.objects.create(user=self.investor_user, application=self.app, investor=self.investor, vote=-1)
         score = get_blended_match(ai_score=50, rule_score=100, application=self.app, investor=self.investor)
-        self.assertEqual(score, 42.5)  # 85 * 0.5
+        self.assertEqual(score, 85.0, 'passing on a company does not worsen the fit')
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
@@ -178,7 +184,10 @@ class DealRuleBasedScoreTests(TestCase):
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
 class DealBlendedMatchTests(TestCase):
-    """get_deal_blended_match: same shape as get_blended_match but for DealFeedback."""
+    """
+    get_deal_blended_match: same shape as get_blended_match, and likewise
+    carrying no DealFeedback term.
+    """
 
     def setUp(self):
         self.seller_user = User.objects.create_user('seller_test', password='x')
@@ -194,15 +203,15 @@ class DealBlendedMatchTests(TestCase):
             budget_min=500_000, budget_max=1_500_000, preferred_deal_structure='ASSET_SALE',
         )
 
-    def test_thumbs_up_adds_15_capped_at_100(self):
+    def test_a_thumbs_up_does_not_raise_the_score(self):
         DealFeedback.objects.create(user=self.buyer_user, seller=self.seller, buyer=self.buyer, vote=1)
         score = get_deal_blended_match(ai_score=50, rule_score=100, seller=self.seller, buyer=self.buyer)
-        self.assertEqual(score, 100)
+        self.assertEqual(score, 85.0, 'liking a listing does not improve the fit')
 
-    def test_thumbs_down_halves_score(self):
+    def test_a_thumbs_down_does_not_lower_the_score(self):
         DealFeedback.objects.create(user=self.buyer_user, seller=self.seller, buyer=self.buyer, vote=-1)
         score = get_deal_blended_match(ai_score=50, rule_score=100, seller=self.seller, buyer=self.buyer)
-        self.assertEqual(score, 42.5)
+        self.assertEqual(score, 85.0, 'passing on a listing does not worsen the fit')
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
@@ -3600,7 +3609,7 @@ class WeeklyDigestHeroCardTests(TestCase):
     def _match(self, investor, application, score, change_reason='', last_changed_at=None):
         from .models import AIMatch
         return AIMatch.objects.create(
-            investor=investor, application=application, score=score, confidence_score=score,
+            investor=investor, application=application, score=score,
             change_reason=change_reason, last_changed_at=last_changed_at,
         )
 

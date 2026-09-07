@@ -226,7 +226,11 @@ def get_weighted_chunk_score(application, investor):
 
 def get_blended_match(ai_score, rule_score, application, investor, sparse_score=None):
     """
-    Enhanced blended match that incorporates historical thumbs up/down feedback.
+    LEGACY blend, retained only for the vector/chunk machinery it wraps.
+
+    The canonical answer to "how well do these two fit" is
+    matchmaking/match_score.py via evaluate_venture_match; no consumer
+    reads this any more. It carries no feedback term (see below).
 
     sparse_score is optional and defaults to None so every existing caller
     keeps its exact prior behavior (70% rule / 30% ai) unchanged. Passing a
@@ -248,15 +252,13 @@ def get_blended_match(ai_score, rule_score, application, investor, sparse_score=
     else:
         base_score = (rule_score * 0.7) + (ai_score * 0.3)
 
-    from matchmaking.models import MatchFeedback
-    feedback = MatchFeedback.objects.filter(application=application, investor=investor).first()
-
-    if feedback:
-        if feedback.vote == 1:
-            return min(base_score + 15, 100)
-        if feedback.vote == -1:
-            return base_score * 0.5
-
+    # A thumbs-up used to add 15 here and a thumbs-down to halve the
+    # result. That made one click worth more than the entire semantic
+    # signal, whose observed maximum contributes 12.5 -- and, worse, it
+    # made a statement about the person look like a property of the
+    # pairing. Feedback is now a personal preference axis: it may order or
+    # filter what a viewer sees, and it never touches match strength,
+    # alert eligibility, or a persisted prediction.
     return round(base_score, 2)
 
 
@@ -310,20 +312,14 @@ def calculate_deal_rule_based_score(seller, buyer):
 
 def get_deal_blended_match(ai_score, rule_score, seller, buyer):
     """
-    Blended AI + rule score for the M&A marketplace, incorporating
-    DealFeedback thumbs up/down. Identical shape to get_blended_match.
+    LEGACY blend for the M&A marketplace. Identical shape to
+    get_blended_match, and likewise no longer the canonical answer and no
+    longer carrying a feedback term.
     """
     base_score = (rule_score * 0.7) + (ai_score * 0.3)
 
-    from matchmaking.models import DealFeedback
-    feedback = DealFeedback.objects.filter(seller=seller, buyer=buyer).first()
-
-    if feedback:
-        if feedback.vote == 1:
-            return min(base_score + 15, 100)
-        if feedback.vote == -1:
-            return base_score * 0.5
-
+    # Same separation as get_blended_match: DealFeedback is preference,
+    # not evidence of fit.
     return round(base_score, 2)
 
 

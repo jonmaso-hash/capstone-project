@@ -296,7 +296,7 @@
                 <div class="card-body p-4 d-flex flex-column">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <h5 class="fw-bold text-dark mb-0">{{ match.investor.company_name|default:"Private Venture Partner" }}</h5>
-                        <span class="badge bg-success text-white small">{{ match.final_score }}%</span>
+                        <span class="badge bg-success text-white small">{{ match.band }}</span>
                     </div>
                     <p class="text-muted small line-clamp-3 mb-3">{{ match.investor.investment_focus|default:"No stated focus." }}</p>
                     <div class="mt-auto">

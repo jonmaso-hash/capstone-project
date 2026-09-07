@@ -249,9 +249,9 @@
                                 
                                 <div class="text-md-end d-flex align-items-center gap-2">
                                     <div class="text-end">
-                                        <small class="text-muted d-block small fw-bold text-uppercase" style="font-size: 9px; letter-spacing: 0.5px;">Match Index</small>
+                                        <small class="text-muted d-block small fw-bold text-uppercase" style="font-size: 9px; letter-spacing: 0.5px;">Match</small>
                                         <span class="badge bg-success text-white score-badge shadow-sm">
-                                            {{ match.final_score }}%
+                                            {{ match.band }}
                                         </span>
                                     </div>
                                 </div>
@@ -307,16 +307,6 @@
                                                 {% endfor %}
                                             </div>
 
-                                            <div class="row mt-4 pt-3 border-top text-center text-md-start g-2">
-                                                <div class="col-sm-6 col-md-3">
-                                                    <small class="text-muted d-block small">AI Vector Score</small>
-                                                    <strong class="text-success">{{ match.ai_score }}%</strong>
-                                                </div>
-                                                <div class="col-sm-6 col-md-3">
-                                                    <small class="text-muted d-block small">Rule Compliance Matrix</small>
-                                                    <strong class="text-primary">{{ match.rule_score }}/100</strong>
-                                                </div>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
