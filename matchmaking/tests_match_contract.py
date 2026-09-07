@@ -424,3 +424,61 @@ class SnapshotVersioningTests(TestCase):
         self.assertEqual(legacy.match_contract_version, '')
         self.assertEqual(legacy.predicted_band, '')
         self.assertIsNone(legacy.predicted_basis)
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class DigestCandidateDiscoveryTests(TestCase):
+    """
+    Discovery must not pre-filter on a rule the contract does not use.
+
+    The digest used to read its candidates from the AIMatch cache, and
+    match_cache.upsert_match refuses to write a row unless BOTH sides have
+    an embedding. So a pairing the contract could rate on declared signals
+    alone was never offered to the contract at all. Measured on the audit
+    fixture: an investor with no focus vector had 11 eligible pairings, 0
+    cached rows, and received nothing.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        fu = User.objects.create_user('dd_founder', password='x')
+        self.app = Application.objects.create(
+            user=fu, company_name='DDCo', founder_name='F', email='f@t.com',
+            description='Forecasting software for community solar operators.',
+            sector='Climate Tech', stage='Seed', raising_amount=4_000_000,
+        )
+        iu = User.objects.create_user('dd_investor', password='x')
+        # Declares a focus and a stage, but has no embedding - so the
+        # AIMatch cache will never hold a row for this pair.
+        self.investor = InvestorApplication.objects.create(
+            user=iu, full_name='I', company_name='Fund', email='i@t.com',
+            investment_focus='Climate Tech, energy software', investment_stage='Seed',
+        )
+
+    def test_the_pairing_is_contract_eligible(self):
+        from .match_components import evaluate_venture_match
+        from .digest import DIGEST_MIN_BAND
+        self.assertGreaterEqual(
+            evaluate_venture_match(self.app, self.investor).band, DIGEST_MIN_BAND)
+
+    def test_no_cached_row_exists_for_it(self):
+        from .models import AIMatch
+        self.assertEqual(
+            AIMatch.objects.filter(investor=self.investor, application=self.app).count(), 0,
+            'precondition: the cache cannot hold this pair, since neither side has a vector')
+
+    def test_a_card_is_still_produced(self):
+        from .digest import build_investor_digest_card
+        card = build_investor_digest_card(self.investor)
+        self.assertIsNotNone(
+            card, 'an eligible pairing must not be lost because no cache row exists')
+        self.assertEqual(card['band'], 'Strong')
+
+    def test_the_reverse_digest_finds_it_too(self):
+        from .digest import build_founder_digest_card
+        self.assertIsNotNone(build_founder_digest_card(self.app))
+
+    def test_freshness_is_absent_rather_than_fabricated(self):
+        from .digest import build_investor_digest_card
+        # No cached row means no freshness line - not an invented one.
+        self.assertIsNone(build_investor_digest_card(self.investor)['freshness'])
