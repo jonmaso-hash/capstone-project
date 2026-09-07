@@ -99,6 +99,20 @@ class Signal:
         return self.present and self.party in (DECLARED, INFERRED)
 
     @property
+    def corroborates(self):
+        """
+        Evidence *for* fit. A component that fired with 0 did not abstain -
+        it looked and found disagreement, which is the opposite of
+        corroboration and must never help carry a pairing to Strong.
+        """
+        return self.moves_strength and self.value > 0
+
+    @property
+    def contradicts(self):
+        """Evidence *against* fit: the component looked and disagreed."""
+        return self.moves_strength and self.value == 0
+
+    @property
     def in_basis(self):
         return self.present
 
@@ -123,7 +137,7 @@ def independent_count(signals):
     signals. Exhaustive rather than greedy - the component roster is
     tiny, and a greedy pass can undercount depending on iteration order.
     """
-    movers = [s for s in signals if s.moves_strength]
+    movers = [s for s in signals if s.corroborates]
     for size in range(len(movers), 0, -1):
         for combo in combinations(movers, size):
             if all(_independent(x, y) for x, y in combinations(combo, 2)):
@@ -133,18 +147,29 @@ def independent_count(signals):
 
 def derive_band(signals):
     """
-    Strong    >= 2 independent signals AND >= 1 party-declared fit (R3, R7)
-    Notable   >= 1 party-declared fit
-    Possible  something fired, but nothing either side declared
-    Unranked  nothing fired
+    Strong    >= 2 independent corroborating signals, >= 1 of them
+              party-declared, and nothing contradicting  (R3, R7)
+    Notable   >= 1 party-declared corroborating signal
+    Possible  something fired, but nothing corroborates a declared fit
+    Unranked  nothing fired at all
+
+    The "nothing contradicting" clause matters more than it looks. Without
+    it, a founder whose sector is plainly outside the mandate and whose
+    stage is merely adjacent has two independent declared signals - one
+    saying no and one saying nearly - and lands in Strong. Two components
+    that looked and disagreed are not corroboration.
     """
     movers = [s for s in signals if s.moves_strength]
     if not movers:
         return Band.UNRANKED
-    has_declared = any(s.party == DECLARED for s in movers)
-    if has_declared and independent_count(signals) >= 2:
+
+    corroborating = [s for s in movers if s.corroborates]
+    has_declared_support = any(s.party == DECLARED for s in corroborating)
+    contradicted = any(s.contradicts for s in movers)
+
+    if has_declared_support and not contradicted and independent_count(signals) >= 2:
         return Band.STRONG
-    if has_declared:
+    if has_declared_support:
         return Band.NOTABLE
     return Band.POSSIBLE
 

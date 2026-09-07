@@ -4657,13 +4657,20 @@ class ExplanatoryInsightsCopyTests(TestCase):
     surfaced this".
     """
 
-    def _insights(self, ai_score=61, rule_score=80, sector='Robotics', stage='Series A',
-                  focus='Robotics, logistics', mandate_stage='Series A'):
+    def _insights(self, sector='Robotics', stage='Series A',
+                  focus='Robotics, logistics', mandate_stage='Series A',
+                  description='Cadence builds robots for logistics warehouses.'):
         from types import SimpleNamespace
+        from .match_components import evaluate_venture_match
         from .views import _generate_explanatory_insights
-        founder = SimpleNamespace(company_name='Cadence', sector=sector, stage=stage)
-        investor = SimpleNamespace(investment_focus=focus, investment_stage=mandate_stage)
-        return _generate_explanatory_insights(ai_score, rule_score, founder, investor)
+        founder = SimpleNamespace(company_name='Cadence', sector=sector, stage=stage,
+                                  description=description, description_vector=None)
+        investor = SimpleNamespace(investment_focus=focus, investment_stage=mandate_stage,
+                                   focus_vector=None)
+        # The helper reads the canonical result rather than being handed
+        # loose numbers, so this exercises the real path end to end.
+        return _generate_explanatory_insights(
+            evaluate_venture_match(founder, investor), founder, investor)
 
     def test_no_machine_voice_in_any_field(self):
         out = self._insights()
@@ -4672,26 +4679,34 @@ class ExplanatoryInsightsCopyTests(TestCase):
                        'semantic matching vectors', 'operational tier', 'baseline index'):
             self.assertNotIn(banned, blob)
 
-    def test_summary_leads_with_words_not_a_percentage(self):
-        out = self._insights(ai_score=61)
-        self.assertNotIn('61', out['summary'])
+    def test_summary_leads_with_words_and_exposes_no_number_at_all(self):
+        out = self._insights()
         self.assertNotIn('%', out['summary'])
-        # match_percentage is still returned for callers that badge/rank on it
-        self.assertEqual(out['match_percentage'], 61)
+        # The internal score is never handed to a renderer. The band is
+        # the whole user-facing answer.
+        self.assertNotIn('match_percentage', out)
+        self.assertEqual(out['band'], 'Strong')
 
     def test_pillars_describe_sector_stage_and_overall_fit(self):
-        out = self._insights(rule_score=80)
+        out = self._insights()
         titles = [p['title'] for p in out['pillars']]
         self.assertEqual(titles, ['Sector', 'Stage', 'Overall fit'])
         scores = {p['title']: p['score'] for p in out['pillars']}
         self.assertEqual(scores['Sector'], 'Match')        # 'Robotics' in 'Robotics, logistics'
         self.assertEqual(scores['Stage'], 'Match')         # 'Series A' == 'Series A'
-        self.assertEqual(scores['Overall fit'], 'Passed')  # rule_score 80 > 60
+        # Passed now means the band is Strong: two independent declared
+        # signals, not a rule subtotal clearing an arbitrary 60.
+        self.assertEqual(scores['Overall fit'], 'Passed')
 
     def test_partial_match_reads_softly_not_as_a_failure(self):
-        out = self._insights(rule_score=40, sector='Biotech', mandate_stage='Seed')
+        # Biotech is genuinely outside a robotics/logistics focus, and the
+        # copy now says so. The old helper had only hit/miss, so it called
+        # this 'Adjacent' and told the reader it was "close enough to
+        # surface" -- a small untruth in exactly the place the reader is
+        # deciding whether to spend attention.
+        out = self._insights(sector='Biotech', mandate_stage='Seed')
         scores = {p['title']: p['score'] for p in out['pillars']}
-        self.assertEqual(scores['Sector'], 'Adjacent')
+        self.assertEqual(scores['Sector'], 'Outside')
         self.assertEqual(scores['Stage'], 'Nearby')
         self.assertEqual(scores['Overall fit'], 'Partial')
         self.assertIn('softer match', out['pillars'][2]['desc'])

@@ -61,6 +61,22 @@ class BandDerivationTests(TestCase):
     def test_bands_are_ordered_so_consumers_can_use_thresholds(self):
         self.assertTrue(Band.STRONG > Band.NOTABLE > Band.POSSIBLE > Band.UNRANKED)
 
+    def test_a_contradicting_signal_blocks_strong(self):
+        # Sector looked and disagreed; stage is only nearby. Two
+        # independent declared signals, but one of them says no.
+        band = derive_band([declared('sector', 0.0, 'sector'),
+                            declared('stage', 50.0, 'stage')])
+        self.assertEqual(band, Band.NOTABLE)
+
+    def test_a_signal_that_fired_with_zero_does_not_corroborate(self):
+        self.assertEqual(independent_count([declared('sector', 0.0, 'sector'),
+                                            declared('stage', 100.0, 'stage')]), 1)
+
+    def test_all_signals_disagreeing_is_possible_not_strong(self):
+        band = derive_band([declared('sector', 0.0, 'sector'),
+                            declared('stage', 0.0, 'stage')])
+        self.assertEqual(band, Band.POSSIBLE)
+
 
 class IndependenceTests(TestCase):
     """R7 - correlated evidence cannot count twice."""
