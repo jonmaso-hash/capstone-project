@@ -93,6 +93,25 @@ def _is_adjacent_stage(stage1, stage2):
     }
     return stage2 in adjacents.get(stage1, [])
 
+
+# 'Series A' / 'series-A' / 'Series_A' are the same stage typed three ways,
+# and both sides of the comparison are free text, so the raw .lower() the
+# hard filter used to do excluded pairs that plainly agree. Folded to the
+# spelling _is_adjacent_stage's table already uses.
+_STAGE_ALIASES = {'pre seed': 'pre-seed', 'preseed': 'pre-seed'}
+
+
+def _normalize_stage(value):
+    """
+    Canonical form of a free-text stage label, for comparison only. Never
+    persisted — this exists so a hyphen can't cost a founder an entire
+    investor's deal flow.
+    """
+    if not value:
+        return ''
+    collapsed = re.sub(r'[\s_\-]+', ' ', value.strip().lower())
+    return _STAGE_ALIASES.get(collapsed, collapsed)
+
 def passes_hard_filters(application, investor):
     """
     Hard-constraint gate — the actual fix for the "high semantic score on a
@@ -109,10 +128,11 @@ def passes_hard_filters(application, investor):
     Result is cached: the key is built directly from every field this
     function reads, so a changed profile automatically produces a
     different (uncached) key — there's no separate invalidation logic to
-    write or get wrong.
+    write or get wrong. ticket_size_max is deliberately absent below
+    because the computation no longer reads it; see _compute_hard_filters.
     """
     key_material = (
-        f"{investor.id}:{investor.ticket_size_min}:{investor.ticket_size_max}:"
+        f"v2:{investor.id}:{investor.ticket_size_min}:"
         f"{investor.investment_stage}:{application.id}:{application.raising_amount}:{application.stage}"
     )
     cache_key = f"hard_filter:{hashlib.sha256(key_material.encode('utf-8')).hexdigest()}"
@@ -126,17 +146,44 @@ def passes_hard_filters(application, investor):
 
 
 def _compute_hard_filters(application, investor):
-    if investor.ticket_size_min is not None or investor.ticket_size_max is not None:
-        raising_amount = application.raising_amount
-        if investor.ticket_size_min is not None and raising_amount < investor.ticket_size_min:
-            return False
-        if investor.ticket_size_max is not None and raising_amount > investor.ticket_size_max:
+    """
+    Only genuinely nonviable pairings are excluded here. Anything that is
+    merely a poor fit belongs in ranking, where the investor can still see
+    it and judge for themselves.
+
+    On cheque size: ticket_size_min/max describe the cheque this investor
+    writes into a round; raising_amount is the size of the whole round.
+    They are different quantities, and comparing them directly excluded
+    every well-capitalised founder from every realistically-sized cheque
+    writer — a $250k–$1.5M investor is an ordinary participant in a $4M
+    seed round, not a mismatch for it. The one combination that cannot
+    work is an investor whose SMALLEST cheque exceeds the entire round,
+    since there is no way to deploy it; that is all we exclude on. A
+    cheque smaller than the round is just syndication.
+
+    On an undeclared raise: raising_amount is a non-null DecimalField
+    defaulting to 0, so 0 overwhelmingly means "hasn't said yet" rather
+    than "raising nothing" — and the founders who haven't said yet are
+    exactly the new ones a cold marketplace can least afford to hide.
+    Skipped rather than failed, on the same principle that keeps
+    calculate_rule_based_score silent about an undisclosed burn rate:
+    absent data must not read as a strike against the founder.
+    """
+    raising_amount = application.raising_amount
+    if investor.ticket_size_min is not None and raising_amount:
+        if investor.ticket_size_min > raising_amount:
             return False
 
+    # Adjacency is checked in both directions: the table is one-way (it
+    # lists 'series c' as a neighbour of 'series b' but has no 'series c'
+    # key of its own), and a one-way read of it silently excluded the
+    # later-stage half of every such pair.
     if investor.investment_stage:
-        app_stage = application.stage.lower() if application.stage else ""
-        inv_stage = investor.investment_stage.lower()
-        if app_stage != inv_stage and not _is_adjacent_stage(app_stage, inv_stage):
+        app_stage = _normalize_stage(application.stage)
+        inv_stage = _normalize_stage(investor.investment_stage)
+        if app_stage != inv_stage \
+                and not _is_adjacent_stage(app_stage, inv_stage) \
+                and not _is_adjacent_stage(inv_stage, app_stage):
             return False
 
     return True
@@ -179,7 +226,11 @@ def get_weighted_chunk_score(application, investor):
 
 def get_blended_match(ai_score, rule_score, application, investor, sparse_score=None):
     """
-    Enhanced blended match that incorporates historical thumbs up/down feedback.
+    LEGACY blend, retained only for the vector/chunk machinery it wraps.
+
+    The canonical answer to "how well do these two fit" is
+    matchmaking/match_score.py via evaluate_venture_match; no consumer
+    reads this any more. It carries no feedback term (see below).
 
     sparse_score is optional and defaults to None so every existing caller
     keeps its exact prior behavior (70% rule / 30% ai) unchanged. Passing a
@@ -201,15 +252,13 @@ def get_blended_match(ai_score, rule_score, application, investor, sparse_score=
     else:
         base_score = (rule_score * 0.7) + (ai_score * 0.3)
 
-    from matchmaking.models import MatchFeedback
-    feedback = MatchFeedback.objects.filter(application=application, investor=investor).first()
-
-    if feedback:
-        if feedback.vote == 1:
-            return min(base_score + 15, 100)
-        if feedback.vote == -1:
-            return base_score * 0.5
-
+    # A thumbs-up used to add 15 here and a thumbs-down to halve the
+    # result. That made one click worth more than the entire semantic
+    # signal, whose observed maximum contributes 12.5 -- and, worse, it
+    # made a statement about the person look like a property of the
+    # pairing. Feedback is now a personal preference axis: it may order or
+    # filter what a viewer sees, and it never touches match strength,
+    # alert eligibility, or a persisted prediction.
     return round(base_score, 2)
 
 
@@ -263,33 +312,36 @@ def calculate_deal_rule_based_score(seller, buyer):
 
 def get_deal_blended_match(ai_score, rule_score, seller, buyer):
     """
-    Blended AI + rule score for the M&A marketplace, incorporating
-    DealFeedback thumbs up/down. Identical shape to get_blended_match.
+    LEGACY blend for the M&A marketplace. Identical shape to
+    get_blended_match, and likewise no longer the canonical answer and no
+    longer carrying a feedback term.
     """
     base_score = (rule_score * 0.7) + (ai_score * 0.3)
 
-    from matchmaking.models import DealFeedback
-    feedback = DealFeedback.objects.filter(seller=seller, buyer=buyer).first()
-
-    if feedback:
-        if feedback.vote == 1:
-            return min(base_score + 15, 100)
-        if feedback.vote == -1:
-            return base_score * 0.5
-
+    # Same separation as get_blended_match: DealFeedback is preference,
+    # not evidence of fit.
     return round(base_score, 2)
 
 
-def get_uncontacted_high_matches(investor_profile, threshold=80):
+def get_uncontacted_high_matches(investor_profile):
     """
-    Counts founders scoring >= threshold on the exact blended-match formula
-    investor_dashboard uses, excluding founders this investor already has a
-    Connection with. Skips lazy vector generation (unlike investor_dashboard)
-    since this runs on every journey-status poll — founders without a vector
-    yet just fall back to the same ai_score=50 default the dashboard uses.
+    Counts founders in the Strong band this investor has not yet contacted.
+
+    This number is rendered to the user as "You have N strong matches you
+    haven't reached out to yet", so it has to mean something. It used to
+    count `blended >= 80`, a cutoff this consumer chose for itself, on a
+    scale where an absent embedding contributed a fabricated 50. Now it
+    asks the contract: Strong requires two independent signals and at
+    least one both parties declared, so the count is of pairings that
+    actually clear that bar.
+
+    No threshold argument any more, deliberately. A consumer that can
+    pick its own cutoff is a consumer that can disagree with every other
+    consumer about what a strong match is.
     """
+    from matchmaking.match_components import evaluate_venture_match
+    from matchmaking.match_score import Band
     from matchmaking.models import Application, Connection
-    from matchmaking.services.ai_engine import calculate_similarity
 
     requested_ids = set(
         Connection.objects.filter(investor=investor_profile).values_list('founder_id', flat=True)
@@ -297,23 +349,10 @@ def get_uncontacted_high_matches(investor_profile, threshold=80):
 
     founders = Application.objects.discoverable().exclude(review_status='DENIED').exclude(id__in=requested_ids)
 
-    count = 0
-    for founder in founders:
-        if investor_profile.focus_vector and founder.description_vector:
-            try:
-                ai_score = max(0.0, min(100.0, calculate_similarity(investor_profile.focus_vector, founder.description_vector) * 100))
-            except Exception:
-                ai_score = 50.0
-        else:
-            ai_score = 50.0
-
-        rule_score = calculate_rule_based_score(application=founder, investor=investor_profile)
-        final_score = get_blended_match(ai_score, rule_score, application=founder, investor=investor_profile)
-
-        if final_score >= threshold:
-            count += 1
-
-    return count
+    return sum(
+        1 for founder in founders
+        if evaluate_venture_match(founder, investor_profile).band == Band.STRONG
+    )
 
 
 def compute_founder_journey_stage(user):
@@ -415,15 +454,16 @@ def compute_investor_journey_stage(user):
     }
 
 
-def get_uncontacted_high_deal_matches(buyer_profile, threshold=80):
+def get_uncontacted_high_deal_matches(buyer_profile):
     """
-    Business Marketplace equivalent of get_uncontacted_high_matches — counts
-    seller listings scoring >= threshold on the exact blended deal-economics
-    formula buyer_dashboard uses, excluding listings this buyer already has
-    an AcquisitionConnection with.
+    Business Marketplace twin of get_uncontacted_high_matches: sellers in
+    the Strong band this buyer has not yet contacted. Same reasoning, and
+    deliberately the same absence of a threshold argument - one contract,
+    one definition of Strong, on both sides of the marketplace.
     """
+    from matchmaking.match_components import evaluate_deal_match
+    from matchmaking.match_score import Band
     from matchmaking.models import SellerApplication, AcquisitionConnection
-    from matchmaking.services.ai_engine import calculate_similarity
 
     requested_ids = set(
         AcquisitionConnection.objects.filter(buyer=buyer_profile).values_list('seller_id', flat=True)
@@ -431,23 +471,10 @@ def get_uncontacted_high_deal_matches(buyer_profile, threshold=80):
 
     sellers = SellerApplication.objects.discoverable().exclude(review_status='DENIED').exclude(id__in=requested_ids)
 
-    count = 0
-    for seller in sellers:
-        if buyer_profile.focus_vector and seller.description_vector:
-            try:
-                ai_score = max(0.0, min(100.0, calculate_similarity(buyer_profile.focus_vector, seller.description_vector) * 100))
-            except Exception:
-                ai_score = 50.0
-        else:
-            ai_score = 50.0
-
-        rule_score = calculate_deal_rule_based_score(seller=seller, buyer=buyer_profile)
-        final_score = get_deal_blended_match(ai_score, rule_score, seller=seller, buyer=buyer_profile)
-
-        if final_score >= threshold:
-            count += 1
-
-    return count
+    return sum(
+        1 for seller in sellers
+        if evaluate_deal_match(seller, buyer_profile).band == Band.STRONG
+    )
 
 
 def compute_seller_journey_stage(user):

@@ -19,6 +19,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from stream_chat import StreamChat
+from .stream_provisioning import ensure_deal_channel, deal_channel_cid
 from .utils import clean_financial_input
 from .models import Application
 from django.http import FileResponse, Http404
@@ -35,6 +36,8 @@ from matchmaking.models import SellerApplication, BuyerApplication, AcquisitionC
 from matchmaking.models import PitchVideoComment
 from matchmaking.services.ai_engine import calculate_similarity, generate_profile_embedding, calculate_sparse_similarity
 from matchmaking.utils import calculate_rule_based_score, get_blended_match, clean_financial_input, passes_hard_filters
+from matchmaking.match_components import evaluate_deal_match, evaluate_venture_match
+from matchmaking.match_score import Band
 from matchmaking.utils import calculate_deal_rule_based_score, get_deal_blended_match
 from .forms import DataRoomDocumentForm
 
@@ -141,7 +144,20 @@ def connection_action_view(request):
         if action == 'DECLINED':
             log_training_example('INVESTOR', conn_req.investor.id, 'FOUNDER', conn_req.founder.id, 'NEGATIVE', 'declined')
 
-        return JsonResponse({'status': 'success', 'new_status': action})
+        # Stand the conversation up the moment the connection is accepted,
+        # so "you are connected" and "you can talk" become true together.
+        # Best-effort: a Stream failure returns None and the acceptance
+        # still stands -- the caller falls back to reloading the page.
+        chat_channel_cid = None
+        if action == 'ACCEPTED':
+            chat_channel_cid = ensure_deal_channel(
+                conn_req.investor.user, conn_req.founder.user,
+                name=f"{conn_req.founder.company_name or conn_req.founder.user.username}",
+            )
+
+        return JsonResponse({
+            'status': 'success', 'new_status': action, 'chat_channel_cid': chat_channel_cid,
+        })
     except Exception as e:
         logger.error(f"Connection action error: {str(e)}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
@@ -230,7 +246,18 @@ def acquisition_connection_action_view(request):
         if action == 'DECLINED':
             log_training_example('BUYER', conn_req.buyer.id, 'SELLER', conn_req.seller.id, 'NEGATIVE', 'declined')
 
-        return JsonResponse({'status': 'success', 'new_status': action})
+        # Same provisioning as connection_action_view — both deal types
+        # share one accept-then-talk path and one JS handler.
+        chat_channel_cid = None
+        if action == 'ACCEPTED':
+            chat_channel_cid = ensure_deal_channel(
+                conn_req.buyer.user, conn_req.seller.user,
+                name=f"{conn_req.seller.company_name or conn_req.seller.user.username}",
+            )
+
+        return JsonResponse({
+            'status': 'success', 'new_status': action, 'chat_channel_cid': chat_channel_cid,
+        })
     except Exception as e:
         logger.error(f"Acquisition connection action error: {str(e)}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
@@ -254,25 +281,50 @@ def founder_required(view_func):
 # HELPER DATA GENERATOR
 # ==========================================
 
-def _generate_explanatory_insights(ai_score, rule_score, application, investor):
+def _signal_label(signal, matched='Match', partial='Adjacent'):
+    """Plain-language label for one component's finding."""
+    if signal is None or not signal.present:
+        return 'Not stated'
+    if signal.value >= 100.0:
+        return matched
+    if signal.value > 0.0:
+        return partial
+    return 'Outside'
+
+
+def _overall_label(band):
+    from .match_score import Band
+    return {
+        Band.STRONG: 'Passed',
+        Band.NOTABLE: 'Partial',
+        Band.POSSIBLE: 'Partial',
+        Band.UNRANKED: 'Unranked',
+    }[band]
+
+
+def _generate_explanatory_insights(result, application, investor):
     """
     Plain-language explanation of why a founder and an investor were
-    matched — the sector, stage and overall-fit signals behind the score,
-    described for a human rather than for a machine. Rendered on the
-    investor dashboard's match accordion and on the Zelda Intelligence
-    Report ("Why Zelda surfaced this"), so the wording stays conservative
-    enough to read well in a dense list and on a report page alike.
+    matched. Rendered on the investor dashboard's match accordion and on
+    the Zelda Intelligence Report ("Why Zelda surfaced this"), so the
+    wording stays conservative enough to read well in a dense list and on
+    a report page alike.
 
-    `match_percentage` is still returned for callers that rank or badge on
-    it; the copy no longer leads with a number.
+    Reads the MatchResult's signals rather than re-deriving sector and
+    stage for itself. It used to do the latter, with subtly different
+    rules from the components -- a second opinion on the same question,
+    which is how one product ends up disagreeing with itself about
+    whether a sector matched.
+
+    No percentage is returned. The band is the user-facing answer; the
+    internal score orders candidates within a band and is never rendered.
     """
-    sector_str = (getattr(application, 'sector', '') or '').strip()
-    focus_str = (getattr(investor, 'investment_focus', '') or '').strip()
-    stage_str = (getattr(application, 'stage', '') or '').strip()
-    mandate_stage_str = (getattr(investor, 'investment_stage', '') or '').strip()
+    from .match_components import SECTOR, STAGE
 
-    sector_hit = bool(sector_str) and sector_str.lower() in focus_str.lower()
-    stage_hit = bool(stage_str) and stage_str.lower() == mandate_stage_str.lower()
+    signals = {s.key: s for s in result.signals}
+    sector, stage = signals.get(SECTOR), signals.get(STAGE)
+    sector_hit = bool(sector and sector.present and sector.value >= 100.0)
+    stage_hit = bool(stage and stage.present and stage.value >= 100.0)
 
     if sector_hit and stage_hit:
         summary = "The company's sector and raise stage both line up with your stated focus."
@@ -283,71 +335,96 @@ def _generate_explanatory_insights(ai_score, rule_score, application, investor):
     else:
         summary = "The company is close enough to your focus and mandate to be worth a look."
 
+    sector_str = (getattr(application, 'sector', '') or '').strip()
+    stage_str = (getattr(application, 'stage', '') or '').strip()
+    mandate_stage_str = (getattr(investor, 'investment_stage', '') or '').strip()
+
     return {
-        'match_percentage': int(round(ai_score)),
+        'band': result.band.label,
         'summary': summary,
         'pillars': [
             {
                 'title': 'Sector',
-                'score': 'Match' if sector_hit else 'Adjacent',
-                'desc': (
-                    f"{sector_str or 'Sector not stated'} — "
-                    + ("in your stated focus." if sector_hit
-                       else "not an explicit focus area for you, but close enough to surface.")
+                'score': _signal_label(sector),
+                'desc': f"{sector_str or 'Sector not stated'} — " + (
+                    "in your stated focus." if sector_hit
+                    else "not stated on one side." if sector is None or not sector.present
+                    else "outside your stated focus." if sector.value == 0.0
+                    else "not an explicit focus area for you, but close enough to surface."
                 ),
             },
             {
                 'title': 'Stage',
-                'score': 'Match' if stage_hit else 'Nearby',
-                'desc': (
-                    f"Raising at {stage_str or 'an unstated stage'} — "
-                    + ("matches your mandate." if stage_hit
-                       else f"your mandate is {mandate_stage_str or 'not set'}.")
+                'score': _signal_label(stage, partial='Nearby'),
+                'desc': f"Raising at {stage_str or 'an unstated stage'} — " + (
+                    "matches your mandate." if stage_hit
+                    else "no stage stated on one side." if stage is None or not stage.present
+                    else f"your mandate is {mandate_stage_str or 'not set'}."
                 ),
             },
             {
                 'title': 'Overall fit',
-                'score': 'Passed' if rule_score > 60 else 'Partial',
+                'score': _overall_label(result.band),
                 'desc': (
-                    "Sector and stage together clear Zelda's match threshold."
-                    if rule_score > 60
-                    else "Sector and stage only partly align, so this is a softer match."
+                    "Sector and stage are independently corroborated, so this is a strong match."
+                    if result.band.name == 'STRONG'
+                    else "Only part of the picture is corroborated, so this is a softer match."
                 ),
             },
         ],
     }
 
-def _generate_deal_explanatory_insights(ai_score, rule_score, seller, buyer):
-    """
-    Deal-economics equivalent of _generate_explanatory_insights, for the
-    Business Marketplace's Explanatory AI Insights panel.
-    """
-    industry_str = getattr(seller, 'industry', '') or ''
-    thesis_str = getattr(buyer, 'acquisition_thesis', '') or ''
-    asking_price = getattr(seller, 'asking_price', None)
-    budget_min = getattr(buyer, 'budget_min', None)
-    budget_max = getattr(buyer, 'budget_max', None)
 
-    industry_match = "Match" if industry_str.lower() in thesis_str.lower() else "Neutral"
-    if asking_price is not None and budget_min is not None and budget_max is not None and budget_min <= asking_price <= budget_max:
-        size_fit = "Excellent"
-    else:
-        size_fit = "Partial"
+def _generate_deal_explanatory_insights(result, seller, buyer):
+    """
+    Deal-economics equivalent, reading the same MatchResult shape.
+
+    The old copy led with "Blended alignment index of N% via semantic
+    matching vectors and deal-economics validation rules" -- a number the
+    evidence could not support, wrapped in machine vocabulary. Both are
+    gone.
+    """
+    from .match_components import DEAL_SIZE, DEAL_STRUCTURE, INDUSTRY
+
+    signals = {s.key: s for s in result.signals}
+    industry = signals.get(INDUSTRY)
+    size = signals.get(DEAL_SIZE)
+    structure = signals.get(DEAL_STRUCTURE)
+    industry_str = getattr(seller, 'industry', '') or 'not stated'
 
     return {
-        'match_percentage': int(round(ai_score)),
-        'summary': f"Blended alignment index of {round(ai_score)}% via semantic matching vectors and deal-economics validation rules.",
+        'band': result.band.label,
+        'summary': (
+            f"This is a {result.band.label.lower()} match on the evidence both sides have stated."
+        ),
         'pillars': [
-            {'title': 'Industry Alignment', 'score': industry_match, 'desc': f"Evaluated business industry '{industry_str}' against acquirer thesis criteria."},
-            {'title': 'Deal Size Fit', 'score': size_fit, 'desc': f"Asking price benchmarked against the acquirer's stated budget range."},
-            {'title': 'Structural Rules', 'score': 'Passed' if rule_score > 60 else 'Review', 'desc': f"Rule compliance engine score marked at a baseline index of {round(rule_score)} points."}
-        ]
+            {
+                'title': 'Industry Alignment',
+                'score': _signal_label(industry, partial='Adjacent'),
+                'desc': f"Business industry '{industry_str}' read against the acquirer's stated thesis.",
+            },
+            {
+                'title': 'Deal Size Fit',
+                'score': _signal_label(size, matched='Match', partial='Near'),
+                'desc': (
+                    "Asking price sits inside the stated budget."
+                    if size is not None and size.present and size.value >= 100.0
+                    else "Asking price or budget has not been stated on one side."
+                    if size is None or not size.present
+                    else "Asking price falls outside the stated budget."
+                ),
+            },
+            {
+                'title': 'Deal Structure',
+                'score': _signal_label(structure, partial='Open'),
+                'desc': (
+                    structure.detail if structure is not None and structure.present
+                    else "Neither side has stated a structure preference, so this says nothing either way."
+                ),
+            },
+        ],
     }
 
-
-# ==========================================
-# MATCHMAKING CORE VIEWS
-# ==========================================
 
 @login_required
 def investor_dashboard(request):
@@ -436,32 +513,25 @@ def investor_dashboard(request):
             except Exception as e:
                 logger.warning(f"Failed lazy-generation embedding for founder application {founder.id}: {str(e)}")
 
-        if investor_profile.focus_vector and founder.description_vector:
-            try:
-                raw_ai_similarity = calculate_similarity(investor_profile.focus_vector, founder.description_vector)
-                ai_score = max(0.0, min(100.0, raw_ai_similarity * 100))
-            except Exception:
-                ai_score = 50.0
-        else:
-            ai_score = 50.0
+        # One evaluation, one result. Every consumer reads the same shape
+        # from the same call rather than assembling its own idea of a
+        # match out of raw parts.
+        result = evaluate_venture_match(founder, investor_profile)
 
-        sparse_score = calculate_sparse_similarity(investor_profile.investment_focus, founder.description) * 100
-
-        rule_score = calculate_rule_based_score(application=founder, investor=investor_profile)
-        final_score = get_blended_match(ai_score, rule_score, application=founder, investor=investor_profile, sparse_score=sparse_score)
-
-        if final_score > 10:
+        if result.band > Band.UNRANKED:
             match_results.append({
                 'founder': founder,
-                'ai_score': round(ai_score, 1),
-                'rule_score': round(rule_score, 1),
-                'final_score': round(final_score, 1),
+                'match': result,
+                'band': result.band.label,
                 'already_requested': founder.id in requested_ids,
                 'connection_status': connection_status_map.get(founder.id),
-                'ai_insights': _generate_explanatory_insights(ai_score, rule_score, founder, investor_profile)
+                'ai_insights': _generate_explanatory_insights(result, founder, investor_profile),
             })
-    
-    match_results = sorted(match_results, key=lambda x: x['final_score'], reverse=True)
+
+    # Band first, internal score only to order within a band — the score
+    # has no meaning across bands and is never shown either way.
+    match_results = sorted(
+        match_results, key=lambda x: (x['match'].band, x['match'].score), reverse=True)
 
     intro_quota_remaining = None
     if not investor_profile.is_premium:
@@ -553,30 +623,20 @@ def buyer_dashboard(request):
             except Exception as e:
                 logger.warning(f"Failed lazy-generation embedding for seller listing {seller.id}: {str(e)}")
 
-        if buyer_profile.focus_vector and seller.description_vector:
-            try:
-                raw_ai_similarity = calculate_similarity(buyer_profile.focus_vector, seller.description_vector)
-                ai_score = max(0.0, min(100.0, raw_ai_similarity * 100))
-            except Exception:
-                ai_score = 50.0
-        else:
-            ai_score = 50.0
+        result = evaluate_deal_match(seller, buyer_profile)
 
-        rule_score = calculate_deal_rule_based_score(seller=seller, buyer=buyer_profile)
-        final_score = get_deal_blended_match(ai_score, rule_score, seller=seller, buyer=buyer_profile)
-
-        if final_score > 10:
+        if result.band > Band.UNRANKED:
             match_results.append({
                 'seller': seller,
-                'ai_score': round(ai_score, 1),
-                'rule_score': round(rule_score, 1),
-                'final_score': round(final_score, 1),
+                'match': result,
+                'band': result.band.label,
                 'already_requested': seller.id in requested_ids,
                 'connection_status': connection_status_map.get(seller.id),
-                'deal_insights': _generate_deal_explanatory_insights(ai_score, rule_score, seller, buyer_profile)
+                'deal_insights': _generate_deal_explanatory_insights(result, seller, buyer_profile),
             })
 
-    match_results = sorted(match_results, key=lambda x: x['final_score'], reverse=True)
+    match_results = sorted(
+        match_results, key=lambda x: (x['match'].band, x['match'].score), reverse=True)
 
     intro_quota_remaining = None
     if not buyer_profile.is_premium:
@@ -619,26 +679,22 @@ def investor_shortlist(request):
 
     shortlist = []
     for founder in founders:
-        if investor_profile.focus_vector and founder.description_vector:
-            try:
-                raw_ai_similarity = calculate_similarity(investor_profile.focus_vector, founder.description_vector)
-                ai_score = max(0.0, min(100.0, raw_ai_similarity * 100))
-            except Exception:
-                ai_score = 50.0
-        else:
-            ai_score = 50.0
-
-        rule_score = calculate_rule_based_score(application=founder, investor=investor_profile)
-        final_score = get_blended_match(ai_score, rule_score, application=founder, investor=investor_profile)
-        final_score = max(0, min(100, final_score + 10))  # thumbs-up nudge, consistent with the bulletin board
+        # The +10 thumbs-up nudge that used to be applied here is gone.
+        # Feedback is a statement about the person, not about the fit, so
+        # it must never move the canonical result. It was also redundant:
+        # this list is already filtered to founders this investor liked,
+        # so the nudge lifted every row equally and ordered nothing.
+        result = evaluate_venture_match(founder, investor_profile)
 
         shortlist.append({
             'founder': founder,
-            'final_score': round(final_score, 1),
+            'match': result,
+            'band': result.band.label,
             'already_requested': founder.id in requested_ids,
         })
 
-    shortlist = sorted(shortlist, key=lambda x: x['final_score'], reverse=True)
+    shortlist = sorted(
+        shortlist, key=lambda x: (x['match'].band, x['match'].score), reverse=True)
 
     return render(request, 'matchmaking/investor_shortlist.html', {
         'shortlist': shortlist,
@@ -704,29 +760,23 @@ def founder_dashboard(request):
         investors = investors.filter(location__icontains=filter_location)
 
     for investor in investors:
-        if application.description_vector and investor.focus_vector:
-            try:
-                raw_ai_similarity = calculate_similarity(application.description_vector, investor.focus_vector)
-                ai_score = max(0.0, min(100.0, raw_ai_similarity * 100))
-            except Exception:
-                ai_score = 50.0
-        else:
-            ai_score = 50.0
+        # Same evaluation as the investor side sees for this pairing --
+        # the contract is symmetric, so the two dashboards can no longer
+        # disagree about how well the same founder and investor fit.
+        result = evaluate_venture_match(application, investor)
 
-        rule_score = calculate_rule_based_score(application=application, investor=investor)
-        final_score = get_blended_match(ai_score, rule_score, application=application, investor=investor)
-        
-        if final_score > 15:
+        if result.band > Band.UNRANKED:
             match_results.append({
                 'investor': investor,
-                'final_score': round(final_score, 1),
-                'rule_match': rule_score >= 80,
+                'match': result,
+                'band': result.band.label,
                 'already_requested': investor.id in connection_status_map,
                 'connection_status': connection_status_map.get(investor.id),
-                'ai_insights': _generate_explanatory_insights(ai_score, rule_score, application, investor)
+                'ai_insights': _generate_explanatory_insights(result, application, investor),
             })
-    
-    match_results = sorted(match_results, key=lambda x: x['final_score'], reverse=True)
+
+    match_results = sorted(
+        match_results, key=lambda x: (x['match'].band, x['match'].score), reverse=True)
 
     from .growth_metrics import get_platform_insights, get_pitch_video_social_signal_insights
     platform_insights = get_platform_insights()
@@ -802,29 +852,20 @@ def seller_dashboard(request):
             pass
 
     for buyer in buyers:
-        if seller_profile.description_vector and buyer.focus_vector:
-            try:
-                raw_ai_similarity = calculate_similarity(seller_profile.description_vector, buyer.focus_vector)
-                ai_score = max(0.0, min(100.0, raw_ai_similarity * 100))
-            except Exception:
-                ai_score = 50.0
-        else:
-            ai_score = 50.0
+        result = evaluate_deal_match(seller_profile, buyer)
 
-        rule_score = calculate_deal_rule_based_score(seller=seller_profile, buyer=buyer)
-        final_score = get_deal_blended_match(ai_score, rule_score, seller=seller_profile, buyer=buyer)
-
-        if final_score > 15:
+        if result.band > Band.UNRANKED:
             match_results.append({
                 'buyer': buyer,
-                'final_score': round(final_score, 1),
-                'rule_match': rule_score >= 80,
+                'match': result,
+                'band': result.band.label,
                 'already_requested': buyer.id in connection_status_map,
                 'connection_status': connection_status_map.get(buyer.id),
-                'deal_insights': _generate_deal_explanatory_insights(ai_score, rule_score, seller_profile, buyer)
+                'deal_insights': _generate_deal_explanatory_insights(result, seller_profile, buyer),
             })
 
-    match_results = sorted(match_results, key=lambda x: x['final_score'], reverse=True)
+    match_results = sorted(
+        match_results, key=lambda x: (x['match'].band, x['match'].score), reverse=True)
 
     # Zelda tie-in: surface the seller's most recent business valuation as a
     # suggested asking-price reference, if they've run one.
@@ -1189,29 +1230,22 @@ def founder_bulletin_board(request):
         if investor_profile and not passes_hard_filters(pitch, investor_profile):
             continue
 
+        # A viewer with no investor profile gets no match at all, rather
+        # than the hardcoded 75 that used to stand in for one. An
+        # anonymous browser has no mandate, so there is nothing to match
+        # against and nothing honest to show.
         ai_insights_data = None
+        result = None
+        if investor_profile:
+            result = evaluate_venture_match(pitch, investor_profile)
+            ai_insights_data = _generate_explanatory_insights(result, pitch, investor_profile)
 
-        if investor_profile and investor_profile.focus_vector and pitch.description_vector:
-            try:
-                raw_similarity = calculate_similarity(investor_profile.focus_vector, pitch.description_vector)
-                ai_score = max(0.0, min(100.0, raw_similarity * 100))
-                match_percentage = int(round(ai_score))
-
-                rule_score = calculate_rule_based_score(application=pitch, investor=investor_profile)
-                ai_insights_data = _generate_explanatory_insights(ai_score, rule_score, pitch, investor_profile)
-            except Exception:
-                match_percentage = 75
-        else:
-            match_percentage = 75
-
-        # Thumbs up/down nudges the score shown for this investor's own feedback
-        vote = feedback_map.get(pitch.id)
-        pitch.base_match_percentage = match_percentage
-        pitch.investor_vote = vote or 0
-        if vote:
-            match_percentage = max(0, min(100, match_percentage + (vote * 10)))
-
-        pitch.match_percentage = match_percentage
+        # The vote is recorded and shown, but it does not touch the band.
+        # It used to shift the displayed number by +/-10, which made a
+        # personal opinion look like a property of the pairing.
+        pitch.investor_vote = feedback_map.get(pitch.id) or 0
+        pitch.match = result
+        pitch.band = result.band.label if result else None
         pitch.ai_insights = ai_insights_data
         pitch.connection_status = connection_status_map.get(pitch.id)
         pitch.already_requested = pitch.id in connection_status_map
@@ -1220,12 +1254,20 @@ def founder_bulletin_board(request):
         pitches.append(pitch)
         
     # Founder Premium perk (or a staff-curated feature): Featured Placement —
-    # featured founders sort first, then by match score within each group
-    # (falls back to match_percentage's default of 75 for viewers with no
-    # vector, so this always has a stable order). An active monthly
+    # featured founders sort first, then by band within each group. An
+    # active monthly
     # highlight (see Application.is_highlighted) outranks plain Featured
     # Placement — it's the stronger, time-boxed signal.
-    pitches = sorted(pitches, key=lambda x: (not x.is_highlighted, not (x.is_premium or x.is_staff_featured), -x.match_percentage))
+    # Featured placement first, then band, then the internal score within
+    # a band. A viewer with no mandate has no match to sort on, so those
+    # rows fall back to a stable neutral position rather than to a
+    # fabricated default.
+    pitches = sorted(pitches, key=lambda x: (
+        not x.is_highlighted,
+        not (x.is_premium or x.is_staff_featured),
+        -(x.match.band if x.match else 0),
+        -(x.match.score if x.match else 0),
+    ))
 
     return render(request, 'matchmaking/bulletin_board.html', {
         'pitches': pitches,
@@ -1287,28 +1329,17 @@ def acquisition_bulletin_board(request):
 
     listings = []
     for listing in listings_queryset:
+        # Mirrors founder_bulletin_board: no mandate, no match, and no
+        # hardcoded 75 standing in for one.
         deal_insights_data = None
+        result = None
+        if buyer_profile:
+            result = evaluate_deal_match(listing, buyer_profile)
+            deal_insights_data = _generate_deal_explanatory_insights(result, listing, buyer_profile)
 
-        if buyer_profile and buyer_profile.focus_vector and listing.description_vector:
-            try:
-                raw_similarity = calculate_similarity(buyer_profile.focus_vector, listing.description_vector)
-                ai_score = max(0.0, min(100.0, raw_similarity * 100))
-                match_percentage = int(round(ai_score))
-
-                rule_score = calculate_deal_rule_based_score(seller=listing, buyer=buyer_profile)
-                deal_insights_data = _generate_deal_explanatory_insights(ai_score, rule_score, listing, buyer_profile)
-            except Exception:
-                match_percentage = 75
-        else:
-            match_percentage = 75
-
-        vote = feedback_map.get(listing.id)
-        listing.base_match_percentage = match_percentage
-        listing.buyer_vote = vote or 0
-        if vote:
-            match_percentage = max(0, min(100, match_percentage + (vote * 10)))
-
-        listing.match_percentage = match_percentage
+        listing.buyer_vote = feedback_map.get(listing.id) or 0
+        listing.match = result
+        listing.band = result.band.label if result else None
         listing.deal_insights = deal_insights_data
         listing.connection_status = connection_status_map.get(listing.id)
         listing.already_requested = listing.id in connection_status_map
@@ -1321,7 +1352,12 @@ def acquisition_bulletin_board(request):
     # (mirrors founder_bulletin_board's Featured Placement — see that view
     # for the same pattern). An active monthly highlight outranks plain
     # Featured Listing, same as the founder side.
-    listings = sorted(listings, key=lambda x: (not x.is_highlighted, not (x.is_premium or x.is_staff_featured), -x.match_percentage))
+    listings = sorted(listings, key=lambda x: (
+        not x.is_highlighted,
+        not (x.is_premium or x.is_staff_featured),
+        -(x.match.band if x.match else 0),
+        -(x.match.score if x.match else 0),
+    ))
 
     return render(request, 'matchmaking/acquisition_bulletin_board.html', {
         'listings': listings,
@@ -2097,9 +2133,17 @@ def get_stream_token(request):
     try:
         client = StreamChat(api_key=settings.STREAM_API_KEY, api_secret=settings.STREAM_API_SECRET)
         user_id = str(request.user.id)
-        
+
         # Use Stream's native token generator, not custom JWT
         token = client.create_token(user_id)
+
+        # A token only authenticates; it does not create the user object.
+        # Upsert here so this user can be named as a channel member before
+        # they have ever opened chat themselves -- the counterparty half of
+        # the problem stream_provisioning.ensure_deal_channel solves from
+        # the other side. accounts.views.get_stream_token already did this;
+        # this is the copy the frontend actually calls.
+        client.upsert_user({"id": user_id, "name": request.user.username})
         
         return JsonResponse({
             'api_key': settings.STREAM_API_KEY,
@@ -2196,14 +2240,9 @@ def standalone_memo_view(request, company_slug):
     # a fourth quasi-score the orientation layer doesn't need. The
     # calculation is untouched; other surfaces still use it.
     ai_insights_data = None
-    if investor_profile and investor_profile.focus_vector and founder_app.description_vector:
-        try:
-            raw_similarity = calculate_similarity(investor_profile.focus_vector, founder_app.description_vector)
-            ai_score = max(0.0, min(100.0, raw_similarity * 100))
-            rule_score = calculate_rule_based_score(application=founder_app, investor=investor_profile)
-            ai_insights_data = _generate_explanatory_insights(ai_score, rule_score, founder_app, investor_profile)
-        except Exception:
-            ai_insights_data = None
+    if investor_profile:
+        ai_insights_data = _generate_explanatory_insights(
+            evaluate_venture_match(founder_app, investor_profile), founder_app, investor_profile)
 
     # The deal room is only a real destination once there's an accepted
     # connection — otherwise the button dropped an investor into an empty
@@ -2739,24 +2778,6 @@ def _get_deal_zelda_summary(company_application):
     }
 
 
-def _stream_deal_channel_id(user_id_a, user_id_b):
-    """
-    Same deterministic id StreamChatController.createDealRoom() computes
-    client-side (matchmaking/static/js/matchmaking.js) the moment EITHER
-    a Connection or an AcquisitionConnection is accepted — both dashboards'
-    updateConnection()/updateAcquisitionConnection() call the identical JS
-    function, so one formula covers both deal types. Reused here, not
-    recreated, so "Open Chat" always opens the real channel Stream already
-    has for this pair rather than standing up a second, competing one.
-    sorted() on strings is lexicographic, matching JS's default
-    Array.sort() exactly (NOT numeric — e.g. "10" sorts before "9" — but
-    both sides only need to agree with each other, not with numeric
-    ordering).
-    """
-    member_ids = sorted([str(user_id_a), str(user_id_b)])
-    return f"deal_{member_ids[0]}_{member_ids[1]}"
-
-
 @login_required
 def deal_workspace_view(request, connection_id):
     """
@@ -2809,7 +2830,15 @@ def deal_workspace_view(request, connection_id):
         'data_room_exists': True,
         'data_room_accessible': data_room_accessible,
         'data_room_url': reverse('matchmaking:data_room', kwargs={'username': founder_application.user.username}) if data_room_accessible else None,
-        'chat_channel_id': _stream_deal_channel_id(founder_application.user_id, investor_application.user_id),
+        # Provision on open as well as on accept, so a connection accepted
+        # before this path existed gets a real channel simply by someone
+        # visiting the workspace — no backfill needed. Falls back to the
+        # computed cid so the link still points somewhere if Stream is down.
+        'chat_channel_cid': (
+            ensure_deal_channel(investor_application.user, founder_application.user,
+                                name=founder_application.company_name or founder_application.user.username)
+            or deal_channel_cid(founder_application.user_id, investor_application.user_id)
+        ),
         'zelda_summary': _get_deal_zelda_summary(founder_application),
         'documents': list(founder_application.data_room_documents.all()[:10]) if data_room_accessible else [],
         'activity': activity,
@@ -2853,7 +2882,11 @@ def acquisition_deal_workspace_view(request, connection_id):
         'data_room_exists': False,
         'data_room_accessible': False,
         'data_room_url': None,
-        'chat_channel_id': _stream_deal_channel_id(seller_application.user_id, buyer_application.user_id),
+        'chat_channel_cid': (
+            ensure_deal_channel(buyer_application.user, seller_application.user,
+                                name=seller_application.company_name or seller_application.user.username)
+            or deal_channel_cid(seller_application.user_id, buyer_application.user_id)
+        ),
         'zelda_summary': _get_deal_zelda_summary(seller_application),
         'documents': [],
         'activity': get_acquisition_deal_activity_timeline(connection),
@@ -2962,31 +2995,30 @@ def delete_milestone(request, milestone_id):
 # per-video via pitch_video_*_enabled settings.
 # ──────────────────────────────────────────────────────────────────────────
 
-def _rank_pitch_video_profiles(items, score_fn, viewer_partner_profile):
+def _rank_pitch_video_profiles(items, evaluate, viewer_partner_profile):
     """
     Sorts founders/sellers with a pitch video: active monthly highlight
     first, then staff/premium-featured (same convention as
-    founder_bulletin_board/acquisition_bulletin_board), then by rule-based
-    match score against the viewer's investor/buyer profile if they have
-    one, then most-recent first. No AI vector call —
-    calculate_rule_based_score/calculate_deal_rule_based_score are pure
-    field comparisons, so ranking a video list stays cheap even without
-    every profile having a computed embedding.
+    founder_bulletin_board/acquisition_bulletin_board), then by the
+    canonical match against the viewer's investor/buyer profile if they
+    have one, then most-recent first.
+
+    This used to compute its own score straight from
+    calculate_rule_based_score and render it as "{score}% Match" -- a rule
+    subtotal presented as a match percentage, on the same scale where a
+    bare stage agreement is worth 60. It is a canonical match consumer
+    like any other and now reads the contract.
     """
     items = list(items)
     for item in items:
-        if viewer_partner_profile:
-            try:
-                item.match_score = score_fn(item, viewer_partner_profile)
-            except Exception:
-                item.match_score = 0
-        else:
-            item.match_score = None
+        item.match = evaluate(item, viewer_partner_profile) if viewer_partner_profile else None
+        item.band = item.match.band.label if item.match else None
 
     items.sort(key=lambda x: (
         not x.is_highlighted,
         not (x.is_premium or x.is_staff_featured),
-        -(x.match_score if x.match_score is not None else 0),
+        -(x.match.band if x.match else 0),
+        -(x.match.score if x.match else 0),
         -x.created_at.timestamp() if x.created_at else 0,
     ))
     return items
@@ -3037,7 +3069,7 @@ def pitch_videos_section(request):
         seller_qs = seller_qs.exclude(pitch_video_visibility='ROLE_ONLY')
 
     founders = _rank_pitch_video_profiles(
-        founder_qs, lambda f, inv: calculate_rule_based_score(application=f, investor=inv), investor_profile
+        founder_qs, lambda f, inv: evaluate_venture_match(f, inv), investor_profile
     )
     for f in founders:
         f.viewer_has_liked = f.id in liked_founder_ids
@@ -3046,7 +3078,7 @@ def pitch_videos_section(request):
         f.comment_count = f.pitch_video_comments.count()
 
     sellers = _rank_pitch_video_profiles(
-        seller_qs, lambda s, buy: calculate_deal_rule_based_score(seller=s, buyer=buy), buyer_profile
+        seller_qs, lambda s, buy: evaluate_deal_match(s, buy), buyer_profile
     )
     for s in sellers:
         s.viewer_has_liked = s.id in liked_seller_ids

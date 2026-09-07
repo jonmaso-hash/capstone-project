@@ -89,7 +89,13 @@ class RuleBasedScoreTests(TestCase):
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
 class BlendedMatchTests(TestCase):
-    """get_blended_match: rule*0.7 + ai*0.3, plus MatchFeedback thumbs nudge."""
+    """
+    get_blended_match: rule*0.7 + ai*0.3, and NO feedback term.
+
+    This is the legacy blend, no longer read by any consumer. It is kept
+    under test because while it exists it must not reintroduce the thumbs
+    nudge that once let one click outweigh the entire semantic signal.
+    """
 
     def setUp(self):
         _mock_embedding_generation(self)
@@ -109,15 +115,15 @@ class BlendedMatchTests(TestCase):
         score = get_blended_match(ai_score=50, rule_score=100, application=self.app, investor=self.investor)
         self.assertEqual(score, 85.0)
 
-    def test_thumbs_up_adds_15_capped_at_100(self):
+    def test_a_thumbs_up_does_not_raise_the_score(self):
         MatchFeedback.objects.create(user=self.investor_user, application=self.app, investor=self.investor, vote=1)
         score = get_blended_match(ai_score=50, rule_score=100, application=self.app, investor=self.investor)
-        self.assertEqual(score, 100)  # 85 + 15 = 100, capped
+        self.assertEqual(score, 85.0, 'liking a company does not improve the fit')
 
-    def test_thumbs_down_halves_score(self):
+    def test_a_thumbs_down_does_not_lower_the_score(self):
         MatchFeedback.objects.create(user=self.investor_user, application=self.app, investor=self.investor, vote=-1)
         score = get_blended_match(ai_score=50, rule_score=100, application=self.app, investor=self.investor)
-        self.assertEqual(score, 42.5)  # 85 * 0.5
+        self.assertEqual(score, 85.0, 'passing on a company does not worsen the fit')
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
@@ -178,7 +184,10 @@ class DealRuleBasedScoreTests(TestCase):
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
 class DealBlendedMatchTests(TestCase):
-    """get_deal_blended_match: same shape as get_blended_match but for DealFeedback."""
+    """
+    get_deal_blended_match: same shape as get_blended_match, and likewise
+    carrying no DealFeedback term.
+    """
 
     def setUp(self):
         self.seller_user = User.objects.create_user('seller_test', password='x')
@@ -194,15 +203,15 @@ class DealBlendedMatchTests(TestCase):
             budget_min=500_000, budget_max=1_500_000, preferred_deal_structure='ASSET_SALE',
         )
 
-    def test_thumbs_up_adds_15_capped_at_100(self):
+    def test_a_thumbs_up_does_not_raise_the_score(self):
         DealFeedback.objects.create(user=self.buyer_user, seller=self.seller, buyer=self.buyer, vote=1)
         score = get_deal_blended_match(ai_score=50, rule_score=100, seller=self.seller, buyer=self.buyer)
-        self.assertEqual(score, 100)
+        self.assertEqual(score, 85.0, 'liking a listing does not improve the fit')
 
-    def test_thumbs_down_halves_score(self):
+    def test_a_thumbs_down_does_not_lower_the_score(self):
         DealFeedback.objects.create(user=self.buyer_user, seller=self.seller, buyer=self.buyer, vote=-1)
         score = get_deal_blended_match(ai_score=50, rule_score=100, seller=self.seller, buyer=self.buyer)
-        self.assertEqual(score, 42.5)
+        self.assertEqual(score, 85.0, 'passing on a listing does not worsen the fit')
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
@@ -685,7 +694,9 @@ class HardFilterCacheCorrectnessTests(TestCase):
     def test_changed_raising_amount_produces_a_different_cache_key_and_result(self):
         self.assertTrue(passes_hard_filters(self.app, self.investor))
 
-        self.app.raising_amount = 999999  # now outside the investor's ticket range
+        # Round is now smaller than this investor's smallest cheque, so
+        # there is no way for them to participate.
+        self.app.raising_amount = 50000
         self.app.save(update_fields=['raising_amount'])
 
         # New raising_amount means a new cache key — must recompute, not
@@ -808,7 +819,15 @@ class FunnelAnalyticsTests(TestCase):
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
 class PassesHardFiltersTests(TestCase):
-    """passes_hard_filters: excludes on ticket-size/stage mismatch, fails open when unset."""
+    """
+    passes_hard_filters: excludes only genuinely nonviable pairings, and
+    fails open on anything the investor never declared.
+
+    The cheque/round cases below are the ones that matter. An investor's
+    ticket size and a founder's raise are different quantities, and this
+    gate is an outright exclusion, so getting the comparison wrong makes
+    whole classes of founder invisible with no explanation anywhere.
+    """
 
     def setUp(self):
         _mock_embedding_generation(self)
@@ -833,19 +852,32 @@ class PassesHardFiltersTests(TestCase):
         app = self._founder(raising_amount=10_000_000, stage='Series C')
         self.assertTrue(passes_hard_filters(app, investor))
 
-    def test_raising_amount_below_ticket_min_excluded(self):
+    def test_round_smaller_than_smallest_cheque_excluded(self):
+        # The only genuinely nonviable case: there is no way to put a
+        # $250k minimum cheque into a $50k round.
         investor = self._investor(ticket_min=250000, ticket_max=1000000)
         app = self._founder(raising_amount=50000)
         self.assertFalse(passes_hard_filters(app, investor))
 
-    def test_raising_amount_above_ticket_max_excluded(self):
+    def test_round_larger_than_largest_cheque_still_passes(self):
+        # A $250k-$1M investor taking part of a $5M round is ordinary
+        # syndication, not a mismatch. This is the case that used to hide
+        # every well-capitalised founder from every realistic cheque writer.
         investor = self._investor(ticket_min=250000, ticket_max=1000000)
         app = self._founder(raising_amount=5_000_000)
-        self.assertFalse(passes_hard_filters(app, investor))
+        self.assertTrue(passes_hard_filters(app, investor))
 
     def test_raising_amount_within_range_passes(self):
         investor = self._investor(ticket_min=250000, ticket_max=1000000)
         app = self._founder(raising_amount=500000)
+        self.assertTrue(passes_hard_filters(app, investor))
+
+    def test_undeclared_raise_is_unknown_not_excluded(self):
+        # raising_amount defaults to 0, so 0 means "hasn't said yet" far
+        # more often than "raising nothing". A founder who hasn't filled
+        # the field in must not be deleted from the marketplace.
+        investor = self._investor(ticket_min=250000, ticket_max=1000000)
+        app = self._founder(raising_amount=0)
         self.assertTrue(passes_hard_filters(app, investor))
 
     def test_stage_mismatch_excluded(self):
@@ -857,6 +889,95 @@ class PassesHardFiltersTests(TestCase):
         investor = self._investor(stage='Seed')
         app = self._founder(stage='Pre-Seed')
         self.assertTrue(passes_hard_filters(app, investor))
+
+    def test_stage_punctuation_does_not_exclude(self):
+        # Both sides are free text; 'Series-A' and 'Series A' are the same
+        # stage and must not be treated as a disagreement.
+        investor = self._investor(stage='Series A')
+        app = self._founder(stage='series-A')
+        self.assertTrue(passes_hard_filters(app, investor))
+
+    def test_adjacency_is_symmetric(self):
+        # The adjacency table lists 'series c' as a neighbour of 'series b'
+        # but has no 'series c' key, so a one-way read excluded the
+        # later-stage half of the pair while admitting the earlier half.
+        early = self._investor(stage='Series B')
+        self.assertTrue(passes_hard_filters(self._founder(stage='Series C'), early))
+
+    def test_genuinely_distant_stage_still_excluded(self):
+        # The relaxations above must not turn the gate into a no-op.
+        investor = self._investor(stage='Seed')
+        app = self._founder(stage='Series B')
+        self.assertFalse(passes_hard_filters(app, investor))
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class MatchingIntegrityRegressionTests(TestCase):
+    """
+    The cold-contact scenario, end to end through the real dashboard view.
+
+    A brand-new climate-tech seed investor writing $250k-$1.5M cheques was
+    shown cookware, a sports-equipment startup and a planetarium scheduler,
+    while the one exactly-matching climate company on the platform -- the
+    only one carrying a full Zelda workup -- was silently excluded for
+    raising $4M. The Zelda report for that company said "Sector: Climate
+    Tech - in your stated focus. Match." at the same time the engine was
+    refusing to surface it.
+
+    This asserts the whole path, not just the predicate, because the
+    predicate was individually defensible and the outcome still wasn't.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.investor_user = User.objects.create_user('mi_investor', password='x')
+        self.investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='Avery Lund', email='a@t.com',
+            company_name='Tessera Ventures',
+            investment_focus='Climate Tech, energy software',
+            investment_stage='Seed',
+            ticket_size_min=250000, ticket_size_max=1500000,
+        )
+        self._founder('mi_northwind', 'Northwind Grid', 'Climate Tech', 'Seed', 4_000_000)
+        self._founder('mi_kettle', 'Kettle & Co', 'Consumer', 'Seed', 1_500_000)
+        self._founder('mi_thistle', 'Thistle Labs', 'Biotech', 'Pre-Seed', 0)
+
+    def _founder(self, username, company, sector, stage, raising):
+        user = User.objects.create_user(username, password='x')
+        return Application.objects.create(
+            user=user, company_name=company, founder_name='F',
+            email=f'{username}@t.com', description=f'{company} description.',
+            sector=sector, stage=stage, raising_amount=raising,
+        )
+
+    def _match_names(self):
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('matchmaking:investor_dashboard'))
+        self.assertEqual(response.status_code, 200)
+        return [m['founder'].company_name for m in response.context['matches']]
+
+    def test_exact_sector_and_stage_match_is_surfaced_first(self):
+        names = self._match_names()
+        self.assertIn('Northwind Grid', names)
+        self.assertEqual(
+            names[0], 'Northwind Grid',
+            'the company matching this mandate on both sector and stage must lead '
+            f'the results; got {names}',
+        )
+
+    def test_large_round_does_not_hide_a_founder_from_a_small_cheque(self):
+        # $4M round, $1.5M maximum cheque: normal syndication.
+        self.assertTrue(passes_hard_filters(
+            Application.objects.get(company_name='Northwind Grid'), self.investor))
+
+    def test_founder_with_no_declared_raise_still_appears(self):
+        self.assertIn('Thistle Labs', self._match_names())
+
+    def test_weaker_sector_fit_still_appears_but_ranks_lower(self):
+        # The fix widens the gate; it must not flatten the ranking.
+        names = self._match_names()
+        self.assertIn('Kettle & Co', names)
+        self.assertLess(names.index('Northwind Grid'), names.index('Kettle & Co'))
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
@@ -3488,7 +3609,7 @@ class WeeklyDigestHeroCardTests(TestCase):
     def _match(self, investor, application, score, change_reason='', last_changed_at=None):
         from .models import AIMatch
         return AIMatch.objects.create(
-            investor=investor, application=application, score=score, confidence_score=score,
+            investor=investor, application=application, score=score,
             change_reason=change_reason, last_changed_at=last_changed_at,
         )
 
@@ -3569,13 +3690,28 @@ class WeeklyDigestHeroCardTests(TestCase):
         card = build_founder_digest_card(app)
         self.assertNotIn('investor_name', card)
 
-    def test_no_card_below_digest_min_score(self):
-        from .digest import build_investor_digest_card, DIGEST_MIN_SCORE
+    def test_no_card_when_the_pairing_cannot_reach_notable(self):
+        # The gate is the band, not the cached number. This investor has
+        # declared no focus and no stage, so nothing about the pairing is
+        # party-declared and it cannot clear Notable -- even with a very
+        # high AIMatch.score, which is a raw semantic input, not a match.
+        from .digest import build_investor_digest_card
         app = self._founder('divf5')
-        inv = self._investor('divi5')
-        self._match(inv, app, DIGEST_MIN_SCORE - 1)
+        u = User.objects.create_user('divi5', password='x', email='divi5@t.com')
+        inv = InvestorApplication.objects.create(user=u, investment_focus='', investment_stage='')
+        self._match(inv, app, 99.0)
 
         self.assertIsNone(build_investor_digest_card(inv))
+
+    def test_card_appears_once_the_pairing_reaches_notable(self):
+        from .digest import build_investor_digest_card
+        app = self._founder('divf5b')
+        inv = self._investor('divi5b')          # declares a SaaS focus
+        self._match(inv, app, 1.0)              # deliberately a low cached score
+
+        card = build_investor_digest_card(inv)
+        self.assertIsNotNone(card, 'eligibility follows the band, not AIMatch.score')
+        self.assertEqual(card['band'], 'Notable')
 
     def test_message_upsells_free_viewer_not_premium(self):
         from .digest import build_investor_digest_card, investor_digest_message
@@ -3608,7 +3744,8 @@ class WeeklyDigestHeroCardTests(TestCase):
 
         self.assertGreaterEqual(result['digests_sent'], 1)
         notif = Notification.objects.get(recipient=inv.user, notification_type='WEEKLY_DIGEST')
-        self.assertIn('90%', notif.message)
+        self.assertIn('notable match', notif.message)
+        self.assertNotIn('%', notif.message)  # no user-facing match percentage
         sent_email = next(m for m in mail.outbox if m.to == [inv.user.email])
         self.assertIn('best match', sent_email.subject.lower())
 
@@ -3649,7 +3786,8 @@ class WeeklyDigestHeroCardTests(TestCase):
         _send_weekly_digests_body()
 
         notif = Notification.objects.get(recipient=app.user, notification_type='WEEKLY_DIGEST')
-        self.assertIn('82%', notif.message)
+        self.assertIn('notable match', notif.message)
+        self.assertNotIn('%', notif.message)
         self.assertNotIn('Upgrade', notif.message)
 
 
@@ -4528,13 +4666,20 @@ class ExplanatoryInsightsCopyTests(TestCase):
     surfaced this".
     """
 
-    def _insights(self, ai_score=61, rule_score=80, sector='Robotics', stage='Series A',
-                  focus='Robotics, logistics', mandate_stage='Series A'):
+    def _insights(self, sector='Robotics', stage='Series A',
+                  focus='Robotics, logistics', mandate_stage='Series A',
+                  description='Cadence builds robots for logistics warehouses.'):
         from types import SimpleNamespace
+        from .match_components import evaluate_venture_match
         from .views import _generate_explanatory_insights
-        founder = SimpleNamespace(company_name='Cadence', sector=sector, stage=stage)
-        investor = SimpleNamespace(investment_focus=focus, investment_stage=mandate_stage)
-        return _generate_explanatory_insights(ai_score, rule_score, founder, investor)
+        founder = SimpleNamespace(company_name='Cadence', sector=sector, stage=stage,
+                                  description=description, description_vector=None)
+        investor = SimpleNamespace(investment_focus=focus, investment_stage=mandate_stage,
+                                   focus_vector=None)
+        # The helper reads the canonical result rather than being handed
+        # loose numbers, so this exercises the real path end to end.
+        return _generate_explanatory_insights(
+            evaluate_venture_match(founder, investor), founder, investor)
 
     def test_no_machine_voice_in_any_field(self):
         out = self._insights()
@@ -4543,26 +4688,34 @@ class ExplanatoryInsightsCopyTests(TestCase):
                        'semantic matching vectors', 'operational tier', 'baseline index'):
             self.assertNotIn(banned, blob)
 
-    def test_summary_leads_with_words_not_a_percentage(self):
-        out = self._insights(ai_score=61)
-        self.assertNotIn('61', out['summary'])
+    def test_summary_leads_with_words_and_exposes_no_number_at_all(self):
+        out = self._insights()
         self.assertNotIn('%', out['summary'])
-        # match_percentage is still returned for callers that badge/rank on it
-        self.assertEqual(out['match_percentage'], 61)
+        # The internal score is never handed to a renderer. The band is
+        # the whole user-facing answer.
+        self.assertNotIn('match_percentage', out)
+        self.assertEqual(out['band'], 'Strong')
 
     def test_pillars_describe_sector_stage_and_overall_fit(self):
-        out = self._insights(rule_score=80)
+        out = self._insights()
         titles = [p['title'] for p in out['pillars']]
         self.assertEqual(titles, ['Sector', 'Stage', 'Overall fit'])
         scores = {p['title']: p['score'] for p in out['pillars']}
         self.assertEqual(scores['Sector'], 'Match')        # 'Robotics' in 'Robotics, logistics'
         self.assertEqual(scores['Stage'], 'Match')         # 'Series A' == 'Series A'
-        self.assertEqual(scores['Overall fit'], 'Passed')  # rule_score 80 > 60
+        # Passed now means the band is Strong: two independent declared
+        # signals, not a rule subtotal clearing an arbitrary 60.
+        self.assertEqual(scores['Overall fit'], 'Passed')
 
     def test_partial_match_reads_softly_not_as_a_failure(self):
-        out = self._insights(rule_score=40, sector='Biotech', mandate_stage='Seed')
+        # Biotech is genuinely outside a robotics/logistics focus, and the
+        # copy now says so. The old helper had only hit/miss, so it called
+        # this 'Adjacent' and told the reader it was "close enough to
+        # surface" -- a small untruth in exactly the place the reader is
+        # deciding whether to spend attention.
+        out = self._insights(sector='Biotech', mandate_stage='Seed')
         scores = {p['title']: p['score'] for p in out['pillars']}
-        self.assertEqual(scores['Sector'], 'Adjacent')
+        self.assertEqual(scores['Sector'], 'Outside')
         self.assertEqual(scores['Stage'], 'Nearby')
         self.assertEqual(scores['Overall fit'], 'Partial')
         self.assertIn('softer match', out['pillars'][2]['desc'])
@@ -5085,14 +5238,20 @@ class DealWorkspaceViewTests(TestCase):
         other_response = self.client.get(reverse('matchmaking:deal_workspace', args=[other_connection.id]))
         self.assertNotContains(other_response, 'Investor viewed &quot;Financials&quot;')
 
-    def test_chat_channel_id_matches_the_js_deal_room_scheme(self):
-        """Must exactly match StreamChatController.createDealRoom()'s
-        `deal_${members[0]}_${members[1]}` — members sorted as strings
-        (lexicographic, same as JS's default Array.sort())."""
+    def test_open_chat_link_carries_the_type_prefixed_cid(self):
+        """
+        chat.html selects the open conversation by comparing ?cid= against
+        channel.cid, which Stream always type-prefixes. The link used to
+        pass the bare id, so it could never auto-select the conversation
+        even once the channel existed.
+        """
         self.client.force_login(self.founder_user)
         response = self.client.get(reverse('matchmaking:deal_workspace', args=[self.connection.id]))
         expected_members = sorted([str(self.founder_user.id), str(self.investor_user.id)])
-        self.assertEqual(response.context['chat_channel_id'], f"deal_{expected_members[0]}_{expected_members[1]}")
+        self.assertEqual(
+            response.context['chat_channel_cid'],
+            f"messaging:deal_{expected_members[0]}_{expected_members[1]}",
+        )
 
     def test_zelda_summary_with_no_reports_yet(self):
         self.client.force_login(self.founder_user)
@@ -5518,11 +5677,14 @@ class AcquisitionDealWorkspaceViewTests(TestCase):
         self.assertEqual(response.context['counterparty_application'].id, self.buyer.id)
         self.assertEqual(response.context['connection'].id, self.connection.id)
 
-    def test_chat_channel_id_matches_the_js_deal_room_scheme(self):
+    def test_open_chat_link_carries_the_type_prefixed_cid(self):
         self.client.force_login(self.seller_user)
         response = self.client.get(reverse('matchmaking:acquisition_deal_workspace', args=[self.connection.id]))
         expected_members = sorted([str(self.seller_user.id), str(self.buyer_user.id)])
-        self.assertEqual(response.context['chat_channel_id'], f"deal_{expected_members[0]}_{expected_members[1]}")
+        self.assertEqual(
+            response.context['chat_channel_cid'],
+            f"messaging:deal_{expected_members[0]}_{expected_members[1]}",
+        )
 
     def test_closed_pending_does_not_render_as_verified_sold(self):
         self.connection.status = 'CLOSED_PENDING'
@@ -6037,3 +6199,145 @@ class InitiateDirectChatAjaxTests(TestCase):
             response_b_to_a = self._post_ajax(self.user_a.id)
 
         self.assertEqual(response_a_to_b.json()['channel_id'], response_b_to_a.json()['channel_id'])
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'],
+                   STREAM_API_KEY='test-key', STREAM_API_SECRET='test-secret')
+class AcceptedConnectionOpensAConversationTests(TestCase):
+    """
+    The cold-contact failure: an intro request was sent, accepted, and
+    confirmed ACCEPTED server-side -- and then both parties opened the deal
+    room to "No conversations", while the founder got a native alert saying
+    the counterparty "has not initialized their chat profile".
+
+    One root cause with two faces. The channel was created in the browser,
+    where the SDK acts only as the connected user, so Stream rejected any
+    channel naming a member who had never opened chat. And because
+    updateConnection's only ACCEPTED branch was that creation call -- which
+    swallowed its own failure and returned without navigating -- a
+    successful acceptance also left the page showing "pending".
+
+    The acceptance test is deliberately blunt: investor accepts founder ->
+    both parties can discover and open the same usable conversation.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('conv_founder', password='x')
+        self.investor_user = User.objects.create_user('conv_investor', password='x')
+        self.founder = Application.objects.create(
+            user=self.founder_user, company_name='Northwind Grid', founder_name='F',
+            email='f@t.com', description='Forecasting for community solar.',
+            sector='Climate Tech', stage='Seed', raising_amount=4_000_000,
+        )
+        self.investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='Avery Lund', email='i@t.com',
+            company_name='Tessera Ventures', investment_focus='Climate Tech',
+            investment_stage='Seed',
+        )
+        self.connection = Connection.objects.create(
+            investor=self.investor, founder=self.founder,
+            status='PENDING', initiated_by='FOUNDER',
+        )
+
+    def _accept(self):
+        """The investor accepts, since initiated_by='FOUNDER'."""
+        self.client.force_login(self.investor_user)
+        with mock.patch('matchmaking.stream_provisioning.StreamChat') as cls:
+            client = mock.MagicMock()
+            cls.return_value = client
+            response = self.client.post(
+                reverse('matchmaking:connection_action'),
+                data=json.dumps({'id': self.connection.id, 'action': 'ACCEPTED'}),
+                content_type='application/json',
+            )
+        return response, client
+
+    def _expected_cid(self):
+        members = sorted([str(self.founder_user.id), str(self.investor_user.id)])
+        return f"messaging:deal_{members[0]}_{members[1]}"
+
+    def test_accepting_provisions_the_channel_server_side(self):
+        response, stream = self._accept()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['new_status'], 'ACCEPTED')
+        # Both users upserted before the channel is created -- the step the
+        # browser could not perform and the reason the old path 400'd.
+        stream.upsert_users.assert_called_once()
+        upserted = {u['id'] for u in stream.upsert_users.call_args[0][0]}
+        self.assertEqual(upserted, {str(self.founder_user.id), str(self.investor_user.id)})
+
+    def test_accepting_returns_the_conversation_to_open(self):
+        response, _ = self._accept()
+        self.assertEqual(response.json()['chat_channel_cid'], self._expected_cid())
+
+    def test_both_parties_get_the_same_conversation(self):
+        self._accept()
+        seen = []
+        for user in (self.founder_user, self.investor_user):
+            self.client.force_login(user)
+            with mock.patch('matchmaking.stream_provisioning.StreamChat'):
+                response = self.client.get(
+                    reverse('matchmaking:deal_workspace', args=[self.connection.id]))
+            self.assertEqual(response.status_code, 200)
+            seen.append(response.context['chat_channel_cid'])
+        self.assertEqual(seen[0], seen[1])
+        self.assertEqual(seen[0], self._expected_cid())
+
+    def test_channel_members_are_exactly_the_two_parties(self):
+        _, stream = self._accept()
+        created = stream.channel.return_value.create
+        created.assert_called_once()
+        data = created.call_args.kwargs['data']
+        self.assertEqual(
+            set(data['members']),
+            {str(self.founder_user.id), str(self.investor_user.id)},
+        )
+        # Stream refuses a server-side channel with no creator attributed.
+        self.assertIn('created_by_id', data)
+
+    def test_acceptance_still_lands_when_stream_is_unreachable(self):
+        """
+        A Stream outage must never make an accepted connection look
+        unaccepted. The status is the source of truth; chat is a follow-on.
+        """
+        self.client.force_login(self.investor_user)
+        with mock.patch('matchmaking.stream_provisioning.StreamChat',
+                        side_effect=Exception('Stream down')):
+            response = self.client.post(
+                reverse('matchmaking:connection_action'),
+                data=json.dumps({'id': self.connection.id, 'action': 'ACCEPTED'}),
+                content_type='application/json',
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['new_status'], 'ACCEPTED')
+        self.assertIsNone(response.json()['chat_channel_cid'])
+        self.connection.refresh_from_db()
+        self.assertEqual(self.connection.status, 'ACCEPTED')
+
+    def test_workspace_provisions_a_connection_accepted_before_this_existed(self):
+        """No backfill: opening the workspace provisions the channel."""
+        self.connection.status = 'ACCEPTED'
+        self.connection.save(update_fields=['status'])
+        self.client.force_login(self.investor_user)
+        with mock.patch('matchmaking.stream_provisioning.StreamChat') as cls:
+            client = mock.MagicMock()
+            cls.return_value = client
+            response = self.client.get(
+                reverse('matchmaking:deal_workspace', args=[self.connection.id]))
+        self.assertEqual(response.status_code, 200)
+        client.upsert_users.assert_called_once()
+
+    def test_declining_provisions_nothing(self):
+        self.client.force_login(self.investor_user)
+        with mock.patch('matchmaking.stream_provisioning.StreamChat') as cls:
+            client = mock.MagicMock()
+            cls.return_value = client
+            response = self.client.post(
+                reverse('matchmaking:connection_action'),
+                data=json.dumps({'id': self.connection.id, 'action': 'DECLINED'}),
+                content_type='application/json',
+            )
+        self.assertEqual(response.json()['new_status'], 'DECLINED')
+        self.assertIsNone(response.json()['chat_channel_cid'])
+        client.upsert_users.assert_not_called()

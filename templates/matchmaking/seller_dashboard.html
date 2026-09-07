@@ -240,7 +240,7 @@
                 <div class="card-body p-4 d-flex flex-column">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <h5 class="fw-bold text-dark mb-0">{{ match.buyer.company_name|default:"Private Acquirer" }}</h5>
-                        <span class="badge bg-warning text-dark small">{{ match.final_score }}%</span>
+                        <span class="badge bg-warning text-dark small">{{ match.band }}</span>
                     </div>
                     <p class="text-muted small line-clamp-3 mb-3">{{ match.buyer.acquisition_thesis|default:"No stated thesis." }}</p>
                     <div class="mt-auto">
@@ -301,11 +301,9 @@ async function updateAcquisitionConnection(connId, action, targetUserId, targetU
         const data = await response.json();
 
         if (response.ok && action === 'ACCEPTED') {
-            if (targetUserId) {
-                await StreamChatController.createDealRoom(targetUserId, targetUsername);
-            } else {
-                window.location.reload();
-            }
+            // Server already recorded the acceptance; never leave the page
+            // showing "pending" because chat provisioning failed.
+            StreamChatController.openDealRoom(data.chat_channel_cid);
         } else if (response.ok) {
             window.location.reload();
         } else {
