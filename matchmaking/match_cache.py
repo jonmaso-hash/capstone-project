@@ -37,18 +37,17 @@ def upsert_match(investor_profile, application, change_reason):
     if existing is None:
         return AIMatch.objects.create(
             investor=investor_profile, application=application,
-            score=score, confidence_score=score,
+            score=score,
             score_generated_at=now, last_changed_at=now, change_reason=change_reason,
         )
 
     score_moved = abs(float(existing.score) - score) >= SCORE_CHANGE_EPSILON
     existing.score = score
-    existing.confidence_score = score
     existing.score_generated_at = now  # every recompute, regardless of whether the score moved
     if score_moved:
         existing.last_changed_at = now
         existing.change_reason = change_reason
-    existing.save(update_fields=['score', 'confidence_score', 'score_generated_at', 'last_changed_at', 'change_reason'])
+    existing.save(update_fields=['score', 'score_generated_at', 'last_changed_at', 'change_reason'])
     return existing
 
 

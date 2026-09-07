@@ -48,8 +48,8 @@
         {% for f in founders %}
         <div class="col-md-6 col-lg-4">
             <div class="card border-0 shadow-sm rounded-4 pv-card h-100 position-relative">
-                {% if f.match_score is not None %}
-                    <span class="pv-match-badge">{{ f.match_score }}% Match</span>
+                {% if f.band %}
+                    <span class="pv-match-badge">{{ f.band }} match</span>
                 {% endif %}
                 <div class="pv-video-wrap ratio ratio-16x9">
                     <video controls controlsList="nodownload" preload="metadata" onplay="pvLogPlay(this, 'founder', {{ f.id }})">
@@ -127,8 +127,8 @@
         {% for s in sellers %}
         <div class="col-md-6 col-lg-4">
             <div class="card border-0 shadow-sm rounded-4 pv-card h-100 position-relative">
-                {% if s.match_score is not None %}
-                    <span class="pv-match-badge">{{ s.match_score }}% Match</span>
+                {% if s.band %}
+                    <span class="pv-match-badge">{{ s.band }} match</span>
                 {% endif %}
                 <div class="pv-video-wrap ratio ratio-16x9">
                     <video controls controlsList="nodownload" preload="metadata" onplay="pvLogPlay(this, 'seller', {{ s.id }})">
