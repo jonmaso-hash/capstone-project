@@ -2968,31 +2968,30 @@ def delete_milestone(request, milestone_id):
 # per-video via pitch_video_*_enabled settings.
 # ──────────────────────────────────────────────────────────────────────────
 
-def _rank_pitch_video_profiles(items, score_fn, viewer_partner_profile):
+def _rank_pitch_video_profiles(items, evaluate, viewer_partner_profile):
     """
     Sorts founders/sellers with a pitch video: active monthly highlight
     first, then staff/premium-featured (same convention as
-    founder_bulletin_board/acquisition_bulletin_board), then by rule-based
-    match score against the viewer's investor/buyer profile if they have
-    one, then most-recent first. No AI vector call —
-    calculate_rule_based_score/calculate_deal_rule_based_score are pure
-    field comparisons, so ranking a video list stays cheap even without
-    every profile having a computed embedding.
+    founder_bulletin_board/acquisition_bulletin_board), then by the
+    canonical match against the viewer's investor/buyer profile if they
+    have one, then most-recent first.
+
+    This used to compute its own score straight from
+    calculate_rule_based_score and render it as "{score}% Match" -- a rule
+    subtotal presented as a match percentage, on the same scale where a
+    bare stage agreement is worth 60. It is a canonical match consumer
+    like any other and now reads the contract.
     """
     items = list(items)
     for item in items:
-        if viewer_partner_profile:
-            try:
-                item.match_score = score_fn(item, viewer_partner_profile)
-            except Exception:
-                item.match_score = 0
-        else:
-            item.match_score = None
+        item.match = evaluate(item, viewer_partner_profile) if viewer_partner_profile else None
+        item.band = item.match.band.label if item.match else None
 
     items.sort(key=lambda x: (
         not x.is_highlighted,
         not (x.is_premium or x.is_staff_featured),
-        -(x.match_score if x.match_score is not None else 0),
+        -(x.match.band if x.match else 0),
+        -(x.match.score if x.match else 0),
         -x.created_at.timestamp() if x.created_at else 0,
     ))
     return items
@@ -3043,7 +3042,7 @@ def pitch_videos_section(request):
         seller_qs = seller_qs.exclude(pitch_video_visibility='ROLE_ONLY')
 
     founders = _rank_pitch_video_profiles(
-        founder_qs, lambda f, inv: calculate_rule_based_score(application=f, investor=inv), investor_profile
+        founder_qs, lambda f, inv: evaluate_venture_match(f, inv), investor_profile
     )
     for f in founders:
         f.viewer_has_liked = f.id in liked_founder_ids
@@ -3052,7 +3051,7 @@ def pitch_videos_section(request):
         f.comment_count = f.pitch_video_comments.count()
 
     sellers = _rank_pitch_video_profiles(
-        seller_qs, lambda s, buy: calculate_deal_rule_based_score(seller=s, buyer=buy), buyer_profile
+        seller_qs, lambda s, buy: evaluate_deal_match(s, buy), buyer_profile
     )
     for s in sellers:
         s.viewer_has_liked = s.id in liked_seller_ids
