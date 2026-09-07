@@ -19,11 +19,20 @@ from datetime import timedelta
 
 from django.utils import timezone
 
-# Deliberately looser than MATCH_ALERT_THRESHOLD (80.0, matchmaking/tasks.py's
-# premium-only priority alert) — the digest goes to every user, free
-# included, so it needs a floor that still finds *a* best match most weeks
-# rather than reusing the premium bar and often finding nothing.
-DIGEST_MIN_SCORE = 50.0
+from .match_components import evaluate_deal_match, evaluate_venture_match
+from .match_score import Band
+
+# The digest goes to every user, free included, so it takes the looser of
+# the two bars: Notable (at least one thing both parties declared) rather
+# than the Strong-plus-full-basis a priority alert demands.
+#
+# This used to be DIGEST_MIN_SCORE = 50.0 applied to AIMatch.score, which
+# is raw cosine similarity. Across all 135 cached pairs that value ranges
+# 0-41.6, so **zero** rows could ever clear it and the weekly digest sent
+# nothing to anyone, every week, silently. A band cannot go stale that way:
+# it is defined by evidence, not by a number someone guessed against a
+# distribution nobody had measured.
+DIGEST_MIN_BAND = Band.NOTABLE
 
 # A change_reason older than this reads as stale news, not a fresh signal —
 # omitted rather than shown once the pair's freshness has aged out.
@@ -60,12 +69,44 @@ def _freshness_reason(ai_match):
     return ai_match.change_reason
 
 
+def _best_by_band(pairs):
+    """
+    pairs is (ai_match, MatchResult). Ranks by band first, then by the
+    canonical internal score - never by AIMatch.score, which is a raw
+    semantic input and not a match score at all.
+    """
+    eligible = [(m, r) for m, r in pairs if r.band >= DIGEST_MIN_BAND]
+    if not eligible:
+        return None, None
+    return max(eligible, key=lambda pair: (pair[1].band, pair[1].score))
+
+
 def get_investor_hero_match(investor_profile):
-    return investor_profile.ai_matches.filter(score__gte=DIGEST_MIN_SCORE).order_by('-score').first()
+    """
+    The AIMatch row still supplies the pairing and its freshness; the
+    contract decides whether that pairing is worth an email.
+    """
+    rows = investor_profile.ai_matches.select_related('application').all()
+    match, _ = _best_by_band(
+        (row, evaluate_venture_match(row.application, investor_profile)) for row in rows
+    )
+    return match
+
+
+def get_investor_hero_result(investor_profile):
+    rows = investor_profile.ai_matches.select_related('application').all()
+    _, result = _best_by_band(
+        (row, evaluate_venture_match(row.application, investor_profile)) for row in rows
+    )
+    return result
 
 
 def get_founder_hero_match(application):
-    return application.ai_matches.filter(score__gte=DIGEST_MIN_SCORE).order_by('-score').first()
+    rows = application.ai_matches.select_related('investor').all()
+    match, _ = _best_by_band(
+        (row, evaluate_venture_match(application, row.investor)) for row in rows
+    )
+    return match
 
 
 def build_investor_digest_card(investor_profile):
@@ -74,8 +115,12 @@ def build_investor_digest_card(investor_profile):
     if ai_match is None:
         return None
     application = ai_match.application
+    result = evaluate_venture_match(application, investor_profile)
     card = {
-        'score': round(float(ai_match.score)),
+        # The band, not a percentage. A "43% fit" invites the reader to
+        # treat it as a probability, and the evidence behind it - a sector
+        # string, a stage string, one embedding - cannot carry that.
+        'band': result.band.label,
         'sector': application.sector,
         'stage': application.stage,
         'raising_bucket': _amount_bucket(application.raising_amount),
@@ -100,8 +145,9 @@ def build_founder_digest_card(application):
     if ai_match is None:
         return None
     investor_profile = ai_match.investor
+    result = evaluate_venture_match(application, investor_profile)
     return {
-        'score': round(float(ai_match.score)),
+        'band': result.band.label,
         'investment_focus_excerpt': (investor_profile.investment_focus or '')[:80],
         'ticket_range': _ticket_range(investor_profile),
         'freshness': _freshness_reason(ai_match),
@@ -110,9 +156,9 @@ def build_founder_digest_card(application):
 
 def investor_digest_message(card):
     if card['is_premium_viewer']:
-        message = f"Your best match this week: {card['score']}% fit — {card['company_name']} ({card['sector']}, {card['stage']})"
+        message = f"Your best match this week: a {card['band'].lower()} match — {card['company_name']} ({card['sector']}, {card['stage']})"
     else:
-        message = f"Your best match this week: {card['score']}% fit — {card['sector']}, {card['stage']}"
+        message = f"Your best match this week: a {card['band'].lower()} match — {card['sector']}, {card['stage']}"
     if card['raising_bucket']:
         message += f", raising {card['raising_bucket']}"
     message += "."
@@ -124,7 +170,7 @@ def investor_digest_message(card):
 
 
 def founder_digest_message(card):
-    message = f"An investor matched with you this week: {card['score']}% fit"
+    message = f"An investor matched with you this week: a {card['band'].lower()} match"
     if card['investment_focus_excerpt']:
         message += f", focused on {card['investment_focus_excerpt']}"
     if card['ticket_range']:

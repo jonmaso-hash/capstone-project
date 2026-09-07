@@ -569,17 +569,30 @@ class MatchFeedback(models.Model):
 
 class AIMatch(models.Model):
     """
-    Cached investor<->founder match score — one row per pair, kept fresh by
-    matchmaking/match_cache.py whenever either side's vector changes or the
-    founder logs a milestone. This is what the weekly digest reads instead
-    of recomputing cosine similarity at send time: match scores are cheap
-    to cache and read, so digest/search/homepage should never pay the cost
-    of a fresh computation, only the compute-triggering event should.
+    Cached RAW SEMANTIC SIMILARITY for one investor<->founder pair — kept
+    fresh by matchmaking/match_cache.py whenever either side's vector
+    changes or the founder logs a milestone.
 
-    last_changed_at/change_reason track *why* a score is fresh — separate
+    `score` here is cosine similarity x100 and nothing else: no rule
+    signals, no basis, no band. It is an INPUT to the Match Score
+    contract (matchmaking/match_score.py), never a synonym for it, and
+    must never be rendered as "% fit" or compared against a match
+    threshold. Observed range across the whole database is 0-41.6, which
+    is why the two thresholds that were once set against it — the weekly
+    digest at 50 and priority alerts at 80 — could never fire.
+
+    Consumers ask for the pairing and its freshness here, then evaluate
+    the contract to decide what the pairing is worth.
+
+    last_changed_at/change_reason track *why* a row is fresh — separate
     from created_at, which only reflects when this pair was first scored —
-    so the digest can say "confidence increased" or "founder completed a
-    milestone" instead of just showing a static number.
+    so the digest can say "founder completed a milestone" rather than
+    showing a static number.
+
+    A duplicate `confidence_score` column used to hold an exact copy of
+    `score`. Nothing ever read it, and "confidence" collides with the
+    report vocabulary settled in PRs #13-#17, where it means something
+    specific and different. Removed rather than renamed.
 
     score_generated_at is separate again from last_changed_at: it updates
     on *every* recompute (matchmaking/match_cache.py::upsert_match), even
@@ -609,11 +622,6 @@ class AIMatch(models.Model):
 
 )
 
-    confidence_score = models.DecimalField(
-    max_digits=5,
-    decimal_places=2,
-    default=0
-)
     created_at = models.DateTimeField(auto_now_add=True)
     score_generated_at = models.DateTimeField(null=True, blank=True)
     last_changed_at = models.DateTimeField(null=True, blank=True)
@@ -1241,10 +1249,17 @@ def can_view_pitch_video(viewer_user, owner_profile):
 
 class InvestorPredictionSnapshot(models.Model):
     """
-    Invisible shadow-prediction system: guesses which founder an investor will
-    fund next using the same scoring components already driving live
-    matching (blended AI + rule score), then grades itself once that investor
-    actually funds someone. Never shown to users — staff-only via admin.
+    Invisible shadow-prediction system: guesses which founder an investor
+    will fund next using the same Match Score contract that drives live
+    matching, then grades itself once that investor actually funds
+    someone. Never shown to users — staff-only via admin.
+
+    Because these rows are graded later, what they mean has to be
+    recoverable later. match_contract_version records which contract
+    produced the row; rows with a blank version predate the contract and
+    were written on the old blended scale, where an absent embedding
+    contributed a fabricated 50. They are left explicitly attributable to
+    those prior semantics rather than silently reinterpreted as v1.
     """
     GRADE_CHOICES = [
         ('A', 'A — Predicted Correctly'),
@@ -1257,6 +1272,22 @@ class InvestorPredictionSnapshot(models.Model):
     investor = models.ForeignKey(InvestorApplication, on_delete=models.CASCADE, related_name='prediction_snapshots')
     predicted_founder = models.ForeignKey(Application, on_delete=models.CASCADE, related_name='predicted_by_snapshots')
     predicted_score = models.FloatField()
+    predicted_band = models.CharField(
+        max_length=16, blank=True,
+        help_text="Match band at snapshot time. Blank on rows written before the contract existed.",
+    )
+    predicted_basis = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        help_text="How many components contributed. Blank on pre-contract rows.",
+    )
+    match_contract_version = models.CharField(
+        max_length=8, blank=True,
+        help_text=(
+            "Which Match Score contract produced predicted_score/band. BLANK MEANS "
+            "PRE-CONTRACT: those rows were written under the old blended scale and "
+            "must not be read as v1 predictions or graded against v1 semantics."
+        ),
+    )
     runner_up_founders = models.JSONField(default=list, blank=True, help_text="Top 5 [{founder_id, score}] at snapshot time")
     snapshot_telemetry = models.JSONField(default=dict, blank=True, help_text="InvestorInterestEvent counts + portfolio/vector presence at snapshot time")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -1699,6 +1730,22 @@ class BuyerPredictionSnapshot(models.Model):
     buyer = models.ForeignKey(BuyerApplication, on_delete=models.CASCADE, related_name='prediction_snapshots')
     predicted_seller = models.ForeignKey(SellerApplication, on_delete=models.CASCADE, related_name='predicted_by_snapshots')
     predicted_score = models.FloatField()
+    predicted_band = models.CharField(
+        max_length=16, blank=True,
+        help_text="Match band at snapshot time. Blank on rows written before the contract existed.",
+    )
+    predicted_basis = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        help_text="How many components contributed. Blank on pre-contract rows.",
+    )
+    match_contract_version = models.CharField(
+        max_length=8, blank=True,
+        help_text=(
+            "Which Match Score contract produced predicted_score/band. BLANK MEANS "
+            "PRE-CONTRACT: those rows were written under the old blended scale and "
+            "must not be read as v1 predictions or graded against v1 semantics."
+        ),
+    )
     runner_up_sellers = models.JSONField(default=list, blank=True, help_text="Top 5 [{seller_id, score}] at snapshot time")
     snapshot_telemetry = models.JSONField(default=dict, blank=True, help_text="AcquisitionInterestEvent counts + vector presence at snapshot time")
     created_at = models.DateTimeField(auto_now_add=True)
