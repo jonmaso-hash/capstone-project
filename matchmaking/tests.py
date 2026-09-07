@@ -685,7 +685,9 @@ class HardFilterCacheCorrectnessTests(TestCase):
     def test_changed_raising_amount_produces_a_different_cache_key_and_result(self):
         self.assertTrue(passes_hard_filters(self.app, self.investor))
 
-        self.app.raising_amount = 999999  # now outside the investor's ticket range
+        # Round is now smaller than this investor's smallest cheque, so
+        # there is no way for them to participate.
+        self.app.raising_amount = 50000
         self.app.save(update_fields=['raising_amount'])
 
         # New raising_amount means a new cache key — must recompute, not
@@ -808,7 +810,15 @@ class FunnelAnalyticsTests(TestCase):
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
 class PassesHardFiltersTests(TestCase):
-    """passes_hard_filters: excludes on ticket-size/stage mismatch, fails open when unset."""
+    """
+    passes_hard_filters: excludes only genuinely nonviable pairings, and
+    fails open on anything the investor never declared.
+
+    The cheque/round cases below are the ones that matter. An investor's
+    ticket size and a founder's raise are different quantities, and this
+    gate is an outright exclusion, so getting the comparison wrong makes
+    whole classes of founder invisible with no explanation anywhere.
+    """
 
     def setUp(self):
         _mock_embedding_generation(self)
@@ -833,19 +843,32 @@ class PassesHardFiltersTests(TestCase):
         app = self._founder(raising_amount=10_000_000, stage='Series C')
         self.assertTrue(passes_hard_filters(app, investor))
 
-    def test_raising_amount_below_ticket_min_excluded(self):
+    def test_round_smaller_than_smallest_cheque_excluded(self):
+        # The only genuinely nonviable case: there is no way to put a
+        # $250k minimum cheque into a $50k round.
         investor = self._investor(ticket_min=250000, ticket_max=1000000)
         app = self._founder(raising_amount=50000)
         self.assertFalse(passes_hard_filters(app, investor))
 
-    def test_raising_amount_above_ticket_max_excluded(self):
+    def test_round_larger_than_largest_cheque_still_passes(self):
+        # A $250k-$1M investor taking part of a $5M round is ordinary
+        # syndication, not a mismatch. This is the case that used to hide
+        # every well-capitalised founder from every realistic cheque writer.
         investor = self._investor(ticket_min=250000, ticket_max=1000000)
         app = self._founder(raising_amount=5_000_000)
-        self.assertFalse(passes_hard_filters(app, investor))
+        self.assertTrue(passes_hard_filters(app, investor))
 
     def test_raising_amount_within_range_passes(self):
         investor = self._investor(ticket_min=250000, ticket_max=1000000)
         app = self._founder(raising_amount=500000)
+        self.assertTrue(passes_hard_filters(app, investor))
+
+    def test_undeclared_raise_is_unknown_not_excluded(self):
+        # raising_amount defaults to 0, so 0 means "hasn't said yet" far
+        # more often than "raising nothing". A founder who hasn't filled
+        # the field in must not be deleted from the marketplace.
+        investor = self._investor(ticket_min=250000, ticket_max=1000000)
+        app = self._founder(raising_amount=0)
         self.assertTrue(passes_hard_filters(app, investor))
 
     def test_stage_mismatch_excluded(self):
@@ -857,6 +880,95 @@ class PassesHardFiltersTests(TestCase):
         investor = self._investor(stage='Seed')
         app = self._founder(stage='Pre-Seed')
         self.assertTrue(passes_hard_filters(app, investor))
+
+    def test_stage_punctuation_does_not_exclude(self):
+        # Both sides are free text; 'Series-A' and 'Series A' are the same
+        # stage and must not be treated as a disagreement.
+        investor = self._investor(stage='Series A')
+        app = self._founder(stage='series-A')
+        self.assertTrue(passes_hard_filters(app, investor))
+
+    def test_adjacency_is_symmetric(self):
+        # The adjacency table lists 'series c' as a neighbour of 'series b'
+        # but has no 'series c' key, so a one-way read excluded the
+        # later-stage half of the pair while admitting the earlier half.
+        early = self._investor(stage='Series B')
+        self.assertTrue(passes_hard_filters(self._founder(stage='Series C'), early))
+
+    def test_genuinely_distant_stage_still_excluded(self):
+        # The relaxations above must not turn the gate into a no-op.
+        investor = self._investor(stage='Seed')
+        app = self._founder(stage='Series B')
+        self.assertFalse(passes_hard_filters(app, investor))
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class MatchingIntegrityRegressionTests(TestCase):
+    """
+    The cold-contact scenario, end to end through the real dashboard view.
+
+    A brand-new climate-tech seed investor writing $250k-$1.5M cheques was
+    shown cookware, a sports-equipment startup and a planetarium scheduler,
+    while the one exactly-matching climate company on the platform -- the
+    only one carrying a full Zelda workup -- was silently excluded for
+    raising $4M. The Zelda report for that company said "Sector: Climate
+    Tech - in your stated focus. Match." at the same time the engine was
+    refusing to surface it.
+
+    This asserts the whole path, not just the predicate, because the
+    predicate was individually defensible and the outcome still wasn't.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.investor_user = User.objects.create_user('mi_investor', password='x')
+        self.investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='Avery Lund', email='a@t.com',
+            company_name='Tessera Ventures',
+            investment_focus='Climate Tech, energy software',
+            investment_stage='Seed',
+            ticket_size_min=250000, ticket_size_max=1500000,
+        )
+        self._founder('mi_northwind', 'Northwind Grid', 'Climate Tech', 'Seed', 4_000_000)
+        self._founder('mi_kettle', 'Kettle & Co', 'Consumer', 'Seed', 1_500_000)
+        self._founder('mi_thistle', 'Thistle Labs', 'Biotech', 'Pre-Seed', 0)
+
+    def _founder(self, username, company, sector, stage, raising):
+        user = User.objects.create_user(username, password='x')
+        return Application.objects.create(
+            user=user, company_name=company, founder_name='F',
+            email=f'{username}@t.com', description=f'{company} description.',
+            sector=sector, stage=stage, raising_amount=raising,
+        )
+
+    def _match_names(self):
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('matchmaking:investor_dashboard'))
+        self.assertEqual(response.status_code, 200)
+        return [m['founder'].company_name for m in response.context['matches']]
+
+    def test_exact_sector_and_stage_match_is_surfaced_first(self):
+        names = self._match_names()
+        self.assertIn('Northwind Grid', names)
+        self.assertEqual(
+            names[0], 'Northwind Grid',
+            'the company matching this mandate on both sector and stage must lead '
+            f'the results; got {names}',
+        )
+
+    def test_large_round_does_not_hide_a_founder_from_a_small_cheque(self):
+        # $4M round, $1.5M maximum cheque: normal syndication.
+        self.assertTrue(passes_hard_filters(
+            Application.objects.get(company_name='Northwind Grid'), self.investor))
+
+    def test_founder_with_no_declared_raise_still_appears(self):
+        self.assertIn('Thistle Labs', self._match_names())
+
+    def test_weaker_sector_fit_still_appears_but_ranks_lower(self):
+        # The fix widens the gate; it must not flatten the ranking.
+        names = self._match_names()
+        self.assertIn('Kettle & Co', names)
+        self.assertLess(names.index('Northwind Grid'), names.index('Kettle & Co'))
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
