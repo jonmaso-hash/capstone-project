@@ -89,7 +89,13 @@ class RuleBasedScoreTests(TestCase):
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
 class BlendedMatchTests(TestCase):
-    """get_blended_match: rule*0.7 + ai*0.3, plus MatchFeedback thumbs nudge."""
+    """
+    get_blended_match: rule*0.7 + ai*0.3, and NO feedback term.
+
+    This is the legacy blend, no longer read by any consumer. It is kept
+    under test because while it exists it must not reintroduce the thumbs
+    nudge that once let one click outweigh the entire semantic signal.
+    """
 
     def setUp(self):
         _mock_embedding_generation(self)
@@ -109,15 +115,15 @@ class BlendedMatchTests(TestCase):
         score = get_blended_match(ai_score=50, rule_score=100, application=self.app, investor=self.investor)
         self.assertEqual(score, 85.0)
 
-    def test_thumbs_up_adds_15_capped_at_100(self):
+    def test_a_thumbs_up_does_not_raise_the_score(self):
         MatchFeedback.objects.create(user=self.investor_user, application=self.app, investor=self.investor, vote=1)
         score = get_blended_match(ai_score=50, rule_score=100, application=self.app, investor=self.investor)
-        self.assertEqual(score, 100)  # 85 + 15 = 100, capped
+        self.assertEqual(score, 85.0, 'liking a company does not improve the fit')
 
-    def test_thumbs_down_halves_score(self):
+    def test_a_thumbs_down_does_not_lower_the_score(self):
         MatchFeedback.objects.create(user=self.investor_user, application=self.app, investor=self.investor, vote=-1)
         score = get_blended_match(ai_score=50, rule_score=100, application=self.app, investor=self.investor)
-        self.assertEqual(score, 42.5)  # 85 * 0.5
+        self.assertEqual(score, 85.0, 'passing on a company does not worsen the fit')
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
@@ -178,7 +184,10 @@ class DealRuleBasedScoreTests(TestCase):
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
 class DealBlendedMatchTests(TestCase):
-    """get_deal_blended_match: same shape as get_blended_match but for DealFeedback."""
+    """
+    get_deal_blended_match: same shape as get_blended_match, and likewise
+    carrying no DealFeedback term.
+    """
 
     def setUp(self):
         self.seller_user = User.objects.create_user('seller_test', password='x')
@@ -194,15 +203,15 @@ class DealBlendedMatchTests(TestCase):
             budget_min=500_000, budget_max=1_500_000, preferred_deal_structure='ASSET_SALE',
         )
 
-    def test_thumbs_up_adds_15_capped_at_100(self):
+    def test_a_thumbs_up_does_not_raise_the_score(self):
         DealFeedback.objects.create(user=self.buyer_user, seller=self.seller, buyer=self.buyer, vote=1)
         score = get_deal_blended_match(ai_score=50, rule_score=100, seller=self.seller, buyer=self.buyer)
-        self.assertEqual(score, 100)
+        self.assertEqual(score, 85.0, 'liking a listing does not improve the fit')
 
-    def test_thumbs_down_halves_score(self):
+    def test_a_thumbs_down_does_not_lower_the_score(self):
         DealFeedback.objects.create(user=self.buyer_user, seller=self.seller, buyer=self.buyer, vote=-1)
         score = get_deal_blended_match(ai_score=50, rule_score=100, seller=self.seller, buyer=self.buyer)
-        self.assertEqual(score, 42.5)
+        self.assertEqual(score, 85.0, 'passing on a listing does not worsen the fit')
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
@@ -3600,7 +3609,7 @@ class WeeklyDigestHeroCardTests(TestCase):
     def _match(self, investor, application, score, change_reason='', last_changed_at=None):
         from .models import AIMatch
         return AIMatch.objects.create(
-            investor=investor, application=application, score=score, confidence_score=score,
+            investor=investor, application=application, score=score,
             change_reason=change_reason, last_changed_at=last_changed_at,
         )
 
@@ -3681,13 +3690,28 @@ class WeeklyDigestHeroCardTests(TestCase):
         card = build_founder_digest_card(app)
         self.assertNotIn('investor_name', card)
 
-    def test_no_card_below_digest_min_score(self):
-        from .digest import build_investor_digest_card, DIGEST_MIN_SCORE
+    def test_no_card_when_the_pairing_cannot_reach_notable(self):
+        # The gate is the band, not the cached number. This investor has
+        # declared no focus and no stage, so nothing about the pairing is
+        # party-declared and it cannot clear Notable -- even with a very
+        # high AIMatch.score, which is a raw semantic input, not a match.
+        from .digest import build_investor_digest_card
         app = self._founder('divf5')
-        inv = self._investor('divi5')
-        self._match(inv, app, DIGEST_MIN_SCORE - 1)
+        u = User.objects.create_user('divi5', password='x', email='divi5@t.com')
+        inv = InvestorApplication.objects.create(user=u, investment_focus='', investment_stage='')
+        self._match(inv, app, 99.0)
 
         self.assertIsNone(build_investor_digest_card(inv))
+
+    def test_card_appears_once_the_pairing_reaches_notable(self):
+        from .digest import build_investor_digest_card
+        app = self._founder('divf5b')
+        inv = self._investor('divi5b')          # declares a SaaS focus
+        self._match(inv, app, 1.0)              # deliberately a low cached score
+
+        card = build_investor_digest_card(inv)
+        self.assertIsNotNone(card, 'eligibility follows the band, not AIMatch.score')
+        self.assertEqual(card['band'], 'Notable')
 
     def test_message_upsells_free_viewer_not_premium(self):
         from .digest import build_investor_digest_card, investor_digest_message
@@ -3720,7 +3744,8 @@ class WeeklyDigestHeroCardTests(TestCase):
 
         self.assertGreaterEqual(result['digests_sent'], 1)
         notif = Notification.objects.get(recipient=inv.user, notification_type='WEEKLY_DIGEST')
-        self.assertIn('90%', notif.message)
+        self.assertIn('notable match', notif.message)
+        self.assertNotIn('%', notif.message)  # no user-facing match percentage
         sent_email = next(m for m in mail.outbox if m.to == [inv.user.email])
         self.assertIn('best match', sent_email.subject.lower())
 
@@ -3761,7 +3786,8 @@ class WeeklyDigestHeroCardTests(TestCase):
         _send_weekly_digests_body()
 
         notif = Notification.objects.get(recipient=app.user, notification_type='WEEKLY_DIGEST')
-        self.assertIn('82%', notif.message)
+        self.assertIn('notable match', notif.message)
+        self.assertNotIn('%', notif.message)
         self.assertNotIn('Upgrade', notif.message)
 
 
@@ -4640,13 +4666,20 @@ class ExplanatoryInsightsCopyTests(TestCase):
     surfaced this".
     """
 
-    def _insights(self, ai_score=61, rule_score=80, sector='Robotics', stage='Series A',
-                  focus='Robotics, logistics', mandate_stage='Series A'):
+    def _insights(self, sector='Robotics', stage='Series A',
+                  focus='Robotics, logistics', mandate_stage='Series A',
+                  description='Cadence builds robots for logistics warehouses.'):
         from types import SimpleNamespace
+        from .match_components import evaluate_venture_match
         from .views import _generate_explanatory_insights
-        founder = SimpleNamespace(company_name='Cadence', sector=sector, stage=stage)
-        investor = SimpleNamespace(investment_focus=focus, investment_stage=mandate_stage)
-        return _generate_explanatory_insights(ai_score, rule_score, founder, investor)
+        founder = SimpleNamespace(company_name='Cadence', sector=sector, stage=stage,
+                                  description=description, description_vector=None)
+        investor = SimpleNamespace(investment_focus=focus, investment_stage=mandate_stage,
+                                   focus_vector=None)
+        # The helper reads the canonical result rather than being handed
+        # loose numbers, so this exercises the real path end to end.
+        return _generate_explanatory_insights(
+            evaluate_venture_match(founder, investor), founder, investor)
 
     def test_no_machine_voice_in_any_field(self):
         out = self._insights()
@@ -4655,26 +4688,34 @@ class ExplanatoryInsightsCopyTests(TestCase):
                        'semantic matching vectors', 'operational tier', 'baseline index'):
             self.assertNotIn(banned, blob)
 
-    def test_summary_leads_with_words_not_a_percentage(self):
-        out = self._insights(ai_score=61)
-        self.assertNotIn('61', out['summary'])
+    def test_summary_leads_with_words_and_exposes_no_number_at_all(self):
+        out = self._insights()
         self.assertNotIn('%', out['summary'])
-        # match_percentage is still returned for callers that badge/rank on it
-        self.assertEqual(out['match_percentage'], 61)
+        # The internal score is never handed to a renderer. The band is
+        # the whole user-facing answer.
+        self.assertNotIn('match_percentage', out)
+        self.assertEqual(out['band'], 'Strong')
 
     def test_pillars_describe_sector_stage_and_overall_fit(self):
-        out = self._insights(rule_score=80)
+        out = self._insights()
         titles = [p['title'] for p in out['pillars']]
         self.assertEqual(titles, ['Sector', 'Stage', 'Overall fit'])
         scores = {p['title']: p['score'] for p in out['pillars']}
         self.assertEqual(scores['Sector'], 'Match')        # 'Robotics' in 'Robotics, logistics'
         self.assertEqual(scores['Stage'], 'Match')         # 'Series A' == 'Series A'
-        self.assertEqual(scores['Overall fit'], 'Passed')  # rule_score 80 > 60
+        # Passed now means the band is Strong: two independent declared
+        # signals, not a rule subtotal clearing an arbitrary 60.
+        self.assertEqual(scores['Overall fit'], 'Passed')
 
     def test_partial_match_reads_softly_not_as_a_failure(self):
-        out = self._insights(rule_score=40, sector='Biotech', mandate_stage='Seed')
+        # Biotech is genuinely outside a robotics/logistics focus, and the
+        # copy now says so. The old helper had only hit/miss, so it called
+        # this 'Adjacent' and told the reader it was "close enough to
+        # surface" -- a small untruth in exactly the place the reader is
+        # deciding whether to spend attention.
+        out = self._insights(sector='Biotech', mandate_stage='Seed')
         scores = {p['title']: p['score'] for p in out['pillars']}
-        self.assertEqual(scores['Sector'], 'Adjacent')
+        self.assertEqual(scores['Sector'], 'Outside')
         self.assertEqual(scores['Stage'], 'Nearby')
         self.assertEqual(scores['Overall fit'], 'Partial')
         self.assertIn('softer match', out['pillars'][2]['desc'])

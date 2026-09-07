@@ -246,22 +246,9 @@
                     <span class="industry-tag">{{ listing.industry|default:"Other" }}</span>
 
                     {% if user.is_authenticated and user.match_buyer_profile %}
-                    {% with score=listing.match_percentage|default:0 %}
                     <div class="d-flex flex-column align-items-end gap-1" id="match-wrap-{{ listing.id }}">
-                        <div class="match-ring
-                            {% if score >= 90 %}fire
-                            {% elif score >= 80 %}muscle
-                            {% elif score >= 70 %}thumb
-                            {% elif score >= 60 %}radar
-                            {% elif score >= 50 %}ok
-                            {% else %}low{% endif %}"
-                            id="match-ring-{{ listing.id }}"
-                            data-base-score="{{ listing.base_match_percentage }}"
-                            data-vote="{{ listing.buyer_vote }}">
-                            {{ score }}%
-                        </div>
+                        <span class="badge bg-dark text-white">{{ listing.band|default:"—" }}</span>
                     </div>
-                    {% endwith %}
                     {% endif %}
                 </div>
 
@@ -365,27 +352,6 @@ function getCookie(name) {
     return null;
 }
 
-function tierForScore(score) {
-    if (score >= 90) return { cls: 'fire' };
-    if (score >= 80) return { cls: 'muscle' };
-    if (score >= 70) return { cls: 'thumb' };
-    if (score >= 60) return { cls: 'radar' };
-    if (score >= 50) return { cls: 'ok' };
-    return { cls: 'low' };
-}
-
-function updateMatchRing(listingId, direction) {
-    const ring = document.getElementById(`match-ring-${listingId}`);
-    if (!ring) return;
-    const baseScore = parseInt(ring.dataset.baseScore, 10) || 0;
-    const newVote = direction === 'up' ? 1 : -1;
-    const newScore = Math.max(0, Math.min(100, baseScore + (newVote * 10)));
-    const tier = tierForScore(newScore);
-    ring.textContent = `${newScore}%`;
-    ring.dataset.vote = newVote;
-    ring.className = `match-ring ${tier.cls}`;
-}
-
 function recordDealVote(listingId, direction, btn) {
     const statusEl = document.getElementById(`vote-status-${listingId}`);
     fetch("{% url 'matchmaking:record_deal_vote' %}", {
@@ -407,7 +373,6 @@ function recordDealVote(listingId, direction, btn) {
                 btn.classList.add('active-down');
                 if (statusEl) statusEl.textContent = '✓ Passed';
             }
-            updateMatchRing(listingId, direction);
         }
     })
     .catch(err => {
