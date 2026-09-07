@@ -23,7 +23,7 @@ made "independence" impossible to enforce before:
 """
 import re
 
-from .match_score import COVERAGE, DECLARED, INFERRED, Signal
+from .match_score import COVERAGE, DECLARED, INFERRED, Signal, build_result
 
 SECTOR = 'sector'
 STAGE = 'stage'
@@ -136,6 +136,18 @@ def venture_signals(application, investor):
     ]
 
 
+def evaluate_venture_match(application, investor):
+    """
+    THE entry point for an investor <-> founder pairing.
+
+    Every consumer calls this and reads the MatchResult it returns. None
+    of them recomputes a score, applies its own cutoff, or reinterprets
+    what a number means - that divergence is what produced three
+    incompatible scales in the first place.
+    """
+    return build_result(venture_signals(application, investor))
+
+
 # ---------------------------------------------------------------- M&A ----
 
 def industry_signal(seller, buyer):
@@ -203,3 +215,8 @@ def deal_signals(seller, buyer):
         deal_size_signal(seller, buyer),
         deal_structure_signal(seller, buyer),
     ]
+
+
+def evaluate_deal_match(seller, buyer):
+    """THE entry point for a buyer <-> seller pairing. See above."""
+    return build_result(deal_signals(seller, buyer))

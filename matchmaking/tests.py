@@ -3681,13 +3681,28 @@ class WeeklyDigestHeroCardTests(TestCase):
         card = build_founder_digest_card(app)
         self.assertNotIn('investor_name', card)
 
-    def test_no_card_below_digest_min_score(self):
-        from .digest import build_investor_digest_card, DIGEST_MIN_SCORE
+    def test_no_card_when_the_pairing_cannot_reach_notable(self):
+        # The gate is the band, not the cached number. This investor has
+        # declared no focus and no stage, so nothing about the pairing is
+        # party-declared and it cannot clear Notable -- even with a very
+        # high AIMatch.score, which is a raw semantic input, not a match.
+        from .digest import build_investor_digest_card
         app = self._founder('divf5')
-        inv = self._investor('divi5')
-        self._match(inv, app, DIGEST_MIN_SCORE - 1)
+        u = User.objects.create_user('divi5', password='x', email='divi5@t.com')
+        inv = InvestorApplication.objects.create(user=u, investment_focus='', investment_stage='')
+        self._match(inv, app, 99.0)
 
         self.assertIsNone(build_investor_digest_card(inv))
+
+    def test_card_appears_once_the_pairing_reaches_notable(self):
+        from .digest import build_investor_digest_card
+        app = self._founder('divf5b')
+        inv = self._investor('divi5b')          # declares a SaaS focus
+        self._match(inv, app, 1.0)              # deliberately a low cached score
+
+        card = build_investor_digest_card(inv)
+        self.assertIsNotNone(card, 'eligibility follows the band, not AIMatch.score')
+        self.assertEqual(card['band'], 'Notable')
 
     def test_message_upsells_free_viewer_not_premium(self):
         from .digest import build_investor_digest_card, investor_digest_message
@@ -3720,7 +3735,8 @@ class WeeklyDigestHeroCardTests(TestCase):
 
         self.assertGreaterEqual(result['digests_sent'], 1)
         notif = Notification.objects.get(recipient=inv.user, notification_type='WEEKLY_DIGEST')
-        self.assertIn('90%', notif.message)
+        self.assertIn('notable match', notif.message)
+        self.assertNotIn('%', notif.message)  # no user-facing match percentage
         sent_email = next(m for m in mail.outbox if m.to == [inv.user.email])
         self.assertIn('best match', sent_email.subject.lower())
 
@@ -3761,7 +3777,8 @@ class WeeklyDigestHeroCardTests(TestCase):
         _send_weekly_digests_body()
 
         notif = Notification.objects.get(recipient=app.user, notification_type='WEEKLY_DIGEST')
-        self.assertIn('82%', notif.message)
+        self.assertIn('notable match', notif.message)
+        self.assertNotIn('%', notif.message)
         self.assertNotIn('Upgrade', notif.message)
 
 

@@ -327,16 +327,25 @@ def get_deal_blended_match(ai_score, rule_score, seller, buyer):
     return round(base_score, 2)
 
 
-def get_uncontacted_high_matches(investor_profile, threshold=80):
+def get_uncontacted_high_matches(investor_profile):
     """
-    Counts founders scoring >= threshold on the exact blended-match formula
-    investor_dashboard uses, excluding founders this investor already has a
-    Connection with. Skips lazy vector generation (unlike investor_dashboard)
-    since this runs on every journey-status poll — founders without a vector
-    yet just fall back to the same ai_score=50 default the dashboard uses.
+    Counts founders in the Strong band this investor has not yet contacted.
+
+    This number is rendered to the user as "You have N strong matches you
+    haven't reached out to yet", so it has to mean something. It used to
+    count `blended >= 80`, a cutoff this consumer chose for itself, on a
+    scale where an absent embedding contributed a fabricated 50. Now it
+    asks the contract: Strong requires two independent signals and at
+    least one both parties declared, so the count is of pairings that
+    actually clear that bar.
+
+    No threshold argument any more, deliberately. A consumer that can
+    pick its own cutoff is a consumer that can disagree with every other
+    consumer about what a strong match is.
     """
+    from matchmaking.match_components import evaluate_venture_match
+    from matchmaking.match_score import Band
     from matchmaking.models import Application, Connection
-    from matchmaking.services.ai_engine import calculate_similarity
 
     requested_ids = set(
         Connection.objects.filter(investor=investor_profile).values_list('founder_id', flat=True)
@@ -344,23 +353,10 @@ def get_uncontacted_high_matches(investor_profile, threshold=80):
 
     founders = Application.objects.discoverable().exclude(review_status='DENIED').exclude(id__in=requested_ids)
 
-    count = 0
-    for founder in founders:
-        if investor_profile.focus_vector and founder.description_vector:
-            try:
-                ai_score = max(0.0, min(100.0, calculate_similarity(investor_profile.focus_vector, founder.description_vector) * 100))
-            except Exception:
-                ai_score = 50.0
-        else:
-            ai_score = 50.0
-
-        rule_score = calculate_rule_based_score(application=founder, investor=investor_profile)
-        final_score = get_blended_match(ai_score, rule_score, application=founder, investor=investor_profile)
-
-        if final_score >= threshold:
-            count += 1
-
-    return count
+    return sum(
+        1 for founder in founders
+        if evaluate_venture_match(founder, investor_profile).band == Band.STRONG
+    )
 
 
 def compute_founder_journey_stage(user):
@@ -462,15 +458,16 @@ def compute_investor_journey_stage(user):
     }
 
 
-def get_uncontacted_high_deal_matches(buyer_profile, threshold=80):
+def get_uncontacted_high_deal_matches(buyer_profile):
     """
-    Business Marketplace equivalent of get_uncontacted_high_matches — counts
-    seller listings scoring >= threshold on the exact blended deal-economics
-    formula buyer_dashboard uses, excluding listings this buyer already has
-    an AcquisitionConnection with.
+    Business Marketplace twin of get_uncontacted_high_matches: sellers in
+    the Strong band this buyer has not yet contacted. Same reasoning, and
+    deliberately the same absence of a threshold argument - one contract,
+    one definition of Strong, on both sides of the marketplace.
     """
+    from matchmaking.match_components import evaluate_deal_match
+    from matchmaking.match_score import Band
     from matchmaking.models import SellerApplication, AcquisitionConnection
-    from matchmaking.services.ai_engine import calculate_similarity
 
     requested_ids = set(
         AcquisitionConnection.objects.filter(buyer=buyer_profile).values_list('seller_id', flat=True)
@@ -478,23 +475,10 @@ def get_uncontacted_high_deal_matches(buyer_profile, threshold=80):
 
     sellers = SellerApplication.objects.discoverable().exclude(review_status='DENIED').exclude(id__in=requested_ids)
 
-    count = 0
-    for seller in sellers:
-        if buyer_profile.focus_vector and seller.description_vector:
-            try:
-                ai_score = max(0.0, min(100.0, calculate_similarity(buyer_profile.focus_vector, seller.description_vector) * 100))
-            except Exception:
-                ai_score = 50.0
-        else:
-            ai_score = 50.0
-
-        rule_score = calculate_deal_rule_based_score(seller=seller, buyer=buyer_profile)
-        final_score = get_deal_blended_match(ai_score, rule_score, seller=seller, buyer=buyer_profile)
-
-        if final_score >= threshold:
-            count += 1
-
-    return count
+    return sum(
+        1 for seller in sellers
+        if evaluate_deal_match(seller, buyer_profile).band == Band.STRONG
+    )
 
 
 def compute_seller_journey_stage(user):

@@ -587,15 +587,13 @@ def grade_buyer_prediction_snapshots(buyer_id, actual_closed_seller_id):
     return {'status': 'success', 'graded_count': graded_count}
 
 
-MATCH_ALERT_THRESHOLD = 80.0
-
-
 @shared_task(bind=True, max_retries=3)
 def send_priority_match_alerts(self):
     """
     Priority Match Alerts — Founder/Investor/Seller/Buyer Premium perk.
     Scans counterpart profiles created in the last 24h and notifies premium
-    users whose vector similarity against one clears MATCH_ALERT_THRESHOLD.
+    premium users whose pairing with one reaches the Strong band on a
+    full evidence basis (see _notify_priority_matches).
     Bounded to "new since yesterday" so a daily run never re-scans the whole
     network — mirrors send_weekly_digests' retry wrapper.
     """
@@ -613,37 +611,43 @@ def send_priority_match_alerts(self):
             return {'status': 'error', 'error': str(exc), 'retries_exhausted': True}
 
 
-def _notify_priority_matches(premium_profiles, new_counterparts, vector_field_self, vector_field_other, target_url, label):
+def _notify_priority_matches(premium_profiles, new_counterparts, evaluate, target_url, label):
     """
-    For each premium profile, checks its vector against every newly-created
-    counterpart profile; fires one Notification per pair that clears
-    MATCH_ALERT_THRESHOLD. `label` names the counterpart type in the message
-    (e.g. "investor", "founder").
+    Fires one Notification per premium profile / new counterpart pairing
+    that clears the alert bar. `evaluate` maps (profile, counterpart) to a
+    MatchResult, which is how one generic helper serves all four role
+    combinations without any of them reinterpreting what a match is.
+
+    The bar is Strong AND full basis - strictly higher than the digest's
+    Notable. An alert spends the recipient's attention without being
+    asked, so it carries the strictest evidence standard in the contract:
+    two independent signals, at least one declared by both parties, and
+    every component of the roster actually present.
+
+    It used to be `raw cosine similarity >= 80`. Observed cosine across the
+    whole database tops out at 41.6, so this premium perk could not fire at
+    all - not rarely, never. That is the failure a numeric threshold guessed
+    against an unmeasured distribution produces, and why the contract
+    expresses bars as bands.
     """
     from notifications.models import Notification
-    from .services.ai_engine import calculate_similarity
+    from .match_score import Band
 
     alerts_sent = 0
     for profile in premium_profiles:
-        self_vector = getattr(profile, vector_field_self, None)
-        if not self_vector:
-            continue
         for counterpart in new_counterparts:
-            other_vector = getattr(counterpart, vector_field_other, None)
-            if not other_vector:
-                continue
             try:
-                score = max(0.0, min(100.0, calculate_similarity(self_vector, other_vector) * 100))
+                result = evaluate(profile, counterpart)
             except Exception:
                 continue
-            if score < MATCH_ALERT_THRESHOLD:
+            if result.band != Band.STRONG or not result.full_basis:
                 continue
 
             counterpart_name = getattr(counterpart, 'company_name', '') or getattr(counterpart, 'full_name', '') or 'a new match'
             Notification.objects.create(
                 recipient=profile.user,
                 notification_type='PRIORITY_MATCH',
-                message=f"New high-fit {label} match: {counterpart_name} ({round(score)}% fit).",
+                message=f"New strong {label} match: {counterpart_name}.",
                 target_url=target_url,
             )
             alerts_sent += 1
@@ -651,6 +655,7 @@ def _notify_priority_matches(premium_profiles, new_counterparts, vector_field_se
 
 
 def _send_priority_match_alerts_body():
+    from .match_components import evaluate_deal_match, evaluate_venture_match
     from .models import Application, InvestorApplication, SellerApplication, BuyerApplication
 
     day_ago = timezone.now() - timedelta(hours=24)
@@ -664,28 +669,32 @@ def _send_priority_match_alerts_body():
     if new_investors:
         premium_founders = Application.objects.discoverable().filter(is_premium=True).exclude(review_status='DENIED')
         total_alerts += _notify_priority_matches(
-            premium_founders, new_investors, 'description_vector', 'focus_vector',
+            premium_founders, new_investors,
+            lambda founder, investor: evaluate_venture_match(founder, investor),
             '/matchmaking/dashboard/founder/', 'investor',
         )
 
     if new_founders:
         premium_investors = InvestorApplication.objects.discoverable().filter(is_premium=True).exclude(review_status='DENIED')
         total_alerts += _notify_priority_matches(
-            premium_investors, new_founders, 'focus_vector', 'description_vector',
+            premium_investors, new_founders,
+            lambda investor, founder: evaluate_venture_match(founder, investor),
             '/matchmaking/dashboard/investor/', 'founder',
         )
 
     if new_buyers:
         premium_sellers = SellerApplication.objects.discoverable().filter(is_premium=True).exclude(review_status='DENIED')
         total_alerts += _notify_priority_matches(
-            premium_sellers, new_buyers, 'description_vector', 'focus_vector',
+            premium_sellers, new_buyers,
+            lambda seller, buyer: evaluate_deal_match(seller, buyer),
             '/matchmaking/dashboard/seller/', 'buyer',
         )
 
     if new_sellers:
         premium_buyers = BuyerApplication.objects.discoverable().filter(is_premium=True).exclude(review_status='DENIED')
         total_alerts += _notify_priority_matches(
-            premium_buyers, new_sellers, 'focus_vector', 'description_vector',
+            premium_buyers, new_sellers,
+            lambda buyer, seller: evaluate_deal_match(seller, buyer),
             '/matchmaking/dashboard/buyer/', 'seller',
         )
 
