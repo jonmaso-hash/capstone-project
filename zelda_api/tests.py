@@ -6076,11 +6076,35 @@ class JourneyStatusAPIViewNextBestActionTests(TestCase):
         response = self.client.get(reverse('zelda_api:journey_status'))
 
         data = response.json()
+        # The elevator pitch leads yellow now -- the light, public artifact
+        # before the substantive fundraising one.
+        self.assertEqual(data['next_best_action']['label'],
+                         'Post a 30-second elevator pitch to Explore')
+        self.assertEqual(data['profile_strength']['label'], 'Building')
+
+    def test_founder_with_an_elevator_pitch_is_then_asked_for_the_deck(self):
+        # Preserves this class's original coverage: the deck action still
+        # resolves with its own copy, it is simply asked for second.
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from matchmaking.models import Application, ProfileVideo
+        user = get_user_model().objects.create_user('nba_founder_yellow2', password='x')
+        app = Application.objects.create(
+            user=user, company_name='Test Co', founder_name='Founder',
+            email='f2@test.com', description='A startup.',
+        )
+        ProfileVideo.objects.create(
+            founder=app, kind=ProfileVideo.KIND_ELEVATOR_PITCH,
+            status=ProfileVideo.STATUS_PUBLISHED,
+            video=SimpleUploadedFile('c.mp4', b'0' * 32, content_type='video/mp4'),
+        )
+        self.client.force_login(user)
+
+        data = self.client.get(reverse('zelda_api:journey_status')).json()
+        self.assertEqual(data['stage_color'], 'yellow')
         self.assertEqual(data['next_best_action']['label'],
                          'Upload a pitch deck or a 1–3 min pitch video')
         self.assertIn('Zelda Intelligence Brief', data['next_best_action']['why_it_matters'])
         self.assertEqual(data['next_best_action']['estimated_minutes'], 2)
-        self.assertEqual(data['profile_strength']['label'], 'Building')
 
     def test_founder_fully_complete_profile_has_no_next_best_action_and_is_strong(self):
         from django.core.files.uploadedfile import SimpleUploadedFile
@@ -6145,6 +6169,26 @@ class JourneyStatusAPIViewNextBestActionTests(TestCase):
         response = self.client.get(reverse('zelda_api:journey_status'))
 
         data = response.json()
+        self.assertEqual(data['next_best_action']['label'],
+                         'Post a 30-second elevator pitch to Explore')
+
+    def test_seller_with_an_elevator_pitch_is_then_asked_for_the_cim(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from matchmaking.models import SellerApplication, ProfileVideo
+        user = get_user_model().objects.create_user('nba_seller_yellow2', password='x')
+        seller = SellerApplication.objects.create(
+            user=user, company_name='Test Widgets', seller_name='Seller',
+            email='s2@test.com', description='A business.',
+        )
+        ProfileVideo.objects.create(
+            seller=seller, kind=ProfileVideo.KIND_ELEVATOR_PITCH,
+            status=ProfileVideo.STATUS_PUBLISHED,
+            video=SimpleUploadedFile('c.mp4', b'0' * 32, content_type='video/mp4'),
+        )
+        self.client.force_login(user)
+
+        data = self.client.get(reverse('zelda_api:journey_status')).json()
+        self.assertEqual(data['stage_color'], 'yellow')
         self.assertEqual(data['next_best_action']['label'], 'Upload a CIM document')
         self.assertIn('Zelda Intelligence Brief', data['next_best_action']['why_it_matters'])
 

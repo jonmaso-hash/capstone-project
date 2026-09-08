@@ -176,7 +176,18 @@ class YellowFounderNextBestActionTests(TestCase):
         self.assertEqual(data['stage_color'], 'yellow')
         self.assertIsNotNone(
             data['next_best_action'],
-            'the renamed pitch-asset label must still resolve to action copy')
+            'a yellow founder must always have a resolvable next action')
+        # The elevator pitch leads deliberately: it is the lightest ask and
+        # the only one that makes the founder discoverable to a stranger.
         self.assertEqual(data['next_best_action']['label'],
-                         'Upload a pitch deck or a 1–3 min pitch video')
+                         'Post a 30-second elevator pitch to Explore')
         self.assertTrue(data['next_best_action']['action_url'])
+
+    def test_the_heavier_pitch_asset_is_still_asked_for_second(self):
+        response = self.client.get('/api/v1/zelda/journey-status/')
+        labels = [i['label'] for i in response.json()['checklist']]
+        self.assertEqual(labels, [
+            'Create your founder profile',
+            'Post a 30-second elevator pitch to Explore',
+            'Upload a pitch deck or a 1–3 min pitch video',
+        ], 'reordering must not drop the deck, only demote it')
