@@ -22,10 +22,15 @@ ACTION_INFO = {
         'estimated_minutes': 5,
         'action_label': 'Create Profile',
     },
-    'Upload a pitch deck or pitch video': {
+    'Upload a pitch deck or a 1–3 min pitch video': {
         'why_it_matters': "Upload a pitch deck and I can generate a full Zelda Intelligence Brief for investors — deeper diligence than a profile alone.",
         'estimated_minutes': 2,
         'action_label': 'Upload Pitch Deck',
+    },
+    'Post a 30-second elevator pitch to Explore': {
+        'why_it_matters': "A 30-second clip puts you on Explore, the one page anyone can browse without an account — it's how someone who isn't looking for you yet finds you.",
+        'estimated_minutes': 3,
+        'action_label': 'Record Elevator Pitch',
     },
     'Publish a blog post to boost visibility': {
         'why_it_matters': "A blog post gives investors more context on your thinking and helps you show up in search.",
@@ -95,6 +100,49 @@ ACTION_INFO = {
     },
 }
 
+
+# Where each checklist item sends the user. Lived as four local dicts inside
+# zelda_api/views.py::JourneyStatusAPIView, which meant nothing could check
+# them against the labels they key off. PR #23 renamed a label and both this
+# and ACTION_INFO silently stopped matching -- ACTION_INFO.get() returns None
+# and the caller just skips the card, so a yellow founder lost their "Next
+# best improvement" with no error anywhere. Importable now, and covered by
+# JourneyLabelMappingTests.
+#
+# Per-role rather than one merged dict because the same label can point
+# somewhere different: "Connect with other businesses" goes to the founder
+# bulletin for founders and the acquisition bulletin for sellers.
+URL_BY_LABEL = {
+    'investor': {
+        'Create your investor profile': 'usersettings:edit_investor_profile',
+        'Complete every mandate field': 'usersettings:edit_investor_profile',
+        'Upload your portfolio for a similarity match': 'usersettings:edit_investor_profile',
+        'Verify your business email': 'accounts:business_verification',
+    },
+    'seller': {
+        'Create your business listing': 'usersettings:edit_seller_profile',
+        'Upload a CIM document': 'usersettings:edit_seller_profile',
+        'Post a 30-second elevator pitch to Explore': 'matchmaking:manage_elevator_pitch',
+        'Get a Zelda valuation to price your asking price with confidence': 'zelda_api:valuation_request',
+        'Connect with other businesses': 'matchmaking:acquisition_bulletin_board',
+        'Verify your business email': 'accounts:business_verification',
+    },
+    'buyer': {
+        'Create your buyer profile': 'usersettings:edit_buyer_profile',
+        'Complete every mandate field': 'usersettings:edit_buyer_profile',
+        'Verify your business email': 'accounts:business_verification',
+    },
+    'founder': {
+        'Create your founder profile': 'usersettings:edit_founder_profile',
+        'Upload a pitch deck or a 1–3 min pitch video': 'usersettings:edit_founder_profile',
+        'Post a 30-second elevator pitch to Explore': 'matchmaking:manage_elevator_pitch',
+        'Publish a blog post to boost visibility': 'blog:blog_view',
+        "Post a job to show you're growing": 'jobs:create',
+        'Connect with other businesses': 'matchmaking:bulletin_board',
+        'Upload your business plan to Zelda for a competitiveness match': 'zelda_api:valuation_request',
+        'Verify your business email': 'accounts:business_verification',
+    },
+}
 
 # Thresholds on the checklist's done/total ratio — a word, not a number,
 # is what the UI shows (see JourneyStatusAPIView and the "My Progress"

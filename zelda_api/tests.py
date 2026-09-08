@@ -6076,7 +6076,8 @@ class JourneyStatusAPIViewNextBestActionTests(TestCase):
         response = self.client.get(reverse('zelda_api:journey_status'))
 
         data = response.json()
-        self.assertEqual(data['next_best_action']['label'], 'Upload a pitch deck or pitch video')
+        self.assertEqual(data['next_best_action']['label'],
+                         'Upload a pitch deck or a 1–3 min pitch video')
         self.assertIn('Zelda Intelligence Brief', data['next_best_action']['why_it_matters'])
         self.assertEqual(data['next_best_action']['estimated_minutes'], 2)
         self.assertEqual(data['profile_strength']['label'], 'Building')
@@ -6097,6 +6098,17 @@ class JourneyStatusAPIViewNextBestActionTests(TestCase):
         from zelda_api.vector_models import DocumentSource
         DocumentSource.objects.create(
             uploaded_by=user, filename='plan.pdf', source_entity='Test Co', document_type='business_plan',
+        )
+        # "Fully complete" now includes the Explore elevator pitch, which is a
+        # separate artifact from pitch_deck/pitch_video (see ProfileVideo's
+        # docstring). Without it this founder genuinely has an outstanding
+        # action, so the fixture has to publish one to still mean complete.
+        from matchmaking.models import ProfileVideo
+        ProfileVideo.objects.create(
+            founder=app, kind=ProfileVideo.KIND_ELEVATOR_PITCH,
+            status=ProfileVideo.STATUS_PUBLISHED,
+            video=SimpleUploadedFile('clip.mp4', b'0' * 32,
+                                     content_type='video/mp4'),
         )
         self.client.force_login(user)
 
