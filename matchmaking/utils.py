@@ -193,9 +193,24 @@ def compute_founder_journey_stage(user):
     if not has_pitch_asset:
         return {
             'stage_color': 'yellow',
-            'headline': 'Make your profile stand out — submit a pitch deck or pitch video.',
+            'headline': 'Make your profile stand out — post a 30-second elevator pitch, then a deck or longer video.',
             'checklist': [
                 {'label': 'Create your founder profile', 'done': True},
+                # Ahead of the deck deliberately. The elevator pitch is the
+                # light, public artifact that puts a founder on Explore --
+                # the one page a stranger can browse without an account --
+                # while a deck or 1-3 min video is a substantive fundraising
+                # asset. Asking for the heavy one first reversed the funnel:
+                # a founder had to produce the deck before they were ever
+                # invited to be discoverable at all, which is why Explore
+                # had zero videos from any of the seeded founders.
+                #
+                # This changes what the founder is SHOWN, not when they move
+                # to green. The stage still turns on has_pitch_asset above;
+                # ProfileVideo deliberately stays out of that condition, so
+                # yellow and green keep meaning exactly what they meant.
+                {'label': 'Post a 30-second elevator pitch to Explore',
+                 'done': has_published_elevator_pitch(application, 'founder')},
                 {'label': 'Upload a pitch deck or a 1–3 min pitch video', 'done': False},
             ],
         }
@@ -317,9 +332,15 @@ def compute_seller_journey_stage(user):
     if not has_cim:
         return {
             'stage_color': 'yellow',
-            'headline': 'Make your listing stand out — upload a Confidential Information Memorandum (CIM).',
+            'headline': 'Make your listing stand out — post a 30-second elevator pitch, then upload a CIM.',
             'checklist': [
                 {'label': 'Create your business listing', 'done': True},
+                # Even more clearly first on this side than for founders: a
+                # CIM is a confidential, late-stage document prepared for a
+                # specific acquirer, while the elevator pitch is public and
+                # takes minutes.
+                {'label': 'Post a 30-second elevator pitch to Explore',
+                 'done': has_published_elevator_pitch(seller_profile, 'seller')},
                 {'label': 'Upload a CIM document', 'done': False},
             ],
         }

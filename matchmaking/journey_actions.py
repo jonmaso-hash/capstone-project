@@ -158,6 +158,19 @@ def compute_profile_strength(checklist):
     """
     {'ratio': 0-1 float, 'label': str} from a journey-stage checklist —
     never shown to the user as a raw percentage, only as a labeled bar.
+
+    The denominator is the CURRENT checklist, so adding an action to a
+    stage lowers every existing user's ratio there. That is deliberate:
+    this measures how far through the journey you are, not an absolute
+    profile quality, and the journey got a step longer.
+
+    Adding the elevator pitch to yellow moved a profile-only founder from
+    1/2 to 1/3. Both are "Building", so the label does not regress, and
+    the new step is the cheapest one on the list -- publishing it lands
+    2/3, which is "Good". Before, a yellow founder had no way to move the
+    bar at all short of producing a deck, which promoted them out of the
+    stage entirely. So the shorter bar comes with the first genuine
+    intermediate progress step the stage has ever had.
     """
     total = len(checklist)
     if total == 0:
