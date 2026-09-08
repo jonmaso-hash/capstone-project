@@ -5,84 +5,6 @@ from django.core.cache import cache
 
 HARD_FILTER_CACHE_TTL = 60 * 60 * 24 * 7  # 7 days — these fields change rarely
 
-def calculate_match_score(investor, founder):
-    """
-    Calculates a match percentage between an investor and a founder.
-    Patched to use correct model fields: investment_focus and sector.
-    """
-    score = 0
-    
-    # Safely parse the comma-separated focus industries
-    investor_sectors = [
-        s.strip().lower() 
-        for s in getattr(investor, 'investment_focus', '').split(',') 
-        if s.strip()
-    ]
-    founder_sector = getattr(founder, 'sector', '').lower() if founder.sector else ""
-    
-    if founder_sector in investor_sectors:
-        score += 50
-    
-    if investor.investment_stage and founder.stage:
-        if investor.investment_stage.lower() == founder.stage.lower():
-            score += 30
-    
-    inv_stage_str = investor.investment_stage.lower() if investor.investment_stage else ""
-    keywords = investor_sectors + [inv_stage_str]
-    
-    if founder.description:
-        description_hits = sum(1 for word in keywords if word and word in founder.description.lower())
-        if description_hits > 0:
-            score += min(20, description_hits * 5)
-            
-    return score
-
-def calculate_rule_based_score(application, investor):
-    """
-    Calculates a compatibility score (0-100) based on hard constraints
-    like Sector and Investment Stage, plus two soft founder-side signals
-    (prior funding, capital efficiency) that no investor field states an
-    explicit preference for — they're rewarded generically as risk-reducers
-    rather than "matched" against anything investor-specified. Clamped to
-    100 since sector+stage alone can already reach that ceiling.
-    """
-    score = 0
-
-    # 1. Sector Matching (40% of rule-based score)
-    app_sector = application.sector.lower() if application.sector else ""
-    investor_sectors = [s.strip().lower() for s in getattr(investor, 'investment_focus', '').split(',') if s.strip()]
-
-    if app_sector in investor_sectors:
-        score += 40
-    elif any(s in app_sector for s in investor_sectors if s):
-        score += 25
-
-    # 2. Stage Matching (60% of rule-based score)
-    app_stage = application.stage.lower() if application.stage else ""
-    inv_stage = investor.investment_stage.lower() if investor.investment_stage else ""
-
-    if app_stage == inv_stage:
-        score += 60
-    elif _is_adjacent_stage(app_stage, inv_stage):
-        score += 30
-
-    # 3. Prior funding raised — having already convinced an outside investor
-    # once is a mild, generic credibility signal regardless of sector/stage fit.
-    if application.prior_amount_raised:
-        score += 5
-
-    # 4. Capital efficiency — rewards an ask that buys at least a year of
-    # runway against disclosed burn. Silent (no bonus, no penalty) when burn
-    # isn't disclosed, since most early founders won't have this yet and
-    # "unknown" shouldn't read as a strike against them.
-    burn = application.monthly_burn_rate
-    if burn and application.raising_amount:
-        implied_runway_months = float(application.raising_amount) / float(burn)
-        if implied_runway_months >= 12:
-            score += 5
-
-    return min(score, 100)
-
 def _is_adjacent_stage(stage1, stage2):
     """Helper to determine if two stages are close enough to be relevant."""
     adjacents = {
@@ -115,10 +37,11 @@ def _normalize_stage(value):
 def passes_hard_filters(application, investor):
     """
     Hard-constraint gate — the actual fix for the "high semantic score on a
-    legally/logistically nonviable deal" false-positive problem. Unlike
-    calculate_rule_based_score (a SOFT bonus that still lets a mismatch
-    through with partial credit), a failure here excludes the founder from
-    that investor's results entirely — they're never scored, never shown.
+    legally/logistically nonviable deal" false-positive problem. Unlike the
+    Match Score contract, which lets a poor fit through at a low band so an
+    investor can still see and judge it, a failure here excludes the
+    founder from that investor's results entirely — never scored, never
+    shown, no reason surfaced. That is why so little qualifies.
 
     Every check fails OPEN when the investor hasn't declared that
     constraint, so this can only ever narrow an investor's own existing
@@ -165,9 +88,9 @@ def _compute_hard_filters(application, investor):
     defaulting to 0, so 0 overwhelmingly means "hasn't said yet" rather
     than "raising nothing" — and the founders who haven't said yet are
     exactly the new ones a cold marketplace can least afford to hide.
-    Skipped rather than failed, on the same principle that keeps
-    calculate_rule_based_score silent about an undisclosed burn rate:
-    absent data must not read as a strike against the founder.
+    Skipped rather than failed, on the same principle the Match Score
+    contract applies throughout: absent data must not read as a strike
+    against the founder, and must never become evidence either way.
     """
     raising_amount = application.raising_amount
     if investor.ticket_size_min is not None and raising_amount:
@@ -187,141 +110,6 @@ def _compute_hard_filters(application, investor):
             return False
 
     return True
-
-def get_weighted_chunk_score(application, investor):
-    """
-    Multi-vector chunked, asymmetrically-weighted alternative to comparing
-    description_vector/focus_vector as monolithic blocks. Compares each
-    founder chunk against the investor chunk it's conceptually paired with,
-    weights each pair by the investor's own declared emphasis, and
-    normalizes by the weight actually used (so a founder/investor pair
-    missing one chunk isn't penalized — it's just excluded from the average,
-    not treated as a zero).
-
-    Returns None (not 0.0) when neither side has any chunk vectors yet, so
-    callers can fall back to the whole-profile ai_score instead of scoring
-    a match on data that doesn't exist.
-    """
-    from matchmaking.services.ai_engine import calculate_similarity
-
-    pairs = [
-        (application.problem_solution_vector, investor.thesis_vector, investor.weight_problem_solution),
-        (application.market_context_vector, investor.focus_vector, investor.weight_market_context),
-        (application.capital_plan_vector, investor.thesis_vector, investor.weight_capital_plan),
-    ]
-
-    weighted_total = 0.0
-    weight_used = 0.0
-    for founder_vector, investor_vector, weight in pairs:
-        if not founder_vector or not investor_vector:
-            continue
-        similarity = calculate_similarity(founder_vector, investor_vector)
-        weighted_total += similarity * weight
-        weight_used += weight
-
-    if weight_used == 0:
-        return None
-
-    return max(0.0, min(100.0, (weighted_total / weight_used) * 100))
-
-def get_blended_match(ai_score, rule_score, application, investor, sparse_score=None):
-    """
-    LEGACY blend, retained only for the vector/chunk machinery it wraps.
-
-    The canonical answer to "how well do these two fit" is
-    matchmaking/match_score.py via evaluate_venture_match; no consumer
-    reads this any more. It carries no feedback term (see below).
-
-    sparse_score is optional and defaults to None so every existing caller
-    keeps its exact prior behavior (70% rule / 30% ai) unchanged. Passing a
-    sparse_score (0-100, from calculate_sparse_similarity) switches to the
-    3-way hybrid blend: 50% rule / 25% dense ai / 25% sparse keyword-overlap.
-
-    ai_score itself is transparently upgraded to the weighted multi-vector
-    chunk score (get_weighted_chunk_score) whenever both sides have chunk
-    vectors — no caller changes needed. Falls back to the passed-in
-    whole-profile ai_score when chunks aren't available yet (e.g. a profile
-    that hasn't been touched/re-saved since the chunking rollout).
-    """
-    chunk_score = get_weighted_chunk_score(application, investor)
-    if chunk_score is not None:
-        ai_score = chunk_score
-
-    if sparse_score is not None:
-        base_score = (rule_score * 0.5) + (ai_score * 0.25) + (sparse_score * 0.25)
-    else:
-        base_score = (rule_score * 0.7) + (ai_score * 0.3)
-
-    # A thumbs-up used to add 15 here and a thumbs-down to halve the
-    # result. That made one click worth more than the entire semantic
-    # signal, whose observed maximum contributes 12.5 -- and, worse, it
-    # made a statement about the person look like a property of the
-    # pairing. Feedback is now a personal preference axis: it may order or
-    # filter what a viewer sees, and it never touches match strength,
-    # alert eligibility, or a persisted prediction.
-    return round(base_score, 2)
-
-
-def calculate_deal_rule_based_score(seller, buyer):
-    """
-    Calculates a compatibility score (0-100) for the M&A marketplace based
-    on deal economics — industry, whether the seller's asking price fits
-    the buyer's acquisition budget, and deal-structure preference. Mirrors
-    calculate_rule_based_score's shape, but scored on deal terms rather than
-    sector/stage since fundraising and M&A criteria aren't the same thing.
-    """
-    score = 0
-
-    # 1. Industry Matching (40% of rule-based score)
-    seller_industry = seller.industry.lower() if seller.industry else ""
-    thesis_text = (buyer.acquisition_thesis or "").lower()
-
-    if seller_industry and seller_industry in thesis_text:
-        score += 40
-    elif seller_industry and any(word in thesis_text for word in seller_industry.split() if len(word) > 2):
-        score += 25
-
-    # 2. Deal Size Fit (35% of rule-based score) — does asking_price fall
-    # within the buyer's acquisition budget range?
-    asking_price = seller.asking_price
-    budget_min = buyer.budget_min
-    budget_max = buyer.budget_max
-
-    if asking_price is not None and budget_min is not None and budget_max is not None:
-        if budget_min <= asking_price <= budget_max:
-            score += 35
-        else:
-            # Partial credit if within 20% of the nearest bound
-            nearest_bound = budget_min if asking_price < budget_min else budget_max
-            if nearest_bound > 0 and abs(asking_price - nearest_bound) / nearest_bound <= 0.2:
-                score += 15
-
-    # 3. Deal Structure Match (25% of rule-based score)
-    seller_structure = seller.deal_structure
-    buyer_preference = buyer.preferred_deal_structure
-
-    if buyer_preference == 'NO_PREFERENCE':
-        score += 25
-    elif seller_structure == buyer_preference:
-        score += 25
-    elif seller_structure == 'OPEN':
-        score += 15
-
-    return score
-
-
-def get_deal_blended_match(ai_score, rule_score, seller, buyer):
-    """
-    LEGACY blend for the M&A marketplace. Identical shape to
-    get_blended_match, and likewise no longer the canonical answer and no
-    longer carrying a feedback term.
-    """
-    base_score = (rule_score * 0.7) + (ai_score * 0.3)
-
-    # Same separation as get_blended_match: DealFeedback is preference,
-    # not evidence of fit.
-    return round(base_score, 2)
-
 
 def get_uncontacted_high_matches(investor_profile):
     """

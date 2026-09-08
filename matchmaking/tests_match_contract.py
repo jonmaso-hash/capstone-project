@@ -340,14 +340,6 @@ class FeedbackIsolationTests(TestCase):
         self._vote(-1)
         self.assertEqual(self._evaluate().persistable, before)
 
-    def test_the_legacy_blend_no_longer_reads_feedback_either(self):
-        # get_blended_match is no longer canonical, but while it exists it
-        # must not reintroduce the nudge through a side door.
-        from .utils import get_blended_match
-        plain = get_blended_match(40.0, 60.0, application=self.app, investor=self.investor)
-        self._vote(1)
-        self.assertEqual(
-            get_blended_match(40.0, 60.0, application=self.app, investor=self.investor), plain)
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
