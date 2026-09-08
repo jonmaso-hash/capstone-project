@@ -19,7 +19,7 @@ from datetime import timedelta
 
 from django.utils import timezone
 
-from .match_components import evaluate_deal_match, evaluate_venture_match
+from .match_components import evaluate_venture_match
 from .match_score import Band
 
 # The digest goes to every user, free included, so it takes the looser of
@@ -62,60 +62,83 @@ def _ticket_range(investor_profile):
 
 
 def _freshness_reason(ai_match):
-    if not ai_match.last_changed_at or not ai_match.change_reason:
+    """
+    The one thing the AIMatch cache knows that the contract does not: when
+    this pairing last changed, and why. None when there is no cached row.
+    """
+    if ai_match is None or not ai_match.last_changed_at or not ai_match.change_reason:
         return None
     if timezone.now() - ai_match.last_changed_at > timedelta(days=FRESHNESS_WINDOW_DAYS):
         return None
     return ai_match.change_reason
 
 
-def _best_by_band(pairs):
+def _pick_hero(scored):
     """
-    pairs is (ai_match, MatchResult). Ranks by band first, then by the
-    canonical internal score - never by AIMatch.score, which is a raw
-    semantic input and not a match score at all.
+    scored is an iterable of (counterpart, MatchResult). Ranks by band
+    first, then by the canonical internal score - never by AIMatch.score,
+    which is a raw semantic input and not a match score at all.
     """
-    eligible = [(m, r) for m, r in pairs if r.band >= DIGEST_MIN_BAND]
+    eligible = [(c, r) for c, r in scored if r.band >= DIGEST_MIN_BAND]
     if not eligible:
         return None, None
     return max(eligible, key=lambda pair: (pair[1].band, pair[1].score))
 
 
-def get_investor_hero_match(investor_profile):
+def get_investor_hero(investor_profile):
     """
-    The AIMatch row still supplies the pairing and its freshness; the
-    contract decides whether that pairing is worth an email.
+    (application, result, ai_match_or_None) for this week's hero card, or
+    (None, None, None) when nothing clears the band.
+
+    Candidates are the discoverable founder population, NOT the AIMatch
+    cache. The cache only ever holds pairs where BOTH sides already have
+    an embedding (match_cache.upsert_match returns early otherwise), so
+    reading candidates from it silently lost every pairing the contract
+    can evaluate on declared signals alone. Measured on the audit fixture:
+    an investor with no focus vector had 11 contract-eligible pairings, 0
+    cached rows, and received nothing.
+
+    Eligibility is the contract's to decide. Discovery must not pre-filter
+    on a different rule, or the contract never gets to see the pairing.
+
+    The cache is still consulted, but only for the freshness line.
+
+    This evaluates the contract per candidate rather than reading a
+    precomputed row, so it is O(founders) per investor. That is fine for a
+    weekly batch job and is deliberately not optimised into a second cache
+    -- a cache is what caused this defect.
     """
-    rows = investor_profile.ai_matches.select_related('application').all()
-    match, _ = _best_by_band(
-        (row, evaluate_venture_match(row.application, investor_profile)) for row in rows
+    from .models import AIMatch, Application
+
+    candidates = Application.objects.discoverable().exclude(review_status='DENIED')
+    application, result = _pick_hero(
+        (app, evaluate_venture_match(app, investor_profile)) for app in candidates
     )
-    return match
+    if application is None:
+        return None, None, None
+    ai_match = AIMatch.objects.filter(investor=investor_profile, application=application).first()
+    return application, result, ai_match
 
 
-def get_investor_hero_result(investor_profile):
-    rows = investor_profile.ai_matches.select_related('application').all()
-    _, result = _best_by_band(
-        (row, evaluate_venture_match(row.application, investor_profile)) for row in rows
+def get_founder_hero(application):
+    """Reverse digest: same discovery rule, investors as candidates."""
+    from .models import AIMatch, InvestorApplication
+
+    candidates = InvestorApplication.objects.discoverable().exclude(review_status='DENIED')
+    investor_profile, result = _pick_hero(
+        (inv, evaluate_venture_match(application, inv)) for inv in candidates
     )
-    return result
-
-
-def get_founder_hero_match(application):
-    rows = application.ai_matches.select_related('investor').all()
-    match, _ = _best_by_band(
-        (row, evaluate_venture_match(application, row.investor)) for row in rows
-    )
-    return match
+    if investor_profile is None:
+        return None, None, None
+    ai_match = AIMatch.objects.filter(investor=investor_profile, application=application).first()
+    return investor_profile, result, ai_match
 
 
 def build_investor_digest_card(investor_profile):
     """None if there's no eligible cached match to lead the digest with this week."""
-    ai_match = get_investor_hero_match(investor_profile)
-    if ai_match is None:
+    application, result, ai_match = get_investor_hero(investor_profile)
+    if application is None:
         return None
-    application = ai_match.application
-    result = evaluate_venture_match(application, investor_profile)
     card = {
         # The band, not a percentage. A "43% fit" invites the reader to
         # treat it as a probability, and the evidence behind it - a sector
@@ -141,11 +164,9 @@ def build_founder_digest_card(application):
     platform. Founder Premium's equivalent perk is the monthly highlight
     boost (see Application.is_highlighted) instead.
     """
-    ai_match = get_founder_hero_match(application)
-    if ai_match is None:
+    investor_profile, result, ai_match = get_founder_hero(application)
+    if investor_profile is None:
         return None
-    investor_profile = ai_match.investor
-    result = evaluate_venture_match(application, investor_profile)
     return {
         'band': result.band.label,
         'investment_focus_excerpt': (investor_profile.investment_focus or '')[:80],
