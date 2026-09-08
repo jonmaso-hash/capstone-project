@@ -355,6 +355,34 @@ def get_uncontacted_high_matches(investor_profile):
     )
 
 
+def has_published_elevator_pitch(profile, role):
+    """
+    Does this founder/seller have a live clip on Explore?
+
+    Deliberately reads ProfileVideo rather than Application.pitch_video.
+    They are different things and the model docstring already says so:
+    an Elevator Pitch is the <=30s clip powering the anonymous Explore
+    feed, while pitch_video is the 1-3 minute video on the profile and in
+    the authenticated Pitch Videos section.
+
+    The onboarding checklist used to treat them as one item -- "Upload a
+    pitch deck or pitch video", satisfied by pitch_video. A founder could
+    tick it, believe they were discoverable on Explore, and Explore would
+    stay empty, because nothing in the funnel ever asked for the thing
+    Explore actually reads. On the audit fixture that showed up as zero
+    ProfileVideo rows of any kind: not a filtering bug, no supply.
+    """
+    from matchmaking.models import ProfileVideo
+
+    if profile is None:
+        return False
+    return ProfileVideo.objects.filter(
+        **{role: profile},
+        kind=ProfileVideo.KIND_ELEVATOR_PITCH,
+        status=ProfileVideo.STATUS_PUBLISHED,
+    ).exists()
+
+
 def compute_founder_journey_stage(user):
     """
     Computes the founder's onboarding/engagement stage for the guided Zelda
@@ -380,7 +408,7 @@ def compute_founder_journey_stage(user):
             'headline': 'Make your profile stand out — submit a pitch deck or pitch video.',
             'checklist': [
                 {'label': 'Create your founder profile', 'done': True},
-                {'label': 'Upload a pitch deck or pitch video', 'done': False},
+                {'label': 'Upload a pitch deck or a 1–3 min pitch video', 'done': False},
             ],
         }
 
@@ -396,7 +424,9 @@ def compute_founder_journey_stage(user):
         'headline': "Your profile is complete — an investor will reach out if your business matches their focus.",
         'checklist': [
             {'label': 'Create your founder profile', 'done': True},
-            {'label': 'Upload a pitch deck or pitch video', 'done': True},
+            {'label': 'Upload a pitch deck or a 1–3 min pitch video', 'done': True},
+            {'label': 'Post a 30-second elevator pitch to Explore',
+             'done': has_published_elevator_pitch(application, 'founder')},
             {'label': 'Publish a blog post to boost visibility', 'done': has_blog},
             {'label': 'Post a job to show you\'re growing', 'done': has_job},
             {'label': 'Connect with other businesses', 'done': has_follow},
@@ -517,6 +547,8 @@ def compute_seller_journey_stage(user):
         'checklist': [
             {'label': 'Create your business listing', 'done': True},
             {'label': 'Upload a CIM document', 'done': True},
+            {'label': 'Post a 30-second elevator pitch to Explore',
+             'done': has_published_elevator_pitch(seller_profile, 'seller')},
             {'label': 'Get a Zelda valuation to price your asking price with confidence', 'done': has_zelda_doc},
             {'label': 'Connect with other businesses', 'done': has_follow},
             {'label': 'Verify your business email', 'done': seller_profile.is_verified},
