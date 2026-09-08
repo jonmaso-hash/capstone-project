@@ -35,10 +35,9 @@ from matchmaking.models import founder_description_meets_word_count
 from matchmaking.models import SellerApplication, BuyerApplication, AcquisitionConnection, DealFeedback, log_buyer_event, AcquisitionInterestEvent
 from matchmaking.models import PitchVideoComment
 from matchmaking.services.ai_engine import calculate_similarity, generate_profile_embedding, calculate_sparse_similarity
-from matchmaking.utils import calculate_rule_based_score, get_blended_match, clean_financial_input, passes_hard_filters
+from matchmaking.utils import clean_financial_input, passes_hard_filters
 from matchmaking.match_components import evaluate_deal_match, evaluate_venture_match
 from matchmaking.match_score import Band
-from matchmaking.utils import calculate_deal_rule_based_score, get_deal_blended_match
 from .forms import DataRoomDocumentForm
 
 # Zelda AI alignment — import DiligenceEngine for vector scoring in memo views

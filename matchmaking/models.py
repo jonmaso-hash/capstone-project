@@ -426,9 +426,20 @@ class InvestorApplication(models.Model):
     # blank, since not every investor fills in the optional thesis summary.
     thesis_vector = models.JSONField(blank=True, null=True, help_text="Embedding of investment_thesis_summary (or investment_focus if blank).")
     # Asymmetric weights an investor sets themselves — "if my profile
-    # emphasizes X, weigh X higher." Not normalized to sum to 1 in the DB;
-    # get_weighted_chunk_score normalizes at scoring time so a partially
-    # filled-in set of weights still behaves sanely.
+    # emphasizes X, weigh X higher." Not normalized to sum to 1 in the DB.
+    #
+    # NOTHING CONSUMES THESE. The Match Score contract's semantic component
+    # (matchmaking/match_components.py::semantic_signal) compares whole-
+    # profile vectors and never reads the chunk vectors above or these
+    # weights, so an investor who sets them changes nothing. The only
+    # reader, get_weighted_chunk_score, was deleted with the legacy blends
+    # it served.
+    #
+    # The fields and their form section are kept deliberately, so the
+    # inconsistency stays visible rather than being resolved by default:
+    # either chunk-level preferences get wired into the contract, or the
+    # fields and the "Advanced matching preferences" section come out.
+    # Both are product decisions and neither belongs in a cleanup PR.
     weight_problem_solution = models.FloatField(default=0.334, help_text="How much to weigh problem/solution fit (0-1).")
     weight_capital_plan = models.FloatField(default=0.333, help_text="How much to weigh capital-plan/use-of-funds fit (0-1).")
     weight_market_context = models.FloatField(default=0.333, help_text="How much to weigh sector/stage/geography fit (0-1).")
