@@ -280,6 +280,31 @@ def founder_required(view_func):
 # HELPER DATA GENERATOR
 # ==========================================
 
+def public_profile_link(request, username):
+    """
+    Where a "view this company" link should point for THIS viewer.
+
+    Profile pages are @login_required. An anonymous visitor clicking one
+    used to land on a bare login form with no indication of what was
+    behind it or why an account was worth creating -- the cold-contact
+    audit found this on the bulletin board and on search results, on the
+    single click a browsing stranger is most likely to make.
+
+    Sending them to signup with the profile as `next` means they land on
+    the company that interested them the moment the account exists. The
+    interest is doing the converting, rather than a login form
+    interrupting it.
+
+    This was already the behaviour on Explore, written as a closure inside
+    explore_feed. Lifted out here so every discovery surface shares one
+    rule instead of each deciding for itself.
+    """
+    path = reverse('accounts:profile', kwargs={'username': username})
+    if request.user.is_authenticated:
+        return path
+    return f"{reverse('accounts:signup')}?next={quote(path)}"
+
+
 def _signal_label(signal, matched='Match', partial='Adjacent'):
     """Plain-language label for one component's finding."""
     if signal is None or not signal.present:
@@ -1243,6 +1268,7 @@ def founder_bulletin_board(request):
         # It used to shift the displayed number by +/-10, which made a
         # personal opinion look like a property of the pairing.
         pitch.investor_vote = feedback_map.get(pitch.id) or 0
+        pitch.profile_url = public_profile_link(request, pitch.user.username)
         pitch.match = result
         pitch.band = result.band.label if result else None
         pitch.ai_insights = ai_insights_data
@@ -1337,6 +1363,7 @@ def acquisition_bulletin_board(request):
             deal_insights_data = _generate_deal_explanatory_insights(result, listing, buyer_profile)
 
         listing.buyer_vote = feedback_map.get(listing.id) or 0
+        listing.profile_url = public_profile_link(request, listing.user.username)
         listing.match = result
         listing.band = result.band.label if result else None
         listing.deal_insights = deal_insights_data
@@ -1841,8 +1868,15 @@ def global_search(request):
         query_summary = '; '.join(f"{k}={v}" for k, v in non_empty_filters.items())
         log_search_event(request, 'filter_search', query_summary)
 
+    # A search result used to offer exactly two actions: leave the platform
+    # for the founder's own website, or a dead `href="#"`. Nothing led to the
+    # company, so the whole intelligence layer was unreachable from search.
+    results = list(queryset)
+    for app in results:
+        app.profile_url = public_profile_link(request, app.user.username)
+
     return render(request, 'matchmaking/search_results.html', {
-        'results': queryset,
+        'results': results,
         'filters': filters,
     })
 
@@ -3351,15 +3385,6 @@ def explore_feed(request):
             request.user.interested_profile_videos.values_list('id', flat=True)
         )
 
-    # The profile page is @login_required. For an anonymous viewer the "View
-    # profile" CTA is the conversion point — send them to signup with the
-    # profile as `next` so they land there right after creating an account.
-    def _profile_link(username):
-        path = reverse('accounts:profile', kwargs={'username': username})
-        if request.user.is_authenticated:
-            return path
-        return f"{reverse('accounts:signup')}?next={quote(path)}"
-
     cards = []
     for v in videos:
         p = v.owner_profile
@@ -3378,7 +3403,7 @@ def explore_feed(request):
                 f"{getattr(p, 'industry', '')} · For sale".strip(' ·')
             ),
             'role_label': 'Founder' if is_founder else 'Business for sale',
-            'profile_url': _profile_link(p.user.username),
+            'profile_url': public_profile_link(request, p.user.username),
             'interested_count': v.interested_users.count(),
             'viewer_interested': v.id in interested_ids,
         })

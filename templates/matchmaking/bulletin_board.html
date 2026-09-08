@@ -548,7 +548,7 @@
                                 Seeking {% if pitch.raising_amount %}${{ pitch.raising_amount|floatformat:0|intcomma }}{% else %}--{% endif %}
                             </span>
                         </div>
-                        <a href="{% url 'accounts:profile' pitch.user.username %}" class="view-btn">
+                        <a href="{{ pitch.profile_url }}" class="view-btn">
                             View Profile →
                         </a>
                     </div>

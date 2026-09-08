@@ -281,7 +281,7 @@
                     <span class="asking-chip">
                         Asking {% if listing.asking_price %}${{ listing.asking_price|floatformat:0|intcomma }}{% else %}--{% endif %}
                     </span>
-                    <a href="{% url 'accounts:profile' listing.user.username %}" class="view-btn">
+                    <a href="{{ listing.profile_url }}" class="view-btn">
                         View Listing &rarr;
                     </a>
                 </div>
