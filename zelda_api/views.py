@@ -1183,9 +1183,9 @@ def _match_reasons(application, investor_profile):
     Plain comparisons over fields already on both profiles — no new AI
     call or scoring model, just surfacing why a match looks promising
     before an investor decides whether to spend an analysis on it. Reuses
-    the exact sector/stage/ticket-size checks matchmaking/utils.py already
-    uses for scoring (calculate_rule_based_score, passes_hard_filters),
-    rather than re-deriving separate logic that could drift out of sync.
+    the sector/stage/ticket-size helpers in matchmaking/utils.py
+    (_is_adjacent_stage, passes_hard_filters) rather than re-deriving
+    separate logic that could drift out of sync.
     """
     from matchmaking.utils import _is_adjacent_stage
 
