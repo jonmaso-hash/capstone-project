@@ -1560,7 +1560,7 @@ class JourneyStatusAPIView(APIView):
             compute_founder_journey_stage, compute_investor_journey_stage,
             compute_seller_journey_stage, compute_buyer_journey_stage,
         )
-        from matchmaking.journey_actions import ACTION_INFO, compute_profile_strength
+        from matchmaking.journey_actions import ACTION_INFO, URL_BY_LABEL, compute_profile_strength
 
         user = request.user
         is_investor = getattr(user, 'match_investor_profile', None) is not None
@@ -1569,42 +1569,19 @@ class JourneyStatusAPIView(APIView):
 
         if is_investor:
             stage = compute_investor_journey_stage(user)
-            url_by_label = {
-                'Create your investor profile': 'usersettings:edit_investor_profile',
-                'Complete every mandate field': 'usersettings:edit_investor_profile',
-                'Upload your portfolio for a similarity match': 'usersettings:edit_investor_profile',
-                'Verify your business email': 'accounts:business_verification',
-            }
+            url_by_label = URL_BY_LABEL['investor']
         elif is_seller:
             stage = compute_seller_journey_stage(user)
-            url_by_label = {
-                'Create your business listing': 'usersettings:edit_seller_profile',
-                'Upload a CIM document': 'usersettings:edit_seller_profile',
-                'Get a Zelda valuation to price your asking price with confidence': 'zelda_api:valuation_request',
-                'Connect with other businesses': 'matchmaking:acquisition_bulletin_board',
-                'Verify your business email': 'accounts:business_verification',
-            }
+            url_by_label = URL_BY_LABEL['seller']
         elif is_buyer:
             stage = compute_buyer_journey_stage(user)
-            url_by_label = {
-                'Create your buyer profile': 'usersettings:edit_buyer_profile',
-                'Complete every mandate field': 'usersettings:edit_buyer_profile',
-                'Verify your business email': 'accounts:business_verification',
-            }
+            url_by_label = URL_BY_LABEL['buyer']
         else:
             # Founders, and users with no role picked yet, both land on the
             # founder track — matching the "(after sign up) -> create
             # profile" first step described for new signups.
             stage = compute_founder_journey_stage(user)
-            url_by_label = {
-                'Create your founder profile': 'usersettings:edit_founder_profile',
-                'Upload a pitch deck or pitch video': 'usersettings:edit_founder_profile',
-                'Publish a blog post to boost visibility': 'blog:blog_view',
-                "Post a job to show you're growing": 'jobs:create',
-                'Connect with other businesses': 'matchmaking:bulletin_board',
-                'Upload your business plan to Zelda for a competitiveness match': 'zelda_api:valuation_request',
-                'Verify your business email': 'accounts:business_verification',
-            }
+            url_by_label = URL_BY_LABEL['founder']
 
         next_action_url = None
         next_best_action = None
