@@ -82,12 +82,12 @@
 {% block scripts %}
 {{ block.super }}
 {% if show_celebration %}
-{# Celebrates reaching this page with a real profile — required-field
+{% comment %} Celebrates reaching this page with a real profile — required-field
    onboarding is done for any of the four roles by the time a user lands
    here. Previously gated on completion_percentage == 100, a metric that
    counts several optional fields (phone, website, current_revenue) and so
    essentially never reached 100 for someone who filled only what's
-   required. #}
+   required. {% endcomment %}
 <style>
     @keyframes zelda-celebrate {
         0%   { transform: scale(1); }

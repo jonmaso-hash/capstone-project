@@ -99,8 +99,8 @@
                     </div>
                 </div>
                 {% endif %}
-                {# No lock-related banner at all until industry/description/reason_for_sale/extra_info/geography
-                   are all filled in — see edit_founder_profile.html for the same rationale. #}
+                {% comment %} No lock-related banner at all until industry/description/reason_for_sale/extra_info/geography
+                   are all filled in — see edit_founder_profile.html for the same rationale. {% endcomment %}
 
                 {% if form.non_field_errors %}
                 <div class="alert alert-danger">{{ form.non_field_errors }}</div>

@@ -101,11 +101,11 @@
                                 </div>
                             </div>
 
-                            {# The company itself — the one destination a search
+                            {% comment %} The company itself — the one destination a search
                                result can always offer. For a signed-out viewer
                                public_profile_link sends them to signup with this
                                profile as `next`, so they land here rather than on
-                               a bare login form. #}
+                               a bare login form. {% endcomment %}
                             <div class="d-grid mt-3">
                                 <a href="{{ app.profile_url }}" class="btn btn-outline-dark btn-sm fw-medium py-2 rounded-2 shadow-sm d-flex align-items-center justify-content-center gap-2">
                                     <i class="bi bi-building"></i> View Company
