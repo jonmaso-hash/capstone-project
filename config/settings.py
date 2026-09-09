@@ -290,7 +290,12 @@ else:
     }
 
 # --- CORE PLATFORM SECURITY & AUTH ROUTING ---
-LOGIN_REDIRECT_URL = "accounts:profile_self"
+# LOGIN_REDIRECT_URL is set once, in the social-login section below
+# (accounts:post_login_router). It used to be assigned here too, as
+# accounts:profile_self, which never survived import — the later assignment
+# always won — while reading as though password login landed on your own
+# profile. It did, but because login_view hardcoded that redirect, not because
+# of this setting. Both are fixed in PR #27; the shadowed line is gone.
 LOGOUT_REDIRECT_URL = "accounts:login"
 LOGIN_URL = "accounts:login"
 

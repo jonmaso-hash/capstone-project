@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect  # Added redirect here
 from django.core.mail import send_mail
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from accounts.redirects import safe_destination
 from .forms import contactForm  # Added your form import back
 
 # Create your views here.
@@ -107,12 +108,22 @@ def thank_you_view(request):
     # with no profile at all shouldn't see a false "profile is live" toast.
     show_celebration = bool(application or investor_profile or seller_profile or buyer_profile)
 
+    # A visitor who arrived from a deep link (an Explore card, a shared
+    # profile, a notification) had their destination carried through signup and
+    # role onboarding — see accounts/redirects.py. It rides in as ?next= rather
+    # than skipping this page, so the onboarding milestone still happens and the
+    # original intent becomes a visible CTA instead of a silent redirect.
+    # Re-validated here: this is the point of use, and the query string is as
+    # untrusted as any other.
+    pending_destination = safe_destination(request.GET.get('next'), request)
+
     return render(request, 'pages/thank_you.html', {
         'applicant_name': applicant_name,
         'application': application,
         'dashboard_url': dashboard_url,
         'show_celebration': show_celebration,
         'next_step_text': next_step_text,
+        'pending_destination': pending_destination,
     })
 
 def contact_view(request):
