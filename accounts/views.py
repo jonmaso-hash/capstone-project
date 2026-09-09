@@ -16,6 +16,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from .redirects import remember_destination, requested_destination
+
 # Core Matchmaking Engine Models
 from matchmaking.services.ai_engine import calculate_zelda_advantage
 from matchmaking.utils import clean_financial_input
@@ -72,7 +74,12 @@ ROLE_PROFILE_URLS = {
 
 def signup_view(request):
     if request.user.is_authenticated:
-        return redirect("accounts:profile", username=request.user.username)
+        # Someone already signed in who followed a signup link — an Explore
+        # card opened in a second tab, a shared link. Send them where the link
+        # was pointing rather than to their own profile.
+        return redirect(requested_destination(request)
+                        or reverse("accounts:profile",
+                                   kwargs={"username": request.user.username}))
 
     # Referral loop (growth app) — a link like /accounts/signup/?ref=CODE
     # stashes the code in session here at GET-time, so it survives through
@@ -81,6 +88,13 @@ def signup_view(request):
     ref_code = request.GET.get('ref')
     if ref_code:
         request.session['pending_referral_code'] = ref_code
+
+    # Same lifecycle for the destination the visitor was heading to before
+    # they were asked to authenticate. Signup hands off to a role form which
+    # redirects again, so a hidden field alone cannot carry it — it has to
+    # survive to whichever edit_*_profile view finally creates the profile,
+    # exactly like the referral code above. Validated here, at the door.
+    remember_destination(request, requested_destination(request))
 
     if request.method == "POST":
         role = request.POST.get('role', '')
@@ -101,7 +115,11 @@ def signup_view(request):
     else:
         form = UserCreationForm()
         log_page_event(request, 'signup_started')
-    return render(request, "accounts/signup.html", {"form": form})
+    # Already validated — never reflect a raw ?next= back into the page.
+    return render(request, "accounts/signup.html", {
+        "form": form,
+        "next_destination": requested_destination(request),
+    })
 
 
 @login_required
@@ -151,17 +169,26 @@ def choose_role(request):
 
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect("accounts:profile", username=request.user.username)
+        return redirect(requested_destination(request)
+                        or reverse("accounts:profile",
+                                   kwargs={"username": request.user.username}))
 
     if request.method == "POST":
         form = AuthenticationForm(data=request.POST)
         if form.is_valid():
             user = form.get_user()
             auth_login(request, user)
-            return redirect("accounts:profile", username=request.user.username)
+            # A validated destination wins; otherwise defer to the shared
+            # router rather than this view's old hardcoded "your own profile",
+            # so password and social login converge on one routing contract.
+            return redirect(requested_destination(request)
+                            or 'accounts:post_login_router')
     else:
         form = AuthenticationForm()
-    return render(request, "accounts/login.html", {"form": form})
+    return render(request, "accounts/login.html", {
+        "form": form,
+        "next_destination": requested_destination(request),
+    })
 
 
 # =====================================================================

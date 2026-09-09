@@ -21,6 +21,13 @@
                 <form method="post">
                     {% csrf_token %}
                     <input type="hidden" name="role" id="selectedRole" value="">
+                    {% comment %}
+                    Belt-and-braces with the session copy stashed at GET: the
+                    session is what actually survives the role-form hop, but a
+                    direct POST still carries its destination here. Validated in
+                    the view; never a raw ?next=.
+                    {% endcomment %}
+                    {% if next_destination %}<input type="hidden" name="next" value="{{ next_destination }}">{% endif %}
                     {{ form|crispy }}
                     <button type="submit" id="roleSubmitBtn" class="btn btn-primary w-100 rounded-pill fw-bold py-2 mt-2" disabled>
                         Create Account

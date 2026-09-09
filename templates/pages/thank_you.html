@@ -37,10 +37,29 @@
             <!-- Buttons -->
             <div class="d-grid gap-2">
 
+                {% comment %}
+                Where the visitor was originally headed before they were asked
+                to sign up — carried through signup and role onboarding, and
+                already validated as an internal path in pages/views.py. It
+                leads here because it is the thing they actually came for; the
+                profile they just created is one tap below.
+                {% endcomment %}
+                {% if pending_destination %}
+                <a href="{{ pending_destination }}"
+                   class="btn btn-primary rounded-pill">
+                    Continue where you left off
+                </a>
+
+                <a href="{% url 'accounts:profile_self' %}"
+                   class="btn btn-outline-secondary rounded-pill">
+                    View Your Profile
+                </a>
+                {% else %}
                 <a href="{% url 'accounts:profile_self' %}"
                    class="btn btn-primary rounded-pill">
                     View Your Profile
                 </a>
+                {% endif %}
 
                 <a href="{% url dashboard_url %}" class="btn btn-outline-secondary rounded-pill">
                     Back to Dashboard

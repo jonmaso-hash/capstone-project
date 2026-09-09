@@ -1,4 +1,5 @@
 import json
+from urllib.parse import quote
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -8,13 +9,38 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from accounts.forms import ApplicationForm, InvestorForm, SellerForm, BuyerForm
+from accounts.redirects import pop_destination
 from growth.services import consume_referral_if_pending
 from matchmaking.models import Application, SellerApplication, ProfileVideo
 from .models import UserSettings
+
+
+def _onboarding_complete_url(request):
+    """
+    Where a just-created role profile goes next.
+
+    Always the thank-you page — it is a real onboarding milestone (celebration
+    plus a concrete next step read from actual data), so a visitor who arrived
+    from a deep link should not silently skip it. Instead the destination they
+    were originally heading to rides along as `?next=`, and thank_you_view
+    offers it as the primary CTA.
+
+    Popped from the session here, beside consume_referral_if_pending, because
+    this is the end of the signup lifecycle that stashed it. Handing it on in
+    the URL rather than leaving it in the session means the thank-you page
+    survives a refresh with its CTA intact, and re-validates the destination at
+    the point of use.
+    """
+    url = reverse("pages:thank_you")
+    destination = pop_destination(request)
+    if destination:
+        url = f"{url}?next={quote(destination)}"
+    return url
 
 
 def _get_role_profile(user):
@@ -225,7 +251,7 @@ def edit_founder_profile(request):
 
             if is_new_submission:
                 consume_referral_if_pending(request, app)
-                return redirect("pages:thank_you")
+                return redirect(_onboarding_complete_url(request))
 
             messages.success(request, "Founder profile updated.")
             return redirect("accounts:profile", username=request.user.username)
@@ -258,7 +284,7 @@ def edit_investor_profile(request):
 
             if is_new_submission:
                 consume_referral_if_pending(request, app)
-                return redirect("pages:thank_you")
+                return redirect(_onboarding_complete_url(request))
 
             messages.success(request, "Investment mandate updated successfully.")
             return redirect("accounts:profile", username=request.user.username)
@@ -294,7 +320,7 @@ def edit_seller_profile(request):
 
             if is_new_submission:
                 consume_referral_if_pending(request, app)
-                return redirect("pages:thank_you")
+                return redirect(_onboarding_complete_url(request))
 
             messages.success(request, "Business listing updated.")
             return redirect("accounts:profile", username=request.user.username)
@@ -323,7 +349,7 @@ def edit_buyer_profile(request):
 
             if is_new_submission:
                 consume_referral_if_pending(request, app)
-                return redirect("pages:thank_you")
+                return redirect(_onboarding_complete_url(request))
 
             messages.success(request, "Acquisition mandate updated successfully.")
             return redirect("accounts:profile", username=request.user.username)
