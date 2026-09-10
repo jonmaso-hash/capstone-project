@@ -12,5 +12,7 @@ urlpatterns = [
     path('bulletin_board/', views.bulletin_board, name='bulletin_board'),
     path('thank-you/', views.thank_you_view, name='thank_you'),
     path('waitlist/', views.waitlist_join, name='waitlist'),
+    path('privacy/', views.privacy, name='privacy'),
+    path('terms/', views.terms, name='terms'),
 
 ]
