@@ -153,9 +153,22 @@ class InvestorForm(forms.ModelForm):
         widgets = {
             "investment_focus": forms.Textarea(attrs={"rows": 4}),
             "investment_thesis_summary": forms.Textarea(attrs={"rows": 4}),
-            "weight_problem_solution": forms.NumberInput(attrs={"step": "0.05", "min": "0", "max": "1"}),
-            "weight_capital_plan": forms.NumberInput(attrs={"step": "0.05", "min": "0", "max": "1"}),
-            "weight_market_context": forms.NumberInput(attrs={"step": "0.05", "min": "0", "max": "1"}),
+            # step="any", not "0.05". The model defaults are 0.334/0.333/0.333 —
+            # equal thirds, i.e. "no stated preference" — and no three multiples
+            # of 0.05 are both equal and sum to 1.00. A 0.05 grid therefore
+            # cannot express the default at all, so the form rendered values its
+            # own widget rejected: the browser refused to submit, and because
+            # these three inputs sit inside the collapsed "Advanced matching
+            # preferences" section it could not even show which control was
+            # invalid. New investors saw "Save & See My Matches" do nothing.
+            #
+            # Relaxing the constraint rather than moving the defaults keeps the
+            # equal weighting honest. Snapping them to 0.35/0.35/0.30 would have
+            # made "market context matters less" the product's stated default —
+            # a preference nobody chose, in fields nothing currently reads.
+            "weight_problem_solution": forms.NumberInput(attrs={"step": "any", "min": "0", "max": "1"}),
+            "weight_capital_plan": forms.NumberInput(attrs={"step": "any", "min": "0", "max": "1"}),
+            "weight_market_context": forms.NumberInput(attrs={"step": "any", "min": "0", "max": "1"}),
         }
 
     def __init__(self, *args, **kwargs):
