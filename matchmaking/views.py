@@ -750,10 +750,19 @@ def founder_dashboard(request):
         except Exception as e:
             logger.warning(f"Failed lazy-generation embedding for founder application {application.id}: {str(e)}")
 
+    # Only connections this founder is the responder for. Without the
+    # exclude, a founder's own outbound request came back to them as inbound
+    # interest with an Accept button that could only ever 403 -- silently,
+    # since the handler surfaces nothing on failure. connection_action_view
+    # makes the investor the responder when initiated_by == 'FOUNDER', so
+    # those belong on the investor's queue, not this one.
+    #
+    # exclude() rather than filter(initiated_by='INVESTOR') so STAFF manual
+    # intros stay visible: the founder is their responder too.
     pending_requests = Connection.objects.filter(
         founder=application,
         status__iexact='pending'
-    ).select_related('investor__user')
+    ).exclude(initiated_by='FOUNDER').select_related('investor__user')
 
     # Includes FUNDED_PENDING so the founder still sees the deal (with an
     # "awaiting investor confirmation" state instead of the Mark as Funded
@@ -843,10 +852,14 @@ def seller_dashboard(request):
         except Exception as e:
             logger.warning(f"Failed lazy-generation embedding for seller listing {seller_profile.id}: {str(e)}")
 
+    # Same rule as the founder dashboard: only what this seller is the
+    # responder for. acquisition_connection_action_view makes the buyer the
+    # responder when initiated_by == 'SELLER'. exclude() keeps STAFF manual
+    # intros, whose responder is the seller.
     pending_requests = AcquisitionConnection.objects.filter(
         seller=seller_profile,
         status__iexact='pending'
-    ).select_related('buyer__user')
+    ).exclude(initiated_by='SELLER').select_related('buyer__user')
 
     # Includes CLOSED_PENDING so the seller still sees the deal (with an
     # "awaiting buyer confirmation" state instead of the Mark as Closed
