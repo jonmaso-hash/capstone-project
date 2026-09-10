@@ -108,9 +108,9 @@
                     </div>
                 </div>
                 {% endif %}
-                {# No lock-related banner at all until sector/stage/description/reason_for_capital/extra_info/geography
+                {% comment %} No lock-related banner at all until sector/stage/description/reason_for_capital/extra_info/geography
                    are all filled in — the lock protects a real, complete profile from being gamed after the fact;
-                   it isn't relevant yet to someone still filling the form out for the first time. #}
+                   it isn't relevant yet to someone still filling the form out for the first time. {% endcomment %}
 
                 {% if form.non_field_errors %}
                 <div class="alert alert-danger">{{ form.non_field_errors }}</div>
