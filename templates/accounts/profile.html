@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load deal_display %}
 {% load humanize %}
 
 {% block title %}Dashboard | Interlink Foundry{% endblock title %}
@@ -582,7 +583,7 @@
                             <div class="col-md-5">
                                 <div class="bg-warning-subtle p-4 rounded-4 border border-warning text-center mb-3">
                                     <small class="text-warning-emphasis text-uppercase fw-bold d-block mb-1">Asking Price</small>
-                                    <h3 class="fw-bold text-warning-emphasis mb-0">${{ seller_application.asking_price|floatformat:0|intcomma }}</h3>
+                                    <h3 class="fw-bold text-warning-emphasis mb-0">{{ seller_application.asking_price|asking_price_display }}</h3>
                                 </div>
                                 <div class="row g-2">
                                     <div class="col-6">

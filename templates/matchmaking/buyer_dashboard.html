@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load deal_display %}
 {% load humanize %}
 
 {% block title %}Buyer Matchmaking Dashboard | Interlink Foundry{% endblock title %}
@@ -207,7 +208,7 @@
                                             <i class="bi bi-tag-fill me-1"></i>{{ match.seller.industry }}
                                         </span>
                                         <span class="badge bg-warning-subtle text-warning-emphasis rounded-2 px-2 py-1 small">
-                                            <i class="bi bi-cash-coin me-1"></i>Asking: ${{ match.seller.asking_price|floatformat:0|intcomma }}
+                                            <i class="bi bi-cash-coin me-1"></i>Asking: {{ match.seller.asking_price|asking_price_display }}
                                         </span>
                                         {% if match.seller.geography %}
                                             <span class="text-muted small ms-1">
