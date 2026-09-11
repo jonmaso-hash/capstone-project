@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load deal_display %}
 
 {% block title %}Pitch Videos | Interlink Foundry{% endblock title %}
 
@@ -141,7 +142,7 @@
                         <a href="{% url 'accounts:profile' s.user.username %}" class="text-dark text-decoration-none">{{ s.company_name }}</a>
                         {% if s.is_highlighted %}<span class="badge bg-warning text-dark ms-1"><i class="bi bi-stars"></i> Highlighted</span>{% endif %}
                     </h6>
-                    <div class="small text-secondary mb-2">{{ s.industry }} &middot; Asking ${{ s.asking_price|floatformat:0 }}</div>
+                    <div class="small text-secondary mb-2">{{ s.industry }} &middot; Asking {{ s.asking_price|asking_price_display }}</div>
                     <p class="small text-secondary mb-3">{{ s.description|truncatewords:22 }}</p>
 
                     <div class="d-flex flex-wrap align-items-center gap-1 mb-2">

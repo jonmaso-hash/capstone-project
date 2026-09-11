@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load deal_display %}
 {% load humanize %}
 
 {% block title %}Business Marketplace | Interlink Foundry{% endblock %}
@@ -279,7 +280,7 @@
 
                 <div class="d-flex justify-content-between align-items-center mt-2">
                     <span class="asking-chip">
-                        Asking {% if listing.asking_price %}${{ listing.asking_price|floatformat:0|intcomma }}{% else %}--{% endif %}
+                        Asking {{ listing.asking_price|asking_price_display }}
                     </span>
                     <a href="{{ listing.profile_url }}" class="view-btn">
                         View Listing &rarr;
