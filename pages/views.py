@@ -54,6 +54,30 @@ def services(request):
 def about(request):
     return render(request, 'pages/about.html')
 
+
+# Both legal pages are deliberately unauthenticated: a visitor has to be able
+# to read them before they sign up or pay, and they are linked from the footer
+# on every page including the signup form. LEGAL_PAGES_ARE_DRAFT flags them as
+# awaiting review; set it False once reviewed language is in place.
+LEGAL_PAGES_ARE_DRAFT = True
+LEGAL_LAST_UPDATED = 'September 2026'
+
+
+def privacy(request):
+    return render(request, 'pages/privacy.html', {
+        'page_title': 'Privacy Policy',
+        'last_updated': LEGAL_LAST_UPDATED,
+        'draft_notice': LEGAL_PAGES_ARE_DRAFT,
+    })
+
+
+def terms(request):
+    return render(request, 'pages/terms.html', {
+        'page_title': 'Terms of Service',
+        'last_updated': LEGAL_LAST_UPDATED,
+        'draft_notice': LEGAL_PAGES_ARE_DRAFT,
+    })
+
 def bulletin_board(request):
     return render(request, 'pages/bulletin_board.html')
 
