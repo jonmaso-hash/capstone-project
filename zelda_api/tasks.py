@@ -264,11 +264,13 @@ def notify_document_processed(document_id: int):
         user = document.uploaded_by
         
         logger.info(f"Document {document.filename} processed for user {user.username}")
-        
-        # TODO: Send email notification
-        # TODO: Send webhook notification
-        # TODO: Update user dashboard
-        
+
+        # A durable "your analysis is ready" the user can come back to, since
+        # the report page only tells them while they are on it. Email and
+        # webhook delivery are deliberately out of scope.
+        from .terminal_notifications import notify_terminal_state
+        notify_terminal_state(document, succeeded=True)
+
         return {'status': 'notified', 'user_id': user.id}
     
     except Exception as exc:
