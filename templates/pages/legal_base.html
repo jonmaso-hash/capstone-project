@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% comment %}
+Shared shell for the two legal pages so they stay visually and structurally
+identical. Both are reachable without authentication on purpose: a visitor has
+to be able to read them before they sign up or pay, which is the whole point of
+linking them in the footer.
+{% endcomment %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            {% if draft_notice %}
+            <div class="alert alert-warning border-0 rounded-4 small mb-4" role="note">
+                <strong>Draft pending legal review.</strong> This text was prepared as a
+                starting point and has not been reviewed by a lawyer. It should be
+                replaced with reviewed language before launch.
+            </div>
+            {% endif %}
+
+            <h1 class="fw-bold mb-1">{{ page_title }}</h1>
+            <p class="text-muted small mb-5">Last updated {{ last_updated }}</p>
+
+            <div class="legal-body">
+                {% block legal_body %}{% endblock %}
+            </div>
+
+            <hr class="my-5">
+            <p class="text-muted small mb-0">
+                Questions about this page? <a href="{% url 'pages:contact' %}">Contact us</a>.
+            </p>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .legal-body h2 { font-size: 1.15rem; font-weight: 700; margin-top: 2.25rem; margin-bottom: .75rem; }
+    .legal-body p, .legal-body li { color: #343a40; line-height: 1.7; }
+    .legal-body ul { margin-bottom: 1.25rem; }
+</style>
+{% endblock %}
