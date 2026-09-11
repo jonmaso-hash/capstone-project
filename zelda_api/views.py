@@ -7,7 +7,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.urls import reverse, NoReverseMatch
 from django.contrib.auth import get_user_model
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_POST
 from django.db.models import Q, Count
 from django.shortcuts import get_object_or_404, redirect, render
@@ -86,12 +86,29 @@ class DiligenceEngine:
 # ── Django Template Render Views ──────────────────────────────────────────────
 
 @login_required
+@user_passes_test(lambda u: u.is_staff)
 def zelda_intelligence_dashboard(request):
     """
-    Renders the frontend HTML dashboard for monitoring the data ingestion pipelines.
+    Internal monitoring surface for the data ingestion pipelines. Staff only.
+
+    Not a product page: the template is standalone HTML with its own <head>
+    rather than an extension of base.html, nothing in the site links to it, and
+    its two document panels never populate because no listing endpoint exists
+    (its only fetches take a document id typed by hand). It was reachable by any
+    authenticated user purely because the decorator was a bare @login_required.
+
+    It also used to pass DocumentSource.objects.all()[:10] into the template --
+    every user's documents, unscoped. The template never rendered it, so nothing
+    leaked, but it sat one {% for %} away from showing document filenames and
+    source entities across tenants on a platform built around private company
+    information. Removed rather than scoped to request.user: a per-user document
+    list is not what this page is, and the right fix for a pipeline monitor is
+    to restrict who reaches it.
+
+    Per-document data still comes from DocumentStatusView and DocumentMemoView,
+    which do their own ownership checks.
     """
-    documents = DocumentSource.objects.all().order_by('-created_at')[:10]
-    return render(request, 'dashboard/zelda_pipeline_dashboard.html', {'documents': documents})
+    return render(request, 'dashboard/zelda_pipeline_dashboard.html')
 
 
 @login_required
