@@ -18,6 +18,8 @@ from .models import Subscription
 
 logger = logging.getLogger(__name__)
 
+from .pricing import subscription_prices
+
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
@@ -70,6 +72,7 @@ def billing_page(request):
 
     firm_membership = getattr(request.user, 'firm_membership', None)
     return render(request, 'billing/billing.html', {
+        **subscription_prices(),
         'subscription': subscription,
         'plan': plan,
         'stripe_configured': bool(settings.STRIPE_SECRET_KEY and price_id),

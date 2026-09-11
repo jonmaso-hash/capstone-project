@@ -3,6 +3,7 @@ from django.core.mail import send_mail
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from accounts.redirects import safe_destination
+from billing.pricing import subscription_prices
 from .forms import contactForm  # Added your form import back
 
 # Create your views here.
@@ -21,6 +22,7 @@ def home_view(request):
     featured_sellers = SellerApplication.objects.discoverable().filter(is_staff_featured=True).exclude(review_status='DENIED')[:6]
 
     return render(request, 'pages/home.html', {
+        **subscription_prices(),
         'featured_founders': featured_founders,
         'featured_sellers': featured_sellers,
         'daily_intro_limit': DAILY_INTRO_REQUEST_LIMIT,
