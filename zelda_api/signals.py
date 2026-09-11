@@ -34,10 +34,17 @@ def handle_document_error(sender, instance, created, update_fields, **kwargs):
     if not created and instance.status == 'error':
         logger.error(f"Document {instance.filename} status is ERROR")
         logger.error(f"Error message: {instance.error_message}")
-        
-        # TODO: Send error alert to user
-        # TODO: Send to monitoring/logging service
-        # TODO: Implement retry logic
+
+        # The user is told on the report page while they are watching it, but
+        # nothing durable existed for someone who had already closed the tab.
+        # This is that durable signal.
+        #
+        # No retry here: the pipeline tasks in tasks.py already retry with
+        # exponential backoff and only reach status='error' once retries are
+        # exhausted, so retrying from a post_save would re-run work that has
+        # already been given up on.
+        from .terminal_notifications import notify_terminal_state
+        notify_terminal_state(instance, succeeded=False)
 
 
 def ready():
