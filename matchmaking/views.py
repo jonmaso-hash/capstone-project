@@ -2717,6 +2717,30 @@ def data_room_document_serve(request, document_id):
 
 
 @login_required
+def cim_document_serve(request, seller_id):
+    """
+    The only way the product hands out a seller's CIM.
+
+    Mirrors data_room_document_serve: authorization is checked here, in the
+    application, and the bytes are streamed back -- the storage URL is never
+    given to the browser. That keeps the document private whether media lives on
+    local disk in development or in S3 in production, instead of relying on
+    storage configuration to enforce who may read it.
+
+    Unauthorized and missing both return 404, so the response does not reveal
+    whether a CIM exists.
+    """
+    from .models import SellerApplication, can_download_cim
+
+    seller = get_object_or_404(SellerApplication, id=seller_id)
+    if not can_download_cim(request.user, seller) or not seller.cim_document:
+        raise Http404("Not found.")
+
+    filename = seller.cim_document.name.rsplit('/', 1)[-1]
+    return FileResponse(seller.cim_document.open('rb'), as_attachment=True, filename=filename)
+
+
+@login_required
 @require_POST
 def record_profile_duration(request, username):
     """

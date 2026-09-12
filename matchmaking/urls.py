@@ -46,6 +46,7 @@ urlpatterns = [
     path('acquisitions/action/', views.acquisition_connection_action_view, name='acquisition_connection_action'),
     path('acquisitions/vote/record/', views.record_deal_vote, name='record_deal_vote'),
     path('acquisitions/seller/interest-analytics/', views.seller_interest_analytics, name='seller_interest_analytics'),
+    path('acquisitions/cim/<int:seller_id>/', views.cim_document_serve, name='cim_document_serve'),
 
 
     # =====================================================================

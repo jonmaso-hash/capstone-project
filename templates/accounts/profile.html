@@ -599,10 +599,19 @@
                                         </div>
                                     </div>
                                 </div>
-                                {% if seller_application.cim_document %}
-                                <a href="{{ seller_application.cim_document.url }}" class="btn btn-outline-warning btn-sm w-100 mt-3" target="_blank">
+                                {% comment %}
+                                The CIM is confidential. It is downloaded through matchmaking:cim_document_serve,
+                                which checks authorization -- never through cim_document.url, which with local
+                                storage is an unauthenticated, guessable /media/ path.
+                                {% endcomment %}
+                                {% if cim_downloadable %}
+                                <a href="{% url 'matchmaking:cim_document_serve' seller_application.id %}" class="btn btn-outline-warning btn-sm w-100 mt-3">
                                     <i class="bi bi-file-earmark-text me-1"></i> Download CIM
                                 </a>
+                                {% elif seller_application.cim_document %}
+                                <p class="text-muted small text-center mt-3 mb-0">
+                                    <i class="bi bi-lock me-1"></i> CIM available to buyers after an accepted introduction.
+                                </p>
                                 {% endif %}
                             </div>
                         </div>
