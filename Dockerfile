@@ -10,6 +10,17 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
+# CPU-only PyTorch, installed before the rest of requirements.txt.
+# torch from the default index on Linux pulls NVIDIA CUDA packages -- several
+# gigabytes this image can never use, since production runs on CPU instances.
+# The version is read from requirements.txt so the two cannot drift, and
+# 2.12.0+cpu satisfies the torch==2.12.0 pin (PEP 440 ignores the +cpu local
+# label), so the requirements install below leaves it in place.
+RUN TORCH_VERSION="$(grep -iE '^torch==' requirements.txt | head -1 | cut -d= -f3 | tr -d '[:space:]')" \
+    && test -n "$TORCH_VERSION" \
+    && pip install --no-cache-dir --user \
+        --index-url https://download.pytorch.org/whl/cpu \
+        "torch==${TORCH_VERSION}"
 RUN pip install --no-cache-dir --user -r requirements.txt
 
 # ---- Final stage: runtime image ----
