@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %}Membership | Interlink Foundry{% endblock title %}
 
@@ -55,7 +56,7 @@
             {% elif plan == 'FOUNDER_PREMIUM' %}
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">
-                    <h5 class="fw-bold mb-1">Founder Premium — $99/mo</h5>
+                    <h5 class="fw-bold mb-1">Founder Premium — ${{ founder_price }}/mo</h5>
                     <p class="text-muted small mb-3">Get discovered faster, raise with AI-backed diligence, and manage every investor relationship in one place.</p>
 
                     <h6 class="text-uppercase small fw-bold text-success mb-2 mt-4">Get discovered faster</h6>
@@ -121,7 +122,7 @@
             {% elif plan == 'INVESTOR_PREMIUM' %}
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">
-                    <h5 class="fw-bold mb-1">Investor Premium — $250/mo</h5>
+                    <h5 class="fw-bold mb-1">Investor Premium — ${{ investor_price }}/mo</h5>
                     <p class="text-muted small mb-3">See the best-fit founders first, move faster on outreach, and run AI diligence at scale.</p>
 
                     <h6 class="text-uppercase small fw-bold text-primary mb-2 mt-4">See the best opportunities first</h6>
@@ -184,7 +185,7 @@
 
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">
-                    <h6 class="fw-bold mb-1">Investing as a firm? — $5,000/mo</h6>
+                    <h6 class="fw-bold mb-1">Investing as a firm? — ${{ firm_price|floatformat:0|intcomma }}/mo</h6>
                     {% if firm_membership %}
                         <p class="text-muted small mb-0">
                             You're part of <strong>{{ firm_membership.firm.name }}</strong>
@@ -225,7 +226,7 @@
             {% elif plan == 'SELLER_PREMIUM' %}
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">
-                    <h5 class="fw-bold mb-1">Seller Premium — $99/mo</h5>
+                    <h5 class="fw-bold mb-1">Seller Premium — ${{ seller_price }}/mo</h5>
                     <p class="text-muted small mb-3">Get your listing in front of more acquirers, prep with AI diligence, and see exactly who's interested.</p>
 
                     <h6 class="text-uppercase small fw-bold mb-2 mt-4" style="color:#997404;">Get discovered faster</h6>
@@ -286,7 +287,7 @@
             {% elif plan == 'BUYER_PREMIUM' %}
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">
-                    <h5 class="fw-bold mb-1">Buyer Premium — $250/mo</h5>
+                    <h5 class="fw-bold mb-1">Buyer Premium — ${{ buyer_price }}/mo</h5>
                     <p class="text-muted small mb-3">Move faster on the deals you want, and run AI diligence at scale.</p>
 
                     <h6 class="text-uppercase small fw-bold text-info-emphasis mb-2 mt-4">Move faster</h6>
