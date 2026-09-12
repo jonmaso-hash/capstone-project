@@ -406,6 +406,10 @@ NEWS_API_KEY = env('NEWS_API_KEY')
 
 # --- STRIPE PAYMENT PROCESSING ---
 STRIPE_SECRET_KEY = env('STRIPE_SECRET_KEY')
+# DEBUG with a live-mode key refuses to start. Local dev must never be able to
+# make real Stripe charges. See config/stripe_guard.py.
+from config.stripe_guard import refuse_live_stripe_key_in_debug
+refuse_live_stripe_key_in_debug(DEBUG, STRIPE_SECRET_KEY)
 STRIPE_PUBLISHABLE_KEY = env('STRIPE_PUBLISHABLE_KEY')
 STRIPE_WEBHOOK_SECRET = env('STRIPE_WEBHOOK_SECRET')
 STRIPE_FOUNDER_PRICE_ID = env('STRIPE_FOUNDER_PRICE_ID')
