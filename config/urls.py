@@ -56,4 +56,7 @@ urlpatterns = [
     path('sharing/', include('sharing.urls', namespace='sharing')),
 ]
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Media is served in development only, and never private uploads -- those
+# leave the app through views that check authorization. See config/private_media.py.
+from config.private_media import media_urlpatterns
+urlpatterns += media_urlpatterns(settings.DEBUG, settings.MEDIA_URL, getattr(settings, 'MEDIA_ROOT', None))

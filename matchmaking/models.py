@@ -1229,6 +1229,35 @@ def can_view_acquisition_deal_workspace(request_user, acquisition_connection):
     return acquisition_connection.status in ('ACCEPTED', 'CLOSED_PENDING', 'CLOSED')
 
 
+def can_download_cim(request_user, seller_application):
+    """
+    Who may download a seller's confidential information memorandum.
+
+    The seller, staff, or a buyer whose AcquisitionConnection with this seller
+    has been accepted -- the acquisition-side mirror of the founder data room,
+    where a document is reachable only by an investor with an ACCEPTED
+    connection (can_view_data_room). The status set matches
+    can_view_acquisition_deal_workspace, so the CIM opens at the same moment the
+    deal workspace does.
+
+    Before this existed the profile page linked cim_document.url directly, which
+    any signed-in viewer could see and, with local storage, anyone at all could
+    fetch without logging in.
+    """
+    if not request_user or not request_user.is_authenticated:
+        return False
+    if request_user == seller_application.user or request_user.is_staff:
+        return True
+    buyer_profile = getattr(request_user, 'match_buyer_profile', None)
+    if not buyer_profile:
+        return False
+    return AcquisitionConnection.objects.filter(
+        seller=seller_application,
+        buyer=buyer_profile,
+        status__in=('ACCEPTED', 'CLOSED_PENDING', 'CLOSED'),
+    ).exists()
+
+
 def can_view_pitch_video(viewer_user, owner_profile):
     """
     Single authority for pitch-video visibility — used by BOTH the
