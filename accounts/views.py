@@ -352,6 +352,14 @@ def profile(request, username=None, pk=None):
             'transactions': [{'counterparty': c.seller.company_name, 'date': c.updated_at} for c in transactions],
         })
 
+    # Show the CIM download only to someone who may actually use it. Everyone
+    # else gets a note instead of a button that would 404.
+    from matchmaking.models import can_download_cim
+    cim_downloadable = bool(
+        seller_application and seller_application.cim_document
+        and can_download_cim(request.user, seller_application)
+    )
+
     dm_enabled = False
     if application and application.allow_direct_messages:
         dm_enabled = True
@@ -615,6 +623,7 @@ def profile(request, username=None, pk=None):
         "user_articles": user_articles,
         "user_jobs": user_jobs,
         "dm_enabled": dm_enabled,
+        "cim_downloadable": cim_downloadable,
         "viewer_is_investor": viewer_is_investor,
         "viewer_is_buyer": viewer_is_buyer,
         "profile_view_count": profile_view_count,
