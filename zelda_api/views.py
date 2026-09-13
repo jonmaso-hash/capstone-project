@@ -1270,6 +1270,7 @@ def analyze_founder_profile(request, founder_username):
     # No document yet — check if founder has a pitch deck file on their profile
     if application.pitch_deck:
         from .quotas import CREDIT_COSTS
+        from .truth_delta_models import _owner_is_premium
         from matchmaking.models import AIMatch
 
         ai_match = AIMatch.objects.filter(investor=investor_profile, application=application).first()
@@ -1279,6 +1280,10 @@ def analyze_founder_profile(request, founder_username):
             'score': round(float(ai_match.score)) if ai_match else None,
             'reasons': _match_reasons(application, investor_profile),
             'analysis_cost': CREDIT_COSTS['memo'],
+            # Drives the pre-spend disclosure: the same check DocumentMemoView
+            # uses to decide full vs. Lite, so the modal describes what the
+            # investor will actually be shown.
+            'founder_premium': _owner_is_premium(founder_user),
         })
 
     # No pitch deck at all
