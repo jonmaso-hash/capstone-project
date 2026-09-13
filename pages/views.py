@@ -53,9 +53,6 @@ def waitlist_join(request):
 def services(request):
     return render(request, 'pages/services.html')
 
-def about(request):
-    return render(request, 'pages/about.html')
-
 
 # Both legal pages are deliberately unauthenticated: a visitor has to be able
 # to read them before they sign up or pay, and they are linked from the footer
