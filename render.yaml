@@ -1,0 +1,322 @@
+# Render Blueprint for Interlink Foundry.
+#
+# Creating this Blueprint in the Render dashboard provisions PAID resources:
+# two 2 GB services (web, Celery worker), a small Celery beat worker, a paid
+# Key Value instance and Postgres. Nothing here is created by committing it.
+#
+# Sizes follow the decisions already made for launch: in-process
+# sentence-transformers needs the 2 GB web and worker; beat only schedules.
+# pages/tests_render_blueprint.py pins the shape of this file.
+#
+# Secrets are declared with `sync: false`: Render asks for their values once,
+# when the Blueprint is first created, and nothing secret is ever committed.
+# They are entered on interlink-web only; the worker copies them from there.
+#
+# First deploy, in order:
+#   1. Create the Blueprint; fill in the prompted secrets on interlink-web.
+#   2. Render builds the image, then runs `manage.py migrate` as the pre-deploy
+#      command. Migration 0049 runs `CREATE EXTENSION vector`, which Render
+#      Postgres allows for the default user (Postgres 13+).
+#   3. The web service goes live once /api/v1/zelda/health/ answers 2xx.
+#   4. Add the custom domain in Render, then add it to ALLOWED_HOSTS and
+#      CSRF_TRUSTED_ORIGINS (the onrender.com hostname is added automatically,
+#      see RENDER_EXTERNAL_HOSTNAME in config/settings.py).
+
+envVarGroups:
+  - name: interlink-shared
+    envVars:
+      # One generated value, shared by every service that links this group, so
+      # anything signed by the web app verifies in the worker and vice versa.
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      # Container filesystems are discarded on deploy; logs go to stdout.
+      - key: LOG_TO_FILE
+        value: "False"
+
+services:
+  - type: web
+    name: interlink-web
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    region: oregon
+    plan: 1c-2g
+    numInstances: 1
+    # Runs the Dockerfile CMD: gunicorn with gunicorn.conf.py, bound to $PORT.
+    healthCheckPath: /api/v1/zelda/health/
+    # A separate instance, after the build and before the new version takes
+    # traffic. If migrations fail, the deploy fails and the old version keeps
+    # serving.
+    preDeployCommand: python manage.py migrate --noinput
+    # Deploy only commits whose CI checks passed.
+    autoDeployTrigger: checksPass
+    envVars:
+      - fromGroup: interlink-shared
+      # Each gunicorn worker loads the embedding model; measure memory on the
+      # first deploy before raising this.
+      - key: WEB_CONCURRENCY
+        value: "2"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: interlink-db
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: keyvalue
+          name: interlink-keyvalue
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: keyvalue
+          name: interlink-keyvalue
+          property: connectionString
+      # Hosts and origins beyond the onrender.com hostname (the custom domain).
+      - key: ALLOWED_HOSTS
+        sync: false
+      - key: CSRF_TRUSTED_ORIGINS
+        sync: false
+      - key: SITE_URL
+        sync: false
+      - key: ADMIN_URL_PATH
+        sync: false
+      # AI and chat
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: STREAM_API_KEY
+        sync: false
+      - key: STREAM_API_SECRET
+        sync: false
+      # Payments -- live keys only here, never in a DEBUG environment.
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_FOUNDER_PRICE_ID
+        sync: false
+      - key: STRIPE_INVESTOR_PRICE_ID
+        sync: false
+      - key: STRIPE_SELLER_PRICE_ID
+        sync: false
+      - key: STRIPE_BUYER_PRICE_ID
+        sync: false
+      - key: STRIPE_FIRM_PRICE_ID
+        sync: false
+      - key: STRIPE_VALUATION_REPORT_PRICE_ID
+        sync: false
+      - key: STRIPE_VALUATION_OVERAGE_PRICE_ID
+        sync: false
+      - key: STRIPE_VALUATION_FIRM_OVERAGE_PRICE_ID
+        sync: false
+      # Email (Postmark)
+      - key: POSTMARK_SERVER_TOKEN
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+      - key: SERVER_EMAIL
+        sync: false
+      - key: ADMINS
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: CONTACT_FORM_RECIPIENT
+        sync: false
+      # Private uploads (S3)
+      - key: AWS_STORAGE_BUCKET_NAME
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_S3_REGION_NAME
+        sync: false
+      # Error monitoring
+      - key: SENTRY_DSN
+        sync: false
+      # Social login
+      - key: GOOGLE_OAUTH_CLIENT_ID
+        sync: false
+      - key: GOOGLE_OAUTH_SECRET
+        sync: false
+      - key: LINKEDIN_OAUTH_CLIENT_ID
+        sync: false
+      - key: LINKEDIN_OAUTH_SECRET
+        sync: false
+      - key: FACEBOOK_OAUTH_CLIENT_ID
+        sync: false
+      - key: FACEBOOK_OAUTH_SECRET
+        sync: false
+      # Truth Delta data sources
+      - key: CRUNCHBASE_API_KEY
+        sync: false
+      - key: NEWS_API_KEY
+        sync: false
+
+  - type: worker
+    name: interlink-worker
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    region: oregon
+    plan: 1c-2g
+    numInstances: 1
+    # Two task processes: each loads the embedding model on a 2 GB instance.
+    dockerCommand: celery -A config worker --loglevel=info --concurrency=2
+    autoDeployTrigger: checksPass
+    envVars:
+      - fromGroup: interlink-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: interlink-db
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: keyvalue
+          name: interlink-keyvalue
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: keyvalue
+          name: interlink-keyvalue
+          property: connectionString
+      - key: SITE_URL
+        fromService:
+          type: web
+          name: interlink-web
+          envVarKey: SITE_URL
+      - key: ANTHROPIC_API_KEY
+        fromService:
+          type: web
+          name: interlink-web
+          envVarKey: ANTHROPIC_API_KEY
+      - key: STREAM_API_KEY
+        fromService:
+          type: web
+          name: interlink-web
+          envVarKey: STREAM_API_KEY
+      - key: STREAM_API_SECRET
+        fromService:
+          type: web
+          name: interlink-web
+          envVarKey: STREAM_API_SECRET
+      - key: STRIPE_SECRET_KEY
+        fromService:
+          type: web
+          name: interlink-web
+          envVarKey: STRIPE_SECRET_KEY
+      - key: POSTMARK_SERVER_TOKEN
+        fromService:
+          type: web
+          name: interlink-web
+          envVarKey: POSTMARK_SERVER_TOKEN
+      - key: DEFAULT_FROM_EMAIL
+        fromService:
+          type: web
+          name: interlink-web
+          envVarKey: DEFAULT_FROM_EMAIL
+      - key: SERVER_EMAIL
+        fromService:
+          type: web
+          name: interlink-web
+          envVarKey: SERVER_EMAIL
+      - key: ADMINS
+        fromService:
+          type: web
+          name: interlink-web
+          envVarKey: ADMINS
+      - key: ADMIN_EMAIL
+        fromService:
+          type: web
+          name: interlink-web
+          envVarKey: ADMIN_EMAIL
+      - key: AWS_STORAGE_BUCKET_NAME
+        fromService:
+          type: web
+          name: interlink-web
+          envVarKey: AWS_STORAGE_BUCKET_NAME
+      - key: AWS_ACCESS_KEY_ID
+        fromService:
+          type: web
+          name: interlink-web
+          envVarKey: AWS_ACCESS_KEY_ID
+      - key: AWS_SECRET_ACCESS_KEY
+        fromService:
+          type: web
+          name: interlink-web
+          envVarKey: AWS_SECRET_ACCESS_KEY
+      - key: AWS_S3_REGION_NAME
+        fromService:
+          type: web
+          name: interlink-web
+          envVarKey: AWS_S3_REGION_NAME
+      - key: SENTRY_DSN
+        fromService:
+          type: web
+          name: interlink-web
+          envVarKey: SENTRY_DSN
+      - key: CRUNCHBASE_API_KEY
+        fromService:
+          type: web
+          name: interlink-web
+          envVarKey: CRUNCHBASE_API_KEY
+      - key: NEWS_API_KEY
+        fromService:
+          type: web
+          name: interlink-web
+          envVarKey: NEWS_API_KEY
+
+  # Exactly one: two beat processes would enqueue every scheduled task twice
+  # (weekly digests, priority alerts, monthly partition creation).
+  - type: worker
+    name: interlink-beat
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    region: oregon
+    plan: 0.5c-512mb
+    numInstances: 1
+    dockerCommand: celery -A config beat --loglevel=info
+    autoDeployTrigger: checksPass
+    envVars:
+      - fromGroup: interlink-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: interlink-db
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: keyvalue
+          name: interlink-keyvalue
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: keyvalue
+          name: interlink-keyvalue
+          property: connectionString
+      - key: SENTRY_DSN
+        fromService:
+          type: web
+          name: interlink-web
+          envVarKey: SENTRY_DSN
+
+  # The Celery broker. Private network only, and never evicting keys: an
+  # eviction policy would silently drop queued tasks under memory pressure.
+  # The Django cache stays in-process (CACHE_URL unset) so it never competes
+  # with the queue for this memory.
+  - type: keyvalue
+    name: interlink-keyvalue
+    region: oregon
+    plan: 256mb
+    ipAllowList: []
+    maxmemoryPolicy: noeviction
+
+databases:
+  - name: interlink-db
+    databaseName: interlink_foundry
+    user: interlink
+    region: oregon
+    plan: 0.5c-1g
+    # Matches docker-compose (pgvector/pgvector:pg16).
+    postgresMajorVersion: "16"
+    # No connections from outside Render's private network.
+    ipAllowList: []
