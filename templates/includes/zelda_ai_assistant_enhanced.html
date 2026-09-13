@@ -1336,6 +1336,70 @@
         loadMemo();
     }
 
+    // ── Memo generation state ──
+    // DocumentMemoView answers 202 {status: 'processing'} until the pipeline
+    // writes the memo, and {status: 'failed'} once it has given up. fetch()
+    // treats a 202 as ok, so both are checked explicitly here rather than
+    // falling through to render a payload with no sections (the old
+    // "Cannot read properties of undefined (reading 'executive_summary')").
+    // One poll per panel tab: opening another report there cancels the old one.
+    const ZELDA_MEMO_POLL_INTERVAL_MS = 5000;
+    const ZELDA_MEMO_POLL_TIMEOUT_MS = 10 * 60 * 1000;
+    const _zeldaMemoPolls = {};
+
+    async function fetchMemoWhenReady(docId, pollKey, onPending) {
+        const token = {};
+        _zeldaMemoPolls[pollKey] = token;
+        const startedAt = Date.now();
+        let notifiedPending = false;
+
+        while (true) {
+            const response = await fetch(`${ZELDA_API}/documents/${docId}/memo/`, {
+                credentials: 'same-origin',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            });
+            if (_zeldaMemoPolls[pollKey] !== token) return { superseded: true };
+
+            if (response.status === 202) {
+                if (Date.now() - startedAt > ZELDA_MEMO_POLL_TIMEOUT_MS) return { timedOut: true };
+                if (!notifiedPending) {
+                    notifiedPending = true;
+                    onPending();
+                }
+                await new Promise(resolve => setTimeout(resolve, ZELDA_MEMO_POLL_INTERVAL_MS));
+                if (_zeldaMemoPolls[pollKey] !== token) return { superseded: true };
+                continue;
+            }
+
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            if (data.status === 'failed') return { failed: true, message: data.error };
+            return { data };
+        }
+    }
+
+    function renderMemoGenerating() {
+        return `<div class="text-center p-4" data-zelda-memo-state="generating">
+            <div class="spinner-border mb-3" role="status" style="color: var(--zelda-accent);"></div>
+            <h6 class="fw-bold text-dark mb-1">Zelda is generating this analysis</h6>
+            <p class="text-muted small mb-0">This usually takes a minute or two. This panel updates automatically when it's ready.</p>
+        </div>`;
+    }
+
+    function renderMemoFailed(message) {
+        return `<div class="p-3 rounded-3 border border-danger-subtle bg-danger-subtle" data-zelda-memo-state="failed">
+            <h6 class="fw-bold text-danger mb-1"><i class="bi bi-exclamation-triangle me-1"></i>${message || "Zelda couldn't finish this analysis."}</h6>
+            <p class="text-muted small mb-0">Please try again later, or contact support if this keeps happening.</p>
+        </div>`;
+    }
+
+    function renderMemoTimedOut() {
+        return `<div class="p-3 rounded-3 bg-light" data-zelda-memo-state="timed-out">
+            <h6 class="fw-bold text-dark mb-1">This is taking longer than usual</h6>
+            <p class="text-muted small mb-0">The analysis is still running. Reopen this report in a few minutes.</p>
+        </div>`;
+    }
+
     async function loadMemo() {
         const docId = document.getElementById('memo-doc-id').value;
         if (!docId) {
@@ -1346,24 +1410,26 @@
         addLogEntry(`Loading memo for document ${docId}...`, 'info');
 
         try {
-            const response = await fetch(`${ZELDA_API}/documents/${docId}/memo/`, {
-                method: 'GET',
-                credentials: 'same-origin',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                }
+            const memoEl = document.getElementById('memo-content');
+            const result = await fetchMemoWhenReady(docId, 'memo', () => {
+                document.getElementById('memo-display').style.display = 'flex';
+                memoEl.innerHTML = renderMemoGenerating();
+                addLogEntry(`Memo for document ${docId} is still being generated — waiting...`, 'warning');
             });
+            if (result.superseded) return;
 
-            if (!response.ok) {
-                if (response.status === 202) {
-                    addLogEntry('Memo still being generated. Please wait...', 'warning');
-                    return;
-                }
-                throw new Error(`HTTP ${response.status}`);
-            }
-
-            const data = await response.json();
             document.getElementById('memo-display').style.display = 'flex';
+            if (result.failed) {
+                memoEl.innerHTML = renderMemoFailed(result.message);
+                addLogEntry(`Memo generation failed for document ${docId}`, 'error');
+                return;
+            }
+            if (result.timedOut) {
+                memoEl.innerHTML = renderMemoTimedOut();
+                addLogEntry(`Stopped waiting for memo ${docId} — still generating`, 'warning');
+                return;
+            }
+            const data = result.data;
 
             console.log('[Zelda] Memo data received:', JSON.stringify(data, null, 2));
 
@@ -1770,13 +1836,18 @@
         content.style.display = 'none';
 
         try {
-            const response = await fetch(`${ZELDA_API}/documents/${founderId}/memo/`, {
-                credentials: 'include',
-                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            const result = await fetchMemoWhenReady(founderId, 'intelligence', () => {
+                loading.style.display = 'none';
+                content.innerHTML = renderMemoGenerating();
+                content.style.display = 'block';
             });
-
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
+            if (result.superseded) return;
+            if (result.failed || result.timedOut) {
+                content.innerHTML = result.failed ? renderMemoFailed(result.message) : renderMemoTimedOut();
+                content.style.display = 'block';
+                return;
+            }
+            const data = result.data;
 
             if (data.locked) {
                 content.innerHTML = data.lite_sections

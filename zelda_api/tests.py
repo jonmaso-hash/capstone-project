@@ -2778,6 +2778,93 @@ class DocumentMemoViewPaywallTests(TestCase):
         self.assertEqual(data['sections']['executive_summary'], 'Secret summary text.')
 
 
+class DocumentMemoViewGenerationStateTests(TestCase):
+    """
+    While the pipeline runs the memo endpoint answers 202 {status:
+    'processing'}; once it has failed, {status: 'failed'}. Without the
+    failed state a document in 'error' answered "not yet generated" forever,
+    and the investor who paid for it can't read the owner-only status view
+    to find out otherwise.
+    """
+
+    def setUp(self):
+        from matchmaking.models import Application, InvestorApplication
+        self.founder_user = User.objects.create_user('memo_state_founder', password='x')
+        Application.objects.create(
+            user=self.founder_user, company_name='MemoStateCo', founder_name='F', email='f@t.com',
+            description='test', sector='SaaS', stage='Seed',
+        )
+        self.doc = DocumentSource.objects.create(
+            uploaded_by=self.founder_user, filename='deck.pdf', source_entity='MemoStateCo',
+            document_type='pitch_deck', status='analyzing',
+        )
+        self.investor_user = User.objects.create_user('memo_state_investor', password='x')
+        InvestorApplication.objects.create(
+            user=self.investor_user, full_name='I', company_name='Fund', email='i@t.com',
+            investment_focus='SaaS', investment_stage='Seed',
+        )
+        self.stranger = User.objects.create_user('memo_state_stranger', password='x')
+        self.url = reverse('zelda_api:document_memo', args=[self.doc.id])
+
+    def _mark_failed(self):
+        self.doc.status = 'error'
+        self.doc.error_message = 'Pipeline failed after 3 retries: INTERNAL-TRACEBACK-DETAIL'
+        self.doc.save(update_fields=['status', 'error_message'])
+
+    def test_generating_answers_202_processing_to_owner_and_investor(self):
+        for user in (self.founder_user, self.investor_user):
+            self.client.force_login(user)
+            response = self.client.get(self.url)
+            self.assertEqual(response.status_code, 202)
+            self.assertEqual(response.json()['status'], 'processing')
+
+    def test_failed_generation_is_reported_as_failed_not_pending(self):
+        self._mark_failed()
+        for user in (self.founder_user, self.investor_user):
+            self.client.force_login(user)
+            response = self.client.get(self.url)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()['status'], 'failed')
+
+    def test_failed_response_does_not_expose_the_internal_error(self):
+        self._mark_failed()
+        self.client.force_login(self.investor_user)
+        response = self.client.get(self.url)
+        self.assertNotIn('INTERNAL-TRACEBACK-DETAIL', response.content.decode())
+
+    def test_a_stranger_is_still_refused_before_any_generation_state(self):
+        self.client.force_login(self.stranger)
+        self.assertEqual(self.client.get(self.url).status_code, 403)
+        self._mark_failed()
+        self.assertEqual(self.client.get(self.url).status_code, 403)
+
+
+class ZeldaMemoGeneratingStateFrontendTests(TestCase):
+    """
+    fetch() treats 202 as ok. loadMemo's only 202 check sat inside
+    `if (!response.ok)`, so it never ran and the code rendered a pending
+    payload — "Cannot read properties of undefined (reading
+    'executive_summary')"; loadIntelligenceBrief silently rendered an empty
+    brief. Both now go through fetchMemoWhenReady.
+    """
+
+    def setUp(self):
+        with open('templates/includes/zelda_ai_assistant_enhanced.html', encoding='utf-8') as f:
+            self.template = f.read()
+
+    def test_both_memo_surfaces_wait_for_the_memo(self):
+        self.assertIn("fetchMemoWhenReady(docId, 'memo',", self.template)
+        self.assertIn("fetchMemoWhenReady(founderId, 'intelligence',", self.template)
+
+    def test_202_is_handled_in_one_place_and_not_behind_response_ok(self):
+        self.assertEqual(self.template.count('response.status === 202'), 1)
+        self.assertNotIn("Memo still being generated. Please wait...", self.template)
+
+    def test_failed_generation_is_surfaced(self):
+        self.assertIn("data.status === 'failed'", self.template)
+        self.assertIn('renderMemoFailed(', self.template)
+
+
 class ZeldaConfirmModalDisclosureTests(TestCase):
     """
     The pre-spend confirmation used to promise a fixed list — AI diligence

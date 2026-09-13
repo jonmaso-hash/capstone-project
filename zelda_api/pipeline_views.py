@@ -225,8 +225,19 @@ class DocumentMemoView(APIView):
                 )
 
             if not hasattr(doc, 'memo'):
+                # A failed pipeline never writes a memo, so without this the
+                # document would answer "not yet generated" forever and the
+                # panel would poll a memo that can't arrive. The status view
+                # is owner-only, so this is the only place an investor who
+                # paid for the analysis can learn it failed. The internal
+                # error_message stays out: a non-owner investor reads this.
+                if doc.status == 'error':
+                    return Response(
+                        {"status": "failed", "error": "Zelda couldn't finish this analysis."},
+                        status=status.HTTP_200_OK
+                    )
                 return Response(
-                    {"error": "Memo not yet generated. Check status endpoint."},
+                    {"status": "processing", "error": "Memo not yet generated. Check status endpoint."},
                     status=status.HTTP_202_ACCEPTED
                 )
 
