@@ -333,6 +333,13 @@ def stripe_webhook(request):
         logger.error(f"Stripe webhook signature verification failed: {str(e)}")
         return HttpResponseBadRequest("Invalid signature")
 
+    # construct_event returns a stripe.Event, and since stripe-python 15 a
+    # StripeObject is no longer a dict: .get() on it raises AttributeError.
+    # Convert once, here, so everything below reads plain dicts -- to_dict()
+    # recurses, so nested objects such as metadata convert too.
+    if isinstance(event, stripe.StripeObject):
+        event = event.to_dict()
+
     event_type = event['type']
     data_object = event['data']['object']
     User = get_user_model()
