@@ -53,6 +53,31 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+def _notify_introduction_accepted(recipient, accepted_by, accepter_name, staff_introduced, target_url):
+    """
+    Accepting an introduction used to notify nobody: the person who asked for
+    it only found out by checking their dashboard. The requester -- or, for a
+    staff introduction, the party who didn't have to respond -- now hears
+    about it, with a link to the Deal Room that acceptance opens.
+
+    Best effort, like the chat channel beside it: the acceptance is already
+    saved, and a notification failure must not turn it into an error response.
+    """
+    try:
+        from notifications.models import Notification
+        message = (
+            f"{accepter_name} accepted the introduction — your Deal Room is open."
+            if staff_introduced else
+            f"{accepter_name} accepted your introduction request — your Deal Room is open."
+        )
+        Notification.objects.create(
+            recipient=recipient, sender=accepted_by, notification_type='INTRO_ACCEPTED',
+            message=message[:255], target_url=target_url,
+        )
+    except Exception:
+        logger.exception('Could not write the introduction-accepted notification')
+
+
 @login_required
 @require_POST
 def connection_action_view(request):
@@ -133,12 +158,27 @@ def connection_action_view(request):
         if responder_user != request.user:
             return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
 
+        previous_status = conn_req.status
         conn_req.status = action
         update_fields = ['status']
         if action == 'ACCEPTED':
             conn_req.accepted_at = timezone.now()
             update_fields.append('accepted_at')
         conn_req.save(update_fields=update_fields)
+
+        # Only on the transition itself, so posting ACCEPTED again can't stack
+        # a second notification.
+        if action == 'ACCEPTED' and previous_status != 'ACCEPTED':
+            investor_accepted = responder_user == conn_req.investor.user
+            _notify_introduction_accepted(
+                recipient=conn_req.founder.user if investor_accepted else conn_req.investor.user,
+                accepted_by=request.user,
+                accepter_name=(
+                    conn_req.investor.company_name if investor_accepted else conn_req.founder.company_name
+                ) or request.user.username,
+                staff_introduced=conn_req.initiated_by == 'STAFF',
+                target_url=reverse('matchmaking:deal_workspace', args=[conn_req.id]),
+            )
 
         if action == 'DECLINED':
             log_training_example('INVESTOR', conn_req.investor.id, 'FOUNDER', conn_req.founder.id, 'NEGATIVE', 'declined')
@@ -235,12 +275,25 @@ def acquisition_connection_action_view(request):
         if responder_user != request.user:
             return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
 
+        previous_status = conn_req.status
         conn_req.status = action
         update_fields = ['status']
         if action == 'ACCEPTED':
             conn_req.accepted_at = timezone.now()
             update_fields.append('accepted_at')
         conn_req.save(update_fields=update_fields)
+
+        if action == 'ACCEPTED' and previous_status != 'ACCEPTED':
+            buyer_accepted = responder_user == conn_req.buyer.user
+            _notify_introduction_accepted(
+                recipient=conn_req.seller.user if buyer_accepted else conn_req.buyer.user,
+                accepted_by=request.user,
+                accepter_name=(
+                    conn_req.buyer.company_name if buyer_accepted else conn_req.seller.company_name
+                ) or request.user.username,
+                staff_introduced=conn_req.initiated_by == 'STAFF',
+                target_url=reverse('matchmaking:acquisition_deal_workspace', args=[conn_req.id]),
+            )
 
         if action == 'DECLINED':
             log_training_example('BUYER', conn_req.buyer.id, 'SELLER', conn_req.seller.id, 'NEGATIVE', 'declined')

@@ -35,11 +35,27 @@ FAILED_MESSAGE = (
     "run — please try uploading it again."
 )
 
+# An investor who spent an analysis on a founder's deck (analyze_founder_profile's
+# confirm step) is who asked for it, but the document stays owned by the founder,
+# so uploaded_by is the wrong recipient -- the AnalysisCreditCharge names the
+# person who paid. Their copy names the company, links to the founder's profile
+# (the IC memo page needs an accepted connection), and says nothing about
+# charging: an investor-triggered analysis is charged even when it fails.
+PAYER_READY_MESSAGE = "Zelda's analysis of %s is ready."
+PAYER_FAILED_MESSAGE = "Zelda couldn't complete the analysis of %s. Please try again later."
+
 # Where the notification takes them, per document type.
 REPORT_ROUTES = {
     'business_valuation': 'zelda_api:valuation_report',
 }
 DEFAULT_ROUTE = 'zelda_api:ic_memo'
+
+
+def _owner_profile_url(document):
+    try:
+        return reverse('accounts:profile', kwargs={'username': document.uploaded_by.username})
+    except NoReverseMatch:
+        return None
 
 
 def _report_url(document):
@@ -74,18 +90,24 @@ def notify_terminal_state(document, succeeded):
     try:
         from notifications.models import Notification
 
-        recipient = document.uploaded_by
-        if recipient is None:
-            return None
+        charge = getattr(document, 'credit_charge', None)
+        if charge is not None:
+            recipient = charge.user
+            company = (document.source_entity or document.uploaded_by.username)[:180]
+            message = (PAYER_READY_MESSAGE if succeeded else PAYER_FAILED_MESSAGE) % company
+            target_url = _owner_profile_url(document)
+        else:
+            recipient = document.uploaded_by
+            if recipient is None:
+                return None
+            message = (READY_MESSAGE if succeeded else FAILED_MESSAGE) % _document_label(document)
+            target_url = _report_url(document)
 
-        label = _document_label(document)
         Notification.objects.get_or_create(
             recipient=recipient,
             notification_type=ANALYSIS_READY if succeeded else ANALYSIS_FAILED,
-            target_url=_report_url(document),
-            defaults={
-                'message': (READY_MESSAGE if succeeded else FAILED_MESSAGE) % label,
-            },
+            target_url=target_url,
+            defaults={'message': message},
         )
     except Exception:
         logger.exception(
