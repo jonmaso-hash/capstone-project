@@ -440,15 +440,41 @@ STRIPE_VALUATION_OVERAGE_PRICE_ID = env('STRIPE_VALUATION_OVERAGE_PRICE_ID')
 STRIPE_VALUATION_FIRM_OVERAGE_PRICE_ID = env('STRIPE_VALUATION_FIRM_OVERAGE_PRICE_ID')
 
 
-# --- EMAIL TRANSMISSION LAYERS (SMTP GMAIL PIPELINES) ---
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+# --- EMAIL ---
+# Which backend sends mail follows from what is configured, so the same code
+# runs in dev, CI and production:
+#   POSTMARK_SERVER_TOKEN set          -> Postmark via django-anymail (production)
+#   EMAIL_HOST_USER + _PASSWORD set    -> SMTP (Gmail unless EMAIL_HOST says otherwise)
+#   neither                            -> console: mail is printed, never sent
+# Django's test runner swaps in its in-memory backend regardless.
+POSTMARK_SERVER_TOKEN = env.str('POSTMARK_SERVER_TOKEN', default='')
+EMAIL_HOST = env.str('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = env.int('EMAIL_PORT', default=587)
+EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
 EMAIL_USE_SSL = False
 EMAIL_HOST_USER = env('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD') 
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+
+if POSTMARK_SERVER_TOKEN:
+    EMAIL_BACKEND = 'anymail.backends.postmark.EmailBackend'
+    ANYMAIL = {'POSTMARK_SERVER_TOKEN': POSTMARK_SERVER_TOKEN}
+elif EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# The address mail is sent from. Postmark only delivers from a verified sender
+# signature or domain, so production sets DEFAULT_FROM_EMAIL explicitly.
+DEFAULT_FROM_EMAIL = env.str('DEFAULT_FROM_EMAIL', default='') or EMAIL_HOST_USER or 'noreply@interlinkfoundry.com'
+# The sender of error and mail_admins() mail. Django's default, root@localhost,
+# is not a sender Postmark will accept.
+SERVER_EMAIL = env.str('SERVER_EMAIL', default='') or DEFAULT_FROM_EMAIL
+# Who mail_admins() reaches -- e.g. the Explore moderation alert. Unset, that
+# mail silently goes nowhere. Comma-separated addresses; Django 6 deprecates
+# (name, address) pairs.
+ADMINS = [address.strip() for address in env.list('ADMINS', default=[]) if address.strip()]
+# Where the public contact form delivers.
+CONTACT_FORM_RECIPIENT = env.str('CONTACT_FORM_RECIPIENT', default='') or ADMIN_EMAIL or DEFAULT_FROM_EMAIL
 
 
 # ==============================================================================

@@ -1,10 +1,15 @@
+import logging
+
+from django.conf import settings
 from django.shortcuts import render, redirect  # Added redirect here
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from accounts.redirects import safe_destination
 from billing.pricing import subscription_prices
 from .forms import contactForm  # Added your form import back
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 def home_view(request):
@@ -170,19 +175,26 @@ def contact_view(request):
                 f'Message:\n{message}'
             )
 
+            # Sent from the site's verified sender (Postmark refuses anything
+            # else) to the configured inbox, with Reply-To set to the visitor
+            # so a reply goes to them. Only the send is inside the try: the
+            # redirect used to be too, and because it named 'contact' instead
+            # of 'pages:contact' it raised after a successful send, so visitors
+            # were told their delivered message had failed.
             try:
-                send_mail(
-                    subject=f"Email From KCV Capital: {name}",
-                    message=message_body,
-                    from_email=None,      # Uses EMAIL_HOST_USER from settings.py
-                    recipient_list=['jonmaso@gmail.com'],
-                    fail_silently=False,
-                )
+                EmailMessage(
+                    subject=f"Interlink Foundry contact form: {name}",
+                    body=message_body,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[settings.CONTACT_FORM_RECIPIENT],
+                    reply_to=[email],
+                ).send(fail_silently=False)
+            except Exception:
+                logger.exception('Contact form email could not be sent')
+                messages.error(request, "We couldn't send your message right now. Please try again in a few minutes.")
+            else:
                 messages.success(request, "Message sent successfully!")
-                return redirect('contact') # This clears the form and shows the success message
-
-            except Exception as e:
-                messages.error(request, f"Error sending email: {e}")
+                return redirect('pages:contact')
         else:
             messages.error(request, "Please correct the errors below.")
     else:
