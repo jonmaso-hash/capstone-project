@@ -110,7 +110,7 @@
 
 .home {
   position: relative;
-  background-image: url('/media/img/business2.jpg');
+  background-image: url('../img/business2.jpg');
   background-size: cover;
   background-position: center;
   z-index: 1;

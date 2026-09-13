@@ -70,6 +70,11 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG')
 ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 
+# Origins trusted for CSRF-protected POSTs, each with its scheme, e.g.
+# "https://interlinkfoundry.com,https://interlink-foundry.onrender.com".
+# Needed once the site is served from a domain behind the host's proxy.
+CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[])
+
 # Non-default admin path — defaults to 'admin/' for local dev convenience,
 # but production should set ADMIN_URL_PATH in .env to something unguessable.
 ADMIN_URL_PATH = env('ADMIN_URL_PATH')
@@ -245,8 +250,19 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # --- STATIC & MEDIA ASSET STORAGE PIPELINES ---
 STATIC_URL = "static/"
-STATICFILES_DIRS = [BASE_DIR / "static", os.path.join(BASE_DIR, 'static'),]
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = env.str('STATIC_ROOT', default=os.path.join(BASE_DIR, 'staticfiles'))
+
+# Static files are served by WhiteNoise from the container in every
+# environment -- S3, when configured below, holds uploads only. In production
+# they get hashed, compressed filenames, so a browser can never keep a stale
+# CSS or JS file after a deploy. That storage raises at render time for any
+# {% static %} path missing from the collected manifest, so with DEBUG on
+# (local dev, CI) the plain storage is used and no collectstatic is needed.
+STATICFILES_BACKEND = (
+    "django.contrib.staticfiles.storage.StaticFilesStorage" if DEBUG
+    else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+)
 
 AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
 AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
@@ -269,10 +285,7 @@ if AWS_STORAGE_BUCKET_NAME:
             "BACKEND": "storages.backends.s3.S3Storage",
             "OPTIONS": {"location": "media"},
         },
-        "staticfiles": {
-            "BACKEND": "storages.backends.s3.S3Storage",
-            "OPTIONS": {"location": "static"},
-        },
+        "staticfiles": {"BACKEND": STATICFILES_BACKEND},
     }
     MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/media/"
 else:
@@ -283,9 +296,7 @@ else:
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
         },
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
+        "staticfiles": {"BACKEND": STATICFILES_BACKEND},
     }
 
 # --- CORE PLATFORM SECURITY & AUTH ROUTING ---
@@ -446,8 +457,12 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 # logger.warning() throughout matchmaking/zelda_api only ever went to
 # console output, which vanishes the moment the process restarts.
 # ==============================================================================
-LOGS_DIR = BASE_DIR / 'logs'
-os.makedirs(LOGS_DIR, exist_ok=True)
+# In production the file handler is off: a container's filesystem is discarded
+# on every deploy, and several gunicorn workers rotating one file race each
+# other. There, logs go to the console (the host collects stdout) and Sentry.
+# The file stays a local-dev convenience, on by default only when DEBUG is.
+LOG_TO_FILE = env.bool('LOG_TO_FILE', default=DEBUG)
+LOG_HANDLERS = ['console', 'file'] if LOG_TO_FILE else ['console']
 
 LOGGING = {
     'version': 1,
@@ -463,27 +478,31 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
-        'file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': LOGS_DIR / 'django.log',
-            'maxBytes': 10 * 1024 * 1024,  # 10 MB per file
-            'backupCount': 5,
-            'formatter': 'verbose',
-            'encoding': 'utf-8',
-        },
     },
     'root': {
-        'handlers': ['console', 'file'],
+        'handlers': LOG_HANDLERS,
         'level': 'INFO',
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'file'],
+            'handlers': LOG_HANDLERS,
             'level': 'INFO',
             'propagate': False,
         },
     },
 }
+
+if LOG_TO_FILE:
+    LOGS_DIR = BASE_DIR / 'logs'
+    os.makedirs(LOGS_DIR, exist_ok=True)
+    LOGGING['handlers']['file'] = {
+        'class': 'logging.handlers.RotatingFileHandler',
+        'filename': LOGS_DIR / 'django.log',
+        'maxBytes': 10 * 1024 * 1024,  # 10 MB per file
+        'backupCount': 5,
+        'formatter': 'verbose',
+        'encoding': 'utf-8',
+    }
 
 
 # --- ERROR TRACKING (Sentry) ---
