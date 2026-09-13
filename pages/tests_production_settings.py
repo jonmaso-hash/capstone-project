@@ -139,8 +139,8 @@ class StaticReferenceTests(SimpleTestCase):
     def test_no_template_hard_codes_a_media_path(self):
         """
         Production never serves /media/ from the app (uploads live in S3), so a
-        site asset linked as /media/... breaks there. The About page photo was.
-        Uploaded files are linked through their FileField .url, never a literal.
+        site asset linked as /media/... breaks there. Uploaded files are linked
+        through their FileField .url, never a literal.
         """
         offenders = []
         for template in self._templates():

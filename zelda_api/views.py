@@ -357,7 +357,6 @@ class ZeldaGlobalSearchAPIView(APIView):
             # 4. Template file search
             template_route_map = {
                 'home.html': ('Main Landing Page', '/home/'),
-                'about.html': ('About Us', '/about/'),
                 'services.html': ('Platform Services Overview', '/services/'),
                 'contact.html': ('Contact & Support', '/contact/'),
                 'edit_founder_profile.html': ('Founder Onboarding Hub', '/settings/profile/founder/'),
