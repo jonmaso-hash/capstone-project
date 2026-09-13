@@ -33,7 +33,8 @@ class EmbeddingEngine:
         if _ANTHROPIC_AVAILABLE:
             api_key = getattr(settings, 'ANTHROPIC_API_KEY', None)
             if api_key:
-                self.client = Anthropic(api_key=api_key)
+                from .anthropic_client import background_anthropic_client
+                self.client = background_anthropic_client(api_key=api_key)
             else:
                 logger.warning("ANTHROPIC_API_KEY not configured in settings.")
     

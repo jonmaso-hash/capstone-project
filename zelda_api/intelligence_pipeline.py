@@ -833,7 +833,8 @@ class ZeldaIntelligencePipelineV2:
         import anthropic
         import json
 
-        client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+        from .anthropic_client import background_anthropic_client
+        client = background_anthropic_client()
 
         insights_list = "\n".join([
             f"{i+1}. [{ins.category} | {ins.confidence_score:.0f}% confidence] {ins.insight_text}"
@@ -1203,7 +1204,8 @@ class ZeldaIntelligencePipelineV2:
         import anthropic
         import json
 
-        client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+        from .anthropic_client import background_anthropic_client
+        client = background_anthropic_client()
 
         # Format insights as numbered evidence list
         insights_list = "\n".join([
@@ -1465,7 +1467,8 @@ def _call_claude_for_query_extraction(question: str, target: str = 'founder') ->
     """
     import anthropic
 
-    client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+    from .anthropic_client import web_request_anthropic_client
+    client = web_request_anthropic_client()
 
     system_prompt = _ASK_ZELDA_EXTRACTION_PROMPTS.get(target, _ASK_ZELDA_EXTRACTION_PROMPTS['founder'])
 
