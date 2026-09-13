@@ -167,7 +167,6 @@ IDEMPOTENCY_EXCLUDED_PATHS = [
     "/accounts/logout/",
     "/accounts/login",
     "/api/v1/auth/login/",
-    "/api/v1/health/",
     "/admin/",
 ]
 
@@ -401,6 +400,14 @@ ADMIN_EMAIL = env('ADMIN_EMAIL')
 STREAM_API_KEY = env('STREAM_API_KEY')
 STREAM_API_SECRET = env('STREAM_API_SECRET')
 ANTHROPIC_API_KEY = env('ANTHROPIC_API_KEY')
+# Explicit ceilings for every Anthropic client (zelda_api/anthropic_client.py)
+# instead of the SDK's 10-minute timeout with 2 retries. A web-request call's
+# worst case, timeout x (retries + 1), must finish inside GUNICORN_TIMEOUT
+# (gunicorn.conf.py, default 60s); pages/tests_request_timeouts.py pins that.
+ANTHROPIC_WEB_REQUEST_TIMEOUT_SECONDS = env.float('ANTHROPIC_WEB_REQUEST_TIMEOUT_SECONDS', default=25.0)
+ANTHROPIC_WEB_REQUEST_MAX_RETRIES = env.int('ANTHROPIC_WEB_REQUEST_MAX_RETRIES', default=0)
+ANTHROPIC_BACKGROUND_TIMEOUT_SECONDS = env.float('ANTHROPIC_BACKGROUND_TIMEOUT_SECONDS', default=120.0)
+ANTHROPIC_BACKGROUND_MAX_RETRIES = env.int('ANTHROPIC_BACKGROUND_MAX_RETRIES', default=2)
 CRUNCHBASE_API_KEY = env('CRUNCHBASE_API_KEY')
 NEWS_API_KEY = env('NEWS_API_KEY')
 

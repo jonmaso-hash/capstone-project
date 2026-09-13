@@ -206,7 +206,8 @@ class TruthDeltaEngine:
         from zelda_api.circuit_breaker import call_with_breaker
         from zelda_api.intelligence_pipeline import _log_anthropic_usage
 
-        client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+        from .anthropic_client import background_anthropic_client
+        client = background_anthropic_client()
 
         user_content = json.dumps({
             'company_name': company_name,

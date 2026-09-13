@@ -50,4 +50,7 @@ EXPOSE 8000
 # collectstatic needs real secrets (SECRET_KEY etc.) that only exist at
 # container runtime, not at `docker build` time — see docker-entrypoint.sh.
 ENTRYPOINT ["./docker-entrypoint.sh"]
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
+# Bind, worker count and timeouts come from gunicorn.conf.py, which reads the
+# environment (PORT, WEB_CONCURRENCY, GUNICORN_TIMEOUT, ...). Flags here would
+# override that file, so none are passed.
+CMD ["gunicorn", "config.wsgi:application", "--config", "gunicorn.conf.py"]
