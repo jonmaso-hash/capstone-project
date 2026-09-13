@@ -368,13 +368,7 @@
             </div>
             <div class="modal-body pt-2">
                 <div id="zelda-confirm-match" class="mb-3"></div>
-                <p class="fw-semibold mb-2">You'll receive:</p>
-                <ul class="list-unstyled mb-3" style="line-height: 2;">
-                    <li><i class="bi bi-check-circle-fill text-success me-2"></i>AI diligence memo</li>
-                    <li><i class="bi bi-check-circle-fill text-success me-2"></i>Truth Delta verification</li>
-                    <li><i class="bi bi-check-circle-fill text-success me-2"></i>Risk assessment</li>
-                    <li><i class="bi bi-check-circle-fill text-success me-2"></i>Key opportunities</li>
-                </ul>
+                <div id="zelda-confirm-deliverables" class="mb-3"></div>
                 <p class="small text-muted mb-0" id="zelda-confirm-cost-line"></p>
                 <p class="small text-danger mb-0 d-none" id="zelda-confirm-error"></p>
             </div>
@@ -1305,6 +1299,38 @@
         `;
     }
 
+    // Zelda Lite — what an investor is shown for a founder without Premium
+    // (DocumentMemoView sends only these fields, as lite_sections). Same
+    // section set as the IC memo page's lite tier (ic_memo.LITE_MEMO_SECTION_KEYS).
+    const ZELDA_LITE_SECTIONS = [
+        { key: 'investment_thesis', label: 'Investment Thesis' },
+        { key: 'investment_readiness', label: 'Investment Readiness' },
+        { key: 'key_strengths', label: 'Key Strengths' },
+        { key: 'key_concerns', label: 'Key Concerns' },
+        { key: 'what_would_change_decision', label: 'What Would Change the Decision' },
+    ];
+
+    function renderLiteMemo(data) {
+        let html = `<div class="mb-3">
+            <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill me-1">${data.document_name || 'Intelligence Brief'}</span>
+            <span class="badge bg-secondary-subtle text-secondary px-3 py-2 rounded-pill"><i class="bi bi-lightning-charge-fill me-1"></i>Zelda Lite</span>
+        </div>`;
+        ZELDA_LITE_SECTIONS.forEach(s => {
+            if (data.lite_sections[s.key]) {
+                html += `<div class="mb-3 p-3 bg-light rounded-3">
+                    <h6 class="fw-bold text-dark mb-1" style="font-size:0.82rem;">${s.label}</h6>
+                    <p class="text-secondary small mb-0" style="line-height:1.6; white-space: pre-line;">${data.lite_sections[s.key]}</p>
+                </div>`;
+            }
+        });
+        html += `<p class="small text-muted border-top pt-2 mb-2">
+            <i class="bi bi-lock-fill me-1"></i>Some detailed intelligence remains locked until
+            ${data.document_name || 'this company'} unlocks Premium.
+        </p>`;
+        html += renderDisclaimerFooter(data.disclaimer);
+        return html;
+    }
+
     function loadMemoById(docId) {
         document.getElementById('memo-doc-id').value = docId;
         loadMemo();
@@ -1343,9 +1369,11 @@
 
             if (data.locked) {
                 const memoContentEl = document.getElementById('memo-content');
-                memoContentEl.innerHTML = renderLockedMemoCard(data.document_name, data.is_owner);
+                memoContentEl.innerHTML = data.lite_sections
+                    ? renderLiteMemo(data)
+                    : renderLockedMemoCard(data.document_name, data.is_owner);
                 initPopovers(memoContentEl);
-                addLogEntry(`Memo is Premium-locked for document ${docId}`, 'info');
+                addLogEntry(`Memo is Premium-locked for document ${docId}${data.lite_sections ? ' (showing Zelda Lite)' : ''}`, 'info');
                 return;
             }
 
@@ -1667,6 +1695,19 @@
         }
         document.getElementById('zelda-confirm-match').innerHTML = matchHtml;
 
+        // Describe what the investor will actually be shown, which depends on
+        // the FOUNDER's Premium (see DocumentMemoView): full report, or the
+        // Zelda Lite section set with the rest locked.
+        document.getElementById('zelda-confirm-deliverables').innerHTML = data.founder_premium
+            ? `<p class="fw-semibold mb-1">You'll receive:</p>
+               <p class="small mb-0">The full Zelda intelligence report for <strong>${companyName}</strong>.</p>`
+            : `<p class="fw-semibold mb-1">You'll receive:</p>
+               <p class="small mb-2">Zelda's investment thesis, readiness assessment, key strengths, key concerns,
+                  what would change the decision, and a Truth Delta summary.</p>
+               <p class="fw-semibold mb-1">Full Intelligence Memo:</p>
+               <p class="small text-muted mb-0">Some detailed intelligence remains locked until ${companyName} unlocks
+                  Premium. You won't need to spend another analysis to access the report when it becomes available.</p>`;
+
         const cost = data.analysis_cost || 1;
         document.getElementById('zelda-confirm-cost-line').textContent =
             `Uses ${cost} of your monthly AI analyses.`;
@@ -1738,7 +1779,9 @@
             const data = await response.json();
 
             if (data.locked) {
-                content.innerHTML = renderLockedMemoCard(data.document_name, data.is_owner);
+                content.innerHTML = data.lite_sections
+                    ? renderLiteMemo(data)
+                    : renderLockedMemoCard(data.document_name, data.is_owner);
                 initPopovers(content);
                 content.style.display = 'block';
                 return;

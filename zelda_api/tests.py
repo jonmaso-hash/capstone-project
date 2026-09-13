@@ -1768,6 +1768,25 @@ class AICreditsQuotaTests(TestCase):
         self.assertEqual(data['analysis_cost'], 1)
         self.assertFalse(DocumentSource.objects.filter(uploaded_by=founder_user, document_type='pitch_deck').exists())
 
+    def test_confirm_required_reports_whether_the_founder_has_premium(self):
+        """Drives the pre-spend disclosure — same check DocumentMemoView uses for full vs. Lite."""
+        from matchmaking.models import Application, InvestorApplication
+        founder_user = User.objects.create_user('disclosure_founder', password='x')
+        application = Application.objects.create(
+            user=founder_user, company_name='DisclosureCo',
+            pitch_deck=SimpleUploadedFile('deck.pdf', b'fake pdf bytes', content_type='application/pdf'),
+        )
+        investor_user = User.objects.create_user('disclosure_investor', password='x')
+        InvestorApplication.objects.create(user=investor_user)
+        self.client.force_login(investor_user)
+        url = reverse('zelda_api:analyze_founder', args=[founder_user.username])
+
+        self.assertIs(self.client.get(url).json()['founder_premium'], False)
+
+        application.is_premium = True
+        application.save(update_fields=['is_premium'])
+        self.assertIs(self.client.get(url).json()['founder_premium'], True)
+
     def test_confirm_analyze_founder_profile_charges_the_investor_not_the_founder(self):
         from matchmaking.models import Application, InvestorApplication
         founder_user = User.objects.create_user('confirm_founder', password='x')
@@ -2684,6 +2703,7 @@ class DocumentMemoViewPaywallTests(TestCase):
         IntelligenceMemo.objects.create(
             document=self.doc, executive_summary='Secret summary text.', recommendation='NEEDS_REVIEW',
             completeness_score=0.8, citations_count=3,
+            investment_thesis='Lite thesis text.', key_strengths='Lite strengths text.',
         )
         self.investor_user = User.objects.create_user('memo_paywall_investor', password='x')
         InvestorApplication.objects.create(
@@ -2701,6 +2721,8 @@ class DocumentMemoViewPaywallTests(TestCase):
         self.assertTrue(data['is_owner'])
         self.assertNotIn('sections', data)
         self.assertNotIn('recommendation', data)
+        # The owner's own locked view is unchanged by the investor Lite fallback.
+        self.assertNotIn('lite_sections', data)
 
     def test_owner_gets_full_response_when_premium(self):
         self.application.is_premium = True
@@ -2720,6 +2742,24 @@ class DocumentMemoViewPaywallTests(TestCase):
         self.assertFalse(data['is_owner'])
         self.assertNotIn('sections', data)
 
+    def test_investor_gets_only_the_lite_sections_when_founder_not_premium(self):
+        """
+        An investor who spent an analysis on a founder without Premium is
+        shown Zelda Lite, not an empty lock card — and only the Lite fields
+        leave the server. The full memo stays redacted server-side.
+        """
+        from .ic_memo import LITE_MEMO_SECTION_KEYS
+        self.client.force_login(self.investor_user)
+        response = self.client.get(reverse('zelda_api:document_memo', args=[self.doc.id]))
+        data = response.json()
+        self.assertEqual(data['tier'], 'lite')
+        self.assertEqual(set(data['lite_sections']), LITE_MEMO_SECTION_KEYS)
+        self.assertEqual(data['lite_sections']['investment_thesis'], 'Lite thesis text.')
+        self.assertEqual(data['lite_sections']['key_strengths'], 'Lite strengths text.')
+        self.assertIn('disclaimer', data)
+        self.assertNotIn('Secret summary text.', response.content.decode())
+        self.assertNotIn('recommendation', data)
+
     def test_investor_gets_full_response_when_founder_premium_without_investor_premium(self):
         self.application.is_premium = True
         self.application.save(update_fields=['is_premium'])
@@ -2728,6 +2768,7 @@ class DocumentMemoViewPaywallTests(TestCase):
         data = response.json()
         self.assertFalse(data['locked'])
         self.assertEqual(data['sections']['executive_summary'], 'Secret summary text.')
+        self.assertNotIn('lite_sections', data)
 
     def test_staff_gets_full_response_regardless_of_premium(self):
         self.client.force_login(self.staff_user)
@@ -2735,6 +2776,31 @@ class DocumentMemoViewPaywallTests(TestCase):
         data = response.json()
         self.assertFalse(data['locked'])
         self.assertEqual(data['sections']['executive_summary'], 'Secret summary text.')
+
+
+class ZeldaConfirmModalDisclosureTests(TestCase):
+    """
+    The pre-spend confirmation used to promise a fixed list — AI diligence
+    memo, Truth Delta verification, risk assessment, key opportunities —
+    regardless of what the investor would actually be shown. For a founder
+    without Premium most of that was locked. The modal now describes the
+    founder_premium case it is in; this guards against the fixed list
+    returning.
+    """
+
+    def setUp(self):
+        with open('templates/includes/zelda_ai_assistant_enhanced.html', encoding='utf-8') as f:
+            self.template = f.read()
+
+    def test_modal_no_longer_promises_a_fixed_deliverables_list(self):
+        for promise in ('AI diligence memo', 'Risk assessment', 'Key opportunities'):
+            self.assertNotIn(promise, self.template)
+
+    def test_modal_copy_depends_on_founder_premium(self):
+        self.assertIn("document.getElementById('zelda-confirm-deliverables').innerHTML = data.founder_premium", self.template)
+
+    def test_locked_memo_renders_lite_when_lite_sections_are_present(self):
+        self.assertEqual(self.template.count('data.lite_sections\n                    ? renderLiteMemo(data)'), 2)
 
 
 class TruthDeltaEngineTests(TestCase):

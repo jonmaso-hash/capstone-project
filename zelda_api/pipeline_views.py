@@ -245,14 +245,29 @@ class DocumentMemoView(APIView):
             memo_unlocked = request.user.is_staff or _owner_is_premium(doc.uploaded_by)
 
             if not memo_unlocked:
-                return Response({
+                is_owner = doc.uploaded_by == request.user
+                locked_response = {
                     'memo_id': memo.id,
                     'document_id': doc.id,
                     'document_name': doc.source_entity,
                     'locked': True,
-                    'is_owner': doc.uploaded_by == request.user,
+                    'is_owner': is_owner,
                     'generated_at': memo.created_at.isoformat(),
-                }, status=status.HTTP_200_OK)
+                }
+                # An investor who spent an analysis on a founder without
+                # Premium gets the Zelda Lite section set -- the same one the
+                # IC memo page's lite tier shows -- instead of an empty lock
+                # card. Only those fields leave the server; the rest of the
+                # memo stays redacted. The owner's own locked view is unchanged.
+                if not is_owner:
+                    from .ic_memo import LITE_MEMO_SECTION_KEYS
+                    from .disclaimers import DUE_DILIGENCE_DISCLAIMER
+                    locked_response['tier'] = 'lite'
+                    locked_response['lite_sections'] = {
+                        key: getattr(memo, key) for key in sorted(LITE_MEMO_SECTION_KEYS)
+                    }
+                    locked_response['disclaimer'] = DUE_DILIGENCE_DISCLAIMER
+                return Response(locked_response, status=status.HTTP_200_OK)
 
             # Serialize memo with full citations
             response = {
