@@ -95,6 +95,11 @@ def process_valuation_document_task(self, document_id: int, raw_text: str):
 
         if result['status'] == 'success':
             logger.info(f"[Celery] Valuation pipeline complete for document {document_id}")
+            # The pitch-deck pipeline notifies through notify_document_processed;
+            # this path never did, so a finished valuation told nobody. A
+            # failure was already covered by the post_save error signal.
+            from .terminal_notifications import notify_terminal_state
+            notify_terminal_state(document, succeeded=True)
             return {
                 'status': 'success',
                 'document_id': document_id,

@@ -98,6 +98,66 @@ class TerminalNotificationTests(TestCase):
         self.assertEqual(self._notifications().count(), 0)
 
 
+class PayingInvestorNotificationTests(TestCase):
+    """
+    An investor who spends an analysis on a founder's deck is who asked for it,
+    but the document stays owned by the founder. The notification used to go to
+    uploaded_by -- confirmed in a real generation: the founder was told "your
+    pitch deck analysis is ready" and the investor who paid heard nothing. The
+    AnalysisCreditCharge names the payer.
+    """
+
+    def setUp(self):
+        from zelda_api.models import AnalysisCreditCharge
+        self.founder = User.objects.create_user('tn_paid_founder', password='x')
+        self.investor = User.objects.create_user('tn_paid_investor', password='x')
+        self.document = DocumentSource.objects.create(
+            filename='deck.pdf', document_type='pitch_deck', source_entity='Northwind Grid',
+            uploaded_by=self.founder, status='analyzing',
+        )
+        AnalysisCreditCharge.objects.create(document=self.document, user=self.investor, job_type='memo')
+        self.document = DocumentSource.objects.get(pk=self.document.pk)
+
+    def test_success_notifies_the_paying_investor_not_the_founder(self):
+        notify_terminal_state(self.document, succeeded=True)
+
+        note = Notification.objects.get(recipient=self.investor)
+        self.assertEqual(note.notification_type, ANALYSIS_READY)
+        self.assertEqual(note.message, "Zelda's analysis of Northwind Grid is ready.")
+        self.assertFalse(Notification.objects.filter(recipient=self.founder).exists())
+
+    def test_the_link_is_the_founder_profile_not_the_connection_gated_ic_memo(self):
+        notify_terminal_state(self.document, succeeded=True)
+
+        note = Notification.objects.get(recipient=self.investor)
+        self.assertEqual(note.target_url, '/accounts/profile/tn_paid_founder/')
+
+    def test_failure_wording_for_the_investor_makes_no_charge_or_upload_claim(self):
+        notify_terminal_state(self.document, succeeded=False)
+
+        note = Notification.objects.get(recipient=self.investor)
+        self.assertEqual(note.notification_type, ANALYSIS_FAILED)
+        self.assertEqual(note.message, "Zelda couldn't complete the analysis of Northwind Grid. Please try again later.")
+        self.assertNotIn('charged', note.message.lower())
+        self.assertNotIn('upload', note.message.lower())
+        self.assertFalse(Notification.objects.filter(recipient=self.founder).exists())
+
+    def test_repeated_terminal_saves_still_notify_the_investor_once(self):
+        for _ in range(3):
+            notify_terminal_state(self.document, succeeded=False)
+        self.assertEqual(Notification.objects.filter(recipient=self.investor).count(), 1)
+
+    def test_the_real_error_signal_notifies_the_paying_investor(self):
+        self.document.status = 'error'
+        self.document.error_message = 'boom'
+        self.document.save()
+
+        note = Notification.objects.get(recipient=self.investor)
+        self.assertEqual(note.notification_type, ANALYSIS_FAILED)
+        self.assertNotIn('boom', note.message)
+        self.assertFalse(Notification.objects.filter(recipient=self.founder).exists())
+
+
 class ErrorSignalWritesNotificationTests(TestCase):
     """
     Through the real post_save signal rather than by calling the helper, so a
@@ -129,3 +189,35 @@ class ErrorSignalWritesNotificationTests(TestCase):
         self.document.status = 'analyzing'
         self.document.save()
         self.assertEqual(Notification.objects.filter(recipient=self.user).count(), 0)
+
+
+class ValuationSuccessNotifiesTheRequesterTests(TestCase):
+    """
+    The pitch-deck pipeline reaches notify_document_processed; the valuation
+    task never did, so a finished valuation told nobody (its failures were
+    already covered by the error signal). For a valuation the uploader is the
+    requester -- the ingest view sets uploaded_by to whoever submitted it, founder
+    or investor alike.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user('tn_valuation', password='x')
+        self.document = DocumentSource.objects.create(
+            filename='financials.pdf', document_type='business_valuation', source_entity='Harbour Facilities',
+            uploaded_by=self.user, status='analyzing',
+        )
+
+    def test_a_finished_valuation_notifies_whoever_requested_it(self):
+        from zelda_api.tasks import process_valuation_document_task
+
+        fake_pipeline = mock.Mock()
+        fake_pipeline.process_valuation_document.return_value = {
+            'status': 'success', 'chunks_created': 1, 'insights_extracted': 1,
+        }
+        with mock.patch('zelda_api.tasks.intelligence_pipeline', fake_pipeline):
+            result = process_valuation_document_task.apply(args=[self.document.id, 'text']).get()
+
+        self.assertEqual(result['status'], 'success')
+        note = Notification.objects.get(recipient=self.user)
+        self.assertEqual(note.notification_type, ANALYSIS_READY)
+        self.assertEqual(note.target_url, '/api/v1/zelda/valuation/%d/' % self.document.id)
