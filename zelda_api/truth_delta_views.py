@@ -81,6 +81,18 @@ class TruthDeltaScoreView(APIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
 
     def get(self, request, document_id):
+        # Same rule as the Truth Delta page (truth_delta_ui_view): a document
+        # staff have hidden while it's under review is visible only to its
+        # owner and staff. Checked before the report lookup, as the page does,
+        # so other viewers can't tell whether a hidden document has a report.
+        document = DocumentSource.objects.filter(id=document_id).first()
+        if (document and document.is_hidden_by_staff
+                and document.uploaded_by != request.user and not request.user.is_staff):
+            return Response(
+                {"error": "This document is currently under review and isn't visible yet."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         # Verification can be re-run (nothing enforces one report per
         # document), so always take the most recent row rather than a bare
         # .get() — a bare .get() throws MultipleObjectsReturned and 500s
