@@ -18,6 +18,7 @@ from accounts.forms import ApplicationForm, InvestorForm, SellerForm, BuyerForm
 from accounts.redirects import pop_destination
 from growth.services import consume_referral_if_pending
 from matchmaking.models import Application, SellerApplication, ProfileVideo
+from .forms import ProfilePictureForm
 from .models import UserSettings
 
 
@@ -238,8 +239,13 @@ def update_profile_picture(request):
         messages.error(request, "Please choose an image to upload.")
         return redirect('usersettings:home')
 
+    form = ProfilePictureForm(files=request.FILES)
+    if not form.is_valid():
+        messages.error(request, form.errors['profile_picture'][0])
+        return redirect('usersettings:home')
+
     user_settings = UserSettings.for_user(request.user)
-    user_settings.profile_picture = picture
+    user_settings.profile_picture = form.cleaned_data['profile_picture']
     user_settings.save(update_fields=['profile_picture', 'updated_at'])
     messages.success(request, "Profile picture updated.")
     return redirect('usersettings:home')

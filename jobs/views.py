@@ -1,11 +1,37 @@
+import os
+
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, CreateView, View
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.db.models import Case, When, Value, BooleanField
+from shared_utils.upload_limits import MB, RESUME_MAX_MB
 from .models import JobListing, JobApplication
 from django.db import models
+
+# The bytes each accepted resume format starts with, so a renamed file is refused.
+RESUME_SIGNATURES = {
+    'pdf': b'%PDF-',
+    'docx': b'PK\x03\x04',                      # a zip container
+    'doc': b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1',  # an OLE compound document
+}
+
+
+def _resume_problem(resume):
+    """Why this resume can't be accepted, or None. Size first, so nothing reads an oversized file."""
+    if resume.size > RESUME_MAX_MB * MB:
+        return f"Your resume is too large. The limit is {RESUME_MAX_MB} MB."
+    signature = RESUME_SIGNATURES.get(os.path.splitext(resume.name)[1].lower().lstrip('.'))
+    if signature is None:
+        return "Your resume must be a PDF, DOC or DOCX file."
+    head = resume.read(len(signature))
+    resume.seek(0)
+    if head != signature:
+        return "Your resume doesn't look like the PDF, DOC or DOCX file its name says it is."
+    return None
+
 
 class JobListView(ListView):
     model = JobListing
@@ -80,13 +106,18 @@ class JobCreateView(LoginRequiredMixin, CreateView):
 class JobApplyView(LoginRequiredMixin, View):
     def post(self, request, pk):
         job = get_object_or_404(JobListing, pk=pk, is_active=True)
+        resume = request.FILES.get('resume_attachment')
+        problem = _resume_problem(resume) if resume else None
+        if problem:
+            messages.error(request, problem)
+            return redirect('jobs:detail', pk=pk)
         # Prevent duplicate submissions
         JobApplication.objects.get_or_create(
             job=job,
             applicant=request.user,
             defaults={
                 'cover_letter': request.POST.get('cover_letter', ''),
-                'resume_attachment': request.FILES.get('resume_attachment')
+                'resume_attachment': resume
             }
         )
         return redirect('jobs:detail', pk=pk)

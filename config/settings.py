@@ -171,6 +171,10 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 
+    # Refuses oversized uploads from Content-Length, before CSRF or the
+    # idempotency layer below parses the body. Must stay ahead of both.
+    'shared_utils.upload_limits.UploadSizeLimitMiddleware',
+
     # Your Unique Idempotency Layer
     'shared_utils.middleware.IdempotencyMiddleware',
 ]
