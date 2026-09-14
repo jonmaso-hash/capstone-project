@@ -1145,6 +1145,14 @@ def find_similar_startups(request, application_id):
     """
     source = get_object_or_404(Application, id=application_id)
 
+    # The source meets the same bar as the results below: a company you
+    # couldn't discover can't be looked up by id either. Ids are sequential,
+    # so without this the page title and profile link named private, archived
+    # and review-denied companies. Owners and staff still see their own.
+    if source.user_id != request.user.id and not request.user.is_staff:
+        if source.is_private or source.archived_at is not None or source.review_status == 'DENIED':
+            raise Http404("Not found.")
+
     if not source.description_vector and source.description:
         try:
             vector_array = generate_profile_embedding(source.description)

@@ -61,6 +61,7 @@ jobs:
           accounts blog billing growth jobs matchmaking
           notifications ops pages sharing usersettings
           zelda_api.tests_library
+          zelda_api.tests_truth_delta_visibility
 
   # ── Non-blocking: the zelda_api suite currently makes live huggingface.co
   # calls, hits the Celery hang, and has known failures (all introduced in the
