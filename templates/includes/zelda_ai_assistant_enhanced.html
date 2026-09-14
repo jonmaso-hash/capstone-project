@@ -431,6 +431,9 @@
             <button class="zelda-tab active" data-tab="search">
                 <i class="bi bi-search me-2"></i>Search
             </button>
+            <button class="zelda-tab" data-tab="library">
+                <i class="bi bi-collection me-2"></i>Library
+            </button>
             <button class="zelda-tab" data-tab="upload">
                 <i class="bi bi-cloud-upload me-2"></i>Upload
             </button>
@@ -516,8 +519,10 @@
                 <div id="search-results-list" class="d-flex flex-column gap-2"></div>
             </div>
 
-            <!-- Vector Search (Document-specific) -->
-            <div class="zelda-card p-4">
+            <!-- Vector Search (Document-specific): a developer tool that needs a raw
+                 document ID, so it is shown to staff only. The elements stay in the
+                 page for everyone because the panel's script attaches to them. -->
+            <div class="zelda-card p-4{% if not user.is_staff %} d-none{% endif %}" id="vector-search-card">
                 <h6 class="fw-bold text-dark mb-3">
                     <i class="bi bi-lightning text-warning me-2"></i>Vector Search Document
                 </h6>
@@ -544,6 +549,15 @@
                     </div>
                 </form>
             </div>
+        </div>
+
+        <!-- TAB: LIBRARY — your analyses and reports; see zelda_api/library.py -->
+        <div id="tab-library" class="tab-content" style="display: none; flex-direction: column; gap: 1rem;">
+            <div id="library-loading" class="text-center py-4" style="display: none;">
+                <div class="spinner-border spinner-border-sm text-warning me-2"></div>
+                <span class="small text-muted">Loading your library...</span>
+            </div>
+            <div id="library-content" class="d-flex flex-column gap-3"></div>
         </div>
 
         <!-- TAB: UPLOAD -->
@@ -629,6 +643,16 @@
                 <h6 class="fw-bold text-dark mb-3">
                     <i class="bi bi-file-text text-info me-2"></i>View Generated Memos
                 </h6>
+                {% if not user.is_staff %}
+                {% comment %}
+                Opening a memo by raw document ID is a staff tool. Everyone else opens
+                reports from the Library. The lookup stays in the page, hidden, because
+                the analyze flow writes the document into #memo-doc-id and loadMemo()
+                reads it back.
+                {% endcomment %}
+                <style>#tab-memo .zelda-card > div { display: none !important; }</style>
+                <p class="small text-muted mb-0" id="memo-library-hint">Open your reports from the <strong>Library</strong> tab.</p>
+                {% endif %}
 
                 <div>
                     <label class="small text-muted d-block mb-2">Document ID</label>
@@ -799,6 +823,9 @@
 
             if (tabName === 'notifications') {
                 loadNotifications();
+            }
+            if (tabName === 'library') {
+                loadLibrary();
             }
         });
     });
@@ -1161,6 +1188,107 @@
     // ──────────────────────────────────────────────────────────────────────────
     // VECTOR SEARCH
     // ──────────────────────────────────────────────────────────────────────────
+
+    // ── LIBRARY ──
+    // Lists what already exists for the signed-in user (zelda_api/library.py).
+    // Company and document names are user-entered, so everything interpolated
+    // into markup goes through zeldaEscape.
+    function zeldaEscape(value) {
+        return String(value ?? '').replace(/[&<>"']/g, ch => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[ch]));
+    }
+
+    function zeldaDate(iso) {
+        return iso ? new Date(iso).toLocaleDateString() : '';
+    }
+
+    function renderLibraryReports(reports) {
+        const links = (reports || []).filter(r => !r.is_current).map(r => r.url
+            ? `<a href="${zeldaEscape(r.url)}" class="btn btn-sm btn-outline-secondary rounded-pill">${zeldaEscape(r.label)}</a>`
+            : `<span class="btn btn-sm btn-light rounded-pill disabled" title="${zeldaEscape(r.note)}"><i class="bi bi-lock me-1"></i>${zeldaEscape(r.label)}</span>`);
+        return links.length ? `<div class="d-flex flex-wrap gap-2 mt-2">${links.join('')}</div>` : '';
+    }
+
+    function renderLibraryBriefButton(documentId) {
+        return documentId
+            ? `<button type="button" class="zelda-button mt-2" style="padding: 0.35rem 0.8rem; font-size: 0.8rem;" onclick="openZeldaIntelligence(${Number(documentId)}, 'intelligence')"><i class="bi bi-cpu me-1"></i>Open brief</button>`
+            : '';
+    }
+
+    function renderLibrary(data) {
+        const cards = [];
+        (data.sections || []).forEach(section => {
+            if (section.key === 'your_company') {
+                const docs = (section.documents || []).map(d => `
+                    <div class="p-2 bg-light rounded-3">
+                        <div class="small fw-semibold text-dark">${zeldaEscape(d.name)}</div>
+                        <div class="small text-muted">${zeldaEscape(d.kind)} · ${zeldaEscape(d.status)} · ${zeldaDate(d.created_at)}</div>
+                        ${d.can_open_brief ? renderLibraryBriefButton(d.document_id) : ''}
+                    </div>`).join('');
+                cards.push(`<div class="zelda-card p-3">
+                    <h6 class="fw-bold text-dark mb-1">${zeldaEscape(section.title)}${section.company ? ` · ${zeldaEscape(section.company)}` : ''}</h6>
+                    ${renderLibraryReports(section.reports)}
+                    ${docs ? `<div class="d-flex flex-column gap-2 mt-3">${docs}</div>` : ''}
+                </div>`);
+            } else if (section.key === 'valuations') {
+                const rows = section.items.map(v => `
+                    <a href="${zeldaEscape(v.url)}" class="d-block p-2 bg-light rounded-3 text-decoration-none">
+                        <span class="small fw-semibold text-dark">${zeldaEscape(v.name)}</span>
+                        <span class="small text-muted d-block">${zeldaEscape(v.status)} · ${zeldaDate(v.created_at)}</span>
+                    </a>`).join('');
+                cards.push(`<div class="zelda-card p-3">
+                    <h6 class="fw-bold text-dark mb-2">${zeldaEscape(section.title)}</h6>
+                    <div class="d-flex flex-column gap-2">${rows}</div>
+                    <a href="${zeldaEscape(section.history_url)}" class="small d-inline-block mt-2">All valuations</a>
+                </div>`);
+            } else if (section.key === 'recent_companies') {
+                const rows = section.items.map(c => `
+                    <div class="p-2 bg-light rounded-3">
+                        <a href="${zeldaEscape(c.profile_url)}" class="small fw-semibold text-dark">${zeldaEscape(c.company)}</a>
+                        <div class="small text-muted">${zeldaEscape(c.activity)} · ${zeldaDate(c.last_activity)}</div>
+                        ${renderLibraryReports(c.reports)}
+                        ${renderLibraryBriefButton(c.brief_document_id)}
+                    </div>`).join('');
+                cards.push(`<div class="zelda-card p-3">
+                    <h6 class="fw-bold text-dark mb-2">${zeldaEscape(section.title)}</h6>
+                    ${rows ? `<div class="d-flex flex-column gap-2">${rows}</div>`
+                           : '<p class="small text-muted mb-0">Companies you analyze or open reports for will appear here.</p>'}
+                </div>`);
+            }
+        });
+        if (!cards.length) {
+            cards.push(`<div class="zelda-card p-3" data-library-empty="true">
+                <h6 class="fw-bold text-dark mb-1">Nothing here yet</h6>
+                <p class="small text-muted mb-0">Analyses you run and reports you open will be collected here.</p>
+            </div>`);
+        }
+        if (data.profile_analytics_url) {
+            cards.push(`<a href="${zeldaEscape(data.profile_analytics_url)}" class="small"><i class="bi bi-bar-chart me-1"></i>Your profile analytics</a>`);
+        }
+        return cards.join('');
+    }
+
+    async function loadLibrary() {
+        const loading = document.getElementById('library-loading');
+        const content = document.getElementById('library-content');
+        loading.style.display = 'block';
+        content.style.display = 'none';
+        try {
+            const response = await fetch(`${ZELDA_API}/library/`, {
+                credentials: 'same-origin',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            content.innerHTML = renderLibrary(await response.json());
+        } catch (err) {
+            content.innerHTML = `<p class="small text-danger mb-0">Couldn't load your library right now.</p>`;
+            addLogEntry(`Library load error: ${err.message}`, 'error');
+        } finally {
+            loading.style.display = 'none';
+            content.style.display = 'flex';
+        }
+    }
 
     document.getElementById('vector-search-form').addEventListener('submit', async (e) => {
         e.preventDefault();

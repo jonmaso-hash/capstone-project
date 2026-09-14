@@ -143,6 +143,20 @@ class ZeldaHealthCheckAPIView(APIView):
         return Response({"status": "ok", "service": "zelda_api"})
 
 
+class ZeldaLibraryAPIView(APIView):
+    """
+    GET /api/v1/zelda/library/ -- the signed-in user's own analyses and reports.
+    Only ever the requester's data; report links carry report_nav's access rules.
+    See zelda_api/library.py.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+
+    def get(self, request):
+        from .library import build_library
+        return Response(build_library(request.user))
+
+
 ZELDA_ASK_DAILY_LIMIT = 30
 
 
@@ -356,14 +370,14 @@ class ZeldaGlobalSearchAPIView(APIView):
 
             # 4. Template file search
             template_route_map = {
-                'home.html': ('Main Landing Page', '/home/'),
-                'contact.html': ('Contact & Support', '/contact/'),
-                'edit_founder_profile.html': ('Founder Onboarding Hub', '/settings/profile/founder/'),
-                'edit_investor_profile.html': ('Investor Mandate Portal', '/settings/profile/investor/'),
-                'ai_search.html': ('Zelda UI Workspace Canvas', '/accounts/ai_search/'),
-                'profile.html': ('User Metrics Engine Profiles', '/accounts/profile/'),
-                'bulletin_board.html': ('Venture Bulletin Board', '/matchmaking/bulletin-board/'),
-                'chat.html': ('Ecosystem Deal Room Space', '/matchmaking/deal-room/'),
+                'home.html': ('Home', '/home/'),
+                'contact.html': ('Contact us', '/contact/'),
+                'edit_founder_profile.html': ('Founder profile settings', '/settings/profile/founder/'),
+                'edit_investor_profile.html': ('Investor profile settings', '/settings/profile/investor/'),
+                'ai_search.html': ('Zelda search', '/accounts/ai_search/'),
+                'profile.html': ('Your profile', '/accounts/profile/'),
+                'bulletin_board.html': ('Bulletin board', '/bulletin_board/'),
+                'chat.html': ('Deal Room', '/matchmaking/deal-room/'),
             }
 
             search_roots = []

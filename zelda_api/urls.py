@@ -39,6 +39,7 @@ urlpatterns = [
     # LEGACY & UI ENDPOINTS (Maintained for Compatibility)
     # ──────────────────────────────────────────────────────────────────────────
     path('health/', standard_views.ZeldaHealthCheckAPIView.as_view(), name='health_check'),
+    path('library/', standard_views.ZeldaLibraryAPIView.as_view(), name='library'),
     # NOTE: this used to be registered at 'api/v1/zelda/search/' while this whole
     # urls.py is *also* mounted at 'api/v1/zelda/' in config/urls.py — making the
     # real path '/api/v1/zelda/api/v1/zelda/search/', which nothing ever called.
