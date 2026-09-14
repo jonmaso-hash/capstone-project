@@ -60,6 +60,7 @@ jobs:
           python manage.py test --verbosity=2
           accounts blog billing growth jobs matchmaking
           notifications ops pages sharing usersettings
+          zelda_api.tests_library
 
   # ── Non-blocking: the zelda_api suite currently makes live huggingface.co
   # calls, hits the Celery hang, and has known failures (all introduced in the
