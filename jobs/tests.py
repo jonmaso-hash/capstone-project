@@ -111,7 +111,9 @@ class ResumeAttachmentStorageCleanupTests(TestCase):
         storage, path = application.resume_attachment.storage, application.resume_attachment.name
         self.assertTrue(storage.exists(path))
 
-        application.delete()
+        # Stored files are removed once the deletion commits (shared_utils/file_cleanup.py).
+        with self.captureOnCommitCallbacks(execute=True):
+            application.delete()
 
         self.assertFalse(storage.exists(path))
 

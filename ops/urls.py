@@ -36,6 +36,7 @@ urlpatterns = [
     path('users/', views.user_management, name='user_management'),
     path('users/<int:user_id>/toggle-active/', views.toggle_user_active, name='toggle_user_active'),
     path('users/<int:user_id>/impersonate/', views.start_impersonation, name='start_impersonation'),
+    path('users/<int:user_id>/delete/', views.delete_user, name='delete_user'),
     path('impersonate/stop/', views.stop_impersonation, name='stop_impersonation'),
 
     path('documents/', views.document_review, name='document_review'),

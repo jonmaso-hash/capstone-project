@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete your account{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <h1 class="h3 fw-bold text-danger mb-2">Delete your account</h1>
+            <p class="text-secondary mb-4">
+                This permanently deletes your Interlink Foundry account. It can't be undone.
+                {% if role_profile %}Just want to step away? You can <a href="{% url 'usersettings:home' %}#archive-delete">archive your {{ role_label }}</a> instead and reactivate it anytime.{% endif %}
+            </p>
+
+            {% comment %}
+            The four outcomes are kept visibly separate on purpose: what is gone, what is
+            kept without the user's identity, what happens to billing, and the cleanup that
+            runs after the deletion and may be retried. See accounts/deletion.py.
+            {% endcomment %}
+            <div class="card border-0 shadow-sm rounded-4 mb-3">
+                <div class="card-body p-4">
+                    <h2 class="h6 fw-bold mb-2"><i class="bi bi-trash text-danger me-2"></i>Permanently deleted</h2>
+                    <ul class="small text-secondary mb-0">
+                        <li>Your account, sign-in details and any connected Google, Facebook or LinkedIn login</li>
+                        <li>Your profile, pitch deck, videos, data room documents and the reports generated for them</li>
+                        <li>Your connections and deal rooms, milestones, CRM leads, posts, comments, job listings and applications</li>
+                        <li>Your notifications and settings</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 mb-3">
+                <div class="card-body p-4">
+                    <h2 class="h6 fw-bold mb-2"><i class="bi bi-incognito me-2"></i>Kept without your identity</h2>
+                    <ul class="small text-secondary mb-0">
+                        <li>Anonymous usage statistics, such as page views and searches, no longer linked to you</li>
+                        <li>Reports you filed about other members, and reports filed about you, so they can still be reviewed. The link to your account is removed; a report about you keeps only the username it was filed against.</li>
+                        <li>Payment records kept by our payment provider</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 mb-3">
+                <div class="card-body p-4">
+                    <h2 class="h6 fw-bold mb-2"><i class="bi bi-credit-card me-2"></i>Your subscription</h2>
+                    {% if open_subscriptions %}
+                    <p class="small text-secondary mb-0">
+                        Your {% for subscription in open_subscriptions %}{{ subscription.get_plan_display }}{% if not forloop.last %} and {% endif %}{% endfor %}
+                        subscription is cancelled with our payment provider first, and billing stops immediately.
+                        If that cancellation fails, nothing is deleted and you can try again.
+                    </p>
+                    {% else %}
+                    <p class="small text-secondary mb-0">You have no active subscription, so there is nothing to cancel.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h2 class="h6 fw-bold mb-2"><i class="bi bi-hourglass-split me-2"></i>Finished shortly after</h2>
+                    <p class="small text-secondary mb-0">
+                        Your uploaded files, and your chat identity and the messages you sent, are removed right after your account is deleted.
+                        If one of those services is briefly unavailable, the removal is retried. Your account stays deleted either way.
+                        Conversations you were part of stay with the other members, without your messages.
+                    </p>
+                </div>
+            </div>
+
+            <form method="post" class="card border-danger rounded-4">
+                {% csrf_token %}
+                <div class="card-body p-4">
+                    <label for="confirm_username" class="form-label fw-semibold">Type your username, <code>{{ request.user.username }}</code>, to confirm</label>
+                    <input type="text" id="confirm_username" name="confirm_username" class="form-control mb-3" autocomplete="off" required>
+                    {% if needs_password %}
+                    <label for="password" class="form-label fw-semibold">Your password</label>
+                    <input type="password" id="password" name="password" class="form-control mb-3" autocomplete="current-password" required>
+                    {% endif %}
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button type="submit" class="btn btn-danger rounded-pill px-4">Delete my account permanently</button>
+                        <a href="{% url 'usersettings:home' %}" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

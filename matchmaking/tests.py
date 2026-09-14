@@ -1977,7 +1977,9 @@ class DataRoomModelTests(TestCase):
         )
         storage, path = doc.file.storage, doc.file.name
         self.assertTrue(storage.exists(path))
-        doc.delete()
+        # Stored files are removed once the deletion commits (shared_utils/file_cleanup.py).
+        with self.captureOnCommitCallbacks(execute=True):
+            doc.delete()
         self.assertFalse(storage.exists(path))
 
     def test_cascade_delete_via_founder_also_removes_file_from_storage(self):
@@ -1998,7 +2000,8 @@ class DataRoomModelTests(TestCase):
         storage, path = doc.file.storage, doc.file.name
         self.assertTrue(storage.exists(path))
 
-        self.founder.user.delete()  # cascades: User -> Application -> DataRoomDocument
+        with self.captureOnCommitCallbacks(execute=True):
+            self.founder.user.delete()  # cascades: User -> Application -> DataRoomDocument
 
         self.assertFalse(storage.exists(path))
 
@@ -2031,7 +2034,8 @@ class UploadedFileStorageCleanupTests(TestCase):
         self.assertTrue(deck_storage.exists(deck_path))
         self.assertTrue(video_storage.exists(video_path))
 
-        app.delete()
+        with self.captureOnCommitCallbacks(execute=True):
+            app.delete()
 
         self.assertFalse(deck_storage.exists(deck_path))
         self.assertFalse(video_storage.exists(video_path))
@@ -2046,7 +2050,8 @@ class UploadedFileStorageCleanupTests(TestCase):
         storage, path = app.pitch_deck.storage, app.pitch_deck.name
         self.assertTrue(storage.exists(path))
 
-        user.delete()  # cascades: User -> Application
+        with self.captureOnCommitCallbacks(execute=True):
+            user.delete()  # cascades: User -> Application
 
         self.assertFalse(storage.exists(path))
 
@@ -2061,7 +2066,8 @@ class UploadedFileStorageCleanupTests(TestCase):
         storage, path = seller.cim_document.storage, seller.cim_document.name
         self.assertTrue(storage.exists(path))
 
-        seller.delete()
+        with self.captureOnCommitCallbacks(execute=True):
+            seller.delete()
 
         self.assertFalse(storage.exists(path))
 

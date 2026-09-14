@@ -14,12 +14,15 @@ class UserReport(models.Model):
         ('DISMISSED', 'Dismissed'),
     ]
 
+    # SET_NULL, not CASCADE: a report stays reviewable when either account is
+    # deleted (accounts/deletion.py). reported_username keeps who it was about.
     reporter = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reports_filed'
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reports_filed'
     )
     reported_user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reports_received'
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reports_received'
     )
+    reported_username = models.CharField(max_length=150, blank=True)
     reason = models.TextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='OPEN')
     resolved_by = models.ForeignKey(
@@ -35,8 +38,13 @@ class UserReport(models.Model):
             models.Index(fields=['status', '-created_at']),
         ]
 
+    def save(self, *args, **kwargs):
+        if self.reported_user_id and not self.reported_username:
+            self.reported_username = self.reported_user.username
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"Report: {self.reported_user.username} ({self.status})"
+        return f"Report: {self.reported_username or 'deleted account'} ({self.status})"
 
 
 class Invite(models.Model):
@@ -134,21 +142,34 @@ class ImpersonationLog(models.Model):
     """Audit trail for staff impersonation — who impersonated whom and for
     how long. Never deleted from the ops UI."""
 
+    # SET_NULL, not CASCADE: the audit trail outlives either account
+    # (accounts/deletion.py). The usernames, filled in on save, record who was involved.
     impersonator = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='impersonation_sessions_started'
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='impersonation_sessions_started'
     )
     target = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='impersonation_sessions_received'
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='impersonation_sessions_received'
     )
+    impersonator_username = models.CharField(max_length=150, blank=True)
+    target_username = models.CharField(max_length=150, blank=True)
     started_at = models.DateTimeField(auto_now_add=True)
     ended_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ['-started_at']
 
+    def save(self, *args, **kwargs):
+        if self.impersonator_id and not self.impersonator_username:
+            self.impersonator_username = self.impersonator.username
+        if self.target_id and not self.target_username:
+            self.target_username = self.target.username
+        super().save(*args, **kwargs)
+
     def __str__(self):
         status = "active" if not self.ended_at else "ended"
-        return f"{self.impersonator.username} → {self.target.username} ({status})"
+        return f"{self.impersonator_username or 'deleted account'} → {self.target_username or 'deleted account'} ({status})"
 
 
 class FailedTaskLog(models.Model):

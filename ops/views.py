@@ -653,6 +653,38 @@ def stop_impersonation(request):
     return redirect('ops:user_management')
 
 
+@login_required
+@require_POST
+def delete_user(request, user_id):
+    """
+    Staff deletion of an account, through the same accounts/deletion.py service
+    as self-serve deletion, so Stripe cancellation, kept safety records and
+    cleanup all apply. Django admin can't delete users (accounts/admin.py).
+    Staff accounts, including your own, can't be deleted here, and the typed
+    username must match.
+    """
+    guard = _staff_required(request)
+    if guard:
+        return guard
+
+    from accounts.deletion import DeletionBlocked, delete_account
+
+    target = get_object_or_404(User, id=user_id)
+    if target == request.user or target.is_staff:
+        messages.error(request, "Staff accounts, including your own, can't be deleted here.")
+    elif request.POST.get('confirm_username', '').strip() != target.username:
+        messages.error(request, "Type the username exactly to confirm deletion.")
+    else:
+        username = target.username
+        try:
+            delete_account(target, performed_by=request.user)
+        except DeletionBlocked as blocked:
+            messages.error(request, f"{username} was not deleted. {blocked.message}")
+        else:
+            messages.success(request, f"Deleted {username}.")
+    return redirect('ops:user_management')
+
+
 # =====================================================================
 # 13. REVIEW UPLOADED DOCUMENTS BEFORE THEY'RE VISIBLE
 # =====================================================================
