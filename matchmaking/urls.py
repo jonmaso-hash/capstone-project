@@ -112,6 +112,8 @@ urlpatterns = [
     # =====================================================================
     # PITCH VIDEOS SECTION
     # =====================================================================
+    # The nav's single "Pitch Videos" entry: redirects to 30 sec (Explore) or Full Pitch.
+    path('videos/', views.pitch_videos_entry, name='pitch_videos_entry'),
     path('pitch-videos/', views.pitch_videos_section, name='pitch_videos'),
     path('pitch-videos/<str:role>/<int:profile_id>/play/', views.log_pitch_video_play, name='log_pitch_video_play'),
     path('pitch-videos/<str:role>/<int:profile_id>/like/', views.toggle_pitch_video_like, name='toggle_pitch_video_like'),
