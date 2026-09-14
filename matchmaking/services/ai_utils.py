@@ -1,4 +1,6 @@
 # ai_utils.py
+import threading
+
 import numpy as np
 
 # Loaded lazily on first use, not at import time — this module gets pulled
@@ -7,13 +9,18 @@ import numpy as np
 # every process start (manage.py check, tests, runserver) pay for a model
 # load/download even when nothing ever generates an embedding.
 _model = None
+# gunicorn runs threaded workers: without the lock, the first requests to reach
+# a fresh worker at the same moment would each load their own copy.
+_model_lock = threading.Lock()
 
 
 def _get_model():
     global _model
     if _model is None:
-        from sentence_transformers import SentenceTransformer
-        _model = SentenceTransformer('all-MiniLM-L6-v2')
+        with _model_lock:
+            if _model is None:
+                from sentence_transformers import SentenceTransformer
+                _model = SentenceTransformer('all-MiniLM-L6-v2')
     return _model
 
 

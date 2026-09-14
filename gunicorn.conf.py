@@ -28,7 +28,10 @@ bind = f"0.0.0.0:{_int_env('PORT', 8000)}"
 # sets the ceiling here; 3 is the previous value, unchanged.
 workers = _int_env('WEB_CONCURRENCY', 3)
 
-# Seconds a worker may spend on one request before it is killed and restarted.
+# Seconds a worker may go without checking in before it is killed and restarted.
+# With threaded workers the check-in runs on the worker's own loop, so this
+# catches a stuck worker rather than one slow request; the Anthropic client's
+# ceiling (zelda_api/anthropic_client.py) is what bounds a slow Claude call.
 timeout = _int_env('GUNICORN_TIMEOUT', 60)
 
 # Seconds an in-flight request gets to finish during a restart or deploy.
@@ -36,3 +39,10 @@ graceful_timeout = _int_env('GUNICORN_GRACEFUL_TIMEOUT', 30)
 
 # Seconds to hold an idle keep-alive connection from the host's proxy.
 keepalive = _int_env('GUNICORN_KEEPALIVE', 5)
+
+# gthread: each worker serves up to GUNICORN_THREADS requests at once, so one
+# slow upload or Claude call holds a thread, not the whole worker. Threads share
+# the worker's memory, embedding model included; the model's lazy load is locked
+# (matchmaking/services/ai_utils.py) so two first requests can't load it twice.
+worker_class = 'gthread'
+threads = _int_env('GUNICORN_THREADS', 4)

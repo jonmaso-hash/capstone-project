@@ -16,6 +16,10 @@ load sentence-transformers -- this module runs in the blocking CI job.
 import os
 import re
 import runpy
+import sys
+import threading
+import time
+import types
 from pathlib import Path
 from unittest import mock
 
@@ -23,7 +27,10 @@ from django.conf import settings
 from django.test import SimpleTestCase
 
 ROOT = Path(settings.BASE_DIR)
-GUNICORN_VARS = ('PORT', 'WEB_CONCURRENCY', 'GUNICORN_TIMEOUT', 'GUNICORN_GRACEFUL_TIMEOUT', 'GUNICORN_KEEPALIVE')
+GUNICORN_VARS = (
+    'PORT', 'WEB_CONCURRENCY', 'GUNICORN_TIMEOUT', 'GUNICORN_GRACEFUL_TIMEOUT', 'GUNICORN_KEEPALIVE',
+    'GUNICORN_THREADS',
+)
 
 # Headroom a web request needs beyond the Claude call itself: the database
 # search that follows extraction, serialization, and the proxy hop.
@@ -47,16 +54,22 @@ class GunicornConfigTests(SimpleTestCase):
         self.assertEqual(config['keepalive'], 5)
         self.assertEqual(config['bind'], '0.0.0.0:8000')
 
+    def test_workers_are_threaded_so_one_slow_upload_does_not_hold_a_whole_worker(self):
+        config = _gunicorn_config()
+        self.assertEqual(config['worker_class'], 'gthread')
+        self.assertEqual(config['threads'], 4)
+
     def test_the_environment_overrides_every_value(self):
         config = _gunicorn_config(
             PORT='10000', WEB_CONCURRENCY='2', GUNICORN_TIMEOUT='90',
-            GUNICORN_GRACEFUL_TIMEOUT='20', GUNICORN_KEEPALIVE='2',
+            GUNICORN_GRACEFUL_TIMEOUT='20', GUNICORN_KEEPALIVE='2', GUNICORN_THREADS='8',
         )
         self.assertEqual(config['bind'], '0.0.0.0:10000')
         self.assertEqual(config['workers'], 2)
         self.assertEqual(config['timeout'], 90)
         self.assertEqual(config['graceful_timeout'], 20)
         self.assertEqual(config['keepalive'], 2)
+        self.assertEqual(config['threads'], 8)
 
     def test_a_blank_value_falls_back_to_the_default(self):
         self.assertEqual(_gunicorn_config(GUNICORN_TIMEOUT='  ')['timeout'], 60)
@@ -68,6 +81,41 @@ class GunicornConfigTests(SimpleTestCase):
         self.assertIn('gunicorn.conf.py', cmd)
         for flag in ('--timeout', '--workers', '--bind', '-w', '-t', '-b'):
             self.assertNotIn(f'"{flag}"', cmd)
+
+
+class EmbeddingModelThreadSafetyTests(SimpleTestCase):
+    """
+    Threaded workers share one embedding model per process. Without a lock, the
+    first requests to reach a fresh worker at the same moment would each load a
+    copy, and on a 2 GB instance that is enough to run out of memory.
+    """
+
+    def test_threads_that_ask_for_the_model_at_once_load_it_once(self):
+        from matchmaking.services import ai_utils
+
+        loads, models = [], []
+
+        def slow_model(name):
+            loads.append(name)
+            time.sleep(0.2)
+            return object()
+
+        barrier = threading.Barrier(4)
+
+        def request():
+            barrier.wait()
+            models.append(ai_utils._get_model())
+
+        fake = types.SimpleNamespace(SentenceTransformer=slow_model)
+        with mock.patch.dict(sys.modules, {'sentence_transformers': fake}), mock.patch.object(ai_utils, '_model', None):
+            threads = [threading.Thread(target=request) for _ in range(4)]
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join()
+
+        self.assertEqual(len(loads), 1)
+        self.assertEqual(len({id(model) for model in models}), 1)
 
 
 class AnthropicClientTimeoutTests(SimpleTestCase):

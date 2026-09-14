@@ -32,6 +32,7 @@ from .serializers import (
 
 # Core Deal Flow Utilities
 from .utils import scan_pitch_deck, AnalyzedPitch, compile_executive_intelligence_memo, analyze_web_text
+from shared_utils.upload_limits import MB, PITCH_ANALYSIS_MAX_MB
 
 UserClass = get_user_model()
 logger = logging.getLogger(__name__)
@@ -48,8 +49,6 @@ except ImportError:
 
 
 # ── DiligenceEngine ───────────────────────────────────────────────────────────
-# FIX: Moved DiligenceEngine to the TOP of the module so that
-# DocumentIntakeAPIView (which references it) can resolve the name at call time.
 class DiligenceEngine:
     @staticmethod
     def calculate_success_vector(founder_app, investor_app, crawled_data):
@@ -574,93 +573,6 @@ class SandboxScanView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class DocumentIntakeAPIView(APIView):
-    """
-    POST /api/v1/zelda/documents/analyze/
-    The Unified Interlink Foundry Pipeline for Founders.
-    FIX: DiligenceEngine is now defined before this class (top of file).
-    FIX: Removed orphaned second post() method that was hidden inside a docstring.
-    """
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [SessionAuthentication, TokenAuthentication]
-    parser_classes = [MultiPartParser, FormParser]
-
-    def post(self, request, format=None):
-        if not _MATCHMAKING_AVAILABLE:
-            return Response({"error": "Matchmaking module is not installed."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-        uploaded_file = request.FILES.get('file')
-        if not uploaded_file:
-            return Response({"error": "No file uploaded. Use the form-data key 'file'."}, status=status.HTTP_400_BAD_REQUEST)
-
-        target_investor_id = request.data.get('investor_id')
-        if target_investor_id:
-            investor_app = get_object_or_404(InvestorApplication, id=target_investor_id)
-        else:
-            investor_app = InvestorApplication.objects.first()
-            if not investor_app:
-                return Response({"error": "No active investor profiles found in registry to compute vector matches against."}, status=status.HTTP_404_NOT_FOUND)
-
-        try:
-            raw_extracted_data = scan_pitch_deck(uploaded_file)
-            if "error" in raw_extracted_data:
-                return Response(raw_extracted_data, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-
-            raw_text_summary = raw_extracted_data.get("summary", "")
-
-            founder_app, created = Application.objects.get_or_create(
-                user=request.user,
-                defaults={
-                    'company_name': 'New Venture Track',
-                    'description': raw_text_summary[:500],
-                    'sector': 'Fintech / Infrastructure',
-                },
-            )
-
-            if not created and raw_text_summary:
-                founder_app.description = raw_text_summary[:500]
-                founder_app.save()
-
-            mock_crawl_telemetry = {
-                'linkedin_headcount': getattr(founder_app, 'company_size', 15) or 15,
-                'job_board_openings': 3,
-            }
-            vector_score, transparency_index = DiligenceEngine.calculate_success_vector(
-                founder_app, investor_app, mock_crawl_telemetry
-            )
-
-            memo_markdown = compile_executive_intelligence_memo(
-                founder_app=founder_app,
-                investor_app=investor_app,
-                extracted_deck_data=raw_extracted_data,
-                vector_score=vector_score,
-                transparency_index=transparency_index,
-            )
-
-            foundry_envelope = {
-                "origin": "pitch_deck_scanner",
-                "timestamp": "2026-05-25T12:00:00Z",
-                "intelligence_score": vector_score,
-                "payload": {
-                    "summary": raw_text_summary[:500],
-                    "investment_memo_markdown": memo_markdown,
-                    "target_investor": investor_app.company_name or "Institutional Allocator",
-                    "transparency_index": transparency_index,
-                    "revenue": raw_extracted_data.get("revenue_metrics", "Pending LLM Analysis"),
-                    "market": raw_extracted_data.get("market_size", "Pending LLM Analysis"),
-                },
-                "risk_flags": {
-                    "low_transparency_variance": transparency_index < 70.0,
-                },
-            }
-
-            return Response(foundry_envelope, status=status.HTTP_201_CREATED)
-
-        except Exception as e:
-            logger.error(f"Unified intake pipeline execution failed: {str(e)}")
-            return Response({"error": f"Intake pipeline structural error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
 class WebExplorationAPIView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [SessionAuthentication, TokenAuthentication]
@@ -905,6 +817,14 @@ class PitchDeckAnalysisAPIView(APIView):
         if not uploaded_file:
             return Response(
                 {"error": "No file provided. Send a PDF, PPTX, or TXT file as 'pitch_deck'."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # UploadSizeLimitMiddleware already refused any request whose header was
+        # too large; this is the exact check, before the scanner reads the file.
+        if uploaded_file.size > PITCH_ANALYSIS_MAX_MB * MB:
+            return Response(
+                {"error": f"File too large. Maximum size is {PITCH_ANALYSIS_MAX_MB} MB."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

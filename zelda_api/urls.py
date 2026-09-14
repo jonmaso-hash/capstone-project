@@ -51,7 +51,6 @@ urlpatterns = [
     path('ask/', standard_views.ZeldaAskAPIView.as_view(), name='ask'),
     path('journey-status/', standard_views.JourneyStatusAPIView.as_view(), name='journey_status'),
     path('pitch-analysis/', standard_views.PitchDeckAnalysisAPIView.as_view(), name='pitch_analysis'),
-    path('documents/analyze/', standard_views.DocumentIntakeAPIView.as_view(), name='document_intake'),
     path('intelligence-memo/', standard_views.IntelligenceMemoAPIView.as_view(), name='intelligence_memo'),
     path('summarize/', standard_views.SummarizePageAPIView.as_view(), name='summarize'),
     path('dashboard/intelligence/', standard_views.zelda_intelligence_dashboard, name='intelligence_dashboard'),
