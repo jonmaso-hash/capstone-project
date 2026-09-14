@@ -322,6 +322,13 @@ else:
 LOGOUT_REDIRECT_URL = "accounts:login"
 LOGIN_URL = "accounts:login"
 
+# Rate limits (accounts/rate_limits.py) count against the client's address.
+# Behind a proxy REMOTE_ADDR is the proxy's, so every visitor would share one
+# count; set this to the number of proxies in front of the app that each append
+# an X-Forwarded-For entry. It stays 0 -- the header is ignored, since a client
+# can forge it -- until staging confirms how Render's proxy writes the header.
+RATE_LIMIT_TRUSTED_PROXY_COUNT = env.int('RATE_LIMIT_TRUSTED_PROXY_COUNT', default=0)
+
 # Reads from .env in production; falls back to localhost Redis for dev.
 CELERY_BROKER_URL = env('CELERY_BROKER_URL')
 CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND')
@@ -373,6 +380,10 @@ CELERY_BEAT_SCHEDULE = {
     'generate-quarterly-insight-report': {
         'task': 'growth.tasks.generate_quarterly_insight_report',
         'schedule': crontab(day_of_month=1, month_of_year='1,4,7,10', hour=6, minute=0),
+    },
+    'prune-rate-limit-events': {
+        'task': 'accounts.tasks.prune_rate_limit_events',
+        'schedule': crontab(hour=4, minute=30),
     },
 }
 

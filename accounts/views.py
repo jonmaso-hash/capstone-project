@@ -7,15 +7,17 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model, login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.views import PasswordResetView
 from django.core.cache import cache
 from django.core.mail import send_mail
 from django.db.models import Avg, Count, Q
-from django.http import JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from . import rate_limits
 from .redirects import remember_destination, requested_destination
 
 # Core Matchmaking Engine Models
@@ -102,8 +104,22 @@ def signup_view(request):
             messages.error(request, "Please pick Founder, Investor, Seller, or Buyer before creating your account.")
             return redirect('accounts:signup')
 
+        # 5 new accounts an hour per address (accounts/rate_limits.py). It counts
+        # accounts, not submissions: a signup that fails validation un-counts
+        # itself, so someone fumbling the password rules isn't slowed down.
+        client_ip = rate_limits.client_ip(request)
+        token = rate_limits.reserve('signup_ip', client_ip)
+        if token is None:
+            messages.error(request, f"Too many new accounts from this network. Try again {rate_limits.retry_phrase('signup_ip', client_ip)}.")
+            return render(request, "accounts/signup.html", {
+                "form": UserCreationForm(),
+                "next_destination": requested_destination(request),
+            }, status=429)
+
         form = UserCreationForm(request.POST)
-        if form.is_valid():
+        if not form.is_valid():
+            rate_limits.release(token)
+        else:
             user = form.save()
             auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             Notification.objects.create(
@@ -175,7 +191,26 @@ def login_view(request):
 
     if request.method == "POST":
         form = AuthenticationForm(data=request.POST)
+        # 5 failed attempts per username and 30 per address, per 15 minutes
+        # (accounts/rate_limits.py). Counted before the password is checked, so
+        # the right password is refused too while a slowdown lasts; a successful
+        # sign-in un-counts itself and clears its username's failures. The
+        # message is the same whether or not the username exists.
+        username = request.POST.get('username', '')
+        tokens, refused = rate_limits.reserve_all([
+            ('login_username', username),
+            ('login_ip', rate_limits.client_ip(request)),
+        ])
+        if refused:
+            messages.error(request, f"Too many sign-in attempts. Try again {rate_limits.retry_phrase(*refused)}.")
+            return render(request, "accounts/login.html", {
+                "form": AuthenticationForm(initial={'username': username}),
+                "next_destination": requested_destination(request),
+            }, status=429)
         if form.is_valid():
+            for token in tokens:
+                rate_limits.release(token)
+            rate_limits.clear('login_username', username)
             user = form.get_user()
             auth_login(request, user)
             # A validated destination wins; otherwise defer to the shared
@@ -189,6 +224,25 @@ def login_view(request):
         "form": form,
         "next_destination": requested_destination(request),
     })
+
+
+class RateLimitedPasswordResetView(PasswordResetView):
+    """
+    Django's password reset, limited to 3 requests an hour per address and 3
+    per email (accounts/rate_limits.py). A refused request gets exactly the
+    response an accepted one does -- the "check your email" page -- and simply
+    sends nothing, so it reveals neither the limit nor whether the account
+    exists. Served at django.contrib.auth's own URL and name; see config/urls.py.
+    """
+
+    def form_valid(self, form):
+        _tokens, refused = rate_limits.reserve_all([
+            ('password_reset_ip', rate_limits.client_ip(self.request)),
+            ('password_reset_email', form.cleaned_data['email']),
+        ])
+        if refused:
+            return HttpResponseRedirect(self.get_success_url())
+        return super().form_valid(form)
 
 
 # =====================================================================
