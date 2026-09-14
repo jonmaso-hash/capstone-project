@@ -48,8 +48,12 @@
                 <ul class="navbar-nav ms-auto align-items-lg-center mb-0 ps-0">
 
                     <li class="nav-item"><a class="nav-link" href="{% url 'pages:home' %}">Home</a></li>
-                    <li class="nav-item"><a class="nav-link nav-link-primary" href="{% url 'explore' %}">Explore</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'matchmaking:pitch_videos' %}">Pitch Videos</a></li>
+                    {% comment %}
+                    One destination for both video experiences: signed-out visitors land on
+                    30 sec (Explore), signed-in users on Full Pitch, and each page switches to
+                    the other. See matchmaking.views.pitch_videos_entry.
+                    {% endcomment %}
+                    <li class="nav-item"><a class="nav-link nav-link-primary" href="{% url 'matchmaking:pitch_videos_entry' %}">Pitch Videos</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'blog:blog_view' %}">Blog</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'jobs:index' %}">Jobs</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'pages:contact' %}">Contact</a></li>

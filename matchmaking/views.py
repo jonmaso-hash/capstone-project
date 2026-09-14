@@ -3147,6 +3147,32 @@ def _rank_pitch_video_profiles(items, evaluate, viewer_partner_profile):
     return items
 
 
+# The navigation's one "Pitch Videos" destination opens either of the two
+# established video experiences. Each stays authoritative at its own route.
+PITCH_VIDEO_TABS = {
+    '30sec': 'explore',                  # <=30s elevator pitches, anonymous front door
+    'full': 'matchmaking:pitch_videos',  # 1-3 min pitch videos, match-ranked
+}
+
+
+def pitch_videos_entry(request):
+    """
+    GET /matchmaking/videos/ -- where the "Pitch Videos" nav item points.
+
+    Only redirects. ?tab=30sec opens Explore and ?tab=full opens the Pitch
+    Videos section, so a link can choose either on purpose. Without a valid
+    tab, signed-out visitors start on 30 sec (Explore is the no-account hook)
+    and signed-in users on Full Pitch.
+
+    Nothing about ranking, visibility, moderation or tracking lives here --
+    both underlying pages are unchanged.
+    """
+    tab = request.GET.get('tab')
+    if tab not in PITCH_VIDEO_TABS:
+        tab = 'full' if request.user.is_authenticated else '30sec'
+    return redirect(PITCH_VIDEO_TABS[tab])
+
+
 def pitch_videos_section(request):
     """
     GET /pitch-videos/ — founders and sellers who've uploaded a pitch
