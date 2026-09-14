@@ -326,6 +326,19 @@ LOGIN_URL = "accounts:login"
 CELERY_BROKER_URL = env('CELERY_BROKER_URL')
 CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND')
 
+# Task modules the worker must load at startup beyond autodiscovery, which only
+# imports each app's `tasks` module. verify_entity_integrity lives in its own
+# module that nothing imported until a request queued it, so the worker had
+# never registered it and discarded every Entity Integrity job as an
+# "unregistered task" -- no report was ever produced. truth_delta_tasks only
+# registered because another import happened to pull it in; it is listed so
+# that stops depending on import order. pages/tests_celery_registration.py pins
+# both from a fresh interpreter, the way a worker starts.
+CELERY_IMPORTS = (
+    'zelda_api.entity_verification_tasks',
+    'zelda_api.truth_delta_tasks',
+)
+
 # Off in prod/dev (tasks go to a real worker). CI/test runs set EAGER True so
 # `.delay()` executes in-process — no broker, no worker, and no dependency on
 # Celery's redis transport (which has hung `.delay()` calls made from inside a
