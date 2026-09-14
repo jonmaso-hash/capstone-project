@@ -6,3 +6,9 @@ media/decks/
 media/cim_documents/
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
+# Local development data -- never commit. The database holds password hashes,
+# sessions and API tokens; media/ holds user uploads. media/img/ is seed art the
+# local database references, kept until it moves to S3 at deploy.
+db.sqlite3
+/media/*
+!/media/img/
