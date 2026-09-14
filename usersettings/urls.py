@@ -11,6 +11,7 @@ urlpatterns = [
     path('profile/archive/', views.archive_profile, name='archive_profile'),
     path('profile/unarchive/', views.unarchive_profile, name='unarchive_profile'),
     path('profile/delete/', views.delete_profile_confirm, name='delete_profile_confirm'),
+    path('account/delete/', views.delete_account, name='delete_account'),
     path('profile/founder/', views.edit_founder_profile, name='edit_founder_profile'),
     path('profile/investor/', views.edit_investor_profile, name='edit_investor_profile'),
     path('profile/seller/', views.edit_seller_profile, name='edit_seller_profile'),

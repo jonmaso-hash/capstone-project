@@ -2,7 +2,7 @@ import json
 from urllib.parse import quote
 
 from django.contrib import messages
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.cache import cache
@@ -13,6 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from accounts import deletion
 from accounts.forms import ApplicationForm, InvestorForm, SellerForm, BuyerForm
 from accounts.redirects import pop_destination
 from growth.services import consume_referral_if_pending
@@ -94,13 +95,57 @@ def delete_profile_confirm(request):
         return redirect('usersettings:home')
 
     if request.method == "POST":
-        profile.delete()
+        # Same Stripe cancellation path as deleting the whole account
+        # (accounts/deletion.py): the profile's subscription is cancelled
+        # before anything is deleted, and nothing is deleted if that fails.
+        try:
+            deletion.delete_role_profile(request.user, profile)
+        except deletion.DeletionBlocked as blocked:
+            messages.error(request, blocked.message)
+            return redirect('usersettings:home')
         messages.success(request, "Your profile has been permanently deleted.")
         return redirect('accounts:choose_role')
 
     return render(request, 'usersettings/delete_profile_confirm.html', {
         'role_label': label,
         'company_name': getattr(profile, 'company_name', None),
+    })
+
+
+@login_required
+def delete_account(request):
+    """
+    Self-serve account deletion through accounts/deletion.py. Only a POST
+    deletes: the typed username must match, and an account with a password
+    must re-enter it. A social-login account has no password to re-enter, so
+    its username alone confirms. On success the session ends and the visitor
+    goes home; a blocked deletion keeps them signed in and says why.
+    """
+    user = request.user
+    needs_password = user.has_usable_password()
+
+    if request.method == "POST":
+        if request.POST.get('confirm_username', '').strip() != user.username:
+            messages.error(request, "The username you typed doesn't match yours. Nothing was deleted.")
+        elif needs_password and not user.check_password(request.POST.get('password', '')):
+            messages.error(request, "That password isn't correct. Nothing was deleted.")
+        else:
+            try:
+                deletion.delete_account(user)
+            except deletion.DeletionBlocked as blocked:
+                messages.error(request, blocked.message)
+            else:
+                logout(request)
+                messages.success(request, "Your account has been deleted.")
+                return redirect('pages:home')
+        return redirect('usersettings:delete_account')
+
+    role_profile, role_label = _get_role_profile(user)
+    return render(request, 'usersettings/delete_account_confirm.html', {
+        'needs_password': needs_password,
+        'open_subscriptions': deletion.open_subscriptions(user),
+        'role_profile': role_profile,
+        'role_label': role_label,
     })
 
 

@@ -2,7 +2,7 @@
 
 {% block ops_content %}
 <h2 class="fw-bold mb-2"><i class="bi bi-people me-2"></i>User Management</h2>
-<p class="text-muted mb-4">Suspend/reactivate accounts, flag a profile for re-review, or impersonate a user for support. Staff accounts are protected from suspension and impersonation.</p>
+<p class="text-muted mb-4">Suspend/reactivate accounts, flag a profile for re-review, impersonate a user for support, or delete an account. Deleting cancels the user's subscriptions first and can't be undone. Staff accounts are protected from suspension, impersonation and deletion.</p>
 
 <form method="get" class="mb-4">
     <input type="text" name="q" class="form-control rounded-pill" style="max-width:320px;" placeholder="Search username..." value="{{ search_query }}">
@@ -33,7 +33,7 @@
                     <span class="badge {% if u.is_active %}bg-success{% else %}bg-danger{% endif %}">{% if u.is_active %}Active{% else %}Suspended{% endif %}</span>
                 </td>
                 <td class="text-muted small">{{ u.date_joined|date:"M j, Y" }}</td>
-                <td class="d-flex gap-1">
+                <td class="d-flex gap-1 flex-wrap">
                     {% if not u.is_staff %}
                     <form method="post" action="{% url 'ops:toggle_user_active' u.id %}">
                         {% csrf_token %}
@@ -44,6 +44,13 @@
                     <form method="post" action="{% url 'ops:start_impersonation' u.id %}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-outline-dark btn-sm rounded-pill px-2">Impersonate</button>
+                    </form>
+                    {# Deletion runs through accounts/deletion.py; the typed username must match. #}
+                    <form method="post" action="{% url 'ops:delete_user' u.id %}" class="d-flex gap-1">
+                        {% csrf_token %}
+                        <input type="text" name="confirm_username" class="form-control form-control-sm" style="max-width:140px;"
+                               placeholder="type username" aria-label="Type {{ u.username }} to confirm deletion" autocomplete="off" required>
+                        <button type="submit" class="btn btn-danger btn-sm rounded-pill px-2">Delete</button>
                     </form>
                     {% endif %}
                 </td>

@@ -192,3 +192,13 @@ def delete_application_files_from_storage(sender, instance, **kwargs):
 def delete_seller_files_from_storage(sender, instance, **kwargs):
     delete_file_field(instance, 'cim_document')
     delete_file_field(instance, 'pitch_video')
+
+
+@receiver(post_delete, sender='matchmaking.ProfileVideo')
+def delete_profile_video_from_storage(sender, instance, **kwargs):
+    delete_file_field(instance, 'video')
+
+
+@receiver(post_delete, sender='usersettings.UserSettings')
+def delete_profile_picture_from_storage(sender, instance, **kwargs):
+    delete_file_field(instance, 'profile_picture')

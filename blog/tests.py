@@ -299,6 +299,8 @@ class ArticleImageStorageCleanupTests(TestCase):
         storage, path = article.image.storage, article.image.name
         self.assertTrue(storage.exists(path))
 
-        article.delete()
+        # Stored files are removed once the deletion commits (shared_utils/file_cleanup.py).
+        with self.captureOnCommitCallbacks(execute=True):
+            article.delete()
 
         self.assertFalse(storage.exists(path))
