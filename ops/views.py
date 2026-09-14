@@ -619,10 +619,13 @@ def start_impersonation(request, user_id):
 
     staff_id = request.user.id
     ImpersonationLog.objects.create(impersonator=request.user, target=target)
+    last_login = target.last_login
     # login() flushes the session when switching between two different
     # already-authenticated users (session-fixation protection), so
     # impersonator_id must be set AFTER login(), not before.
     login(request, target, backend='django.contrib.auth.backends.ModelBackend')
+    # login() also stamps last_login, which profiles show as the user's own activity.
+    User.objects.filter(pk=target.pk).update(last_login=last_login)
     request.session['impersonator_id'] = staff_id
     messages.info(request, f"Viewing as {target.username}.")
     return redirect('accounts:profile', username=target.username)

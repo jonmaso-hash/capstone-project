@@ -8,7 +8,6 @@ from matchmaking.enterprise_views import EnterpriseFounderSearchView, Enterprise
 from django.views.generic import TemplateView
 from django.shortcuts import render
 from accounts.views import RateLimitedPasswordResetView
-from zelda_api import views
 from growth.views import robots_txt
 from growth.sitemaps import InvestorDirectorySitemap, FounderDirectorySitemap, InsightReportSitemap
 
@@ -55,7 +54,6 @@ urlpatterns = [
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='sitemap'),
     path('robots.txt', robots_txt, name='robots_txt'),
     path('', include('growth.urls', namespace='growth')),
-    path('<str:startup_name>/', views.MemoIntelligenceView.as_view(), name='memo-intelligence'),
     path('notifications/', include('notifications.urls')),
     path('sharing/', include('sharing.urls', namespace='sharing')),
 ]

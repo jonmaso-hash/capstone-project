@@ -171,6 +171,10 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 
+    # Staff viewing as a user can't change anything as them (ops/impersonation.py).
+    # Needs the session, auth and messages middleware above it.
+    'ops.impersonation.ReadOnlyImpersonationMiddleware',
+
     # Refuses oversized uploads from Content-Length, before CSRF or the
     # idempotency layer below parses the body. Must stay ahead of both.
     'shared_utils.upload_limits.UploadSizeLimitMiddleware',

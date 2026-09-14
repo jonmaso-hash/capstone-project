@@ -869,6 +869,9 @@ def log_investor_event(investor_user, founder_application, event_type, metadata=
     Fire-and-forget event logger. Never breaks the calling view,
     even if logging itself fails.
     """
+    from ops.impersonation import is_impersonating
+    if is_impersonating():  # staff viewing as this user aren't the user
+        return
     if not investor_user or not getattr(investor_user, 'is_authenticated', False):
         return
     if not founder_application:
@@ -1154,6 +1157,22 @@ class DataRoomDocumentView(models.Model):
     document = models.ForeignKey(DataRoomDocument, on_delete=models.CASCADE, related_name='view_log')
     viewer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='data_room_views_made')
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+def founder_is_visible_to(request_user, founder_application):
+    """
+    Whether a page reached by company name or username may show this founder.
+    The owner and staff always; anyone else only while it is discoverable (not
+    private, not archived) and not DENIED -- the rule every discovery surface
+    already filters through. Callers answer exactly as they would for a founder
+    that doesn't exist, so the response never confirms a hidden one is there.
+    """
+    if request_user.is_authenticated and (request_user == founder_application.user or request_user.is_staff):
+        return True
+    return (
+        Application.objects.discoverable().exclude(review_status='DENIED')
+        .filter(pk=founder_application.pk).exists()
+    )
 
 
 def can_view_data_room(request_user, founder_application):
@@ -1735,6 +1754,9 @@ def log_buyer_event(buyer_user, seller_application, event_type, metadata=None):
     Fire-and-forget event logger for the M&A marketplace — mirrors
     log_investor_event exactly.
     """
+    from ops.impersonation import is_impersonating
+    if is_impersonating():  # staff viewing as this user aren't the user
+        return
     if not buyer_user or not getattr(buyer_user, 'is_authenticated', False):
         return
     if not seller_application:
@@ -1856,6 +1878,9 @@ def log_page_event(request, event_type, role='', user=None):
     at all yet, so a later visit (with or without the param) never
     overwrites how the visitor actually first arrived.
     """
+    from ops.impersonation import is_impersonating
+    if is_impersonating():  # staff viewing as this user aren't the user
+        return
     try:
         if not request.session.session_key:
             request.session.create()
@@ -1951,7 +1976,8 @@ def log_search_event(request, source, query_summary):
     contract as log_page_event/log_investor_event. Skips silently when
     there's nothing to search on (empty filters/query).
     """
-    if not query_summary:
+    from ops.impersonation import is_impersonating
+    if not query_summary or is_impersonating():
         return
     try:
         session_key = request.session.session_key or ''
@@ -2021,6 +2047,9 @@ def log_training_example(anchor_type, anchor_id, candidate_type, candidate_id, l
     Fire-and-forget — mirrors log_investor_event's "never break the calling
     view" contract exactly.
     """
+    from ops.impersonation import is_impersonating
+    if is_impersonating():  # staff viewing as this user aren't the user
+        return
     try:
         MatchTrainingExample.objects.create(
             anchor_type=anchor_type, anchor_id=anchor_id,

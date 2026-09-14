@@ -699,36 +699,6 @@ class InvestmentMemoGeneratorAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-class MemoIntelligenceView(APIView):
-    authentication_classes = [SessionAuthentication, TokenAuthentication]
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, startup_name):
-        if not _MATCHMAKING_AVAILABLE:
-            return Response({"error": "Matchmaking module is not installed."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-        founder_app = get_object_or_404(Application, company_name__iexact=startup_name)
-        investor_app = InvestorApplication.objects.first()
-        url_to_crawl = getattr(founder_app, 'website', None)
-
-        if url_to_crawl:
-            external_data = self.perform_live_crawl(url_to_crawl)
-        else:
-            external_data = {'linkedin_headcount': 0, 'job_board_openings': 0}
-
-        vector_score, transparency = DiligenceEngine.calculate_success_vector(founder_app, investor_app, external_data)
-
-        return Response({
-            "startup": founder_app.company_name,
-            "success_vector_score": vector_score,
-            "transparency_index": transparency,
-            "text_synthesis": f"Memo for {startup_name} generated using live data. Score: {vector_score}/100.",
-        })
-
-    def perform_live_crawl(self, url):
-        return {'linkedin_headcount': 45, 'job_board_openings': 2}
-
-
 class InvestorPortfolioIntakeAPIView(APIView):
     """
     POST /api/v1/zelda/investors/portfolio/
@@ -1121,7 +1091,9 @@ def _founder_investor_context(request, founder_username):
 
     founder_user = get_object_or_404(User, username=founder_username)
     application = getattr(founder_user, 'match_founder_profile', None)
-    if not application:
+    # A private, archived or denied founder answers like one with no profile.
+    from matchmaking.models import founder_is_visible_to
+    if not application or not founder_is_visible_to(request.user, application):
         return None, JsonResponse({'status': 'error', 'message': 'No founder profile found'}, status=404)
 
     return (investor_profile, founder_user, application), None
@@ -1305,7 +1277,7 @@ def confirm_analyze_founder_profile(request, founder_username):
         logger.warning(f"Track 1 pipeline trigger failed: {str(e)}")
         return JsonResponse({
             'status': 'error',
-            'message': f'Pipeline error: {str(e)}'
+            'message': "Zelda couldn't start this analysis. Please try again."
         }, status=500)
 
 def get_memo(request, doc_id):

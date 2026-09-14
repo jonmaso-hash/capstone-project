@@ -199,7 +199,7 @@ def connection_action_view(request):
         })
     except Exception as e:
         logger.error(f"Connection action error: {str(e)}")
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+        return JsonResponse({'status': 'error', 'message': "Couldn't update this introduction. Please try again."}, status=400)
 
 
 @login_required
@@ -312,7 +312,7 @@ def acquisition_connection_action_view(request):
         })
     except Exception as e:
         logger.error(f"Acquisition connection action error: {str(e)}")
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+        return JsonResponse({'status': 'error', 'message': "Couldn't update this introduction. Please try again."}, status=400)
 
 
 # ==========================================
@@ -2228,8 +2228,9 @@ def toggle_privacy_view(request):
             investor_profile.save(update_fields=['is_private'])
 
         return JsonResponse({"status": "success", "is_private": is_private_state})
-    except Exception as e:
-        return JsonResponse({"status": "error", "message": str(e)}, status=400)
+    except Exception:
+        logger.exception("AJAX privacy toggle update failed.")
+        return JsonResponse({"status": "error", "message": "Couldn't update your privacy setting."}, status=400)
     
 @login_required
 def get_stream_token(request):
@@ -2290,6 +2291,11 @@ def standalone_memo_view(request, company_slug):
 
     formatted_name = company_slug.replace('-', ' ')
     founder_app = get_object_or_404(Application, company_name__iexact=formatted_name)
+
+    # A private, archived or denied company answers like one that doesn't exist.
+    from .models import founder_is_visible_to
+    if not founder_is_visible_to(request.user, founder_app):
+        raise Http404("No Application matches the given query.")
 
     # Access: investor profile or staff only (unchanged).
     investor_profile = getattr(request.user, 'match_investor_profile', None)

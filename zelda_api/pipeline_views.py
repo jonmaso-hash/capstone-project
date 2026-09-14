@@ -128,7 +128,7 @@ class DocumentIngestView(APIView):
         except Exception as e:
             logger.error(f"Document ingestion error: {str(e)}")
             return Response(
-                {"error": str(e)},
+                {"error": "Zelda couldn't process this document."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
