@@ -142,3 +142,26 @@ class FounderApplication(models.Model):
     def __str__(self):
         return f"{self.company_name} ({self.user.username})"
     
+
+
+class RateLimitEvent(models.Model):
+    """
+    One counted attempt against a rate limit (accounts/rate_limits.py): a failed
+    sign-in, a new account, a reset request, a contact message, a waitlist join.
+    Kept in the database so every web worker shares the count and a deploy does
+    not reset it. `key` is a keyed hash of the username, email or address, never
+    the value itself. Rows older than a day are pruned by
+    accounts.tasks.prune_rate_limit_events.
+    """
+    scope = models.CharField(max_length=32)
+    key = models.CharField(max_length=64)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['scope', 'key', 'created_at']),
+            models.Index(fields=['created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.scope} at {self.created_at:%Y-%m-%d %H:%M}"

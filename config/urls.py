@@ -7,6 +7,7 @@ from matchmaking.views import global_search, explore_feed
 from matchmaking.enterprise_views import EnterpriseFounderSearchView, EnterprisePlatformStatsView
 from django.views.generic import TemplateView
 from django.shortcuts import render
+from accounts.views import RateLimitedPasswordResetView
 from zelda_api import views
 from growth.views import robots_txt
 from growth.sitemaps import InvestorDirectorySitemap, FounderDirectorySitemap, InsightReportSitemap
@@ -26,6 +27,9 @@ urlpatterns = [
     path(settings.ADMIN_URL_PATH, admin.site.urls),
     path('', include('pages.urls')),
     path('accounts/', include('accounts.urls', namespace='accounts')),
+    # Rate-limited, in place of django.contrib.auth's own view at the same URL
+    # and name, so the include below never serves it. See accounts/rate_limits.py.
+    path('accounts/password_reset/', RateLimitedPasswordResetView.as_view(), name='password_reset'),
     path('accounts/', include('django.contrib.auth.urls')),
     # Only the provider-specific routes here matter (accounts/google/login/,
     # accounts/facebook/login/, accounts/linkedin_oauth2/login/, + callbacks) —

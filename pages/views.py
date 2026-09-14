@@ -49,7 +49,11 @@ def waitlist_join(request):
         if not email:
             messages.error(request, "Email is required.")
         else:
-            WaitlistEntry.objects.get_or_create(email=email, defaults={'name': name})
+            # 10 joins an hour per address (accounts/rate_limits.py). Over that the
+            # visitor sees the same confirmation and nothing is saved.
+            from accounts import rate_limits
+            if rate_limits.reserve('waitlist_ip', rate_limits.client_ip(request)) is not None:
+                WaitlistEntry.objects.get_or_create(email=email, defaults={'name': name})
             messages.success(request, "You're on the list — we'll be in touch.")
         return redirect('pages:waitlist')
     return render(request, 'pages/waitlist.html')
@@ -177,6 +181,15 @@ def contact_view(request):
             # redirect used to be too, and because it named 'contact' instead
             # of 'pages:contact' it raised after a successful send, so visitors
             # were told their delivered message had failed.
+            # 5 messages an hour per address (accounts/rate_limits.py); a message
+            # that fails to send doesn't count.
+            from accounts import rate_limits
+            client_ip = rate_limits.client_ip(request)
+            token = rate_limits.reserve('contact_ip', client_ip)
+            if token is None:
+                messages.error(request, f"Too many messages from this network. Try again {rate_limits.retry_phrase('contact_ip', client_ip)}.")
+                return render(request, 'pages/contact.html', {'form': form}, status=429)
+
             try:
                 EmailMessage(
                     subject=f"Interlink Foundry contact form: {name}",
@@ -186,6 +199,7 @@ def contact_view(request):
                     reply_to=[email],
                 ).send(fail_silently=False)
             except Exception:
+                rate_limits.release(token)
                 logger.exception('Contact form email could not be sent')
                 messages.error(request, "We couldn't send your message right now. Please try again in a few minutes.")
             else:
