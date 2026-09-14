@@ -194,6 +194,9 @@
         border-bottom: 2px solid #e2e8f0;
         margin-bottom: 1rem;
         padding-bottom: 0;
+        /* the tabs are wider than the panel: scroll this bar, not the whole body */
+        flex-shrink: 0;
+        overflow-x: auto;
     }
 
     .zelda-tab {
@@ -205,6 +208,8 @@
         color: #64748b;
         border-bottom: 3px solid transparent;
         transition: all 0.3s ease;
+        flex-shrink: 0;
+        white-space: nowrap;
     }
 
     .zelda-tab.active {
@@ -449,8 +454,6 @@
             <button class="zelda-tab" data-tab="progress">
                 <i class="bi bi-signpost-2 me-2"></i>My Progress
             </button>
-        </div>
-
         </div>
 
         <!-- TAB: NOTIFICATIONS -->
@@ -750,7 +753,6 @@
         </div>
 
         <!-- EXECUTION LOG -->
-        <div class="zelda-log" id="agent-response-log">
         <div class="zelda-log" id="agent-response-log">
             <div style="padding-right: 1rem; position: relative; z-index: 10;">
                 <div class="log-entry info">
