@@ -75,6 +75,19 @@ ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 # Needed once the site is served from a domain behind the host's proxy.
 CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[])
 
+# Render sets RENDER_EXTERNAL_HOSTNAME on a web service to its onrender.com
+# hostname, and sends health checks with that Host header until a custom
+# domain is verified. Without it in ALLOWED_HOSTS every health check gets a
+# 400 DisallowedHost and the deploy never goes live. Empty everywhere else
+# (workers, local dev, CI), so this is a no-op there. A custom domain still
+# goes in ALLOWED_HOSTS / CSRF_TRUSTED_ORIGINS explicitly.
+RENDER_EXTERNAL_HOSTNAME = env.str('RENDER_EXTERNAL_HOSTNAME', default='')
+if RENDER_EXTERNAL_HOSTNAME:
+    if RENDER_EXTERNAL_HOSTNAME not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+    if f'https://{RENDER_EXTERNAL_HOSTNAME}' not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
+
 # Non-default admin path — defaults to 'admin/' for local dev convenience,
 # but production should set ADMIN_URL_PATH in .env to something unguessable.
 ADMIN_URL_PATH = env('ADMIN_URL_PATH')
@@ -562,6 +575,11 @@ if not DEBUG:
     # Route traffic through secure proxy SSL handling mechanisms (Nginx/ALB)
     SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT', default=True)
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    # The host's health check calls the container directly over plain HTTP,
+    # with no X-Forwarded-Proto. Redirecting it would still count as healthy
+    # (Render accepts 3xx) but would never actually reach Django, so a broken
+    # app could pass. The health endpoint answers the check itself instead.
+    SECURE_REDIRECT_EXEMPT = [r'^api/v1/zelda/health/$']
     
     # HTTP Strict Transport Security (HSTS) configuration layers
     SECURE_HSTS_SECONDS = env.int('SECURE_HSTS_SECONDS', default=31536000)
