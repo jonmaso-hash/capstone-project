@@ -484,6 +484,33 @@ class AccessAndDisplayTests(_Requests):
         self.assertIn('first-check-marker', section)
         self.assertNotIn('second-check-marker', section)
 
+    def test_a_grant_lets_someone_view_a_report_but_never_makes_them_its_owner(self):
+        """
+        Ownership comes only from the Application/SellerApplication relationship.
+        A grant answers one question -- may this user view this report -- and
+        nothing that belongs to the owner follows from it.
+        """
+        from zelda_api.entity_verification_models import EntityReportAccessGrant
+        report = self._report()
+        grant = EntityReportAccessGrant.objects.create(report=report, user=self.investor_user)
+
+        self.assertEqual(report.owner, self.founder_user)
+        self.assertIn('Named on acmerobotics.com', self._page(self.investor_user))
+
+        self.client.force_login(self.investor_user)
+        page = self.client.get(reverse('zelda_api:truth_delta_ui', args=[self.deck.id]))
+        self.assertFalse(page.context['is_owner'])
+        with mock.patch('zelda_api.truth_delta_tasks.verify_document_truth_delta.delay') as truth_delta, \
+                mock.patch('zelda_api.entity_verification_tasks.verify_entity_integrity.delay') as entity:
+            verify = self.client.post(reverse('zelda_api:truth_delta_verify', args=[self.deck.id]))
+        self.assertEqual(verify.status_code, 403)
+        truth_delta.assert_not_called()
+        entity.assert_not_called()
+
+        grant.delete()
+        self.assertNotIn('Named on acmerobotics.com', self._page(self.investor_user))
+        self.assertIn('Named on acmerobotics.com', self._page(self.founder_user))
+
     def test_staff_see_the_rows(self):
         staff = User.objects.create_user('ei_staff_viewer', password='x', is_staff=True)
         self._report()
