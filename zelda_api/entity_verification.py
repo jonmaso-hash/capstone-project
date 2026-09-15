@@ -16,7 +16,10 @@ check, Public record) and when it was checked. Absence of evidence is "Not
 found", never an accusation; nothing is called verified and nothing is scored.
 
 SEC EDGAR and Form D rows (filer, incorporation, the people listed, the year
-formed) come from sec_identity.py through the same row function.
+formed) come from sec_identity.py through the same row function, as do the
+financing history, the fundraising total beside the profile's prior raise,
+and revenue evidence (sec_financing.py). Editing revenue or prior capital
+changes the inputs hash, so the next request runs a fresh check.
 
 One external check per business runs at most once per REUSE_WINDOW; later
 requests in that window reuse it and are simply granted access to that report.
@@ -36,6 +39,7 @@ from django.utils import timezone
 
 from . import sec_identity
 from .safe_fetch import FetchError, fetch_public_page
+from .sec_financing import money
 
 logger = logging.getLogger(__name__)
 
@@ -158,9 +162,17 @@ def _describe(subject):
     from matchmaking.models import SellerApplication
     if isinstance(subject, SellerApplication):
         return {'field': 'seller_profile', 'source': 'Business-for-sale profile',
-                'person_label': 'Owner', 'person': subject.seller_name}
+                'person_label': 'Owner', 'person': subject.seller_name,
+                'revenue': subject.annual_revenue, 'revenue_is_annual': True, 'prior_raised': None}
+    # A founder's "current revenue" has no stated period; a blank or zero prior raise is no claim.
     return {'field': 'founder_profile', 'source': 'Startup profile',
-            'person_label': 'Founder', 'person': subject.founder_name}
+            'person_label': 'Founder', 'person': subject.founder_name,
+            'revenue': subject.current_revenue, 'revenue_is_annual': False,
+            'prior_raised': subject.prior_amount_raised or 0}
+
+
+def _amount_input(value):
+    return f'{value:.2f}' if value is not None else ''
 
 
 def subject_for_document(document):
@@ -174,11 +186,14 @@ def subject_for_document(document):
 
 
 def identity_inputs(subject):
+    described = _describe(subject)
     return {
         'company_name': (subject.company_name or '').strip(),
         'website': (subject.company_website or '').strip(),
-        'person_name': (_describe(subject)['person'] or '').strip(),
+        'person_name': (described['person'] or '').strip(),
         'years_in_business': subject.years_in_business or 0,
+        'revenue': _amount_input(described['revenue']),
+        'prior_amount_raised': _amount_input(described['prior_raised']),
     }
 
 
@@ -246,12 +261,28 @@ def collect_findings(subject):
     founding_claim = (f"Founded around {claimed_year} ({years} years in business)" if claimed_year
                       else 'Founding year: not on the profile')
 
+    revenue = described['revenue']
+    if described['revenue_is_annual']:
+        revenue_claim = f'Annual revenue: {money(revenue)}' if revenue is not None else 'Annual revenue: not on the profile'
+    else:
+        revenue_claim = (f'Current revenue: {money(revenue)} (period not stated on the profile)' if revenue is not None
+                         else 'Current revenue: not on the profile')
+    prior_raised = described['prior_raised']
+    if prior_raised is None:
+        capital_claim = 'Prior capital raised: not on the profile'
+    elif prior_raised > 0:
+        capital_claim = f'Prior capital raised: {money(prior_raised)}'
+    else:
+        capital_claim = 'Prior capital raised: not claimed on the profile'
+
     def add_sec_rows():
         # A business with no website can still have SEC filings, so this runs on every path.
         sec_identity.sec_findings(
             add, company_name=inputs['company_name'], company_claim=company_claim,
             person_name=inputs['person_name'], person_claim=person_claim,
             claimed_year=claimed_year, founding_claim=founding_claim,
+            capital_claim=capital_claim, revenue_claim=revenue_claim,
+            revenue_amount=revenue, revenue_is_annual=described['revenue_is_annual'],
         )
 
     if not website:
