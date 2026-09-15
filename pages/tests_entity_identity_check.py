@@ -196,8 +196,10 @@ class _Businesses(TestCase):
         else:
             fetch.return_value = FetchResult(final_url='https://acmerobotics.com/', status=200, text=page)
         whois = mock.Mock(return_value=(domain_date, whois_error))
+        # SEC and Form D rows are covered in pages/tests_entity_sec_form_d.py.
         with mock.patch.object(entity_verification, 'fetch_public_page', fetch), \
-                mock.patch.object(entity_verification, 'lookup_domain_creation_date', whois):
+                mock.patch.object(entity_verification, 'lookup_domain_creation_date', whois), \
+                mock.patch('zelda_api.sec_identity.sec_findings'):
             rows = entity_verification.collect_findings(subject or self.founder)
         self.fetch, self.whois = fetch, whois
         return {row['check']: row for row in rows}
@@ -336,6 +338,7 @@ class _Requests(_Businesses):
         patches = [
             mock.patch.object(entity_verification, 'fetch_public_page', self.fetch),
             mock.patch.object(entity_verification, 'lookup_domain_creation_date', self.whois),
+            mock.patch('zelda_api.sec_identity.sec_findings'),
             mock.patch.object(entity_verification_tasks.run_entity_check, 'delay',
                               side_effect=lambda report_id: entity_verification_tasks.run_entity_check.run(report_id)),
         ]
