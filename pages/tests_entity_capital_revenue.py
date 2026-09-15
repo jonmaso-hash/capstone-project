@@ -349,15 +349,31 @@ class FinancingEventTests(SimpleTestCase):
         self.assertFalse(combination.counts_toward_total)
         self.assertEqual(combination.excluded_reason, 'business_combination')
 
-        clarified = _events(CMS_CHAIN)[0]
-        self.assertFalse(clarified.counts_toward_total)
-        self.assertEqual(clarified.excluded_reason, 'clarified')
+        profits_interests = _events(CMS_CHAIN)[0]
+        self.assertFalse(profits_interests.counts_toward_total)
+        self.assertEqual(profits_interests.excluded_reason, 'profits_interests')
 
         company = _events(DIVERSY_CHAIN + [GUIDEBOX_OFFERING])
-        total, counted, excluded = capital_total(company + [fund, combination, clarified])
+        total, counted, excluded = capital_total(company + [fund, combination, profits_interests])
         self.assertEqual(total, 1125000)
         self.assertEqual(len(counted), 2)
         self.assertEqual(len(excluded), 3)
+
+    def test_a_filer_note_alone_never_keeps_an_offering_out_of_the_total(self):
+        noted = _events([('0000000010-26-000001', '2026-02-01', 'D', form_d_xml(
+            sold='750000', securities=('isEquityType',),
+            clarification='Amount sold includes the conversion of previously issued notes.'))])[0]
+        self.assertTrue(noted.counts_toward_total)
+        self.assertIsNone(noted.excluded_reason)
+
+    def test_only_securities_described_as_profits_interests_are_excluded(self):
+        for description, excluded in (
+                ('Profits Interests', True), ('Class B Profits Interest Units', True), ('profit interests', True),
+                ('Profits-Interest Units', True), ('Profit Sharing Notes', False), ('Convertible Notes', False)):
+            with self.subTest(description=description):
+                event = _events([('0000000011-26-000001', '2026-02-01', 'D', form_d_xml(
+                    securities=('isOtherType',), other_description=description))])[0]
+                self.assertEqual(event.excluded_reason == 'profits_interests', excluded)
 
     def test_revenue_brackets_are_read_exactly_as_the_form_prints_them(self):
         from zelda_api.sec_financing import revenue_bounds
@@ -487,20 +503,31 @@ class CapitalHistoryRowTests(_RowsMixin, TestCase):
         self.assertIn('not counted', combination_row['evidence'])
         self.assertNotIn('$4,125,000', self._one(rows, 'sec_capital_raised')['evidence'])
 
-    def test_an_amount_the_filer_clarifies_is_quoted_and_not_counted(self):
+    def test_a_profits_interest_offering_is_shown_with_its_note_and_not_counted(self):
         # CMS Apollo's "amount sold" is a distribution threshold for profits
-        # interests, not money raised -- reading it as fundraising would widen
-        # what the field means.
+        # interests -- service grants, not money raised. The exclusion rests on
+        # the security type, not on the note being there.
         rows = self._rows(_Filings(CMS_CHAIN))
         offering = self._one(rows, 'sec_offering')
         self.assertIn('$25,541,548', offering['evidence'])
         self.assertIn('per-unit amount', offering['evidence'])
         self.assertIn('not counted', offering['evidence'])
+        self.assertIn('profits interests', offering['evidence'])
         for older in ('8,885,405', '22,553,036', '24,142,798'):
             self.assertNotIn(older, offering['evidence'])
         self.assertIn('indefinite', offering['evidence'].lower())
         self.assertIn('Profits Interests', offering['evidence'])
         self.assertNotIn('$25,541,548', self._one(rows, 'sec_capital_raised')['evidence'])
+
+    def test_an_ordinary_offering_with_a_filer_note_is_counted_and_the_note_is_shown(self):
+        noted = ('0000000010-26-000001', '2026-02-01', 'D', form_d_xml(
+            sold='750000', securities=('isEquityType',),
+            clarification='Amount sold includes the conversion of previously issued notes.'))
+        rows = self._rows(_Filings([noted, GUIDEBOX_OFFERING]))
+        offering = next(row for row in self._offerings(rows) if '000000001026000001' in row['source_url'])
+        self.assertIn('conversion of previously issued notes', offering['evidence'])
+        self.assertNotIn('not counted', offering['evidence'])
+        self.assertIn('$875,000', self._one(rows, 'sec_capital_raised')['evidence'])
 
     def test_missing_earlier_filings_are_mentioned(self):
         offering = self._one(self._rows(_Filings(DIVERSY_CHAIN[:1])), 'sec_offering')
@@ -524,6 +551,41 @@ class CapitalHistoryRowTests(_RowsMixin, TestCase):
         rows = self._rows(sec)
         self.assertEqual(len(sec.form_d_fetches()), sec_identity.MAX_FORM_D_FILINGS)
         self.assertIn(f'newest {sec_identity.MAX_FORM_D_FILINGS}', self._one(rows, 'sec_capital_raised')['evidence'])
+
+    def test_an_amendment_chain_that_crosses_the_filing_limit_is_followed_to_its_original(self):
+        from zelda_api import sec_identity
+        limit = sec_identity.MAX_FORM_D_FILINGS
+        newest = [(f'0000000001-26-{n:06d}', _days_ago(n), 'D', form_d_xml(sold='1000')) for n in range(1, limit)]
+        # The 20th-newest filing is an amendment; the original it points to is the 21st.
+        amendment = ('0000000002-26-000001', _days_ago(limit), 'D/A',
+                     form_d_xml(previous='0000000002-25-000001', sold='900000'))
+        original = ('0000000002-25-000001', _days_ago(limit + 10), 'D', form_d_xml(sold='400000'))
+        older = [(f'0000000003-24-{n:06d}', _days_ago(limit + 20 + n), 'D', form_d_xml(sold='1000')) for n in range(1, 4)]
+        sec = _Filings(newest + [amendment, original] + older)
+        rows = self._rows(sec)
+        self.assertEqual(len(sec.form_d_fetches()), limit + 1)
+        chained = next(row for row in self._offerings(rows) if '000000000226000001' in row['source_url'])
+        self.assertIn('$900,000', chained['evidence'])
+        self.assertIn(f'First filed {_days_ago(limit + 10)}', chained['evidence'])
+        self.assertNotIn('Earlier filings', chained['evidence'])
+        total = self._one(rows, 'sec_capital_raised')
+        self.assertIn('$919,000', total['evidence'])  # 19 x $1,000 + $900,000, never + $400,000
+        self.assertIn(f'newest {limit}', total['evidence'])
+
+    def test_following_amendment_chains_past_the_limit_is_bounded(self):
+        from zelda_api import sec_identity
+        chain = []
+        for n in range(30):  # n=0 is the newest amendment; each points to the next-older filing
+            previous = f'0000000004-26-{n + 2:06d}' if n < 29 else None
+            chain.append((f'0000000004-26-{n + 1:06d}', _days_ago(n + 1), 'D/A' if previous else 'D',
+                          form_d_xml(previous=previous, sold=str(1000 * (30 - n)))))
+        sec = _Filings(chain)
+        with mock.patch.object(sec_identity, 'MAX_FORM_D_FETCHES', 25):
+            rows = self._rows(sec)
+        self.assertEqual(len(sec.form_d_fetches()), 25)
+        offering = self._one(rows, 'sec_offering')
+        self.assertIn('$30,000', offering['evidence'])
+        self.assertIn('Earlier filings for this offering', offering['evidence'])
 
     def test_a_business_for_sale_gets_the_capital_rows_without_a_prior_capital_claim(self):
         rows = self._rows(_Filings([GUIDEBOX_OFFERING]), subject=self._seller())
@@ -641,6 +703,31 @@ class RevenueRowTests(_RowsMixin, TestCase):
     def test_a_filer_with_neither_a_form_d_nor_an_annual_report_has_revenue_not_applicable(self):
         sec = _Filings([('0002153610-26-000009', '2026-01-01', '8-K')])
         self.assertEqual(self._one(self._rows(sec), 'sec_revenue')['result'], 'not_applicable')
+
+    # Precedence: 10-K revenue, then a fresh Form D bracket, then a stale one (Public record), then nothing.
+
+    def test_annual_report_revenue_takes_precedence_over_a_form_d_bracket(self):
+        seller = self._seller(annual_revenue=Decimal('12000000'))
+        sec = _Filings([('0000320193-26-000001', _days_ago(60), '10-K'),
+                        self._bracket_filing('$1,000,001 - $5,000,000', 30)], facts=ANNUAL_REPORT_FACTS)
+        row = self._one(self._rows(sec, subject=seller), 'sec_revenue')
+        self.assertEqual(row['evidence_source'], 'SEC 10-K')
+        self.assertEqual(row['result'], 'public_record')
+        self.assertIn('$1,100,000,000', row['evidence'])
+
+    def test_a_10k_filer_without_a_revenue_figure_falls_back_to_its_form_d_bracket(self):
+        seller = self._seller(annual_revenue=Decimal('12000000'))
+        sec = _Filings([('0000320193-26-000001', _days_ago(60), '10-K'),
+                        self._bracket_filing('$1,000,001 - $5,000,000', 30)], facts={'facts': {'us-gaap': {}}})
+        row = self._one(self._rows(sec, subject=seller), 'sec_revenue')
+        self.assertEqual(row['evidence_source'], 'SEC Form D')
+        self.assertEqual(row['result'], 'doesnt_match')
+
+    def test_annual_report_data_that_cant_be_fetched_is_not_replaced_by_a_weaker_form_d_bracket(self):
+        seller = self._seller(annual_revenue=Decimal('12000000'))
+        sec = _Filings([('0000320193-26-000001', _days_ago(60), '10-K'),
+                        self._bracket_filing('$1,000,001 - $5,000,000', 30)], facts=None)
+        self.assertEqual(self._one(self._rows(sec, subject=seller), 'sec_revenue')['result'], 'couldnt_check')
 
 
 class CapitalRevenueSafetyTests(_RowsMixin, TestCase):
