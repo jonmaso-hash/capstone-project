@@ -964,16 +964,62 @@ def truth_delta_ui_view(request, document_id):
     context['disclaimer'] = DUE_DILIGENCE_DISCLAIMER
     context['report_nav'] = build_report_nav(request.user, document.uploaded_by, REPORT_EVIDENCE)
 
-    # Entity Integrity (Secretary of State / domain / timeline checks) is a
-    # Zelda AI feature per the Lite/AI split — Lite proves Zelda ran the
-    # analysis, AI proves the company checks out.
-    if tier == 'full':
-        from .entity_verification_models import EntityVerificationReport
-        context['entity_report'] = EntityVerificationReport.objects.filter(document=document).order_by('-created_at').first()
-    else:
-        context['entity_report'] = None
+    # Entity Integrity is shown to whoever may view that report -- the business
+    # owner, staff, or someone granted it -- and never depends on the founder's
+    # Premium. See zelda_api/entity_verification.py.
+    from .entity_verification import (
+        can_request_identity_check, display_rows, latest_viewable_report, subject_for_document,
+    )
+    entity_report = latest_viewable_report(request.user, document)
+    context['entity_report'] = entity_report
+    context['entity_rows'] = display_rows(entity_report) if entity_report else []
+    identity_subject = subject_for_document(document)
+    context['identity_check_subject_id'] = (
+        identity_subject.id if can_request_identity_check(request.user, identity_subject) else None
+    )
 
     return render(request, 'truth_delta_dashboard.html', context)
+
+
+@login_required
+@require_POST
+def identity_check_request(request, profile_id):
+    """
+    An investor, buyer or staff member asks for a startup's identity check.
+    Reuses a check from the last 7 days when there is one, and grants the
+    requester that report. A hidden company answers like a missing one.
+    """
+    from matchmaking.models import Application, founder_is_visible_to
+    from .entity_verification import can_request_identity_check, request_identity_check
+    from .entity_verification_models import EntityVerificationReport
+
+    application = Application.objects.filter(pk=profile_id).first()
+    if application is None or not founder_is_visible_to(request.user, application):
+        return JsonResponse({'error': 'Not found.'}, status=404)
+    if not can_request_identity_check(request.user, application):
+        return JsonResponse({'error': 'Only investors, buyers and staff can request an identity check.'}, status=403)
+
+    report, _created = request_identity_check(application, request.user)
+    return JsonResponse({
+        'report_id': report.id,
+        'status': report.status,
+        'checked_at': report.checked_at.isoformat() if report.checked_at else None,
+        'status_url': reverse('zelda_api:identity_check_status', args=[report.id]),
+    }, status=202 if report.status == EntityVerificationReport.PENDING else 200)
+
+
+@login_required
+def identity_check_status(request, report_id):
+    from .entity_verification import can_view_entity_report
+    from .entity_verification_models import EntityVerificationReport
+
+    report = EntityVerificationReport.objects.filter(pk=report_id).first()
+    if report is None or not can_view_entity_report(request.user, report):
+        return JsonResponse({'error': 'Not found.'}, status=404)
+    return JsonResponse({
+        'status': report.status,
+        'checked_at': report.checked_at.isoformat() if report.checked_at else None,
+    })
 
 
 @login_required
@@ -1265,6 +1311,14 @@ def confirm_analyze_founder_profile(request, founder_username):
         AnalysisCreditCharge.objects.create(document=doc, user=request.user, job_type='memo')
 
         process_document_pipeline.delay(doc.id, raw_text)
+
+        # The investor who paid for this analysis gets the business identity
+        # check with it. Best effort: it must never undo an analysis already started.
+        try:
+            from .entity_verification import request_identity_check
+            request_identity_check(application, request.user, document=doc)
+        except Exception as e:
+            logger.warning(f"Identity check request failed for document {doc.id}: {str(e)}")
 
         return JsonResponse({
             'status': 'processing',
