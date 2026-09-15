@@ -13,12 +13,14 @@ so the amount sold is a running total. A chain of filings is one financing
 event described by its newest filing; amounts are never added across
 amendments.
 
-The fundraising total adds separate events only, and leaves out pooled-fund
-offerings, business combinations, and offerings whose filer attached a
-clarification of the sales amounts -- a clarification can change what "amount
-sold" means (one real filing uses it for a profits-interest distribution
-threshold, not money raised). The total is always Public record: Form D is
-not a complete record of a company's capital.
+The fundraising total adds separate events only, and leaves out offerings a
+structured field marks as something other than a company raising capital:
+pooled-fund offerings, business combinations, and securities described as
+profits interests (service grants, not cash sales -- one real filing reports a
+distribution threshold for them as "amount sold"). A filer's note on the sales
+amounts is always shown but never, on its own, keeps an offering out. The
+total is always Public record: Form D is not a complete record of a company's
+capital.
 
 Revenue. A Form D revenue bracket covers the issuer's most recently completed
 fiscal year, and issuers need not amend when only revenue changes. Only an
@@ -26,6 +28,7 @@ explicitly annual figure is compared with it, and only when the filing is at
 most REVENUE_FRESHNESS old; otherwise the bracket is shown as Public record.
 A fund's net asset value range is never read as revenue.
 """
+import re
 from dataclasses import dataclass
 from datetime import date, timedelta
 
@@ -43,6 +46,7 @@ REVENUE_BRACKETS = {
 
 POOLED_FUND_INDUSTRY = 'Pooled Investment Fund'
 POOLED_FUND_SECURITY = 'Pooled investment fund interests'
+_PROFITS_INTERESTS = re.compile(r'\bprofits?[\s-]+interests?\b', re.IGNORECASE)
 MAX_CLARIFICATION_CHARS = 300
 
 CAPITAL_CAVEAT = (
@@ -84,8 +88,8 @@ class FinancingEvent:
             return 'business_combination'
         if form_d.industry_group == POOLED_FUND_INDUSTRY or POOLED_FUND_SECURITY in form_d.security_types:
             return 'pooled_fund'
-        if form_d.sales_clarification:
-            return 'clarified'
+        if any(_PROFITS_INTERESTS.search(security) for security in form_d.security_types):
+            return 'profits_interests'
         return None
 
     @property
@@ -184,9 +188,9 @@ def describe_offering(event):
         parts.append(f"A pooled investment fund{kind}, so it is not counted toward the company's fundraising total.")
     elif reason == 'business_combination':
         parts.append("Part of a business combination, so it is not counted toward the company's fundraising total.")
-    elif reason == 'clarified':
-        parts.append("Because the filer clarifies what the amount sold represents, it is not counted toward the "
-                     "company's fundraising total.")
+    elif reason == 'profits_interests':
+        parts.append("The securities include profits interests, which are granted rather than sold for cash, so it is "
+                     "not counted toward the company's fundraising total.")
     return ' '.join(parts)
 
 
@@ -207,7 +211,8 @@ def add_capital_rows(add, events, *, capital_claim, filing_url, company_url, rev
     if excluded:
         summary += f" {_plural(len(excluded), 'other offering')} shown above {'is' if len(excluded) == 1 else 'are'} not counted."
     if reviewed_limit:
-        summary += f' Only the newest {reviewed_limit} Form D filings were reviewed.'
+        summary += (f' Only the newest {reviewed_limit} Form D filings, and earlier filings in their amendment chains, '
+                    'were reviewed.')
     add('sec_capital_raised', capital_claim, 'SEC Form D', f'{summary} {CAPITAL_CAVEAT}', R.PUBLIC_RECORD, company_url)
 
 
@@ -260,19 +265,22 @@ def add_form_d_revenue_row(add, *, form_d, filing_date, revenue_claim, revenue_a
             "year ends, so this is worth asking about.", R.DOESNT_MATCH, source_url)
 
 
-def add_annual_report_revenue_row(add, facts, *, revenue_claim, source_url):
-    """A 10-K filer's latest annual revenue, through the existing Truth Delta extractor, as Public record."""
-    from .entity_verification_models import EntityVerificationReport as R
+def annual_report_revenue(facts):
+    """(revenue, period) from a 10-K filer's company facts, through the existing Truth Delta extractor, or None."""
     from .truth_delta_sources import SECFilingsIntegration
 
     integration = SECFilingsIntegration()
     revenue = integration.extract_revenue(facts)
     if not revenue:
-        add('sec_revenue', revenue_claim, 'SEC 10-K',
-            "The company's SEC annual report data has no revenue figure.", R.NOT_APPLICABLE, source_url)
-        return
-    value, _unit = revenue
-    period = integration.extract_time_period(facts) or '10-K'
+        return None
+    return revenue[0], integration.extract_time_period(facts) or '10-K'
+
+
+def add_annual_report_revenue_row(add, annual_revenue, *, revenue_claim, source_url):
+    """A 10-K filer's latest annual revenue, as Public record."""
+    from .entity_verification_models import EntityVerificationReport as R
+
+    value, period = annual_revenue
     add('sec_revenue', revenue_claim, 'SEC 10-K',
         f"Revenue of {money(value)} in its {period}, from SEC annual report data. It is shown for reference "
         "and not compared with the profile.", R.PUBLIC_RECORD, source_url)

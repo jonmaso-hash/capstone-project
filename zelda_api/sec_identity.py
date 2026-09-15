@@ -58,8 +58,10 @@ MIN_INTERVAL_SECONDS = 0.12
 MAX_FILING_BYTES = 2 * 1024 * 1024
 FORM_D_TYPES = {'D', 'D/A'}
 ANNUAL_REPORT_TYPES = {'10-K'}
-# Each Form D is its own request; a company with a long filing history is read from its newest filings.
+# Each Form D is its own request; a company with a long filing history is read from its newest filings,
+# then from the earlier filings their amendment chains point back to, up to MAX_FORM_D_FETCHES in all.
 MAX_FORM_D_FILINGS = 20
+MAX_FORM_D_FETCHES = 40
 
 UNREACHABLE = "SEC EDGAR couldn't be reached."
 
@@ -425,34 +427,52 @@ def sec_findings(add, *, company_name, company_claim, person_name, person_claim,
             "No Form D was found in this company's recent SEC filings, so there is no offering to compare.",
             R.NOT_APPLICABLE, company_url)
     else:
-        reviewed = filings[:MAX_FORM_D_FILINGS]
+        by_accession = {filing['accession']: filing for filing in filings}
+        parsed = {latest['accession']: (latest['accession'], latest['filing_date'], form_d)}
+
+        def read(accession):
+            filing = by_accession[accession]
+            parsed[accession] = (accession, filing['filing_date'], fetch_form_d(filer.cik, accession))
+            return parsed[accession][2]
+
         try:
-            parsed = [(latest['accession'], latest['filing_date'], form_d)] + [
-                (filing['accession'], filing['filing_date'], fetch_form_d(filer.cik, filing['accession']))
-                for filing in reviewed[1:]
-            ]
+            for filing in filings[1:MAX_FORM_D_FILINGS]:
+                read(filing['accession'])
+            # An amendment near the limit can point past it; follow those links so its chain stays whole.
+            pending = [entry[2].previous_accession for entry in list(parsed.values())]
+            while pending and len(parsed) < MAX_FORM_D_FETCHES:
+                accession = pending.pop(0)
+                if accession in by_accession and accession not in parsed:
+                    pending.append(read(accession).previous_accession)
         except SecUnavailable as error:
             add('sec_capital_raised', capital_claim, 'SEC Form D', str(error), R.COULDNT_CHECK, company_url)
         else:
             sec_financing.add_capital_rows(
-                add, sec_financing.financing_events(parsed), capital_claim=capital_claim,
+                add, sec_financing.financing_events(list(parsed.values())), capital_claim=capital_claim,
                 filing_url=lambda accession: filing_index_url(filer.cik, accession), company_url=company_url,
                 reviewed_limit=MAX_FORM_D_FILINGS if len(filings) > MAX_FORM_D_FILINGS else None,
             )
 
-    # Revenue: a 10-K filer's reported revenue, otherwise the newest Form D's bracket.
+    # Revenue, strongest evidence first: a 10-K filer's reported revenue, then the newest Form D's bracket.
+    annual_revenue = None
     if files_annual_reports(record):
         try:
-            facts = company_facts(filer.cik)
+            annual_revenue = sec_financing.annual_report_revenue(company_facts(filer.cik))
         except SecUnavailable as error:
+            # Annual report data SEC didn't return isn't replaced by a weaker Form D bracket.
             add('sec_revenue', revenue_claim, 'SEC 10-K', str(error), R.COULDNT_CHECK, company_url)
-        else:
-            sec_financing.add_annual_report_revenue_row(add, facts, revenue_claim=revenue_claim, source_url=company_url)
+            return
+    if annual_revenue:
+        sec_financing.add_annual_report_revenue_row(
+            add, annual_revenue, revenue_claim=revenue_claim, source_url=company_url)
     elif form_d:
         sec_financing.add_form_d_revenue_row(
             add, form_d=form_d, filing_date=latest['filing_date'], revenue_claim=revenue_claim,
             revenue_amount=revenue_amount, revenue_is_annual=revenue_is_annual, source_url=filing_url,
         )
+    elif files_annual_reports(record):
+        add('sec_revenue', revenue_claim, 'SEC 10-K',
+            "The company's SEC annual report data has no revenue figure.", R.NOT_APPLICABLE, company_url)
     else:
         add('sec_revenue', revenue_claim, 'SEC EDGAR',
             "No Form D or annual report was found in this company's recent SEC filings, so there is no revenue "
