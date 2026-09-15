@@ -83,7 +83,7 @@ def scan_pitch_deck(uploaded_file) -> Dict:
         
     except Exception as e:
         logger.error(f"Pitch deck parsing error: {str(e)}")
-        return {"error": f"Failed to parse document: {str(e)}"}
+        return {"error": "Failed to parse document."}
 
 
 def _extract_pdf_text(pdf_file):
@@ -324,7 +324,7 @@ def compile_executive_intelligence_memo(
         
     except Exception as e:
         logger.error(f"Memo compilation failed for {getattr(founder_app, 'id', 'unknown')}: {str(e)}")
-        return {"error": f"Failed to compile memo: {str(e)}"}
+        return {"error": "Failed to compile memo."}
 
 def _generate_executive_summary(app) -> str:
     """Generate executive summary for a company/investor profile."""

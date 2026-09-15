@@ -525,7 +525,8 @@ def profile(request, username=None, pk=None):
     # tables above (they predate this model and already have history), but
     # investor/buyer had no view tracking at all until now, and nothing
     # anywhere tracked time-on-page, so ProfileView is logged for every role.
-    if request.user.is_authenticated and viewed_user != request.user:
+    from ops.impersonation import is_impersonating
+    if request.user.is_authenticated and viewed_user != request.user and not is_impersonating():
         from matchmaking.models import ProfileView
         if not request.session.session_key:
             request.session.create()
@@ -963,9 +964,9 @@ def get_stream_token(request):
             'username': username
         })
         
-    except Exception as e:
+    except Exception:
         logger.exception("Stream Token Generation & Upsert Failed")
-        return JsonResponse({'error': 'Internal Server Error', 'details': str(e)}, status=500)
+        return JsonResponse({'error': 'Internal Server Error'}, status=500)
 
 
 # =====================================================================
@@ -1034,9 +1035,9 @@ def toggle_privacy_view(request):
             investor_profile.save(update_fields=['is_private'])
 
         return JsonResponse({"status": "success", "is_private": is_private_state})
-    except Exception as e:
+    except Exception:
         logger.exception("AJAX privacy toggle update failed.")
-        return JsonResponse({"status": "error", "message": str(e)}, status=400)
+        return JsonResponse({"status": "error", "message": "Couldn't update your privacy setting."}, status=400)
     
 @login_required
 def zelda_dashboard_view(request):
@@ -1099,9 +1100,9 @@ def toggle_dm_view(request):
             investor_profile.save(update_fields=['allow_direct_messages'])
 
         return JsonResponse({"status": "success", "dm_enabled": is_enabled})
-    except Exception as e:
+    except Exception:
         logger.exception("AJAX DM toggle update failed.")
-        return JsonResponse({"status": "error", "message": str(e)}, status=400)
+        return JsonResponse({"status": "error", "message": "Couldn't update your messaging setting."}, status=400)
 
 
 ROLE_PROFILE_ATTRS = (

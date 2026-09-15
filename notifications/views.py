@@ -10,7 +10,10 @@ def notification_list_api(request):
     notifications = request.user.notifications.filter(is_read=False)
     data = list(notifications.values('id', 'message', 'target_url'))
 
-    notifications.update(is_read=True)
+    # Staff viewing as this user see the list without clearing it for them.
+    from ops.impersonation import is_impersonating
+    if not is_impersonating():
+        notifications.update(is_read=True)
     return JsonResponse(data, safe=False)
 
 def unread_count_api(request):

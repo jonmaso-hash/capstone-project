@@ -3899,8 +3899,11 @@ class EntityVerificationTests(TestCase):
         doc = DocumentSource.objects.create(
             uploaded_by=founder_user, filename='deck.pdf', source_entity='TaskCo', document_type='pitch_deck',
         )
+        from .safe_fetch import FetchResult
         mock_result = MagicMock(creation_date=date(2024, 1, 1))
-        with patch('whois.whois', return_value=mock_result):
+        page = FetchResult(final_url='https://taskco.com/', status=200, text='<title>TaskCo</title>')
+        with patch('whois.whois', return_value=mock_result), \
+             patch('zelda_api.entity_verification.fetch_public_page', return_value=page):
             result = verify_entity_integrity(doc.id)
 
         self.assertEqual(result['status'], 'success')

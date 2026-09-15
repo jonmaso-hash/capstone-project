@@ -699,36 +699,6 @@ class InvestmentMemoGeneratorAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-class MemoIntelligenceView(APIView):
-    authentication_classes = [SessionAuthentication, TokenAuthentication]
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, startup_name):
-        if not _MATCHMAKING_AVAILABLE:
-            return Response({"error": "Matchmaking module is not installed."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-        founder_app = get_object_or_404(Application, company_name__iexact=startup_name)
-        investor_app = InvestorApplication.objects.first()
-        url_to_crawl = getattr(founder_app, 'website', None)
-
-        if url_to_crawl:
-            external_data = self.perform_live_crawl(url_to_crawl)
-        else:
-            external_data = {'linkedin_headcount': 0, 'job_board_openings': 0}
-
-        vector_score, transparency = DiligenceEngine.calculate_success_vector(founder_app, investor_app, external_data)
-
-        return Response({
-            "startup": founder_app.company_name,
-            "success_vector_score": vector_score,
-            "transparency_index": transparency,
-            "text_synthesis": f"Memo for {startup_name} generated using live data. Score: {vector_score}/100.",
-        })
-
-    def perform_live_crawl(self, url):
-        return {'linkedin_headcount': 45, 'job_board_openings': 2}
-
-
 class InvestorPortfolioIntakeAPIView(APIView):
     """
     POST /api/v1/zelda/investors/portfolio/
@@ -994,16 +964,62 @@ def truth_delta_ui_view(request, document_id):
     context['disclaimer'] = DUE_DILIGENCE_DISCLAIMER
     context['report_nav'] = build_report_nav(request.user, document.uploaded_by, REPORT_EVIDENCE)
 
-    # Entity Integrity (Secretary of State / domain / timeline checks) is a
-    # Zelda AI feature per the Lite/AI split — Lite proves Zelda ran the
-    # analysis, AI proves the company checks out.
-    if tier == 'full':
-        from .entity_verification_models import EntityVerificationReport
-        context['entity_report'] = EntityVerificationReport.objects.filter(document=document).order_by('-created_at').first()
-    else:
-        context['entity_report'] = None
+    # Entity Integrity is shown to whoever may view that report -- the business
+    # owner, staff, or someone granted it -- and never depends on the founder's
+    # Premium. See zelda_api/entity_verification.py.
+    from .entity_verification import (
+        can_request_identity_check, display_rows, latest_viewable_report, subject_for_document,
+    )
+    entity_report = latest_viewable_report(request.user, document)
+    context['entity_report'] = entity_report
+    context['entity_rows'] = display_rows(entity_report) if entity_report else []
+    identity_subject = subject_for_document(document)
+    context['identity_check_subject_id'] = (
+        identity_subject.id if can_request_identity_check(request.user, identity_subject) else None
+    )
 
     return render(request, 'truth_delta_dashboard.html', context)
+
+
+@login_required
+@require_POST
+def identity_check_request(request, profile_id):
+    """
+    An investor, buyer or staff member asks for a startup's identity check.
+    Reuses a check from the last 7 days when there is one, and grants the
+    requester that report. A hidden company answers like a missing one.
+    """
+    from matchmaking.models import Application, founder_is_visible_to
+    from .entity_verification import can_request_identity_check, request_identity_check
+    from .entity_verification_models import EntityVerificationReport
+
+    application = Application.objects.filter(pk=profile_id).first()
+    if application is None or not founder_is_visible_to(request.user, application):
+        return JsonResponse({'error': 'Not found.'}, status=404)
+    if not can_request_identity_check(request.user, application):
+        return JsonResponse({'error': 'Only investors, buyers and staff can request an identity check.'}, status=403)
+
+    report, _created = request_identity_check(application, request.user)
+    return JsonResponse({
+        'report_id': report.id,
+        'status': report.status,
+        'checked_at': report.checked_at.isoformat() if report.checked_at else None,
+        'status_url': reverse('zelda_api:identity_check_status', args=[report.id]),
+    }, status=202 if report.status == EntityVerificationReport.PENDING else 200)
+
+
+@login_required
+def identity_check_status(request, report_id):
+    from .entity_verification import can_view_entity_report
+    from .entity_verification_models import EntityVerificationReport
+
+    report = EntityVerificationReport.objects.filter(pk=report_id).first()
+    if report is None or not can_view_entity_report(request.user, report):
+        return JsonResponse({'error': 'Not found.'}, status=404)
+    return JsonResponse({
+        'status': report.status,
+        'checked_at': report.checked_at.isoformat() if report.checked_at else None,
+    })
 
 
 @login_required
@@ -1121,7 +1137,9 @@ def _founder_investor_context(request, founder_username):
 
     founder_user = get_object_or_404(User, username=founder_username)
     application = getattr(founder_user, 'match_founder_profile', None)
-    if not application:
+    # A private, archived or denied founder answers like one with no profile.
+    from matchmaking.models import founder_is_visible_to
+    if not application or not founder_is_visible_to(request.user, application):
         return None, JsonResponse({'status': 'error', 'message': 'No founder profile found'}, status=404)
 
     return (investor_profile, founder_user, application), None
@@ -1294,6 +1312,14 @@ def confirm_analyze_founder_profile(request, founder_username):
 
         process_document_pipeline.delay(doc.id, raw_text)
 
+        # The investor who paid for this analysis gets the business identity
+        # check with it. Best effort: it must never undo an analysis already started.
+        try:
+            from .entity_verification import request_identity_check
+            request_identity_check(application, request.user, document=doc)
+        except Exception as e:
+            logger.warning(f"Identity check request failed for document {doc.id}: {str(e)}")
+
         return JsonResponse({
             'status': 'processing',
             'document_id': doc.id,
@@ -1305,7 +1331,7 @@ def confirm_analyze_founder_profile(request, founder_username):
         logger.warning(f"Track 1 pipeline trigger failed: {str(e)}")
         return JsonResponse({
             'status': 'error',
-            'message': f'Pipeline error: {str(e)}'
+            'message': "Zelda couldn't start this analysis. Please try again."
         }, status=500)
 
 def get_memo(request, doc_id):
