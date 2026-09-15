@@ -3903,7 +3903,8 @@ class EntityVerificationTests(TestCase):
         mock_result = MagicMock(creation_date=date(2024, 1, 1))
         page = FetchResult(final_url='https://taskco.com/', status=200, text='<title>TaskCo</title>')
         with patch('whois.whois', return_value=mock_result), \
-             patch('zelda_api.entity_verification.fetch_public_page', return_value=page):
+             patch('zelda_api.entity_verification.fetch_public_page', return_value=page), \
+             patch('zelda_api.sec_identity.sec_findings'):
             result = verify_entity_integrity(doc.id)
 
         self.assertEqual(result['status'], 'success')

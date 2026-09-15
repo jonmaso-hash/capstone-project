@@ -15,9 +15,11 @@ evidence, a result (Matches, Doesn't match, Not found, Not applicable, Couldn't
 check, Public record) and when it was checked. Absence of evidence is "Not
 found", never an accusation; nothing is called verified and nothing is scored.
 
+SEC EDGAR and Form D rows (filer, incorporation, the people listed, the year
+formed) come from sec_identity.py through the same row function.
+
 One external check per business runs at most once per REUSE_WINDOW; later
 requests in that window reuse it and are simply granted access to that report.
-SEC and Form D evidence are added in a later change on this same row shape.
 """
 import hashlib
 import ipaddress
@@ -32,6 +34,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
+from . import sec_identity
 from .safe_fetch import FetchError, fetch_public_page
 
 logger = logging.getLogger(__name__)
@@ -243,12 +246,21 @@ def collect_findings(subject):
     founding_claim = (f"Founded around {claimed_year} ({years} years in business)" if claimed_year
                       else 'Founding year: not on the profile')
 
+    def add_sec_rows():
+        # A business with no website can still have SEC filings, so this runs on every path.
+        sec_identity.sec_findings(
+            add, company_name=inputs['company_name'], company_claim=company_claim,
+            person_name=inputs['person_name'], person_claim=person_claim,
+            claimed_year=claimed_year, founding_claim=founding_claim,
+        )
+
     if not website:
         no_site = 'The profile has no website to check.'
         add('website', 'Website: not on the profile', 'Company website', no_site, R.NOT_APPLICABLE)
         add('company_name', company_claim, 'Company website', no_site, R.NOT_APPLICABLE)
         add('person_name', person_claim, 'Company website', no_site, R.NOT_APPLICABLE)
         add('founding_year', founding_claim, 'Domain registration', no_site, R.NOT_APPLICABLE)
+        add_sec_rows()
         return rows
 
     # 1. The website itself, fetched only through the public-address checks.
@@ -322,6 +334,7 @@ def collect_findings(subject):
                 f"{domain} was registered in {registered:%B %Y}, in line with the claimed founding year.",
                 R.MATCHES, lookup_url)
 
+    add_sec_rows()
     return rows
 
 
