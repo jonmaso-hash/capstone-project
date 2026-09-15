@@ -16,13 +16,16 @@ most startups raising a private round file. The lookup has two steps:
    companies' filings that mention Apple, which is why step 1 comes first.
 
 When exactly one filer's name matches (legal suffixes like Inc. and LLC
-ignored), its company record and newest Form D add rows through the same
+ignored), its company record and Form D filings add rows through the same
 `add` function the website checks use:
 
 - sec_filer          Matches / Not found / Couldn't check (shared name, SEC down)
 - sec_incorporation  Public record: entity type, jurisdiction, year formed
 - sec_person         Matches / Not found against the Form D's related persons
 - sec_founding_year  Matches / Doesn't match against the year formed
+- sec_offering       Public record, one per financing event (sec_financing.py)
+- sec_capital_raised Public record: the fundraising total beside the profile's claim
+- sec_revenue        the newest Form D revenue bracket, or a 10-K filer's revenue
 
 Filings also carry street addresses and phone numbers; nothing here reads them.
 Every request declares Interlink's user agent, has a timeout, and waits at
@@ -39,11 +42,14 @@ from dataclasses import dataclass, field
 import requests
 from lxml import etree
 
+from . import sec_financing
+
 logger = logging.getLogger(__name__)
 
 COMPANY_SEARCH_URL = 'https://www.sec.gov/cgi-bin/browse-edgar'
 SEARCH_URL = 'https://efts.sec.gov/LATEST/search-index'
 COMPANY_RECORD_URL = 'https://data.sec.gov/submissions/CIK{cik}.json'
+COMPANY_FACTS_URL = 'https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json'
 FILING_FOLDER_URL = 'https://www.sec.gov/Archives/edgar/data/{cik_number}/{accession_digits}/'
 COMPANY_PAGE_URL = 'https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={cik}'
 USER_AGENT = 'Interlink Foundry Entity Integrity (contact: admin@interlinkfoundry.com)'
@@ -51,6 +57,9 @@ TIMEOUT_SECONDS = 10
 MIN_INTERVAL_SECONDS = 0.12
 MAX_FILING_BYTES = 2 * 1024 * 1024
 FORM_D_TYPES = {'D', 'D/A'}
+ANNUAL_REPORT_TYPES = {'10-K'}
+# Each Form D is its own request; a company with a long filing history is read from its newest filings.
+MAX_FORM_D_FILINGS = 20
 
 UNREACHABLE = "SEC EDGAR couldn't be reached."
 
@@ -65,6 +74,18 @@ _TRAILING_LEGAL_SUFFIX = re.compile(
 _XML_PARSER = etree.XMLParser(
     resolve_entities=False, no_network=True, load_dtd=False, huge_tree=False, remove_comments=True,
 )
+
+# Form D Item 9, in the form's order.
+_SECURITY_TYPES = [
+    ('isEquityType', 'Equity'),
+    ('isDebtType', 'Debt'),
+    ('isOptionToAcquireType', 'Option, warrant or other right to acquire another security'),
+    ('isSecurityToBeAcquiredType', 'Security to be acquired upon exercise of an option, warrant or other right'),
+    ('isPooledInvestmentFundType', 'Pooled investment fund interests'),
+    ('isTenantInCommonType', 'Tenant-in-common securities'),
+    ('isMineralPropertyType', 'Mineral property securities'),
+    ('isOtherType', 'Other'),
+]
 
 
 class SecUnavailable(Exception):
@@ -86,6 +107,21 @@ class FormD:
     year_of_incorporation: int = None
     over_five_years: bool = False
     people: list = field(default_factory=list)  # [(first + last name, [relationships])]
+    # The offering, as this filing states it.
+    is_amendment: bool = False
+    previous_accession: str = None
+    date_of_first_sale: str = None
+    total_offering_amount: int = None
+    offering_amount_indefinite: bool = False
+    total_amount_sold: int = None
+    sales_clarification: str = None
+    investor_count: int = None
+    security_types: list = field(default_factory=list)
+    is_business_combination: bool = False
+    industry_group: str = None
+    fund_type: str = None
+    revenue_range: str = None
+    net_asset_value_range: str = None
 
 
 def _get(url, params=None):
@@ -176,15 +212,31 @@ def company_record(cik):
     return _json(_get(COMPANY_RECORD_URL.format(cik=str(cik).zfill(10))))
 
 
+def company_facts(cik):
+    return _json(_get(COMPANY_FACTS_URL.format(cik=str(cik).zfill(10))))
+
+
+def _recent_filings(record):
+    recent = ((record or {}).get('filings') or {}).get('recent') or {}
+    return zip(recent.get('accessionNumber') or [], recent.get('filingDate') or [], recent.get('form') or [])
+
+
+def form_d_filings(record):
+    """Every Form D and amendment in the company record's recent filings, newest first."""
+    filings = [{'accession': accession, 'filing_date': filing_date, 'form': form}
+               for accession, filing_date, form in _recent_filings(record) if form in FORM_D_TYPES]
+    filings.sort(key=lambda filing: (filing['filing_date'], filing['accession']), reverse=True)
+    return filings
+
+
+def files_annual_reports(record):
+    return any(form in ANNUAL_REPORT_TYPES for _accession, _date, form in _recent_filings(record))
+
+
 def latest_form_d(record):
     """{'accession', 'filing_date'} for the newest Form D or amendment, or None."""
-    recent = ((record or {}).get('filings') or {}).get('recent') or {}
-    newest = None
-    for accession, filing_date, form in zip(
-            recent.get('accessionNumber') or [], recent.get('filingDate') or [], recent.get('form') or []):
-        if form in FORM_D_TYPES and (newest is None or filing_date > newest['filing_date']):
-            newest = {'accession': accession, 'filing_date': filing_date}
-    return newest
+    filings = form_d_filings(record)
+    return {'accession': filings[0]['accession'], 'filing_date': filings[0]['filing_date']} if filings else None
 
 
 def _filing_folder(cik, accession):
@@ -202,6 +254,10 @@ def fetch_form_d(cik, accession):
     return parse_form_d(response.text)
 
 
+def _whole_dollars(value):
+    return int(value) if value and re.fullmatch(r'\d+', value) else None
+
+
 def parse_form_d(xml_text):
     try:
         data = xml_text.encode('utf-8') if isinstance(xml_text, str) else xml_text
@@ -213,6 +269,9 @@ def parse_form_d(xml_text):
         node = parent.find(path) if parent is not None else None
         value = node.text if node is not None else None
         return value.strip() if isinstance(value, str) and value.strip() else None
+
+    def is_true(parent, path):
+        return (text(parent, path) or '').lower() == 'true'
 
     issuer = root.find('{*}primaryIssuer')
     year_block = issuer.find('{*}yearOfInc') if issuer is not None else None
@@ -229,6 +288,15 @@ def parse_form_d(xml_text):
                  if isinstance(role.text, str) and role.text.strip()]
         people.append((name, roles))
 
+    offering = root.find('{*}offeringData')
+    securities = offering.find('{*}typesOfSecuritiesOffered') if offering is not None else None
+    security_types = []
+    for tag, label in _SECURITY_TYPES:
+        if is_true(securities, f'{{*}}{tag}'):
+            description = text(securities, '{*}descriptionOfOtherType') if tag == 'isOtherType' else None
+            security_types.append(f'{label}: {description}' if description else label)
+    offering_amount = text(offering, '{*}offeringSalesAmounts/{*}totalOfferingAmount')
+
     return FormD(
         entity_name=text(issuer, '{*}entityName'),
         entity_type=text(issuer, '{*}entityType'),
@@ -236,10 +304,27 @@ def parse_form_d(xml_text):
         year_of_incorporation=int(year_text) if year_text and year_text.isdigit() else None,
         over_five_years=(text(year_block, '{*}overFiveYears') or '').lower() == 'true',
         people=people,
+        is_amendment=is_true(offering, '{*}typeOfFiling/{*}newOrAmendment/{*}isAmendment'),
+        previous_accession=text(offering, '{*}typeOfFiling/{*}newOrAmendment/{*}previousAccessionNumber'),
+        date_of_first_sale=text(offering, '{*}typeOfFiling/{*}dateOfFirstSale/{*}value'),
+        total_offering_amount=_whole_dollars(offering_amount),
+        offering_amount_indefinite=(offering_amount or '').lower() == 'indefinite',
+        total_amount_sold=_whole_dollars(text(offering, '{*}offeringSalesAmounts/{*}totalAmountSold')),
+        sales_clarification=text(offering, '{*}offeringSalesAmounts/{*}clarificationOfResponse'),
+        investor_count=_whole_dollars(text(offering, '{*}investors/{*}totalNumberAlreadyInvested')),
+        security_types=security_types,
+        is_business_combination=is_true(
+            offering, '{*}businessCombinationTransaction/{*}isBusinessCombinationTransaction'),
+        industry_group=text(offering, '{*}industryGroup/{*}industryGroupType'),
+        fund_type=text(offering, '{*}industryGroup/{*}investmentFundInfo/{*}investmentFundType'),
+        revenue_range=text(offering, '{*}issuerSize/{*}revenueRange'),
+        net_asset_value_range=text(offering, '{*}issuerSize/{*}aggregateNetAssetValueRange'),
     )
 
 
-def sec_findings(add, *, company_name, company_claim, person_name, person_claim, claimed_year, founding_claim):
+def sec_findings(add, *, company_name, company_claim, person_name, person_claim, claimed_year, founding_claim,
+                 capital_claim='Prior capital raised: not on the profile', revenue_claim='Revenue: not on the profile',
+                 revenue_amount=None, revenue_is_annual=False):
     """Adds the SEC rows for one business through entity_verification.collect_findings's `add`."""
     from .entity_verification import _company_core, _normalize
     from .entity_verification_models import EntityVerificationReport as R
@@ -269,7 +354,8 @@ def sec_findings(add, *, company_name, company_claim, person_name, person_claim,
     incorporation_claim = 'Incorporation: not on the profile'
     try:
         record = company_record(filer.cik)
-        latest = latest_form_d(record)
+        filings = form_d_filings(record)
+        latest = filings[0] if filings else None
         form_d = fetch_form_d(filer.cik, latest['accession']) if latest else None
     except SecUnavailable as error:
         add('sec_incorporation', incorporation_claim, 'SEC EDGAR', str(error), R.COULDNT_CHECK, company_url)
@@ -332,3 +418,42 @@ def sec_findings(add, *, company_name, company_claim, person_name, person_claim,
             add('sec_founding_year', founding_claim, 'SEC Form D',
                 f'The Form D gives {year} as the year the company was formed, {-gap} years before the claimed founding year.',
                 R.DOESNT_MATCH, filing_url)
+
+    # Financing history: every recent Form D, grouped into financing events.
+    if not form_d:
+        add('sec_capital_raised', capital_claim, 'SEC Form D',
+            "No Form D was found in this company's recent SEC filings, so there is no offering to compare.",
+            R.NOT_APPLICABLE, company_url)
+    else:
+        reviewed = filings[:MAX_FORM_D_FILINGS]
+        try:
+            parsed = [(latest['accession'], latest['filing_date'], form_d)] + [
+                (filing['accession'], filing['filing_date'], fetch_form_d(filer.cik, filing['accession']))
+                for filing in reviewed[1:]
+            ]
+        except SecUnavailable as error:
+            add('sec_capital_raised', capital_claim, 'SEC Form D', str(error), R.COULDNT_CHECK, company_url)
+        else:
+            sec_financing.add_capital_rows(
+                add, sec_financing.financing_events(parsed), capital_claim=capital_claim,
+                filing_url=lambda accession: filing_index_url(filer.cik, accession), company_url=company_url,
+                reviewed_limit=MAX_FORM_D_FILINGS if len(filings) > MAX_FORM_D_FILINGS else None,
+            )
+
+    # Revenue: a 10-K filer's reported revenue, otherwise the newest Form D's bracket.
+    if files_annual_reports(record):
+        try:
+            facts = company_facts(filer.cik)
+        except SecUnavailable as error:
+            add('sec_revenue', revenue_claim, 'SEC 10-K', str(error), R.COULDNT_CHECK, company_url)
+        else:
+            sec_financing.add_annual_report_revenue_row(add, facts, revenue_claim=revenue_claim, source_url=company_url)
+    elif form_d:
+        sec_financing.add_form_d_revenue_row(
+            add, form_d=form_d, filing_date=latest['filing_date'], revenue_claim=revenue_claim,
+            revenue_amount=revenue_amount, revenue_is_annual=revenue_is_annual, source_url=filing_url,
+        )
+    else:
+        add('sec_revenue', revenue_claim, 'SEC EDGAR',
+            "No Form D or annual report was found in this company's recent SEC filings, so there is no revenue "
+            "figure to compare.", R.NOT_APPLICABLE, company_url)
