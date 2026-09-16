@@ -865,6 +865,12 @@ def truth_delta_ui_view(request, document_id):
 
     document = get_object_or_404(DocumentSource, id=document_id)
 
+    # Visibility first: a hidden company's report answers exactly as a missing
+    # one. Answering "under review" below would confirm the document exists.
+    from .document_access import document_is_visible_to
+    if not document_is_visible_to(request.user, document):
+        raise Http404("Not found.")
+
     if document.is_hidden_by_staff and document.uploaded_by != request.user and not request.user.is_staff:
         from django.core.exceptions import PermissionDenied
         raise PermissionDenied("This document is currently under review and isn't visible yet.")
@@ -1035,6 +1041,11 @@ def flag_truth_delta_claim(request, document_id, category):
     from .truth_delta_models import TruthDeltaReport, ClaimedDatapoint, ClarificationRequest, can_request_clarification
 
     document = get_object_or_404(DocumentSource, id=document_id)
+    # Checked before anything is created or sent: a question on a hidden
+    # company's claim would otherwise reach its owner as a notification.
+    from .document_access import document_is_visible_to
+    if not document_is_visible_to(request.user, document):
+        return JsonResponse({'error': 'Not found.'}, status=404)
     if not can_request_clarification(request.user, document):
         return JsonResponse({'error': 'Not authorized.'}, status=403)
 

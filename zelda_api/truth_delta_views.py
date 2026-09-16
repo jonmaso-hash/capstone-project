@@ -81,11 +81,20 @@ class TruthDeltaScoreView(APIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
 
     def get(self, request, document_id):
+        document = DocumentSource.objects.filter(id=document_id).first()
+
+        # Visibility first, same order as the page: a private, archived or
+        # denied company answers as a missing report, so this JSON can't be
+        # walked by document id, and "under review" below never confirms that
+        # a hidden company's document exists.
+        from .document_access import document_is_visible_to
+        if document is not None and not document_is_visible_to(request.user, document):
+            return Response({"error": "Report not found"}, status=status.HTTP_404_NOT_FOUND)
+
         # Same rule as the Truth Delta page (truth_delta_ui_view): a document
         # staff have hidden while it's under review is visible only to its
         # owner and staff. Checked before the report lookup, as the page does,
         # so other viewers can't tell whether a hidden document has a report.
-        document = DocumentSource.objects.filter(id=document_id).first()
         if (document and document.is_hidden_by_staff
                 and document.uploaded_by != request.user and not request.user.is_staff):
             return Response(

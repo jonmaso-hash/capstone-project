@@ -218,6 +218,16 @@ class DocumentMemoView(APIView):
                     status=status.HTTP_403_FORBIDDEN
                 )
 
+            # A company every discovery surface hides answers here exactly as a
+            # missing document would -- 404, never 403, so walking document ids
+            # can't confirm a private, archived or denied company is there.
+            from .document_access import document_is_visible_to
+            if not document_is_visible_to(request.user, doc):
+                return Response(
+                    {"error": "Document not found"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
             if doc.is_hidden_by_staff and doc.uploaded_by != request.user and not request.user.is_staff:
                 return Response(
                     {"error": "This document is currently under review and isn't visible yet."},
