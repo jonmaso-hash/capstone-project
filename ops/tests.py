@@ -76,9 +76,13 @@ class DocumentVisibilityTests(TestCase):
         )
 
     def test_hidden_document_blocks_non_owner_non_staff(self):
+        # 404, not 403: this uploader has no founder or seller profile, so the
+        # document is owner-and-staff only (zelda_api/document_access.py), and
+        # the refusal must not confirm that the document exists. The owner and
+        # staff cases below are unchanged.
         self.client.force_login(self.investor_user)
         response = self.client.get(f'/api/v1/zelda/documents/{self.document.id}/memo/')
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 404)
 
     def test_hidden_document_still_visible_to_owner(self):
         self.client.force_login(self.owner)
