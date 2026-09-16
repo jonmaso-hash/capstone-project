@@ -996,7 +996,7 @@ def identity_check_request(request, profile_id):
     requester that report. A hidden company answers like a missing one.
     """
     from matchmaking.models import Application, founder_is_visible_to
-    from .entity_verification import can_request_identity_check, request_identity_check
+    from .entity_verification import IdentityCheckLimited, can_request_identity_check, request_identity_check
     from .entity_verification_models import EntityVerificationReport
 
     application = Application.objects.filter(pk=profile_id).first()
@@ -1005,7 +1005,13 @@ def identity_check_request(request, profile_id):
     if not can_request_identity_check(request.user, application):
         return JsonResponse({'error': 'Only investors, buyers and staff can request an identity check.'}, status=403)
 
-    report, _created = request_identity_check(application, request.user)
+    try:
+        report, _created = request_identity_check(application, request.user)
+    except IdentityCheckLimited as limited:
+        # Checking a company again inside the 7-day window is always free, so
+        # this only ever counts genuinely new checks.
+        return JsonResponse(
+            {'error': f"That's a lot of company checks. Please try again {limited.retry_phrase}."}, status=429)
     return JsonResponse({
         'report_id': report.id,
         'status': report.status,
@@ -1327,7 +1333,9 @@ def confirm_analyze_founder_profile(request, founder_username):
         # check with it. Best effort: it must never undo an analysis already started.
         try:
             from .entity_verification import request_identity_check
-            request_identity_check(application, request.user, document=doc)
+            # The analysis credit already paid for this one, so it doesn't
+            # count against the free-check allowance.
+            request_identity_check(application, request.user, document=doc, counts_against_limits=False)
         except Exception as e:
             logger.warning(f"Identity check request failed for document {doc.id}: {str(e)}")
 

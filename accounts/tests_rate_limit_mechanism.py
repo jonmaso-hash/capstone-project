@@ -42,6 +42,11 @@ class LockedLimitsTests(TestCase):
             'password_reset_email': (3, timedelta(hours=1)),
             'contact_ip': (5, timedelta(hours=1)),
             'waitlist_ip': (10, timedelta(hours=1)),
+            # Entity Integrity checks: each new one sends ~45 requests to SEC
+            # under one declared user agent, so a per-user limit protects the
+            # platform and a global one protects SEC's fair-access policy.
+            'identity_check_user': (10, timedelta(days=1)),
+            'identity_check_global': (200, timedelta(hours=1)),
         })
 
     def test_each_scope_allows_exactly_its_limit(self):
@@ -199,11 +204,14 @@ class ClientAddressTests(TestCase):
 
 class PruningTests(TestCase):
 
-    def test_rows_older_than_a_day_are_pruned_and_recent_ones_kept(self):
+    def test_rows_past_the_retention_period_are_pruned_and_recent_ones_kept(self):
+        # Aged relative to RETENTION rather than a fixed number of hours: the
+        # longest window grew to a day (identity_check_user), so retention grew
+        # with it, and a hard-coded 25 hours would now be inside it.
         rate_limits.reserve('signup_ip', 'old-address')
         rate_limits.reserve('signup_ip', 'recent-address')
         RateLimitEvent.objects.filter(key=rate_limits.hash_key('signup_ip', 'old-address')).update(
-            created_at=timezone.now() - timedelta(hours=25))
+            created_at=timezone.now() - rate_limits.RETENTION - timedelta(hours=1))
         self.assertEqual(prune_rate_limit_events(), 1)
         self.assertEqual(list(RateLimitEvent.objects.values_list('key', flat=True)),
                          [rate_limits.hash_key('signup_ip', 'recent-address')])

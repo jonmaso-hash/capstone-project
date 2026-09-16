@@ -396,13 +396,49 @@ def _find_or_start(subject, document=None):
     return R.objects.create(**{field: subject}, document=document, inputs_hash=digest, status=R.PENDING), True
 
 
-def request_identity_check(subject, user, document=None):
+class IdentityCheckLimited(Exception):
+    """
+    Too many new checks, per user or across the platform. `retry_phrase` is
+    the wording the sign-in limits use and is safe to show the requester.
+    """
+
+    def __init__(self, scope, identifier):
+        from accounts.rate_limits import retry_phrase
+
+        self.scope = scope
+        self.retry_phrase = retry_phrase(scope, identifier)
+        super().__init__(f'identity check limit reached ({scope})')
+
+
+def request_identity_check(subject, user, document=None, counts_against_limits=True):
     """
     An investor, buyer or staff member asks about a business. Reuses a recent
     check or queues a new one, and grants `user` access to that report.
+
+    A new check is expensive -- about 45 SEC requests, a website fetch and a
+    WHOIS lookup -- so it counts against this user's daily allowance and the
+    platform's hourly ceiling (accounts/rate_limits.py), and raises
+    IdentityCheckLimited when either is reached. A reuse runs nothing and
+    releases its slot. Staff are exempt, and so is the check that comes with a
+    paid analysis: pass counts_against_limits=False, as the credit already
+    paid for it.
     """
+    from accounts import rate_limits
     from .entity_verification_models import EntityReportAccessGrant
     from .entity_verification_tasks import run_entity_check
+
+    counted = (
+        counts_against_limits and user is not None
+        and user.is_authenticated and not user.is_staff
+    )
+    tokens = []
+    if counted:
+        tokens, refused = rate_limits.reserve_all([
+            ('identity_check_user', str(user.id)),
+            ('identity_check_global', rate_limits.GLOBAL_KEY),
+        ])
+        if refused is not None:
+            raise IdentityCheckLimited(*refused)
 
     with transaction.atomic():
         report, created = _find_or_start(subject, document)
@@ -411,6 +447,11 @@ def request_identity_check(subject, user, document=None):
             transaction.on_commit(lambda: run_entity_check.delay(report_id))
         if user is not None and user.is_authenticated:
             EntityReportAccessGrant.objects.get_or_create(report=report, user=user)
+
+    if counted and not created:
+        # Reusing a report inside the 7-day window runs no check at all.
+        for token in tokens:
+            rate_limits.release(token)
     return report, created
 
 
