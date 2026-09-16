@@ -39,10 +39,24 @@ LIMITS = {
     'password_reset_email': (3, timedelta(hours=1)),
     'contact_ip': (5, timedelta(hours=1)),
     'waitlist_ip': (10, timedelta(hours=1)),
+    # Entity Integrity (zelda_api/entity_verification.py). Every NEW check
+    # sends about 45 requests to SEC EDGAR under one declared user agent, plus
+    # a website fetch and a WHOIS lookup, so one limit protects the platform
+    # from a single account and the other keeps everyone inside SEC's
+    # fair-access policy, which applies to the identity rather than the user.
+    # Reused checks (the 7-day window) run nothing and release their slot.
+    'identity_check_user': (10, timedelta(days=1)),
+    'identity_check_global': (200, timedelta(hours=1)),
 }
 
-# How long rows are kept before pruning -- well past every window above.
-RETENTION = timedelta(days=1)
+# The identifier the platform-wide ceiling counts against -- one bucket for
+# everyone, unlike the per-user and per-address scopes above.
+GLOBAL_KEY = 'all'
+
+# How long rows are kept before pruning -- well past every window above. The
+# longest window is a day (identity_check_user), so a day's retention would
+# prune attempts still inside it.
+RETENTION = timedelta(days=3)
 
 
 def hash_key(scope, identifier):
