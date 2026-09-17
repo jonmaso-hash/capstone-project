@@ -124,6 +124,7 @@ class SignupRateLimitTests(TestCase):
     def _signup(self, n, ip='203.0.113.20', valid=True):
         return _client(ip).post(reverse('accounts:signup'), {
             'username': f'rl_signup_{n}',
+            'email': f'rl_signup_{n}@example.com',
             'password1': PASSWORD,
             'password2': PASSWORD if valid else 'Mismatch!2026xyz',
             'role': 'founder',

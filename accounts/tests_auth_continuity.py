@@ -88,6 +88,7 @@ class DeepLinkSurvivesSignupTests(TestCase):
         created = self.client.post(signup_url, {
             'role': 'investor',
             'username': 'dl_newcomer',
+            'email': 'dl_newcomer@example.com',
             'password1': PASSWORD,
             'password2': PASSWORD,
             'next': self.destination,
@@ -116,7 +117,7 @@ class DeepLinkSurvivesSignupTests(TestCase):
         """An abandoned signup must not leak its destination into a later onboarding."""
         self.client.get('%s?next=%s' % (reverse('accounts:signup'), self.destination))
         self.client.post(reverse('accounts:signup'), {
-            'role': 'buyer', 'username': 'dl_once', 'password1': PASSWORD,
+            'role': 'buyer', 'username': 'dl_once', 'email': 'dl_once@example.com', 'password1': PASSWORD,
             'password2': PASSWORD,
         })
 
@@ -129,7 +130,7 @@ class DeepLinkSurvivesSignupTests(TestCase):
     def test_signup_without_a_destination_still_reaches_thank_you(self):
         """The ordinary signup is untouched by any of this."""
         self.client.post(reverse('accounts:signup'), {
-            'role': 'buyer', 'username': 'dl_plain', 'password1': PASSWORD,
+            'role': 'buyer', 'username': 'dl_plain', 'email': 'dl_plain@example.com', 'password1': PASSWORD,
             'password2': PASSWORD,
         })
         onboarded = self.client.post('/settings/profile/buyer/', BUYER_FORM)
