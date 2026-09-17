@@ -20,6 +20,8 @@ from django.urls import reverse
 
 from matchmaking.models import Application, InvestorApplication
 from matchmaking.tests import _mock_embedding_generation
+from zelda_api.models import AnalysisCreditCharge
+from zelda_api.vector_models import DocumentSource
 
 User = get_user_model()
 SECRET = 'SECRET-INTERNAL-DETAIL-7f3a'
@@ -90,16 +92,38 @@ class ExceptionTextStaysInTheLogTests(_Leaks):
 
     @override_settings(MEDIA_ROOT=tempfile.mkdtemp())
     def test_starting_a_paid_analysis(self):
+        # The failure is forced after the deck has been read: since D9 an
+        # extraction failure is answered as an unreadable deck (see the next
+        # test), so this is what exercises the step's own error handler.
         self.founder.pitch_deck = SimpleUploadedFile('deck.pdf', b'%PDF-1.4 deck', content_type='application/pdf')
         self.founder.save()
         self.client.force_login(self.investor_user)
         with self.assertLogs('zelda_api.views', level='WARNING') as logs, \
                 mock.patch('zelda_api.quotas.has_credits_for', return_value=True), \
-                mock.patch('zelda_api.utils._extract_pdf_text', side_effect=RuntimeError(SECRET)):
+                mock.patch('zelda_api.utils._extract_pdf_text', return_value=('Deck text about the product.', 3)), \
+                mock.patch.object(DocumentSource.objects, 'create', side_effect=RuntimeError(SECRET)):
             response = self.client.post(
                 reverse('zelda_api:analyze_founder_confirm', args=[self.founder_user.username]))
         self.assertEqual(response.status_code, 500)
         self.assertSecretOnlyInTheLog(response, logs)
+
+    @override_settings(MEDIA_ROOT=tempfile.mkdtemp())
+    def test_an_extraction_failure_on_a_paid_analysis_is_refused_without_leaking(self):
+        # The shared extractor (zelda_api/utils.py::extract_text_from_file) logs
+        # the failure and returns no text, so the step refuses the deck as
+        # unreadable: the detail stays in the log and nothing is charged.
+        self.founder.pitch_deck = SimpleUploadedFile('deck.pdf', b'%PDF-1.4 deck', content_type='application/pdf')
+        self.founder.save()
+        self.client.force_login(self.investor_user)
+        with self.assertLogs('zelda_api.utils', level='ERROR') as logs, \
+                mock.patch('zelda_api.quotas.has_credits_for', return_value=True), \
+                mock.patch('zelda_api.utils._extract_pdf_text', side_effect=RuntimeError(SECRET)):
+            response = self.client.post(
+                reverse('zelda_api:analyze_founder_confirm', args=[self.founder_user.username]))
+        self.assertEqual(response.status_code, 422)
+        self.assertSecretOnlyInTheLog(response, logs)
+        self.assertFalse(DocumentSource.objects.filter(uploaded_by=self.founder_user).exists())
+        self.assertFalse(AnalysisCreditCharge.objects.exists())
 
     def test_ingesting_a_document(self):
         self.client.force_login(self.founder_user)

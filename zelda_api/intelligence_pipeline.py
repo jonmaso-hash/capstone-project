@@ -110,6 +110,9 @@ class ZeldaIntelligencePipelineV2:
     def process_document(self, document_source: DocumentSource, raw_text: str) -> Dict:
         """Process document through complete pipeline + Truth Delta trigger"""
         logger.info(f"Starting pipeline v2 for {document_source.filename}")
+        refused = self._refuse_unreadable(document_source, raw_text)
+        if refused:
+            return refused
         
         try:
             # Store preview
@@ -195,6 +198,9 @@ class ZeldaIntelligencePipelineV2:
         fundraising claim to verify.
         """
         logger.info(f"Starting valuation pipeline for {document_source.filename}")
+        refused = self._refuse_unreadable(document_source, raw_text)
+        if refused:
+            return refused
 
         try:
             document_source.raw_text_preview = raw_text[:1000]
@@ -259,6 +265,25 @@ class ZeldaIntelligencePipelineV2:
             document_source.error_message = str(e)
             document_source.save()
             return {'status': 'error', 'error': str(e)}
+
+    def _refuse_unreadable(self, document_source, raw_text):
+        """
+        An error result -- with the document marked failed -- when there is no
+        readable text, else None. Whatever queued the document, nothing past
+        this point can make empty text meaningful, so it gets no chunks, no
+        insights and no Claude call. retryable=False tells the Celery task not
+        to retry what a retry can't fix.
+        """
+        from .utils import has_usable_text
+
+        if has_usable_text(raw_text):
+            return None
+        message = 'No readable text was found in this document.'
+        logger.warning(f"Not analyzing {document_source.filename}: {message}")
+        document_source.status = 'error'
+        document_source.error_message = message
+        document_source.save()
+        return {'status': 'error', 'error': message, 'retryable': False}
 
     # --- Pipeline Methods ---
     

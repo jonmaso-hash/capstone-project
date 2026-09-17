@@ -1207,8 +1207,6 @@ def analyze_founder_profile(request, founder_username):
     itself only happens via confirm_analyze_founder_profile (POST) — see
     that view's docstring for why the cost moved off the founder.
     """
-    from .vector_models import DocumentSource
-
     resolved, error_response = _founder_investor_context(request, founder_username)
     if error_response:
         return error_response
@@ -1218,11 +1216,9 @@ def analyze_founder_profile(request, founder_username):
     from matchmaking.models import log_investor_event
     log_investor_event(request.user, application, 'analyze')
 
-    # Look for existing DocumentSource for this founder
-    doc = DocumentSource.objects.filter(
-        uploaded_by=founder_user,
-        document_type='pitch_deck'
-    ).order_by('-created_at').first()
+    # The founder's newest document that can actually be shown. An empty or
+    # failed one doesn't count, so the investor is offered a fresh analysis.
+    doc = _usable_pitch_deck_document(founder_user)
 
     if doc:
         # Document already exists — return it directly
@@ -1261,6 +1257,27 @@ def analyze_founder_profile(request, founder_username):
     })
 
 
+def _usable_pitch_deck_document(founder_user):
+    """
+    The founder's newest pitch-deck document that can be shown or reused: not
+    failed, and with readable text. An empty or failed one -- a PowerPoint once
+    read through the PDF extractor, an image-only deck, a stuck ingest -- is
+    skipped, so the deck is read again instead of being offered as ready
+    forever. A usable document still being processed counts, so a second
+    investor isn't charged for a run already under way.
+    """
+    from .utils import has_usable_text
+    from .vector_models import DocumentSource
+
+    documents = (
+        DocumentSource.objects
+        .filter(uploaded_by=founder_user, document_type='pitch_deck')
+        .exclude(status='error')
+        .order_by('-created_at')
+    )
+    return next((doc for doc in documents if has_usable_text(doc.raw_text_full)), None)
+
+
 @require_POST
 def confirm_analyze_founder_profile(request, founder_username):
     """
@@ -1284,8 +1301,9 @@ def confirm_analyze_founder_profile(request, founder_username):
     if not application.pitch_deck:
         return JsonResponse({'status': 'no_deck', 'message': 'This founder has not uploaded a pitch deck yet.'}, status=404)
 
-    # Re-check for a race: another investor may have confirmed first.
-    doc = DocumentSource.objects.filter(uploaded_by=founder_user, document_type='pitch_deck').order_by('-created_at').first()
+    # Re-check for a race: another investor may have confirmed first. Only a
+    # usable document counts -- an empty or failed one is read again below.
+    doc = _usable_pitch_deck_document(founder_user)
     if doc:
         return JsonResponse({
             'status': 'ready',
@@ -1304,15 +1322,17 @@ def confirm_analyze_founder_profile(request, founder_username):
         }, status=402)
 
     try:
-        from .utils import _extract_pptx_text, _extract_pdf_text
-        deck_path = application.pitch_deck.path
+        from .utils import UNREADABLE_DOCUMENT_MESSAGE, extract_text_from_file, has_usable_text
 
-        if deck_path.lower().endswith('.pptx'):
-            with open(deck_path, 'rb') as pdf_file:
-                raw_text, page_count = _extract_pdf_text(pdf_file)
-        else:
-            with open(deck_path, 'rb') as pdf_file:
-                raw_text, page_count = _extract_pdf_text(pdf_file)
+        # The same dispatcher the upload path uses, so a PowerPoint deck is read
+        # as a PowerPoint. Read through storage: files on S3 have no local path.
+        with application.pitch_deck.open('rb') as deck:
+            raw_text, page_count = extract_text_from_file(deck)
+
+        # Nothing readable -- an image-only deck, empty text boxes, a file that
+        # won't open -- means no document, no charge and no analysis.
+        if not has_usable_text(raw_text):
+            return JsonResponse({'status': 'error', 'message': UNREADABLE_DOCUMENT_MESSAGE}, status=422)
 
         doc = DocumentSource.objects.create(
             uploaded_by=founder_user,
