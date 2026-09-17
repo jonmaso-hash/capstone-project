@@ -16,7 +16,7 @@ from unittest import mock
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
-from django.urls import reverse
+from django.urls import NoReverseMatch, reverse
 
 from matchmaking.models import Application, InvestorApplication
 from matchmaking.tests import _mock_embedding_generation
@@ -145,11 +145,28 @@ class ExceptionTextStaysInTheLogTests(_Leaks):
         self.assertEqual(response.status_code, 422)
         self.assertSecretOnlyInTheLog(response, logs)
 
-    def test_intelligence_memo_compile_failure(self):
-        # The first thing the compiler calls, so the forced failure is the one that happens.
+
+class IntelligenceMemoEndpointRemovedTests(_Leaks):
+    """
+    The intelligence-memo endpoint, once covered above for leaking its compile
+    error, is removed: it returned boilerplate ("engagement_score": 85, fixed
+    recommendations) as if it were analysis, and nothing called it. There is
+    no response left to leak from.
+    """
+
+    def test_the_intelligence_memo_endpoint_is_gone(self):
         self.client.force_login(self.founder_user)
-        with self.assertLogs('zelda_api.utils', level='ERROR') as logs, \
-                mock.patch.object(Application, 'to_foundry_envelope', side_effect=RuntimeError(SECRET)):
-            response = self.client.get(reverse('zelda_api:intelligence_memo'))
-        self.assertEqual(response.status_code, 200)
-        self.assertSecretOnlyInTheLog(response, logs)
+        with self.assertRaises(NoReverseMatch):
+            reverse('zelda_api:intelligence_memo')
+        response = self.client.get('/api/v1/zelda/intelligence-memo/')
+        self.assertEqual(response.status_code, 404)
+
+    def test_the_memo_compiler_is_gone(self):
+        import zelda_api.utils
+        for name in (
+            'compile_executive_intelligence_memo', '_generate_executive_summary',
+            '_generate_market_position', '_generate_recommendations',
+            '_generate_metrics_dashboard', '_calculate_completeness',
+        ):
+            with self.subTest(name=name):
+                self.assertFalse(hasattr(zelda_api.utils, name))
