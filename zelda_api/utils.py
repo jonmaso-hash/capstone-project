@@ -379,6 +379,21 @@ def _calculate_completeness(app) -> int:
     filled = sum(1 for field in tracked_fields if getattr(app, field, None))
     return int((filled / len(tracked_fields)) * 100)
 
+UNREADABLE_DOCUMENT_MESSAGE = (
+    "Zelda couldn't find any readable text in this document. It may be made only of images "
+    "— please upload a version with selectable text."
+)
+
+
+def has_usable_text(text):
+    """
+    Whether extraction produced anything to analyze. Whitespace doesn't count:
+    a deck of empty text boxes extracts to newlines, an image-only deck to
+    nothing, and analyzing either would be a paid call about no content.
+    """
+    return bool(text and text.strip())
+
+
 def extract_text_from_file(uploaded_file):
     """
     Extracts raw text from an uploaded file, plus a page/slide count for

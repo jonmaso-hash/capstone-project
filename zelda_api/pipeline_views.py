@@ -73,12 +73,14 @@ class DocumentIngestView(APIView):
 
         try:
             # Extract text from file
-            from .utils import extract_text_from_file
+            from .utils import UNREADABLE_DOCUMENT_MESSAGE, extract_text_from_file, has_usable_text
             extracted_text, page_count = extract_text_from_file(uploaded_file)
 
-            if not extracted_text:
+            # Whitespace counts as nothing: a deck of empty text boxes extracts
+            # to newlines. Refused before any document or task exists.
+            if not has_usable_text(extracted_text):
                 return Response(
-                    {"error": "Failed to extract text from file"},
+                    {"error": UNREADABLE_DOCUMENT_MESSAGE},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 

@@ -46,6 +46,11 @@ def process_document_pipeline(self, document_id: int, raw_text: str):
                 'chunks': result['chunks_created'],
                 'insights': result['insights_extracted'],
             }
+        elif result.get('retryable') is False:
+            # A retry can't make an unreadable document readable, and the
+            # pipeline has already marked it failed.
+            logger.warning(f"[Celery] Not retrying document {document_id}: {result['error']}")
+            return {'status': 'error', 'document_id': document_id, 'error': result['error']}
         else:
             logger.error(f"[Celery] Pipeline failed for document {document_id}: {result['error']}")
             raise Exception(result['error'])
