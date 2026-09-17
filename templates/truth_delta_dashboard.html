@@ -692,7 +692,7 @@
         {% if report and category_states %}
         <div class="truth-delta-stats mb-0">
             <div class="stat-card">
-                <div class="stat-value">{{ claims_count }}</div>
+                <div class="stat-value">{{ claims_analyzed }}</div>
                 <div class="stat-label">Claims Analyzed</div>
             </div>
             <div class="stat-card">
@@ -834,12 +834,11 @@ const SERVER_TRUTH_DATA = {
     overall_truth_score: {% if truth_score is not None %}{{ truth_score }}{% else %}null{% endif %},
     credibility_risk: _readJsonScript('truth-delta-risk-json', 'pending'),
     summary: _readJsonScript('truth-delta-summary-json', 'Verification pending — no public data found for this company.'),
-    claims_analyzed: {{ claims_count|default:0 }},
-    claims_verified: {{ claims_count|default:0 }},
+    claims_analyzed: {{ claims_analyzed|default:0 }},
     claims_flagged: 0,
     verification_rate: 0,
     discrepancy_rate: 0,
-    flag_breakdown: { verified: {{ claims_count|default:0 }}, caution: 0, warning: 0, critical: 0 },
+    flag_breakdown: { caution: 0, warning: 0, critical: 0 },
     recommendation_impact: { adjusted: null },
     details: _readJsonScript('truth-delta-details-json', {})
 };
