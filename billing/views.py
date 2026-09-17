@@ -9,7 +9,6 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import redirect, render
 from django.urls import reverse
-from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
@@ -316,6 +315,52 @@ def create_billing_portal_session(request):
     return redirect(session.url)
 
 
+# Stripe subscription status -> local status. Only ACTIVE grants Premium.
+# Anything not listed -- `paused`, or a status Stripe adds later -- is stored
+# as INCOMPLETE, so it never does.
+STRIPE_SUBSCRIPTION_STATUSES = {
+    'active': Subscription.Status.ACTIVE,
+    'trialing': Subscription.Status.ACTIVE,
+    'past_due': Subscription.Status.PAST_DUE,
+    'unpaid': Subscription.Status.PAST_DUE,
+    'canceled': Subscription.Status.CANCELED,
+    'incomplete_expired': Subscription.Status.CANCELED,
+    'incomplete': Subscription.Status.INCOMPLETE,
+}
+
+
+def _utc_from_timestamp(value):
+    """An aware UTC datetime from a Unix timestamp, or None when it isn't a usable one."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    try:
+        return datetime.datetime.fromtimestamp(value, tz=datetime.timezone.utc)
+    except (OverflowError, OSError, ValueError):
+        return None
+
+
+def _subscription_period_end(subscription):
+    """
+    When a Stripe subscription next renews, or None.
+
+    Since API 2025-03-31.basil the billing period lives on each subscription
+    item (items.data[].current_period_end), not on the subscription, so the
+    earliest item end is the next renewal. A legacy payload's top-level
+    current_period_end is used only when no item gives a usable one. Values
+    that aren't usable timestamps are ignored rather than failing the webhook.
+    """
+    item_data = (subscription.get('items') or {}).get('data') or []
+    ends = [
+        end for end in (
+            _utc_from_timestamp(item.get('current_period_end')) for item in item_data if isinstance(item, dict)
+        ) if end
+    ]
+    if not ends:
+        legacy = _utc_from_timestamp(subscription.get('current_period_end'))
+        ends = [legacy] if legacy else []
+    return min(ends) if ends else None
+
+
 @csrf_exempt
 @require_POST
 def stripe_webhook(request):
@@ -419,20 +464,15 @@ def stripe_webhook(request):
         stripe_status = data_object.get('status')
         sub = Subscription.objects.filter(stripe_subscription_id=stripe_subscription_id).first()
         if sub:
-            if stripe_status == 'active':
-                new_status = Subscription.Status.ACTIVE
-            elif stripe_status == 'past_due':
-                new_status = Subscription.Status.PAST_DUE
-            else:
-                new_status = Subscription.Status.INCOMPLETE
-
-            current_period_end = data_object.get('current_period_end')
-            if current_period_end:
-                sub.current_period_end = timezone.make_aware(
-                    datetime.datetime.utcfromtimestamp(current_period_end), timezone.utc
-                )
+            new_status = STRIPE_SUBSCRIPTION_STATUSES.get(stripe_status, Subscription.Status.INCOMPLETE)
+            update_fields = ['status', 'updated_at']
+            # Stored only when the payload actually says when it renews.
+            period_end = _subscription_period_end(data_object)
+            if period_end:
+                sub.current_period_end = period_end
+                update_fields.append('current_period_end')
             sub.status = new_status
-            sub.save(update_fields=['status', 'current_period_end', 'updated_at'])
+            sub.save(update_fields=update_fields)
             _apply_premium_flag(sub.user, new_status == Subscription.Status.ACTIVE)
 
     elif event_type == 'customer.subscription.deleted':
