@@ -910,6 +910,9 @@ def truth_delta_ui_view(request, document_id):
     category_states = report.category_states() if report else {}
     verified_count = sum(1 for s in category_states.values() if s == 'verified')
     unverified_count = sum(1 for s in category_states.values() if s == 'no_data')
+    # "Claims Analyzed" counts the same categories as Verified/Unverified, not
+    # the extracted ClaimedDatapoint rows, so the three cards always add up.
+    claims_analyzed = verified_count + unverified_count
 
     # Work Done — concrete analysis work on the underlying document.
     # work_done_summary keeps only genuinely-computed positive integers,
@@ -931,7 +934,7 @@ def truth_delta_ui_view(request, document_id):
         'truth_score': round(report.overall_truth_score) if report and report.overall_truth_score is not None else None,
         'credibility_risk': report.credibility_risk if report else 'pending',
         'summary': report.summary if report else 'Verification pending.',
-        'claims_count': claims.count(),
+        'claims_analyzed': claims_analyzed,
         'details': details,
         'clarification_requests': clarification_requests,
         'can_request_clarification': can_request_clarification(request.user, document) if tier == 'full' else False,

@@ -3,6 +3,7 @@ import re
 from django import forms
 from matchmaking.models import Application, InvestorApplication, SellerApplication, BuyerApplication
 from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import UserCreationForm
 
 User = get_user_model()
 
@@ -308,14 +309,30 @@ class BuyerForm(forms.ModelForm):
                 field.required = True
 
 # -----------------------------
-# System User Creation Form
+# Password Signup Form
 # -----------------------------
-class CustomUserCreationForm(forms.ModelForm):
-    class Meta:
+class SignupForm(UserCreationForm):
+    """
+    Stock signup plus a required email, so password accounts can reset their
+    password and receive account email. No two accounts share an email,
+    whatever its case; the database enforces the same rule
+    (accounts_auth_user_email_ci_uniq), this gives the friendly message.
+    """
+
+    class Meta(UserCreationForm.Meta):
         model = User
         fields = ('username', 'email')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            field.widget.attrs["class"] = "form-control"
+        email = self.fields['email']
+        email.required = True
+        email.widget.attrs['autocomplete'] = 'email'
+
+    def clean_email(self):
+        email = User.objects.normalize_email(self.cleaned_data['email'])
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError(
+                "An account with this email already exists. Sign in, or reset your password."
+            )
+        return email
