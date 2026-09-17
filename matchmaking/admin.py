@@ -37,28 +37,35 @@ def deny_profiles(modeladmin, request, queryset):
 
 @admin.action(description="Forward selected Founder(s) to an Investor")
 def forward_to_investor(modeladmin, request, queryset):
+    """
+    Staff introduce each selected founder to one investor, who is emailed the
+    founder's profile.
+
+    Same rule as the ops manual-intro tool (ops/views.py::manual_intro_create):
+    a new connection is initiated by STAFF and starts `pending`, so it shows in
+    the founder's inbound queue and the founder answers it. A founder and
+    investor who are already connected are left exactly as they are -- staff
+    initiating an introduction never changes an existing relationship.
+    """
     if 'apply' in request.POST:
         investor_id = request.POST.get('investor')
         investor = InvestorApplication.objects.get(id=investor_id)
-        
-        connections_created = 0
-        connections_updated = 0
-        
+
+        created_count = 0
+        existing_count = 0
+
         for founder in queryset:
-            # 1. Database Logic: Get or Create the connection
-            obj, created = Connection.objects.get_or_create(
-                founder=founder, 
+            # 1. A new staff introduction, or the existing relationship untouched.
+            _connection, created = Connection.objects.get_or_create(
+                founder=founder,
                 investor=investor,
-                defaults={'status': 'requested'} 
+                defaults={'initiated_by': 'STAFF', 'notes': 'Created by staff from the admin.'},
             )
-            
-            if not created:
-                obj.status = 'requested'
-                obj.save()
-                connections_updated += 1
+            if created:
+                created_count += 1
             else:
-                connections_created += 1
-            
+                existing_count += 1
+
             # 2. Email Logic: Render HTML and send
             try:
                 html_content = render_to_string('emails/founder_match.html', {
@@ -79,24 +86,16 @@ def forward_to_investor(modeladmin, request, queryset):
                 modeladmin.message_user(request, f"Error sending email to {investor.full_name}: {e}", messages.ERROR)
 
         # 3. Final Admin Feedback
-        total_processed = connections_created + connections_updated
         modeladmin.message_user(
-            request, 
-            f"Success: Processed {total_processed} profile(s) for {investor.full_name}. ({connections_created} New, {connections_updated} Updated).", 
-            messages.SUCCESS
+            request,
+            f"Forwarded {created_count + existing_count} founder(s) to {investor.full_name}: "
+            f"{created_count} new introduction(s); {existing_count} already connected and left unchanged.",
+            messages.SUCCESS,
         )
         return HttpResponseRedirect(request.get_full_path())
-    
+
     # Selection page rendering
-    active_investors = InvestorApplication.objects.all() 
-    return render(request, 'admin/matchmaking/forward_to_investor.html', {
-        'founders': queryset,
-        'investors': active_investors,
-        'action_checkbox_name': admin.helpers.ACTION_CHECKBOX_NAME,
-    })
-    
-    # Render the selection page
-    active_investors = InvestorApplication.objects.all() 
+    active_investors = InvestorApplication.objects.all()
     return render(request, 'admin/matchmaking/forward_to_investor.html', {
         'founders': queryset,
         'investors': active_investors,

@@ -34,6 +34,7 @@ class SignupViewTests(TestCase):
     def test_signup_post_creates_user_and_logs_in(self):
         response = self.client.post(reverse('accounts:signup'), {
             'username': 'signup_regression_user',
+            'email': 'signup.regression@example.com',
             'password1': 'TempAudit!2026xyz',
             'password2': 'TempAudit!2026xyz',
             'role': 'buyer',
@@ -53,6 +54,7 @@ class SignupViewTests(TestCase):
         from notifications.models import Notification
         self.client.post(reverse('accounts:signup'), {
             'username': 'disclaimer_signup_user',
+            'email': 'disclaimer.signup@example.com',
             'password1': 'TempAudit!2026xyz',
             'password2': 'TempAudit!2026xyz',
             'role': 'founder',

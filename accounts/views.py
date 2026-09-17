@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login as auth_login
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.views import PasswordResetView
 from django.core.cache import cache
 from django.core.mail import send_mail
@@ -18,6 +18,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from . import rate_limits
+from .forms import SignupForm
 from .redirects import remember_destination, requested_destination
 
 # Core Matchmaking Engine Models
@@ -112,11 +113,11 @@ def signup_view(request):
         if token is None:
             messages.error(request, f"Too many new accounts from this network. Try again {rate_limits.retry_phrase('signup_ip', client_ip)}.")
             return render(request, "accounts/signup.html", {
-                "form": UserCreationForm(),
+                "form": SignupForm(),
                 "next_destination": requested_destination(request),
             }, status=429)
 
-        form = UserCreationForm(request.POST)
+        form = SignupForm(request.POST)
         if not form.is_valid():
             rate_limits.release(token)
         else:
@@ -129,7 +130,7 @@ def signup_view(request):
             messages.success(request, f"Welcome to Interlink Foundry, {user.username}!")
             return redirect(ROLE_PROFILE_URLS[role])
     else:
-        form = UserCreationForm()
+        form = SignupForm()
         log_page_event(request, 'signup_started')
     # Already validated — never reflect a raw ?next= back into the page.
     return render(request, "accounts/signup.html", {

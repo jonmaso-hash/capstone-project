@@ -149,7 +149,7 @@ class FailClosedTests(TestCase):
     def test_signup_is_refused_when_the_counter_is_down(self):
         with mock.patch.object(RateLimitEvent.objects, 'create', side_effect=DatabaseError('write failed')):
             response = Client().post(reverse('accounts:signup'), {
-                'username': 'fc_signup', 'password1': PASSWORD, 'password2': PASSWORD, 'role': 'buyer',
+                'username': 'fc_signup', 'email': 'fc_signup@example.com', 'password1': PASSWORD, 'password2': PASSWORD, 'role': 'buyer',
             })
         self.assertEqual(response.status_code, 429)
         self.assertFalse(User.objects.filter(username='fc_signup').exists())
