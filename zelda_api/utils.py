@@ -5,7 +5,7 @@ Core functions for document parsing, text analysis, and AI memo generation.
 """
 import re
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 from datetime import datetime
 import json
 
@@ -283,101 +283,6 @@ def _extract_investment_ask(text: str) -> str:
     
     return "Target funding details not explicitly stated."
 
-
-def compile_executive_intelligence_memo(
-    founder_app,
-    investor_app=None,
-    vector_score=None,
-    transparency_index=None,
-    investor_matches=None
-):
-    """
-    Generates a structured executive intelligence memo. 
-    Integrates with the FoundryStandardMixin protocol for data consistency.
-    """
-    try:
-        # Use the protocol to ensure we have normalized, safe data
-        data = founder_app.to_foundry_envelope(include_full_data=True)
-        payload = data.get("payload", {})
-
-        # Build the memo structure
-        memo = {
-            "memo_type": "Founder Intelligence Brief" if hasattr(founder_app, 'company_name') else "Investor Intelligence Brief",
-            "subject": payload.get('company_name', 'Investment Mandate'),
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-            "executive_summary": _generate_executive_summary(founder_app),
-            "market_position": _generate_market_position(founder_app),
-            "recommendations": _generate_recommendations(founder_app),
-            "metrics_dashboard": _generate_metrics_dashboard(founder_app),
-            "vector_score": vector_score,
-            "transparency_index": transparency_index
-        }
-
-        # Add Investor Context if present
-        if investor_app:
-            memo["target_investor"] = getattr(investor_app, "company_name", "Institutional Investor")
-            if investor_matches:
-                memo["potential_connections"] = len(investor_matches)
-                memo["top_matches"] = investor_matches[:5]
-        
-        return memo
-        
-    except Exception as e:
-        logger.error(f"Memo compilation failed for {getattr(founder_app, 'id', 'unknown')}: {str(e)}")
-        return {"error": "Failed to compile memo."}
-
-def _generate_executive_summary(app) -> str:
-    """Generate executive summary for a company/investor profile."""
-    try:
-        company_name = getattr(app, 'company_name', 'Profile')
-        sector = getattr(app, 'sector', 'General')
-        description = getattr(app, 'description', '')[:150]
-        
-        return f"{company_name} is a {sector} company focused on {description}. Based on current market positioning and network traction, significant opportunity exists for expanded investor engagement and capital deployment."
-    except:
-        return "Profile analysis unavailable."
-
-
-def _generate_market_position(app) -> Dict:
-    """Generate market positioning analysis."""
-    return {
-        "sector": getattr(app, 'sector', 'General'),
-        "geography": getattr(app, 'location', 'Global'),
-        "stage": getattr(app, 'stage', 'Early-stage'),
-        "market_assessment": "Growing market with increasing institutional interest",
-        "competitive_position": "Well-positioned relative to peer benchmarks"
-    }
-
-
-def _generate_recommendations(app) -> List[str]:
-    """Generate strategic recommendations."""
-    return [
-        "Increase network visibility through featured placement opportunities",
-        "Engage with industry-specific investor cohorts for targeted capital deployment",
-        "Leverage platform analytics to refine market positioning",
-        "Utilize match radar insights to optimize investor targeting strategy"
-    ]
-
-
-def _generate_metrics_dashboard(app) -> Dict:
-    """Generate key performance metrics for dashboard display."""
-    return {
-        "profile_completeness": _calculate_completeness(app),
-        "network_activity": "Active",
-        "engagement_score": 85,
-        "match_quality": "High",
-        "platform_recommendations": 12
-    }
-
-
-def _calculate_completeness(app) -> int:
-    """Calculate profile completion percentage."""
-    tracked_fields = [
-        'company_name', 'sector', 'description', 
-        'location', 'email', 'phone_number'
-    ]
-    filled = sum(1 for field in tracked_fields if getattr(app, field, None))
-    return int((filled / len(tracked_fields)) * 100)
 
 UNREADABLE_DOCUMENT_MESSAGE = (
     "Zelda couldn't find any readable text in this document. It may be made only of images "

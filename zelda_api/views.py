@@ -31,7 +31,7 @@ from .serializers import (
 )
 
 # Core Deal Flow Utilities
-from .utils import scan_pitch_deck, AnalyzedPitch, compile_executive_intelligence_memo, analyze_web_text
+from .utils import scan_pitch_deck, AnalyzedPitch, analyze_web_text
 from shared_utils.upload_limits import MB, PITCH_ANALYSIS_MAX_MB
 
 UserClass = get_user_model()
@@ -816,28 +816,6 @@ class PitchDeckAnalysisAPIView(APIView):
             "sections": analyzed.sections,
             "confidence": result.get("confidence", 0.0),
         }, status=status.HTTP_200_OK)
-
-
-class IntelligenceMemoAPIView(APIView):
-    """
-    GET /api/v1/zelda/intelligence-memo/
-    Generates an executive intelligence memo for the authenticated user's founder profile.
-
-    FIX: Was incorrectly passing `request.user` (a User instance) to
-    compile_executive_intelligence_memo(), which expects a founder_app (Application)
-    model instance. Now fetches the founder Application first.
-    """
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [SessionAuthentication, TokenAuthentication]
-
-    def get(self, request):
-        if not _MATCHMAKING_AVAILABLE:
-            return Response({"error": "Matchmaking module is not installed."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-        # FIX: fetch the correct object type before passing to memo compiler
-        founder_app = get_object_or_404(Application, user=request.user)
-        memo = compile_executive_intelligence_memo(founder_app)
-        return Response({"status": "success", "memo": memo}, status=status.HTTP_200_OK)
 
 
 class SummarizePageAPIView(APIView):
