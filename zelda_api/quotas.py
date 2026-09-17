@@ -105,9 +105,14 @@ def _credits_used_in_window(user, window_start):
     verification_credits = TruthDeltaReport.objects.filter(
         document__uploaded_by=user, created_at__gte=window_start,
     ).count() * CREDIT_COSTS['truth_delta_verify']
+    # No charge for a failed analysis: an investor-paid document that ended in
+    # `error` stops counting, the same rule the owner's own documents follow
+    # above. If a staff requeue later makes it succeed, it counts again.
     charged_credits = sum(
         CREDIT_COSTS[charge.job_type]
-        for charge in AnalysisCreditCharge.objects.filter(user=user, created_at__gte=window_start)
+        for charge in AnalysisCreditCharge.objects.filter(
+            user=user, created_at__gte=window_start,
+        ).exclude(document__status='error')
     )
     return memo_credits + verification_credits + charged_credits
 
