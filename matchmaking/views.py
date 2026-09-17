@@ -78,6 +78,34 @@ def _notify_introduction_accepted(recipient, accepted_by, accepter_name, staff_i
         logger.exception('Could not write the introduction-accepted notification')
 
 
+# An introduction nobody has answered yet: `pending` is what every
+# user-created introduction is (the model default, matched case-insensitively
+# by the dashboard queues), and `requested` is what Django admin gives staff
+# introductions.
+AWAITING_RESPONSE_STATUSES = {'pending', 'requested'}
+ALREADY_ANSWERED_MESSAGE = "This introduction has already been answered."
+
+
+def _answer_refusal(connection, action):
+    """
+    None when the responder may apply `action`; otherwise the response to send
+    instead. An introduction is answered once: repeating the current answer is
+    a harmless no-op (a double-click on Accept), and any other change to an
+    answered introduction -- including a claimed or confirmed funded/closed
+    deal -- is refused. Either way nothing is touched: no status, timestamp,
+    notification, training example or chat channel.
+    """
+    if (connection.status or '').strip().lower() in AWAITING_RESPONSE_STATUSES:
+        return None
+    if connection.status == action:
+        return JsonResponse({'status': 'success', 'new_status': action, 'chat_channel_cid': None})
+    # `error` as well as `message`: the dashboards display `error`.
+    return JsonResponse(
+        {'status': 'error', 'message': ALREADY_ANSWERED_MESSAGE, 'error': ALREADY_ANSWERED_MESSAGE},
+        status=409,
+    )
+
+
 @login_required
 @require_POST
 def connection_action_view(request):
@@ -157,6 +185,11 @@ def connection_action_view(request):
         responder_user = conn_req.investor.user if conn_req.initiated_by == 'FOUNDER' else conn_req.founder.user
         if responder_user != request.user:
             return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+
+        # Checked after the responder, so anyone else still gets 403 whatever the state.
+        refusal = _answer_refusal(conn_req, action)
+        if refusal is not None:
+            return refusal
 
         previous_status = conn_req.status
         conn_req.status = action
@@ -274,6 +307,10 @@ def acquisition_connection_action_view(request):
         responder_user = conn_req.buyer.user if conn_req.initiated_by == 'SELLER' else conn_req.seller.user
         if responder_user != request.user:
             return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+
+        refusal = _answer_refusal(conn_req, action)
+        if refusal is not None:
+            return refusal
 
         previous_status = conn_req.status
         conn_req.status = action
