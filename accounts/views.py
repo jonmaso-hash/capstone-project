@@ -195,6 +195,14 @@ def admin_login_redirect(request):
     This route is registered ahead of admin.site.urls, so the admin's form is
     never served; `next` carries through, and staff still land in the admin.
     """
+    if request.user.is_authenticated and not request.user.is_staff:
+        # Already signed in, just not staff: sending them to the login page
+        # would bounce them straight back here (login_view returns an
+        # authenticated visitor to their destination), so say no and stop.
+        # Same answer the ops dashboard gives a non-staff visitor.
+        messages.error(request, "That area is restricted to staff.")
+        return redirect('pages:home')
+
     destination = safe_destination(request.GET.get('next'), request) or '/' + settings.ADMIN_URL_PATH
     return redirect(f"{reverse('accounts:login')}?next={quote(destination)}")
 

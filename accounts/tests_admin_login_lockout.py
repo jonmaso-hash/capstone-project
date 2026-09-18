@@ -81,6 +81,29 @@ class AdminLoginGoesThroughTheLockoutTests(TestCase):
         self.assertEqual(self.client.get(ADMIN).status_code, 200)
 
 
+    def test_a_member_cannot_reach_the_admin_through_it(self):
+        member = User.objects.create_user('al_member', password=PASSWORD)
+        self.client.force_login(member)
+        # A signed-in non-staff visitor is turned away, not bounced to a login
+        # they have already passed -- that would redirect in a circle.
+        response = self.client.get(ADMIN, follow=True)
+        self.assertNotContains(response, 'Site administration')
+        self.assertContains(response, 'restricted to staff')
+        # And the redirect route itself grants nothing.
+        self.assertRedirects(self.client.get(ADMIN + 'login/'), reverse('pages:home'))
+
+    def test_the_admin_still_works_once_signed_in(self):
+        self.client.post(
+            reverse('accounts:login'),
+            {'username': 'al_staff', 'password': PASSWORD, 'next': ADMIN},
+        )
+        index = self.client.get(ADMIN)
+        self.assertContains(index, 'Site administration')
+        # A real changelist, not just the index page.
+        changelist = self.client.get(reverse('admin:matchmaking_application_changelist'))
+        self.assertEqual(changelist.status_code, 200)
+
+
 @override_settings(PASSWORD_HASHERS=FAST_HASHER, STAFF_SESSION_IDLE_TIMEOUT=3600)
 class StaffSessionIdleTimeoutTests(TestCase):
 
@@ -112,3 +135,33 @@ class StaffSessionIdleTimeoutTests(TestCase):
         self._idle(600)
         self.client.get(reverse('pages:home'))
         self.assertEqual(str(self.member.id), self.client.session.get('_auth_user_id'))
+
+    def test_staff_activity_resets_the_timer(self):
+        self.client.force_login(self.staff)
+        self._idle(59)
+        # A request just inside the hour refreshes the stamp...
+        self.client.get(reverse('pages:home'))
+        refreshed = self.client.session['staff_last_seen']
+        self.assertGreater(
+            timezone.datetime.fromisoformat(refreshed),
+            timezone.now() - timedelta(minutes=1),
+        )
+        # ...so another 59 idle minutes still doesn't reach the timeout.
+        self._idle(59)
+        self.client.get(reverse('pages:home'))
+        self.assertEqual(str(self.staff.id), self.client.session.get('_auth_user_id'))
+
+    @override_settings(STAFF_SESSION_IDLE_TIMEOUT=60)
+    def test_the_timeout_is_configurable_and_still_spares_members(self):
+        self.client.force_login(self.staff)
+        self._idle(2)  # two minutes, past a 60-second timeout
+        self.client.get(reverse('pages:home'))
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+        member_client = self.client_class()
+        member_client.force_login(self.member)
+        session = member_client.session
+        session['staff_last_seen'] = (timezone.now() - timedelta(days=3)).isoformat()
+        session.save()
+        member_client.get(reverse('pages:home'))
+        self.assertEqual(str(self.member.id), member_client.session.get('_auth_user_id'))
