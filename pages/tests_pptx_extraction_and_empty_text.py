@@ -102,7 +102,7 @@ class _Deck(TestCase):
         DocumentSource.objects.filter(pk=doc.pk).update(created_at=timezone.now() - timedelta(minutes=minutes_ago))
         if memo:
             IntelligenceMemo.objects.create(
-                document=doc, executive_summary='Not disclosed in pitch deck.', investment_thesis='Not disclosed.',
+                document=doc, executive_summary='Not disclosed in pitch deck.', business_model_analysis='Not disclosed.',
                 evidence_level='PARTLY_EVIDENCED', completeness_score=0.1, citations_count=0,
             )
         doc.refresh_from_db()
@@ -247,7 +247,7 @@ class RecoveryTests(_Deck):
         fresh.status = 'analyzed'
         fresh.save()
         IntelligenceMemo.objects.create(
-            document=fresh, executive_summary='A real summary.', investment_thesis='Real thesis.',
+            document=fresh, executive_summary='A real summary.', business_model_analysis='Real thesis.',
             evidence_level='PARTLY_EVIDENCED', completeness_score=0.7, citations_count=3,
         )
 

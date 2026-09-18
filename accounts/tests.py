@@ -965,7 +965,7 @@ class InvestorReadinessCenterTests(TestCase):
             document_type='pitch_deck', status='analyzed',
         )
         IntelligenceMemo.objects.create(
-            document=doc, executive_summary='x', investment_thesis='x',
+            document=doc, executive_summary='x', business_model_analysis='x',
         )
         TruthDeltaReport.objects.create(document=doc, overall_truth_score=90.0, credibility_risk='low')
         DataRoomDocument.objects.create(

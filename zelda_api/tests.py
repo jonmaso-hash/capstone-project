@@ -109,12 +109,12 @@ class AnthropicFailureDetectionTests(TestCase):
         payload = {
             'executive_summary': 'Great company.',
             'evidence_level': 'WELL_EVIDENCED',
-            'key_strengths': 'Strong ARR growth.',
-            'key_concerns': 'Thin team disclosure.',
-            'what_would_change_decision': 'A signed LOI from an anchor customer.',
-            'bull_case': 'Bull case text.',
-            'base_case': 'Base case text.',
-            'bear_case': 'Bear case text.',
+            'supported_points': 'Strong ARR growth.',
+            'open_concerns': 'Thin team disclosure.',
+            'what_would_change_the_picture': 'A signed LOI from an anchor customer.',
+            'upside_scenario': 'Bull case text.',
+            'base_scenario': 'Base case text.',
+            'downside_scenario': 'Bear case text.',
             'zelda_advantage': 'Cross-checked claim X against Y; consistent.',
         }
         fake_response = mock.Mock()
@@ -127,12 +127,12 @@ class AnthropicFailureDetectionTests(TestCase):
 
         self.assertNotIn('error', result)
         memo = IntelligenceMemo.objects.get(document=doc)
-        self.assertEqual(memo.key_strengths, 'Strong ARR growth.')
-        self.assertEqual(memo.key_concerns, 'Thin team disclosure.')
-        self.assertEqual(memo.what_would_change_decision, 'A signed LOI from an anchor customer.')
-        self.assertEqual(memo.bull_case, 'Bull case text.')
-        self.assertEqual(memo.base_case, 'Base case text.')
-        self.assertEqual(memo.bear_case, 'Bear case text.')
+        self.assertEqual(memo.supported_points, 'Strong ARR growth.')
+        self.assertEqual(memo.open_concerns, 'Thin team disclosure.')
+        self.assertEqual(memo.what_would_change_the_picture, 'A signed LOI from an anchor customer.')
+        self.assertEqual(memo.upside_scenario, 'Bull case text.')
+        self.assertEqual(memo.base_scenario, 'Base case text.')
+        self.assertEqual(memo.downside_scenario, 'Bear case text.')
         self.assertEqual(memo.zelda_advantage, 'Cross-checked claim X against Y; consistent.')
 
     def test_memo_generation_defaults_new_fields_to_blank_when_claude_omits_them(self):
@@ -149,7 +149,7 @@ class AnthropicFailureDetectionTests(TestCase):
 
         self.assertNotIn('error', result)
         memo = IntelligenceMemo.objects.get(document=doc)
-        self.assertEqual(memo.key_strengths, '')
+        self.assertEqual(memo.supported_points, '')
         self.assertEqual(memo.zelda_advantage, '')
 
     @mock.patch('zelda_api.intelligence_pipeline.logger')
@@ -260,7 +260,7 @@ class CrossReportNavigationTests(TestCase):
             document_type='pitch_deck', status='analyzed',
         )
         IntelligenceMemo.objects.create(
-            document=self.deck, executive_summary='NavCo summary.', investment_thesis='y',
+            document=self.deck, executive_summary='NavCo summary.', business_model_analysis='y',
             evidence_level='PARTLY_EVIDENCED', completeness_score=0.6, citations_count=2,
         )
         TruthDeltaReport.objects.create(
@@ -522,7 +522,7 @@ class ZeldaReportObservationsTests(TestCase):
     def test_worth_investigating_pulls_memo_concern_lines_verbatim(self):
         from .ic_memo import zelda_report_observations
         doc = self._deck()
-        memo = self._memo(doc, key_concerns='Customer concentration is high. Runway is under 12 months.')
+        memo = self._memo(doc, open_concerns='Customer concentration is high. Runway is under 12 months.')
         obs = zelda_report_observations(memo, doc)
         topics = [w['topic'] for w in obs['worth_investigating']]
         self.assertIn('Customer concentration is high', topics)
@@ -532,7 +532,7 @@ class ZeldaReportObservationsTests(TestCase):
     def test_worth_investigating_points_at_questions_when_no_concerns(self):
         from .ic_memo import zelda_report_observations
         doc = self._deck()
-        memo = self._memo(doc, key_concerns='', questions_for_management='What is NRR? What is CAC payback?')
+        memo = self._memo(doc, open_concerns='', questions_for_management='What is NRR? What is CAC payback?')
         obs = zelda_report_observations(memo, doc)
         self.assertEqual([w['topic'] for w in obs['worth_investigating']],
                          ["Open questions the deck doesn't answer"])
@@ -541,7 +541,7 @@ class ZeldaReportObservationsTests(TestCase):
         from .ic_memo import zelda_report_observations
         from .truth_delta_models import TruthDeltaReport
         doc = self._deck()
-        memo = self._memo(doc, key_concerns='A. B. C. D. E. F.')
+        memo = self._memo(doc, open_concerns='A. B. C. D. E. F.')
         TruthDeltaReport.objects.create(
             document=doc, overall_truth_score=50.0, credibility_risk='low', summary='ok',
             details={'claims': [{'category': c} for c in ('a', 'b', 'c')],
@@ -588,7 +588,7 @@ class ICMemoTests(TestCase):
             IntelligenceMemo.objects.create(
                 document=doc,
                 executive_summary='We build developer tools.',
-                investment_thesis='Strong team, growing market.',
+                business_model_analysis='Strong team, growing market.',
                 evidence_level='PARTLY_EVIDENCED',
                 completeness_score=0.8,
                 citations_count=3,
@@ -927,13 +927,13 @@ class ICMemoTests(TestCase):
         IntelligenceMemo.objects.create(
             document=doc,
             executive_summary='We build developer tools.',
-            investment_thesis='Strong team, growing market.',
-            key_strengths='Disclosed $2M ARR with 120% net revenue retention.',
-            key_concerns='No customer concentration data disclosed.',
-            what_would_change_decision='Audited financials showing gross margin.',
-            bull_case='If retention holds, this is a durable, capital-efficient business.',
-            base_case='Growth continues at the current disclosed pace.',
-            bear_case='Customer concentration risk is entirely unknown.',
+            business_model_analysis='Strong team, growing market.',
+            supported_points='Disclosed $2M ARR with 120% net revenue retention.',
+            open_concerns='No customer concentration data disclosed.',
+            what_would_change_the_picture='Audited financials showing gross margin.',
+            upside_scenario='If retention holds, this is a durable, capital-efficient business.',
+            base_scenario='Growth continues at the current disclosed pace.',
+            downside_scenario='Customer concentration risk is entirely unknown.',
             zelda_advantage='Cross-checked ARR claim against the disclosed cohort data; no contradiction found.',
             evidence_level='PARTLY_EVIDENCED', completeness_score=0.8, citations_count=3,
         )
@@ -2700,7 +2700,7 @@ class DocumentMemoViewPaywallTests(TestCase):
         IntelligenceMemo.objects.create(
             document=self.doc, executive_summary='Secret summary text.', evidence_level='PARTLY_EVIDENCED',
             completeness_score=0.8, citations_count=3,
-            investment_thesis='Lite thesis text.', key_strengths='Lite strengths text.',
+            business_model_analysis='Lite thesis text.', supported_points='Lite strengths text.',
         )
         self.investor_user = User.objects.create_user('memo_paywall_investor', password='x')
         InvestorApplication.objects.create(
@@ -2751,8 +2751,8 @@ class DocumentMemoViewPaywallTests(TestCase):
         data = response.json()
         self.assertEqual(data['tier'], 'lite')
         self.assertEqual(set(data['lite_sections']), LITE_MEMO_SECTION_KEYS)
-        self.assertEqual(data['lite_sections']['investment_thesis'], 'Lite thesis text.')
-        self.assertEqual(data['lite_sections']['key_strengths'], 'Lite strengths text.')
+        self.assertEqual(data['lite_sections']['business_model_analysis'], 'Lite thesis text.')
+        self.assertEqual(data['lite_sections']['supported_points'], 'Lite strengths text.')
         self.assertIn('disclaimer', data)
         self.assertNotIn('Secret summary text.', response.content.decode())
         self.assertNotIn('evidence_level', data)
@@ -3135,7 +3135,7 @@ class TruthDeltaNoScoreCoherenceTests(TestCase):
             document_type='pitch_deck', status='analyzed',
         )
         IntelligenceMemo.objects.create(
-            document=self.doc, executive_summary='x', investment_thesis='y',
+            document=self.doc, executive_summary='x', business_model_analysis='y',
             evidence_level='PARTLY_EVIDENCED', completeness_score=0.5, citations_count=0,
         )
         self.report = TruthDeltaReport.objects.create(
@@ -5703,7 +5703,7 @@ class GaugeVocabularyTests(TestCase):
             document_type='pitch_deck', status='analyzed',
         )
         IntelligenceMemo.objects.create(
-            document=deck, executive_summary='x', investment_thesis='y',
+            document=deck, executive_summary='x', business_model_analysis='y',
             information_readiness=readiness_text,
             evidence_level='PARTLY_EVIDENCED', completeness_score=0.72, citations_count=3,
         )
@@ -5753,7 +5753,7 @@ class GaugeVocabularyTests(TestCase):
             document_type='pitch_deck', status='analyzed',
         )
         IntelligenceMemo.objects.create(
-            document=deck, executive_summary='x', investment_thesis='y',
+            document=deck, executive_summary='x', business_model_analysis='y',
             evidence_level='PARTLY_EVIDENCED', completeness_score=0.6, citations_count=1,
         )
         TruthDeltaReport.objects.create(document=deck, overall_truth_score=80.0,
@@ -5778,7 +5778,7 @@ class GaugeVocabularyTests(TestCase):
             filename='deck.pdf', source_entity='OneNameCo', uploaded_by=founder,
             document_type='pitch_deck', status='analyzed',
         )
-        IntelligenceMemo.objects.create(document=deck, executive_summary='x', investment_thesis='y',
+        IntelligenceMemo.objects.create(document=deck, executive_summary='x', business_model_analysis='y',
             evidence_level='PARTLY_EVIDENCED', completeness_score=0.6, citations_count=1)
         TruthDeltaReport.objects.create(document=deck, overall_truth_score=77.0,
             credibility_risk='low', summary='ok', details={'claims': [{'category': 'revenue'}]})
@@ -5875,7 +5875,7 @@ class GaugeVocabularyTests(TestCase):
             document_type='pitch_deck', status='analyzed',
         )
         IntelligenceMemo.objects.create(
-            document=deck, executive_summary='x', investment_thesis='y',
+            document=deck, executive_summary='x', business_model_analysis='y',
             evidence_level='PARTLY_EVIDENCED', completeness_score=0.6, citations_count=1,
         )
         vdoc = DocumentSource.objects.create(
@@ -5901,7 +5901,7 @@ class GaugeVocabularyTests(TestCase):
             filename='deck.pdf', source_entity='MemoMd', uploaded_by=self.user,
             document_type='pitch_deck', status='analyzed',
         )
-        IntelligenceMemo.objects.create(document=deck, executive_summary='x', investment_thesis='y',
+        IntelligenceMemo.objects.create(document=deck, executive_summary='x', business_model_analysis='y',
             evidence_level='PARTLY_EVIDENCED', completeness_score=0.6, citations_count=1)
         vdoc = DocumentSource.objects.create(
             filename='val.pptx', source_entity='MemoMd', uploaded_by=self.user,
@@ -5970,7 +5970,7 @@ class IntelligenceHeaderTests(TestCase):
             email='f@t.com', description='x', sector='SaaS', stage='Seed', is_premium=True)
         deck = DocumentSource.objects.create(filename='deck.pdf', source_entity='IHMEMO',
             uploaded_by=self.user, document_type='pitch_deck', status='analyzed')
-        IntelligenceMemo.objects.create(document=deck, executive_summary='x', investment_thesis='y',
+        IntelligenceMemo.objects.create(document=deck, executive_summary='x', business_model_analysis='y',
             evidence_level='PARTLY_EVIDENCED', completeness_score=0.5, citations_count=0)
         html = self.client.get(reverse('zelda_api:ic_memo', args=[deck.id])).content.decode()
         self._assert_eyebrow(html)

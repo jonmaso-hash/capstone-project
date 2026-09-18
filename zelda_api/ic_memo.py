@@ -23,14 +23,14 @@ MEMO_SECTIONS = [
     ('team_assessment', 'Team Assessment'),
     ('financial_analysis', 'Financial Analysis'),
     ('risk_assessment', 'Risk Assessment'),
-    ('investment_thesis', 'Investment Thesis'),
+    ('business_model_analysis', 'Business Model & Growth Analysis'),
     ('information_readiness', 'Information Readiness'),
-    ('key_strengths', 'Key Strengths'),
-    ('key_concerns', 'Key Concerns'),
-    ('what_would_change_decision', 'What Would Change the Decision'),
-    ('bull_case', 'Bull Case'),
-    ('base_case', 'Base Case'),
-    ('bear_case', 'Bear Case'),
+    ('supported_points', 'Supported Points'),
+    ('open_concerns', 'Open Concerns'),
+    ('what_would_change_the_picture', 'What Would Change the Picture'),
+    ('upside_scenario', 'Upside Scenario'),
+    ('base_scenario', 'Base Scenario'),
+    ('downside_scenario', 'Downside Scenario'),
     ('zelda_advantage', 'Zelda Advantage'),
     ('questions_for_management', 'Questions for Management'),
 ]
@@ -83,8 +83,8 @@ def ic_memo_unlocked(request_user, founder_application):
 # valuation, deck engagement) is the "what would they actually say and why"
 # depth reserved for Zelda AI.
 LITE_MEMO_SECTION_KEYS = {
-    'investment_thesis', 'information_readiness',
-    'key_strengths', 'key_concerns', 'what_would_change_decision',
+    'business_model_analysis', 'information_readiness',
+    'supported_points', 'open_concerns', 'what_would_change_the_picture',
 }
 
 # The Zelda Intelligence Report is the *orientation* layer — "what is this
@@ -226,7 +226,7 @@ def zelda_report_observations(memo, pitch_deck_doc):
     # 3. Worth investigating — the memo's own concern lines, verbatim, as
     #    clickable topics; the full treatment lives in the IC Memo.
     if memo is not None:
-        for point in _first_points(memo.key_concerns, 2):
+        for point in _first_points(memo.open_concerns, 2):
             worth.append({'topic': point, 'target': 'ic_memo'})
         if not any(w['target'] == 'ic_memo' for w in worth) and (memo.questions_for_management or '').strip():
             worth.append({'topic': "Open questions the deck doesn't answer", 'target': 'ic_memo'})

@@ -45,7 +45,7 @@ def _analyzed_deck(owner, company, hidden=False):
         uploaded_by=owner, filename='deck.pdf', source_entity=company,
         document_type='pitch_deck', status='analyzed', is_hidden_by_staff=hidden,
     )
-    IntelligenceMemo.objects.create(document=document, executive_summary='s', investment_thesis='t')
+    IntelligenceMemo.objects.create(document=document, executive_summary='s', business_model_analysis='t')
     return document
 
 

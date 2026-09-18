@@ -51,6 +51,36 @@ FORBIDDEN_TOKENS = (
     'recommended investment',
     'good investment',
     'bad investment',
+    # Added by the advocacy pass: removing the verdict was not enough while the
+    # prompts still instructed Claude to argue a side.
+    'case FOR investing',
+    'case AGAINST investing',
+    'supports investing',
+    'supporting investment',
+    'against investment',
+    'recommend investing',
+    'recommend against',
+    'should not invest',
+    'this recommendation',
+    'Recommendation:',
+    'Why this is investable',
+)
+
+# The locked renames. Left column is what the memo used to call a section while
+# arguing a position; right column is what it now calls the same analysis.
+SECTION_RENAMES = {
+    'business_model_analysis': 'Business Model & Growth Analysis',
+    'upside_scenario': 'Upside Scenario',
+    'base_scenario': 'Base Scenario',
+    'downside_scenario': 'Downside Scenario',
+    'supported_points': 'Supported Points',
+    'open_concerns': 'Open Concerns',
+    'what_would_change_the_picture': 'What Would Change the Picture',
+}
+
+RETIRED_FIELDS = (
+    'investment_thesis', 'bull_case', 'base_case', 'bear_case',
+    'key_strengths', 'key_concerns', 'what_would_change_decision',
 )
 
 
@@ -170,3 +200,56 @@ class NoAdvisoryVocabularyAnywhereTests(SimpleTestCase):
         # Positive control: the scan actually reached the files it claims to.
         self.assertGreater(searched, 50)
         self.assertEqual(offenders, [], 'advisory vocabulary found in production code')
+
+
+class SectionsAnalyseRatherThanAdvocateTests(TestCase):
+    """
+    The verdict went first; this is the persuasive structure underneath it.
+    "Investment Thesis" was prompted as a bull case, and the bull/bear sections
+    were prompted as the strongest case for and against investing. Renaming the
+    labels alone would have left Zelda arguing a side under a calmer heading.
+    """
+
+    def test_the_advocacy_fields_are_gone_and_the_analysis_fields_exist(self):
+        field_names = {f.name for f in IntelligenceMemo._meta.get_fields()}
+        for old in RETIRED_FIELDS:
+            with self.subTest(field=old):
+                self.assertNotIn(old, field_names)
+        for new in SECTION_RENAMES:
+            with self.subTest(field=new):
+                self.assertIn(new, field_names)
+
+    def test_no_field_help_text_argues_a_side(self):
+        for field in IntelligenceMemo._meta.get_fields():
+            help_text = getattr(field, 'help_text', '')
+            if not help_text:
+                continue
+            for token in FORBIDDEN_TOKENS:
+                with self.subTest(field=field.name, token=token):
+                    self.assertNotIn(token.lower(), str(help_text).lower())
+
+    def test_the_memo_sections_carry_the_new_labels(self):
+        from .ic_memo import LITE_MEMO_SECTION_KEYS, MEMO_SECTIONS
+        sections = dict(MEMO_SECTIONS)
+        for key, label in SECTION_RENAMES.items():
+            with self.subTest(section=key):
+                self.assertEqual(sections.get(key), label)
+        for old in RETIRED_FIELDS:
+            self.assertNotIn(old, sections)
+            self.assertNotIn(old, LITE_MEMO_SECTION_KEYS)
+
+    def test_the_prompt_asks_for_analysis_not_a_case(self):
+        from .intelligence_pipeline import MEMO_JSON_KEYS, MEMO_SECTION_INSTRUCTIONS
+        for key in SECTION_RENAMES:
+            with self.subTest(section=key):
+                self.assertIn(key, MEMO_JSON_KEYS)
+                self.assertIn(key, MEMO_SECTION_INSTRUCTIONS)
+        for old in RETIRED_FIELDS:
+            self.assertNotIn(old, MEMO_JSON_KEYS)
+        for token in FORBIDDEN_TOKENS:
+            with self.subTest(token=token):
+                self.assertNotIn(token, MEMO_SECTION_INSTRUCTIONS)
+
+    def test_the_scenarios_ask_what_would_have_to_be_true(self):
+        from .intelligence_pipeline import MEMO_SECTION_INSTRUCTIONS
+        self.assertIn('would have to be true', MEMO_SECTION_INSTRUCTIONS)

@@ -66,7 +66,7 @@ class ReadinessBadgeTests(TestCase):
         )
         doc = DocumentSource.objects.create(filename='deck.pdf', source_entity='FCo', uploaded_by=user, document_type='pitch_deck')
         IntelligenceMemo.objects.create(
-            document=doc, executive_summary='Summary.', investment_thesis='Thesis.',
+            document=doc, executive_summary='Summary.', business_model_analysis='Thesis.',
             information_readiness=information_readiness,
         )
         return user
@@ -101,7 +101,7 @@ class ReadinessScoreParsingTests(TestCase):
         user = User.objects.create_user(f'score_parse_{DocumentSource.objects.count()}', password='x')
         doc = DocumentSource.objects.create(filename='deck.pdf', source_entity='FCo', uploaded_by=user, document_type='pitch_deck')
         return IntelligenceMemo.objects.create(
-            document=doc, executive_summary='S', investment_thesis='T', information_readiness=information_readiness,
+            document=doc, executive_summary='S', business_model_analysis='T', information_readiness=information_readiness,
         )
 
     def test_parses_standard_format(self):
