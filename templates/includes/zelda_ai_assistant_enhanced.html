@@ -1434,7 +1434,7 @@
     // section set as the IC memo page's lite tier (ic_memo.LITE_MEMO_SECTION_KEYS).
     const ZELDA_LITE_SECTIONS = [
         { key: 'investment_thesis', label: 'Investment Thesis' },
-        { key: 'investment_readiness', label: 'Investment Readiness' },
+        { key: 'information_readiness', label: 'Information Readiness' },
         { key: 'key_strengths', label: 'Key Strengths' },
         { key: 'key_concerns', label: 'Key Concerns' },
         { key: 'what_would_change_decision', label: 'What Would Change the Decision' },
@@ -1578,8 +1578,8 @@
         <h5 class="fw-bold text-dark mb-3">${data.document_name || 'Untitled'}</h5>
         <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
             <div>
-                <div class="small text-muted">Recommendation</div>
-                <strong style="color: var(--zelda-accent);">${(data.recommendation || 'pending').replace('_', ' ').toUpperCase()}</strong>
+                <div class="small text-muted">Evidence Level</div>
+                <strong style="color: var(--zelda-accent);">${(data.evidence_level || 'not classified').replace(/_/g, ' ').toUpperCase()}</strong>
             </div>
             <div>
                 <div class="small text-muted">Citations</div>
@@ -1598,7 +1598,7 @@
                 { key: 'financial_analysis', label: 'Financial Analysis' },
                 { key: 'risk_assessment', label: 'Risk Assessment' },
                 { key: 'investment_thesis', label: 'Investment Thesis' },
-                { key: 'investment_readiness', label: 'Investment Readiness' },
+                { key: 'information_readiness', label: 'Information Readiness' },
                 { key: 'key_strengths', label: 'Key Strengths' },
                 { key: 'key_concerns', label: 'Key Concerns' },
                 { key: 'what_would_change_decision', label: 'What Would Change the Decision' },
@@ -2003,7 +2003,7 @@
                     { key: 'financial_analysis', label: 'Financial Overview' },
                     { key: 'risk_assessment', label: 'Risk Factors' },
                     { key: 'investment_thesis', label: 'Investment Thesis' },
-                    { key: 'investment_readiness', label: 'Investment Readiness' },
+                    { key: 'information_readiness', label: 'Information Readiness' },
                     { key: 'questions_for_management', label: 'Questions for Management' },
                 ];
                 sections.forEach(s => {

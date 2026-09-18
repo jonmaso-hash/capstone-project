@@ -103,7 +103,7 @@ class _Deck(TestCase):
         if memo:
             IntelligenceMemo.objects.create(
                 document=doc, executive_summary='Not disclosed in pitch deck.', investment_thesis='Not disclosed.',
-                recommendation='NEEDS_REVIEW', completeness_score=0.1, citations_count=0,
+                evidence_level='PARTLY_EVIDENCED', completeness_score=0.1, citations_count=0,
             )
         doc.refresh_from_db()
         return doc
@@ -248,7 +248,7 @@ class RecoveryTests(_Deck):
         fresh.save()
         IntelligenceMemo.objects.create(
             document=fresh, executive_summary='A real summary.', investment_thesis='Real thesis.',
-            recommendation='NEEDS_REVIEW', completeness_score=0.7, citations_count=3,
+            evidence_level='PARTLY_EVIDENCED', completeness_score=0.7, citations_count=3,
         )
 
         ready = self._analyze().json()

@@ -4075,7 +4075,7 @@ class StandaloneMemoViewTierTests(TestCase):
             financial_analysis='Early revenue, disciplined burn.',
             risk_assessment='Single-founder key-person risk.',
             key_concerns='Single-founder key-person risk. No repeatable sales motion yet.',
-            recommendation='NEEDS_REVIEW', completeness_score=0.7, citations_count=4,
+            evidence_level='PARTLY_EVIDENCED', completeness_score=0.7, citations_count=4,
         )
         return doc
 
@@ -4190,7 +4190,7 @@ class StandaloneMemoRealDataTests(TestCase):
             risk_assessment='The risks read from the actual memo.',
             key_concerns='Customer concentration is high. No VP Sales yet.',
             questions_for_management='What is net revenue retention?',
-            recommendation='NEEDS_REVIEW', completeness_score=0.7, citations_count=5,
+            evidence_level='PARTLY_EVIDENCED', completeness_score=0.7, citations_count=5,
         )
         fields.update(overrides)
         return IntelligenceMemo.objects.create(**fields)
@@ -4251,7 +4251,7 @@ class StandaloneMemoRealDataTests(TestCase):
         from zelda_api.vector_models import IntelligenceMemo
         doc = self._deck()
         IntelligenceMemo.objects.create(
-            document=doc, executive_summary='x', recommendation='NEEDS_REVIEW',
+            document=doc, executive_summary='x', evidence_level='PARTLY_EVIDENCED',
             completeness_score=0.5, citations_count=0,
         )
         r = self._get()
@@ -4369,7 +4369,7 @@ class StandaloneMemoRealDataTests(TestCase):
         )  # no raising_amount / current_revenue / team_size
         d = DocumentSource.objects.create(uploaded_by=bare, filename='d.pdf', source_entity='BareCo',
                                           document_type='pitch_deck', status='analyzed')
-        IntelligenceMemo.objects.create(document=d, executive_summary='x', recommendation='NEEDS_REVIEW',
+        IntelligenceMemo.objects.create(document=d, executive_summary='x', evidence_level='PARTLY_EVIDENCED',
                                         completeness_score=0.5, citations_count=0)
         r = self.client.get(reverse('matchmaking:standalone_memo', args=['bareco']))
         self.assertContains(r, 'Stage')             # the one real fact renders
@@ -5048,16 +5048,17 @@ class DealWorkspaceViewTests(TestCase):
             uploaded_by=self.founder_user, filename='deck.pdf', source_entity='DWVCo', document_type='pitch_deck',
         )
         IntelligenceMemo.objects.create(
-            document=doc, executive_summary='x', investment_thesis='x', recommendation='INVEST',
+            document=doc, executive_summary='x', investment_thesis='x',
+            evidence_level='PARTLY_EVIDENCED',
         )
         TruthDeltaReport.objects.create(document=doc, overall_truth_score=88.0, credibility_risk='low')
 
         self.client.force_login(self.investor_user)
         response = self.client.get(reverse('matchmaking:deal_workspace', args=[self.connection.id]))
         summary = response.context['zelda_summary']
-        self.assertEqual(summary['latest_memo'].recommendation, 'INVEST')
+        self.assertEqual(summary['latest_memo'].evidence_level, 'PARTLY_EVIDENCED')
         self.assertEqual(summary['latest_truth_delta'].overall_truth_score, 88.0)
-        self.assertContains(response, 'Invest')
+        self.assertContains(response, 'Partly evidenced')
         self.assertContains(response, '88')
 
     def test_data_room_documents_shown(self):

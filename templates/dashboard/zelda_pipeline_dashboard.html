@@ -225,9 +225,7 @@
             background: rgba(251, 191, 36, 0.05);
         }
 
-        .recommendation-strong { color: var(--zelda-success); font-weight: 600; }
-        .recommendation-consider { color: var(--zelda-accent); font-weight: 600; }
-        .recommendation-pass { color: #ef4444; font-weight: 600; }
+        .evidence-level { color: var(--zelda-accent); font-weight: 600; }
     </style>
 </head>
 <body>
@@ -358,7 +356,7 @@
                         <th style="border-bottom: 2px solid rgba(251, 191, 36, 0.3);">Document</th>
                         <th style="border-bottom: 2px solid rgba(251, 191, 36, 0.3);">Status</th>
                         <th style="border-bottom: 2px solid rgba(251, 191, 36, 0.3);">Confidence</th>
-                        <th style="border-bottom: 2px solid rgba(251, 191, 36, 0.3);">Recommendation</th>
+                        <th style="border-bottom: 2px solid rgba(251, 191, 36, 0.3);">Evidence level</th>
                         <th style="border-bottom: 2px solid rgba(251, 191, 36, 0.3);">Action</th>
                     </tr>
                 </thead>
@@ -512,7 +510,7 @@
                         </div>
                         <small>89%</small>
                     </td>
-                    <td><span class="recommendation-strong">Strong Interest</span></td>
+                    <td><span class="evidence-level">Well evidenced</span></td>
                     <td>
                         <button class="button-zelda" style="padding: 0.5rem 1rem; font-size: 0.75rem;" onclick="viewMemo(42)">View</button>
                     </td>
@@ -526,7 +524,7 @@
                         </div>
                         <small>65%</small>
                     </td>
-                    <td><span class="recommendation-consider">Consider</span></td>
+                    <td><span class="evidence-level">Limited evidence</span></td>
                     <td>
                         <button class="button-zelda" style="padding: 0.5rem 1rem; font-size: 0.75rem;" disabled>Wait...</button>
                     </td>
@@ -550,7 +548,7 @@
             .then(data => {
                 let html = `
                     <div class="mb-3">
-                        <h6>Recommendation: <span class="recommendation-strong">${data.recommendation}</span></h6>
+                        <h6>Evidence level: <span class="evidence-level">${(data.evidence_level || 'not classified').replace(/_/g, ' ').toLowerCase()}</span></h6>
                         <p class="text-muted small">Completeness: ${Math.round(data.completeness_score*100)}%</p>
                     </div>
                     <div>

@@ -90,7 +90,7 @@ class AnthropicFailureDetectionTests(TestCase):
     def test_memo_generation_succeeds_when_claude_returns_valid_json(self):
         """Sanity check the mock itself is exercising the real code path, not just always-erroring."""
         fake_response = mock.Mock()
-        fake_response.content = [mock.Mock(text='{"executive_summary": "Great company.", "recommendation": "STRONG_INVEST"}')]
+        fake_response.content = [mock.Mock(text='{"executive_summary": "Great company.", "evidence_level": "WELL_EVIDENCED"}')]
 
         with mock.patch('anthropic.Anthropic') as mock_anthropic_cls:
             mock_anthropic_cls.return_value.messages.create.return_value = fake_response
@@ -108,7 +108,7 @@ class AnthropicFailureDetectionTests(TestCase):
         import json
         payload = {
             'executive_summary': 'Great company.',
-            'recommendation': 'STRONG_INVEST',
+            'evidence_level': 'WELL_EVIDENCED',
             'key_strengths': 'Strong ARR growth.',
             'key_concerns': 'Thin team disclosure.',
             'what_would_change_decision': 'A signed LOI from an anchor customer.',
@@ -140,7 +140,7 @@ class AnthropicFailureDetectionTests(TestCase):
         older cached response, or a model that ignores the new instructions)
         must not error — new fields just stay blank, never fabricated."""
         fake_response = mock.Mock()
-        fake_response.content = [mock.Mock(text='{"executive_summary": "Great company.", "recommendation": "STRONG_INVEST"}')]
+        fake_response.content = [mock.Mock(text='{"executive_summary": "Great company.", "evidence_level": "WELL_EVIDENCED"}')]
 
         with mock.patch('anthropic.Anthropic') as mock_anthropic_cls:
             mock_anthropic_cls.return_value.messages.create.return_value = fake_response
@@ -155,7 +155,7 @@ class AnthropicFailureDetectionTests(TestCase):
     @mock.patch('zelda_api.intelligence_pipeline.logger')
     def test_successful_call_logs_token_usage(self, mock_logger):
         fake_response = mock.Mock()
-        fake_response.content = [mock.Mock(text='{"executive_summary": "Great company.", "recommendation": "STRONG_INVEST"}')]
+        fake_response.content = [mock.Mock(text='{"executive_summary": "Great company.", "evidence_level": "WELL_EVIDENCED"}')]
         fake_response.usage.input_tokens = 1234
         fake_response.usage.output_tokens = 567
 
@@ -261,7 +261,7 @@ class CrossReportNavigationTests(TestCase):
         )
         IntelligenceMemo.objects.create(
             document=self.deck, executive_summary='NavCo summary.', investment_thesis='y',
-            recommendation='NEEDS_REVIEW', completeness_score=0.6, citations_count=2,
+            evidence_level='PARTLY_EVIDENCED', completeness_score=0.6, citations_count=2,
         )
         TruthDeltaReport.objects.create(
             document=self.deck, overall_truth_score=70.0, credibility_risk='low', summary='ok',
@@ -476,7 +476,7 @@ class ZeldaReportObservationsTests(TestCase):
         )
 
     def _memo(self, doc, **kw):
-        fields = dict(document=doc, executive_summary='x', recommendation='NEEDS_REVIEW',
+        fields = dict(document=doc, executive_summary='x', evidence_level='PARTLY_EVIDENCED',
                       completeness_score=0.6, citations_count=0)
         fields.update(kw)
         return IntelligenceMemo.objects.create(**fields)
@@ -589,7 +589,7 @@ class ICMemoTests(TestCase):
                 document=doc,
                 executive_summary='We build developer tools.',
                 investment_thesis='Strong team, growing market.',
-                recommendation='NEEDS_REVIEW',
+                evidence_level='PARTLY_EVIDENCED',
                 completeness_score=0.8,
                 citations_count=3,
             )
@@ -935,7 +935,7 @@ class ICMemoTests(TestCase):
             base_case='Growth continues at the current disclosed pace.',
             bear_case='Customer concentration risk is entirely unknown.',
             zelda_advantage='Cross-checked ARR claim against the disclosed cohort data; no contradiction found.',
-            recommendation='NEEDS_REVIEW', completeness_score=0.8, citations_count=3,
+            evidence_level='PARTLY_EVIDENCED', completeness_score=0.8, citations_count=3,
         )
 
         lite_context = build_ic_memo_context(self.application, tier='lite')
@@ -1595,8 +1595,8 @@ class DocumentIngestViewTests(TestCase):
         # Simulate each finishing with its own distinct memo (as two real
         # pipeline runs would) and confirm they don't collide.
         doc1, doc2 = DocumentSource.objects.get(id=id1), DocumentSource.objects.get(id=id2)
-        IntelligenceMemo.objects.create(document=doc1, executive_summary='First run summary.', recommendation='NEEDS_REVIEW')
-        IntelligenceMemo.objects.create(document=doc2, executive_summary='Second run summary.', recommendation='NEEDS_REVIEW')
+        IntelligenceMemo.objects.create(document=doc1, executive_summary='First run summary.', evidence_level='PARTLY_EVIDENCED')
+        IntelligenceMemo.objects.create(document=doc2, executive_summary='Second run summary.', evidence_level='PARTLY_EVIDENCED')
         self.assertEqual(doc1.memo.executive_summary, 'First run summary.')
         self.assertEqual(doc2.memo.executive_summary, 'Second run summary.')
 
@@ -2650,7 +2650,7 @@ class DocumentMemoViewAnalyticsTests(TestCase):
             document_type='pitch_deck', status='analyzed',
         )
         IntelligenceMemo.objects.create(
-            document=self.doc, executive_summary='We build developer tools.', recommendation='NEEDS_REVIEW',
+            document=self.doc, executive_summary='We build developer tools.', evidence_level='PARTLY_EVIDENCED',
         )
         self.client.force_login(self.investor_user)
 
@@ -2698,7 +2698,7 @@ class DocumentMemoViewPaywallTests(TestCase):
             document_type='pitch_deck', status='analyzed',
         )
         IntelligenceMemo.objects.create(
-            document=self.doc, executive_summary='Secret summary text.', recommendation='NEEDS_REVIEW',
+            document=self.doc, executive_summary='Secret summary text.', evidence_level='PARTLY_EVIDENCED',
             completeness_score=0.8, citations_count=3,
             investment_thesis='Lite thesis text.', key_strengths='Lite strengths text.',
         )
@@ -2717,7 +2717,7 @@ class DocumentMemoViewPaywallTests(TestCase):
         self.assertTrue(data['locked'])
         self.assertTrue(data['is_owner'])
         self.assertNotIn('sections', data)
-        self.assertNotIn('recommendation', data)
+        self.assertNotIn('evidence_level', data)
         # The owner's own locked view is unchanged by the investor Lite fallback.
         self.assertNotIn('lite_sections', data)
 
@@ -2755,7 +2755,7 @@ class DocumentMemoViewPaywallTests(TestCase):
         self.assertEqual(data['lite_sections']['key_strengths'], 'Lite strengths text.')
         self.assertIn('disclaimer', data)
         self.assertNotIn('Secret summary text.', response.content.decode())
-        self.assertNotIn('recommendation', data)
+        self.assertNotIn('evidence_level', data)
 
     def test_investor_gets_full_response_when_founder_premium_without_investor_premium(self):
         self.application.is_premium = True
@@ -3136,7 +3136,7 @@ class TruthDeltaNoScoreCoherenceTests(TestCase):
         )
         IntelligenceMemo.objects.create(
             document=self.doc, executive_summary='x', investment_thesis='y',
-            recommendation='NEEDS_REVIEW', completeness_score=0.5, citations_count=0,
+            evidence_level='PARTLY_EVIDENCED', completeness_score=0.5, citations_count=0,
         )
         self.report = TruthDeltaReport.objects.create(
             document=self.doc, overall_truth_score=None, credibility_risk='unknown',
@@ -5704,8 +5704,8 @@ class GaugeVocabularyTests(TestCase):
         )
         IntelligenceMemo.objects.create(
             document=deck, executive_summary='x', investment_thesis='y',
-            investment_readiness=readiness_text,
-            recommendation='NEEDS_REVIEW', completeness_score=0.72, citations_count=3,
+            information_readiness=readiness_text,
+            evidence_level='PARTLY_EVIDENCED', completeness_score=0.72, citations_count=3,
         )
         if truth_delta:
             ClaimedDatapoint.objects.create(document=deck, category='revenue', claimed_value='x')
@@ -5731,7 +5731,7 @@ class GaugeVocabularyTests(TestCase):
         self.assertIn('Analysis Confidence', html)
         self.assertIn('72.0%', html)
 
-    def test_ic_memo_investment_readiness_stays_distinct_from_analysis_confidence(self):
+    def test_ic_memo_information_readiness_stays_distinct_from_analysis_confidence(self):
         html = self._ic_memo_html(readiness_text='Score: 66/100\nSolid metrics, thin pipeline.')
         self.assertIn('Investment Readiness', html)
         self.assertIn('66/100', html)
@@ -5754,7 +5754,7 @@ class GaugeVocabularyTests(TestCase):
         )
         IntelligenceMemo.objects.create(
             document=deck, executive_summary='x', investment_thesis='y',
-            recommendation='NEEDS_REVIEW', completeness_score=0.6, citations_count=1,
+            evidence_level='PARTLY_EVIDENCED', completeness_score=0.6, citations_count=1,
         )
         TruthDeltaReport.objects.create(document=deck, overall_truth_score=80.0,
             credibility_risk='low', summary='ok', details={'claims': [{'category': 'revenue'}]})
@@ -5779,7 +5779,7 @@ class GaugeVocabularyTests(TestCase):
             document_type='pitch_deck', status='analyzed',
         )
         IntelligenceMemo.objects.create(document=deck, executive_summary='x', investment_thesis='y',
-            recommendation='NEEDS_REVIEW', completeness_score=0.6, citations_count=1)
+            evidence_level='PARTLY_EVIDENCED', completeness_score=0.6, citations_count=1)
         TruthDeltaReport.objects.create(document=deck, overall_truth_score=77.0,
             credibility_risk='low', summary='ok', details={'claims': [{'category': 'revenue'}]})
         self.client.force_login(staff)
@@ -5876,7 +5876,7 @@ class GaugeVocabularyTests(TestCase):
         )
         IntelligenceMemo.objects.create(
             document=deck, executive_summary='x', investment_thesis='y',
-            recommendation='NEEDS_REVIEW', completeness_score=0.6, citations_count=1,
+            evidence_level='PARTLY_EVIDENCED', completeness_score=0.6, citations_count=1,
         )
         vdoc = DocumentSource.objects.create(
             filename='val.pptx', source_entity='MemoGauge', uploaded_by=self.user,
@@ -5902,7 +5902,7 @@ class GaugeVocabularyTests(TestCase):
             document_type='pitch_deck', status='analyzed',
         )
         IntelligenceMemo.objects.create(document=deck, executive_summary='x', investment_thesis='y',
-            recommendation='NEEDS_REVIEW', completeness_score=0.6, citations_count=1)
+            evidence_level='PARTLY_EVIDENCED', completeness_score=0.6, citations_count=1)
         vdoc = DocumentSource.objects.create(
             filename='val.pptx', source_entity='MemoMd', uploaded_by=self.user,
             document_type='business_valuation', status='analyzed', valuation_tier='full',
@@ -5971,7 +5971,7 @@ class IntelligenceHeaderTests(TestCase):
         deck = DocumentSource.objects.create(filename='deck.pdf', source_entity='IHMEMO',
             uploaded_by=self.user, document_type='pitch_deck', status='analyzed')
         IntelligenceMemo.objects.create(document=deck, executive_summary='x', investment_thesis='y',
-            recommendation='NEEDS_REVIEW', completeness_score=0.5, citations_count=0)
+            evidence_level='PARTLY_EVIDENCED', completeness_score=0.5, citations_count=0)
         html = self.client.get(reverse('zelda_api:ic_memo', args=[deck.id])).content.decode()
         self._assert_eyebrow(html)
         self.assertIn("not an endorsement by Interlink Foundry", html)

@@ -280,7 +280,7 @@ class IntelligenceInsightAdmin(admin.ModelAdmin):
             'opportunity': '#66ff66',
             'statement': '#cccccc',
             'assumption': '#ffcccc',
-            'recommendation': '#ccffcc',
+            'evidence_level': '#ccffcc',
         }
         color = colors.get(obj.insight_type, '#cccccc')
         return format_html(
@@ -348,13 +348,13 @@ class IntelligenceMemoAdmin(admin.ModelAdmin):
     
     list_display = [
         'document_link',
-        'recommendation_badge',
+        'evidence_level_badge',
         'completeness_score',
         'citations_count',
         'created_at_short',
     ]
     list_filter = [
-        'recommendation',
+        'evidence_level',
         'completeness_score',
         'created_at',
     ]
@@ -371,7 +371,7 @@ class IntelligenceMemoAdmin(admin.ModelAdmin):
     ]
     fieldsets = (
         ('Memo Info', {
-            'fields': ('document', 'recommendation'),
+            'fields': ('document', 'evidence_level'),
         }),
         ('Executive Summary', {
             'fields': ('summary_preview',),
@@ -384,7 +384,7 @@ class IntelligenceMemoAdmin(admin.ModelAdmin):
                 'financial_analysis',
                 'risk_assessment',
                 'investment_thesis',
-                'investment_readiness',
+                'information_readiness',
                 'questions_for_management',
             ),
             'classes': ('collapse',),
@@ -406,29 +406,21 @@ class IntelligenceMemoAdmin(admin.ModelAdmin):
         return format_html('<a href="{}">{}</a>', url, obj.document.filename[:30])
     document_link.short_description = 'Document'
     
-    def recommendation_badge(self, obj):
-        """Display recommendation as colored badge."""
+    def evidence_level_badge(self, obj):
+        """Display the evidence level as a coloured badge."""
         colors = {
-            'STRONG_INVEST': '#66ff66',
-            'INVEST': '#99ccff',
-            'NEEDS_REVIEW': '#ffff66',
-            'PASS': '#ff9999',
+            'WELL_EVIDENCED': '#66ff66',
+            'PARTLY_EVIDENCED': '#99ccff',
+            'LIMITED_EVIDENCE': '#ffff66',
+            'LITTLE_EVIDENCE': '#ffcc99',
         }
-        color = colors.get(obj.recommendation, '#cccccc')
-        labels = {
-            'STRONG_INVEST': '✓ Strong Invest',
-            'INVEST': '✓ Invest',
-            'NEEDS_REVIEW': '⚠ Needs Review',
-            'PASS': '✗ Pass',
-        }
-        label = labels.get(obj.recommendation, obj.get_recommendation_display())
-        
+        color = colors.get(obj.evidence_level, '#cccccc')
         return format_html(
             '<span style="background-color: {}; padding: 4px 8px; border-radius: 3px; font-weight: bold;">{}</span>',
             color,
-            label
+            obj.get_evidence_level_display(),
         )
-    recommendation_badge.short_description = 'Recommendation'
+    evidence_level_badge.short_description = 'Evidence level'
     
     def completeness_score(self, obj):
         """Format completeness score."""
