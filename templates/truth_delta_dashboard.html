@@ -783,12 +783,16 @@
         </div>
         {% endif %}
 
-        <!-- Actions -->
+        <!-- Actions — running verification spends the owner's credits, and
+             TruthDeltaVerifyView accepts only the uploader or staff, so
+             nobody else is offered a button that can only answer 403. -->
+        {% if is_owner or user.is_staff %}
         <div class="truth-delta-actions">
             <button class="truth-delta-btn primary" onclick="runTruthDeltaVerification()">
                 <span id="verifyButtonText">▶ Run Verification</span>
             </button>
         </div>
+        {% endif %}
 
         {% if disclaimer %}
         <div style="font-size: 0.72rem; line-height: 1.5; color: #64748b; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e0e7ff;">
@@ -1207,7 +1211,13 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
                 }
             );
 
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            if (!response.ok) {
+                // The endpoint says why: out of credits (402) carries the
+                // upgrade message, a refusal (403) its own reason. Showing
+                // one generic line for all of them told the owner nothing.
+                const body = await response.json().catch(() => ({}));
+                throw new Error(body.error || `Verification couldn't be started (HTTP ${response.status}).`);
+            }
 
             document.getElementById('truthDeltaLoading').style.display = 'block';
             
@@ -1218,7 +1228,7 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
             console.error('Verification error:', error);
             button.disabled = false;
             button.textContent = '▶ Run Verification';
-            alert('Failed to start verification');
+            alert(error.message || "Verification couldn't be started.");
         }
     }
 
