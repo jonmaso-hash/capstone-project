@@ -24,7 +24,7 @@ MEMO_SECTIONS = [
     ('financial_analysis', 'Financial Analysis'),
     ('risk_assessment', 'Risk Assessment'),
     ('investment_thesis', 'Investment Thesis'),
-    ('investment_readiness', 'Investment Readiness'),
+    ('information_readiness', 'Information Readiness'),
     ('key_strengths', 'Key Strengths'),
     ('key_concerns', 'Key Concerns'),
     ('what_would_change_decision', 'What Would Change the Decision'),
@@ -83,7 +83,7 @@ def ic_memo_unlocked(request_user, founder_application):
 # valuation, deck engagement) is the "what would they actually say and why"
 # depth reserved for Zelda AI.
 LITE_MEMO_SECTION_KEYS = {
-    'investment_thesis', 'investment_readiness',
+    'investment_thesis', 'information_readiness',
     'key_strengths', 'key_concerns', 'what_would_change_decision',
 }
 
@@ -284,7 +284,7 @@ def build_ic_memo_context(founder_application, tier='full'):
             if getattr(memo, key, '')
         ]
         memo_meta = {
-            'recommendation': memo.get_recommendation_display(),
+            'evidence_level': memo.get_evidence_level_display(),
             # Despite the model field's name, IntelligenceMemo.completeness_score is
             # Claude's own self-reported confidence in its analysis (see
             # intelligence_pipeline.py's `analysis_result.get('confidence', 0)`) — NOT
@@ -294,7 +294,7 @@ def build_ic_memo_context(founder_application, tier='full'):
             # structural completeness metric.
             'analysis_confidence': round(memo.completeness_score * 100, 1),  # 0-1 -> 0-100 for display
             'section_coverage': round(len(memo_sections) / len(MEMO_SECTIONS) * 100, 1) if MEMO_SECTIONS else 0,
-            'readiness_score': memo.readiness_score,  # parsed 0-100 from investment_readiness text, or None
+            'readiness_score': memo.readiness_score,  # parsed 0-100 from information_readiness text, or None
             'citations_count': memo.citations_count,
             'generated_at': memo.created_at,
         }
@@ -338,7 +338,7 @@ def build_ic_memo_context(founder_application, tier='full'):
         # Application.zelda_score is deliberately NOT surfaced here: it's an
         # internal stability/efficiency/runway composite used for
         # matchmaking, and as a "/99" figure next to the memo's
-        # Recommendation, Investment Readiness and Truth Delta coverage it
+        # Evidence level, Information Readiness and Truth Delta coverage it
         # read as a fourth, competing verdict. The field stays on the model
         # and in the matching pipeline untouched — this is presentation only.
         financials = {
@@ -374,11 +374,11 @@ def render_ic_memo_markdown(context):
 
     if context['memo_meta']:
         meta = context['memo_meta']
-        lines.append(f"**Recommendation:** {meta['recommendation']}  ")
+        lines.append(f"**Evidence level:** {meta['evidence_level']} — how much of what the company states is supported by evidence Zelda could find, not a view on whether to invest  ")
         lines.append(f"**Section Coverage:** {meta['section_coverage']}% of memo sections generated  ")
         lines.append(f"**Analysis Confidence:** {meta['analysis_confidence']}% (how sure Zelda is of its own reading of this deck — not a verification score, not a completeness score)  ")
         if meta['readiness_score'] is not None:
-            lines.append(f"**Investment Readiness:** {meta['readiness_score']}/100  ")
+            lines.append(f"**Information Readiness:** {meta['readiness_score']}/100 — how complete the information is for review, not an assessment of whether to invest  ")
         lines.append(f"**Citations:** {meta['citations_count']}  ")
         lines.append(f"**Generated:** {meta['generated_at']:%Y-%m-%d}")
         lines.append('')

@@ -47,7 +47,7 @@
             AI Investment Committee Memo
             <i class="bi bi-info-circle field-info-icon no-print" role="button" tabindex="0"
                data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom"
-               data-bs-content="An investment-committee memo drafted for you, ready to share or mark up. It pulls the intelligence summary, Truth Delta verification, valuation and pitch-deck engagement into one document with a thesis, risks, a recommendation and questions for the founder. It is a first draft to react to — the recommendation is Zelda's, not an endorsement by Interlink Foundry."></i>
+               data-bs-content="An investment-committee memo drafted for you, ready to share or mark up. It pulls the intelligence summary, Truth Delta verification, valuation and pitch-deck engagement into one document with the evidence, risks, open questions and what the company states. Zelda reports what the evidence shows and never advises whether to invest — the decision is yours."></i>
         </p>
         <h1 class="fw-bold mb-0">{{ company_name }}</h1>
         {% if ic_memo_tier == 'full' %}
@@ -65,8 +65,8 @@
     <div class="row g-3 mb-2">
         <div class="col-6 col-md-3">
             <div class="card p-3 bg-dark text-white shadow-sm border-0 h-100">
-                <small class="text-white-50 text-uppercase">Recommendation</small>
-                <h6 class="fw-bold mb-0">{{ memo_meta.recommendation }}</h6>
+                <small class="text-white-50 text-uppercase">Evidence Level</small>
+                <h6 class="fw-bold mb-0">{{ memo_meta.evidence_level }}</h6>
             </div>
         </div>
         <div class="col-6 col-md-3">
@@ -78,7 +78,7 @@
         {% if memo_meta.readiness_score is not None %}
         <div class="col-6 col-md-3">
             <div class="card p-3 shadow-sm border-0 h-100">
-                <small class="text-muted text-uppercase">Investment Readiness</small>
+                <small class="text-muted text-uppercase">Information Readiness</small>
                 <h6 class="fw-bold mb-0">{{ memo_meta.readiness_score }}/100</h6>
             </div>
         </div>
@@ -99,7 +99,8 @@
     </div>
     <p class="small text-muted mb-4">
         <strong>Section Coverage</strong> is how much of this memo Zelda could generate from available materials.
-        {% if memo_meta.readiness_score is not None %}<strong>Investment Readiness</strong> is Zelda's holistic assessment of how prepared this company is for investment.{% else %}<strong>Analysis Confidence</strong> is how sure Zelda is of its own reading of this deck — not a verification score and not a completeness score.{% endif %}
+        <strong>Evidence Level</strong> is how much of what this company states is supported by evidence Zelda could find — it is not an assessment of whether to invest.
+        {% if memo_meta.readiness_score is not None %}<strong>Information Readiness</strong> measures how complete and reviewable the available information is; it is not an assessment of whether an investment should be made.{% else %}<strong>Analysis Confidence</strong> is how sure Zelda is of its own reading of this deck — not a verification score and not a completeness score.{% endif %}
         Generated {{ memo_meta.generated_at|date:"M j, Y" }}.
     </p>
     {% comment %}

@@ -182,7 +182,7 @@ class DocumentStatusView(APIView):
             if doc.status == 'analyzed' and hasattr(doc, 'memo'):
                 response['memo_available'] = True
                 response['memo_id'] = doc.memo.id
-                response['memo_recommendation'] = doc.memo.recommendation
+                response['memo_evidence_level'] = doc.memo.evidence_level
             
             return Response(response, status=status.HTTP_200_OK)
         
@@ -298,7 +298,7 @@ class DocumentMemoView(APIView):
                 'document_id': doc.id,
                 'document_name': doc.source_entity,
                 'locked': False,
-                'recommendation': memo.recommendation,
+                'evidence_level': memo.evidence_level,
                 'completeness_score': memo.completeness_score,
                 'citations_count': memo.citations_count,
                 'sections': {
@@ -309,7 +309,7 @@ class DocumentMemoView(APIView):
                     'financial_analysis': memo.financial_analysis,
                     'risk_assessment': memo.risk_assessment,
                     'investment_thesis': memo.investment_thesis,
-                    'investment_readiness': memo.investment_readiness,
+                    'information_readiness': memo.information_readiness,
                     'key_strengths': memo.key_strengths,
                     'key_concerns': memo.key_concerns,
                     'what_would_change_decision': memo.what_would_change_decision,

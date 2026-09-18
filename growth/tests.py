@@ -56,7 +56,7 @@ class ReadinessBadgeTests(TestCase):
     def setUp(self):
         _mock_embedding_generation(self)
 
-    def _founder_with_memo(self, username, investment_readiness, is_private=False):
+    def _founder_with_memo(self, username, information_readiness, is_private=False):
         from zelda_api.vector_models import DocumentSource, IntelligenceMemo
 
         user = User.objects.create_user(username, password='x')
@@ -67,7 +67,7 @@ class ReadinessBadgeTests(TestCase):
         doc = DocumentSource.objects.create(filename='deck.pdf', source_entity='FCo', uploaded_by=user, document_type='pitch_deck')
         IntelligenceMemo.objects.create(
             document=doc, executive_summary='Summary.', investment_thesis='Thesis.',
-            investment_readiness=investment_readiness,
+            information_readiness=information_readiness,
         )
         return user
 
@@ -96,12 +96,12 @@ class ReadinessBadgeTests(TestCase):
 class ReadinessScoreParsingTests(TestCase):
     """IntelligenceMemo.readiness_score parses the standard 'Score: XX/100' format, returns None otherwise."""
 
-    def _memo(self, investment_readiness):
+    def _memo(self, information_readiness):
         from zelda_api.vector_models import DocumentSource, IntelligenceMemo
         user = User.objects.create_user(f'score_parse_{DocumentSource.objects.count()}', password='x')
         doc = DocumentSource.objects.create(filename='deck.pdf', source_entity='FCo', uploaded_by=user, document_type='pitch_deck')
         return IntelligenceMemo.objects.create(
-            document=doc, executive_summary='S', investment_thesis='T', investment_readiness=investment_readiness,
+            document=doc, executive_summary='S', investment_thesis='T', information_readiness=information_readiness,
         )
 
     def test_parses_standard_format(self):

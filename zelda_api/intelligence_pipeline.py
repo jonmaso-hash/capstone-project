@@ -43,6 +43,29 @@ def _log_anthropic_usage(response, document_source, call_type):
         logger.warning(f"Failed to log Anthropic usage: {str(e)}")
 
 
+
+# The memo's JSON contract with Claude. Stated once here so the prompt, the
+# model and the tests can't drift apart — and so the guard test in
+# tests_no_investment_advice.py has something to read.
+MEMO_JSON_KEYS = (
+    'executive_summary', 'problem_solution', 'market_analysis', 'team_assessment',
+    'financial_analysis', 'risk_assessment', 'investment_thesis', 'information_readiness',
+    'key_strengths', 'key_concerns', 'what_would_change_decision',
+    'bull_case', 'base_case', 'bear_case', 'zelda_advantage',
+    'questions_for_management', 'evidence_level',
+)
+
+# Zelda never tells a reader what to do with a company. It says how well the
+# company's own statements are supported by evidence, and the reader decides.
+EVIDENCE_LEVEL_INSTRUCTION = (
+    "For evidence_level use exactly one of: WELL_EVIDENCED, PARTLY_EVIDENCED, "
+    "LIMITED_EVIDENCE, LITTLE_EVIDENCE. This describes how much of what the company "
+    "states is supported by evidence in the material you were given — never whether "
+    "the reader should act. Do not give an opinion on the opportunity, and do not "
+    "suggest any course of action."
+)
+
+
 class ZeldaIntelligencePipelineV2:
     """Zelda Intelligence Pipeline v2 - Production Ready"""
 
@@ -770,7 +793,10 @@ class ZeldaIntelligencePipelineV2:
                     'financial_analysis': memo_sections.get('financial_analysis', 'Not disclosed in pitch deck.'),
                     'risk_assessment':    memo_sections.get('risk_assessment', 'Not disclosed in pitch deck.'),
                     'investment_thesis':  memo_sections.get('investment_thesis', 'Insufficient data.'),
-                    'investment_readiness':     memo_sections.get('investment_readiness', 'Not assessed.'),
+                    'information_readiness':    memo_sections.get(
+                        # Older stored memos and older Claude responses used the
+                        # investment_ key; read both so nothing breaks on upgrade.
+                        'information_readiness', memo_sections.get('investment_readiness', 'Not assessed.')),
                     'key_strengths':      memo_sections.get('key_strengths', ''),
                     'key_concerns':       memo_sections.get('key_concerns', ''),
                     'what_would_change_decision': memo_sections.get('what_would_change_decision', ''),
@@ -785,7 +811,7 @@ class ZeldaIntelligencePipelineV2:
             )
 
             memo.insights_used.set(insights)
-            memo.recommendation = memo_sections.get('recommendation', 'NEEDS_REVIEW')
+            memo.evidence_level = memo_sections.get('evidence_level', 'NOT_CLASSIFIED')
             memo.save()
 
             logger.info(f"Claude memo generated for document {document_source.id}")
@@ -1276,13 +1302,9 @@ class ZeldaIntelligencePipelineV2:
     ---
 
     Write the memo using ONLY the above information. Return a JSON object with these exact keys:
-    executive_summary, problem_solution, market_analysis, team_assessment,
-    financial_analysis, risk_assessment, investment_thesis, investment_readiness,
-    key_strengths, key_concerns, what_would_change_decision,
-    bull_case, base_case, bear_case, zelda_advantage,
-    questions_for_management, recommendation
+    {', '.join(MEMO_JSON_KEYS)}
 
-    For recommendation use exactly one of: STRONG_INVEST, INVEST, NEEDS_REVIEW, PASS
+    {EVIDENCE_LEVEL_INSTRUCTION}
 
     ### Instructions per section:
 
@@ -1307,7 +1329,8 @@ class ZeldaIntelligencePipelineV2:
     investment_thesis: Bull case in 2-3 sentences using only disclosed facts.
     If insufficient data: "Insufficient disclosed data to form a complete investment thesis."
 
-    investment_readiness: Score 0-100 and list strengths/weaknesses based only on
+    information_readiness: Score 0-100 for how complete and reviewable the information
+    is, and list what is present and missing, based only on
     what IS and IS NOT in the deck. Format:
     Score: XX/100
     Strengths: [bullet list]
@@ -1381,15 +1404,19 @@ class ZeldaIntelligencePipelineV2:
             return {'error': f'Memo generation failed: {str(e)}'}
     
     
-    def _determine_recommendation(self, insights, confidence: float) -> str:
-        """Kept for backwards compatibility — now set by Claude directly"""
+    def _determine_evidence_level(self, insights, confidence: float) -> str:
+        """
+        Fallback for when Claude returns no evidence_level — normally it sets
+        it directly. Bands Claude's own confidence in its reading of the
+        material; it is a statement about the evidence, not about the reader.
+        """
         if confidence >= 80:
-            return 'STRONG_INVEST'
+            return 'WELL_EVIDENCED'
         elif confidence >= 65:
-            return 'INVEST'
+            return 'PARTLY_EVIDENCED'
         elif confidence >= 45:
-            return 'NEEDS_REVIEW'
-        return 'PASS'
+            return 'LIMITED_EVIDENCE'
+        return 'LITTLE_EVIDENCE'
     # Global instance
 intelligence_pipeline = ZeldaIntelligencePipelineV2()
 
