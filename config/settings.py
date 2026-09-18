@@ -171,6 +171,10 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 
+    # Staff can impersonate and override deal states, so their sessions end
+    # when idle (accounts/staff_sessions.py). Needs auth + messages above it.
+    'accounts.staff_sessions.StaffSessionTimeoutMiddleware',
+
     # Staff viewing as a user can't change anything as them (ops/impersonation.py).
     # Needs the session, auth and messages middleware above it.
     'ops.impersonation.ReadOnlyImpersonationMiddleware',
@@ -329,6 +333,9 @@ else:
 # of this setting. Both are fixed in PR #27; the shadowed line is gone.
 LOGOUT_REDIRECT_URL = "accounts:login"
 LOGIN_URL = "accounts:login"
+
+# Staff sessions expire after this many idle seconds (accounts/staff_sessions.py).
+STAFF_SESSION_IDLE_TIMEOUT = env.int('STAFF_SESSION_IDLE_TIMEOUT', default=3600)
 
 # Rate limits (accounts/rate_limits.py) count against the client's address.
 # Behind a proxy REMOTE_ADDR is the proxy's, so every visitor would share one
