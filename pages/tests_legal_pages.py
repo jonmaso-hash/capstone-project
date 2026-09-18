@@ -54,3 +54,46 @@ class LegalPagesAreLinkedTests(TestCase):
                     '<a href="#" class="text-decoration-none text-muted mx-2">%s</a>' % label,
                     html,
                     '%s is linked to a dead anchor again' % label)
+
+
+class PrivacyDescribesWhatTheCodeActuallyDoesTests(TestCase):
+    """
+    Two things the policy never mentioned, both of which a founder uploading a
+    cap table will ask about: that staff can view the site as them, and what
+    happens to a document once an analysis is requested.
+
+    Written from the implementation, so each assertion here is a claim the code
+    has to keep being true:
+
+    - read-only impersonation, permanent audit log, never counted as the user's
+      own activity (ops/impersonation.py, ops.models.ImpersonationLog)
+    - profile embeddings are generated on our own servers
+      (matchmaking/services/ai_utils.py loads sentence-transformers locally), so
+      profile text is not sent to an AI provider for matching
+    """
+
+    def setUp(self):
+        self.html = self.client.get(reverse('pages:privacy')).content.decode()
+
+    def test_staff_access_is_disclosed_as_read_only_and_logged(self):
+        self.assertIn('Staff access to your account', self.html)
+        self.assertIn('read-only', self.html)
+        self.assertRegex(self.html, r'recorded|record')
+
+    def test_it_says_what_happens_to_an_uploaded_document(self):
+        self.assertIn('Anthropic', self.html)
+        self.assertIn('not used to train', self.html)
+
+    def test_it_says_matching_does_not_send_profiles_to_a_provider(self):
+        self.assertRegex(self.html, r'not sent to an AI provider')
+
+    def test_the_providers_are_named(self):
+        for provider in ('Stripe', 'Anthropic', 'Stream', 'Postmark', 'Sentry'):
+            with self.subTest(provider=provider):
+                self.assertIn(provider, self.html)
+
+    def test_the_advice_disclaimer_is_still_there(self):
+        # Pre-existing and load-bearing: automated output is informational and
+        # must not be the sole basis for a decision.
+        self.assertIn('sole basis', self.html)
+        self.assertIn('not investment, financial, legal, tax or accounting', self.html)
