@@ -555,24 +555,6 @@ class ZeldaAskAPIView(APIView):
             )
 
 
-class SandboxScanView(APIView):
-    permission_classes = [AllowAny]
-    parser_classes = [MultiPartParser, FormParser]
-
-    def post(self, request, format=None):
-        file = request.FILES.get('file')
-        if not file:
-            return Response({"error": "No file uploaded. Make sure your form-data key is 'file'."}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            raw_data = scan_pitch_deck(file)
-            pitch_object = AnalyzedPitch(raw_data)
-            return Response(pitch_object.to_foundry_envelope(), status=status.HTTP_200_OK)
-        except Exception as e:
-            logger.error(f"Sandbox extraction failed: {str(e)}")
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
 class WebExplorationAPIView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [SessionAuthentication, TokenAuthentication]
