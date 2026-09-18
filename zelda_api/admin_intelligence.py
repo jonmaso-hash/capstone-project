@@ -383,7 +383,7 @@ class IntelligenceMemoAdmin(admin.ModelAdmin):
                 'team_assessment',
                 'financial_analysis',
                 'risk_assessment',
-                'investment_thesis',
+                'business_model_analysis',
                 'information_readiness',
                 'questions_for_management',
             ),

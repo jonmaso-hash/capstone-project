@@ -4074,7 +4074,7 @@ class StandaloneMemoViewTierTests(TestCase):
             team_assessment='Domain-expert founders.',
             financial_analysis='Early revenue, disciplined burn.',
             risk_assessment='Single-founder key-person risk.',
-            key_concerns='Single-founder key-person risk. No repeatable sales motion yet.',
+            open_concerns='Single-founder key-person risk. No repeatable sales motion yet.',
             evidence_level='PARTLY_EVIDENCED', completeness_score=0.7, citations_count=4,
         )
         return doc
@@ -4188,7 +4188,7 @@ class StandaloneMemoRealDataTests(TestCase):
             team_assessment='The team read from the actual memo.',
             financial_analysis='The financial read from the actual memo.',
             risk_assessment='The risks read from the actual memo.',
-            key_concerns='Customer concentration is high. No VP Sales yet.',
+            open_concerns='Customer concentration is high. No VP Sales yet.',
             questions_for_management='What is net revenue retention?',
             evidence_level='PARTLY_EVIDENCED', completeness_score=0.7, citations_count=5,
         )
@@ -4260,7 +4260,7 @@ class StandaloneMemoRealDataTests(TestCase):
     def test_worth_investigating_surfaces_memo_concerns_and_unverified_claims(self):
         from zelda_api.truth_delta_models import TruthDeltaReport
         doc = self._deck()
-        self._memo(doc, key_concerns='Customer concentration is high. Runway is under 12 months.')
+        self._memo(doc, open_concerns='Customer concentration is high. Runway is under 12 months.')
         TruthDeltaReport.objects.create(
             document=doc, overall_truth_score=70.0, credibility_risk='low', summary='ok',
             details={'claims': [{'category': 'customers'}],
@@ -5048,7 +5048,7 @@ class DealWorkspaceViewTests(TestCase):
             uploaded_by=self.founder_user, filename='deck.pdf', source_entity='DWVCo', document_type='pitch_deck',
         )
         IntelligenceMemo.objects.create(
-            document=doc, executive_summary='x', investment_thesis='x',
+            document=doc, executive_summary='x', business_model_analysis='x',
             evidence_level='PARTLY_EVIDENCED',
         )
         TruthDeltaReport.objects.create(document=doc, overall_truth_score=88.0, credibility_risk='low')

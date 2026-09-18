@@ -251,7 +251,10 @@ class IntelligenceMemo(FoundryStandardMixin, models.Model):
     team_assessment = models.TextField(blank=True, help_text="Team experience, background, gaps")
     financial_analysis = models.TextField(blank=True, help_text="Revenue, burn, runway, unit economics")
     risk_assessment = models.TextField(blank=True, help_text="Key risks and mitigation strategies")
-    investment_thesis = models.TextField(help_text="Why this is investable")
+    business_model_analysis = models.TextField(
+        help_text="How the company makes money, who its customers are, what drives growth, "
+                  "and what evidence supports each — no conclusion about what to do about it",
+    )
     information_readiness = models.TextField(
         blank=True,
         help_text="0-100 score for how complete and reviewable the information is — not an assessment of whether an investment should be made",
@@ -262,16 +265,17 @@ class IntelligenceMemo(FoundryStandardMixin, models.Model):
     # text. Deliberately separate fields (not sub-bullets of an existing
     # section) so the Lite/AI template split (zelda_api/ic_memo.py's
     # LITE_MEMO_SECTION_KEYS) can address each independently.
-    key_strengths = models.TextField(blank=True, help_text="2-4 evidence-cited strengths supporting investment")
-    key_concerns = models.TextField(blank=True, help_text="2-4 evidence-cited concerns/gaps against investment")
-    what_would_change_decision = models.TextField(blank=True, help_text="The single most important missing piece of evidence")
+    supported_points = models.TextField(blank=True, help_text="2-4 points the disclosed evidence supports, each cited")
+    open_concerns = models.TextField(blank=True, help_text="2-4 gaps, omissions or contradictions that remain unresolved, each cited")
+    what_would_change_the_picture = models.TextField(blank=True, help_text="The single most important missing piece of evidence")
 
-    # Zelda AI-only additions (see LITE_MEMO_SECTION_KEYS) — deeper scenario
-    # analysis and an honest note on what evidence-grounding actually added
+    # Zelda AI-only additions (see LITE_MEMO_SECTION_KEYS) — scenario analysis,
+    # framed as what would have to be true rather than a case for or against a
+    # transaction, and an honest note on what evidence-grounding actually added
     # here, not marketing copy about the platform in general.
-    bull_case = models.TextField(blank=True, help_text="Strongest evidence-grounded case FOR investing")
-    base_case = models.TextField(blank=True, help_text="Most likely outcome given disclosed facts and trajectory")
-    bear_case = models.TextField(blank=True, help_text="Strongest evidence-grounded case AGAINST investing")
+    upside_scenario = models.TextField(blank=True, help_text="What would have to be true for the favourable reading, and what evidence bears on it")
+    base_scenario = models.TextField(blank=True, help_text="What follows if the disclosed facts and current trajectory hold")
+    downside_scenario = models.TextField(blank=True, help_text="What would have to be true for the unfavourable reading, and what evidence bears on it")
     zelda_advantage = models.TextField(blank=True, help_text="What this evidence-grounded pass surfaced that a generic AI summary would likely miss")
 
     questions_for_management = models.TextField(blank=True, help_text="Open questions the deck does not answer")

@@ -47,7 +47,7 @@ HIDDEN = ('private', 'archived', 'denied')
 
 def _memo_for(document):
     return IntelligenceMemo.objects.create(
-        document=document, executive_summary='Summary.', investment_thesis='Thesis.',
+        document=document, executive_summary='Summary.', business_model_analysis='Thesis.',
         evidence_level='PARTLY_EVIDENCED', completeness_score=0.6, citations_count=1,
     )
 
