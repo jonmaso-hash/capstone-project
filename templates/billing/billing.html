@@ -26,15 +26,29 @@
                 <div class="card-body p-4">
                     <span class="badge bg-success mb-2">Active</span>
                     <h5 class="fw-bold mb-1">{{ subscription.get_plan_display }}</h5>
-                    {% if subscription.current_period_end %}
-                    <p class="text-muted small mb-3">Renews {{ subscription.current_period_end|date:"F j, Y" }}</p>
+                    {% if subscription.cancel_at_period_end %}
+                    <p class="text-muted small mb-3">
+                        Cancelled — this subscription will not renew.
+                        {% if subscription.current_period_end %}Your access ends {{ subscription.current_period_end|date:"F j, Y" }}.{% endif %}
+                    </p>
+                    {% elif subscription.current_period_end %}
+                    <p class="text-muted small mb-1">Renews automatically {{ subscription.current_period_end|date:"F j, Y" }} at ${{ current_plan_price }} per month until you cancel.</p>
+                    <p class="text-muted small mb-3">Cancel any time — you keep access until the period you have paid for ends.</p>
                     {% endif %}
-                    <form method="post" action="{% url 'billing:create_billing_portal_session' %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-secondary">
-                            <i class="bi bi-credit-card me-1"></i> Manage Membership
-                        </button>
-                    </form>
+                    <div class="d-flex flex-wrap gap-2">
+                        <form method="post" action="{% url 'billing:create_billing_portal_session' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-secondary">
+                                <i class="bi bi-credit-card me-1"></i> Invoices &amp; payment method
+                            </button>
+                        </form>
+                        {% if not subscription.cancel_at_period_end %}
+                        <form method="post" action="{% url 'billing:cancel_subscription' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger">Cancel subscription</button>
+                        </form>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
@@ -84,6 +98,14 @@
 
                     <form method="post" action="{% url 'billing:create_checkout_session' %}">
                         {% csrf_token %}
+                        {# Terms shown before any payment detail is collected; same sentence is stored with the consent. #}
+                        <p class="small text-muted mb-2">{{ renewal_terms }}</p>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" name="agree_to_renewal" id="agree_to_renewal_{{ plan|lower }}" required>
+                            <label class="form-check-label small" for="agree_to_renewal_{{ plan|lower }}">
+                                I understand this subscription renews automatically until I cancel.
+                            </label>
+                        </div>
                         <button type="submit" class="btn btn-success" {% if not stripe_configured %}disabled{% endif %}>
                             <i class="bi bi-star-fill me-1"></i> Subscribe
                         </button>
@@ -151,6 +173,14 @@
 
                     <form method="post" action="{% url 'billing:create_checkout_session' %}">
                         {% csrf_token %}
+                        {# Terms shown before any payment detail is collected; same sentence is stored with the consent. #}
+                        <p class="small text-muted mb-2">{{ renewal_terms }}</p>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" name="agree_to_renewal" id="agree_to_renewal_{{ plan|lower }}" required>
+                            <label class="form-check-label small" for="agree_to_renewal_{{ plan|lower }}">
+                                I understand this subscription renews automatically until I cancel.
+                            </label>
+                        </div>
                         <button type="submit" class="btn btn-primary" {% if not stripe_configured %}disabled{% endif %}>
                             <i class="bi bi-star-fill me-1"></i> Subscribe
                         </button>
@@ -252,6 +282,14 @@
 
                     <form method="post" action="{% url 'billing:create_checkout_session' %}">
                         {% csrf_token %}
+                        {# Terms shown before any payment detail is collected; same sentence is stored with the consent. #}
+                        <p class="small text-muted mb-2">{{ renewal_terms }}</p>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" name="agree_to_renewal" id="agree_to_renewal_{{ plan|lower }}" required>
+                            <label class="form-check-label small" for="agree_to_renewal_{{ plan|lower }}">
+                                I understand this subscription renews automatically until I cancel.
+                            </label>
+                        </div>
                         <button type="submit" class="btn btn-warning" {% if not stripe_configured %}disabled{% endif %}>
                             <i class="bi bi-star-fill me-1"></i> Subscribe
                         </button>
@@ -308,6 +346,14 @@
 
                     <form method="post" action="{% url 'billing:create_checkout_session' %}">
                         {% csrf_token %}
+                        {# Terms shown before any payment detail is collected; same sentence is stored with the consent. #}
+                        <p class="small text-muted mb-2">{{ renewal_terms }}</p>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" name="agree_to_renewal" id="agree_to_renewal_{{ plan|lower }}" required>
+                            <label class="form-check-label small" for="agree_to_renewal_{{ plan|lower }}">
+                                I understand this subscription renews automatically until I cancel.
+                            </label>
+                        </div>
                         <button type="submit" class="btn btn-primary" {% if not stripe_configured %}disabled{% endif %}>
                             <i class="bi bi-star-fill me-1"></i> Subscribe
                         </button>
