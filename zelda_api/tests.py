@@ -6,9 +6,6 @@ the wrong key (e.g. 'executive_summary' instead of 'error'), so the
 calling code's `if 'error' in result: raise` check never fired — the
 pipeline would silently write a "successful" memo/report whose content
 was literally the error message, and mark the document 'analyzed'.
-
-NOTE: zelda_api/test_views.py is NOT a test file despite its name — it's
-a real production view (SandboxScanView). Don't confuse it with this file.
 """
 import re
 from types import SimpleNamespace
