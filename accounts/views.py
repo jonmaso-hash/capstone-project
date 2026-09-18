@@ -1,5 +1,6 @@
 import json
 import logging
+from urllib.parse import quote
 from datetime import timedelta
 from django.apps import apps
 from django.conf import settings
@@ -19,7 +20,7 @@ from django.views.decorators.http import require_POST
 
 from . import rate_limits
 from .forms import SignupForm
-from .redirects import remember_destination, requested_destination
+from .redirects import remember_destination, requested_destination, safe_destination
 
 # Core Matchmaking Engine Models
 from matchmaking.services.ai_engine import calculate_zelda_advantage
@@ -182,6 +183,20 @@ def choose_role(request):
         )
         return redirect(ROLE_PROFILE_URLS[role])
     return render(request, "accounts/choose_role.html")
+
+
+def admin_login_redirect(request):
+    """
+    Django admin's own login form, replaced by the rate-limited one.
+
+    The 5-per-username / 30-per-IP lockout lives in login_view, and the admin
+    shipped a second sign-in form that it never covered -- so the superuser
+    could be guessed at without limit by anyone who found the admin path.
+    This route is registered ahead of admin.site.urls, so the admin's form is
+    never served; `next` carries through, and staff still land in the admin.
+    """
+    destination = safe_destination(request.GET.get('next'), request) or '/' + settings.ADMIN_URL_PATH
+    return redirect(f"{reverse('accounts:login')}?next={quote(destination)}")
 
 
 def login_view(request):

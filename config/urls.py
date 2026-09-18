@@ -7,7 +7,7 @@ from matchmaking.views import global_search, explore_feed
 from matchmaking.enterprise_views import EnterpriseFounderSearchView, EnterprisePlatformStatsView
 from django.views.generic import TemplateView
 from django.shortcuts import render
-from accounts.views import RateLimitedPasswordResetView
+from accounts.views import RateLimitedPasswordResetView, admin_login_redirect
 from growth.views import robots_txt
 from growth.sitemaps import InvestorDirectorySitemap, FounderDirectorySitemap, InsightReportSitemap
 
@@ -23,6 +23,9 @@ def memo_dashboard_view(request, startup_name):
     return render(request, 'search/memo_dashboard.html', {'startup_name': startup_name})
 
 urlpatterns = [
+    # Ahead of admin.site.urls on purpose: the admin's own login form is a
+    # second sign-in path the lockout never covered (accounts/rate_limits.py).
+    path(settings.ADMIN_URL_PATH + 'login/', admin_login_redirect, name='admin_login_redirect'),
     path(settings.ADMIN_URL_PATH, admin.site.urls),
     path('', include('pages.urls')),
     path('accounts/', include('accounts.urls', namespace='accounts')),
