@@ -66,6 +66,24 @@
     private and whether you accept direct messages.
 </p>
 
+<h2>Analytics</h2>
+<p>
+    We use <strong>Google Analytics</strong> to understand how people arrive at Interlink
+    Foundry and which public pages they use. It is <strong>off until you accept it</strong>,
+    it is not loaded at all on signed-in pages, and it never receives company names,
+    documents, deal information or anything from a report — only page addresses and
+    the fact that an action such as a sign-up happened.
+</p>
+<p>
+    You can change or withdraw your choice at any time:
+</p>
+<form method="post" action="{% url 'pages:analytics_consent' %}" class="mb-4 d-flex gap-2">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <button class="btn btn-sm btn-outline-dark" name="choice" value="accept" type="submit">Allow analytics</button>
+    <button class="btn btn-sm btn-outline-secondary" name="choice" value="decline" type="submit">Turn analytics off</button>
+</form>
+
 <h2>Staff access to your account</h2>
 <p>
     Our staff can open the site as your account to investigate a problem you have
@@ -85,7 +103,7 @@
 <h2>Service providers</h2>
 <p>
     We use third parties to run the service — currently Stripe (payments),
-    Anthropic (AI analysis), Stream (chat), Postmark (email delivery), Amazon Web
+    Anthropic (AI analysis), Google Analytics (website measurement), Stream (chat), Postmark (email delivery), Amazon Web
     Services (file storage) and Sentry (error monitoring) — including payment processing, messaging
     and chat infrastructure, email delivery, file storage, error monitoring, and AI
     analysis. They receive only what they need to perform their function. We do not

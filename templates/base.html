@@ -237,6 +237,8 @@
     {% if user.is_authenticated %}
         {% include "includes/zelda_ai_assistant_enhanced.html" %}
     {% endif %}
+    {% include 'includes/_analytics.html' %}
+
     {% block scripts %}{% endblock scripts %}
 
     {# ── Global Search Sidebar ── #}

@@ -44,6 +44,9 @@ env = environ.Env(
     STRIPE_VALUATION_REPORT_PRICE_ID=(str, ''),
     STRIPE_VALUATION_OVERAGE_PRICE_ID=(str, ''),
     STRIPE_VALUATION_FIRM_OVERAGE_PRICE_ID=(str, ''),
+    # Public by design (it ships in the page source); kept in the environment so
+    # development and staging never write into the production property.
+    GA_MEASUREMENT_ID=(str, ''),
     GOOGLE_OAUTH_CLIENT_ID=(str, ''),
     GOOGLE_OAUTH_SECRET=(str, ''),
     FACEBOOK_OAUTH_CLIENT_ID=(str, ''),
@@ -216,6 +219,7 @@ TEMPLATES = [
                 'matchmaking.context_processors.investor_status',
                 'notifications.context_processors.notifications',
                 'ops.context_processors.active_announcements',
+                'pages.analytics.analytics_context',
             ],
         },
     },
@@ -332,6 +336,8 @@ else:
 # profile. It did, but because login_view hardcoded that redirect, not because
 # of this setting. Both are fixed in PR #27; the shadowed line is gone.
 LOGOUT_REDIRECT_URL = "accounts:login"
+GA_MEASUREMENT_ID = env('GA_MEASUREMENT_ID')
+
 LOGIN_URL = "accounts:login"
 
 # Staff sessions expire after this many idle seconds (accounts/staff_sessions.py).
