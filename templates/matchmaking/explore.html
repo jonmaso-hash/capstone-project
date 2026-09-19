@@ -118,7 +118,7 @@
         }
     </style>
 </head>
-<body>
+<body data-ga-page="explore_view">
 
 <div class="ep-topbar">
     <a class="ep-brand" href="{% url 'pages:home' %}">Interlink Foundry <span class="ep-sub">· Explore</span></a>
@@ -153,7 +153,7 @@
                 <h1 class="ep-company">{{ c.company_name }}</h1>
                 {% if c.context %}<div class="ep-context">{{ c.context }}{% if c.owner_name %} · {{ c.owner_name }}{% endif %}</div>{% endif %}
                 {% if c.caption %}<p class="ep-caption">{{ c.caption }}</p>{% endif %}
-                <a class="ep-cta" href="{{ c.profile_url }}">View profile <i class="bi bi-arrow-right"></i></a>
+                <a class="ep-cta" href="{{ c.profile_url }}" data-ga-event="elevator_pitch_profile_click">View profile <i class="bi bi-arrow-right"></i></a>
             </div>
 
             <div class="ep-rail">
@@ -404,5 +404,6 @@
     if (slides.length) activate(slides[Math.max(0, slides.findIndex(s => s.dataset.videoId == START_ID))] || slides[0]);
 })();
 </script>
+{% include 'includes/_analytics.html' %}
 </body>
 </html>

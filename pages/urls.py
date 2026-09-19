@@ -12,5 +12,6 @@ urlpatterns = [
     path('waitlist/', views.waitlist_join, name='waitlist'),
     path('privacy/', views.privacy, name='privacy'),
     path('terms/', views.terms, name='terms'),
+    path('analytics-consent/', views.analytics_consent, name='analytics_consent'),
 
 ]

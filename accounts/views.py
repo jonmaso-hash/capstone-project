@@ -128,6 +128,11 @@ def signup_view(request):
                 recipient=user, notification_type='SYSTEM', message=PLATFORM_DISCLAIMER_MESSAGE,
             )
             log_page_event(request, 'signup_completed', role=role, user=user)
+            # The conversion happens during a redirect, so it is queued and
+            # reported on the next rendered page (pages/analytics.py). The
+            # event carries its name only — never who signed up.
+            from pages.analytics import queue_event
+            queue_event(request, 'signup_completed')
             messages.success(request, f"Welcome to Interlink Foundry, {user.username}!")
             return redirect(ROLE_PROFILE_URLS[role])
     else:

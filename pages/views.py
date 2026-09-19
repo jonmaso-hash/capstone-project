@@ -5,6 +5,8 @@ from django.shortcuts import render, redirect  # Added redirect here
 from django.core.mail import EmailMessage
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
+from django.urls import reverse
 from accounts.redirects import safe_destination
 from billing.pricing import subscription_prices
 from .forms import contactForm  # Added your form import back
@@ -211,3 +213,32 @@ def contact_view(request):
         form = contactForm()
 
     return render(request, 'pages/contact.html', {'form': form})
+
+
+@require_POST
+def analytics_consent(request):
+    """
+    Record an analytics choice, or change one already made.
+
+    A POST, not a link: it changes state, and it must be as easy to withdraw as
+    to give. The destination is validated like every other post-action redirect
+    here — a consent click is not a reason to trust a URL.
+    """
+    from accounts.redirects import safe_destination
+    from .analytics import CONSENT_COOKIE, CONSENT_MAX_AGE, DENIED, GRANTED
+
+    granted = request.POST.get('choice') == 'accept'
+    destination = safe_destination(request.POST.get('next'), request) or reverse('pages:home')
+    response = redirect(destination)
+    response.set_cookie(
+        CONSENT_COOKIE,
+        GRANTED if granted else DENIED,
+        max_age=CONSENT_MAX_AGE,
+        samesite='Lax',
+        secure=not settings.DEBUG,
+        httponly=False,
+    )
+    if not granted:
+        # Nothing of theirs should be left behind by a decline.
+        response.delete_cookie('_ga')
+    return response
