@@ -1,0 +1,73 @@
+{% extends 'ops/_ops_base.html' %}
+{% block ops_content %}
+<h4 class="fw-bold mb-1">Disputed findings</h4>
+<p class="text-muted small mb-4">
+    A company contesting a finding published about it. Resolving one decides what other
+    users see, so every outcome needs a note. There is no evidence-state field here on
+    purpose: choosing <strong>Correct</strong> re-runs verification, so the state still
+    comes from the pipeline rather than from this form.
+</p>
+
+{% for dispute in open_disputes %}
+<div class="card border-warning shadow-sm rounded-3 mb-3">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+                <span class="badge bg-warning text-dark">Under review</span>
+                <strong class="ms-2">{{ dispute.get_category_display }}</strong>
+                <span class="text-muted small">— {{ dispute.report.document.source_entity }}</span>
+            </div>
+            <span class="text-muted small">Raised {{ dispute.created_at|date:"M j, Y H:i" }} by {{ dispute.raised_by.username }}</span>
+        </div>
+
+        <div class="row g-3 small">
+            <div class="col-md-6">
+                <div class="text-muted text-uppercase small">What the report said when this was raised</div>
+                <div><strong>Evidence state:</strong> {{ dispute.original_evidence_state|default:"—" }}</div>
+                <div><strong>Observed:</strong> {{ dispute.original_observed_text|default:"—" }}</div>
+                <div class="text-muted mt-1">Report #{{ dispute.report_id }}, generated {{ dispute.report.created_at|date:"M j, Y" }}</div>
+            </div>
+            <div class="col-md-6">
+                <div class="text-muted text-uppercase small">What the company says</div>
+                <div>{{ dispute.reason }}</div>
+                {% if dispute.evidence_text %}<div class="mt-1"><strong>Supplied:</strong> {{ dispute.evidence_text }}</div>{% endif %}
+                {% if dispute.evidence_url %}<div class="mt-1"><a href="{{ dispute.evidence_url }}" rel="noopener noreferrer nofollow" target="_blank">Supplied link</a></div>{% endif %}
+            </div>
+        </div>
+
+        <form method="post" action="{% url 'ops:resolve_finding_dispute' dispute.id %}" class="mt-3">
+            {% csrf_token %}
+            <label class="form-label small fw-semibold" for="note_{{ dispute.id }}">Resolution note (required)</label>
+            <textarea class="form-control mb-2" id="note_{{ dispute.id }}" name="resolution_note" rows="2" required
+                      placeholder="What you reviewed, and what it showed."></textarea>
+            <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-sm btn-outline-secondary" name="action" value="uphold" type="submit">Uphold — the finding stands</button>
+                <button class="btn btn-sm btn-outline-primary" name="action" value="correct" type="submit">Correct — re-run verification</button>
+                <button class="btn btn-sm btn-outline-dark" name="action" value="close" type="submit">Close — insufficient basis</button>
+                <button class="btn btn-sm btn-outline-danger" name="action" value="withdraw" type="submit">Withdrawn</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% empty %}
+<p class="text-muted">No disputes are open.</p>
+{% endfor %}
+
+{% if resolved_disputes %}
+<h6 class="fw-bold mt-4 mb-2">Resolved</h6>
+<div class="list-group small">
+    {% for dispute in resolved_disputes %}
+    <div class="list-group-item">
+        <div class="d-flex justify-content-between">
+            <span><strong>{{ dispute.get_category_display }}</strong> — {{ dispute.report.document.source_entity }}</span>
+            <span class="text-muted">{{ dispute.get_status_display }}</span>
+        </div>
+        <div class="text-muted">
+            {{ dispute.resolution_note }}
+            — {{ dispute.resolved_by.username|default:"staff" }}, {{ dispute.resolved_at|date:"M j, Y H:i" }}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

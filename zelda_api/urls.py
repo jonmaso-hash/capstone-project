@@ -56,6 +56,7 @@ urlpatterns = [
     path('ui/search/', standard_views.zelda_search_view, name='zelda_search_ui'),
     path('documents/<int:document_id>/verification/', standard_views.truth_delta_ui_view, name='truth_delta_ui'),
     path('documents/<int:document_id>/truth-delta/claims/<str:category>/flag/', standard_views.flag_truth_delta_claim, name='truth_delta_claim_flag'),
+    path('documents/<int:document_id>/truth-delta/claims/<str:category>/dispute/', standard_views.dispute_finding, name='dispute_finding'),
     path('truth-delta/claims/<int:clarification_id>/respond/', standard_views.respond_to_clarification_request, name='truth_delta_claim_respond'),
     path('identity-check/founder/<int:profile_id>/', standard_views.identity_check_request, name='identity_check_request'),
     path('identity-check/<int:report_id>/status/', standard_views.identity_check_status, name='identity_check_status'),

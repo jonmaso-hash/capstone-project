@@ -10,6 +10,8 @@ urlpatterns = [
     path('verification/<str:role>/<int:profile_id>/action/', views.review_action, name='review_action'),
     path('verification/<str:role>/<int:profile_id>/flag/', views.flag_for_review, name='flag_for_review'),
 
+    path('disputes/', views.finding_disputes, name='finding_disputes'),
+    path('disputes/<int:dispute_id>/resolve/', views.resolve_finding_dispute, name='resolve_finding_dispute'),
     path('reports/', views.reported_users, name='reported_users'),
     path('reports/<int:report_id>/resolve/', views.resolve_report, name='resolve_report'),
     path('reports/submit/<str:username>/', views.submit_user_report, name='submit_user_report'),
