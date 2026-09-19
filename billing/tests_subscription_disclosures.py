@@ -60,7 +60,16 @@ class PlanPageStatesTheRenewalTermsTests(TestCase):
         self.assertRegex(html, r'[Cc]ancel any time')
 
 
+@override_settings(**FAKE_STRIPE_SETTINGS)
 class ConsentIsRequiredAndRecordedTests(TestCase):
+    """
+    Wrapped in FAKE_STRIPE_SETTINGS deliberately. Without it these tests inherit
+    whatever Stripe configuration the developer's .env happens to hold, and on a
+    machine with no price IDs -- CI, or a new checkout -- create_checkout_session
+    returns early and they fail for a reason that has nothing to do with consent.
+    That is exactly how they passed locally and errored on CI.
+    """
+
 
     def setUp(self):
         _mock_embedding_generation(self)
@@ -98,6 +107,32 @@ class ConsentIsRequiredAndRecordedTests(TestCase):
         self.client.post(reverse('billing:create_checkout_session'), {'agree_to_renewal': 'on'})
         kwargs = create.call_args.kwargs
         self.assertEqual(kwargs.get('billing_address_collection'), 'required')
+
+
+
+class CheckoutIsRefusedWhenStripeIsNotConfiguredTests(TestCase):
+    """
+    No price ID configured -- a fresh environment, or CI -- must refuse clearly
+    rather than half-starting a purchase. Untested until CI failed on it.
+    """
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.user = User.objects.create_user('sd_unconfigured', password=PASSWORD)
+        Application.objects.create(
+            user=self.user, company_name='SDCo3', founder_name='F', email='sd3@t.test',
+            description='d', sector='SaaS', stage='Seed',
+        )
+        self.client.force_login(self.user)
+
+    @override_settings(STRIPE_SECRET_KEY='', STRIPE_FOUNDER_PRICE_ID='')
+    @mock.patch('billing.views.stripe.checkout.Session.create')
+    def test_it_refuses_and_records_no_consent(self, create):
+        response = self.client.post(
+            reverse('billing:create_checkout_session'), {'agree_to_renewal': 'on'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        create.assert_not_called()
+        self.assertFalse(SubscriptionConsent.objects.exists())
 
 
 class CancellingEndsAtThePeriodEndTests(TestCase):
