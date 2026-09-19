@@ -689,6 +689,14 @@
             </div>
         </div>
 
+        {% if disputed_categories %}
+        <div class="alert alert-secondary border-0 rounded-3 small mb-3" role="status">
+            <strong>Disputed by the company — under review.</strong>
+            The company has contested {% for category in disputed_categories %}<em>{{ category }}</em>{% if not forloop.last %}, {% endif %}{% endfor %}
+            and supplied an explanation. Staff are reviewing it. The finding below is unchanged while that review is open — a dispute records that the company disagrees, not that the finding is wrong.
+        </div>
+        {% endif %}
+
         {% if report and category_states %}
         <div class="truth-delta-stats mb-0">
             <div class="stat-card">
