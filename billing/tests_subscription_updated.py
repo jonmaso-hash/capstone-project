@@ -139,7 +139,9 @@ class RenewalDateTests(_Updated):
         self._updated(items=items(stamp(RENEWS)))
         self.client.force_login(self.user)
         response = self.client.get(reverse('billing:billing_page'))
-        self.assertContains(response, 'Renews October 17, 2026')
+        # The line now carries the recurring terms with the date.
+        self.assertContains(response, 'October 17, 2026')
+        self.assertContains(response, 'Renews automatically')
 
 
 class StatusMappingTests(_Updated):
