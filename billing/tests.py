@@ -62,7 +62,8 @@ class CheckoutSessionTests(TestCase):
         mock_create.return_value = mock.Mock(url='https://checkout.stripe.com/fake-founder')
         self.client.force_login(self.founder_user)
 
-        response = self.client.post(reverse('billing:create_checkout_session'))
+        response = self.client.post(
+            reverse('billing:create_checkout_session'), {'agree_to_renewal': 'on'})
 
         self.assertRedirects(response, 'https://checkout.stripe.com/fake-founder', fetch_redirect_response=False)
         _, kwargs = mock_create.call_args
@@ -74,7 +75,8 @@ class CheckoutSessionTests(TestCase):
         mock_create.return_value = mock.Mock(url='https://checkout.stripe.com/fake-investor')
         self.client.force_login(self.investor_user)
 
-        response = self.client.post(reverse('billing:create_checkout_session'))
+        response = self.client.post(
+            reverse('billing:create_checkout_session'), {'agree_to_renewal': 'on'})
 
         self.assertRedirects(response, 'https://checkout.stripe.com/fake-investor', fetch_redirect_response=False)
         _, kwargs = mock_create.call_args
@@ -86,7 +88,8 @@ class CheckoutSessionTests(TestCase):
         mock_create.return_value = mock.Mock(url='https://checkout.stripe.com/fake-seller')
         self.client.force_login(self.seller_user)
 
-        response = self.client.post(reverse('billing:create_checkout_session'))
+        response = self.client.post(
+            reverse('billing:create_checkout_session'), {'agree_to_renewal': 'on'})
 
         self.assertRedirects(response, 'https://checkout.stripe.com/fake-seller', fetch_redirect_response=False)
         _, kwargs = mock_create.call_args
@@ -98,7 +101,8 @@ class CheckoutSessionTests(TestCase):
         mock_create.return_value = mock.Mock(url='https://checkout.stripe.com/fake-buyer')
         self.client.force_login(self.buyer_user)
 
-        response = self.client.post(reverse('billing:create_checkout_session'))
+        response = self.client.post(
+            reverse('billing:create_checkout_session'), {'agree_to_renewal': 'on'})
 
         self.assertRedirects(response, 'https://checkout.stripe.com/fake-buyer', fetch_redirect_response=False)
         _, kwargs = mock_create.call_args

@@ -12,8 +12,12 @@ from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
+from accounts import rate_limits
+
 from notifications.models import Notification
-from .models import Subscription
+from .disclosures import plan_price_usd, renewal_terms
+from .emails import send_subscription_cancelled_email, send_subscription_started_email
+from .models import Subscription, SubscriptionConsent
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +78,10 @@ def billing_page(request):
         **subscription_prices(),
         'subscription': subscription,
         'plan': plan,
+        # Stated once in billing/disclosures.py so the sentence on the card, the
+        # one beside the checkbox, and the one stored with the consent match.
+        'renewal_terms': renewal_terms(plan) if plan else '',
+        'current_plan_price': plan_price_usd(subscription.plan) if subscription else 0,
         'stripe_configured': bool(settings.STRIPE_SECRET_KEY and price_id),
         'free_ai_credits': FREE_CREDITS,
         'premium_ai_credits': PREMIUM_CREDITS,
@@ -102,6 +110,21 @@ def create_checkout_session(request):
         messages.error(request, "Payments aren't configured yet. Contact support.")
         return redirect('billing:billing_page')
 
+    # ROSCA and the strictest state rules want affirmative consent to the
+    # recurring terms, kept on the record. No tick, no checkout — and the row
+    # stores the exact sentence that was on screen, not a pointer to wording
+    # that may have changed since.
+    if not request.POST.get('agree_to_renewal'):
+        messages.error(request, "Please confirm you understand the subscription renews automatically.")
+        return redirect('billing:billing_page')
+
+    terms = renewal_terms(plan)
+    consent = SubscriptionConsent.objects.create(
+        user=request.user, plan=plan, price_usd=plan_price_usd(plan),
+        interval='year' if plan == 'INVESTOR_FIRM' else 'month',
+        terms_text=terms, ip_address=rate_limits.client_ip(request) or None,
+    )
+
     try:
         session = stripe.checkout.Session.create(
             mode='subscription',
@@ -109,16 +132,56 @@ def create_checkout_session(request):
             line_items=[{'price': price_id, 'quantity': 1}],
             customer_email=request.user.email or None,
             client_reference_id=str(request.user.id),
+            # The authoritative jurisdiction for the consumer rules, recorded on
+            # the consent row once Stripe returns it.
+            billing_address_collection='required',
             success_url=request.build_absolute_uri(reverse('billing:billing_page')) + '?checkout=success',
             cancel_url=request.build_absolute_uri(reverse('billing:billing_page')) + '?checkout=canceled',
-            metadata={'user_id': str(request.user.id), 'plan': plan},
+            metadata={'user_id': str(request.user.id), 'plan': plan, 'consent_id': str(consent.id)},
         )
     except stripe.error.StripeError as e:
         logger.error(f"Stripe checkout session creation failed: {str(e)}")
         messages.error(request, "Couldn't start checkout. Please try again.")
         return redirect('billing:billing_page')
 
+    SubscriptionConsent.objects.filter(pk=consent.pk).update(
+        stripe_checkout_session_id=str(getattr(session, 'id', '') or ''))
     return redirect(session.url)
+
+
+@login_required
+@require_POST
+def cancel_subscription(request):
+    """
+    Cancel here rather than sending the customer to Stripe's portal.
+
+    `cancel_at_period_end` because they paid for this period: access continues
+    until it ends, and nothing is taken away mid-period. Stripe stays the source
+    of truth — the local flag mirrors it so the billing page can say what ends
+    and when. If Stripe refuses, nothing local changes and no email goes out;
+    telling someone they cancelled when they did not is the one outcome worth
+    avoiding above all.
+    """
+    subscription = (
+        Subscription.objects.filter(user=request.user, status=Subscription.Status.ACTIVE)
+        .order_by('-created_at').first()
+    )
+    if not subscription:
+        messages.error(request, "You don't have an active subscription to cancel.")
+        return redirect('billing:billing_page')
+
+    try:
+        stripe.Subscription.modify(subscription.stripe_subscription_id, cancel_at_period_end=True)
+    except Exception:
+        logger.exception("Stripe refused to cancel subscription %s", subscription.stripe_subscription_id)
+        messages.error(request, "Couldn't cancel the subscription just now. Nothing has changed — please try again.")
+        return redirect('billing:billing_page')
+
+    subscription.cancel_at_period_end = True
+    subscription.save(update_fields=['cancel_at_period_end', 'updated_at'])
+    send_subscription_cancelled_email(subscription)
+    messages.success(request, "Your subscription is cancelled and will not renew. You keep access until the end of the period you have paid for.")
+    return redirect('billing:billing_page')
 
 
 @login_required
@@ -430,7 +493,7 @@ def stripe_webhook(request):
                 logger.error(f"Stripe webhook: no user found for id {user_id}")
                 return HttpResponse(status=200)
 
-            Subscription.objects.update_or_create(
+            subscription, created = Subscription.objects.update_or_create(
                 stripe_subscription_id=stripe_subscription_id,
                 defaults={
                     'user': user,
@@ -440,6 +503,23 @@ def stripe_webhook(request):
                 },
             )
             _apply_premium_flag(user, True)
+
+            # The billing address is the authoritative jurisdiction for the
+            # consumer-protection rules, and it only exists once the customer
+            # has entered it at Stripe. Recorded on the consent row so each
+            # subscription shows which state it was actually sold into.
+            address = (data_object.get('customer_details') or {}).get('address') or {}
+            consent_id = metadata.get('consent_id')
+            if consent_id:
+                SubscriptionConsent.objects.filter(pk=consent_id, user=user).update(
+                    billing_country=(address.get('country') or '')[:2],
+                    billing_state=(address.get('state') or '')[:64],
+                )
+
+            # Stripe sends a card receipt; it does not say what the plan
+            # includes, when it renews, or how to stop it.
+            if created:
+                send_subscription_started_email(subscription)
 
             if plan == Subscription.Plan.INVESTOR_FIRM:
                 from matchmaking.models import Firm, FirmMembership
