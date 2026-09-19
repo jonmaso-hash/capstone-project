@@ -890,6 +890,11 @@ def truth_delta_ui_view(request, document_id):
         }
 
     category_states = report.category_states() if report else {}
+    # Findings the company is currently contesting. Shown to every viewer, and
+    # deliberately separate from category_states: a dispute is a right of reply,
+    # not a re-verification, so the evidence state itself does not move.
+    from .truth_delta_models import open_dispute_categories
+    disputed_categories = sorted(open_dispute_categories(report))
     verified_count = sum(1 for s in category_states.values() if s == 'verified')
     unverified_count = sum(1 for s in category_states.values() if s == 'no_data')
     # "Claims Analyzed" counts the same categories as Verified/Unverified, not
@@ -924,6 +929,7 @@ def truth_delta_ui_view(request, document_id):
         'truth_delta_tier': tier,
         'is_owner': is_owner,
         'category_states': category_states,
+        'disputed_categories': disputed_categories,
         'verified_count': verified_count,
         'unverified_count': unverified_count,
         'work_done': work_done,
@@ -994,6 +1000,71 @@ def identity_check_status(request, report_id):
     return JsonResponse({
         'status': report.status,
         'checked_at': report.checked_at.isoformat() if report.checked_at else None,
+    })
+
+
+@login_required
+@require_POST
+def dispute_finding(request, document_id, category):
+    """
+    The subject of a report contesting a finding about itself.
+
+    The mirror image of flag_truth_delta_claim: that is an investor asking the
+    company to explain a claim; this is the company's right of reply to what
+    Interlink publishes about it. Only the document's owner may raise one — an
+    investor disputing someone else's finding would be an accusation, not a
+    correction.
+
+    The dispute copies what the report says right now, because re-running
+    verification changes the report and the record has to keep answering "what
+    did it say when this was raised?".
+    """
+    from .truth_delta_models import ClaimedDatapoint, FindingDispute, TruthDeltaReport
+    from .document_access import document_is_visible_to
+
+    document = get_object_or_404(DocumentSource, id=document_id)
+    if not document_is_visible_to(request.user, document):
+        raise Http404("Not found.")
+    if document.uploaded_by != request.user:
+        return JsonResponse({'error': 'Only the company this report is about can dispute a finding.'}, status=403)
+
+    if category not in dict(ClaimedDatapoint.CATEGORY_CHOICES):
+        return JsonResponse({'error': 'Unknown claim category.'}, status=400)
+
+    reason = (request.POST.get('reason') or '').strip()
+    if not reason:
+        return JsonResponse({'error': 'Please say what is wrong with this finding.'}, status=400)
+    if len(reason) > 2000:
+        return JsonResponse({'error': 'Reason is too long (max 2000 characters).'}, status=400)
+
+    report = TruthDeltaReport.objects.filter(document=document).order_by('-created_at').first()
+    if not report:
+        return JsonResponse({'error': 'No verification report exists for this document yet.'}, status=404)
+
+    if report.disputes.filter(category=category, status=FindingDispute.Status.OPEN).exists():
+        return JsonResponse({'error': 'This finding is already under review.'}, status=409)
+
+    observed = ''
+    for row in (report.details or {}).get('per_claim') or []:
+        if row.get('category') == category:
+            observed = row.get('observed') or ''
+            break
+
+    dispute = FindingDispute.objects.create(
+        report=report,
+        category=category,
+        original_evidence_state=report.category_states().get(category, ''),
+        original_observed_text=observed,
+        raised_by=request.user,
+        reason=reason,
+        evidence_text=(request.POST.get('evidence_text') or '').strip()[:2000],
+        evidence_url=(request.POST.get('evidence_url') or '').strip()[:200],
+    )
+    logger.info("Finding dispute %s raised on report %s (%s)", dispute.id, report.id, category)
+    return JsonResponse({
+        'status': 'under_review',
+        'dispute_id': dispute.id,
+        'message': 'Recorded. This finding now shows as disputed while staff review it.',
     })
 
 

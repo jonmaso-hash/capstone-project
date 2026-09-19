@@ -5,6 +5,7 @@ Compares claimed data vs observed data to detect discrepancies.
 This is the highest-value diligence feature.
 """
 from django.db import models
+from django.utils import timezone
 from django.conf import settings
 from .vector_models import DocumentSource
 
@@ -229,6 +230,94 @@ class ClarificationRequest(models.Model):
 
     def __str__(self):
         return f"{self.requested_by.username} asked about {self.category} on document {self.report.document_id} [{self.status}]"
+
+
+class FindingDispute(models.Model):
+    """
+    The subject of a report contesting a finding about itself.
+
+    Distinct from ClarificationRequest, which runs the other way: an investor
+    asking the company to explain a claim. This is the company's right of reply
+    to what Interlink publishes about it, and it has to be auditable afterwards
+    — a report that says a claim is unsupported, read by investors, is exactly
+    the kind of statement someone later argues about.
+
+    Append-only by design. `original_evidence_state` and `original_observed_text`
+    are copied in at creation, so re-running verification changes the report but
+    never changes what this record says the report said at the time. Resolution
+    adds fields; it never edits the ones above it.
+
+    An open dispute does **not** move the evidence state. "Disputed by the
+    company — under review" means the company contests it, not that the company
+    is right; only a staff resolution decides what the evidence supports.
+    """
+
+    class Status(models.TextChoices):
+        OPEN = 'OPEN', 'Under review'
+        UPHELD = 'UPHELD', 'Upheld — the finding stands on the evidence reviewed'
+        CORRECTED = 'CORRECTED', 'Corrected — the evidence warranted a change'
+        CLOSED_INSUFFICIENT = 'CLOSED_INSUFFICIENT', 'Closed — insufficient basis to change it'
+        WITHDRAWN = 'WITHDRAWN', 'Withdrawn'
+
+    report = models.ForeignKey(TruthDeltaReport, on_delete=models.CASCADE, related_name='disputes')
+    category = models.CharField(max_length=50, choices=ClaimedDatapoint.CATEGORY_CHOICES)
+
+    # What the report said when this was raised. Never updated.
+    original_evidence_state = models.CharField(max_length=20)
+    original_observed_text = models.TextField(blank=True)
+
+    raised_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='finding_disputes_raised',
+    )
+    reason = models.TextField(help_text="What the company says is wrong with the finding")
+    evidence_text = models.TextField(blank=True, help_text="Supporting detail the company supplied")
+    evidence_url = models.URLField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.OPEN)
+    resolution_note = models.TextField(blank=True, help_text="Why staff decided what they decided")
+    resolved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='finding_disputes_resolved',
+    )
+    resolved_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        app_label = 'zelda_api'
+        ordering = ['-created_at']
+        indexes = [models.Index(fields=['report', 'status'])]
+
+    def __str__(self):
+        return f"{self.get_status_display()} — {self.category} on report {self.report_id}"
+
+    @property
+    def is_open(self):
+        return self.status == self.Status.OPEN
+
+    def resolve(self, status, note, by):
+        """
+        Record a decision. The note is mandatory: a resolution without a stated
+        reason is indistinguishable from the finding quietly changing, which is
+        the thing this record exists to prevent.
+        """
+        if status == self.Status.OPEN:
+            raise ValueError("Resolving a dispute needs a decision, not OPEN.")
+        if not (note or '').strip():
+            raise ValueError("A resolution needs a note saying why.")
+        self.status = status
+        self.resolution_note = note.strip()
+        self.resolved_by = by
+        self.resolved_at = timezone.now()
+        self.save(update_fields=['status', 'resolution_note', 'resolved_by', 'resolved_at'])
+
+
+def open_dispute_categories(report):
+    """Categories the subject is currently contesting, for the report page."""
+    if not report:
+        return set()
+    return set(
+        report.disputes.filter(status=FindingDispute.Status.OPEN).values_list('category', flat=True)
+    )
 
 
 def can_request_clarification(request_user, document):

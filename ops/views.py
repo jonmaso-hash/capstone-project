@@ -987,3 +987,87 @@ def toggle_insight_report_published(request, report_id):
     report.save(update_fields=['is_published'])
     messages.success(request, f"{'Published' if report.is_published else 'Unpublished'} \"{report.title}\".")
     return redirect('ops:insight_reports')
+
+
+@login_required
+def finding_disputes(request):
+    """
+    Companies contesting findings published about them.
+
+    Resolution is a staff judgment with consequences for what other users see,
+    so it lives here with the rest of the reviewed actions rather than in the
+    Django admin, where a required note is a form detail rather than a rule.
+    """
+    guard = _staff_required(request)
+    if guard:
+        return guard
+
+    from zelda_api.truth_delta_models import FindingDispute
+
+    disputes = (
+        FindingDispute.objects
+        .select_related('report__document', 'raised_by', 'resolved_by')
+        .order_by('status', '-created_at')
+    )
+    return render(request, 'ops/finding_disputes.html', {
+        'open_disputes': [d for d in disputes if d.is_open],
+        'resolved_disputes': [d for d in disputes if not d.is_open][:50],
+        'ops_section': 'finding_disputes',
+    })
+
+
+@login_required
+@require_POST
+def resolve_finding_dispute(request, dispute_id):
+    """
+    Record a decision on a disputed finding.
+
+    There is deliberately no evidence-state field here. Staff decide whether the
+    finding stands or needs to change; when it needs to change, this hands off
+    to the same verification pipeline the Verify button uses. An evidence state
+    that a staff member could type would no longer come from a defined process,
+    which is the one property that makes the state worth anything.
+    """
+    guard = _staff_required(request)
+    if guard:
+        return guard
+
+    from zelda_api.truth_delta_models import FindingDispute
+
+    dispute = get_object_or_404(FindingDispute, id=dispute_id)
+    action = request.POST.get('action') or ''
+    note = (request.POST.get('resolution_note') or '').strip()
+
+    allowed = {
+        'uphold': FindingDispute.Status.UPHELD,
+        'correct': FindingDispute.Status.CORRECTED,
+        'close': FindingDispute.Status.CLOSED_INSUFFICIENT,
+        'withdraw': FindingDispute.Status.WITHDRAWN,
+    }
+    if action not in allowed:
+        messages.error(request, "Choose uphold, correct, close, or withdraw.")
+        return redirect('ops:finding_disputes')
+    if not note:
+        messages.error(request, "A resolution needs a note saying why.")
+        return redirect('ops:finding_disputes')
+    if not dispute.is_open:
+        messages.error(request, "That dispute has already been resolved.")
+        return redirect('ops:finding_disputes')
+
+    dispute.resolve(status=allowed[action], note=note, by=request.user)
+
+    if action == 'correct':
+        # The finding changes because the pipeline re-runs, not because anyone
+        # edited a state by hand.
+        from zelda_api.truth_delta_tasks import verify_document_truth_delta
+        verify_document_truth_delta.delay(dispute.report.document_id)
+        messages.success(request, "Recorded, and verification has been re-run for this document.")
+    else:
+        messages.success(request, f"Recorded: {dispute.get_status_display()}.")
+
+    from notifications.models import Notification
+    Notification.objects.create(
+        recipient=dispute.raised_by, sender=None, notification_type='TRUTH_DELTA_DISPUTE',
+        message=f"Your disputed finding ({dispute.category}) was reviewed: {dispute.get_status_display()}.",
+    )
+    return redirect('ops:finding_disputes')
