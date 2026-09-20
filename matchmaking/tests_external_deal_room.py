@@ -1,15 +1,15 @@
 """
-The external deal room: Interlink holds the link, never the documents.
+External hosting: for this room, Interlink holds the link rather than the files.
 
-A founder's cap table, financials and contracts are the most sensitive material
-on the platform. Today the only way to share them is to upload them here, which
-makes Interlink Foundry the custodian of exactly the documents it has the least
-business holding.
+Interlink Foundry does store business documents -- DataRoomDocument is the
+canonical stored-document record, and secure storage is a product in its own
+right. This module covers the other option, for founders who already keep their
+materials with DocSend, Box, Dropbox or a Workspace drive and would rather share
+from there than upload a second copy.
 
-This adds the other path: the founder keeps the documents in a data room they
-control -- DocSend, Box, a Workspace drive -- and Interlink stores the address
-and decides who may read it. Nothing is uploaded, proxied, mirrored or cached,
-so there is no copy here to leak.
+For that path the founder keeps the documents with their provider and Interlink
+stores only the address, deciding who may read it. Nothing is uploaded, proxied,
+mirrored or cached, so within this feature there is no copy here to leak.
 
 Two authorizations, deliberately not merged into one:
 
@@ -107,20 +107,28 @@ class AuthorizationMatrixTests(_Room):
         self.assertTrue(can_view_external_deal_room_url(self.owner_user, self.room))
         self.assertTrue(can_view_external_deal_room_url(self.staff_user, self.room))
 
-    def test_granted_investor_is_authorized(self):
+    def test_granted_investor_can_view_external_room(self):
         self.assertTrue(can_view_external_deal_room_url(self.granted_user, self.room))
 
-    def test_connected_but_ungranted_investor_is_not(self):
+    def test_revoked_investor_cannot_view_external_room(self):
+        """Revocation is a state on the surviving grant row, not a deletion, so
+        the predicate has to read revoked_at rather than mere existence."""
+        self.grant.revoked_at = timezone.now()
+        self.grant.save(update_fields=['revoked_at'])
+        self.assertFalse(can_view_external_deal_room_url(self.granted_user, self.room))
+
+    def test_connected_but_ungranted_investor_cannot_view_external_room(self):
         """The distinction this whole feature exists for: an ACCEPTED connection
         opens the room, it does not hand over the address."""
         from .models import can_view_data_room
         self.assertTrue(can_view_data_room(self.connected_user, self.founder))
         self.assertFalse(can_view_external_deal_room_url(self.connected_user, self.room))
 
-    def test_unconnected_investor_is_not(self):
+    def test_authenticated_stranger_cannot_view_external_room(self):
+        """Signed in, has an investor profile, no connection to this founder."""
         self.assertFalse(can_view_external_deal_room_url(self.stranger_user, self.room))
 
-    def test_user_with_no_investor_profile_is_not(self):
+    def test_user_with_no_investor_profile_cannot_view_external_room(self):
         plain = User.objects.create_user('edr_plain', password='x')
         self.assertFalse(can_view_external_deal_room_url(plain, self.room))
 
@@ -247,27 +255,32 @@ class PageExposureTests(_Room):
         self.assertNotContains(response, EXTERNAL_URL)
 
 
-class PublicSurfaceTests(_Room):
+class SurfaceExposureTests(_Room):
     """
-    Part 20, items 7-9: the address never reaches a public surface.
+    The address never reaches a surface its holder has not been granted.
 
-    Each test carries a positive control. "The link is not in this response" is
+    Not named "public": only /explore/ and sitemap.xml are reachable without
+    signing in. A founder profile requires authentication, so calling it a
+    "public profile" misdescribes the authorization model -- and an earlier
+    draft of this class made exactly that mistake, fetching the profile
+    anonymously, landing on the login form, and passing because a login page
+    naturally contains no deal-room link. Each test below therefore says which
+    of the two surfaces it is exercising.
+
+    Each also carries a positive control. "The link is not in this response" is
     trivially true of a 404, a login redirect or an empty page, so an absence
-    assertion on its own would keep passing even if the page stopped rendering
-    the founder entirely -- and would go on passing after someone added the
-    link to a page that no longer loads in tests. Every case below first proves
-    it fetched a real, populated page.
+    assertion alone would keep passing even if the page stopped rendering the
+    founder entirely. Every case first proves it fetched a real, populated page.
     """
 
     def _body(self, response):
         return response.content.decode(errors='ignore')
 
-    def test_url_absent_from_the_founder_profile_seen_by_a_stranger(self):
+    def test_authenticated_stranger_profile_view_carries_no_room_link(self):
         """
-        The profile page is behind login -- an anonymous fetch lands on the
-        login form, where asserting the link is absent proves nothing. The real
-        risk is a signed-in user with no connection to this founder, so that is
-        who fetches it here.
+        AUTHENTICATED surface. The profile page is behind login, so an
+        anonymous fetch lands on the login form and proves nothing. The real
+        risk is a signed-in user with no connection to this founder.
         """
         self.client.force_login(self.stranger_user)
         response = self.client.get(
@@ -278,19 +291,25 @@ class PublicSurfaceTests(_Room):
         self.assertIn('EDR Co', body)  # positive control: this founder's page really rendered
         self.assertNotIn(EXTERNAL_URL, body)
 
-    def test_url_absent_from_the_anonymous_explore_feed(self):
+    def test_anonymous_explore_is_public_and_carries_no_room_link(self):
+        """
+        ANONYMOUS surface. The 200 is the assertion, not just a guard: /explore/
+        really is reachable with no session, which is exactly why nothing
+        connection-gated may appear on it.
+        """
         response = self.client.get(reverse('explore'))
         self.assertEqual(response.status_code, 200)
         self.assertNotIn(EXTERNAL_URL, self._body(response))
 
-    def test_url_absent_from_the_sitemap(self):
+    def test_anonymous_sitemap_carries_no_room_link(self):
+        """ANONYMOUS surface, and the one actively submitted for indexing."""
         response = self.client.get(reverse('sitemap'))
         self.assertEqual(response.status_code, 200)
         body = self._body(response)
         self.assertIn('<urlset', body)  # positive control: a real sitemap, not an error page
         self.assertNotIn(EXTERNAL_URL, body)
 
-    def test_url_absent_from_global_search(self):
+    def test_authenticated_stranger_search_carries_no_room_link(self):
         self.client.force_login(self.stranger_user)
         response = self.client.get(reverse('matchmaking:global_search'), {'q': 'EDR'}, follow=True)
         self.assertEqual(response.status_code, 200)

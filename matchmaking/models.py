@@ -1162,10 +1162,18 @@ class DataRoomDocumentView(models.Model):
 class ExternalDealRoom(models.Model):
     """
     The address of a data room the founder controls somewhere else — and
-    nothing else. No file field, deliberately: the reason this model exists is
-    that Interlink should not be the custodian of cap tables, bank statements
-    or tax returns, and a model that cannot hold a document cannot be talked
-    into holding one later.
+    nothing else.
+
+    This is an interoperability option, not a replacement for Interlink-hosted
+    storage. Interlink does provide secure document storage (see
+    DataRoomDocument, the canonical stored-document record); this exists for
+    users who already keep their materials with DocSend, Box, Dropbox or a
+    Workspace drive and would rather share from there than upload a second copy.
+
+    No file field, deliberately — but the reason is scoping, not a claim that
+    Interlink should not hold documents. A model whose job is to hold a *link*
+    must not also hold bytes, because then "who may access this" has two
+    different answers depending on which half a caller happens to read.
 
     Interlink stores the link and decides who may read it. The provider stores
     the documents and decides who may open them. Those are two different
