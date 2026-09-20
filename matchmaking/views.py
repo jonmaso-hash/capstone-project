@@ -30,6 +30,7 @@ from .models import Follow
 # Internal Services & Models
 from matchmaking.models import Application, Connection, InvestorApplication, MatchFeedback, ConnectionRequest, log_investor_event, PitchDeckViewSession, PitchDeckSlideTime, FundraisingLead, FounderMilestone, log_training_example, MessageThread, PitchVideoView, ProfileView, log_page_event, log_search_event, SearchEvent
 from matchmaking.models import DataRoomDocument, DataRoomAccessRequest, DataRoomDocumentView, DataRoomInformationRequest, can_view_data_room, can_download_data_room_document, can_view_deal_workspace
+from matchmaking.models import ExternalDealRoom, ExternalDealRoomGrant, ExternalDealRoomEvent, can_view_external_deal_room_url
 from matchmaking.deal_activity import get_deal_activity_timeline
 from matchmaking.models import founder_description_meets_word_count
 from matchmaking.models import SellerApplication, BuyerApplication, AcquisitionConnection, DealFeedback, log_buyer_event, AcquisitionInterestEvent
@@ -38,7 +39,7 @@ from matchmaking.services.ai_engine import calculate_similarity, generate_profil
 from matchmaking.utils import clean_financial_input, passes_hard_filters
 from matchmaking.match_components import evaluate_deal_match, evaluate_venture_match
 from matchmaking.match_score import Band
-from .forms import DataRoomDocumentForm
+from .forms import DataRoomDocumentForm, ExternalDealRoomForm
 
 # Zelda AI alignment — import DiligenceEngine for vector scoring in memo views
 try:
@@ -2606,6 +2607,37 @@ def data_room(request, username):
                 for value, label in DataRoomDocument.CATEGORY_CHOICES if value != 'OTHER'
             ]
 
+    # External deal room. The room object is only ever put in the context when
+    # this viewer may see the address — a template that never receives it
+    # cannot leak it by accident, which is a stronger guarantee than a
+    # template-level {% if %} around a variable that is always present.
+    external_room = ExternalDealRoom.objects.filter(founder=founder_application).first()
+    external_room_visible = can_view_external_deal_room_url(request.user, external_room)
+    external_room_grants = []
+    if external_room and is_owner_or_staff:
+        external_room_grants = list(
+            external_room.grants.select_related('investor__user').order_by('-granted_at')
+        )
+    if external_room and external_room_visible and not is_owner_or_staff:
+        # Part 18: record that this person actually read the address. Owners
+        # and staff reading their own management view are not an access event.
+        ExternalDealRoomEvent.objects.create(
+            room=external_room, actor=request.user, action='VIEWED',
+        )
+
+    # Who the owner may still grant: accepted connections without a live grant.
+    grantable_investors = []
+    if external_room and request.user == founder_application.user:
+        granted_ids = set(
+            external_room.grants.filter(revoked_at__isnull=True).values_list('investor_id', flat=True)
+        )
+        grantable_investors = [
+            connection.investor for connection in Connection.objects.filter(
+                founder=founder_application, status='ACCEPTED'
+            ).select_related('investor__user')
+            if connection.investor_id not in granted_ids
+        ]
+
     return render(request, 'matchmaking/data_room.html', {
         'founder_application': founder_application,
         'documents': documents,
@@ -2615,6 +2647,11 @@ def data_room(request, username):
         'category_request_status': category_request_status,
         'category_choices': DataRoomDocument.CATEGORY_CHOICES,
         'visibility_choices': DataRoomDocument.VISIBILITY_CHOICES,
+        'external_room': external_room if external_room_visible else None,
+        'external_room_exists': external_room is not None,
+        'external_room_grants': external_room_grants,
+        'grantable_investors': grantable_investors,
+        'is_room_owner': request.user == founder_application.user,
     })
 
 
@@ -2875,6 +2912,145 @@ def record_profile_duration(request, username):
     except Exception as e:
         logger.warning(f"Profile duration ingestion failed: {str(e)}")
         return JsonResponse({'status': 'error'}, status=400)
+
+
+def _owned_external_deal_room(request, username):
+    """
+    The caller's own room, or 404.
+
+    Deliberately not PermissionDenied: a 403 confirms the room exists to
+    someone who has no business knowing that, and every other founder-scoped
+    surface here already answers as though a hidden thing simply isn't there
+    (see founder_is_visible_to). Staff are excluded on purpose — they can read
+    a room, but changing who may see a founder's diligence materials is the
+    founder's decision, not support's.
+    """
+    founder = get_object_or_404(Application, user__username=username)
+    if request.user != founder.user:
+        raise Http404("No such room")
+    return founder
+
+
+@login_required
+@require_POST
+def external_deal_room_save(request, username):
+    """Create or update the room. Logs that the link changed, never to what."""
+    founder = _owned_external_deal_room(request, username)
+    external_url = (request.POST.get('external_url') or '').strip()
+    if not external_url:
+        messages.error(request, 'An external data-room link is required.')
+        return redirect('matchmaking:data_room', username=username)
+
+    form = ExternalDealRoomForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, 'That does not look like a valid link. Use the full https:// address.')
+        return redirect('matchmaking:data_room', username=username)
+
+    room = ExternalDealRoom.objects.filter(founder=founder).first()
+    if room is None:
+        room = form.save(commit=False)
+        room.founder = founder
+        room.save()
+        ExternalDealRoomEvent.objects.create(room=room, actor=request.user, action='CREATED')
+        messages.success(request, 'External data room saved. No documents are stored on Interlink Foundry.')
+        return redirect('matchmaking:data_room', username=username)
+
+    url_changed = room.external_url != form.cleaned_data['external_url']
+    for field, value in form.cleaned_data.items():
+        setattr(room, field, value)
+    room.save()
+    ExternalDealRoomEvent.objects.create(
+        room=room, actor=request.user,
+        action='URL_CHANGED' if url_changed else 'DETAILS_CHANGED',
+    )
+    if url_changed:
+        messages.success(
+            request,
+            'Link updated. Anyone holding the old address can no longer reach it through '
+            'Interlink Foundry — but if your provider still honours the old link, revoke it there too.',
+        )
+    else:
+        messages.success(request, 'External data room updated.')
+    return redirect('matchmaking:data_room', username=username)
+
+
+@login_required
+@require_POST
+def external_deal_room_grant(request, username):
+    """
+    Hand the address to one investor.
+
+    Bounded by can_view_data_room: the founder cannot grant someone who could
+    not be in the room at all, so a stale investor_id from an old page cannot
+    widen access beyond the connection gate.
+    """
+    founder = _owned_external_deal_room(request, username)
+    room = get_object_or_404(ExternalDealRoom, founder=founder)
+    investor = get_object_or_404(InvestorApplication, id=request.POST.get('investor_id'))
+
+    if not can_view_data_room(investor.user, founder):
+        messages.error(request, 'You can only share the link with an investor you have accepted a connection with.')
+        return redirect('matchmaking:data_room', username=username)
+
+    grant, created = ExternalDealRoomGrant.objects.get_or_create(room=room, investor=investor)
+    if not created and grant.revoked_at is not None:
+        grant.revoked_at = None
+        grant.save(update_fields=['revoked_at'])
+        created = True
+    if created:
+        ExternalDealRoomEvent.objects.create(
+            room=room, actor=request.user, subject=investor.user, action='GRANTED',
+        )
+        messages.success(request, f'{investor.company_name} can now see the link.')
+    return redirect('matchmaking:data_room', username=username)
+
+
+@login_required
+@require_POST
+def external_deal_room_revoke(request, username):
+    """
+    Stop showing the address to one investor.
+
+    This is where the two authorizations come apart, so the message says so
+    plainly: Interlink can stop displaying a link, and that is all it can do.
+    """
+    founder = _owned_external_deal_room(request, username)
+    room = get_object_or_404(ExternalDealRoom, founder=founder)
+    grant = ExternalDealRoomGrant.objects.filter(
+        room=room, investor_id=request.POST.get('investor_id'), revoked_at__isnull=True
+    ).first()
+    if grant:
+        grant.revoked_at = timezone.now()
+        grant.save(update_fields=['revoked_at'])
+        ExternalDealRoomEvent.objects.create(
+            room=room, actor=request.user, subject=grant.investor.user, action='REVOKED',
+        )
+        messages.success(
+            request,
+            f'{grant.investor.company_name} can no longer see the link here. If your provider '
+            'granted them access directly, revoke it there as well — Interlink Foundry cannot.',
+        )
+    return redirect('matchmaking:data_room', username=username)
+
+
+@login_required
+@require_POST
+def external_deal_room_set_active(request, username):
+    """Take the room down for everyone but the owner, or put it back up."""
+    founder = _owned_external_deal_room(request, username)
+    room = get_object_or_404(ExternalDealRoom, founder=founder)
+    room.is_active = request.POST.get('is_active') == '1'
+    room.save(update_fields=['is_active'])
+    ExternalDealRoomEvent.objects.create(
+        room=room, actor=request.user,
+        action='REACTIVATED' if room.is_active else 'DEACTIVATED',
+    )
+    messages.success(
+        request,
+        'External data room is visible to investors you have granted.' if room.is_active
+        else 'External data room hidden. Access already granted by your provider is unaffected.',
+    )
+    return redirect('matchmaking:data_room', username=username)
 
 
 @login_required

@@ -83,6 +83,12 @@ urlpatterns = [
     path('data-room/<str:username>/request-information/', views.data_room_request_information, name='data_room_request_information'),
     path('data-room/information-request/<int:request_id>/decline/', views.data_room_decline_information_request, name='data_room_decline_information_request'),
 
+    # External deal room: Interlink stores the address, never the documents.
+    path('data-room/<str:username>/external/save/', views.external_deal_room_save, name='external_deal_room_save'),
+    path('data-room/<str:username>/external/grant/', views.external_deal_room_grant, name='external_deal_room_grant'),
+    path('data-room/<str:username>/external/revoke/', views.external_deal_room_revoke, name='external_deal_room_revoke'),
+    path('data-room/<str:username>/external/active/', views.external_deal_room_set_active, name='external_deal_room_set_active'),
+
     # =====================================================================
     # PITCH VIDEO & PROFILE DWELL-TIME TELEMETRY
     # =====================================================================

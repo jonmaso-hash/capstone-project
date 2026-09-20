@@ -1159,6 +1159,157 @@ class DataRoomDocumentView(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
+class ExternalDealRoom(models.Model):
+    """
+    The address of a data room the founder controls somewhere else — and
+    nothing else. No file field, deliberately: the reason this model exists is
+    that Interlink should not be the custodian of cap tables, bank statements
+    or tax returns, and a model that cannot hold a document cannot be talked
+    into holding one later.
+
+    Interlink stores the link and decides who may read it. The provider stores
+    the documents and decides who may open them. Those are two different
+    authorizations and the UI must never let them be confused — revoking here
+    hides the address, it does not reach into DocSend and cancel anything.
+
+    One room per founder: this is "where my diligence materials live", not a
+    per-counterparty folder. Who may see it is the grant table's job.
+    """
+    founder = models.OneToOneField(
+        'matchmaking.Application', on_delete=models.CASCADE, related_name='external_deal_room'
+    )
+    title = models.CharField(max_length=255)
+    provider = models.CharField(
+        max_length=100, blank=True,
+        help_text="Who hosts it — DocSend, Box, Dropbox, Google Drive. Free text: "
+                  "naming providers in code would read as an endorsement of them.",
+    )
+    external_url = models.URLField(max_length=1000)
+    description = models.TextField(blank=True)
+    access_instructions = models.TextField(
+        blank=True,
+        help_text="How a granted investor gets in — e.g. 'request access with the "
+                  "email on your Interlink profile'. Never put a password here.",
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Unset to take the room down for everyone but the owner, without "
+                  "deleting the grant history.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_verified_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="When the OWNER last confirmed the link still works. Interlink never "
+                  "fetches the URL to check — that would be a request to the provider on "
+                  "the founder's behalf, and it would show up in their access logs as us.",
+    )
+
+    def __str__(self):
+        return f"{self.title} — {self.founder.company_name}"
+
+
+class ExternalDealRoomGrant(models.Model):
+    """
+    One investor's permission to see the address. Revoking sets revoked_at
+    rather than deleting the row, because "who has ever held this link" is
+    exactly the question a founder will need answered later, and a delete
+    destroys the only record of it.
+
+    Being connected is not a grant. An ACCEPTED connection lets an investor
+    into the room to see what categories exist; the address is a credential and
+    is handed over one investor at a time.
+    """
+    room = models.ForeignKey(ExternalDealRoom, on_delete=models.CASCADE, related_name='grants')
+    investor = models.ForeignKey(
+        'matchmaking.InvestorApplication', on_delete=models.CASCADE, related_name='external_deal_room_grants'
+    )
+    granted_at = models.DateTimeField(auto_now_add=True)
+    revoked_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ('room', 'investor')
+
+    @property
+    def is_active(self):
+        return self.revoked_at is None
+
+    def __str__(self):
+        state = 'active' if self.is_active else 'revoked'
+        return f"{self.investor.company_name} → {self.room.title} [{state}]"
+
+
+class ExternalDealRoomEvent(models.Model):
+    """
+    Append-only trail of everything that changed who could read the address,
+    plus every time someone did.
+
+    It deliberately stores no URL. An audit log that keeps old links is a
+    second copy of the credential, sitting in a table nobody thinks of as
+    sensitive — so rotating a leaked link would leave the leaked value behind
+    in the record of the rotation. The event says the link changed; what it
+    changed from is gone.
+    """
+    ACTION_CHOICES = [
+        ('CREATED', 'Room created'),
+        ('URL_CHANGED', 'Link changed'),
+        ('DETAILS_CHANGED', 'Details changed'),
+        ('GRANTED', 'Access granted'),
+        ('REVOKED', 'Access revoked'),
+        ('DEACTIVATED', 'Room deactivated'),
+        ('REACTIVATED', 'Room reactivated'),
+        ('VIEWED', 'Link viewed'),
+    ]
+
+    room = models.ForeignKey(ExternalDealRoom, on_delete=models.CASCADE, related_name='events')
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
+        related_name='external_deal_room_actions',
+        help_text="Who did it.",
+    )
+    subject = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='external_deal_room_events_about',
+        help_text="Who it was done to, for grant and revoke.",
+    )
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.get_action_display()} — {self.room_id} @ {self.created_at:%Y-%m-%d}"
+
+
+def can_view_external_deal_room_url(request_user, room):
+    """
+    Whether this person may see the external room's address.
+
+    Strictly narrower than can_view_data_room, which it defers to rather than
+    re-deriving: the room gate decides who may be present at all, and this adds
+    the founder's explicit, per-investor decision on top. A connected investor
+    who has not been granted sees the room with the link withheld, which is the
+    entire point of the feature.
+
+    The owner and staff keep seeing it when the room is deactivated — an owner
+    who cannot see a broken room cannot fix it.
+    """
+    if not room or not request_user or not request_user.is_authenticated:
+        return False
+    founder = room.founder
+    if request_user == founder.user or request_user.is_staff:
+        return True
+    if not room.is_active:
+        return False
+    if not can_view_data_room(request_user, founder):
+        return False
+    investor_profile = getattr(request_user, 'match_investor_profile', None)
+    if not investor_profile:
+        return False
+    return room.grants.filter(investor=investor_profile, revoked_at__isnull=True).exists()
+
+
 def founder_is_visible_to(request_user, founder_application):
     """
     Whether a page reached by company name or username may show this founder.
