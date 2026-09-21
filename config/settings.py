@@ -29,6 +29,9 @@ env = environ.Env(
     # set this (e.g. via docker-compose) to turn on the Redis-backed cache.
     CACHE_URL=(str, ''),
     AWS_STORAGE_BUCKET_NAME=(str, ''),
+    # Acknowledges that uploads here are disposable, for an environment that
+    # has no object storage yet. See config/storage_guard.py.
+    ALLOW_EPHEMERAL_MEDIA=(bool, False),
     AWS_ACCESS_KEY_ID=(str, ''),
     AWS_SECRET_ACCESS_KEY=(str, ''),
     AWS_S3_REGION_NAME=(str, 'us-east-1'),
@@ -300,10 +303,22 @@ AWS_S3_REGION_NAME = env('AWS_S3_REGION_NAME')
 # videos, CIMs, Zelda documents) go to S3 instead — nothing else in the
 # app needs to change since all uploads already go through Django's
 # default_storage / FileField API.
+# A container's disk accepts writes and then throws them away on the next
+# deploy, so production without a bucket silently loses uploads. See
+# config/storage_guard.py; ALLOW_EPHEMERAL_MEDIA acknowledges it deliberately.
+from config.storage_guard import refuse_ephemeral_media_in_production
+refuse_ephemeral_media_in_production(
+    DEBUG, AWS_STORAGE_BUCKET_NAME, env('ALLOW_EPHEMERAL_MEDIA')
+)
+
 if AWS_STORAGE_BUCKET_NAME:
     AWS_S3_FILE_OVERWRITE = False
     AWS_DEFAULT_ACL = None
     AWS_QUERYSTRING_AUTH = True
+
+    # Encryption at rest that a caller cannot forget: every object this app
+    # writes carries it, rather than relying on each upload site to ask.
+    AWS_S3_OBJECT_PARAMETERS = {'ServerSideEncryption': 'AES256'}
 
     STORAGES = {
         "default": {

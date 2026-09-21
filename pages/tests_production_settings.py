@@ -42,6 +42,7 @@ _PROBE = (
     "'root_handlers': s.LOGGING['root']['handlers'], "
     "'django_handlers': s.LOGGING['loggers']['django']['handlers'], "
     "'handler_names': sorted(s.LOGGING['handlers']), "
+    "'object_params': getattr(s, 'AWS_S3_OBJECT_PARAMETERS', None), "
     "}))"
 )
 
@@ -58,6 +59,12 @@ def _settings_with(**env):
         'CSRF_TRUSTED_ORIGINS': '',
         'LOG_TO_FILE': '',
         'SENTRY_DSN': '',
+        # These probes load production-shaped settings with no S3 bucket, which
+        # config/storage_guard.py refuses by default. They are testing static
+        # files and logging, not storage, so they acknowledge the ephemeral
+        # media explicitly rather than each one tripping the guard.
+        # MediaStorageGuardTests overrides this to test the guard itself.
+        'ALLOW_EPHEMERAL_MEDIA': '1',
     })
     child_env = {k: v for k, v in child_env.items() if v != ''} | {k: v for k, v in env.items()}
     result = subprocess.run(
@@ -68,6 +75,74 @@ def _settings_with(**env):
     if line is None:
         raise AssertionError(f'settings failed to load:\n{result.stderr[-2000:]}')
     return json.loads(line[len('SETTINGS_JSON='):])
+
+
+def _settings_refused(**env):
+    """Load settings expecting ImproperlyConfigured; return the message."""
+    child_env = dict(os.environ)
+    child_env.update({
+        'DJANGO_SETTINGS_MODULE': 'config.settings',
+        'SECRET_KEY': 'test-only-production-settings-probe',
+        'ALLOWED_HOSTS': 'localhost',
+        'STRIPE_SECRET_KEY': '',
+        'AWS_STORAGE_BUCKET_NAME': '',
+        'CSRF_TRUSTED_ORIGINS': '',
+        'LOG_TO_FILE': '',
+        'SENTRY_DSN': '',
+        'ALLOW_EPHEMERAL_MEDIA': '',
+    })
+    child_env = {k: v for k, v in child_env.items() if v != ''} | {k: v for k, v in env.items()}
+    result = subprocess.run(
+        [sys.executable, '-c', _PROBE], cwd=ROOT, env=child_env,
+        capture_output=True, text=True, timeout=120,
+    )
+    if any(l.startswith('SETTINGS_JSON=') for l in result.stdout.splitlines()):
+        raise AssertionError('settings loaded, but should have been refused')
+    return result.stderr
+
+
+class MediaStorageGuardTests(SimpleTestCase):
+    """
+    Production must not silently store uploads on a container's local disk.
+
+    Found on the first Render deploy: no S3 bucket was configured, so every
+    FileField wrote to the container filesystem. A founder uploading a cap table
+    got a success message, and the file was destroyed by the next deploy. The
+    upload path was working correctly; the storage underneath it was disposable,
+    and nothing anywhere said so.
+
+    The guard makes that combination deliberate instead of accidental. It is not
+    absolute: bringing up a new environment (proving the database, running
+    migrations) legitimately happens before object storage exists, so an
+    explicit ALLOW_EPHEMERAL_MEDIA acknowledges the trade rather than pretending
+    it is safe. What it forbids is arriving there by omission.
+    """
+
+    def test_production_without_a_bucket_refuses_to_start(self):
+        message = _settings_refused(DEBUG='False')
+        self.assertIn('ALLOW_EPHEMERAL_MEDIA', message)
+        self.assertIn('AWS_STORAGE_BUCKET_NAME', message)
+
+    def test_production_with_a_bucket_starts(self):
+        loaded = _settings_with(DEBUG='False', AWS_STORAGE_BUCKET_NAME='interlink-uploads',
+                                ALLOW_EPHEMERAL_MEDIA='')
+        self.assertEqual(loaded['default'], 'storages.backends.s3.S3Storage')
+
+    def test_development_without_a_bucket_is_unaffected(self):
+        """Local dev and CI have no S3 and must never need it."""
+        loaded = _settings_with(DEBUG='True', ALLOW_EPHEMERAL_MEDIA='')
+        self.assertEqual(loaded['default'], 'django.core.files.storage.FileSystemStorage')
+
+    def test_an_explicit_acknowledgement_allows_bring_up(self):
+        loaded = _settings_with(DEBUG='False', ALLOW_EPHEMERAL_MEDIA='1')
+        self.assertEqual(loaded['default'], 'django.core.files.storage.FileSystemStorage')
+
+    def test_uploads_are_encrypted_at_rest(self):
+        loaded = _settings_with(DEBUG='False', AWS_STORAGE_BUCKET_NAME='interlink-uploads')
+        self.assertEqual((loaded['object_params'] or {}).get('ServerSideEncryption'), 'AES256')
+
+    def test_no_bucket_means_no_s3_object_parameters(self):
+        self.assertIsNone(_settings_with(DEBUG='True')['object_params'])
 
 
 class StaticStorageTests(SimpleTestCase):
