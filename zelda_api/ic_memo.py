@@ -243,7 +243,7 @@ def zelda_report_observations(memo, pitch_deck_doc):
     return {'noticed': noticed[:3], 'worth_investigating': deduped[:4]}
 
 
-def build_ic_memo_context(founder_application, tier='full'):
+def build_ic_memo_context(founder_application, tier='full', viewer=None):
     """
     Assembles everything an IC memo needs for one founder. Every piece is
     optional and independently None-able — a founder with no valuation
@@ -341,12 +341,30 @@ def build_ic_memo_context(founder_application, tier='full'):
         # Evidence level, Information Readiness and Truth Delta coverage it
         # read as a fourth, competing verdict. The field stays on the model
         # and in the matching pipeline untouched — this is presentation only.
+        # Per-field disclosure the founder controls (matchmaking/models.py).
+        # can_view_ic_memo already limits this memo to the owner, staff, or an
+        # investor with an ACCEPTED connection, so a CONNECTED field belongs
+        # here -- the audience is exactly who the founder authorised. What must
+        # not survive is a PRIVATE one.
+        #
+        # A withheld figure becomes None rather than being removed: the
+        # formatters read these keys directly and already print "not disclosed"
+        # for a falsy value, which is the right thing to say.
+        from matchmaking.models import can_view_profile_field, profile_field_level, FIELD_PRIVATE
+
+        def _disclosed(field, value):
+            if viewer is not None:
+                return value if can_view_profile_field(viewer, founder_application, field) else None
+            # No viewer supplied: strip only what nobody in this audience may
+            # see, rather than assuming the most permissive reader.
+            return None if profile_field_level(founder_application, field) == FIELD_PRIVATE else value
+
         financials = {
-            'raising_amount': founder_application.raising_amount,
-            'current_revenue': founder_application.current_revenue,
-            'monthly_burn_rate': founder_application.monthly_burn_rate,
-            'team_size': founder_application.team_size,
-            'years_in_business': founder_application.years_in_business,
+            'raising_amount': _disclosed('raising_amount', founder_application.raising_amount),
+            'current_revenue': _disclosed('current_revenue', founder_application.current_revenue),
+            'monthly_burn_rate': _disclosed('monthly_burn_rate', founder_application.monthly_burn_rate),
+            'team_size': _disclosed('team_size', founder_application.team_size),
+            'years_in_business': _disclosed('years_in_business', founder_application.years_in_business),
             'runway_months': founder_application.runway_months,
         }
 

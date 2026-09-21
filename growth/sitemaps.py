@@ -2,7 +2,9 @@ from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
 from django.utils.text import slugify
 
-from matchmaking.models import Application, InvestorApplication
+from matchmaking.models import (
+    Application, InvestorApplication, exclude_profiles_hiding_directory_attributes,
+)
 from .models import PlatformInsightReport
 from .views import _public_queryset
 
@@ -17,8 +19,14 @@ def _distinct_combos(model, fields):
     this just keeps sitemap generation simple rather than computing a full
     cross-product of every individual industry token.
     """
-    combos = _public_queryset(model).exclude(**{f'{f}__isnull': True for f in fields}) \
-        .values_list(*fields).distinct()
+    queryset = _public_queryset(model).exclude(**{f'{f}__isnull': True for f in fields})
+    if model is Application:
+        # Founders who keep sector, stage or geography below PUBLIC are absent
+        # from the directory page, so they must not generate a sitemap entry
+        # either -- submitting a URL for a page they do not appear on would
+        # advertise that combination on their behalf.
+        queryset = exclude_profiles_hiding_directory_attributes(queryset)
+    combos = queryset.values_list(*fields).distinct()
     seen_slugs = set()
     result = []
     for combo in combos:

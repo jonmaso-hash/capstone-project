@@ -2,6 +2,7 @@ import re
 import uuid
 from django.db import models
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -166,6 +167,16 @@ class Application(models.Model):
     
     # Metadata
     is_private = models.BooleanField(default=False)
+    # Per-field disclosure, {field_name: level}. Absent keys fall back to the
+    # declared default in NEW_PROFILE_FIELD_VISIBILITY -- never to PUBLIC. See
+    # can_view_profile_field, the single authority every surface asks.
+    field_visibility = models.JSONField(default=dict, blank=True)
+    field_visibility_defaults_applied_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="When the one-time backfill wrote this profile's starting visibility. "
+                  "Distinguishes 'migrated, then the founder cleared it' from 'never migrated', "
+                  "which an empty field_visibility alone cannot.",
+    )
     archived_at = models.DateTimeField(
         null=True, blank=True,
         help_text="Set when the founder archives this profile — hidden from discovery like is_private, "
@@ -215,7 +226,12 @@ class Application(models.Model):
     runway_months = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True, default=None)
 
     def save(self, *args, **kwargs):
-        # Optional: Auto-run calculation on save if you want it to be instant
+        # Validated here rather than in clean(): full_clean() is not called on
+        # save, so a view assigning field_visibility directly would otherwise
+        # persist an unknown key or a bogus level unchecked. A stored value the
+        # authority does not recognise falls back to the field's default, so
+        # this is about rejecting mistakes loudly rather than about safety.
+        validate_profile_field_visibility(self.field_visibility)
         super().save(*args, **kwargs)
 
     @property
@@ -1316,6 +1332,280 @@ def can_view_external_deal_room_url(request_user, room):
     if not investor_profile:
         return False
     return room.grants.filter(investor=investor_profile, revoked_at__isnull=True).exists()
+
+
+# ---------------------------------------------------------------------------
+# Profile field visibility
+# ---------------------------------------------------------------------------
+"""
+What a founder discloses, to whom, field by field.
+
+Three concepts that must not be conflated, because conflating the first and
+third is what created the defect this replaces:
+
+    internal data       values authorized Interlink systems may compute on
+                        (matching, ranking, Zelda). Never restricted here.
+    disclosure          whether a person may SEE a value.
+    requester querying  whether a person may use a value as a FILTER dimension.
+
+Hiding a value from display while leaving it filterable does not hide it: an
+unconnected viewer could binary-search `?capital=` against
+_filtered_public_applications and recover a hidden raise amount to the dollar.
+So disclosure and querying are enforced together, by this one authority.
+
+Three levels, deliberately not a role test. "Any investor account" is not
+authorization -- the founder authorizes a *person*, by accepting a connection.
+
+    PUBLIC      anyone, including anonymous, if the profile is discoverable
+    CONNECTED   a party with an ACCEPTED connection to this founder
+    PRIVATE     the owner and staff only
+
+Named for profiles rather than founders: SellerApplication and the other role
+models are expected to adopt this unchanged.
+"""
+
+FIELD_PUBLIC = 'PUBLIC'
+FIELD_CONNECTED = 'CONNECTED'
+FIELD_PRIVATE = 'PRIVATE'
+PROFILE_FIELD_VISIBILITY_LEVELS = (FIELD_PUBLIC, FIELD_CONNECTED, FIELD_PRIVATE)
+
+PROFILE_FIELD_VISIBILITY_CHOICES = [
+    (FIELD_PUBLIC, 'Anyone — shown on your public profile'),
+    (FIELD_CONNECTED, 'Only investors you have accepted'),
+    (FIELD_PRIVATE, 'Only you'),
+]
+
+# What a profile created from now on starts with.
+NEW_PROFILE_FIELD_VISIBILITY = {
+    # Descriptive. Public today; unchanged.
+    'description': FIELD_PUBLIC,
+    'geography': FIELD_PUBLIC,
+    'sector': FIELD_PUBLIC,
+    'stage': FIELD_PUBLIC,
+    'team_size': FIELD_PUBLIC,
+    'years_in_business': FIELD_PUBLIC,
+    'company_website': FIELD_PUBLIC,
+    'linkedin_url': FIELD_PUBLIC,
+    'extra_info': FIELD_PUBLIC,
+    # Financial. Visible to any signed-in account today, which is the defect.
+    'raising_amount': FIELD_CONNECTED,
+    'prior_amount_raised': FIELD_CONNECTED,
+    'current_revenue': FIELD_CONNECTED,
+    'monthly_burn_rate': FIELD_CONNECTED,
+    'reason_for_capital': FIELD_CONNECTED,
+    # Who the founder is. Already partly withheld today -- the profile renders
+    # it inside the show_contact_info block -- so CONNECTED matches where it
+    # already sits rather than moving it.
+    'founder_name': FIELD_CONNECTED,
+    # Controllable, but defaulting to PUBLIC so nothing changes for anyone who
+    # does not touch it. Founders generally want their deck read and nobody
+    # reported a problem with today's access; this PR fixes founder-controlled
+    # disclosure rather than tightening unrelated access as a side effect.
+    'pitch_deck': FIELD_PUBLIC,
+}
+
+# company_name is deliberately absent: it is the anchor, and a profile with no
+# name is not a profile.
+
+# pitch_deck already has its own gate, _can_view_pitch_deck, which is looser
+# than CONNECTED. Two authorities over one field is exactly the drift this
+# module exists to prevent, so the rule is one-directional: the deck view must
+# satisfy BOTH. The founder's level can only ever tighten what the existing
+# gate allows, never loosen it, and PUBLIC here means "no restriction beyond
+# the gate that was already there".
+
+# What existing profiles were moved to, once, by migration. Identical today and
+# kept separate on purpose: "what a new profile starts with" and "what we did
+# to profiles that predate the feature" are different questions, and the day
+# they diverge, one constant changing must not silently change the other.
+MIGRATION_FIELD_VISIBILITY = dict(NEW_PROFILE_FIELD_VISIBILITY)
+
+# Attributes the public SEO directory encodes in its own URL and heading
+# (/startups/<sector>/<stage>/<location>/). Listing a founder there while any
+# of these is below PUBLIC would disclose it regardless of the template.
+DIRECTORY_DISCLOSING_FIELDS = ('sector', 'stage', 'geography')
+
+
+def _level_from_stored(stored, field_name):
+    """
+    Resolve one field's level from a raw stored dict.
+
+    An absent, malformed or unrecognised value falls back to the field's
+    default -- never to PUBLIC. That is the whole protection against a future
+    contributor reading "no entry" as "no restriction": for every financial
+    field the default is CONNECTED, so an empty {} is already closed.
+
+    Takes the raw dict rather than a profile so the object path and the
+    values_list path in restrict_queryset_for_field_filter resolve levels
+    through identical code and cannot drift apart.
+    """
+    if field_name not in NEW_PROFILE_FIELD_VISIBILITY:
+        return FIELD_PUBLIC
+    value = stored.get(field_name) if isinstance(stored, dict) else None
+    if value in PROFILE_FIELD_VISIBILITY_LEVELS:
+        return value
+    return NEW_PROFILE_FIELD_VISIBILITY[field_name]
+
+
+def profile_field_level(profile, field_name):
+    """The stored level for one field on a loaded profile, or its default."""
+    return _level_from_stored(getattr(profile, 'field_visibility', None) or {}, field_name)
+
+
+def _viewer_is_connected_to(viewer_user, profile):
+    """An ACCEPTED connection — the same authority that gates the data room."""
+    investor_profile = getattr(viewer_user, 'match_investor_profile', None)
+    if not investor_profile:
+        return False
+    return Connection.objects.filter(
+        investor=investor_profile, founder=profile, status='ACCEPTED'
+    ).exists()
+
+
+def can_view_profile_field(viewer_user, profile, field_name):
+    """
+    Single authority for whether this viewer may see this field.
+
+    Every surface asks this -- profile page, public directory, Explore, search,
+    CSV export, similar-startups, digest, the staff-forward email, the IC memo
+    and the Enterprise API. Same reasoning as can_view_pitch_video: one
+    authority means a founder's change takes effect everywhere at once, rather
+    than everywhere someone remembered.
+
+    A field with no whitelist entry is uncontrolled and always visible;
+    company_name is the anchor and is deliberately not listed.
+    """
+    if field_name not in NEW_PROFILE_FIELD_VISIBILITY:
+        return True
+    if viewer_user is not None and getattr(viewer_user, 'is_authenticated', False):
+        if viewer_user == profile.user or viewer_user.is_staff:
+            return True
+    level = profile_field_level(profile, field_name)
+    if level == FIELD_PUBLIC:
+        return True
+    if level == FIELD_PRIVATE:
+        return False
+    if viewer_user is None or not getattr(viewer_user, 'is_authenticated', False):
+        return False
+    return _viewer_is_connected_to(viewer_user, profile)
+
+
+def visible_profile_fields(viewer_user, profile, field_names):
+    """
+    {field: value} for those this viewer may see, omitting the rest.
+
+    Serialisers use this rather than reading attributes directly, so a hidden
+    field is *absent* from JSON and CSV rather than present as null -- null
+    still discloses that the field exists and was withheld, and invites a
+    caller to treat it as "no value".
+    """
+    return {
+        name: getattr(profile, name)
+        for name in field_names
+        if can_view_profile_field(viewer_user, profile, name)
+    }
+
+
+def exclude_profiles_hiding_directory_attributes(queryset):
+    """
+    Drop founders who have not made every attribute the public directory
+    encodes PUBLIC.
+
+    /startups/<sector>/<stage>/<location>/ states those three in its own URL and
+    heading. Listing a founder there while they keep sector, stage or geography
+    below PUBLIC would disclose it no matter what the template prints -- the
+    page's existence is the disclosure.
+
+    Applied for every viewer, not only anonymous ones. The page is indexed and
+    shareable, so what a signed-in visitor sees must match the canonical
+    version a crawler stored; a listing that varies by viewer is a listing
+    whose URL still tells the truth about somebody.
+
+    Costs one extra query, on ids and stored levels only.
+    """
+    allowed = [
+        pk for pk, stored in queryset.values_list('pk', 'field_visibility')
+        if all(_level_from_stored(stored, field) == FIELD_PUBLIC
+               for field in DIRECTORY_DISCLOSING_FIELDS)
+    ]
+    return queryset.filter(pk__in=allowed)
+
+
+def restrict_queryset_for_field_filter(queryset, viewer_user, field_name):
+    """
+    Narrow a queryset before it is filtered on a controlled field.
+
+    SECURITY BOUNDARY. A filter whose result tells the requester whether a
+    record matched is disclosure, whatever the template later renders. Without
+    this, `?capital=` over _filtered_public_applications recovers a hidden
+    raise amount by bisection in a handful of requests.
+
+    So a founder is excluded from a filter on a field the requester may not
+    see. They still appear in unfiltered results, and the exclusion is silent:
+    no count, no "some results hidden" notice, because that would disclose who
+    has chosen privacy.
+
+    Any new filter on a field in NEW_PROFILE_FIELD_VISIBILITY must pass through
+    here first.
+
+    Two queries regardless of result size: one for the candidates' stored
+    levels, one for the viewer's accepted connections. Deliberately not
+    can_view_profile_field per row -- that is a connection query per founder,
+    which turns a search page into an N+1.
+    """
+    if field_name not in NEW_PROFILE_FIELD_VISIBILITY:
+        return queryset
+
+    signed_in = viewer_user is not None and getattr(viewer_user, 'is_authenticated', False)
+    if signed_in and viewer_user.is_staff:
+        return queryset
+
+    connected_founder_ids = set()
+    if signed_in:
+        investor_profile = getattr(viewer_user, 'match_investor_profile', None)
+        if investor_profile:
+            connected_founder_ids = set(
+                Connection.objects.filter(
+                    investor=investor_profile, status='ACCEPTED'
+                ).values_list('founder_id', flat=True)
+            )
+
+    viewer_id = getattr(viewer_user, 'id', None) if signed_in else None
+    allowed = []
+    for pk, stored, owner_id in queryset.values_list('pk', 'field_visibility', 'user_id'):
+        if viewer_id is not None and owner_id == viewer_id:
+            allowed.append(pk)
+            continue
+        level = _level_from_stored(stored, field_name)
+        if level == FIELD_PUBLIC or (level == FIELD_CONNECTED and pk in connected_founder_ids):
+            allowed.append(pk)
+    return queryset.filter(pk__in=allowed)
+
+
+def validate_profile_field_visibility(value):
+    """
+    Reject unknown keys and unrecognised levels, loudly.
+
+    The authority already falls back safely, so this is not what keeps a
+    profile private -- it is what stops a typo silently becoming a setting that
+    appears to work. `raising_amont: PRIVATE` would otherwise be accepted,
+    stored, and ignored, and the founder would believe they had hidden it.
+    """
+    if value in (None, ''):
+        return
+    if not isinstance(value, dict):
+        raise ValidationError('Field visibility must be a mapping of field name to level.')
+    for name, level in value.items():
+        if name not in NEW_PROFILE_FIELD_VISIBILITY:
+            raise ValidationError(
+                f'"{name}" is not a field whose visibility can be set. '
+                f'Known fields: {", ".join(sorted(NEW_PROFILE_FIELD_VISIBILITY))}.'
+            )
+        if level not in PROFILE_FIELD_VISIBILITY_LEVELS:
+            raise ValidationError(
+                f'"{level}" is not a visibility level for "{name}". '
+                f'Use one of: {", ".join(PROFILE_FIELD_VISIBILITY_LEVELS)}.'
+            )
 
 
 def founder_is_visible_to(request_user, founder_application):

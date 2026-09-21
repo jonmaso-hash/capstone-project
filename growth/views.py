@@ -6,6 +6,7 @@ from django.core.cache import cache
 from django.core.mail import send_mail
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
+from matchmaking.models import exclude_profiles_hiding_directory_attributes
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
@@ -72,10 +73,16 @@ def founder_directory(request, sector_slug, stage_slug, location_slug):
     stage_text = _slug_to_search_text(stage_slug)
     location_text = _slug_to_search_text(location_slug)
 
-    founders = _public_queryset(Application).filter(
-        sector__icontains=sector_text,
-        stage__icontains=stage_text,
-        geography__icontains=location_text,
+    # This page states a company's sector, stage and location in its own URL
+    # and heading, so being listed here discloses all three whatever the
+    # template prints. A founder who keeps any of them below PUBLIC is left
+    # out rather than listed under a URL that contradicts their setting.
+    founders = exclude_profiles_hiding_directory_attributes(
+        _public_queryset(Application).filter(
+            sector__icontains=sector_text,
+            stage__icontains=stage_text,
+            geography__icontains=location_text,
+        )
     ).select_related('user').order_by('-created_at')
 
     count = founders.count()

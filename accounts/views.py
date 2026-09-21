@@ -472,6 +472,15 @@ def profile(request, username=None, pk=None):
     from usersettings.models import UserSettings
     viewed_user_settings = UserSettings.for_user(viewed_user)
 
+    # Per-field disclosure the founder controls (matchmaking/models.py). The
+    # owner and staff get everything; anyone else sees only what the founder
+    # has opened to them.
+    from matchmaking.models import NEW_PROFILE_FIELD_VISIBILITY, can_view_profile_field
+    visible_founder_fields = [
+        name for name in NEW_PROFILE_FIELD_VISIBILITY
+        if application is not None and can_view_profile_field(request.user, application, name)
+    ]
+
     show_contact_info = True
     if viewed_user != request.user:
         if not viewed_user_settings.show_job_postings:
@@ -707,6 +716,10 @@ def profile(request, username=None, pk=None):
         "viewer_is_buyer": viewer_is_buyer,
         "profile_view_count": profile_view_count,
         "show_contact_info": show_contact_info,
+        # Which founder-controlled fields this viewer may see. Computed once
+        # here rather than asked per field in the template, so every field on
+        # the page resolves against one consistent answer.
+        "visible_founder_fields": visible_founder_fields,
         "mutual_connections": mutual_connections,
         "founder_milestones": founder_milestones,
         "founder_activity": founder_activity,
