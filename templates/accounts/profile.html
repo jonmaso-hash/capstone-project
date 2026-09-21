@@ -277,7 +277,9 @@
                                             <div class="bg-light p-2 rounded border small">
                                                 <span class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.65rem;">Prior Raised</span>
                                                 <span class="text-dark fw-bold">
-                                                    {% if application.prior_amount_raised %}
+                                                    {% if 'prior_amount_raised' not in visible_founder_fields %}
+                                                        <span class="text-muted fw-normal">Private</span>
+                                                    {% elif application.prior_amount_raised %}
                                                         ${{ application.prior_amount_raised|floatformat:0|intcomma }}
                                                     {% else %}
                                                         --
@@ -290,7 +292,11 @@
 
                                 <div class="p-3 bg-light rounded-3 border-start border-4 border-success mb-4">
                                     <h6 class="fw-bold text-muted text-uppercase small mb-2">Growth Strategy & Capital Deployment</h6>
+                                    {% if 'reason_for_capital' in visible_founder_fields %}
                                     <p class="text-secondary mb-0 small fst-italic">{{ application.reason_for_capital|default:"No capitalization strategy declared yet." }}</p>
+                                    {% else %}
+                                    <p class="text-muted mb-0 small fst-italic">Shared with investors this founder has accepted.</p>
+                                    {% endif %}
                                 </div>
 
                                 <div class="mb-4 mb-md-0">
@@ -387,7 +393,9 @@
                                 <div class="bg-light p-4 rounded-4 border">
                                     <h6 class="text-uppercase fw-bold text-muted small mb-3">Contact & Links</h6>
                                     <ul class="list-unstyled mb-0">
+                                        {% if 'founder_name' in visible_founder_fields %}
                                         <li class="mb-2"><i class="bi bi-person-circle me-2 text-success"></i> <strong>{{ application.founder_name }}</strong></li>
+                                        {% endif %}
                                         <li class="mb-2"><i class="bi bi-envelope me-2 text-muted"></i> {{ application.email }}</li>
                                         {% if application.phone_number %}
                                         <li class="mb-2"><i class="bi bi-telephone me-2 text-muted"></i> {{ application.phone_number }}</li>
@@ -416,19 +424,31 @@
                                     <div class="col-4">
                                         <div class="bg-white border rounded-3 p-3 text-center h-100 shadow-sm">
                                             <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem;">Raising</small>
+                                            {% if 'raising_amount' in visible_founder_fields %}
                                             <span class="fw-bold text-success">${{ application.raising_amount|floatformat:0|intcomma }}</span>
+                                            {% else %}
+                                            <span class="text-muted" title="The founder shares this with investors they have accepted.">Private</span>
+                                            {% endif %}
                                         </div>
                                     </div>
                                     <div class="col-4">
                                         <div class="bg-white border rounded-3 p-3 text-center h-100 shadow-sm">
                                             <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem;">Revenue</small>
+                                            {% if 'current_revenue' in visible_founder_fields %}
                                             <span class="fw-bold text-dark">{% if application.current_revenue %}${{ application.current_revenue|floatformat:0|intcomma }}{% else %}--{% endif %}</span>
+                                            {% else %}
+                                            <span class="text-muted">Private</span>
+                                            {% endif %}
                                         </div>
                                     </div>
                                     <div class="col-4">
                                         <div class="bg-white border rounded-3 p-3 text-center h-100 shadow-sm">
                                             <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem;">Burn Rate</small>
+                                            {% if 'monthly_burn_rate' in visible_founder_fields %}
                                             <span class="fw-bold text-danger">{% if application.monthly_burn_rate %}${{ application.monthly_burn_rate|floatformat:0|intcomma }}/mo{% else %}--{% endif %}</span>
+                                            {% else %}
+                                            <span class="text-muted">Private</span>
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </div>

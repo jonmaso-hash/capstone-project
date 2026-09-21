@@ -31,6 +31,10 @@ from .models import Follow
 from matchmaking.models import Application, Connection, InvestorApplication, MatchFeedback, ConnectionRequest, log_investor_event, PitchDeckViewSession, PitchDeckSlideTime, FundraisingLead, FounderMilestone, log_training_example, MessageThread, PitchVideoView, ProfileView, log_page_event, log_search_event, SearchEvent
 from matchmaking.models import DataRoomDocument, DataRoomAccessRequest, DataRoomDocumentView, DataRoomInformationRequest, can_view_data_room, can_download_data_room_document, can_view_deal_workspace
 from matchmaking.models import ExternalDealRoom, ExternalDealRoomGrant, ExternalDealRoomEvent, can_view_external_deal_room_url
+from matchmaking.models import (
+    NEW_PROFILE_FIELD_VISIBILITY, can_view_profile_field,
+    restrict_queryset_for_field_filter, visible_profile_fields,
+)
 from matchmaking.deal_activity import get_deal_activity_timeline
 from matchmaking.models import founder_description_meets_word_count
 from matchmaking.models import SellerApplication, BuyerApplication, AcquisitionConnection, DealFeedback, log_buyer_event, AcquisitionInterestEvent
@@ -1923,9 +1927,27 @@ def deal_room_view(request):
 
 def _filtered_public_applications(request):
     """
-    Shared filter logic for both the HTML search results page and the CSV
-    export — same filters, same privacy rules, so the two can never drift
-    out of sync. Returns (queryset, filters_dict).
+    Shared filter logic for the HTML search results page, the CSV export and
+    the Enterprise API — same filters, same privacy rules, so the three can
+    never drift out of sync. Returns (queryset, filters_dict).
+
+    SECURITY BOUNDARY for founder-controlled fields.
+
+    A filter whose result tells the requester whether a record matched is
+    disclosure, whatever the template later renders. `capital` and `revenue`
+    filter on raising_amount and current_revenue, which a founder may keep to
+    accepted connections — so without restricting the candidates first, an
+    unconnected viewer could bisect `?capital=` (500k no, 1M yes, 750k no) and
+    recover a hidden amount exactly, while every page correctly hid it.
+
+    So each controlled filter narrows to founders who have disclosed that field
+    to this requester, via restrict_queryset_for_field_filter. They still
+    appear in unfiltered results, and the exclusion is silent: a count of
+    withheld results would itself disclose who has chosen privacy.
+
+    **Any new filter on a field in NEW_PROFILE_FIELD_VISIBILITY must go through
+    that helper.** Adding `queryset.filter(monthly_burn_rate__lte=...)` here
+    without it reopens this hole.
     """
     state = request.GET.get('state', '').strip()  # free-text keyword search (label: "Keywords")
     location = request.GET.get('location', '').strip()
@@ -1952,9 +1974,11 @@ def _filtered_public_applications(request):
         queryset = queryset.filter(stage__iexact=stage)
 
     if max_capital and max_capital.isdigit():
+        queryset = restrict_queryset_for_field_filter(queryset, request.user, 'raising_amount')
         queryset = queryset.filter(raising_amount__lte=int(max_capital))
 
     if min_revenue and min_revenue.isdigit():
+        queryset = restrict_queryset_for_field_filter(queryset, request.user, 'current_revenue')
         queryset = queryset.filter(current_revenue__gte=int(min_revenue))
 
     filters = {
@@ -2013,22 +2037,30 @@ def export_search_csv(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="interlink_foundry_export.csv"'
 
+    # A bulk extraction surface, so it goes through the same authority as the
+    # page. A withheld cell is left empty rather than carrying the value; note
+    # an empty cell here reads as "not disclosed to you", which is why the
+    # header row still names the column -- dropping the column entirely for one
+    # founder would misalign every other row.
     writer = csv.writer(response)
     writer.writerow([
         'Company Name', 'Sector', 'Stage', 'Location', 'Raising Amount',
         'Current Revenue', 'Team Size', 'Years in Business', 'Website',
     ])
+    controlled = ('sector', 'stage', 'geography', 'raising_amount',
+                  'current_revenue', 'team_size', 'years_in_business', 'company_website')
     for app in queryset:
+        shown = visible_profile_fields(request.user, app, controlled)
         writer.writerow([
             app.company_name,
-            app.sector,
-            app.stage,
-            app.geography,
-            app.raising_amount,
-            app.current_revenue,
-            app.team_size,
-            app.years_in_business,
-            app.company_website,
+            shown.get('sector', ''),
+            shown.get('stage', ''),
+            shown.get('geography', ''),
+            shown.get('raising_amount', ''),
+            shown.get('current_revenue', ''),
+            shown.get('team_size', ''),
+            shown.get('years_in_business', ''),
+            shown.get('company_website', ''),
         ])
 
     return response

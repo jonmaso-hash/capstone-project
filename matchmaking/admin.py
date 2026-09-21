@@ -3,6 +3,7 @@ from django.shortcuts import render
 from django.http import HttpResponseRedirect
 from django.contrib import messages
 from .models import (
+    NEW_PROFILE_FIELD_VISIBILITY, can_view_profile_field,
     Application, InvestorApplication, AIMatch, Connection, MatchFeedback, InvestorInterestEvent,
     APIKey, InvestorPredictionSnapshot,
     SellerApplication, BuyerApplication, AcquisitionConnection, DealFeedback, AcquisitionInterestEvent,
@@ -68,9 +69,21 @@ def forward_to_investor(modeladmin, request, queryset):
 
             # 2. Email Logic: Render HTML and send
             try:
+                # What this founder discloses to THIS investor. The connection
+                # created above is `pending`, so an investor the founder has
+                # not accepted is not a connection yet -- and anything the
+                # founder limited to accepted connections must not leave in
+                # this email. Staff choosing the recipient does not widen what
+                # the founder agreed to share, and this is the one surface that
+                # pushes a founder's figures to someone who did not ask.
+                visible_fields = [
+                    name for name in NEW_PROFILE_FIELD_VISIBILITY
+                    if can_view_profile_field(investor.user, founder, name)
+                ]
                 html_content = render_to_string('emails/founder_match.html', {
                     'founder': founder,
                     'investor': investor,
+                    'visible_fields': visible_fields,
                 })
                 
                 msg = EmailMessage(

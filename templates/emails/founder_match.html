@@ -10,23 +10,27 @@
         <p>Interlink Foundry has identified a new high-conviction opportunity for your portfolio.</p>
 
         <h3 style="border-bottom: 2px solid #007bff; padding-bottom: 5px;">Founder Information</h3>
-        <p><strong>Founder Name:</strong> {{ founder.founder_name }}<br>
+        <p>{% if 'founder_name' in visible_fields %}<strong>Founder Name:</strong> {{ founder.founder_name }}<br>{% endif %}
            <strong>Email:</strong> {{ founder.email }}<br>
            <strong>Phone:</strong> {{ founder.phone_number }}</p>
 
         <h3 style="border-bottom: 2px solid #007bff; padding-bottom: 5px;">Business Details</h3>
         <p><strong>Company Name:</strong> {{ founder.company_name }}<br>
-           <strong>Industry/Sector:</strong> {{ founder.sector }}<br>
-           <strong>Team Size:</strong> {{ founder.team_size }} | <strong>Stage:</strong> {{ founder.stage }}<br>
-           <strong> Business Description:</strong> {{ founder.description }}</p>
+           {% if 'sector' in visible_fields %}<strong>Industry/Sector:</strong> {{ founder.sector }}<br>{% endif %}
+           {% if 'team_size' in visible_fields %}<strong>Team Size:</strong> {{ founder.team_size }} | {% endif %}{% if 'stage' in visible_fields %}<strong>Stage:</strong> {{ founder.stage }}<br>{% endif %}
+           {% if 'description' in visible_fields %}<strong> Business Description:</strong> {{ founder.description }}{% endif %}</p>
 
-        <h3 style="border-bottom: 2px solid #007bff; padding-bottom: 5px;">Investment Metrics</h3>
-        <p><strong>Raising Amount:</strong> ${{ founder.raising_amount }}<br>
-           <strong>Current Revenue:</strong> ${{ founder.current_revenue }}<br>
-           <strong>Prior Capital Raised:</strong> ${{ founder.prior_amount_raised }}</p>
+        {% if 'raising_amount' in visible_fields or 'current_revenue' in visible_fields or 'prior_amount_raised' in visible_fields %}
+        <h3 style="border-bottom: 2px solid #007bff; padding-bottom: 5px;">Business Metrics</h3>
+        <p>{% if 'raising_amount' in visible_fields %}<strong>Raising Amount:</strong> ${{ founder.raising_amount }}<br>{% endif %}
+           {% if 'current_revenue' in visible_fields %}<strong>Current Revenue:</strong> ${{ founder.current_revenue }}<br>{% endif %}
+           {% if 'prior_amount_raised' in visible_fields %}<strong>Prior Capital Raised:</strong> ${{ founder.prior_amount_raised }}{% endif %}</p>
+        {% endif %}
 
+        {% if 'reason_for_capital' in visible_fields %}
         <h3 style="border-bottom: 2px solid #007bff; padding-bottom: 5px;">Reason for Funds</h3>
         <p>{{ founder.reason_for_capital }}</p>
+        {% endif %}
     </div>
 
     <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; text-align: center; font-size: 11px; color: #777;">
