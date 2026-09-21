@@ -674,3 +674,152 @@ class FounderControlsTests(_Cast):
         )
         self.founder.refresh_from_db()
         self.assertEqual(profile_field_level(self.founder, 'raising_amount'), FIELD_CONNECTED)
+
+
+class CrossSurfaceInvariantTests(_Cast):
+    """
+    The invariant the whole PR exists to establish:
+
+        For a field a founder has set to PRIVATE, neither an anonymous visitor
+        nor a signed-in investor they have not accepted may obtain the value,
+        or a meaningful derivative of it, through ANY supported surface.
+
+    Every surface is exercised through a real request. Each negative assertion
+    is paired with a positive control on the SAME surface with the SAME viewer,
+    differing only in the founder's setting -- so a surface that renders
+    nothing, returns an empty list, or 404s cannot make the negative pass. That
+    trap is not hypothetical: it is how the first similar-startups tests came
+    to assert nothing at all.
+    """
+
+    AMOUNT_FORMS = ('1000000', '1,000,000', '$1,000,000', '1000000.00')
+
+    def setUp(self):
+        super().setUp()
+        from .models import ProfileVideo
+        self.video = ProfileVideo.objects.create(
+            founder=self.founder, kind=ProfileVideo.KIND_ELEVATOR_PITCH,
+            caption='Our pitch',
+            video=SimpleUploadedFile('p.mp4', b'x', content_type='video/mp4'),
+        )
+        self.api_key = self._make_api_key()
+
+    def _make_api_key(self):
+        from .models import APIKey
+        owner = User.objects.create_user('fv_api', password='x')
+        return APIKey.objects.create(owner=owner, firm_name='Test Firm', is_active=True)
+
+    def assert_absent(self, text, where):
+        for form in self.AMOUNT_FORMS:
+            self.assertNotIn(form, text, f'raise amount leaked via {where}')
+
+    def assert_present(self, text, where):
+        self.assertTrue(
+            any(form in text for form in self.AMOUNT_FORMS),
+            f'positive control failed: {where} showed no amount even when PUBLIC, '
+            f'so its negative case proves nothing',
+        )
+
+    # -- each surface: control first, then the private case ------------------
+
+    def profile_body(self):
+        self.client.force_login(self.stranger_user)
+        return self.client.get(
+            reverse('accounts:profile', args=[self.founder_user.username]), follow=True
+        ).content.decode(errors='ignore')
+
+    def csv_body(self):
+        self.connected_investor.is_premium = True
+        self.connected_investor.save()
+        self.client.force_login(self.connected_user)
+        return self.client.get(reverse('matchmaking:export_search_csv')).content.decode(errors='ignore')
+
+    def api_body(self):
+        return self.client.get(
+            '/api/v1/enterprise/founders/',
+            HTTP_AUTHORIZATION=f'Api-Key {self.api_key.key}',
+        ).content.decode(errors='ignore')
+
+    def explore_body(self):
+        self.client.logout()
+        return self.client.get(reverse('explore')).content.decode(errors='ignore')
+
+    def test_private_amount_never_reaches_the_profile_page(self):
+        self.set_level('raising_amount', FIELD_PUBLIC)
+        self.assert_present(self.profile_body(), 'profile page')
+        self.set_level('raising_amount', FIELD_PRIVATE)
+        self.assert_absent(self.profile_body(), 'profile page')
+
+    def test_private_amount_never_reaches_the_csv_export(self):
+        self.set_level('raising_amount', FIELD_PUBLIC)
+        body = self.csv_body()
+        self.assertIn('FV Co', body)
+        self.assert_present(body, 'CSV export')
+        self.set_level('raising_amount', FIELD_PRIVATE)
+        body = self.csv_body()
+        self.assertIn('FV Co', body)  # still listed, value withheld
+        self.assert_absent(body, 'CSV export')
+
+    def test_private_amount_never_reaches_the_enterprise_api(self):
+        self.set_level('raising_amount', FIELD_PUBLIC)
+        body = self.api_body()
+        self.assertIn('FV Co', body)
+        self.assert_present(body, 'Enterprise API')
+        self.set_level('raising_amount', FIELD_PRIVATE)
+        body = self.api_body()
+        self.assertIn('FV Co', body)
+        self.assert_absent(body, 'Enterprise API')
+        # Omitted, not null -- a null still says the field exists and was held back.
+        self.assertNotIn('"raising_amount"', body)
+
+    def test_private_founder_name_never_reaches_anonymous_explore(self):
+        self.set_level('founder_name', FIELD_PUBLIC)
+        body = self.explore_body()
+        self.assertIn('FV Co', body)
+        self.assertIn('Dana Founder', body)  # positive control
+        self.set_level('founder_name', FIELD_PRIVATE)
+        body = self.explore_body()
+        self.assertIn('FV Co', body)
+        self.assertNotIn('Dana Founder', body)
+
+    # -- inference channels, per surface --------------------------------------
+
+    def _appears_in_csv_filtered(self, threshold):
+        self.connected_investor.is_premium = True
+        self.connected_investor.save()
+        self.client.force_login(self.stranger_user)
+        stranger_profile = self.stranger_investor
+        stranger_profile.is_premium = True
+        stranger_profile.save()
+        body = self.client.get(
+            reverse('matchmaking:export_search_csv'), {'capital': str(threshold)}
+        ).content.decode(errors='ignore')
+        return 'FV Co' in body
+
+    def test_the_csv_filter_cannot_bisect_a_private_amount(self):
+        """CSV shares _filtered_public_applications, so it shares the channel."""
+        self.set_level('raising_amount', FIELD_PUBLIC)
+        control = {self._appears_in_csv_filtered(t) for t in (500_000, 5_000_000)}
+        self.assertEqual(len(control), 2, 'the CSV filter never changed anything')
+
+        self.set_level('raising_amount', FIELD_PRIVATE)
+        seen = {self._appears_in_csv_filtered(t)
+                for t in (500_000, 900_000, 1_000_000, 1_100_000, 5_000_000)}
+        self.assertEqual(len(seen), 1, 'CSV filtering leaked the private amount')
+
+    def _appears_in_api_filtered(self, threshold):
+        body = self.client.get(
+            '/api/v1/enterprise/founders/', {'capital': str(threshold)},
+            HTTP_AUTHORIZATION=f'Api-Key {self.api_key.key}',
+        ).content.decode(errors='ignore')
+        return 'FV Co' in body
+
+    def test_the_api_filter_cannot_bisect_a_private_amount(self):
+        self.set_level('raising_amount', FIELD_PUBLIC)
+        control = {self._appears_in_api_filtered(t) for t in (500_000, 5_000_000)}
+        self.assertEqual(len(control), 2, 'the API filter never changed anything')
+
+        self.set_level('raising_amount', FIELD_PRIVATE)
+        seen = {self._appears_in_api_filtered(t)
+                for t in (500_000, 900_000, 1_000_000, 1_100_000, 5_000_000)}
+        self.assertEqual(len(seen), 1, 'API filtering leaked the private amount')
