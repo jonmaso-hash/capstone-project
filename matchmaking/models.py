@@ -1506,6 +1506,31 @@ def visible_profile_fields(viewer_user, profile, field_names):
     }
 
 
+def exclude_profiles_hiding_directory_attributes(queryset):
+    """
+    Drop founders who have not made every attribute the public directory
+    encodes PUBLIC.
+
+    /startups/<sector>/<stage>/<location>/ states those three in its own URL and
+    heading. Listing a founder there while they keep sector, stage or geography
+    below PUBLIC would disclose it no matter what the template prints -- the
+    page's existence is the disclosure.
+
+    Applied for every viewer, not only anonymous ones. The page is indexed and
+    shareable, so what a signed-in visitor sees must match the canonical
+    version a crawler stored; a listing that varies by viewer is a listing
+    whose URL still tells the truth about somebody.
+
+    Costs one extra query, on ids and stored levels only.
+    """
+    allowed = [
+        pk for pk, stored in queryset.values_list('pk', 'field_visibility')
+        if all(_level_from_stored(stored, field) == FIELD_PUBLIC
+               for field in DIRECTORY_DISCLOSING_FIELDS)
+    ]
+    return queryset.filter(pk__in=allowed)
+
+
 def restrict_queryset_for_field_filter(queryset, viewer_user, field_name):
     """
     Narrow a queryset before it is filtered on a controlled field.

@@ -1562,7 +1562,7 @@ def ic_memo_view(request, document_id):
         raise Http404("Not found.")
 
     tier = 'full' if ic_memo_unlocked(request.user, application) else 'lite'
-    context = build_ic_memo_context(application, tier=tier)
+    context = build_ic_memo_context(application, tier=tier, viewer=request.user)
     # Navigation only — added at render time, not in build_ic_memo_context,
     # so the Markdown export stays a pure document.
     from .report_nav import build_report_nav, ANALYSIS as REPORT_ANALYSIS
@@ -1587,7 +1587,7 @@ def ic_memo_download_view(request, document_id):
     if not ic_memo_unlocked(request.user, application):
         return redirect('zelda_api:ic_memo', document_id=document_id)
 
-    context = build_ic_memo_context(application)
+    context = build_ic_memo_context(application, viewer=request.user)
     markdown_text = render_ic_memo_markdown(context)
 
     response = HttpResponse(markdown_text, content_type='text/markdown')

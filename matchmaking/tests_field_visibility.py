@@ -60,7 +60,7 @@ class _Cast(TestCase):
         self.founder = Application.objects.create(
             user=self.founder_user, company_name='FV Co', founder_name='Dana Founder',
             email='fv@t.com', description='We build things.', sector='SaaS', stage='Seed',
-            geography='San Diego, CA', raising_amount=RAISE, current_revenue=REVENUE,
+            geography='San Diego CA', raising_amount=RAISE, current_revenue=REVENUE,
             reason_for_capital='Hiring two engineers.', review_status='APPROVED',
         )
         self.staff_user = User.objects.create_user('fv_staff', password='x', is_staff=True)
@@ -245,7 +245,7 @@ class FilterInferenceTests(_Cast):
         self.control = Application.objects.create(
             user=self.control_user, company_name='Control Co', founder_name='Kim Control',
             email='fvk@t.com', description='We build things.', sector='SaaS', stage='Seed',
-            geography='San Diego, CA', raising_amount=RAISE, current_revenue=REVENUE,
+            geography='San Diego CA', raising_amount=RAISE, current_revenue=REVENUE,
             review_status='APPROVED',
             field_visibility={'raising_amount': FIELD_PUBLIC, 'current_revenue': FIELD_PUBLIC},
         )
@@ -367,3 +367,79 @@ class StaffForwardEmailTests(_Cast):
         self.set_level('founder_name', FIELD_PRIVATE)
         body = self.forward_to(self.stranger_investor)
         self.assertNotIn('Dana Founder', body)
+
+
+class PublicDirectoryTests(_Cast):
+    """
+    The directory URL states sector, stage and location, so being listed there
+    discloses all three regardless of what the template prints. A founder who
+    keeps any of them below PUBLIC is left out entirely.
+    """
+
+    def directory_url(self):
+        return reverse('growth:founder_directory', args=['saas', 'seed', 'san-diego-ca'])
+
+    def test_a_founder_with_all_three_public_is_listed(self):
+        """Positive control: the page works and this founder matches it."""
+        response = self.client.get(self.directory_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('FV Co', response.content.decode(errors='ignore'))
+
+    def test_hiding_the_sector_removes_the_founder_from_the_directory(self):
+        self.set_level('sector', FIELD_CONNECTED)
+        response = self.client.get(self.directory_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn('FV Co', response.content.decode(errors='ignore'))
+
+    def test_hiding_the_location_removes_the_founder(self):
+        self.set_level('geography', FIELD_PRIVATE)
+        self.assertNotIn('FV Co', self.client.get(self.directory_url()).content.decode(errors='ignore'))
+
+    def test_hiding_the_stage_removes_the_founder(self):
+        self.set_level('stage', FIELD_PRIVATE)
+        self.assertNotIn('FV Co', self.client.get(self.directory_url()).content.decode(errors='ignore'))
+
+    def test_the_sitemap_stops_advertising_the_combination(self):
+        """A URL for a page they are absent from would advertise it for them."""
+        before = self.client.get(reverse('sitemap')).content.decode(errors='ignore')
+        self.assertIn('saas', before.lower())
+        self.set_level('sector', FIELD_PRIVATE)
+        after = self.client.get(reverse('sitemap')).content.decode(errors='ignore')
+        self.assertNotIn('/startups/saas/seed/san-diego-ca/', after)
+
+
+class ICMemoTests(_Cast):
+    """
+    The memo's audience is already owner, staff, or an ACCEPTED connection, so
+    a CONNECTED field belongs in it. A PRIVATE one does not.
+    """
+
+    def context_for(self, viewer):
+        from zelda_api.ic_memo import build_ic_memo_context
+        return build_ic_memo_context(self.founder, viewer=viewer)['financials']
+
+    def test_a_connected_field_reaches_the_connected_audience(self):
+        self.set_level('raising_amount', FIELD_CONNECTED)
+        self.assertEqual(self.context_for(self.connected_user)['raising_amount'], RAISE)
+
+    def test_a_private_field_does_not(self):
+        self.set_level('raising_amount', FIELD_PRIVATE)
+        self.assertIsNone(self.context_for(self.connected_user)['raising_amount'])
+
+    def test_the_owner_still_sees_their_own_private_field(self):
+        self.set_level('raising_amount', FIELD_PRIVATE)
+        self.assertEqual(self.context_for(self.founder_user)['raising_amount'], RAISE)
+
+    def test_without_a_viewer_private_is_still_stripped(self):
+        """A caller that forgets the viewer must not get the permissive answer."""
+        from zelda_api.ic_memo import build_ic_memo_context
+        self.set_level('raising_amount', FIELD_PRIVATE)
+        self.assertIsNone(build_ic_memo_context(self.founder)['financials']['raising_amount'])
+
+    def test_the_rendered_memo_says_not_disclosed(self):
+        """Proven at the output, not the context dict."""
+        from zelda_api.ic_memo import build_ic_memo_context, render_ic_memo_markdown
+        self.set_level('raising_amount', FIELD_PRIVATE)
+        md = render_ic_memo_markdown(build_ic_memo_context(self.founder, viewer=self.connected_user))
+        self.assertIn('Raising: not disclosed', md)
+        self.assertNotIn('1,000,000', md)
