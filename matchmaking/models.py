@@ -1414,11 +1414,13 @@ NEW_PROFILE_FIELD_VISIBILITY = {
 # gate allows, never loosen it, and PUBLIC here means "no restriction beyond
 # the gate that was already there".
 
-# What existing profiles were moved to, once, by migration. Identical today and
-# kept separate on purpose: "what a new profile starts with" and "what we did
-# to profiles that predate the feature" are different questions, and the day
-# they diverge, one constant changing must not silently change the other.
-MIGRATION_FIELD_VISIBILITY = dict(NEW_PROFILE_FIELD_VISIBILITY)
+# The levels applied to profiles that predated this feature are NOT defined
+# here. They are frozen inside migration 0079 as APPLIED_FIELD_VISIBILITY --
+# the historical record of what that migration wrote, which must never change.
+# There is deliberately no application constant for them: one existed, the
+# migration imported it, and editing it would have silently changed what a
+# fresh database receives. NEW_PROFILE_FIELD_VISIBILITY above governs current
+# defaults and may change freely without touching existing profiles.
 
 # Attributes the public SEO directory encodes in its own URL and heading
 # (/startups/<sector>/<stage>/<location>/). Listing a founder there while any
