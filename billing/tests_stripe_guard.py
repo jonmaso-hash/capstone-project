@@ -65,6 +65,12 @@ class SettingsActuallyEnforceTheGuardTests(SimpleTestCase):
         env['DEBUG'] = 'True' if debug else 'False'
         env['STRIPE_SECRET_KEY'] = secret_key
         env['DJANGO_SETTINGS_MODULE'] = 'config.settings'
+        # This probe loads production settings to exercise the Stripe guard,
+        # with no S3 bucket, which config/storage_guard.py refuses by default.
+        # Acknowledged explicitly so the two guards are tested independently:
+        # without this, a Stripe-guard failure and a storage-guard refusal look
+        # identical from here, since both are ImproperlyConfigured at import.
+        env['ALLOW_EPHEMERAL_MEDIA'] = '1'
         return subprocess.run(
             [sys.executable, '-c', 'import django; django.setup(); print("STARTED")'],
             cwd=str(settings.BASE_DIR), env=env,

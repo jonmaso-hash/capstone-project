@@ -201,6 +201,10 @@ class RenderHealthCheckUnderProductionSettingsTests(SimpleTestCase):
             'RENDER_EXTERNAL_HOSTNAME': 'interlink-web.onrender.com',
             'STRIPE_SECRET_KEY': 'sk_test_placeholder',
             'LOG_TO_FILE': 'False',
+            # Production settings with no S3 bucket, which
+            # config/storage_guard.py refuses by default. This probe is about
+            # the health-check route and host/CSRF derivation, not storage.
+            'ALLOW_EPHEMERAL_MEDIA': '1',
         })
         env.pop('SECURE_SSL_REDIRECT', None)
         result = subprocess.run([sys.executable, '-c', _HEALTH_PROBE], cwd=ROOT, env=env,

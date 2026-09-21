@@ -29,6 +29,9 @@ env = environ.Env(
     # set this (e.g. via docker-compose) to turn on the Redis-backed cache.
     CACHE_URL=(str, ''),
     AWS_STORAGE_BUCKET_NAME=(str, ''),
+    # Acknowledges that uploads here are disposable, for an environment that
+    # has no object storage yet. See config/storage_guard.py.
+    ALLOW_EPHEMERAL_MEDIA=(bool, False),
     AWS_ACCESS_KEY_ID=(str, ''),
     AWS_SECRET_ACCESS_KEY=(str, ''),
     AWS_S3_REGION_NAME=(str, 'us-east-1'),
@@ -305,7 +308,7 @@ AWS_S3_REGION_NAME = env('AWS_S3_REGION_NAME')
 # config/storage_guard.py; ALLOW_EPHEMERAL_MEDIA acknowledges it deliberately.
 from config.storage_guard import refuse_ephemeral_media_in_production
 refuse_ephemeral_media_in_production(
-    DEBUG, AWS_STORAGE_BUCKET_NAME, env.bool('ALLOW_EPHEMERAL_MEDIA', default=False)
+    DEBUG, AWS_STORAGE_BUCKET_NAME, env('ALLOW_EPHEMERAL_MEDIA')
 )
 
 if AWS_STORAGE_BUCKET_NAME:
