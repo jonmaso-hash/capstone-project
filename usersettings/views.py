@@ -17,7 +17,11 @@ from accounts import deletion
 from accounts.forms import ApplicationForm, InvestorForm, SellerForm, BuyerForm
 from accounts.redirects import pop_destination
 from growth.services import consume_referral_if_pending
-from matchmaking.models import Application, SellerApplication, ProfileVideo
+from matchmaking.models import (
+    Application, SellerApplication, ProfileVideo,
+    NEW_PROFILE_FIELD_VISIBILITY, PROFILE_FIELD_VISIBILITY_CHOICES,
+    PROFILE_FIELD_VISIBILITY_LEVELS, profile_field_level,
+)
 from .forms import ProfilePictureForm
 from .models import UserSettings
 
@@ -296,6 +300,21 @@ def edit_founder_profile(request):
             if 'pitch_deck' in form.changed_data:
                 app.pitch_deck_uploaded_at = timezone.now()
 
+            # Per-field disclosure. Only known field/level pairs are accepted;
+            # anything else is dropped rather than stored, so a hand-crafted
+            # POST cannot reach the model validator and turn this page into a
+            # 500. Merged rather than replaced so a field absent from the form
+            # keeps whatever the founder already chose.
+            submitted = {
+                name: request.POST.get(f'visibility__{name}')
+                for name in NEW_PROFILE_FIELD_VISIBILITY
+                if request.POST.get(f'visibility__{name}') in PROFILE_FIELD_VISIBILITY_LEVELS
+            }
+            if submitted:
+                merged = dict(app.field_visibility or {})
+                merged.update(submitted)
+                app.field_visibility = merged
+
             app.save()
 
             cache.delete(f"startup_data_{app.id}")
@@ -309,11 +328,27 @@ def edit_founder_profile(request):
     else:
         form = ApplicationForm(instance=application, lock_vector_fields=is_locked)
 
+    # One row per controllable field, carrying the level in force now -- the
+    # founder's own choice where they made one, the declared default where they
+    # have not. Built here rather than in the template so the page shows the
+    # same answer the authority would give.
+    visibility_rows = [
+        {
+            'name': name,
+            'label': name.replace('_', ' ').title(),
+            'level': profile_field_level(application, name) if application else default,
+            'default': default,
+        }
+        for name, default in NEW_PROFILE_FIELD_VISIBILITY.items()
+    ]
+
     return render(request, "usersettings/edit_founder_profile.html", {
         "form": form,
         "application": application,
         "is_locked": is_locked,
         "unlock_at": application.vector_fields_unlock_at if application else None,
+        "visibility_rows": visibility_rows,
+        "visibility_choices": PROFILE_FIELD_VISIBILITY_CHOICES,
     })
 
 

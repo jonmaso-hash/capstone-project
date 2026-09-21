@@ -580,3 +580,97 @@ class DigestBucketTests(_Cast):
         from .models import visible_profile_fields
         self.assertNotIn('raising_amount', visible_profile_fields(self.connected_user, self.founder, ('raising_amount',)))
         self.assertIn('raising_amount', visible_profile_fields(self.founder_user, self.founder, ('raising_amount',)))
+
+
+class FounderControlsTests(_Cast):
+    """The page where a founder actually sets these."""
+
+    URL_NAME = 'usersettings:edit_founder_profile'
+
+    def form_payload(self, **overrides):
+        """The profile form's required fields, plus visibility selections."""
+        payload = {
+            'company_name': self.founder.company_name,
+            'founder_name': self.founder.founder_name,
+            'email': self.founder.email,
+            'description': self.founder.description,
+            'sector': self.founder.sector,
+            'stage': self.founder.stage,
+            'raising_amount': self.founder.raising_amount,
+            'prior_amount_raised': self.founder.prior_amount_raised or 0,
+            'years_in_business': self.founder.years_in_business or 0,
+            'geography': self.founder.geography,
+        }
+        payload.update(overrides)
+        return payload
+
+    def test_the_page_offers_a_control_for_every_governed_field(self):
+        self.client.force_login(self.founder_user)
+        body = self.client.get(reverse(self.URL_NAME), follow=True).content.decode(errors='ignore')
+        for name in NEW_PROFILE_FIELD_VISIBILITY:
+            self.assertIn(f'visibility__{name}', body, name)
+
+    def test_the_page_shows_the_level_currently_in_force(self):
+        """Including the declared default, where the founder has chosen nothing."""
+        self.client.force_login(self.founder_user)
+        body = self.client.get(reverse(self.URL_NAME), follow=True).content.decode(errors='ignore')
+        self.assertIn('value="CONNECTED" selected', body)
+
+    def test_a_founder_can_open_a_field(self):
+        self.client.force_login(self.founder_user)
+        self.client.post(
+            reverse(self.URL_NAME),
+            self.form_payload(**{'visibility__raising_amount': FIELD_PUBLIC}),
+            follow=True,
+        )
+        self.founder.refresh_from_db()
+        self.assertEqual(profile_field_level(self.founder, 'raising_amount'), FIELD_PUBLIC)
+        self.assertTrue(can_view_profile_field(self.stranger_user, self.founder, 'raising_amount'))
+
+    def test_a_founder_can_close_a_field_completely(self):
+        self.client.force_login(self.founder_user)
+        self.client.post(
+            reverse(self.URL_NAME),
+            self.form_payload(**{'visibility__reason_for_capital': FIELD_PRIVATE}),
+            follow=True,
+        )
+        self.founder.refresh_from_db()
+        self.assertFalse(can_view_profile_field(self.connected_user, self.founder, 'reason_for_capital'))
+
+    def test_a_crafted_level_is_dropped_rather_than_stored(self):
+        """A hand-made POST must not reach the model validator and 500 the page."""
+        self.client.force_login(self.founder_user)
+        response = self.client.post(
+            reverse(self.URL_NAME),
+            self.form_payload(**{'visibility__raising_amount': 'EVERYONE'}),
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.founder.refresh_from_db()
+        self.assertEqual(profile_field_level(self.founder, 'raising_amount'), FIELD_CONNECTED)
+
+    def test_a_crafted_field_name_is_ignored(self):
+        self.client.force_login(self.founder_user)
+        self.client.post(
+            reverse(self.URL_NAME),
+            self.form_payload(**{'visibility__is_staff': FIELD_PUBLIC}),
+            follow=True,
+        )
+        self.founder.refresh_from_db()
+        self.assertNotIn('is_staff', self.founder.field_visibility or {})
+
+    def test_another_founder_cannot_set_visibility_on_this_profile(self):
+        """The editor works on request.user's own profile, never one named in a POST."""
+        other = User.objects.create_user('fv_other_founder', password='x')
+        Application.objects.create(
+            user=other, company_name='Other Co', founder_name='O', email='o2@t.com',
+            description='d', sector='SaaS', stage='Seed', review_status='APPROVED',
+        )
+        self.client.force_login(other)
+        self.client.post(
+            reverse(self.URL_NAME),
+            self.form_payload(**{'visibility__raising_amount': FIELD_PUBLIC}),
+            follow=True,
+        )
+        self.founder.refresh_from_db()
+        self.assertEqual(profile_field_level(self.founder, 'raising_amount'), FIELD_CONNECTED)
