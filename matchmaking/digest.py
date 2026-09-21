@@ -139,14 +139,27 @@ def build_investor_digest_card(investor_profile):
     application, result, ai_match = get_investor_hero(investor_profile)
     if application is None:
         return None
+    # A derived representation inherits the visibility of the field it comes
+    # from. "$500K-$1M" is the raise amount at lower resolution, not a
+    # different fact, so a founder who limited raising_amount to accepted
+    # connections has not agreed to it being bucketed into a stranger's inbox
+    # either. Most digest recipients are by definition not yet connected --
+    # that is what the digest is for -- so this will withhold the bucket
+    # often, which is the founder's setting working rather than a regression.
+    from .models import visible_profile_fields
+    shown = visible_profile_fields(
+        investor_profile.user, application, ('sector', 'stage', 'raising_amount')
+    )
     card = {
         # The band, not a percentage. A "43% fit" invites the reader to
         # treat it as a probability, and the evidence behind it - a sector
         # string, a stage string, one embedding - cannot carry that.
         'band': result.band.label,
-        'sector': application.sector,
-        'stage': application.stage,
-        'raising_bucket': _amount_bucket(application.raising_amount),
+        'sector': shown.get('sector', ''),
+        'stage': shown.get('stage', ''),
+        'raising_bucket': (
+            _amount_bucket(shown['raising_amount']) if 'raising_amount' in shown else None
+        ),
         'freshness': _freshness_reason(ai_match),
         'is_premium_viewer': investor_profile.is_premium,
     }

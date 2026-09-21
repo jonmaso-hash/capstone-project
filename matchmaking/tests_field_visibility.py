@@ -28,6 +28,7 @@ from unittest import mock
 
 from django.contrib.auth.models import AnonymousUser, User
 from django.core import mail
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.exceptions import ValidationError
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -443,3 +444,139 @@ class ICMemoTests(_Cast):
         md = render_ic_memo_markdown(build_ic_memo_context(self.founder, viewer=self.connected_user))
         self.assertIn('Raising: not disclosed', md)
         self.assertNotIn('1,000,000', md)
+
+
+class ExploreFeedTests(_Cast):
+    """
+    Explore serves anonymous visitors, so it is a PUBLIC disclosure surface.
+    founder_name defaults to CONNECTED, which means the anonymous card shows a
+    company without the person behind it unless the founder opens it.
+    """
+
+    def setUp(self):
+        super().setUp()
+        from .models import ProfileVideo
+        # role is derived from which owner FK is set, not assignable.
+        self.video = ProfileVideo.objects.create(
+            founder=self.founder, kind=ProfileVideo.KIND_ELEVATOR_PITCH,
+            caption='Our pitch',
+            video=SimpleUploadedFile('p.mp4', b'x', content_type='video/mp4'),
+        )
+
+    def body(self):
+        response = self.client.get(reverse('explore'))
+        self.assertEqual(response.status_code, 200)
+        return response.content.decode(errors='ignore')
+
+    def test_the_card_appears_at_all(self):
+        """Positive control: without this the absence assertions prove nothing."""
+        self.assertIn('FV Co', self.body())
+
+    def test_founder_name_is_withheld_from_anonymous_by_default(self):
+        body = self.body()
+        self.assertIn('FV Co', body)
+        self.assertNotIn('Dana Founder', body)
+
+    def test_a_founder_can_make_their_name_public(self):
+        self.set_level('founder_name', FIELD_PUBLIC)
+        self.assertIn('Dana Founder', self.body())
+
+    def test_a_hidden_sector_is_not_in_the_card_context(self):
+        self.set_level('sector', FIELD_PRIVATE)
+        body = self.body()
+        self.assertIn('FV Co', body)
+        self.assertNotIn('SaaS', body)
+
+
+class SimilarStartupsTests(_Cast):
+    """
+    "Seeking $X" is the raise amount in a different costume.
+
+    Similarity needs both profiles to carry a description_vector, and the
+    suite mocks embedding generation to [] -- so without setting the vectors
+    explicitly the page renders an empty list and every absence assertion here
+    passes against nothing at all. A mutation of the authority proved exactly
+    that about an earlier version of this class.
+    """
+
+    VECTOR = [1.0, 0.0, 0.0]
+
+    def setUp(self):
+        super().setUp()
+        Application.objects.filter(pk=self.founder.pk).update(description_vector=self.VECTOR)
+        self.founder.refresh_from_db()
+        self.similar_user = User.objects.create_user('fv_similar', password='x')
+        self.similar = Application.objects.create(
+            user=self.similar_user, company_name='Similar Co', founder_name='S Founder',
+            email='sim@t.com', description='We build things.', sector='SaaS', stage='Seed',
+            geography='San Diego CA', raising_amount=RAISE, review_status='APPROVED',
+        )
+        Application.objects.filter(pk=self.similar.pk).update(description_vector=self.VECTOR)
+
+    def body(self):
+        self.client.force_login(self.stranger_user)
+        response = self.client.get(
+            reverse('matchmaking:find_similar_startups', args=[self.founder.id]), follow=True
+        )
+        self.assertEqual(response.status_code, 200)
+        return response.content.decode(errors='ignore')
+
+    def set_similar_level(self, level):
+        # .update(), not .save(): the post_save signal regenerates
+        # description_vector, and the suite mocks that generator to [], so
+        # saving here would wipe the vector this page needs and silently empty
+        # the result list -- which is exactly how the earlier version of these
+        # tests came to assert nothing at all.
+        Application.objects.filter(pk=self.similar.pk).update(
+            field_visibility={'raising_amount': level}, description_vector=self.VECTOR
+        )
+
+    def test_the_similar_company_is_listed_at_all(self):
+        """Positive control. Without it the assertions below prove nothing."""
+        self.set_similar_level(FIELD_PUBLIC)
+        self.assertIn('Similar Co', self.body())
+
+    def test_a_public_amount_produces_the_seeking_line(self):
+        """Control for the derived display: it renders when permitted."""
+        self.set_similar_level(FIELD_PUBLIC)
+        self.assertIn('1,000,000', self.body())
+
+    def test_a_stranger_gets_no_derived_seeking_line(self):
+        self.set_similar_level(FIELD_CONNECTED)
+        body = self.body()
+        self.assertIn('Similar Co', body)
+        self.assertNotIn('1,000,000', body)
+
+    def test_a_private_amount_is_withheld_too(self):
+        self.set_similar_level(FIELD_PRIVATE)
+        body = self.body()
+        self.assertIn('Similar Co', body)
+        self.assertNotIn('1,000,000', body)
+
+
+class DigestBucketTests(_Cast):
+    """A derived representation inherits the visibility of its source field."""
+
+    def bucket_for(self, investor_profile):
+        from .digest import build_investor_digest_card
+        from .match_score import evaluate_venture_match
+        card = build_investor_digest_card(investor_profile)
+        return card['raising_bucket'] if card else None
+
+    def test_a_bucket_is_not_built_from_a_hidden_amount(self):
+        self.set_level('raising_amount', FIELD_CONNECTED)
+        from .models import visible_profile_fields
+        shown = visible_profile_fields(self.stranger_user, self.founder, ('raising_amount',))
+        self.assertNotIn('raising_amount', shown)
+
+    def test_a_connected_investor_may_receive_the_bucket(self):
+        self.set_level('raising_amount', FIELD_CONNECTED)
+        from .models import visible_profile_fields
+        shown = visible_profile_fields(self.connected_user, self.founder, ('raising_amount',))
+        self.assertIn('raising_amount', shown)
+
+    def test_a_private_amount_is_withheld_from_everyone_but_the_owner(self):
+        self.set_level('raising_amount', FIELD_PRIVATE)
+        from .models import visible_profile_fields
+        self.assertNotIn('raising_amount', visible_profile_fields(self.connected_user, self.founder, ('raising_amount',)))
+        self.assertIn('raising_amount', visible_profile_fields(self.founder_user, self.founder, ('raising_amount',)))

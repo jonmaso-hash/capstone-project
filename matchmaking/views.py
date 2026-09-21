@@ -1234,6 +1234,18 @@ def find_similar_startups(request, application_id):
 
         results = sorted(results, key=lambda x: x['score'], reverse=True)[:6]
 
+        # "Seeking $X" is the raise amount in a different costume, so it
+        # inherits that field's visibility. Decided here, not in the template:
+        # the flag says whether the derived display may exist at all, rather
+        # than the template deciding what to do with a value it was handed.
+        # Ranking is unaffected -- similarity comes from description_vector,
+        # which is not a disclosed field, so hiding an amount cannot change
+        # which companies appear or their order.
+        for entry in results:
+            entry['raise_disclosed'] = can_view_profile_field(
+                request.user, entry['application'], 'raising_amount'
+            )
+
     return render(request, 'matchmaking/similar_startups.html', {
         'source': source,
         'results': results,
@@ -3766,17 +3778,26 @@ def explore_feed(request):
         if not p:
             continue
         is_founder = v.role == 'founder'
+        # Explore serves anonymous visitors, so the card is built from what
+        # this viewer may see rather than filtered afterwards in the template:
+        # a value that never enters the context cannot be leaked by a later
+        # template change, and the card is also read by the JSON the page
+        # scrolls through. founder_name defaults to CONNECTED, so an anonymous
+        # visitor gets the company without the person behind it.
+        if is_founder:
+            shown = visible_profile_fields(request.user, p, ('founder_name', 'sector', 'stage'))
+            owner_name = shown.get('founder_name', '')
+            context_line = f"{shown.get('sector', '')} · {shown.get('stage', '')}".strip(' ·')
+        else:
+            owner_name = getattr(p, 'seller_name', '')
+            context_line = f"{getattr(p, 'industry', '')} · For sale".strip(' ·')
         cards.append({
             'id': v.id,
             'video_url': v.video.url,
             'caption': v.caption,
             'company_name': getattr(p, 'company_name', ''),
-            'owner_name': getattr(p, 'founder_name', '') or getattr(p, 'seller_name', ''),
-            'context': (
-                f"{getattr(p, 'sector', '')} · {getattr(p, 'stage', '')}".strip(' ·')
-                if is_founder else
-                f"{getattr(p, 'industry', '')} · For sale".strip(' ·')
-            ),
+            'owner_name': owner_name,
+            'context': context_line,
             'role_label': 'Founder' if is_founder else 'Business for sale',
             'profile_url': public_profile_link(request, p.user.username),
             'interested_count': v.interested_users.count(),
