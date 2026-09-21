@@ -3428,6 +3428,35 @@ class WeeklyDigestHeroCardTests(TestCase):
         self.assertIsNotNone(card)
         self.assertNotIn('company_name', card)
         self.assertEqual(card['sector'], 'SaaS')
+        # The bucket is the raise amount at lower resolution, so it inherits
+        # that field's visibility (matchmaking/models.py). raising_amount
+        # defaults to CONNECTED and this investor has no accepted connection,
+        # so there is no bucket to show. A digest recipient is by definition
+        # someone the founder has not accepted yet -- that is what a digest is
+        # for -- so this is the common case, not an edge one.
+        self.assertIsNone(card['raising_bucket'])
+
+    def test_investor_card_shows_the_bucket_once_the_founder_has_accepted_them(self):
+        """The other half: an accepted connection does receive it."""
+        from .digest import build_investor_digest_card
+        app = self._founder('divf1c', raising_amount=500_000)
+        inv = self._investor('divi1c', is_premium=False)
+        self._match(inv, app, 85.0)
+        Connection.objects.create(investor=inv, founder=app, status='ACCEPTED', initiated_by='INVESTOR')
+
+        card = build_investor_digest_card(inv)
+        self.assertEqual(card['raising_bucket'], "$250K–$1M")
+
+    def test_investor_card_shows_the_bucket_when_the_founder_made_it_public(self):
+        from .digest import build_investor_digest_card
+        from .models import FIELD_PUBLIC
+        app = self._founder('divf1p', raising_amount=500_000)
+        app.field_visibility = {'raising_amount': FIELD_PUBLIC}
+        app.save()
+        inv = self._investor('divi1p', is_premium=False)
+        self._match(inv, app, 85.0)
+
+        card = build_investor_digest_card(inv)
         self.assertEqual(card['raising_bucket'], "$250K–$1M")
 
     def test_premium_investor_card_includes_company_name(self):
