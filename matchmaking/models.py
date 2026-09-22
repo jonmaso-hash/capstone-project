@@ -2032,6 +2032,14 @@ class SellerApplication(models.Model):
     )
 
     is_private = models.BooleanField(default=False)
+    # Per-field disclosure under SELLER_FIELD_VISIBILITY -- the same authority
+    # founders use, with the seller's own policy. Absent keys fall back to that
+    # policy's defaults, never to PUBLIC.
+    field_visibility = models.JSONField(default=dict, blank=True)
+    field_visibility_defaults_applied_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="When the one-time backfill wrote this listing's starting visibility.",
+    )
     archived_at = models.DateTimeField(
         null=True, blank=True,
         help_text="Set when the seller archives this listing — hidden from discovery like is_private, "
@@ -2134,6 +2142,13 @@ class SellerApplication(models.Model):
     @property
     def has_verified_sale(self):
         return self.acquisition_connections.filter(status='CLOSED').exists()
+
+    def save(self, *args, **kwargs):
+        # Validated on save rather than in clean(), which save() does not call:
+        # an unknown key or a bogus level must fail loudly instead of being
+        # stored and silently ignored while the seller believes it took effect.
+        validate_profile_field_visibility(self.field_visibility, SELLER_FIELD_VISIBILITY)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.company_name} (For Sale)"
