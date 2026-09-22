@@ -20,7 +20,8 @@ from growth.services import consume_referral_if_pending
 from matchmaking.models import (
     Application, SellerApplication, ProfileVideo,
     NEW_PROFILE_FIELD_VISIBILITY, PROFILE_FIELD_VISIBILITY_CHOICES,
-    PROFILE_FIELD_VISIBILITY_LEVELS, profile_field_level,
+    PROFILE_FIELD_VISIBILITY_LEVELS, SELLER_FIELD_VISIBILITY,
+    SELLER_FIELD_VISIBILITY_CHOICES, profile_field_level,
 )
 from .forms import ProfilePictureForm
 from .models import UserSettings
@@ -276,6 +277,30 @@ def toggle_setting(request):
     return JsonResponse({"status": "success", "field": field, "value": bool(value)})
 
 
+def _apply_visibility_selections(profile, post, policy_defaults):
+    """
+    Merge the editor's visibility__<field> selections into profile.field_visibility.
+
+    Only known field/level pairs are accepted; anything else is dropped rather
+    than stored, so a hand-crafted POST cannot reach the model validator and
+    turn the page into a 500. Merged rather than replaced so a field absent
+    from the form keeps whatever the owner already chose.
+
+    This only ever writes field_visibility. Access to anything with its own
+    gate -- a CIM, a data room, a deal workspace, whether a profile is private
+    -- is decided elsewhere and is not reachable from here.
+    """
+    submitted = {
+        name: post.get(f'visibility__{name}')
+        for name in policy_defaults
+        if post.get(f'visibility__{name}') in PROFILE_FIELD_VISIBILITY_LEVELS
+    }
+    if submitted:
+        merged = dict(profile.field_visibility or {})
+        merged.update(submitted)
+        profile.field_visibility = merged
+
+
 @login_required
 def edit_founder_profile(request):
     """
@@ -300,20 +325,7 @@ def edit_founder_profile(request):
             if 'pitch_deck' in form.changed_data:
                 app.pitch_deck_uploaded_at = timezone.now()
 
-            # Per-field disclosure. Only known field/level pairs are accepted;
-            # anything else is dropped rather than stored, so a hand-crafted
-            # POST cannot reach the model validator and turn this page into a
-            # 500. Merged rather than replaced so a field absent from the form
-            # keeps whatever the founder already chose.
-            submitted = {
-                name: request.POST.get(f'visibility__{name}')
-                for name in NEW_PROFILE_FIELD_VISIBILITY
-                if request.POST.get(f'visibility__{name}') in PROFILE_FIELD_VISIBILITY_LEVELS
-            }
-            if submitted:
-                merged = dict(app.field_visibility or {})
-                merged.update(submitted)
-                app.field_visibility = merged
+            _apply_visibility_selections(app, request.POST, NEW_PROFILE_FIELD_VISIBILITY)
 
             app.save()
 
@@ -402,6 +414,8 @@ def edit_seller_profile(request):
             if vector_changed:
                 app.vector_fields_updated_at = timezone.now()
 
+            _apply_visibility_selections(app, request.POST, SELLER_FIELD_VISIBILITY)
+
             app.save()
 
             if is_new_submission:
@@ -413,11 +427,25 @@ def edit_seller_profile(request):
     else:
         form = SellerForm(instance=seller_profile, lock_vector_fields=is_locked)
 
+    # As on the founder page: the level in force now, from the authority. The
+    # label is the form's own, so each select reads like the input it governs.
+    visibility_rows = [
+        {
+            'name': name,
+            'label': form.fields[name].label,
+            'level': profile_field_level(seller_profile, name) if seller_profile else default,
+            'default': default,
+        }
+        for name, default in SELLER_FIELD_VISIBILITY.items()
+    ]
+
     return render(request, "usersettings/edit_seller_profile.html", {
         "form": form,
         "seller_profile": seller_profile,
         "is_locked": is_locked,
         "unlock_at": seller_profile.vector_fields_unlock_at if seller_profile else None,
+        "visibility_rows": visibility_rows,
+        "visibility_choices": SELLER_FIELD_VISIBILITY_CHOICES,
     })
 
 
