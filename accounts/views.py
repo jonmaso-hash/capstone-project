@@ -499,6 +499,13 @@ def profile(request, username=None, pk=None):
         name for name in NEW_PROFILE_FIELD_VISIBILITY
         if application is not None and can_view_profile_field(request.user, application, name)
     ]
+    # The seller half of the page, under the seller's own policy. Same
+    # authority; SELLER_FIELD_VISIBILITY supplies the fields and defaults.
+    from matchmaking.models import SELLER_FIELD_VISIBILITY
+    visible_seller_fields = [
+        name for name in SELLER_FIELD_VISIBILITY
+        if seller_application is not None and can_view_profile_field(request.user, seller_application, name)
+    ]
 
     show_contact_info = True
     if viewed_user != request.user:
@@ -743,6 +750,7 @@ def profile(request, username=None, pk=None):
         # here rather than asked per field in the template, so every field on
         # the page resolves against one consistent answer.
         "visible_founder_fields": visible_founder_fields,
+        "visible_seller_fields": visible_seller_fields,
         "mutual_connections": mutual_connections,
         "founder_milestones": founder_milestones,
         "founder_activity": founder_activity,

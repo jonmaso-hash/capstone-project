@@ -740,9 +740,21 @@ def buyer_dashboard(request):
         sellers = sellers.filter(deal_structure=filter_structure)
     if filter_max_price:
         try:
-            sellers = sellers.filter(asking_price__lte=float(filter_max_price))
+            threshold = float(filter_max_price)
         except ValueError:
-            pass
+            threshold = None
+        if threshold is not None:
+            # A seller may hide their asking price. Filtering on it directly
+            # would let a buyer bisect a hidden price -- $2M in, $1M out --
+            # exactly as ?capital= did on the founder side, so the same
+            # boundary applies: sellers who have not disclosed it to this buyer
+            # sit out of this filter, silently.
+            sellers = restrict_queryset_for_field_filter(sellers, request.user, 'asking_price')
+            sellers = sellers.filter(asking_price__lte=threshold)
+
+    # Resolved once, before deal_size_signal reads it inside evaluate_deal_match,
+    # so whether a hidden price may shape the band costs no query per seller.
+    sellers = attach_visible_fields(request.user, sellers)
 
     for seller in sellers:
         if not seller.description_vector and seller.description:
@@ -1502,6 +1514,11 @@ def acquisition_bulletin_board(request):
         .values('seller_id').annotate(n=Count('id')).values_list('seller_id', 'n')
     )
 
+    # Anonymous-reachable. Resolved once, before evaluate_deal_match reads it:
+    # the price shown and whether it may shape a buyer's match both depend on
+    # what this viewer may see.
+    listings_queryset = attach_visible_fields(request.user, listings_queryset)
+
     listings = []
     for listing in listings_queryset:
         # Mirrors founder_bulletin_board: no mandate, no match, and no
@@ -2142,14 +2159,24 @@ def export_acquisition_csv(request):
         'Company Name', 'Industry', 'Location', 'Asking Price',
         'Annual Revenue', 'EBITDA', 'Deal Structure', 'Years in Business', 'Website',
     ])
-    for listing in queryset:
+    # A bulk extraction surface -- every discoverable listing to any premium
+    # buyer -- so it goes through the same authority as the listing page. One
+    # relation query for the whole export, via attach_visible_fields.
+    #
+    # A withheld figure writes the same empty cell an unstated one does. An
+    # unstated asking price is stored as 0 and used to export as "0.00"; if a
+    # hidden price wrote "" instead, the difference would mark exactly which
+    # sellers set a price and hid it. So both are now "", which is also more
+    # honest -- 0 means "not stated", not "free".
+    for listing in attach_visible_fields(request.user, queryset):
+        shown = listing.visible_fields
         writer.writerow([
             listing.company_name,
             listing.industry,
             listing.geography,
-            listing.asking_price,
-            listing.annual_revenue,
-            listing.ebitda,
+            (listing.asking_price or '') if 'asking_price' in shown else '',
+            (listing.annual_revenue if listing.annual_revenue is not None else '') if 'annual_revenue' in shown else '',
+            (listing.ebitda if listing.ebitda is not None else '') if 'ebitda' in shown else '',
             listing.get_deal_structure_display(),
             listing.years_in_business,
             listing.company_website,
@@ -3526,6 +3553,9 @@ def pitch_videos_section(request):
         f.like_count = f.pitch_video_likes.count() if f.pitch_video_show_like_count else None
         f.comment_count = f.pitch_video_comments.count()
 
+    # Anonymous-reachable, and ranked by evaluate_deal_match for a signed-in
+    # buyer -- so a hidden price must neither print nor move a seller's rank.
+    seller_qs = attach_visible_fields(request.user, seller_qs)
     sellers = _rank_pitch_video_profiles(
         seller_qs, lambda s, buy: evaluate_deal_match(s, buy), buyer_profile
     )

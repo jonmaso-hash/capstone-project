@@ -280,7 +280,7 @@
 
                 <div class="d-flex justify-content-between align-items-center mt-2">
                     <span class="asking-chip">
-                        Asking {{ listing.asking_price|asking_price_display }}
+                        Asking {% if 'asking_price' in listing.visible_fields %}{{ listing.asking_price|asking_price_display }}{% else %}Not stated{% endif %}
                     </span>
                     <a href="{{ listing.profile_url }}" class="view-btn">
                         View Listing &rarr;
