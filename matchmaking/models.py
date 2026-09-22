@@ -1462,6 +1462,14 @@ SELLER_FIELD_VISIBILITY = {
     'reason_for_sale': FIELD_CONNECTED,
 }
 
+# The same three levels in a seller's words: CONNECTED means buyers the seller
+# accepted, and the founder wording ("investors") would be false on a listing.
+SELLER_FIELD_VISIBILITY_CHOICES = [
+    (FIELD_PUBLIC, 'Anyone — shown on your public listing'),
+    (FIELD_CONNECTED, 'Only buyers you have accepted'),
+    (FIELD_PRIVATE, 'Only you'),
+]
+
 # The acquisition mirror of ESTABLISHED_FOUNDER_CONNECTION_STATES: a deal that
 # has moved to closing does not end the relationship. Shared with the
 # acquisition deal workspace and the CIM, so "connected" means one thing.

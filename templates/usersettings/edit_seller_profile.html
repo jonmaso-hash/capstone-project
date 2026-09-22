@@ -279,6 +279,41 @@
 
                 </div>
 
+                {# Per-field disclosure. Business name is deliberately absent: it is always shown. #}
+                <div class="card border-0 shadow-sm rounded-4 mt-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-1"><i class="bi bi-eye me-2"></i>Who can see what</h5>
+                        <p class="text-secondary small mb-4">
+                            Your business name is always visible. These four figures are your choice.
+                            <strong>Only buyers you have accepted</strong> means the buyers you
+                            personally approved &mdash; not everyone with a buyer account.
+                        </p>
+
+                        <div class="row g-3">
+                            {% for row in visibility_rows %}
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold mb-1" for="vis_{{ row.name }}">{{ row.label }}</label>
+                                <select class="form-select form-select-sm" id="vis_{{ row.name }}" name="visibility__{{ row.name }}">
+                                    {% for value, label in visibility_choices %}
+                                    <option value="{{ value }}" {% if row.level == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="alert alert-light border small mt-4 mb-0">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Hiding a figure also removes your listing from searches that filter on it &mdash;
+                            a buyer narrowing by &ldquo;asking price under $2M&rdquo; will not see you unless
+                            you have shared your price with them. A buyer who cannot see your asking price is
+                            matched as though you had not stated one.
+                            These settings cover these figures only: your CIM and your deal rooms keep their
+                            own access rules, and a private listing stays private whatever you choose here.
+                        </div>
+                    </div>
+                </div>
+
                 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mt-5">
                     <a href="{% url 'accounts:profile_self' %}" class="btn btn-link text-muted text-decoration-none order-2 order-sm-1 px-0">
                         <i class="bi bi-arrow-left me-1"></i> Cancel changes
