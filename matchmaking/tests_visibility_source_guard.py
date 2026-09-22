@@ -45,10 +45,19 @@ TEMPLATES_DIR = ROOT / 'templates'
 # The fields whose default visibility is below PUBLIC -- the ones a read can
 # actually disclose. The descriptive fields default PUBLIC; a read of those is
 # not a leak unless a founder raises the level, which the template gates cover.
-SENSITIVE = (
+FOUNDER_SENSITIVE = (
     'raising_amount', 'prior_amount_raised', 'current_revenue',
     'monthly_burn_rate', 'reason_for_capital', 'founder_name',
 )
+
+# Every controllable seller field -- including asking_price, which defaults
+# PUBLIC. The founder list above scans only fields that default below PUBLIC;
+# that is not good enough here, because the seller field most likely to be
+# tightened is precisely the one that starts open. Leaving asking_price out
+# would exempt the headline field of every listing from enforcement.
+SELLER_SENSITIVE = ('asking_price', 'annual_revenue', 'ebitda', 'reason_for_sale')
+
+SENSITIVE = FOUNDER_SENSITIVE + SELLER_SENSITIVE
 
 TEMPLATE_READ = re.compile(r'\.(' + '|'.join(SENSITIVE) + r')\b')
 TEMPLATE_GATES = ('visible_founder_fields', 'visible_fields', 'raise_disclosed')
