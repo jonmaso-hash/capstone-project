@@ -1049,11 +1049,13 @@ class ApplyConstraintsToQuerysetTests(TestCase):
         u1 = User.objects.create_user('cq_f1', password='x')
         u2 = User.objects.create_user('cq_f2', password='x')
         self.f1 = Application.objects.create(
+            field_visibility={'raising_amount': 'PUBLIC', 'monthly_burn_rate': 'PUBLIC'},
             user=u1, company_name='F1', founder_name='F', email='f1@t.com',
             description='test', sector='Healthcare', stage='Series C',
             raising_amount=3000000, years_in_business=5, monthly_burn_rate=40000,
         )
         self.f2 = Application.objects.create(
+            field_visibility={'raising_amount': 'PUBLIC', 'monthly_burn_rate': 'PUBLIC'},
             user=u2, company_name='F2', founder_name='F', email='f2@t.com',
             description='test', sector='SaaS', stage='Seed',
             raising_amount=100000, years_in_business=1, monthly_burn_rate=5000,
@@ -1147,6 +1149,7 @@ class SearchWithRelaxationTests(TestCase):
         self.Application = Application
         u = User.objects.create_user('relax_f1', password='x')
         self.f1 = Application.objects.create(
+            field_visibility={'raising_amount': 'PUBLIC', 'monthly_burn_rate': 'PUBLIC'},
             user=u, company_name='RelaxCo', founder_name='F', email='relax@t.com',
             description='test', sector='Healthcare', stage='Series C',
             raising_amount=3000000, years_in_business=5, monthly_burn_rate=40000,
@@ -1221,6 +1224,7 @@ class AskZeldaAPIViewTests(TestCase):
         defaults = dict(
             company_name=f'{username}Co', founder_name='F', email=f'{username}@t.com',
             description='test', sector='SaaS', stage='Series C',
+            field_visibility={'raising_amount': 'PUBLIC', 'monthly_burn_rate': 'PUBLIC'},
         )
         defaults.update(kwargs)
         return Application.objects.create(user=u, **defaults)
@@ -1388,6 +1392,10 @@ class AskZeldaBuyerSellerSearchTests(TestCase):
         defaults = dict(
             company_name=f'{username}Co', seller_name='S', email=f'{username}@t.com',
             description='A steady regional business.', industry='Manufacturing',
+            # These tests exercise the constraint logic, which only runs on a
+            # figure the searching buyer may see; revenue and EBITDA default to
+            # accepted buyers, so they are made public here.
+            field_visibility={'annual_revenue': 'PUBLIC', 'ebitda': 'PUBLIC'},
         )
         defaults.update(kwargs)
         return SellerApplication.objects.create(user=u, **defaults)

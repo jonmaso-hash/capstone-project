@@ -1560,7 +1560,7 @@ def _call_claude_for_query_extraction(question: str, target: str = 'founder') ->
         return {'constraints': []}
 
 
-def _apply_constraints_to_queryset(queryset, constraints, relax=False, allowed_fields=None):
+def _apply_constraints_to_queryset(queryset, constraints, relax=False, allowed_fields=None, viewer=None):
     """
     Applies an allowlisted, type-checked constraint list to a queryset.
     Constraints come from Claude's output — untrusted input, not a trusted
@@ -1586,7 +1586,29 @@ def _apply_constraints_to_queryset(queryset, constraints, relax=False, allowed_f
     constraints (sector/stage/geography) are never relaxed — widening those
     would change *what kind* of founder is being searched for, not just
     how strict the match is.
+
+    SECURITY BOUNDARY. Several allowlisted fields are founder- or
+    seller-controlled -- raising_amount and monthly_burn_rate default to
+    accepted connections; asking_price, annual_revenue and ebitda likewise on
+    the seller side. A constraint on one is a filter whose result tells the
+    requester whether a record matched, so "raising under $1M", then "$500K",
+    bisects a hidden amount through a chat box, exactly as ?capital= did on the
+    search page. Each filter therefore narrows first, through
+    restrict_queryset_for_field_filter, to profiles that disclosed that field to
+    `viewer`.
+
+    Narrowed only when the filter is actually about to run: narrowing for a
+    constraint that is then discarded as malformed would make hidden profiles
+    vanish merely because a field was mentioned, which is its own signal.
+    `viewer=None` gets the most restrictive answer -- only PUBLIC fields are
+    filterable -- so a caller that forgets to pass one fails closed.
+
+    This boundary is invisible to the source guard's attribute scan: every
+    filter here is built from a field NAME, never a `.raising_amount` read.
+    See test_ask_zelda_constraints_pass_the_boundary in the guard.
     """
+    from matchmaking.models import restrict_queryset_for_field_filter
+
     if allowed_fields is None:
         allowed_fields = ASK_ZELDA_ALLOWED_FIELDS
 
@@ -1605,30 +1627,28 @@ def _apply_constraints_to_queryset(queryset, constraints, relax=False, allowed_f
         if field_type == 'string':
             if not isinstance(value, str) or not value.strip():
                 continue
-            queryset = queryset.filter(**{f'{field}__icontains': value.strip()})
-            continue
-
-        # field_type == 'number'
-        try:
-            value = float(value)
-        except (TypeError, ValueError):
-            continue
-
-        slack = 0.20 if relax else 0.0
-        about_band = 0.30 if relax else 0.15
-
-        if qualifier == 'at_least':
-            queryset = queryset.filter(**{f'{field}__gte': value * (1 - slack)})
-        elif qualifier == 'at_most':
-            queryset = queryset.filter(**{f'{field}__lte': value * (1 + slack)})
-        elif qualifier == 'about':
-            queryset = queryset.filter(**{f'{field}__gte': value * (1 - about_band), f'{field}__lte': value * (1 + about_band)})
-        else:  # 'exact', or an unrecognized qualifier — safest fallback
-            if relax:
-                queryset = queryset.filter(**{f'{field}__gte': value * 0.85, f'{field}__lte': value * 1.15})
-            else:
-                queryset = queryset.filter(**{f'{field}__exact': value})
-
+            lookup = {f'{field}__icontains': value.strip()}
+        else:  # field_type == 'number'
+            try:
+                value = float(value)
+            except (TypeError, ValueError):
+                continue
+            slack = 0.20 if relax else 0.0
+            about_band = 0.30 if relax else 0.15
+            if qualifier == 'at_least':
+                lookup = {f'{field}__gte': value * (1 - slack)}
+            elif qualifier == 'at_most':
+                lookup = {f'{field}__lte': value * (1 + slack)}
+            elif qualifier == 'about':
+                lookup = {f'{field}__gte': value * (1 - about_band), f'{field}__lte': value * (1 + about_band)}
+            else:  # 'exact', or an unrecognized qualifier — safest fallback
+                if relax:
+                    lookup = {f'{field}__gte': value * 0.85, f'{field}__lte': value * 1.15}
+                else:
+                    lookup = {f'{field}__exact': value}
+        # The filter is about to run: narrow to profiles that disclosed this
+        # field to the viewer first. A no-op for fields no policy controls.
+        queryset = restrict_queryset_for_field_filter(queryset, viewer, field).filter(**lookup)
     return queryset
 
 
@@ -1644,7 +1664,7 @@ def _constraint_label(constraint):
     return f"{field} of {value}"
 
 
-def _search_with_relaxation(queryset, constraints, limit=10, allowed_fields=None):
+def _search_with_relaxation(queryset, constraints, limit=10, allowed_fields=None, viewer=None):
     """
     Runs the constraint list as given first. If that returns zero results,
     progressively relaxes the search instead of just reporting "no
@@ -1669,11 +1689,11 @@ def _search_with_relaxation(queryset, constraints, limit=10, allowed_fields=None
     if allowed_fields is None:
         allowed_fields = ASK_ZELDA_ALLOWED_FIELDS
 
-    matches = list(_apply_constraints_to_queryset(queryset, constraints, allowed_fields=allowed_fields)[:limit])
+    matches = list(_apply_constraints_to_queryset(queryset, constraints, allowed_fields=allowed_fields, viewer=viewer)[:limit])
     if matches:
         return matches, [], False
 
-    matches = list(_apply_constraints_to_queryset(queryset, constraints, relax=True, allowed_fields=allowed_fields)[:limit])
+    matches = list(_apply_constraints_to_queryset(queryset, constraints, relax=True, allowed_fields=allowed_fields, viewer=viewer)[:limit])
     if matches:
         return matches, [], True
 
@@ -1685,13 +1705,13 @@ def _search_with_relaxation(queryset, constraints, limit=10, allowed_fields=None
     dropped = []
     for idx in reversed(numeric_indices):
         dropped.append(remaining.pop(idx))
-        matches = list(_apply_constraints_to_queryset(queryset, remaining, relax=True, allowed_fields=allowed_fields)[:limit])
+        matches = list(_apply_constraints_to_queryset(queryset, remaining, relax=True, allowed_fields=allowed_fields, viewer=viewer)[:limit])
         if matches:
             return matches, [_constraint_label(c) for c in dropped], False
 
     while remaining:
         dropped.append(remaining.pop())
-        matches = list(_apply_constraints_to_queryset(queryset, remaining, allowed_fields=allowed_fields)[:limit])
+        matches = list(_apply_constraints_to_queryset(queryset, remaining, allowed_fields=allowed_fields, viewer=viewer)[:limit])
         if matches:
             return matches, [_constraint_label(c) for c in dropped], False
 

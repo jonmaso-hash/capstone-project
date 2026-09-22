@@ -154,7 +154,7 @@
                         <a href="{% url 'accounts:profile' s.user.username %}" class="text-dark text-decoration-none">{{ s.company_name }}</a>
                         {% if s.is_highlighted %}<span class="badge bg-warning text-dark ms-1"><i class="bi bi-stars"></i> Highlighted</span>{% endif %}
                     </h6>
-                    <div class="small text-secondary mb-2">{{ s.industry }} &middot; Asking {{ s.asking_price|asking_price_display }}</div>
+                    <div class="small text-secondary mb-2">{{ s.industry }} &middot; Asking {% if 'asking_price' in s.visible_fields %}{{ s.asking_price|asking_price_display }}{% else %}Not stated{% endif %}</div>
                     <p class="small text-secondary mb-3">{{ s.description|truncatewords:22 }}</p>
 
                     <div class="d-flex flex-wrap align-items-center gap-1 mb-2">

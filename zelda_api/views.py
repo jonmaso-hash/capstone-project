@@ -159,7 +159,7 @@ class ZeldaLibraryAPIView(APIView):
 ZELDA_ASK_DAILY_LIMIT = 30
 
 
-def _founder_to_result_dict(app):
+def _founder_to_result_dict(app, viewer=None):
     """
     Builds the standard founder search-result dict — shared by
     ZeldaGlobalSearchAPIView and ZeldaAskAPIView so the two search surfaces
@@ -170,10 +170,19 @@ def _founder_to_result_dict(app):
     except NoReverseMatch:
         url = f"/accounts/profile/{app.user.username}/"
 
+    from matchmaking.models import can_view_profile_field
+
     return {
         'type': 'Founder Profile',
         'title': f"Founder: {app.company_name}",
-        'founder_name': app.user.get_full_name() or app.user.username,
+        # The person's name comes from their ACCOUNT here, not the founder_name
+        # profile field -- so a founder who hid founder_name still had it served
+        # under this very key. Gated on that field's visibility; when hidden it
+        # falls back to the username, which every profile URL already exposes.
+        'founder_name': (
+            (app.user.get_full_name() or app.user.username)
+            if can_view_profile_field(viewer, app, 'founder_name') else app.user.username
+        ),
         'username': app.user.username,
         'startup_name': app.company_name,
         'sector': app.sector or 'General',
@@ -184,7 +193,7 @@ def _founder_to_result_dict(app):
     }
 
 
-def _seller_to_result_dict(seller):
+def _seller_to_result_dict(seller, viewer=None):
     """
     Buyer-side mirror of _founder_to_result_dict — same shape convention
     (type/title/username/executive_summary/url) so the Ask Zelda widget's
@@ -192,6 +201,8 @@ def _seller_to_result_dict(seller):
     with seller-specific fields (industry, asking_price, has_cim) in place
     of the founder-specific ones (sector, funding_stage, has_pitch_deck).
     """
+    from matchmaking.models import can_download_cim, can_view_profile_field
+
     try:
         url = reverse('accounts:profile', kwargs={'username': seller.user.username})
     except NoReverseMatch:
@@ -205,8 +216,18 @@ def _seller_to_result_dict(seller):
         'company_name': seller.company_name,
         'industry': seller.industry or 'General',
         'executive_summary': (seller.description or "")[:200] + '...',
-        'asking_price': str(seller.asking_price) if seller.asking_price else None,
-        'has_cim': bool(seller.cim_document),
+        # A hidden price serialises exactly like an unstated one -- None, key
+        # present -- because omitting the key would let "absent" and "null"
+        # tell a caller which sellers set a price and then hid it.
+        'asking_price': (
+            str(seller.asking_price)
+            if seller.asking_price and can_view_profile_field(viewer, seller, 'asking_price')
+            else None
+        ),
+        # Whether a CIM exists is itself protected: cim_document_serve returns
+        # 404 for "none" and "not allowed" alike, so this must not say otherwise.
+        # A viewer who may not download it always sees False, whatever exists.
+        'has_cim': bool(seller.cim_document) and can_download_cim(viewer, seller),
         'url': url,
     }
 
@@ -513,10 +534,10 @@ class ZeldaAskAPIView(APIView):
                 base_queryset = Application.objects.discoverable().select_related('user').exclude(review_status='DENIED')
                 to_result_dict = _founder_to_result_dict
 
-            matches, dropped_labels, widened = _search_with_relaxation(base_queryset, constraints, allowed_fields=allowed_fields)
+            matches, dropped_labels, widened = _search_with_relaxation(base_queryset, constraints, allowed_fields=allowed_fields, viewer=request.user)
 
             summary = ', '.join(f"{c['field']}={c['value']}" for c in constraints)
-            results = [to_result_dict(obj) for obj in matches]
+            results = [to_result_dict(obj, viewer=request.user) for obj in matches]
             count = len(matches)
             plural = 'es' if (target == 'seller' and count != 1) else ('s' if count != 1 else '')
             noun = 'business' if target == 'seller' else 'founder'

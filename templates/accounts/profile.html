@@ -575,7 +575,7 @@
 
                                 <div class="p-3 bg-light rounded-3 border-start border-4 border-warning mb-4">
                                     <h6 class="fw-bold text-muted text-uppercase small mb-2">Reason for Sale</h6>
-                                    <p class="text-secondary mb-0 small fst-italic">{{ seller_application.reason_for_sale|default:"Not disclosed." }}</p>
+                                    <p class="text-secondary mb-0 small fst-italic">{% if 'reason_for_sale' in visible_seller_fields %}{{ seller_application.reason_for_sale|default:"Not disclosed." }}{% else %}Not disclosed.{% endif %}</p>
                                 </div>
 
                                 {% if elevator_pitch %}
@@ -603,19 +603,19 @@
                             <div class="col-md-5">
                                 <div class="bg-warning-subtle p-4 rounded-4 border border-warning text-center mb-3">
                                     <small class="text-warning-emphasis text-uppercase fw-bold d-block mb-1">Asking Price</small>
-                                    <h3 class="fw-bold text-warning-emphasis mb-0">{{ seller_application.asking_price|asking_price_display }}</h3>
+                                    <h3 class="fw-bold text-warning-emphasis mb-0">{% if 'asking_price' in visible_seller_fields %}{{ seller_application.asking_price|asking_price_display }}{% else %}Not stated{% endif %}</h3>
                                 </div>
                                 <div class="row g-2">
                                     <div class="col-6">
                                         <div class="bg-light p-2 rounded border small text-center">
                                             <span class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.65rem;">Annual Revenue</span>
-                                            <span class="fw-bold text-dark">{% if seller_application.annual_revenue %}${{ seller_application.annual_revenue|floatformat:0|intcomma }}{% else %}--{% endif %}</span>
+                                            <span class="fw-bold text-dark">{% if 'annual_revenue' in visible_seller_fields and seller_application.annual_revenue %}${{ seller_application.annual_revenue|floatformat:0|intcomma }}{% else %}--{% endif %}</span>
                                         </div>
                                     </div>
                                     <div class="col-6">
                                         <div class="bg-light p-2 rounded border small text-center">
                                             <span class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.65rem;">EBITDA</span>
-                                            <span class="fw-bold text-dark">{% if seller_application.ebitda %}${{ seller_application.ebitda|floatformat:0|intcomma }}{% else %}--{% endif %}</span>
+                                            <span class="fw-bold text-dark">{% if 'ebitda' in visible_seller_fields and seller_application.ebitda %}${{ seller_application.ebitda|floatformat:0|intcomma }}{% else %}--{% endif %}</span>
                                         </div>
                                     </div>
                                 </div>

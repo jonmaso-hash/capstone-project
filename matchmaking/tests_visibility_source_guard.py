@@ -60,7 +60,7 @@ SELLER_SENSITIVE = ('asking_price', 'annual_revenue', 'ebitda', 'reason_for_sale
 SENSITIVE = FOUNDER_SENSITIVE + SELLER_SENSITIVE
 
 TEMPLATE_READ = re.compile(r'\.(' + '|'.join(SENSITIVE) + r')\b')
-TEMPLATE_GATES = ('visible_founder_fields', 'visible_fields', 'raise_disclosed')
+TEMPLATE_GATES = ('visible_founder_fields', 'visible_seller_fields', 'visible_fields', 'raise_disclosed')
 TEMPLATE_LOOKBACK = 12
 
 TEMPLATE_ALLOWED = {
@@ -74,6 +74,8 @@ TEMPLATE_ALLOWED = {
     # is left as a separate decision.
     'accounts/application_detail.html':
         'UNREACHABLE: referenced by no view, include or extends',
+    'matchmaking/seller_dashboard.html':
+        "the seller's own dashboard: their own asking price",
 }
 
 # Templates allowlisted only because nothing renders them. Each must stay
@@ -112,6 +114,17 @@ PYTHON_ALLOWED = {
         'cache key carries the raise amount only when visible to the investor',
     ('matchmaking/utils.py', '_compute_hard_filters'):
         'reads the raise amount only when raise_visible is True for the investor',
+    # Seller side.
+    ('matchmaking/insights_engine.py', '_completion_percentage'):
+        'profile completeness percentage; reports whether fields are filled, not their values',
+    ('matchmaking/tasks.py', 'grade_buyer_prediction_snapshots'):
+        'staff-only shadow prediction grading; never shown to users',
+    ('matchmaking/match_components.py', 'deal_size_signal'):
+        'reads the asking price only when _asking_price_visible for the buyer; hidden = unstated',
+    ('matchmaking/views.py', 'export_acquisition_csv'):
+        'each figure written only when in the listing\'s visible_fields for the requester',
+    ('zelda_api/views.py', '_seller_to_result_dict'):
+        'price gated by can_view_profile_field, has_cim by can_download_cim, for the viewer',
     # Unreachable today -- kept visible here rather than silently allowed, so
     # wiring either up forces a decision.
     ('matchmaking/models.py', 'to_foundry_envelope'):
@@ -127,6 +140,27 @@ PYTHON_ALLOWED = {
 # versions, and the stale-entry test fails if any of them stops reading.
 
 SKIP_DIRS = {'venv', 'node_modules', 'staticfiles', 'migrations', '.git', '__pycache__'}
+
+# Module-level tables that hold controlled field NAMES as keys. An attribute
+# scan cannot see a field used this way: Ask Zelda filtered on raising_amount
+# and asking_price through `filter(**{f'{field}__lte': v})` with the field name
+# drawn from a dict like these, and no `.raising_amount` read ever appeared --
+# so a hidden amount was bisectable through a chat box while the attribute
+# guard stayed green. Every such table must be named here with the reason its
+# names cannot reach a requester-visible filter unguarded. A new one fails the
+# guard the day it is written.
+FIELD_NAME_TABLES = {
+    ('matchmaking/models.py', 'NEW_PROFILE_FIELD_VISIBILITY'):
+        'the founder policy itself: defines the fields, filters on none',
+    ('matchmaking/models.py', 'SELLER_FIELD_VISIBILITY'):
+        'the seller policy itself: defines the fields, filters on none',
+    ('zelda_api/intelligence_pipeline.py', 'ASK_ZELDA_ALLOWED_FIELDS'):
+        'consumed only by _apply_constraints_to_queryset, which narrows via '
+        'restrict_queryset_for_field_filter before every filter',
+    ('zelda_api/intelligence_pipeline.py', 'ASK_ZELDA_SELLER_ALLOWED_FIELDS'):
+        'consumed only by _apply_constraints_to_queryset, which narrows via '
+        'restrict_queryset_for_field_filter before every filter',
+}
 
 
 def _python_reads():
@@ -208,6 +242,50 @@ class ControlledFieldReadsGoThroughTheAuthority(SimpleTestCase):
                 and name in path.read_text(encoding='utf-8', errors='ignore')
             ]
             self.assertEqual(referrers, [], f'{template} is referenced again, so its reads are live: {referrers}')
+
+    def test_every_table_of_controlled_field_names_is_accounted_for(self):
+        """
+        The blind spot of the attribute scan, closed by looking for the names
+        themselves: any module-level dict keyed by a controlled field.
+        """
+        found = set()
+        for path in ROOT.rglob('*.py'):
+            if any(part in SKIP_DIRS for part in path.parts) or path.name.startswith('tests'):
+                continue
+            rel = path.relative_to(ROOT).as_posix()
+            try:
+                tree = ast.parse(path.read_text(encoding='utf-8', errors='ignore'))
+            except SyntaxError:
+                continue
+            for node in tree.body:
+                if not (isinstance(node, ast.Assign) and isinstance(node.value, ast.Dict)):
+                    continue
+                keys = {k.value for k in node.value.keys if isinstance(k, ast.Constant)}
+                if keys & set(SENSITIVE):
+                    for target in node.targets:
+                        if isinstance(target, ast.Name):
+                            found.add((rel, target.id))
+        unexplained = sorted(f'{rel} :: {name}' for rel, name in found - set(FIELD_NAME_TABLES))
+        self.assertEqual(
+            unexplained, [],
+            'Tables keyed by controlled field names, not accounted for. If any '
+            'feeds a filter, route it through restrict_queryset_for_field_filter '
+            'and register it:\n  ' + '\n  '.join(unexplained),
+        )
+        stale = sorted(f'{rel} :: {name}' for rel, name in set(FIELD_NAME_TABLES) - found)
+        self.assertEqual(stale, [], 'registered tables that no longer exist:\n  ' + '\n  '.join(stale))
+
+    def test_ask_zelda_constraints_pass_the_boundary(self):
+        """
+        Pins the specific fix: the function every Ask Zelda filter runs through
+        must call restrict_queryset_for_field_filter.
+        """
+        tree = ast.parse((ROOT / 'zelda_api' / 'intelligence_pipeline.py').read_text(encoding='utf-8'))
+        fn = next(n for n in ast.walk(tree)
+                  if isinstance(n, ast.FunctionDef) and n.name == '_apply_constraints_to_queryset')
+        calls = {c.func.id for c in ast.walk(fn)
+                 if isinstance(c, ast.Call) and isinstance(c.func, ast.Name)}
+        self.assertIn('restrict_queryset_for_field_filter', calls)
 
     def test_the_scanners_see_what_they_guard(self):
         """

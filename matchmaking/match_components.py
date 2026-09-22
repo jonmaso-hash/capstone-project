@@ -163,6 +163,21 @@ def industry_signal(seller, buyer):
     return Signal(INDUSTRY, 0.0, INDUSTRY, DECLARED, detail=f'{seller.industry} is outside the thesis')
 
 
+def _asking_price_visible(seller, buyer):
+    """
+    Whether this buyer may see the seller's asking price.
+
+    Reuses a precomputed `visible_fields` when the caller resolved a list in
+    one query (attach_visible_fields), and asks the per-object authority
+    otherwise.
+    """
+    visible = getattr(seller, 'visible_fields', None)
+    if visible is not None:
+        return 'asking_price' in visible
+    from matchmaking.models import can_view_profile_field
+    return can_view_profile_field(getattr(buyer, 'user', None), seller, 'asking_price')
+
+
 def deal_size_signal(seller, buyer):
     """
     Asking price against the buyer's budget - like against like, which is
@@ -175,7 +190,15 @@ def deal_size_signal(seller, buyer):
     mismatch, so a seller who has not priced the business is ranked lower
     for thin evidence rather than scored against a number they never gave.
     """
-    asking = seller.asking_price
+    # A price the seller has hidden from this buyer is treated exactly as an
+    # unstated one -- the same signal, the same detail string. This one signal
+    # decides whether a seller clears the band that puts them on the buyer's
+    # dashboard, the explanation shown, and the sort order; and the buyer sets
+    # the budget it is compared against. Letting a hidden price participate
+    # would let them move their budget and bisect it by watching a seller
+    # appear, be explained, or change rank. Returning anything distinguishable
+    # from "not stated" would itself disclose that a price exists.
+    asking = seller.asking_price if _asking_price_visible(seller, buyer) else None
     lo, hi = buyer.budget_min, buyer.budget_max
     if not asking or lo is None or hi is None:
         return Signal(DEAL_SIZE, None, DEAL_SIZE, DECLARED, detail='asking price or budget not stated')
