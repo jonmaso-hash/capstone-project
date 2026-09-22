@@ -355,7 +355,6 @@ def _get_investor_readiness(application):
     }
 
 
-@login_required
 def _zelda_advantage_payload(application):
     """
     The figures the Zelda Advantage widget computes from, as JSON.
@@ -375,6 +374,7 @@ def _zelda_advantage_payload(application):
     })
 
 
+@login_required
 def profile(request, username=None, pk=None):
     """
     Renders user profile, calculates follow status, and fetches connections.
