@@ -509,6 +509,9 @@ class HardFilterCacheCorrectnessTests(TestCase):
         self.app = Application.objects.create(
             user=self.founder_user, company_name='FCo', founder_name='F', email='f@t.com',
             description='test', sector='SaaS', stage='Seed', raising_amount=250000,
+            # Public, so the cache key is expected to follow the amount. A hidden
+            # amount deliberately does not reach the key -- see utils.passes_hard_filters.
+            field_visibility={'raising_amount': 'PUBLIC'},
         )
 
     def test_same_inputs_return_cached_result(self):
@@ -670,9 +673,15 @@ class PassesHardFiltersTests(TestCase):
         )
 
     def _founder(self, raising_amount=500000, stage='Seed'):
+        # These tests exercise the cheque-versus-round logic, which only runs
+        # on a raise amount the investor may see: a hidden one is skipped like
+        # an undeclared one, so it cannot decide discovery (see
+        # HiddenRaiseDoesNotDecideDiscoveryTests). The amount is made public
+        # here so that logic is what these tests actually reach.
         return Application.objects.create(
             user=self.founder_user, company_name='FCo', founder_name='F', email='f@t.com',
             description='test', sector='SaaS', stage=stage, raising_amount=raising_amount,
+            field_visibility={'raising_amount': 'PUBLIC'},
         )
 
     def test_no_constraints_declared_passes(self):

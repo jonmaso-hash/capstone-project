@@ -181,3 +181,87 @@ class MatchReasonsTests(_Cast):
     def test_an_accepted_investor_gets_it(self):
         self.set_level('raising_amount', FIELD_CONNECTED)
         self.assertIn('Raise size fits your check range', self.reasons(self.connected_investor))
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class HiddenRaiseDoesNotDecideDiscoveryTests(_Cast):
+    """
+    The invariant, stated as the attack:
+
+        Two founders identical in everything an investor can see, whose private
+        raise amounts differ. An investor who can see neither amount must get
+        identical discoverability for both -- otherwise the amount is being
+        read back through whether the founder appears.
+
+    The investor's smallest cheque sits BETWEEN the two amounts. Before the fix
+    the hard filter excluded the founder whose whole round was smaller than
+    that cheque and kept the other, so moving ticket_size_min and watching who
+    appeared bisected both amounts.
+    """
+
+    SMALL, LARGE, CHEQUE = 200_000, 5_000_000, 1_000_000
+
+    def setUp(self):
+        super().setUp()
+        self.small = self._twin('fv_twin_small', 'Small Co', self.SMALL)
+        self.large = self._twin('fv_twin_large', 'Large Co', self.LARGE)
+        self.stranger_investor.ticket_size_min = self.CHEQUE
+        self.stranger_investor.investment_stage = 'Seed'
+        self.stranger_investor.save()
+
+    def _twin(self, username, company, amount):
+        from .models import Application
+        user = User.objects.create_user(username, password='x')
+        return Application.objects.create(
+            user=user, company_name=company, founder_name='T', email=f'{username}@t.com',
+            description='We build things.', sector='SaaS', stage='Seed',
+            geography='San Diego CA', raising_amount=amount, review_status='APPROVED',
+        )
+
+    def _passes(self, founder):
+        from .utils import passes_hard_filters
+        return passes_hard_filters(founder, self.stranger_investor)
+
+    def test_hidden_amounts_do_not_change_eligibility(self):
+        self.assertEqual(self._passes(self.small), self._passes(self.large),
+                         'eligibility differs between twins whose only difference is a hidden amount')
+        self.assertTrue(self._passes(self.small), 'a hidden raise must be skipped, not held against the founder')
+
+    def test_visible_amounts_still_filter(self):
+        """
+        Positive control. Without it, "both pass" is also what a filter that
+        never runs looks like. With the amounts public, the cheque that cannot
+        fit the small round must still exclude it.
+        """
+        for founder in (self.small, self.large):
+            founder.field_visibility = {'raising_amount': FIELD_PUBLIC}
+            founder.save()
+        self.assertFalse(self._passes(self.small))
+        self.assertTrue(self._passes(self.large))
+
+    def test_the_bulletin_board_lists_both_twins(self):
+        """
+        The same invariant at the request boundary, asserted on the listing
+        itself -- the `pitches` the hard filter produced -- rather than on the
+        page text. The board has other sections that name companies without
+        applying hard filters, so a founder excluded from the listing can still
+        appear elsewhere on the page; an earlier version of this test searched
+        the whole page and passed with the leak restored.
+        """
+        self.client.force_login(self.stranger_user)
+        response = self.client.get(reverse('matchmaking:bulletin_board'))
+        listed = {p.pk for p in response.context['pitches']}
+        self.assertIn(self.large.pk, listed)  # the listing is live for this investor
+        self.assertIn(self.small.pk, listed, 'a hidden raise amount excluded a founder from the listing')
+
+    def test_a_cached_verdict_does_not_survive_the_founder_hiding_it(self):
+        """
+        The cache key carries the visibility decision. A result computed while
+        the amount was public must not be served once the founder hides it.
+        """
+        self.small.field_visibility = {'raising_amount': FIELD_PUBLIC}
+        self.small.save()
+        self.assertFalse(self._passes(self.small))   # cached: excluded
+        self.small.field_visibility = {'raising_amount': FIELD_CONNECTED}
+        self.small.save()
+        self.assertTrue(self._passes(self.small), 'a stale cached exclusion outlived the founder hiding the amount')

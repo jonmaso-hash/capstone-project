@@ -97,6 +97,12 @@ PYTHON_ALLOWED = {
         'applies can_view_profile_field / PRIVATE stripping itself',
     ('zelda_api/views.py', '_match_reasons'):
         'each field read is guarded by can_view_profile_field for the viewing investor',
+    # Matching. A hidden raise amount must not decide whether an investor can
+    # discover a founder, so both read it only when it is visible to them.
+    ('matchmaking/utils.py', 'passes_hard_filters'):
+        'cache key carries the raise amount only when visible to the investor',
+    ('matchmaking/utils.py', '_compute_hard_filters'):
+        'reads the raise amount only when raise_visible is True for the investor',
     # Unreachable today -- kept visible here rather than silently allowed, so
     # wiring either up forces a decision.
     ('matchmaking/models.py', 'to_foundry_envelope'):
@@ -106,13 +112,10 @@ PYTHON_ALLOWED = {
         'never takes status APPROVED',
 }
 
-# Deliberately absent, so they fail:
-#   accounts/views.py::profile             founder_data_json ignores PRIVATE
-#   zelda_api/views.py::_match_reasons     "raise fits your check range" bisects a hidden amount
-#   matchmaking/utils.py::passes_hard_filters / _compute_hard_filters
-#                                          matching presence vs an investor-set ticket range
-#                                          is a per-record signal -- a product decision,
-#                                          not something this guard should settle by allowlisting
+# History: this list began failing on accounts/views.py::profile,
+# zelda_api/views.py::_match_reasons and the two hard-filter functions. Each
+# was closed rather than allowlisted; the entries above describe the gated
+# versions, and the stale-entry test fails if any of them stops reading.
 
 SKIP_DIRS = {'venv', 'node_modules', 'staticfiles', 'migrations', '.git', '__pycache__'}
 

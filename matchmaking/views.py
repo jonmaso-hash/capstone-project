@@ -611,12 +611,23 @@ def investor_dashboard(request):
     filter_industry = request.GET.get('industry', '').strip()
     filter_location = request.GET.get('location', '').strip()
 
+    # Each of these filters on a founder-controlled field. They default to
+    # PUBLIC, but a founder may hide them, and filtering on a hidden stage
+    # reveals it by elimination -- the same channel as ?capital= in
+    # _filtered_public_applications, so the same boundary applies.
     if filter_stage:
+        founders = restrict_queryset_for_field_filter(founders, request.user, 'stage')
         founders = founders.filter(stage__icontains=filter_stage)
     if filter_industry:
+        founders = restrict_queryset_for_field_filter(founders, request.user, 'sector')
         founders = founders.filter(sector__icontains=filter_industry)
     if filter_location:
+        founders = restrict_queryset_for_field_filter(founders, request.user, 'geography')
         founders = founders.filter(geography__icontains=filter_location)
+
+    # Resolved once, so the hard-filter gate below can ask whether a hidden
+    # raise amount or stage may participate without a query per founder.
+    founders = attach_visible_fields(request.user, founders)
 
     for founder in founders:
         # Hard-filter gate: excluded entirely rather than down-ranked — see
@@ -1376,6 +1387,11 @@ def founder_bulletin_board(request):
         .values('founder_id').annotate(n=Count('id')).values_list('founder_id', 'n')
     )
 
+    # Resolved once, before the hard-filter gate reads it: whether a hidden raise
+    # amount may participate in excluding a founder depends on what this viewer
+    # may see, and asking per founder would be a query each.
+    pitches_queryset = attach_visible_fields(request.user, pitches_queryset)
+
     pitches = []
     for pitch in pitches_queryset:
         # Hard-filter gate: excluded entirely (not shown, not scored) rather
@@ -1427,7 +1443,7 @@ def founder_bulletin_board(request):
 
     # Anonymous-reachable. The raise amount defaults to CONNECTED, so an
     # anonymous visitor sees it only where the founder has made it public.
-    pitches = attach_visible_fields(request.user, pitches)
+    # visible_fields was set before the loop, on these same objects.
     return render(request, 'matchmaking/bulletin_board.html', {
         'pitches': pitches,
         'selected_sector': selected_sector,
