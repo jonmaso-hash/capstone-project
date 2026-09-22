@@ -1479,17 +1479,65 @@ def can_view_profile_field(viewer_user, profile, field_name):
     """
     if field_name not in NEW_PROFILE_FIELD_VISIBILITY:
         return True
-    if viewer_user is not None and getattr(viewer_user, 'is_authenticated', False):
-        if viewer_user == profile.user or viewer_user.is_staff:
-            return True
+    signed_in = viewer_user is not None and getattr(viewer_user, 'is_authenticated', False)
+    privileged = signed_in and (viewer_user == profile.user or viewer_user.is_staff)
     level = profile_field_level(profile, field_name)
-    if level == FIELD_PUBLIC:
+    # The connection query is only paid when the answer depends on it.
+    connected = (
+        level == FIELD_CONNECTED and signed_in and not privileged
+        and _viewer_is_connected_to(viewer_user, profile)
+    )
+    return _level_permits(level, privileged, connected)
+
+
+def _level_permits(level, privileged, connected):
+    """
+    The decision itself, shared by the per-object and bulk paths.
+
+    can_view_profile_field answers one field on one profile; attach_visible_fields
+    answers every field on a whole list with one query. Both must reach
+    identical answers, so neither contains the rule -- they gather the facts
+    (who is viewing, what level is stored, whether a connection exists) and ask
+    this.
+    """
+    if privileged or level == FIELD_PUBLIC:
         return True
     if level == FIELD_PRIVATE:
         return False
-    if viewer_user is None or not getattr(viewer_user, 'is_authenticated', False):
-        return False
-    return _viewer_is_connected_to(viewer_user, profile)
+    return connected
+
+
+def attach_visible_fields(viewer_user, profiles):
+    """
+    Set `.visible_fields` on each profile: the controlled fields this viewer
+    may see. Templates gate with `{% if 'raising_amount' in p.visible_fields %}`.
+
+    For lists -- the bulletin board, search results, the investor shortlist --
+    where asking can_view_profile_field per field per row would cost a
+    connection query each: fifty founders by six fields is three hundred
+    queries on one page. This does one, for the viewer's accepted connections,
+    and resolves the rest from stored levels through _level_permits, the same
+    rule the per-object authority uses.
+    """
+    profiles = list(profiles)
+    signed_in = viewer_user is not None and getattr(viewer_user, 'is_authenticated', False)
+    connected_ids = set()
+    if signed_in:
+        investor_profile = getattr(viewer_user, 'match_investor_profile', None)
+        if investor_profile:
+            connected_ids = set(
+                Connection.objects.filter(investor=investor_profile, status='ACCEPTED')
+                .values_list('founder_id', flat=True)
+            )
+    for profile in profiles:
+        privileged = signed_in and (viewer_user.is_staff or viewer_user.pk == profile.user_id)
+        connected = profile.pk in connected_ids
+        stored = getattr(profile, 'field_visibility', None) or {}
+        profile.visible_fields = {
+            name for name in NEW_PROFILE_FIELD_VISIBILITY
+            if _level_permits(_level_from_stored(stored, name), privileged, connected)
+        }
+    return profiles
 
 
 def visible_profile_fields(viewer_user, profile, field_names):

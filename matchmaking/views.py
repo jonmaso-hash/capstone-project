@@ -34,6 +34,7 @@ from matchmaking.models import ExternalDealRoom, ExternalDealRoomGrant, External
 from matchmaking.models import (
     NEW_PROFILE_FIELD_VISIBILITY, can_view_profile_field,
     restrict_queryset_for_field_filter, visible_profile_fields,
+    attach_visible_fields,
 )
 from matchmaking.deal_activity import get_deal_activity_timeline
 from matchmaking.models import founder_description_meets_word_count
@@ -815,6 +816,8 @@ def investor_shortlist(request):
     shortlist = sorted(
         shortlist, key=lambda x: (x['match'].band, x['match'].score), reverse=True)
 
+    # A shortlisted founder is not necessarily one who accepted this investor.
+    attach_visible_fields(request.user, [entry['founder'] for entry in shortlist])
     return render(request, 'matchmaking/investor_shortlist.html', {
         'shortlist': shortlist,
         'investor': investor_profile,
@@ -1422,6 +1425,9 @@ def founder_bulletin_board(request):
         -(x.match.score if x.match else 0),
     ))
 
+    # Anonymous-reachable. The raise amount defaults to CONNECTED, so an
+    # anonymous visitor sees it only where the founder has made it public.
+    pitches = attach_visible_fields(request.user, pitches)
     return render(request, 'matchmaking/bulletin_board.html', {
         'pitches': pitches,
         'selected_sector': selected_sector,
@@ -2023,6 +2029,10 @@ def global_search(request):
     for app in results:
         app.profile_url = public_profile_link(request, app.user.username)
 
+    # Anonymous-reachable. _filtered_public_applications already stops a hidden
+    # amount being inferred from the FILTER; this stops it being printed in the
+    # results. #83 closed the first and missed the second.
+    results = attach_visible_fields(request.user, results)
     return render(request, 'matchmaking/search_results.html', {
         'results': results,
         'filters': filters,
@@ -2376,6 +2386,9 @@ def standalone_memo_view(request, company_slug):
 
     # A private, archived or denied company answers like one that doesn't exist.
     from .models import founder_is_visible_to
+    # founder_is_visible_to decides whether the memo may be shown at all; which
+    # of its figures this reader may see is a separate, per-field question.
+    attach_visible_fields(request.user, [founder_app])
     if not founder_is_visible_to(request.user, founder_app):
         raise Http404("No Application matches the given query.")
 

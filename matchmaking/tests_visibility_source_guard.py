@@ -59,7 +59,17 @@ TEMPLATE_ALLOWED = {
         'the founder editing their own profile',
     'zelda_api/ic_memo.html':
         'values filtered to None by build_ic_memo_context(viewer=...) before render',
+    # Orphaned: no view renders it and no template includes or extends it, so
+    # its ungated financial fields reach no one. Enforced, not assumed -- see
+    # test_orphaned_templates_stay_orphaned. Deleting it is the cleaner fix and
+    # is left as a separate decision.
+    'accounts/application_detail.html':
+        'UNREACHABLE: referenced by no view, include or extends',
 }
+
+# Templates allowlisted only because nothing renders them. Each must stay
+# unreferenced for its exemption to remain true.
+ORPHANED_TEMPLATES = ('accounts/application_detail.html',)
 
 PYTHON_ALLOWED = {
     # Internal computation: reads the value, never returns it per record.
@@ -81,8 +91,12 @@ PYTHON_ALLOWED = {
     ('pages/views.py', 'thank_you_view'):
         "greets the signed-in founder by their own name",
     # Already filtered upstream.
+    ('accounts/views.py', '_zelda_advantage_payload'):
+        'called only after profile() confirms all three figures are visible to the viewer',
     ('zelda_api/ic_memo.py', 'build_ic_memo_context'):
         'applies can_view_profile_field / PRIVATE stripping itself',
+    ('zelda_api/views.py', '_match_reasons'):
+        'each field read is guarded by can_view_profile_field for the viewing investor',
     # Unreachable today -- kept visible here rather than silently allowed, so
     # wiring either up forces a decision.
     ('matchmaking/models.py', 'to_foundry_envelope'):
@@ -163,6 +177,25 @@ class ControlledFieldReadsGoThroughTheAuthority(SimpleTestCase):
         present = {(rel, fn) for rel, fn, _, _ in _python_reads()}
         stale = sorted(f'{rel} :: {fn}' for rel, fn in PYTHON_ALLOWED if (rel, fn) not in present)
         self.assertEqual(stale, [], 'allowlist entries matching no current read:\n  ' + '\n  '.join(stale))
+
+    def test_orphaned_templates_stay_orphaned(self):
+        """
+        An UNREACHABLE exemption is only as good as the claim behind it. If any
+        view, include or extends starts referencing one of these templates, its
+        ungated fields become live and this fails -- so the exemption cannot
+        silently outlive its reason.
+        """
+        for template in ORPHANED_TEMPLATES:
+            name = template.rsplit('/', 1)[-1]
+            referrers = [
+                path.relative_to(ROOT).as_posix()
+                for path in list(ROOT.rglob('*.py')) + list(TEMPLATES_DIR.rglob('*.html'))
+                if not any(part in SKIP_DIRS for part in path.parts)
+                and path.as_posix() != (TEMPLATES_DIR / template).as_posix()
+                and not path.name.startswith('tests_visibility_source_guard')
+                and name in path.read_text(encoding='utf-8', errors='ignore')
+            ]
+            self.assertEqual(referrers, [], f'{template} is referenced again, so its reads are live: {referrers}')
 
     def test_the_scanners_see_what_they_guard(self):
         """
