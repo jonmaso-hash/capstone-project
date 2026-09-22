@@ -114,6 +114,8 @@ class TruthDeltaScoreView(APIView):
         tier = 'full' if truth_delta_unlocked(request.user, report.document) else 'lite'
 
         details = report.details or {}
+        if details:
+            details = {**details, 'per_claim': report.per_claim_rows()}
         if tier == 'lite' and details:
             details = {
                 'claims': details.get('claims', []),

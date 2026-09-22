@@ -901,6 +901,9 @@ def truth_delta_ui_view(request, document_id):
         ]
 
     details = report.details if report else {}
+    if details:
+        # Every served row carries whether real evidence backs it.
+        details = {**details, 'per_claim': report.per_claim_rows()}
     if tier == 'lite' and details:
         # Lite gets a few representative findings, not the full claim-by-claim
         # breakdown — "tells you whether there's a problem," not "exactly

@@ -29,8 +29,17 @@ User = get_user_model()
 PER_CLAIM = [
     {'category': 'revenue', 'claimed': '$1M ARR', 'observed': 'SEC Form D: $900K sold', 'assessment': 'close'},
     {'category': 'customers', 'claimed': '500', 'observed': 'No external data found', 'assessment': 'n/a'},
+    # The model wrote an observed value LinkedIn would supply; the pipeline
+    # deliberately integrates no LinkedIn source (truth_delta_sources), so no
+    # datapoint backs this row and it counts as unverified.
     {'category': 'team_size', 'claimed': '12', 'observed': 'LinkedIn: 11 employees', 'assessment': 'close'},
     {'category': 'funding_raised', 'claimed': '$2M', 'observed': 'Form D: $2M', 'assessment': 'match'},
+]
+
+# What the pipeline actually fetched -- what 'verified' now counts.
+OBSERVED = [
+    {'category': 'revenue', 'observed_value': '$900K', 'source': 'SEC EDGAR', 'time_period': 'FY2025'},
+    {'category': 'funding_raised', 'observed_value': '$2M', 'source': 'SEC EDGAR', 'time_period': '2025'},
 ]
 
 
@@ -57,7 +66,10 @@ class ClaimsAnalyzedCountTests(TestCase):
         )
         self.report = TruthDeltaReport.objects.create(
             document=self.doc, overall_truth_score=70.0, credibility_risk='low', summary='Summary.',
-            details={'claims': [{'category': row['category']} for row in PER_CLAIM], 'per_claim': PER_CLAIM},
+            details={
+                'claims': [{'category': row['category']} for row in PER_CLAIM],
+                'per_claim': PER_CLAIM, 'observed': OBSERVED,
+            },
         )
         # Six extracted rows (two revenue figures, an "other") against four categories.
         for category, value in [
@@ -78,7 +90,9 @@ class ClaimsAnalyzedCountTests(TestCase):
             with self.subTest(user=user.username):
                 html = self._page(user).content.decode()
                 verified, unverified = _stat(html, 'Verified'), _stat(html, 'Unverified')
-                self.assertEqual((verified, unverified), (3, 1))
+                # Two categories have a stored datapoint; customers and
+                # team_size have only the model's prose.
+                self.assertEqual((verified, unverified), (2, 2))
                 self.assertEqual(_stat(html, 'Claims Analyzed'), verified + unverified)
 
     def test_the_count_matches_the_reports_categories_not_the_extracted_rows(self):

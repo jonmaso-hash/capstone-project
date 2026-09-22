@@ -4276,7 +4276,11 @@ class StandaloneMemoRealDataTests(TestCase):
                      'per_claim': [
                          {'category': 'revenue', 'claimed': '$5M', 'observed': '$5.1M (EDGAR)', 'assessment': 'match'},
                          {'category': 'employees', 'claimed': '20', 'observed': 'no external data', 'assessment': 'unchecked'},
-                     ]},
+                     ],
+                     # Revenue is the backed claim: a datapoint the pipeline
+                     # stored, not a sentence describing one.
+                     'observed': [{'category': 'revenue', 'observed_value': '$5.1M',
+                                   'source': 'SEC EDGAR', 'time_period': 'FY2025'}]},
         )
         r = self._get()
         self.assertContains(r, 'What Zelda noticed')

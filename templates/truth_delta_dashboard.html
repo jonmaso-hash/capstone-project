@@ -991,22 +991,24 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
         list.innerHTML = '';
         const rows = perClaim.length > 0
             ? perClaim.map(row => ({
-                category: row.category, claimed: row.claimed, observed: row.observed, assessment: row.assessment,
+                category: row.category, claimed: row.claimed, observed: row.observed,
+                assessment: row.assessment, grounded: row.grounded === true,
             }))
             : claims.map(c => ({
                 category: c.category, claimed: c.claimed_value, observed: null,
-                assessment: 'Not checked against external data.',
+                assessment: 'Not checked against external data.', grounded: false,
             }));
 
         rows.forEach(row => list.appendChild(buildClaimItem(row)));
         section.style.display = 'block';
 
-        // Rollup — same "was real evidence actually named" check as each
-        // claim-item's ✅/❔ icon, just aggregated. Computed here rather
-        // than trusting a separate server-computed number, so it can
-        // never disagree with the table directly below it.
+        // Rollup — the same server answer each claim-item's ✅/❔ icon uses,
+        // just aggregated, so it cannot disagree with the table below it or
+        // with the stat cards above. Never re-derived from the observed text:
+        // that text is written by a model, and reading verification out of it
+        // let a sentence stand in for evidence.
         if (rollup) {
-            const verifiedCount = rows.filter(r => r.observed && !/no external data/i.test(r.observed)).length;
+            const verifiedCount = rows.filter(r => r.grounded).length;
             const pct = Math.round((verifiedCount / rows.length) * 1000) / 10;
             let text = `${verifiedCount}/${rows.length} claims verified against external data (${pct}%)`;
             // SERVER_TRUTH_DATA.claims_analyzed is the TRUE total; rows.length
@@ -1021,8 +1023,11 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
     }
 
     function buildClaimItem(row) {
-        const observedText = row.observed && !/no external data/i.test(row.observed) ? row.observed : null;
-        const icon = observedText ? '✅' : '❔';
+        // Only evidence the pipeline actually fetched goes in the Observed
+        // column. An ungrounded row's text is the model's description, not a
+        // source, and showing it there would read as corroboration.
+        const observedText = row.grounded ? row.observed : null;
+        const icon = row.grounded ? '✅' : '❔';
         // 'funding_raised' -> 'Funding raised' — the CSS already
         // uppercases this label, but the underscore reads oddly
         // ("FUNDING_RAISED") if not split into words first.
