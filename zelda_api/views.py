@@ -1207,18 +1207,26 @@ def _match_reasons(application, investor_profile):
     """
     from matchmaking.utils import _is_adjacent_stage
 
+    # Each reason is derived from a founder field, so each inherits that
+    # field's visibility for THIS investor. A reason built from a hidden field
+    # is omitted rather than reworded: "Raise size fits your check range" still
+    # says the amount lies inside a range the investor chose, and since they
+    # can move that range, re-running this analysis would bisect the amount.
+    from matchmaking.models import can_view_profile_field
+    viewer = investor_profile.user
+
     reasons = []
-    app_sector = (application.sector or '').lower()
+    app_sector = (application.sector or '').lower() if can_view_profile_field(viewer, application, 'sector') else ''
     investor_sectors = [s.strip().lower() for s in (investor_profile.investment_focus or '').split(',') if s.strip()]
     if app_sector and (app_sector in investor_sectors or any(s and s in app_sector for s in investor_sectors)):
         reasons.append(f"Sector alignment ({application.sector})")
 
-    app_stage = (application.stage or '').lower()
+    app_stage = (application.stage or '').lower() if can_view_profile_field(viewer, application, 'stage') else ''
     inv_stage = (investor_profile.investment_stage or '').lower()
     if app_stage and inv_stage and (app_stage == inv_stage or _is_adjacent_stage(app_stage, inv_stage)):
         reasons.append(f"Stage alignment ({application.stage})")
 
-    if investor_profile.ticket_size_min is not None or investor_profile.ticket_size_max is not None:
+    if (investor_profile.ticket_size_min is not None or investor_profile.ticket_size_max is not None)             and can_view_profile_field(viewer, application, 'raising_amount'):
         lo = investor_profile.ticket_size_min or 0
         hi = investor_profile.ticket_size_max
         if application.raising_amount >= lo and (hi is None or application.raising_amount <= hi):

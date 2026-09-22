@@ -1364,6 +1364,22 @@ Named for profiles rather than founders: SellerApplication and the other role
 models are expected to adopt this unchanged.
 """
 
+# The founder Connection states in which the investor relationship is
+# established. The lifecycle runs ACCEPTED -> FUNDED_PENDING -> FUNDED, and
+# funding a company does not end the relationship: the investor who funded it
+# is the last person who should lose sight of its figures.
+#
+# Named for what it means, not for what it currently contains. Everything that
+# asks "is this investor connected to this founder?" -- field visibility on
+# every path, and the deal workspace -- reads this one constant, so the answer
+# cannot differ between pages. It did: the visibility authority copied
+# can_view_data_room's ACCEPTED-only rule rather than the workspace's, and an
+# investor lost sight of a founder's figures the moment they marked the deal
+# funded, while the workspace itself stayed open.
+#
+# A new post-acceptance state belongs here, not in a new tuple somewhere else.
+ESTABLISHED_FOUNDER_CONNECTION_STATES = ('ACCEPTED', 'FUNDED_PENDING', 'FUNDED')
+
 FIELD_PUBLIC = 'PUBLIC'
 FIELD_CONNECTED = 'CONNECTED'
 FIELD_PRIVATE = 'PRIVATE'
@@ -1460,7 +1476,7 @@ def _viewer_is_connected_to(viewer_user, profile):
     if not investor_profile:
         return False
     return Connection.objects.filter(
-        investor=investor_profile, founder=profile, status='ACCEPTED'
+        investor=investor_profile, founder=profile, status__in=ESTABLISHED_FOUNDER_CONNECTION_STATES
     ).exists()
 
 
@@ -1479,17 +1495,65 @@ def can_view_profile_field(viewer_user, profile, field_name):
     """
     if field_name not in NEW_PROFILE_FIELD_VISIBILITY:
         return True
-    if viewer_user is not None and getattr(viewer_user, 'is_authenticated', False):
-        if viewer_user == profile.user or viewer_user.is_staff:
-            return True
+    signed_in = viewer_user is not None and getattr(viewer_user, 'is_authenticated', False)
+    privileged = signed_in and (viewer_user == profile.user or viewer_user.is_staff)
     level = profile_field_level(profile, field_name)
-    if level == FIELD_PUBLIC:
+    # The connection query is only paid when the answer depends on it.
+    connected = (
+        level == FIELD_CONNECTED and signed_in and not privileged
+        and _viewer_is_connected_to(viewer_user, profile)
+    )
+    return _level_permits(level, privileged, connected)
+
+
+def _level_permits(level, privileged, connected):
+    """
+    The decision itself, shared by the per-object and bulk paths.
+
+    can_view_profile_field answers one field on one profile; attach_visible_fields
+    answers every field on a whole list with one query. Both must reach
+    identical answers, so neither contains the rule -- they gather the facts
+    (who is viewing, what level is stored, whether a connection exists) and ask
+    this.
+    """
+    if privileged or level == FIELD_PUBLIC:
         return True
     if level == FIELD_PRIVATE:
         return False
-    if viewer_user is None or not getattr(viewer_user, 'is_authenticated', False):
-        return False
-    return _viewer_is_connected_to(viewer_user, profile)
+    return connected
+
+
+def attach_visible_fields(viewer_user, profiles):
+    """
+    Set `.visible_fields` on each profile: the controlled fields this viewer
+    may see. Templates gate with `{% if 'raising_amount' in p.visible_fields %}`.
+
+    For lists -- the bulletin board, search results, the investor shortlist --
+    where asking can_view_profile_field per field per row would cost a
+    connection query each: fifty founders by six fields is three hundred
+    queries on one page. This does one, for the viewer's accepted connections,
+    and resolves the rest from stored levels through _level_permits, the same
+    rule the per-object authority uses.
+    """
+    profiles = list(profiles)
+    signed_in = viewer_user is not None and getattr(viewer_user, 'is_authenticated', False)
+    connected_ids = set()
+    if signed_in:
+        investor_profile = getattr(viewer_user, 'match_investor_profile', None)
+        if investor_profile:
+            connected_ids = set(
+                Connection.objects.filter(investor=investor_profile, status__in=ESTABLISHED_FOUNDER_CONNECTION_STATES)
+                .values_list('founder_id', flat=True)
+            )
+    for profile in profiles:
+        privileged = signed_in and (viewer_user.is_staff or viewer_user.pk == profile.user_id)
+        connected = profile.pk in connected_ids
+        stored = getattr(profile, 'field_visibility', None) or {}
+        profile.visible_fields = {
+            name for name in NEW_PROFILE_FIELD_VISIBILITY
+            if _level_permits(_level_from_stored(stored, name), privileged, connected)
+        }
+    return profiles
 
 
 def visible_profile_fields(viewer_user, profile, field_names):
@@ -1568,7 +1632,7 @@ def restrict_queryset_for_field_filter(queryset, viewer_user, field_name):
         if investor_profile:
             connected_founder_ids = set(
                 Connection.objects.filter(
-                    investor=investor_profile, status='ACCEPTED'
+                    investor=investor_profile, status__in=ESTABLISHED_FOUNDER_CONNECTION_STATES
                 ).values_list('founder_id', flat=True)
             )
 
@@ -1682,7 +1746,7 @@ def can_view_deal_workspace(request_user, connection):
         return True
     if request_user not in (connection.founder.user, connection.investor.user):
         return False
-    return connection.status in ('ACCEPTED', 'FUNDED_PENDING', 'FUNDED')
+    return connection.status in ESTABLISHED_FOUNDER_CONNECTION_STATES
 
 
 def can_view_acquisition_deal_workspace(request_user, acquisition_connection):

@@ -76,11 +76,12 @@
         <div class="card card-body shadow-sm border-0 p-4 mb-4 metric-card">
             <h5 class="fw-bold border-bottom pb-2 mb-3 text-dark">Overview</h5>
             <p class="text-secondary lh-lg mb-0" style="white-space: pre-line;">{{ overview_text }}</p>
-            {% if founder_app.stage or founder_app.raising_amount or founder_app.current_revenue is not None or founder_app.team_size %}
+            {# The strip's own condition only consults figures this viewer may see: gating it on a hidden raise amount would reveal that one exists. #}
+            {% if founder_app.stage or founder_app.team_size or 'raising_amount' in founder_app.visible_fields or 'current_revenue' in founder_app.visible_fields %}
             <div class="fact-strip mt-3 pt-3 border-top">
                 {% if founder_app.stage %}<div class="fact"><small>Stage</small><span>{{ founder_app.stage }}</span></div>{% endif %}
-                {% if founder_app.raising_amount %}<div class="fact"><small>Raising</small><span>${{ founder_app.raising_amount|floatformat:0|intcomma }}</span></div>{% endif %}
-                {% if founder_app.current_revenue is not None %}<div class="fact"><small>Current revenue</small><span>${{ founder_app.current_revenue|floatformat:0|intcomma }}</span></div>{% endif %}
+                {% if 'raising_amount' in founder_app.visible_fields and founder_app.raising_amount %}<div class="fact"><small>Raising</small><span>${{ founder_app.raising_amount|floatformat:0|intcomma }}</span></div>{% endif %}
+                {% if 'current_revenue' in founder_app.visible_fields and founder_app.current_revenue is not None %}<div class="fact"><small>Current revenue</small><span>${{ founder_app.current_revenue|floatformat:0|intcomma }}</span></div>{% endif %}
                 {% if founder_app.team_size %}<div class="fact"><small>Team size</small><span>{{ founder_app.team_size }}</span></div>{% endif %}
             </div>
             {% endif %}

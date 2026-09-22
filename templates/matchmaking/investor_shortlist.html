@@ -64,7 +64,7 @@
                         </div>
                         <p class="text-muted mb-3">{{ entry.founder.description|truncatewords:40 }}</p>
                         <span class="badge bg-light text-dark border">
-                            Seeking {% if entry.founder.raising_amount %}${{ entry.founder.raising_amount|floatformat:0|intcomma }}{% else %}--{% endif %}
+                            {% if 'raising_amount' in entry.founder.visible_fields %}Seeking {% if entry.founder.raising_amount %}${{ entry.founder.raising_amount|floatformat:0|intcomma }}{% else %}--{% endif %}{% else %}Raise not disclosed{% endif %}
                         </span>
                     </div>
 

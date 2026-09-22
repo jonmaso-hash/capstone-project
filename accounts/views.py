@@ -355,6 +355,25 @@ def _get_investor_readiness(application):
     }
 
 
+def _zelda_advantage_payload(application):
+    """
+    The figures the Zelda Advantage widget computes from, as JSON.
+
+    Separate from profile() so the source guard can exempt exactly these reads
+    rather than the whole profile view -- which renders more of a founder's data
+    than any other page, and is the last place a blanket exemption belongs.
+    Only called once profile() has established that all three financial figures
+    are visible to the viewer; it performs no check of its own.
+    """
+    return json.dumps({
+        "revenue": float(clean_financial_input(application.current_revenue) or 0),
+        "ask": float(clean_financial_input(application.raising_amount) or 0),
+        "burn": float(clean_financial_input(application.monthly_burn_rate) or 1),
+        "team_size": int(clean_financial_input(application.team_size) or 1),
+        "years": int(clean_financial_input(application.years_in_business) or 0),
+    })
+
+
 @login_required
 def profile(request, username=None, pk=None):
     """
@@ -526,15 +545,19 @@ def profile(request, username=None, pk=None):
             if viewer_investor and Connection.objects.filter(investor=viewer_investor, founder=application, status="ACCEPTED").exists():
                 has_advantage_access = True
         
+        # The advantage model needs all three figures, and its JSON falls back
+        # to 0 or 1 for a missing one -- so a withheld revenue would render as
+        # "$0 revenue", a false statement rather than a withheld one. If the
+        # founder has kept any of them from this viewer, the widget takes the
+        # same no-data path as a viewer without access. Gated on CONNECTED
+        # above; this adds PRIVATE, which the connection check alone ignored.
+        advantage_figures = ('current_revenue', 'raising_amount', 'monthly_burn_rate')
+        if has_advantage_access and not all(f in visible_founder_fields for f in advantage_figures):
+            has_advantage_access = False
+
         if has_advantage_access:
             zelda_score = calculate_zelda_advantage(application)
-            founder_data_json = json.dumps({
-                "revenue": float(clean_financial_input(application.current_revenue) or 0),
-                "ask": float(clean_financial_input(application.raising_amount) or 0),
-                "burn": float(clean_financial_input(application.monthly_burn_rate) or 1),
-                "team_size": int(clean_financial_input(application.team_size) or 1),
-                "years": int(clean_financial_input(application.years_in_business) or 0),
-            })
+            founder_data_json = _zelda_advantage_payload(application)
     viewer_is_investor = (
     getattr(request.user, 'accounts_investor_profile', None) is not None or
     getattr(request.user, 'match_investor_profile', None) is not None

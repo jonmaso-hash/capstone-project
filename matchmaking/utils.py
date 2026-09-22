@@ -54,21 +54,57 @@ def passes_hard_filters(application, investor):
     write or get wrong. ticket_size_max is deliberately absent below
     because the computation no longer reads it; see _compute_hard_filters.
     """
+    # A founder-controlled field this investor may not see must not decide
+    # whether they can discover the founder. Exclusion here is a per-record
+    # signal -- the founder simply does not appear -- and the investor sets
+    # the threshold it is compared against, so letting a hidden raise amount
+    # participate would let them move ticket_size_min and bisect it by
+    # watching the founder come and go. So a hidden value is treated exactly
+    # like an undeclared one: the check is skipped, the founder is shown.
+    raise_visible, stage_visible = _hard_filter_visibility(application, investor)
+
+    # The key carries each field only when it is visible, and carries the
+    # visibility decision itself -- so a result cached while the raise was
+    # visible is not served after the founder hides it. v3: every v2 entry was
+    # keyed on the raw amount whether or not the investor could see it.
     key_material = (
-        f"v2:{investor.id}:{investor.ticket_size_min}:"
-        f"{investor.investment_stage}:{application.id}:{application.raising_amount}:{application.stage}"
+        f"v3:{investor.id}:{investor.ticket_size_min}:{investor.investment_stage}:{application.id}:"
+        f"{application.raising_amount if raise_visible else 'hidden'}:"
+        f"{application.stage if stage_visible else 'hidden'}"
     )
     cache_key = f"hard_filter:{hashlib.sha256(key_material.encode('utf-8')).hexdigest()}"
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
 
-    result = _compute_hard_filters(application, investor)
+    result = _compute_hard_filters(
+        application, investor, raise_visible=raise_visible, stage_visible=stage_visible
+    )
     cache.set(cache_key, result, HARD_FILTER_CACHE_TTL)
     return result
 
 
-def _compute_hard_filters(application, investor):
+def _hard_filter_visibility(application, investor):
+    """
+    Whether this investor may see the raise amount and stage.
+
+    Uses a precomputed `visible_fields` when the caller has one -- the bulletin
+    board resolves a whole list in one query via attach_visible_fields -- and
+    falls back to the per-object authority otherwise, so a single call stays
+    correct without making the board an N+1.
+    """
+    visible = getattr(application, 'visible_fields', None)
+    if visible is not None:
+        return 'raising_amount' in visible, 'stage' in visible
+    from matchmaking.models import can_view_profile_field
+    viewer = getattr(investor, 'user', None)
+    return (
+        can_view_profile_field(viewer, application, 'raising_amount'),
+        can_view_profile_field(viewer, application, 'stage'),
+    )
+
+
+def _compute_hard_filters(application, investor, raise_visible=True, stage_visible=True):
     """
     Only genuinely nonviable pairings are excluded here. Anything that is
     merely a poor fit belongs in ranking, where the investor can still see
@@ -92,7 +128,10 @@ def _compute_hard_filters(application, investor):
     contract applies throughout: absent data must not read as a strike
     against the founder, and must never become evidence either way.
     """
-    raising_amount = application.raising_amount
+    # A raise hidden from this investor is skipped exactly like an undeclared
+    # one, for the reason above: absent data never counts against the founder,
+    # and a hidden value must not become evidence either.
+    raising_amount = application.raising_amount if raise_visible else None
     if investor.ticket_size_min is not None and raising_amount:
         if investor.ticket_size_min > raising_amount:
             return False
@@ -101,7 +140,7 @@ def _compute_hard_filters(application, investor):
     # lists 'series c' as a neighbour of 'series b' but has no 'series c'
     # key of its own), and a one-way read of it silently excluded the
     # later-stage half of every such pair.
-    if investor.investment_stage:
+    if investor.investment_stage and stage_visible:
         app_stage = _normalize_stage(application.stage)
         inv_stage = _normalize_stage(investor.investment_stage)
         if app_stage != inv_stage \
