@@ -1438,13 +1438,92 @@ NEW_PROFILE_FIELD_VISIBILITY = {
 # fresh database receives. NEW_PROFILE_FIELD_VISIBILITY above governs current
 # defaults and may change freely without touching existing profiles.
 
+# ---------------------------------------------------------------------------
+# Visibility policy, per profile model
+# ---------------------------------------------------------------------------
+# One authority serves both sides of the marketplace. What differs between a
+# founder and a seller is data, not logic -- which fields are controlled and
+# their defaults, which profile a viewer must hold to count as the other party,
+# which relation records the connection, and which of its states mean the
+# relationship is established. So that difference lives here, as a table,
+# rather than as `if isinstance(profile, SellerApplication)` scattered through
+# every function. A new role model adopts the mechanism by adding a row.
+
+# The seller's listing has a different centre of gravity from a founder's
+# pitch. Asking price is the listing itself -- buyers browse by it, and a
+# listing without one is barely a listing -- so it defaults PUBLIC. The seller
+# can still tighten it, and every surface honours that. Revenue, EBITDA and the
+# reason for the sale are diligence material and default to buyers the seller
+# has accepted.
+SELLER_FIELD_VISIBILITY = {
+    'asking_price': FIELD_PUBLIC,
+    'annual_revenue': FIELD_CONNECTED,
+    'ebitda': FIELD_CONNECTED,
+    'reason_for_sale': FIELD_CONNECTED,
+}
+
+# The acquisition mirror of ESTABLISHED_FOUNDER_CONNECTION_STATES: a deal that
+# has moved to closing does not end the relationship. Shared with the
+# acquisition deal workspace and the CIM, so "connected" means one thing.
+ESTABLISHED_ACQUISITION_CONNECTION_STATES = ('ACCEPTED', 'CLOSED_PENDING', 'CLOSED')
+
+
+class _VisibilityPolicy:
+    """What one profile model contributes to the shared authority."""
+
+    def __init__(self, defaults, viewer_profile_attr, relation, viewer_fk, profile_fk, states):
+        self.defaults = defaults                       # {field: default level}
+        self.viewer_profile_attr = viewer_profile_attr # the viewer's counterpart profile
+        self.relation = relation                       # name of the connection model
+        self.viewer_fk = viewer_fk                     # relation FK to that profile
+        self.profile_fk = profile_fk                   # relation FK to the viewed profile
+        self.states = states                           # states meaning "established"
+
+    def relation_model(self):
+        # Resolved at call time: the relation models are defined further down
+        # this module than the policy table.
+        return globals()[self.relation]
+
+
+_VISIBILITY_POLICIES = {
+    'Application': _VisibilityPolicy(
+        NEW_PROFILE_FIELD_VISIBILITY, 'match_investor_profile',
+        'Connection', 'investor', 'founder', ESTABLISHED_FOUNDER_CONNECTION_STATES,
+    ),
+    'SellerApplication': _VisibilityPolicy(
+        SELLER_FIELD_VISIBILITY, 'match_buyer_profile',
+        'AcquisitionConnection', 'buyer', 'seller', ESTABLISHED_ACQUISITION_CONNECTION_STATES,
+    ),
+}
+
+
+def _policy_for_model(model):
+    return _VISIBILITY_POLICIES[model.__name__]
+
+
+def _policy_for(profile):
+    return _policy_for_model(type(profile))
+
+
+def _established_profile_ids(viewer_user, policy):
+    """Primary keys of every profile this viewer has an established relation with."""
+    counterpart = getattr(viewer_user, policy.viewer_profile_attr, None)
+    if not counterpart:
+        return set()
+    return set(
+        policy.relation_model().objects.filter(
+            **{policy.viewer_fk: counterpart, 'status__in': policy.states}
+        ).values_list(f'{policy.profile_fk}_id', flat=True)
+    )
+
+
 # Attributes the public SEO directory encodes in its own URL and heading
 # (/startups/<sector>/<stage>/<location>/). Listing a founder there while any
 # of these is below PUBLIC would disclose it regardless of the template.
 DIRECTORY_DISCLOSING_FIELDS = ('sector', 'stage', 'geography')
 
 
-def _level_from_stored(stored, field_name):
+def _level_from_stored(stored, field_name, defaults=None):
     """
     Resolve one field's level from a raw stored dict.
 
@@ -1457,26 +1536,30 @@ def _level_from_stored(stored, field_name):
     values_list path in restrict_queryset_for_field_filter resolve levels
     through identical code and cannot drift apart.
     """
-    if field_name not in NEW_PROFILE_FIELD_VISIBILITY:
+    defaults = NEW_PROFILE_FIELD_VISIBILITY if defaults is None else defaults
+    if field_name not in defaults:
         return FIELD_PUBLIC
     value = stored.get(field_name) if isinstance(stored, dict) else None
     if value in PROFILE_FIELD_VISIBILITY_LEVELS:
         return value
-    return NEW_PROFILE_FIELD_VISIBILITY[field_name]
+    return defaults[field_name]
 
 
 def profile_field_level(profile, field_name):
     """The stored level for one field on a loaded profile, or its default."""
-    return _level_from_stored(getattr(profile, 'field_visibility', None) or {}, field_name)
+    return _level_from_stored(
+        getattr(profile, 'field_visibility', None) or {}, field_name, _policy_for(profile).defaults
+    )
 
 
 def _viewer_is_connected_to(viewer_user, profile):
-    """An ACCEPTED connection — the same authority that gates the data room."""
-    investor_profile = getattr(viewer_user, 'match_investor_profile', None)
-    if not investor_profile:
+    """An established relation of the kind this profile's policy names."""
+    policy = _policy_for(profile)
+    counterpart = getattr(viewer_user, policy.viewer_profile_attr, None)
+    if not counterpart:
         return False
-    return Connection.objects.filter(
-        investor=investor_profile, founder=profile, status__in=ESTABLISHED_FOUNDER_CONNECTION_STATES
+    return policy.relation_model().objects.filter(
+        **{policy.viewer_fk: counterpart, policy.profile_fk: profile, 'status__in': policy.states}
     ).exists()
 
 
@@ -1493,7 +1576,7 @@ def can_view_profile_field(viewer_user, profile, field_name):
     A field with no whitelist entry is uncontrolled and always visible;
     company_name is the anchor and is deliberately not listed.
     """
-    if field_name not in NEW_PROFILE_FIELD_VISIBILITY:
+    if field_name not in _policy_for(profile).defaults:
         return True
     signed_in = viewer_user is not None and getattr(viewer_user, 'is_authenticated', False)
     privileged = signed_in and (viewer_user == profile.user or viewer_user.is_staff)
@@ -1537,21 +1620,18 @@ def attach_visible_fields(viewer_user, profiles):
     """
     profiles = list(profiles)
     signed_in = viewer_user is not None and getattr(viewer_user, 'is_authenticated', False)
-    connected_ids = set()
-    if signed_in:
-        investor_profile = getattr(viewer_user, 'match_investor_profile', None)
-        if investor_profile:
-            connected_ids = set(
-                Connection.objects.filter(investor=investor_profile, status__in=ESTABLISHED_FOUNDER_CONNECTION_STATES)
-                .values_list('founder_id', flat=True)
-            )
+    # One relation query per policy present in the list, not per profile.
+    established = {}
     for profile in profiles:
+        policy = _policy_for(profile)
+        if policy not in established:
+            established[policy] = _established_profile_ids(viewer_user, policy) if signed_in else set()
         privileged = signed_in and (viewer_user.is_staff or viewer_user.pk == profile.user_id)
-        connected = profile.pk in connected_ids
+        connected = profile.pk in established[policy]
         stored = getattr(profile, 'field_visibility', None) or {}
         profile.visible_fields = {
-            name for name in NEW_PROFILE_FIELD_VISIBILITY
-            if _level_permits(_level_from_stored(stored, name), privileged, connected)
+            name for name in policy.defaults
+            if _level_permits(_level_from_stored(stored, name, policy.defaults), privileged, connected)
         }
     return profiles
 
@@ -1619,36 +1699,30 @@ def restrict_queryset_for_field_filter(queryset, viewer_user, field_name):
     can_view_profile_field per row -- that is a connection query per founder,
     which turns a search page into an N+1.
     """
-    if field_name not in NEW_PROFILE_FIELD_VISIBILITY:
+    policy = _policy_for_model(queryset.model)
+    if field_name not in policy.defaults:
         return queryset
 
     signed_in = viewer_user is not None and getattr(viewer_user, 'is_authenticated', False)
     if signed_in and viewer_user.is_staff:
         return queryset
 
-    connected_founder_ids = set()
-    if signed_in:
-        investor_profile = getattr(viewer_user, 'match_investor_profile', None)
-        if investor_profile:
-            connected_founder_ids = set(
-                Connection.objects.filter(
-                    investor=investor_profile, status__in=ESTABLISHED_FOUNDER_CONNECTION_STATES
-                ).values_list('founder_id', flat=True)
-            )
-
+    established = _established_profile_ids(viewer_user, policy) if signed_in else set()
     viewer_id = getattr(viewer_user, 'id', None) if signed_in else None
-    allowed = []
-    for pk, stored, owner_id in queryset.values_list('pk', 'field_visibility', 'user_id'):
-        if viewer_id is not None and owner_id == viewer_id:
-            allowed.append(pk)
-            continue
-        level = _level_from_stored(stored, field_name)
-        if level == FIELD_PUBLIC or (level == FIELD_CONNECTED and pk in connected_founder_ids):
-            allowed.append(pk)
+    allowed = [
+        pk for pk, stored, owner_id in queryset.values_list('pk', 'field_visibility', 'user_id')
+        # The same decision the per-object authority makes, not a restatement
+        # of it: an inline copy of the rule is how two paths start to disagree.
+        if _level_permits(
+            _level_from_stored(stored, field_name, policy.defaults),
+            privileged=(viewer_id is not None and owner_id == viewer_id),
+            connected=pk in established,
+        )
+    ]
     return queryset.filter(pk__in=allowed)
 
 
-def validate_profile_field_visibility(value):
+def validate_profile_field_visibility(value, defaults=None):
     """
     Reject unknown keys and unrecognised levels, loudly.
 
@@ -1661,11 +1735,12 @@ def validate_profile_field_visibility(value):
         return
     if not isinstance(value, dict):
         raise ValidationError('Field visibility must be a mapping of field name to level.')
+    defaults = NEW_PROFILE_FIELD_VISIBILITY if defaults is None else defaults
     for name, level in value.items():
-        if name not in NEW_PROFILE_FIELD_VISIBILITY:
+        if name not in defaults:
             raise ValidationError(
                 f'"{name}" is not a field whose visibility can be set. '
-                f'Known fields: {", ".join(sorted(NEW_PROFILE_FIELD_VISIBILITY))}.'
+                f'Known fields: {", ".join(sorted(defaults))}.'
             )
         if level not in PROFILE_FIELD_VISIBILITY_LEVELS:
             raise ValidationError(
@@ -1760,7 +1835,7 @@ def can_view_acquisition_deal_workspace(request_user, acquisition_connection):
         return True
     if request_user not in (acquisition_connection.seller.user, acquisition_connection.buyer.user):
         return False
-    return acquisition_connection.status in ('ACCEPTED', 'CLOSED_PENDING', 'CLOSED')
+    return acquisition_connection.status in ESTABLISHED_ACQUISITION_CONNECTION_STATES
 
 
 def can_download_cim(request_user, seller_application):
@@ -1788,7 +1863,7 @@ def can_download_cim(request_user, seller_application):
     return AcquisitionConnection.objects.filter(
         seller=seller_application,
         buyer=buyer_profile,
-        status__in=('ACCEPTED', 'CLOSED_PENDING', 'CLOSED'),
+        status__in=ESTABLISHED_ACQUISITION_CONNECTION_STATES,
     ).exists()
 
 
