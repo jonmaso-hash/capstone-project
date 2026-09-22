@@ -1364,6 +1364,22 @@ Named for profiles rather than founders: SellerApplication and the other role
 models are expected to adopt this unchanged.
 """
 
+# The founder Connection states in which the investor relationship is
+# established. The lifecycle runs ACCEPTED -> FUNDED_PENDING -> FUNDED, and
+# funding a company does not end the relationship: the investor who funded it
+# is the last person who should lose sight of its figures.
+#
+# Named for what it means, not for what it currently contains. Everything that
+# asks "is this investor connected to this founder?" -- field visibility on
+# every path, and the deal workspace -- reads this one constant, so the answer
+# cannot differ between pages. It did: the visibility authority copied
+# can_view_data_room's ACCEPTED-only rule rather than the workspace's, and an
+# investor lost sight of a founder's figures the moment they marked the deal
+# funded, while the workspace itself stayed open.
+#
+# A new post-acceptance state belongs here, not in a new tuple somewhere else.
+ESTABLISHED_FOUNDER_CONNECTION_STATES = ('ACCEPTED', 'FUNDED_PENDING', 'FUNDED')
+
 FIELD_PUBLIC = 'PUBLIC'
 FIELD_CONNECTED = 'CONNECTED'
 FIELD_PRIVATE = 'PRIVATE'
@@ -1460,7 +1476,7 @@ def _viewer_is_connected_to(viewer_user, profile):
     if not investor_profile:
         return False
     return Connection.objects.filter(
-        investor=investor_profile, founder=profile, status='ACCEPTED'
+        investor=investor_profile, founder=profile, status__in=ESTABLISHED_FOUNDER_CONNECTION_STATES
     ).exists()
 
 
@@ -1526,7 +1542,7 @@ def attach_visible_fields(viewer_user, profiles):
         investor_profile = getattr(viewer_user, 'match_investor_profile', None)
         if investor_profile:
             connected_ids = set(
-                Connection.objects.filter(investor=investor_profile, status='ACCEPTED')
+                Connection.objects.filter(investor=investor_profile, status__in=ESTABLISHED_FOUNDER_CONNECTION_STATES)
                 .values_list('founder_id', flat=True)
             )
     for profile in profiles:
@@ -1616,7 +1632,7 @@ def restrict_queryset_for_field_filter(queryset, viewer_user, field_name):
         if investor_profile:
             connected_founder_ids = set(
                 Connection.objects.filter(
-                    investor=investor_profile, status='ACCEPTED'
+                    investor=investor_profile, status__in=ESTABLISHED_FOUNDER_CONNECTION_STATES
                 ).values_list('founder_id', flat=True)
             )
 
@@ -1730,7 +1746,7 @@ def can_view_deal_workspace(request_user, connection):
         return True
     if request_user not in (connection.founder.user, connection.investor.user):
         return False
-    return connection.status in ('ACCEPTED', 'FUNDED_PENDING', 'FUNDED')
+    return connection.status in ESTABLISHED_FOUNDER_CONNECTION_STATES
 
 
 def can_view_acquisition_deal_workspace(request_user, acquisition_connection):
