@@ -115,6 +115,10 @@ class TruthDeltaEngine:
             details={
                 'claims': self._serialize_claims(claims),
                 'observed': self._serialize_observed(observed),
+                # The canonical intermediate artifact. Previously built, handed
+                # to Claude and discarded, which left the model's prose as the
+                # only surviving account of a comparison it did not perform.
+                'comparison': comparison,
                 'per_claim': result.get('per_claim', []),
             },
         )
@@ -171,6 +175,18 @@ class TruthDeltaEngine:
                 'observed_source': best.source.source_name if best and best.source else None,
                 'observed_time_period': best.time_period if best else None,
                 'discrepancy_pct': discrepancy_pct,
+                # Provenance. A contradiction has to be explainable from what
+                # was stored: which sentence the claim came from, which source
+                # the datapoint came from, and how much that source is trusted.
+                # Without it the state is an accusation nobody can audit.
+                'claim_raw_text': claim.claimed_value,
+                'observed_raw_value': best.observed_value if best else None,
+                'source_credibility': best.source_credibility if best else None,
+                # ClaimedDatapoint carries no period yet. Recorded explicitly
+                # as unknown rather than omitted, because the grounding rule
+                # reads it: an unknown period blocks a contradiction and only
+                # qualifies an agreement.
+                'claim_period': None,
             })
         return rows
 

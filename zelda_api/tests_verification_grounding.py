@@ -121,10 +121,24 @@ class CategoryStatesAreGroundedInEvidenceTests(_GroundingCast):
         self.assertEqual(report.category_states(), {'arr': 'verified'})
 
     def test_verified_counts_follow_the_same_rule(self):
-        ungrounded = self.report()
-        self.assertEqual(ungrounded.verifiability_stats(), {'total': 2, 'verified': 0, 'pct': 0.0})
-        grounded = self.report(observed=[self.evidence('arr')])
-        self.assertEqual(grounded.verifiability_stats(), {'total': 2, 'verified': 1, 'pct': 50.0})
+        # Compared key by key rather than as a whole dict: the stats grew a
+        # `contradicted` and a `no_data` count when grounding became
+        # three-state, and this test is about what counts as VERIFIED.
+        ungrounded = self.report().verifiability_stats()
+        self.assertEqual((ungrounded['total'], ungrounded['verified'], ungrounded['pct']), (2, 0, 0.0))
+        grounded = self.report(observed=[self.evidence('arr')]).verifiability_stats()
+        self.assertEqual((grounded['total'], grounded['verified'], grounded['pct']), (2, 1, 50.0))
+
+    def test_prose_alone_is_not_a_contradiction_either(self):
+        """
+        The mirror of this file's rule under three-state grounding: a model
+        writing a disagreement into `observed` must not produce `contradicted`
+        any more than it could produce `verified`. Only a stored comparison
+        can, and these reports have none.
+        """
+        stats = self.report().verifiability_stats()
+        self.assertEqual(stats['contradicted'], 0)
+        self.assertEqual(stats['no_data'], 2)
 
     def test_a_report_with_no_per_claim_breakdown_is_still_all_unchecked(self):
         report = self.report(per_claim=[])

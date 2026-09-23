@@ -132,5 +132,7 @@ class TruthDeltaScoreView(APIView):
             "details": details,
             "category_states": category_states,
             "verified_count": sum(1 for s in category_states.values() if s == 'verified'),
+            "contradicted_count": sum(1 for s in category_states.values() if s == 'contradicted'),
             "unverified_count": sum(1 for s in category_states.values() if s == 'no_data'),
+            "grounding_reasons": report.grounding_reasons(),
         })
