@@ -93,13 +93,17 @@ CORPUS = [
         'real_starbucks_revenue_and_headcount_trap', 'Starbucks Corporation',
         "Starbucks Corporation generated approximately $36 billion in revenue last fiscal year. "
         "The company now employs over 380,000 partners worldwide across its company-operated and licensed stores.",
-        {'Revenue': (36_000_000_000, 'Explicit revenue figure stated')},
-        # Deliberately no Team claim expected: Starbucks calls its workforce
-        # "partners," not "employees" — the Team fallback regex only
-        # matches the literal word "employees," so a real, human-readable
-        # headcount claim here is expected to be genuinely present but
-        # likely MISSED by the extractor. Ground truth says it should be
-        # extracted; the eval is expected to surface this as a recall gap.
+        {
+            'Revenue': (36_000_000_000, 'Explicit revenue figure stated'),
+            # Starbucks calls its workforce "partners," not "employees." The
+            # claim is genuinely present and readable, so ground truth says it
+            # should be extracted -- exactly as ferngully_spelled_out_headcount
+            # and wrenfield_team_and_traction already encode the same
+            # phenomenon. This entry previously omitted Team, which read as
+            # "no such claim" and scored a correct extraction as a false
+            # positive, contradicting the note that sat directly above it.
+            'Team': (380_000, 'Headcount stated as "partners" rather than "employees"'),
+        },
         is_real_public_company=True, sector='consumer',
     ),
     _doc(

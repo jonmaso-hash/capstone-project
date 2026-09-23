@@ -126,7 +126,9 @@ class Command(BaseCommand):
             with mock.patch('zelda_api.truth_delta_tasks.verify_document_truth_delta.delay'):
                 extract_claims_from_insights.run(doc.id)
 
-            claims_by_category = {c.category: c for c in ClaimedDatapoint.objects.filter(document=doc)}
+            claims_by_category = defaultdict(list)
+            for claim in ClaimedDatapoint.objects.filter(document=doc):
+                claims_by_category[claim.category].append(claim)
 
             resolved_cik, resolution_reason = None, None
             observed_categories = set()
@@ -150,7 +152,7 @@ class Command(BaseCommand):
             for annotation in entry['annotations']:
                 category = annotation['category']
                 claim_category = CATEGORY_MAPPING[category]
-                extracted = claims_by_category.get(claim_category) if claim_category else None
+                extracted = claims_by_category.get(claim_category, []) if claim_category else []
 
                 if annotation['should_extract']:
                     if extracted:
@@ -178,14 +180,16 @@ class Command(BaseCommand):
                                     coverage_reasons[('skipped', 'private_company (expected — not an SEC filer)')] += 1
                             else:
                                 coverage_reasons[('failed', 'no_relevant_filing (company resolved, but no matching XBRL data)')] += 1
-                        if annotation['expected_numeric'] is not None and extracted.claimed_value_numeric is not None:
+                        values = [c.claimed_value_numeric for c in extracted if c.claimed_value_numeric is not None]
+                        if annotation['expected_numeric'] is not None and values:
                             numeric_checked += 1
                             expected = annotation['expected_numeric']
-                            actual = extracted.claimed_value_numeric
-                            if expected and abs(actual - expected) / abs(expected) <= 0.15:
+                            closest = min(values, key=lambda v: abs(v - expected))
+                            if expected and abs(closest - expected) / abs(expected) <= 0.15:
                                 numeric_correct += 1
                             else:
-                                numeric_mismatches.append(f"{entry['id']} [{category}]: expected ~{expected:,.0f}, got {actual:,.0f}")
+                                got = ', '.join(f'{v:,.0f}' for v in values)
+                                numeric_mismatches.append(f"{entry['id']} [{category}]: expected ~{expected:,.0f}, got {got}")
                     else:
                         fn += 1
                         sector_stats[sector]['fn'] += 1
@@ -196,7 +200,8 @@ class Command(BaseCommand):
                         fp += 1
                         sector_stats[sector]['fp'] += 1
                         type_stats[company_type]['fp'] += 1
-                        false_positives.append(f"{entry['id']} [{category}]: extracted \"{extracted.claimed_value[:80]}\" — {annotation['note']}")
+                        values = '; '.join(c.claimed_value[:60] for c in extracted)
+                        false_positives.append(f"{entry['id']} [{category}]: extracted \"{values[:80]}\" — {annotation['note']}")
                         provenance_lines.append(self._format_provenance(entry['id'], category, 'FP', provenance_by_category.get(category)))
                     else:
                         tn += 1
