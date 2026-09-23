@@ -183,7 +183,7 @@ class ZeldaIntelligencePipelineV2:
         'Problem': 'problem challenge issue pain solution healthcare fragmented',
         'Market': 'market tam sam opportunity size addressable healthcare',
         'Revenue': 'revenue arr mrr pricing monetization income annual recurring subscription',
-        'Team': 'team founder ceo experience background skill leadership',
+        'Team': 'team founder ceo experience background skill leadership employs employees staff headcount',
         'Product': 'product feature technology platform service offering',
         # 'revenue' deliberately excluded — Revenue already has its
         # own category, and including it here meant every revenue
@@ -446,6 +446,12 @@ class ZeldaIntelligencePipelineV2:
             chunks = list(DocumentChunk.objects.filter(document=document_source).order_by('chunk_index'))
 
             for category, keywords in self.ANALYSIS_CATEGORIES.items():
+                # Every chunk's candidate, not just the winner. A deck states
+                # revenue in one place and headcount in another; keeping a
+                # single sentence per category capped the whole document at
+                # five possible claims and discarded the rest before Truth
+                # Delta ever saw them.
+                candidates = []
                 best_insight = None
                 best_confidence = 0
 
@@ -472,10 +478,10 @@ class ZeldaIntelligencePipelineV2:
                     if is_better:
                         best_confidence = confidence
                         best_insight = (result, confidence, chunk, provenance)
+                    candidates.append((result, confidence, chunk, provenance))
 
-                if best_insight:
-                    insight_text, confidence, source_chunk, provenance = best_insight
-
+                for insight_text, confidence, source_chunk, provenance in self._select_insights(
+                        category, candidates, best_insight):
                     insight = IntelligenceInsight.objects.create(
                         document=document_source,
                         insight_type='statement',
@@ -549,6 +555,52 @@ class ZeldaIntelligencePipelineV2:
             logger.warning(f"Failed to extract {category}: {str(e)}")
             return None
     
+    # How many insights one category may contribute. Only numeric categories
+    # go above one: a second narrative sentence says the same thing again,
+    # while a second FIGURE is a second checkable claim. Capped so a long
+    # document cannot flood the memo or the claim table.
+    MAX_INSIGHTS_PER_NUMERIC_CATEGORY = 3
+
+    def _select_insights(self, category, candidates, best_insight):
+        """
+        Which of a category's candidate sentences become insights.
+
+        Narrative categories keep exactly the best one, as before -- every
+        surface that reads a category's insight (the memo sections, the
+        confidence scorecard) expects one, and a second qualitative sentence
+        adds no checkable claim.
+
+        Numeric categories keep the best, then any further candidate carrying
+        a DIFFERENT figure, highest confidence first. Distinctness is by the
+        parsed number, so the same figure restated in two chunks does not
+        become two claims.
+        """
+        if not best_insight:
+            return []
+        if category not in self.NUMERIC_CATEGORIES:
+            return [best_insight]
+
+        from .truth_delta_tasks import _extract_numeric_value
+
+        selected = [best_insight]
+        seen = {_extract_numeric_value(best_insight[0])}
+        for candidate in sorted(candidates, key=lambda c: -c[1]):
+            if len(selected) >= self.MAX_INSIGHTS_PER_NUMERIC_CATEGORY:
+                break
+            # An additional claim has to carry a figure of this category's own
+            # kind -- currency for Revenue/Funding/Market, a counted noun for
+            # Team/Traction. Without this, "Net revenue retention of 131%"
+            # became both a $131 revenue claim and a 131-customer claim: the
+            # percentage parses as a number, but it is neither.
+            if not self._has_figure(category, candidate[0]):
+                continue
+            value = _extract_numeric_value(candidate[0])
+            if value is None or value in seen:
+                continue
+            seen.add(value)
+            selected.append(candidate)
+        return selected
+
     def _smart_extract(self, category: str, text: str, keywords: str) -> Tuple[Optional[str], float, Optional[Dict]]:
         """
         Smart extraction with DYNAMIC confidence scoring.
@@ -686,6 +738,13 @@ class ZeldaIntelligencePipelineV2:
                 return match.group().strip()
 
         if category == 'Team':
+            # A headcount sentence first: "employs approximately 30 people"
+            # keeps its number, which is the whole point of extracting it.
+            headcount = re.search(
+                r'([\d,]+[^.]{0,30}\b(?:employees|people|staff|headcount|full-time|team members)\b'
+                r'|\b(?:employs|employing)\b[^.]{0,40})', cleaned, re.IGNORECASE)
+            if headcount:
+                return headcount.group().strip()
             # Extract: "200 employees" or "Founded by..."
             match = re.search(r'(founder.{0,60}|ceo.{0,60}|founded by.{0,60})', cleaned, re.IGNORECASE)
             if match:
@@ -701,9 +760,46 @@ class ZeldaIntelligencePipelineV2:
         # real (already keyword-matched) sentence itself, truncated.
         return cleaned[:200]
     
+    # A figure, in the forms real decks actually use: an abbreviated
+    # multiplier ($4.2M) or a spelled-out one ($416 billion). The old
+    # per-category patterns below required the abbreviation, so a deck
+    # writing "$416 billion" scored no better than prose -- and lost to the
+    # ten-words-or-more rule, which is how a risks sentence beat Apple's
+    # revenue. Matched case-insensitively against the raw sentence.
+    MONEY_FIGURE = re.compile(
+        r'\$\s?[\d,]*\.?\d+\s*(?:thousand|million|billion|trillion|[KkMmBb])?\b', re.IGNORECASE)
+
+    # A headcount or unit count stated next to the noun it counts. Not a
+    # currency figure, so Team and Traction need their own shape.
+    COUNT_FIGURE = {
+        'Team': re.compile(
+            r'\b[\d,]+\b[^.]{0,30}\b(employees|people|staff|headcount|full-time|team members)\b'
+            r'|\b(employs|employing)\b[^.]{0,30}\b[\d,]+\b', re.IGNORECASE),
+        'Traction': re.compile(
+            r'\b[\d,]+\b[^.]{0,30}\b(customers?|users?|clients?|accounts?|patients?|distributors?|'
+            r'subscribers?|hospitals?|clinics?)\b', re.IGNORECASE),
+    }
+
+    def _has_figure(self, category: str, sentence: str) -> bool:
+        """Does this sentence carry a figure this category could be checked on?"""
+        if category not in self.NUMERIC_CATEGORIES:
+            return False
+        if self.MONEY_FIGURE.search(sentence):
+            return True
+        pattern = self.COUNT_FIGURE.get(category)
+        return bool(pattern and pattern.search(sentence))
+
     def _calculate_confidence(self, category: str, sentence: str, full_text: str) -> float:
         """Calculate DYNAMIC confidence based on content analysis."""
         sentence_lower = sentence.lower()
+
+        # A sentence carrying the figure outranks one that does not, whatever
+        # its length. Checked before the per-category patterns below, which
+        # are healthcare-shaped (Market scores only beside hospitals/clinics,
+        # Traction beside "momentum"/"series c") and so score every other
+        # sector by sentence length alone.
+        if self._has_figure(category, sentence):
+            return 95.0
 
         category_number_patterns = {
             'Funding': r'(seeking.{0,20}\$[\d,]+[MBK]|\$[\d,]+[MBK].{0,40}(raised|capital|funding|proceeds|round)|(use of proceeds))',

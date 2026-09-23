@@ -37,6 +37,24 @@ _CATEGORY_STYLE = {
 _DEFAULT_STYLE = {'noun': 'detail', 'verb': 'described'}
 
 
+def _best_by_category(insights):
+    """
+    {category: the most confident insight in it}.
+
+    A numeric category can contribute several insights now — a deck states
+    revenue in one place and headcount in another, and each distinct figure is
+    its own checkable claim. Both surfaces here show one row per category, so
+    they take the strongest; a dict comprehension would silently keep whichever
+    insight happened to come last.
+    """
+    best = {}
+    for insight in insights:
+        current = best.get(insight.category)
+        if current is None or insight.confidence_score > current.confidence_score:
+            best[insight.category] = insight
+    return best
+
+
 def _section_name(source_attribution):
     """'Extracted from: Traction' -> 'Traction' — falls back to 'the document' if unset."""
     prefix = 'Extracted from: '
@@ -77,7 +95,7 @@ def compute_confidence_breakdown(insights):
     .insight_text — either the in-memory list _analyze_document just built,
     or document.insights.all() for an already-analyzed document.
     """
-    insights_by_category = {insight.category: insight for insight in insights}
+    insights_by_category = _best_by_category(insights)
 
     rows = []
     for category in ZeldaIntelligencePipelineV2.ANALYSIS_CATEGORIES:
@@ -124,7 +142,7 @@ def compute_overall_confidence(insights):
     coverage-only formula used (min(len(insights) / 8.0, 1.0)), so nothing
     downstream that just displays this number needs to change.
     """
-    insights_by_category = {insight.category: insight for insight in insights}
+    insights_by_category = _best_by_category(insights)
     total = sum(
         insights_by_category[c].confidence_score
         for c in ZeldaIntelligencePipelineV2.ANALYSIS_CATEGORIES

@@ -213,7 +213,12 @@ def zelda_report_observations(memo, pitch_deck_doc):
 
     # 2. Analysis depth — from the memo's own extracted insights.
     if memo is not None:
-        by_cat = {i.category: i.confidence_score for i in memo.insights_used.all()}
+        # Highest confidence per category: a numeric category may carry more
+        # than one insight now, and a dict comprehension would keep whichever
+        # one happened to come last rather than the strongest.
+        by_cat = {}
+        for i in memo.insights_used.all():
+            by_cat[i.category] = max(by_cat.get(i.category, 0), i.confidence_score)
         canonical = list(ZeldaIntelligencePipelineV2.ANALYSIS_CATEGORIES)
         strong = [c for c in canonical if by_cat.get(c, 0) >= 85]
         light = [c for c in canonical if by_cat.get(c, 0) < 60]

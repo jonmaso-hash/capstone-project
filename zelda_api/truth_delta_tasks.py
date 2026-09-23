@@ -99,6 +99,14 @@ def extract_claims_from_insights(document_id: int):
 
 # Helper functions
 
+def _is_bare_year(match) -> bool:
+    """A four-digit calendar year with no currency mark, multiplier or separator."""
+    currency, digits, suffix = match.group(1), match.group(2), match.group(3)
+    if currency or suffix or ',' in digits or '.' in digits:
+        return False
+    return len(digits) == 4 and 1900 <= int(digits) <= 2099
+
+
 def _extract_numeric_value(text: str) -> float:
     """
     Extract first numeric value from text.
@@ -139,19 +147,26 @@ def _extract_numeric_value(text: str) -> float:
     # digits — either the single-letter form or the spelled-out word.
     # The trailing negative lookahead rejects ambiguous adjacent-letter
     # cases (e.g. "1Mbps", "$50 billionaire") rather than guessing.
-    match = re.search(
-        r'\$?([\d,]*\.?\d+)\s*(thousand\b|million\b|billion\b|[kmb])?(?![a-zA-Z])',
+    for match in re.finditer(
+        r'(\$)?([\d,]*\.?\d+)\s*(thousand\b|million\b|billion\b|[kmb])?(?![a-zA-Z])',
         text, re.IGNORECASE,
-    )
-    if not match:
+    ):
+        if _is_bare_year(match):
+            # "returned capital to shareholders continuously since 2012"
+            # became funding_raised = $2012, which Truth Delta then scored.
+            # A calendar year carries no currency mark, no multiplier and no
+            # thousands separator; $2,015 and "2,015 customers" both do.
+            continue
+        break
+    else:
         return None
 
     try:
-        numeric_value = float(match.group(1).replace(',', ''))
+        numeric_value = float(match.group(2).replace(',', ''))
     except ValueError:
         return None
 
-    suffix = (match.group(2) or '').lower()
+    suffix = (match.group(3) or '').lower()
     if suffix in ('k', 'thousand'):
         numeric_value *= 1_000
     elif suffix in ('m', 'million'):

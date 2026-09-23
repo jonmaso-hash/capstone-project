@@ -69,6 +69,7 @@ jobs:
           zelda_api.tests_finding_disputes
           zelda_api.tests_verification_grounding
           zelda_api.tests_memo_persistence
+          zelda_api.tests_claim_extraction_scoring
 
   # ── Non-blocking: the zelda_api suite currently makes live huggingface.co
   # calls, hits the Celery hang, and has known failures (all introduced in the
