@@ -161,6 +161,119 @@ class TruthDeltaReport(models.Model):
         app_label = 'zelda_api'
         ordering = ['-created_at']
 
+    # How far a claim may sit from the evidence before the pair stops
+    # reconciling. Per category on purpose: a filed revenue figure and a
+    # market-size estimate do not deserve the same band.
+    GROUNDING_TOLERANCE = {
+        'revenue': 0.10,
+        'arr': 0.10,
+        'funding_raised': 0.10,
+        'employees': 0.20,
+        'team_size': 0.20,
+        'customers': 0.20,
+        'user_count': 0.20,
+    }
+    DEFAULT_TOLERANCE = 0.15
+
+    # Categories that can never be contradicted, as a RULE rather than a very
+    # large tolerance -- so a later tolerance edit cannot accidentally make a
+    # TAM disagreement into a contradiction. Estimates of a market legitimately
+    # differ by multiples and say nothing about the company.
+    NEVER_CONTRADICTED = {'market_size', 'market_share'}
+
+    # Everything a contradiction has to be able to show. Without these the
+    # state cannot be explained afterwards, and an unexplainable contradiction
+    # is an accusation -- see run 3, where the only divergence found across
+    # four subjects was this pipeline's own extraction defect.
+    REQUIRED_PROVENANCE = ('claim_raw_text', 'observed_source')
+
+    def _tolerance_for(self, category):
+        return self.GROUNDING_TOLERANCE.get(category, self.DEFAULT_TOLERANCE)
+
+    @staticmethod
+    def _periods_comparable(row):
+        """
+        Both sides name a period and they agree.
+
+        ClaimedDatapoint stores no period today, so this is False for every
+        deck claim, and the asymmetry below is what keeps that from destroying
+        real agreements.
+        """
+        claim_period = (row.get('claim_period') or '').strip().lower()
+        observed_period = (row.get('observed_time_period') or '').strip().lower()
+        if not claim_period or not observed_period:
+            return False
+        return claim_period in observed_period or observed_period in claim_period
+
+    def _row_state(self, row):
+        """
+        (state, reason, tolerance) for one claim/datapoint pairing.
+
+        The period rule is asymmetric, deliberately. Agreement does not require
+        a comparable period: two independently produced figures matching to
+        0.04% are themselves evidence of describing the same period. A
+        DISAGREEMENT does require one, because a period mismatch is exactly
+        what a large gap looks like, and inferring a contradiction from an
+        incomparable pair would manufacture the finding.
+        """
+        category = row.get('category')
+        tolerance = self._tolerance_for(category)
+        claimed = row.get('claimed_value_numeric')
+        observed = row.get('observed_value_numeric')
+
+        if claimed is None or not observed:
+            return 'no_data', 'no_external_evidence', tolerance
+
+        within = abs(claimed - observed) / abs(observed) <= tolerance
+        if within:
+            return 'verified', None, tolerance
+
+        # Beyond here the pair diverges, and every gate must be satisfied
+        # before that may be called a contradiction.
+        if category in self.NEVER_CONTRADICTED:
+            return 'no_data', 'no_comparable_claim', tolerance
+        if any(not row.get(field) for field in self.REQUIRED_PROVENANCE):
+            return 'no_data', 'extraction_insufficient', tolerance
+        if not self._periods_comparable(row):
+            return 'no_data', 'period_unknown', tolerance
+        return 'contradicted', None, tolerance
+
+    def _comparison_rows(self):
+        return (self.details or {}).get('comparison') or []
+
+    def grounding_chain(self):
+        """
+        {category: [pairing, ...]} with the state and tolerance attached to
+        each row, so a finding can be reconstructed from what was stored
+        rather than from a sentence a model wrote about it.
+        """
+        chain = {}
+        for row in self._comparison_rows():
+            category = row.get('category')
+            if not category:
+                continue
+            state, reason, tolerance = self._row_state(row)
+            chain.setdefault(category, []).append(
+                {**row, 'state': state, 'reason': reason, 'tolerance_applied': tolerance,
+                 'period_comparable': self._periods_comparable(row)}
+            )
+        return chain
+
+    def grounding_reasons(self):
+        """{category: why no comparison could be made}, only where none could."""
+        reasons = {}
+        for category, rows in self.grounding_chain().items():
+            if any(r['state'] != 'no_data' for r in rows):
+                continue
+            # The most specific reason present, so "we had evidence but could
+            # not compare the periods" never reads as "we found nothing".
+            for preferred in ('period_unknown', 'extraction_insufficient',
+                              'ambiguous_pairing', 'no_comparable_claim', 'no_external_evidence'):
+                if any(r['reason'] == preferred for r in rows):
+                    reasons[category] = preferred
+                    break
+        return reasons
+
     def grounded_categories(self):
         """
         The categories this report actually holds external evidence for:
@@ -195,12 +308,38 @@ class TruthDeltaReport(models.Model):
         stored as datapoints, and Truth Delta's own prompt says a headline
         corroborates a narrative but never confirms a figure.
 
-        Deliberately two-state, not three: "contradicted" isn't something
-        the stored assessment text reliably distinguishes from "verified
-        but concerning" without over-reading free text as a structured
-        signal. How far a verified claim diverges from its evidence is the
-        score's job, not this function's.
+        Three-state where a stored comparison exists. It used to be two,
+        because "contradicted" could not be told from "verified but
+        concerning" without over-reading the model's free text. That reason
+        no longer applies: the pairing carries a computed discrepancy, so a
+        contradiction is arithmetic on two stored numbers, not a reading of
+        prose.
+
+            verified      a pairing reconciles within the category tolerance
+            contradicted  a pairing diverges, the periods are comparable, the
+                          provenance is present, and the category is one where
+                          a contradiction means anything
+            no_data       none of the above could be established; the reason
+                          is available from grounding_reasons()
+
+        A category is verified when ANY of its claims reconciles -- a deck
+        stating revenue twice, one figure matching, has stated a figure the
+        evidence supports. The diverging pairing stays visible in
+        grounding_chain(); it just does not make the category a contradiction.
+
+        Reports stored before the comparison was persisted keep the older
+        rule below, so history does not silently re-read as contradicted.
         """
+        chain = self.grounding_chain()
+        if chain:
+            states = {}
+            for category, rows in chain.items():
+                row_states = {r['state'] for r in rows}
+                states[category] = ('verified' if 'verified' in row_states
+                                    else 'contradicted' if 'contradicted' in row_states
+                                    else 'no_data')
+            return states
+
         grounded = self.grounded_categories()
         per_claim = self.details.get('per_claim', [])
         if per_claim:
@@ -239,9 +378,16 @@ class TruthDeltaReport(models.Model):
         states = self.category_states()
         total = len(states)
         if not total:
-            return {'total': 0, 'verified': 0, 'pct': None}
+            return {'total': 0, 'verified': 0, 'contradicted': 0, 'no_data': 0, 'pct': None}
         verified = sum(1 for state in states.values() if state == 'verified')
-        return {'total': total, 'verified': verified, 'pct': round(verified / total * 100, 1)}
+        # "no external data was found" and "the evidence disagrees" are
+        # different findings and must not be summed into one number.
+        contradicted = sum(1 for state in states.values() if state == 'contradicted')
+        return {
+            'total': total, 'verified': verified, 'contradicted': contradicted,
+            'no_data': total - verified - contradicted,
+            'pct': round(verified / total * 100, 1),
+        }
 
 
 class ClarificationRequest(models.Model):

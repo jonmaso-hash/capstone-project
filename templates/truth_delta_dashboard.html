@@ -707,6 +707,18 @@
                 <div class="stat-value" style="color: var(--td-green);">{{ verified_count }}</div>
                 <div class="stat-label">Verified</div>
             </div>
+            {% if contradicted_count %}
+            <div class="stat-card">
+                {% comment %}
+                The evidence disagrees with the figure -- a different finding
+                from "nothing was found", and never a statement about the
+                person who submitted it. Django's {# #} is single-line only;
+                spanning one renders the note onto the page.
+                {% endcomment %}
+                <div class="stat-value" style="color: var(--td-red);">{{ contradicted_count }}</div>
+                <div class="stat-label">Diverges</div>
+            </div>
+            {% endif %}
             <div class="stat-card">
                 <div class="stat-value" style="color: var(--td-yellow);">{{ unverified_count }}</div>
                 <div class="stat-label">Unverified</div>

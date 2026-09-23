@@ -920,10 +920,13 @@ def truth_delta_ui_view(request, document_id):
     from .truth_delta_models import open_dispute_categories
     disputed_categories = sorted(open_dispute_categories(report))
     verified_count = sum(1 for s in category_states.values() if s == 'verified')
+    # "no external data was found" and "the evidence disagrees" are different
+    # findings; summing them into one number hides the second.
+    contradicted_count = sum(1 for s in category_states.values() if s == 'contradicted')
     unverified_count = sum(1 for s in category_states.values() if s == 'no_data')
     # "Claims Analyzed" counts the same categories as Verified/Unverified, not
     # the extracted ClaimedDatapoint rows, so the three cards always add up.
-    claims_analyzed = verified_count + unverified_count
+    claims_analyzed = verified_count + contradicted_count + unverified_count
 
     # Work Done — concrete analysis work on the underlying document.
     # work_done_summary keeps only genuinely-computed positive integers,
@@ -955,7 +958,9 @@ def truth_delta_ui_view(request, document_id):
         'category_states': category_states,
         'disputed_categories': disputed_categories,
         'verified_count': verified_count,
+        'contradicted_count': contradicted_count,
         'unverified_count': unverified_count,
+        'grounding_reasons': report.grounding_reasons() if report else {},
         'work_done': work_done,
     }
     from .disclaimers import DUE_DILIGENCE_DISCLAIMER

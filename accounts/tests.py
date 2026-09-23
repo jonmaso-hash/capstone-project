@@ -662,7 +662,11 @@ class VerificationHistoryProfileTests(TestCase):
         response = self.client.get(reverse('accounts:profile', args=[self.founder_user.username]))
         history = list(response.context['verification_history'])
         newest, oldest = history[0], history[1]
-        self.assertEqual(newest.stats, {'total': 0, 'verified': 0, 'pct': None})
+        # Key by key, not as a whole dict: the stats grew `contradicted` and
+        # `no_data` counts when grounding became three-state, and this test is
+        # about a report with empty details having nothing to count.
+        self.assertEqual(
+            (newest.stats['total'], newest.stats['verified'], newest.stats['pct']), (0, 0, None))
         self.assertEqual(newest.trend, {'newly_verified': [], 'lost_verification': []})
         self.assertIsNone(oldest.trend, "the oldest report has no prior report to diff against")
 
