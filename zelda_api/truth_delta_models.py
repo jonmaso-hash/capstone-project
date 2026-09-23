@@ -161,28 +161,72 @@ class TruthDeltaReport(models.Model):
         app_label = 'zelda_api'
         ordering = ['-created_at']
 
+    def grounded_categories(self):
+        """
+        The categories this report actually holds external evidence for:
+        `details['observed']`, written from the ObservedDatapoint rows the
+        pipeline fetched. Nothing a model wrote can add to this set.
+
+        A report stored before `observed` was recorded has no key here and
+        so grounds nothing — the conservative answer, since a claim cannot
+        be shown to be corroborated by evidence that was never saved.
+        """
+        return {
+            row.get('category')
+            for row in (self.details or {}).get('observed') or []
+            if row.get('category')
+        }
+
     def category_states(self):
         """
-        {category: 'verified' | 'no_data'} derived from `details` — a
-        claim counts as 'verified' only when its per-claim `observed`
-        field actually names real external evidence, not merely that a
-        Claude assessment exists. Deliberately two-state, not three:
-        "contradicted" isn't something the stored assessment text
-        reliably distinguishes from "verified but concerning" without
-        over-reading free text as a structured signal.
+        {category: 'verified' | 'no_data'} — 'verified' means THIS pipeline
+        fetched and stored an external datapoint in that category.
+
+        It deliberately does not read the per-claim `observed` text. That
+        field is written by a language model, so deriving verification from
+        it let the model's prose stand in for evidence: with no external
+        source configured or reachable, a row reading "Crunchbase reports
+        $4.2M ARR" counted as corroboration of the very deck it came from.
+        The model may describe evidence; only the fetch creates it.
+
+        The consequence runs both ways, on purpose. A claim with a stored
+        datapoint counts as verified even where the model's row says it
+        found nothing, and news headlines never count — they are never
+        stored as datapoints, and Truth Delta's own prompt says a headline
+        corroborates a narrative but never confirms a figure.
+
+        Deliberately two-state, not three: "contradicted" isn't something
+        the stored assessment text reliably distinguishes from "verified
+        but concerning" without over-reading free text as a structured
+        signal. How far a verified claim diverges from its evidence is the
+        score's job, not this function's.
         """
+        grounded = self.grounded_categories()
         per_claim = self.details.get('per_claim', [])
         if per_claim:
             return {
-                row['category']: (
-                    'verified' if row.get('observed') and 'no external data' not in row['observed'].lower()
-                    else 'no_data'
-                )
+                row['category']: ('verified' if row['category'] in grounded else 'no_data')
                 for row in per_claim if row.get('category')
             }
         # No qualitative per_claim breakdown at all (e.g. the "no external
-        # data found for this company" branch) — every claim is unchecked.
-        return {c['category']: 'no_data' for c in self.details.get('claims', []) if c.get('category')}
+        # data found for this company" branch).
+        return {
+            c['category']: ('verified' if c['category'] in grounded else 'no_data')
+            for c in self.details.get('claims', []) if c.get('category')
+        }
+
+    def per_claim_rows(self):
+        """
+        The per-claim table with the server's grounding answer attached, so
+        a page renders what the evidence says instead of re-deciding from
+        the prose it was handed — which is how the claim list and the stat
+        cards came to compute "verified" two different ways.
+        """
+        grounded = self.grounded_categories()
+        return [
+            {**row, 'grounded': row.get('category') in grounded}
+            for row in self.details.get('per_claim', []) or []
+        ]
 
     def verifiability_stats(self):
         """

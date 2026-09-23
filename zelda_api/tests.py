@@ -500,7 +500,9 @@ class ZeldaReportObservationsTests(TestCase):
                      'per_claim': [
                          {'category': 'revenue', 'claimed': '$5M', 'observed': '$5M (EDGAR)', 'assessment': 'match'},
                          {'category': 'employees', 'claimed': '20', 'observed': 'no external data', 'assessment': 'unchecked'},
-                     ]},
+                     ],
+                     'observed': [{'category': 'revenue', 'observed_value': '$5M',
+                                   'source': 'SEC EDGAR', 'time_period': 'FY2025'}]},
         )
         obs = zelda_report_observations(memo, doc)
         self.assertTrue(any('backs 1 of 2 checkable claims' in n for n in obs['noticed']))
@@ -769,6 +771,8 @@ class ICMemoTests(TestCase):
                 {'category': 'revenue', 'claimed': '$5M', 'observed': '$5.1M (SEC EDGAR)', 'assessment': 'match'},
                 {'category': 'employees', 'claimed': '40', 'observed': 'no external data', 'assessment': 'unchecked'},
             ],
+            'observed': [{'category': 'revenue', 'observed_value': '$5.1M',
+                         'source': 'SEC EDGAR', 'time_period': 'FY2025'}],
         })
         td = build_ic_memo_context(self.application)['truth_delta']
         self.assertEqual(td['claims_checked'], 3)
@@ -820,6 +824,8 @@ class ICMemoTests(TestCase):
         self._truth_delta_report(doc, details={
             'claims': [{'category': 'revenue'}],
             'per_claim': [{'category': 'revenue', 'claimed': '$5M', 'observed': '$5.1M (SEC EDGAR)', 'assessment': 'match'}],
+            'observed': [{'category': 'revenue', 'observed_value': '$5.1M',
+                         'source': 'SEC EDGAR', 'time_period': 'FY2025'}],
         })
         md = render_ic_memo_markdown(build_ic_memo_context(self.application))
         self.assertIn('**Claims checked:** 1', md)
@@ -3095,7 +3101,18 @@ class TruthDeltaUIViewProvenanceTests(TestCase):
     def test_details_context_matches_the_report(self):
         response = self.client.get(reverse('zelda_api:truth_delta_ui', args=[self.doc.id]))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['details'], self.report.details)
+        details = response.context['details']
+        # The same stored provenance, claim for claim -- plus the server's
+        # grounding answer per row, so the page never re-derives "verified"
+        # from the observed text it was handed.
+        self.assertEqual(details['claims'], self.report.details['claims'])
+        self.assertEqual(details['observed'], self.report.details['observed'])
+        self.assertEqual(details['per_claim'], self.report.per_claim_rows())
+        self.assertEqual(
+            [{k: v for k, v in row.items() if k != 'grounded'} for row in details['per_claim']],
+            self.report.details['per_claim'],
+        )
+        self.assertIs(details['per_claim'][0]['grounded'], True)
 
     def test_per_claim_data_is_embedded_as_parseable_json(self):
         import json
@@ -3210,7 +3227,11 @@ class TruthDeltaEvidenceCoverageChartTests(TestCase):
         self._report(details={'per_claim': [
             {'category': 'revenue', 'claimed': '$5M', 'observed': '$5.1M (SEC EDGAR)', 'assessment': 'match'},
             {'category': 'employees', 'claimed': '40', 'observed': 'no external data', 'assessment': 'unchecked'},
-        ], 'claims': [{'category': 'revenue'}, {'category': 'employees'}]})
+        ], 'claims': [{'category': 'revenue'}, {'category': 'employees'}],
+            # Revenue is the verified half of the split: a datapoint the
+            # pipeline stored, not a sentence describing one.
+            'observed': [{'category': 'revenue', 'observed_value': '$5.1M',
+                          'source': 'SEC EDGAR', 'time_period': 'FY2025'}]})
         html = self._html()
         self.assertIn('id="evidenceCoverageChart"', html)
         self.assertIn('chart.js', html)
@@ -3661,18 +3682,27 @@ class TruthDeltaReportRollupAndTrendTests(TestCase):
             uploaded_by=self.user, document_type='pitch_deck',
         )
 
-    def _report(self, per_claim=None, claims=None):
+    def _report(self, per_claim=None, claims=None, evidence=()):
+        """`evidence`: the categories the pipeline actually fetched data for."""
         from .truth_delta_models import TruthDeltaReport
         return TruthDeltaReport.objects.create(
             document=self.doc, overall_truth_score=80.0, credibility_risk='low', summary='test',
-            details={'claims': claims or [], 'per_claim': per_claim or []},
+            details={
+                'claims': claims or [], 'per_claim': per_claim or [],
+                'observed': [
+                    {'category': c, 'observed_value': 'x', 'source': 'SEC EDGAR', 'time_period': 'FY2025'}
+                    for c in evidence
+                ],
+            },
         )
 
     def test_verifiability_stats_counts_only_claims_with_real_evidence(self):
+        # Both rows carry model prose in `observed`; only revenue has a stored
+        # datapoint behind it, and only that one counts.
         report = self._report(per_claim=[
             {'category': 'revenue', 'claimed': '$1M', 'observed': '$1.1M (SEC EDGAR)', 'assessment': 'ok'},
-            {'category': 'funding', 'claimed': '$500K', 'observed': 'no external data found', 'assessment': 'unverifiable'},
-        ])
+            {'category': 'funding', 'claimed': '$500K', 'observed': '$500K (Crunchbase)', 'assessment': 'ok'},
+        ], evidence=['revenue'])
         stats = report.verifiability_stats()
         self.assertEqual(stats, {'total': 2, 'verified': 1, 'pct': 50.0})
 
@@ -3688,7 +3718,8 @@ class TruthDeltaReportRollupAndTrendTests(TestCase):
     def test_diff_detects_newly_verified_category(self):
         from .truth_delta_models import diff_verification_reports
         older = self._report(per_claim=[{'category': 'funding', 'observed': 'no external data found'}])
-        newer = self._report(per_claim=[{'category': 'funding', 'observed': '$2M (Crunchbase)'}])
+        newer = self._report(per_claim=[{'category': 'funding', 'observed': '$2M (Crunchbase)'}],
+                             evidence=['funding'])
         diff = diff_verification_reports(newer, older)
         self.assertEqual(diff['newly_verified'], ['funding'])
         self.assertEqual(diff['lost_verification'], [])
@@ -3698,7 +3729,7 @@ class TruthDeltaReportRollupAndTrendTests(TestCase):
         older = self._report(per_claim=[
             {'category': 'market', 'observed': '$50B (per prior filing)'},
             {'category': 'revenue', 'observed': '$1M (SEC EDGAR)'},
-        ])
+        ], evidence=['market', 'revenue'])
         newer = self._report(per_claim=[
             {'category': 'market', 'observed': 'no external data found'},
             # 'revenue' isn't mentioned in the newer report at all — must NOT count as "lost."
@@ -3709,8 +3740,10 @@ class TruthDeltaReportRollupAndTrendTests(TestCase):
 
     def test_diff_with_no_changes_is_empty(self):
         from .truth_delta_models import diff_verification_reports
-        older = self._report(per_claim=[{'category': 'revenue', 'observed': '$1M (SEC EDGAR)'}])
-        newer = self._report(per_claim=[{'category': 'revenue', 'observed': '$1.05M (SEC EDGAR)'}])
+        older = self._report(per_claim=[{'category': 'revenue', 'observed': '$1M (SEC EDGAR)'}],
+                             evidence=['revenue'])
+        newer = self._report(per_claim=[{'category': 'revenue', 'observed': '$1.05M (SEC EDGAR)'}],
+                             evidence=['revenue'])
         diff = diff_verification_reports(newer, older)
         self.assertEqual(diff, {'newly_verified': [], 'lost_verification': []})
 
