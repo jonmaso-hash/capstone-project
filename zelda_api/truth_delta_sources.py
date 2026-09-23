@@ -243,6 +243,10 @@ class SECFilingsIntegration(DataSourceIntegration):
     _CACHE_TTL_FOUND = 60 * 60 * 24 * 7
     _CACHE_TTL_NOT_FOUND = 60 * 60 * 6
 
+    # Reasons that describe the ATTEMPT rather than the company. A successful
+    # query that matched nothing is evidence; an unreachable source is not.
+    TRANSIENT_REASONS = ('timeout', 'request_error')
+
     def _find_cik(self, company_name: str) -> Optional[str]:
         """Thin wrapper over resolve_with_diagnostics for callers that only need the CIK."""
         cik, _reason = self.resolve_with_diagnostics(company_name)
@@ -292,10 +296,18 @@ class SECFilingsIntegration(DataSourceIntegration):
                 cache.set(cache_key, result, self._CACHE_TTL_FOUND)
                 return result
             reason = candidate_reason
-            if reason in ('timeout', 'request_error'):
+            if reason in self.TRANSIENT_REASONS:
                 # A real network failure won't be fixed by trying a
                 # differently-worded candidate — stop retrying.
                 break
+
+        if reason in self.TRANSIENT_REASONS:
+            # NOT cached. The not-found TTL is six hours, so caching a
+            # ten-second timeout made a company read as having no external
+            # evidence for the rest of the day, long after the source
+            # recovered -- turning a failed attempt into evidence about the
+            # company. Returned uncached so the next attempt sees recovery.
+            return (None, reason)
 
         result = (None, reason)
         cache.set(cache_key, result, self._CACHE_TTL_NOT_FOUND)
@@ -511,7 +523,8 @@ class DataSourceManager:
         return results
 
     @classmethod
-    def create_observed_datapoints(cls, document, company_name: str, domain: str = None) -> List[ObservedDatapoint]:
+    def create_observed_datapoints(cls, document, company_name: str, domain: str = None,
+                                   diagnostics: dict = None) -> List[ObservedDatapoint]:
         """
         Fetch data from all sources and create ObservedDatapoint records.
         Returns the list of created ObservedDatapoint objects.

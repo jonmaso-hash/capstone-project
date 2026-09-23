@@ -222,7 +222,7 @@ class TruthDeltaReport(models.Model):
         observed = row.get('observed_value_numeric')
 
         if claimed is None or not observed:
-            return 'no_data', 'no_external_evidence', tolerance
+            return 'no_data', self._absence_reason(), tolerance
 
         within = abs(claimed - observed) / abs(observed) <= tolerance
         if within:
@@ -237,6 +237,23 @@ class TruthDeltaReport(models.Model):
         if not self._periods_comparable(row):
             return 'no_data', 'period_unknown', tolerance
         return 'contradicted', None, tolerance
+
+    # Source outcomes that describe the ATTEMPT rather than the company.
+    SOURCE_FAILURE_REASONS = {'timeout', 'request_error'}
+
+    def _absence_reason(self):
+        """
+        Why nothing was compared: the source found nothing, or was never
+        reached. `no_external_evidence` asserts something about the world;
+        `source_unavailable` asserts something about the attempt. Recording
+        the first when the second is true makes the artifact wrong -- which is
+        what run 4 did, reporting no external evidence for a company SEC
+        EDGAR plainly knows, because a 10s timeout had been cached as absence.
+        """
+        diagnostics = (self.details or {}).get('source_diagnostics') or {}
+        if any(reason in self.SOURCE_FAILURE_REASONS for reason in diagnostics.values()):
+            return 'source_unavailable'
+        return 'no_external_evidence'
 
     def _comparison_rows(self):
         return (self.details or {}).get('comparison') or []
@@ -268,7 +285,8 @@ class TruthDeltaReport(models.Model):
             # The most specific reason present, so "we had evidence but could
             # not compare the periods" never reads as "we found nothing".
             for preferred in ('period_unknown', 'extraction_insufficient',
-                              'ambiguous_pairing', 'no_comparable_claim', 'no_external_evidence'):
+                              'ambiguous_pairing', 'no_comparable_claim',
+                              'source_unavailable', 'no_external_evidence'):
                 if any(r['reason'] == preferred for r in rows):
                     reasons[category] = preferred
                     break
