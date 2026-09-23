@@ -870,12 +870,19 @@ class ZeldaIntelligencePipelineV2:
                         # Older stored memos and older Claude responses used the
                         # investment_ key; read both so nothing breaks on upgrade.
                         'information_readiness', memo_sections.get('investment_readiness', 'Not assessed.')),
-                    'key_strengths':      memo_sections.get('key_strengths', ''),
-                    'key_concerns':       memo_sections.get('key_concerns', ''),
+                    # Renamed by migration 0024 (analyse rather than advocate).
+                    # The prompt asks for the new key; the old one is read as a
+                    # fallback for a response produced before that change, the
+                    # same way business_model_analysis and information_readiness
+                    # above do. Writing the old FIELD names here raised
+                    # "Invalid field name(s)" on every save, which failed the
+                    # whole pipeline before claim extraction.
+                    'supported_points':   memo_sections.get('supported_points', memo_sections.get('key_strengths', '')),
+                    'open_concerns':      memo_sections.get('open_concerns', memo_sections.get('key_concerns', '')),
                     'what_would_change_the_picture': memo_sections.get('what_would_change_the_picture', memo_sections.get('what_would_change_decision', '')),
-                    'bull_case':          memo_sections.get('bull_case', ''),
-                    'base_case':          memo_sections.get('base_case', ''),
-                    'bear_case':          memo_sections.get('bear_case', ''),
+                    'upside_scenario':    memo_sections.get('upside_scenario', memo_sections.get('bull_case', '')),
+                    'base_scenario':      memo_sections.get('base_scenario', memo_sections.get('base_case', '')),
+                    'downside_scenario':  memo_sections.get('downside_scenario', memo_sections.get('bear_case', '')),
                     'zelda_advantage':    memo_sections.get('zelda_advantage', ''),
                     'questions_for_management': memo_sections.get('questions_for_management', 'Not assessed.'),
                     'completeness_score': analysis_result.get('confidence', 0),
