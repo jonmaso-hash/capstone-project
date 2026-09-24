@@ -65,10 +65,19 @@ class TruthDeltaEngine:
         # External-source failures must never block report creation — a
         # report saying "no external data found" is a true, useful result,
         # not a broken one.
+        # What each source DID, not just what it returned. A decline caused by
+        # an unreachable source must not be recorded as an absence of evidence
+        # about the company.
+        source_diagnostics = {}
         try:
+            data_source_manager.create_observed_datapoints(
+                document, company_name, domain, diagnostics=source_diagnostics)
+        except TypeError:
+            # A caller or double that predates the diagnostics argument.
             data_source_manager.create_observed_datapoints(document, company_name, domain)
         except Exception as e:
             logger.warning(f"External data fetch failed for document {document_id}: {e}")
+            source_diagnostics.setdefault('fetch', 'request_error')
 
         observed = ObservedDatapoint.objects.filter(document_id=document_id)
 
@@ -94,7 +103,15 @@ class TruthDeltaEngine:
                     f"claims are accurate — only that no corroborating or contradicting "
                     f"external data was found for \"{company_name}\"."
                 ),
-                details={'claims': self._serialize_claims(claims), 'observed': []},
+                details={
+                    'claims': self._serialize_claims(claims), 'observed': [],
+                    'source_diagnostics': source_diagnostics,
+                    # Even with nothing to compare against, record WHAT could
+                    # not be compared. Without this the report has no chain at
+                    # all, so a reader cannot tell which claims were left
+                    # unchecked or why -- and the decline carries no reason.
+                    'comparison': self._build_comparison(claims, observed),
+                },
             )
             return report
 
@@ -119,6 +136,7 @@ class TruthDeltaEngine:
                 # to Claude and discarded, which left the model's prose as the
                 # only surviving account of a comparison it did not perform.
                 'comparison': comparison,
+                'source_diagnostics': source_diagnostics,
                 'per_claim': result.get('per_claim', []),
             },
         )
