@@ -72,6 +72,7 @@ jobs:
           zelda_api.tests_claim_extraction_scoring
           zelda_api.tests_three_state_grounding
           zelda_api.tests_source_unavailable
+          zelda_api.tests_claim_field_binding
 
   # ── Non-blocking: the zelda_api suite currently makes live huggingface.co
   # calls, hits the Celery hang, and has known failures (all introduced in the
