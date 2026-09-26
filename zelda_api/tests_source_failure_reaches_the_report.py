@@ -119,6 +119,65 @@ class ASourceFailureSurvivesToTheReportTests(TestCase):
         report = self.verify_with_sec_answering((None, 'ambiguous'))
         self.assertEqual(report.grounding_reasons()['revenue'], 'no_external_evidence')
 
+    # --- failures AFTER the company resolved -----------------------------
+    def test_a_companyfacts_timeout_is_also_a_source_failure(self):
+        """
+        Resolution succeeded, so the company is not in doubt -- SEC simply
+        never returned its figures. That is squarely the attempt failing, and
+        the old code returned a bare {} for it, indistinguishable from "this
+        company has filed nothing".
+
+        Added because `companyfacts_timeout_silent` SURVIVED: every test
+        stopped at a failure to resolve, so the second half of the fetch was
+        never exercised.
+        """
+        import requests as requests_lib
+        with mock.patch.object(DataSourceManager, 'INTEGRATIONS', {'sec': SECFilingsIntegration}), \
+             mock.patch.object(DataSourceManager, 'fetch_news_headlines', return_value=[]), \
+             mock.patch.object(SECFilingsIntegration, '_find_cik_exact',
+                               return_value=('0000320193', None)), \
+             mock.patch.object(requests_lib.Session, 'get',
+                               side_effect=requests_lib.exceptions.Timeout()):
+            report = TruthDeltaEngine().verify_document(self.document.id)
+        self.assertIsNotNone(report)
+        self.assertEqual(report.grounding_reasons()['revenue'], 'source_unavailable')
+
+    def test_a_source_that_raises_is_recorded_as_a_failed_attempt(self):
+        """
+        The manager swallows exceptions so one broken source cannot stop the
+        rest. Swallowing it silently, though, lets a crash read as an absence
+        of evidence about the company.
+
+        Added because `raised_source_not_recorded` SURVIVED.
+        """
+        with mock.patch.object(DataSourceManager, 'INTEGRATIONS', {'sec': SECFilingsIntegration}), \
+             mock.patch.object(DataSourceManager, 'fetch_news_headlines', return_value=[]), \
+             mock.patch.object(SECFilingsIntegration, 'fetch_company_data',
+                               side_effect=RuntimeError('boom')):
+            report = TruthDeltaEngine().verify_document(self.document.id)
+        self.assertIsNotNone(report)
+        self.assertEqual(report.grounding_reasons()['revenue'], 'source_unavailable')
+
+    # --- the summary must not contradict the report's own grounding ------
+    def test_the_summary_does_not_claim_a_source_was_checked_when_it_failed(self):
+        """
+        Once diagnostics reach the report, a summary saying "checked SEC
+        EDGAR ... no public data could be found" sits directly against a
+        grounding of source_unavailable. The report would contradict itself,
+        and the sentence a reader actually reads is the one asserting an
+        absence.
+        """
+        report = self.verify_with_sec_answering((None, 'timeout'))
+        self.assertNotIn('checked SEC EDGAR', report.summary)
+        self.assertNotIn('No public data could be found', report.summary)
+        self.assertIn('could not be reached', report.summary)
+
+    def test_a_genuine_absence_still_says_it_checked(self):
+        """Control: the original sentence must survive where it is true."""
+        report = self.verify_with_sec_answering((None, 'not_found'))
+        self.assertIn('checked SEC EDGAR', report.summary)
+        self.assertIn('No public data could be found', report.summary)
+
     # --- the invariant the whole thing protects --------------------------
     def test_an_unreachable_source_never_produces_a_contradiction(self):
         report = self.verify_with_sec_answering((None, 'timeout'))
