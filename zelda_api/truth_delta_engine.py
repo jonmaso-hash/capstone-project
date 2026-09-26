@@ -93,16 +93,35 @@ class TruthDeltaEngine:
                 checked_sources.append('Crunchbase')
             if settings.NEWS_API_KEY:
                 checked_sources.append('recent news')
-            report = TruthDeltaReport.objects.create(
-                document_id=document_id,
-                overall_truth_score=None,
-                credibility_risk='unknown',
-                summary=(
+
+            # A source that never answered was not "checked", and saying it
+            # was turns a failed attempt into a statement about the company --
+            # the same conflation the grounding layer refuses to make. Now
+            # that diagnostics actually reach the report, a summary claiming
+            # the sources were checked would contradict the report's own data.
+            unreachable = sorted(
+                source for source, reason in (source_diagnostics or {}).items()
+                if reason in TruthDeltaReport.SOURCE_FAILURE_REASONS
+            )
+            if unreachable:
+                summary = (
+                    f"Public sources could not be reached, so these claims were left "
+                    f"unchecked rather than found unsupported. This says nothing about "
+                    f"\"{company_name}\" — only that the attempt did not complete."
+                )
+            else:
+                summary = (
                     f"No public data could be found to independently verify these claims "
                     f"(checked {', '.join(checked_sources)}). This is not a confirmation the "
                     f"claims are accurate — only that no corroborating or contradicting "
                     f"external data was found for \"{company_name}\"."
-                ),
+                )
+
+            report = TruthDeltaReport.objects.create(
+                document_id=document_id,
+                overall_truth_score=None,
+                credibility_risk='unknown',
+                summary=summary,
                 details={
                     'claims': self._serialize_claims(claims), 'observed': [],
                     'source_diagnostics': source_diagnostics,
