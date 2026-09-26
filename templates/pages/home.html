@@ -73,7 +73,7 @@
                         <span class="badge bg-primary-subtle text-primary fw-semibold mb-3">Sourcing Deals</span>
                         <h5 class="fw-bold mb-3"><i class="bi bi-briefcase-fill me-2 text-primary"></i>Investor</h5>
                         <ul class="list-unstyled small text-secondary mb-4">
-                            <li class="mb-2"><i class="bi bi-check2 text-primary me-1"></i>Deal flow scored by fit, not keyword filters</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-primary me-1"></i>Deal flow ranked by semantic profile match, not keyword filters</li>
                             <li class="mb-2"><i class="bi bi-check2 text-primary me-1"></i>Browse pitch decks & videos directly</li>
                             <li class="mb-2"><i class="bi bi-check2 text-primary me-1"></i>Direct intro requests, no cold outreach</li>
                         </ul>
@@ -159,9 +159,9 @@
                 <span class="badge bg-dark text-uppercase tracking-wide mb-3 px-3 py-2 rounded-pill">The Intelligence Layer</span>
                 <h2 class="display-6 fw-bolder text-dark mb-3" style="letter-spacing: -1px;">Meet Zelda.</h2>
                 <p class="lead text-muted pe-lg-5 mb-2">
-                    Zelda analyzes private companies like an investment analyst, separates disclosed claims from
-                    verified evidence like a diligence associate, and connects the right counterparties like a deal
-                    team — turning raw documents into intelligence you can act on.
+                    Zelda analyzes private-company materials, separates company-reported claims from the
+                    supporting evidence it can find, and surfaces potential counterparties through semantic
+                    matching — turning raw documents into structured business intelligence.
                 </p>
                 <p class="fw-semibold text-dark mb-0">
                     Information <i class="bi bi-arrow-right mx-1 text-muted"></i> Matching <i class="bi bi-arrow-right mx-1 text-muted"></i> Intelligence <i class="bi bi-arrow-right mx-1 text-muted"></i> Verified Outcomes
@@ -190,7 +190,7 @@
                     </div>
                     <div>
                         <h5 class="fw-bold mb-1">2. Find the Right Opportunities</h5>
-                        <p class="text-muted small mb-0">Semantic matching connects the right businesses and capital or acquisition partners, scored by true fit, not keyword filters.</p>
+                        <p class="text-muted small mb-0">Semantic matching connects businesses with capital or acquisition partners, ranked by how closely the stated profiles align, not by keyword filters.</p>
                     </div>
                 </div>
 
@@ -200,7 +200,7 @@
                     </div>
                     <div>
                         <h5 class="fw-bold mb-1">3. Analyze the Evidence</h5>
-                        <p class="text-muted small mb-0">Zelda turns submitted information into intelligence. Truth Delta separates disclosed claims from verified or unsupported information — so you know what's backed by evidence before you decide.</p>
+                        <p class="text-muted small mb-0">Zelda turns submitted information into intelligence. Truth Delta reports each disclosed claim as verified, unsupported, unavailable, or not comparable — so you can see which is which before you decide.</p>
                     </div>
                 </div>
 
@@ -229,13 +229,26 @@
                 <div class="font-monospace small" style="color: #00ff41; line-height: 1.8;">
                     <div class="mb-2"><span class="text-secondary">[INGEST]</span> Parsing uploaded pitch deck (Founder_App_ID:492)...</div>
                     <div class="mb-2"><span class="text-secondary">[VECTOR]</span> Embedding profile against 340 active investor mandates.</div>
-                    <div class="mb-2 text-white"><span class="text-secondary">[MATCH]</span> Calibrating alignment score... <span class="badge bg-success ms-2">94.2% MATCH</span></div>
-                    <div class="mb-2"><span class="text-secondary">[TRUTH DELTA]</span> Cross-checking claims against source documents...</div>
+                    <div class="mb-2 text-white"><span class="text-secondary">[MATCH]</span> Calibrating alignment score... <span class="badge bg-success ms-2">94.2% SEMANTIC MATCH</span></div>
+                    <div class="mb-2"><span class="text-secondary">[TRUTH DELTA]</span> Comparing disclosed claims against independent public sources...</div>
                     <div class="mb-2 text-white"><span class="text-secondary">[MEMO]</span> Generating Intelligence Memo + Truth Delta report...</div>
                     <div class="mb-4 text-white"><span class="text-secondary">[VERIFIED]</span> Deal confirmed by both parties. <span class="badge bg-success ms-2">FUNDED</span></div>
 
                     <div class="d-inline-block bg-success" style="width: 8px; height: 16px; animation: blink 1s step-end infinite;"></div>
                 </div>
+
+                {% comment %}
+                    An illustration of the pipeline, not a live feed. The
+                    caption is load-bearing: a bare percentage beside a deal
+                    reads as a quality or success score, and this one measures
+                    similarity between stated criteria.
+                {% endcomment %}
+                {# text-white-50, not text-secondary: the grey utility is a light-background colour and clears only 3.3:1 on this panel. #}
+                <p class="small text-white-50 mt-4 mb-0" style="max-width: 46rem;">
+                    Illustrative. A semantic match score measures how closely stated company and investor
+                    criteria align. It is not investment advice, a prediction of outcome, or an assessment
+                    of quality.
+                </p>
 
                 <div class="position-absolute top-0 end-0 bottom-0 w-50" style="background: radial-gradient(circle at right, rgba(0, 255, 65, 0.05), transparent); pointer-events: none;"></div>
             </div>
@@ -254,13 +267,13 @@
       <div class="service-card">
         <div class="icon">🧠</div>
         <h5>AI Intelligence Memos <span class="badge bg-warning-subtle text-warning-emphasis" style="font-size: 0.65rem; vertical-align: middle;">Premium</span></h5>
-        <p>Claude synthesizes a due-diligence-ready brief from your materials in minutes.</p>
+        <p>Claude synthesizes a structured brief from your materials, with each finding traceable to the passage it came from.</p>
       </div>
 
       <div class="service-card">
         <div class="icon">🔍</div>
         <h5>Truth Delta Verification <span class="badge bg-warning-subtle text-warning-emphasis" style="font-size: 0.65rem; vertical-align: middle;">Premium</span></h5>
-        <p>Claims in the deck are cross-checked against the underlying documents automatically.</p>
+        <p>Claims in the deck are compared against independent public sources, where those sources report the metric, and each one is reported as verified, unsupported, unavailable, or not comparable.</p>
       </div>
 
       <div class="service-card">
@@ -272,7 +285,7 @@
       <div class="service-card">
         <div class="icon">🎯</div>
         <h5>Semantic Matching</h5>
-        <p>Embeddings surface true-fit counterparties, not just keyword or filter matches.</p>
+        <p>Embeddings surface counterparties whose stated profile aligns with yours, not just keyword or filter matches.</p>
       </div>
 
       <div class="service-card">

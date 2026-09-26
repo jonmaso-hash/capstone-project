@@ -218,6 +218,22 @@ class HomepagePositioningCopyTests(TestCase):
     competitive benchmarking, #7 expert review).
     """
 
+    @staticmethod
+    def _squeeze(text):
+        """
+        Lowercased, with every run of whitespace collapsed to one space.
+
+        Template copy wraps across source lines, so a needle written with
+        single spaces will not match the raw HTML even when the phrase is
+        plainly on the page. Scanning raw text makes a phrase assertion
+        silently unfalsifiable; `test_the_phrase_scan_can_actually_see_a_
+        phrase_that_wraps` is the control that keeps this honest.
+        """
+        return ' '.join(text.lower().split())
+
+    def _squeezed_home(self):
+        return self._squeeze(self.client.get(reverse('pages:home')).content.decode('utf-8'))
+
     def test_hero_leads_with_decision_making_not_audience_actions(self):
         """
         "Make better decisions about businesses." is the primary <h1> —
@@ -268,11 +284,112 @@ class HomepagePositioningCopyTests(TestCase):
         """The approved messaging principle: Truth Delta evaluates claims/
         evidence; Verified Funded/Sold confirms an actual transaction. The
         page must describe both without merging them into generic "AI
-        verification" language."""
+        verification" language.
+
+        The Truth Delta half of this used to be pinned to a two-state
+        sentence -- "verified or unsupported" -- while the engine reports
+        five. Two states is itself a kind of blurring: it implies a claim
+        Zelda could not corroborate was found wanting, when the far more
+        common outcomes are that no source reports the metric at all, or
+        that the two figures aren't comparable. The assertion now pins the
+        states the engine actually has, which is a sharper form of the same
+        guard, not a relaxed one."""
         response = self.client.get(reverse('pages:home'))
         content = response.content.decode('utf-8')
-        self.assertIn('Truth Delta separates disclosed claims from verified or unsupported information', content)
+        self.assertIn(
+            'reports each disclosed claim as verified, unsupported, unavailable, or not comparable',
+            content,
+        )
         self.assertIn('both sides confirm the outcome', content)
+
+    def test_the_page_does_not_claim_zelda_checks_the_founders_own_documents(self):
+        """
+        Truth Delta compares deck claims against INDEPENDENT public sources --
+        SEC EDGAR company facts and Form D (zelda_api/truth_delta_sources.py).
+        It does not cross-reference the founder's own uploads against each
+        other. The page said it did, in two places, which described a
+        mechanism the product doesn't have; corroboration against an outside
+        source is both the real behaviour and the stronger claim.
+        """
+        content = self.client.get(reverse('pages:home')).content.decode('utf-8')
+        self.assertNotIn('against source documents', content)
+        self.assertNotIn('against the underlying documents', content)
+        self.assertIn('independent public sources', content)
+
+    def test_independent_source_language_states_its_coverage(self):
+        """
+        Only two fields are populated by any live source today (revenue and
+        employees, both from SEC EDGAR), and only for SEC filers. An
+        unqualified "compared against independent public sources" promises
+        coverage the source layer does not have, so the sentence has to carry
+        its own limit.
+        """
+        content = self.client.get(reverse('pages:home')).content.decode('utf-8')
+        self.assertIn('where those sources report the metric', content)
+
+    def test_the_match_score_says_what_it_measures(self):
+        """
+        A bare percentage next to a deal reads as a quality or success score.
+        The number is semantic similarity between stated criteria, and the
+        page has to say so where it shows one.
+        """
+        content = self.client.get(reverse('pages:home')).content.decode('utf-8')
+        self.assertNotIn('94.2% MATCH', content)
+        self.assertIn('94.2% SEMANTIC MATCH', content)
+        self.assertIn('not investment advice', content)
+
+    def test_no_unmeasured_capability_or_assurance_claims(self):
+        """
+        Claims whose referent is an outcome nobody has measured. "True fit" is
+        an empirical claim about whether semantic similarity predicts a real
+        deal -- there is no marketplace data to support it yet. The rest
+        imply a standard or an assurance with no definition behind it.
+
+        Kept deliberately: "verified deal outcomes" and
+        "[VERIFIED] ... FUNDED", whose referent is a bilateral state the
+        connection state machine enforces -- FUNDED_PENDING renders no badge.
+        The word is accurate when it names a state the product establishes.
+        """
+        content = self._squeezed_home()
+        for phrase in ('true fit', 'true-fit', 'scored by fit', 'due-diligence-ready',
+                       'bank-grade', 'military-grade', 'fully secure', 'guaranteed'):
+            with self.subTest(phrase=phrase):
+                self.assertNotIn(phrase, content)
+
+    def test_zelda_is_not_described_as_a_person_who_reaches_conclusions(self):
+        """
+        "Like an investment analyst" and "like a diligence associate" are
+        analogies to roles that exercise judgment. Zelda organizes evidence
+        and leaves the decision with the reader -- see the standing guard in
+        zelda_api/tests_no_investment_advice.py, which this complements from
+        the marketing side.
+        """
+        content = self._squeezed_home()
+        for phrase in ('investment analyst', 'diligence associate', 'like a deal team'):
+            with self.subTest(phrase=phrase):
+                self.assertNotIn(phrase, content)
+
+    def test_the_phrase_scan_can_actually_see_a_phrase_that_wraps(self):
+        """
+        Positive control for the two scans above. Template copy wraps across
+        source lines, so a needle written with single spaces never matches the
+        raw HTML: 'like a deal team' sat on the page for the whole of this
+        change and the first version of that assertion passed anyway, seeing
+        nothing. The scans squeeze whitespace; this proves the squeeze works,
+        by finding a phrase that is known to wrap in the template.
+
+        Without this, every phrase in those lists could silently become a
+        test that cannot fail.
+        """
+        self.assertIn('a b c', self._squeeze('a\n   b\n\tc'),
+                      'the squeeze does not collapse a wrapped phrase')
+        raw = self.client.get(reverse('pages:home')).content.decode('utf-8').lower()
+        self.assertNotEqual(
+            raw, self._squeezed_home(),
+            'the rendered page has no whitespace runs, so the scans below are '
+            'being run against text that never needed squeezing -- check that '
+            'the page rendered at all',
+        )
 
     def test_no_unshipped_capabilities_advertised(self):
         """#8 (competitive benchmarking) and #7 (expert review) aren't
