@@ -88,11 +88,12 @@ class TruthDeltaEngine:
             logger.warning(f"News headline fetch failed for document {document_id}: {e}")
 
         if not observed.exists() and not headlines:
-            checked_sources = ['SEC EDGAR']
-            if settings.CRUNCHBASE_API_KEY:
-                checked_sources.append('Crunchbase')
-            if settings.NEWS_API_KEY:
-                checked_sources.append('recent news')
+            # The same list the surfaces render, from the same helper: news is
+            # fetched when configured but yields no comparable datapoint, so
+            # listing it among the sources a claim was "checked" against
+            # overstates what happened. See zelda_api/disclaimers.py.
+            from .disclaimers import verifying_source_names
+            checked_sources = verifying_source_names()
 
             # A source that never answered was not "checked", and saying it
             # was turns a failed attempt into a statement about the company --

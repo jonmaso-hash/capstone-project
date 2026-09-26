@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load humanize %}
+{% load zelda_sources %}
 
 {% block title %}AI Investment Committee Memo — {{ company_name }} | Interlink Foundry{% endblock title %}
 
@@ -130,9 +131,9 @@
     <div class="mb-4 ic-memo-section">
         <h5 class="fw-bold border-bottom pb-2 mb-2">Truth Delta</h5>
         <p class="small text-muted fst-italic mb-2">
-            An automated cross-check of the deck's claims against SEC EDGAR, Crunchbase, and recent news coverage
-            where available — a real signal, not a substitute for full diligence, since public data is sparse or
-            nonexistent for most early-stage private companies.
+            An automated cross-check of the deck's claims against independent public records.
+            {% zelda_evidence_sources %} A real signal, not a substitute for full diligence, since
+            public data is sparse or nonexistent for most early-stage private companies.
         </p>
         {% comment %}
         Same number and same name as the full Truth Delta report's own
