@@ -167,6 +167,24 @@ class ASingleCikIsNotAnIdentityTests(SimpleTestCase):
         self.assertIsNone(cik, "an unrelated filer's CIK was accepted")
         self.assertEqual(reason, 'name_mismatch')
 
+    def test_a_single_cik_with_no_name_is_refused(self):
+        """
+        A shape we do not understand. Every real single-match feed carries
+        <conformed-name>, so a lone CIK without one means EDGAR answered with
+        something other than what this parser was written against -- and an
+        unverifiable CIK is precisely what this function exists to refuse.
+
+        Added because the mutation that accepts an unnamed CIK SURVIVED: the
+        branch was written and argued for in the docstring, and nothing
+        exercised it.
+        """
+        cik, reason = self.resolve('Acme', (
+            '<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">'
+            '<company-info><cik>0001092013</cik></company-info></feed>'
+        ))
+        self.assertIsNone(cik, 'a CIK with no name attached was accepted')
+        self.assertEqual(reason, 'name_mismatch')
+
     # --- unchanged behaviour ---------------------------------------------
     def test_no_company_is_still_not_found(self):
         cik, reason = self.resolve('Pamela', feed())

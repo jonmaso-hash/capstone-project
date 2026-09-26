@@ -4136,7 +4136,12 @@ class SECCompanyNameNormalizationTests(TestCase):
         """
         from .truth_delta_sources import SECFilingsIntegration
         empty_feed = '<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"></feed>'
-        found_feed = '<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><entry><cik>0000789019</cik></entry></feed>'
+        # The real single-match shape: a top-level <company-info> carrying the
+        # conformed name. EDGAR only omits names from MULTI-match feeds, where
+        # it garbles them into ARRAY(0x...) — see tests_sec_entity_identity.
+        found_feed = ('<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">'
+                      '<company-info><cik>0000789019</cik>'
+                      '<conformed-name>MICROSOFT CORP</conformed-name></company-info></feed>')
 
         integration = SECFilingsIntegration()
         responses = [mock.Mock(status_code=200, text=empty_feed), mock.Mock(status_code=200, text=found_feed)]
@@ -4632,7 +4637,11 @@ class SECAliasAndCachingTests(TestCase):
     def test_known_alias_is_tried_first(self):
         from zelda_api.truth_delta_sources import SECFilingsIntegration
         integration = SECFilingsIntegration()
-        found_feed = '<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><entry><cik>0001326801</cik></entry></feed>'
+        # The alias maps "Meta" -> "Meta Platforms", so that is what is
+        # searched and what the returned name must match.
+        found_feed = ('<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">'
+                      '<company-info><cik>0001326801</cik>'
+                      '<conformed-name>META PLATFORMS INC</conformed-name></company-info></feed>')
         with mock.patch.object(integration.session, 'get', return_value=mock.Mock(status_code=200, text=found_feed)) as mock_get:
             cik = integration._find_cik('Meta')
         self.assertEqual(cik, '0001326801')
@@ -4641,7 +4650,9 @@ class SECAliasAndCachingTests(TestCase):
     def test_successful_resolution_is_cached(self):
         from zelda_api.truth_delta_sources import SECFilingsIntegration
         integration = SECFilingsIntegration()
-        found_feed = '<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><entry><cik>0000320193</cik></entry></feed>'
+        found_feed = ('<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">'
+                      '<company-info><cik>0000320193</cik>'
+                      '<conformed-name>APPLE INC</conformed-name></company-info></feed>')
         with mock.patch.object(integration.session, 'get', return_value=mock.Mock(status_code=200, text=found_feed)) as mock_get:
             integration._find_cik('Apple Inc.')
             integration._find_cik('Apple Inc.')
@@ -4676,7 +4687,9 @@ class SECResolverDiagnosticsTests(TestCase):
     def test_found_company_has_no_reason(self):
         from zelda_api.truth_delta_sources import SECFilingsIntegration
         integration = SECFilingsIntegration()
-        found_feed = '<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><entry><cik>0000320193</cik></entry></feed>'
+        found_feed = ('<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">'
+                      '<company-info><cik>0000320193</cik>'
+                      '<conformed-name>APPLE INC</conformed-name></company-info></feed>')
         with mock.patch.object(integration.session, 'get', return_value=mock.Mock(status_code=200, text=found_feed)):
             cik, reason = integration.resolve_with_diagnostics('Apple Inc.')
         self.assertEqual(cik, '0000320193')

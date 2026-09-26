@@ -40,6 +40,15 @@ from .vector_models import DocumentSource
 
 CACHE_KEY = 'sec_edgar_cik_v2:apple inc.'
 
+# EDGAR's real single-match shape: a top-level <company-info> carrying the
+# conformed name. These fixtures used to be a bare '<CIK>0000320193</CIK>',
+# which no EDGAR response looks like -- and once the resolver started
+# requiring the returned company to BE the company asked for, an unnamed CIK
+# was exactly what it had to refuse. See tests_sec_entity_identity.
+APPLE_FEED = ('<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">'
+              '<company-info><cik>0000320193</cik>'
+              '<conformed-name>APPLE INC</conformed-name></company-info></feed>')
+
 
 class ATransientFailureIsNotAnAbsenceTests(SimpleTestCase):
     """The cache must not turn a ten-second blip into a six-hour absence."""
@@ -67,7 +76,7 @@ class ATransientFailureIsNotAnAbsenceTests(SimpleTestCase):
         """The point of not caching: recovery is visible immediately."""
         self.resolve_with(requests.exceptions.Timeout())
 
-        good = mock.Mock(status_code=200, text='<CIK>0000320193</CIK>')
+        good = mock.Mock(status_code=200, text=APPLE_FEED)
         integration = SECFilingsIntegration()
         with mock.patch.object(integration.session, 'get', return_value=good):
             cik, reason = integration.resolve_with_diagnostics('Apple Inc.')
@@ -85,7 +94,7 @@ class ATransientFailureIsNotAnAbsenceTests(SimpleTestCase):
 
     def test_a_resolution_is_still_cached(self):
         """Control: the found path keeps its cache, which is the point of it."""
-        good = mock.Mock(status_code=200, text='<CIK>0000320193</CIK>')
+        good = mock.Mock(status_code=200, text=APPLE_FEED)
         integration = SECFilingsIntegration()
         with mock.patch.object(integration.session, 'get', return_value=good):
             integration.resolve_with_diagnostics('Apple Inc.')

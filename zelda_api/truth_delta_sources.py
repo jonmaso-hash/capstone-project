@@ -331,10 +331,46 @@ class SECFilingsIntegration(DataSourceIntegration):
         if response.status_code != 200:
             return None, 'request_error'
 
-        match = re.search(r'<cik>(\d+)</cik>', response.text, re.IGNORECASE)
-        if not match:
+        return self._one_named_company(company_name, response.text)
+
+    @staticmethod
+    def _one_named_company(company_name, feed_text):
+        """
+        (cik, reason) for the ONE company in this feed that is the company we
+        asked for -- or why there isn't one.
+
+        EDGAR's company search is a prefix match, so "Acme" answers with
+        seven filers and "Apple" with ten. Taking the first was not a
+        resolution, it was a guess, and the guess decides which company's
+        revenue becomes evidence about the subject.
+
+        Several CIKs cannot be disambiguated here at all: in the multi-match
+        feed EDGAR replaces every company name with a Perl array reference
+        (`<company-info name="ARRAY(0x...)">`), so there is nothing to compare
+        against. The only honest answer is to refuse -- the same conclusion
+        sec_identity.py reached for Entity Integrity.
+
+        A single match does carry <conformed-name>, so it is checked. The
+        comparison is on the core name because a deck says "Starbucks" where
+        EDGAR says "STARBUCKS CORP", and a legal suffix must not defeat a
+        correct match.
+        """
+        from .entity_verification import _company_core
+
+        ciks = re.findall(r'<cik>(\d+)</cik>', feed_text or '', re.IGNORECASE)
+        if not ciks:
             return None, 'not_found'
-        return match.group(1).zfill(10), None
+        if len(ciks) > 1:
+            return None, 'ambiguous'
+
+        names = re.findall(r'<conformed-name>([^<]+)</conformed-name>',
+                           feed_text or '', re.IGNORECASE)
+        # A single-company feed always carries the name. If it somehow
+        # doesn't, that is a shape we do not understand, and an unverifiable
+        # CIK is exactly what this function exists to refuse.
+        if not names or _company_core(names[0]) != _company_core(company_name):
+            return None, 'name_mismatch'
+        return ciks[0].zfill(10), None
 
     def fetch_company_data(self, company_name: str, domain: str = None) -> Dict:
         """
