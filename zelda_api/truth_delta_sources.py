@@ -23,6 +23,13 @@ class DataSourceIntegration:
     """Base class for all data source integrations"""
 
     source_type = None
+
+    # Why this source's last fetch came back empty, when it did: one of
+    # 'timeout' / 'request_error' (the attempt failed) or 'not_found' /
+    # 'ambiguous' / 'name_mismatch' (the source answered, and this is what it
+    # said). None means the fetch succeeded or the source never ran. The
+    # report's grounding reads this to tell an absence from an outage.
+    last_failure_reason = None
     source_name = None
 
     def authenticate(self) -> bool:
@@ -376,9 +383,18 @@ class SECFilingsIntegration(DataSourceIntegration):
         """
         Resolves the company to a CIK, then pulls its full XBRL company
         facts payload (all tagged financial figures it has ever filed).
+
+        Records WHY on `last_failure_reason` when it comes back empty, so the
+        caller can tell "SEC answered and this company isn't there" from "SEC
+        never answered". Returning a bare {} for both made a ten-second
+        outage indistinguishable from an absence of evidence about the
+        company, which is the distinction the report's grounding depends on.
         """
-        cik = self._find_cik(company_name)
+        self.last_failure_reason = None
+
+        cik, reason = self.resolve_with_diagnostics(company_name)
         if not cik:
+            self.last_failure_reason = reason
             return {}
 
         try:
@@ -387,12 +403,20 @@ class SECFilingsIntegration(DataSourceIntegration):
                 timeout=15,
             )
             if response.status_code != 200:
+                self.last_failure_reason = 'request_error'
                 return {}
             payload = response.json()
             payload['_cik'] = cik
             return payload
+        except requests.exceptions.Timeout:
+            # The company resolved, so this is squarely the attempt failing,
+            # not the company being absent.
+            logger.error(f"SEC companyfacts timed out for {company_name} (CIK {cik})")
+            self.last_failure_reason = 'timeout'
+            return {}
         except Exception as e:
             logger.error(f"SEC companyfacts fetch failed for {company_name} (CIK {cik}): {e}")
+            self.last_failure_reason = 'request_error'
             return {}
 
     def _latest_annual_fact(self, data: Dict, tags: List[str]) -> Optional[Dict]:
@@ -545,8 +569,17 @@ class DataSourceManager:
         return active
 
     @classmethod
-    def fetch_company_data(cls, company_name: str, domain: str = None) -> Dict[str, Dict]:
-        """Fetch company data from all available sources. Returns dict of {source_type: data}"""
+    def fetch_company_data(cls, company_name: str, domain: str = None,
+                           diagnostics: dict = None) -> Dict[str, Dict]:
+        """
+        Fetch company data from all available sources. Returns {source_type: data}.
+
+        When `diagnostics` is given, each source that came back with nothing
+        records WHY under its own source_type. That dict is what the report's
+        grounding consults to decide whether a missing comparison means the
+        source found nothing about this company, or that the source was never
+        reached -- two statements that must not be collapsed into one.
+        """
         results = {}
         for integration in cls.get_all_active():
             logger.info(f"Fetching {company_name} from {integration.source_name}")
@@ -554,8 +587,15 @@ class DataSourceManager:
                 data = integration.fetch_company_data(company_name, domain)
                 if data:
                     results[integration.source_type] = data
+                elif diagnostics is not None and integration.last_failure_reason:
+                    diagnostics[integration.source_type] = integration.last_failure_reason
             except Exception as e:
                 logger.error(f"Error fetching from {integration.source_name}: {e}")
+                if diagnostics is not None:
+                    # The source raised on the way out. That is the attempt
+                    # failing, and recording nothing here would let it read as
+                    # an absence of evidence about the company.
+                    diagnostics[integration.source_type] = 'request_error'
         return results
 
     @classmethod
@@ -566,7 +606,7 @@ class DataSourceManager:
         Returns the list of created ObservedDatapoint objects.
         """
         created_points = []
-        all_data = cls.fetch_company_data(company_name, domain)
+        all_data = cls.fetch_company_data(company_name, domain, diagnostics=diagnostics)
 
         if not all_data:
             logger.info(f"No external data found for {company_name}")
