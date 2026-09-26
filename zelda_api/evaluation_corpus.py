@@ -989,4 +989,59 @@ CORPUS = [
         # exists specifically to confirm that absence is handled cleanly.
         sector='consumer', company_type='business_for_sale',
     ),
+
+    # --- Clause order inverted -------------------------------------------
+    # Every multi-metric sentence above states the TARGET metric first, which
+    # is the order a greedy "first plausible number" rule happens to handle.
+    # The extractor scored 95.8% precision while binding a revenue figure to a
+    # funding claim, because nothing here inverted the clauses. These entries
+    # state the competing metric first; the facts are otherwise identical to
+    # their originals.
+    _doc(
+        'bramblewood_reversed_clause_order', 'Bramblewood Foods',
+        "Bramblewood Foods closed a $4 million seed round earlier this year and separately "
+        "generated $6.1 million in revenue last year.",
+        {
+            'Revenue': (6_100_000, 'Revenue stated AFTER the funding figure — the inverted order of bramblewood_revenue_and_funding'),
+            'Funding': (4_000_000, 'Funding stated first; must not absorb the revenue figure'),
+        },
+        sector='consumer', company_type='seed',
+    ),
+    _doc(
+        'ridgeway_reversed_clause_order', 'Ridgeway Print Shop',
+        "Ridgeway Print Shop posted EBITDA of $410,000 last year, on revenue of $1.8 million.",
+        {
+            'Revenue': (1_800_000, 'Revenue stated after EBITDA; the EBITDA figure must not become the revenue claim'),
+        },
+        sector='retail', company_type='business_for_sale',
+    ),
+    _doc(
+        'harrowgate_market_before_revenue', 'Harrowgate Logistics',
+        "The addressable market for regional freight software is $1.9 billion, and Harrowgate "
+        "Logistics generated $11.4 million in revenue last year.",
+        {
+            'Market': (1_900_000_000, 'Explicit market size, stated first'),
+            'Revenue': (11_400_000, 'Revenue stated second; a market-size figure landing in revenue is a 167x error'),
+        },
+        sector='logistics', company_type='series_ab',
+    ),
+    _doc(
+        'thorne_customers_before_headcount', 'Thorne Instruments',
+        "Thorne Instruments serves 218 customers with 87 full-time employees across two sites.",
+        {
+            'Traction': (218, 'Customer count stated first'),
+            'Team': (87, 'Headcount stated second; the customer count must not become the headcount'),
+        },
+        sector='hardware', company_type='series_ab',
+    ),
+    _doc(
+        'calder_funding_after_revenue', 'Calder Analytics',
+        "Calder Analytics reached $4 million in revenue before raising $9 million in growth "
+        "capital in 2021.",
+        {
+            'Revenue': (4_000_000, 'Revenue stated first'),
+            'Funding': (9_000_000, 'The funding figure follows a revenue figure — the shape that produced a $4M funding claim on a real deck'),
+        },
+        sector='saas', company_type='series_ab',
+    ),
 ]

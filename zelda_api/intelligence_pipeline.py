@@ -677,8 +677,15 @@ class ZeldaIntelligencePipelineV2:
                 re.search(r'\$[\d,]+[MBK]?', clean_sentence) and
                 not re.search(r'\$[\d,]+[MBK]?', best_match or '')
             ):
-                best_confidence = confidence
                 cleaned_value = self._extract_clean_value(category, clean_sentence)
+                if cleaned_value is None:
+                    # The sentence carries figures, and none of them belongs to
+                    # this category -- a headcount beside a customer count, a
+                    # market size beside revenue. Declining leaves the category
+                    # to a later sentence that does own its figure, instead of
+                    # taking a number that reads plausibly and is wrong.
+                    continue
+                best_confidence = confidence
                 best_match = cleaned_value[:500]
                 best_provenance = {
                     'rule': 'primary_match', 'matched_keywords': matched_keywords, 'matched_sentence': clean_sentence,
@@ -686,11 +693,75 @@ class ZeldaIntelligencePipelineV2:
 
         if not best_match:
             fallback = self._get_smart_fallback(category, text)
+            # The fallback searches the raw chunk, so it can resurrect exactly
+            # the figure field binding just refused. Put it through the same
+            # rule: a category that declined every sentence must not acquire a
+            # number by another route.
+            if fallback is not None and category in self.NUMERIC_CATEGORIES:
+                if self._extract_clean_value(category, fallback) is None:
+                    return None, 0.0, None
             if fallback is None:
                 return None, 0.0, None
             return fallback, 35.0, {'rule': 'fallback', 'matched_keywords': [], 'matched_sentence': fallback}
 
         return best_match, best_confidence, best_provenance
+
+    # What each metric is CALLED in a deck. A figure belongs to the metric
+    # whose label sits nearest it -- the rule Traction already followed by
+    # requiring the counted noun adjacent, and the one the other branches
+    # lacked. 'other' holds metrics with no category of their own that must
+    # still be able to own a figure, so an EBITDA or valuation number is not
+    # claimed by revenue or funding.
+    METRIC_LABELS = {
+        'Revenue': r'\b(?:revenue|revenues|arr|mrr|recurring|sales|turnover)\b',
+        'Funding': r'\b(?:raised|raise|raising|seeking|seed|series\s+[a-e]\b|round|rounds|funding|capital|investment|financing|pre-seed)\b',
+        'Team': r'\b(?:employees|employee|people|staff|headcount|full-time|fte|team members|employs|employing)\b',
+        'Traction': r'\b(?:customers?|users?|clients?|accounts?|patients?|subscribers?|distributors?|hospitals?|clinics?)\b',
+        'Market': r'\b(?:market|tam|sam|som|addressable|opportunity)\b',
+        'other': r'\b(?:ebitda|profit|margin|valuation|pre-money|post-money|burn|runway|churn|retention|salary|payroll)\b',
+    }
+
+    # A currency amount, or a bare count for the categories that count things.
+    _MONEY_FIGURE = r'\$\s?[\d,]*\.?\d+\s*(?:thousand|million|billion|trillion|[KkMmBb])?'
+    _COUNT_FIGURE = r'\b[\d,]*\.?\d+\b'
+
+    def _figure_spans(self, category, sentence):
+        """Every figure in the sentence, as match objects."""
+        pattern = self._MONEY_FIGURE if category in ('Revenue', 'Funding', 'Market') else self._COUNT_FIGURE
+        return list(re.finditer(pattern, sentence, re.IGNORECASE))
+
+    def _owned_figures(self, category, sentence, figures):
+        """
+        The figures whose NEAREST metric label is this category's.
+
+        Distance is measured between the figure and each label occurrence, so
+        "Bootstrapped to $4 million in revenue, then raised $9 million" gives
+        the first figure to Revenue (1 character away) rather than to Funding
+        (15 away), which is what produced a $4M funding claim.
+        """
+        labelled = []
+        for metric, pattern in self.METRIC_LABELS.items():
+            for match in re.finditer(pattern, sentence, re.IGNORECASE):
+                labelled.append((metric, match.start(), match.end()))
+        if not labelled:
+            return []
+
+        # An earlier version refused to let a label BEHIND a count own it, to
+        # stop "across 31 states" being claimed by the `customers` label eight
+        # characters back. Closest-binding already handles that (218 is one
+        # character from its label, 31 is eight), and the restriction rejected
+        # a legitimate claim -- "Our employees numbered 87" names the metric
+        # before the figure. Removed rather than tested.
+        owned = []
+        for figure in figures:
+            nearest, best = None, None
+            for metric, start, end in labelled:
+                distance = start - figure.end() if start >= figure.end() else figure.start() - end
+                if best is None or distance < best:
+                    nearest, best = metric, distance
+            if nearest == category:
+                owned.append((figure, best))
+        return owned
 
     def _extract_clean_value(self, category: str, sentence: str) -> str:
         """
@@ -707,6 +778,40 @@ class ZeldaIntelligencePipelineV2:
         extraction was available.)
         """
         cleaned = re.sub(r'^[A-Z][a-z]+\s*:\s*', '', sentence).strip()
+
+        # Field binding first, for the categories that carry figures. A
+        # sentence holding figures must yield the one this category OWNS, or
+        # nothing: a plausible wrong number survives every downstream layer,
+        # while a missing one is visible. Sentences with no figures fall
+        # through to the qualitative branches below, which is how
+        # "Recurring subscription revenue model." still becomes an insight.
+        if category in self.NUMERIC_CATEGORIES:
+            figures = self._figure_spans(category, cleaned)
+            if not figures and category in ('Revenue', 'Funding', 'Market') and re.search(r'\d', cleaned):
+                # A money field, no money in the sentence, but digits present:
+                # "serves 340 recurring commercial clients" matches the label
+                # `recurring` and would hand 340 to the numeric parser as
+                # revenue. A qualitative sentence with no digits still falls
+                # through below, which is how "Recurring subscription revenue
+                # model." survives.
+                return None
+            if figures:
+                owned = sorted(self._owned_figures(category, cleaned, figures), key=lambda pair: pair[1])
+                if not owned:
+                    # No figure here belongs to this category.
+                    return None
+                if len(owned) > 1 and owned[0][1] == owned[1][1]:
+                    # Two figures bound equally tightly to this metric's label
+                    # ("revenue of $4 million and revenue of $7 million"). The
+                    # pattern cannot say which is meant, and guessing is worse
+                    # than declining. A figure bound LOOSELY elsewhere in the
+                    # sentence is not a tie: "$6 million seed round" beats the
+                    # investors' "$500 million in assets" sixty characters away.
+                    return None
+                figure = owned[0][0]
+                # The context starts AT the figure, so the numeric parser
+                # downstream cannot pick up an earlier, unrelated number.
+                return cleaned[figure.start():figure.end() + 60].strip()
 
         # Shared numeric token: digits (with optional decimal) plus an
         # optional multiplier — either abbreviated (K/M/B) or spelled out
