@@ -351,8 +351,8 @@ class HomepagePositioningCopyTests(TestCase):
         The word is accurate when it names a state the product establishes.
         """
         content = self._squeezed_home()
-        for phrase in ('true fit', 'true-fit', 'due-diligence-ready', 'bank-grade',
-                       'military-grade', 'fully secure', 'guaranteed'):
+        for phrase in ('true fit', 'true-fit', 'scored by fit', 'due-diligence-ready',
+                       'bank-grade', 'military-grade', 'fully secure', 'guaranteed'):
             with self.subTest(phrase=phrase):
                 self.assertNotIn(phrase, content)
 
