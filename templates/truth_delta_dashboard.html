@@ -1,4 +1,5 @@
 <!-- Zelda Truth Delta Verification UI - Complete Dashboard -->
+{% load zelda_sources %}
 
 
 <style>
@@ -678,7 +679,7 @@
                 <h2>Truth Delta Verification
                     <i class="bi bi-info-circle field-info-icon" role="button" tabindex="0"
                        data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom"
-                       data-bs-content="See which of a company's claims hold up against outside records. Truth Delta checks the deck's claims against SEC EDGAR, Crunchbase and recent news, and marks each one supported, unverified, or contradicted. It only covers claims with a public source to check — a diligence accelerator, not a background check or a guarantee."></i>
+                       data-bs-content="See which of a company's claims hold up against outside records. {% zelda_evidence_sources %} Each claim is reported as verified, unsupported, unavailable, or not comparable — the same four outcomes shown on the homepage, with the reason given rather than a bare verdict. It only covers claims with a public source to check — a diligence accelerator, not a background check or a guarantee."></i>
                 </h2>
             </div>
             <div class="truth-delta-score-box">
@@ -738,7 +739,7 @@
             <canvas id="evidenceCoverageChart" width="400" height="92" style="max-width: 100%; margin-top: 0.25rem;"></canvas>
             <p class="mb-0 mt-1" style="font-size: 0.75rem; color: #64748b;">
                 Of the claim categories Zelda cross-checked, how many it could confirm against
-                independent public sources (SEC EDGAR, Crunchbase, recent news).
+                independent public sources ({% zelda_source_names %}).
             </p>
         </div>
         {% elif report %}

@@ -76,6 +76,18 @@ class TheSourceListFollowsTheConfigurationTests(SimpleTestCase):
     def test_news_is_not_mentioned_when_it_is_not_configured(self):
         self.assertNotIn('news', evidence_sources_sentence().lower())
 
+    @override_settings(CRUNCHBASE_API_KEY='', NEWS_API_KEY='')
+    def test_the_sentence_carries_its_own_coverage_limit(self):
+        """
+        Naming the source correctly is only half of it. Only revenue and
+        employees are populated by any live source, and only for companies
+        that file with the SEC, so "compared against SEC EDGAR" unqualified
+        promises a reach the fetch layer does not have — the same defect as
+        naming a source that never runs, one step further in.
+        """
+        self.assertIn('where those sources report the metric',
+                      evidence_sources_sentence())
+
 
 class NoTemplateSpellsOutTheSourcesItselfTests(SimpleTestCase):
     """

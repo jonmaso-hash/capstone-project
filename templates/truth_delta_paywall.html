@@ -1,4 +1,5 @@
 <!-- Zelda Truth Delta Verification UI - Locked Preview -->
+{% load zelda_sources %}
 <style>
     .truth-delta-paywall {
         background: linear-gradient(135deg, #fff8e1 0%, #fffdf5 100%);
@@ -44,8 +45,8 @@
         <h2><span class="lock-icon">🔒</span>{% if is_owner %}Unlock Your Truth Delta Verification{% else %}Premium Feature{% endif %}</h2>
         <p>
             {% if is_owner %}
-            Cross-check your claims against public sources (SEC EDGAR and, where configured, Crunchbase/news) &mdash;
-            a credibility score, claim-by-claim verification, and evidence citations for this document.
+            {% zelda_evidence_sources %} You get a credibility score, claim-by-claim
+            evidence states, and citations for this document.
             {% else %}
             This founder hasn't unlocked Truth Delta verification yet. Once they upgrade to Premium, you'll be
             able to view it here &mdash; no extra cost to you.
