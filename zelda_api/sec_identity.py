@@ -91,7 +91,19 @@ _SECURITY_TYPES = [
 
 
 class SecUnavailable(Exception):
-    """SEC couldn't answer usefully. The message is safe to show a user."""
+    """
+    SEC couldn't answer usefully. The message is safe to show a user.
+
+    `reason` distinguishes a slow source from a broken one -- 'timeout' or
+    'request_error'. Both are transient and both surface as
+    `source_unavailable`, so the difference is invisible to a reader; it
+    matters operationally, and collapsing it would lose the diagnostic #98
+    was written to preserve.
+    """
+
+    def __init__(self, message, reason='request_error'):
+        super().__init__(message)
+        self.reason = reason
 
 
 @dataclass
@@ -135,9 +147,12 @@ def _get(url, params=None):
         _last_request_at = time.monotonic()
     try:
         response = requests.get(url, params=params, headers={'User-Agent': USER_AGENT}, timeout=TIMEOUT_SECONDS)
+    except requests.exceptions.Timeout as error:
+        logger.warning(f"SEC request timed out for {url}: {error}")
+        raise SecUnavailable(UNREACHABLE, reason='timeout')
     except requests.exceptions.RequestException as error:
         logger.warning(f"SEC request failed for {url}: {error}")
-        raise SecUnavailable(UNREACHABLE)
+        raise SecUnavailable(UNREACHABLE, reason='request_error')
     if response.status_code != 200:
         logger.warning(f"SEC request to {url} answered {response.status_code}")
         raise SecUnavailable(UNREACHABLE)

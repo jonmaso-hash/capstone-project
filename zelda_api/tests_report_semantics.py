@@ -86,7 +86,7 @@ class AReportRecordsTheRulesThatProducedItTests(TestCase):
         )
         with mock.patch.object(DataSourceManager, 'INTEGRATIONS', {'sec': SECFilingsIntegration}), \
              mock.patch.object(DataSourceManager, 'fetch_news_headlines', return_value=[]), \
-             mock.patch.object(SECFilingsIntegration, '_find_cik_exact',
+             mock.patch.object(SECFilingsIntegration, 'resolve_with_diagnostics',
                                return_value=(None, 'not_found')):
             report = TruthDeltaEngine().verify_document(self.document.id)
 
@@ -127,7 +127,7 @@ class AReportRecordsTheRulesThatProducedItTests(TestCase):
 
         with mock.patch.object(DataSourceManager, 'INTEGRATIONS', {'sec': SECFilingsIntegration}), \
              mock.patch.object(DataSourceManager, 'fetch_news_headlines', return_value=[]), \
-             mock.patch.object(SECFilingsIntegration, '_find_cik_exact',
+             mock.patch.object(SECFilingsIntegration, 'resolve_with_diagnostics',
                                return_value=(None, 'not_found')), \
              mock.patch.object(TruthDeltaEngine, '_call_claude_for_verification',
                                return_value=None):

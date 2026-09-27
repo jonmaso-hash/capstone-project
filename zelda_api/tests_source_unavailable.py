@@ -35,10 +35,13 @@ from django.core.cache import cache
 from django.test import SimpleTestCase, TestCase
 
 from .truth_delta_models import TruthDeltaReport
+from . import sec_identity
 from .truth_delta_sources import SECFilingsIntegration
 from .vector_models import DocumentSource
 
-CACHE_KEY = 'sec_edgar_cik_v2:apple inc.'
+# The cache moved with the resolution it protects: identity is now decided
+# once, in sec_company_identity, and cached there.
+CACHE_KEY = 'sec_identity_v3:apple inc.'
 
 # EDGAR's real single-match shape: a top-level <company-info> carrying the
 # conformed name. These fixtures used to be a bare '<CIK>0000320193</CIK>',
@@ -49,6 +52,15 @@ APPLE_FEED = ('<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">'
               '<company-info><cik>0000320193</cik>'
               '<conformed-name>APPLE INC</conformed-name></company-info></feed>')
 
+# Identity now comes from the registrant's own submissions payload, so the
+# feed alone is not enough to resolve.
+APPLE_RECORD = {
+    'cik': '320193', 'name': 'APPLE INC', 'tickers': ['AAPL'],
+    'exchanges': ['Nasdaq'], 'sic': '3571', 'formerNames': [],
+    'filings': {'recent': {'form': ['10-K', '10-Q'],
+                           'filingDate': ['2025-11-01', '2026-08-01']}},
+}
+
 
 class ATransientFailureIsNotAnAbsenceTests(SimpleTestCase):
     """The cache must not turn a ten-second blip into a six-hour absence."""
@@ -58,8 +70,16 @@ class ATransientFailureIsNotAnAbsenceTests(SimpleTestCase):
         self.addCleanup(cache.delete, CACHE_KEY)
 
     def resolve_with(self, side_effect):
+        """
+        The seam is sec_identity._get, because identity resolution moved
+        there. Stubbing the integration's own session no longer intercepts
+        anything, and these tests would reach live SEC.
+        """
         integration = SECFilingsIntegration()
-        with mock.patch.object(integration.session, 'get', side_effect=side_effect):
+        # One level below _get, so _get's real conversion of a requests
+        # exception into SecUnavailable is exercised rather than stubbed --
+        # that conversion is the thing under test.
+        with mock.patch.object(sec_identity.requests, 'get', side_effect=side_effect):
             return integration.resolve_with_diagnostics('Apple Inc.')
 
     def test_a_timeout_is_not_cached(self):
@@ -78,7 +98,7 @@ class ATransientFailureIsNotAnAbsenceTests(SimpleTestCase):
 
         good = mock.Mock(status_code=200, text=APPLE_FEED)
         integration = SECFilingsIntegration()
-        with mock.patch.object(integration.session, 'get', return_value=good):
+        with mock.patch.object(sec_identity.requests, 'get', return_value=good),              mock.patch.object(sec_identity, 'company_record', return_value=APPLE_RECORD):
             cik, reason = integration.resolve_with_diagnostics('Apple Inc.')
 
         self.assertEqual(cik, '0000320193')
@@ -88,17 +108,17 @@ class ATransientFailureIsNotAnAbsenceTests(SimpleTestCase):
         """Control: a successful query that found nothing is genuine evidence."""
         empty = mock.Mock(status_code=200, text='<feed></feed>')
         integration = SECFilingsIntegration()
-        with mock.patch.object(integration.session, 'get', return_value=empty):
+        with mock.patch.object(sec_identity.requests, 'get', return_value=empty):
             integration.resolve_with_diagnostics('Apple Inc.')
-        self.assertEqual(cache.get(CACHE_KEY), (None, 'not_found'))
+        self.assertEqual(cache.get(CACHE_KEY).status, 'not_found')
 
     def test_a_resolution_is_still_cached(self):
         """Control: the found path keeps its cache, which is the point of it."""
         good = mock.Mock(status_code=200, text=APPLE_FEED)
         integration = SECFilingsIntegration()
-        with mock.patch.object(integration.session, 'get', return_value=good):
+        with mock.patch.object(sec_identity.requests, 'get', return_value=good),              mock.patch.object(sec_identity, 'company_record', return_value=APPLE_RECORD):
             integration.resolve_with_diagnostics('Apple Inc.')
-        self.assertEqual(cache.get(CACHE_KEY), ('0000320193', None))
+        self.assertEqual(cache.get(CACHE_KEY).cik, '0000320193')
 
 
 class ADeclineNamesTheRightCauseTests(TestCase):

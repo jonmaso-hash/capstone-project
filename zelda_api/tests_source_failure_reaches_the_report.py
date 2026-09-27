@@ -20,7 +20,8 @@ report as an empty diagnostics dict and was reported as
 ends green, wire missing.
 
 So every test here asserts at the REPORT, after running the real engine, and
-the seam is pushed down to the HTTP boundary (`_find_cik_exact`) so that
+the seam is pushed down to identity resolution (`resolve_company_identity`)
+so that
 everything above it -- resolution, the manager's fetch loop, datapoint
 creation, the engine, and the report's own grounding logic -- is the code
 that ships.
@@ -65,10 +66,14 @@ class ASourceFailureSurvivesToTheReportTests(TestCase):
         """
         Runs the REAL engine with SEC's HTTP boundary answering `resolution`.
 
-        Only `_find_cik_exact` is stubbed -- the lowest point where a network
-        answer enters. Resolution, the manager's fetch loop, datapoint
-        creation and the report's grounding all run for real, which is the
-        whole point: the defect this file exists for lived between them.
+        Only identity resolution is stubbed -- the point where a network
+        answer enters. The manager's fetch loop, datapoint creation and the
+        report's grounding all run for real, which is the whole point: the
+        defect this file exists for lived between them.
+
+        The stub sits on `resolve_company_identity` because identity moved
+        there; stubbing SECFilingsIntegration._find_cik_exact no longer
+        intercepts anything and would let this test reach SEC.
 
         News and Crunchbase are held out so the test cannot make a live call
         and cannot contribute diagnostics of their own; SEC is the source
@@ -76,7 +81,8 @@ class ASourceFailureSurvivesToTheReportTests(TestCase):
         """
         with mock.patch.object(DataSourceManager, 'INTEGRATIONS', {'sec': SECFilingsIntegration}), \
              mock.patch.object(DataSourceManager, 'fetch_news_headlines', return_value=[]), \
-             mock.patch.object(SECFilingsIntegration, '_find_cik_exact', return_value=resolution):
+             mock.patch.object(SECFilingsIntegration, 'resolve_with_diagnostics',
+                               return_value=resolution):
             report = TruthDeltaEngine().verify_document(self.document.id)
         self.assertIsNotNone(report, 'the engine produced no report at all')
         return report
@@ -134,7 +140,7 @@ class ASourceFailureSurvivesToTheReportTests(TestCase):
         import requests as requests_lib
         with mock.patch.object(DataSourceManager, 'INTEGRATIONS', {'sec': SECFilingsIntegration}), \
              mock.patch.object(DataSourceManager, 'fetch_news_headlines', return_value=[]), \
-             mock.patch.object(SECFilingsIntegration, '_find_cik_exact',
+             mock.patch.object(SECFilingsIntegration, 'resolve_with_diagnostics',
                                return_value=('0000320193', None)), \
              mock.patch.object(requests_lib.Session, 'get',
                                side_effect=requests_lib.exceptions.Timeout()):
