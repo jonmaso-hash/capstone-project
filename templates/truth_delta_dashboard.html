@@ -761,10 +761,12 @@
         {% endif %}
 
         {% comment %}
-        Which entity the external figures were observed about. "Checked against
-        SEC EDGAR" names a source and not a company, which leaves a reader
-        unable to tell this business from another registrant with a similar or
-        former name. Shown at both tiers: this is attribution, not analysis.
+        Which entity the external figures were observed about. Naming only the
+        source says where a figure came from and not who it is about, which
+        leaves a reader unable to tell this business from another registrant
+        with a similar or former name. The source name itself comes from the
+        stored record, never spelled out here -- see tests_source_naming.
+        Shown at both tiers: this is attribution, not analysis.
         {% endcomment %}
         {% if evidence_registrants %}
         <div class="mt-3 mb-2 small" style="color: #64748b;">
