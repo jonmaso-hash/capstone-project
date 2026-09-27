@@ -288,3 +288,48 @@ class TheCandidateSearchMustNotStopEarlyTests(SimpleTestCase):
         self.assertIn('0000829224', found,
                       'the operating company was never offered as a candidate')
         self.assertIn('0000887557', found)
+
+
+class EachRankingSignalDecidesOnItsOwnTests(SimpleTestCase):
+    """
+    The Starbucks fixtures differ on every axis at once -- current-name,
+    activity, periodic reporting and ticker -- so the real company wins even
+    if any one signal is removed. Mutations that zeroed each signal
+    individually all SURVIVED against them.
+
+    These isolate one signal at a time: two candidates identical except for
+    the dimension under test. Remove that signal and the pair ties, which
+    resolves to AMBIGUOUS rather than to the right company -- so each test
+    fails when its signal stops counting.
+    """
+
+    def test_a_current_name_match_beats_a_former_name_match(self):
+        current = submissions('0000111111', 'CALDER MILLS INC',
+                              [('10-K', '2026-03-01')], tickers=['CMI'])
+        former = submissions('0000222222', 'SOMETHING ELSE INC',
+                             [('10-K', '2026-03-01')], tickers=['SEI'],
+                             former=['CALDER MILLS INC'])
+        identity = resolve_from_candidates('Calder Mills Inc', [former, current])
+        self.assertEqual(identity.status, FOUND)
+        self.assertEqual(identity.cik, '0000111111')
+        self.assertEqual(identity.matched_on, 'current_name')
+
+    def test_a_recently_active_registrant_beats_a_dormant_one(self):
+        active = submissions('0000111111', 'HARBOR BAKERY LLC',
+                             [('D', '2026-05-01')])
+        dormant = submissions('0000222222', 'HARBOR BAKERY LLC',
+                              [('D', '2011-05-01')])
+        identity = resolve_from_candidates('Harbor Bakery LLC', [dormant, active])
+        self.assertEqual(identity.status, FOUND)
+        self.assertEqual(identity.cik, '0000111111')
+
+    def test_a_periodic_filer_beats_a_registrant_that_files_nothing_periodic(self):
+        reporting = submissions('0000111111', 'RIDGEWAY HOLDINGS LLC',
+                                [('10-K', '2026-03-01')])
+        ownership_only = submissions('0000222222', 'RIDGEWAY HOLDINGS LLC',
+                                     [('SC 13G', '2026-03-01')])
+        identity = resolve_from_candidates('Ridgeway Holdings LLC',
+                                           [ownership_only, reporting])
+        self.assertEqual(identity.status, FOUND)
+        self.assertEqual(identity.cik, '0000111111')
+        self.assertTrue(identity.can_establish_revenue)
