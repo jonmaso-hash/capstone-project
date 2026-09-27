@@ -77,6 +77,7 @@ jobs:
           zelda_api.tests_source_failure_reaches_the_report
           zelda_api.tests_source_naming
           zelda_api.tests_report_semantics
+          zelda_api.tests_source_capabilities
 
   # ── Non-blocking: the zelda_api suite currently makes live huggingface.co
   # calls, hits the Celery hang, and has known failures (all introduced in the
