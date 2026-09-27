@@ -246,6 +246,15 @@ class EveryFindingNamesItsRegistrantTests(SimpleTestCase):
 
 
 class TheCandidateSearchMustNotStopEarlyTests(SimpleTestCase):
+
+    def setUp(self):
+        # resolve_company_identity caches, and these classes share one
+        # process-wide cache. Without this the suite is order-dependent:
+        # the truncation test showed up as a killer for six unrelated
+        # mutations because a neighbour had cached its answer first.
+        from django.core.cache import cache
+        cache.clear()
+        self.addCleanup(cache.clear)
     """
     Found by running the resolver against live EDGAR; no fixture could have
     shown it.
@@ -366,3 +375,89 @@ class EachRankingSignalDecidesOnItsOwnTests(SimpleTestCase):
         self.assertEqual(identity.status, FOUND)
         self.assertEqual(identity.cik, '0000111111')
         self.assertTrue(identity.can_establish_revenue)
+
+
+class AnAliasRenamesTheSubjectTests(SimpleTestCase):
+
+    def setUp(self):
+        # resolve_company_identity caches, and these classes share one
+        # process-wide cache. Without this the suite is order-dependent:
+        # the truncation test showed up as a killer for six unrelated
+        # mutations because a neighbour had cached its answer first.
+        from django.core.cache import cache
+        cache.clear()
+        self.addCleanup(cache.clear)
+    """
+    A brand name that shares no root with the registered legal name is
+    unreachable by suffix-stripping: EDGAR registers "Meta Platforms, Inc."
+    and nothing about "Meta" reaches it.
+
+    The alias has to rename the SUBJECT, not merely the query. Renaming only
+    the query searches "Meta Platforms" and then rejects every candidate for
+    failing to match "Meta" -- which is what happened live, resolving a real
+    company to nothing.
+    """
+
+    def test_candidates_are_matched_against_the_alias_not_the_brand(self):
+        from unittest import mock
+
+        from . import sec_company_identity as sci
+        from . import sec_identity
+
+        platforms = submissions('0001326801', 'Meta Platforms, Inc.',
+                                [('10-K', '2026-01-29'), ('10-Q', '2026-07-30')],
+                                tickers=['META'])
+
+        with mock.patch.object(sci, 'candidate_ciks', return_value=(['0001326801'], False)), \
+             mock.patch.object(sec_identity, 'company_record', return_value=platforms):
+            identity = sci.resolve_company_identity('Meta')
+
+        self.assertEqual(identity.status, FOUND)
+        self.assertEqual(identity.cik, '0001326801')
+
+    def test_a_configured_alias_is_not_broadened_back_to_the_brand(self):
+        """
+        Broadening past the alias buries the answer it exists to find.
+        Searching "Meta Platforms" offers one registrant; adding "Meta" to
+        the same resolution offers dozens of Form D shells, which trips the
+        truncation guard and turns a resolvable company into ambiguous.
+
+        Added because the mutation that restores broadening SURVIVED once
+        the suite's cache flakiness was fixed -- nothing had been testing it.
+        """
+        from unittest import mock
+
+        from . import sec_company_identity as sci
+        from . import sec_identity
+
+        feeds = {
+            'Meta Platforms': '<feed><cik>0001326801</cik></feed>',
+            'Meta': '<feed>' + ''.join(
+                f'<cik>{i:010d}</cik>' for i in range(1, 26)) + '</feed>',
+        }
+
+        class FakeResponse:
+            def __init__(self, text):
+                self.text = text
+
+        def fake_get(url, params=None):
+            return FakeResponse(feeds.get(params['company'], '<feed></feed>'))
+
+        with mock.patch.object(sec_identity, '_get', side_effect=fake_get):
+            ciks, truncated = sci.candidate_ciks('Meta')
+
+        self.assertEqual(ciks, ['0001326801'],
+                         'the alias was broadened back to the brand name')
+        self.assertFalse(truncated)
+
+    def test_a_name_with_no_alias_is_matched_against_itself(self):
+        """Control: aliasing must not leak into ordinary resolution."""
+        from unittest import mock
+
+        from . import sec_company_identity as sci
+        from . import sec_identity
+
+        with mock.patch.object(sci, 'candidate_ciks', return_value=(['0000829224'], False)), \
+             mock.patch.object(sec_identity, 'company_record', return_value=STARBUCKS_REAL):
+            identity = sci.resolve_company_identity('Starbucks Corporation')
+        self.assertEqual(identity.cik, '0000829224')
