@@ -56,7 +56,12 @@ FACTS = {
             {'val': 37_184_400_000, 'form': '10-K', 'fy': 2025, 'fp': 'FY',
              'start': '2024-10-01', 'end': '2025-09-28'},
         ]}}},
-        'dei': {},
+        # Employees too, so BOTH write sites SEC can reach are exercised.
+        # With revenue alone the employees site is never run, and a mutation
+        # dropping the registrant there survives -- it did.
+        'dei': {'EntityNumberOfEmployees': {'units': {'pure': [
+            {'val': 361000, 'end': '2025-09-28', 'form': '10-K'},
+        ]}}},
     },
     'entityName': 'STARBUCKS CORP',
 }
@@ -105,7 +110,8 @@ class AnObservationNamesItsRegistrantTests(TestCase):
         """
         stored = self.observe()
         self.assertTrue(stored, 'no observation was stored, so nothing was tested')
-        self.assertEqual({row.category for row in stored}, {'revenue'})
+        self.assertEqual({row.category for row in stored}, {'revenue', 'employees'},
+                         'both SEC-capable write sites must be exercised')
 
     def test_an_observation_carries_the_registrant_it_was_observed_about(self):
         for row in self.observe():
