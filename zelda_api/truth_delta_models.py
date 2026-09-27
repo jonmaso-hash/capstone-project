@@ -142,8 +142,35 @@ class ObservedDatapoint(models.Model):
         return f"{self.category}: {self.observed_value}"
 
 
+# What rules produced a report. Bumped ONLY when evidence admission,
+# comparison, or state assignment changes -- never for refactors, wording, or
+# unrelated commits. A git SHA cannot serve here: it changes on every commit,
+# so it could never express "these two reports mean the same thing", which is
+# the only question this value exists to answer.
+#
+#   unknown  every report written before stamping existed. NOT a lower
+#            version of td.1 -- an absence of provenance. It cannot be
+#            reconstructed: created_at records when a report was WRITTEN,
+#            while what governed it was whatever was DEPLOYED at that moment,
+#            and nothing records deploys.
+#   td.1     SEC evidence requires a uniquely resolved entity (#97); a source
+#            that failed reaches the report as source_unavailable rather than
+#            an absence (#98); surfaces name only sources that actually run
+#            (#99).
+UNKNOWN_SEMANTICS = 'unknown'
+TRUTH_DELTA_SEMANTICS = 'td.1'
+
+
 class TruthDeltaReport(models.Model):
     document = models.ForeignKey('DocumentSource', on_delete=models.CASCADE)
+    # Which rules produced this report. Defaults to UNKNOWN_SEMANTICS so the
+    # migration leaves every existing row honestly unprovenanced, and so a
+    # report written by any path that forgets to stamp is treated as unknown
+    # rather than silently inheriting today's meaning.
+    engine_version = models.CharField(
+        max_length=32, default=UNKNOWN_SEMANTICS,
+        help_text="The evidence semantics that produced this report; 'unknown' predates stamping.",
+    )
     # Null (not 0.0) specifically means "no external data was found to
     # compare against" — distinct from an actual low score, since 0.0
     # would otherwise misleadingly read as "claims are false" rather than
@@ -160,6 +187,23 @@ class TruthDeltaReport(models.Model):
     class Meta:
         app_label = 'zelda_api'
         ordering = ['-created_at']
+
+    @property
+    def semantics_known(self):
+        """
+        Whether we can say which rules produced this report.
+
+        Deliberately a comparison against the stored value and nothing else.
+        It must never consult `created_at`: a row written one second ago with
+        no stamp is still of unknown provenance, and deciding otherwise would
+        invent the fact this field exists to preserve.
+        """
+        return self.engine_version != UNKNOWN_SEMANTICS
+
+    @property
+    def predates_current_semantics(self):
+        """True when this report was not produced under today's rules."""
+        return self.engine_version != TRUTH_DELTA_SEMANTICS
 
     # How far a claim may sit from the evidence before the pair stops
     # reconciling. Per category on purpose: a filed revenue figure and a

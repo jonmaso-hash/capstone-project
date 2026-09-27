@@ -11,7 +11,9 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 
-from .truth_delta_models import ClaimedDatapoint, ObservedDatapoint, TruthDeltaReport
+from .truth_delta_models import (
+    TRUTH_DELTA_SEMANTICS, ClaimedDatapoint, ObservedDatapoint, TruthDeltaReport,
+)
 from .truth_delta_sources import data_source_manager
 
 logger = logging.getLogger(__name__)
@@ -52,6 +54,12 @@ def _risk_band(score: float) -> str:
 
 
 class TruthDeltaEngine:
+    # Stamped onto every report this engine writes, so a state can later be
+    # explained by the evidence AND the rules available when it was produced.
+    # Without it, "Zelda changed its mind" is indistinguishable from "Zelda
+    # used to be wrong", and a reader cannot tell new evidence from new rules.
+    semantics_version = TRUTH_DELTA_SEMANTICS
+
     def verify_document(self, document_id):
         claims = ClaimedDatapoint.objects.filter(document_id=document_id)
         if not claims.exists():
@@ -120,6 +128,7 @@ class TruthDeltaEngine:
 
             report = TruthDeltaReport.objects.create(
                 document_id=document_id,
+                engine_version=self.semantics_version,
                 overall_truth_score=None,
                 credibility_risk='unknown',
                 summary=summary,
@@ -146,6 +155,7 @@ class TruthDeltaEngine:
 
         report = TruthDeltaReport.objects.create(
             document_id=document_id,
+            engine_version=self.semantics_version,
             overall_truth_score=result['overall_truth_score'],
             credibility_risk=result['credibility_risk'],
             summary=result['summary'],
