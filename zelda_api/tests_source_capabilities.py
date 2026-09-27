@@ -40,7 +40,10 @@ same defect as `engine_version` shipping without either `objects.create` call
 setting it, caught one PR ago. `create_observed_datapoints` therefore asks
 before it writes, and a mutation proves it.
 """
-from django.test import SimpleTestCase
+from unittest import mock
+
+from django.contrib.auth import get_user_model
+from django.test import SimpleTestCase, TestCase
 
 from .source_capabilities import (
     CAN_CORROBORATE, CAN_ESTABLISH, INFORMATIONAL_ONLY, ROLES, UNAVAILABLE,
@@ -172,3 +175,104 @@ class TheContractIsConsultedTests(SimpleTestCase):
         self.assertNotEqual(CAN_CORROBORATE, CAN_ESTABLISH)
         self.assertFalse(may_establish('crunchbase', 'employees'))
         self.assertEqual(capability_for('crunchbase', 'employees'), CAN_CORROBORATE)
+
+
+class TheGateBlocksAnUndeclaredWriteTests(TestCase):
+    """
+    The registry has to be load-bearing, not documentation. These run the real
+    `create_observed_datapoints` and check what reached the database.
+
+    A helper returning False proves nothing on its own: the previous PR
+    shipped `engine_version` with neither create call setting it, and every
+    unit test passed. So the assertion is on stored rows.
+    """
+
+    def setUp(self):
+        from .vector_models import DocumentSource
+        self.user = get_user_model().objects.create_user('cap_owner', password='x')
+        self.document = DocumentSource.objects.create(
+            filename='deck.pdf', source_entity='Subject Co', uploaded_by=self.user,
+            document_type='pitch_deck', status='analyzed',
+        )
+
+    def write_with(self, source_type, extractors):
+        """
+        Runs the real writing path with one fake source whose extractors
+        return whatever the test wants, so the only thing under test is
+        whether the declared capability gates the write.
+        """
+        from .truth_delta_sources import DataSourceManager
+        from .truth_delta_models import ObservedDatapoint
+
+        class FakeIntegration:
+            source_name = 'Fake'
+            last_failure_reason = None
+
+            def authenticate(self):
+                return True
+
+            def fetch_company_data(self, company_name, domain=None):
+                return {'something': True}
+
+            def extract_time_period(self, data):
+                return 'FY2025'
+
+        FakeIntegration.source_type = source_type
+        for name, value in extractors.items():
+            setattr(FakeIntegration, name, (lambda v: (lambda self, data: v))(value))
+
+        with mock.patch.object(DataSourceManager, 'INTEGRATIONS', {source_type: FakeIntegration}):
+            DataSourceManager.create_observed_datapoints(self.document, 'Subject Co')
+        return set(
+            ObservedDatapoint.objects.filter(document=self.document)
+            .values_list('category', flat=True)
+        )
+
+    def test_a_declared_category_is_written(self):
+        """Positive control. Without it, the test below could pass because
+        nothing is ever written for any reason."""
+        stored = self.write_with('sec', {
+            'extract_revenue': (416_000_000_000.0, '$'),
+            'extract_customers': None,
+            'extract_employees': None,
+            'extract_funding': None,
+        })
+        self.assertIn('revenue', stored)
+
+    def test_an_undeclared_category_is_refused_even_when_extracted(self):
+        """
+        The gate. SEC declares `customers` unavailable, so a value arriving
+        from that source must not become evidence -- however plausible the
+        number is.
+        """
+        stored = self.write_with('sec', {
+            'extract_revenue': None,
+            'extract_customers': 218,
+            'extract_employees': None,
+            'extract_funding': None,
+        })
+        self.assertNotIn(
+            'customers', stored,
+            'a source wrote a datapoint for a category it is not allowed to establish',
+        )
+
+    def test_an_informational_source_cannot_write_at_all(self):
+        """News supplies context. Even if an extractor started returning a
+        number, it must not become a comparable observation."""
+        stored = self.write_with('news', {
+            'extract_revenue': (1_000_000.0, '$'),
+            'extract_customers': 42,
+            'extract_employees': 7,
+            'extract_funding': 500_000.0,
+        })
+        self.assertEqual(stored, set())
+
+    def test_a_corroborating_source_cannot_establish(self):
+        """Crunchbase may support a claim, not originate one."""
+        stored = self.write_with('crunchbase', {
+            'extract_revenue': (1_000_000.0, '$'),
+            'extract_customers': None,
+            'extract_employees': 30,
+            'extract_funding': None,
+        })
+        self.assertEqual(stored, set())

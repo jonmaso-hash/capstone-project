@@ -14,6 +14,7 @@ import re
 import requests
 from typing import Dict, List, Optional, Tuple
 from django.conf import settings
+from .source_capabilities import may_establish
 from .truth_delta_models import ObservedDatapoint, ExternalDataSource
 
 logger = logging.getLogger(__name__)
@@ -624,7 +625,7 @@ class DataSourceManager:
             time_period = integration.extract_time_period(data) or ''
 
             revenue_data = integration.extract_revenue(data)
-            if revenue_data:
+            if revenue_data and may_establish(source_type, 'revenue'):
                 value, unit = revenue_data
                 created_points.append(ObservedDatapoint.objects.create(
                     document=document, category='revenue', observed_value=str(value),
@@ -633,7 +634,7 @@ class DataSourceManager:
                 ))
 
             customers = integration.extract_customers(data)
-            if customers:
+            if customers and may_establish(source_type, 'customers'):
                 created_points.append(ObservedDatapoint.objects.create(
                     document=document, category='customers', observed_value=str(customers),
                     observed_value_numeric=float(customers), unit='customers', time_period=time_period,
@@ -641,7 +642,7 @@ class DataSourceManager:
                 ))
 
             employees = integration.extract_employees(data)
-            if employees:
+            if employees and may_establish(source_type, 'employees'):
                 created_points.append(ObservedDatapoint.objects.create(
                     document=document, category='employees', observed_value=str(employees),
                     observed_value_numeric=float(employees), unit='headcount', time_period=time_period,
@@ -649,7 +650,7 @@ class DataSourceManager:
                 ))
 
             funding = integration.extract_funding(data)
-            if funding:
+            if funding and may_establish(source_type, 'funding_raised'):
                 created_points.append(ObservedDatapoint.objects.create(
                     document=document, category='funding_raised', observed_value=f"${funding:,.0f}",
                     observed_value_numeric=float(funding), unit='$', time_period=time_period,
