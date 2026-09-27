@@ -19,6 +19,7 @@ fair-access policy. Fixtures are trimmed copies of real EDGAR responses for a
 Form D-only filer; nothing here reaches the network.
 """
 import json
+import re
 import tempfile
 from datetime import date
 from pathlib import Path
@@ -124,6 +125,33 @@ COMPANY_SEARCH_NONE = """<?xml version="1.0" encoding="ISO-8859-1" ?>
 """
 
 
+def _search_feed(*ciks):
+    """A browse-EDGAR multi-result feed: CIKs only, names garbled as EDGAR
+    really garbles them. The names are never read from here."""
+    entries = ''.join(
+        f'<entry title="ARRAY(0x{i:012x})"><content type="text/xml">'
+        f'<company-info name="ARRAY(0x{i:012x})"><cik>{cik}</cik></company-info>'
+        f'</content></entry>'
+        for i, cik in enumerate(ciks))
+    return ('<?xml version="1.0" encoding="ISO-8859-1" ?>'
+            '<feed xmlns="http://www.w3.org/2005/Atom">'
+            '<title>EDGAR Company Search Results</title>' + entries + '</feed>')
+
+
+def _record(cik, name, forms=(('D', '2026-09-04'),), state='IL'):
+    """A submissions payload for one registrant -- the authority on its name."""
+    return {
+        'cik': cik, 'name': name, 'entityType': 'other',
+        'stateOfIncorporation': state, 'stateOfIncorporationDescription': state,
+        'filings': {'recent': {
+            'accessionNumber': [ACCESSION for _ in forms],
+            'filingDate': [d for _, d in forms],
+            'form': [f for f, _ in forms],
+            'primaryDocument': ['xslFormDX01/primary_doc.xml' for _ in forms],
+        }},
+    }
+
+
 class _Response:
     def __init__(self, status_code=200, payload=None, text=None):
         self.status_code = status_code
@@ -141,9 +169,14 @@ class _Sec:
     """Answers SEC requests from fixtures and records what was asked."""
 
     def __init__(self, search=SEARCH_ONE_FILER, record=COMPANY_RECORD, form_d=FORM_D_XML, fail=None,
-                 company_search=COMPANY_SEARCH_ONE):
+                 company_search=COMPANY_SEARCH_ONE, records=None):
         self.search, self.record, self.form_d, self.fail = search, record, form_d, fail
         self.company_search = company_search
+        # {cik: submissions payload}. Identity now comes from each
+        # registrant's OWN submissions payload rather than from a name in the
+        # search feed, so a fixture that answers every CIK with one record
+        # cannot express two distinct candidates.
+        self.records = dict(records or {})
         self.calls = []
 
     def __call__(self, url, params=None, headers=None, timeout=None, **kwargs):
@@ -157,7 +190,9 @@ class _Sec:
         if 'efts.sec.gov' in url:
             return _Response(payload=self.search)
         if 'data.sec.gov/submissions' in url:
-            return _Response(payload=self.record)
+            asked = re.search(r'CIK(\d+)\.json', url)
+            cik = asked.group(1) if asked else None
+            return _Response(payload=self.records.get(cik, self.record))
         if url.endswith('primary_doc.xml'):
             return _Response(text=self.form_d)
         return _Response(404, text='not found')
@@ -194,37 +229,45 @@ class SecLookupTests(SimpleTestCase):
         # Found against live EDGAR: full-text search for "Apple" returned only
         # other companies' filings that mention Apple, and the row said no SEC
         # filer used the name.
-        apple = COMPANY_SEARCH_ONE.replace('0002153610', '0000320193').replace('Akil-Abree Consulting, LLC', 'Apple Inc.')
         noisy = {'hits': {'hits': [{'_source': {
             'ciks': ['0001111111'], 'display_names': ['Some Supplier Corp  (CIK 0001111111)'], 'adsh': 'z'}}]}}
-        sec = _Sec(search=noisy, company_search=apple)
+        sec = _Sec(search=noisy, company_search=_search_feed('0000320193'),
+                   records={'0000320193': _record('0000320193', 'Apple Inc.')})
         lookup = self._lookup('Apple Inc.', sec)
         self.assertEqual(lookup.status, 'found')
         self.assertEqual(lookup.cik, '0000320193')
         self.assertFalse(any('efts.sec.gov' in call['url'] for call in sec.calls))
 
-    def test_a_single_company_search_result_with_a_different_name_is_not_taken(self):
-        other = COMPANY_SEARCH_ONE.replace('Akil-Abree Consulting, LLC', 'Akil-Abree Consulting Group Inc')
-        sec = _Sec(company_search=other)
+    def test_a_registrant_whose_own_record_names_another_company_is_not_taken(self):
+        """
+        The search feed is a source of CANDIDATES, never of names. A CIK
+        whose own submissions payload names a different company must not be
+        accepted for this one -- previously this was rescued by falling back
+        to full-text search, which is no longer consulted.
+        """
+        sec = _Sec(company_search=_search_feed('0009999999'),
+                   records={'0009999999': _record('0009999999',
+                                                  'Akil-Abree Consulting Group Inc')})
         lookup = self._lookup('Akil-Abree Consulting, LLC', sec)
-        self.assertEqual(lookup.status, 'found')
-        self.assertTrue(any('efts.sec.gov' in call['url'] for call in sec.calls))
+        self.assertEqual(lookup.status, 'not_found')
+        self.assertIsNone(lookup.cik)
+        self.assertFalse(any('efts.sec.gov' in call['url'] for call in sec.calls))
 
     def test_names_match_exactly_with_legal_suffixes_ignored(self):
-        search = {'hits': {'hits': [
-            {'_source': {'ciks': [CIK], 'display_names': [f'Akil-Abree Consulting, LLC  (CIK {CIK})'], 'adsh': ACCESSION}},
-            {'_source': {'ciks': ['0009999999'], 'display_names': ['Akil-Abree Consulting Group Inc  (CIK 0009999999)'], 'adsh': 'x'}},
-        ]}}
-        lookup = self._lookup('Akil-Abree Consulting Inc.', _Sec(search=search, company_search=COMPANY_SEARCH_SEVERAL))
+        sec = _Sec(company_search=_search_feed(CIK, '0009999999'), records={
+            CIK: _record(CIK, 'Akil-Abree Consulting, LLC'),
+            '0009999999': _record('0009999999', 'Akil-Abree Consulting Group Inc'),
+        })
+        lookup = self._lookup('Akil-Abree Consulting Inc.', sec)
         self.assertEqual(lookup.status, 'found')
         self.assertEqual(lookup.cik, CIK)
 
     def test_two_filers_with_the_same_name_are_ambiguous_and_neither_is_chosen(self):
-        search = {'hits': {'hits': [
-            {'_source': {'ciks': ['0000000001'], 'display_names': ['Harbor Bakery LLC  (CIK 0000000001)'], 'adsh': 'a'}},
-            {'_source': {'ciks': ['0000000002'], 'display_names': ['Harbor Bakery, Inc.  (CIK 0000000002)'], 'adsh': 'b'}},
-        ]}}
-        lookup = self._lookup('Harbor Bakery', _Sec(search=search, company_search=COMPANY_SEARCH_SEVERAL))
+        sec = _Sec(company_search=_search_feed('0000000001', '0000000002'), records={
+            '0000000001': _record('0000000001', 'Harbor Bakery LLC'),
+            '0000000002': _record('0000000002', 'Harbor Bakery, Inc.'),
+        })
+        lookup = self._lookup('Harbor Bakery', sec)
         self.assertEqual(lookup.status, 'ambiguous')
         self.assertIsNone(lookup.cik)
 
@@ -246,7 +289,14 @@ class SecLookupTests(SimpleTestCase):
             filer = sec_identity.find_sec_filer('Akil-Abree Consulting, LLC')
             record = sec_identity.company_record(filer.cik)
             sec_identity.fetch_form_d(filer.cik, sec_identity.latest_form_d(record)['accession'])
-        self.assertEqual(len(sec.calls), 3)
+        # Five, where the old chain made three. Resolving the registrant now
+        # searches BOTH name variants -- the name as given and the
+        # suffix-stripped phrase, because EDGAR's conformed name abbreviates
+        # and the operating company may only appear under one of them -- and
+        # then reads that registrant's own submissions payload rather than
+        # trusting a name in the search feed. Two searches plus one payload,
+        # then this test's own company_record and fetch_form_d.
+        self.assertEqual(len(sec.calls), 5)
         for call in sec.calls:
             self.assertIn('@', call['headers'].get('User-Agent', ''))
             self.assertTrue(call['timeout'])
