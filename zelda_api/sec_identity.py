@@ -179,35 +179,33 @@ def _single_company(name):
 
 
 def find_sec_filer(company_name):
-    """The one EDGAR filer whose name matches, or why there isn't one."""
-    from .entity_verification import _company_core
+    """
+    The one EDGAR registrant that is this company, or why there isn't one.
 
-    wanted = _company_core(company_name)
+    Delegates to sec_company_identity, which is the single place a name
+    becomes a registrant. Before this, Entity Integrity resolved names
+    independently of Truth Delta and the two disagreed live on 2026-09-26 --
+    0000887557 against 0000829224, both named "STARBUCKS CORP", findings from
+    each shown as facts about one company.
 
-    # 1. A company EDGAR can name on its own: exact name first, then without the legal suffix.
-    for name in dict.fromkeys(filter(None, [(company_name or '').strip(), _search_phrase(company_name)])):
-        single = _single_company(name)
-        if single and _company_core(single[1]) == wanted:
-            return FilerLookup('found', cik=single[0], name=single[1])
+    The shell won because its FORMER name matched the search string exactly
+    while the operating company's conformed name abbreviates. No name rule
+    could have caught that; what separates them is that one files periodic
+    reports and the other has not filed anything since 2014.
 
-    # 2. Several companies share the name (or none matched): full-text search keeps filer names intact.
-    response = _get(SEARCH_URL, params={'q': f'"{_search_phrase(company_name)}"'})
-    hits = ((_json(response) or {}).get('hits') or {}).get('hits') or []
+    Resolution does not require periodic filings: a private company that has
+    filed only a Form D is its own registrant, and Entity Integrity's Form D
+    pathway depends on finding it. Whether that registrant can support a
+    revenue figure is a separate question the identity answers separately.
+    """
+    from .sec_company_identity import AMBIGUOUS, FOUND, resolve_company_identity
 
-    matches = {}
-    for hit in hits:
-        source = hit.get('_source') or {}
-        for cik, display_name in zip(source.get('ciks') or [], source.get('display_names') or []):
-            name = _DISPLAY_NAME_CIK.sub('', display_name or '').strip()
-            if cik and _company_core(name) == wanted:
-                matches.setdefault(str(cik).zfill(10), name)
-
-    if not matches:
-        return FilerLookup('not_found')
-    if len(matches) > 1:
+    identity = resolve_company_identity(company_name)
+    if identity.status == FOUND:
+        return FilerLookup('found', cik=identity.cik, name=identity.name)
+    if identity.status == AMBIGUOUS:
         return FilerLookup('ambiguous')
-    cik, name = next(iter(matches.items()))
-    return FilerLookup('found', cik=cik, name=name)
+    return FilerLookup('not_found')
 
 
 def company_record(cik):

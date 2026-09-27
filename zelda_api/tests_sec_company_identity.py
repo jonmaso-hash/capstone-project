@@ -52,7 +52,7 @@ ownership-forms-only filer must never quietly occupy that slot.
 from django.test import SimpleTestCase
 
 from .sec_company_identity import (
-    AMBIGUOUS, FOUND, NOT_FOUND, NO_FINANCIAL_IDENTITY, resolve_from_candidates,
+    AMBIGUOUS, FOUND, NOT_FOUND, resolve_from_candidates,
 )
 
 
@@ -101,15 +101,31 @@ class TheOperatingCompanyWinsOverAShellTests(SimpleTestCase):
         self.assertEqual(identity.cik, '0000829224')
         self.assertTrue(identity.can_establish_revenue)
 
-    def test_the_shell_alone_is_not_a_financial_identity(self):
+    def test_the_shell_alone_resolves_but_cannot_establish_revenue(self):
         """
-        Not a weak match, not a fallback: a registrant that has only ever
-        filed ownership forms cannot be the source of a revenue figure.
-        Returning it as `found` is what put the wrong company's findings on
-        the page.
+        Identity and capability are separate questions. A registrant that has
+        only ever filed ownership forms IS a registrant -- refusing to
+        resolve it would resurrect the annual-report heuristic that broke
+        Form D-only private companies. It simply cannot be the source of a
+        revenue figure.
         """
         identity = resolve_from_candidates('Starbucks Corporation', [STARBUCKS_SHELL])
-        self.assertEqual(identity.status, NO_FINANCIAL_IDENTITY)
+        self.assertEqual(identity.status, FOUND)
+        self.assertFalse(identity.can_establish_revenue,
+                         'a registrant with no periodic filings supplied revenue')
+        self.assertTrue(identity.is_stale)
+
+    def test_a_form_d_only_private_company_resolves(self):
+        """
+        The case that caught the first design. Most Interlink companies are
+        here: a real registrant, no periodic reporting, and Entity
+        Integrity's whole Form D pathway depends on finding it.
+        """
+        form_d_only = submissions('0002153610', 'AKIL-ABREE CONSULTING, LLC',
+                                  [('D', '2026-05-01')], sic='8742')
+        identity = resolve_from_candidates('Akil-Abree Consulting, LLC', [form_d_only])
+        self.assertEqual(identity.status, FOUND)
+        self.assertEqual(identity.cik, '0002153610')
         self.assertFalse(identity.can_establish_revenue)
 
     def test_a_former_name_match_does_not_outrank_a_current_one(self):
@@ -227,3 +243,48 @@ class EveryFindingNamesItsRegistrantTests(SimpleTestCase):
         b = submissions('0000222222', 'HORIZON GROUP INC', [('10-K', '2025-02-20')])
         identity = resolve_from_candidates('Horizon Group Inc', [a, b])
         self.assertIsNone(identity.cik, 'an ambiguous result must not name a registrant')
+
+
+class TheCandidateSearchMustNotStopEarlyTests(SimpleTestCase):
+    """
+    Found by running the resolver against live EDGAR; no fixture could have
+    shown it.
+
+    EDGAR's conformed name abbreviates, so the operating company is
+    "STARBUCKS CORP" and searching "Starbucks Corporation" does NOT match it.
+    It matches the shell, whose FORMER name is exactly that string. The
+    operating company only appears under the suffix-stripped phrase.
+
+    The first implementation stopped at the first query that returned
+    anything, so it found the shell, never searched "Starbucks", and reported
+    no_financial_identity for a company with 1015 filings -- swapping a
+    wrong-company bug for a missing-company bug.
+    """
+
+    def test_candidates_are_gathered_from_every_name_variant(self):
+        from unittest import mock
+        from . import sec_company_identity as sci
+
+        feeds = {
+            'Starbucks Corporation': '<feed><cik>0000887557</cik></feed>',
+            'Starbucks': '<feed><cik>0000887557</cik><cik>0000829224</cik></feed>',
+        }
+        calls = []
+
+        class FakeResponse:
+            def __init__(self, text):
+                self.text = text
+
+        def fake_get(url, params=None):
+            calls.append(params['company'])
+            return FakeResponse(feeds.get(params['company'], '<feed></feed>'))
+
+        from . import sec_identity
+        with mock.patch.object(sec_identity, '_get', side_effect=fake_get):
+            found = sci.candidate_ciks('Starbucks Corporation')
+
+        self.assertEqual(calls, ['Starbucks Corporation', 'Starbucks'],
+                         'the suffix-stripped phrase was not searched')
+        self.assertIn('0000829224', found,
+                      'the operating company was never offered as a candidate')
+        self.assertIn('0000887557', found)
