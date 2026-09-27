@@ -115,6 +115,16 @@ class ObservedDatapoint(models.Model):
     
     # Source information
     source = models.ForeignKey(ExternalDataSource, on_delete=models.SET_NULL, null=True)
+    # WHICH COMPANY at that source. `source` names SEC EDGAR; it cannot say
+    # whose revenue this is, and two registrants can share a name -- 0000829224
+    # and 0000887557 are both "STARBUCKS CORP". Set from the registrant the
+    # identity authority selected for the observation that produced this row,
+    # never re-derived here and never parsed back out of source_url. Blank for
+    # sources that do not identify companies.
+    registrant = models.CharField(
+        max_length=32, blank=True,
+        help_text="The registrant this figure was observed about, e.g. an SEC CIK.",
+    )
     source_url = models.URLField(blank=True)
     source_date = models.DateField(null=True, blank=True, help_text="When this data was published")
     
@@ -138,6 +148,18 @@ class ObservedDatapoint(models.Model):
         app_label = 'zelda_api'
         ordering = ['-source_date', '-created_at']
     
+    @property
+    def describes_registrant(self):
+        """
+        Which entity this figure was observed about, for attribution on a
+        finding. "No annual report was found" was TRUE of 0000887557 and
+        wrong only because it was presented as a fact about Starbucks.
+        """
+        if not self.registrant:
+            return ''
+        source = self.source.source_name if self.source else 'an external source'
+        return f'{source} registrant {self.registrant}'
+
     def __str__(self):
         return f"{self.category}: {self.observed_value}"
 
