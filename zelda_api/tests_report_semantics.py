@@ -66,8 +66,77 @@ class AReportRecordsTheRulesThatProducedItTests(TestCase):
 
     # 1. new reports carry the current semantics
     def test_a_report_the_engine_writes_carries_the_current_semantics(self):
+        """
+        Asserted by RUNNING the engine, not by reading its constant. The
+        first version of this test compared `TruthDeltaEngine.semantics_version`
+        to the constant, which is a tautology: it passed while neither
+        `objects.create` call set the field, so every new report would have
+        been written as `unknown` and the whole stamp would have been inert.
+        """
+        from unittest import mock
+
+        from .truth_delta_models import ClaimedDatapoint
         from .truth_delta_engine import TruthDeltaEngine
-        self.assertEqual(TruthDeltaEngine().semantics_version, TRUTH_DELTA_SEMANTICS)
+        from .truth_delta_sources import DataSourceManager, SECFilingsIntegration
+
+        ClaimedDatapoint.objects.create(
+            document=self.document, category='revenue',
+            claimed_value='$416 billion', claimed_value_numeric=416_000_000_000.0,
+            unit='$', source_chunk='Insight: Revenue', text_excerpt='about $416 billion.',
+        )
+        with mock.patch.object(DataSourceManager, 'INTEGRATIONS', {'sec': SECFilingsIntegration}), \
+             mock.patch.object(DataSourceManager, 'fetch_news_headlines', return_value=[]), \
+             mock.patch.object(SECFilingsIntegration, '_find_cik_exact',
+                               return_value=(None, 'not_found')):
+            report = TruthDeltaEngine().verify_document(self.document.id)
+
+        self.assertIsNotNone(report)
+        self.assertEqual(report.engine_version, TRUTH_DELTA_SEMANTICS)
+        self.assertTrue(report.semantics_known)
+
+    def test_a_report_with_evidence_is_stamped_too(self):
+        """
+        The engine writes reports from TWO places: one when nothing external
+        was found, one when evidence was found and scored. Stamping only the
+        first leaves every report that actually has evidence -- the ones that
+        matter most -- reading `unknown`.
+
+        Added because `engine_stops_stamping_scored` SURVIVED: the test above
+        exercises only the no-evidence branch.
+        """
+        from unittest import mock
+
+        from .truth_delta_models import (
+            ClaimedDatapoint, ExternalDataSource, ObservedDatapoint,
+        )
+        from .truth_delta_engine import TruthDeltaEngine
+        from .truth_delta_sources import DataSourceManager, SECFilingsIntegration
+
+        ClaimedDatapoint.objects.create(
+            document=self.document, category='revenue',
+            claimed_value='$416 billion', claimed_value_numeric=416_000_000_000.0,
+            unit='$', source_chunk='Insight: Revenue', text_excerpt='about $416 billion.',
+        )
+        source, _ = ExternalDataSource.objects.get_or_create(
+            source_type='sec', defaults={'source_name': 'SEC EDGAR', 'is_active': True})
+        ObservedDatapoint.objects.create(
+            document=self.document, category='revenue', observed_value='416161000000',
+            observed_value_numeric=416_161_000_000.0, unit='$', time_period='FY2025',
+            source=source, source_credibility=0.95, extraction_method='api',
+        )
+
+        with mock.patch.object(DataSourceManager, 'INTEGRATIONS', {'sec': SECFilingsIntegration}), \
+             mock.patch.object(DataSourceManager, 'fetch_news_headlines', return_value=[]), \
+             mock.patch.object(SECFilingsIntegration, '_find_cik_exact',
+                               return_value=(None, 'not_found')), \
+             mock.patch.object(TruthDeltaEngine, '_call_claude_for_verification',
+                               return_value=None):
+            report = TruthDeltaEngine().verify_document(self.document.id)
+
+        self.assertIsNotNone(report)
+        self.assertIsNotNone(report.overall_truth_score,
+                             'this test must exercise the SCORED branch, not the empty one')
+        self.assertEqual(report.engine_version, TRUTH_DELTA_SEMANTICS)
 
     # 2. a row written without a stamp is unknown, never the current version
     def test_an_unstamped_row_is_unknown_not_the_current_version(self):

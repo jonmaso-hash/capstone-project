@@ -128,6 +128,7 @@ class TruthDeltaEngine:
 
             report = TruthDeltaReport.objects.create(
                 document_id=document_id,
+                engine_version=self.semantics_version,
                 overall_truth_score=None,
                 credibility_risk='unknown',
                 summary=summary,
@@ -154,6 +155,7 @@ class TruthDeltaEngine:
 
         report = TruthDeltaReport.objects.create(
             document_id=document_id,
+            engine_version=self.semantics_version,
             overall_truth_score=result['overall_truth_score'],
             credibility_risk=result['credibility_risk'],
             summary=result['summary'],

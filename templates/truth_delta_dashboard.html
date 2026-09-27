@@ -681,6 +681,17 @@
                        data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom"
                        data-bs-content="See which of a company's claims hold up against outside records. {% zelda_evidence_sources %} Each claim is reported as verified, unsupported, unavailable, or not comparable — the same four outcomes shown on the homepage, with the reason given rather than a bare verdict. It only covers claims with a public source to check — a diligence accelerator, not a background check or a guarantee."></i>
                 </h2>
+                {% if report and report.predates_current_semantics %}
+                    {% comment %}
+                        Not a warning that the report is wrong -- we cannot know that.
+                        A statement that it was produced under earlier rules, which is
+                        the one thing the stamp does establish.
+                    {% endcomment %}
+                    <p class="small text-muted mb-0 mt-1" style="max-width: 44rem;">
+                        This report predates Zelda's current evidence rules. It has not been
+                        re-run, so its findings reflect the rules in force when it was produced.
+                    </p>
+                {% endif %}
             </div>
             <div class="truth-delta-score-box">
                 <div class="score-label">Credibility Score</div>
