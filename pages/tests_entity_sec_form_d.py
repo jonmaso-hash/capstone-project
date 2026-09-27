@@ -209,6 +209,14 @@ def _patched_sec(sec):
 
 class SecLookupTests(SimpleTestCase):
 
+    def setUp(self):
+        # Identity resolution is cached now, and these classes share one
+        # process-wide cache: without this a fixture from an earlier test
+        # answers a later one.
+        from django.core.cache import cache
+        cache.clear()
+        self.addCleanup(cache.clear)
+
     def _lookup(self, name, sec):
         from zelda_api import sec_identity
         with _patched_sec(sec), mock.patch.object(sec_identity.time, 'sleep'):
@@ -366,6 +374,12 @@ class FormDParsingTests(SimpleTestCase):
 class SecFindingsTests(TestCase):
 
     def setUp(self):
+        # Identity resolution is cached now, and these classes share one
+        # process-wide cache: without this a fixture from an earlier test
+        # answers a later one.
+        from django.core.cache import cache
+        cache.clear()
+        self.addCleanup(cache.clear)
         _mock_embedding_generation(self)
         self.founder_user = User.objects.create_user('sec_founder', password='x')
         self.founder = Application.objects.create(

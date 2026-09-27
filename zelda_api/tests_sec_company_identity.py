@@ -283,11 +283,44 @@ class TheCandidateSearchMustNotStopEarlyTests(SimpleTestCase):
         with mock.patch.object(sec_identity, '_get', side_effect=fake_get):
             found = sci.candidate_ciks('Starbucks Corporation')
 
+        ciks, truncated = found
         self.assertEqual(calls, ['Starbucks Corporation', 'Starbucks'],
                          'the suffix-stripped phrase was not searched')
-        self.assertIn('0000829224', found,
+        self.assertIn('0000829224', ciks,
                       'the operating company was never offered as a candidate')
-        self.assertIn('0000887557', found)
+        self.assertIn('0000887557', ciks)
+        self.assertFalse(truncated)
+
+    def test_a_name_matching_more_registrants_than_we_fetch_is_ambiguous(self):
+        """
+        Truncation must not be silent. Searching "Meta" really does return
+        dozens of Form D shells -- Meta Co, Meta Burger, Meta Athlete -- and
+        Meta Platforms is not among the first ten. Ranking that sample picks
+        the best of an arbitrary subset and calls it an identity; "Meta Co"
+        even matches exactly, because `_company_core` strips "Co" as a legal
+        suffix.
+
+        A name we have only sampled has not been resolved.
+        """
+        from unittest import mock
+
+        from . import sec_company_identity as sci
+        from . import sec_identity
+
+        many = ''.join(f'<cik>{i:010d}</cik>' for i in range(1, 26))
+
+        class FakeResponse:
+            text = f'<feed>{many}</feed>'
+
+        with mock.patch.object(sec_identity, '_get', return_value=FakeResponse()):
+            ciks, truncated = sci.candidate_ciks('Meta')
+        self.assertTrue(truncated, 'a truncated candidate list was reported as complete')
+        self.assertEqual(len(ciks), sci.MAX_CANDIDATES)
+
+        with mock.patch.object(sci, 'candidate_ciks', return_value=(ciks, True)):
+            identity = sci.resolve_company_identity('Meta')
+        self.assertEqual(identity.status, AMBIGUOUS)
+        self.assertIsNone(identity.cik)
 
 
 class EachRankingSignalDecidesOnItsOwnTests(SimpleTestCase):

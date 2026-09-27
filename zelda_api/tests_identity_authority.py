@@ -142,7 +142,9 @@ class TheTenKCrutchIsGoneTests(SimpleTestCase):
             return FakeResponse()
 
         integration = SECFilingsIntegration()
-        with mock.patch.object(integration.session, 'get', side_effect=record):
+        # The seam is sec_identity._get: identity resolution moved there, so
+        # that is where SEC requests are now made.
+        with mock.patch.object(sec_identity, '_get', side_effect=record):
             integration.resolve_with_diagnostics('Harbor Bakery Corporation')
 
         self.assertTrue(calls, 'no SEC request was made, so this test checked nothing')
@@ -162,3 +164,62 @@ class TransientFailuresStillSaySoTests(SimpleTestCase):
             cik, reason = SECFilingsIntegration().resolve_with_diagnostics('Harbor Bakery Corp')
         self.assertIsNone(cik)
         self.assertIn(reason, SECFilingsIntegration.TRANSIENT_REASONS)
+
+
+class NoIdentityMeansNoEvidenceTests(SimpleTestCase):
+    """
+    Ported from tests_sec_entity_identity, which pinned this at the feed
+    level. The feed-level rules went with `_find_cik_exact`; this property
+    did not, and nothing else asserts it: an unresolved company must
+    contribute no company data, so it can never reach the comparison layer.
+    """
+
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+        self.addCleanup(cache.clear)
+
+    def fetch_with(self, identity):
+        integration = SECFilingsIntegration()
+        facts = {'facts': {'us-gaap': {}}, 'entityName': 'SOMEONE ELSE INC', '_cik': 'x'}
+
+        class FactsResponse:
+            status_code = 200
+            text = ''
+
+            def json(self):
+                return dict(facts)
+
+        with mock.patch('zelda_api.sec_company_identity.resolve_company_identity',
+                        return_value=identity), \
+             mock.patch.object(integration.session, 'get', return_value=FactsResponse()):
+            return integration.fetch_company_data('Harbor Bakery Corporation')
+
+    def test_the_harness_can_see_a_resolved_company(self):
+        """
+        Positive control. Without it, the assertions below could pass because
+        the harness never returns anything at all.
+        """
+        resolved = resolve_from_candidates('Harbor Bakery Corporation', [DECOY, INTENDED])
+        self.assertEqual(self.fetch_with(resolved).get('_cik'), '0000829224')
+
+    def test_an_ambiguous_company_yields_no_company_data(self):
+        ambiguous = resolve_from_candidates('Harbor Bakery Corp', [
+            submissions('0000000001', 'HARBOR BAKERY CORP', [('10-K', '2026-03-01')]),
+            submissions('0000000002', 'HARBOR BAKERY CORP', [('10-K', '2026-03-01')]),
+        ])
+        self.assertEqual(self.fetch_with(ambiguous), {})
+
+    def test_an_absent_company_yields_no_company_data(self):
+        self.assertEqual(self.fetch_with(resolve_from_candidates('Nobody', [])), {})
+
+    def test_a_candidate_with_no_name_of_its_own_is_never_resolved(self):
+        """
+        Also ported: a submissions payload carrying a CIK and no name cannot
+        be matched to anyone, and an unverifiable registrant is exactly what
+        identity resolution exists to refuse.
+        """
+        nameless = {'cik': '887557', 'tickers': [], 'formerNames': [],
+                    'filings': {'recent': {'form': ['10-K'], 'filingDate': ['2026-01-01']}}}
+        identity = resolve_from_candidates('Harbor Bakery Corporation', [nameless])
+        self.assertIsNone(identity.cik)

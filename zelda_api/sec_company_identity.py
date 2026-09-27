@@ -225,7 +225,8 @@ MAX_CANDIDATES = 10
 
 def candidate_ciks(company_name):
     """
-    Every CIK EDGAR's company search offers for this name, not the first.
+    (CIKs, truncated) -- every CIK EDGAR's company search offers for this
+    name, and whether there were more than we looked at.
 
     The multi-match feed garbles company names into ARRAY(0x...) references,
     which defeated name-checking before -- but that no longer matters here.
@@ -235,10 +236,24 @@ def candidate_ciks(company_name):
     from . import sec_identity
     import re as _re
 
-    seen = []
-    for name in dict.fromkeys(filter(None, [
+    from .truth_delta_sources import SECFilingsIntegration
+
+    # A brand name that shares no root with the legal name EDGAR registers
+    # ("Meta" -> "Meta Platforms") is unreachable by suffix-stripping alone.
+    # The alias table moved here with the resolution it serves; leaving it
+    # behind in Truth Delta would have silently dropped those companies.
+    alias = SECFilingsIntegration.KNOWN_ALIASES.get((company_name or '').strip().lower())
+
+    # An alias exists precisely BECAUSE the brand name is ambiguous ("Meta"
+    # matches dozens of Form D shells). When one is configured it is the
+    # answer, and broadening to the raw name afterwards buries it under
+    # namesakes and trips the truncation guard below.
+    variants = [alias] if alias else [
         (company_name or '').strip(), sec_identity._search_phrase(company_name),
-    ])):
+    ]
+
+    seen = []
+    for name in dict.fromkeys(filter(None, variants)):
         try:
             response = sec_identity._get(sec_identity.COMPANY_SEARCH_URL, params={
                 'action': 'getcompany', 'company': name, 'owner': 'include',
@@ -256,7 +271,12 @@ def candidate_ciks(company_name):
         # EDGAR's conformed name abbreviates ("STARBUCKS CORP"). Stopping at
         # the first query that returned anything found the shell and never
         # looked for the company -- which is how the live check failed.
-    return seen[:MAX_CANDIDATES]
+    # Truncation is reported, never silent. A name matching more registrants
+    # than we are willing to fetch has not been resolved -- it has been
+    # sampled, and ranking the sample would pick the best of an arbitrary
+    # subset. Searching "Meta" returns dozens of Form D shells and Meta
+    # Platforms is not among the first ten; the honest answer is ambiguous.
+    return seen[:MAX_CANDIDATES], len(seen) > MAX_CANDIDATES
 
 
 def resolve_company_identity(company_name):
@@ -271,10 +291,32 @@ def resolve_company_identity(company_name):
     unreachable source is a statement about the attempt, never an absence of
     a registrant, and callers must be unable to confuse the two.
     """
+    from django.core.cache import cache
+
     from . import sec_identity
 
+    # Settled outcomes are cached; transient failures raise before reaching
+    # this point and so are never cached. That is #98's rule: a ten-second
+    # outage must not read as an absence for the rest of the day.
+    key = f'sec_identity_v3:{(company_name or "").strip().lower()}'
+    cached = cache.get(key)
+    if cached is not None:
+        return cached
+
+    # An alias renames the subject for the whole resolution, not just the
+    # search: EDGAR registers "Meta Platforms, Inc.", and matching candidates
+    # against the brand name "Meta" would reject the very company the alias
+    # was written to reach.
+    from .truth_delta_sources import SECFilingsIntegration
+    match_against = (SECFilingsIntegration.KNOWN_ALIASES.get(
+        (company_name or '').strip().lower()) or company_name)
+
+    ciks, truncated = candidate_ciks(company_name)
+    if truncated:
+        return CompanyIdentity(status=AMBIGUOUS, candidate_ciks=tuple(ciks))
+
     records = []
-    for cik in candidate_ciks(company_name):
+    for cik in ciks:
         try:
             records.append(sec_identity.company_record(cik))
         except sec_identity.SecUnavailable:
@@ -284,8 +326,6 @@ def resolve_company_identity(company_name):
         except Exception:
             continue
 
-    # Deliberately uncached. The caller this replaces did no caching either,
-    # and adding it here would change how often SEC is called and how results
-    # leak between requests -- a separate concern from making the two
-    # subsystems agree on one registrant.
-    return resolve_from_candidates(company_name, records)
+    identity = resolve_from_candidates(match_against, records)
+    cache.set(key, identity, 60 * 60 * 6)
+    return identity

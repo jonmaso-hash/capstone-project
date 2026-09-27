@@ -262,123 +262,50 @@ class SECFilingsIntegration(DataSourceIntegration):
 
     def resolve_with_diagnostics(self, company_name: str) -> Tuple[Optional[str], Optional[str]]:
         """
-        Resolves a company name to a 10-digit zero-padded CIK via SEC's
-        public company-search Atom feed, and — critically — WHY, when it
-        fails: 'not_found' | 'timeout' | 'request_error'. A single "33%
-        verification coverage" number conflates very different situations
-        (a company that's genuinely private and has no SEC filings at
-        all, a resolver bug that missed a real public company, a
-        transient SEC outage) that call for completely different fixes;
-        without this, every miss looks like the same problem. See
-        evaluate_claim_extraction's --check-external-evidence reporting,
+        Which SEC registrant this company is, and WHY when there isn't one:
+        'not_found' | 'ambiguous' | 'timeout' | 'request_error'.
+
+        Identity is not decided here. It is decided once, in
+        sec_company_identity, and every SEC-consuming subsystem receives that
+        decision -- because when Truth Delta and Entity Integrity each
+        resolved names independently they disagreed live on 2026-09-26,
+        0000887557 against 0000829224, and presented findings about two
+        registrants as facts about one company.
+
+        Truth Delta happened to be right that day only because its own search
+        passed `type=10-K`, which excluded the dormant registrant by luck of a
+        query parameter. That search is gone with the filter: it would also
+        drop foreign private issuers filing 20-F or 40-F, and newly public
+        companies with no annual report yet.
+
+        What remains Truth Delta's question is CAPABILITY -- whether that
+        registrant can supply revenue evidence. Identity and capability are
+        different questions, and conflating them broke every Form D-only
+        private company once already.
+
+        The distinction the reason preserves is still #98's: a company that is
+        genuinely private and has no SEC filings, versus a transient outage.
+        See evaluate_claim_extraction's --check-external-evidence reporting,
         which cross-references 'not_found' against the corpus's own
-        is_real_public_company annotation to tell "expected, this company
-        is private" apart from "this is a real resolver bug."
-
-        Tries, in order: a known brand alias, the normalized
-        (suffix-stripped) name, then the exact name as given — falling
-        through in case an earlier candidate over-strips or under-matches.
-        Successful (and failed) resolutions are cached so re-running the
-        same document, or the evaluation harness, doesn't re-hit SEC for
-        a name already resolved.
+        is_real_public_company annotation.
         """
-        from django.core.cache import cache
+        from .sec_company_identity import AMBIGUOUS, FOUND, resolve_company_identity
+        from .sec_identity import SecUnavailable
 
-        cache_key = f"sec_edgar_cik_v2:{company_name.strip().lower()}"
-        cached = cache.get(cache_key)
-        if cached is not None:
-            return cached
-
-        alias = self.KNOWN_ALIASES.get(company_name.strip().lower())
-        candidates = dict.fromkeys(filter(None, [
-            alias,
-            self._normalize_company_name_for_search(company_name),
-            company_name.strip(),
-        ]))
-
-        reason = 'not_found'
-        for candidate in candidates:
-            cik, candidate_reason = self._find_cik_exact(candidate)
-            if cik:
-                result = (cik, None)
-                cache.set(cache_key, result, self._CACHE_TTL_FOUND)
-                return result
-            reason = candidate_reason
-            if reason in self.TRANSIENT_REASONS:
-                # A real network failure won't be fixed by trying a
-                # differently-worded candidate — stop retrying.
-                break
-
-        if reason in self.TRANSIENT_REASONS:
-            # NOT cached. The not-found TTL is six hours, so caching a
-            # ten-second timeout made a company read as having no external
-            # evidence for the rest of the day, long after the source
-            # recovered -- turning a failed attempt into evidence about the
-            # company. Returned uncached so the next attempt sees recovery.
-            return (None, reason)
-
-        result = (None, reason)
-        cache.set(cache_key, result, self._CACHE_TTL_NOT_FOUND)
-        return result
-
-    def _find_cik_exact(self, company_name: str) -> Tuple[Optional[str], Optional[str]]:
-        """Returns (cik, reason) — reason is None exactly when cik is not None."""
         try:
-            response = self.session.get(
-                'https://www.sec.gov/cgi-bin/browse-edgar',
-                params={'action': 'getcompany', 'company': company_name, 'type': '10-K', 'owner': 'include', 'count': 10, 'output': 'atom'},
-                timeout=10,
-            )
-        except requests.exceptions.Timeout:
-            logger.error(f"SEC CIK lookup timed out for {company_name}")
-            return None, 'timeout'
-        except requests.exceptions.RequestException as e:
-            logger.error(f"SEC CIK lookup failed for {company_name}: {e}")
-            return None, 'request_error'
+            identity = resolve_company_identity(company_name)
+        except SecUnavailable as unreachable:
+            # An unreachable source is a statement about the attempt, never an
+            # absence of a registrant -- and never cached, so the next attempt
+            # sees recovery rather than a six-hour-old failure.
+            return (None, getattr(unreachable, 'reason', 'request_error'))
 
-        if response.status_code != 200:
-            return None, 'request_error'
+        if identity.status == FOUND:
+            return (identity.cik, None)
+        if identity.status == AMBIGUOUS:
+            return (None, 'ambiguous')
+        return (None, 'not_found')
 
-        return self._one_named_company(company_name, response.text)
-
-    @staticmethod
-    def _one_named_company(company_name, feed_text):
-        """
-        (cik, reason) for the ONE company in this feed that is the company we
-        asked for -- or why there isn't one.
-
-        EDGAR's company search is a prefix match, so "Acme" answers with
-        seven filers and "Apple" with ten. Taking the first was not a
-        resolution, it was a guess, and the guess decides which company's
-        revenue becomes evidence about the subject.
-
-        Several CIKs cannot be disambiguated here at all: in the multi-match
-        feed EDGAR replaces every company name with a Perl array reference
-        (`<company-info name="ARRAY(0x...)">`), so there is nothing to compare
-        against. The only honest answer is to refuse -- the same conclusion
-        sec_identity.py reached for Entity Integrity.
-
-        A single match does carry <conformed-name>, so it is checked. The
-        comparison is on the core name because a deck says "Starbucks" where
-        EDGAR says "STARBUCKS CORP", and a legal suffix must not defeat a
-        correct match.
-        """
-        from .entity_verification import _company_core
-
-        ciks = re.findall(r'<cik>(\d+)</cik>', feed_text or '', re.IGNORECASE)
-        if not ciks:
-            return None, 'not_found'
-        if len(ciks) > 1:
-            return None, 'ambiguous'
-
-        names = re.findall(r'<conformed-name>([^<]+)</conformed-name>',
-                           feed_text or '', re.IGNORECASE)
-        # A single-company feed always carries the name. If it somehow
-        # doesn't, that is a shape we do not understand, and an unverifiable
-        # CIK is exactly what this function exists to refuse.
-        if not names or _company_core(names[0]) != _company_core(company_name):
-            return None, 'name_mismatch'
-        return ciks[0].zfill(10), None
 
     def fetch_company_data(self, company_name: str, domain: str = None) -> Dict:
         """
