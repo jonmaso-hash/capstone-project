@@ -1757,6 +1757,43 @@ def validate_profile_field_visibility(value, defaults=None):
             )
 
 
+# The four role profiles a user can hold. All four are OneToOne, so one
+# account can hold every one of them at once. Named here, once, because
+# direct-message consent is stored on the role models but is a single
+# account-level preference: a list that drifts would let one surface consult
+# roles another ignores, which is how seller and buyer came to be silently
+# unsupported in the first place.
+DM_ROLE_PROFILE_ATTRS = (
+    'match_founder_profile',
+    'match_investor_profile',
+    'match_seller_profile',
+    'match_buyer_profile',
+)
+
+
+def role_profiles(user):
+    """Every role profile this user actually holds, in a stable order."""
+    held = []
+    for attr in DM_ROLE_PROFILE_ATTRS:
+        profile = getattr(user, attr, None)
+        if profile is not None:
+            held.append(profile)
+    return held
+
+
+def direct_messages_open(user):
+    """
+    Whether this user has opted into being messaged directly, bypassing the
+    role-paired introduction flow.
+
+    One authority, because dm_enabled was previously recomputed in
+    accounts/views.py and usersettings/views.py independently -- and both
+    consulted only the founder and investor profiles, so the profile page and
+    the settings toggle would each have had to be fixed separately to agree.
+    """
+    return any(profile.allow_direct_messages for profile in role_profiles(user))
+
+
 def founder_is_visible_to(request_user, founder_application):
     """
     Whether a page reached by company name or username may show this founder.
@@ -2040,6 +2077,10 @@ class SellerApplication(models.Model):
     )
 
     is_private = models.BooleanField(default=False)
+    allow_direct_messages = models.BooleanField(
+        default=False,
+        help_text="If True, verified users can bypass the matchmaking radar to initiate a Deal Room chat."
+    )
     # Per-field disclosure under SELLER_FIELD_VISIBILITY -- the same authority
     # founders use, with the seller's own policy. Absent keys fall back to that
     # policy's defaults, never to PUBLIC.
@@ -2211,6 +2252,10 @@ class BuyerApplication(models.Model):
     )
 
     is_private = models.BooleanField(default=False)
+    allow_direct_messages = models.BooleanField(
+        default=False,
+        help_text="If True, verified users can bypass the matchmaking radar to initiate a Deal Room chat."
+    )
     archived_at = models.DateTimeField(
         null=True, blank=True,
         help_text="Set when the buyer archives this mandate — hidden from discovery like is_private, "

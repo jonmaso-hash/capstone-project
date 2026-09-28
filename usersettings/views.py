@@ -166,11 +166,11 @@ def settings_home(request):
     application = getattr(request.user, "match_founder_profile", None)
     investor_application = getattr(request.user, "match_investor_profile", None)
 
-    dm_enabled = False
-    if application and application.allow_direct_messages:
-        dm_enabled = True
-    elif investor_application and investor_application.allow_direct_messages:
-        dm_enabled = True
+    # The same authority the profile page uses. Computed independently here
+    # before, and both copies read only founder/investor -- so the toggle and
+    # the profile page could disagree about the same user's consent.
+    from matchmaking.models import direct_messages_open
+    dm_enabled = direct_messages_open(request.user)
 
     is_private = bool(
         (application and application.is_private) or

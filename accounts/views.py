@@ -457,11 +457,11 @@ def profile(request, username=None, pk=None):
         and can_download_cim(request.user, seller_application)
     )
 
-    dm_enabled = False
-    if application and application.allow_direct_messages:
-        dm_enabled = True
-    elif investor_application and investor_application.allow_direct_messages:
-        dm_enabled = True
+    # Every role the viewed user holds, via the one authority -- this used to
+    # consult only founder and investor, so a seller or buyer who opted in was
+    # still rendered as unreachable. See matchmaking.models.direct_messages_open.
+    from matchmaking.models import direct_messages_open
+    dm_enabled = direct_messages_open(viewed_user)
 
     # Fetch optional modules safely
     user_jobs = []
@@ -1157,15 +1157,30 @@ def toggle_dm_view(request):
         data = json.loads(request.body)
         is_enabled = bool(data.get('dm_enabled', False))
         
-        founder_profile = Application.objects.filter(user=request.user).first()
-        if founder_profile:
-            founder_profile.allow_direct_messages = is_enabled
-            founder_profile.save(update_fields=['allow_direct_messages'])
+        # Every role the user holds, not the first match. All four role
+        # profiles are OneToOne, so one account can hold all four, and direct
+        # messaging is ONE account-level preference stored on role-specific
+        # models. A partial write leaves the account's own roles disagreeing --
+        # and because the read paths report "enabled if any role says so", a
+        # partial DISABLE would keep advertising consent the user withdrew.
+        from matchmaking.models import role_profiles
+        written = []
+        for profile in role_profiles(request.user):
+            profile.allow_direct_messages = is_enabled
+            profile.save(update_fields=['allow_direct_messages'])
+            written.append(profile)
 
-        investor_profile = InvestorApplication.objects.filter(user=request.user).first()
-        if investor_profile:
-            investor_profile.allow_direct_messages = is_enabled
-            investor_profile.save(update_fields=['allow_direct_messages'])
+        if not written:
+            # Persistence is what success means. This endpoint used to answer
+            # "success" here, so a seller or buyer saw "Direct messaging is now
+            # open", nothing was stored, and the switch silently reverted on
+            # reload. A consent control that confirms an action it did not take
+            # is worse than one that is missing.
+            return JsonResponse({
+                "status": "error",
+                "message": "Add a founder, investor, seller or buyer profile before "
+                           "changing your messaging setting.",
+            }, status=400)
 
         return JsonResponse({"status": "success", "dm_enabled": is_enabled})
     except Exception:
