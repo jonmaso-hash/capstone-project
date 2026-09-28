@@ -93,7 +93,11 @@ def extract_claims_from_insights(document_id: int):
         return {'status': 'success', 'claims_created': claims_created}
     
     except Exception as exc:
-        logger.error(f"Error extracting claims: {str(exc)}")
+        # This path never queued verification, so the run simply never
+        # happened and the page said "hasn't been run yet" -- true, and
+        # useless. Record it for the same reason the verify task does.
+        logger.exception(f"Error extracting claims for document {document_id}")
+        _record_verification_failure(document_id, exc)
         return {'status': 'error', 'error': str(exc)}
 
 
@@ -176,15 +180,59 @@ def _extract_numeric_value(text: str) -> float:
 
     return numeric_value
 
+
+def _record_verification_failure(document_id, exc):
+    """
+    Persist that verification could not complete, so the absence of a report
+    stops being the only evidence that something went wrong.
+
+    The technical cause is kept for staff and the logs; the surfaces show an
+    end user that it failed and what they can do. Deliberately best-effort:
+    if recording the failure ALSO fails there is nothing useful left to do,
+    and raising here would replace the real exception with a worse one.
+    """
+    try:
+        DocumentSource.objects.filter(id=document_id).update(
+            verification_failed_at=timezone.now(),
+            verification_error=str(exc)[:2000],
+        )
+    except Exception:
+        logger.exception(f"[Truth Delta] Could not record the failure for {document_id}")
+
+    try:
+        from ops.models import log_failed_task
+        log_failed_task('zelda_api.tasks.verify_document_truth_delta', [document_id], str(exc))
+    except Exception:
+        logger.exception(f"[Truth Delta] Could not log the failed task for {document_id}")
+
+
 @shared_task
 def verify_document_truth_delta(document_id):
     engine = TruthDeltaEngine()
-    result = engine.verify_document(document_id)
-    
+    try:
+        result = engine.verify_document(document_id)
+    except Exception as exc:
+        # Previously unhandled. A raise left Celery reporting a failed task and
+        # NOTHING a reader could see -- the page said "hasn't been run yet",
+        # which is indistinguishable from "still running".
+        logger.exception(f"[Truth Delta] Verification failed for document {document_id}")
+        _record_verification_failure(document_id, exc)
+        # Re-raised on purpose: recording it for the user must not swallow it
+        # for us, or the task reports success and the failure leaves no trace
+        # in Celery or in ops.
+        raise
+
+    # A run that completed clears any earlier failure. Without this the state
+    # is permanent once tripped: a document that failed yesterday and verified
+    # fine today would still be shown as broken.
+    DocumentSource.objects.filter(id=document_id).update(
+        verification_failed_at=None, verification_error='')
+
     # Return JSON-serializable dict, not a Django model object
     if result is None:
+        # No claims to verify is an ordinary outcome, not a breakage.
         return {'status': 'no_claims', 'document_id': document_id}
-    
+
     return {
         'status': 'success',
         'document_id': document_id,

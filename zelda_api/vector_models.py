@@ -64,6 +64,20 @@ class DocumentSource(FoundryStandardMixin, models.Model):
     # Error tracking
     error_message = models.TextField(blank=True)
 
+    # Truth Delta run tracking. Separate from `status`/`error_message`, which
+    # track the INTELLIGENCE pipeline -- a document can be fully 'analyzed'
+    # while verification died, which is exactly how a failed run came to be
+    # presented as "hasn't been run yet". Without a durable record there is
+    # nothing to distinguish a crash from a run that has not started, and
+    # "still working" from "this will never arrive".
+    verification_failed_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="When Truth Delta verification last failed. Cleared by a successful run.")
+    # Staff and logs only. An end user is told that it failed and what they can
+    # do, never a database error -- see pages/tests_exception_responses.py.
+    verification_error = models.TextField(
+        blank=True, help_text="Technical cause of the last verification failure. Never shown to end users.")
+
     # Staff moderation — default False means nothing changes for any
     # existing document; only takes effect once a staff member hides one.
     is_hidden_by_staff = models.BooleanField(default=False, help_text="Hides this document from everyone except the owner and staff.")
@@ -93,6 +107,30 @@ class DocumentSource(FoundryStandardMixin, models.Model):
             models.Index(fields=['source_entity']),
         ]
     
+    PENDING, FAILED, COMPLETE = 'pending', 'failed', 'complete'
+
+    @property
+    def verification_state(self):
+        """
+        'pending' | 'failed' | 'complete' -- one authority, because the report
+        page and the status endpoint each concluded independently that a
+        document was fine: the endpoint reports the intelligence pipeline's
+        status (still 'analyzed' when verification died), and the page treated
+        "no report" as "hasn't been run yet".
+
+        A failure only stands while it is the LATEST word. A report written
+        after the failure means a retry worked; a failure after the newest
+        report means the retry did not, and a stale report must not be
+        presented as the current answer.
+        """
+        from .truth_delta_models import TruthDeltaReport
+        latest = (TruthDeltaReport.objects.filter(document=self)
+                  .order_by('-created_at').first())
+        if self.verification_failed_at and (
+                latest is None or latest.created_at < self.verification_failed_at):
+            return self.FAILED
+        return self.COMPLETE if latest else self.PENDING
+
     def get_serialized_data(self):
         return {
             "id": self.id,

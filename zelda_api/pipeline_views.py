@@ -161,6 +161,11 @@ class DocumentStatusView(APIView):
                 'document_id': doc.id,
                 'filename': doc.filename,
                 'status': doc.status,
+                # `status` is the INTELLIGENCE pipeline's. It stays 'analyzed'
+                # when Truth Delta dies, so a caller polling this endpoint
+                # concluded the whole document was fine. Verification gets its
+                # own answer, from the one authority both surfaces read.
+                'verification_state': doc.verification_state,
                 'confidence_score': doc.confidence_score,
                 'created_at': doc.created_at.isoformat(),
             }
