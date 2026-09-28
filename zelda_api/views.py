@@ -961,6 +961,11 @@ def truth_delta_ui_view(request, document_id):
         'contradicted_count': contradicted_count,
         'unverified_count': unverified_count,
         'grounding_reasons': report.grounding_reasons() if report else {},
+        # Read off report.details, not the `details` above -- that one is
+        # trimmed for Lite. Which entity was checked is attribution, not
+        # analysis: a Lite reader who is told nothing was found still needs
+        # to know who "nothing" was found about.
+        'evidence_registrants': report.evidence_registrants() if report else [],
         'work_done': work_done,
     }
     from .disclaimers import DUE_DILIGENCE_DISCLAIMER

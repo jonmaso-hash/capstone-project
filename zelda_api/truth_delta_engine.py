@@ -221,6 +221,13 @@ class TruthDeltaEngine:
                 'observed_value': best.observed_value if best else None,
                 'observed_value_numeric': best.observed_value_numeric if best else None,
                 'observed_source': best.source.source_name if best and best.source else None,
+                # WHICH SOURCE is not WHICH COMPANY AT THAT SOURCE. "SEC EDGAR"
+                # alone cannot distinguish this business from a dormant
+                # registrant sharing its former name -- the confusion the
+                # identity authority exists to settle. Carried from the
+                # observation, never re-resolved here: a second lookup at this
+                # boundary would be a second identity authority.
+                'observed_registrant': (best.registrant or None) if best else None,
                 'observed_time_period': best.time_period if best else None,
                 'discrepancy_pct': discrepancy_pct,
                 # Provenance. A contradiction has to be explainable from what

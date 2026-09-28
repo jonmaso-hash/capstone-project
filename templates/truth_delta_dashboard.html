@@ -761,6 +761,22 @@
         {% endif %}
 
         {% comment %}
+        Which entity the external figures were observed about. Naming only the
+        source says where a figure came from and not who it is about, which
+        leaves a reader unable to tell this business from another registrant
+        with a similar or former name. The source name itself comes from the
+        stored record, never spelled out here -- see tests_source_naming.
+        Shown at both tiers: this is attribution, not analysis.
+        {% endcomment %}
+        {% if evidence_registrants %}
+        <div class="mt-3 mb-2 small" style="color: #64748b;">
+            <i class="bi bi-building me-1"></i>External figures were observed about
+            {% for attribution in evidence_registrants %}<strong>{{ attribution }}</strong>{% if not forloop.last %}, {% endif %}{% endfor %}.
+            Zelda did not confirm that this is the same legal entity as the company in this document.
+        </div>
+        {% endif %}
+
+        {% comment %}
         No confidence gauge here: it was fed the same overall_truth_score
         as the Credibility Score above, so it only restated the signal.
         Truth Delta's second-order read is the risk band + Evidence

@@ -451,6 +451,27 @@ class TruthDeltaReport(models.Model):
             for row in self.details.get('per_claim', []) or []
         ]
 
+    def evidence_registrants(self):
+        """
+        Which entity each external figure was observed about, phrased for a
+        reader: "SEC EDGAR registrant 0000829224".
+
+        A finding attributed only to a source names WHICH SOURCE and never
+        WHICH COMPANY AT THAT SOURCE, so a founder cannot tell whether the
+        figures Zelda compared against belong to their business or to some
+        other registrant that happens to match the name. Read straight off
+        the stored comparison rows -- this is a rendering of the identity
+        already decided upstream, not another chance to decide it.
+        """
+        seen = {}
+        for row in (self.details or {}).get('comparison') or []:
+            registrant = row.get('observed_registrant')
+            if not registrant:
+                continue
+            source = row.get('observed_source') or 'An external source'
+            seen.setdefault((source, registrant), None)
+        return [f'{source} registrant {registrant}' for source, registrant in seen]
+
     def verifiability_stats(self):
         """
         {'total', 'verified', 'pct'} — how many of this report's claims
