@@ -80,11 +80,10 @@ def forward_to_investor(modeladmin, request, queryset):
                     name for name in NEW_PROFILE_FIELD_VISIBILITY
                     if can_view_profile_field(investor.user, founder, name)
                 ]
-                html_content = render_to_string('emails/founder_match.html', {
-                    'founder': founder,
-                    'investor': investor,
-                    'visible_fields': visible_fields,
-                })
+                from .emails import founder_match_context
+                html_content = render_to_string(
+                    'emails/founder_match.html',
+                    founder_match_context(founder, investor, visible_fields))
                 
                 msg = EmailMessage(
                     subject=f"Exclusive Founder Profile: {founder.company_name}",
