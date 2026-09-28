@@ -761,6 +761,31 @@
         {% endif %}
 
         {% comment %}
+        A verification that CRASHED and one that has not started used to render
+        identically -- both produced no report, and the empty state said
+        "hasn't been run yet". A reader could not tell "still working" from
+        "this will never arrive". The technical cause is staff-only.
+        {% endcomment %}
+        {% if verification_failed %}
+        <div class="mt-3 mb-2 p-3 rounded-3" role="status"
+             style="background: rgba(239, 68, 68, 0.06); border-left: 4px solid var(--td-red);">
+            <div class="fw-bold" style="font-size: 0.95rem; color: var(--td-text);">
+                <i class="bi bi-exclamation-triangle me-1"></i>This verification couldn't be completed
+            </div>
+            <p class="mb-0 mt-1" style="font-size: 0.85rem; color: #475569;">
+                Zelda could not finish checking these claims, so nothing below reflects a completed
+                run. This is not a finding about the company &mdash; no claim was judged unsupported.
+                {% if is_document_owner or request.user.is_staff %}Use Run Verification to try again.{% endif %}
+            </p>
+            {% if verification_error %}
+            <p class="mb-0 mt-2 font-monospace" style="font-size: 0.75rem; color: #64748b;">
+                Staff only &mdash; {{ verification_error }}
+            </p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% comment %}
         Which entity the external figures were observed about. Naming only the
         source says where a figure came from and not who it is about, which
         leaves a reader unable to tell this business from another registrant

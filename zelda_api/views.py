@@ -966,6 +966,13 @@ def truth_delta_ui_view(request, document_id):
         # analysis: a Lite reader who is told nothing was found still needs
         # to know who "nothing" was found about.
         'evidence_registrants': report.evidence_registrants() if report else [],
+        # A crash and a run that never started used to render identically.
+        # From DocumentSource.verification_state, the same answer the polling
+        # endpoint gives, so the two cannot disagree.
+        'verification_failed': document.verification_state == DocumentSource.FAILED,
+        # Staff and logs only: an end user is told that it failed and what to
+        # do, never a database error.
+        'verification_error': document.verification_error if request.user.is_staff else '',
         'work_done': work_done,
     }
     from .disclaimers import DUE_DILIGENCE_DISCLAIMER
