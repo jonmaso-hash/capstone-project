@@ -54,15 +54,22 @@ class _Leaks(TestCase):
 class ExceptionTextStaysInTheLogTests(_Leaks):
 
     def test_privacy_and_direct_message_toggles(self):
+        # Each endpoint is broken at a point ITS OWN code path reaches. The DM
+        # toggle no longer queries Application.objects -- it walks the user's role
+        # profiles through matchmaking.models.role_profiles -- so the shared
+        # Application.objects patch would have stopped firing there and this
+        # subTest would have quietly asserted nothing about that endpoint.
         self.client.force_login(self.founder_user)
-        for url_name, logger in (
-            ('accounts:toggle_privacy', 'accounts.views'),
-            ('accounts:toggle_dm', 'accounts.views'),
-            ('matchmaking:toggle_privacy', 'matchmaking.views'),
+        for url_name, logger, break_at in (
+            ('accounts:toggle_privacy', 'accounts.views',
+             mock.patch.object(Application.objects, 'filter', side_effect=RuntimeError(SECRET))),
+            ('accounts:toggle_dm', 'accounts.views',
+             mock.patch('matchmaking.models.role_profiles', side_effect=RuntimeError(SECRET))),
+            ('matchmaking:toggle_privacy', 'matchmaking.views',
+             mock.patch.object(Application.objects, 'filter', side_effect=RuntimeError(SECRET))),
         ):
             with self.subTest(url=url_name):
-                with self.assertLogs(logger, level='ERROR') as logs, \
-                        mock.patch.object(Application.objects, 'filter', side_effect=RuntimeError(SECRET)):
+                with self.assertLogs(logger, level='ERROR') as logs, break_at:
                     response = self.client.post(
                         reverse(url_name), data=json.dumps({'is_private': True, 'dm_enabled': True}),
                         content_type='application/json')
