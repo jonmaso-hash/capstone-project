@@ -1,7 +1,16 @@
 <!DOCTYPE html>
+{% load static %}
 <html>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
     <div style="background: #1a1a1a; padding: 20px; text-align: center; color: white;">
+        {% comment %}
+        PNG, not SVG: Gmail and Outlook strip SVG entirely. The wordmark stays
+        as TEXT because most clients block remote images by default -- with
+        images off this header still reads correctly instead of going blank.
+        {% endcomment %}
+        <img src="{{ site_url }}{% static 'img/brand/interlink-mark-96.png' %}"
+             alt="Interlink Foundry" width="48" height="48"
+             style="display:block;margin:0 auto 8px;border:0;">
         <h1 style="margin: 0; letter-spacing: 2px;">INTERLINK FOUNDRY</h1>
         <p style="margin: 5px 0 0; font-size: 12px; text-transform: uppercase; opacity: 0.8;">Confidential Founder Profile</p>
     </div>
