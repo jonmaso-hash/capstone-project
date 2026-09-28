@@ -69,7 +69,16 @@ SCRIPTS = re.compile(r'<script\b.*?</script>', re.DOTALL | re.IGNORECASE)
 # The sentence that attributes evidence to an entity. Presence and absence
 # are both asserted against this one constant, so a typo cannot quietly
 # turn "the page says nothing" into "the test looked for the wrong thing".
-ATTRIBUTION_LEAD = 'External figures were observed about'
+ATTRIBUTION_LEAD = 'Registrant attribution:'
+
+# The clause that keeps attribution from reading as identity validation.
+# Naming the registrant Zelda used is provenance; it does not establish that
+# the registrant and the document's company are one legal entity. Without
+# this clause the panel silently upgrades "where the figures came from" into
+# "who this company is", which is the claim the whole subsystem refuses to
+# make -- and it sits beside an Entity Integrity panel that DOES make
+# identity findings, so a reader has no other way to tell the two apart.
+SCOPE_CAVEAT = 'does not by itself establish'
 
 
 def readable(html):
@@ -196,6 +205,18 @@ class TheIdentitySurvivesEveryBoundaryTests(ChainHarness):
         self.assertIn(ATTRIBUTION_LEAD, page,
                       'the page never attributed the evidence to an entity')
         self.assertIn(CHOSEN, page)
+
+    def test_the_attribution_states_what_it_does_not_establish(self):
+        """
+        Copy, load-bearing. The panel names the registrant Zelda used for the
+        SEC-derived figures -- provenance -- immediately beside an Entity
+        Integrity panel that does make identity findings. Dropping the scope
+        clause turns provenance into an identity claim by omission, and
+        nothing else on the page distinguishes them.
+        """
+        self.run_pipeline()
+        self.assertIn(SCOPE_CAVEAT, readable(self.page()),
+                      'the attribution asserted an identity it never established')
 
     def test_the_reader_is_not_shown_a_registrant_nobody_chose(self):
         self.run_pipeline()

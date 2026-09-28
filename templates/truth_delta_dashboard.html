@@ -767,12 +767,23 @@
         with a similar or former name. The source name itself comes from the
         stored record, never spelled out here -- see tests_source_naming.
         Shown at both tiers: this is attribution, not analysis.
+
+        The wording states what Zelda DID establish before what it did not.
+        "Zelda did not confirm..." alone reads as a contradiction of the
+        Entity Integrity panel above, which does make identity findings; the
+        two answer different questions. This panel says which registrant the
+        SEC-derived figures came from. It is provenance, and provenance is
+        never allowed to become identity validation on its own -- the caveat
+        sentence is what holds that line, and tests_identity_chain_of_custody
+        fails if it is removed.
         {% endcomment %}
         {% if evidence_registrants %}
         <div class="mt-3 mb-2 small" style="color: #64748b;">
-            <i class="bi bi-building me-1"></i>External figures were observed about
-            {% for attribution in evidence_registrants %}<strong>{{ attribution }}</strong>{% if not forloop.last %}, {% endif %}{% endfor %}.
-            Zelda did not confirm that this is the same legal entity as the company in this document.
+            <i class="bi bi-building me-1"></i><strong>Registrant attribution:</strong>
+            Zelda identified
+            {% for attribution in evidence_registrants %}<strong>{{ attribution }}</strong>{% if not forloop.last %}, {% endif %}{% endfor %}
+            as the source used for this evidence. This does not by itself establish that the
+            registrant is the same legal entity as the company described in this document.
         </div>
         {% endif %}
 
