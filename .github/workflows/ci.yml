@@ -82,6 +82,8 @@ jobs:
           zelda_api.tests_observation_registrant
           zelda_api.tests_identity_chain_of_custody
           zelda_api.tests_verification_failure_is_visible
+          zelda_api.tests_dashboard_authorization
+          zelda_api.tests_terminal_notifications
 
   # ── Non-blocking: the zelda_api suite currently makes live huggingface.co
   # calls, hits the Celery hang, and has known failures (all introduced in the
