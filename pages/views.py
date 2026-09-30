@@ -175,7 +175,7 @@ def contact_view(request):
                 f'Message:\n{message}'
             )
 
-            # Sent from the site's verified sender (Postmark refuses anything
+            # Sent from the site's verified sender (Resend refuses anything
             # else) to the configured inbox, with Reply-To set to the visitor
             # so a reply goes to them. Only the send is inside the try: the
             # redirect used to be too, and because it named 'contact' instead

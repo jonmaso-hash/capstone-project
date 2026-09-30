@@ -88,7 +88,7 @@ class PrivacyDescribesWhatTheCodeActuallyDoesTests(TestCase):
         self.assertRegex(self.html, r'not sent to an AI provider')
 
     def test_the_providers_are_named(self):
-        for provider in ('Stripe', 'Anthropic', 'Stream', 'Postmark', 'Sentry'):
+        for provider in ('Stripe', 'Anthropic', 'Stream', 'Resend', 'Sentry'):
             with self.subTest(provider=provider):
                 self.assertIn(provider, self.html)
 

@@ -110,8 +110,8 @@ services:
         sync: false
       - key: STRIPE_VALUATION_FIRM_OVERAGE_PRICE_ID
         sync: false
-      # Email (Postmark)
-      - key: POSTMARK_SERVER_TOKEN
+      # Email (Resend)
+      - key: RESEND_API_KEY
         sync: false
       - key: DEFAULT_FROM_EMAIL
         sync: false
@@ -205,11 +205,11 @@ services:
           type: web
           name: interlink-web
           envVarKey: STRIPE_SECRET_KEY
-      - key: POSTMARK_SERVER_TOKEN
+      - key: RESEND_API_KEY
         fromService:
           type: web
           name: interlink-web
-          envVarKey: POSTMARK_SERVER_TOKEN
+          envVarKey: RESEND_API_KEY
       - key: DEFAULT_FROM_EMAIL
         fromService:
           type: web

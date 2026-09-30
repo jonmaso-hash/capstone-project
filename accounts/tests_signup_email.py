@@ -17,7 +17,7 @@ Now:
 - accounts with no email -- staff tools, older records, test users -- are
   still allowed; only a non-blank email must be unique
 
-No confirmation email yet: that waits for transactional email (Postmark) to
+No confirmation email yet: that waits for transactional email (Resend) to
 be live.
 """
 from django.contrib.auth import get_user_model
