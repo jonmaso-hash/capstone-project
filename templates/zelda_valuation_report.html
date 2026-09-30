@@ -12,7 +12,20 @@
                    data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom"
                    data-bs-content="A ballpark valuation range without hiring a firm. Zelda reads the financials, stage and market position in your documents and produces a low–high range, a read on how fully those documents cover the dimensions it values against, and the factors moving the number. It is a model estimate for planning and negotiation — not an appraisal, an audit, or a price."></i>
             </h2>
-            <p class="text-muted mb-0">{{ document.source_entity }}</p>
+            <p class="text-muted mb-1">{{ document.source_entity }}</p>
+            {% comment %}
+            Inline, not only in the info popover above. A range of dollars put
+            on someone's business reads as a number they can take to a lender
+            or a negotiation unless the page says otherwise, and a
+            qualification behind a click is read by almost nobody. The popover
+            keeps the fuller explanation of how the range is produced; this is
+            the line that constrains what it MEANS. See
+            zelda_api/tests_valuation_disclosure.py.
+            {% endcomment %}
+            <p class="mb-0" style="font-size: 0.82rem; color: #64748b; max-width: 46rem;">
+                A model estimate for planning and negotiation &mdash;
+                <strong>not an appraisal, an audit, or a price.</strong>
+            </p>
         </div>
         <div class="d-flex gap-2">
             <a href="{% url 'zelda_api:valuation_history' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
