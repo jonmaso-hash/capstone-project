@@ -184,3 +184,90 @@ class RaiseIsNotRevenueTests(FactSemanticsHarness):
             with self.subTest(field=field):
                 self.assertIsNone(facts[field],
                                   f'a capital raise was recorded as {field}')
+
+
+class ClaimExtractionRespectsTheSameSemanticsTests(TestCase):
+    """
+    Track B: the SECOND producer. `truth_delta_tasks.extract_claims_from_insights`
+    maps an insight category to a claim category and then takes whatever number
+    `_extract_numeric_value` finds in the text. Nothing checks that the number
+    is admissible evidence for that category, so on the JoyToys deck:
+
+        Traction "$250K sought..."      -> customers = 250,000
+        Funding  "...75% utilized"      -> funding_raised = 75
+        Funding  "$250K Series A"       -> funding_raised = 250,000  (sought!)
+        Revenue  "$240K annualized burn"-> revenue = 240,000
+
+    Four of six claims materially wrong. Truth Delta then reported them
+    honestly as unverified, which is correct -- but had JoyToys been an SEC
+    filer, it would have compared burn against real revenue and reported a
+    CONTRADICTION about a company that did nothing wrong. The grounding layer
+    is faithful; it was being fed nonsense.
+
+    A dollar amount is not a headcount. A percentage is not a sum of money.
+    Money sought is not money raised. Burn is not revenue.
+    """
+
+    def setUp(self):
+        from matchmaking.tests import _mock_embedding_generation
+        _mock_embedding_generation(self)
+        self.user = User.objects.create_user('claims_owner', password='x')
+        self.document = DocumentSource.objects.create(
+            filename='deck.pptx', source_entity='JoyToys', uploaded_by=self.user,
+            document_type='pitch_deck', status='analyzed')
+
+    def claims_from(self, *insights):
+        from .truth_delta_models import ClaimedDatapoint
+        from .truth_delta_tasks import extract_claims_from_insights
+        for category, text in insights:
+            IntelligenceInsight.objects.create(
+                document=self.document, category=category, insight_text=text,
+                confidence_score=0.95)
+        extract_claims_from_insights(self.document.id)
+        return {c.category: c.claimed_value_numeric
+                for c in ClaimedDatapoint.objects.filter(document=self.document)}
+
+    def test_the_harness_creates_claims_at_all(self):
+        """Positive control: the assertions below read this dict."""
+        claims = self.claims_from(('Team', '17 employees'))
+        self.assertEqual(claims.get('employees'), 17.0)
+
+    def test_a_dollar_amount_is_not_a_customer_count(self):
+        claims = self.claims_from(
+            ('Traction', '$250K sought, Series A, primary purpose: growth'))
+        self.assertIsNone(claims.get('customers'),
+                          'a capital raise was recorded as a count of customers')
+
+    def test_a_real_customer_count_still_becomes_a_claim(self):
+        """Paired positive: the fix must not delete the customers category."""
+        claims = self.claims_from(('Traction', '1,200 paying customers across three retailers'))
+        self.assertEqual(claims.get('customers'), 1200.0)
+
+    def test_a_percentage_is_not_an_amount_of_money(self):
+        claims = self.claims_from(
+            ('Funding', 'Prior capital raised: $20K. Bank line: 75% utilized.'))
+        self.assertNotEqual(claims.get('funding_raised'), 75.0,
+                            'a utilization percentage was recorded as dollars raised')
+
+    def test_money_sought_is_not_money_raised(self):
+        claims = self.claims_from(
+            ('Funding', '$250K sought, Series A, primary use: new entertainment licenses'))
+        self.assertIsNone(claims.get('funding_raised'),
+                          'the amount being SOUGHT was recorded as capital already raised')
+
+    def test_money_actually_raised_still_becomes_a_claim(self):
+        """Paired positive."""
+        claims = self.claims_from(('Funding', 'Prior capital raised: $20K to date.'))
+        self.assertEqual(claims.get('funding_raised'), 20000.0)
+
+    def test_burn_is_not_revenue(self):
+        claims = self.claims_from(('Revenue', '$240K annualized stated burn'))
+        self.assertIsNone(claims.get('revenue'),
+                          'burn was recorded as revenue; had this company been an SEC '
+                          'filer, Truth Delta would have reported a contradiction '
+                          'against its real revenue')
+
+    def test_real_revenue_still_becomes_a_claim(self):
+        """Paired positive."""
+        claims = self.claims_from(('Revenue', '$300K / month'))
+        self.assertEqual(claims.get('revenue'), 300000.0)

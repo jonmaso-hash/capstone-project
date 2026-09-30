@@ -1,5 +1,6 @@
 """
-Which financial field a source statement is entitled to populate.
+Which financial field a source statement is entitled to populate, and which
+claim categories it is admissible evidence for.
 
 A figure may only occupy a field whose name its SOURCE supports.
 
@@ -26,14 +27,6 @@ Do not unify them.
 """
 import re
 
-SAYS_ANNUAL = re.compile(
-    r"\bARR\b|annual\s+recurring|\bannualized\b|\bannual\b|\bper\s+year\b|/\s*(?:yr|year)\b",
-    re.IGNORECASE,
-)
-SAYS_MONTHLY = re.compile(
-    r"\bMRR\b|monthly\s+recurring|\bper\s+month\b|\bmonthly\b|/\s*(?:mo|month)\b",
-    re.IGNORECASE,
-)
 _IS_ARR = re.compile(r"\bARR\b|annual\s+recurring", re.IGNORECASE)
 _IS_MRR = re.compile(r"\bMRR\b|monthly\s+recurring", re.IGNORECASE)
 
@@ -72,3 +65,100 @@ def revenue_field_for(text):
     if _IS_ARR.search(text):
         return "arr"
     return "revenue"
+
+
+# --- which claim categories a sentence may support -------------------------
+#
+# The claim extractor maps an insight category to a claim category and then
+# takes whatever number the text contains. Nothing checked that the number was
+# admissible evidence for that category, so on the JoyToys deck a $250K raise
+# became 250,000 customers, a 75% bank-line utilization became $75 raised, an
+# amount SOUGHT became capital raised, and annualized burn became revenue.
+#
+# Truth Delta then reported those honestly as unverified, which is correct --
+# but for an SEC filer it would have compared burn against real revenue and
+# announced a contradiction about a company that did nothing wrong. The
+# grounding layer is faithful; it was being fed nonsense.
+
+MONEY_CATEGORIES = frozenset({"revenue", "funding_raised", "market_size"})
+
+_SEEKING = re.compile(
+    r"\bsought\b|\bseeking\b|\bseeks\b|\bseek\b|\braising\b|\bto\s+raise\b|"
+    r"\btarget(?:ing)?\b|\bask\b|\bcapital\s+request\b|\bnew\s+capital\b",
+    re.IGNORECASE,
+)
+# Capital raised must be STATED as raised. A positive requirement, not merely
+# the absence of "sought": the first version of this rule admitted anything
+# without a disqualifier, and the real JoyToys insight defeated it. The deck
+# slide reads "Seeking $250K", but the analyzer dropped the word when building
+# the insight, leaving "$250K Series A Primary use: new entertainment
+# licenses" -- no disqualifier to find, so the ask was recorded as capital
+# raised. Absence of a disqualifier is not evidence of the positive.
+_RAISED = re.compile(
+    r"\braised\b|\bprior\s+capital\b|\bcapital\s+raised\b|\bto\s+date\b|"
+    r"\bclosed\b|\bsecured\b|\bhas\s+raised\b|\bhave\s+raised\b|"
+    r"\bpreviously\s+raised\b|\bfunding\s+received\b",
+    re.IGNORECASE,
+)
+_COUNT_NOUN = re.compile(
+    r"\bcustomers?\b|\bclients?\b|\busers?\b|\baccounts?\b|\bsubscribers?\b|"
+    r"\bretailers?\b|\bstores?\b|\bclinics?\b|\bpractices?\b|\bhospitals?\b",
+    re.IGNORECASE,
+)
+_PEOPLE_NOUN = re.compile(
+    r"\bemployees?\b|\bstaff\b|\bheadcount\b|\bFTEs?\b|\bteam\s+(?:of|size)\b|"
+    r"\bpeople\b|\bperson\s+team\b",
+    re.IGNORECASE,
+)
+# A $-denominated amount. Deliberately anchored on the currency mark so a
+# percentage elsewhere in the sentence cannot be read as a sum of money.
+_CURRENCY = re.compile(
+    r"\$\s*([\d,]+(?:\.\d+)?)\s*([KMB]|thousand|million|billion)?", re.IGNORECASE
+)
+_MULTIPLIER = {
+    "k": 1_000, "thousand": 1_000,
+    "m": 1_000_000, "million": 1_000_000,
+    "b": 1_000_000_000, "billion": 1_000_000_000,
+}
+
+
+def claim_is_admissible(category, text):
+    """
+    Whether this sentence is admissible evidence for this claim category.
+
+    Positive requirements wherever possible: a headcount needs a word for
+    people, a customer count needs a word for customers, capital raised must
+    say it was raised. A negative-only rule passes any sentence that merely
+    omits the disqualifier -- which is how an ask whose "Seeking" had been
+    dropped upstream was recorded as money already in the bank.
+    """
+    text = text or ""
+    if category == "revenue":
+        return not states_other_metric(text)
+    if category == "funding_raised":
+        return bool(_RAISED.search(text)) and not _SEEKING.search(text)
+    if category == "customers":
+        return bool(_COUNT_NOUN.search(text))
+    if category == "employees":
+        return bool(_PEOPLE_NOUN.search(text))
+    return True
+
+
+def currency_value(text):
+    """
+    The first $-denominated amount, or None.
+
+    Used for money categories so a percentage cannot win: the general numeric
+    extractor matches percentages FIRST, which is how "Bank line: 75% utilized"
+    became $75 of capital raised while the $20K actually raised sat unread in
+    the same sentence.
+    """
+    match = _CURRENCY.search(text or "")
+    if not match:
+        return None
+    try:
+        value = float(match.group(1).replace(",", ""))
+    except ValueError:
+        return None
+    suffix = (match.group(2) or "").lower()
+    return value * _MULTIPLIER.get(suffix, 1)
