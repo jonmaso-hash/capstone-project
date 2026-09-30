@@ -461,9 +461,40 @@ class SecFindingsTests(TestCase):
         self.assertNotIn('sec_founding_year', rows)
 
     def test_addresses_and_phone_numbers_from_filings_are_never_shown(self):
-        everything = json.dumps(list(self._rows().values()))
+        """
+        Searches only the fields a reader actually sees.
+
+        This used to json.dumps the whole row, INCLUDING checked_at -- an ISO
+        timestamp with six microsecond digits. '746' is a street-number
+        fragment, so the assertion failed whenever the clock happened to
+        contain those digits (it did, at 11:04:35.772746). A flake roughly one
+        run in a few hundred, and one that says nothing about privacy either
+        way: a timestamp is not leaked address data.
+        """
+        visible = ' '.join(
+            str(row.get(field, ''))
+            for row in self._rows().values()
+            for field in ('claim', 'evidence', 'evidence_source', 'interlink_source',
+                          'source_url', 'result')
+        )
         for private in ('746', 'SUNSET', 'Sunset', '872-222', '60425'):
-            self.assertNotIn(private, everything)
+            with self.subTest(fragment=private):
+                self.assertNotIn(private, visible)
+
+    def test_the_privacy_scan_reads_real_row_content(self):
+        """
+        Positive control. The scan above asserts a set of strings is ABSENT;
+        if it were assembling an empty string -- a renamed field, a changed row
+        shape -- it would pass while checking nothing.
+        """
+        visible = ' '.join(
+            str(row.get(field, ''))
+            for row in self._rows().values()
+            for field in ('claim', 'evidence', 'evidence_source', 'interlink_source',
+                          'source_url', 'result')
+        )
+        self.assertGreater(len(visible), 500, 'the privacy scan is reading empty rows')
+        self.assertIn('SEC', visible, 'the scan is not seeing the SEC findings at all')
 
     def test_the_sec_rows_never_say_verified_or_score_anything(self):
         everything = json.dumps(list(self._rows().values())).lower()
