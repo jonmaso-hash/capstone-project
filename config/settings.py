@@ -17,6 +17,11 @@ env = environ.Env(
     ADMIN_EMAIL=(str, ''),
     SECRET_KEY=(str, None),
     ANTHROPIC_API_KEY=(str, ''),
+    # Optional like every other outbound-service key: absent means the
+    # integration is off, never an import-time failure. A key declared
+    # without a default is REQUIRED, which breaks `manage.py check` in
+    # CI -- the first step of the blocking job, before any test runs.
+    RESEND_API_KEY=(str, ''),
     STREAM_API_KEY=(str, ''),
     STREAM_API_SECRET=(str, ''),
     EMAIL_HOST_USER=(str, ''),
@@ -488,6 +493,12 @@ ANTHROPIC_BACKGROUND_TIMEOUT_SECONDS = env.float('ANTHROPIC_BACKGROUND_TIMEOUT_S
 ANTHROPIC_BACKGROUND_MAX_RETRIES = env.int('ANTHROPIC_BACKGROUND_MAX_RETRIES', default=2)
 CRUNCHBASE_API_KEY = env('CRUNCHBASE_API_KEY')
 NEWS_API_KEY = env('NEWS_API_KEY')
+RESEND_API_KEY = env('RESEND_API_KEY')
+# DEFAULT_FROM_EMAIL is NOT set here. It is assigned below with a deliberate
+# fallback (env -> EMAIL_HOST_USER -> noreply@), and that later assignment
+# would overwrite anything set at this point anyway. CI relies on the
+# EMAIL_HOST_USER leg: tests assert an admin email reaches the outbox, and
+# EmailMessage silently drops blank recipients when the sender is empty.
 
 # --- STRIPE PAYMENT PROCESSING ---
 STRIPE_SECRET_KEY = env('STRIPE_SECRET_KEY')
