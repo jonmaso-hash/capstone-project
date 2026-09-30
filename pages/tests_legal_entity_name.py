@@ -97,3 +97,46 @@ class BrandingStaysCleanTests(TestCase):
         title = self.html.split('<title>', 1)[1].split('</title>', 1)[0]
         self.assertIn('Interlink Foundry', title)
         self.assertNotIn('LLC', title)
+
+
+class TheLegalPagesArePublishedNotDraftTests(TestCase):
+    """
+    The draft banner was removed on 2026-09-30 when the owner adopted this text
+    as the published Terms and Privacy Policy.
+
+    Asserted both ways. The banner must be gone -- a live site telling visitors
+    its own terms are an unreviewed draft undercuts the agreement it is asking
+    them to accept. And the pages must still RENDER and stay reachable without
+    signing in: a visitor has to be able to read them before they sign up or
+    pay, and removing a banner must not have removed anything around it.
+    """
+
+    def setUp(self):
+        from matchmaking.tests import _mock_embedding_generation
+        _mock_embedding_generation(self)
+
+    def page(self, name):
+        response = self.client.get(reverse(f'pages:{name}'))
+        self.assertEqual(response.status_code, 200,
+                         f'{name} is not reachable to a signed-out visitor')
+        return response.content.decode()
+
+    def test_neither_page_still_calls_itself_a_draft(self):
+        for name in ('privacy', 'terms'):
+            with self.subTest(page=name):
+                html = self.page(name)
+                self.assertNotIn('Draft pending legal review', html)
+                self.assertNotIn('has not been reviewed by a lawyer', html)
+
+    def test_both_pages_still_have_their_content(self):
+        """
+        Positive control for the assertions above: "the draft text is absent"
+        is also true of a page that failed to render, or one whose body was
+        deleted along with the banner.
+        """
+        for name, marker in (('privacy', 'Service providers'), ('terms', 'These terms')):
+            with self.subTest(page=name):
+                html = self.page(name)
+                self.assertIn(marker, html)
+                self.assertIn('Last updated', html,
+                              'a published policy has to say which version this is')

@@ -61,9 +61,10 @@ def waitlist_join(request):
 
 # Both legal pages are deliberately unauthenticated: a visitor has to be able
 # to read them before they sign up or pay, and they are linked from the footer
-# on every page including the signup form. LEGAL_PAGES_ARE_DRAFT flags them as
-# awaiting review; set it False once reviewed language is in place.
-LEGAL_PAGES_ARE_DRAFT = True
+# on every page including the signup form. The draft banner these pages once
+# carried was removed on 2026-09-30 by the site owner, who adopted this text as
+# the published Terms and Privacy Policy. LEGAL_LAST_UPDATED is what tells a
+# reader which version they agreed to, so it moves whenever the text does.
 LEGAL_LAST_UPDATED = 'September 2026'
 
 
@@ -71,7 +72,6 @@ def privacy(request):
     return render(request, 'pages/privacy.html', {
         'page_title': 'Privacy Policy',
         'last_updated': LEGAL_LAST_UPDATED,
-        'draft_notice': LEGAL_PAGES_ARE_DRAFT,
     })
 
 
@@ -79,7 +79,6 @@ def terms(request):
     return render(request, 'pages/terms.html', {
         'page_title': 'Terms of Service',
         'last_updated': LEGAL_LAST_UPDATED,
-        'draft_notice': LEGAL_PAGES_ARE_DRAFT,
     })
 
 def bulletin_board(request):
