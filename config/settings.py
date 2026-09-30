@@ -521,11 +521,18 @@ STRIPE_VALUATION_FIRM_OVERAGE_PRICE_ID = env('STRIPE_VALUATION_FIRM_OVERAGE_PRIC
 # --- EMAIL ---
 # Which backend sends mail follows from what is configured, so the same code
 # runs in dev, CI and production:
-#   POSTMARK_SERVER_TOKEN set          -> Postmark via django-anymail (production)
+#   RESEND_API_KEY set                 -> Resend via django-anymail (production)
 #   EMAIL_HOST_USER + _PASSWORD set    -> SMTP (Gmail unless EMAIL_HOST says otherwise)
 #   neither                            -> console: mail is printed, never sent
 # Django's test runner swaps in its in-memory backend regardless.
-POSTMARK_SERVER_TOKEN = env.str('POSTMARK_SERVER_TOKEN', default='')
+#
+# Resend replaced Postmark. The Postmark branch is GONE rather than demoted:
+# it used to be checked first, so leaving it in place would let a stale
+# POSTMARK_SERVER_TOKEN in a deployment keep routing production mail to an
+# account nobody watches, while the Resend key sat unused and everything
+# looked healthy. Anymail ships the Resend backend already and it needs no
+# extra dependency -- it goes through the same requests-based base as Postmark
+# did -- so all 13 send sites keep using django.core.mail untouched.
 EMAIL_HOST = env.str('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = env.int('EMAIL_PORT', default=587)
 EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
@@ -533,19 +540,19 @@ EMAIL_USE_SSL = False
 EMAIL_HOST_USER = env('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 
-if POSTMARK_SERVER_TOKEN:
-    EMAIL_BACKEND = 'anymail.backends.postmark.EmailBackend'
-    ANYMAIL = {'POSTMARK_SERVER_TOKEN': POSTMARK_SERVER_TOKEN}
+if RESEND_API_KEY:
+    EMAIL_BACKEND = 'anymail.backends.resend.EmailBackend'
+    ANYMAIL = {'RESEND_API_KEY': RESEND_API_KEY}
 elif EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# The address mail is sent from. Postmark only delivers from a verified sender
+# The address mail is sent from. Resend only delivers from a verified sender
 # signature or domain, so production sets DEFAULT_FROM_EMAIL explicitly.
 DEFAULT_FROM_EMAIL = env.str('DEFAULT_FROM_EMAIL', default='') or EMAIL_HOST_USER or 'noreply@interlinkfoundry.com'
 # The sender of error and mail_admins() mail. Django's default, root@localhost,
-# is not a sender Postmark will accept.
+# is not a sender Resend will accept.
 SERVER_EMAIL = env.str('SERVER_EMAIL', default='') or DEFAULT_FROM_EMAIL
 # Who mail_admins() reaches -- e.g. the Explore moderation alert. Unset, that
 # mail silently goes nowhere. Comma-separated addresses; Django 6 deprecates

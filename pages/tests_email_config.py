@@ -3,7 +3,8 @@ Email behind configuration.
 
 The backend used to be hard-wired to Gmail SMTP, with DEFAULT_FROM_EMAIL equal to
 the Gmail login, no ADMINS (so mail_admins reached nobody) and no SERVER_EMAIL (so
-error mail came from root@localhost, which Postmark refuses). The contact form
+error mail came from root@localhost, which a transactional provider refuses).
+The contact form
 sent to a hard-coded personal address.
 
 Backend selection and the address settings are evaluated at import, so those
@@ -28,7 +29,7 @@ from django.urls import reverse
 ROOT = Path(settings.BASE_DIR)
 
 EMAIL_VARS = (
-    'POSTMARK_SERVER_TOKEN', 'EMAIL_HOST_USER', 'EMAIL_HOST_PASSWORD', 'DEFAULT_FROM_EMAIL',
+    'RESEND_API_KEY', 'EMAIL_HOST_USER', 'EMAIL_HOST_PASSWORD', 'DEFAULT_FROM_EMAIL',
     'SERVER_EMAIL', 'ADMINS', 'ADMIN_EMAIL', 'CONTACT_FORM_RECIPIENT',
 )
 
@@ -36,7 +37,7 @@ _PROBE = (
     "import json; from django.conf import settings as s; "
     "print('SETTINGS_JSON=' + json.dumps({"
     "'backend': s.EMAIL_BACKEND, "
-    "'anymail_token': getattr(s, 'ANYMAIL', {}).get('POSTMARK_SERVER_TOKEN'), "
+    "'anymail_key': getattr(s, 'ANYMAIL', {}).get('RESEND_API_KEY'), "
     "'default_from': s.DEFAULT_FROM_EMAIL, "
     "'server_email': s.SERVER_EMAIL, "
     "'admins': s.ADMINS, "
@@ -73,15 +74,36 @@ class EmailBackendSelectionTests(TestCase):
         loaded = _email_settings(EMAIL_HOST_USER='sender@example.test', EMAIL_HOST_PASSWORD='app-password')
         self.assertEqual(loaded['backend'], 'django.core.mail.backends.smtp.EmailBackend')
 
-    def test_a_postmark_token_selects_postmark_through_anymail(self):
-        loaded = _email_settings(POSTMARK_SERVER_TOKEN='postmark-token')
-        self.assertEqual(loaded['backend'], 'anymail.backends.postmark.EmailBackend')
-        self.assertEqual(loaded['anymail_token'], 'postmark-token')
+    def test_a_resend_key_selects_resend_through_anymail(self):
+        loaded = _email_settings(RESEND_API_KEY='resend-key')
+        self.assertEqual(loaded['backend'], 'anymail.backends.resend.EmailBackend')
+        self.assertEqual(loaded['anymail_key'], 'resend-key')
 
-    def test_postmark_wins_when_smtp_credentials_are_also_present(self):
-        loaded = _email_settings(POSTMARK_SERVER_TOKEN='postmark-token',
+    def test_resend_wins_when_smtp_credentials_are_also_present(self):
+        loaded = _email_settings(RESEND_API_KEY='resend-key',
                                  EMAIL_HOST_USER='sender@example.test', EMAIL_HOST_PASSWORD='app-password')
-        self.assertEqual(loaded['backend'], 'anymail.backends.postmark.EmailBackend')
+        self.assertEqual(loaded['backend'], 'anymail.backends.resend.EmailBackend')
+
+    def test_a_leftover_postmark_token_no_longer_routes_mail(self):
+        """
+        Postmark used to be checked FIRST. If its branch were left in place
+        above Resend, a stale POSTMARK_SERVER_TOKEN in the deployment
+        environment would keep quietly routing production mail there while
+        the key in Resend sat unused -- and everything would look healthy,
+        because mail would still be sent, just by the wrong provider to an
+        account nobody is watching.
+        """
+        loaded = _email_settings(POSTMARK_SERVER_TOKEN='stale-token',
+                                 RESEND_API_KEY='resend-key')
+        self.assertEqual(loaded['backend'], 'anymail.backends.resend.EmailBackend')
+
+    def test_a_leftover_postmark_token_alone_does_not_select_a_backend(self):
+        """
+        And with Resend absent it must fall through to console, not to
+        Postmark. The provider is gone; a token cannot resurrect it.
+        """
+        loaded = _email_settings(POSTMARK_SERVER_TOKEN='stale-token')
+        self.assertEqual(loaded['backend'], 'django.core.mail.backends.console.EmailBackend')
 
 
 class EmailAddressSettingsTests(TestCase):
