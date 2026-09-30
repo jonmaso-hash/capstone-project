@@ -234,8 +234,19 @@
                 <a href="{% url 'pages:terms' %}" class="text-decoration-none text-muted mx-2">Terms</a> |
                 <span class="mx-2">San Diego, CA</span>
             </div>
+            {% comment %}
+            The legal entity is named here rather than in the header. The
+            footer is on every page, so this is the one surface that always
+            identifies who a visitor is dealing with -- which is what signals
+            a registered company rather than an individual trading under a
+            name. The navbar and page titles deliberately stay "Interlink
+            Foundry"; see pages/tests_legal_entity_name.py.
+            {% endcomment %}
             <div class="text-muted" style="font-size: 0.75rem;">
-                &copy; 2026 Interlink Foundry. All Rights Reserved. Build v2.4.1
+                &copy; 2026 Interlink Foundry LLC. All Rights Reserved. Build v2.4.1
+            </div>
+            <div class="text-muted" style="font-size: 0.72rem;">
+                Interlink Foundry LLC is a California limited liability company.
             </div>
         </div>
     </footer>
