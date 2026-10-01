@@ -22,6 +22,10 @@ env = environ.Env(
     # without a default is REQUIRED, which breaks `manage.py check` in
     # CI -- the first step of the blocking job, before any test runs.
     RESEND_API_KEY=(str, ''),
+    # CompanyEnrich: a B2B aggregator used for CORROBORATION only.
+    # Absent means the integration is off, never an import failure --
+    # see pages/tests_settings_contract.py.
+    COMPANYENRICH_API_KEY=(str, ''),
     STREAM_API_KEY=(str, ''),
     STREAM_API_SECRET=(str, ''),
     EMAIL_HOST_USER=(str, ''),
@@ -494,6 +498,7 @@ ANTHROPIC_BACKGROUND_MAX_RETRIES = env.int('ANTHROPIC_BACKGROUND_MAX_RETRIES', d
 CRUNCHBASE_API_KEY = env('CRUNCHBASE_API_KEY')
 NEWS_API_KEY = env('NEWS_API_KEY')
 RESEND_API_KEY = env('RESEND_API_KEY')
+COMPANYENRICH_API_KEY = env('COMPANYENRICH_API_KEY')
 # DEFAULT_FROM_EMAIL is NOT set here. It is assigned below with a deliberate
 # fallback (env -> EMAIL_HOST_USER -> noreply@), and that later assignment
 # would overwrite anything set at this point anyway. CI relies on the

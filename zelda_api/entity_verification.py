@@ -236,6 +236,9 @@ def _page_text(html):
     return f" {_normalize(' '.join(parts))} "
 
 
+from . import companyenrich
+
+
 def collect_findings(subject):
     """Consults the website and WHOIS for one business and returns its finding rows."""
     from .entity_verification_models import EntityVerificationReport as R
@@ -364,6 +367,50 @@ def collect_findings(subject):
             add('founding_year', founding_claim, 'Domain registration',
                 f"{domain} was registered in {registered:%B %Y}, in line with the claimed founding year.",
                 R.MATCHES, lookup_url)
+
+    # 5. An independent commercial footprint, from CompanyEnrich.
+    #
+    # CORROBORATION ONLY. This is a B2B aggregator, not a registry: its own
+    # docs describe the inputs as public databases, partner feeds, user-
+    # submitted data and scraped web pages, with no per-field provenance. The
+    # first record we pulled put Stripe in the Netherlands with a South San
+    # Francisco postal code and called it "Stripe, LLC". So only four fields
+    # are carried (see zelda_api/companyenrich.py), and absence NEVER becomes
+    # a finding: a two-year-old private LLC missing from a sales database is
+    # the ordinary case, not evidence about the company.
+    footprint = companyenrich.company_footprint(website)
+    status = companyenrich.lookup_status(website)
+    if status == companyenrich.FOUND and footprint:
+        detail = []
+        if footprint.get('founded_year'):
+            detail.append('founded %s' % footprint['founded_year'])
+        if footprint.get('industry'):
+            detail.append(str(footprint['industry']).lower())
+        described_as = ' (%s)' % ', '.join(detail) if detail else ''
+        add('commercial_footprint', f"Website: {website}",
+            'CompanyEnrich (aggregated business data)',
+            'An independent business record is associated with %s%s. This is '
+            'aggregated commercial data, not a government registry, so it '
+            'corroborates that the business has a public footprint rather '
+            'than establishing its legal identity.' % (
+                footprint.get('domain') or website, described_as),
+            R.PUBLIC_RECORD)
+    elif status == companyenrich.NO_RECORD:
+        add('commercial_footprint', f"Website: {website}",
+            'CompanyEnrich (aggregated business data)',
+            'No business record was found for this domain. Aggregated '
+            'commercial databases do not cover every company, and smaller or '
+            'newer businesses are routinely absent, so this is not evidence '
+            'about whether the business exists.',
+            R.COULDNT_CHECK)
+    elif status == companyenrich.UNAVAILABLE:
+        add('commercial_footprint', f"Website: {website}",
+            'CompanyEnrich (aggregated business data)',
+            'The business-data service could not be reached, so this check '
+            'did not complete.',
+            R.COULDNT_CHECK)
+    # UNCONFIGURED adds nothing: the integration being off is not evidence and
+    # should not occupy a line in an investor-facing report.
 
     add_sec_rows()
     return rows
