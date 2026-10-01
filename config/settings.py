@@ -26,6 +26,7 @@ env = environ.Env(
     # Absent means the integration is off, never an import failure --
     # see pages/tests_settings_contract.py.
     COMPANYENRICH_API_KEY=(str, ''),
+    FILED_API_KEY=(str, ''),
     STREAM_API_KEY=(str, ''),
     STREAM_API_SECRET=(str, ''),
     EMAIL_HOST_USER=(str, ''),
@@ -499,6 +500,11 @@ CRUNCHBASE_API_KEY = env('CRUNCHBASE_API_KEY')
 NEWS_API_KEY = env('NEWS_API_KEY')
 RESEND_API_KEY = env('RESEND_API_KEY')
 COMPANYENRICH_API_KEY = env('COMPANYENRICH_API_KEY')
+
+# Filed: business-entity records. Empty default on purpose -- the settings
+# contract forbids an env() call that is required at import, and an absent key
+# must degrade to UNCONFIGURED rather than break startup.
+FILED_API_KEY = env('FILED_API_KEY')
 # DEFAULT_FROM_EMAIL is NOT set here. It is assigned below with a deliberate
 # fallback (env -> EMAIL_HOST_USER -> noreply@), and that later assignment
 # would overwrite anything set at this point anyway. CI relies on the
