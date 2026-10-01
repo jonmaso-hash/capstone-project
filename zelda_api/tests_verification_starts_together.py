@@ -1,0 +1,215 @@
+"""
+Every path that starts Truth Delta also starts Entity Integrity.
+
+The two answer different questions about the same document:
+
+    Truth Delta       are the claims in this deck supported by evidence?
+    Entity Integrity  is there a real business behind them?
+
+The Run Verification button has always started both -- its own comment says
+"same button, same click, a distinct question". But there are TWO paths to
+Truth Delta, and the other one never started Entity Integrity:
+
+    button   -> verify_document_truth_delta + verify_entity_integrity
+    ingest   -> extract_claims_from_insights -> verify_document_truth_delta
+                                                (and nothing else)
+
+So a deck uploaded through the pipeline got its claims checked and its business
+never looked at. That is how the JoyToys walk produced a Truth Delta report
+with zero Entity Integrity findings: not a missing feature, a path that skipped
+one.
+
+The defect is invisible from the UI, because the path a human clicks works
+correctly. Only an upload exercises the broken one.
+
+Two kinds of test here, and the second matters more:
+
+    BEHAVIOURAL -- each known path starts both.
+    STRUCTURAL  -- a source scan, so a THIRD path added later cannot start
+                   Truth Delta alone. Behavioural tests only cover the paths
+                   someone remembered to write a test for, which is exactly
+                   how these two drifted apart.
+"""
+import io
+import re
+from pathlib import Path
+from unittest import mock
+
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.test import TestCase
+from django.urls import reverse
+
+from .vector_models import DocumentSource
+
+User = get_user_model()
+
+# Tasks that begin Truth Delta work for a document. Starting any of these is
+# what obliges a call site to start Entity Integrity too.
+TRUTH_DELTA_STARTERS = ('verify_document_truth_delta', 'extract_claims_from_insights')
+ENTITY_STARTER = 'verify_entity_integrity'
+
+# Modules allowed to start verification. A starter called from anywhere else
+# is a new path nobody has considered.
+SOURCES = ('zelda_api/intelligence_pipeline.py', 'zelda_api/truth_delta_views.py')
+
+
+def _source(path):
+    return io.open(Path(settings.BASE_DIR) / path, encoding='utf-8').read()
+
+
+def starts_truth_delta(text):
+    """Does this source actually CALL a Truth Delta starter?"""
+    return any(re.search(r'%s\s*\.\s*delay' % starter, text or '')
+               for starter in TRUTH_DELTA_STARTERS)
+
+
+def starts_entity_integrity(text):
+    """
+    Does this source actually CALL the Entity Integrity starter?
+
+    An invocation, never a mention. A presence check
+    (`'verify_entity_integrity' in text`) is satisfied by a comment, a stale
+    import or dead code -- the "present but inert" shape that has now appeared
+    three times in this codebase: a field written nowhere, a disclaimer only
+    inside an attribute, and a manifest entry for a module nobody ran.
+
+    Pure, so it can be given text that contains the case. Checked only against
+    the live repository, a weakened version passes while the repository
+    happens to satisfy both forms -- which is exactly how a mutation of this
+    guard survived its first battery.
+    """
+    return bool(re.search(r'%s\s*\.\s*delay' % ENTITY_STARTER, text or ''))
+
+
+class BothQuestionsStartTogetherTests(TestCase):
+
+    def setUp(self):
+        from matchmaking.tests import _mock_embedding_generation
+        _mock_embedding_generation(self)
+        self.user = User.objects.create_user('starts_owner', password='x', is_staff=True)
+        self.client.force_login(self.user)
+        self.document = DocumentSource.objects.create(
+            filename='deck.pdf', source_entity='Northwind Grid', uploaded_by=self.user,
+            document_type='pitch_deck', status='analyzed')
+
+    def test_the_ingest_pipeline_starts_entity_integrity(self):
+        """
+        The path that was broken. A deck uploaded and processed by the
+        pipeline must have its business looked at, not only its numbers.
+        """
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        with mock.patch('zelda_api.truth_delta_tasks.extract_claims_from_insights.delay') as claims, \
+             mock.patch('zelda_api.entity_verification_tasks.verify_entity_integrity.delay') as entity:
+            ZeldaIntelligencePipelineV2()._trigger_verification(self.document)
+        self.assertTrue(claims.called, 'the pipeline stopped starting Truth Delta')
+        self.assertTrue(entity.called,
+                        'the pipeline started Truth Delta without Entity Integrity, '
+                        'so an uploaded deck gets its claims checked and its '
+                        'business never looked at')
+
+    def test_a_failure_starting_one_does_not_stop_the_other(self):
+        """
+        Neither question may be lost because the other could not be queued.
+        The memo has already been generated by this point, so a queueing
+        failure must degrade rather than cascade.
+        """
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        with mock.patch('zelda_api.truth_delta_tasks.extract_claims_from_insights.delay',
+                        side_effect=RuntimeError('broker down')), \
+             mock.patch('zelda_api.entity_verification_tasks.verify_entity_integrity.delay') as entity:
+            ZeldaIntelligencePipelineV2()._trigger_verification(self.document)
+        self.assertTrue(entity.called,
+                        'Entity Integrity was skipped because Truth Delta failed to queue')
+
+
+class TheSourceCannotDriftAgainTests(TestCase):
+    """
+    The structural half. These two paths drifted because the pairing lived in
+    one of them as two adjacent lines, and the other was written without it.
+    A behavioural test covers the paths someone remembered; this covers the
+    next one.
+    """
+
+    def test_the_scan_reads_real_files(self):
+        """Positive control: a scan of missing files would pass vacuously."""
+        for path in SOURCES:
+            with self.subTest(path=path):
+                self.assertGreater(len(_source(path)), 500)
+
+    def test_every_module_that_starts_truth_delta_also_starts_entity_integrity(self):
+        """
+        Both sides require an actual INVOCATION, not a mention.
+
+        A presence check (`'verify_entity_integrity' in text`) would be
+        satisfied by a comment, a stale import, or a reference in dead code --
+        the same "present but inert" shape as a field that exists and is never
+        written, or a disclaimer that only renders inside an attribute. The
+        guard has to see the call.
+        """
+        offenders = []
+        for path in SOURCES:
+            text = _source(path)
+            if starts_truth_delta(text) and not starts_entity_integrity(text):
+                offenders.append(path)
+        self.assertEqual(
+            offenders, [],
+            'These modules start Truth Delta without starting Entity Integrity, '
+            'so a document goes through them with its claims checked and its '
+            'business never established:\n  ' + '\n  '.join(offenders))
+
+    def test_no_unlisted_module_starts_verification(self):
+        """
+        A starter called from a module not in SOURCES is a path nobody has
+        considered -- and the test above cannot see it.
+        """
+        root = Path(settings.BASE_DIR) / 'zelda_api'
+        unlisted = []
+        for path in sorted(root.glob('*.py')):
+            rel = 'zelda_api/%s' % path.name
+            if rel in SOURCES or path.name.startswith('tests'):
+                continue
+            text = io.open(path, encoding='utf-8').read()
+            for starter in TRUTH_DELTA_STARTERS:
+                # The task's own module defines and chains it; that is not a
+                # new entry point.
+                if path.name == 'truth_delta_tasks.py':
+                    continue
+                if re.search(r'%s\s*\.\s*delay' % starter, text):
+                    unlisted.append('%s (%s)' % (rel, starter))
+        self.assertEqual(
+            unlisted, [],
+            'Verification is started from modules this guard does not know '
+            'about. Add them to SOURCES and make sure they start BOTH:\n  '
+            + '\n  '.join(unlisted))
+
+
+class TheGuardLogicIsTestedOnItsOwnTests(TestCase):
+    """
+    The guard, checked against text that contains the case.
+
+    Against the live repository both a strict and a sloppy guard pass, because
+    the repository satisfies both -- so a mutation weakening it to a presence
+    check survived the first battery. These feed it source that MENTIONS the
+    starter without calling it, which only the strict form rejects.
+    """
+
+    def test_an_invocation_counts(self):
+        self.assertTrue(starts_entity_integrity(
+            'verify_entity_integrity.delay(document_source.id)'))
+
+    def test_a_comment_does_not_count(self):
+        self.assertFalse(starts_entity_integrity(
+            '# TODO: call verify_entity_integrity here one day'))
+
+    def test_a_bare_import_does_not_count(self):
+        self.assertFalse(starts_entity_integrity(
+            'from .entity_verification_tasks import verify_entity_integrity'))
+
+    def test_a_truth_delta_invocation_counts(self):
+        self.assertTrue(starts_truth_delta(
+            'extract_claims_from_insights.delay(doc.id)'))
+
+    def test_a_truth_delta_mention_does_not_count(self):
+        self.assertFalse(starts_truth_delta(
+            '# extract_claims_from_insights runs later'))
