@@ -9,6 +9,9 @@ from celery import shared_task
 from django.utils import timezone
 from .vector_models import DocumentSource
 from .truth_delta_engine import TruthDeltaEngine
+from .financial_metrics import (
+    MONEY_CATEGORIES, claim_is_admissible, currency_value,
+)
 from .truth_delta_models import ClaimedDatapoint
 
 logger = logging.getLogger(__name__)
@@ -59,10 +62,33 @@ def extract_claims_from_insights(document_id: int):
 
             if not matched_category:
                 continue
-            
-            # Extract numeric value from insight text
-            numeric_value = _extract_numeric_value(insight.insight_text)
-            
+
+            # A category mapping is not evidence. The analyzer's category says
+            # which BUCKET a sentence was filed under; it does not establish
+            # that the sentence supports a claim of that kind. Without this
+            # check the JoyToys deck produced: a $250K raise as 250,000
+            # customers, 75% bank-line utilization as $75 raised, an amount
+            # SOUGHT as capital raised, and annualized burn as revenue -- four
+            # of six claims materially wrong. Truth Delta reported them
+            # honestly as unverified, but for an SEC filer it would have
+            # compared burn against real revenue and announced a contradiction
+            # about a company that did nothing wrong.
+            text = insight.insight_text or ''
+            if not claim_is_admissible(matched_category, text):
+                logger.debug(
+                    "[Truth Delta] %s insight is not admissible evidence for %s: %r",
+                    insight.category, matched_category, text[:80])
+                continue
+
+            # Money categories read MONEY. The general extractor matches
+            # percentages first, which is how "Bank line: 75% utilized" became
+            # $75 raised while the $20K actually raised sat unread in the same
+            # sentence.
+            if matched_category in MONEY_CATEGORIES:
+                numeric_value = currency_value(text)
+            else:
+                numeric_value = _extract_numeric_value(text)
+
             if numeric_value is None:
                 logger.debug(f"Could not extract numeric value from insight: {insight.insight_text}")
                 continue

@@ -4767,8 +4767,19 @@ class StructuredContextRevenueExtractionTests(TestCase):
         pipeline = ZeldaIntelligencePipelineV2()
         facts = pipeline._build_structured_context(doc, insights)
 
-        self.assertIn('4.5', facts['arr'])
-        self.assertNotIn('20', facts['arr'])
+        # Migrated with the fact-semantics change: "Current Revenue: $4.5M"
+        # states no period, so it is revenue, not ARR. Recording it as ARR
+        # invented an annual period -- the defect that produced the JoyToys
+        # 12x contradiction. The ORIGINAL intent of this test is unchanged and
+        # in fact stronger: the $20M funding figure must not be taken as the
+        # company's revenue under any metric.
+        revenue_facts = [v for k, v in facts.items()
+                         if k in ('revenue', 'arr', 'mrr') and v]
+        self.assertEqual(len(revenue_facts), 1,
+                         'exactly one revenue metric should be populated')
+        self.assertIn('4.5', revenue_facts[0])
+        self.assertNotIn('20', revenue_facts[0])
+        self.assertIsNone(facts['arr'], 'a period-less revenue figure is not ARR')
 
     def test_bare_dollar_amount_with_no_revenue_keyword_is_not_captured(self):
         from zelda_api.intelligence_pipeline import ZeldaIntelligencePipelineV2

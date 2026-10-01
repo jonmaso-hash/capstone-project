@@ -139,6 +139,12 @@ EVIDENCE_LEVEL_INSTRUCTION = (
 )
 
 
+# Which field a financial statement may populate lives in its own module,
+# so the semantics can be read and tested without this file. See
+# zelda_api/financial_metrics.py and tests_financial_fact_semantics.py.
+from .financial_metrics import revenue_field_for, states_other_metric
+
+
 class ZeldaIntelligencePipelineV2:
     """Zelda Intelligence Pipeline v2 - Production Ready"""
 
@@ -1424,11 +1430,24 @@ class ZeldaIntelligencePipelineV2:
         for insight in revenue_insights + other_insights:
             text = insight.insight_text or ''
 
-            if not facts['arr']:
+            if not (facts['revenue'] or facts['arr'] or facts['mrr']):
+                # A figure may only occupy a field whose name its SOURCE
+                # supports. Putting "$300K / month" in `arr` asserts an annual
+                # period the deck never gave -- and because the reconciliation
+                # below then copies it to `revenue`, facts_display handed
+                # Claude {"revenue": "$300K", "arr": "$300K"} beside the
+                # insight "$300K per month". Claude correctly called that a
+                # 12x contradiction, reported it across five memo sections and
+                # credited Zelda for catching it. The model reasoned properly;
+                # the data was corrupt. See tests_financial_fact_semantics.py.
+                #
+                # `facts['arr']` and Truth Delta's ClaimedDatapoint(
+                # category='arr') are INTENTIONALLY different contracts: the
+                # claim category genuinely means ARR. Do not unify them.
                 pattern = bare_amount_pattern if insight.category == 'Revenue' else revenue_pattern
-                m = pattern.search(text)
+                m = pattern.search(text) if not states_other_metric(text) else None
                 if m:
-                    facts['arr'] = m.group(0).strip()
+                    facts[revenue_field_for(text)] = m.group(0).strip()
                     document_source_insight['revenue'] = insight
 
             if not facts['raise_amount']:
@@ -1477,7 +1496,10 @@ class ZeldaIntelligencePipelineV2:
         #                    separate field for backward compatibility
         #                    with existing callers of that name), so it
         #                    needs the alias below.
-        document_field_alias = {'revenue': 'arr'}
+        # No alias any more: revenue is extracted into `revenue`, which is what
+        # this loop reconciles. It used to read `arr`, which is how a monthly
+        # figure ended up asserted as annual recurring revenue.
+        document_field_alias = {}
         for field in ('revenue', 'raise_amount', 'team_size'):
             document_value = facts[document_field_alias.get(field, field)]
             profile_value = profile_values.get(field)
@@ -1516,8 +1538,11 @@ class ZeldaIntelligencePipelineV2:
                 }
 
         # Identify missing fields
+        # 'revenue' stands for the whole metric family here: any of
+        # revenue/arr/mrr being present means the deck disclosed revenue, and
+        # only one of them is ever populated (see the extractor above).
         checks = {
-            'arr':             'Revenue / ARR / MRR',
+            'revenue':         'Revenue / ARR / MRR',
             'raise_amount':    'Raise amount',
             'market_size':     'Total addressable market size',
             'use_of_proceeds': 'Use of proceeds',
@@ -1526,7 +1551,9 @@ class ZeldaIntelligencePipelineV2:
             'growth_rate':     'Growth rate',
         }
         for field, label in checks.items():
-            if not facts[field]:
+            present = (facts['revenue'] or facts['arr'] or facts['mrr']
+                       if field == 'revenue' else facts[field])
+            if not present:
                 facts['missing_fields'].append(label)
 
         return facts
