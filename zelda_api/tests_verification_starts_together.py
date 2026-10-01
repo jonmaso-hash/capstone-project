@@ -58,6 +58,30 @@ def _source(path):
     return io.open(Path(settings.BASE_DIR) / path, encoding='utf-8').read()
 
 
+def starts_truth_delta(text):
+    """Does this source actually CALL a Truth Delta starter?"""
+    return any(re.search(r'%s\s*\.\s*delay' % starter, text or '')
+               for starter in TRUTH_DELTA_STARTERS)
+
+
+def starts_entity_integrity(text):
+    """
+    Does this source actually CALL the Entity Integrity starter?
+
+    An invocation, never a mention. A presence check
+    (`'verify_entity_integrity' in text`) is satisfied by a comment, a stale
+    import or dead code -- the "present but inert" shape that has now appeared
+    three times in this codebase: a field written nowhere, a disclaimer only
+    inside an attribute, and a manifest entry for a module nobody ran.
+
+    Pure, so it can be given text that contains the case. Checked only against
+    the live repository, a weakened version passes while the repository
+    happens to satisfy both forms -- which is exactly how a mutation of this
+    guard survived its first battery.
+    """
+    return bool(re.search(r'%s\s*\.\s*delay' % ENTITY_STARTER, text or ''))
+
+
 class BothQuestionsStartTogetherTests(TestCase):
 
     def setUp(self):
@@ -126,12 +150,7 @@ class TheSourceCannotDriftAgainTests(TestCase):
         offenders = []
         for path in SOURCES:
             text = _source(path)
-            starts_truth_delta = any(
-                re.search(r'%s\s*\.\s*delay' % starter, text)
-                for starter in TRUTH_DELTA_STARTERS
-            )
-            starts_entity = re.search(r'%s\s*\.\s*delay' % ENTITY_STARTER, text)
-            if starts_truth_delta and not starts_entity:
+            if starts_truth_delta(text) and not starts_entity_integrity(text):
                 offenders.append(path)
         self.assertEqual(
             offenders, [],
@@ -163,3 +182,34 @@ class TheSourceCannotDriftAgainTests(TestCase):
             'Verification is started from modules this guard does not know '
             'about. Add them to SOURCES and make sure they start BOTH:\n  '
             + '\n  '.join(unlisted))
+
+
+class TheGuardLogicIsTestedOnItsOwnTests(TestCase):
+    """
+    The guard, checked against text that contains the case.
+
+    Against the live repository both a strict and a sloppy guard pass, because
+    the repository satisfies both -- so a mutation weakening it to a presence
+    check survived the first battery. These feed it source that MENTIONS the
+    starter without calling it, which only the strict form rejects.
+    """
+
+    def test_an_invocation_counts(self):
+        self.assertTrue(starts_entity_integrity(
+            'verify_entity_integrity.delay(document_source.id)'))
+
+    def test_a_comment_does_not_count(self):
+        self.assertFalse(starts_entity_integrity(
+            '# TODO: call verify_entity_integrity here one day'))
+
+    def test_a_bare_import_does_not_count(self):
+        self.assertFalse(starts_entity_integrity(
+            'from .entity_verification_tasks import verify_entity_integrity'))
+
+    def test_a_truth_delta_invocation_counts(self):
+        self.assertTrue(starts_truth_delta(
+            'extract_claims_from_insights.delay(doc.id)'))
+
+    def test_a_truth_delta_mention_does_not_count(self):
+        self.assertFalse(starts_truth_delta(
+            '# extract_claims_from_insights runs later'))
