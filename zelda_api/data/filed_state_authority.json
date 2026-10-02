@@ -1,0 +1,380 @@
+{
+  "how_measured": "One search plus one entity-detail call per jurisdiction, classified by the DETAIL response meta.source. Officer and agent rates are from ten sampled entities per registrar. See zelda_api/tests_filed_authority.py.",
+  "jurisdictions": {
+    "AK": {
+      "authority_source": "Alaska Division of Corporations, Business and Professional Licensing",
+      "classification": "state_registry",
+      "coverage": "unmeasured",
+      "observed_agent_rate": "0/10",
+      "observed_at": "2026-10-02",
+      "observed_last_updated": "2026-07-01",
+      "observed_officer_rate": "0/10",
+      "publishes_agent": false,
+      "publishes_officers": false
+    },
+    "AL": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "AR": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "AZ": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "CA": {
+      "authority_source": "California SOS",
+      "classification": "state_registry",
+      "coverage": "unmeasured",
+      "observed_agent_rate": "0/10",
+      "observed_at": "2026-10-02",
+      "observed_last_updated": "2026-03-22",
+      "observed_officer_rate": "0/10",
+      "publishes_agent": false,
+      "publishes_officers": false
+    },
+    "CO": {
+      "authority_source": "Colorado Secretary of State",
+      "classification": "state_registry",
+      "coverage": "unmeasured",
+      "observed_agent_rate": "0/10",
+      "observed_at": "2026-10-02",
+      "observed_last_updated": "2026-03-22",
+      "observed_officer_rate": "0/10",
+      "publishes_agent": false,
+      "publishes_officers": false
+    },
+    "CT": {
+      "authority_source": "Connecticut Secretary of State",
+      "classification": "state_registry",
+      "coverage": "unmeasured",
+      "observed_agent_rate": "0/10",
+      "observed_at": "2026-10-02",
+      "observed_last_updated": "2026-07-13",
+      "observed_officer_rate": "0/10",
+      "publishes_agent": false,
+      "publishes_officers": false
+    },
+    "DC": {
+      "authority_source": "DC Department of Licensing and Consumer Protection",
+      "classification": "state_registry",
+      "coverage": "unmeasured",
+      "observed_agent_rate": "10/10",
+      "observed_at": "2026-10-02",
+      "observed_last_updated": "2026-10-02",
+      "observed_officer_rate": "0/10",
+      "publishes_agent": true,
+      "publishes_officers": false
+    },
+    "DE": {
+      "authority_source": "Delaware DOS",
+      "classification": "state_registry",
+      "coverage": "partial",
+      "coverage_note": "51 records for a query returning 3,420 in Florida, despite Delaware having comparable real-world registrations, and heavily nonprofit-skewed. A Delaware miss is close to meaningless; a Delaware hit is still real evidence.",
+      "observed_agent_rate": "0/10",
+      "observed_at": "2026-10-02",
+      "observed_corpus_total": 51,
+      "observed_last_updated": "2026-08-01",
+      "observed_officer_rate": "0/10",
+      "publishes_agent": false,
+      "publishes_officers": false
+    },
+    "FL": {
+      "authority_source": "Florida Division of Corporations (Sunbiz)",
+      "classification": "state_registry",
+      "coverage": "unmeasured",
+      "observed_agent_rate": "10/10",
+      "observed_at": "2026-10-02",
+      "observed_corpus_total": 3420,
+      "observed_last_updated": "2026-04-22",
+      "observed_officer_rate": "10/10",
+      "publishes_agent": true,
+      "publishes_officers": true
+    },
+    "GA": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "HI": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "IA": {
+      "authority_source": null,
+      "classification": "no_data",
+      "observed_at": "2026-10-02"
+    },
+    "ID": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "IL": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "IN": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "KS": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "KY": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "LA": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "MA": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "MD": {
+      "authority_source": "Maryland SDAT",
+      "classification": "state_registry",
+      "coverage": "unmeasured",
+      "observed_agent_rate": "0/10",
+      "observed_at": "2026-10-02",
+      "observed_last_updated": "2026-08-01",
+      "observed_officer_rate": "0/10",
+      "publishes_agent": false,
+      "publishes_officers": false
+    },
+    "ME": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "MI": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "MN": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "MO": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "MS": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "MT": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "NC": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "ND": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "NE": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "NH": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "NJ": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "NM": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "NV": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "NY": {
+      "authority_source": "New York Department of State",
+      "classification": "state_registry",
+      "coverage": "unmeasured",
+      "observed_agent_rate": "10/10",
+      "observed_at": "2026-10-02",
+      "observed_last_updated": "2026-10-02",
+      "observed_officer_rate": "0/10",
+      "publishes_agent": true,
+      "publishes_officers": false
+    },
+    "OH": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "OK": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "OR": {
+      "authority_source": "Oregon Secretary of State",
+      "classification": "state_registry",
+      "coverage": "unmeasured",
+      "observed_agent_rate": "2/10",
+      "observed_at": "2026-10-02",
+      "observed_last_updated": "2026-10-02",
+      "observed_officer_rate": "0/10",
+      "publishes_agent": true,
+      "publishes_officers": false
+    },
+    "PA": {
+      "authority_source": "Pennsylvania Department of State",
+      "classification": "state_registry",
+      "coverage": "unmeasured",
+      "observed_agent_rate": "0/10",
+      "observed_at": "2026-10-02",
+      "observed_last_updated": "2026-10-02",
+      "observed_officer_rate": "0/10",
+      "publishes_agent": false,
+      "publishes_officers": false
+    },
+    "RI": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "SC": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "SD": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "TN": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "TX": {
+      "authority_source": "Texas SOS",
+      "classification": "state_registry",
+      "coverage": "unmeasured",
+      "observed_agent_rate": "10/10",
+      "observed_at": "2026-10-02",
+      "observed_last_updated": "2026-05-01",
+      "observed_officer_rate": "8/10",
+      "publishes_agent": true,
+      "publishes_officers": true
+    },
+    "UT": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "VA": {
+      "authority_source": "Virginia SCC",
+      "classification": "state_registry",
+      "coverage": "unmeasured",
+      "observed_agent_rate": "0/10",
+      "observed_at": "2026-10-02",
+      "observed_last_updated": "2026-07-01",
+      "observed_officer_rate": "0/10",
+      "publishes_agent": false,
+      "publishes_officers": false
+    },
+    "VT": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "WA": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "WI": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "WV": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    },
+    "WY": {
+      "authority_source": null,
+      "classification": "federal_substitution",
+      "observed_at": "2026-10-02",
+      "observed_source": "IRS Exempt Organizations Business Master File"
+    }
+  },
+  "observed_at": "2026-10-02",
+  "schema": 1
+}

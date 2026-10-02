@@ -242,7 +242,7 @@ def _page_text(html):
     return f" {_normalize(' '.join(parts))} "
 
 
-from . import companyenrich, filed
+from . import companyenrich, filed, filed_authority
 from .jurisdiction import state_from_geography
 
 
@@ -297,21 +297,60 @@ def collect_findings(subject):
         # differently is the ordinary reason for a miss.
         outcome, detail = filed.company_record(
             inputs['company_name'], state=inputs['jurisdiction'])
-        if outcome != filed.FOUND:
+
+        # Only NO_RECORD is silence from the register, and silence is the
+        # ordinary state of a name we spelled differently -- it never earns a
+        # line in an investor-facing report. The other two are failures to
+        # resolve the QUERY, which are worth saying out loud because a reader
+        # would otherwise assume the business was checked and cleared.
+        if outcome in (filed.NO_RECORD, filed.UNAVAILABLE, filed.UNCONFIGURED):
+            return
+        if outcome == filed.UNRESOLVED:
+            add('business_registration', company_claim,
+                'Business registration record',
+                'Business records were returned for this name, but none matched '
+                'the company name exactly, so no record could be attributed to '
+                'this business. This is not evidence about whether it is '
+                'registered.',
+                R.COULDNT_CHECK)
+            return
+        if outcome == filed.AMBIGUOUS:
+            add('business_registration', company_claim,
+                'Business registration record',
+                'More than one registered business matches this name exactly, so '
+                'none was attributed to this company. A company can also be '
+                'registered under one name in several states.',
+                R.COULDNT_CHECK)
             return
         source = (detail.get('meta') or {}).get('source')
         if not filed.is_state_registration_source(source):
+            # Measured in 37 of 51 jurisdictions. Naming the substitution keeps
+            # the row from reading as though a state register had answered.
             add('business_registration', company_claim,
                 'Business registration record',
                 'A business record was returned for this name, but it came from '
                 '%s rather than a state register of companies, so it is not '
-                'evidence about this business being registered.' % (source or 'an unnamed source'),
+                'evidence about whether this business is registered.'
+                % (source or 'an unnamed source'),
                 R.COULDNT_CHECK)
             return
-        add('business_registration', company_claim, source,
-            filed.describe_record(detail), R.PUBLIC_RECORD)
 
+        record_state = (detail.get('data') or {}).get('state')
+        evidence = filed.describe_record(detail)
+        if record_state and filed_authority.coverage_for(record_state) == 'partial':
+            evidence += (' This register is only partly carried by the source '
+                         'used, so a business missing from it may still be '
+                         'registered there.')
+        add('business_registration', company_claim, source, evidence, R.PUBLIC_RECORD)
+
+        # Officers exist in FL (10/10) and TX (8/10) and in none of the other
+        # eleven registrars. Present officers are used wherever they come from;
+        # what the capability gates is the INFERENCE FROM ABSENCE. Reporting
+        # that Delaware does not list a founder, when Delaware lists no officers
+        # for anyone, would be a fabricated adverse finding about a person.
         officers = filed.officer_names(detail)
+        if not officers and not filed.officer_absence_is_meaningful(detail):
+            return
         if officers and inputs['person_name']:
             named = _normalize(inputs['person_name'])
             matched = [o for o in officers if _normalize(o) == named]
