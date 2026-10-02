@@ -265,9 +265,21 @@ def _get(url, **params):
         return response.status_code, None
 
 
-def _search(company_name):
-    """Nationwide name search. One credit."""
-    return _get(SEARCH_ENDPOINT, name=company_name)[1]
+def _search(company_name, state=None):
+    """
+    Name search. One credit.
+
+    With a state the response names the real registrar and ranks the exact
+    company higher; without one it is a cross-state search whose `meta.source`
+    is "Cross-state search" and whose ranking is measurably worse -- nationwide
+    put `ALLAN, JOHN S DBA PUBLIX SUPER MARKET` above `PUBLIX SUPER MARKETS,
+    INC.`. The parameter is OMITTED rather than passed as None, because its
+    absence is what selects the nationwide mode.
+    """
+    params = {'name': company_name}
+    if state:
+        params['state'] = state
+    return _get(SEARCH_ENDPOINT, **params)[1]
 
 
 def _detail(entity_id):
@@ -275,19 +287,25 @@ def _detail(entity_id):
     return _get(ENTITY_ENDPOINT % entity_id)[1]
 
 
-def company_record(company_name):
+def company_record(company_name, state=None):
     """
-    (outcome, detail) for one company name.
+    (outcome, detail) for one company name, optionally scoped to a state.
 
-    Two steps by necessity: the nationwide search carries no state authority, so
-    the authoritative record always comes from the detail call.
+    Two steps either way: a cross-state search carries no state authority, and
+    even a state-scoped one is only a search. The authoritative record always
+    comes from the detail call, whose `meta.source` is the only field that says
+    which registrar answered -- measured, a `state=GA` query returns rows
+    stamped `GA` sourced from the IRS Exempt Organizations file, so neither the
+    requested state nor `data[].state` is evidence of a state register.
+
+    `state` narrows and ranks; it never decides identity or authority.
     """
     if not _key():
         return UNCONFIGURED, None
     if not (company_name or '').strip():
         return NO_RECORD, None
 
-    body = _search(company_name)
+    body = _search(company_name, state=state)
     if not isinstance(body, dict) or body.get('error'):
         return UNAVAILABLE, None
     if not (body.get('data') or []):
