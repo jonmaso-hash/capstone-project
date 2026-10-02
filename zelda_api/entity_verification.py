@@ -189,6 +189,12 @@ def identity_inputs(subject):
     described = _describe(subject)
     return {
         'company_name': (subject.company_name or '').strip(),
+        # The DERIVED jurisdiction, not the raw `geography` text, so a cosmetic
+        # edit ('Denver, CO' -> 'Boulder, CO') does not invalidate a check and
+        # spend a credit re-deriving the same answer -- while a correction that
+        # changes which register is queried ('san diego' -> 'San Diego, CA')
+        # does. This sits inside inputs_hash, which is what decides reuse.
+        'jurisdiction': state_from_geography(getattr(subject, 'geography', '')),
         'website': (subject.company_website or '').strip(),
         'person_name': (described['person'] or '').strip(),
         'years_in_business': subject.years_in_business or 0,
@@ -237,6 +243,7 @@ def _page_text(html):
 
 
 from . import companyenrich, filed
+from .jurisdiction import state_from_geography
 
 
 def collect_findings(subject):
@@ -288,7 +295,8 @@ def collect_findings(subject):
         # "Filed returned something" is not "a state register says so" -- see
         # zelda_api/filed.py. Absence is never a finding: a name we spelled
         # differently is the ordinary reason for a miss.
-        outcome, detail = filed.company_record(inputs['company_name'])
+        outcome, detail = filed.company_record(
+            inputs['company_name'], state=inputs['jurisdiction'])
         if outcome != filed.FOUND:
             return
         source = (detail.get('meta') or {}).get('source')
