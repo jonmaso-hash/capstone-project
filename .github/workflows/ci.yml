@@ -91,6 +91,8 @@ jobs:
           pages.tests_no_network_in_tests
           zelda_api.tests_filed
           zelda_api.tests_jurisdiction
+          zelda_api.tests_filed_authority
+          zelda_api.tests_filed_outcomes
 
   # ── Non-blocking: the zelda_api suite currently makes live huggingface.co
   # calls, hits the Celery hang, and has known failures (all introduced in the

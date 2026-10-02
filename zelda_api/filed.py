@@ -47,6 +47,8 @@ from datetime import datetime, timezone
 import requests
 from django.conf import settings
 
+from . import filed_authority
+
 logger = logging.getLogger(__name__)
 
 SEARCH_ENDPOINT = 'https://filed.dev/api/v1/search'
@@ -58,6 +60,14 @@ TIMEOUT_SECONDS = 20
 # about the company -- and even then, very little.
 FOUND = 'found'
 NO_RECORD = 'no_record'
+# Rows came back and none was this company, or several were. Previously both
+# collapsed into NO_RECORD, directly contradicting the comment beside it:
+# absence of a confident match is not absence of the company. A misspelled name
+# is the ordinary reason for the first, and a company registered under one name
+# in two states for the second -- neither is evidence the business is unknown to
+# the register.
+UNRESOLVED = 'unresolved'
+AMBIGUOUS = 'ambiguous'
 UNAVAILABLE = 'unavailable'
 UNCONFIGURED = 'unconfigured'
 
@@ -65,27 +75,11 @@ UNCONFIGURED = 'unconfigured'
 # a registry.
 CROSS_STATE_SOURCE = 'Cross-state search'
 
-# Recognised state registration authorities, DECLARED rather than pattern
-# matched. A pattern would have accepted "IRS Exempt Organizations Business
-# Master File" the moment someone wrote a rule like "contains a state name", and
-# a default is not a decision -- it is the omission source_capabilities.py
-# exists to prevent. Each entry below was observed answering a state query with
-# genuine registration data. Adding a state means probing that state first:
-# "all 50 states" means every state code returns something.
-STATE_REGISTRATION_SOURCES = frozenset({
-    'Florida Division of Corporations (Sunbiz)',
-    'Delaware DOS',
-    'California SOS',
-    'Texas SOS',
-    'New York Department of State',
-})
-
-# Sources seen standing in for a state registry. Listed explicitly so the
-# substitution is visible in the source, not merely excluded by omission.
-KNOWN_NON_STATE_SOURCES = frozenset({
-    'IRS Exempt Organizations Business Master File',
-    CROSS_STATE_SOURCE,
-})
+# The accepted registrars are MEASURED, not listed here. This module used to
+# carry five -- the five states that happened to have been probed -- while a
+# sweep of all 51 jurisdictions found thirteen genuine registrars, thirty-seven
+# answering a state query with the IRS Exempt Organizations file, and Iowa
+# returning nothing at all. See zelda_api/filed_authority.py and its fixture.
 
 # How fresh a record must be before it may CONTRADICT a company's own account.
 # Measured staleness ran from same-day (NY) to roughly six months (FL), and the
@@ -125,8 +119,15 @@ def classify(status_code, body):
 
 
 def is_state_registration_source(source):
-    """Whether this source may ground a statement about state registration."""
-    return bool(source) and source in STATE_REGISTRATION_SOURCES
+    """
+    Whether this source may ground a statement about state registration.
+
+    Delegated to the measured fixture. Membership, never a pattern: thirty-seven
+    jurisdictions answer a state query with a federal file, and
+    'Georgia Secretary of State' reads exactly like an accepted entry while
+    Georgia was measured to return the IRS file.
+    """
+    return filed_authority.is_state_registration_source(source)
 
 
 def _meta(detail):
@@ -179,26 +180,68 @@ def candidate_for(rows, company_name):
 
     None when nothing matches and also when SEVERAL do: a name registered in two
     states is not resolved by name, and choosing between them here would be an
-    identity decision this module has no standing to make.
+    identity decision this module has no standing to make. Callers that need to
+    tell those two apart use `resolve_candidate`.
     """
+    return resolve_candidate(rows, company_name)[1]
+
+
+def resolve_candidate(rows, company_name):
+    """
+    (outcome, candidate-or-None) -- which kind of non-answer this is.
+
+    Three distinct facts, and reporting them as one was a defect:
+
+        no rows at all            NO_RECORD
+        rows, no exact match      UNRESOLVED  (a misspelling, an abbreviation)
+        rows, several exact       AMBIGUOUS   (one name, two registrations)
+
+    Only the first says anything about the register. The others say the query
+    could not be resolved, which a jurisdiction may later narrow.
+    """
+    rows = rows or []
     wanted = _normalise_name(company_name)
+    if not rows:
+        return NO_RECORD, None
     if not wanted:
-        return None
-    exact = [row for row in (rows or []) if _normalise_name(row.get('name')) == wanted]
-    return exact[0] if len(exact) == 1 else None
+        return UNRESOLVED, None
+    exact = [row for row in rows if _normalise_name(row.get('name')) == wanted]
+    if len(exact) == 1:
+        return FOUND, exact[0]
+    return (AMBIGUOUS if exact else UNRESOLVED), None
 
 
 def officer_names(detail):
     """
-    Officer names, but only from a qualifying state source.
+    Officer names, from a qualifying registrar that publishes them at all.
 
-    Officer corroboration is the strongest thing this provider offers -- nothing
-    else in the suite can speak to a named founder of a private company -- which
-    makes it the most damaging to take from the wrong dataset.
+    Measured: officers exist in FL (10/10) and TX (8/10) and in none of the
+    other eleven registrars, including Delaware, California and New York. An
+    earlier Florida-only sample was generalised into a Filed-wide capability;
+    it is not one. So a caller must OMIT this dimension where unsupported
+    rather than render it empty -- absence from a registrar that never
+    publishes officers is not evidence about a company.
     """
     if not is_state_registration_source(_meta(detail).get('source')):
         return []
+    # No capability gate here on purpose. Officers that ARE present are real
+    # corroboration from a measured registrar, whatever the fixture expects of
+    # that registrar in general. The capability decides whether ABSENCE may be
+    # reported -- see `officer_absence_is_meaningful`.
     return [o.get('name') for o in (_data(detail).get('officers') or []) if o.get('name')]
+
+
+def officer_absence_is_meaningful(detail):
+    """
+    Whether "the register does not list this person" is a statement worth making.
+
+    Only where the registrar publishes officers at all. Measured: FL 10/10 and
+    TX 8/10, and 0/10 in the other eleven. Reporting that Delaware does not list
+    a founder, when Delaware lists no officers for anyone, would be a fabricated
+    adverse finding about a person.
+    """
+    state = _data(detail).get('state')
+    return bool(state) and filed_authority.publishes_officers(state)
 
 
 def registered_agent(detail):
@@ -308,14 +351,11 @@ def company_record(company_name, state=None):
     body = _search(company_name, state=state)
     if not isinstance(body, dict) or body.get('error'):
         return UNAVAILABLE, None
-    if not (body.get('data') or []):
-        return NO_RECORD, None
-
-    candidate = candidate_for(body.get('data') or [], company_name)
+    outcome, candidate = resolve_candidate(body.get('data') or [], company_name)
     if candidate is None:
-        # Rows came back but none is this company, or several are. Absence of a
-        # confident match is not absence of the company.
-        return NO_RECORD, None
+        # NO_RECORD, UNRESOLVED or AMBIGUOUS -- reported as itself, because
+        # absence of a confident match is not absence of the company.
+        return outcome, None
 
     detail = _detail(candidate.get('id'))
     if not isinstance(detail, dict) or not _data(detail):
