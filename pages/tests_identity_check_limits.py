@@ -68,7 +68,7 @@ class _Checks(TestCase):
         Enforced by config.test_runner, not merely intended here.
         """
         from zelda_api import entity_verification, entity_verification_tasks
-        from zelda_api import companyenrich
+        from zelda_api import companyenrich, filed
 
         patches = [
             mock.patch.object(entity_verification, 'fetch_public_page', mock.Mock(
@@ -83,6 +83,9 @@ class _Checks(TestCase):
             # still run; only the transport is replaced.
             mock.patch('zelda_api.companyenrich._fetch',
                        return_value=(companyenrich.NO_RECORD, None)),
+                       # Filed sits inside collect_findings too; _search is the
+                       # lowest seam that removes the network.
+                       mock.patch('zelda_api.filed._search', return_value={'data': [], 'meta': {'total': 0}}),
             mock.patch.object(entity_verification_tasks.run_entity_check, 'delay',
                               side_effect=lambda report_id: entity_verification_tasks.run_entity_check.run(report_id)),
         ]

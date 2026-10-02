@@ -236,7 +236,7 @@ def _page_text(html):
     return f" {_normalize(' '.join(parts))} "
 
 
-from . import companyenrich
+from . import companyenrich, filed
 
 
 def collect_findings(subject):
@@ -278,6 +278,44 @@ def collect_findings(subject):
     else:
         capital_claim = 'Prior capital raised: not claimed on the profile'
 
+    def add_filed_rows():
+        # State business registration, via Filed. Runs on EVERY path: a company
+        # can be registered without a website, and the query is by name, so the
+        # no-website branch has no reason to skip it.
+        #
+        # GATED ON SOURCE AUTHORITY, not on getting an answer. A `state=WA`
+        # query returns IRS Exempt Organizations data under a federal label, so
+        # "Filed returned something" is not "a state register says so" -- see
+        # zelda_api/filed.py. Absence is never a finding: a name we spelled
+        # differently is the ordinary reason for a miss.
+        outcome, detail = filed.company_record(inputs['company_name'])
+        if outcome != filed.FOUND:
+            return
+        source = (detail.get('meta') or {}).get('source')
+        if not filed.is_state_registration_source(source):
+            add('business_registration', company_claim,
+                'Business registration record',
+                'A business record was returned for this name, but it came from '
+                '%s rather than a state register of companies, so it is not '
+                'evidence about this business being registered.' % (source or 'an unnamed source'),
+                R.COULDNT_CHECK)
+            return
+        add('business_registration', company_claim, source,
+            filed.describe_record(detail), R.PUBLIC_RECORD)
+
+        officers = filed.officer_names(detail)
+        if officers and inputs['person_name']:
+            named = _normalize(inputs['person_name'])
+            matched = [o for o in officers if _normalize(o) == named]
+            add('officer_of_record', person_claim, source,
+                '%s is listed as an officer of record.' % inputs['person_name'] if matched else
+                'The register lists %s as officer%s of record, and does not list %s. '
+                'Officers of record are not the same list as a company\'s founders, '
+                'so this is not evidence that the person is unconnected to the business.' % (
+                    ', '.join(officers[:4]), '' if len(officers) == 1 else 's',
+                    inputs['person_name']),
+                R.MATCHES if matched else R.PUBLIC_RECORD)
+
     def add_sec_rows():
         # A business with no website can still have SEC filings, so this runs on every path.
         sec_identity.sec_findings(
@@ -294,6 +332,7 @@ def collect_findings(subject):
         add('company_name', company_claim, 'Company website', no_site, R.NOT_APPLICABLE)
         add('person_name', person_claim, 'Company website', no_site, R.NOT_APPLICABLE)
         add('founding_year', founding_claim, 'Domain registration', no_site, R.NOT_APPLICABLE)
+        add_filed_rows()
         add_sec_rows()
         return rows
 
@@ -412,6 +451,7 @@ def collect_findings(subject):
     # UNCONFIGURED adds nothing: the integration being off is not evidence and
     # should not occupy a line in an investor-facing report.
 
+    add_filed_rows()
     add_sec_rows()
     return rows
 
