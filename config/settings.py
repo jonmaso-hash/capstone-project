@@ -499,6 +499,12 @@ CRUNCHBASE_API_KEY = env('CRUNCHBASE_API_KEY')
 NEWS_API_KEY = env('NEWS_API_KEY')
 RESEND_API_KEY = env('RESEND_API_KEY')
 COMPANYENRICH_API_KEY = env('COMPANYENRICH_API_KEY')
+
+# Tests must not reach the network, enforced rather than promised. Clearing the
+# provider keys does not achieve it: PowerShell's `$env:X = ''` deletes the
+# variable and read_env() above puts the real value straight back from .env.
+# See config/test_runner.py.
+TEST_RUNNER = 'config.test_runner.InterlinkTestRunner'
 # DEFAULT_FROM_EMAIL is NOT set here. It is assigned below with a deliberate
 # fallback (env -> EMAIL_HOST_USER -> noreply@), and that later assignment
 # would overwrite anything set at this point anyway. CI relies on the

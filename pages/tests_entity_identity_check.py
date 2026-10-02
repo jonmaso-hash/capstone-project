@@ -35,6 +35,7 @@ from django.utils import timezone
 
 from matchmaking.models import Application, BuyerApplication, InvestorApplication, SellerApplication
 from matchmaking.tests import _mock_embedding_generation
+from zelda_api import companyenrich
 from zelda_api.vector_models import DocumentSource
 
 User = get_user_model()
@@ -199,6 +200,8 @@ class _Businesses(TestCase):
         # SEC and Form D rows are covered in pages/tests_entity_sec_form_d.py.
         with mock.patch.object(entity_verification, 'fetch_public_page', fetch), \
                 mock.patch.object(entity_verification, 'lookup_domain_creation_date', whois), \
+                mock.patch('zelda_api.companyenrich._fetch',
+                           return_value=(companyenrich.NO_RECORD, None)), \
                 mock.patch('zelda_api.sec_identity.sec_findings'):
             rows = entity_verification.collect_findings(subject or self.founder)
         self.fetch, self.whois = fetch, whois
@@ -328,8 +331,9 @@ class _Requests(_Businesses):
         )
 
     def _external(self):
-        """Patches the website fetch and WHOIS, and runs queued checks immediately."""
+        """Replaces every outward call, and runs queued checks immediately."""
         from zelda_api import entity_verification, entity_verification_tasks
+        from zelda_api import companyenrich
         from zelda_api.safe_fetch import FetchResult
 
         self.fetch = mock.Mock(return_value=FetchResult(
@@ -339,6 +343,13 @@ class _Requests(_Businesses):
             mock.patch.object(entity_verification, 'fetch_public_page', self.fetch),
             mock.patch.object(entity_verification, 'lookup_domain_creation_date', self.whois),
             mock.patch('zelda_api.sec_identity.sec_findings'),
+            # CompanyEnrich is inside collect_findings and was NOT patched here
+            # for months, so every one of these tests called a metered API --
+            # see pages/tests_no_network_in_tests.py. Patched at _fetch rather
+            # than higher up so the module's own caching and outcome mapping
+            # still run; only the transport is replaced.
+            mock.patch('zelda_api.companyenrich._fetch',
+                       return_value=(companyenrich.NO_RECORD, None)),
             mock.patch.object(entity_verification_tasks.run_entity_check, 'delay',
                               side_effect=lambda report_id: entity_verification_tasks.run_entity_check.run(report_id)),
         ]

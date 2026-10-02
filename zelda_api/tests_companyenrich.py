@@ -42,7 +42,7 @@ from unittest import mock
 from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase, TestCase, override_settings
 
-from . import companyenrich
+from . import companyenrich, sec_identity
 from .safe_fetch import FetchError
 
 KEY = 'ce-test-key-not-real'
@@ -243,7 +243,7 @@ class TheFindingsCorroborateAndNeverDenyTests(TestCase):
 
     def rows(self, status, footprint):
         """
-        The real collect_findings, with only the network edges stubbed. The
+        The real collect_findings, with every outward edge stubbed. The
         site fetch raises FetchError -- the exception the code actually
         catches -- so these tests exercise the CompanyEnrich block without
         depending on a live site or a WHOIS lookup.
@@ -256,6 +256,14 @@ class TheFindingsCorroborateAndNeverDenyTests(TestCase):
                        side_effect=FetchError('not fetched in this test')),
             mock.patch('zelda_api.entity_verification.lookup_domain_creation_date',
                        return_value=(None, 'skipped')),
+            # SEC too: the docstring above used to claim only the network
+            # edges were stubbed while this one was live, so every test here
+            # called EDGAR. Stubbed at find_sec_filer rather than at
+            # sec_findings, so the real not-found branch still runs and still
+            # adds its row -- test_the_other_checks_still_run asserts that row
+            # exists, and mocking one level higher silently deleted it.
+            mock.patch('zelda_api.sec_identity.find_sec_filer',
+                       return_value=sec_identity.FilerLookup('not_found')),
         ]
         for patch in patches:
             patch.start()
