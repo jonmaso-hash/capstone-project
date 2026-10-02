@@ -505,6 +505,12 @@ COMPANYENRICH_API_KEY = env('COMPANYENRICH_API_KEY')
 # contract forbids an env() call that is required at import, and an absent key
 # must degrade to UNCONFIGURED rather than break startup.
 FILED_API_KEY = env('FILED_API_KEY')
+
+# Tests must not reach the network, enforced rather than promised. Clearing the
+# provider keys does not achieve it: PowerShell's `$env:X = ''` deletes the
+# variable and read_env() above puts the real value straight back from .env.
+# See config/test_runner.py.
+TEST_RUNNER = 'config.test_runner.InterlinkTestRunner'
 # DEFAULT_FROM_EMAIL is NOT set here. It is assigned below with a deliberate
 # fallback (env -> EMAIL_HOST_USER -> noreply@), and that later assignment
 # would overwrite anything set at this point anyway. CI relies on the

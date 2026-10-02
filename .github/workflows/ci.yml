@@ -88,6 +88,7 @@ jobs:
           zelda_api.tests_financial_fact_semantics
           zelda_api.tests_companyenrich
           zelda_api.tests_verification_starts_together
+          pages.tests_no_network_in_tests
           zelda_api.tests_filed
 
   # ── Non-blocking: the zelda_api suite currently makes live huggingface.co

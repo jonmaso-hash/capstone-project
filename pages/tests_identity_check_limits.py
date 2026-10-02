@@ -63,8 +63,12 @@ class _Checks(TestCase):
         )
 
     def _external(self):
-        """Same shape as pages/tests_entity_identity_check.py: nothing reaches the network."""
+        """Same shape as pages/tests_entity_identity_check.py: nothing reaches the network.
+
+        Enforced by config.test_runner, not merely intended here.
+        """
         from zelda_api import entity_verification, entity_verification_tasks
+        from zelda_api import companyenrich
 
         patches = [
             mock.patch.object(entity_verification, 'fetch_public_page', mock.Mock(
@@ -72,6 +76,13 @@ class _Checks(TestCase):
             mock.patch.object(entity_verification, 'lookup_domain_creation_date',
                               mock.Mock(return_value=(date(2020, 1, 1), ''))),
             mock.patch('zelda_api.sec_identity.sec_findings'),
+            # CompanyEnrich is inside collect_findings and was NOT patched here
+            # for months, so every one of these tests called a metered API --
+            # see pages/tests_no_network_in_tests.py. Patched at _fetch rather
+            # than higher up so the module's own caching and outcome mapping
+            # still run; only the transport is replaced.
+            mock.patch('zelda_api.companyenrich._fetch',
+                       return_value=(companyenrich.NO_RECORD, None)),
             mock.patch.object(entity_verification_tasks.run_entity_check, 'delay',
                               side_effect=lambda report_id: entity_verification_tasks.run_entity_check.run(report_id)),
         ]
