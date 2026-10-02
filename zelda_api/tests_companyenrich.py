@@ -42,7 +42,7 @@ from unittest import mock
 from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase, TestCase, override_settings
 
-from . import companyenrich, sec_identity
+from . import companyenrich, filed, sec_identity
 from .safe_fetch import FetchError
 
 KEY = 'ce-test-key-not-real'
@@ -264,6 +264,9 @@ class TheFindingsCorroborateAndNeverDenyTests(TestCase):
             # exists, and mocking one level higher silently deleted it.
             mock.patch('zelda_api.sec_identity.find_sec_filer',
                        return_value=sec_identity.FilerLookup('not_found')),
+                       # Filed sits inside collect_findings too; _search is the
+                       # lowest seam that removes the network.
+                       mock.patch('zelda_api.filed._search', return_value={'data': [], 'meta': {'total': 0}}),
         ]
         for patch in patches:
             patch.start()

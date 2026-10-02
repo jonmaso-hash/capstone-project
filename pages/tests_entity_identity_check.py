@@ -35,7 +35,7 @@ from django.utils import timezone
 
 from matchmaking.models import Application, BuyerApplication, InvestorApplication, SellerApplication
 from matchmaking.tests import _mock_embedding_generation
-from zelda_api import companyenrich
+from zelda_api import companyenrich, filed
 from zelda_api.vector_models import DocumentSource
 
 User = get_user_model()
@@ -202,6 +202,7 @@ class _Businesses(TestCase):
                 mock.patch.object(entity_verification, 'lookup_domain_creation_date', whois), \
                 mock.patch('zelda_api.companyenrich._fetch',
                            return_value=(companyenrich.NO_RECORD, None)), \
+                mock.patch('zelda_api.filed._search', return_value={'data': [], 'meta': {'total': 0}}), \
                 mock.patch('zelda_api.sec_identity.sec_findings'):
             rows = entity_verification.collect_findings(subject or self.founder)
         self.fetch, self.whois = fetch, whois
@@ -350,6 +351,10 @@ class _Requests(_Businesses):
             # still run; only the transport is replaced.
             mock.patch('zelda_api.companyenrich._fetch',
                        return_value=(companyenrich.NO_RECORD, None)),
+            # Filed sits inside collect_findings too. _search is the
+            # lowest seam that removes the network, so the provider
+            # still maps no rows to NO_RECORD for itself.
+            mock.patch('zelda_api.filed._search', return_value={'data': [], 'meta': {'total': 0}}),
             mock.patch.object(entity_verification_tasks.run_entity_check, 'delay',
                               side_effect=lambda report_id: entity_verification_tasks.run_entity_check.run(report_id)),
         ]
