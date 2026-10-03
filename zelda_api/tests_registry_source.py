@@ -337,6 +337,61 @@ class TheEntityKeyCameFromTheFieldDefinitionsTests(SimpleTestCase):
         self.assertNotIn('key_uniqueness', OPEN_UNKNOWNS)
         self.assertIn('delta_merge_semantics', OPEN_UNKNOWNS)
 
+    def test_the_module_never_calls_the_key_a_unique_identifier(self):
+        """
+        A documentation guard, in the same spirit as the one holding Filed's
+        registration row off the words 'founder' and 'verified'.
+
+        An earlier revision described the document number as the "cross-file
+        unique identifier" in a comment sitting directly above the block
+        stating that duplicate document numbers legitimately occur. The code
+        was right and the prose set a trap: a future reader meets 'unique',
+        reasonably infers one row per number, and writes the deduplication that
+        throws away rows the source deliberately included.
+        """
+        import io
+        from pathlib import Path
+        from django.conf import settings
+
+        text = io.open(Path(settings.BASE_DIR) / 'zelda_api' / 'registry_source.py',
+                       encoding='utf-8').read()
+        self.assertGreater(len(text), 500, 'positive control: the file was read')
+        # Reported as a count, not with assertNotIn: the haystack is the whole
+        # module, and a failing assertNotIn prints all of it, burying the one
+        # line that matters under 20KB of source.
+        self.assertEqual(
+            text.lower().count('unique identifier'), 0,
+            "registry_source.py calls the document number a 'unique "
+            "identifier'. It is not row-unique -- duplicate document numbers "
+            'legitimately occur -- and that phrase is what invites a future '
+            'uniqueness assertion that would reject valid Sunbiz files.')
+        # The disambiguation that replaced it must still be there.
+        self.assertIn('never ROW identity', text)
+
+    def test_the_docstring_does_not_contradict_the_constants(self):
+        """
+        The guard above was too narrow and let a bigger version of the same
+        trap survive: after the field definitions were read, the module
+        DOCSTRING still announced "`ENTITY_KEY_FIELD` is None" and "The Florida
+        dataset statement is UNVERIFIED" while the code said otherwise.
+
+        A reader trusts the docstring over a constant 200 lines down, so the
+        two claims that have actually flipped are checked against the values
+        they describe.
+        """
+        import io
+        from pathlib import Path
+        from django.conf import settings
+        from . import registry_source
+
+        doc = (registry_source.__doc__ or '')
+        self.assertGreater(len(doc), 500, 'positive control: the docstring was read')
+        if registry_source.ENTITY_KEY_FIELD is not None:
+            self.assertNotIn('`ENTITY_KEY_FIELD` is None', doc)
+        if dataset_statement(DATASET_CORPORATE)['verified']:
+            self.assertNotIn('statement is UNVERIFIED', doc)
+            self.assertNotIn("`verified: False`", doc)
+
     def test_the_duplicate_row_caveat_is_recorded_as_the_sources_own(self):
         from .registry_source import SOURCE_CAVEATS
         joined = ' '.join(SOURCE_CAVEATS).lower()
