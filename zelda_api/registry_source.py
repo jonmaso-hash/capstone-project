@@ -53,14 +53,45 @@ AUTHORITY_SOURCE = 'Florida Division of Corporations (Sunbiz)'
 # --- dataset families ----------------------------------------------------
 DATASET_CORPORATE = 'corporate'
 
-# What 'corporate data' covers, kept narrow on purpose. Sunbiz publishes other
-# datasets (trademarks among them) that this one does not include, and a
-# fictitious name or a sole proprietorship is not in it either. Inheriting
-# corporate coverage for those would claim evidence about a corpus that was
-# never ingested.
+# The filing types actually present in the corporate data file.
+#
+# THE SOURCE'S PROSE UNDERSTATES ITS OWN DATASET. The download page summarises
+# corporate data as "corporations, limited liability companies and limited
+# partnerships", while the type list it publishes also carries non-profit
+# variants, trusts and registered agents. The codes are what is in the file, so
+# the codes are the scope; the prose is recorded as the source's summary of it.
+CORPORATE_FILING_TYPES = (
+    'DOMP',     # domestic profit corporation
+    'DOMNP',    # domestic non-profit corporation
+    'FORP',     # foreign profit corporation
+    'FORNP',    # foreign non-profit corporation
+    'DOMLP',    # domestic limited partnership
+    'FORLP',    # foreign limited partnership
+    'FLAL',     # Florida limited liability company
+    'FORL',     # foreign limited liability company
+    'NPREG',    # non-profit registration
+    'TRUST',    # trust
+    'AGENT',    # registered agent
+)
+
+# What 'corporate data' covers, derived from the filing types above rather than
+# from the prose. Still narrow: trademarks are a separate Sunbiz dataset, and a
+# fictitious name or sole proprietorship is not here either. Inheriting
+# corporate coverage for those would claim evidence about a corpus never
+# ingested.
 SCOPED_ENTITY_FAMILIES = {
-    DATASET_CORPORATE: ('corporation', 'limited_liability_company',
-                        'limited_partnership'),
+    DATASET_CORPORATE: ('corporation', 'nonprofit_corporation',
+                        'limited_partnership', 'limited_liability_company',
+                        'trust', 'registered_agent'),
+}
+
+FILING_TYPE_FAMILIES = {
+    'DOMP': 'corporation', 'FORP': 'corporation',
+    'DOMNP': 'nonprofit_corporation', 'FORNP': 'nonprofit_corporation',
+    'NPREG': 'nonprofit_corporation',
+    'DOMLP': 'limited_partnership', 'FORLP': 'limited_partnership',
+    'FLAL': 'limited_liability_company', 'FORL': 'limited_liability_company',
+    'TRUST': 'trust', 'AGENT': 'registered_agent',
 }
 
 # --- artifact types ------------------------------------------------------
@@ -80,27 +111,140 @@ COVERAGE_UNMEASURED = 'unmeasured'
 # the same bytes under the old ones.
 PARSER_SCHEMA_VERSION = 1
 
-# NOT DECIDED. See the module docstring: the field definitions decide this.
-ENTITY_KEY_FIELD = None
+# DECIDED, now that the published field definitions have been read. Field 1 of
+# the data file is the Corporation Number at start 1, length 12, described as
+# the corporate document number, and it sits at the same position and width in
+# the event file -- which is what makes it the join key between filings and
+# events. The usage guide calls it the cross-file unique identifier.
+ENTITY_KEY_FIELD = 'document_number'
+ENTITY_KEY_LAYOUT = {'start': 1, 'length': 12}
 
-# The dataset claim, as a quotation rather than as a fact. `verified` flips
-# only when the statement has actually been retrieved from the source, and
-# `retrieved_at` records when.
+# The FIELD is 12 wide; the VALUE may be 6 or 12 characters. A parser that
+# assumed 12 would mangle every short number, and one that stripped padding
+# without recording the original width could not round-trip a record.
+ENTITY_KEY_VALUE_LENGTHS = (6, 12)
+
+# A ROW IS NOT AN ENTITY. The usage guide states that duplicate document
+# numbers can legitimately occur -- a file may carry several rows about the same
+# entity -- so the key identifies a business while rows about it are many.
+#
+# An earlier draft of this module had it backwards: it recorded uniqueness as
+# unestablished and told 5B's parser to "assert it and fail loudly". That would
+# have rejected valid Sunbiz files as corrupt. Deduplicating on the document
+# number alone is equally wrong in the other direction: it would silently throw
+# away rows the source deliberately included. How several rows for one entity
+# combine is `delta_merge_semantics`, still open.
+ROWS_PER_KEY = 'many'
+
+# Events are keyed by the pair, not by the document number alone.
+EVENT_KEY_FIELDS = ('document_number', 'sequence_number')
+EVENT_SEQUENCE_LAYOUT = {'start': 13, 'length': 5}
+
+# Fixed-width record geometry, stated to apply to both daily and quarterly
+# files. Both lengths reconcile against their last field, which is a cheap
+# check that the layout was transcribed correctly: 1437 + 4 - 1 = 1440 and
+# 653 + 10 - 1 = 662.
+RECORD_LENGTHS = {'data': 1440, 'event': 662}
+FIELD_COUNTS = {'data': 79, 'event': 25}
+
+# The data record carries at most six officers, with a flag at position 495
+# when there are more. So officer evidence from this dataset is CAPPED, and the
+# source separately warns that addresses and officers may be truncated or not
+# current. Florida is the strongest officer source in the whole suite and it
+# still cannot support "these are the officers" -- only "these are officers the
+# register listed, as of this snapshot".
+MAX_OFFICERS_IN_RECORD = 6
+MORE_OFFICERS_FLAG_POSITION = 495
+
+# Caveats the source states about its own data. Recorded because they bound
+# what a finding may claim, and because a future reader should not have to
+# re-derive them from a page behind a bot check.
+SOURCE_CAVEATS = (
+    'Addresses and officers may be truncated or may not be current.',
+    'At most six officers appear in a record; a flag marks that more exist.',
+    'Annual reports and address changes do not appear as events.',
+    'No daily file is produced on a work day with no filings, so a missing '
+    'date is an expected gap rather than a failed retrieval.',
+    'Duplicate document numbers can legitimately occur, so rows must not be '
+    'deduplicated on the document number alone.',
+    'Malformed rows can occur, caused by special characters or line breaks '
+    'embedded in the data.',
+)
+
+# What the date in a daily filename means, which is NOT what it looks like.
+# It is the date the information was entered into the Sunbiz database -- not
+# the filing date, not the effective date, not the date anything happened to
+# the business. A parser treating `20261002c.txt` as "these filings occurred on
+# 2 October" would date every record in it wrongly, and plausibly.
+DAILY_FILENAME_DATE_MEANS = 'entered_into_database'
+DAILY_FILENAME_DATE_IS_NOT = ('filing_date', 'effective_date', 'event_date')
+
+# Row length is the parser's first and cheapest integrity check, and the one
+# thing that must never degrade quietly: the source says malformed rows occur,
+# and in a fixed-width layout a row one byte short shifts every later field and
+# yields plausible nonsense instead of an error.
+MALFORMED_ROW_POLICY = 'reject_explicitly'
+
+# What is still NOT established, kept explicit so 5B resolves rather than
+# assumes. Each is settled by one real artifact.
+OPEN_UNKNOWNS = {
+    'date_format': (
+        'Date fields are 8 characters, but the definitions do not say whether '
+        'they are MMDDYYYY or YYYYMMDD. Parsing the wrong one silently '
+        'produces plausible, wrong dates rather than an error.'),
+    'shard_names': (
+        'The corporate quarterly data is split into 10 files by the trailing '
+        'digit of the record number, but the page does not name them, and it '
+        'says "ending in the number" without stating that the number is the '
+        'document number. assess_coverage needs the real names to tell a '
+        'complete release from a partial one.'),
+    'delta_merge_semantics': (
+        'Whether an amended entity reappears in a daily filings file as a full '
+        'record is not stated, so how several rows for one document number '
+        'combine into one business record is unverified. This is the open '
+        'question that replaced the mistaken "assert uniqueness" rule.'),
+    'corpus_generation': (
+        'assess_coverage evaluates every snapshot it is given. Once historical '
+        'snapshots accumulate, one old incomplete snapshot would hold coverage '
+        'down forever even after a later complete release superseded it. '
+        'Coverage has to be assessed against a GOVERNING generation -- the '
+        'latest applicable snapshot plus its own deltas -- before production '
+        'ingestion. Harmless today because nothing has been ingested.'),
+    'delta_continuity': (
+        'freshness() takes the maximum delta_through, which overstates '
+        'freshness across a gap: with 1 and 3 October present and 2 October '
+        'missing it would report the 3rd. Freshness should advance only '
+        'through the latest CONTIGUOUS verified delta sequence after the '
+        'governing snapshot. Shard completeness already gets this treatment '
+        'for snapshots; deltas need the same.'),
+}
+
+# The dataset claim, as a quotation with its provenance. `verified` means the
+# statement was actually retrieved from the source -- not that Zelda has
+# confirmed the corpus is complete, which is what assess_coverage decides
+# separately from an actual ingestion.
 _DATASET_STATEMENTS = {
     DATASET_CORPORATE: {
         'source_url': 'https://dos.fl.gov/sunbiz/other-services/data-downloads/quarterly-data/',
+        'definitions_url': 'https://dos.sunbiz.org/data-definitions/cor.html',
+        'daily_url': 'https://dos.fl.gov/sunbiz/other-services/data-downloads/daily-data/',
         'quoted_claim': (
-            'Reported as: quarterly files are generated in January, April, July '
-            'and October and contain all data on record at the time the file is '
-            'generated; corporate data covers corporations, limited liability '
-            'companies and limited partnerships.'),
-        'verified': False,
-        'retrieved_at': None,
-        'why_unverified': (
-            'The Sunbiz download pages return a Cloudflare bot-verification '
-            'interstitial to this project, and defeating bot detection is out '
-            'of bounds here. The claim is second-hand until the page or the '
-            'field definitions are supplied directly.'),
+            'Quarterly files are generated in January, April, July and October '
+            'and contain all data on record at the time the file is generated, '
+            'so each release is a full snapshot rather than a delta. Corporate '
+            'data covers corporations, limited liability companies and limited '
+            'partnerships, and excludes trademarks. Daily files are generated '
+            'on work days and contain filings added to the record that day; '
+            'the filename date is the date the information was entered into '
+            'the database.'),
+        'verified': True,
+        'retrieved_at': datetime.date(2026, 10, 2),
+        # Recorded, because how a fact was obtained is part of the fact. The
+        # Sunbiz pages return a Cloudflare bot-verification interstitial to this
+        # project and defeating bot detection is out of bounds here, so the
+        # operator read the pages directly. That is a weaker provenance than a
+        # programmatic fetch and a re-check needs a human again.
+        'verified_by': 'operator read the source pages directly',
     },
 }
 
@@ -217,6 +361,14 @@ def freshness(ingestions):
 
     Separate from coverage by design. A quarter-old snapshot is broad and
     stale; reporting it as partial would claim its corpus was incomplete.
+
+    KNOWN LIMITATION, recorded as OPEN_UNKNOWNS['delta_continuity']: this takes
+    the maximum delta_through and so overstates freshness across a gap. With 1
+    and 3 October ingested and 2 October missing it reports the 3rd, although
+    the mirror is missing a day. Correct behaviour is to advance only through
+    the latest contiguous verified sequence, which needs the delta lineage that
+    5B/5C will establish. Harmless while nothing is ingested, and stated here
+    rather than discovered later.
     """
     ingestions = list(ingestions or [])
     snapshot_dates = [i.snapshot_as_of for i in ingestions if i.snapshot_as_of]
