@@ -49,6 +49,23 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      # The test runner forces HF_HUB_OFFLINE, so the weights must already
+      # be on disk. Before this, CI downloaded them live on every run --
+      # EmbeddingSemanticOrderingTests deliberately uses a real model, and
+      # was quietly depending on huggingface.co being up. One declared
+      # fetch, cached between runs, and the test run itself reaches nothing.
+      - name: Cache the embedding model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-minilm-l6-v2-${{ hashFiles('requirements.txt') }}
+          restore-keys: hf-minilm-l6-v2-
+
+      - name: Put the embedding model on disk
+        run: >-
+          python -c "from sentence_transformers import SentenceTransformer;
+          SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')"
+
       - name: Django system check
         run: python manage.py check
 
@@ -117,6 +134,23 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      # The test runner forces HF_HUB_OFFLINE, so the weights must already
+      # be on disk. Before this, CI downloaded them live on every run --
+      # EmbeddingSemanticOrderingTests deliberately uses a real model, and
+      # was quietly depending on huggingface.co being up. One declared
+      # fetch, cached between runs, and the test run itself reaches nothing.
+      - name: Cache the embedding model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-minilm-l6-v2-${{ hashFiles('requirements.txt') }}
+          restore-keys: hf-minilm-l6-v2-
+
+      - name: Put the embedding model on disk
+        run: >-
+          python -c "from sentence_transformers import SentenceTransformer;
+          SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')"
 
       - name: Run zelda_api test suite (non-blocking)
         run: python manage.py test zelda_api --verbosity=2

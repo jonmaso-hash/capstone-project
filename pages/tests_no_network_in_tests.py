@@ -316,6 +316,51 @@ class HuggingFaceIsOfflineDuringTestsTests(SimpleTestCase):
             with self.subTest(variable=name):
                 self.assertEqual(os.environ.get(name), '1')
 
+    def test_ci_puts_the_model_on_disk_since_the_runner_forbids_fetching_it(self):
+        """
+        The guard for the failure that actually happened, which a local gate
+        cannot otherwise catch.
+
+        Forcing offline mode broke CI and not this machine, because the weights
+        are cached here and were not there. `EmbeddingSemanticOrderingTests`
+        deliberately uses a real model -- a mocked embedding would make a
+        semantic-ordering assertion meaningless -- so offline mode without a
+        cached model gives it 0.0 similarity scores and five failures.
+
+        Two halves that must stay together: the runner forbids fetching, so CI
+        must fetch beforehand. Removing either one alone is the bug, and this
+        fails locally if anyone does.
+        """
+        import io
+        from pathlib import Path
+
+        import yaml
+        from django.conf import settings
+
+        workflow = yaml.safe_load(
+            io.open(Path(settings.BASE_DIR) / '.github' / 'workflows' / 'ci.yml',
+                    encoding='utf-8').read())
+        for job in ('check', 'zelda-api-tests'):
+            steps = workflow['jobs'][job]['steps']
+            self.assertGreater(len(steps), 2, 'positive control: %s has steps' % job)
+            fetches = [s for s in steps
+                       if 'sentence_transformers' in str(s.get('run', ''))]
+            caches = [s for s in steps
+                      if 'cache' in str(s.get('uses', ''))
+                      and 'huggingface' in str(s.get('with', {}).get('path', ''))]
+            with self.subTest(job=job):
+                self.assertTrue(
+                    fetches,
+                    'The test runner forces HF offline, so %s must put the '
+                    'embedding model on disk before running tests. Without it, '
+                    'EmbeddingSemanticOrderingTests gets 0.0 similarity scores '
+                    'and fails -- which is how PR #124 broke.' % job)
+                self.assertTrue(
+                    caches,
+                    '%s fetches the model but does not cache it, so every run '
+                    'downloads it again and depends on huggingface.co being '
+                    'up.' % job)
+
     def test_the_runner_is_what_sets_them(self):
         """
         Not a shell or a developer's environment. A property that depends on
