@@ -30,9 +30,10 @@ env:
   CELERY_RESULT_BACKEND: "cache+memory://"
 
 jobs:
-  # ── Blocking: fast, hermetic suites. Every local app EXCEPT zelda_api.
-  # Keep the app list in sync with INSTALLED_APPS; zelda_api is covered by the
-  # non-blocking job below until its test suite is made hermetic.
+  # ── Blocking: fast, hermetic suites. Every local app, and every zelda_api
+  # test module enumerated by label. Keep the app list in sync with
+  # INSTALLED_APPS; pages/tests_ci_manifest.py fails if a zelda_api module is
+  # neither listed here nor a named, reasoned exclusion.
   check:
     runs-on: ubuntu-latest
     env:
@@ -103,11 +104,12 @@ jobs:
       - name: Check for missing migrations
         run: python manage.py makemigrations --check --dry-run
 
-      - name: Run test suite (excludes zelda_api)
+      - name: Run test suite
         run: >-
           python manage.py test --verbosity=2
           accounts blog billing growth jobs matchmaking
           notifications ops pages sharing usersettings
+          zelda_api.tests
           zelda_api.tests_library
           zelda_api.tests_truth_delta_visibility
           zelda_api.tests_claims_analyzed_count
@@ -143,11 +145,11 @@ jobs:
           zelda_api.tests_filed_outcomes
           zelda_api.tests_registry_source
 
-  # ── Non-blocking: the zelda_api suite currently makes live huggingface.co
-  # calls, hits the Celery hang, and has known failures (all introduced in the
-  # two "IC memo needs works" commits, +4,250 lines in zelda_api/tests.py).
-  # Runs on push to main only (not on every PR iteration) for visibility;
-  # does not gate merges until it's rehabbed.
+  # ── Non-blocking, and now redundant: zelda_api/tests.py -- the last module
+  # kept out of the blocking job -- was rehabbed and is gated by `check` above.
+  # What remains here is a whole-app `zelda_api` run on push to main, which
+  # would also discover a module the manifest guard somehow missed. Kept for
+  # now; removing it is a separate decision.
   zelda-api-tests:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
