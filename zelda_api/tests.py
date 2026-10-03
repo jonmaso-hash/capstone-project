@@ -4012,6 +4012,16 @@ class EntityVerificationTests(TestCase):
         self.client.force_login(founder_user)
         with patch('zelda_api.truth_delta_tasks.verify_document_truth_delta.delay') as mock_td_delay, \
              patch('zelda_api.entity_verification_tasks.verify_entity_integrity.delay') as mock_ent_delay:
+            # The view returns {'task_id': task.id}. Left as a bare MagicMock,
+            # `task.id` is itself a mock, and DRF's JSON encoder calls it --
+            # mock then auto-creates child mocks without bound, so json.dumps
+            # walks an endless structure. Measured: this one test peaked at
+            # 1098 MB while the other 21 in this class sat at 330-363 MB, and
+            # it was the sole reason the module breached the 1000 MB watchdog.
+            #
+            # A real Celery AsyncResult has a string id, so saying so is both
+            # the fix and the more faithful double.
+            mock_td_delay.return_value.id = 'test-task-id'
             response = self.client.post(reverse('zelda_api:truth_delta_verify', args=[doc.id]))
         self.assertEqual(response.status_code, 202)
         mock_td_delay.assert_called_once_with(doc.id)
