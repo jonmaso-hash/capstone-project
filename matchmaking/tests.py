@@ -1132,9 +1132,45 @@ class EmbeddingSemanticOrderingTests(TestCase):
     """
 
     def setUp(self):
+        self._require_a_real_embedding()
         self.founder_user = User.objects.create_user('semantic_founder', password='x')
         self.other_founder_user = User.objects.create_user('semantic_founder2', password='x')
         self.investor_user = User.objects.create_user('semantic_investor', password='x')
+
+    def _require_a_real_embedding(self):
+        """
+        Fail on the real cause, not on a semantic assertion.
+
+        `generate_profile_embedding` catches a model failure, logs it and
+        returns [] -- sensible in production, where a request should degrade
+        rather than crash. `calculate_similarity([], x)` is then 0.0, so every
+        assertion below reports "0.0 not greater than 0.0: expected FinTech to
+        outrank restaurants". That is a lie about what went wrong: the ranking
+        logic was never exercised, the weights were simply absent.
+
+        It is how PR #124 read in CI, and it cost a round trip to diagnose.
+        Reproduced locally against an empty HF_HOME to confirm.
+
+        A precondition check, deliberately NOT skipTest: the suite may consume
+        pretrained weights but never acquire them, so an absent model is a
+        provisioning failure that must be loud. Skipping would turn five red
+        assertions into silent green and lose the coverage entirely.
+        """
+        from .services.ai_engine import generate_profile_embedding
+
+        probe = generate_profile_embedding(
+            'A payment platform providing digital banking infrastructure.')
+        if not probe:
+            self.fail(
+                'The embedding model produced no vector, so these semantic '
+                'assertions cannot mean anything.\n'
+                'This is a PROVISIONING failure, not a ranking failure: the '
+                'test runner forces HF_HUB_OFFLINE, so the weights must already '
+                'be in the HuggingFace cache. CI populates it in the "Put the '
+                'embedding model on disk" step; locally it is the ordinary '
+                'HF_HOME cache.\n'
+                'Look for "[Embedding Pipeline Error]" above for the underlying '
+                'cause.')
 
     def test_related_profile_outranks_unrelated_profile(self):
         from .services.ai_engine import calculate_similarity
