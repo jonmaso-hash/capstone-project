@@ -113,9 +113,9 @@ class TheProvidersCannotDialOutTests(SimpleTestCase):
         `sec_identity._get` catches `requests.exceptions.RequestException` and
         degrades politely. A ban raised as a request exception would be
         swallowed there and the violation would vanish into a graceful
-        fallback -- the test would pass while the call went out. RealNetworkInTests
-        is an AssertionError for exactly this reason, and this test is what
-        holds it to that.
+        fallback -- the test would pass while the call went out.
+        RealNetworkInTests derives from BaseException for exactly this reason,
+        and this test is what holds it to that.
         """
         from zelda_api import sec_identity
         with self.assertRaises(RealNetworkInTests):
@@ -295,6 +295,84 @@ class TheCacheIsLocalDuringTestsTests(TestCase):
         A hit here would mean the run inherited another run's answers.
         """
         self.assertIsNone(cache.get('companyenrich_v1:never-queried.example'))
+
+
+class HuggingFaceIsOfflineDuringTestsTests(SimpleTestCase):
+    """
+    The one provider the ban cannot cover. `huggingface_hub` catches broadly to
+    fall back on its local cache, so a refused request never becomes a test
+    failure -- it becomes a slow, non-deterministic model resolution instead.
+    The previous PR recorded huggingface.co as still being contacted for
+    exactly that reason.
+
+    It matters beyond tidiness: the zelda_api rehab is measuring peak memory,
+    and model-resolution behaviour would land inside `peak - start` and
+    contaminate the comparison between isolated and cumulative runs.
+    """
+
+    def test_the_offline_switches_are_set(self):
+        import os
+        for name in ('HF_HUB_OFFLINE', 'TRANSFORMERS_OFFLINE', 'HF_DATASETS_OFFLINE'):
+            with self.subTest(variable=name):
+                self.assertEqual(os.environ.get(name), '1')
+
+    def test_the_runner_is_what_sets_them(self):
+        """
+        Not a shell or a developer's environment. A property that depends on
+        how the suite was launched is not a property of the suite.
+        """
+        import inspect
+        from config import test_runner
+        source = inspect.getsource(test_runner._force_huggingface_offline)
+        self.assertGreater(len(source), 200, 'positive control: source was read')
+        self.assertIn('HF_HUB_OFFLINE', source)
+
+
+class TheBanIsDescribedAccuratelyTests(SimpleTestCase):
+    """
+    A consistency guard, reusing the pattern that caught the stale
+    `registry_source` docstring: check the prose against the value it
+    describes, rather than banning a phrase.
+
+    This file described the ban as the wrong base class, in the present tense,
+    after the class had been changed to BaseException. The claim was not merely
+    stale: it asserted the opposite of the fix, and would have led the next
+    reader to "correct" the base class back.
+
+    The claim is deliberately NOT quoted here. This file is one of the files
+    the guard scans, so writing the banned phrase out -- even inside a
+    docstring explaining it -- makes the guard fail on itself. It did, twice:
+    once as a test literal and once as a quotation in this docstring.
+    """
+
+    def test_no_file_claims_the_ban_is_an_assertionerror(self):
+        import io
+        from pathlib import Path
+        from django.conf import settings
+
+        # The needles are ASSEMBLED, never written out, because this file is one
+        # of the files being scanned -- a literal would match the guard's own
+        # source and fail on itself. The first version did exactly that.
+        wrong = 'AssertionError'
+        claims = ('is an ' + wrong, 'RealNetworkInTests(' + wrong + ')')
+
+        for relative in ('config/test_runner.py', 'pages/tests_no_network_in_tests.py'):
+            text = io.open(Path(settings.BASE_DIR) / relative, encoding='utf-8').read()
+            self.assertGreater(len(text), 500, 'positive control: %s was read' % relative)
+            # "subclassed AssertionError" and "back to AssertionError" are
+            # historical narration and stay; a present-tense claim does not.
+            for claim in claims:
+                with self.subTest(file=relative, claim=claim):
+                    self.assertEqual(
+                        text.count(claim), 0,
+                        '%s says the ban %r, but it derives from BaseException. '
+                        'That claim is not merely stale -- it asserts the '
+                        'opposite of the fix, and would lead the next reader to '
+                        '"correct" the base class back.' % (relative, claim))
+
+    def test_the_base_class_is_what_the_prose_says(self):
+        self.assertTrue(issubclass(RealNetworkInTests, BaseException))
+        self.assertFalse(issubclass(RealNetworkInTests, Exception))
 
 
 class StreamChatIsInertDuringTestsTests(SimpleTestCase):
