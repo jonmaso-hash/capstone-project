@@ -341,14 +341,28 @@ class HuggingFaceIsOfflineDuringTestsTests(SimpleTestCase):
             io.open(Path(settings.BASE_DIR) / '.github' / 'workflows' / 'ci.yml',
                     encoding='utf-8').read())
         for job in ('check', 'zelda-api-tests'):
-            steps = workflow['jobs'][job]['steps']
+            spec = workflow['jobs'][job]
+            steps = spec['steps']
             self.assertGreater(len(steps), 2, 'positive control: %s has steps' % job)
+
+            # The producer and the consumer must agree on ONE location. An
+            # earlier version of this test looked for the literal string
+            # 'huggingface' in the cache path, which broke the moment the path
+            # became an HF_HOME reference -- it was checking a spelling, not the
+            # property. The property is: the job declares HF_HOME, and the thing
+            # it caches is that same location.
+            hf_home = (spec.get('env') or {}).get('HF_HOME')
             fetches = [s for s in steps
                        if 'sentence_transformers' in str(s.get('run', ''))]
-            caches = [s for s in steps
-                      if 'cache' in str(s.get('uses', ''))
-                      and 'huggingface' in str(s.get('with', {}).get('path', ''))]
+            caches = [s for s in steps if 'cache' in str(s.get('uses', ''))]
+            cached_paths = [str(s.get('with', {}).get('path', '')) for s in caches]
+
             with self.subTest(job=job):
+                self.assertTrue(
+                    hf_home,
+                    '%s does not declare HF_HOME, so the preload step and the '
+                    'test step rely on the default cache location happening to '
+                    'coincide. It does today; it is not a contract.' % job)
                 self.assertTrue(
                     fetches,
                     'The test runner forces HF offline, so %s must put the '
@@ -356,10 +370,50 @@ class HuggingFaceIsOfflineDuringTestsTests(SimpleTestCase):
                     'EmbeddingSemanticOrderingTests gets 0.0 similarity scores '
                     'and fails -- which is how PR #124 broke.' % job)
                 self.assertTrue(
-                    caches,
-                    '%s fetches the model but does not cache it, so every run '
-                    'downloads it again and depends on huggingface.co being '
-                    'up.' % job)
+                    any('HF_HOME' in p or 'huggingface' in p for p in cached_paths),
+                    '%s fetches the model but caches nothing at HF_HOME, so '
+                    'every run downloads it again and depends on '
+                    'huggingface.co being up. Cached paths: %r'
+                    % (job, cached_paths))
+                self.assertTrue(
+                    any('revision=' in str(s.get('run', '')) for s in fetches),
+                    '%s fetches the model without pinning a revision, so '
+                    'upstream reweighting can move the semantic assertions '
+                    'underneath the suite.' % job)
+                self.assertTrue(
+                    any('EMBEDDING_REVISION' in str(s.get('run', ''))
+                        for s in fetches),
+                    '%s names a revision of its own rather than deriving it '
+                    'from ai_utils.EMBEDDING_REVISION. That disagreement IS '
+                    'the bug that broke the build: CI fetched a SHA while the '
+                    'loader asked for `main`, and a SHA fetch writes no '
+                    'refs/main for an offline lookup to resolve.' % job)
+
+    def test_the_model_identity_lives_in_one_place(self):
+        """
+        The loader must pin the same revision CI preloads. A pin the consumer
+        ignores protects nothing -- and worse, it breaks the offline path,
+        because fetching by SHA writes snapshots/<sha> and no refs/main.
+        """
+        import io
+        from pathlib import Path
+
+        from django.conf import settings
+        from matchmaking.services.ai_utils import EMBEDDING_MODEL, EMBEDDING_REVISION
+
+        self.assertTrue(EMBEDDING_MODEL and EMBEDDING_REVISION)
+        self.assertEqual(len(EMBEDDING_REVISION), 40,
+                         'a revision should be a full commit SHA')
+
+        # And the workflow must not carry its own copy of it.
+        workflow_text = io.open(
+            Path(settings.BASE_DIR) / '.github' / 'workflows' / 'ci.yml',
+            encoding='utf-8').read()
+        self.assertGreater(len(workflow_text), 500, 'positive control')
+        self.assertEqual(
+            workflow_text.count(EMBEDDING_REVISION), 0,
+            'ci.yml hardcodes the revision instead of importing it from '
+            'ai_utils, which is how the two sides drifted apart.')
 
     def test_the_runner_is_what_sets_them(self):
         """

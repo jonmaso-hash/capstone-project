@@ -95,8 +95,12 @@ class EmbeddingModelThreadSafetyTests(SimpleTestCase):
 
         loads, models = [], []
 
-        def slow_model(name):
-            loads.append(name)
+        def slow_model(name, revision=None):
+            # `revision` is accepted because the loader now pins it. The pin has
+            # to be on THIS side as well as in CI's preload: a SHA fetch writes
+            # snapshots/<sha> and no refs/main, so a loader asking for the
+            # default `main` finds nothing offline.
+            loads.append((name, revision))
             time.sleep(0.2)
             return object()
 
@@ -115,6 +119,9 @@ class EmbeddingModelThreadSafetyTests(SimpleTestCase):
                 thread.join()
 
         self.assertEqual(len(loads), 1)
+        # The pinned identity reaches the loader, not just CI's preload step.
+        from matchmaking.services.ai_utils import EMBEDDING_MODEL, EMBEDDING_REVISION
+        self.assertEqual(loads[0], (EMBEDDING_MODEL, EMBEDDING_REVISION))
         self.assertEqual(len({id(model) for model in models}), 1)
 
 
