@@ -776,7 +776,8 @@ class ICMemoTests(TestCase):
         })
         td = build_ic_memo_context(self.application)['truth_delta']
         self.assertEqual(td['claims_checked'], 3)
-        self.assertEqual(td['coverage'], {'total': 2, 'verified': 1, 'pct': 50.0})
+        self.assertEqual(td['coverage'], {'total': 2, 'verified': 1, 'contradicted': 0,
+                                          'no_data': 1, 'pct': 50.0})
         self.assertEqual(td['no_data_count'], 1)
         self.assertEqual(td['document_id'], doc.id)
 
@@ -3704,11 +3705,16 @@ class TruthDeltaReportRollupAndTrendTests(TestCase):
             {'category': 'funding', 'claimed': '$500K', 'observed': '$500K (Crunchbase)', 'assessment': 'ok'},
         ], evidence=['revenue'])
         stats = report.verifiability_stats()
-        self.assertEqual(stats, {'total': 2, 'verified': 1, 'pct': 50.0})
+        # Three-state grounding: `contradicted` and `no_data` are counted apart,
+        # never summed. Funding has only model prose behind it -> no_data, and
+        # no stored comparison exists -> nothing is contradicted.
+        self.assertEqual(stats, {'total': 2, 'verified': 1, 'contradicted': 0,
+                                 'no_data': 1, 'pct': 50.0})
 
     def test_verifiability_stats_with_no_claims_at_all(self):
         report = self._report()
-        self.assertEqual(report.verifiability_stats(), {'total': 0, 'verified': 0, 'pct': None})
+        self.assertEqual(report.verifiability_stats(), {
+            'total': 0, 'verified': 0, 'contradicted': 0, 'no_data': 0, 'pct': None})
 
     def test_category_states_without_per_claim_are_all_no_data(self):
         """The 'no external data found for this company at all' branch never sets per_claim — every claim is unchecked."""
