@@ -173,3 +173,28 @@ Intelligence-quality items (L-006, L-010, L-011, L-012) are backlog for the late
 - The local DB keeps the five `baseline_*` users, Application 35 and document 3117 with its outputs, for before/after comparison.
 - The rerun needs fresh principals, or must delete these first.
 - The temporary launch configs and the dev-media copy of the deck were removed after the run.
+
+## Errata
+
+**E-1 (2026-10-03), L-017 and the P-PAID fixture.**
+
+*What was wrong with the fixture:*
+- P-PAID (user 288) was given an active `Subscription(plan=INVESTOR_PREMIUM)` row but **not** `InvestorApplication.is_premium=True`.
+- The application's premium authority is that `is_premium` flag on the role profile. The Stripe webhook sets it (`billing/views.py:49-58`); the `Subscription` row alone grants nothing.
+- So the run observed an incomplete paid state. P-PAID was, to the code, an unpaid investor with a subscription record.
+
+*What still stands:*
+- Every report gate the run probed is keyed to the document **owner's** Premium status, with a staff bypass, never the viewer's: `truth_delta_unlocked` (`zelda_api/truth_delta_models.py:650`), the memo API's `memo_unlocked` (`zelda_api/pipeline_views.py:273`), and the IC memo tier (`zelda_api/ic_memo.py:75`).
+- So "LITE and PAID were identical on every probed report surface" remains supported by the code, independent of the fixture.
+
+*What is withdrawn:*
+- L-017's broader wording, "the viewer's subscription changes nothing on any surface". A viewer's own `is_premium` does govern:
+  - their outreach cap (`matchmaking/views.py:668`);
+  - their analysis credits (`zelda_api/quotas.py`, used by `confirm_analyze_founder_profile`).
+- The baseline neither probed these nor could have, with this fixture.
+
+*For the rerun:*
+- Set `is_premium=True` on P-PAID's role profile, as the webhook does.
+- Add one probe of a viewer-premium gate: the outreach cap, or `analyze/founder/<u>/confirm/`, the latter charged at local test cost only.
+
+Finding L-017 itself is unchanged in place, per the freeze rule.
