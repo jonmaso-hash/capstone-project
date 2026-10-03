@@ -20,21 +20,29 @@ resolver would recreate the dual-identity-authority defect PRs #102-#105
 removed, so this module exposes no resolution at all and a structural test
 keeps it that way.
 
-TWO DELIBERATE REFUSALS.
+TWO REFUSALS, BOTH SINCE RESOLVED BY EVIDENCE -- recorded because how a fact
+arrived is part of the fact.
 
-`ENTITY_KEY_FIELD` is None. The document number is probably the right natural
-key, and "probably" is exactly how five Filed sources became the whole truth.
-Sunbiz publishes formal fixed-width field definitions; those are the authority
-for what the document number means and whether it is stable enough to key a
-business record. The key gets encoded after they are read, not before.
+`ENTITY_KEY_FIELD` was None until the published field definitions were read.
+"Probably the document number" is exactly how five Filed sources became the
+whole truth, so the key waited for the definitions rather than the other way
+round. It is now `document_number`, and `ROWS_PER_KEY` is 'many': the key says
+which business a row is about and nothing about how many rows there are.
 
-The Florida dataset statement is UNVERIFIED. The Sunbiz download pages sit
-behind Cloudflare bot verification, which this project does not defeat -- the
-same evidence-based line that stopped the Secretary of State scraper. So the
-claim is carried as an attributed, dated quotation with `verified: False`, and
-`assess_coverage` refuses 'broad' while it stays that way. Florida therefore
-remains 'unmeasured', exactly where PR 4 left it, and a test holds it there
-rather than relying on anyone's restraint.
+The Florida dataset statement was unverified, and is now verified with
+`verified_by` recording that a human read the pages -- the Sunbiz downloads sit
+behind Cloudflare bot verification, which this project does not defeat, the
+same evidence-based line that stopped the Secretary of State scraper. That is
+weaker provenance than a programmatic fetch and a re-check needs a human again.
+
+Verifying the statement did NOT grant coverage, and that separation is the
+point: knowing what a corpus is MEANT to contain says nothing about whether it
+was ingested. Florida has no ingestion, so it remains 'unmeasured', and a test
+holds it there rather than relying on anyone's restraint.
+
+What is still open: the 8-character date format, the internal quarterly shard
+names, and how several rows for one document number combine. See OPEN_UNKNOWNS;
+each is settled by one real artifact and none should be guessed.
 
 COVERAGE AND FRESHNESS ARE DIFFERENT QUESTIONS, and the vocabulary is shared
 with `filed_authority` on purpose: 'broad' is the breadth of the documented
@@ -115,7 +123,14 @@ PARSER_SCHEMA_VERSION = 1
 # the data file is the Corporation Number at start 1, length 12, described as
 # the corporate document number, and it sits at the same position and width in
 # the event file -- which is what makes it the join key between filings and
-# events. The usage guide calls it the cross-file unique identifier.
+# events.
+#
+# The usage guide describes it as identifying a record across the files. Read
+# that as ENTITY identity, never ROW identity: it says which business a row is
+# about, and says nothing about how many rows are about that business. The
+# source states elsewhere that duplicate document numbers legitimately occur,
+# so the two statements only contradict each other if "identifies" is taken to
+# mean "appears once". See ROWS_PER_KEY immediately below.
 ENTITY_KEY_FIELD = 'document_number'
 ENTITY_KEY_LAYOUT = {'start': 1, 'length': 12}
 
