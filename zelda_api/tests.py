@@ -3940,9 +3940,19 @@ class EntityVerificationTests(TestCase):
         from .safe_fetch import FetchResult
         mock_result = MagicMock(creation_date=date(2024, 1, 1))
         page = FetchResult(final_url='https://taskco.com/', status=200, text='<title>TaskCo</title>')
+        from . import companyenrich, filed
+        # This test is about the task persisting a report, not about the external
+        # sources. collect_findings() reaches companyenrich (any report with a
+        # website) and Filed (every report) and, left unpatched, each made a
+        # real HTTP call that the test runner's network ban correctly refused.
+        # Each source gets its neutral answer -- "no key" / "no record" -- so no
+        # finding is produced and the ban stays armed for anything else.
         with patch('whois.whois', return_value=mock_result), \
              patch('zelda_api.entity_verification.fetch_public_page', return_value=page), \
-             patch('zelda_api.sec_identity.sec_findings'):
+             patch('zelda_api.sec_identity.sec_findings'), \
+             patch.object(companyenrich, 'lookup_status', return_value=companyenrich.UNCONFIGURED), \
+             patch.object(companyenrich, 'company_footprint', return_value=None), \
+             patch.object(filed, 'company_record', return_value=(filed.NO_RECORD, None)):
             result = verify_entity_integrity(doc.id)
 
         self.assertEqual(result['status'], 'success')
