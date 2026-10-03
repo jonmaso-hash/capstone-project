@@ -37,6 +37,7 @@ Note: `facts['arr']` here and `ClaimedDatapoint(category='arr')` in Truth Delta
 are INTENTIONALLY different contracts. The claim category legitimately means
 ARR. Do not unify them.
 """
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
@@ -217,13 +218,33 @@ class ClaimExtractionRespectsTheSameSemanticsTests(TestCase):
             document_type='pitch_deck', status='analyzed')
 
     def claims_from(self, *insights):
+        from unittest import mock
+        from . import sec_identity
         from .truth_delta_models import ClaimedDatapoint
         from .truth_delta_tasks import extract_claims_from_insights
         for category, text in insights:
             IntelligenceInsight.objects.create(
                 document=self.document, category=category, insight_text=text,
                 confidence_score=0.95)
-        extract_claims_from_insights(self.document.id)
+        # Claim extraction resolves the company identity, which reaches EDGAR.
+        # These tests are about what counts as a money claim, not about SEC
+        # availability, so the lookup is stubbed at `_get` -- the lowest seam
+        # that removes the network -- and made to fail the way a real outage
+        # fails, so sec_identity's own degradation path still runs.
+        #
+        # It was reaching the network until the test ban stopped being
+        # swallowable: the ban had been firing here and something upstream was
+        # catching it, so the suite looked clean while calling sec.gov.
+        # NewsAPI is reached too, and is stubbed by making it INACTIVE rather
+        # than by faking a response: that reproduces CI, where NEWS_API_KEY is
+        # absent so the integration never activates. The local .env has a key,
+        # which is the whole reason this diverged from CI unnoticed -- and why
+        # `apiKey=...` turned up in a gate log.
+        with mock.patch.object(
+                sec_identity, '_get',
+                side_effect=sec_identity.SecUnavailable(sec_identity.UNREACHABLE)), \
+             mock.patch.object(settings, 'NEWS_API_KEY', ''):
+            extract_claims_from_insights(self.document.id)
         return {c.category: c.claimed_value_numeric
                 for c in ClaimedDatapoint.objects.filter(document=self.document)}
 

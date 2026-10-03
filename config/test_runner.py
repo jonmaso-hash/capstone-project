@@ -40,8 +40,22 @@ from django.test.runner import DiscoverRunner
 _ALLOWED = []
 
 
-class RealHTTPInTests(AssertionError):
-    """A test tried to make a real HTTP request."""
+class RealNetworkInTests(BaseException):
+    """
+    A test tried to reach the network.
+
+    DERIVED FROM BaseException, NOT Exception, and that is the whole point.
+    The first version subclassed AssertionError, and
+    `entity_verification.lookup_domain_creation_date` wraps its WHOIS call in a
+    bare `except Exception` -- so it CAUGHT the ban, returned its polite
+    "Domain lookup unavailable right now." string, and the test passed while
+    having attempted a real network call. Measured, not theorised.
+
+    A ban a provider can catch is not a ban. unittest's test executor uses a
+    bare `except:`, so a BaseException subclass is still reported as a test
+    error rather than aborting the run -- which is what makes this safe as well
+    as correct.
+    """
 
 
 @contextlib.contextmanager
@@ -54,9 +68,22 @@ def allow_real_http():
         _ALLOWED.pop()
 
 
-def install_http_ban():
+def install_network_ban():
     """
     Replace HTTPAdapter.send with a refusal. Idempotent.
+
+    Covers TWO paths, because one was missed and the gap was invisible:
+
+      `requests`, via HTTPAdapter.send -- every HTTP provider in this codebase.
+      `whois.whois`, which uses RAW SOCKETS and so never touched the first ban
+      at all. A survey of the excluded suite caught it live:
+      "WHOIS lookup failed for domain example.com: socket timeout at
+      10.0.0.1:43". Port 43 is WHOIS.
+
+    Still not a socket ban: the cache is Redis over TLS to a remote host, so
+    banning sockets wholesale would break every test that touches the cache.
+    Each outbound provider is banned at its own seam instead, and the cost of
+    that choice is exactly this -- a new seam has to be added deliberately.
 
     Idempotence matters: the runner installs it once, but a test that imports
     this module must not be able to wrap the refusal in another refusal and
@@ -71,7 +98,7 @@ def install_http_ban():
     def send(self, request, *args, **kwargs):
         if _ALLOWED:
             return original_send(self, request, *args, **kwargs)
-        raise RealHTTPInTests(
+        raise RealNetworkInTests(
             'A test tried to make a real HTTP request:\n'
             '    %s %s\n'
             'Tests must not reach the network: it makes them slow, flaky, '
@@ -84,6 +111,83 @@ def install_http_ban():
 
     HTTPAdapter.send = send
     HTTPAdapter._interlink_http_banned = True
+
+    _install_whois_ban()
+
+
+def _install_whois_ban():
+    """
+    Ban the WHOIS lookup, which reaches the network over a raw socket and so
+    was never covered by the `requests` ban.
+    """
+    try:
+        import whois
+    except ImportError:          # pragma: no cover - the package is installed
+        return
+    if getattr(whois, '_interlink_whois_banned', False):
+        return
+    original_whois = whois.whois
+
+    def banned_whois(domain, *args, **kwargs):
+        if _ALLOWED:
+            return original_whois(domain, *args, **kwargs)
+        raise RealNetworkInTests(
+            'A test tried to make a real WHOIS lookup for %r.\n'
+            'WHOIS uses a raw socket on port 43, so it is banned at its own '
+            'seam rather than through requests. Mock '
+            "mock.patch('zelda_api.entity_verification."
+            "lookup_domain_creation_date'), or the whois call itself."
+            % (domain,))
+
+    whois.whois = banned_whois
+    whois._interlink_whois_banned = True
+
+
+def _install_stream_stub():
+    """
+    Replace Stream Chat with an inert double.
+
+    A STUB, not a ban, and the distinction is deliberate. Stream is third-party
+    chat infrastructure, not one of Zelda's evidence sources: its calls say
+    nothing about a company and cannot corrupt a finding. So it is substituted
+    the way the cache is substituted for locmem, rather than refused the way a
+    provider is refused.
+
+    It was found the hard way. Making the ban unswallowable turned 27 tests
+    across three modules red, all of them POSTing to chat.stream-io-api.com and
+    creating real users in a live Stream account on every gate run. The ban had
+    been firing on them all along and something in that path was catching it --
+    which is precisely what deriving from Exception allowed.
+
+    Patched in THREE places, because `from stream_chat import StreamChat` at
+    module scope binds the name into the importing module: replacing only
+    `stream_chat.StreamChat` would leave the already-imported references in the
+    view modules pointing at the real client.
+    """
+    class _InertStreamChat:
+        """Records what was asked of it and reaches nothing."""
+
+        calls = []
+
+        def __init__(self, *args, **kwargs):
+            type(self).calls.append(('__init__', args, kwargs))
+
+        def __getattr__(self, name):
+            def _recorded(*args, **kwargs):
+                type(self).calls.append((name, args, kwargs))
+                return {}
+            return _recorded
+
+    import stream_chat
+    stream_chat.StreamChat = _InertStreamChat
+    for dotted in ('accounts.views', 'matchmaking.views'):
+        try:
+            module = __import__(dotted, fromlist=['StreamChat'])
+        except Exception:                      # pragma: no cover
+            continue
+        if hasattr(module, 'StreamChat'):
+            module.StreamChat = _InertStreamChat
+    return _InertStreamChat
 
 
 class InterlinkTestRunner(DiscoverRunner):
@@ -110,7 +214,8 @@ class InterlinkTestRunner(DiscoverRunner):
 
     def setup_test_environment(self, **kwargs):
         super().setup_test_environment(**kwargs)
-        install_http_ban()
+        install_network_ban()
+        _install_stream_stub()
         from django.test.utils import override_settings
         self._local_cache = override_settings(CACHES={
             'default': {
