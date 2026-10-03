@@ -39,9 +39,10 @@ WHY THIS TEST LIVES IN `pages`. `pages` is a whole-app entry, so this file is
 discovered automatically. In zelda_api it would itself need a manifest entry,
 and a manifest guard that can be omitted from the manifest guards nothing.
 
-PHASE 0 ENDS when INTENTIONAL_EXCLUSIONS is empty. Until then this test makes
-the remaining debt countable rather than letting a passing manifest imply a
-complete one.
+PHASE 0 ENDED when INTENTIONAL_EXCLUSIONS became empty: zelda_api.tests, the
+last module kept out of the blocking job, was rehabbed (all 418 tests passing,
+one process, 756 MB peak) and wired in. The set is now a gate rather than a
+scoreboard -- a new exclusion fails the suite, so it cannot be added quietly.
 """
 import io
 import re
@@ -60,16 +61,10 @@ TEST_STEP = re.compile(r'python\s+manage\.py\s+test\b')
 
 # Modules deliberately left out of the blocking job, each with its reason.
 # A module may only be here because running it would break the gate for a
-# stated cause -- never because nobody got round to wiring it up. When this is
-# empty, Phase 0 is done.
-INTENTIONAL_EXCLUSIONS = {
-    'zelda_api.tests': (
-        "The 4,250-line suite added in the two 'IC memo needs works' commits "
-        "(2026-07-21). Makes live huggingface.co calls, hits the Celery "
-        ".delay()-from-a-live-view hang, and has real failures. Covered by the "
-        "non-blocking zelda-api-tests job until rehabbed."
-    ),
-}
+# stated cause -- never because nobody got round to wiring it up. Empty since
+# zelda_api.tests was wired in; adding an entry now fails
+# test_the_blocking_manifest_has_no_exclusions below.
+INTENTIONAL_EXCLUSIONS = {}
 
 
 def blocking_test_labels(workflow=None):
@@ -255,16 +250,17 @@ class TheRemainingDebtIsCountableTests(SimpleTestCase):
             exclusions_without_reasons(INTENTIONAL_EXCLUSIONS), [],
             'an exclusion is listed without a substantive reason')
 
-    def test_the_exclusion_set_is_the_phase_0_scoreboard(self):
+    def test_the_blocking_manifest_has_no_exclusions(self):
         """
-        Not a pass/fail gate on its own -- it records the number so a run says
-        how much debt is left. Phase 0 is complete when this is 0, at which
-        point this test is the one that tells you.
+        Phase 0 is complete, so this is a gate and no longer a scoreboard: it
+        used to tolerate one exclusion and report the count. Re-excluding a
+        module is a decision to take a suite out of the merge gate, and it
+        should have to say so by changing this test, not by adding a line to a
+        dict that is easy to read past in a diff.
         """
-        remaining = sorted(INTENTIONAL_EXCLUSIONS)
-        self.assertLessEqual(
-            len(remaining), 1,
-            f'the blocking manifest has grown new permanent holes: {remaining}')
+        self.assertEqual(
+            sorted(INTENTIONAL_EXCLUSIONS), [],
+            'a module has been excluded from the blocking CI job again')
 
 
 class TheContractLogicItselfIsTestedTests(SimpleTestCase):
