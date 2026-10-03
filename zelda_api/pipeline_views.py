@@ -16,10 +16,18 @@ from rest_framework.authentication import SessionAuthentication, TokenAuthentica
 from .truth_delta_tasks import verify_document_truth_delta as initiate_truth_delta_verification
 from .vector_models import DocumentSource, IntelligenceMemo, IntelligenceInsight, DocumentChunk, BusinessValuationReport
 from .intelligence_pipeline import intelligence_pipeline
-from .retrieval import retriever, context_assembler
+from .authorization import authorize
+from .principal import Principal
+from .retrieval import VectorRetriever, retriever, validate_top_k
 from .tasks import process_document_pipeline, process_valuation_document_task
 
 logger = logging.getLogger(__name__)
+
+
+def _query_from(request):
+    """The search query from a request body: a stripped string, or '' for anything else."""
+    query = request.data.get('query', '')
+    return query.strip() if isinstance(query, str) else ''
 
 
 class DocumentIngestView(APIView):
@@ -537,22 +545,23 @@ class DocumentSearchView(APIView):
     def post(self, request, document_id):
         try:
             doc = DocumentSource.objects.get(id=document_id)
-            
-            if doc.uploaded_by != request.user and not request.user.is_staff:
+            principal = Principal.from_request(request, label='zelda_api:document_search')
+
+            if not authorize(principal).text_permitted(doc):
                 return Response(
                     {"error": "Not authorized"},
                     status=status.HTTP_403_FORBIDDEN
                 )
-            
-            query = request.data.get('query', '').strip()
+
+            query = _query_from(request)
             if not query:
                 return Response(
                     {"error": "Query required"},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
-            # Vector search within document
-            results = retriever.retrieve(query, doc)
+
+            # Vector search within document, scoped to this principal
+            results = retriever.retrieve(principal, query, doc)
             
             return Response({
                 'document_id': doc.id,
@@ -581,25 +590,30 @@ class DocumentRAGView(APIView):
     def post(self, request, document_id):
         try:
             doc = DocumentSource.objects.get(id=document_id)
-            
-            if doc.uploaded_by != request.user and not request.user.is_staff:
+            principal = Principal.from_request(request, label='zelda_api:document_rag')
+
+            if not authorize(principal).text_permitted(doc):
                 return Response(
                     {"error": "Not authorized"},
                     status=status.HTTP_403_FORBIDDEN
                 )
-            
-            query = request.data.get('query', '').strip()
-            top_k = request.data.get('top_k', 5)
-            
+
+            query = _query_from(request)
             if not query:
                 return Response(
                     {"error": "Query required"},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
-            # Retrieve context for RAG
-            retriever_temp = retriever.__class__(top_k=top_k)
-            results = retriever_temp.retrieve(query, doc)
+
+            # Validated before any retrieval: an unchecked top_k from the
+            # request body sized the candidate list.
+            try:
+                top_k = validate_top_k(request.data.get('top_k'))
+            except ValueError as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Retrieve context for RAG, scoped to this principal
+            results = VectorRetriever(top_k=top_k).retrieve(principal, query, doc)
             
             # Assemble context
             context_text = "Retrieved Context:\n\n"

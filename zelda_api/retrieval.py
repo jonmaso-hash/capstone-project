@@ -2,14 +2,41 @@
 """
 Vector retrieval and context assembly for RAG (Retrieval-Augmented Generation).
 Finds relevant document chunks and assembles contextual information for analysis.
+
+Principal-scoped (Phase 1 Task 3). Every retrieval names the Principal it is
+for, and the candidate chunks are restricted to what authorize(principal)
+permits BEFORE anything is loaded, embedded, scored or keyword-matched --
+retrieve-then-filter is never the security model. There is no unscoped
+retrieval: no principal refuses, and a document outside the principal's
+scope refuses rather than returning an empty result.
 """
 import logging
 from typing import List, Dict, Tuple, Optional
 from django.db.models import Q
+from .authorization import authorize
+from .principal import PrincipalRequired, require_principal
 from .vector_models import DocumentChunk, DocumentSource
 from .embeddings import embedding_engine, EmbeddingEngine
 
 logger = logging.getLogger(__name__)
+
+MAX_TOP_K = 20
+
+
+class RetrievalRefused(PrincipalRequired):
+    """The principal may not retrieve this document's text."""
+
+
+def validate_top_k(value, default=5):
+    """
+    An int in 1..MAX_TOP_K, or ValueError. Booleans and strings are not
+    numbers here: top_k arrives from request bodies.
+    """
+    if value is None:
+        return default
+    if isinstance(value, bool) or not isinstance(value, int) or not 1 <= value <= MAX_TOP_K:
+        raise ValueError(f'top_k must be an integer from 1 to {MAX_TOP_K}.')
+    return value
 
 
 class VectorRetriever:
@@ -17,64 +44,77 @@ class VectorRetriever:
     Retrieves relevant document chunks based on semantic similarity.
     Uses vector search with fallback to keyword search.
     """
-    
+
     def __init__(self, top_k: int = 5):
-        self.top_k = top_k
+        self.top_k = validate_top_k(top_k)
         self.embedding_engine = embedding_engine
-    
-    def retrieve(self, query: str, document_source: Optional[DocumentSource] = None) -> List[Dict]:
+
+    def retrieve(self, principal, query: str, document_source: Optional[DocumentSource] = None) -> List[Dict]:
         """
-        Retrieve top-k relevant chunks for a query.
-        
+        Retrieve top-k relevant chunks for a query, for this principal.
+
         Args:
+            principal: Who the retrieval is for. Required; None refuses.
             query: The search query
-            document_source: Optional filter to single document
-            
+            document_source: Optional filter to single document. Refuses if
+                the principal may not read its text.
+
         Returns:
             List of dicts with chunk info and relevance scores
         """
+        candidates = self._candidates(principal, document_source)
+
         # Generate query embedding
         query_embedding = self.embedding_engine.embed_text(query)
-        
+
         if not query_embedding:
             logger.warning(f"Failed to embed query: {query}")
-            return self._keyword_fallback_search(query, document_source)
-        
-        return self._vector_search(query_embedding, query, document_source)
-    
-    def _vector_search(self, query_embedding: List[float], query: str, document_source: Optional[DocumentSource]) -> List[Dict]:
+            return self._keyword_fallback_search(query, candidates)
+
+        return self._vector_search(query_embedding, query, candidates)
+
+    @staticmethod
+    def _candidates(principal, document_source: Optional[DocumentSource]):
         """
-        Search using vector similarity.
+        The only place this module reads DocumentChunk: the chunks of the
+        documents authorize(principal) permits, narrowed to one document if
+        asked. Built before any ranking, so nothing outside scope is loaded.
         """
-        # Get candidate chunks
-        chunks_query = DocumentChunk.objects.filter(embedding_vector__isnull=False)
-        
-        if document_source:
-            chunks_query = chunks_query.filter(document=document_source)
-        
-        chunks = list(chunks_query.select_related('document'))
-        
+        auth = authorize(require_principal(principal))
+        if document_source is not None and not auth.text_permitted(document_source):
+            raise RetrievalRefused('This principal may not retrieve this document.')
+        candidates = DocumentChunk.objects.filter(document__in=auth.text_documents())
+        if document_source is not None:
+            candidates = candidates.filter(document=document_source)
+        return candidates
+
+    def _vector_search(self, query_embedding: List[float], query: str, candidates) -> List[Dict]:
+        """
+        Search using vector similarity over the authorized candidates.
+        """
+        chunks = list(candidates.filter(embedding_vector__isnull=False).select_related('document'))
+
         if not chunks:
             logger.debug("No embedded chunks found, falling back to keyword search")
-            return self._keyword_fallback_search(query, document_source)
-        
+            return self._keyword_fallback_search(query, candidates)
+
         # Calculate similarity scores
         scored_chunks = []
         for chunk in chunks:
             if not chunk.embedding_vector:
                 continue
-            
+
             try:
                 similarity = self.embedding_engine.cosine_similarity(
-                    query_embedding, 
+                    query_embedding,
                     chunk.embedding_vector
                 )
-                
+
                 # Boost score if query keywords appear in chunk
                 keyword_boost = self._keyword_boost(query, chunk.raw_text)
-                
+
                 final_score = (similarity * 0.7) + (keyword_boost * 0.3)
-                
+
                 scored_chunks.append({
                     'chunk': chunk,
                     'score': final_score,
@@ -83,10 +123,10 @@ class VectorRetriever:
                 })
             except Exception as e:
                 logger.error(f"Error scoring chunk {chunk.id}: {str(e)}")
-        
+
         # Sort by score and return top-k
         scored_chunks.sort(key=lambda x: x['score'], reverse=True)
-        
+
         return [
             {
                 'id': s['chunk'].id,
@@ -98,25 +138,22 @@ class VectorRetriever:
             }
             for s in scored_chunks[:self.top_k]
         ]
-    
-    def _keyword_fallback_search(self, query: str, document_source: Optional[DocumentSource]) -> List[Dict]:
+
+    def _keyword_fallback_search(self, query: str, candidates) -> List[Dict]:
         """
-        Fallback keyword search when vector search unavailable.
+        Fallback keyword search when vector search unavailable, over the same
+        authorized candidates -- never over every chunk.
         """
         query_words = query.lower().split()
-        
-        chunks_query = DocumentChunk.objects.all()
-        if document_source:
-            chunks_query = chunks_query.filter(document=document_source)
-        
+
         # Search for chunks containing multiple query terms
         q_objects = Q()
         for word in query_words:
             if len(word) > 3:  # Skip short words
                 q_objects |= Q(raw_text__icontains=word)
-        
-        chunks = list(chunks_query.filter(q_objects).select_related('document')[:self.top_k])
-        
+
+        chunks = list(candidates.filter(q_objects).select_related('document')[:self.top_k])
+
         return [
             {
                 'id': chunk.id,
@@ -128,20 +165,20 @@ class VectorRetriever:
             }
             for chunk in chunks
         ]
-    
+
     def _keyword_boost(self, query: str, text: str) -> float:
         """
         Calculate keyword match boost (0.0-1.0).
         """
         query_words = set(query.lower().split())
         text_words = set(text.lower().split())
-        
+
         matches = len(query_words & text_words)
         max_matches = len(query_words)
-        
+
         if max_matches == 0:
             return 0.0
-        
+
         return min(matches / max_matches, 1.0)
 
 
@@ -150,13 +187,13 @@ class ContextAssembler:
     Assembles contextual information from retrieved chunks.
     Produces structured context for memo generation.
     """
-    
+
     def __init__(self):
         self.retriever = VectorRetriever(top_k=7)
-    
-    def assemble_context(self, document_source: DocumentSource) -> Dict:
+
+    def assemble_context(self, principal, document_source: DocumentSource) -> Dict:
         """
-        Assemble comprehensive context for a document.
+        Assemble comprehensive context for a document, for this principal.
         Retrieves context for key topics and organizes by section.
         """
         # Key analysis topics to retrieve context for
@@ -169,36 +206,42 @@ class ContextAssembler:
             "funding stage and investment ask",
             "risks and challenges",
         ]
-        
+
         context_map = {}
         all_cited_chunks = set()
-        
+
         for topic in topics:
-            results = self.retriever.retrieve(topic, document_source)
+            results = self.retriever.retrieve(principal, topic, document_source)
             context_map[topic] = {
                 'retrieved': results,
                 'count': len(results),
             }
-            
+
             for result in results:
                 all_cited_chunks.add(result['id'])
-        
-        # Compile citation metadata
-        cited_chunks = DocumentChunk.objects.filter(id__in=all_cited_chunks)
-        
+
+        # Citation metadata from the chunks already retrieved for this
+        # principal, not a second, unscoped read.
+        cited_pages = {
+            result['page']
+            for topic_context in context_map.values()
+            for result in topic_context['retrieved']
+            if result['page']
+        }
+
         return {
             'document_id': document_source.id,
             'source_entity': document_source.source_entity,
             'context_by_topic': context_map,
             'total_cited_chunks': len(all_cited_chunks),
             'total_chunks': document_source.chunks.count(),
-            'cited_pages': sorted(set(c.page_number for c in cited_chunks if c.page_number)),
+            'cited_pages': sorted(cited_pages),
         }
-    
-    def retrieve_for_category(self, document_source: DocumentSource, category: str) -> Tuple[List[Dict], str]:
+
+    def retrieve_for_category(self, principal, document_source: DocumentSource, category: str) -> Tuple[List[Dict], str]:
         """
-        Retrieve context for a specific insight category.
-        
+        Retrieve context for a specific insight category, for this principal.
+
         Returns:
             (retrieved_chunks, assembled_context_text)
         """
@@ -213,16 +256,16 @@ class ContextAssembler:
             'Risk': "risk challenges problems threats competition",
             'Other': "company business model vision",
         }
-        
+
         query = category_queries.get(category, category)
-        results = self.retriever.retrieve(query, document_source)
-        
+        results = self.retriever.retrieve(principal, query, document_source)
+
         # Assemble into readable text
         context_text = f"Context for {category}:\n\n"
         for i, result in enumerate(results, 1):
             context_text += f"[Source {i} - {result['section'] or 'General'}]:\n"
             context_text += result['text'][:300] + "...\n\n"
-        
+
         return results, context_text
 
 

@@ -140,6 +140,7 @@ jobs:
           zelda_api.tests_verification_starts_together
           zelda_api.tests_principal
           zelda_api.tests_authorization
+          zelda_api.tests_retrieval
           pages.tests_no_network_in_tests
           zelda_api.tests_filed
           zelda_api.tests_jurisdiction
