@@ -680,7 +680,7 @@ class ICMemoTests(TestCase):
         self.assertIsNotNone(context['memo_sections'])
         labels = [s['label'] for s in context['memo_sections']]
         self.assertIn('Executive Summary', labels)
-        self.assertIn('Investment Thesis', labels)
+        self.assertIn('Business Model & Growth Analysis', labels)  # was 'Investment Thesis'
         # Sections with blank text (never set) should be omitted, not shown empty.
         self.assertNotIn('Problem & Solution', labels)
         self.assertEqual(context['memo_meta']['citations_count'], 3)
@@ -918,15 +918,17 @@ class ICMemoTests(TestCase):
 
     def test_structured_fields_split_between_lite_and_full(self):
         """
-        Key Strengths/Concerns/What Would Change the Decision are Zelda
-        Lite; Bull/Base/Bear and Zelda Advantage are Zelda AI-only — the
-        intelligence_pipeline.py structured-fields pass.
+        Supported Points/Open Concerns/What Would Change the Picture are Zelda
+        Lite; the Upside/Base/Downside scenarios and Zelda Advantage are Zelda
+        AI-only — the intelligence_pipeline.py structured-fields pass. (Renamed
+        from Key Strengths/Concerns/What Would Change the Decision and
+        Bull/Base/Bear by migration 0024: the sections analyse, not advocate.)
 
         Asserts against build_ic_memo_context's section labels directly
         (not raw HTTP response text) for the exclusion checks — the global
         Zelda sidebar widget included on every authenticated page carries
         its own hardcoded loadMemo() section labels (including the literal
-        strings "Bull Case" and "Zelda Advantage"), which would false-
+        strings "Upside Scenario" and "Zelda Advantage"), which would false-
         positive an HTML-substring assertion regardless of memo tier.
         """
         from .ic_memo import build_ic_memo_context
@@ -947,20 +949,23 @@ class ICMemoTests(TestCase):
 
         lite_context = build_ic_memo_context(self.application, tier='lite')
         lite_labels = [s['label'] for s in lite_context['memo_sections']]
-        self.assertIn('Key Strengths', lite_labels)
-        self.assertIn('Key Concerns', lite_labels)
-        self.assertIn('What Would Change the Decision', lite_labels)
-        self.assertNotIn('Bull Case', lite_labels)
-        self.assertNotIn('Base Case', lite_labels)
-        self.assertNotIn('Bear Case', lite_labels)
+        self.assertIn('Supported Points', lite_labels)
+        self.assertIn('Open Concerns', lite_labels)
+        self.assertIn('What Would Change the Picture', lite_labels)
+        # These exclusions are only meaningful if the labels exist: against a
+        # retired label ('Bull Case') they pass vacuously whatever Lite shows.
+        # The full-tier assertions below are the positive control for them.
+        self.assertNotIn('Upside Scenario', lite_labels)
+        self.assertNotIn('Base Scenario', lite_labels)
+        self.assertNotIn('Downside Scenario', lite_labels)
         self.assertNotIn('Zelda Advantage', lite_labels)
         self.assertNotIn('Executive Summary', lite_labels)
 
         full_context = build_ic_memo_context(self.application, tier='full')
         full_labels = [s['label'] for s in full_context['memo_sections']]
-        self.assertIn('Bull Case', full_labels)
-        self.assertIn('Base Case', full_labels)
-        self.assertIn('Bear Case', full_labels)
+        self.assertIn('Upside Scenario', full_labels)
+        self.assertIn('Base Scenario', full_labels)
+        self.assertIn('Downside Scenario', full_labels)
         self.assertIn('Zelda Advantage', full_labels)
 
         # Content-level check via the real page render — these exact
@@ -5824,7 +5829,7 @@ class GaugeVocabularyTests(TestCase):
 
     def test_ic_memo_information_readiness_stays_distinct_from_analysis_confidence(self):
         html = self._ic_memo_html(readiness_text='Score: 66/100\nSolid metrics, thin pipeline.')
-        self.assertIn('Investment Readiness', html)
+        self.assertIn('Information Readiness', html)  # was 'Investment Readiness'
         self.assertIn('66/100', html)
         # when readiness parses, the memo shows readiness in the slot, not
         # analysis confidence — they are not the same measurement
@@ -6065,7 +6070,11 @@ class IntelligenceHeaderTests(TestCase):
             evidence_level='PARTLY_EVIDENCED', completeness_score=0.5, citations_count=0)
         html = self.client.get(reverse('zelda_api:ic_memo', args=[deck.id])).content.decode()
         self._assert_eyebrow(html)
-        self.assertIn("not an endorsement by Interlink Foundry", html)
+        # The memo used to carry "the recommendation is Zelda's, not an
+        # endorsement by Interlink Foundry". It no longer makes a recommendation
+        # (it states an evidence level), so the disclaimer became the statement
+        # that it never advises.
+        self.assertIn('never advises whether to invest', html)
         self.assertIn('AI Investment Committee Memo', html)
 
 
