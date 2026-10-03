@@ -14,13 +14,34 @@ _model = None
 _model_lock = threading.Lock()
 
 
+# THE CANONICAL MODEL IDENTITY. One place, because it is consumed from four:
+# this loader, CI's preload step, CI's cache key, and the test that checks a
+# real embedding was produced. Repeating it as literals across YAML and Python
+# is the next drift surface, and it already bit once.
+#
+# THE REVISION IS PINNED HERE AND NOT ONLY IN CI, which is the part that
+# matters. CI preloading a pinned SHA while this loader asked for the default
+# `main` is what broke the build: fetching by SHA writes snapshots/<sha> but no
+# refs/main pointer, so an offline resolution of `main` finds nothing and the
+# whole suite reports "couldn't find them in the cached files". Measured against
+# an empty HF_HOME, not deduced. A pin the consumer ignores protects nothing.
+#
+# Changing the revision changes the embeddings, so it also changes what the
+# semantic-ordering tests measure and what is stored in the 384-dimension
+# pgvector columns (see migration 0051). Treat a bump as a data migration, not
+# a dependency bump.
+EMBEDDING_MODEL = 'sentence-transformers/all-MiniLM-L6-v2'
+EMBEDDING_REVISION = '1110a243fdf4706b3f48f1d95db1a4f5529b4d41'
+
+
 def _get_model():
     global _model
     if _model is None:
         with _model_lock:
             if _model is None:
                 from sentence_transformers import SentenceTransformer
-                _model = SentenceTransformer('all-MiniLM-L6-v2')
+                _model = SentenceTransformer(EMBEDDING_MODEL,
+                                             revision=EMBEDDING_REVISION)
     return _model
 
 

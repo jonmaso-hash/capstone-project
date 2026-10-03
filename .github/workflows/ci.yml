@@ -58,20 +58,44 @@ jobs:
       # EmbeddingSemanticOrderingTests deliberately uses a real model, and
       # was quietly depending on huggingface.co being up. One declared
       # fetch, cached between runs, and the test run itself reaches nothing.
+      # The model identity comes from the app, never from a literal here.
+      # CI pinning a SHA while the loader asked for `main` is what broke the
+      # build: a SHA fetch writes no refs/main, so an offline `main` lookup
+      # finds nothing. One source of truth removes the disagreement.
+      - name: Resolve the embedding model identity
+        run: >-
+          python -c "from matchmaking.services.ai_utils import
+          EMBEDDING_MODEL, EMBEDDING_REVISION;
+          print(f'EMBEDDING_MODEL={EMBEDDING_MODEL}');
+          print(f'EMBEDDING_REVISION={EMBEDDING_REVISION}')"
+          >> "$GITHUB_ENV"
+
       - name: Cache the embedding model
         uses: actions/cache@v4
         with:
           path: ${{ env.HF_HOME }}
-          key: hf-minilm-l6-v2-1110a243fdf4-${{ hashFiles('requirements.txt') }}
-          restore-keys: hf-minilm-l6-v2-1110a243fdf4-
+          key: hf-${{ env.EMBEDDING_REVISION }}
+          restore-keys: hf-${{ env.EMBEDDING_REVISION }}
 
-      # Pinned revision: an unpinned model can be reweighted upstream and
-      # move the semantic assertions underneath the suite.
       - name: Put the embedding model on disk
         run: >-
-          python -c "from sentence_transformers import SentenceTransformer;
-          SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2',
-          revision='1110a243fdf4706b3f48f1d95db1a4f5529b4d41')"
+          python -c "from matchmaking.services.ai_utils import
+          EMBEDDING_MODEL, EMBEDDING_REVISION;
+          from sentence_transformers import SentenceTransformer;
+          SentenceTransformer(EMBEDDING_MODEL, revision=EMBEDDING_REVISION)"
+
+      # Observable evidence for the cache-hit path: a restored cache must
+      # contain the snapshot already, so a green second run cannot be
+      # explained by a silent re-download.
+      - name: Show what the cache restored
+        run: >-
+          python -c "import os, pathlib;
+          root = pathlib.Path(os.environ['HF_HOME']);
+          files = list(root.rglob('*')) if root.exists() else [];
+          print(f'HF_HOME={root} entries={len(files)}');
+          print(*[str(p.relative_to(root)) for p in files
+          if p.is_dir() and p.name.startswith('1110') or
+          p.name == 'snapshots'], sep='\n')"
 
       - name: Django system check
         run: python manage.py check
@@ -151,20 +175,44 @@ jobs:
       # EmbeddingSemanticOrderingTests deliberately uses a real model, and
       # was quietly depending on huggingface.co being up. One declared
       # fetch, cached between runs, and the test run itself reaches nothing.
+      # The model identity comes from the app, never from a literal here.
+      # CI pinning a SHA while the loader asked for `main` is what broke the
+      # build: a SHA fetch writes no refs/main, so an offline `main` lookup
+      # finds nothing. One source of truth removes the disagreement.
+      - name: Resolve the embedding model identity
+        run: >-
+          python -c "from matchmaking.services.ai_utils import
+          EMBEDDING_MODEL, EMBEDDING_REVISION;
+          print(f'EMBEDDING_MODEL={EMBEDDING_MODEL}');
+          print(f'EMBEDDING_REVISION={EMBEDDING_REVISION}')"
+          >> "$GITHUB_ENV"
+
       - name: Cache the embedding model
         uses: actions/cache@v4
         with:
           path: ${{ env.HF_HOME }}
-          key: hf-minilm-l6-v2-1110a243fdf4-${{ hashFiles('requirements.txt') }}
-          restore-keys: hf-minilm-l6-v2-1110a243fdf4-
+          key: hf-${{ env.EMBEDDING_REVISION }}
+          restore-keys: hf-${{ env.EMBEDDING_REVISION }}
 
-      # Pinned revision: an unpinned model can be reweighted upstream and
-      # move the semantic assertions underneath the suite.
       - name: Put the embedding model on disk
         run: >-
-          python -c "from sentence_transformers import SentenceTransformer;
-          SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2',
-          revision='1110a243fdf4706b3f48f1d95db1a4f5529b4d41')"
+          python -c "from matchmaking.services.ai_utils import
+          EMBEDDING_MODEL, EMBEDDING_REVISION;
+          from sentence_transformers import SentenceTransformer;
+          SentenceTransformer(EMBEDDING_MODEL, revision=EMBEDDING_REVISION)"
+
+      # Observable evidence for the cache-hit path: a restored cache must
+      # contain the snapshot already, so a green second run cannot be
+      # explained by a silent re-download.
+      - name: Show what the cache restored
+        run: >-
+          python -c "import os, pathlib;
+          root = pathlib.Path(os.environ['HF_HOME']);
+          files = list(root.rglob('*')) if root.exists() else [];
+          print(f'HF_HOME={root} entries={len(files)}');
+          print(*[str(p.relative_to(root)) for p in files
+          if p.is_dir() and p.name.startswith('1110') or
+          p.name == 'snapshots'], sep='\n')"
 
       - name: Run zelda_api test suite (non-blocking)
         run: python manage.py test zelda_api --verbosity=2

@@ -380,6 +380,40 @@ class HuggingFaceIsOfflineDuringTestsTests(SimpleTestCase):
                     '%s fetches the model without pinning a revision, so '
                     'upstream reweighting can move the semantic assertions '
                     'underneath the suite.' % job)
+                self.assertTrue(
+                    any('EMBEDDING_REVISION' in str(s.get('run', ''))
+                        for s in fetches),
+                    '%s names a revision of its own rather than deriving it '
+                    'from ai_utils.EMBEDDING_REVISION. That disagreement IS '
+                    'the bug that broke the build: CI fetched a SHA while the '
+                    'loader asked for `main`, and a SHA fetch writes no '
+                    'refs/main for an offline lookup to resolve.' % job)
+
+    def test_the_model_identity_lives_in_one_place(self):
+        """
+        The loader must pin the same revision CI preloads. A pin the consumer
+        ignores protects nothing -- and worse, it breaks the offline path,
+        because fetching by SHA writes snapshots/<sha> and no refs/main.
+        """
+        import io
+        from pathlib import Path
+
+        from django.conf import settings
+        from matchmaking.services.ai_utils import EMBEDDING_MODEL, EMBEDDING_REVISION
+
+        self.assertTrue(EMBEDDING_MODEL and EMBEDDING_REVISION)
+        self.assertEqual(len(EMBEDDING_REVISION), 40,
+                         'a revision should be a full commit SHA')
+
+        # And the workflow must not carry its own copy of it.
+        workflow_text = io.open(
+            Path(settings.BASE_DIR) / '.github' / 'workflows' / 'ci.yml',
+            encoding='utf-8').read()
+        self.assertGreater(len(workflow_text), 500, 'positive control')
+        self.assertEqual(
+            workflow_text.count(EMBEDDING_REVISION), 0,
+            'ci.yml hardcodes the revision instead of importing it from '
+            'ai_utils, which is how the two sides drifted apart.')
 
     def test_the_runner_is_what_sets_them(self):
         """
