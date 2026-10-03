@@ -33,6 +33,7 @@ a future contract test against a real endpoint has a sanctioned way through,
 rather than a reason to weaken the guard.
 """
 import contextlib
+import os
 
 from django.test.runner import DiscoverRunner
 
@@ -143,6 +144,30 @@ def _install_whois_ban():
     whois._interlink_whois_banned = True
 
 
+def _force_huggingface_offline():
+    """
+    Stop the embedding model resolving itself over the network.
+
+    The ban cannot fix this one. `huggingface_hub` catches broadly to fall back
+    to its local cache, so a refused request never surfaces as a test failure
+    -- it just quietly becomes a slow, non-deterministic model resolution. The
+    previous PR recorded huggingface.co as still being contacted for that
+    reason.
+
+    This matters beyond tidiness: the zelda_api suite rehab is measuring peak
+    memory, and model-resolution behaviour would land inside `peak - start` and
+    contaminate the comparison between isolated and cumulative runs.
+
+    HF reads these at call time, so setting them before any test runs is
+    enough. Offline mode raises rather than downloads, which is the point: a
+    test that genuinely needs an uncached model should fail loudly instead of
+    reaching out.
+    """
+    for name in ('HF_HUB_OFFLINE', 'TRANSFORMERS_OFFLINE',
+                 'HF_DATASETS_OFFLINE', 'HF_HUB_DISABLE_TELEMETRY'):
+        os.environ[name] = '1'
+
+
 def _install_stream_stub():
     """
     Replace Stream Chat with an inert double.
@@ -165,7 +190,18 @@ def _install_stream_stub():
     view modules pointing at the real client.
     """
     class _InertStreamChat:
-        """Records what was asked of it and reaches nothing."""
+        """
+        Records what was asked of it and reaches nothing.
+
+        KNOWN LOOSENESS: `__getattr__` answers to ANY attribute, so a
+        misspelled or nonexistent Stream method is accepted silently and the
+        test still passes. That is the right trade for the job this does --
+        stopping accidental live traffic -- but it means these tests cannot
+        catch a wrong Stream call. A stricter double exposing only the methods
+        Interlink actually uses would make them meaningful; recorded here
+        rather than built, because narrowing it belongs with whoever next
+        touches the Stream integration and knows which calls are real.
+        """
 
         calls = []
 
@@ -216,6 +252,7 @@ class InterlinkTestRunner(DiscoverRunner):
         super().setup_test_environment(**kwargs)
         install_network_ban()
         _install_stream_stub()
+        _force_huggingface_offline()
         from django.test.utils import override_settings
         self._local_cache = override_settings(CACHES={
             'default': {
