@@ -4123,6 +4123,43 @@ class SECEdgarIntegrationTests(TestCase):
         self.assertIsNone(integration.extract_employees({}))
 
 
+# --- SEC resolver seam ---------------------------------------------------
+# Identity is decided once, in sec_company_identity, and its HTTP goes through
+# sec_identity._get -> requests.get. The tests below used to stub
+# `integration.session.get`, which no longer intercepts anything: they reached
+# the real network and the runner's network ban refused them before any
+# assertion ran. These patch one level BELOW _get, so _get's own conversion of a
+# requests exception into SecUnavailable is exercised rather than stubbed.
+
+_EDGAR_EMPTY_FEED = '<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"></feed>'
+
+
+def _edgar_feed(cik, conformed_name):
+    """EDGAR's real single-match shape: a top-level <company-info>."""
+    return ('<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">'
+            '<company-info><cik>%s</cik><conformed-name>%s</conformed-name>'
+            '</company-info></feed>' % (cik, conformed_name))
+
+
+def _edgar_record(cik, conformed_name):
+    """The registrant's own submissions payload -- identity comes from this, not the feed."""
+    return {
+        'cik': cik.lstrip('0'), 'name': conformed_name, 'tickers': ['TICK'],
+        'exchanges': ['Nasdaq'], 'sic': '3571', 'formerNames': [],
+        'filings': {'recent': {'form': ['10-K', '10-Q'],
+                               'filingDate': ['2025-11-01', '2026-08-01']}},
+    }
+
+
+def _edgar_search(feeds, calls):
+    """A requests.get stand-in answering each company-search by the name queried."""
+    def fake_get(url, params=None, **kwargs):
+        name = (params or {}).get('company')
+        calls.append(name)
+        return mock.Mock(status_code=200, text=feeds.get(name, _EDGAR_EMPTY_FEED))
+    return fake_get
+
+
 class SECCompanyNameNormalizationTests(TestCase):
     """
     Regression coverage for a real bug found by the claim-extraction
@@ -4161,28 +4198,29 @@ class SECCompanyNameNormalizationTests(TestCase):
 
     def test_find_cik_retries_with_normalized_name_when_exact_name_finds_nothing(self):
         """
-        Mocks the SEC HTTP call directly (no live network) — an empty feed
-        for the exact legal name, a real result for the normalized name,
-        confirming the fallback chain actually gets exercised end to end.
+        End to end through Truth Delta's entry point: an empty feed for the exact
+        legal name, a real result for the normalized name, and the company
+        resolves. Both variants are ALWAYS searched, exact name first -- the
+        resolver deliberately has no early exit, because the exact name can
+        match a dormant registrant's FORMER name while the operating company
+        only appears under the suffix-stripped phrase.
         """
+        from django.core.cache import cache
+        from . import sec_identity
         from .truth_delta_sources import SECFilingsIntegration
-        empty_feed = '<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"></feed>'
-        # The real single-match shape: a top-level <company-info> carrying the
-        # conformed name. EDGAR only omits names from MULTI-match feeds, where
-        # it garbles them into ARRAY(0x...) — see tests_sec_entity_identity.
-        found_feed = ('<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">'
-                      '<company-info><cik>0000789019</cik>'
-                      '<conformed-name>MICROSOFT CORP</conformed-name></company-info></feed>')
+        cache.clear()
+        self.addCleanup(cache.clear)
 
+        feeds = {'Microsoft': _edgar_feed('0000789019', 'MICROSOFT CORP')}
+        calls = []
         integration = SECFilingsIntegration()
-        responses = [mock.Mock(status_code=200, text=empty_feed), mock.Mock(status_code=200, text=found_feed)]
-        with mock.patch.object(integration.session, 'get', side_effect=responses) as mock_get:
+        with mock.patch.object(sec_identity.requests, 'get', side_effect=_edgar_search(feeds, calls)), \
+             mock.patch.object(sec_identity, 'company_record',
+                               return_value=_edgar_record('0000789019', 'MICROSOFT CORP')):
             cik = integration._find_cik('Microsoft Corporation')
 
         self.assertEqual(cik, '0000789019')
-        self.assertEqual(mock_get.call_count, 2)
-        self.assertEqual(mock_get.call_args_list[0].kwargs['params']['company'], 'Microsoft')
-        self.assertEqual(mock_get.call_args_list[1].kwargs['params']['company'], 'Microsoft Corporation')
+        self.assertEqual(calls, ['Microsoft Corporation', 'Microsoft'])
 
 
 class ExtractNumericValueTests(TestCase):
@@ -4664,42 +4702,55 @@ class SECAliasAndCachingTests(TestCase):
     def setUp(self):
         from django.core.cache import cache
         cache.clear()
+        self.addCleanup(cache.clear)
 
-    def test_known_alias_is_tried_first(self):
-        from zelda_api.truth_delta_sources import SECFilingsIntegration
+    def test_known_alias_is_searched_in_place_of_the_brand_name(self):
+        from . import sec_identity
+        from .truth_delta_sources import SECFilingsIntegration
         integration = SECFilingsIntegration()
-        # The alias maps "Meta" -> "Meta Platforms", so that is what is
-        # searched and what the returned name must match.
-        found_feed = ('<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">'
-                      '<company-info><cik>0001326801</cik>'
-                      '<conformed-name>META PLATFORMS INC</conformed-name></company-info></feed>')
-        with mock.patch.object(integration.session, 'get', return_value=mock.Mock(status_code=200, text=found_feed)) as mock_get:
+        # The alias maps "Meta" -> "Meta Platforms". An alias exists BECAUSE the
+        # brand name is ambiguous (it matches dozens of Form D shells), so it is
+        # the only name searched -- broadening back to the brand would bury it.
+        feeds = {'Meta Platforms': _edgar_feed('0001326801', 'META PLATFORMS INC')}
+        calls = []
+        with mock.patch.object(sec_identity.requests, 'get', side_effect=_edgar_search(feeds, calls)), \
+             mock.patch.object(sec_identity, 'company_record',
+                               return_value=_edgar_record('0001326801', 'META PLATFORMS INC')):
             cik = integration._find_cik('Meta')
         self.assertEqual(cik, '0001326801')
-        self.assertEqual(mock_get.call_args.kwargs['params']['company'], 'Meta Platforms')
+        self.assertEqual(calls, ['Meta Platforms'])
 
     def test_successful_resolution_is_cached(self):
-        from zelda_api.truth_delta_sources import SECFilingsIntegration
+        from . import sec_identity
+        from .truth_delta_sources import SECFilingsIntegration
         integration = SECFilingsIntegration()
-        found_feed = ('<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">'
-                      '<company-info><cik>0000320193</cik>'
-                      '<conformed-name>APPLE INC</conformed-name></company-info></feed>')
-        with mock.patch.object(integration.session, 'get', return_value=mock.Mock(status_code=200, text=found_feed)) as mock_get:
-            integration._find_cik('Apple Inc.')
-            integration._find_cik('Apple Inc.')
-        self.assertEqual(mock_get.call_count, 1)
+        feeds = {'Apple Inc.': _edgar_feed('0000320193', 'APPLE INC')}
+        calls = []
+        with mock.patch.object(sec_identity.requests, 'get', side_effect=_edgar_search(feeds, calls)), \
+             mock.patch.object(sec_identity, 'company_record',
+                               return_value=_edgar_record('0000320193', 'APPLE INC')) as record:
+            first = integration._find_cik('Apple Inc.')
+            searches_after_first = len(calls)
+            second = integration._find_cik('Apple Inc.')
+        self.assertEqual((first, second), ('0000320193', '0000320193'))
+        # The first resolution really hit the source (positive control for the
+        # assertions below), and the second added nothing: no search, no record.
+        self.assertGreater(searches_after_first, 0)
+        self.assertEqual(len(calls), searches_after_first)
+        self.assertEqual(record.call_count, 1)
 
     def test_not_found_result_is_also_cached(self):
-        from zelda_api.truth_delta_sources import SECFilingsIntegration
+        from . import sec_identity
+        from .truth_delta_sources import SECFilingsIntegration
         integration = SECFilingsIntegration()
-        empty_feed = '<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"></feed>'
-        with mock.patch.object(integration.session, 'get', return_value=mock.Mock(status_code=200, text=empty_feed)) as mock_get:
+        calls = []
+        with mock.patch.object(sec_identity.requests, 'get', side_effect=_edgar_search({}, calls)):
             first = integration._find_cik('Totally Fictional Startup Co')
             second = integration._find_cik('Totally Fictional Startup Co')
         self.assertIsNone(first)
         self.assertIsNone(second)
-        # 2 real HTTP attempts (normalized + exact name) on the first call, 0 on the second (cached).
-        self.assertEqual(mock_get.call_count, 2)
+        # 2 real HTTP attempts (exact + suffix-stripped name) on the first call, 0 on the second (cached).
+        self.assertEqual(calls, ['Totally Fictional Startup Co', 'Totally Fictional Startup'])
 
 
 class SECResolverDiagnosticsTests(TestCase):
@@ -4714,32 +4765,36 @@ class SECResolverDiagnosticsTests(TestCase):
     def setUp(self):
         from django.core.cache import cache
         cache.clear()
+        self.addCleanup(cache.clear)
 
     def test_found_company_has_no_reason(self):
-        from zelda_api.truth_delta_sources import SECFilingsIntegration
+        from . import sec_identity
+        from .truth_delta_sources import SECFilingsIntegration
         integration = SECFilingsIntegration()
-        found_feed = ('<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">'
-                      '<company-info><cik>0000320193</cik>'
-                      '<conformed-name>APPLE INC</conformed-name></company-info></feed>')
-        with mock.patch.object(integration.session, 'get', return_value=mock.Mock(status_code=200, text=found_feed)):
+        feeds = {'Apple Inc.': _edgar_feed('0000320193', 'APPLE INC')}
+        with mock.patch.object(sec_identity.requests, 'get', side_effect=_edgar_search(feeds, [])), \
+             mock.patch.object(sec_identity, 'company_record',
+                               return_value=_edgar_record('0000320193', 'APPLE INC')):
             cik, reason = integration.resolve_with_diagnostics('Apple Inc.')
         self.assertEqual(cik, '0000320193')
         self.assertIsNone(reason)
 
     def test_genuinely_absent_company_is_tagged_not_found(self):
-        from zelda_api.truth_delta_sources import SECFilingsIntegration
+        from . import sec_identity
+        from .truth_delta_sources import SECFilingsIntegration
         integration = SECFilingsIntegration()
-        empty_feed = '<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"></feed>'
-        with mock.patch.object(integration.session, 'get', return_value=mock.Mock(status_code=200, text=empty_feed)):
+        with mock.patch.object(sec_identity.requests, 'get', side_effect=_edgar_search({}, [])):
             cik, reason = integration.resolve_with_diagnostics('Totally Fictional Startup Co')
         self.assertIsNone(cik)
         self.assertEqual(reason, 'not_found')
 
     def test_network_timeout_is_tagged_distinctly_from_not_found(self):
         import requests
-        from zelda_api.truth_delta_sources import SECFilingsIntegration
+        from . import sec_identity
+        from .truth_delta_sources import SECFilingsIntegration
         integration = SECFilingsIntegration()
-        with mock.patch.object(integration.session, 'get', side_effect=requests.exceptions.Timeout('simulated timeout')):
+        with mock.patch.object(sec_identity.requests, 'get',
+                               side_effect=requests.exceptions.Timeout('simulated timeout')):
             cik, reason = integration.resolve_with_diagnostics('Apple Inc.')
         self.assertIsNone(cik)
         self.assertEqual(reason, 'timeout')
@@ -4747,9 +4802,13 @@ class SECResolverDiagnosticsTests(TestCase):
     def test_timeout_stops_retrying_further_name_candidates(self):
         """A real network failure won't be fixed by trying a differently-worded name — shouldn't retry 3x against a dead connection."""
         import requests
-        from zelda_api.truth_delta_sources import SECFilingsIntegration
+        from . import sec_identity
+        from .truth_delta_sources import SECFilingsIntegration
         integration = SECFilingsIntegration()
-        with mock.patch.object(integration.session, 'get', side_effect=requests.exceptions.Timeout('simulated timeout')) as mock_get:
+        # 'Microsoft Corporation' has two name variants, so a resolver that kept
+        # going after the first failure would call twice.
+        with mock.patch.object(sec_identity.requests, 'get',
+                               side_effect=requests.exceptions.Timeout('simulated timeout')) as mock_get:
             integration.resolve_with_diagnostics('Microsoft Corporation')
         self.assertEqual(mock_get.call_count, 1)
 
