@@ -340,7 +340,15 @@ class HuggingFaceIsOfflineDuringTestsTests(SimpleTestCase):
         workflow = yaml.safe_load(
             io.open(Path(settings.BASE_DIR) / '.github' / 'workflows' / 'ci.yml',
                     encoding='utf-8').read())
-        for job in ('check', 'zelda-api-tests'):
+        # Every job that runs the test suite, derived from the workflow rather
+        # than named here: a hand-kept list is how a new test job would have
+        # skipped this guard, and how deleting one raised a KeyError.
+        test_jobs = [
+            name for name, spec in workflow['jobs'].items()
+            if any('manage.py test' in str(s.get('run', '')) for s in spec['steps'])
+        ]
+        self.assertIn('check', test_jobs, 'positive control: the blocking job was found')
+        for job in test_jobs:
             spec = workflow['jobs'][job]
             steps = spec['steps']
             self.assertGreater(len(steps), 2, 'positive control: %s has steps' % job)
