@@ -24,12 +24,12 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.test import SimpleTestCase, TestCase
 
-from config.test_runner import RealHTTPInTests, allow_real_http, install_http_ban
+from config.test_runner import RealNetworkInTests, allow_real_http, install_network_ban
 
 
 class RealHTTPIsRefusedTests(SimpleTestCase):
     """
-    The ban is installed by the runner. `install_http_ban()` is called here too
+    The ban is installed by the runner. `install_network_ban()` is called here too
     so these tests mean something under a runner that has not been configured
     yet -- otherwise this file would pass vacuously on exactly the setup it
     exists to detect.
@@ -38,28 +38,28 @@ class RealHTTPIsRefusedTests(SimpleTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        install_http_ban()
+        install_network_ban()
 
     def test_a_plain_get_is_refused(self):
-        with self.assertRaises(RealHTTPInTests):
+        with self.assertRaises(RealNetworkInTests):
             requests.get('https://example.invalid/whatever', timeout=1)
 
     def test_a_post_is_refused(self):
-        with self.assertRaises(RealHTTPInTests):
+        with self.assertRaises(RealNetworkInTests):
             requests.post('https://example.invalid/whatever', json={}, timeout=1)
 
     def test_a_session_is_refused_too(self):
         """Providers hold Session objects; they share the same adapter."""
-        with self.assertRaises(RealHTTPInTests):
+        with self.assertRaises(RealNetworkInTests):
             requests.Session().get('https://example.invalid/', timeout=1)
 
     def test_the_refusal_names_the_url_so_the_provider_is_obvious(self):
-        with self.assertRaises(RealHTTPInTests) as caught:
+        with self.assertRaises(RealNetworkInTests) as caught:
             requests.get('https://api.companyenrich.com/companies/enrich', timeout=1)
         self.assertIn('api.companyenrich.com', str(caught.exception))
 
     def test_the_refusal_says_what_to_do_instead(self):
-        with self.assertRaises(RealHTTPInTests) as caught:
+        with self.assertRaises(RealNetworkInTests) as caught:
             requests.get('https://example.invalid/', timeout=1)
         self.assertIn('mock', str(caught.exception).lower())
 
@@ -97,13 +97,13 @@ class TheProvidersCannotDialOutTests(SimpleTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        install_http_ban()
+        install_network_ban()
 
     def test_companyenrich_cannot_reach_its_api(self):
         from zelda_api import companyenrich
         with mock.patch.object(companyenrich.settings, 'COMPANYENRICH_API_KEY',
                                'configured-on-purpose', create=True):
-            with self.assertRaises(RealHTTPInTests):
+            with self.assertRaises(RealNetworkInTests):
                 companyenrich._fetch('example.com')
 
     def test_the_sec_lookup_cannot_reach_edgar(self):
@@ -113,21 +113,119 @@ class TheProvidersCannotDialOutTests(SimpleTestCase):
         `sec_identity._get` catches `requests.exceptions.RequestException` and
         degrades politely. A ban raised as a request exception would be
         swallowed there and the violation would vanish into a graceful
-        fallback -- the test would pass while the call went out. RealHTTPInTests
+        fallback -- the test would pass while the call went out. RealNetworkInTests
         is an AssertionError for exactly this reason, and this test is what
         holds it to that.
         """
         from zelda_api import sec_identity
-        with self.assertRaises(RealHTTPInTests):
+        with self.assertRaises(RealNetworkInTests):
             sec_identity._get('https://data.sec.gov/submissions/CIK0000320193.json')
 
-    def test_a_provider_catching_everything_still_cannot_hide_it(self):
-        """The same property stated directly, independent of any provider."""
-        with self.assertRaises(RealHTTPInTests):
+    def test_a_narrow_except_cannot_hide_it(self):
+        """
+        Renamed, because the old name -- "a provider catching everything still
+        cannot hide it" -- described something this body never did. It catches
+        `requests.exceptions.RequestException` only, which is narrow. The real
+        claim is tested below, against a provider that genuinely catches
+        Exception.
+        """
+        with self.assertRaises(RealNetworkInTests):
             try:
                 requests.get('https://example.invalid/', timeout=1)
             except requests.exceptions.RequestException:
                 self.fail('the ban was raised as a request exception and got swallowed')
+
+    def test_a_bare_except_exception_cannot_hide_it(self):
+        """
+        The claim the old test name made and did not keep.
+
+        `except Exception` is what the first version of the ban actually died
+        on: it subclassed AssertionError, so a provider wrapping its call in
+        `except Exception` caught the ban, degraded politely, and the test
+        passed having tried to reach the network. Deriving from BaseException
+        is what fixes it, and this is the test that holds it there.
+        """
+        with self.assertRaises(RealNetworkInTests):
+            try:
+                requests.get('https://example.invalid/', timeout=1)
+            except Exception:                      # noqa: BLE001 - the point
+                self.fail('a bare `except Exception` swallowed the network ban')
+
+    def test_the_ban_is_not_an_exception_subclass(self):
+        """
+        Stated structurally too, so the property survives someone "tidying"
+        the base class back to AssertionError for consistency with other
+        test helpers.
+        """
+        self.assertTrue(issubclass(RealNetworkInTests, BaseException))
+        self.assertFalse(issubclass(RealNetworkInTests, Exception))
+
+
+class WhoisIsBannedAtItsOwnSeamTests(SimpleTestCase):
+    """
+    WHOIS reaches the network over a raw socket on port 43, so the `requests`
+    ban never saw it. A survey of the excluded zelda_api suite caught it live:
+    "WHOIS lookup failed for domain example.com: socket timeout at 10.0.0.1:43".
+
+    This is the cost of banning each provider at its own seam rather than
+    banning sockets -- a choice forced by the cache being Redis over TLS to a
+    remote host. The cost is that a new seam must be added deliberately, and
+    this test is what makes a missing one visible.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        install_network_ban()
+
+    def test_a_direct_whois_call_is_refused(self):
+        import whois
+        with self.assertRaises(RealNetworkInTests):
+            whois.whois('example.com')
+
+    def test_the_providers_whois_path_is_refused_rather_than_degraded(self):
+        """
+        The end-to-end case. Before this, the provider's `except Exception`
+        turned the ban into "Domain lookup unavailable right now." and the test
+        reported success.
+        """
+        from zelda_api.entity_verification import lookup_domain_creation_date
+        with self.assertRaises(RealNetworkInTests):
+            lookup_domain_creation_date('example.com')
+
+    def test_the_refusal_names_the_domain_and_the_seam(self):
+        import whois
+        with self.assertRaises(RealNetworkInTests) as caught:
+            whois.whois('northwind-grid.example')
+        message = str(caught.exception)
+        self.assertIn('northwind-grid.example', message)
+        self.assertIn('WHOIS', message)
+
+    def test_the_whois_ban_consults_the_same_escape_hatch_as_http(self):
+        """
+        Checked structurally, because the honest behavioural test would have to
+        let a real WHOIS lookup out to observe delegation -- and the first
+        version of this test dodged that by asserting `mock.patch` had worked,
+        which proves nothing about the hatch.
+
+        Both bans gate on the same `_ALLOWED` stack, so the hatch's behaviour
+        is already covered by the HTTP delegation test; what matters here is
+        that WHOIS reads the same gate rather than ignoring it.
+        """
+        import inspect
+        from config import test_runner
+
+        source = inspect.getsource(test_runner._install_whois_ban)
+        self.assertGreater(len(source), 200, 'positive control: source was read')
+        self.assertIn('_ALLOWED', source)
+
+    def test_the_hatch_is_empty_outside_and_filled_inside(self):
+        """The shared gate both bans read, asserted directly."""
+        from config import test_runner
+        self.assertEqual(test_runner._ALLOWED, [])
+        with allow_real_http():
+            self.assertNotEqual(test_runner._ALLOWED, [])
+        self.assertEqual(test_runner._ALLOWED, [])
 
 
 class TheEscapeHatchIsNarrowTests(SimpleTestCase):
@@ -135,12 +233,12 @@ class TheEscapeHatchIsNarrowTests(SimpleTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        install_http_ban()
+        install_network_ban()
 
     def test_inside_the_hatch_the_ban_delegates(self):
         """
         Delegation proved WITHOUT touching the internet: a closed port on
-        localhost. Getting a ConnectionError rather than RealHTTPInTests is the
+        localhost. Getting a ConnectionError rather than RealNetworkInTests is the
         evidence -- the request reached the real adapter and failed at the
         transport layer.
 
@@ -155,7 +253,7 @@ class TheEscapeHatchIsNarrowTests(SimpleTestCase):
     def test_the_ban_is_back_once_the_hatch_closes(self):
         with allow_real_http():
             pass
-        with self.assertRaises(RealHTTPInTests):
+        with self.assertRaises(RealNetworkInTests):
             requests.get('https://example.invalid/', timeout=1)
 
     def test_a_raising_block_still_restores_the_ban(self):
@@ -163,7 +261,7 @@ class TheEscapeHatchIsNarrowTests(SimpleTestCase):
         with self.assertRaises(ValueError):
             with allow_real_http():
                 raise ValueError('boom')
-        with self.assertRaises(RealHTTPInTests):
+        with self.assertRaises(RealNetworkInTests):
             requests.get('https://example.invalid/', timeout=1)
 
 
@@ -197,6 +295,50 @@ class TheCacheIsLocalDuringTestsTests(TestCase):
         A hit here would mean the run inherited another run's answers.
         """
         self.assertIsNone(cache.get('companyenrich_v1:never-queried.example'))
+
+
+class StreamChatIsInertDuringTestsTests(SimpleTestCase):
+    """
+    Found by making the ban unswallowable: 27 tests across three modules were
+    POSTing to chat.stream-io-api.com and creating real users in a live Stream
+    account on every gate run. The ban had been firing on them the whole time
+    and something in that path was catching it -- which is exactly what
+    subclassing Exception permitted.
+
+    A STUB rather than a ban, because Stream is third-party chat
+    infrastructure and not one of Zelda's evidence sources: its calls say
+    nothing about a company and cannot corrupt a finding. Substituted the way
+    the cache is substituted for locmem.
+    """
+
+    def test_the_view_modules_hold_the_inert_double_not_the_real_client(self):
+        """
+        Checked in the VIEW modules, not in `stream_chat`. Both do
+        `from stream_chat import StreamChat` at module scope, which binds the
+        name at import time -- so replacing only the package attribute would
+        leave these pointing at the real client.
+        """
+        from accounts import views as accounts_views
+        from matchmaking import views as matchmaking_views
+        for module in (accounts_views, matchmaking_views):
+            with self.subTest(module=module.__name__):
+                self.assertEqual(module.StreamChat.__name__, '_InertStreamChat')
+
+    def test_using_it_records_the_call_and_reaches_nothing(self):
+        from matchmaking import views as matchmaking_views
+        client = matchmaking_views.StreamChat(api_key='k', api_secret='s')
+        before = len(type(client).calls)
+        client.upsert_user({'id': 'someone'})
+        self.assertGreater(len(type(client).calls), before)
+
+    def test_the_real_client_still_exists(self):
+        """
+        Positive control. If `stream_chat` stopped importing, the stub would
+        still be in place and every test above would pass while the production
+        import was broken.
+        """
+        import importlib
+        self.assertIsNotNone(importlib.import_module('stream_chat'))
 
 
 class TheRunnerIsTheConfiguredOneTests(SimpleTestCase):
