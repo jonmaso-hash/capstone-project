@@ -1,0 +1,110 @@
+{
+ "note": "One Entity Integrity report per founder profile. It was created and checked (10:22:18Z) during the abandoned 3119 run. For 3120 it was reused unchanged, because the profile inputs hash matched (entity_verification.py:523-534, by design). Entity Integrity does not read the columns that were missing under E-3. document_id still points at 3119.",
+ "report": {
+  "id": 24,
+  "founder_profile_id": 36,
+  "seller_profile_id": null,
+  "document_id": 3119,
+  "status": "complete",
+  "checked_at": "2026-10-04 10:22:18.806521+00:00",
+  "inputs_hash": "217ec1327589b8a47a2bd1024eb34df2b414f5df907cab30ff1013b8c2fc0889",
+  "findings": [
+   {
+    "check": "website",
+    "claim": "Website: not on the profile",
+    "interlink_source": "Startup profile",
+    "evidence_source": "Company website",
+    "evidence": "The profile has no website to check.",
+    "result": "not_applicable",
+    "source_url": "",
+    "checked_at": "2026-10-04T10:22:05.738205+00:00"
+   },
+   {
+    "check": "company_name",
+    "claim": "Company name: NIKE, Inc.",
+    "interlink_source": "Startup profile",
+    "evidence_source": "Company website",
+    "evidence": "The profile has no website to check.",
+    "result": "not_applicable",
+    "source_url": "",
+    "checked_at": "2026-10-04T10:22:05.738205+00:00"
+   },
+   {
+    "check": "person_name",
+    "claim": "Founder: Rerun Owner",
+    "interlink_source": "Startup profile",
+    "evidence_source": "Company website",
+    "evidence": "The profile has no website to check.",
+    "result": "not_applicable",
+    "source_url": "",
+    "checked_at": "2026-10-04T10:22:05.738205+00:00"
+   },
+   {
+    "check": "founding_year",
+    "claim": "Founding year: not on the profile",
+    "interlink_source": "Startup profile",
+    "evidence_source": "Domain registration",
+    "evidence": "The profile has no website to check.",
+    "result": "not_applicable",
+    "source_url": "",
+    "checked_at": "2026-10-04T10:22:05.738205+00:00"
+   },
+   {
+    "check": "sec_filer",
+    "claim": "Company name: NIKE, Inc.",
+    "interlink_source": "Startup profile",
+    "evidence_source": "SEC EDGAR",
+    "evidence": "SEC lists NIKE, Inc. (CIK 0000320187).",
+    "result": "matches",
+    "source_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000320187",
+    "checked_at": "2026-10-04T10:22:05.738205+00:00"
+   },
+   {
+    "check": "sec_incorporation",
+    "claim": "Incorporation: not on the profile",
+    "interlink_source": "Startup profile",
+    "evidence_source": "SEC company record",
+    "evidence": "Incorporated in OR, according to the SEC company record.",
+    "result": "public_record",
+    "source_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000320187",
+    "checked_at": "2026-10-04T10:22:05.738205+00:00"
+   },
+   {
+    "check": "sec_person",
+    "claim": "Founder: Rerun Owner",
+    "interlink_source": "Startup profile",
+    "evidence_source": "SEC Form D",
+    "evidence": "No Form D was found in this company's recent SEC filings, so there is no list of its people to compare.",
+    "result": "not_applicable",
+    "source_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000320187",
+    "checked_at": "2026-10-04T10:22:05.738205+00:00"
+   },
+   {
+    "check": "sec_capital_raised",
+    "claim": "Prior capital raised: not claimed on the profile",
+    "interlink_source": "Startup profile",
+    "evidence_source": "SEC Form D",
+    "evidence": "No Form D was found in this company's recent SEC filings, so there is no offering to compare.",
+    "result": "not_applicable",
+    "source_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000320187",
+    "checked_at": "2026-10-04T10:22:05.738205+00:00"
+   },
+   {
+    "check": "sec_revenue",
+    "claim": "Current revenue: not on the profile",
+    "interlink_source": "Startup profile",
+    "evidence_source": "SEC 10-K",
+    "evidence": "Revenue of $46,398,000,000 in its FY2026 10-K (period ending 2026-05-31), from SEC annual report data. It is shown for reference and not compared with the profile.",
+    "result": "public_record",
+    "source_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000320187",
+    "checked_at": "2026-10-04T10:22:05.738205+00:00"
+   }
+  ],
+  "domain": "",
+  "domain_registered_date": null,
+  "domain_lookup_error": "",
+  "claimed_founding_year": null,
+  "timeline_flags": [],
+  "created_at": "2026-10-04 10:22:05.726201+00:00"
+ }
+}

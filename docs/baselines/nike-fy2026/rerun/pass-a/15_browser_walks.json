@@ -1,0 +1,28 @@
+{
+ "note": "Real browser walks in the desktop app's browser pane against http://localhost:8010, document 3120. Text is JavaScript-rendered innerText; canary checks also test outerHTML. Each signed-in walk ended with the nav Logout button and was confirmed signed out on /home/.",
+ "OWNER": {
+  "truth_delta_page": {"rollup": "0/2 claims verified against external data (0%)", "verified_count": 0, "icons": "two question-mark icons", "revenue_note": "An external figure was found, but its period could not be confirmed as comparable, so this claim is not verified.", "narrative": "OVERALL ASSESSMENT calls the revenue claim 'materially overstated' and 'a significant red flag'; the revenue detail says 'a material and unexplained overstatement'", "document_title": "", "upsell": "Zelda AI unlocks the full breakdown"},
+  "profile": {"canary_visible": true},
+  "signed_out": true
+ },
+ "ANON": {"truth_delta_page": "redirected to /accounts/login/?next=/api/v1/zelda/documents/3120/verification/", "canary_visible": false},
+ "LITE": {
+  "intelligence_report": {"loaded": true, "coverage": "0 of 2 checkable claims verified against a public source; 2 could not be confirmed. Reflects only claims that had a public source to check against.", "external_support_phrase": false, "noticed_section": "not shown on Lite ('The full report adds what Zelda noticed...')", "canary_in_text": false, "canary_in_html": false},
+  "truth_delta_page": {"rollup": "0/2 claims verified against external data (0%)", "verified_count": 0, "icons": "two question-mark icons", "period_note": true, "overstatement_narrative": true, "canary": false, "document_title": ""},
+  "profile": {"canary_in_text": false, "canary_in_html": false},
+  "signed_out": true
+ },
+ "PAID": {
+  "login_landing": "/matchmaking/dashboard/investor/",
+  "intelligence_report": {"coverage": "0 of 2 checkable claims verified against a public source; 2 could not be confirmed.", "external_support_phrase": false, "lite_banner": true, "canary_in_text": false, "canary_in_html": false},
+  "profile": {"canary_in_text": false, "canary_in_html": false},
+  "signed_out": true
+ },
+ "STAFF": {
+  "login_landing": "/accounts/choose-role/",
+  "intelligence_report": {"full_report": true, "coverage": "0 of 2 checkable claims verified against a public source; 2 could not be confirmed.", "noticed": "No public source was found to check employees. An external figure was found for revenue, but its period could not be confirmed as comparable.", "external_support_phrase": false, "canary": false},
+  "ic_memo_page": {"loaded": true, "canary": false, "fabricated_500_people": false, "states_period_unknown_or_insufficient": true, "embedded_truth_delta_summary": "'...a ~14% gap that is too large to attribute to timing or rounding differences alone... The revenue overstatement is a material red flag warranting further scrutiny.' (report 81's model summary, shown beside 'Verified against public sources - 0 / No external data - 2')"},
+  "profile": {"canary_visible": true},
+  "signed_out": true
+ }
+}
