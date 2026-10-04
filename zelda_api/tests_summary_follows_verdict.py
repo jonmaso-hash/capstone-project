@@ -233,13 +233,13 @@ class TheModelCannotShapeTheTableTests(_Verify):
         self.claim('revenue', '$52.8 billion', 52.8e9)
         self.verify(model_says([]), revenue=46.398e9)
         self.assertEqual(self.report.engine_version, TRUTH_DELTA_SEMANTICS)
-        self.assertEqual(TRUTH_DELTA_SEMANTICS, 'td.2')
+        self.assertIn(TRUTH_DELTA_SEMANTICS, ('td.2', 'td.3'))   # td.3 = R-003b, which keeps R-003
 
-    def test_the_score_is_out_of_scope_and_unchanged(self):
-        # R-003b owns the score. This PR must not move it.
+    def test_the_models_score_is_not_stored(self):
+        # R-003b: the score is Zelda's too (zelda_api/tests_score_follows_verdict.py).
         self.claim('revenue', '$52.8 billion', 52.8e9)
         self.verify(model_says([], score=42.0), revenue=46.398e9)
-        self.assertEqual((self.report.overall_truth_score, self.report.credibility_risk), (42.0, 'high'))
+        self.assertEqual((self.report.overall_truth_score, self.report.credibility_risk), (None, 'unknown'))
 
     def test_the_numeric_fallback_also_writes_canonical_rows(self):
         self.claim('revenue', '$52.8 billion', 52.8e9)

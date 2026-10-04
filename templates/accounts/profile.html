@@ -919,8 +919,14 @@
     <div class="row row-cols-2 row-cols-md-4 g-3 mb-3">
         <div class="col">
             <div class="card h-100 border-0 shadow-sm rounded-4 p-3">
-                <small class="text-muted text-uppercase">Company Verification</small>
-                <span class="fw-semibold fs-5">{% if investor_readiness.company_verification_pct is not None %}{{ investor_readiness.company_verification_pct }}%{% else %}—{% endif %}</span>
+                <small class="text-muted text-uppercase">Evidence Credibility</small>
+                {% if investor_readiness.company_credibility_status == 'scored' %}
+                <span class="fw-semibold fs-5">{{ investor_readiness.company_credibility_score }}/100</span>
+                {% elif investor_readiness.company_credibility_status == 'insufficient_evidence' %}
+                <span class="fw-semibold small">Not enough comparable public evidence to score</span>
+                {% else %}
+                <span class="fw-semibold fs-5">—</span>
+                {% endif %}
             </div>
         </div>
         <div class="col">

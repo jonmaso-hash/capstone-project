@@ -329,9 +329,19 @@ def _get_investor_readiness(application):
     latest_truth_delta = TruthDeltaReport.objects.filter(
         document__uploaded_by=founder_user
     ).order_by('-created_at').first()
-    company_verification_pct = None
-    if latest_truth_delta and latest_truth_delta.overall_truth_score is not None:
-        company_verification_pct = round(latest_truth_delta.overall_truth_score)
+    # The Truth Delta credibility score, named as what it is (R-003b). It is
+    # verified / (verified + contradicted), NOT a share of claims verified, so
+    # it is never shown as a percentage. Three states, because a blank card
+    # reads as "not analyzed yet" (see the popover) and an analyzed deck with
+    # nothing scoreable -- Nike: 0 verified, 0 contradicted -- was analyzed.
+    company_credibility_score = None
+    if not latest_truth_delta:
+        company_credibility_status = 'not_analyzed'
+    elif latest_truth_delta.overall_truth_score is None:
+        company_credibility_status = 'insufficient_evidence'
+    else:
+        company_credibility_status = 'scored'
+        company_credibility_score = round(latest_truth_delta.overall_truth_score)
 
     materials = []
     if application.pitch_deck:
@@ -349,7 +359,8 @@ def _get_investor_readiness(application):
     return {
         'market_evidence_pct': market_evidence_pct,
         'financial_disclosure_pct': financial_disclosure_pct,
-        'company_verification_pct': company_verification_pct,
+        'company_credibility_score': company_credibility_score,
+        'company_credibility_status': company_credibility_status,
         'founder_verification_pct': 100 if application.is_verified else 0,
         'materials': materials,
     }

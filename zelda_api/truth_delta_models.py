@@ -209,8 +209,12 @@ class ObservedDatapoint(models.Model):
 #            stored comparison row with observed text written from the stored
 #            evidence, and a model explanation kept only when it asserts no
 #            other verdict. td.1 summaries and rows were model-written.
+#   td.3     The credibility score follows the state (R-003b): verified /
+#            (verified + contradicted) * 100 from the canonical counts, no
+#            score and 'unknown' risk when nothing is scoreable. td.1 and td.2
+#            scores were chosen by the model.
 UNKNOWN_SEMANTICS = 'unknown'
-TRUTH_DELTA_SEMANTICS = 'td.2'
+TRUTH_DELTA_SEMANTICS = 'td.3'
 
 
 class TruthDeltaReport(models.Model):
