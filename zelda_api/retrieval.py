@@ -11,6 +11,7 @@ retrieval: no principal refuses, and a document outside the principal's
 scope refuses rather than returning an empty result.
 """
 import logging
+import re
 from typing import List, Dict, Tuple, Optional
 from django.db.models import Q
 from .authorization import authorize
@@ -25,6 +26,15 @@ MAX_TOP_K = 20
 
 class RetrievalRefused(PrincipalRequired):
     """The principal may not retrieve this document's text."""
+
+
+def meaningful_terms(text):
+    """
+    Lowercase words longer than three characters, punctuation stripped -- the
+    rule the keyword fallback always used. Counting "on" or "the" as a match
+    is how an unrelated question returned chunks with a non-zero relevance.
+    """
+    return {w for w in re.findall(r"[a-z0-9]+", (text or '').lower()) if len(w) > 3}
 
 
 def validate_top_k(value, default=5):
@@ -114,6 +124,11 @@ class VectorRetriever:
                 keyword_boost = self._keyword_boost(query, chunk.raw_text)
 
                 final_score = (similarity * 0.7) + (keyword_boost * 0.3)
+                if final_score <= 0:
+                    # Nothing in this chunk bears on the query. Returning it
+                    # anyway, ranked, is how a question the document cannot
+                    # answer got five "sources".
+                    continue
 
                 scored_chunks.append({
                     'chunk': chunk,
@@ -144,13 +159,14 @@ class VectorRetriever:
         Fallback keyword search when vector search unavailable, over the same
         authorized candidates -- never over every chunk.
         """
-        query_words = query.lower().split()
-
-        # Search for chunks containing multiple query terms
+        # Search for chunks containing any meaningful query term. No term
+        # means nothing to match: an empty Q() would match every chunk.
+        terms = meaningful_terms(query)
+        if not terms:
+            return []
         q_objects = Q()
-        for word in query_words:
-            if len(word) > 3:  # Skip short words
-                q_objects |= Q(raw_text__icontains=word)
+        for word in terms:
+            q_objects |= Q(raw_text__icontains=word)
 
         chunks = list(candidates.filter(q_objects).select_related('document')[:self.top_k])
 
@@ -170,8 +186,8 @@ class VectorRetriever:
         """
         Calculate keyword match boost (0.0-1.0).
         """
-        query_words = set(query.lower().split())
-        text_words = set(text.lower().split())
+        query_words = meaningful_terms(query)
+        text_words = meaningful_terms(text)
 
         matches = len(query_words & text_words)
         max_matches = len(query_words)

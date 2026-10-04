@@ -170,7 +170,9 @@ class DocumentChunk(FoundryStandardMixin, models.Model):
     # If using pgvector: use VectorField from django-pgvector
     # For now, we'll store as JSON array for compatibility
     embedding_vector = models.JSONField(null=True, blank=True, help_text="Vector embedding (list of floats)")
-    embedding_model = models.CharField(max_length=100, default="claude-3-5-sonnet", blank=True)
+    # Which scheme produced embedding_vector (EmbeddingEngine.label()). Blank
+    # until embedded; never a model name no model produced.
+    embedding_model = models.CharField(max_length=100, default='', blank=True)
     
     # Metadata
     is_key_insight = models.BooleanField(default=False, help_text="Marked as particularly important")

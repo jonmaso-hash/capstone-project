@@ -20,13 +20,16 @@ except ImportError:
 
 class EmbeddingEngine:
     """
-    Generates embeddings for text chunks using Claude API.
-    Falls back to simple hashing if API unavailable.
+    Produces hash-based vectors for text chunks. No embedding model is called:
+    Claude has no embeddings endpoint, so embed_text returns a semantic-hashing
+    vector when an Anthropic client is configured and a plain hash otherwise.
+    `label()` names which, and is what DocumentChunk.embedding_model records --
+    the field used to say "claude-3-5-sonnet" for vectors no model produced.
     """
-    
-    # Model to use for embeddings
-    EMBEDDING_MODEL = "claude-3-5-sonnet-20241022"
-    EMBEDDING_DIMENSION = 1024  # Claude's embedding dimension
+
+    SEMANTIC_HASH_LABEL = 'semantic-hash-v1'
+    PLAIN_HASH_LABEL = 'hash-v1'
+    EMBEDDING_DIMENSION = 1024
     
     def __init__(self):
         self.client = None
@@ -38,6 +41,10 @@ class EmbeddingEngine:
             else:
                 logger.warning("ANTHROPIC_API_KEY not configured in settings.")
     
+    def label(self) -> str:
+        """The scheme embed_text uses right now -- recorded on every chunk."""
+        return self.SEMANTIC_HASH_LABEL if self.client else self.PLAIN_HASH_LABEL
+
     def embed_text(self, text: str) -> Optional[List[float]]:
         """
         Generate embedding for a single text chunk.
