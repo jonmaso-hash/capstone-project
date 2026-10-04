@@ -193,9 +193,22 @@ class UnreadableDeckTests(_Deck):
         self._deck(pptx_bytes(['empty', 'empty']))
         self._assert_refused(self._confirm())
 
-    def test_a_file_that_cannot_be_opened_is_refused_the_same_way(self):
+    def test_a_file_that_cannot_be_opened_is_refused_as_itself(self):
+        """
+        Refused exactly as firmly -- 422, nothing created, nothing spent -- but
+        said as what it is. A damaged file used to come back as "" and get the
+        image-only message, so the two failures could not be told apart
+        (Nike baseline L-001).
+        """
+        from zelda_api.utils import EXTRACTION_FAILURE_MESSAGES
+
         self._deck(b'this is not a presentation')
-        self._assert_refused(self._confirm())
+        response = self._confirm()
+        self.assertEqual(response.status_code, 422, response.content[:300])
+        body = response.json()
+        self.assertEqual((body['status'], body['code']), ('error', 'unreadable_file'))
+        self.assertEqual(body['message'], EXTRACTION_FAILURE_MESSAGES['unreadable_file'])
+        self.assert_nothing_spent()
 
     def test_an_unreadable_pdf_is_refused_the_same_way(self):
         self._deck(b'%PDF-1.4 fake', name='deck.pdf')

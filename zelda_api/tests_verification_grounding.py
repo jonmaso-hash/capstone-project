@@ -266,9 +266,19 @@ class DashboardCountsFromEvidenceNotProseTests(TestCase):
         self.assertNotIn(self.PROSE_TEST, self.squeezed())
 
     def test_the_page_uses_the_servers_grounded_answer(self):
+        """
+        Counts and icons come from the server's canonical STATE; the observed
+        cell from `grounded` (an external figure exists to show). Counting
+        `grounded` as verified is the Nike baseline L-005 defect: an SEC
+        figure with an unconfirmed period was drawn as a check mark and
+        counted as "1/2 verified" beside a "0 verified" stat card.
+        """
         body = self.squeezed()
-        self.assertIn('rows.filter(r=>r.grounded)', body)          # the rollup count
-        self.assertIn('row.grounded?row.observed:null', body)      # the observed cell
+        self.assertIn("rows.filter(r=>r.state==='verified')", body)        # the rollup count
+        self.assertIn('CLAIM_STATE_ICONS[row.state]', body)                 # the icon
+        self.assertIn('row.grounded?row.observed:null', body)              # the observed cell
+        self.assertNotIn('rows.filter(r=>r.grounded)', body)
+        self.assertNotIn("row.grounded?'✅'", body)
 
     def test_the_scanner_would_catch_the_old_rule(self):
         """

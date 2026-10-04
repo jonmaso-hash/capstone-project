@@ -1410,12 +1410,22 @@ def confirm_analyze_founder_profile(request, founder_username):
         }, status=402)
 
     try:
-        from .utils import UNREADABLE_DOCUMENT_MESSAGE, extract_text_from_file, has_usable_text, strip_page_markers
+        from .utils import (
+            EXTRACTION_FAILURE_MESSAGES, UNREADABLE_DOCUMENT_MESSAGE, ExtractionError,
+            extract_text_from_file, has_usable_text, strip_page_markers,
+        )
 
         # The same dispatcher the upload path uses, so a PowerPoint deck is read
         # as a PowerPoint. Read through storage: files on S3 have no local path.
-        with application.pitch_deck.open('rb') as deck:
-            raw_text, page_count = extract_text_from_file(deck)
+        try:
+            with application.pitch_deck.open('rb') as deck:
+                raw_text, page_count = extract_text_from_file(deck)
+        except ExtractionError as failure:
+            # No document, no charge, no analysis -- and the failure is said as
+            # itself, never stored as the deck's text.
+            return JsonResponse({'status': 'error', 'code': failure.reason,
+                                 'message': EXTRACTION_FAILURE_MESSAGES[failure.reason]},
+                                status=503 if failure.reason == 'dependency_missing' else 422)
 
         # Nothing readable -- an image-only deck, empty text boxes, a file that
         # won't open -- means no document, no charge and no analysis.

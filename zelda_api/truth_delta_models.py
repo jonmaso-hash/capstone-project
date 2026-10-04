@@ -478,9 +478,20 @@ class TruthDeltaReport(models.Model):
         the prose it was handed — which is how the claim list and the stat
         cards came to compute "verified" two different ways.
         """
+        # `grounded` = an external datapoint exists to SHOW. `state` = what
+        # the evidence establishes about the claim (category_states()), with
+        # its `reason` when nothing could be established. They differ exactly
+        # where it matters: Nike's revenue had an SEC figure (grounded) but no
+        # comparable period (no_data), and a page that drew its check mark
+        # from `grounded` showed a contradicted-looking claim as verified
+        # (baseline L-005). Icons and counts read `state`; never `grounded`.
         grounded = self.grounded_categories()
+        states = self.category_states()
+        reasons = self.grounding_reasons()
         return [
-            {**row, 'grounded': row.get('category') in grounded}
+            {**row, 'grounded': row.get('category') in grounded,
+             'state': states.get(row.get('category'), 'no_data'),
+             'reason': reasons.get(row.get('category'), '')}
             for row in self.details.get('per_claim', []) or []
         ]
 

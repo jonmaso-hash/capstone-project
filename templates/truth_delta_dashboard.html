@@ -1069,10 +1069,12 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
             ? perClaim.map(row => ({
                 category: row.category, claimed: row.claimed, observed: row.observed,
                 assessment: row.assessment, grounded: row.grounded === true,
+                state: row.state || 'no_data', reason: row.reason || '',
             }))
             : claims.map(c => ({
                 category: c.category, claimed: c.claimed_value, observed: null,
                 assessment: 'Not checked against external data.', grounded: false,
+                state: 'no_data', reason: '',
             }));
 
         rows.forEach(row => list.appendChild(buildClaimItem(row)));
@@ -1084,7 +1086,9 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
         // that text is written by a model, and reading verification out of it
         // let a sentence stand in for evidence.
         if (rollup) {
-            const verifiedCount = rows.filter(r => r.grounded).length;
+            // The canonical state, as the stat cards count it -- not `grounded`,
+            // which only means an external figure exists to show.
+            const verifiedCount = rows.filter(r => r.state === 'verified').length;
             const pct = Math.round((verifiedCount / rows.length) * 1000) / 10;
             let text = `${verifiedCount}/${rows.length} claims verified against external data (${pct}%)`;
             // SERVER_TRUTH_DATA.claims_analyzed is the TRUE total; rows.length
@@ -1098,12 +1102,28 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
         }
     }
 
+    const CLAIM_STATE_ICONS = {verified: '✅', contradicted: '⚠️', no_data: '❔'};
+    // Why a claim is no_data, in a reader's words (grounding_reasons()).
+    const NO_DATA_REASONS = {
+        period_unknown: 'An external figure was found, but its period could not be confirmed as comparable, so this claim is not verified.',
+        corroboration_only: 'Only lower-authority (LinkedIn-derived) data was found. It is shown as corroboration and does not verify the claim.',
+        source_unavailable: 'The external source could not be reached, so this claim was not checked.',
+        extraction_insufficient: 'The claim could not be read precisely enough to compare.',
+        ambiguous_pairing: 'Several external figures were found and none could be paired with this claim.',
+        no_comparable_claim: 'This kind of claim is not one an external figure can confirm or contradict.',
+        no_external_evidence: 'No external data was found for this claim.',
+    };
+
     function buildClaimItem(row) {
         // Only evidence the pipeline actually fetched goes in the Observed
         // column. An ungrounded row's text is the model's description, not a
         // source, and showing it there would read as corroboration.
         const observedText = row.grounded ? row.observed : null;
-        const icon = row.grounded ? '✅' : '❔';
+        // The icon is the canonical state (TruthDeltaReport.category_states),
+        // never `grounded`: an external figure can exist without establishing
+        // anything, and a check mark there reads as "verified" (baseline L-005).
+        const icon = CLAIM_STATE_ICONS[row.state] || CLAIM_STATE_ICONS.no_data;
+        const stateNote = row.state === 'no_data' ? (NO_DATA_REASONS[row.reason] || '') : '';
         // 'funding_raised' -> 'Funding raised' — the CSS already
         // uppercases this label, but the underscore reads oddly
         // ("FUNDING_RAISED") if not split into words first.
@@ -1125,6 +1145,7 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
                         <div class="comparison-text">${escapeHtml(observedText || 'No external data found')}</div>
                     </div>
                 </div>
+                ${stateNote ? `<div class="claim-explanation claim-state-note">${escapeHtml(stateNote)}</div>` : ''}
                 <div class="claim-explanation">${escapeHtml(row.assessment || '')}</div>
                 <div class="claim-clarification-area" data-category="${escapeHtml(row.category || '')}" data-unverified="${!observedText}"></div>
             </div>

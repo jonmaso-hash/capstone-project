@@ -81,8 +81,20 @@ class DocumentIngestView(APIView):
 
         try:
             # Extract text from file
-            from .utils import UNREADABLE_DOCUMENT_MESSAGE, extract_text_from_file, has_usable_text, strip_page_markers
-            extracted_text, page_count = extract_text_from_file(uploaded_file)
+            from .utils import (
+                EXTRACTION_FAILURE_MESSAGES, UNREADABLE_DOCUMENT_MESSAGE, ExtractionError,
+                extract_text_from_file, has_usable_text, strip_page_markers,
+            )
+            try:
+                extracted_text, page_count = extract_text_from_file(uploaded_file)
+            except ExtractionError as failure:
+                # Refused before any document or task exists: a failure to read
+                # the file is never stored as the document's text.
+                return Response(
+                    {"error": EXTRACTION_FAILURE_MESSAGES[failure.reason], "code": failure.reason},
+                    status=(status.HTTP_503_SERVICE_UNAVAILABLE if failure.reason == 'dependency_missing'
+                            else status.HTTP_400_BAD_REQUEST),
+                )
 
             # Whitespace counts as nothing: a deck of empty text boxes extracts
             # to newlines. Refused before any document or task exists.
