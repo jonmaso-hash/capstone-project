@@ -142,7 +142,7 @@
             {% if truth_delta %}
                 {% if truth_delta.overall_truth_score is not None %}
                 <p class="mb-1"><strong>Credibility Score:</strong> {{ truth_delta.overall_truth_score|floatformat:0 }}/100
-                    <span class="text-muted small d-block">Zelda found external support for several of the deck's checkable claims. Reflects only claims that had a public source to check against.</span>
+                    <span class="text-muted small d-block">{{ truth_delta.coverage_sentence }} Reflects only claims that had a public source to check against.</span>
                 </p>
                 {% else %}
                 <p class="mb-1"><strong>Credibility Score:</strong> <span class="text-muted">not scored</span>

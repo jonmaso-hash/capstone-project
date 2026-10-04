@@ -131,8 +131,39 @@ def truth_delta_signal(pitch_deck_doc):
         'claims_checked': ClaimedDatapoint.objects.filter(document=pitch_deck_doc).count(),
         'coverage': coverage,
         'no_data_count': coverage['total'] - coverage['verified'],
+        'coverage_sentence': coverage_sentence(coverage),
         'document_id': pitch_deck_doc.id,
     }
+
+
+def coverage_sentence(coverage):
+    """
+    What the verification established, in words, from the canonical counts
+    (verifiability_stats). Replaces fixed copy that said "Zelda found external
+    support for several of the deck's checkable claims" whatever the counts
+    were -- including when none were verified (Nike baseline L-008).
+    """
+    total = coverage.get('total') or 0
+    if not total:
+        return "None of the deck's claims had a public source to check against."
+    verified = coverage.get('verified') or 0
+    contradicted = coverage.get('contradicted') or 0
+    unconfirmed = total - verified - contradicted
+    plural = lambda n, word: f"{n} {word}{'' if n == 1 else 's'}"
+    parts = [f"{verified} of {plural(total, 'checkable claim')} verified against a public source"]
+    if contradicted:
+        parts.append(f"{contradicted} contradicted")
+    if unconfirmed:
+        parts.append(f"{unconfirmed} could not be confirmed")
+    return '; '.join(parts) + '.'
+
+
+# Why a category could not be established, for "What Zelda noticed".
+NO_DATA_PHRASES = {
+    'period_unknown': 'an external figure was found for {cats}, but its period could not be confirmed as comparable',
+    'corroboration_only': 'only lower-authority (LinkedIn-derived) data was found for {cats}',
+    'source_unavailable': 'the public source could not be reached to check {cats}',
+}
 
 
 def _humanize_list(items):
@@ -193,6 +224,7 @@ def zelda_report_observations(memo, pitch_deck_doc):
         if stats['total']:
             verified_cats = sorted(c for c, s in states.items() if s == 'verified')
             no_data_cats = sorted(c for c, s in states.items() if s == 'no_data')
+            reasons = report.grounding_reasons()
             if stats['verified']:
                 noticed.append(
                     f"External data backs {stats['verified']} of {stats['total']} "
@@ -200,9 +232,15 @@ def zelda_report_observations(memo, pitch_deck_doc):
                     + (f" ({_humanize_list(verified_cats)})." if verified_cats else ".")
                 )
             if no_data_cats:
-                noticed.append(
-                    f"No public source was found to check {_humanize_list(no_data_cats)}."
-                )
+                # Grouped by WHY, so "an SEC figure exists but the period is
+                # unconfirmed" is never reported as "no public source was found".
+                by_phrase = {}
+                for c in no_data_cats:
+                    phrase = NO_DATA_PHRASES.get(reasons.get(c), 'no public source was found to check {cats}')
+                    by_phrase.setdefault(phrase, []).append(c)
+                for phrase, cats in by_phrase.items():
+                    sentence = phrase.format(cats=_humanize_list(cats))
+                    noticed.append(sentence[0].upper() + sentence[1:] + '.')
                 for c in no_data_cats[:2]:
                     worth.append({
                         'topic': f"{str(c).replace('_', ' ').capitalize()} — not externally verified",

@@ -3122,7 +3122,8 @@ class TruthDeltaUIViewProvenanceTests(TestCase):
         self.assertEqual(details['observed'], self.report.details['observed'])
         self.assertEqual(details['per_claim'], self.report.per_claim_rows())
         self.assertEqual(
-            [{k: v for k, v in row.items() if k != 'grounded'} for row in details['per_claim']],
+            # Server-attached keys aside, the stored rows come through intact.
+            [{k: v for k, v in row.items() if k not in ('grounded', 'state', 'reason')} for row in details['per_claim']],
             self.report.details['per_claim'],
         )
         self.assertIs(details['per_claim'][0]['grounded'], True)

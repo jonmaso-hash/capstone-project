@@ -148,6 +148,7 @@ jobs:
           zelda_api.tests_dataforb2b_adapter
           zelda_api.tests_boundary_closeout
           zelda_api.tests_page_provenance
+          zelda_api.tests_canonical_presentation
           pages.tests_no_network_in_tests
           zelda_api.tests_filed
           zelda_api.tests_jurisdiction
