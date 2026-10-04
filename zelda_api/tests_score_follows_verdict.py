@@ -95,10 +95,11 @@ class TheEngineStoresZeldasScoreTests(_Verify):
         payload = self.client.get(reverse('zelda_api:truth_delta_score', args=[self.doc.id])).json()
         self.assertEqual((payload['overall_truth_score'], payload['credibility_risk']), (None, 'unknown'))
 
-    def test_the_page_calls_no_score_insufficient_evidence(self):
+    def test_the_page_calls_no_score_not_scored_limited_public_evidence(self):
         self.claim('revenue', '$52.8 billion', 52.8e9)
         self.verify(model_says([], score=42.0), revenue=46.398e9)
         self.client.force_login(self.user)
         body = self.client.get(reverse('zelda_api:truth_delta_ui', args=[self.doc.id])).content.decode()
-        self.assertIn('INSUFFICIENT EVIDENCE', body)
+        self.assertIn('NOT SCORED · LIMITED PUBLIC EVIDENCE', body)
         self.assertNotIn('NO EXTERNAL DATA', body)
+        self.assertNotIn('INSUFFICIENT EVIDENCE', body)

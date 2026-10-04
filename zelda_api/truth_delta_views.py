@@ -123,6 +123,9 @@ class TruthDeltaScoreView(APIView):
             }
 
         category_states = report.category_states()
+        # The same display counts every surface uses (ic_memo.coverage_counts).
+        from .ic_memo import coverage_counts, coverage_sentence
+        counts = coverage_counts(report.verifiability_stats())
 
         return Response({
             "tier": tier,
@@ -131,8 +134,9 @@ class TruthDeltaScoreView(APIView):
             "summary": report.summary,
             "details": details,
             "category_states": category_states,
-            "verified_count": sum(1 for s in category_states.values() if s == 'verified'),
-            "contradicted_count": sum(1 for s in category_states.values() if s == 'contradicted'),
-            "unverified_count": sum(1 for s in category_states.values() if s == 'no_data'),
+            "verified_count": counts['verified'],
+            "contradicted_count": counts['contradicted'],
+            "unverified_count": counts['not_established'],
+            "coverage_sentence": coverage_sentence(counts) if counts['total'] else '',
             "grounding_reasons": report.grounding_reasons(),
         })

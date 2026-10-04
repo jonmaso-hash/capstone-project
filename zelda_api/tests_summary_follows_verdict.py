@@ -32,7 +32,9 @@ from zelda_api.truth_delta_models import (
 from zelda_api.truth_delta_sources import DataSourceManager
 from zelda_api.vector_models import DocumentSource
 
-CONTRADICTION_WORDS = re.compile(r'overstat|red flag|contradict|inaccura|inflat', re.I)
+# Verdict language. Not bare "contradict": the canonical coverage line says
+# "0 contradicted" and "could be verified or contradicted", which assert nothing.
+CONTRADICTION_WORDS = re.compile(r'overstat|red flag|inaccura|inflat|contradicts|is contradicted|[1-9]\d* contradicted', re.I)
 # The model's affirmative phrasings. Canonical text may say "could not be confirmed".
 VERIFICATION_WORDS = re.compile(r'verified by|confirmed by|headcount confirmed|funding verified|consistent with', re.I)
 MODEL_SUMMARY = 'MODEL SUMMARY: the revenue claim is materially overstated, a significant red flag.'
@@ -129,7 +131,7 @@ class EachCanonicalOutcomeWinsOverTheModelTests(_Verify):
         self.assertEqual(self.report.category_states(), {'revenue': 'verified'})
         self.assertModelSummaryNotStored()
         self.assertNoContradictionLanguage(self.report.summary)
-        self.assertIn('1 of 1 checkable claim verified', self.report.summary)
+        self.assertIn('1 verified · 0 contradicted · 0 not established (of 1)', self.report.summary)
         row = self.rows()['revenue']
         self.assertEqual(row['explanation_source'], 'zelda')
         self.assertNoContradictionLanguage(row['assessment'])
@@ -159,7 +161,7 @@ class EachCanonicalOutcomeWinsOverTheModelTests(_Verify):
         self.assertEqual(self.report.grounding_reasons()['revenue'], 'period_unknown')
         self.assertModelSummaryNotStored()
         self.assertNoContradictionLanguage(self.report.summary)
-        self.assertIn('0 of 2 checkable claims verified', self.report.summary)
+        self.assertIn('Limited public evidence: none of the 2 claims', self.report.summary)
         self.assertIn('$46.4 billion', self.report.summary)
         self.assertIn('could not be compared', self.report.summary)
         rows = self.rows()

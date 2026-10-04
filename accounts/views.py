@@ -703,8 +703,14 @@ def profile(request, username=None, pk=None):
                 # codes are mapped to their display labels here (view/template
                 # concern) — diff_verification_reports itself stays in terms
                 # of raw category codes, which is what its own tests assert on.
+                from zelda_api.ic_memo import coverage_counts, coverage_line
                 for i, report in enumerate(verification_history):
                     report.stats = report.verifiability_stats()
+                    # Counts from the shared helper, never a percentage: "0/3
+                    # claims verified (0%)" graded a private company's lack of
+                    # public evidence as a failure.
+                    counts = coverage_counts(report.stats)
+                    report.coverage_line = coverage_line(counts) if counts['total'] else ''
                     trend = (
                         diff_verification_reports(report, verification_history[i + 1])
                         if i + 1 < len(verification_history) else None

@@ -142,23 +142,27 @@
             {% if truth_delta %}
                 {% if truth_delta.overall_truth_score is not None %}
                 <p class="mb-1"><strong>Evidence Credibility:</strong> {{ truth_delta.overall_truth_score|floatformat:0 }}/100
-                    <span class="text-muted small d-block">{{ truth_delta.coverage_sentence }} Reflects only claims that had a public source to check against.</span>
+                    <span class="text-muted small d-block">{{ truth_delta.coverage_sentence }}</span>
                 </p>
                 {% else %}
                 <p class="mb-1"><strong>Evidence Credibility:</strong> <span class="text-muted">not scored</span>
-                    <span class="text-muted small d-block">No claim could be verified or contradicted against a public source.</span>
+                    <span class="text-muted small d-block">{% if truth_delta.counts.total %}{{ truth_delta.coverage_sentence }}{% else %}No claim could be verified or contradicted against a public source.{% endif %}</span>
                 </p>
                 {% endif %}
 
-                {% if memo_tier == 'full' and truth_delta.coverage.total %}
+                {% if memo_tier == 'full' and truth_delta.counts.total %}
                 <div class="d-flex rounded overflow-hidden mb-1 mt-2" style="height: 10px; max-width: 320px; background: #e9ecef;">
-                    {% if truth_delta.coverage.verified %}<div style="width: {% widthratio truth_delta.coverage.verified truth_delta.coverage.total 100 %}%; background: #10b981;"></div>{% endif %}
-                    {% if truth_delta.no_data_count %}<div style="width: {% widthratio truth_delta.no_data_count truth_delta.coverage.total 100 %}%; background: #f59e0b;"></div>{% endif %}
+                    {% if truth_delta.counts.verified %}<div style="width: {% widthratio truth_delta.counts.verified truth_delta.counts.total 100 %}%; background: #10b981;"></div>{% endif %}
+                    {% if truth_delta.counts.contradicted %}<div style="width: {% widthratio truth_delta.counts.contradicted truth_delta.counts.total 100 %}%; background: #ef4444;"></div>{% endif %}
+                    {% if truth_delta.counts.not_established %}<div style="width: {% widthratio truth_delta.counts.not_established truth_delta.counts.total 100 %}%; background: #f59e0b;"></div>{% endif %}
                 </div>
                 <p class="small text-muted mb-0">
-                    <span style="color: #10b981;">&#9632;</span> Verified — {{ truth_delta.coverage.verified }}
+                    <span style="color: #10b981;">&#9632;</span> Verified — {{ truth_delta.counts.verified }}
                     &nbsp;&middot;&nbsp;
-                    <span style="color: #f59e0b;">&#9632;</span> No external data — {{ truth_delta.no_data_count }}
+                    <span style="color: #ef4444;">&#9632;</span> Contradicted — {{ truth_delta.counts.contradicted }}
+                    &nbsp;&middot;&nbsp;
+                    <span style="color: #f59e0b;">&#9632;</span> Not established — {{ truth_delta.counts.not_established }}
+                    &nbsp;(of {{ truth_delta.counts.total }})
                 </p>
                 {% endif %}
 

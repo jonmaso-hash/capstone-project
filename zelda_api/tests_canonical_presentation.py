@@ -90,12 +90,11 @@ class CoverageSentenceTests(SimpleTestCase):
 
     def test_says_what_the_counts_say(self):
         self.assertEqual(coverage_sentence({'total': 2, 'verified': 0, 'contradicted': 0}),
-                         '0 of 2 checkable claims verified against a public source; 2 could not be confirmed.')
+                         'Limited public evidence: none of the 2 claims could be verified or contradicted against a public source.')
         self.assertEqual(coverage_sentence({'total': 3, 'verified': 1, 'contradicted': 1}),
-                         '1 of 3 checkable claims verified against a public source; 1 contradicted; '
-                         '1 could not be confirmed.')
+                         '1 verified · 1 contradicted · 1 not established (of 3).')
         self.assertEqual(coverage_sentence({'total': 1, 'verified': 1, 'contradicted': 0}),
-                         '1 of 1 checkable claim verified against a public source.')
+                         '1 verified · 0 contradicted · 0 not established (of 1).')
         self.assertIn('None of', coverage_sentence({'total': 0}))
 
 
@@ -103,8 +102,7 @@ class IntelligenceReportTests(_NikeShape):
     """L-008: the investor-facing card and observations follow the canonical state."""
 
     def test_signal_carries_the_canonical_sentence(self):
-        self.assertEqual(truth_delta_signal(self.doc)['coverage_sentence'],
-                         '0 of 2 checkable claims verified against a public source; 2 could not be confirmed.')
+        self.assertEqual(truth_delta_signal(self.doc)['coverage_sentence'], 'Limited public evidence: none of the 2 claims could be verified or contradicted against a public source.')
 
     def test_the_report_page_no_longer_claims_external_support(self):
         investor = User.objects.create_user('present_investor', password='x')
@@ -114,7 +112,7 @@ class IntelligenceReportTests(_NikeShape):
         response = self.client.get(reverse('matchmaking:standalone_memo', args=['present-co']))
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, 'found external support')
-        self.assertContains(response, '0 of 2 checkable claims verified against a public source')
+        self.assertContains(response, 'Limited public evidence: none of the 2 claims could be verified or contradicted against a public source.')
 
     def test_observations_say_why_nothing_was_confirmed(self):
         noticed = zelda_report_observations(IntelligenceMemo.objects.get(document=self.doc), self.doc)['noticed']
