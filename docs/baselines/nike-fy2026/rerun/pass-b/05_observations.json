@@ -1,0 +1,24 @@
+[
+ {
+  "id": 129,
+  "document_id": 3121,
+  "category": "revenue",
+  "observed_value": "46398000000.0",
+  "observed_value_numeric": 46398000000.0,
+  "unit": "$",
+  "time_period": "FY2026 10-K (period ending 2026-05-31)",
+  "source_id": 1,
+  "registrant": "0000320187",
+  "source_url": "",
+  "source_date": null,
+  "role": "can_establish",
+  "evidence_origin": "sec_filing",
+  "provenance": {},
+  "source_credibility": 0.95,
+  "extraction_method": "api",
+  "created_at": "2026-10-04 10:43:07.937320+00:00",
+  "verified_at": null,
+  "source_type": "sec",
+  "source_name": "SEC EDGAR"
+ }
+]
