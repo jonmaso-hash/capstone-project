@@ -89,7 +89,21 @@ class TruthDeltaEngine:
             logger.warning(f"External data fetch failed for document {document_id}: {e}")
             source_diagnostics.setdefault('fetch', 'request_error')
 
+        # Lower-authority providers write role-stamped rows through their own
+        # adapters (Task 8), never through the establishing path above. Their
+        # outcomes are kept apart from source_diagnostics on purpose: a
+        # DataForB2B timeout must not relabel a revenue claim's absence as
+        # "source unavailable" when DataForB2B can never speak to revenue.
+        provider_outcomes = {}
+        try:
+            from .dataforb2b_adapter import observe as observe_dataforb2b
+            provider_outcomes['dataforb2b'] = observe_dataforb2b(document, list(claims))
+        except Exception as e:
+            logger.warning(f"DataForB2B observation failed for document {document_id}: {type(e).__name__}")
+            provider_outcomes['dataforb2b'] = 'provider_error'
+
         observed = ObservedDatapoint.objects.filter(document_id=document_id)
+        establishing = observed.filter(role=CAN_ESTABLISH)
 
         headlines = []
         try:
@@ -97,7 +111,7 @@ class TruthDeltaEngine:
         except Exception as e:
             logger.warning(f"News headline fetch failed for document {document_id}: {e}")
 
-        if not observed.exists() and not headlines:
+        if not establishing.exists() and not headlines:
             # The same list the surfaces render, from the same helper: news is
             # fetched when configured but yields no comparable datapoint, so
             # listing it among the sources a claim was "checked" against
@@ -114,11 +128,19 @@ class TruthDeltaEngine:
                 source for source, reason in (source_diagnostics or {}).items()
                 if reason in TruthDeltaReport.SOURCE_FAILURE_REASONS
             )
+            corroborated = observed.filter(role=CAN_CORROBORATE).exists()
             if unreachable:
                 summary = (
                     f"Public sources could not be reached, so these claims were left "
                     f"unchecked rather than found unsupported. This says nothing about "
                     f"\"{company_name}\" — only that the attempt did not complete."
+                )
+            elif corroborated:
+                summary = (
+                    f"No authoritative source could verify these claims. Lower-authority "
+                    f"data (LinkedIn-derived) is shown alongside them as corroboration "
+                    f"only; it does not verify or contradict anything about "
+                    f"\"{company_name}\"."
                 )
             else:
                 summary = (
@@ -137,6 +159,7 @@ class TruthDeltaEngine:
                 details={
                     'claims': self._serialize_claims(claims), 'observed': [],
                     'source_diagnostics': source_diagnostics,
+                    'provider_outcomes': provider_outcomes,
                     # Even with nothing to compare against, record WHAT could
                     # not be compared. Without this the report has no chain at
                     # all, so a reader cannot tell which claims were left
@@ -169,6 +192,7 @@ class TruthDeltaEngine:
                 # only surviving account of a comparison it did not perform.
                 'comparison': comparison,
                 'source_diagnostics': source_diagnostics,
+                'provider_outcomes': provider_outcomes,
                 'per_claim': result.get('per_claim', []),
             },
         )
