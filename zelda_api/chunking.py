@@ -37,6 +37,56 @@ class DocumentChunker:
     
     def chunk(self, text: str):
         """
+        [(chunk_text, page_number, title), ...].
+
+        page_number is the REAL slide/page number, read from the markers the
+        extractor writes (zelda_api.utils.page_marker), or None when the text
+        has none -- a .txt file, or content before the first marker. It is
+        never derived from split order: the heuristic below used to number its
+        pieces 1, 2, 3, so "page 4" meant the fourth thing a regex split off
+        (Nike baseline L-014: 11 "pages" for a 10-slide deck). A page too long
+        for one chunk becomes several chunks that all keep that page's number.
+        """
+        from .utils import split_pages
+
+        segments = split_pages(text)
+        if len(segments) == 1 and segments[0][0] is None:
+            return [(chunk_text, None, title) for chunk_text, _position, title in self._heuristic_chunks(text)]
+
+        chunks = []
+        for page_number, segment in segments:
+            for piece in self._split_long(segment):
+                piece = piece.strip()
+                if len(piece) < 20:
+                    continue
+                chunks.append((piece, page_number, self._title(piece)))
+        return chunks
+
+    def _split_long(self, segment):
+        """One page's text, split on line boundaries only when it exceeds one chunk."""
+        lines = [line for line in segment.split('\n') if line.strip()]
+        pieces, current, words = [], [], 0
+        for line in lines:
+            count = len(line.split())
+            if current and words + count > self.chunk_size_words:
+                pieces.append('\n'.join(current))
+                current, words = [], 0
+            current.append(line)
+            words += count
+        if current:
+            pieces.append('\n'.join(current))
+        return pieces
+
+    @staticmethod
+    def _title(piece):
+        first = next((line.strip() for line in piece.split('\n') if line.strip()), '')
+        return first[:100]
+
+    def _heuristic_chunks(self, text: str):
+        """
+        UNMARKED TEXT ONLY. Its second element is a split position, not a page,
+        and chunk() discards it.
+
         Split on slide boundaries for PPTX content. PPTX exports commonly
         repeat the company name as a running header at the top of every
         slide — detected here dynamically (any short line recurring 3+

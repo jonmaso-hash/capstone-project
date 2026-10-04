@@ -14,6 +14,7 @@ from typing import Dict, List, Optional, Tuple
 from django.utils import timezone
 from .vector_models import DocumentSource, DocumentChunk, IntelligenceInsight, IntelligenceMemo, BusinessValuationReport
 from .chunking import DocumentChunker
+from .utils import strip_page_markers
 from .embeddings import embedding_engine
 import json
 from django.conf import settings
@@ -216,9 +217,9 @@ class ZeldaIntelligencePipelineV2:
         
         try:
             # Store preview
-            document_source.raw_text_preview = raw_text[:1000]
+            document_source.raw_text_preview = strip_page_markers(raw_text)[:1000]
             document_source.raw_text_full = raw_text
-            document_source.total_word_count = len(raw_text.split())
+            document_source.total_word_count = len(strip_page_markers(raw_text).split())
             document_source.save()
             
             # STEP 1: CHUNKING
@@ -299,9 +300,9 @@ class ZeldaIntelligencePipelineV2:
             return refused
 
         try:
-            document_source.raw_text_preview = raw_text[:1000]
+            document_source.raw_text_preview = strip_page_markers(raw_text)[:1000]
             document_source.raw_text_full = raw_text
-            document_source.total_word_count = len(raw_text.split())
+            document_source.total_word_count = len(strip_page_markers(raw_text).split())
             document_source.save()
 
             logger.info(f"Chunking: {document_source.filename}")
