@@ -423,6 +423,7 @@ class ZeldaIntelligencePipelineV2:
                     embedding = self.embedding_engine.embed_text(chunk.raw_text)
                     if embedding is not None:
                         # Ensure valid JSON before storing
+                        chunk.embedding_model = self.embedding_engine.label()
                         chunk.embedding_vector = json.dumps(
                             [float(x) for x in embedding]
                         )

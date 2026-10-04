@@ -569,6 +569,9 @@ class DocumentSearchView(APIView):
                 'query': query,
                 'results_count': len(results),
                 'results': results,
+                # Said explicitly, so "nothing in this document bears on the
+                # question" is never inferred from an empty list.
+                'no_relevant_evidence': not results,
             }, status=status.HTTP_200_OK)
         
         except DocumentSource.DoesNotExist:
@@ -617,7 +620,8 @@ class DocumentRAGView(APIView):
             results = VectorRetriever(top_k=top_k).retrieve(principal, query, doc)
             
             # Assemble context
-            context_text = "Retrieved Context:\n\n"
+            context_text = ("Retrieved Context:\n\n" if results else
+                            "No relevant evidence was found in this document for this query.\n")
             for i, result in enumerate(results, 1):
                 context_text += f"[Source {i} - Page {result['page']}, {result['section']}]\n"
                 context_text += result['text']
@@ -628,6 +632,7 @@ class DocumentRAGView(APIView):
                 'query': query,
                 'context': context_text,
                 'source_count': len(results),
+                'no_relevant_evidence': not results,
                 'sources': [
                     {
                         'chunk_id': r['id'],

@@ -1209,13 +1209,18 @@ def respond_to_clarification_request(request, clarification_id):
 
     return JsonResponse({'status': 'success', 'response_text': clarification.response_text})
 
-@login_required
 def _founder_investor_context(request, founder_username):
     """
     Shared resolution + auth for analyze_founder_profile and its confirm
     step: investor role check, founder lookup, and the founder's
     Application. Returns (investor_profile, founder_user, application) or
-    an early JsonResponse on failure.
+    an early JsonResponse on failure -- ALWAYS a pair.
+
+    It used to carry @login_required. On a helper that returns a tuple, that
+    decorator hands an anonymous caller a bare redirect, which the callers'
+    `resolved, error_response = ...` then failed to unpack: a 500 instead of
+    a refusal (Nike baseline L-016). An anonymous user has no investor
+    profile, so the role check below already refuses them with a 403.
     """
     from django.contrib.auth import get_user_model
     User = get_user_model()
