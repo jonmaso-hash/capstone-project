@@ -21,32 +21,48 @@ from . import truth_delta_narrative as narrative
 logger = logging.getLogger(__name__)
 
 
-TRUTH_DELTA_SYSTEM_PROMPT = """You are Zelda's Truth Delta verification analyst. You are given a founder's/seller's self-reported claims from a pitch deck, alongside data pulled from independent public sources (SEC EDGAR filings, Crunchbase, recent news headlines) for the same company. Your job is to judge how well the claims hold up against that external data.
+TRUTH_DELTA_SYSTEM_PROMPT = """You are Zelda's Truth Delta explainer. You are given a founder's/seller's self-reported claims from a pitch deck, the data Zelda pulled from independent public sources for the same company, and Zelda's verdict on each claim. Your only job is to explain each verdict in plain English. You do not judge the claims, and you do not score them.
 
 ABSOLUTE RULES:
 - Only reason about the claims and observed data given to you. Never invent a number, source, or fact that isn't in the input.
-- Each row's observed_* fields are the only evidence that can verify or contradict its claim. A row's `corroboration` entries come from lower-authority sources: describe them as consistent with or differing from the claim, never as verification, and treat an entry with "independent": false as no extra confirmation. `context` entries are background only and never evidence about the claim.
-- If a claim has no matching observed data, say so plainly in per_claim — that is NOT evidence the claim is false, only that it could not be checked. Do not penalize the score for unchecked claims.
-- A claim that is directionally consistent with observed data (e.g. within a reasonable range, accounting for the observed data possibly being from a different, older time period) should not be flagged as a contradiction.
-- A claim that is significantly higher than observed data (e.g. claiming 10x the SEC-reported revenue) is a real red flag and should lower the score substantially.
-- News headlines are supporting context only, not a verified numeric source — they can corroborate a narrative (e.g. a funding round being reported) but never confirm an exact figure.
 - Each row carries `zelda_state` (verified, contradicted or no_data) and, for no_data, `zelda_reason`. These are Zelda's final verdict on that claim and are not yours to change. Your per_claim `assessment` explains that verdict in one short sentence. Never call a claim verified, confirmed, contradicted, overstated, inaccurate or a red flag unless its zelda_state says so; a no_data claim was not established either way, whatever the numbers look like.
+- A row's `corroboration` entries come from lower-authority sources: describe them as consistent with or differing from the claim, never as verification, and treat an entry with "independent": false as no extra confirmation. `context` entries are background only and never evidence about the claim.
+- If a claim has no matching observed data, say so plainly — that is NOT evidence the claim is false, only that it could not be checked.
+- News headlines are context only, never a verified numeric source.
 
 Return ONLY valid JSON in this exact shape, no markdown fences, no other text:
 {
-  "overall_truth_score": <0-100 integer, your holistic judgment across only the CHECKED claims>,
-  "credibility_risk": "<low|medium|high|critical>",
   "per_claim": [
     {"category": "<claim category>", "assessment": "<one short sentence explaining zelda_state>"}
   ]
 }"""
 
 
+def canonical_score(stats):
+    """
+    (overall_truth_score, credibility_risk) from the canonical counts alone (R-003b).
+
+    score = verified / (verified + contradicted) * 100. Only claims Zelda
+    established either way are scored: a no_data claim -- period_unknown,
+    no_external_evidence, corroboration_only, source_unavailable -- is excluded,
+    however far apart its raw numbers are, because Zelda has said they cannot be
+    compared. With nothing scoreable there is no score and the risk is 'unknown':
+    Nike's 0 verified / 0 contradicted is "insufficient evidence", not 42/100.
+
+    Before this the model chose both numbers. It was shown a 13.8% gap and a
+    prompt calling such gaps "a real red flag", and scored a claim Zelda could
+    not compare.
+    """
+    verified = stats.get('verified') or 0
+    scoreable = verified + (stats.get('contradicted') or 0)
+    if not scoreable:
+        return None, 'unknown'
+    score = round(verified / scoreable * 100, 1)
+    return score, _risk_band(score)
+
+
 def _risk_band(score: float) -> str:
-    """
-    Shared score->risk mapping so 'credibility_risk' means the same thing
-    whether Claude produced it or the numeric fallback did.
-    """
+    """Score -> risk band, the one mapping every report uses."""
     if score >= 80:
         return 'low'
     if score >= 60:
@@ -156,12 +172,14 @@ class TruthDeltaEngine:
             # reader cannot tell which claims were left unchecked or why --
             # and the decline carries no reason.
             comparison = self._build_comparison(claims, observed)
-            states, reasons, _ = self._canonical_state(comparison, source_diagnostics)
+            states, reasons, stats = self._canonical_state(comparison, source_diagnostics)
+            # Nothing establishing, so nothing scoreable: (None, 'unknown').
+            score, risk = canonical_score(stats)
             report = TruthDeltaReport.objects.create(
                 document_id=document_id,
                 engine_version=self.semantics_version,
-                overall_truth_score=None,
-                credibility_risk='unknown',
+                overall_truth_score=score,
+                credibility_risk=risk,
                 summary=summary,
                 details={
                     'claims': self._serialize_claims(claims), 'observed': [],
@@ -183,23 +201,24 @@ class TruthDeltaEngine:
         explanations = {}
         summary = narrative.summary(states, reasons, comparison, stats, headlines)
         if result is None:
-            # Claude unavailable (circuit open, API error, malformed JSON)
-            # — fall back to a purely numeric score computed only from
-            # already-gathered real numbers, rather than producing nothing.
-            result = self._numeric_fallback(comparison)
-            # Zelda-written and true: the reader must know no explanation ran.
-            summary = f"{summary} {result['summary']}"
+            # Claude unavailable (circuit open, API error, malformed JSON).
+            # Nothing it would have produced decides anything any more, so the
+            # report is complete without it; the reader is told no
+            # explanation ran, and each row shows Zelda's own reason.
+            summary = f"{summary} {self._numeric_fallback(comparison)['summary']}"
         else:
             explanations = {
                 row.get('category'): row.get('assessment')
                 for row in result.get('per_claim') or [] if isinstance(row, dict)
             }
+        # From the canonical counts, never from the model (R-003b).
+        score, risk = canonical_score(stats)
 
         report = TruthDeltaReport.objects.create(
             document_id=document_id,
             engine_version=self.semantics_version,
-            overall_truth_score=result['overall_truth_score'],
-            credibility_risk=result['credibility_risk'],
+            overall_truth_score=score,
+            credibility_risk=risk,
             # Composed from the canonical state; the model's summary is not stored.
             summary=summary,
             details={
@@ -416,17 +435,12 @@ class TruthDeltaEngine:
                 raw = re.sub(r'\n?```$', '', raw)
 
             parsed = json.loads(raw)
-            if not isinstance(parsed, dict) or 'overall_truth_score' not in parsed:
-                logger.error("Truth Delta Claude response missing overall_truth_score")
+            if not isinstance(parsed, dict) or not isinstance(parsed.get('per_claim'), list):
+                logger.error("Truth Delta Claude response missing per_claim")
                 return None
-
-            score = max(0.0, min(100.0, float(parsed['overall_truth_score'])))
-            parsed['overall_truth_score'] = score
-            if parsed.get('credibility_risk') not in {'low', 'medium', 'high', 'critical'}:
-                parsed['credibility_risk'] = _risk_band(score)
-            parsed.setdefault('summary', '')
-            parsed.setdefault('per_claim', [])
-            return parsed
+            # Only the explanations are read. Any score, risk or summary the
+            # model adds anyway is ignored: those are Zelda's (R-003, R-003b).
+            return {'per_claim': parsed['per_claim']}
 
         except json.JSONDecodeError as e:
             logger.error(f"Truth Delta Claude JSON parse error: {str(e)}")
@@ -437,42 +451,14 @@ class TruthDeltaEngine:
 
     def _numeric_fallback(self, comparison):
         """
-        Used only when Claude is unavailable. A plain arithmetic score
-        computed from real claimed-vs-observed numbers already gathered —
-        never a fabricated figure, and never penalizes a claim just for
-        having no external match (absence of data isn't evidence of a lie).
+        Used only when Claude is unavailable: the sentence that tells the
+        reader no explanation ran.
+
+        It used to compute its own score from every raw gap -- the same
+        mistake the model made, in arithmetic: Nike's 13.8% revenue gap, which
+        Zelda cannot compare (period unknown), scored as a 13.8-point penalty.
+        The score now comes from canonical_score() on every path, so nothing
+        here is a number.
         """
-        checked = [row for row in comparison if row['discrepancy_pct'] is not None]
-        if not checked:
-            return {
-                'overall_truth_score': None,
-                'credibility_risk': 'unknown',
-                'summary': (
-                    "Automated qualitative verification (Claude) was unavailable, and none of "
-                    "the claims had a matching external datapoint to compare against numerically."
-                ),
-                'per_claim': [],
-            }
-
-        # Each checked claim starts at 100 and loses a point per percent of
-        # deviation, capped at 100 so one wildly-off claim can't zero out
-        # an otherwise-consistent report on its own.
-        per_claim_scores = [max(0, 100 - min(abs(row['discrepancy_pct']), 100)) for row in checked]
-        overall = round(sum(per_claim_scores) / len(per_claim_scores), 1)
-
-        return {
-            'overall_truth_score': overall,
-            'credibility_risk': _risk_band(overall),
-            'summary': (
-                f"Claude was unavailable, so this score is a plain arithmetic comparison of "
-                f"{len(checked)} claim(s) against matching external data — no qualitative "
-                f"judgment was applied."
-            ),
-            'per_claim': [
-                {
-                    'category': row['category'], 'claimed': row['claimed_value'], 'observed': row['observed_value'],
-                    'assessment': f"{row['discrepancy_pct']}% difference from observed value ({row['observed_source']})",
-                }
-                for row in checked
-            ],
-        }
+        return {'summary': ('Automated explanations (Claude) were unavailable, so each claim shows '
+                            "Zelda's own reason; the verdicts and the score do not depend on them.")}

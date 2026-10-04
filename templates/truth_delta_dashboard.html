@@ -1009,11 +1009,13 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
             riskElement.textContent = 'PENDING VERIFICATION';
             riskElement.className = 'score-risk risk-medium';
         } else if (!hasScore) {
-            // Verification ran, but no public data was found to score against —
-            // distinct from "pending" and distinct from a low score.
+            // Verification ran, but no claim was verified or contradicted, so
+            // nothing is scoreable -- distinct from "pending" and from a low
+            // score. Not "no external data": Nike had an SEC figure it could
+            // not compare (R-003b).
             scoreElement.textContent = 'N/A';
             scoreElement.className = 'score-value medium-risk';
-            riskElement.textContent = 'NO EXTERNAL DATA';
+            riskElement.textContent = 'INSUFFICIENT EVIDENCE';
             riskElement.className = 'score-risk risk-medium';
         } else {
             scoreElement.textContent = Math.round(score);

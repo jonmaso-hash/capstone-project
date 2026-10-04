@@ -896,7 +896,8 @@ class InvestorReadinessCenterTests(TestCase):
         readiness = response.context['investor_readiness']
         self.assertIsNone(readiness['market_evidence_pct'])
         self.assertIsNone(readiness['financial_disclosure_pct'])
-        self.assertIsNone(readiness['company_verification_pct'])
+        self.assertIsNone(readiness['company_credibility_score'])
+        self.assertEqual(readiness['company_credibility_status'], 'not_analyzed')
         self.assertEqual(readiness['founder_verification_pct'], 0)
         self.assertEqual(readiness['materials'], [])
         self.assertContains(response, 'No investor materials available yet.')
@@ -921,7 +922,7 @@ class InvestorReadinessCenterTests(TestCase):
         response = self.client.get(self._profile_url())
         self.assertEqual(response.context['investor_readiness']['market_evidence_pct'], 82)
 
-    def test_company_verification_pct_derives_from_real_truth_delta_score(self):
+    def test_company_credibility_derives_from_real_truth_delta_score(self):
         from zelda_api.vector_models import DocumentSource
         from zelda_api.truth_delta_models import TruthDeltaReport
         doc = DocumentSource.objects.create(
@@ -931,9 +932,30 @@ class InvestorReadinessCenterTests(TestCase):
         TruthDeltaReport.objects.create(document=doc, overall_truth_score=73.4, credibility_risk='medium')
         self.client.force_login(self.founder_user)
         response = self.client.get(self._profile_url())
-        self.assertEqual(response.context['investor_readiness']['company_verification_pct'], 73)
+        readiness = response.context['investor_readiness']
+        self.assertEqual((readiness['company_credibility_score'], readiness['company_credibility_status']),
+                         (73, 'scored'))
+        # A credibility score, not a verification percentage (R-003b).
+        self.assertContains(response, '73/100')
+        self.assertNotContains(response, 'Company Verification')
 
-    def test_no_truth_delta_report_leaves_company_verification_none(self):
+    def test_an_analyzed_deck_with_nothing_scoreable_says_so(self):
+        # Nike: verified, but 0 verified / 0 contradicted. Not "not analyzed yet".
+        from zelda_api.vector_models import DocumentSource
+        from zelda_api.truth_delta_models import TruthDeltaReport
+        doc = DocumentSource.objects.create(
+            uploaded_by=self.founder_user, filename='deck.pdf', source_entity='ReadyCo',
+            document_type='pitch_deck', status='analyzed',
+        )
+        TruthDeltaReport.objects.create(document=doc, overall_truth_score=None, credibility_risk='unknown')
+        self.client.force_login(self.founder_user)
+        response = self.client.get(self._profile_url())
+        readiness = response.context['investor_readiness']
+        self.assertEqual((readiness['company_credibility_score'], readiness['company_credibility_status']),
+                         (None, 'insufficient_evidence'))
+        self.assertContains(response, 'Not enough comparable public evidence to score')
+
+    def test_no_truth_delta_report_leaves_company_credibility_unanalyzed(self):
         from zelda_api.vector_models import DocumentSource
         DocumentSource.objects.create(
             uploaded_by=self.founder_user, filename='deck.pdf', source_entity='ReadyCo',
@@ -941,7 +963,9 @@ class InvestorReadinessCenterTests(TestCase):
         )
         self.client.force_login(self.founder_user)
         response = self.client.get(self._profile_url())
-        self.assertIsNone(response.context['investor_readiness']['company_verification_pct'])
+        readiness = response.context['investor_readiness']
+        self.assertEqual((readiness['company_credibility_score'], readiness['company_credibility_status']),
+                         (None, 'not_analyzed'))
 
     def test_financial_disclosure_pct_derives_from_real_structured_facts(self):
         from zelda_api.vector_models import DocumentSource, IntelligenceInsight

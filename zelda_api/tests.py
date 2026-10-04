@@ -2985,7 +2985,9 @@ class TruthDeltaEngineTests(TestCase):
             from .truth_delta_engine import TruthDeltaEngine
             report = TruthDeltaEngine().verify_document(self.doc.id)
 
-        self.assertEqual(report.overall_truth_score, 88.0)
+        # R-003b: the score is Zelda's (1 verified of 1 scoreable), not the
+        # model's 88 (zelda_api/tests_score_follows_verdict.py).
+        self.assertEqual(report.overall_truth_score, 100.0)
         self.assertEqual(report.credibility_risk, 'low')
         # R-003: the summary is composed from the canonical state; the model's
         # summary is not stored (zelda_api/tests_summary_follows_verdict.py).
@@ -2995,7 +2997,9 @@ class TruthDeltaEngineTests(TestCase):
         self.assertEqual(len(report.details['observed']), 1)
 
     def test_claude_failure_falls_back_to_grounded_numeric_score(self):
-        """Claim=120 vs observed=100 -> 20% over -> numeric fallback score 80, 'low' risk. Never crashes, never invents a number."""
+        """Claude fails -> the report is still complete: Zelda's state and score (120 vs 100 is within
+        the customers tolerance, so verified -> 100), and a summary saying no explanation ran.
+        Never crashes, never invents a number. R-003b replaced the old arithmetic score (80)."""
         self._claim(claimed_value='120', claimed_value_numeric=120.0)
         self._observed(observed_value='100', observed_value_numeric=100.0)
 
@@ -3007,9 +3011,10 @@ class TruthDeltaEngineTests(TestCase):
             from .truth_delta_engine import TruthDeltaEngine
             report = TruthDeltaEngine().verify_document(self.doc.id)
 
-        self.assertEqual(report.overall_truth_score, 80.0)
+        self.assertEqual(report.category_states(), {'customers': 'verified'})
+        self.assertEqual(report.overall_truth_score, 100.0)
         self.assertEqual(report.credibility_risk, 'low')
-        self.assertIn('Claude was unavailable', report.summary)
+        self.assertIn('Claude) were unavailable', report.summary)
 
     def test_claude_malformed_json_also_falls_back(self):
         self._claim(claimed_value='120', claimed_value_numeric=120.0)
@@ -3026,7 +3031,8 @@ class TruthDeltaEngineTests(TestCase):
             from .truth_delta_engine import TruthDeltaEngine
             report = TruthDeltaEngine().verify_document(self.doc.id)
 
-        self.assertEqual(report.overall_truth_score, 80.0)
+        self.assertEqual(report.overall_truth_score, 100.0)          # Zelda's score, as with any failure
+        self.assertIn('Claude) were unavailable', report.summary)
 
     def test_unmatched_claim_never_penalizes_the_numeric_fallback(self):
         """A claim category with no observed match shouldn't drag the score down — absence of data isn't evidence of a lie."""
