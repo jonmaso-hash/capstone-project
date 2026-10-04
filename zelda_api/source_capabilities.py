@@ -9,12 +9,15 @@ answer for.
 
 Four roles, and the distinction between the middle two is the point:
 
-    can_establish       authoritative for this claim -- its value may become
-                        an ObservedDatapoint
-    can_corroborate     may support a claim established elsewhere, but may
-                        not be the origin of one
-    informational_only  provides context to the analysis and never a claim
-    unavailable         cannot speak to this claim at all
+    can_establish       authoritative for this claim -- its value may decide
+                        whether a claim is verified or contradicted
+    can_corroborate     stored and attached to a claim as agreeing or
+                        dissenting evidence; never decides its state, alone or
+                        against an establishing source
+    informational_only  stored and shown as labelled context; never compared
+    unavailable         cannot speak to this claim at all; never stored
+
+Every stored ObservedDatapoint carries its role and its evidence origin.
 
 Declaration is EXHAUSTIVE. `capability_for` raises on anything undeclared
 rather than returning a default, because a default is precisely the silent
@@ -76,6 +79,37 @@ CAPABILITIES = {
 }
 
 
+# Where each source's evidence ultimately comes from. Two sources are not two
+# independent confirmations if they read the same upstream: a LinkedIn-derived
+# dataset and a database that scrapes LinkedIn are one origin. Declared per
+# source, exhaustively, like the capabilities above.
+SEC_FILING = 'sec_filing'
+COMPANY_DOCUMENT = 'company_document'
+COMPANY_WEBSITE = 'company_website'
+THIRD_PARTY_DATABASE = 'third_party_database'
+LINKEDIN_DERIVED = 'linkedin_derived'
+NEWS = 'news'
+EVIDENCE_ORIGINS = frozenset({SEC_FILING, COMPANY_DOCUMENT, COMPANY_WEBSITE,
+                              THIRD_PARTY_DATABASE, LINKEDIN_DERIVED, NEWS})
+
+SOURCE_ORIGINS = {
+    'sec': SEC_FILING,
+    'crunchbase': THIRD_PARTY_DATABASE,
+    'news': NEWS,
+}
+
+
+def origin_for(source_type):
+    """The declared evidence origin of a source. Raises for an undeclared one."""
+    try:
+        return SOURCE_ORIGINS[source_type]
+    except KeyError:
+        raise KeyError(
+            f"No evidence origin declared for source {source_type!r}. Declare it in "
+            f"SOURCE_ORIGINS -- independence cannot be judged for an unknown origin."
+        )
+
+
 def capability_for(source_type, category):
     """
     The declared role of `source_type` for `category`.
@@ -95,5 +129,19 @@ def capability_for(source_type, category):
 
 
 def may_establish(source_type, category):
-    """Whether this source's value for this category may become evidence."""
+    """
+    Whether this source's value for this category may decide a claim's state
+    (verified / contradicted). Only CAN_ESTABLISH may.
+    """
     return capability_for(source_type, category) == CAN_ESTABLISH
+
+
+def may_store(source_type, category):
+    """
+    Whether this source's value may be stored at all. Everything but
+    UNAVAILABLE: a corroborating value is kept so it can support or dissent
+    from a claim, an informational one so it can be shown as labelled
+    context. Storing is not authority -- the stored row carries its role, and
+    only CAN_ESTABLISH rows ever decide a state (TruthDeltaEngine._build_comparison).
+    """
+    return capability_for(source_type, category) != UNAVAILABLE

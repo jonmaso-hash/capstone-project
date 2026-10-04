@@ -1616,12 +1616,20 @@ class ZeldaIntelligencePipelineV2:
        - INSUFFICIENT: it was checked but nothing could be concluded; give the reason.
          If an external value is attached, report it alongside the claim and say the
          two could not be confirmed as comparable. Never treat it as verified.
-    4. A gap means the extraction found no statement, not that the document lacks it.
+    4. Each external value has a role. Only role "establishes" stands behind a status.
+       - "corroborates": a lower-authority source. Say it is "consistent with" or
+         "differs from" the claim, name the source and origin, and never present it as
+         verification. If "independent" is false it shares an origin with another
+         source and is not a second confirmation.
+       - "context": background only, labelled with its source and origin (e.g. a
+         LinkedIn-derived profile count is not headcount). Never treat it as a fact
+         about the company.
+    5. A gap means the extraction found no statement, not that the document lacks it.
        Write "Not found in the extracted evidence", never "not disclosed".
-    5. Never use vague phrases like "strong opportunity", "experienced team", or
+    6. Never use vague phrases like "strong opportunity", "experienced team", or
        "significant market" without immediately citing an item.
-    6. Never write placeholder text.
-    7. Write as a skeptical but fair analyst — evidence-driven, not promotional."""
+    7. Never write placeholder text.
+    8. Write as a skeptical but fair analyst — evidence-driven, not promotional."""
 
         user_prompt = f"""Prepare an investment memo for {context.company}.
 
