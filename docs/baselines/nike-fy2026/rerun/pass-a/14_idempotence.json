@@ -1,0 +1,118 @@
+{
+ "trigger": "POST /api/v1/zelda/documents/3120/truth-delta/verify/ as the owner -> 202 verification_queued (the Run Verification button)",
+ "before": "report 80 + 05_observations.json + 09_memo.json, captured before the POST",
+ "after": "report 81",
+ "observations_identical": true,
+ "observation_rows_before_after": [
+  1,
+  1
+ ],
+ "observation_ids_before_after": [
+  [
+   127
+  ],
+  [
+   128
+  ]
+ ],
+ "identical": {
+  "category_states": true,
+  "grounding_reasons": true,
+  "verifiability_stats": true,
+  "comparison": true,
+  "provider_outcomes": true
+ },
+ "score_before_after": [
+  42.0,
+  42.0
+ ],
+ "risk_before_after": [
+  "high",
+  "high"
+ ],
+ "reports_for_document": [
+  [
+   80,
+   "2026-10-04 10:28:10.561627+00:00"
+  ],
+  [
+   81,
+   "2026-10-04 10:34:22.806617+00:00"
+  ]
+ ],
+ "memos_before": [
+  {
+   "id": 83,
+   "created_at": "2026-10-04 10:29:05.940864+00:00",
+   "updated_at": "2026-10-04 10:29:05.972464+00:00"
+  }
+ ],
+ "memos_after": [
+  {
+   "id": 83,
+   "created_at": "2026-10-04 10:29:05.940864+00:00",
+   "updated_at": "2026-10-04 10:35:14.137284+00:00"
+  }
+ ],
+ "document_status": "analyzed",
+ "report_81": {
+  "category_states": {
+   "employees": "no_data",
+   "revenue": "no_data"
+  },
+  "grounding_reasons": {
+   "employees": "no_external_evidence",
+   "revenue": "period_unknown"
+  },
+  "verifiability_stats": {
+   "total": 2,
+   "verified": 0,
+   "contradicted": 0,
+   "no_data": 2,
+   "pct": 0.0
+  },
+  "comparison": [
+   {
+    "category": "employees",
+    "claimed_value": "81,500 people worldwide",
+    "claimed_value_numeric": 81500.0,
+    "observed_value": null,
+    "observed_value_numeric": null,
+    "observed_source": null,
+    "observed_registrant": null,
+    "observed_time_period": null,
+    "discrepancy_pct": null,
+    "claim_raw_text": "81,500 people worldwide",
+    "observed_raw_value": null,
+    "source_credibility": null,
+    "claim_period": null,
+    "observed_role": null,
+    "observed_origin": null,
+    "corroboration": [],
+    "context": []
+   },
+   {
+    "category": "revenue",
+    "claimed_value": "$52.8 billion, supported by wholesale growth and stabilization across cor",
+    "claimed_value_numeric": 52800000000.0,
+    "observed_value": "46398000000.0",
+    "observed_value_numeric": 46398000000.0,
+    "observed_source": "SEC EDGAR",
+    "observed_registrant": "0000320187",
+    "observed_time_period": "FY2026 10-K (period ending 2026-05-31)",
+    "discrepancy_pct": 13.8,
+    "claim_raw_text": "$52.8 billion, supported by wholesale growth and stabilization across cor",
+    "observed_raw_value": "46398000000.0",
+    "source_credibility": 0.95,
+    "claim_period": null,
+    "observed_role": "can_establish",
+    "observed_origin": "sec_filing",
+    "corroboration": [],
+    "context": []
+   }
+  ],
+  "provider_outcomes": {
+   "dataforb2b": "unconfigured"
+  }
+ }
+}
