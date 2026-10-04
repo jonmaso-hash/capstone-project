@@ -16,8 +16,8 @@ Every value in the live database, and what it must yield:
     'Jacksonville, Fl' -> FL      'Atlanta, GA'          -> GA
     'Wichita, KS'      -> KS
 
-Ten of eleven. The eleventh costs nothing: no jurisdiction means the nationwide
-search that already works.
+Ten of eleven. The eleventh costs nothing: no jurisdiction means Filed is not
+asked (filed.NO_JURISDICTION).
 
 WHAT THIS IS FOR, and what it is not. It supplies SEARCH CONTEXT -- narrowing a
 fuzzy nationwide query, and enabling the officer reverse lookup, which returns
@@ -32,7 +32,7 @@ ONLY THE LAST COMMA-SEPARATED SEGMENT COUNTS, and it must match a code or a
 state name in full. Scanning the string for any two-letter token would read OR
 out of "Portland or Seattle" and IN out of "moved in 2024" -- both valid state
 codes and common English words. The narrow rule is what makes a miss safe: it
-degrades to nationwide rather than to the wrong jurisdiction, and guessing a
+degrades to not asking rather than to the wrong jurisdiction, and guessing a
 state from a city would attribute a company to a register it was never in.
 """
 from unittest import mock
@@ -224,38 +224,44 @@ class TheJurisdictionNarrowsTheSearchTests(TestCase):
             filed.company_record('Publix Super Markets, Inc.', state='FL')
         self.assertEqual(search.call_args.kwargs.get('state'), 'FL')
 
-    def test_without_a_jurisdiction_the_search_stays_nationwide(self):
+    def test_without_a_jurisdiction_nothing_is_sent(self):
         """
-        No state must mean no `state` argument, not `state=None` -- the API
-        treats the parameter's absence as a cross-state search, and passing an
-        empty one is a different request.
+        No state means no request at all -- not a cross-state search. Filed
+        bills those at 5 credits and they ran 61-273 s, past our timeout, so
+        the answer was always discarded after being paid for. Asserted at the
+        HTTP layer, so a mutation anywhere above it cannot hide a request.
         """
         from . import filed
-        with mock.patch.object(filed, '_key', return_value='k'), \
-             mock.patch.object(filed, '_search',
-                               return_value={'data': [], 'meta': {'total': 0}}) as search:
-            filed.company_record('Publix Super Markets, Inc.')
-        self.assertIsNone(search.call_args.kwargs.get('state'))
+        with mock.patch.object(filed, '_key', return_value='k'),              mock.patch.object(filed.requests, 'get') as http:
+            for state in (None, ''):
+                with self.subTest(state=state):
+                    self.assertEqual(filed.company_record('Publix Super Markets, Inc.', state=state),
+                                     (filed.NO_JURISDICTION, None))
+        http.assert_not_called()
 
-    def test_the_state_parameter_is_omitted_rather_than_sent_empty(self):
+    def test_a_cross_state_search_cannot_be_built(self):
         """
-        Checked at `_get`, where the params dict is actually built.
-
-        The test above mocks `_search`, so it cannot see what `_search` does
-        with its argument -- a mutation that sent `state: None` unconditionally
-        survived it. That mutation is harmless today only because `requests`
-        happens to drop None-valued params, which is a library detail this
-        module should not depend on silently: the API treats the parameter's
-        ABSENCE as the cross-state mode.
+        Checked at `_search`, where the request is built: refusing only in the
+        caller would let a future path send one by leaving the argument out.
         """
         from . import filed
         with mock.patch.object(filed, '_get', return_value=(200, {})) as got:
-            filed._search('Acme Inc')
-        self.assertNotIn('state', got.call_args.kwargs)
-
-        with mock.patch.object(filed, '_get', return_value=(200, {})) as got:
+            for state in (None, ''):
+                with self.subTest(state=state), self.assertRaises(ValueError):
+                    filed._search('Acme Inc', state)
+            got.assert_not_called()
             filed._search('Acme Inc', state='FL')
-        self.assertEqual(got.call_args.kwargs.get('state'), 'FL')
+        self.assertEqual(got.call_args.kwargs, {'name': 'Acme Inc', 'state': 'FL'})
+
+    def test_no_jurisdiction_adds_no_finding(self):
+        """Not asking says nothing about the company: no line in the report."""
+        from . import entity_verification, filed
+        self.subject.geography = 'Somewhere overseas'
+        self.subject.save()
+        with mock.patch.object(filed, '_key', return_value='k'),              mock.patch('zelda_api.sec_identity.sec_findings', return_value=[]),              mock.patch.object(filed, '_get') as filed_http:
+            findings = entity_verification.collect_findings(self.subject)
+        filed_http.assert_not_called()
+        self.assertFalse([f for f in findings if f.get('check') == 'business_registration'])
 
     def test_collect_findings_passes_the_profiles_jurisdiction(self):
         """

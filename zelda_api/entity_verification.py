@@ -303,7 +303,11 @@ def collect_findings(subject):
         # line in an investor-facing report. The other two are failures to
         # resolve the QUERY, which are worth saying out loud because a reader
         # would otherwise assume the business was checked and cleared.
-        if outcome in (filed.NO_RECORD, filed.UNAVAILABLE, filed.UNCONFIGURED):
+        # NO_JURISDICTION is silent for the same reason as UNCONFIGURED: nothing
+        # was asked. Before it existed this path sent a cross-state search that
+        # timed out into UNAVAILABLE, so the report reads exactly as it did --
+        # without the 5 credits and the 20-second wait.
+        if outcome in (filed.NO_RECORD, filed.UNAVAILABLE, filed.UNCONFIGURED, filed.NO_JURISDICTION):
             return
         if outcome == filed.UNRESOLVED:
             add('business_registration', company_claim,

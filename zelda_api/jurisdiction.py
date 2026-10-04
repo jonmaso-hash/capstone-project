@@ -24,8 +24,9 @@ ONLY THE LAST COMMA-SEPARATED SEGMENT IS CONSIDERED, and it must match a code
 or a full state name exactly. Scanning for any two-letter token would read OR
 out of "Portland or Seattle" and IN out of "moved in 2024" -- both are real
 state codes and ordinary English words. Returning None is always preferable to
-a confident wrong jurisdiction: a miss falls back to the nationwide search that
-already works, while a wrong state searches a register the company was never
+a confident wrong jurisdiction: a miss means Filed is not asked at all
+(filed.NO_JURISDICTION -- a cross-state search costs 5 credits and does not
+finish in time), while a wrong state searches a register the company was never
 in and reports what it finds there.
 """
 import re
