@@ -198,3 +198,22 @@ Intelligence-quality items (L-006, L-010, L-011, L-012) are backlog for the late
 - Add one probe of a viewer-premium gate: the outreach cap, or `analyze/founder/<u>/confirm/`, the latter charged at local test cost only.
 
 Finding L-017 itself is unchanged in place, per the freeze rule.
+
+**E-2 (2026-10-04), the broker, and the "pre-run queue" row.**
+
+*What was wrong:*
+- The run record says Redis was a local `memurai.exe` process. It was running, but nothing used it.
+- The local `.env` sets `CELERY_BROKER_URL`, `CELERY_RESULT_BACKEND` and `CACHE_URL` to a shared Upstash Redis instance. Production uses Render's `interlink-keyvalue` (`render.yaml`), not this instance. The baseline's server and worker read `.env`, so every task went through Upstash.
+- The "old backlog" in the Pre-run queue row was not a local leftover. Focused local test runs enqueue tasks for low ids (document 1, investors 1–3) into that same queue, and nothing consumes them. The baseline worker drained some of them.
+- Found during the rerun on 2026-10-04: Upstash held 213 waiting tasks, and the first Pass A upload (document 3118) was stuck behind them.
+
+*What still stands:*
+- Every Nike finding. Document 3117's own tasks (pipeline, verification, memo) ran to completion through the same worker, and the run graded what they produced. The broker carried those tasks; it did not change their inputs or outputs.
+- The drained tasks changed local rows for other documents (document 1's memo and report 21), not Nike's. That much of the row was right.
+
+*What is withdrawn:*
+- The claim that the backlog was "pre-existing" local state, and the implied claim that the run was isolated on a local broker.
+
+*For the rerun:* both passes force the broker, result backend and cache to `localhost`, and print the effective broker from inside both the web and worker processes before starting. They refuse to start if it is not local. See `RERUN_LEDGER.md`, erratum E-2.
+
+Nothing above it in this ledger is changed, per the freeze rule.
