@@ -160,6 +160,9 @@ FIELD_NAME_TABLES = {
     ('zelda_api/intelligence_pipeline.py', 'ASK_ZELDA_SELLER_ALLOWED_FIELDS'):
         'consumed only by _apply_constraints_to_queryset, which narrows via '
         'restrict_queryset_for_field_filter before every filter',
+    ('zelda_api/grounded_context.py', 'PROFILE_FIELDS'):
+        'read only by _profile_items, which admits each value solely when '
+        'can_view_profile_field allows an anonymous viewer (PUBLIC); filters on none',
 }
 
 

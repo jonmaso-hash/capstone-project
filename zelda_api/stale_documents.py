@@ -16,7 +16,7 @@ from django.utils import timezone
 
 # Every non-terminal status a document can sit in mid-pipeline — 'analyzed'
 # and 'error' are terminal outcomes, deliberately excluded.
-PENDING_STATUSES = ['ingested', 'chunking', 'chunked', 'embedding', 'embedded', 'analyzing']
+PENDING_STATUSES = ['ingested', 'chunking', 'chunked', 'embedding', 'embedded', 'analyzing', 'verifying']
 STALE_THRESHOLD_MINUTES = 5
 
 

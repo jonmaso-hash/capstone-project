@@ -255,30 +255,26 @@ class ZeldaIntelligencePipelineV2:
             if 'error' in analysis_result:
                 raise Exception(analysis_result['error'])
             
-            # STEP 4: MEMO GENERATION
-            logger.info(f"Generating memo: {document_source.filename}")
-            memo_result = self._generate_memo(document_source, analysis_result)
-            if 'error' in memo_result:
-                raise Exception(memo_result['error'])
-            
-            # STEP 5: TRIGGER TRUTH DELTA
+            # STEP 4: VERIFY, THEN WRITE. The memo is no longer written here:
+            # it is written from a GroundedContext once verification reaches
+            # a terminal state (any terminal state -- a failed or empty run
+            # still gets a memo), by tasks.generate_intelligence_memo. Writing
+            # it before verification is how the Nike baseline's memo called a
+            # contradicted revenue figure "supported".
+            document_source.status = 'verifying'
+            document_source.confidence_score = analysis_result.get('confidence', 0)
+            document_source.save()
+
             logger.info(f"Triggering Truth Delta: {document_source.filename}")
             self._trigger_verification(document_source)
-            
-            # Mark complete
-            document_source.status = 'analyzed'
-            document_source.confidence_score = memo_result.get('completeness_score', 0)
-            document_source.processed_at = timezone.now()
-            document_source.save()
-            
-            logger.info(f"Pipeline complete for {document_source.filename}")
-            
+
+            logger.info(f"Pipeline complete for {document_source.filename}; memo follows verification")
+
             return {
                 'status': 'success',
                 'document_id': document_source.id,
                 'chunks_created': chunks_result.get('chunk_count', 0),
                 'insights_extracted': len(analysis_result.get('insights', [])),
-                'memo_id': memo_result.get('memo_id'),
                 'truth_delta_queued': True,
             }
         
@@ -1041,17 +1037,22 @@ class ZeldaIntelligencePipelineV2:
     
     # --- Memo builders ---
     
-    def _generate_memo(self, document_source: DocumentSource, analysis_result: Dict) -> Dict:
-        """Step 4: Generate intelligence memo using Claude with evidence-grounded prompt"""
+    def _generate_memo(self, context) -> Dict:
+        """
+        Generate the Intelligence Memo from a GroundedContext -- and from
+        nothing else (Phase 1 Task 5). No raw text, no chunks, no document
+        row: what the memo may know is decided by GroundedContext.build(),
+        which ran the principal through the authorization resolver and
+        attached Truth Delta's canonical verdict to every claim.
+        """
+        from .grounded_context import GroundedContext
+
+        if not isinstance(context, GroundedContext):
+            raise TypeError('_generate_memo takes a GroundedContext.')
         try:
-            IntelligenceMemo.objects.filter(document=document_source).delete()
-
-            insights = IntelligenceInsight.objects.filter(
-                document=document_source
-            ).order_by('-confidence_score')
-
-            structured_context = self._build_structured_context(document_source, insights)
-            memo_sections = self._call_claude_for_memo(document_source, structured_context, insights)
+            # The previous memo (a re-verification regenerates) is replaced
+            # only once a new one exists, so a failed call never deletes it.
+            memo_sections = self._call_claude_for_memo(context)
 
             if 'error' in memo_sections:
                 # Without this check, the update_or_create below would use
@@ -1062,7 +1063,7 @@ class ZeldaIntelligencePipelineV2:
                 raise Exception(memo_sections['error'])
 
             memo, created = IntelligenceMemo.objects.update_or_create(
-                document=document_source,
+                document_id=context.document_id,
                 defaults={
                     'executive_summary':  memo_sections.get('executive_summary', 'Not generated.'),
                     'problem_solution':   memo_sections.get('problem_solution', 'Not disclosed in pitch deck.'),
@@ -1090,16 +1091,16 @@ class ZeldaIntelligencePipelineV2:
                     'downside_scenario':  memo_sections.get('downside_scenario', memo_sections.get('bear_case', '')),
                     'zelda_advantage':    memo_sections.get('zelda_advantage', ''),
                     'questions_for_management': memo_sections.get('questions_for_management', 'Not assessed.'),
-                    'completeness_score': analysis_result.get('confidence', 0),
-                    'citations_count':    sum(i.source_chunks.count() for i in insights),
+                    'completeness_score': context.analysis_confidence,
+                    'citations_count':    context.citations_count,
                 }
             )
 
-            memo.insights_used.set(insights)
+            memo.insights_used.set(IntelligenceInsight.objects.filter(id__in=context.insight_ids))
             memo.evidence_level = memo_sections.get('evidence_level', 'NOT_CLASSIFIED')
             memo.save()
 
-            logger.info(f"Claude memo generated for document {document_source.id}")
+            logger.info(f"Claude memo generated for document {context.document_id}")
 
             return {
                 'memo_id': memo.id,
@@ -1126,9 +1127,11 @@ class ZeldaIntelligencePipelineV2:
         a missing feature, a path that skipped one. The defect was invisible
         from the UI, because the path a human clicks worked correctly.
 
-        Each is queued independently and each failure is non-fatal: the memo
-        has already been generated by this point, and neither question may be
-        lost because the other could not be queued. Named for the whole
+        Each is queued independently and each failure is non-fatal: neither
+        question may be lost because the other could not be queued. The memo
+        is written when Truth Delta finishes (truth_delta_tasks.
+        verification_finished), so a Truth Delta that cannot even be queued
+        finishes here instead. Named for the whole
         workflow rather than one task, so the pairing is harder to drop.
 
         See zelda_api/tests_verification_starts_together.py, which also scans
@@ -1140,6 +1143,11 @@ class ZeldaIntelligencePipelineV2:
             logger.info(f"Truth Delta queued for document {document_source.id}")
         except Exception as e:
             logger.warning(f"Truth Delta trigger failed for document {document_source.id}: {str(e)}")
+            # Verification will never report back, so it ends here: record it
+            # and let the memo be written from what is known.
+            from .truth_delta_tasks import _record_verification_failure, verification_finished
+            _record_verification_failure(document_source.id, e)
+            verification_finished(document_source.id)
 
         try:
             from .entity_verification_tasks import verify_entity_integrity
@@ -1581,58 +1589,50 @@ class ZeldaIntelligencePipelineV2:
 
         return facts
     
-    def _call_claude_for_memo(self, doc: DocumentSource, facts: dict, insights) -> dict:
-        """Call Claude API to generate evidence-grounded investment memo"""
-        import anthropic
+    def _call_claude_for_memo(self, context) -> dict:
+        """Call Claude to write the memo over a GroundedContext's items only."""
         import json
+        from types import SimpleNamespace
 
         from .anthropic_client import background_anthropic_client
         client = background_anthropic_client()
 
-        # Format insights as numbered evidence list
-        insights_list = "\n".join([
-            f"{i+1}. [{ins.category} | {ins.confidence_score:.0f}% confidence] {ins.insight_text}"
-            for i, ins in enumerate(insights[:25])
-        ])
+        evidence_json = json.dumps(context.to_prompt_payload(), indent=2, default=str)
 
-        missing = "\n".join([f"• {m}" for m in facts.get('missing_fields', [])]) or "• None identified"
-        traction = "\n".join([f"• {t}" for t in facts.get('traction_signals', [])]) or "• None extracted"
-
-        facts_display = json.dumps({
-            k: v for k, v in facts.items()
-            if k not in ('missing_fields', 'traction_signals', '_provenance') and v is not None
-        }, indent=2)
-
-        system_prompt = """You are a senior analyst at a top-tier venture capital firm preparing 
+        system_prompt = """You are a senior analyst at a top-tier venture capital firm preparing
     an institutional-quality investment memo for a partner meeting.
 
     ABSOLUTE RULES:
-    1. Every factual claim MUST come from the extracted facts or insights provided below.
-    2. Never invent numbers, projections, or metrics not present in the source data.
-    3. Never use vague phrases like "strong opportunity", "experienced team", or 
-    "significant market" without immediately citing specific evidence.
-    4. If information is missing, write exactly: "Not disclosed in pitch deck."
-    5. Never write "Assessment based on 0 business factors" or any placeholder text.
-    6. Write as a skeptical but fair analyst — evidence-driven, not promotional.
-    7. Every section must be grounded in the provided insights or facts."""
+    1. Every factual statement MUST come from an evidence item below, and should cite
+       its ref in brackets, e.g. [C1], [S3], [P2].
+    2. Never invent numbers, projections, or metrics not present in the evidence.
+    3. Each item has a status, and the memo must carry it:
+       - SELF_REPORTED: the company says so; nothing checked it. Write "the company
+         states", never "the company has" or "supported".
+       - VERIFIED: independent evidence reconciles with the claim. Name the source.
+       - CONTRADICTED: independent evidence diverges. Present the company's figure AND
+         the external figure and source together, as a contradiction. Never describe
+         a contradicted claim as supported, confirmed or disclosed fact.
+       - INSUFFICIENT: it was checked but nothing could be concluded; give the reason.
+         If an external value is attached, report it alongside the claim and say the
+         two could not be confirmed as comparable. Never treat it as verified.
+    4. A gap means the extraction found no statement, not that the document lacks it.
+       Write "Not found in the extracted evidence", never "not disclosed".
+    5. Never use vague phrases like "strong opportunity", "experienced team", or
+       "significant market" without immediately citing an item.
+    6. Never write placeholder text.
+    7. Write as a skeptical but fair analyst — evidence-driven, not promotional."""
 
-        user_prompt = f"""Prepare an investment memo for {facts['company']}.
+        user_prompt = f"""Prepare an investment memo for {context.company}.
 
-    ## STRUCTURED FACTS (extracted from pitch deck)
-    {facts_display}
-
-    ## TRACTION SIGNALS DETECTED
-    {traction}
-
-    ## ZELDA INSIGHTS (extracted with confidence scores)
-    {insights_list}
-
-    ## INFORMATION NOT FOUND IN DECK
-    {missing}
+    ## EVIDENCE (the only material you may use)
+    Each item: ref, kind (claim | statement | profile), status, sources, and for checked
+    claims the external evidence Zelda stored. Verification of this document: {context.verification}.
+    {evidence_json}
 
     ---
 
-    Write the memo using ONLY the above information. Return a JSON object with these exact keys:
+    Write the memo using ONLY the evidence above. Return a JSON object with these exact keys:
     {', '.join(MEMO_JSON_KEYS)}
 
     {EVIDENCE_LEVEL_INSTRUCTION}
@@ -1651,7 +1651,7 @@ class ZeldaIntelligencePipelineV2:
                 system=system_prompt,
                 messages=[{"role": "user", "content": user_prompt}]
             )
-            _log_anthropic_usage(response, doc, 'memo')
+            _log_anthropic_usage(response, SimpleNamespace(id=context.document_id), 'memo')
 
             raw = response.content[0].text.strip()
 

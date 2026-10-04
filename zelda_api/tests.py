@@ -18,6 +18,13 @@ from django.test import TestCase
 from django.urls import reverse
 
 from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+from .grounded_context import GroundedContext
+from .principal import ORIGIN_TASK, Principal
+
+
+def grounded_context_for(doc):
+    """The memo's only input: a GroundedContext built as the document's owner."""
+    return GroundedContext.build(Principal.for_user(doc.uploaded_by, ORIGIN_TASK), doc)
 from .vector_models import (
     DocumentSource, DocumentChunk, IntelligenceInsight, IntelligenceMemo,
     BusinessValuationReport,
@@ -52,7 +59,7 @@ class AnthropicFailureDetectionTests(TestCase):
         mock_anthropic_cls.return_value.messages.create.side_effect = Exception('simulated API failure')
         doc = self._doc()
 
-        result = self.pipeline._generate_memo(doc, {'confidence': 0.5})
+        result = self.pipeline._generate_memo(grounded_context_for(doc))
 
         self.assertIn('error', result)
         self.assertIn('simulated API failure', result['error'])
@@ -62,7 +69,7 @@ class AnthropicFailureDetectionTests(TestCase):
         mock_anthropic_cls.return_value.messages.create.side_effect = Exception('simulated API failure')
         doc = self._doc()
 
-        self.pipeline._generate_memo(doc, {'confidence': 0.5})
+        self.pipeline._generate_memo(grounded_context_for(doc))
 
         # Before the fix, this would exist with 'simulated API failure' baked
         # into executive_summary as if it were real memo content.
@@ -95,7 +102,7 @@ class AnthropicFailureDetectionTests(TestCase):
         with mock.patch('anthropic.Anthropic') as mock_anthropic_cls:
             mock_anthropic_cls.return_value.messages.create.return_value = fake_response
             doc = self._doc()
-            result = self.pipeline._generate_memo(doc, {'confidence': 0.5})
+            result = self.pipeline._generate_memo(grounded_context_for(doc))
 
         self.assertNotIn('error', result)
         memo = IntelligenceMemo.objects.get(document=doc)
@@ -123,7 +130,7 @@ class AnthropicFailureDetectionTests(TestCase):
         with mock.patch('anthropic.Anthropic') as mock_anthropic_cls:
             mock_anthropic_cls.return_value.messages.create.return_value = fake_response
             doc = self._doc()
-            result = self.pipeline._generate_memo(doc, {'confidence': 0.5})
+            result = self.pipeline._generate_memo(grounded_context_for(doc))
 
         self.assertNotIn('error', result)
         memo = IntelligenceMemo.objects.get(document=doc)
@@ -145,7 +152,7 @@ class AnthropicFailureDetectionTests(TestCase):
         with mock.patch('anthropic.Anthropic') as mock_anthropic_cls:
             mock_anthropic_cls.return_value.messages.create.return_value = fake_response
             doc = self._doc()
-            result = self.pipeline._generate_memo(doc, {'confidence': 0.5})
+            result = self.pipeline._generate_memo(grounded_context_for(doc))
 
         self.assertNotIn('error', result)
         memo = IntelligenceMemo.objects.get(document=doc)
@@ -162,7 +169,7 @@ class AnthropicFailureDetectionTests(TestCase):
         with mock.patch('anthropic.Anthropic') as mock_anthropic_cls:
             mock_anthropic_cls.return_value.messages.create.return_value = fake_response
             doc = self._doc()
-            self.pipeline._generate_memo(doc, {'confidence': 0.5})
+            self.pipeline._generate_memo(grounded_context_for(doc))
 
         logged_messages = [call.args[0] for call in mock_logger.info.call_args_list]
         self.assertTrue(any('input_tokens=1234' in msg and 'output_tokens=567' in msg for msg in logged_messages))
@@ -2606,7 +2613,7 @@ class MalformedClaudeResponseTests(TestCase):
         with mock.patch('anthropic.Anthropic') as mock_anthropic_cls:
             mock_anthropic_cls.return_value.messages.create.return_value = self._truncated_response()
             doc = self._doc()
-            result = self.pipeline._generate_memo(doc, {'confidence': 0.5})
+            result = self.pipeline._generate_memo(grounded_context_for(doc))
 
         self.assertIn('error', result)
         self.assertIn('parsing error', result['error'])

@@ -81,7 +81,7 @@ class ClaimedDatapoint(models.Model):
 
     # Provenance — full traceability back to the source chunk this claim came from
     page_number = models.IntegerField(null=True, blank=True, help_text="Page this claim's source chunk came from")
-    text_excerpt = models.TextField(blank=True, help_text="Full source chunk text this claim was extracted from")
+    text_excerpt = models.TextField(blank=True, help_text="The claim's own sentence, bounded to 300 characters. Never the source chunk: page_number and chunk_hash carry provenance.")
     chunk_hash = models.CharField(max_length=128, blank=True, help_text="Hash of the source chunk, for change detection/dedup")
 
     # Extraction metadata

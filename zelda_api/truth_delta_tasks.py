@@ -16,6 +16,37 @@ from .truth_delta_models import ClaimedDatapoint
 
 logger = logging.getLogger(__name__)
 
+# ClaimedDatapoint.text_excerpt holds the claim's own sentence, bounded. It
+# used to hold the whole source chunk: document text copied outside the
+# chunk boundary, where a serializer could expose it without anyone asking
+# whether the reader may see the document's text. chunk_hash and
+# page_number keep the provenance.
+EXCERPT_CHARS = 300
+
+
+def bounded_excerpt(text):
+    text = ' '.join((text or '').split())
+    return text if len(text) <= EXCERPT_CHARS else text[:EXCERPT_CHARS - 1] + '…'
+
+
+def verification_finished(document_id):
+    """
+    Verification for this document has reached a terminal state -- verified,
+    contradicted, nothing to check, or failed. Write the memo now, from a
+    GroundedContext that carries that outcome. Called at every terminal path,
+    including a re-run from the Run Verification button, so the memo never
+    lags the evidence. Valuation documents have no Intelligence Memo.
+    """
+    try:
+        document_type = (DocumentSource.objects.filter(id=document_id)
+                         .values_list('document_type', flat=True).first())
+        if document_type is None or document_type == 'business_valuation':
+            return
+        from .tasks import generate_intelligence_memo
+        generate_intelligence_memo.delay(document_id)
+    except Exception:
+        logger.exception(f"[Truth Delta] Could not queue the memo for document {document_id}")
+
 
 @shared_task
 def extract_claims_from_insights(document_id: int):
@@ -104,7 +135,7 @@ def extract_claims_from_insights(document_id: int):
                 source_chunk=f"Insight: {insight.category}",
                 confidence_in_extraction=insight.confidence_score,
                 page_number=source_chunk_obj.page_number if source_chunk_obj else None,
-                text_excerpt=source_chunk_obj.raw_text if source_chunk_obj else '',
+                text_excerpt=bounded_excerpt(insight.insight_text),
                 chunk_hash=hashlib.sha256(source_chunk_obj.raw_text.encode()).hexdigest() if source_chunk_obj else '',
             )
             
@@ -124,6 +155,7 @@ def extract_claims_from_insights(document_id: int):
         # useless. Record it for the same reason the verify task does.
         logger.exception(f"Error extracting claims for document {document_id}")
         _record_verification_failure(document_id, exc)
+        verification_finished(document_id)
         return {'status': 'error', 'error': str(exc)}
 
 
@@ -243,6 +275,9 @@ def verify_document_truth_delta(document_id):
         # which is indistinguishable from "still running".
         logger.exception(f"[Truth Delta] Verification failed for document {document_id}")
         _record_verification_failure(document_id, exc)
+        # A failed verification is still a terminal state: the memo is written
+        # from what is known, with the failure on record.
+        verification_finished(document_id)
         # Re-raised on purpose: recording it for the user must not swallow it
         # for us, or the task reports success and the failure leaves no trace
         # in Celery or in ops.
@@ -253,6 +288,8 @@ def verify_document_truth_delta(document_id):
     # fine today would still be shown as broken.
     DocumentSource.objects.filter(id=document_id).update(
         verification_failed_at=None, verification_error='')
+    # Verified, contradicted or nothing to check: all terminal, all get a memo.
+    verification_finished(document_id)
 
     # Return JSON-serializable dict, not a Django model object
     if result is None:
