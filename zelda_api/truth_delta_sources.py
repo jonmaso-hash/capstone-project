@@ -549,6 +549,14 @@ class DataSourceManager:
                 source_type=source_type,
                 defaults={'source_name': integration.source_name, 'is_active': True},
             )
+            # This source answered, so its answer REPLACES what it said last
+            # time. Rows used to accumulate on every verification run, so a
+            # re-verified document carried its SEC revenue twice. Only this
+            # source's rows for this document go: a source that did not answer
+            # this run is not in this loop and keeps its earlier evidence, and
+            # other providers (e.g. the DataForB2B adapter, which replaces its
+            # own) are untouched.
+            ObservedDatapoint.objects.filter(document=document, source=external_source).delete()
             time_period = integration.extract_time_period(data) or ''
             # The registrant the identity authority chose, carried on the
             # payload by fetch_company_data. Read once, here, and never
