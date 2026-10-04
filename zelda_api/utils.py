@@ -166,7 +166,7 @@ def _extract_pdf_text(pdf_file):
         logger.error("PyPDF2 is not installed; PDF extraction is unavailable.")
         raise ExtractionError('dependency_missing', 'PyPDF2')
     except Exception as e:
-        logger.error(f"PDF extraction failed: {type(e).__name__}")
+        logger.error(f"PDF extraction failed: {e}")
         raise ExtractionError('unreadable_file', type(e).__name__) from e
 
 
@@ -187,7 +187,7 @@ def _extract_pptx_text(pptx_file):
         logger.error("python-pptx is not installed; PPTX extraction is unavailable.")
         raise ExtractionError('dependency_missing', 'python-pptx')
     except Exception as e:
-        logger.error(f"PPTX extraction failed: {type(e).__name__}")
+        logger.error(f"PPTX extraction failed: {e}")
         raise ExtractionError('unreadable_file', type(e).__name__) from e
 
 
@@ -395,5 +395,5 @@ def extract_text_from_file(uploaded_file):
     except ExtractionError:
         raise
     except Exception as e:
-        logger.error(f"Failed to extract text: {type(e).__name__}")
+        logger.error(f"Failed to extract text: {e}")
         raise ExtractionError('unreadable_file', type(e).__name__) from e
