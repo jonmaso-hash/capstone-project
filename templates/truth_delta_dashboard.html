@@ -694,7 +694,7 @@
                 {% endif %}
             </div>
             <div class="truth-delta-score-box">
-                <div class="score-label">Credibility Score</div>
+                <div class="score-label">Evidence Credibility</div>
                 <div class="score-value" id="truthScoreValue">—</div>
                 <div class="score-label">/100</div>
                 <div class="score-risk" id="truthScoreRisk">—</div>
@@ -814,7 +814,7 @@
 
         {% comment %}
         No confidence gauge here: it was fed the same overall_truth_score
-        as the Credibility Score above, so it only restated the signal.
+        as the Evidence Credibility score above, so it only restated the signal.
         Truth Delta's second-order read is the risk band + Evidence
         Coverage, not a separate percentage.
         {% endcomment %}
@@ -854,7 +854,7 @@
             <div class="adjustment-title" style="color: #1e293b; font-size: 1.05rem;">Zelda AI unlocks the full breakdown</div>
             <div class="adjustment-text" style="color: #475569;">
                 {% if is_owner %}
-                Every extracted claim, source-by-source provenance, entity verification (Secretary of State, domain, timeline), and the ability to request evidence from investors — all included once you upgrade.
+                Every extracted claim, source-by-source provenance, public-record checks (business registration, domain, SEC), and the ability to answer investors' evidence requests — all included once you upgrade.
                 {% else %}
                 {{ document.uploaded_by.username }} hasn't upgraded to Zelda AI yet. Once they do, you'll see the full claim-by-claim breakdown here — no extra cost to you.
                 {% endif %}

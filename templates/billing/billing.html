@@ -71,7 +71,7 @@
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">
                     <h5 class="fw-bold mb-1">Founder Premium — ${{ founder_price }}/mo</h5>
-                    <p class="text-muted small mb-3">Get discovered faster, raise with AI-backed diligence, and manage every investor relationship in one place.</p>
+                    <p class="text-muted small mb-3">Get discovered faster, give investors evidence-labelled reports on your deck, and manage every investor relationship in one place.</p>
 
                     <h6 class="text-uppercase small fw-bold text-success mb-2 mt-4">Get discovered faster</h6>
                     <ul class="text-secondary small mb-0">
@@ -83,10 +83,10 @@
                     <h6 class="text-uppercase small fw-bold text-success mb-2 mt-4">Understand &amp; improve your company</h6>
                     <ul class="text-secondary small mb-0">
                         <li>{{ premium_ai_credits }} monthly AI analyses for Zelda memos, valuations, and Truth Delta verification (free tier: {{ free_ai_credits }}/month)
-                            <div class="text-muted" style="font-size:0.78rem;">Each analysis generates new AI diligence — viewing reports you've already generated stays unlimited.</div>
+                            <div class="text-muted" style="font-size:0.78rem;">Each analysis produces a new Zelda report — viewing reports you've already generated stays unlimited.</div>
                         </li>
                         <li>Full Intelligence Memo — AI business summary, strengths, weaknesses, and improvement recommendations</li>
-                        <li>Truth Delta verification against real external filings, plus your full verification history and trend</li>
+                        <li>Truth Delta: your deck's claims checked against public sources where they report the figure, plus your full verification history and trend</li>
                         <li>Zelda business valuation — ${{ valuation_report_price|floatformat:2 }}/report, pay-per-use (not included in your subscription)</li>
                         <li>Investment Committee Memo — generate and share a one-page executive report with connected investors, free for them to view</li>
                     </ul>
@@ -145,7 +145,7 @@
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">
                     <h5 class="fw-bold mb-1">Investor Premium — ${{ investor_price }}/mo</h5>
-                    <p class="text-muted small mb-3">See the best-fit founders first, move faster on outreach, and run AI diligence at scale.</p>
+                    <p class="text-muted small mb-3">See the best-fit founders first, move faster on outreach, and screen decks with first-pass investment intelligence.</p>
 
                     <h6 class="text-uppercase small fw-bold text-primary mb-2 mt-4">See the best opportunities first</h6>
                     <ul class="text-secondary small mb-0">
@@ -159,12 +159,12 @@
                         <li>Direct CRM export (CSV) of your deal flow</li>
                     </ul>
 
-                    <h6 class="text-uppercase small fw-bold text-primary mb-2 mt-4">AI investment research</h6>
+                    <h6 class="text-uppercase small fw-bold text-primary mb-2 mt-4">First-pass investment intelligence</h6>
                     <ul class="text-secondary small mb-3">
                         <li>{{ premium_ai_credits }} monthly AI analyses for Zelda memos, valuations, and Truth Delta verification (free tier: {{ free_ai_credits }}/month)
-                            <div class="text-muted" style="font-size:0.78rem;">Each analysis generates new AI diligence — viewing reports you've already generated stays unlimited.</div>
+                            <div class="text-muted" style="font-size:0.78rem;">Each analysis produces a new Zelda report — viewing reports you've already generated stays unlimited.</div>
                         </li>
-                        <li>Truth Delta verification against real external filings</li>
+                        <li>Truth Delta: claims checked against public sources where they report the figure</li>
                         <li>Zelda business valuation — {{ valuation_investor_buyer_monthly_limit }} included every month (${{ valuation_overage_price|floatformat:2 }}/report after that)</li>
                         <li>Full access to any founder's Intelligence Memo, Truth Delta verification, and AI Investment Committee Memo once <em>they've</em> upgraded to Premium
                             <div class="text-muted" style="font-size:0.78rem;">Free for you to view — that's the founder's subscription unlocking it, not yours.</div>
@@ -257,7 +257,7 @@
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">
                     <h5 class="fw-bold mb-1">Seller Premium — ${{ seller_price }}/mo</h5>
-                    <p class="text-muted small mb-3">Get your listing in front of more acquirers, prep with AI diligence, and see exactly who's interested.</p>
+                    <p class="text-muted small mb-3">Get your listing in front of more acquirers, see how your materials read to a buyer, and see exactly who's interested.</p>
 
                     <h6 class="text-uppercase small fw-bold mb-2 mt-4" style="color:#997404;">Get discovered faster</h6>
                     <ul class="text-secondary small mb-0">
@@ -269,9 +269,9 @@
                     <h6 class="text-uppercase small fw-bold mb-2 mt-4" style="color:#997404;">AI-powered deal prep</h6>
                     <ul class="text-secondary small mb-0">
                         <li>{{ premium_ai_credits }} monthly AI analyses for Zelda memos, valuations, and Truth Delta verification (free tier: {{ free_ai_credits }}/month)
-                            <div class="text-muted" style="font-size:0.78rem;">Each analysis generates new AI diligence — viewing reports you've already generated stays unlimited.</div>
+                            <div class="text-muted" style="font-size:0.78rem;">Each analysis produces a new Zelda report — viewing reports you've already generated stays unlimited.</div>
                         </li>
-                        <li>Truth Delta verification against real external filings</li>
+                        <li>Truth Delta: claims checked against public sources where they report the figure</li>
                         <li>Zelda business valuation — ${{ valuation_report_price|floatformat:2 }}/report, pay-per-use (not included in your subscription)</li>
                     </ul>
 
@@ -326,7 +326,7 @@
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">
                     <h5 class="fw-bold mb-1">Buyer Premium — ${{ buyer_price }}/mo</h5>
-                    <p class="text-muted small mb-3">Move faster on the deals you want, and run AI diligence at scale.</p>
+                    <p class="text-muted small mb-3">Move faster on the deals you want, and screen listings with first-pass acquisition intelligence.</p>
 
                     <h6 class="text-uppercase small fw-bold text-info-emphasis mb-2 mt-4">Move faster</h6>
                     <ul class="text-secondary small mb-0">
@@ -335,12 +335,12 @@
                         <li>Priority Match Alerts — notified when a new listing matches your acquisition thesis</li>
                     </ul>
 
-                    <h6 class="text-uppercase small fw-bold text-info-emphasis mb-2 mt-4">AI acquisition research</h6>
+                    <h6 class="text-uppercase small fw-bold text-info-emphasis mb-2 mt-4">First-pass acquisition intelligence</h6>
                     <ul class="text-secondary small mb-3">
                         <li>{{ premium_ai_credits }} monthly AI analyses for Zelda memos, valuations, and Truth Delta verification (free tier: {{ free_ai_credits }}/month)
-                            <div class="text-muted" style="font-size:0.78rem;">Each analysis generates new AI diligence — viewing reports you've already generated stays unlimited.</div>
+                            <div class="text-muted" style="font-size:0.78rem;">Each analysis produces a new Zelda report — viewing reports you've already generated stays unlimited.</div>
                         </li>
-                        <li>Truth Delta verification against real external filings</li>
+                        <li>Truth Delta: claims checked against public sources where they report the figure</li>
                         <li>Zelda business valuation — {{ valuation_investor_buyer_monthly_limit }} included every month (${{ valuation_overage_price|floatformat:2 }}/report after that)</li>
                     </ul>
 

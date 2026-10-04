@@ -72,7 +72,7 @@
 
                     {% if zelda_summary.latest_truth_delta %}
                     <div class="d-flex justify-content-between align-items-center small mb-1">
-                        <span class="text-muted">Truth Delta Score</span>
+                        <span class="text-muted">Evidence Credibility</span>
                         <span class="fw-semibold">
                             {% if zelda_summary.latest_truth_delta.overall_truth_score is not None %}{{ zelda_summary.latest_truth_delta.overall_truth_score|floatformat:0 }}/100{% else %}Unknown{% endif %}
                         </span>

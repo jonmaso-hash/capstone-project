@@ -4358,9 +4358,9 @@ class StandaloneMemoRealDataTests(TestCase):
             summary='No public data found.', details={'claims': [], 'observed': []},
         )
         r = self._get()
-        self.assertContains(r, 'Credibility Score')
+        self.assertContains(r, 'Evidence Credibility')
         self.assertContains(r, 'not scored')
-        self.assertContains(r, 'No external data was found')
+        self.assertContains(r, 'No claim could be verified or contradicted against a public source')
 
     def test_no_verification_state_when_no_truth_delta_report(self):
         self._memo(self._deck())
