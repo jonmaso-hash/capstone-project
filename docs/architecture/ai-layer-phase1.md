@@ -66,6 +66,8 @@ These were measured by the rerun and are deliberately **not** part of this freez
 
 ## Operating notes for local runs
 
+Run `manage.py preflight --local` before starting a local worker or server for any controlled run. It prints the broker, result backend and cache the processes will actually use, and exits non-zero on anything remote or on pending migrations. The test runner pins Celery to an in-process broker and refuses to run otherwise (`config/test_runner.isolate_celery`).
+
 From the rerun's errata:
 - **Broker.** `.env` points Celery and the cache at a shared cloud Redis. Local workers must override the broker, the result backend and `CACHE_URL` to `localhost` and print the effective values (E-2).
 - **Schema.** The local database must have no unapplied migrations; the gate's fresh test database cannot see this (E-3).

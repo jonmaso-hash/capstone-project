@@ -226,11 +226,109 @@ def _install_stream_stub():
     return _InertStreamChat
 
 
+class SharedBrokerInTests(BaseException):
+    """
+    The test run could not be isolated from the configured Celery broker.
+
+    A BaseException for the same reason as RealNetworkInTests: nothing on the
+    way up may catch it and carry on.
+    """
+
+
+IN_MEMORY_BROKER = 'memory://localhost//'
+IN_MEMORY_RESULTS = 'cache+memory://'
+
+
+def isolate_celery():
+    """
+    Point Celery at an in-process broker and result store, and prove it took.
+
+    The local `.env` sets CELERY_BROKER_URL to a SHARED cloud Redis. Focused
+    test runs do not set CELERY_TASK_ALWAYS_EAGER, so every `.delay()` a test
+    triggers -- a profile save fires refresh_matches_*, a verification fires
+    generate_intelligence_memo -- was published to that queue and never
+    consumed. 213 had piled up when it was found (2026-10-04). A local worker
+    then drained them: real Claude calls, a real memo overwritten, and a
+    controlled experiment's own task stranded behind them. The full gate never
+    saw it, because the gate script exports memory:// itself.
+
+    SETTING app.conf IS NOT ENOUGH, which is why this sets the environment
+    too. Celery's Settings.broker_url and .result_backend read
+    os.environ['CELERY_BROKER_URL'] / ['CELERY_RESULT_BACKEND'] BEFORE their
+    own config, and read_env() has already copied the .env values there.
+    Measured: after `app.conf.broker_url = 'memory://'`,
+    `app.connection_for_write().as_uri()` still named the cloud host.
+
+    The backend and the producer pool are cached once created, so both are
+    dropped and rebuilt from the new values. Then the live objects are read
+    back, not the settings, and anything other than memory refuses the run.
+    """
+    from config.celery import app
+
+    for name in ('CELERY_BROKER_READ_URL', 'CELERY_BROKER_WRITE_URL'):
+        os.environ.pop(name, None)
+    os.environ['CELERY_BROKER_URL'] = IN_MEMORY_BROKER
+    os.environ['CELERY_RESULT_BACKEND'] = IN_MEMORY_RESULTS
+    app.conf.broker_url = IN_MEMORY_BROKER
+    app.conf.broker_read_url = None
+    app.conf.broker_write_url = None
+    app.conf.result_backend = IN_MEMORY_RESULTS
+    # Drop, never close, the cached pools -- the same two references
+    # Celery's own _after_fork resets. Closing them is wrong: kombu keeps a
+    # global pool registry keyed by connection, and hands the CLOSED pool back
+    # to the next lookup ('Acquire on closed pool', measured in the gate).
+    app._pool = None
+    if 'amqp' in app.__dict__:
+        app.amqp._producer_pool = None
+    # Celery caches the backend in one of two places (app._backend's getter:
+    # _backend_cache when thread-safe, else a thread-local). Private names,
+    # so the read-back below is what proves the reset worked.
+    app._backend_cache = None
+    if hasattr(app._local, 'backend'):
+        del app._local.backend
+    verify_celery_isolated(app)
+
+
+def verify_celery_isolated(app):
+    """Read the broker and result store Celery will actually use; refuse anything not in-process."""
+    with app.connection_for_write() as connection:
+        write_uri = connection.as_uri()
+    with app.connection_for_read() as connection:
+        read_uri = connection.as_uri()
+    # What .delay() actually publishes through. A pool built before the switch
+    # keeps its old connection while a fresh one reads memory -- measured -- so
+    # the fresh connection alone proves nothing about it.
+    publish_uri = app.amqp.producer_pool.connections.connection.as_uri()
+    backend = app.backend
+    backend_uri = getattr(backend, 'url', '') or ''
+    in_memory = (write_uri.startswith('memory://') and read_uri.startswith('memory://')
+                 and publish_uri.startswith('memory://')
+                 and type(backend).__name__ == 'CacheBackend' and backend_uri.startswith('memory'))
+    if not in_memory:
+        raise SharedBrokerInTests(
+            'The test run is not isolated from the Celery broker:\n'
+            '    write: %s\n    read:  %s\n    publish pool: %s\n    results: %s %s\n'
+            'Tests must never publish to a real queue. A shared broker turns '
+            'every .delay() a test triggers into a task some real worker will '
+            'run later.' % (_redacted(write_uri), _redacted(read_uri), _redacted(publish_uri),
+                            type(backend).__name__, _redacted(backend_uri)))
+
+
+def _redacted(uri):
+    """Scheme and host only: a broker URI can carry a password."""
+    from urllib.parse import urlsplit
+    parts = urlsplit(uri or '')
+    return '%s://%s' % (parts.scheme, parts.hostname or '')
+
+
 class InterlinkTestRunner(DiscoverRunner):
     """
-    DiscoverRunner, plus two kinds of isolation.
+    DiscoverRunner, plus three kinds of isolation.
 
     THE HTTP BAN, above.
+
+    AN IN-PROCESS CELERY BROKER (isolate_celery, above), so no test can
+    publish a task to a real queue.
 
     A LOCAL CACHE, because the configured cache is Redis on a REMOTE host and
     sharing it between runs made the suite depend on history rather than on
@@ -251,6 +349,7 @@ class InterlinkTestRunner(DiscoverRunner):
     def setup_test_environment(self, **kwargs):
         super().setup_test_environment(**kwargs)
         install_network_ban()
+        isolate_celery()
         _install_stream_stub()
         _force_huggingface_offline()
         from django.test.utils import override_settings
