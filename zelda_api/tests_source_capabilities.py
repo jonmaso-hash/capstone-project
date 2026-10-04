@@ -224,9 +224,13 @@ class TheGateBlocksAnUndeclaredWriteTests(TestCase):
         with mock.patch.object(DataSourceManager, 'INTEGRATIONS', {source_type: FakeIntegration}):
             DataSourceManager.create_observed_datapoints(self.document, 'Subject Co')
         return set(
-            ObservedDatapoint.objects.filter(document=self.document)
+            ObservedDatapoint.objects.filter(document=self.document, role=CAN_ESTABLISH)
             .values_list('category', flat=True)
         )
+
+    def stored_roles(self):
+        from .truth_delta_models import ObservedDatapoint
+        return dict(ObservedDatapoint.objects.filter(document=self.document).values_list('category', 'role'))
 
     def test_a_declared_category_is_written(self):
         """Positive control. Without it, the test below could pass because
@@ -256,9 +260,9 @@ class TheGateBlocksAnUndeclaredWriteTests(TestCase):
             'a source wrote a datapoint for a category it is not allowed to establish',
         )
 
-    def test_an_informational_source_cannot_write_at_all(self):
-        """News supplies context. Even if an extractor started returning a
-        number, it must not become a comparable observation."""
+    def test_an_informational_source_never_establishes(self):
+        """News supplies context. A number it returns is kept as labelled
+        context -- and never as an establishing observation."""
         stored = self.write_with('news', {
             'extract_revenue': (1_000_000.0, '$'),
             'extract_customers': 42,
@@ -266,6 +270,7 @@ class TheGateBlocksAnUndeclaredWriteTests(TestCase):
             'extract_funding': 500_000.0,
         })
         self.assertEqual(stored, set())
+        self.assertEqual(set(self.stored_roles().values()), {INFORMATIONAL_ONLY})
 
     def test_a_corroborating_source_cannot_establish(self):
         """Crunchbase may support a claim, not originate one."""
@@ -276,3 +281,4 @@ class TheGateBlocksAnUndeclaredWriteTests(TestCase):
             'extract_funding': None,
         })
         self.assertEqual(stored, set())
+        self.assertEqual(self.stored_roles(), {'revenue': CAN_CORROBORATE, 'employees': CAN_CORROBORATE})

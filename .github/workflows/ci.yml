@@ -143,6 +143,7 @@ jobs:
           zelda_api.tests_retrieval
           zelda_api.tests_chunk_boundary
           zelda_api.tests_grounded_context
+          zelda_api.tests_corroboration
           pages.tests_no_network_in_tests
           zelda_api.tests_filed
           zelda_api.tests_jurisdiction

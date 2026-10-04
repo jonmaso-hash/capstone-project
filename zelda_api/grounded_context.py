@@ -75,14 +75,28 @@ class SourceRef:
             raise ValueError('A source needs a document or a profile field.')
 
 
+ESTABLISHES = 'establishes'
+CORROBORATES = 'corroborates'
+CONTEXT = 'context'
+
+
 @dataclass(frozen=True)
 class External:
-    """A stored external observation, exactly as Truth Delta recorded it."""
+    """
+    A stored external observation, exactly as Truth Delta recorded it, with
+    what it is allowed to do. Only an 'establishes' value stands behind the
+    item's status; 'corroborates' values agree or dissent without deciding
+    anything; 'context' values are labelled background.
+    """
     value: object
     source: str
+    role: str = ESTABLISHES
+    origin: str = ''
     period: str = ''
     registrant: str = ''
     discrepancy_pct: Optional[float] = None
+    agrees: Optional[bool] = None
+    independent: Optional[bool] = None
 
 
 @dataclass(frozen=True)
@@ -193,8 +207,10 @@ class GroundedContext:
                     **({'reason': item.reason} if item.reason else {}),
                     **({'confidence': round(item.confidence)} if item.confidence is not None else {}),
                     **({'external': [
-                        {k: v for k, v in (('value', e.value), ('source', e.source), ('period', e.period),
-                                           ('discrepancy_pct', e.discrepancy_pct)) if v not in (None, '')}
+                        {k: v for k, v in (('role', e.role), ('value', e.value), ('source', e.source),
+                                           ('origin', e.origin), ('period', e.period),
+                                           ('discrepancy_pct', e.discrepancy_pct), ('agrees', e.agrees),
+                                           ('independent', e.independent)) if v not in (None, '')}
                         for e in item.external]} if item.external else {}),
                     'sources': [source(s) for s in item.sources],
                 }
@@ -224,17 +240,30 @@ def _claim_items(document, claims, report):
         else:
             status = _CANONICAL_TO_STATE[canonical]
             reason = reasons.get(claim.category, '') if status == INSUFFICIENT else ''
-        external = tuple(
-            External(
-                value=row.get('observed_value_numeric', row.get('observed_value')),
-                source=row.get('observed_source') or '',
-                period=row.get('observed_time_period') or '',
-                registrant=row.get('observed_registrant') or '',
-                discrepancy_pct=row.get('discrepancy_pct'),
-            )
-            for row in chain.get(claim.category, [])
-            if row.get('observed_value') is not None
-        )
+        external = []
+        for row in chain.get(claim.category, []):
+            if row.get('observed_value') is not None:
+                external.append(External(
+                    value=row.get('observed_value_numeric', row.get('observed_value')),
+                    source=row.get('observed_source') or '', role=ESTABLISHES,
+                    origin=row.get('observed_origin') or '',
+                    period=row.get('observed_time_period') or '',
+                    registrant=row.get('observed_registrant') or '',
+                    discrepancy_pct=row.get('discrepancy_pct'),
+                ))
+            for entry in row.get('corroboration') or []:
+                external.append(External(
+                    value=entry.get('value_numeric', entry.get('value')), source=entry.get('source') or '',
+                    role=CORROBORATES, origin=entry.get('origin') or '', period=entry.get('period') or '',
+                    discrepancy_pct=entry.get('discrepancy_pct'), agrees=entry.get('agrees'),
+                    independent=entry.get('independent'),
+                ))
+            for entry in row.get('context') or []:
+                external.append(External(
+                    value=entry.get('value'), source=entry.get('source') or '', role=CONTEXT,
+                    origin=entry.get('origin') or '', period=entry.get('period') or '',
+                ))
+        external = tuple(external)
         items.append(GroundedItem(
             ref=f'C{n}', kind='claim', category=claim.category,
             statement=_excerpt(claim.claimed_value), status=status, reason=reason,

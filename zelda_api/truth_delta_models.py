@@ -128,6 +128,24 @@ class ObservedDatapoint(models.Model):
     source_url = models.URLField(blank=True)
     source_date = models.DateField(null=True, blank=True, help_text="When this data was published")
     
+    # What this row may do (source_capabilities). Only 'can_establish' rows
+    # decide a claim's state; 'can_corroborate' rows attach as agreeing or
+    # dissenting evidence; 'informational_only' rows are labelled context.
+    role = models.CharField(
+        max_length=20, default='can_establish',
+        choices=[('can_establish', 'Establishes'), ('can_corroborate', 'Corroborates'),
+                 ('informational_only', 'Informational only')],
+        help_text="The source's declared role for this category when the row was stored.",
+    )
+    # Where the evidence ultimately comes from, so confirmations that share an
+    # upstream origin are not counted as independent.
+    evidence_origin = models.CharField(
+        max_length=32, blank=True,
+        choices=[('sec_filing', 'SEC filing'), ('company_document', 'Company document'),
+                 ('company_website', 'Company website'), ('third_party_database', 'Third-party database'),
+                 ('linkedin_derived', 'LinkedIn-derived'), ('news', 'News')],
+    )
+
     # Credibility
     source_credibility = models.FloatField(default=0.8, help_text="0.0-1.0 how much we trust this source")
     extraction_method = models.CharField(
@@ -288,6 +306,11 @@ class TruthDeltaReport(models.Model):
         observed = row.get('observed_value_numeric')
 
         if claimed is None or not observed:
+            # No ESTABLISHING evidence. Corroboration alone never decides a
+            # state, but it is not nothing either -- say so, rather than
+            # reporting "no external evidence" when some was found.
+            if row.get('corroboration'):
+                return 'no_data', 'corroboration_only', tolerance
             return 'no_data', self._absence_reason(), tolerance
 
         within = abs(claimed - observed) / abs(observed) <= tolerance
@@ -352,6 +375,7 @@ class TruthDeltaReport(models.Model):
             # not compare the periods" never reads as "we found nothing".
             for preferred in ('period_unknown', 'extraction_insufficient',
                               'ambiguous_pairing', 'no_comparable_claim',
+                              'corroboration_only',
                               'source_unavailable', 'no_external_evidence'):
                 if any(r['reason'] == preferred for r in rows):
                     reasons[category] = preferred
@@ -371,7 +395,9 @@ class TruthDeltaReport(models.Model):
         return {
             row.get('category')
             for row in (self.details or {}).get('observed') or []
-            if row.get('category')
+            # Only establishing evidence grounds a category. Rows stored before
+            # roles existed carry none and were all written as establishing.
+            if row.get('category') and row.get('role', 'can_establish') == 'can_establish'
         }
 
     def category_states(self):

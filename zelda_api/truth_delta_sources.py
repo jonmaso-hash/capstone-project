@@ -14,7 +14,7 @@ import re
 import requests
 from typing import Dict, List, Optional, Tuple
 from django.conf import settings
-from .source_capabilities import may_establish
+from .source_capabilities import capability_for, may_store, origin_for
 from .truth_delta_models import ObservedDatapoint, ExternalDataSource
 
 logger = logging.getLogger(__name__)
@@ -557,38 +557,38 @@ class DataSourceManager:
             # company the authority did not choose.
             registrant = str(data.get('_cik') or '')
 
-            revenue_data = integration.extract_revenue(data)
-            if revenue_data and may_establish(source_type, 'revenue'):
-                value, unit = revenue_data
+            origin = origin_for(source_type)
+
+            def store(category, value_numeric, observed_value, unit, credibility):
+                # Stored for every declared role but UNAVAILABLE, stamped with
+                # that role: storing is not authority. Only a can_establish row
+                # ever decides a claim's state (TruthDeltaEngine._build_comparison).
+                if not may_store(source_type, category):
+                    return
                 created_points.append(ObservedDatapoint.objects.create(
-                    document=document, category='revenue', registrant=registrant, observed_value=str(value),
-                    observed_value_numeric=float(value), unit=unit, time_period=time_period,
-                    source=external_source, source_credibility=0.95, extraction_method='api',
+                    document=document, category=category, registrant=registrant,
+                    observed_value=observed_value, observed_value_numeric=value_numeric, unit=unit,
+                    time_period=time_period, source=external_source, source_credibility=credibility,
+                    extraction_method='api', role=capability_for(source_type, category),
+                    evidence_origin=origin,
                 ))
+
+            revenue_data = integration.extract_revenue(data)
+            if revenue_data:
+                value, unit = revenue_data
+                store('revenue', float(value), str(value), unit, 0.95)
 
             customers = integration.extract_customers(data)
-            if customers and may_establish(source_type, 'customers'):
-                created_points.append(ObservedDatapoint.objects.create(
-                    document=document, category='customers', registrant=registrant, observed_value=str(customers),
-                    observed_value_numeric=float(customers), unit='customers', time_period=time_period,
-                    source=external_source, source_credibility=0.9, extraction_method='api',
-                ))
+            if customers:
+                store('customers', float(customers), str(customers), 'customers', 0.9)
 
             employees = integration.extract_employees(data)
-            if employees and may_establish(source_type, 'employees'):
-                created_points.append(ObservedDatapoint.objects.create(
-                    document=document, category='employees', registrant=registrant, observed_value=str(employees),
-                    observed_value_numeric=float(employees), unit='headcount', time_period=time_period,
-                    source=external_source, source_credibility=0.85, extraction_method='api',
-                ))
+            if employees:
+                store('employees', float(employees), str(employees), 'headcount', 0.85)
 
             funding = integration.extract_funding(data)
-            if funding and may_establish(source_type, 'funding_raised'):
-                created_points.append(ObservedDatapoint.objects.create(
-                    document=document, category='funding_raised', registrant=registrant, observed_value=f"${funding:,.0f}",
-                    observed_value_numeric=float(funding), unit='$', time_period=time_period,
-                    source=external_source, source_credibility=0.95, extraction_method='api',
-                ))
+            if funding:
+                store('funding_raised', float(funding), f"${funding:,.0f}", '$', 0.95)
 
         logger.info(f"Created {len(created_points)} observed datapoints for {company_name}")
         return created_points

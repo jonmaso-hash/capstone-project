@@ -15,6 +15,7 @@ from .truth_delta_models import (
     TRUTH_DELTA_SEMANTICS, ClaimedDatapoint, ObservedDatapoint, TruthDeltaReport,
 )
 from .truth_delta_sources import data_source_manager
+from .source_capabilities import CAN_CORROBORATE, CAN_ESTABLISH, INFORMATIONAL_ONLY
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,7 @@ TRUTH_DELTA_SYSTEM_PROMPT = """You are Zelda's Truth Delta verification analyst.
 
 ABSOLUTE RULES:
 - Only reason about the claims and observed data given to you. Never invent a number, source, or fact that isn't in the input.
+- Each row's observed_* fields are the only evidence that can verify or contradict its claim. A row's `corroboration` entries come from lower-authority sources: describe them as consistent with or differing from the claim, never as verification, and treat an entry with "independent": false as no extra confirmation. `context` entries are background only and never evidence about the claim.
 - If a claim has no matching observed data, say so plainly in per_claim — that is NOT evidence the claim is false, only that it could not be checked. Do not penalize the score for unchecked claims.
 - A claim that is directionally consistent with observed data (e.g. within a reasonable range, accounting for the observed data possibly being from a different, older time period) should not be flagged as a contradiction.
 - A claim that is significantly higher than observed data (e.g. claiming 10x the SEC-reported revenue) is a real red flag and should lower the score substantially.
@@ -206,7 +208,14 @@ class TruthDeltaEngine:
         rows = []
         for claim in claims:
             matches = observed_by_category.get(claim.category, [])
-            best = max(matches, key=lambda o: o.source_credibility) if matches else None
+            # Only an establishing observation may become THE observation the
+            # state is computed from. A corroborating one is attached as
+            # agreeing or dissenting evidence and an informational one as
+            # context; neither can verify or contradict, alone or against an
+            # establishing source. This is the single place a claim is paired
+            # with evidence, so it is the single place that rule lives.
+            establishing = [o for o in matches if o.role == CAN_ESTABLISH]
+            best = max(establishing, key=lambda o: o.source_credibility) if establishing else None
 
             discrepancy_pct = None
             if best and claim.claimed_value_numeric is not None and best.observed_value_numeric:
@@ -242,8 +251,48 @@ class TruthDeltaEngine:
                 # reads it: an unknown period blocks a contradiction and only
                 # qualifies an agreement.
                 'claim_period': None,
+                'observed_role': CAN_ESTABLISH if best else None,
+                'observed_origin': (best.evidence_origin or None) if best else None,
+                'corroboration': [
+                    self._corroboration_entry(claim, obs, best)
+                    for obs in matches if obs.role == CAN_CORROBORATE
+                ],
+                'context': [
+                    {'value': obs.observed_value, 'source': obs.source.source_name if obs.source else None,
+                     'origin': obs.evidence_origin or None, 'period': obs.time_period or None}
+                    for obs in matches if obs.role == INFORMATIONAL_ONLY
+                ],
             })
         return rows
+
+    @staticmethod
+    def _corroboration_entry(claim, obs, best):
+        """
+        One corroborating observation, described against the claim. `agrees`
+        uses the category's grounding tolerance; `independent` is False when
+        it shares an origin with the establishing observation, because two
+        readings of one upstream are not two confirmations.
+        """
+        from .truth_delta_models import TruthDeltaReport
+
+        tolerance = TruthDeltaReport.GROUNDING_TOLERANCE.get(claim.category, TruthDeltaReport.DEFAULT_TOLERANCE)
+        agrees = None
+        discrepancy_pct = None
+        if claim.claimed_value_numeric is not None and obs.observed_value_numeric:
+            gap = (claim.claimed_value_numeric - obs.observed_value_numeric) / obs.observed_value_numeric
+            discrepancy_pct = round(gap * 100, 1)
+            agrees = abs(gap) <= tolerance
+        return {
+            'value': obs.observed_value,
+            'value_numeric': obs.observed_value_numeric,
+            'source': obs.source.source_name if obs.source else None,
+            'origin': obs.evidence_origin or None,
+            'period': obs.time_period or None,
+            'agrees': agrees,
+            'discrepancy_pct': discrepancy_pct,
+            'independent': not (best is not None and best.evidence_origin
+                                and best.evidence_origin == obs.evidence_origin),
+        }
 
     @staticmethod
     def _serialize_claims(claims):
@@ -258,6 +307,7 @@ class TruthDeltaEngine:
             {
                 'category': o.category, 'observed_value': o.observed_value,
                 'source': o.source.source_name if o.source else None, 'time_period': o.time_period,
+                'role': o.role, 'origin': o.evidence_origin or None,
             }
             for o in observed
         ]
