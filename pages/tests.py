@@ -253,7 +253,7 @@ class HomepagePositioningCopyTests(TestCase):
         self.assertIn('Make better decisions', h1_text)
         self.assertNotIn('Raise capital', h1_text)
 
-        self.assertContains(response, 'evidence-grounded intelligence, semantic matching, and verified deal outcomes')
+        self.assertContains(response, 'first-pass investment intelligence you can trace, semantic matching, and verified deal outcomes')
         self.assertContains(response, 'Raise capital. Source deals. Buy or sell a business.')
         self.assertNotContains(response, 'reads the deal before you do')
 
@@ -293,11 +293,16 @@ class HomepagePositioningCopyTests(TestCase):
         common outcomes are that no source reports the metric at all, or
         that the two figures aren't comparable. The assertion now pins the
         states the engine actually has, which is a sharper form of the same
-        guard, not a relaxed one."""
+        guard, not a relaxed one.
+
+        Since R-003 the engine's states are verified, contradicted, or not
+        established with a reason, and "each disclosed claim" overstated
+        coverage (Truth Delta checks the claims Zelda extracts), so the pin
+        follows the copy that says exactly that."""
         response = self.client.get(reverse('pages:home'))
         content = response.content.decode('utf-8')
         self.assertIn(
-            'reports each disclosed claim as verified, unsupported, unavailable, or not comparable',
+            'labels each one verified, contradicted, or not established — with the reason',
             content,
         )
         self.assertIn('both sides confirm the outcome', content)
@@ -314,7 +319,7 @@ class HomepagePositioningCopyTests(TestCase):
         content = self.client.get(reverse('pages:home')).content.decode('utf-8')
         self.assertNotIn('against source documents', content)
         self.assertNotIn('against the underlying documents', content)
-        self.assertIn('independent public sources', content)
+        self.assertIn('against public sources', content)
 
     def test_independent_source_language_states_its_coverage(self):
         """
@@ -325,7 +330,7 @@ class HomepagePositioningCopyTests(TestCase):
         its own limit.
         """
         content = self.client.get(reverse('pages:home')).content.decode('utf-8')
-        self.assertIn('where those sources report the metric', content)
+        self.assertIn('where those sources report the figure', content)
 
     def test_the_match_score_says_what_it_measures(self):
         """

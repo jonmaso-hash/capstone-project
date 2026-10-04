@@ -137,18 +137,18 @@
         </p>
         {% comment %}
         Same number and same name as the full Truth Delta report's own
-        headline ("Credibility Score"): it measures how far the deck's
+        headline ("Evidence Credibility"): it measures how far the deck's
         checkable claims held up against outside data — a verification
         read, not analysis confidence. Was labelled "Signal Score" here,
         which made one number look like two.
         {% endcomment %}
         {% if truth_delta.overall_truth_score is not None %}
-        <p class="mb-1"><strong>Credibility Score:</strong> {{ truth_delta.overall_truth_score|floatformat:0 }}/100
-            <span class="text-muted small">— reflects only the claims that had external data to check against, not an overall company assessment</span>
+        <p class="mb-1"><strong>Evidence Credibility:</strong> {{ truth_delta.overall_truth_score|floatformat:0 }}/100
+            <span class="text-muted small">— reflects only the claims Zelda could verify or contradict, not an overall company assessment</span>
         </p>
         {% else %}
-        <p class="mb-1"><strong>Credibility Score:</strong> <span class="text-muted">not scored</span>
-            <span class="text-muted small">— no external data was found to verify or contradict these claims</span>
+        <p class="mb-1"><strong>Evidence Credibility:</strong> <span class="text-muted">not scored</span>
+            <span class="text-muted small">— no claim could be verified or contradicted against a public source</span>
         </p>
         {% endif %}
         {% if truth_delta.summary %}<p class="text-secondary mb-2">{{ truth_delta.summary }}</p>{% endif %}
@@ -243,7 +243,7 @@
             <h5 class="fw-bold mb-1">Zelda AI unlocks the full memo</h5>
             <p class="text-muted small mb-3">
                 {% if request.user == application.user %}
-                Every memo section, Truth Delta verification, valuation, financial snapshot, and pitch engagement data — combined into one shareable diligence package.
+                Every memo section, Truth Delta verification, valuation, financial snapshot, and pitch engagement data — combined into one shareable investor report.
                 {% else %}
                 {{ company_name }} hasn't upgraded to Zelda AI yet. Once they do, you'll see the full memo here — no extra cost to you.
                 {% endif %}

@@ -406,7 +406,7 @@ class CrossReportNavigationTests(TestCase):
         overview = self.client.get(self.urls['overview']).content.decode()
         self.assertIn('NavCo summary.', overview)               # Zelda Report overview
         evidence = self.client.get(self.urls['evidence']).content.decode()
-        self.assertIn('Credibility Score', evidence)            # Truth Delta headline
+        self.assertIn('Evidence Credibility', evidence)            # Truth Delta headline
         analysis = self.client.get(self.urls['analysis']).content.decode()
         self.assertIn('AI Investment Committee Memo', analysis)
         valuation = self.client.get(self.urls['valuation']).content.decode()
@@ -3196,7 +3196,7 @@ class TruthDeltaNoScoreCoherenceTests(TestCase):
     def test_ic_memo_html_shows_not_scored_not_none(self):
         html = self.client.get(reverse('zelda_api:ic_memo', args=[self.doc.id])).content.decode()
         self.assertIn('>Truth Delta<', html)
-        self.assertNotIn('Credibility Score:</strong> None', html)
+        self.assertNotIn('Evidence Credibility:</strong> None', html)
         self.assertNotIn('None/100', html)
         self.assertIn('not scored', html)
 
@@ -5891,7 +5891,7 @@ class GaugeVocabularyTests(TestCase):
 
     def test_ic_memo_truth_delta_number_is_credibility_score_not_signal_score(self):
         html = self._ic_memo_html()
-        self.assertIn('Credibility Score:', html)
+        self.assertIn('Evidence Credibility:', html)
         self.assertNotIn('Signal Score', html)
         self.assertIn('>Truth Delta<', html)          # section header, no "Signal"
         self.assertNotIn('Truth Delta Signal', html)
@@ -5932,12 +5932,12 @@ class GaugeVocabularyTests(TestCase):
             credibility_risk='low', summary='ok', details={'claims': [{'category': 'revenue'}]})
         md = render_ic_memo_markdown(build_ic_memo_context(app, tier='full'))
         self.assertIn('## Truth Delta', md)
-        self.assertIn('**Credibility Score:**', md)
+        self.assertIn('**Evidence Credibility:**', md)
         self.assertNotIn('Signal Score', md)
 
     def test_same_truth_delta_number_one_name_across_three_reports(self):
         # TD report page, IC Memo, and Zelda Intelligence Report all call
-        # overall_truth_score the same thing: "Credibility Score".
+        # overall_truth_score the same thing: "Evidence Credibility".
         from matchmaking.models import Application
         from .truth_delta_models import TruthDeltaReport
         founder = User.objects.create_user('onename_founder', password='x')
@@ -5959,7 +5959,7 @@ class GaugeVocabularyTests(TestCase):
         ic_memo = self.client.get(reverse('zelda_api:ic_memo', args=[deck.id])).content.decode()
         zelda_report = self.client.get(reverse('matchmaking:standalone_memo', args=['onenameco'])).content.decode()
         for html in (td_page, ic_memo, zelda_report):
-            self.assertIn('Credibility Score', html)
+            self.assertIn('Evidence Credibility', html)
             self.assertNotIn('Signal Score', html)
 
     # --- Truth Delta: the redundant gauge is gone ---
@@ -5982,7 +5982,7 @@ class GaugeVocabularyTests(TestCase):
                      'claims': [{'category': 'revenue'}]},
         )
         html = self.client.get(reverse('zelda_api:truth_delta_ui', args=[doc.id])).content.decode()
-        self.assertIn('Credibility Score', html)             # the signal stays
+        self.assertIn('Evidence Credibility', html)             # the signal stays
         self.assertNotIn('truthdelta-confidence-gauge', html)  # the gauge is gone
         self.assertNotIn('Verification Confidence', html)
 

@@ -200,8 +200,8 @@ class TheScannerActuallyWorksTests(SimpleTestCase):
         for legitimate in (
             'Verified Funded and Verified Sold outcomes become part of the track record.',
             '[VERIFIED] Deal confirmed by both parties. FUNDED',
-            'evidence-grounded intelligence, semantic matching, and verified deal outcomes',
-            'reports each disclosed claim as verified, unsupported, unavailable, or not comparable',
+            'first-pass investment intelligence you can trace, semantic matching, and verified deal outcomes',
+            'labels each one verified, contradicted, or not established — with the reason',
             '4. Build a Verified Track Record',
         ):
             with self.subTest(text=legitimate[:40]):

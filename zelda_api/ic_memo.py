@@ -65,7 +65,7 @@ def ic_memo_unlocked(request_user, founder_application):
     Separate from can_view_ic_memo's access gate: whether the FULL Zelda AI
     memo is unlocked, vs. Zelda Lite. Gated on the FOUNDER's own Premium,
     not the investor's — this is a founder-controlled asset (their
-    diligence package to share), so gating it on the investor's premium
+    investor report to share), so gating it on the investor's premium
     instead would let a founder ask to be connected and have investors
     keep viewing it for free with no one ever paying. Staff bypass for
     support purposes.
@@ -461,12 +461,12 @@ def render_ic_memo_markdown(context):
             "available — a real signal, not a substitute for full diligence, since public data is "
             "sparse or nonexistent for most early-stage private companies._"
         )
-        # "Credibility Score" — same number and name as the full Truth Delta
+        # "Evidence Credibility" — same number and name as the full Truth Delta
         # report's headline; a verification read, not analysis confidence.
         if td['overall_truth_score'] is not None:
-            lines.append(f"**Credibility Score:** {td['overall_truth_score']}/100 — reflects only the claims that had external data to check against, not an overall company assessment")
+            lines.append(f"**Evidence Credibility:** {td['overall_truth_score']}/100 — reflects only the claims Zelda could verify or contradict, not an overall company assessment")
         else:
-            lines.append("**Credibility Score:** not scored — no external data was found to verify or contradict these claims")
+            lines.append("**Evidence Credibility:** not scored — no claim could be verified or contradicted against a public source")
         if td['summary']:
             lines.append(td['summary'])
         cov = td['coverage']

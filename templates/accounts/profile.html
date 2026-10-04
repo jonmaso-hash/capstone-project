@@ -738,11 +738,11 @@
                         <p class="text-muted mb-3">
                             {% if request.user == profile_user %}
                             Zelda has cross-checked {{ verification_reports_count }} document{{ verification_reports_count|pluralize }}
-                            of yours against public sources. Upgrade to see credibility scores, claim-by-claim verification,
+                            of yours against public sources. Upgrade to see Evidence Credibility, claim-by-claim verification,
                             and how they've trended across your uploads.
                             {% else %}
                             {{ profile_user.username }} hasn't unlocked Truth Delta verification yet. Once they upgrade to
-                            Premium, you'll be able to view their credibility scores and verification history here &mdash;
+                            Premium, you'll be able to view their Evidence Credibility and verification history here &mdash;
                             no extra cost to you.
                             {% endif %}
                         </p>
@@ -755,7 +755,7 @@
                 <div class="card shadow-sm border-0 rounded-4">
                     <div class="card-body p-4">
                         <p class="text-muted small mb-3">
-                            Truth Delta's cross-check against independent public sources for every document
+                            Truth Delta's check of each submitted document's claims against public sources
                             {{ profile_user.username }} has submitted, most recent first — a trend across
                             uploads and fundraising rounds, not just a single deck. {% zelda_evidence_sources %}
                         </p>
@@ -1275,7 +1275,7 @@ document.addEventListener('DOMContentLoaded', function () {
         data: {
             labels: points.map(p => p.date),
             datasets: [{
-                label: 'Truth Delta Score',
+                label: 'Evidence Credibility',
                 data: points.map(p => p.score),
                 borderColor: '#198754',
                 backgroundColor: 'rgba(25, 135, 84, 0.08)',
