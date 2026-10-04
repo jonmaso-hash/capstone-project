@@ -141,6 +141,29 @@ class EndpointTests(_Retrieval):
                     self.client.logout()
                 self.assertIn(self.post(None, name, 'a', {'query': 'text'}).status_code, (401, 403))
 
+    def test_chunks_view_boundary(self):
+        url = lambda key: reverse('zelda_api:document_chunks', args=[self.docs[key].pk])
+        self.client.force_login(self.users['a'])
+        response = self.client.get(url('a'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([c['text'] for c in response.json()['chunks']], ['text of a'])
+        self.client.logout()
+        for stranger in (self.investor, self.connected, self.roleless, self.users['x']):
+            self.client.force_login(stranger)
+            self.assertEqual(self.client.get(url('a')).status_code, 403)
+            self.client.logout()
+        self.client.force_login(self.staff)
+        self.assertEqual(self.client.get(url('x')).status_code, 200)
+
+    def test_document_chunks_refuses_out_of_scope(self):
+        from zelda_api.retrieval import document_chunks
+        with self.assertRaises(RetrievalRefused):
+            document_chunks(self.principals['investor'], self.docs['a'])
+        with self.assertRaises(PrincipalRequired):
+            document_chunks(None, self.docs['a'])
+        self.assertEqual([c.raw_text for c in document_chunks(self.principals['owner_a'], self.docs['a'])],
+                         ['text of a'])
+
     def test_owner_sees_only_their_chunks(self):
         response = self.post(self.users['a'], 'zelda_api:document_search', 'a', {'query': 'text'})
         self.assertEqual([r['text'] for r in response.json()['results']], ['text of a'])
