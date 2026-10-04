@@ -31,9 +31,8 @@ ALLOWLIST = {
     ('zelda_api/intelligence_pipeline.py', 'ZeldaIntelligencePipelineV2._extract_insight_with_confidence'):
         'Ingest: links an insight to its source chunks in this document.',
     ('zelda_api/truth_delta_tasks.py', 'extract_claims_from_insights'):
-        'Ingest: copies the source chunk into ClaimedDatapoint.text_excerpt. That copy is '
-        'document text at rest outside this boundary; nothing reads it today, and any '
-        'surface that does must gate it like raw text (Task 5).',
+        'Ingest: reads the claim\'s source chunk for its page number and content hash only. '
+        'text_excerpt now stores the claim\'s own bounded sentence, never the chunk (Task 5).',
     # Delete paths.
     ('zelda_api/tasks.py', 'process_document_pipeline'):
         'Delete: clears partial chunks when the pipeline fails.',

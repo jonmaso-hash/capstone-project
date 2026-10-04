@@ -18,7 +18,9 @@ logger = logging.getLogger(__name__)
 def process_document_pipeline(self, document_id: int, raw_text: str):
     """
     Main async task: Process a document through the complete Zelda Intelligence Pipeline.
-    Handles chunking → embedding → analysis → memo generation.
+    Handles chunking → embedding → analysis → verification. The memo, and
+    the "analysis ready" notification, follow verification
+    (generate_intelligence_memo).
     """
     try:
         logger.info(f"[Celery] Starting pipeline processing for document {document_id}")
@@ -36,10 +38,7 @@ def process_document_pipeline(self, document_id: int, raw_text: str):
         
         if result['status'] == 'success':
             logger.info(f"[Celery] Pipeline complete for document {document_id}")
-            
-            # Send notification if needed
-            notify_document_processed.delay(document_id)
-            
+
             return {
                 'status': 'success',
                 'document_id': document_id,
@@ -228,38 +227,46 @@ def analyze_document_insights(document_id: int, raw_text: str):
 @shared_task
 def generate_intelligence_memo(document_id: int):
     """
-    Focused task: Generate the final intelligence memo.
-    Must run after analysis is complete.
+    The memo stage: runs once verification reaches a terminal state
+    (truth_delta_tasks.verification_finished), including on a re-run.
+
+    Acts as the document's owner -- the memo is the owner's artifact -- and
+    builds a GroundedContext, which refuses rather than proceeding if there
+    is no owner or the owner may not read the document. The memo is written
+    from that context alone. Status updates are targeted (.update), so they
+    never overwrite the verification fields Truth Delta just wrote.
     """
+    from .grounded_context import GroundedContext
+    from .principal import ORIGIN_TASK, Principal
+
     try:
-        document = DocumentSource.objects.get(id=document_id)
-        
-        from .vector_models import IntelligenceInsight
-        insights = IntelligenceInsight.objects.filter(document=document)
-        
-        analysis_result = {
-            'confidence': min(len(insights) / 8.0, 1.0),
-        }
-        
-        result = intelligence_pipeline._generate_memo(document, analysis_result)
-        
+        document = DocumentSource.objects.defer('raw_text_full', 'raw_text_preview').get(id=document_id)
+        principal = Principal.for_user(document.uploaded_by, ORIGIN_TASK,
+                                       label='zelda_api.tasks.generate_intelligence_memo')
+        context = GroundedContext.build(principal, document)
+
+        result = intelligence_pipeline._generate_memo(context)
+
         if 'error' not in result:
-            document.status = 'analyzed'
-            document.confidence_score = result['completeness_score']
-            document.processed_at = timezone.now()
-            document.save()
-            
+            DocumentSource.objects.filter(id=document_id).update(
+                status='analyzed',
+                confidence_score=result['completeness_score'],
+                processed_at=timezone.now(),
+            )
             logger.info(f"Memo generated for document {document_id}")
+            notify_document_processed.delay(document_id)
             return {'status': 'success', 'memo_id': result['memo_id']}
         else:
             raise Exception(result['error'])
-    
+
     except Exception as exc:
         logger.error(f"Memo generation error for document {document_id}: {str(exc)}")
-        document = DocumentSource.objects.get(id=document_id)
-        document.status = 'error'
-        document.error_message = str(exc)
-        document.save()
+        from .vector_models import IntelligenceMemo
+        if IntelligenceMemo.objects.filter(document_id=document_id).exists():
+            # A regeneration failed; the earlier memo stands and so does the
+            # document. Logged, not surfaced as a broken document.
+            return {'status': 'error', 'error': str(exc), 'kept_previous_memo': True}
+        DocumentSource.objects.filter(id=document_id).update(status='error', error_message=str(exc))
         return {'status': 'error', 'error': str(exc)}
 
 

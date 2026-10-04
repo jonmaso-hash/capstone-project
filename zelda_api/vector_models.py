@@ -36,6 +36,7 @@ class DocumentSource(FoundryStandardMixin, models.Model):
         ('embedding', 'Embedding'),
         ('embedded', 'Embedded'),
         ('analyzing', 'Analyzing'),
+        ('verifying', 'Verifying'),
         ('analyzed', 'Analyzed'),
         ('error', 'Error'),
     ]

@@ -179,7 +179,7 @@ class DocumentStatusView(APIView):
             }
             
             # Add progress details
-            if doc.status in ['chunking', 'chunked', 'embedding', 'embedded', 'analyzing']:
+            if doc.status in ['chunking', 'chunked', 'embedding', 'embedded', 'analyzing', 'verifying']:
                 chunks = doc.chunks.count()
                 response['progress'] = {
                     'chunks_created': chunks,

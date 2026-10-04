@@ -109,7 +109,8 @@ class MemoPersistsThroughTheRealWriterTests(TestCase):
         pipeline = ZeldaIntelligencePipelineV2()
         with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=sections), \
              mock.patch.object(pipeline, '_build_structured_context', return_value=''):
-            return pipeline._generate_memo(self.doc, {'confidence': 0.8})
+            from zelda_api.tests import grounded_context_for
+            return pipeline._generate_memo(grounded_context_for(self.doc))
 
     def test_a_memo_is_saved_from_the_sections_claude_is_asked_for(self):
         sections = {key: f'{key} text' for key in MEMO_JSON_KEYS}
