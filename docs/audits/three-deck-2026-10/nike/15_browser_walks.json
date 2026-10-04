@@ -1,0 +1,13 @@
+{
+ "note": "Browser pane against http://localhost:8010, Nike audit documents 3122 (pitch deck) and 3123 (valuation). Each read was confirmed by URL, title and text length. Each signed-in walk ended with the nav Logout, confirmed on /home/.",
+ "OWNER audit_nike_owner": {
+  "truth_delta_page": {"score_value": "N/A", "score_label": "NOT SCORED · LIMITED PUBLIC EVIDENCE", "stat_cards": ["2 CLAIMS ANALYZED", "0 VERIFIED", "2 NOT ESTABLISHED"], "chart_series": ["Verified=0", "Contradicted=0", "Not established=2"], "chart_visual": "one amber bar; legend 'Verified — 0 · Contradicted — 0 · Not established — 2' (screenshot taken)", "rollup": "Limited public evidence: none of the 2 claims could be verified or contradicted against a public source.", "percent_in_coverage": false},
+  "ic_memo_page": {"bar_segments": ["100% amber"], "label": "Verified against public sources — 0 · Contradicted — 0 · Not established — 2 (of 2)", "valuation_line": "Range: $105,600,000,000 – $184,800,000,000", "raw_list_syntax_visible": "Questions for Management | ['What fiscal period does the stated $52.8 billion revenue figure correspond to…"},
+  "valuation_page": {"tier_shown": "Zelda Lite Report (preview)", "range_hidden": "The exact range is included in the full Zelda AI report… Upgrade to Zelda AI — $9.99", "business_overview": "…with disclosed annual revenue of $52.8 billion…", "scorecard": "Revenue A+"},
+  "signed_out": true
+ },
+ "LITE audit_lite_investor": {
+  "intelligence_report": {"bar_segments": ["100% amber"], "label": "Verified — 0 · Contradicted — 0 · Not established — 2 (of 2)", "canary_in_text": false, "canary_in_html": false, "raw_list_syntax_visible": "[\"The revenue figure discrepancy — $52.8 billion stated by the company [S1] versus…"},
+  "signed_out": true
+ }
+}

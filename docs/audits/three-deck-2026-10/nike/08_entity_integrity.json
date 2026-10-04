@@ -1,0 +1,129 @@
+{
+ "report": {
+  "id": 26,
+  "founder_profile_id": 38,
+  "seller_profile_id": null,
+  "document_id": 3122,
+  "status": "complete",
+  "checked_at": "2026-10-04 23:36:04.298417+00:00",
+  "inputs_hash": "b35b0f494c90ef257f9fe83402d39cc640229718b6db7c571709ae53043a3a60",
+  "findings": [
+   {
+    "check": "website",
+    "claim": "Website: https://www.nike.com",
+    "interlink_source": "Startup profile",
+    "evidence_source": "Company website",
+    "evidence": "The site loaded at https://www.nike.com/mx/.",
+    "result": "matches",
+    "source_url": "https://www.nike.com/mx/",
+    "checked_at": "2026-10-04T23:35:39.445433+00:00"
+   },
+   {
+    "check": "company_name",
+    "claim": "Company name: NIKE, Inc.",
+    "interlink_source": "Startup profile",
+    "evidence_source": "Company website",
+    "evidence": "The company name appears on the website.",
+    "result": "matches",
+    "source_url": "https://www.nike.com/mx/",
+    "checked_at": "2026-10-04T23:35:39.445433+00:00"
+   },
+   {
+    "check": "person_name",
+    "claim": "Founder: Audit Owner",
+    "interlink_source": "Startup profile",
+    "evidence_source": "Company website",
+    "evidence": "This name does not appear on the page that loaded.",
+    "result": "not_found",
+    "source_url": "https://www.nike.com/mx/",
+    "checked_at": "2026-10-04T23:35:39.445433+00:00"
+   },
+   {
+    "check": "founding_year",
+    "claim": "Founding year: not on the profile",
+    "interlink_source": "Startup profile",
+    "evidence_source": "Domain registration",
+    "evidence": "nike.com was registered in March 1995.",
+    "result": "public_record",
+    "source_url": "https://lookup.icann.org/en/lookup?name=nike.com",
+    "checked_at": "2026-10-04T23:35:39.445433+00:00"
+   },
+   {
+    "check": "commercial_footprint",
+    "claim": "Website: https://www.nike.com",
+    "interlink_source": "Startup profile",
+    "evidence_source": "CompanyEnrich (aggregated business data)",
+    "evidence": "An independent business record is associated with nike.com (founded 1972, retail). This is aggregated commercial data, not a government registry, so it corroborates that the business has a public footprint rather than establishing its legal identity.",
+    "result": "public_record",
+    "source_url": "",
+    "checked_at": "2026-10-04T23:35:39.445433+00:00"
+   },
+   {
+    "check": "business_registration",
+    "claim": "Company name: NIKE, Inc.",
+    "interlink_source": "Startup profile",
+    "evidence_source": "Business registration record",
+    "evidence": "More than one registered business matches this name exactly, so none was attributed to this company. A company can also be registered under one name in several states.",
+    "result": "couldnt_check",
+    "source_url": "",
+    "checked_at": "2026-10-04T23:35:39.445433+00:00"
+   },
+   {
+    "check": "sec_filer",
+    "claim": "Company name: NIKE, Inc.",
+    "interlink_source": "Startup profile",
+    "evidence_source": "SEC EDGAR",
+    "evidence": "SEC lists NIKE, Inc. (CIK 0000320187).",
+    "result": "matches",
+    "source_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000320187",
+    "checked_at": "2026-10-04T23:35:39.445433+00:00"
+   },
+   {
+    "check": "sec_incorporation",
+    "claim": "Incorporation: not on the profile",
+    "interlink_source": "Startup profile",
+    "evidence_source": "SEC company record",
+    "evidence": "Incorporated in OR, according to the SEC company record.",
+    "result": "public_record",
+    "source_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000320187",
+    "checked_at": "2026-10-04T23:35:39.445433+00:00"
+   },
+   {
+    "check": "sec_person",
+    "claim": "Founder: Audit Owner",
+    "interlink_source": "Startup profile",
+    "evidence_source": "SEC Form D",
+    "evidence": "No Form D was found in this company's recent SEC filings, so there is no list of its people to compare.",
+    "result": "not_applicable",
+    "source_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000320187",
+    "checked_at": "2026-10-04T23:35:39.445433+00:00"
+   },
+   {
+    "check": "sec_capital_raised",
+    "claim": "Prior capital raised: not claimed on the profile",
+    "interlink_source": "Startup profile",
+    "evidence_source": "SEC Form D",
+    "evidence": "No Form D was found in this company's recent SEC filings, so there is no offering to compare.",
+    "result": "not_applicable",
+    "source_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000320187",
+    "checked_at": "2026-10-04T23:35:39.445433+00:00"
+   },
+   {
+    "check": "sec_revenue",
+    "claim": "Current revenue: not on the profile",
+    "interlink_source": "Startup profile",
+    "evidence_source": "SEC 10-K",
+    "evidence": "Revenue of $46,398,000,000 in its FY2026 10-K (period ending 2026-05-31), from SEC annual report data. It is shown for reference and not compared with the profile.",
+    "result": "public_record",
+    "source_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000320187",
+    "checked_at": "2026-10-04T23:35:39.445433+00:00"
+   }
+  ],
+  "domain": "",
+  "domain_registered_date": null,
+  "domain_lookup_error": "",
+  "claimed_founding_year": null,
+  "timeline_flags": [],
+  "created_at": "2026-10-04 23:35:39.432128+00:00"
+ }
+}

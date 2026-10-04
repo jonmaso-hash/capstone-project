@@ -1,0 +1,112 @@
+{
+ "report": {
+  "id": 83,
+  "document_id": 3122,
+  "engine_version": "td.3",
+  "overall_truth_score": null,
+  "credibility_risk": "unknown",
+  "summary": "Limited public evidence: none of the 2 claims could be verified or contradicted against a public source. Employees: no external data was found for this claim. Revenue: SEC EDGAR, FY2026 10-K (period ending 2026-05-31) reports $46.4 billion, but the deck's figure has no stated period, so the two could not be compared and the claim is not verified. Recent news headlines were reviewed as context only; they verify nothing.",
+  "details": {
+   "claims": [
+    {
+     "category": "employees",
+     "claimed_value": "81,500 people worldwide",
+     "claimed_value_numeric": 81500.0,
+     "unit": ""
+    },
+    {
+     "category": "revenue",
+     "claimed_value": "$52.8 billion, supported by wholesale growth and stabilization across cor",
+     "claimed_value_numeric": 52800000000.0,
+     "unit": ""
+    }
+   ],
+   "observed": [
+    {
+     "category": "revenue",
+     "observed_value": "46398000000.0",
+     "source": "SEC EDGAR",
+     "time_period": "FY2026 10-K (period ending 2026-05-31)",
+     "role": "can_establish",
+     "origin": "sec_filing"
+    }
+   ],
+   "comparison": [
+    {
+     "category": "employees",
+     "claimed_value": "81,500 people worldwide",
+     "claimed_value_numeric": 81500.0,
+     "observed_value": null,
+     "observed_value_numeric": null,
+     "observed_source": null,
+     "observed_registrant": null,
+     "observed_time_period": null,
+     "discrepancy_pct": null,
+     "claim_raw_text": "81,500 people worldwide",
+     "observed_raw_value": null,
+     "source_credibility": null,
+     "claim_period": null,
+     "observed_role": null,
+     "observed_origin": null,
+     "corroboration": [],
+     "context": []
+    },
+    {
+     "category": "revenue",
+     "claimed_value": "$52.8 billion, supported by wholesale growth and stabilization across cor",
+     "claimed_value_numeric": 52800000000.0,
+     "observed_value": "46398000000.0",
+     "observed_value_numeric": 46398000000.0,
+     "observed_source": "SEC EDGAR",
+     "observed_registrant": "0000320187",
+     "observed_time_period": "FY2026 10-K (period ending 2026-05-31)",
+     "discrepancy_pct": 13.8,
+     "claim_raw_text": "$52.8 billion, supported by wholesale growth and stabilization across cor",
+     "observed_raw_value": "46398000000.0",
+     "source_credibility": 0.95,
+     "claim_period": null,
+     "observed_role": "can_establish",
+     "observed_origin": "sec_filing",
+     "corroboration": [],
+     "context": []
+    }
+   ],
+   "source_diagnostics": {},
+   "provider_outcomes": {
+    "dataforb2b": "ambiguous"
+   },
+   "per_claim": [
+    {
+     "category": "employees",
+     "claimed": "81,500 people worldwide",
+     "observed": "No external data found",
+     "assessment": "No independent data was found to check the claimed headcount of 81,500 employees, so the figure could not be established either way.",
+     "explanation_source": "model"
+    },
+    {
+     "category": "revenue",
+     "claimed": "$52.8 billion, supported by wholesale growth and stabilization across cor",
+     "observed": "$46.4 billion (SEC EDGAR, FY2026 10-K (period ending 2026-05-31))",
+     "assessment": "Although SEC EDGAR shows a revenue figure for a Nike filing, the time period of the $52.8 billion claim is unknown, making it impossible to match against the observed data and leaving the claim unestablished.",
+     "explanation_source": "model"
+    }
+   ]
+  },
+  "created_at": "2026-10-04 23:36:13.787398+00:00"
+ },
+ "category_states": {
+  "employees": "no_data",
+  "revenue": "no_data"
+ },
+ "grounding_reasons": {
+  "employees": "no_external_evidence",
+  "revenue": "period_unknown"
+ },
+ "verifiability_stats": {
+  "total": 2,
+  "verified": 0,
+  "contradicted": 0,
+  "no_data": 2,
+  "pct": 0.0
+ }
+}

@@ -1,0 +1,35 @@
+{
+ "document": {
+  "id": 3123,
+  "filename": "nike_zelda_adversarial_test_deck.pptx",
+  "document_type": "business_valuation",
+  "source_entity": "NIKE, Inc.",
+  "uploaded_by_id": 295,
+  "total_pages": 10,
+  "total_word_count": 618,
+  "status": "analyzed",
+  "confidence_score": 0.5625,
+  "intelligence_rank": 0,
+  "error_message": "",
+  "verification_failed_at": null,
+  "verification_error": "",
+  "is_hidden_by_staff": false,
+  "valuation_tier": "preview",
+  "created_at": "2026-10-04 23:37:40.841664+00:00",
+  "updated_at": "2026-10-04 23:37:58.501055+00:00",
+  "processed_at": "2026-10-04 23:37:58.500736+00:00"
+ },
+ "valuation_report": {
+  "id": 23,
+  "document_id": 3123,
+  "business_overview": "NIKE, Inc. is a globally operating athletic footwear, apparel, and equipment company with disclosed annual revenue of $52.8 billion and a worldwide workforce of approximately 81,500 people. The company operates across mature and growth markets, with Greater China identified as a key but volatile demand region. Management is currently rebalancing marketplace execution while sustaining investment in product innovation, sport, and brand demand creation.",
+  "financial_summary": "• Annual Revenue: $52.8 billion (95% confidence, supported by wholesale growth and stabilization across core segments)\n• Team Size: 81,500 people worldwide (95% confidence)\n• Gross Margin: Not disclosed in submitted documents.\n• EBITDA / Operating Income: Not disclosed in submitted documents.\n• Net Income: Not disclosed in submitted documents.\n• Monthly Burn Rate: Not disclosed in submitted documents.\n• Growth Rate (YoY): Not disclosed in submitted documents.\n• Customer Retention / Churn Rate: Not disclosed in submitted documents.\n• Raise Amount / Use of Proceeds: Not disclosed in submitted documents.",
+  "risk_report": "1. Geographic Concentration Risk: Greater China is explicitly identified as a market where demand volatility can affect consolidated performance. No quantification of China revenue as a percentage of total is disclosed, making it impossible to size this exposure.\n2. Competitive Intensity Risk: The submitted documents acknowledge that competitive intensity in athletic footwear and apparel requires sustained innovation and marketing investment. Failure to maintain this investment cadence could erode market position, though specific competitor benchmarks or market share data are not disclosed.\n3. Marketplace Rebalancing Execution Risk: Management is described as actively rebalancing marketplace execution. This transition introduces operational uncertainty; the timeline, cost, or success metrics for this rebalancing are not disclosed.\n4. Missing Profitability Data Risk: No gross margin, EBITDA, operating income, or net income figures are disclosed. Valuation multiples applied to revenue alone carry elevated uncertainty — a business at $52.8 billion revenue could carry materially different enterprise value depending on profitability, which is entirely undisclosed here.\n5. Growth Rate Omission Risk: Year-over-year revenue growth rate is not disclosed. Given the scale of the business and stated marketplace rebalancing, it is unclear whether revenue is growing, stable, or declining — a critical valuation input that is absent from submitted documents.",
+  "valuation_summary": "Given that only top-line revenue ($52.8 billion) is disclosed, a revenue multiple methodology is the sole applicable approach. For large-cap, mature athletic apparel and footwear companies, market revenue multiples typically range from approximately 2.0x to 3.5x trailing revenue, reflecting the sector's brand value, global distribution, and competitive moat, tempered by margin uncertainty and market volatility. Applying these multiples to $52.8 billion yields a valuation range of approximately $105.6 billion (low, at 2.0x) to $184.8 billion (high, at 3.5x). It must be noted that without EBITDA, net income, growth rate, or margin data, these estimates carry significant uncertainty. An EBITDA-based valuation — which would typically yield a more precise range — cannot be performed with the information submitted. The range provided should be treated as indicative only.",
+  "valuation_low": "105600000000.00",
+  "valuation_high": "184800000000.00",
+  "confidence_score": 0.5625,
+  "created_at": "2026-10-04 23:37:58.470821+00:00",
+  "updated_at": "2026-10-04 23:37:58.470882+00:00"
+ }
+}
