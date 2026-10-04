@@ -27,6 +27,7 @@ env = environ.Env(
     # see pages/tests_settings_contract.py.
     COMPANYENRICH_API_KEY=(str, ''),
     FILED_API_KEY=(str, ''),
+    DATA4B2B_API_KEY=(str, ''),
     STREAM_API_KEY=(str, ''),
     STREAM_API_SECRET=(str, ''),
     EMAIL_HOST_USER=(str, ''),
@@ -505,6 +506,11 @@ COMPANYENRICH_API_KEY = env('COMPANYENRICH_API_KEY')
 # contract forbids an env() call that is required at import, and an absent key
 # must degrade to UNCONFIGURED rather than break startup.
 FILED_API_KEY = env('FILED_API_KEY')
+
+# DataForB2B: LinkedIn-derived company data (zelda_api/dataforb2b.py). Server-
+# side only; same empty-default contract, so an absent key degrades to
+# UNCONFIGURED.
+DATA4B2B_API_KEY = env('DATA4B2B_API_KEY')
 
 # Tests must not reach the network, enforced rather than promised. Clearing the
 # provider keys does not achieve it: PowerShell's `$env:X = ''` deletes the

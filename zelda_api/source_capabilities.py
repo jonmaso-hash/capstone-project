@@ -76,6 +76,20 @@ CAPABILITIES = {
         'customers': INFORMATIONAL_ONLY,
         'funding_raised': INFORMATIONAL_ONLY,
     },
+    # DataForB2B (zelda_api/dataforb2b.py). LinkedIn-derived, and measured
+    # (2026-10-03): `size.employees` is LinkedIn-associated profiles, not
+    # headcount -- Nike read 106,208 against a filed ~73,000 -- so it is
+    # context only. Funding rounds matched the public record for a VC-backed
+    # private company but invented a round for a public one, so they may
+    # corroborate and never establish. No revenue or customer fields exist.
+    # Declared here so its authority has one home; it is deliberately NOT in
+    # DataSourceManager.INTEGRATIONS until the adapter task wires it in.
+    'dataforb2b': {
+        'revenue': UNAVAILABLE,
+        'employees': INFORMATIONAL_ONLY,
+        'customers': UNAVAILABLE,
+        'funding_raised': CAN_CORROBORATE,
+    },
 }
 
 
@@ -96,6 +110,7 @@ SOURCE_ORIGINS = {
     'sec': SEC_FILING,
     'crunchbase': THIRD_PARTY_DATABASE,
     'news': NEWS,
+    'dataforb2b': LINKEDIN_DERIVED,
 }
 
 
