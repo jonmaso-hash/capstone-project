@@ -150,6 +150,7 @@ jobs:
           zelda_api.tests_page_provenance
           zelda_api.tests_canonical_presentation
           zelda_api.tests_observation_idempotence
+          zelda_api.tests_extraction_failures
           pages.tests_no_network_in_tests
           zelda_api.tests_filed
           zelda_api.tests_jurisdiction

@@ -87,6 +87,34 @@ def scan_pitch_deck(uploaded_file) -> Dict:
         return {"error": "Failed to parse document."}
 
 
+class ExtractionError(Exception):
+    """
+    Extraction failed. Never text: before this, a missing parser returned the
+    sentence "PPTX parsing requires python-pptx..." AS the document, to be
+    chunked and analyzed, and any other failure returned "" with nothing to
+    tell it from an image-only deck (Nike baseline L-001).
+
+    reason: 'dependency_missing' -- the server cannot read this type at all
+            'unreadable_file'    -- this file could not be opened or parsed
+            'unsupported_format' -- not a type Zelda extracts
+    """
+    REASONS = ('dependency_missing', 'unreadable_file', 'unsupported_format')
+
+    def __init__(self, reason, detail=''):
+        assert reason in self.REASONS, reason
+        super().__init__(f'{reason}: {detail}' if detail else reason)
+        self.reason = reason
+
+
+# What each failure tells the person who uploaded the file. No exception text.
+EXTRACTION_FAILURE_MESSAGES = {
+    'dependency_missing': "Zelda can't read this file type right now. Please try again later.",
+    'unreadable_file': "Zelda couldn't open this file. It may be damaged or password-protected "
+                       "-- please upload it again or export a fresh copy.",
+    'unsupported_format': "Zelda can read PDF, PowerPoint (.pptx) and text files.",
+}
+
+
 # Page/slide provenance, decided where it is known: at extraction. Each page
 # or slide begins with a reserved marker line naming its REAL number, and the
 # chunker splits on these markers instead of guessing boundaries afterwards
@@ -135,11 +163,11 @@ def _extract_pdf_text(pdf_file):
             text += page_marker('page', number) + "\n" + (page.extract_text() or '') + "\n"
         return text, len(reader.pages)
     except ImportError:
-        logger.warning("PyPDF2 not installed. Returning placeholder text.")
-        return "PDF parsing requires PyPDF2. Install with: pip install PyPDF2", 0
+        logger.error("PyPDF2 is not installed; PDF extraction is unavailable.")
+        raise ExtractionError('dependency_missing', 'PyPDF2')
     except Exception as e:
-        logger.error(f"PDF extraction failed: {str(e)}")
-        return "", 0
+        logger.error(f"PDF extraction failed: {type(e).__name__}")
+        raise ExtractionError('unreadable_file', type(e).__name__) from e
 
 
 def _extract_pptx_text(pptx_file):
@@ -156,11 +184,11 @@ def _extract_pptx_text(pptx_file):
                     text += shape.text + "\n"
         return text, len(prs.slides)
     except ImportError:
-        logger.warning("python-pptx not installed. Returning placeholder text.")
-        return "PPTX parsing requires python-pptx. Install with: pip install python-pptx", 0
+        logger.error("python-pptx is not installed; PPTX extraction is unavailable.")
+        raise ExtractionError('dependency_missing', 'python-pptx')
     except Exception as e:
-        logger.error(f"PPTX extraction failed: {str(e)}")
-        return "", 0
+        logger.error(f"PPTX extraction failed: {type(e).__name__}")
+        raise ExtractionError('unreadable_file', type(e).__name__) from e
 
 
 def _extract_metrics(text: str) -> Dict:
@@ -346,6 +374,10 @@ def extract_text_from_file(uploaded_file):
     the count, it just wasn't being returned). Returns (text, page_count);
     .txt has no natural pagination, so it's always 1 "page."
     Used by the DocumentIngestView to get raw text for the pipeline.
+
+    Raises ExtractionError when the file cannot be read; never returns
+    an error message or an empty string in place of the document. ("" still
+    means the file opened and holds no text, e.g. an image-only deck.)
     """
     try:
         filename = uploaded_file.name.lower()
@@ -359,8 +391,9 @@ def extract_text_from_file(uploaded_file):
             text = uploaded_file.read().decode('utf-8', errors='ignore')
             return text, 1 if text else 0
         else:
-            logger.error(f"Unsupported file format for extraction: {filename}")
-            return "", 0
+            raise ExtractionError('unsupported_format', filename.rsplit('.', 1)[-1])
+    except ExtractionError:
+        raise
     except Exception as e:
-        logger.error(f"Failed to extract text: {str(e)}")
-        return "", 0
+        logger.error(f"Failed to extract text: {type(e).__name__}")
+        raise ExtractionError('unreadable_file', type(e).__name__) from e
