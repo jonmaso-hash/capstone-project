@@ -2987,7 +2987,10 @@ class TruthDeltaEngineTests(TestCase):
 
         self.assertEqual(report.overall_truth_score, 88.0)
         self.assertEqual(report.credibility_risk, 'low')
-        self.assertEqual(report.summary, 'Claim is close to the observed figure.')
+        # R-003: the summary is composed from the canonical state; the model's
+        # summary is not stored (zelda_api/tests_summary_follows_verdict.py).
+        self.assertNotIn('Claim is close to the observed figure.', report.summary)
+        self.assertIn('1 of 1 checkable claim verified', report.summary)
         self.assertEqual(len(report.details['claims']), 1)
         self.assertEqual(len(report.details['observed']), 1)
 
