@@ -274,7 +274,9 @@ class DashboardCountsFromEvidenceNotProseTests(TestCase):
         counted as "1/2 verified" beside a "0 verified" stat card.
         """
         body = self.squeezed()
-        self.assertIn("rows.filter(r=>r.state==='verified')", body)        # the rollup count
+        # The rollup shows the server's canonical coverage sentence and counts
+        # nothing itself (private-company presentation).
+        self.assertIn('SERVER_TRUTH_DATA.coverage_sentence', body)
         self.assertIn('CLAIM_STATE_ICONS[row.state]', body)                 # the icon
         self.assertIn('row.grounded?row.observed:null', body)              # the observed cell
         self.assertNotIn('rows.filter(r=>r.grounded)', body)
@@ -306,10 +308,10 @@ class MemoDoesNotClaimExternalBackingTests(_GroundingCast):
 
     def test_no_evidence_produces_no_backing_claim(self):
         section = self.memo_section(self.report())
-        self.assertEqual(section['coverage']['verified'], 0)
-        self.assertEqual(section['no_data_count'], 2)
+        self.assertEqual(section['counts']['verified'], 0)
+        self.assertEqual(section['counts']['not_established'], 2)
 
     def test_evidence_produces_a_backing_claim(self):
         section = self.memo_section(self.report(observed=[self.evidence('arr')]))
-        self.assertEqual(section['coverage']['verified'], 1)
-        self.assertEqual(section['no_data_count'], 1)
+        self.assertEqual(section['counts']['verified'], 1)
+        self.assertEqual(section['counts']['not_established'], 1)

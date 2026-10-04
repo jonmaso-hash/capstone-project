@@ -4320,7 +4320,7 @@ class StandaloneMemoRealDataTests(TestCase):
         )
         r = self._get()
         self.assertContains(r, 'What Zelda noticed')
-        self.assertContains(r, 'External data backs 1 of 2 checkable claims')
+        self.assertContains(r, 'External data backs 1 of 2 claims')
         self.assertContains(r, 'No public source was found to check employees')
 
     def test_what_zelda_noticed_omitted_when_data_cannot_support_an_observation(self):
@@ -4347,7 +4347,7 @@ class StandaloneMemoRealDataTests(TestCase):
         r = self._get()
         self.assertContains(r, 'Worth investigating')
         self.assertContains(r, 'Customer concentration is high')
-        self.assertContains(r, 'Customers — not externally verified')
+        self.assertContains(r, 'Customers — not established')
 
     def test_credibility_signal_and_not_scored_state(self):
         from zelda_api.truth_delta_models import TruthDeltaReport

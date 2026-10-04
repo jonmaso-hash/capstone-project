@@ -124,38 +124,74 @@ def truth_delta_signal(pitch_deck_doc):
     if not report:
         return None
     from .truth_delta_models import ClaimedDatapoint
-    coverage = report.verifiability_stats()  # {total, verified, pct}; pct None when total 0
+    counts = coverage_counts(report.verifiability_stats())
     return {
         'overall_truth_score': report.overall_truth_score,
         'summary': report.summary,
         'claims_checked': ClaimedDatapoint.objects.filter(document=pitch_deck_doc).count(),
-        'coverage': coverage,
-        'no_data_count': coverage['total'] - coverage['verified'],
-        'coverage_sentence': coverage_sentence(coverage),
+        # THE display counts. Templates read these and do no arithmetic of
+        # their own: `total - verified` here once filed contradicted claims
+        # under "No external data" and hid them.
+        'counts': counts,
+        'coverage_line': coverage_line(counts),
+        'coverage_sentence': coverage_sentence(counts),
         'document_id': pitch_deck_doc.id,
     }
 
 
-def coverage_sentence(coverage):
+def coverage_counts(stats):
     """
-    What the verification established, in words, from the canonical counts
-    (verifiability_stats). Replaces fixed copy that said "Zelda found external
-    support for several of the deck's checkable claims" whatever the counts
-    were -- including when none were verified (Nike baseline L-008).
+    The one source of every displayed coverage count, from
+    TruthDeltaReport.verifiability_stats():
+
+        {'verified', 'contradicted', 'not_established', 'total', 'scoreable'}
+
+    Every surface reads these exact values, and none reconstructs them.
+    `not_established` is the `no_data` count and NEVER includes a contradicted
+    claim; `scoreable` (verified + contradicted) is the R-003b denominator.
+    Counts only -- there is deliberately no percentage here. A share of claims
+    verified reads as a grade, and for a private company with little public
+    evidence it is a punitive 0%. The only percentage-like number on a report
+    is the Evidence Credibility score, and only when canonical_score() has one.
     """
-    total = coverage.get('total') or 0
+    stats = stats or {}
+    total = stats.get('total') or 0
+    verified = stats.get('verified') or 0
+    contradicted = stats.get('contradicted') or 0
+    not_established = stats.get('no_data')
+    if not_established is None:         # a partial dict, e.g. from a caller's test
+        not_established = total - verified - contradicted
+    return {'verified': verified, 'contradicted': contradicted, 'not_established': not_established,
+            'total': total, 'scoreable': verified + contradicted}
+
+
+def coverage_line(counts):
+    """`1 verified · 1 contradicted · 1 not established (of 3)` -- counts, never a percentage."""
+    return (f"{counts['verified']} verified · {counts['contradicted']} contradicted · "
+            f"{counts['not_established']} not established (of {counts['total']})")
+
+
+def coverage_sentence(stats):
+    """
+    What the verification established, in words, from the canonical counts.
+
+    With nothing scoreable it says so plainly -- "Limited public evidence" --
+    rather than opening on a zero. It used to read "0 of 3 checkable claims
+    verified": a private company's claims with no public source were never
+    checkable, and the zero read as a failed check. Replaced, in turn, fixed
+    copy that said "Zelda found external support for several of the deck's
+    checkable claims" whatever the counts were (Nike baseline L-008).
+    """
+    counts = coverage_counts(stats)
+    total = counts['total']
     if not total:
         return "None of the deck's claims had a public source to check against."
-    verified = coverage.get('verified') or 0
-    contradicted = coverage.get('contradicted') or 0
-    unconfirmed = total - verified - contradicted
-    plural = lambda n, word: f"{n} {word}{'' if n == 1 else 's'}"
-    parts = [f"{verified} of {plural(total, 'checkable claim')} verified against a public source"]
-    if contradicted:
-        parts.append(f"{contradicted} contradicted")
-    if unconfirmed:
-        parts.append(f"{unconfirmed} could not be confirmed")
-    return '; '.join(parts) + '.'
+    if not counts['scoreable']:
+        which = 'the claim' if total == 1 else f'none of the {total} claims'
+        verb = 'could not' if total == 1 else 'could'
+        return (f"Limited public evidence: {which} {verb} be verified or contradicted "
+                f"against a public source.")
+    return coverage_line(counts) + '.'
 
 
 # Why a category could not be established, for "What Zelda noticed".
@@ -219,16 +255,29 @@ def zelda_report_observations(memo, pitch_deck_doc):
 
     # 1. Verification coverage — straight from the Truth Delta report.
     if report:
-        stats = report.verifiability_stats()      # {total, verified, pct}
-        states = report.category_states()          # {category: 'verified'|'no_data'}
-        if stats['total']:
+        counts = coverage_counts(report.verifiability_stats())
+        states = report.category_states()          # {category: 'verified'|'contradicted'|'no_data'}
+        if counts['total']:
             verified_cats = sorted(c for c, s in states.items() if s == 'verified')
+            contradicted_cats = sorted(c for c, s in states.items() if s == 'contradicted')
             no_data_cats = sorted(c for c, s in states.items() if s == 'no_data')
             reasons = report.grounding_reasons()
-            if stats['verified']:
+            if contradicted_cats:
+                # First, and never folded into "not established": a real
+                # contradiction must stay visible. This section used to name
+                # only verified and no_data categories, so one vanished here.
+                sentence = (f"{_humanize_list(contradicted_cats)}: the public figure differs "
+                            f"for a comparable period.")
+                noticed.append(sentence[0].upper() + sentence[1:])
+                for c in contradicted_cats:
+                    worth.append({
+                        'topic': f"{str(c).replace('_', ' ').capitalize()} — contradicted by a public source",
+                        'target': 'truth_delta',
+                    })
+            if counts['verified']:
                 noticed.append(
-                    f"External data backs {stats['verified']} of {stats['total']} "
-                    f"checkable claim{'s' if stats['total'] != 1 else ''}"
+                    f"External data backs {counts['verified']} of {counts['total']} "
+                    f"claim{'s' if counts['total'] != 1 else ''}"
                     + (f" ({_humanize_list(verified_cats)})." if verified_cats else ".")
                 )
             if no_data_cats:
@@ -243,7 +292,7 @@ def zelda_report_observations(memo, pitch_deck_doc):
                     noticed.append(sentence[0].upper() + sentence[1:] + '.')
                 for c in no_data_cats[:2]:
                     worth.append({
-                        'topic': f"{str(c).replace('_', ' ').capitalize()} — not externally verified",
+                        'topic': f"{str(c).replace('_', ' ').capitalize()} — not established",
                         'target': 'truth_delta',
                     })
         elif not states:
@@ -469,14 +518,10 @@ def render_ic_memo_markdown(context):
             lines.append("**Evidence Credibility:** not scored — no claim could be verified or contradicted against a public source")
         if td['summary']:
             lines.append(td['summary'])
-        cov = td['coverage']
         if td['claims_checked']:
             lines.append(f"**Claims checked:** {td['claims_checked']}  ")
-        if cov['total']:
-            lines.append(
-                f"**Evidence coverage:** {cov['verified']} verified against public sources, "
-                f"{td['no_data_count']} with no external data (of {cov['total']} claim categories)"
-            )
+        if td['counts']['total']:
+            lines.append(f"**Evidence coverage:** {td['coverage_line']}")
         else:
             lines.append("**Evidence coverage:** no verifiable claims were extracted from the deck, so there was nothing to cross-check against public sources")
         lines.append('')

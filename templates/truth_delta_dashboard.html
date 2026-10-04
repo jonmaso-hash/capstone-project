@@ -728,12 +728,12 @@
                 spanning one renders the note onto the page.
                 {% endcomment %}
                 <div class="stat-value" style="color: var(--td-red);">{{ contradicted_count }}</div>
-                <div class="stat-label">Diverges</div>
+                <div class="stat-label">Contradicted</div>
             </div>
             {% endif %}
             <div class="stat-card">
                 <div class="stat-value" style="color: var(--td-yellow);">{{ unverified_count }}</div>
-                <div class="stat-label">Unverified</div>
+                <div class="stat-label">Not established</div>
             </div>
         </div>
 
@@ -749,8 +749,8 @@
             <div class="small fw-bold" style="color: var(--td-text);">Evidence Coverage</div>
             <canvas id="evidenceCoverageChart" width="400" height="92" style="max-width: 100%; margin-top: 0.25rem;"></canvas>
             <p class="mb-0 mt-1" style="font-size: 0.75rem; color: #64748b;">
-                Of the claim categories Zelda cross-checked, how many it could confirm against
-                independent public sources ({% zelda_source_names %}).
+                Of the claim categories Zelda cross-checked, how many public sources
+                ({% zelda_source_names %}) verified, contradicted, or could not establish.
             </p>
         </div>
         {% elif report %}
@@ -889,6 +889,7 @@
 {{ details|json_script:"truth-delta-details-json" }}
 {{ summary|default:"Verification pending — no public data found for this company."|json_script:"truth-delta-summary-json" }}
 {{ credibility_risk|default:"pending"|json_script:"truth-delta-risk-json" }}
+{{ coverage_sentence|default:""|json_script:"truth-delta-coverage-json" }}
 {{ clarification_requests|json_script:"truth-delta-clarifications-json" }}
 
 <!-- JAVASCRIPT ENGINE FOR TRUTH DELTA UI -->
@@ -923,6 +924,9 @@ const SERVER_TRUTH_DATA = {
     credibility_risk: _readJsonScript('truth-delta-risk-json', 'pending'),
     summary: _readJsonScript('truth-delta-summary-json', 'Verification pending — no public data found for this company.'),
     claims_analyzed: {{ claims_analyzed|default:0 }},
+    // ic_memo.coverage_sentence over ic_memo.coverage_counts -- the rollup
+    // shows this text and computes nothing (no percentage, no arithmetic).
+    coverage_sentence: _readJsonScript('truth-delta-coverage-json', ''),
     claims_flagged: 0,
     verification_rate: 0,
     discrepancy_rate: 0,
@@ -1015,7 +1019,9 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
             // not compare (R-003b).
             scoreElement.textContent = 'N/A';
             scoreElement.className = 'score-value medium-risk';
-            riskElement.textContent = 'INSUFFICIENT EVIDENCE';
+            // Not "insufficient evidence", which can read as a judgement of the
+            // company: Zelda has too little comparable public evidence to score.
+            riskElement.textContent = 'NOT SCORED · LIMITED PUBLIC EVIDENCE';
             riskElement.className = 'score-risk risk-medium';
         } else {
             scoreElement.textContent = Math.round(score);
@@ -1028,6 +1034,9 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
         document.getElementById('truthSummaryText').textContent = data.summary ||
             'Verification pending — no public data found for this company.';
 
+        if (data.coverage_sentence && typeof SERVER_TRUTH_DATA !== 'undefined') {
+            SERVER_TRUTH_DATA.coverage_sentence = data.coverage_sentence;   // the API's copy, same helper
+        }
         renderClaimsSection(data.details || {});
     }
 
@@ -1088,11 +1097,11 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
         // that text is written by a model, and reading verification out of it
         // let a sentence stand in for evidence.
         if (rollup) {
-            // The canonical state, as the stat cards count it -- not `grounded`,
-            // which only means an external figure exists to show.
-            const verifiedCount = rows.filter(r => r.state === 'verified').length;
-            const pct = Math.round((verifiedCount / rows.length) * 1000) / 10;
-            let text = `${verifiedCount}/${rows.length} claims verified against external data (${pct}%)`;
+            // The server's coverage sentence (ic_memo.coverage_sentence over
+            // coverage_counts): counts, never a percentage. It used to read
+            // a share of claims verified with a percentage -- a grade a
+            // private company with little public evidence always failed.
+            let text = (typeof SERVER_TRUTH_DATA !== 'undefined' && SERVER_TRUTH_DATA.coverage_sentence) || '';
             // SERVER_TRUTH_DATA.claims_analyzed is the TRUE total; rows.length
             // is capped to 3 for Lite (see truth_delta_ui_view/TruthDeltaScoreView),
             // so a gap between them means there's more behind Zelda AI.
@@ -1100,7 +1109,7 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
                 text += ` — showing ${rows.length} of ${SERVER_TRUTH_DATA.claims_analyzed}, upgrade to Zelda AI to see the rest`;
             }
             rollup.textContent = text;
-            rollup.style.display = 'block';
+            rollup.style.display = text ? 'block' : 'none';
         }
     }
 
@@ -1439,16 +1448,18 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Evidence Coverage chart — reads the two counts the Django view already
-// computed from report.category_states() (same numbers as the stat cards);
-// nothing is recalculated here.
+// Evidence Coverage chart — reads the three counts the view took from
+// ic_memo.coverage_counts() (the same numbers as the stat cards); nothing is
+// recalculated here. Contradicted is its own red series: it was missing, and
+// a real contradiction must stay visible.
 (function () {
     const el = document.getElementById('evidenceCoverageChart');
     if (!el || typeof Chart === 'undefined') return;
 
     const verified = {{ verified_count|default:0 }};
-    const noData = {{ unverified_count|default:0 }};
-    const total = verified + noData;
+    const contradicted = {{ contradicted_count|default:0 }};
+    const notEstablished = {{ unverified_count|default:0 }};
+    const total = {{ claims_analyzed|default:0 }};
 
     const wrap = el.closest('.td-evidence-coverage');
     if (total === 0) {                 // belt-and-suspenders: the template already
@@ -1456,7 +1467,7 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
         return;
     }
 
-    const GREEN = '#10b981', AMBER = '#f59e0b', INK = '#1e293b';
+    const GREEN = '#10b981', RED = '#ef4444', AMBER = '#f59e0b', INK = '#1e293b';
 
     new Chart(el.getContext('2d'), {
         type: 'bar',
@@ -1465,7 +1476,9 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
             datasets: [
                 { label: 'Verified', data: [verified],
                   backgroundColor: GREEN, borderColor: '#ffffff', borderWidth: 2, borderRadius: 4, borderSkipped: false },
-                { label: 'No external data', data: [noData],
+                { label: 'Contradicted', data: [contradicted],
+                  backgroundColor: RED, borderColor: '#ffffff', borderWidth: 2, borderRadius: 4, borderSkipped: false },
+                { label: 'Not established', data: [notEstablished],
                   backgroundColor: AMBER, borderColor: '#ffffff', borderWidth: 2, borderRadius: 4, borderSkipped: false },
             ],
         },
@@ -1502,8 +1515,8 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
                         title: function () { return ''; },
                         label: function (ctx) {
                             const n = ctx.parsed.x;
-                            const pct = Math.round(n / total * 100);
-                            return ' ' + ctx.dataset.label + ': ' + n + ' of ' + total + ' (' + pct + '%)';
+                            // Counts only: coverage is not a grade.
+                            return ' ' + ctx.dataset.label + ': ' + n + ' of ' + total;
                         },
                     },
                 },

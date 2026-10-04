@@ -89,7 +89,7 @@ class ClaimsAnalyzedCountTests(TestCase):
         for user in (self.owner, self.viewer):
             with self.subTest(user=user.username):
                 html = self._page(user).content.decode()
-                verified, unverified = _stat(html, 'Verified'), _stat(html, 'Unverified')
+                verified, unverified = _stat(html, 'Verified'), _stat(html, 'Not established')
                 # Two categories have a stored datapoint; customers and
                 # team_size have only the model's prose.
                 self.assertEqual((verified, unverified), (2, 2))

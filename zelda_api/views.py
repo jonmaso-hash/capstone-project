@@ -919,14 +919,17 @@ def truth_delta_ui_view(request, document_id):
     # not a re-verification, so the evidence state itself does not move.
     from .truth_delta_models import open_dispute_categories
     disputed_categories = sorted(open_dispute_categories(report))
-    verified_count = sum(1 for s in category_states.values() if s == 'verified')
-    # "no external data was found" and "the evidence disagrees" are different
-    # findings; summing them into one number hides the second.
-    contradicted_count = sum(1 for s in category_states.values() if s == 'contradicted')
-    unverified_count = sum(1 for s in category_states.values() if s == 'no_data')
-    # "Claims Analyzed" counts the same categories as Verified/Unverified, not
-    # the extracted ClaimedDatapoint rows, so the three cards always add up.
-    claims_analyzed = verified_count + contradicted_count + unverified_count
+    # The display counts, from the one helper every surface uses
+    # (ic_memo.coverage_counts) -- never recomputed here. "Not established" and
+    # "the evidence disagrees" are different findings; summing them hides the second.
+    from .ic_memo import coverage_counts, coverage_sentence
+    counts = coverage_counts(report.verifiability_stats() if report else {})
+    verified_count = counts['verified']
+    contradicted_count = counts['contradicted']
+    unverified_count = counts['not_established']     # shown as "Not established"
+    # "Claims Analyzed" counts the same categories as the other cards, not the
+    # extracted ClaimedDatapoint rows, so the cards always add up.
+    claims_analyzed = counts['total']
 
     # Work Done — concrete analysis work on the underlying document.
     # work_done_summary keeps only genuinely-computed positive integers,
@@ -960,6 +963,7 @@ def truth_delta_ui_view(request, document_id):
         'verified_count': verified_count,
         'contradicted_count': contradicted_count,
         'unverified_count': unverified_count,
+        'coverage_sentence': coverage_sentence(counts) if counts['total'] else '',
         'grounding_reasons': report.grounding_reasons() if report else {},
         # Read off report.details, not the `details` above -- that one is
         # trimmed for Lite. Which entity was checked is attribution, not

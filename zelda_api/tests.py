@@ -512,9 +512,9 @@ class ZeldaReportObservationsTests(TestCase):
                                    'source': 'SEC EDGAR', 'time_period': 'FY2025'}]},
         )
         obs = zelda_report_observations(memo, doc)
-        self.assertTrue(any('backs 1 of 2 checkable claims' in n for n in obs['noticed']))
+        self.assertTrue(any('backs 1 of 2 claims' in n for n in obs['noticed']))
         self.assertTrue(any('No public source was found to check employees' in n for n in obs['noticed']))
-        self.assertIn({'topic': 'Employees — not externally verified', 'target': 'truth_delta'},
+        self.assertIn({'topic': 'Employees — not established', 'target': 'truth_delta'},
                       obs['worth_investigating'])
 
     def test_analysis_depth_observation_from_insight_confidence(self):
@@ -783,9 +783,9 @@ class ICMemoTests(TestCase):
         })
         td = build_ic_memo_context(self.application)['truth_delta']
         self.assertEqual(td['claims_checked'], 3)
-        self.assertEqual(td['coverage'], {'total': 2, 'verified': 1, 'contradicted': 0,
-                                          'no_data': 1, 'pct': 50.0})
-        self.assertEqual(td['no_data_count'], 1)
+        self.assertEqual(td['counts'], {'verified': 1, 'contradicted': 0, 'not_established': 1,
+                                        'total': 2, 'scoreable': 1})
+        self.assertNotIn('no_data_count', td)        # the template-side arithmetic is gone
         self.assertEqual(td['document_id'], doc.id)
 
     def test_coverage_embed_renders_bar_and_link_when_populated(self):
@@ -801,8 +801,9 @@ class ICMemoTests(TestCase):
         })
         html = self._ic_memo_html(doc)
         self.assertIn('Verified against public sources', html)
-        self.assertIn('No external data', html)
-        self.assertIn('of 2 claim categories', html)
+        self.assertIn('Not established', html)
+        self.assertIn('Contradicted', html)
+        self.assertIn('(of 2)', html)
         self.assertIn(reverse('zelda_api:truth_delta_ui', args=[doc.id]), html)
 
     def test_coverage_embed_no_external_data_keeps_not_scored_state(self):
@@ -814,8 +815,8 @@ class ICMemoTests(TestCase):
                                  details={'claims': [{'category': 'revenue'}, {'category': 'traction'}], 'per_claim': []})
         html = self._ic_memo_html(doc)
         self.assertIn('not scored', html)                 # PR #3 coherence state intact
-        self.assertIn('No external data — 2', html)
-        self.assertIn('of 2 claim categories', html)
+        self.assertIn('Not established — 2', html)
+        self.assertIn('(of 2)', html)
 
     def test_coverage_embed_shows_sentence_when_no_claims_extracted(self):
         doc = self._make_pitch_deck_doc(with_memo=True)
@@ -837,7 +838,7 @@ class ICMemoTests(TestCase):
         })
         md = render_ic_memo_markdown(build_ic_memo_context(self.application))
         self.assertIn('**Claims checked:** 1', md)
-        self.assertIn('1 verified against public sources', md)
+        self.assertIn('**Evidence coverage:** 1 verified · 0 contradicted · 0 not established (of 1)', md)
 
     def test_markdown_renders_without_error_for_bare_founder(self):
         from .ic_memo import build_ic_memo_context, render_ic_memo_markdown
@@ -2992,7 +2993,7 @@ class TruthDeltaEngineTests(TestCase):
         # R-003: the summary is composed from the canonical state; the model's
         # summary is not stored (zelda_api/tests_summary_follows_verdict.py).
         self.assertNotIn('Claim is close to the observed figure.', report.summary)
-        self.assertIn('1 of 1 checkable claim verified', report.summary)
+        self.assertIn('1 verified · 0 contradicted · 0 not established (of 1)', report.summary)
         self.assertEqual(len(report.details['claims']), 1)
         self.assertEqual(len(report.details['observed']), 1)
 
