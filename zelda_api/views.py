@@ -1410,7 +1410,7 @@ def confirm_analyze_founder_profile(request, founder_username):
         }, status=402)
 
     try:
-        from .utils import UNREADABLE_DOCUMENT_MESSAGE, extract_text_from_file, has_usable_text
+        from .utils import UNREADABLE_DOCUMENT_MESSAGE, extract_text_from_file, has_usable_text, strip_page_markers
 
         # The same dispatcher the upload path uses, so a PowerPoint deck is read
         # as a PowerPoint. Read through storage: files on S3 have no local path.
@@ -1427,7 +1427,7 @@ def confirm_analyze_founder_profile(request, founder_username):
             filename=application.pitch_deck.name,
             source_entity=application.company_name or founder_user.username,
             document_type='pitch_deck',
-            raw_text_preview=raw_text[:1000],
+            raw_text_preview=strip_page_markers(raw_text)[:1000],
             raw_text_full=raw_text,
             total_pages=page_count,
             status='ingested',

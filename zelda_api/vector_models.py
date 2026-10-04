@@ -159,7 +159,11 @@ class DocumentChunk(FoundryStandardMixin, models.Model):
     
     # Position in document
     chunk_index = models.IntegerField(help_text="Order in the document (0-indexed)")
-    page_number = models.IntegerField(default=0, help_text="Page this chunk came from")
+    # The REAL slide/page number from extraction markers, or None when the
+    # source has none (zelda_api.chunking). Never a split position. Rows
+    # chunked before this carry a legacy split index until reprocessed.
+    page_number = models.IntegerField(null=True, blank=True, default=None,
+                                      help_text="Slide/page this chunk came from; null when unknown")
     section_title = models.CharField(max_length=255, blank=True, help_text="e.g., 'Problem Statement', 'Market Size'")
     
     # Content

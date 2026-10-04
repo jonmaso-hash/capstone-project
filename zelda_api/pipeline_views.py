@@ -81,7 +81,7 @@ class DocumentIngestView(APIView):
 
         try:
             # Extract text from file
-            from .utils import UNREADABLE_DOCUMENT_MESSAGE, extract_text_from_file, has_usable_text
+            from .utils import UNREADABLE_DOCUMENT_MESSAGE, extract_text_from_file, has_usable_text, strip_page_markers
             extracted_text, page_count = extract_text_from_file(uploaded_file)
 
             # Whitespace counts as nothing: a deck of empty text boxes extracts
@@ -98,9 +98,9 @@ class DocumentIngestView(APIView):
                 document_type=document_type,
                 source_entity=source_entity,
                 uploaded_by=request.user,
-                raw_text_preview=extracted_text[:1000],
+                raw_text_preview=strip_page_markers(extracted_text)[:1000],
                 raw_text_full=extracted_text,
-                total_word_count=len(extracted_text.split()),
+                total_word_count=len(strip_page_markers(extracted_text).split()),
                 total_pages=page_count,
                 status='ingested',
                 **({'valuation_tier': valuation_tier} if valuation_tier else {}),
@@ -623,7 +623,8 @@ class DocumentRAGView(APIView):
             context_text = ("Retrieved Context:\n\n" if results else
                             "No relevant evidence was found in this document for this query.\n")
             for i, result in enumerate(results, 1):
-                context_text += f"[Source {i} - Page {result['page']}, {result['section']}]\n"
+                page = result['page'] if result['page'] is not None else 'unknown'
+                context_text += f"[Source {i} - Page {page}, {result['section']}]\n"
                 context_text += result['text']
                 context_text += f"\n[Relevance: {result['relevance']:.1%}]\n\n"
             

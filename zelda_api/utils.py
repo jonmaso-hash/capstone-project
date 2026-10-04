@@ -65,6 +65,7 @@ def scan_pitch_deck(uploaded_file) -> Dict:
         else:
             return {"error": "Unsupported file format. Use PDF, PPTX, or TXT."}
         
+        extracted_text = strip_page_markers(extracted_text)
         if not extracted_text.strip():
             return {"error": "No readable text found in document."}
         
@@ -86,6 +87,43 @@ def scan_pitch_deck(uploaded_file) -> Dict:
         return {"error": "Failed to parse document."}
 
 
+# Page/slide provenance, decided where it is known: at extraction. Each page
+# or slide begins with a reserved marker line naming its REAL number, and the
+# chunker splits on these markers instead of guessing boundaries afterwards
+# (the old heuristic made "page 4" mean "the fourth thing a regex split off").
+# Kept inside the text so extract_text_from_file's (text, pages) contract and
+# raw_text_full -- which reprocessing feeds back in -- carry provenance as-is.
+# Anything that checks, counts or displays text strips them first.
+PAGE_MARKER_RE = re.compile(r'^\[\[zelda:(slide|page) (\d+)\]\]$', re.MULTILINE)
+
+
+def page_marker(kind, number):
+    return f'[[zelda:{kind} {number}]]'
+
+
+def strip_page_markers(text):
+    return PAGE_MARKER_RE.sub('', text or '')
+
+
+def split_pages(text):
+    """
+    [(page_number, segment), ...] in document order. Text before the first
+    marker, or text with no markers at all, has page_number None: unknown,
+    never a number made up from its position.
+    """
+    text = text or ''
+    markers = list(PAGE_MARKER_RE.finditer(text))
+    if not markers:
+        return [(None, text)]
+    segments = []
+    if text[:markers[0].start()].strip():
+        segments.append((None, text[:markers[0].start()]))
+    for i, marker in enumerate(markers):
+        end = markers[i + 1].start() if i + 1 < len(markers) else len(text)
+        segments.append((int(marker.group(2)), text[marker.end():end]))
+    return segments
+
+
 def _extract_pdf_text(pdf_file):
     """Extract text from PDF files. Returns (text, page_count)."""
     try:
@@ -93,8 +131,8 @@ def _extract_pdf_text(pdf_file):
         pdf_file.seek(0)
         reader = PyPDF2.PdfReader(pdf_file)
         text = ""
-        for page in reader.pages:
-            text += page.extract_text() + "\n"
+        for number, page in enumerate(reader.pages, start=1):
+            text += page_marker('page', number) + "\n" + (page.extract_text() or '') + "\n"
         return text, len(reader.pages)
     except ImportError:
         logger.warning("PyPDF2 not installed. Returning placeholder text.")
@@ -111,7 +149,8 @@ def _extract_pptx_text(pptx_file):
         pptx_file.seek(0)
         prs = Presentation(pptx_file)
         text = ""
-        for slide in prs.slides:
+        for number, slide in enumerate(prs.slides, start=1):
+            text += page_marker('slide', number) + "\n"
             for shape in slide.shapes:
                 if hasattr(shape, "text"):
                     text += shape.text + "\n"
@@ -296,7 +335,7 @@ def has_usable_text(text):
     a deck of empty text boxes extracts to newlines, an image-only deck to
     nothing, and analyzing either would be a paid call about no content.
     """
-    return bool(text and text.strip())
+    return bool(strip_page_markers(text).strip())
 
 
 def extract_text_from_file(uploaded_file):
