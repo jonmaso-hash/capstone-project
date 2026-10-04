@@ -16,6 +16,7 @@ from .truth_delta_models import (
 )
 from .truth_delta_sources import data_source_manager
 from .source_capabilities import CAN_CORROBORATE, CAN_ESTABLISH, INFORMATIONAL_ONLY
+from . import truth_delta_narrative as narrative
 
 logger = logging.getLogger(__name__)
 
@@ -29,14 +30,14 @@ ABSOLUTE RULES:
 - A claim that is directionally consistent with observed data (e.g. within a reasonable range, accounting for the observed data possibly being from a different, older time period) should not be flagged as a contradiction.
 - A claim that is significantly higher than observed data (e.g. claiming 10x the SEC-reported revenue) is a real red flag and should lower the score substantially.
 - News headlines are supporting context only, not a verified numeric source — they can corroborate a narrative (e.g. a funding round being reported) but never confirm an exact figure.
+- Each row carries `zelda_state` (verified, contradicted or no_data) and, for no_data, `zelda_reason`. These are Zelda's final verdict on that claim and are not yours to change. Your per_claim `assessment` explains that verdict in one short sentence. Never call a claim verified, confirmed, contradicted, overstated, inaccurate or a red flag unless its zelda_state says so; a no_data claim was not established either way, whatever the numbers look like.
 
 Return ONLY valid JSON in this exact shape, no markdown fences, no other text:
 {
   "overall_truth_score": <0-100 integer, your holistic judgment across only the CHECKED claims>,
   "credibility_risk": "<low|medium|high|critical>",
-  "summary": "<2-4 sentence plain-English summary a busy investor can read in 10 seconds>",
   "per_claim": [
-    {"category": "<claim category>", "claimed": "<claimed value>", "observed": "<observed value or 'no external data found'>", "assessment": "<one short sentence>"}
+    {"category": "<claim category>", "assessment": "<one short sentence explaining zelda_state>"}
   ]
 }"""
 
@@ -150,6 +151,12 @@ class TruthDeltaEngine:
                     f"external data was found for \"{company_name}\"."
                 )
 
+            # Even with nothing to compare against, record WHAT could not be
+            # compared. Without this the report has no chain at all, so a
+            # reader cannot tell which claims were left unchecked or why --
+            # and the decline carries no reason.
+            comparison = self._build_comparison(claims, observed)
+            states, reasons, _ = self._canonical_state(comparison, source_diagnostics)
             report = TruthDeltaReport.objects.create(
                 document_id=document_id,
                 engine_version=self.semantics_version,
@@ -160,30 +167,41 @@ class TruthDeltaEngine:
                     'claims': self._serialize_claims(claims), 'observed': [],
                     'source_diagnostics': source_diagnostics,
                     'provider_outcomes': provider_outcomes,
-                    # Even with nothing to compare against, record WHAT could
-                    # not be compared. Without this the report has no chain at
-                    # all, so a reader cannot tell which claims were left
-                    # unchecked or why -- and the decline carries no reason.
-                    'comparison': self._build_comparison(claims, observed),
+                    'comparison': comparison,
+                    # The same claim table as the other branch, written the same way.
+                    'per_claim': narrative.claim_rows(comparison, states, reasons),
                 },
             )
             return report
 
         comparison = self._build_comparison(claims, observed)
-        result = self._call_claude_for_verification(company_name, comparison, headlines, document)
-
+        # The verdict is decided BEFORE any prose, by the same rules every
+        # surface reads (R-003). The model is told it; it does not decide it.
+        states, reasons, stats = self._canonical_state(comparison, source_diagnostics)
+        result = self._call_claude_for_verification(
+            company_name, comparison, headlines, document, states=states, reasons=reasons)
+        explanations = {}
+        summary = narrative.summary(states, reasons, comparison, stats, headlines)
         if result is None:
             # Claude unavailable (circuit open, API error, malformed JSON)
             # — fall back to a purely numeric score computed only from
             # already-gathered real numbers, rather than producing nothing.
             result = self._numeric_fallback(comparison)
+            # Zelda-written and true: the reader must know no explanation ran.
+            summary = f"{summary} {result['summary']}"
+        else:
+            explanations = {
+                row.get('category'): row.get('assessment')
+                for row in result.get('per_claim') or [] if isinstance(row, dict)
+            }
 
         report = TruthDeltaReport.objects.create(
             document_id=document_id,
             engine_version=self.semantics_version,
             overall_truth_score=result['overall_truth_score'],
             credibility_risk=result['credibility_risk'],
-            summary=result['summary'],
+            # Composed from the canonical state; the model's summary is not stored.
+            summary=summary,
             details={
                 'claims': self._serialize_claims(claims),
                 'observed': self._serialize_observed(observed),
@@ -193,10 +211,24 @@ class TruthDeltaEngine:
                 'comparison': comparison,
                 'source_diagnostics': source_diagnostics,
                 'provider_outcomes': provider_outcomes,
-                'per_claim': result.get('per_claim', []),
+                # One row per stored comparison row -- the model can neither
+                # add nor drop a claim -- with deterministic observed text and
+                # a model explanation only where the guard accepted it.
+                'per_claim': narrative.claim_rows(comparison, states, reasons, explanations),
             },
         )
         return report
+
+    @staticmethod
+    def _canonical_state(comparison, source_diagnostics):
+        """
+        (states, reasons, stats) for a comparison, computed by
+        TruthDeltaReport's own rules on an unsaved report -- so there is still
+        exactly one implementation of what a pairing establishes.
+        """
+        canonical = TruthDeltaReport(details={'comparison': comparison,
+                                              'source_diagnostics': source_diagnostics})
+        return canonical.category_states(), canonical.grounding_reasons(), canonical.verifiability_stats()
 
     # --- helpers ---
 
@@ -336,7 +368,8 @@ class TruthDeltaEngine:
             for o in observed
         ]
 
-    def _call_claude_for_verification(self, company_name, comparison, headlines, document):
+    def _call_claude_for_verification(self, company_name, comparison, headlines, document,
+                                      states=None, reasons=None):
         """
         Qualitative judgment on top of the raw comparison — same call
         convention as the rest of zelda_api (local anthropic import, Sonnet
@@ -354,9 +387,16 @@ class TruthDeltaEngine:
         from .anthropic_client import background_anthropic_client
         client = background_anthropic_client()
 
+        # Each row carries the verdict the model is to explain, never decide.
+        states, reasons = states or {}, reasons or {}
+        rows = [
+            {**row, 'zelda_state': states.get(row.get('category'), 'no_data'),
+             'zelda_reason': reasons.get(row.get('category'))}
+            for row in comparison
+        ]
         user_content = json.dumps({
             'company_name': company_name,
-            'claims_vs_observed': comparison,
+            'claims_vs_observed': rows,
             'recent_news_headlines': headlines,
         }, indent=2, default=str)
 

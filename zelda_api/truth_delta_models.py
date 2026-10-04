@@ -190,8 +190,8 @@ class ObservedDatapoint(models.Model):
 
 
 # What rules produced a report. Bumped ONLY when evidence admission,
-# comparison, or state assignment changes -- never for refactors, wording, or
-# unrelated commits. A git SHA cannot serve here: it changes on every commit,
+# comparison, state assignment, or WHO may assert a state in the report's words
+# changes -- never for refactors, rephrasing, or unrelated commits. A git SHA cannot serve here: it changes on every commit,
 # so it could never express "these two reports mean the same thing", which is
 # the only question this value exists to answer.
 #
@@ -204,8 +204,13 @@ class ObservedDatapoint(models.Model):
 #            that failed reaches the report as source_unavailable rather than
 #            an absence (#98); surfaces name only sources that actually run
 #            (#99).
+#   td.2     The report's words follow its state (R-003): the summary and the
+#            per-claim rows are derived from category_states(), one row per
+#            stored comparison row with observed text written from the stored
+#            evidence, and a model explanation kept only when it asserts no
+#            other verdict. td.1 summaries and rows were model-written.
 UNKNOWN_SEMANTICS = 'unknown'
-TRUTH_DELTA_SEMANTICS = 'td.1'
+TRUTH_DELTA_SEMANTICS = 'td.2'
 
 
 class TruthDeltaReport(models.Model):
