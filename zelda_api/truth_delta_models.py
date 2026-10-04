@@ -18,6 +18,7 @@ class ExternalDataSource(models.Model):
     
     SOURCE_TYPES = [
         ('crunchbase', 'Crunchbase'),
+        ('dataforb2b', 'DataForB2B'),
         ('linkedin', 'LinkedIn'),
         ('sec', 'SEC EDGAR'),
         ('web', 'Web Scraping'),
@@ -145,6 +146,12 @@ class ObservedDatapoint(models.Model):
                  ('company_website', 'Company website'), ('third_party_database', 'Third-party database'),
                  ('linkedin_derived', 'LinkedIn-derived'), ('news', 'News')],
     )
+
+    # How the provider found this company and which of its fields this value
+    # came from: provider id, field, lookup method and identifier, retrieval
+    # time. Written by provider adapters (zelda_api/dataforb2b_adapter.py);
+    # empty for older rows.
+    provenance = models.JSONField(default=dict, blank=True)
 
     # Credibility
     source_credibility = models.FloatField(default=0.8, help_text="0.0-1.0 how much we trust this source")
