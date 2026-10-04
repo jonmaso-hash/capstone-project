@@ -70,6 +70,13 @@ UNRESOLVED = 'unresolved'
 AMBIGUOUS = 'ambiguous'
 UNAVAILABLE = 'unavailable'
 UNCONFIGURED = 'unconfigured'
+# No state could be derived, so nothing was asked. A cross-state search costs
+# 5 credits instead of 1 (Filed support, 2026-10-03), fans out to all 51
+# jurisdictions and was measured at 61-273 s -- far past TIMEOUT_SECONDS, so it
+# ended as UNAVAILABLE anyway, after being billed -- and it ranks worse besides
+# (nationwide put a sole trader above PUBLIX SUPER MARKETS, INC.). Not asking
+# says nothing about the company, exactly like UNCONFIGURED.
+NO_JURISDICTION = 'no_jurisdiction'
 
 # What a name-only (nationwide) search reports as its source. A search mode, not
 # a registry.
@@ -308,21 +315,21 @@ def _get(url, **params):
         return response.status_code, None
 
 
-def _search(company_name, state=None):
+def _search(company_name, state):
     """
-    Name search. One credit.
+    Name search within one state. One credit.
 
-    With a state the response names the real registrar and ranks the exact
-    company higher; without one it is a cross-state search whose `meta.source`
-    is "Cross-state search" and whose ranking is measurably worse -- nationwide
-    put `ALLAN, JOHN S DBA PUBLIX SUPER MARKET` above `PUBLIX SUPER MARKETS,
-    INC.`. The parameter is OMITTED rather than passed as None, because its
-    absence is what selects the nationwide mode.
+    A state is REQUIRED. Without one Filed runs a cross-state search: 5 credits,
+    a 51-jurisdiction fan-out measured at 61-273 s (past TIMEOUT_SECONDS, so the
+    answer was discarded after being billed), a `meta.source` of "Cross-state
+    search" that may never ground a finding, and measurably worse ranking --
+    nationwide put `ALLAN, JOHN S DBA PUBLIX SUPER MARKET` above `PUBLIX SUPER
+    MARKETS, INC.`. Refusing here, not just at the caller, means no future path
+    can send one by leaving the argument out.
     """
-    params = {'name': company_name}
-    if state:
-        params['state'] = state
-    return _get(SEARCH_ENDPOINT, **params)[1]
+    if not state:
+        raise ValueError('Filed searches are state-scoped; a cross-state search is never sent.')
+    return _get(SEARCH_ENDPOINT, name=company_name, state=state)[1]
 
 
 def _detail(entity_id):
@@ -332,10 +339,11 @@ def _detail(entity_id):
 
 def company_record(company_name, state=None):
     """
-    (outcome, detail) for one company name, optionally scoped to a state.
+    (outcome, detail) for one company name in one state. Without a state it
+    returns NO_JURISDICTION and sends nothing -- a cross-state search costs 5
+    credits and does not finish within TIMEOUT_SECONDS (see NO_JURISDICTION).
 
-    Two steps either way: a cross-state search carries no state authority, and
-    even a state-scoped one is only a search. The authoritative record always
+    Two steps: a state-scoped search is only a search. The authoritative record always
     comes from the detail call, whose `meta.source` is the only field that says
     which registrar answered -- measured, a `state=GA` query returns rows
     stamped `GA` sourced from the IRS Exempt Organizations file, so neither the
@@ -347,6 +355,9 @@ def company_record(company_name, state=None):
         return UNCONFIGURED, None
     if not (company_name or '').strip():
         return NO_RECORD, None
+    if not state:
+        # Nothing is sent: see NO_JURISDICTION.
+        return NO_JURISDICTION, None
 
     body = _search(company_name, state=state)
     if not isinstance(body, dict) or body.get('error'):

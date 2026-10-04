@@ -289,7 +289,9 @@ class TheProviderIsWiredInTests(TestCase):
             user=self.user, company_name='Publix Super Markets, Inc.',
             founder_name='A Founder', email='f@t.com', description='test',
             sector='Retail', stage='Seed', years_in_business=5,
-            company_website='')
+            # A parseable state: without one Filed is not asked at all
+            # (filed.NO_JURISDICTION), and this test is about the asking.
+            company_website='', geography='Lakeland, FL')
 
     def _collect(self, search_body, detail_body):
         from zelda_api import entity_verification
