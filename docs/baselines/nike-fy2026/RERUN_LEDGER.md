@@ -54,6 +54,19 @@ The baseline ledger graded the pre-migration rows. Those rows are preserved unch
 
 *A passing control from the incident.* The 3119 memo states that the document's "verification failed", and calls the $52.8B figure one that "could not be independently verified". It is saved under `rerun/abandoned/`. This is the designed failure path (`truth_delta_tasks.verify_document_truth_delta`), observed working on a real failure.
 
+**E-4 (2026-10-04), the owner's analysis allowance for Pass B.** Recorded before the Pass B upload.
+
+*What happened:*
+- The first Pass B upload was refused: `POST /api/v1/zelda/documents/ingest/` → **402** `quota_exceeded`, "0 of 3 remaining this period". No document was created.
+- The allowance is a Lite founder's 3 credits per 30 days. Pass A spent all three on document 3120: its memo (1), its automatic Truth Delta verification (1), and the layer-11 re-verification (1).
+- The abandoned documents 3118 and 3119 do not count (`status='error'` is excluded by `quotas._credits_used_in_window`).
+- The upload widget never surfaced the 402. Its status stayed "Uploading file..." (L-022).
+
+*Correction:*
+- `Application.is_premium` is set to `True` on the owner's profile for the ingest request only. It is reverted to `False` as soon as the upload returns 201, before any capture.
+- Nothing in extraction, chunking, claims, Truth Delta, providers or memo generation reads `is_premium`. It is read only by presentation gates: `truth_delta_models._owner_is_premium` (report and memo unlocks), `ic_memo.py:75` and `views.py:1337`. All Pass B surfaces are therefore captured under the same Lite gating as Pass A.
+- The pre-registered §4 expectations do not change.
+
 ## Follow-ups
 
 - **Fail-closed test broker** (separate PR after this one): the test runner refuses any Celery broker that is not in-memory, as it already refuses network calls.
