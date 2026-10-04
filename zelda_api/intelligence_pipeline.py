@@ -15,7 +15,6 @@ from django.utils import timezone
 from .vector_models import DocumentSource, DocumentChunk, IntelligenceInsight, IntelligenceMemo, BusinessValuationReport
 from .chunking import DocumentChunker
 from .embeddings import embedding_engine
-from .retrieval import retriever
 import json
 from django.conf import settings
 
@@ -206,7 +205,6 @@ class ZeldaIntelligencePipelineV2:
     def __init__(self):
         self.chunker = DocumentChunker(chunk_size_tokens=400, overlap_tokens=50)
         self.embedding_engine = embedding_engine
-        self.retriever = retriever
         self.used_chunks = set()  # Track used chunks to prevent duplication
     
     def process_document(self, document_source: DocumentSource, raw_text: str) -> Dict:

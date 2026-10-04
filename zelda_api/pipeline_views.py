@@ -14,11 +14,11 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from .truth_delta_tasks import verify_document_truth_delta as initiate_truth_delta_verification
-from .vector_models import DocumentSource, IntelligenceMemo, IntelligenceInsight, DocumentChunk, BusinessValuationReport
+from .vector_models import DocumentSource, IntelligenceMemo, IntelligenceInsight, BusinessValuationReport
 from .intelligence_pipeline import intelligence_pipeline
 from .authorization import authorize
 from .principal import Principal
-from .retrieval import VectorRetriever, retriever, validate_top_k
+from .retrieval import VectorRetriever, document_chunks, retriever, validate_top_k
 from .tasks import process_document_pipeline, process_valuation_document_task
 
 logger = logging.getLogger(__name__)
@@ -444,14 +444,15 @@ class DocumentChunksView(APIView):
     def get(self, request, document_id):
         try:
             doc = DocumentSource.objects.get(id=document_id)
-            
-            if doc.uploaded_by != request.user and not request.user.is_staff:
+            principal = Principal.from_request(request, label='zelda_api:document_chunks')
+
+            if not authorize(principal).text_permitted(doc):
                 return Response(
                     {"error": "Not authorized"},
                     status=status.HTTP_403_FORBIDDEN
                 )
-            
-            chunks = doc.chunks.all().order_by('chunk_index')
+
+            chunks = document_chunks(principal, doc)
             
             chunks_data = [
                 {

@@ -182,6 +182,14 @@ class VectorRetriever:
         return min(matches / max_matches, 1.0)
 
 
+def document_chunks(principal, document_source: DocumentSource):
+    """
+    Every chunk of one document, in order, for a principal who may read its
+    text. The same candidate scope as retrieval; out of scope refuses.
+    """
+    return VectorRetriever._candidates(principal, document_source).order_by('chunk_index')
+
+
 class ContextAssembler:
     """
     Assembles contextual information from retrieved chunks.
