@@ -23,7 +23,8 @@ broker, result backend or cache that is not on this machine also fails.
 
 Celery's settings read CELERY_BROKER_URL from the environment before their
 own config, so the broker is read from the app's connection, never from
-settings.CELERY_BROKER_URL. A check that read the setting would agree with a
+settings.CELERY_BROKER_URL. The result backend is read from the live backend
+object for the same reason: it is cached once built. A check that read the setting would agree with a
 value the worker does not use.
 
 Without --local a remote broker is reported, not refused: production runs on
@@ -53,6 +54,8 @@ def is_local(uri):
     if uri in (IN_PROCESS, ''):
         return True
     parts = urlsplit(uri or '')
+    if parts.scheme == 'disabled':           # Celery's DisabledBackend: results are not stored
+        return True
     return 'memory' in parts.scheme or (parts.hostname or '') in LOCAL_HOSTS
 
 
@@ -69,7 +72,11 @@ def effective_targets():
     return [
         ('broker (write)', write),
         ('broker (read)', read),
-        ('result backend', app.conf.result_backend or ''),
+        # The live backend object, not app.conf.result_backend: Celery caches
+        # the backend once built, so the config can read memory while results
+        # still go to the old store (measured). as_uri() masks the password;
+        # redacted() then keeps only scheme and host.
+        ('result backend', app.backend.as_uri() or ''),
         ('cache', cache_uri or ''),
     ]
 
