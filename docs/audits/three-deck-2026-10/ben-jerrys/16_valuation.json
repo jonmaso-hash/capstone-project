@@ -1,0 +1,35 @@
+{
+ "document": {
+  "id": 3125,
+  "filename": "ben_jerrys_public_pitch_deck_test.pptx",
+  "document_type": "business_valuation",
+  "source_entity": "Ben & Jerry's",
+  "uploaded_by_id": 299,
+  "total_pages": 11,
+  "total_word_count": 1110,
+  "status": "analyzed",
+  "confidence_score": 0.5875,
+  "intelligence_rank": 0,
+  "error_message": "",
+  "verification_failed_at": null,
+  "verification_error": "",
+  "is_hidden_by_staff": false,
+  "valuation_tier": "preview",
+  "created_at": "2026-10-04 23:49:31.710621+00:00",
+  "updated_at": "2026-10-04 23:49:50.589076+00:00",
+  "processed_at": "2026-10-04 23:49:50.588800+00:00"
+ },
+ "valuation_report": {
+  "id": 24,
+  "document_id": 3125,
+  "business_overview": "Ben & Jerry's is a well-known consumer packaged goods brand operating in the premium ice cream segment. The brand publicly frames its operating model around 'linked prosperity,' integrating product quality, social mission, and sustainable growth as core business principles. No standalone financial documents were submitted; all available context relates to brand identity and ownership structure rather than an independent operating entity.",
+  "financial_summary": "• Revenue / ARR / MRR: Not disclosed in submitted documents.\n• Growth rate: Not disclosed in submitted documents.\n• Margins / EBITDA: Not disclosed in submitted documents.\n• Monthly burn rate: Not disclosed in submitted documents.\n• Customer retention / churn rate: Not disclosed in submitted documents.\n• Raise amount or use of proceeds: Not disclosed in submitted documents.\n• Note: Zelda Insights flag that any parent-company or Unilever ice cream segment figures available publicly are NOT standalone Ben & Jerry's revenue and should not be used as a substitute for entity-level financials.",
+  "risk_report": "1. CRITICAL DATA OMISSION RISK: Zero financial metrics were submitted — no revenue, no margins, no growth rate, no EBITDA. This is the single largest risk to any valuation exercise; no credible range can be established without entity-level financials.\n2. OWNERSHIP STRUCTURE RISK: Ben & Jerry's operates under Unilever ownership with a unique governance structure that grants the brand's independent board authority over social mission. Any sale would involve complex legal and contractual unwinding of this arrangement, which is not addressed in the submitted documents.\n3. MISSION-BRAND DEPENDENCY RISK: The brand's market positioning is explicitly tied to its 'linked prosperity' social mission framework. A change of ownership could impair brand equity if the acquirer is perceived as misaligned with these values, as the mission is described as a feature of the product experience itself.\n4. PARENT/STANDALONE REVENUE CONFLATION RISK: Zelda Insights explicitly flag that publicly available figures represent parent or ice cream unit data, not standalone Ben & Jerry's figures. Any buyer relying on public Unilever disclosures would be valuing the wrong entity.\n5. INFORMATION ASYMMETRY RISK: No traction signals were extracted from submitted documents. The absence of customer retention, growth rate, and market size data makes it impossible to assess competitive positioning or organic growth trajectory independently of the Unilever distribution infrastructure.",
+  "valuation_summary": "Insufficient data exists to estimate a valuation range. Standard valuation methodologies — including revenue multiples (typically 1.5x–4x for consumer branded goods), EBITDA multiples (typically 8x–14x for premium food brands), or discounted cash flow analysis — all require entity-level financial inputs that were not disclosed in the submitted documents. Zelda Insights explicitly confirm that no standalone Ben & Jerry's revenue figures were provided, and that any parent-company figures would be inappropriate to use as a substitute. Additionally, the unique dual-governance ownership structure under Unilever introduces transaction complexity that would materially affect any control premium or strategic buyer calculus. To proceed with a credible valuation, the following minimum inputs are required: standalone annual revenue, gross and operating margins, EBITDA, year-over-year growth rate, and clarity on the legal and financial terms of any separation from Unilever.",
+  "valuation_low": null,
+  "valuation_high": null,
+  "confidence_score": 0.5875,
+  "created_at": "2026-10-04 23:49:50.558143+00:00",
+  "updated_at": "2026-10-04 23:49:50.558198+00:00"
+ }
+}

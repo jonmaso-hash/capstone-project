@@ -1,0 +1,89 @@
+{
+ "report": {
+  "id": 27,
+  "founder_profile_id": 39,
+  "seller_profile_id": null,
+  "document_id": 3124,
+  "status": "complete",
+  "checked_at": "2026-10-04 23:48:29.052847+00:00",
+  "inputs_hash": "44958467e8bb9822d08553c57bd240502b090c58debf84289d45a568fdffd36a",
+  "findings": [
+   {
+    "check": "website",
+    "claim": "Website: https://www.benjerry.com",
+    "interlink_source": "Startup profile",
+    "evidence_source": "Company website",
+    "evidence": "The website answered with an error (403).",
+    "result": "couldnt_check",
+    "source_url": "",
+    "checked_at": "2026-10-04T23:48:11.292358+00:00"
+   },
+   {
+    "check": "company_name",
+    "claim": "Company name: Ben & Jerry's",
+    "interlink_source": "Startup profile",
+    "evidence_source": "Company website",
+    "evidence": "The website couldn't be read.",
+    "result": "couldnt_check",
+    "source_url": "",
+    "checked_at": "2026-10-04T23:48:11.292358+00:00"
+   },
+   {
+    "check": "person_name",
+    "claim": "Founder: Audit Owner",
+    "interlink_source": "Startup profile",
+    "evidence_source": "Company website",
+    "evidence": "The website couldn't be read.",
+    "result": "couldnt_check",
+    "source_url": "",
+    "checked_at": "2026-10-04T23:48:11.292358+00:00"
+   },
+   {
+    "check": "founding_year",
+    "claim": "Founding year: not on the profile",
+    "interlink_source": "Startup profile",
+    "evidence_source": "Domain registration",
+    "evidence": "benjerry.com was registered in November 1994.",
+    "result": "public_record",
+    "source_url": "https://lookup.icann.org/en/lookup?name=benjerry.com",
+    "checked_at": "2026-10-04T23:48:11.292358+00:00"
+   },
+   {
+    "check": "commercial_footprint",
+    "claim": "Website: https://www.benjerry.com",
+    "interlink_source": "Startup profile",
+    "evidence_source": "CompanyEnrich (aggregated business data)",
+    "evidence": "An independent business record is associated with benjerry.com (founded 1978, manufacturing). This is aggregated commercial data, not a government registry, so it corroborates that the business has a public footprint rather than establishing its legal identity.",
+    "result": "public_record",
+    "source_url": "",
+    "checked_at": "2026-10-04T23:48:11.292358+00:00"
+   },
+   {
+    "check": "business_registration",
+    "claim": "Company name: Ben & Jerry's",
+    "interlink_source": "Startup profile",
+    "evidence_source": "Business registration record",
+    "evidence": "Business records were returned for this name, but none matched the company name exactly, so no record could be attributed to this business. This is not evidence about whether it is registered.",
+    "result": "couldnt_check",
+    "source_url": "",
+    "checked_at": "2026-10-04T23:48:11.292358+00:00"
+   },
+   {
+    "check": "sec_filer",
+    "claim": "Company name: Ben & Jerry's",
+    "interlink_source": "Startup profile",
+    "evidence_source": "SEC EDGAR",
+    "evidence": "No SEC filer with this name was found on EDGAR. Most private companies never file with the SEC.",
+    "result": "not_found",
+    "source_url": "",
+    "checked_at": "2026-10-04T23:48:11.292358+00:00"
+   }
+  ],
+  "domain": "",
+  "domain_registered_date": null,
+  "domain_lookup_error": "",
+  "claimed_founding_year": null,
+  "timeline_flags": [],
+  "created_at": "2026-10-04 23:48:11.281868+00:00"
+ }
+}
