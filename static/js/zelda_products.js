@@ -2,6 +2,17 @@
     const config = document.getElementById('zelda-product-config');
     if (!config) return;
     const panels = Array.from(document.querySelectorAll('.zelda-product-panel'));
+    // Account-menu shortcuts open existing product panels without starting a purchase.
+    document.querySelectorAll('[data-zelda-product], [data-zelda-tab]').forEach(shortcut => {
+        shortcut.addEventListener('click', () => {
+            const tabName = shortcut.dataset.zeldaProduct ?
+                `product-${shortcut.dataset.zeldaProduct}` : shortcut.dataset.zeldaTab;
+            const sidebar = document.getElementById('aiAgentSidebar');
+            const tab = sidebar && Array.from(sidebar.querySelectorAll('.zelda-tab'))
+                .find(button => button.dataset.tab === tabName);
+            if (tab) tab.click();
+        });
+    });
     let evidence = null;
     let selectedSubject = null;
     let pendingEvidence = 0;
