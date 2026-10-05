@@ -17,10 +17,16 @@
     }
     async function post(url, body, json=false) {
         const headers={'X-CSRFToken':csrf()};if(json)headers['Content-Type']='application/json';
-        const response=await fetch(url,{method:'POST',credentials:'same-origin',headers,body:json?JSON.stringify(body):body});
-        const data=await response.json();
-        if(!response.ok)throw new Error(data.error||'The request could not finish. Please try again.');
-        return data;
+        const controller=new AbortController(), timer=setTimeout(()=>controller.abort(),60000);
+        try {
+            const response=await fetch(url,{method:'POST',credentials:'same-origin',headers,signal:controller.signal,body:json?JSON.stringify(body):body});
+            let data;try { data=await response.json(); } catch(error) { throw new Error('The request could not finish. Please try again.'); }
+            if(!response.ok)throw new Error(data.error||'The request could not finish. Please try again.');
+            return data;
+        } catch(error) {
+            if(error.name==='AbortError')throw new Error('The request took too long. Please try again.');
+            throw error;
+        } finally { clearTimeout(timer); }
     }
     panels.forEach(panel=>{
         panel.querySelectorAll('[name="pack-report"]').forEach(input=>input.addEventListener('change',sync));

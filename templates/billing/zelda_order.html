@@ -25,10 +25,13 @@
             reports.replaceChildren();
             (data.reports || []).forEach(report => { const link=document.createElement('a');link.className='btn btn-outline-primary';link.href=report.url;link.textContent=report.name;reports.append(link); });
             retry.hidden = data.status !== 'failed';
-            if (['awaiting_payment','paid','processing'].includes(data.status) && attempts++ < 100) setTimeout(load, 5000);
+            if (['awaiting_payment','paid','processing'].includes(data.status)) {
+                if (attempts++ < 100) setTimeout(load, 5000);
+                else state.textContent += ' Processing continues in the background. Refresh this page or check Library for updates.';
+            }
         } catch(error) { state.textContent='The status could not be retrieved. Refresh this page to try again.'; }
     }
-    retry.addEventListener('click',async()=>{retry.disabled=true; const token=document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);const response=await fetch('{% url "billing:zelda_order_retry" order.id %}',{method:'POST',headers:{'X-CSRFToken':token?decodeURIComponent(token[1]):''}}); retry.disabled=false;if(response.ok){attempts=0;load();}else{state.textContent='The retry could not start. Please refresh and try again.';}});
+    retry.addEventListener('click',async()=>{retry.disabled=true;try { const token=document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);const response=await fetch('{% url "billing:zelda_order_retry" order.id %}',{method:'POST',headers:{'X-CSRFToken':token?decodeURIComponent(token[1]):''}});if(response.ok){attempts=0;load();}else{state.textContent='The retry could not start. Please refresh and try again.';} } catch(error) { state.textContent='The retry could not start. Please refresh and try again.'; } finally { retry.disabled=false; }});
     load();
 })();
 </script>
