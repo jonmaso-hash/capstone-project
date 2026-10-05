@@ -3219,7 +3219,7 @@ def external_deal_room_set_active(request, username):
 def deal_pulse(request):
     """
     Investor-side pipeline board over their real platform Connections,
-    bucketed into Active / Needs Attention / Completed. Mirrors the
+    bucketed into Active / Needs Attention / Outcomes. Mirrors the
     founder-side Fundraising CRM's visual pattern, but tracks actual
     Connection records rather than a separate off-platform lead list —
     investors' deal flow already lives on-platform via Connection.
@@ -3247,7 +3247,7 @@ def deal_pulse(request):
     columns = [
         {'key': 'ACTIVE', 'label': 'Active', 'connections': board['ACTIVE']},
         {'key': 'NEEDS_ATTENTION', 'label': 'Needs Attention', 'connections': board['NEEDS_ATTENTION']},
-        {'key': 'COMPLETED', 'label': 'Completed', 'connections': board['COMPLETED']},
+        {'key': 'COMPLETED', 'label': 'Outcomes', 'connections': board['COMPLETED']},
     ]
 
     return render(request, 'matchmaking/deal_pulse.html', {

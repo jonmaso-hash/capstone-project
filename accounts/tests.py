@@ -363,7 +363,7 @@ class ProfileAnalysisPaywallTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.context['has_analytics_paywall'])
-        self.assertContains(response, 'Profile Analysis')
+        self.assertContains(response, 'Investor Analytics')
         # Narrower than a bare 'Unlock' substring check — the sidebar's
         # globally-included Zelda widget script now contains that word in
         # its own (unrelated) locked-memo-card JS string literal, so a
