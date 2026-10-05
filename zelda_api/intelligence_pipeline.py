@@ -198,7 +198,11 @@ class ZeldaIntelligencePipelineV2:
         # wiring bug was fixed and Traction claims started reaching
         # ClaimedDatapoint at all, at which point it surfaced as a
         # real precision regression in the evaluation harness).
-        'Traction': 'customers users growth adopted retention metric',
+        # 'bots' and 'messages': usage nouns, added because ManyChat's
+        # slide titled "Traction" says "140 000+ bots" and "500M messages"
+        # and matched nothing. A Traction figure counting them becomes a
+        # `usage` claim, never `customers` (see financial_metrics.usage_unit).
+        'Traction': 'customers users growth adopted retention metric bots messages',
         'Funding': 'funding raise capital investment ask series round raised',
         'Risk': 'risks challenges competition threats barrier regulatory',
     }
@@ -469,7 +473,9 @@ class ZeldaIntelligencePipelineV2:
                 # used that qualitative sentence as the Revenue insight and
                 # the actual $4.5M figure never surfaced at all.
                 for chunk in chunks:
-                    result, confidence, provenance = self._smart_extract(category, chunk.raw_text, keywords)
+                    sentences = [] if category in self.NUMERIC_CATEGORIES else None
+                    result, confidence, provenance = self._smart_extract(
+                        category, chunk.raw_text, keywords, collect=sentences)
                     if not result:
                         continue
                     is_better = confidence > best_confidence or (
@@ -481,6 +487,14 @@ class ZeldaIntelligencePipelineV2:
                         best_confidence = confidence
                         best_insight = (result, confidence, chunk, provenance)
                     candidates.append((result, confidence, chunk, provenance))
+                    # A chunk's other sentences are candidates too, for the
+                    # numeric categories: one slide can state two figures.
+                    # _select_insights still admits only a distinct figure of
+                    # the category's own kind, so a restated number or a
+                    # figureless sentence adds nothing.
+                    for value, sentence_confidence, sentence_provenance in sentences or ():
+                        if value != result:
+                            candidates.append((value, sentence_confidence, chunk, sentence_provenance))
 
                 for insight_text, confidence, source_chunk, provenance in self._select_insights(
                         category, candidates, best_insight):
@@ -603,7 +617,8 @@ class ZeldaIntelligencePipelineV2:
             selected.append(candidate)
         return selected
 
-    def _smart_extract(self, category: str, text: str, keywords: str) -> Tuple[Optional[str], float, Optional[Dict]]:
+    def _smart_extract(self, category: str, text: str, keywords: str,
+                       collect: Optional[List] = None) -> Tuple[Optional[str], float, Optional[Dict]]:
         """
         Smart extraction with DYNAMIC confidence scoring.
         Confidence logic:
@@ -622,6 +637,10 @@ class ZeldaIntelligencePipelineV2:
         finding the cause means re-deriving which rule fired and on
         which sentence by hand; carrying that through as it's computed
         (this function already knows it) is a lot cheaper than that.
+
+        `collect`, when given a list, receives (value, confidence, provenance)
+        for every sentence that qualifies, winner included. The return value
+        does not depend on it.
         """
         keyword_list = keywords.split()
         sentences = re.split(r'(?<!\d)[.!?](?!\d)|\n', text)
@@ -674,6 +693,17 @@ class ZeldaIntelligencePipelineV2:
 
             confidence = self._calculate_confidence(category, clean_sentence, text)
 
+            if collect is not None:
+                # Every qualifying sentence, not only the winner: a slide that
+                # states two figures ("140 000+ bots", "500M messages") lost
+                # the second here. Choosing the winner below is unchanged.
+                value = self._extract_clean_value(category, clean_sentence)
+                if value:
+                    collect.append((value[:500], confidence, {
+                        'rule': 'primary_match', 'matched_keywords': matched_keywords,
+                        'matched_sentence': clean_sentence,
+                    }))
+
             if confidence > best_confidence or (
                 confidence == best_confidence and
                 re.search(r'\$[\d,]+[MBK]?', clean_sentence) and
@@ -723,16 +753,48 @@ class ZeldaIntelligencePipelineV2:
         'other': r'\b(?:ebitda|profit|margin|valuation|pre-money|post-money|burn|runway|churn|retention|salary|payroll)\b',
     }
 
+    # Usage nouns label a Traction figure only when no customer-type label in
+    # the sentence owns one, so a sentence that already yielded a customer
+    # count still yields exactly that. Kept out of METRIC_LABELS so no other
+    # category's binding can change.
+    USAGE_LABEL = r'\b(?:bots?|messages?)\b'
+
     # A currency amount, or a bare count for the categories that count things.
     _MONEY_FIGURE = r'\$\s?[\d,]*\.?\d+\s*(?:thousand|million|billion|trillion|[KkMmBb])?'
     _COUNT_FIGURE = r'\b[\d,]*\.?\d+\b'
+    # Traction counts as decks write them: a spaced thousands separator
+    # ("140 000+ bots"), an abbreviated or spelled multiplier ("500M
+    # messages"), a trailing "+". _COUNT_FIGURE read "140 000" as two figures,
+    # 140 and 000, and could not see "500M" at all.
+    _TRACTION_NUMBER = (r'(?<![\w.,])(?:\d{1,3}(?:[   ]\d{3})+(?![\d.,])|[\d,]*\.?\d+)'
+                        r'(?:[KkMmBb](?![A-Za-z])|\s*(?:thousand|million|billion)\b|(?!\w))\+?')
 
     def _figure_spans(self, category, sentence):
         """Every figure in the sentence, as match objects."""
         pattern = self._MONEY_FIGURE if category in ('Revenue', 'Funding', 'Market') else self._COUNT_FIGURE
         return list(re.finditer(pattern, sentence, re.IGNORECASE))
 
-    def _owned_figures(self, category, sentence, figures):
+    def _usage_figure(self, sentence, figures):
+        """
+        The usage count this Traction sentence states, from the figure on, or
+        None. Only when no customer-type label owns any of its figures: a
+        sentence that yielded a customer count before still yields exactly
+        that, by the unchanged path below.
+        """
+        if not re.search(self.USAGE_LABEL, sentence, re.IGNORECASE):
+            return None
+        if figures and self._owned_figures('Traction', sentence, figures):
+            return None
+        usage_figures = list(re.finditer(self._TRACTION_NUMBER, sentence, re.IGNORECASE))
+        owned = sorted(self._owned_figures(
+            'Traction', sentence, usage_figures,
+            labels={**self.METRIC_LABELS, 'Traction': self.USAGE_LABEL}), key=lambda pair: pair[1])
+        if not owned or (len(owned) > 1 and owned[0][1] == owned[1][1]):
+            return None
+        figure = owned[0][0]
+        return sentence[figure.start():figure.end() + 60].strip()
+
+    def _owned_figures(self, category, sentence, figures, labels=None):
         """
         The figures whose NEAREST metric label is this category's.
 
@@ -742,7 +804,7 @@ class ZeldaIntelligencePipelineV2:
         (15 away), which is what produced a $4M funding claim.
         """
         labelled = []
-        for metric, pattern in self.METRIC_LABELS.items():
+        for metric, pattern in (labels or self.METRIC_LABELS).items():
             for match in re.finditer(pattern, sentence, re.IGNORECASE):
                 labelled.append((metric, match.start(), match.end()))
         if not labelled:
@@ -797,6 +859,10 @@ class ZeldaIntelligencePipelineV2:
                 # through below, which is how "Recurring subscription revenue
                 # model." survives.
                 return None
+            if category == 'Traction':
+                usage = self._usage_figure(cleaned, figures)
+                if usage is not None:
+                    return usage
             if figures:
                 owned = sorted(self._owned_figures(category, cleaned, figures), key=lambda pair: pair[1])
                 if not owned:
@@ -886,6 +952,9 @@ class ZeldaIntelligencePipelineV2:
             r'\b[\d,]+\b[^.]{0,30}\b(customers?|users?|clients?|accounts?|patients?|distributors?|'
             r'subscribers?|hospitals?|clinics?)\b', re.IGNORECASE),
     }
+    # A usage count ("140 000+ bots", "500M messages") is a Traction figure
+    # too. Its own pattern, so the customer pattern above is untouched.
+    USAGE_FIGURE = re.compile(_TRACTION_NUMBER + r'[^.]{0,30}\b(?:bots?|messages?)\b', re.IGNORECASE)
 
     def _has_figure(self, category: str, sentence: str) -> bool:
         """Does this sentence carry a figure this category could be checked on?"""
@@ -894,7 +963,9 @@ class ZeldaIntelligencePipelineV2:
         if self.MONEY_FIGURE.search(sentence):
             return True
         pattern = self.COUNT_FIGURE.get(category)
-        return bool(pattern and pattern.search(sentence))
+        if pattern and pattern.search(sentence):
+            return True
+        return category == 'Traction' and bool(self.USAGE_FIGURE.search(sentence))
 
     def _calculate_confidence(self, category: str, sentence: str, full_text: str) -> float:
         """Calculate DYNAMIC confidence based on content analysis."""

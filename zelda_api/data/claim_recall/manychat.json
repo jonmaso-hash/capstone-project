@@ -1,0 +1,194 @@
+{
+  "deck": "ManyChat (three-deck audit, deck 3), document 3129",
+  "frozen": "2026-10-04, PR 1 (recall only)",
+  "note": "Frozen BEFORE the PR 1 code change (claim-extraction recall). Chunk text is copied verbatim from the stored audit run; nothing was re-uploaded. Do not edit to make a test pass: a changed expectation is a new decision and needs its own justification. The answer key and ledger it derives from are frozen and are not edited.",
+  "source": {
+    "path": "docs/baselines/manychat/run/02_chunks.json",
+    "sha256": "3938e252b7d2c91680b3ea8313ddc747b320c925defda476759032de933bee11",
+    "answer_key": "docs/baselines/manychat/ANSWER_KEY.md",
+    "ledger": "docs/baselines/manychat/LEDGER.md"
+  },
+  "expected_claims": [
+    {
+      "category": "funding_raised",
+      "value": 23100000.0,
+      "unit": "",
+      "page": 2,
+      "claimed_value": "$23.1M raised",
+      "source_sentence": "Source: Pitch Deck Hunt lists ManyChat as a 2015 Series A deck with $23.1M raised",
+      "status": "pre-existing, unchanged by PR 1",
+      "why_category": "'raised' states capital raised; '$23.1M' is a $ amount.",
+      "known_issues_for_pr2": [
+        "MC-2: slide 2 is audit framing that quotes a third party (key I4); attribution is PR 2",
+        "MC-3 / S-2: '2015' and 'Series A' are dropped; period is PR 2"
+      ]
+    },
+    {
+      "category": "usage",
+      "value": 140000.0,
+      "unit": "bots",
+      "page": 10,
+      "claimed_value": "140 000+ bots",
+      "source_sentence": "140 000+ bots",
+      "status": "new in PR 1 (key M5)",
+      "why_category": "The words count bots. A bot is not a customer or a user, so the figure is a usage count of bots, nothing more.",
+      "known_issues_for_pr2": [
+        "'Traction by Apr-16' (the period) is not attached; period is PR 2",
+        "'+' (a lower bound) is not stored; the value is the stated floor"
+      ]
+    },
+    {
+      "category": "usage",
+      "value": 500000000.0,
+      "unit": "messages",
+      "page": 10,
+      "claimed_value": "500M messages",
+      "source_sentence": "500M messages",
+      "status": "new in PR 1 (key M6, slide-10 half)",
+      "why_category": "The words count messages. A message is not a customer or a user, so the figure is a usage count of messages.",
+      "known_issues_for_pr2": [
+        "Cumulative-by-context vs slide 12's per-month rate (key I1) is not flagged; period is PR 2"
+      ]
+    }
+  ],
+  "negative_controls": [
+    {
+      "value": 900000000.0,
+      "page": 4,
+      "text": "FB Messenger / 900M / people",
+      "why": "Platform user count (key M4). Must not become a ManyChat claim (ATTRIBUTION ERROR)."
+    },
+    {
+      "value": 275000000.0,
+      "page": 4,
+      "text": "Kik / 275M / people",
+      "why": "Platform registration count (key M3). Must not become a ManyChat claim."
+    },
+    {
+      "value": 100000000.0,
+      "page": 4,
+      "text": "Telegram / 100M / people",
+      "why": "Platform user count (key M2). Must not become a ManyChat claim."
+    },
+    {
+      "value": 140.0,
+      "page": null,
+      "text": "140 000+ bots",
+      "why": "Seed S-7: the spaced thousands separator must not truncate 140,000 to 140."
+    },
+    {
+      "value": 16.0,
+      "page": 10,
+      "text": "Traction by Apr-16",
+      "why": "A date fragment, not a figure."
+    }
+  ],
+  "category_controls": {
+    "never": [
+      "customers",
+      "employees",
+      "revenue",
+      "market_size"
+    ],
+    "why": "Nothing in this deck counts customers, users, employees, revenue or a market. Bots and messages must never be filed as customers (the JoyToys failure)."
+  },
+  "holds_without_attribution_logic": "Yes. The slide-4 figures sit on their own lines ('900M' then 'people'), and no added vocabulary word ('bots', 'messages') appears on slide 4, so no sentence there reaches the claim layer. No phrase-specific exclusion was added.",
+  "not_recovered_by_design": [
+    {
+      "page": 12,
+      "text": "500M / messages/month",
+      "why": "Figure and noun are on separate lines, and '/month' is a period. Recovering it means joining lines and interpreting a period, both PR 2. Merging it with slide 10's 500M would be wrong (key M6)."
+    },
+    {
+      "page": 12,
+      "text": "140 000+ bots",
+      "why": "Same figure as slide 10; the existing distinct-value rule keeps one claim, from slide 10."
+    }
+  ],
+  "chunks": [
+    {
+      "chunk_index": 0,
+      "page_number": 1,
+      "section_title": "Audit source deck",
+      "token_count": 31,
+      "raw_text": "Audit source deck\nManyChat\nSeries A pitch deck recreation\nSelected because the company remains an active private operating company for this audit leg.\nPRIVATE COMPANY\nSERIES A\n10-SLIDE SOURCE\n🐙\nManyChat"
+    },
+    {
+      "chunk_index": 1,
+      "page_number": 2,
+      "section_title": "Why this deck fits the audit leg",
+      "token_count": 91,
+      "raw_text": "Why this deck fits the audit leg\nSource: Pitch Deck Hunt lists ManyChat as a 2015 Series A deck with $23.1M raised. The embedded SlideShare deck has 10 slides. ManyChat’s current site is active under Manychat, Inc. and describes current products across Instagram, WhatsApp, TikTok, and Messenger.\nStage\nSeries A\nCompany status\nActive private company\nAudit use\nPrivate-company source deck\nDeck length\n10 slides\nUse this as the third audit deck after Nike / Ben & Jerry’s to check how Zelda handles a live private company with older public fundraising materials."
+    },
+    {
+      "chunk_index": 2,
+      "page_number": 3,
+      "section_title": "angel.co/manychat",
+      "token_count": 22,
+      "raw_text": "angel.co/manychat\nmike@manychat.com\n🐙\nManyChat\nCreate Your Chat Bot in 5-Minutes\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 1"
+    },
+    {
+      "chunk_index": 3,
+      "page_number": 4,
+      "section_title": "angel.co/manychat",
+      "token_count": 33,
+      "raw_text": "angel.co/manychat\nmike@manychat.com\nMessaging apps opened up their APIs.\n✈\nTelegram\n100M\npeople\nkik\nKik\n275M\npeople\n⚡\nFB Messenger\n900M\npeople\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 2"
+    },
+    {
+      "chunk_index": 4,
+      "page_number": 5,
+      "section_title": "angel.co/manychat",
+      "token_count": 21,
+      "raw_text": "angel.co/manychat\nmike@manychat.com\nMessengers are great for engagement and sales.\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 3"
+    },
+    {
+      "chunk_index": 5,
+      "page_number": 6,
+      "section_title": "angel.co/manychat",
+      "token_count": 21,
+      "raw_text": "angel.co/manychat\nmike@manychat.com\nThe only scalable way to engage –\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 4"
+    },
+    {
+      "chunk_index": 6,
+      "page_number": 7,
+      "section_title": "angel.co/manychat",
+      "token_count": 26,
+      "raw_text": "angel.co/manychat\nmike@manychat.com\nIt’s HARD to create a bot.\nCoding, Servers, Databases, APIs,\nSSL certificates...\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 5"
+    },
+    {
+      "chunk_index": 7,
+      "page_number": 8,
+      "section_title": "angel.co/manychat",
+      "token_count": 24,
+      "raw_text": "angel.co/manychat\nmike@manychat.com\nManyChat – a visual bot builder that doesn’t require coding.\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 6"
+    },
+    {
+      "chunk_index": 8,
+      "page_number": 9,
+      "section_title": "angel.co/manychat",
+      "token_count": 16,
+      "raw_text": "angel.co/manychat\nmike@manychat.com\nWe launched\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 7"
+    },
+    {
+      "chunk_index": 9,
+      "page_number": 10,
+      "section_title": "angel.co/manychat",
+      "token_count": 43,
+      "raw_text": "angel.co/manychat\nmike@manychat.com\nTotal Bots Created\nJul-15\nAug-15\nSep-15\nOct-15\nNov-15\nDec-15\nJan-16\nFeb-16\nMar-16\nApr-16\n0\n20,000\n40,000\n60,000\n80,000\n100,000\n120,000\n140,000\nTraction by Apr-16\n140 000+ bots\n500M messages\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 8"
+    },
+    {
+      "chunk_index": 10,
+      "page_number": 11,
+      "section_title": "angel.co/manychat",
+      "token_count": 21,
+      "raw_text": "angel.co/manychat\nmike@manychat.com\n⚡\nJust got approved on\nFacebook Messenger.\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 9"
+    },
+    {
+      "chunk_index": 11,
+      "page_number": 12,
+      "section_title": "angel.co/manychat",
+      "token_count": 27,
+      "raw_text": "angel.co/manychat\nmike@manychat.com\n🐙\nManyChat\n140 000+ bots\n500M\nmessages/month\nLaunching on Facebook\nMessenger this month\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 10"
+    }
+  ]
+}
