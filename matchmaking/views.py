@@ -2346,7 +2346,7 @@ def platform_metrics(request):
     documents_processed = DocumentSource.objects.filter(status='analyzed').count()
     memos_generated = IntelligenceMemo.objects.count()
     truth_delta_runs = TruthDeltaReport.objects.count()
-    zelda_analyses_triggered = InvestorInterestEvent.objects.filter(investor__match_investor_profile__is_internal_profile=False, founder__is_internal_profile=False, event_type='analyze').count()
+    zelda_analyses_triggered = InvestorInterestEvent.objects.exclude(investor__match_investor_profile__is_internal_profile=True).filter(founder__is_internal_profile=False, event_type='analyze').count()
 
     # Full activation funnel (all 4 personas) + Zelda feature-usage breakdown —
     # see matchmaking/analytics.py for how each stage is computed.
