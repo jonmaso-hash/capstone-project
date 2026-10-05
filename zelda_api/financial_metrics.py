@@ -105,6 +105,16 @@ _COUNT_NOUN = re.compile(
     r"\bretailers?\b|\bstores?\b|\bclinics?\b|\bpractices?\b|\bhospitals?\b",
     re.IGNORECASE,
 )
+# What a usage figure counts. A bot or a message is not a customer, a user or
+# a person: filing "140,000 bots" as customers is the JoyToys failure again,
+# a real number in a claim that changes its meaning. These nouns are the ones
+# the frozen audit decks actually use (docs/baselines/manychat); the list is
+# widened by evidence, not by guessing what else a deck might count.
+_USAGE_NOUN = re.compile(r"\b(bots?|messages?)\b", re.IGNORECASE)
+# The first figure in the text, and the first counted noun of either kind after
+# it. The insight text starts AT its figure (the analyzer cuts it there), so
+# that noun is the one the figure counts.
+_ANY_COUNTED_NOUN = re.compile(f"{_USAGE_NOUN.pattern}|(?:{_COUNT_NOUN.pattern})", re.IGNORECASE)
 _PEOPLE_NOUN = re.compile(
     r"\bemployees?\b|\bstaff\b|\bheadcount\b|\bFTEs?\b|\bteam\s+(?:of|size)\b|"
     r"\bpeople\b|\bperson\s+team\b",
@@ -141,7 +151,27 @@ def claim_is_admissible(category, text):
         return bool(_COUNT_NOUN.search(text))
     if category == "employees":
         return bool(_PEOPLE_NOUN.search(text))
+    if category == "usage":
+        return usage_unit(text) is not None
     return True
+
+
+def usage_unit(text):
+    """
+    The noun a usage figure counts ("bots", "messages"), or None.
+
+    None unless the text has a figure and the first counted noun after it is a
+    usage noun. "500M messages from 2,000 customers" counts messages; "2,000
+    customers sent 500M messages" counts customers and stays a customer claim.
+    """
+    text = text or ""
+    figure = re.search(r"\d", text)
+    if not figure:
+        return None
+    noun = _ANY_COUNTED_NOUN.search(text, figure.start())
+    if noun is None or noun.group(1) is None:
+        return None
+    return noun.group(1).lower()
 
 
 def currency_value(text):

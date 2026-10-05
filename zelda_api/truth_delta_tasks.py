@@ -10,7 +10,7 @@ from django.utils import timezone
 from .vector_models import DocumentSource
 from .truth_delta_engine import TruthDeltaEngine
 from .financial_metrics import (
-    MONEY_CATEGORIES, claim_is_admissible, currency_value,
+    MONEY_CATEGORIES, claim_is_admissible, currency_value, usage_unit,
 )
 from .truth_delta_models import ClaimedDatapoint
 
@@ -105,6 +105,14 @@ def extract_claims_from_insights(document_id: int):
             # compared burn against real revenue and announced a contradiction
             # about a company that did nothing wrong.
             text = insight.insight_text or ''
+            # A Traction figure that counts bots or messages is a usage figure,
+            # not a customer count. Its own noun decides, and is kept as the
+            # unit so two usage claims never read as the same quantity.
+            unit = insight.metric_unit or ''
+            if matched_category == 'customers':
+                counted = usage_unit(text)
+                if counted:
+                    matched_category, unit = 'usage', counted
             if not claim_is_admissible(matched_category, text):
                 logger.debug(
                     "[Truth Delta] %s insight is not admissible evidence for %s: %r",
@@ -131,7 +139,7 @@ def extract_claims_from_insights(document_id: int):
                 category=matched_category,
                 claimed_value=insight.insight_text[:255],  # Truncate if needed
                 claimed_value_numeric=numeric_value,
-                unit=insight.metric_unit or '',
+                unit=unit,
                 source_chunk=f"Insight: {insight.category}",
                 confidence_in_extraction=insight.confidence_score,
                 page_number=source_chunk_obj.page_number if source_chunk_obj else None,
@@ -164,7 +172,7 @@ def extract_claims_from_insights(document_id: int):
 def _is_bare_year(match) -> bool:
     """A four-digit calendar year with no currency mark, multiplier or separator."""
     currency, digits, suffix = match.group(1), match.group(2), match.group(3)
-    if currency or suffix or ',' in digits or '.' in digits:
+    if currency or suffix or not digits.isdigit():
         return False
     return len(digits) == 4 and 1900 <= int(digits) <= 2099
 
@@ -209,8 +217,15 @@ def _extract_numeric_value(text: str) -> float:
     # digits — either the single-letter form or the spelled-out word.
     # The trailing negative lookahead rejects ambiguous adjacent-letter
     # cases (e.g. "1Mbps", "$50 billionaire") rather than guessing.
+    #
+    # The first alternative is a SPACED thousands separator ("140 000+ bots",
+    # also with a no-break or narrow no-break space): it read as 140 before.
+    # Its groups must be exactly three digits, and it may not start inside a
+    # longer number, so "In 2016 500 customers" stays 500 and "12 50" stays 12.
+    # A trailing "+" needs nothing: it is not a letter, so it ends the figure.
     for match in re.finditer(
-        r'(\$)?([\d,]*\.?\d+)\s*(thousand\b|million\b|billion\b|[kmb])?(?![a-zA-Z])',
+        r'(\$)?((?<![\d.,])\d{1,3}(?:[ \u00a0\u202f]\d{3})+(?![\d.,])|[\d,]*\.?\d+)'
+        r'\s*(thousand\b|million\b|billion\b|[kmb])?(?![a-zA-Z])',
         text, re.IGNORECASE,
     ):
         if _is_bare_year(match):
@@ -224,7 +239,7 @@ def _extract_numeric_value(text: str) -> float:
         return None
 
     try:
-        numeric_value = float(match.group(2).replace(',', ''))
+        numeric_value = float(re.sub(r'[,\s]', '', match.group(2)))
     except ValueError:
         return None
 

@@ -67,6 +67,9 @@ class ClaimedDatapoint(models.Model):
         ('team_size', 'Team Size'),
         ('office_locations', 'Office Locations'),
         ('countries', 'Countries Served'),
+        # A count of something used ("140,000 bots", "500M messages"), with
+        # the counted noun in `unit`. Not users and not customers.
+        ('usage', 'Usage Count'),
         ('other', 'Other Metric'),
     ]
     

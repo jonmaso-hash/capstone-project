@@ -123,6 +123,7 @@ jobs:
           zelda_api.tests_three_state_grounding
           zelda_api.tests_source_unavailable
           zelda_api.tests_claim_field_binding
+          zelda_api.tests_claim_extraction_recall
           zelda_api.tests_source_failure_reaches_the_report
           zelda_api.tests_source_naming
           zelda_api.tests_report_semantics
