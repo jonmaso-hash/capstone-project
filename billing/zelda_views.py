@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core import signing
 from django.core.cache import cache
-from django.db import transaction
+from django.db import transaction, DatabaseError
 from django.http import JsonResponse, Http404
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -19,6 +19,10 @@ from .zelda_catalog import PRODUCTS, REPORTS, catalog, selected_reports
 logger = logging.getLogger(__name__)
 
 
+class ProductPaymentConfigurationError(ValueError):
+    pass
+
+
 def plain(value):
     return value.to_dict() if isinstance(value, stripe.StripeObject) else value
 
@@ -26,25 +30,28 @@ def plain(value):
 def stripe_price(product):
     """Use an existing active catalog Price; never create a replacement product."""
     name, amount, _ = PRODUCTS[product]
+    api_key = settings.STRIPE_SECRET_KEY.strip()
+    if not api_key:
+        raise ProductPaymentConfigurationError('STRIPE_SECRET_KEY is missing on the web service')
     account = hashlib.sha256(settings.STRIPE_SECRET_KEY.encode()).hexdigest()[:12]
     key = f'zelda_price:{account}:{product}'
     price_id = cache.get(key)
     if not price_id:
-        products = stripe.Product.list(active=True, limit=100)
+        products = stripe.Product.list(active=True, limit=100, api_key=api_key)
         matches = [plain(p) for p in products.auto_paging_iter() if plain(p).get('name', '').casefold() == name.casefold()]
         if len(matches) != 1:
-            raise ValueError('The product must have one matching active Stripe catalog entry.')
-        prices = plain(stripe.Price.list(product=matches[0]['id'], active=True, limit=100)).get('data', [])
+            raise ProductPaymentConfigurationError('The product must have one matching active Stripe catalog entry.')
+        prices = plain(stripe.Price.list(product=matches[0]['id'], active=True, limit=100, api_key=api_key)).get('data', [])
         matches = [plain(p) for p in prices if plain(p).get('currency') == 'usd'
                    and plain(p).get('unit_amount') == amount and plain(p).get('type') == 'one_time']
         if len(matches) != 1:
-            raise ValueError('The product must have one matching active USD one-time price.')
+            raise ProductPaymentConfigurationError('The product must have one matching active USD one-time price.')
         price_id = matches[0]['id']
         cache.set(key, price_id, 3600)
-    price = plain(stripe.Price.retrieve(price_id))
+    price = plain(stripe.Price.retrieve(price_id, api_key=api_key))
     if not price.get('active') or price.get('currency') != 'usd' or price.get('unit_amount') != amount or price.get('type') != 'one_time':
         cache.delete(key)
-        raise ValueError('The configured catalog price does not match the product.')
+        raise ProductPaymentConfigurationError('The configured catalog price does not match the product.')
     return price_id
 
 
@@ -56,11 +63,11 @@ def product_catalog(request):
 @login_required
 @require_POST
 def external_search(request):
-    from zelda_api.sec_company_identity import resolve_company_identity, FOUND
+    from zelda_api.sec_company_identity import resolve_company_identity, search_listed_companies, FOUND
     from zelda_api.sec_identity import SecUnavailable
     name = request.POST.get('q', '').strip()[:255]
-    if len(name) < 3:
-        return JsonResponse({'error': 'Enter a company name of at least three characters.'}, status=400)
+    if len(name) < 1:
+        return JsonResponse({'error': 'Enter a company name or stock ticker.'}, status=400)
     from accounts import rate_limits
     _tokens, refused = rate_limits.reserve_all([
         ('zelda_company_search_user', str(request.user.pk)),
@@ -69,13 +76,25 @@ def external_search(request):
     if refused:
         return JsonResponse({'error': 'Company search is temporarily limited. Please try again later.'}, status=429)
     try:
+        index_unavailable = False
+        try:
+            choices = search_listed_companies(name)
+        except SecUnavailable:
+            choices, index_unavailable = [], True
+        if choices:
+            for choice in choices:
+                choice['token'] = signing.dumps({'name': choice['name'], 'cik': choice['cik']}, salt='zelda-company-selection')
+                choice['source_url'] = f'https://www.sec.gov/edgar/browse/?CIK={choice["cik"]}'
+            return JsonResponse({'results': choices})
         identity = resolve_company_identity(name)
+        if identity.status != FOUND and index_unavailable:
+            raise SecUnavailable('Company index unavailable')
     except SecUnavailable:
         return JsonResponse({'error': 'Public company records are temporarily unavailable. Please try again.'}, status=503)
     if identity.status != FOUND:
         return JsonResponse({'results': [], 'message': (
             'More than one SEC registrant matches. Use a more specific legal company name.' if identity.status == 'ambiguous'
-            else 'No matching SEC registrant was found. SEC records do not cover every private company. You can still upload your own document and name its company.'
+            else 'No matching SEC registrant was found. A brand may not file separately from its parent, and SEC records do not cover every private company. You can still upload its document and enter its company name.'
         )})
     token = signing.dumps({'name': identity.name, 'cik': identity.cik}, salt='zelda-company-selection')
     return JsonResponse({'results': [{'name': identity.name, 'cik': identity.cik, 'token': token,
@@ -131,11 +150,15 @@ def product_intake(request):
         return JsonResponse({'error': 'Upload a document or select a company from external search.'}, status=400)
     if not has_usable_text(raw):
         return JsonResponse({'error': 'The document contains insufficient readable text. Please upload another file.'}, status=422)
-    doc = DocumentSource.objects.create(
-        uploaded_by=request.user, source_entity=name, filename=filename, document_type='research_report',
-        raw_text_full=raw, raw_text_preview=strip_page_markers(raw)[:1000], total_pages=pages,
-        is_external_subject=True, is_product_input=True, external_cik=cik,
-    )
+    try:
+        doc = DocumentSource.objects.create(
+            uploaded_by=request.user, source_entity=name, filename=filename, document_type='research_report',
+            raw_text_full=raw, raw_text_preview=strip_page_markers(raw)[:1000], total_pages=pages,
+            is_external_subject=True, is_product_input=True, external_cik=cik,
+        )
+    except DatabaseError:
+        logger.exception('Could not save Zelda product evidence for user %s', request.user.pk)
+        return JsonResponse({'error': 'The server could not save your document. Please try again shortly. Nothing was purchased.'}, status=503)
     return JsonResponse({'document_id': doc.id, 'company': name, 'evidence': evidence_label}, status=201)
 
 
@@ -175,9 +198,13 @@ def product_checkout(request):
             success_url=order_url, cancel_url=order_url,
             metadata={'purpose': 'zelda_product', 'order_id': str(order.id), 'user_id': str(request.user.id)},
             idempotency_key=f'zelda-order-{order.id}',
+            api_key=settings.STRIPE_SECRET_KEY.strip(),
         ))
         order.stripe_session_id, order.checkout_url = session['id'], session['url']
         order.save(update_fields=['stripe_session_id', 'checkout_url'])
+    except ProductPaymentConfigurationError:
+        logger.exception('Zelda product payment configuration unavailable for order %s', order.id)
+        return JsonResponse({'error': 'Payments are not configured for this product yet. Please try again later. Nothing was charged.'}, status=503)
     except Exception:
         logger.exception('Could not create Zelda product checkout %s', order.id)
         return JsonResponse({'error': 'Checkout is currently unavailable. Nothing was charged. Please try again.'}, status=503)

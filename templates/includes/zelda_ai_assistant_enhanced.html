@@ -1295,6 +1295,7 @@
 
     function renderLibrary(data) {
         const cards = [];
+        (data.warnings || []).forEach(message => cards.push(`<p class="small text-danger border border-danger rounded p-2" role="status">${zeldaEscape(message)}</p>`));
         (data.sections || []).forEach(section => {
             if (section.key === 'your_company') {
                 const docs = (section.documents || []).map(d => `
@@ -1359,17 +1360,21 @@
         const content = document.getElementById('library-content');
         loading.style.display = 'block';
         content.style.display = 'none';
+        const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 30000);
         try {
             const response = await fetch(`${ZELDA_API}/library/`, {
                 credentials: 'same-origin',
+                signal: controller.signal,
                 headers: { 'X-CSRFToken': getCookie('csrftoken') }
             });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            if (response.redirected || response.status === 401 || response.status === 403) throw new Error('Refresh this page and sign in again to load your Library.');
+            if (!response.ok) throw new Error('Library is temporarily unavailable. Please try again shortly.');
             content.innerHTML = renderLibrary(await response.json());
         } catch (err) {
-            content.innerHTML = `<p class="small text-danger mb-0">Couldn't load your library right now.</p>`;
+            content.innerHTML = `<p class="small text-danger border border-danger rounded p-2 mb-0" role="status">${zeldaEscape(err.name === 'AbortError' ? 'Library took too long to load. Please try again.' : err.message)}</p>`;
             addLogEntry(`Library load error: ${err.message}`, 'error');
         } finally {
+            clearTimeout(timer);
             loading.style.display = 'none';
             content.style.display = 'flex';
         }

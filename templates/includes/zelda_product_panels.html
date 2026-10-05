@@ -17,19 +17,23 @@
         <h3 class="h6 fw-bold">Select the company and evidence</h3>
         <p class="small text-muted zelda-selected-evidence">Upload a document or select a company below. Nothing is purchased by searching or uploading.</p>
         <form class="zelda-product-search d-grid gap-2">
+            {% csrf_token %}
             <label class="small fw-semibold" for="product-search-{{ product.key }}">Search companies outside Interlink</label>
-            <div class="d-flex gap-2"><input id="product-search-{{ product.key }}" name="q" class="form-control form-control-sm" style="min-width: 0;" required minlength="3" maxlength="255" placeholder="Exact legal company name"><button type="submit" class="btn btn-outline-dark btn-sm flex-shrink-0">Search</button></div>
-            <p class="small text-muted mb-0">Searches SEC public registration records, including registered private issuers. Not every private company is covered.</p>
+            <div class="d-flex gap-2"><input id="product-search-{{ product.key }}" name="q" class="form-control form-control-sm" style="min-width: 0;" required maxlength="255" placeholder="Company name or stock ticker"><button type="submit" class="btn btn-outline-dark btn-sm flex-shrink-0">Search</button></div>
+            <p class="small text-muted mb-0">Searches SEC public registration records, including registered private issuers. Not every private company is covered. For better results with private companies, upload a pitch deck.</p>
+            <div class="zelda-search-status small" role="status" aria-live="polite" hidden></div>
             <div class="zelda-company-results d-grid gap-2"></div>
         </form>
         <hr>
         <form class="zelda-product-upload d-grid gap-2" enctype="multipart/form-data">
+            {% csrf_token %}
             <label class="small fw-semibold" for="product-company-{{ product.key }}">Company name</label>
             <input id="product-company-{{ product.key }}" name="company" required maxlength="255" class="form-control form-control-sm" placeholder="Company name">
             <label class="small fw-semibold" for="product-file-{{ product.key }}">Upload a pitch deck or document</label>
             <input id="product-file-{{ product.key }}" name="file" type="file" accept=".pdf,.pptx,.txt" required class="form-control form-control-sm">
             <span class="small text-muted">PDF, PPTX or TXT · up to 25 MB · use only evidence you are authorized to provide</span>
             <button type="submit" class="btn btn-outline-dark btn-sm">Use this document</button>
+            <div class="zelda-upload-status small" role="status" aria-live="polite" hidden></div>
         </form>
     </div>
     {% if product.key == 'three_pack' %}
