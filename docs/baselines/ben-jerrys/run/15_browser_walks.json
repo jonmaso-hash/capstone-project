@@ -1,0 +1,33 @@
+{
+ "note": "Real browser walks in the desktop app's browser pane against http://localhost:8010, document 3128. Text is JavaScript-rendered innerText; canary checks also test outerHTML. Each signed-in walk ended with the nav Logout button, confirmed by /accounts/profile/bj_owner/ redirecting to /accounts/login/.",
+ "OWNER": {
+  "login_landing": "/matchmaking/dashboard/founder/",
+  "upload": "201, document 3128 (see 00_setup.json)",
+  "truth_delta_page": {"headings": ["Entity Integrity", "Truth Delta Verification"], "score": "— /100, NOT SCORED · NO VERIFIABLE CLAIMS", "explanation": "No verifiable claims were extracted from this document, so there is nothing to cross-check against public sources yet.", "overall_assessment": "Verification finished with nothing to check: no verifiable claims were extracted from this document, so no claim was compared against public sources.", "no_public_data_phrase": false, "reconciliation_panel": false, "entity_integrity_sec_line": "No SEC filer with this name was found on EDGAR. Most private companies never file with the SEC. — Not found", "euro_or_7.9_or_Unilever": false, "canary_text": false, "canary_html": false, "document_title": "", "run_verification_button": true},
+  "profile": {"positive_company": true, "positive_geography": true, "canary_visible": true},
+  "ic_memo_page": {"title": "AI Investment Committee Memo — Ben & Jerry's | Interlink Foundry", "tier": "Zelda Lite Memo (owner not Premium)", "evidence_level": "Little evidence found", "section_coverage": "31.2%", "information_readiness": "5/100", "citations": 7, "canary": false, "euro": false, "7.9B": false, "Unilever": false, "raw_state_token_visible": "The verification status for the entire document is 'no_claims,' meaning every statement is self-reported with no independent confirmation"},
+  "signed_out": true
+ },
+ "ANON": {"truth_delta_page": "redirected to /accounts/login/?next=/api/v1/zelda/documents/3128/verification/", "profile": "redirected to /accounts/login/?next=/accounts/profile/bj_owner/", "home": {"loaded": true, "sign_in_link": true, "canary": false}},
+ "LITE": {
+  "login_landing": "/matchmaking/dashboard/investor/",
+  "profile": {"positive_company": true, "positive_geography": true, "canary_text": false, "canary_html": false},
+  "truth_delta_page": {"positive_heading": true, "not_scored_no_verifiable_claims": true, "no_public_data_phrase": false, "reconciliation_panel": false, "entity_integrity_section": false, "canary_html": false},
+  "company_overview_link": "/matchmaking/memo/ben-%26-jerry's/ → 500 MultipleObjectsReturned (Django debug page): get() returned more than one Application -- it returned 2!",
+  "signed_out": true
+ },
+ "PAID": {
+  "login_landing": "/matchmaking/dashboard/investor/",
+  "profile": {"positive_company": true, "positive_geography": true, "canary_text": false, "canary_html": false},
+  "truth_delta_page": {"positive_heading": true, "not_scored_no_verifiable_claims": true, "zelda_lite_label": true, "no_public_data_phrase": false, "reconciliation_panel": false, "entity_integrity_section": false, "canary_html": false},
+  "ic_memo_page": "404 (raised by zelda_api.views.ic_memo_view)",
+  "signed_out": true
+ },
+ "STAFF": {
+  "login_landing": "/accounts/choose-role/",
+  "profile": {"positive_company": true, "canary_text": true, "canary_html": true, "note": "staff may see PRIVATE: this is the positive control"},
+  "truth_delta_page": {"positive_heading": true, "not_scored_no_verifiable_claims": true, "no_public_data_phrase": false, "reconciliation_panel": false, "entity_integrity_sec_line": true, "run_verification_button": true, "canary_html": false},
+  "ic_memo_page": {"full_memo": true, "canary": false, "euro": false, "7.9B": false, "advice_words": false, "Unilever_only_in": "Questions for Management: '...separated from Unilever or any other parent-company figures?'"},
+  "signed_out": true
+ }
+}

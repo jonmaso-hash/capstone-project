@@ -1,0 +1,23 @@
+{
+ "note": "Read-only probes run inside the same wrapper environment after the pipeline finished. Nothing was changed.",
+ "sec_identity": {
+  "cached_outcome_from_the_run": "CompanyIdentity(status='not_found', cik=None, name=None, matched_on=None, has_ticker=False, is_stale=False, annual_filing_date=None, candidate_ciks=(), files_periodically=False)",
+  "cache_key": "sec_identity_v3:ben & jerry's (CacheKeyWarning: characters that will cause errors with memcached)",
+  "search_phrase": "Ben & Jerry's",
+  "candidate_ciks_live_edgar": [],
+  "core(profile name)": "ben jerry s",
+  "core('BEN & JERRYS HOMEMADE INC')": "ben jerrys homemade",
+  "reading": "EDGAR company search returns no CIK for the profile name, and the core-name normaliser splits the apostrophe ('jerry s'), so even a returned CIK 768384 would not match. S-4 cannot occur at this code state; the registrant is unreachable by this name."
+ },
+ "numeric_parser_seeds": {
+  "Unilever ice cream unit 2024 sales: \u20ac7.9B": 7900000000.0,
+  "\u20ac7.9B": 7900000000.0,
+  "$7.9B": 7900000000.0,
+  "140 000+ bots": 140.0,
+  "reading": "S-3 and S-7 are present and unfixed at b9f6867 (zelda_api/truth_delta_tasks.py _extract_numeric_value, last touched by ddd6e20). In this run S-3 was never reached: no claim was extracted."
+ },
+ "credits": {"bj_owner": "1 used of 3 (memo only; a no_claims verification is not charged)", "bj_lite": "0 of 3", "bj_paid": "0 of 100", "bj_staff": "0 of 3"},
+ "reconciliation_by_principal": {"OWNER": [], "LITE": [], "PAID": [], "STAFF": [], "ANON": [], "reading": "reconcile_profile_with_deck omits pairs with no deck claim; with 0 claims it returns [] for the owner too"},
+ "anthropic_calls": "1 memo generation (worker, 47.8 s) + 7 /ask/ query extractions (Q1-Q7, ~350 input / 8 output tokens each)",
+ "memwatch": "no process crossed the 1500 MB threshold during the run"
+}

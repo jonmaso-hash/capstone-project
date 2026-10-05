@@ -1,0 +1,407 @@
+{
+ "OWNER:G_memo_api": {
+  "memo_id": 88,
+  "document_id": 3128,
+  "document_name": "Ben & Jerry's",
+  "locked": true,
+  "is_owner": true,
+  "generated_at": "2026-10-05T05:27:10.109539+00:00"
+ },
+ "OWNER:H_td_api": {
+  "status": "no_claims",
+  "overall_truth_score": null,
+  "credibility_risk": "no_claims",
+  "summary": "Verification finished with nothing to check: no verifiable claims were extracted from this document, so no claim was compared against public sources.",
+  "details": {},
+  "category_states": {},
+  "verified_count": 0,
+  "contradicted_count": 0,
+  "unverified_count": 0,
+  "coverage_sentence": "",
+  "grounding_reasons": {}
+ },
+ "OWNER:I_status": {
+  "document_id": 3128,
+  "filename": "ben_jerrys_public_pitch_deck_test.pptx",
+  "status": "analyzed",
+  "verification_state": "no_claims",
+  "confidence_score": 0.5875,
+  "created_at": "2026-10-05T05:26:11.686508+00:00",
+  "memo_available": true,
+  "memo_id": 88,
+  "memo_evidence_level": "LITTLE_EVIDENCE"
+ },
+ "OWNER:J_valuation_api": {
+  "error": "Valuation report not yet generated. Check status endpoint."
+ },
+ "OWNER:L_identity_status": {
+  "status": "complete",
+  "checked_at": "2026-10-05T05:26:22.362067+00:00"
+ },
+ "OWNER:O_library": {
+  "sections": [
+   {
+    "key": "your_company",
+    "title": "Your company",
+    "company": "Ben & Jerry's",
+    "reports": [
+     {
+      "key": "overview",
+      "label": "Company overview",
+      "url": null,
+      "note": "Investor accounts only",
+      "is_current": false
+     },
+     {
+      "key": "evidence",
+      "label": "Check the evidence",
+      "url": "/api/v1/zelda/documents/3128/verification/",
+      "note": "",
+      "is_current": false
+     },
+     {
+      "key": "analysis",
+      "label": "Investment analysis",
+      "url": "/api/v1/zelda/documents/3128/ic-memo/",
+      "note": "",
+      "is_current": false
+     }
+    ],
+    "documents": [
+     {
+      "document_id": 3128,
+      "name": "Ben & Jerry's",
+      "kind": "Pitch Deck",
+      "status": "Ready",
+      "can_open_brief": true,
+      "created_at": "2026-10-05T05:26:11.686508+00:00"
+     }
+    ]
+   }
+  ],
+  "profile_analytics_url": "/accounts/profile/bj_owner/analysis/"
+ },
+ "OWNER:P_analyze_founder": {
+  "status": "error",
+  "message": "Investor access required"
+ },
+ "LITE:G_memo_api": {
+  "memo_id": 88,
+  "document_id": 3128,
+  "document_name": "Ben & Jerry's",
+  "locked": true,
+  "is_owner": false,
+  "generated_at": "2026-10-05T05:27:10.109539+00:00",
+  "tier": "lite",
+  "lite_sections": {
+   "business_model_analysis": "Insufficient disclosed data to describe the business model in full. The company states it operates under a 'linked prosperity' framework in which product quality, sustainable growth, and social mission are intended to reinforce one another [S4][S5], but no revenue mechanism, pricing structure, distribution channel detail, or customer acquisition model was extracted. The evidence explicitly cautions that financial figures in the source are parent or ice-cream-unit figures rather than standalone Ben & Jerry's data [S2]. The company states the brand makes mission a feature of the product experience [S3], suggesting a differentiation-based positioning, but no quantitative evidence supports or contextualizes this. Ownership structure, operating model, and distribution are identified as information gaps [S6] with no corresponding data extracted.",
+   "information_readiness": "Score: 5/100\nPresent:\n• Company name and brand identity [P1, P2, P3]\n• High-level brand philosophy ('linked prosperity') [S4, S5]\n• Stated transparency around values as a brand feature [S3]\n• Acknowledgment that financial figures in the source are not standalone Ben & Jerry's data [S2]\n\nNeeds Validation:\n• Standalone revenue, margins, and unit economics\n• Ownership and corporate governance structure\n• Management team credentials\n• Market size and competitive positioning\n• Funding history and capital structure\n• Distribution model and customer base\n• Independent verification of any factual claim (none currently verified)\n\nNext evidence to supply: Audited standalone financial statements for the Ben & Jerry's business unit, clearly separated from parent-company figures, would be the single most important document to advance this review.",
+   "open_concerns": "• The financial data in the source document is explicitly flagged as parent or ice-cream-unit figures rather than standalone Ben & Jerry's data [S2]; it is therefore unknown whether the business unit is profitable, growing, or capital-intensive on a standalone basis, which is fundamental to any investment assessment.\n• No funding information was extracted [Gaps], leaving the company's capitalization, debt position, and future capital requirements entirely unknown.\n• No team or management information was extracted, making it impossible to assess execution capability or leadership continuity.\n• The verification status for the entire document is 'no_claims,' meaning every statement is self-reported with no independent confirmation; the reliability of any assertion in this memo cannot be established from the evidence provided.",
+   "supported_points": "• The company states it operates under a 'linked prosperity' philosophy connecting product quality, sustainable growth, and social mission [S4][S5]; this is a self-reported framing and has not been independently verified.\n• The company states it is unusually transparent about values and that mission is embedded in the product experience [S3]; this is self-reported and not corroborated by external evidence in the extracted materials.",
+   "what_would_change_the_picture": "Audited standalone financial statements for the Ben & Jerry's business unit—separating its revenues, margins, and costs from parent-company figures [S2]—would be the single most important piece of evidence, as the current materials contain no independently verifiable financial data for the entity under review."
+  },
+  "disclaimer": "This report is provided for informational and due-diligence purposes only. It is not financial, investment, legal, tax, or accounting advice. Do not rely solely on this report when making an investment or transaction decision. You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers. It is not a binding representation by Interlink Foundry."
+ },
+ "LITE:H_td_api": {
+  "status": "no_claims",
+  "overall_truth_score": null,
+  "credibility_risk": "no_claims",
+  "summary": "Verification finished with nothing to check: no verifiable claims were extracted from this document, so no claim was compared against public sources.",
+  "details": {},
+  "category_states": {},
+  "verified_count": 0,
+  "contradicted_count": 0,
+  "unverified_count": 0,
+  "coverage_sentence": "",
+  "grounding_reasons": {}
+ },
+ "LITE:I_status": {
+  "error": "Not authorized"
+ },
+ "LITE:J_valuation_api": {
+  "error": "Not authorized"
+ },
+ "LITE:L_identity_status": {
+  "error": "Not found."
+ },
+ "LITE:O_library": {
+  "sections": [
+   {
+    "key": "recent_companies",
+    "title": "Companies you've looked into",
+    "items": [
+     {
+      "company": "Ben & Jerry's",
+      "activity": "You opened its Zelda brief",
+      "last_activity": "2026-10-05T05:42:37.125438+00:00",
+      "profile_url": "/accounts/profile/bj_owner/",
+      "brief_document_id": 3128,
+      "reports": [
+       {
+        "key": "overview",
+        "label": "Company overview",
+        "url": "/matchmaking/memo/ben-&-jerry's/",
+        "note": "",
+        "is_current": false
+       },
+       {
+        "key": "evidence",
+        "label": "Check the evidence",
+        "url": "/api/v1/zelda/documents/3128/verification/",
+        "note": "",
+        "is_current": false
+       },
+       {
+        "key": "analysis",
+        "label": "Investment analysis",
+        "url": null,
+        "note": "Available once you and this company are connected",
+        "is_current": false
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "profile_analytics_url": "/accounts/profile/bj_lite/analysis/"
+ },
+ "LITE:P_analyze_founder": {
+  "status": "ready",
+  "document_id": 3128,
+  "filename": "ben_jerrys_public_pitch_deck_test.pptx",
+  "company": "Ben & Jerry's",
+  "has_memo": true
+ },
+ "PAID:G_memo_api": {
+  "memo_id": 88,
+  "document_id": 3128,
+  "document_name": "Ben & Jerry's",
+  "locked": true,
+  "is_owner": false,
+  "generated_at": "2026-10-05T05:27:10.109539+00:00",
+  "tier": "lite",
+  "lite_sections": {
+   "business_model_analysis": "Insufficient disclosed data to describe the business model in full. The company states it operates under a 'linked prosperity' framework in which product quality, sustainable growth, and social mission are intended to reinforce one another [S4][S5], but no revenue mechanism, pricing structure, distribution channel detail, or customer acquisition model was extracted. The evidence explicitly cautions that financial figures in the source are parent or ice-cream-unit figures rather than standalone Ben & Jerry's data [S2]. The company states the brand makes mission a feature of the product experience [S3], suggesting a differentiation-based positioning, but no quantitative evidence supports or contextualizes this. Ownership structure, operating model, and distribution are identified as information gaps [S6] with no corresponding data extracted.",
+   "information_readiness": "Score: 5/100\nPresent:\n• Company name and brand identity [P1, P2, P3]\n• High-level brand philosophy ('linked prosperity') [S4, S5]\n• Stated transparency around values as a brand feature [S3]\n• Acknowledgment that financial figures in the source are not standalone Ben & Jerry's data [S2]\n\nNeeds Validation:\n• Standalone revenue, margins, and unit economics\n• Ownership and corporate governance structure\n• Management team credentials\n• Market size and competitive positioning\n• Funding history and capital structure\n• Distribution model and customer base\n• Independent verification of any factual claim (none currently verified)\n\nNext evidence to supply: Audited standalone financial statements for the Ben & Jerry's business unit, clearly separated from parent-company figures, would be the single most important document to advance this review.",
+   "open_concerns": "• The financial data in the source document is explicitly flagged as parent or ice-cream-unit figures rather than standalone Ben & Jerry's data [S2]; it is therefore unknown whether the business unit is profitable, growing, or capital-intensive on a standalone basis, which is fundamental to any investment assessment.\n• No funding information was extracted [Gaps], leaving the company's capitalization, debt position, and future capital requirements entirely unknown.\n• No team or management information was extracted, making it impossible to assess execution capability or leadership continuity.\n• The verification status for the entire document is 'no_claims,' meaning every statement is self-reported with no independent confirmation; the reliability of any assertion in this memo cannot be established from the evidence provided.",
+   "supported_points": "• The company states it operates under a 'linked prosperity' philosophy connecting product quality, sustainable growth, and social mission [S4][S5]; this is a self-reported framing and has not been independently verified.\n• The company states it is unusually transparent about values and that mission is embedded in the product experience [S3]; this is self-reported and not corroborated by external evidence in the extracted materials.",
+   "what_would_change_the_picture": "Audited standalone financial statements for the Ben & Jerry's business unit—separating its revenues, margins, and costs from parent-company figures [S2]—would be the single most important piece of evidence, as the current materials contain no independently verifiable financial data for the entity under review."
+  },
+  "disclaimer": "This report is provided for informational and due-diligence purposes only. It is not financial, investment, legal, tax, or accounting advice. Do not rely solely on this report when making an investment or transaction decision. You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers. It is not a binding representation by Interlink Foundry."
+ },
+ "PAID:H_td_api": {
+  "status": "no_claims",
+  "overall_truth_score": null,
+  "credibility_risk": "no_claims",
+  "summary": "Verification finished with nothing to check: no verifiable claims were extracted from this document, so no claim was compared against public sources.",
+  "details": {},
+  "category_states": {},
+  "verified_count": 0,
+  "contradicted_count": 0,
+  "unverified_count": 0,
+  "coverage_sentence": "",
+  "grounding_reasons": {}
+ },
+ "PAID:I_status": {
+  "error": "Not authorized"
+ },
+ "PAID:J_valuation_api": {
+  "error": "Not authorized"
+ },
+ "PAID:L_identity_status": {
+  "error": "Not found."
+ },
+ "PAID:O_library": {
+  "sections": [
+   {
+    "key": "recent_companies",
+    "title": "Companies you've looked into",
+    "items": [
+     {
+      "company": "Ben & Jerry's",
+      "activity": "You opened its Zelda brief",
+      "last_activity": "2026-10-05T05:42:37.907419+00:00",
+      "profile_url": "/accounts/profile/bj_owner/",
+      "brief_document_id": 3128,
+      "reports": [
+       {
+        "key": "overview",
+        "label": "Company overview",
+        "url": "/matchmaking/memo/ben-&-jerry's/",
+        "note": "",
+        "is_current": false
+       },
+       {
+        "key": "evidence",
+        "label": "Check the evidence",
+        "url": "/api/v1/zelda/documents/3128/verification/",
+        "note": "",
+        "is_current": false
+       },
+       {
+        "key": "analysis",
+        "label": "Investment analysis",
+        "url": null,
+        "note": "Available once you and this company are connected",
+        "is_current": false
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "profile_analytics_url": "/accounts/profile/bj_paid/analysis/"
+ },
+ "PAID:P_analyze_founder": {
+  "status": "ready",
+  "document_id": 3128,
+  "filename": "ben_jerrys_public_pitch_deck_test.pptx",
+  "company": "Ben & Jerry's",
+  "has_memo": true
+ },
+ "STAFF:G_memo_api": {
+  "memo_id": 88,
+  "document_id": 3128,
+  "document_name": "Ben & Jerry's",
+  "locked": false,
+  "evidence_level": "LITTLE_EVIDENCE",
+  "completeness_score": 0.5875,
+  "citations_count": 7,
+  "sections": {
+   "executive_summary": "Ben & Jerry's is a consumer-sector ice cream brand headquartered in South Burlington, VT [P3], categorized as a public-stage entity [P1] operating in the Consumer sector [P2]. The company states it frames its business around a 'linked prosperity' model connecting product quality, sustainable growth, and social mission [S4]. No raise amount, revenue figure, or standalone financial data is present in the extracted evidence; the evidence explicitly notes that any figures available are parent or ice-cream-unit figures, not standalone Ben & Jerry's revenue [S2].",
+   "problem_solution": "The extracted evidence does not clearly articulate a specific consumer problem the company is solving or define the target customer in analytical terms. The company states it pursues 'linked prosperity,' connecting product quality, sustainable growth, and social mission [S4], suggesting the brand positions itself as a values-driven alternative in the premium ice cream category. However, no formal problem-solution framing was extracted from the submitted document. The reference item S7 contains only the label 'Zelda challenge' [S7], providing no substantive content.",
+   "market_analysis": "Market size not disclosed in pitch deck. The extracted evidence contains a reference to market context as an extraction target [S6] and a test of whether brand facts can be separated from market context [S1], but no market size figures, segment definitions, or growth rates were extracted from the submitted materials. No market claims can be reported.",
+   "team_assessment": "No founder names, executive names, credentials, or organizational details were extracted from the submitted evidence. The company states the brand is 'unusually transparent about values, making mission a feature of the product experience' [S3], but this is a brand-character claim, not a team credential. Insufficient data exists in the extracted evidence to assess the management team.",
+   "financial_analysis": "• Current revenue: Not found in the extracted evidence. The evidence explicitly flags that any financial figures in the source document are parent or ice-cream-unit figures, not standalone Ben & Jerry's revenue [S2].\n• Burn rate: Not found in the extracted evidence.\n• Raise amount: Not found in the extracted evidence. The extraction log notes no funding statement was extracted [Gaps].\n• Use of proceeds: Not found in the extracted evidence.\n• Gross margin or profitability: Not found in the extracted evidence.",
+   "risk_assessment": "1. Corporate structure opacity: The evidence explicitly states that financial figures in the source document are parent or ice-cream-unit figures, not standalone Ben & Jerry's data [S2]. This makes it impossible to assess the economics of the Ben & Jerry's business unit in isolation.\n2. Mission-commercial tension: The company states it operates under a 'linked prosperity' framework [S4][S5], but no evidence is provided that this model has been validated or that mission activities do not create drag on financial returns. This tension is named but unresolved.\n3. Absence of verifiable claims: The verification status for this document is 'no_claims,' meaning no factual assertions in the submitted materials were independently checked. Every statement carries SELF_REPORTED status only [S1–S6].\n4. Ownership and governance ambiguity: The evidence flags ownership and operating model as extraction targets [S6] but provides no actual information on either. The relationship between Ben & Jerry's and its parent entity is uncharacterized in the extracted evidence.\n5. Funding and capital structure unknown: No funding statement was extracted [Gaps], meaning there is no basis to evaluate the company's capitalization, leverage, or future funding needs.",
+   "business_model_analysis": "Insufficient disclosed data to describe the business model in full. The company states it operates under a 'linked prosperity' framework in which product quality, sustainable growth, and social mission are intended to reinforce one another [S4][S5], but no revenue mechanism, pricing structure, distribution channel detail, or customer acquisition model was extracted. The evidence explicitly cautions that financial figures in the source are parent or ice-cream-unit figures rather than standalone Ben & Jerry's data [S2]. The company states the brand makes mission a feature of the product experience [S3], suggesting a differentiation-based positioning, but no quantitative evidence supports or contextualizes this. Ownership structure, operating model, and distribution are identified as information gaps [S6] with no corresponding data extracted.",
+   "information_readiness": "Score: 5/100\nPresent:\n• Company name and brand identity [P1, P2, P3]\n• High-level brand philosophy ('linked prosperity') [S4, S5]\n• Stated transparency around values as a brand feature [S3]\n• Acknowledgment that financial figures in the source are not standalone Ben & Jerry's data [S2]\n\nNeeds Validation:\n• Standalone revenue, margins, and unit economics\n• Ownership and corporate governance structure\n• Management team credentials\n• Market size and competitive positioning\n• Funding history and capital structure\n• Distribution model and customer base\n• Independent verification of any factual claim (none currently verified)\n\nNext evidence to supply: Audited standalone financial statements for the Ben & Jerry's business unit, clearly separated from parent-company figures, would be the single most important document to advance this review.",
+   "supported_points": "• The company states it operates under a 'linked prosperity' philosophy connecting product quality, sustainable growth, and social mission [S4][S5]; this is a self-reported framing and has not been independently verified.\n• The company states it is unusually transparent about values and that mission is embedded in the product experience [S3]; this is self-reported and not corroborated by external evidence in the extracted materials.",
+   "open_concerns": "• The financial data in the source document is explicitly flagged as parent or ice-cream-unit figures rather than standalone Ben & Jerry's data [S2]; it is therefore unknown whether the business unit is profitable, growing, or capital-intensive on a standalone basis, which is fundamental to any investment assessment.\n• No funding information was extracted [Gaps], leaving the company's capitalization, debt position, and future capital requirements entirely unknown.\n• No team or management information was extracted, making it impossible to assess execution capability or leadership continuity.\n• The verification status for the entire document is 'no_claims,' meaning every statement is self-reported with no independent confirmation; the reliability of any assertion in this memo cannot be established from the evidence provided.",
+   "what_would_change_the_picture": "Audited standalone financial statements for the Ben & Jerry's business unit—separating its revenues, margins, and costs from parent-company figures [S2]—would be the single most important piece of evidence, as the current materials contain no independently verifiable financial data for the entity under review.",
+   "upside_scenario": "If the 'linked prosperity' model [S4] were demonstrated through standalone financials to generate premium margins and durable consumer loyalty, and if the brand's stated transparency around values [S3] were shown to translate into measurable pricing power or lower customer acquisition costs, the most favorable reading of the disclosed facts would be that mission-driven differentiation creates a defensible competitive position. No financial or market evidence in the extracted materials currently supports or contradicts this reading.",
+   "base_scenario": "Based solely on the extracted evidence, Ben & Jerry's is a consumer brand [P2] headquartered in South Burlington, VT [P3] that states it pursues a values-integrated business model [S4][S5]. Without standalone financials [S2], verified market data, or confirmed management information, the base case cannot be characterized beyond the brand's self-reported positioning. The current evidence base is insufficient to project trajectory.",
+   "downside_scenario": "If standalone financials—currently absent from the evidence [S2, Gaps]—were to reveal that the Ben & Jerry's business unit is structurally dependent on parent-company subsidies, or that mission-related costs materially compress margins, the least favorable reading would be that the 'linked prosperity' framing [S4] masks economic fragility. The complete absence of verified claims [verification: no_claims] means there is currently no evidence to rule out this possibility.",
+   "zelda_advantage": "The extraction explicitly flagged that financial figures in the source document are parent or ice-cream-unit figures rather than standalone Ben & Jerry's data [S2], a structural attribution problem that a plain AI summary of the same document would likely have presented as company-level financials without qualification. This distinction is material to any investment assessment of the entity.",
+   "questions_for_management": "• What are Ben & Jerry's standalone revenues, gross margins, and operating income, separated from Unilever or any other parent-company figures?\n• What is the precise ownership and governance structure, including the degree of operational autonomy Ben & Jerry's exercises relative to its parent?\n• Who comprises the current executive leadership team, what are their tenures, and how is the social mission governance board constituted?\n• How is 'linked prosperity' operationally defined and measured—are there internal KPIs that link social mission activity to financial outcomes?\n• What distribution channels does Ben & Jerry's use, and what proportion of revenue comes from each?\n• Has the brand experienced any financial or reputational impact from its social and political activism, and how does management quantify that risk?\n• Is there any active or contemplated separation, divestiture, or restructuring of the Ben & Jerry's entity from its parent?\n• What is the company's capital structure, including any intercompany debt or transfer-pricing arrangements with the parent?"
+  },
+  "insights_cited": [
+   {
+    "category": "Risk",
+    "text": "• Create extraction targets across history, ownership, operating model, distribution, values, risks, and strategic narrative",
+    "confidence": 70.0,
+    "sources": [
+     2
+    ]
+   },
+   {
+    "category": "Traction",
+    "text": "Ben & Jerry’s publicly frames the business around “linked prosperity,” where product quality, sustainable growth, and social mission should thrive together",
+    "confidence": 70.0,
+    "sources": [
+     3
+    ]
+   },
+   {
+    "category": "Product",
+    "text": "Ben & Jerry’s publicly frames the business around “linked prosperity,” where product quality, sustainable growth, and social mission should thrive together",
+    "confidence": 70.0,
+    "sources": [
+     3
+    ]
+   },
+   {
+    "category": "Team",
+    "text": "• The brand is unusually transparent about values, making mission a feature of the product experience",
+    "confidence": 70.0,
+    "sources": [
+     4
+    ]
+   },
+   {
+    "category": "Revenue",
+    "text": "These are parent/ice-cream-unit figures, not standalone Ben & Jerry’s revenue",
+    "confidence": 70.0,
+    "sources": [
+     6
+    ]
+   },
+   {
+    "category": "Market",
+    "text": "• Test whether Truth Delta separates brand facts, parent-company facts, mission claims, market context, and unsupported deck claims",
+    "confidence": 70.0,
+    "sources": [
+     2
+    ]
+   },
+   {
+    "category": "Problem",
+    "text": "Zelda challenge",
+    "confidence": 50.0,
+    "sources": [
+     8
+    ]
+   }
+  ],
+  "generated_at": "2026-10-05T05:27:10.109539+00:00",
+  "disclaimer": "This report is provided for informational and due-diligence purposes only. It is not financial, investment, legal, tax, or accounting advice. Do not rely solely on this report when making an investment or transaction decision. You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers. It is not a binding representation by Interlink Foundry."
+ },
+ "STAFF:H_td_api": {
+  "status": "no_claims",
+  "overall_truth_score": null,
+  "credibility_risk": "no_claims",
+  "summary": "Verification finished with nothing to check: no verifiable claims were extracted from this document, so no claim was compared against public sources.",
+  "details": {},
+  "category_states": {},
+  "verified_count": 0,
+  "contradicted_count": 0,
+  "unverified_count": 0,
+  "coverage_sentence": "",
+  "grounding_reasons": {}
+ },
+ "STAFF:I_status": {
+  "document_id": 3128,
+  "filename": "ben_jerrys_public_pitch_deck_test.pptx",
+  "status": "analyzed",
+  "verification_state": "no_claims",
+  "confidence_score": 0.5875,
+  "created_at": "2026-10-05T05:26:11.686508+00:00",
+  "memo_available": true,
+  "memo_id": 88,
+  "memo_evidence_level": "LITTLE_EVIDENCE"
+ },
+ "STAFF:J_valuation_api": {
+  "error": "Valuation report not yet generated. Check status endpoint."
+ },
+ "STAFF:L_identity_status": {
+  "status": "complete",
+  "checked_at": "2026-10-05T05:26:22.362067+00:00"
+ },
+ "STAFF:O_library": {
+  "sections": [],
+  "profile_analytics_url": null
+ },
+ "STAFF:P_analyze_founder": {
+  "status": "error",
+  "message": "Investor access required"
+ },
+ "ANON:G_memo_api": {
+  "detail": "Authentication credentials were not provided."
+ },
+ "ANON:H_td_api": {
+  "detail": "Authentication credentials were not provided."
+ },
+ "ANON:I_status": {
+  "detail": "Authentication credentials were not provided."
+ },
+ "ANON:J_valuation_api": {
+  "detail": "Authentication credentials were not provided."
+ },
+ "ANON:O_library": {
+  "detail": "Authentication credentials were not provided."
+ },
+ "ANON:P_analyze_founder": {
+  "status": "error",
+  "message": "Investor access required"
+ }
+}
