@@ -640,7 +640,7 @@ def mark_identity_check_failed(report):
     """Record a failed attempt without turning it into evidence or a check date."""
     from .entity_verification_models import EntityVerificationReport as R
     R.objects.filter(pk=report.pk, status=R.PENDING).update(status=R.FAILED)
-    report.refresh_from_db(fields=['status'])
+    report.refresh_from_db()
     return report
 
 
@@ -652,7 +652,7 @@ def refresh_identity_check_status(report):
             pk=report.pk, status=R.PENDING,
             created_at__lt=timezone.now() - PENDING_SHARE_WINDOW,
         ).update(status=R.FAILED)
-        report.refresh_from_db(fields=['status'])
+        report.refresh_from_db()
     return report
 
 

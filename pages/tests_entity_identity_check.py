@@ -668,6 +668,20 @@ class CheckLifecycleTests(_Requests):
         self.assertIn('js/entity_identity_check.js', section)
         self.assertNotIn('id="identityCheckButton"', section)
 
+    def test_completion_during_a_status_read_refreshes_findings_and_check_date_together(self):
+        from zelda_api.entity_verification import refresh_identity_check_status
+        from zelda_api.entity_verification_models import EntityVerificationReport
+        report = self._pending()
+        checked_at = timezone.now()
+        finding = self._finding()
+        EntityVerificationReport.objects.filter(pk=report.pk).update(
+            status='complete', checked_at=checked_at, findings=[finding])
+        # The reader already loaded the pending instance before the worker saved.
+        refresh_identity_check_status(report)
+        self.assertEqual(report.status, 'complete')
+        self.assertEqual(report.checked_at, checked_at)
+        self.assertEqual(report.findings, [finding])
+
 
 class TriggerTests(_Requests):
 
