@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-5" style="max-width: 800px;">
+    <h1 class="h3">{{ product_name }}</h1>
+    <p class="text-muted">{{ order.source_document.source_entity }}</p>
+    <div class="card rounded-4 p-4">
+        <p id="order-state" role="status">Loading your purchase status…</p>
+        <div id="order-reports" class="d-grid gap-2"></div>
+        <button id="order-retry" class="btn btn-outline-primary mt-3" hidden>Retry without another payment</button>
+        {% if order.status == 'awaiting_payment' and order.checkout_url %}<a class="btn btn-primary mt-3" href="{{ order.checkout_url }}">Continue to Stripe Checkout</a>{% endif %}
+    </div>
+    <p class="small text-muted mt-3">Reports are saved automatically in Zelda’s Library. Payment confirmation comes from Stripe; returning to this page does not itself unlock a report.</p>
+</div>
+<script>
+(function () {
+    const state = document.getElementById('order-state'), reports = document.getElementById('order-reports'), retry = document.getElementById('order-retry');
+    let attempts = 0;
+    async function load() {
+        try {
+            const response = await fetch('{% url "billing:zelda_order_status" order.id %}', {credentials:'same-origin'});
+            if (!response.ok) throw new Error();
+            const data = await response.json();
+            const wording = {awaiting_payment:'Waiting for Stripe payment confirmation.', paid:'Payment confirmed. Your reports are queued.', processing:'Zelda is processing your evidence.', ready:'Your reports are ready and saved in Library.', failed:'The reports could not finish. You can retry without another payment.', canceled:'Payment was not completed.'};
+            state.textContent = wording[data.status] || 'Refresh this page for the latest status.';
+            reports.replaceChildren();
+            (data.reports || []).forEach(report => { const link=document.createElement('a');link.className='btn btn-outline-primary';link.href=report.url;link.textContent=report.name;reports.append(link); });
+            retry.hidden = data.status !== 'failed';
+            if (['awaiting_payment','paid','processing'].includes(data.status)) {
+                if (attempts++ < 100) setTimeout(load, 5000);
+                else state.textContent += ' Processing continues in the background. Refresh this page or check Library for updates.';
+            }
+        } catch(error) { state.textContent='The status could not be retrieved. Refresh this page to try again.'; }
+    }
+    retry.addEventListener('click',async()=>{retry.disabled=true;try { const token=document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);const response=await fetch('{% url "billing:zelda_order_retry" order.id %}',{method:'POST',headers:{'X-CSRFToken':token?decodeURIComponent(token[1]):''}});if(response.ok){attempts=0;load();}else{state.textContent='The retry could not start. Please refresh and try again.';} } catch(error) { state.textContent='The retry could not start. Please refresh and try again.'; } finally { retry.disabled=false; }});
+    load();
+})();
+</script>
+{% endblock %}

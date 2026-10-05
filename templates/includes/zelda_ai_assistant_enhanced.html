@@ -340,6 +340,8 @@
 
     #aiAgentSidebar.zelda-fullscreen .zelda-tab {
         text-align: left;
+        white-space: normal;
+        overflow-wrap: anywhere;
         border-bottom: none;
         border-left: 3px solid transparent;
         border-radius: 6px;
@@ -495,19 +497,25 @@
             <button class="zelda-tab" data-tab="upload">
                 <i class="bi bi-cloud-upload me-2"></i>Upload
             </button>
-            <button class="zelda-tab" data-tab="memo">
+            <button class="zelda-tab" data-tab="memo" style="display: none;" aria-hidden="true">
                 <i class="bi bi-file-text me-2"></i>Memos
             </button>
-            <button class="zelda-tab" data-tab="intelligence">
+            <button class="zelda-tab" data-tab="intelligence" style="display: none;" aria-hidden="true">
                 <i class="bi bi-cpu me-2"></i>Intelligence
             </button>
-            <button class="zelda-tab" data-tab="truth-delta">
+            <button class="zelda-tab" data-tab="truth-delta" style="display: none;" aria-hidden="true">
                 <i class="bi bi-shield-check me-2"></i>Truth Delta
             </button>
             <button class="zelda-tab" data-tab="progress">
                 <i class="bi bi-signpost-2 me-2"></i>My Progress
             </button>
+            {% load zelda_products %}{% zelda_products as zelda_catalog %}
+            {% for product in zelda_catalog %}
+            <button class="zelda-tab" data-tab="product-{{ product.key }}"><i class="bi bi-file-earmark-text me-2"></i>{{ product.name }}</button>
+            {% endfor %}
         </div>
+
+        {% include 'includes/zelda_product_panels.html' %}
 
         <!-- TAB: NOTIFICATIONS -->
         <div id="tab-notifications" class="tab-content" style="display: none; flex-direction: column; gap: 1rem;">
@@ -1326,6 +1334,14 @@
                 </div>`);
             }
         });
+        if (data.purchases && data.purchases.length) {
+            const rows = data.purchases.map(purchase => `<div class="p-3 bg-light rounded-3">
+                <a href="${zeldaEscape(purchase.url)}" class="small fw-bold">${zeldaEscape(purchase.company)} · ${zeldaEscape(purchase.product)}</a>
+                <div class="small text-muted">${zeldaEscape(purchase.status)}</div>
+                ${(purchase.reports || []).map(report => `<a class="d-block small mt-1" href="${zeldaEscape(report.url)}">${zeldaEscape(report.name)}</a>`).join('')}
+            </div>`).join('');
+            cards.unshift(`<div class="zelda-card p-3"><h6 class="fw-bold">Purchased intelligence</h6><div class="d-grid gap-2">${rows}</div></div>`);
+        }
         if (!cards.length) {
             cards.push(`<div class="zelda-card p-3" data-library-empty="true">
                 <h6 class="fw-bold text-dark mb-1">Nothing here yet</h6>

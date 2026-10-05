@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<article class="container py-5" style="max-width: 900px;">
+    <a href="{% url 'billing:zelda_order' order.id %}" class="small">← Your purchased reports</a>
+    <h1 class="h2 mt-3">{{ report_name }}</h1>
+    <p class="text-muted">{{ order.source_document.source_entity }} · Generated {{ order.finished_at|date:"M j, Y" }}</p>
+    <p class="small text-muted">Based on the selected evidence set. A report does not establish representation authority and is not investment advice, an audit, or an appraisal.</p>
+    {% for section in sections %}
+    <section class="card rounded-4 p-4 mb-3"><h2 class="h5">{{ section.title }}</h2><div>{{ section.text|linebreaks }}</div></section>
+    {% endfor %}
+</article>
+{% endblock %}
