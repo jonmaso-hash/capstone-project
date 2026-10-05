@@ -847,6 +847,54 @@ def investor_shortlist(request):
 
 
 @login_required
+@require_POST
+def toggle_investor_shortlist(request):
+    """Save or remove one founder from the current investor's private shortlist."""
+    investor_profile = getattr(request.user, 'match_investor_profile', None)
+    if not investor_profile:
+        return JsonResponse({'status': 'error', 'message': 'Investor account required.'}, status=403)
+
+    is_json = request.content_type == 'application/json'
+    if is_json:
+        try:
+            payload = json.loads(request.body)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({'status': 'error', 'message': 'Invalid request body.'}, status=400)
+        application_id = payload.get('application_id')
+    else:
+        application_id = request.POST.get('application_id')
+
+    founder_app = get_object_or_404(
+        Application.objects.discoverable().exclude(review_status='DENIED'),
+        id=application_id,
+    )
+
+    entry = InvestorShortlist.objects.filter(
+        investor=investor_profile,
+        application=founder_app,
+    ).first()
+
+    if entry:
+        entry.delete()
+        saved = False
+    else:
+        InvestorShortlist.objects.create(
+            investor=investor_profile,
+            application=founder_app,
+        )
+        saved = True
+
+    if is_json:
+        return JsonResponse({'status': 'success', 'saved': saved})
+
+    messages.success(
+        request,
+        "Added to your shortlist." if saved else "Removed from your shortlist.",
+    )
+    return redirect(request.META.get('HTTP_REFERER', 'matchmaking:investor_shortlist'))
+
+
+@login_required
 @founder_required
 def founder_dashboard(request):
     """
