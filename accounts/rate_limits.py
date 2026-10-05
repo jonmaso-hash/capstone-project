@@ -47,8 +47,6 @@ LIMITS = {
     # Reused checks (the 7-day window) run nothing and release their slot.
     'identity_check_user': (10, timedelta(days=1)),
     'identity_check_global': (200, timedelta(hours=1)),
-    'zelda_company_search_user': (120, timedelta(hours=1)),
-    'zelda_product_intake_user': (20, timedelta(days=1)),
 }
 
 # The identifier the platform-wide ceiling counts against -- one bucket for

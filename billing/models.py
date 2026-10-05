@@ -1,32 +1,5 @@
 from django.conf import settings
 from django.db import models
-import uuid
-
-
-class ZeldaOrder(models.Model):
-    """One paid evidence set; report access never transfers another user's files."""
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='zelda_orders')
-    source_document = models.ForeignKey('zelda_api.DocumentSource', on_delete=models.PROTECT, related_name='product_orders')
-    product = models.CharField(max_length=32)
-    reports = models.JSONField(default=list)
-    amount = models.PositiveIntegerField()
-    currency = models.CharField(max_length=3, default='usd')
-    status = models.CharField(max_length=24, default='awaiting_payment', choices=[
-        ('awaiting_payment', 'Awaiting payment'), ('paid', 'Paid'), ('processing', 'Processing'),
-        ('ready', 'Ready'), ('failed', 'Could not finish'), ('canceled', 'Canceled'),
-    ])
-    stripe_session_id = models.CharField(max_length=255, null=True, blank=True, unique=True)
-    checkout_url = models.URLField(max_length=1000, blank=True)
-    analysis_document = models.ForeignKey('zelda_api.DocumentSource', null=True, blank=True, on_delete=models.PROTECT, related_name='analysis_orders')
-    valuation_document = models.ForeignKey('zelda_api.DocumentSource', null=True, blank=True, on_delete=models.PROTECT, related_name='valuation_orders')
-    entity_report = models.ForeignKey('zelda_api.EntityVerificationReport', null=True, blank=True, on_delete=models.PROTECT, related_name='product_orders')
-    created_at = models.DateTimeField(auto_now_add=True)
-    paid_at = models.DateTimeField(null=True, blank=True)
-    finished_at = models.DateTimeField(null=True, blank=True)
-
-    class Meta:
-        ordering = ['-created_at']
 
 
 class Subscription(models.Model):

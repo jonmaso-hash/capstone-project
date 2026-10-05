@@ -43,8 +43,7 @@ class EntityVerificationReport(models.Model):
 
     PENDING = 'pending'
     COMPLETE = 'complete'
-    FAILED = 'failed'
-    STATUS_CHOICES = [(PENDING, 'Checking'), (COMPLETE, 'Complete'), (FAILED, "Couldn't complete")]
+    STATUS_CHOICES = [(PENDING, 'Checking'), (COMPLETE, 'Complete')]
 
     # The business being checked -- exactly one for new reports (see Meta).
     founder_profile = models.ForeignKey(
