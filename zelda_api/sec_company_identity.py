@@ -242,7 +242,7 @@ def listed_company_matches(query, rows):
     return list(exact.values() or partial.values())[:MAX_CANDIDATES]
 
 
-def search_listed_companies(query):
+def search_listed_companies(query, before_fetch=None):
     """Search the SEC's public issuer index by real name as well as ticker.
 
     Return explicit choices; do not attribute a brand's parent financials to
@@ -253,6 +253,8 @@ def search_listed_companies(query):
     key = 'sec_listed_company_index_v1'
     rows = cache.get(key)
     if rows is None:
+        if before_fetch:
+            before_fetch()
         payload = sec_identity._json(sec_identity._get('https://www.sec.gov/files/company_tickers.json'))
         if not isinstance(payload, dict) or not payload or not all(isinstance(row, dict) for row in payload.values()):
             raise sec_identity.SecUnavailable(sec_identity.UNREACHABLE)
