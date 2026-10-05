@@ -21,8 +21,8 @@
             <label class="small fw-semibold" for="product-search-{{ product.key }}">Search companies outside Interlink</label>
             <div class="d-flex gap-2"><input id="product-search-{{ product.key }}" name="q" class="form-control form-control-sm" style="min-width: 0;" required maxlength="255" placeholder="Company name or stock ticker"><button type="submit" class="btn btn-outline-dark btn-sm flex-shrink-0">Search</button></div>
             <p class="small text-muted mb-0">Searches SEC public registration records, including registered private issuers. Not every private company is covered. For better results with private companies, upload a pitch deck.</p>
-            <div class="zelda-company-results d-grid gap-2"></div>
             <div class="zelda-search-status small" role="status" aria-live="polite" hidden></div>
+            <div class="zelda-company-results d-grid gap-2"></div>
         </form>
         <hr>
         <form class="zelda-product-upload d-grid gap-2" enctype="multipart/form-data">

@@ -19,6 +19,7 @@
             const spinner=document.createElement('span');spinner.className='spinner-border spinner-border-sm me-2';spinner.setAttribute('aria-hidden','true');box.append(spinner);
         }
         const copy=document.createElement('span');copy.textContent=text;box.append(copy);
+        box.scrollIntoView({block:'nearest',behavior:'smooth'});
     }
     function sync() {
         panels.forEach(panel=>{
