@@ -629,6 +629,40 @@ class MatchFeedback(models.Model):
         verbose_name_plural = "Match Feedbacks"
 
 
+class InvestorShortlist(models.Model):
+    """
+    Investor-owned saved-company state.
+
+    This is intentionally separate from MatchFeedback: "Relevant / Not
+    Relevant" teaches recommendation quality, while Shortlist means "save this
+    company for my own review." Neither action implies the other.
+    """
+    investor = models.ForeignKey(
+        InvestorApplication,
+        on_delete=models.CASCADE,
+        related_name="shortlist_entries",
+    )
+    application = models.ForeignKey(
+        Application,
+        on_delete=models.CASCADE,
+        related_name="shortlisted_by",
+    )
+    saved_at = models.DateTimeField(auto_now_add=True)
+    note = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-saved_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["investor", "application"],
+                name="unique_investor_shortlist_entry",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.investor} saved {self.application}"
+
+
 class AIMatch(models.Model):
     """
     Cached RAW SEMANTIC SIMILARITY for one investor<->founder pair — kept
