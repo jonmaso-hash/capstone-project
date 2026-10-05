@@ -1,0 +1,81 @@
+<ul class="navbar-nav ms-auto align-items-xl-center mb-0 ps-0 gap-xl-1">
+    {% if user.is_authenticated %}
+        <li class="nav-item">
+            {% if user.match_founder_profile %}
+                <a class="nav-link{% if request.resolver_match.url_name == 'founder_dashboard' %} active{% endif %}" href="{% url 'matchmaking:founder_dashboard' %}"{% if request.resolver_match.url_name == 'founder_dashboard' %} aria-current="page"{% endif %}>Dashboard</a>
+            {% elif user.match_investor_profile %}
+                <a class="nav-link{% if request.resolver_match.url_name == 'investor_dashboard' %} active{% endif %}" href="{% url 'matchmaking:investor_dashboard' %}"{% if request.resolver_match.url_name == 'investor_dashboard' %} aria-current="page"{% endif %}>Dashboard</a>
+            {% elif user.match_seller_profile %}
+                <a class="nav-link{% if request.resolver_match.url_name == 'seller_dashboard' %} active{% endif %}" href="{% url 'matchmaking:seller_dashboard' %}"{% if request.resolver_match.url_name == 'seller_dashboard' %} aria-current="page"{% endif %}>Dashboard</a>
+            {% elif user.match_buyer_profile %}
+                <a class="nav-link{% if request.resolver_match.url_name == 'buyer_dashboard' %} active{% endif %}" href="{% url 'matchmaking:buyer_dashboard' %}"{% if request.resolver_match.url_name == 'buyer_dashboard' %} aria-current="page"{% endif %}>Dashboard</a>
+            {% else %}
+                <a class="nav-link" href="{% url 'pages:home' %}">Home</a>
+            {% endif %}
+        </li>
+        <li class="nav-item">
+            {% if user.match_founder_profile or user.match_investor_profile %}
+                <a class="nav-link{% if request.resolver_match.url_name == 'bulletin_board' %} active{% endif %}" href="{% url 'matchmaking:bulletin_board' %}"{% if request.resolver_match.url_name == 'bulletin_board' %} aria-current="page"{% endif %}>Bulletin</a>
+            {% elif user.match_seller_profile or user.match_buyer_profile %}
+                <a class="nav-link{% if request.resolver_match.url_name == 'acquisition_bulletin_board' %} active{% endif %}" href="{% url 'matchmaking:acquisition_bulletin_board' %}"{% if request.resolver_match.url_name == 'acquisition_bulletin_board' %} aria-current="page"{% endif %}>Bulletin</a>
+            {% else %}
+                <a class="nav-link" href="{% url 'matchmaking:bulletin_board' %}">Bulletin</a>
+            {% endif %}
+        </li>
+    {% else %}
+        <li class="nav-item"><a class="nav-link{% if request.resolver_match.namespace == 'pages' and request.resolver_match.url_name == 'home' %} active{% endif %}" href="{% url 'pages:home' %}"{% if request.resolver_match.namespace == 'pages' and request.resolver_match.url_name == 'home' %} aria-current="page"{% endif %}>Home</a></li>
+    {% endif %}
+    <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'explore' or request.resolver_match.url_name == 'pitch_videos' or request.resolver_match.url_name == 'pitch_videos_entry' %} active{% endif %}" href="{% url 'matchmaking:pitch_videos_entry' %}"{% if request.resolver_match.url_name == 'explore' or request.resolver_match.url_name == 'pitch_videos' or request.resolver_match.url_name == 'pitch_videos_entry' %} aria-current="page"{% endif %}>Pitch Videos</a></li>
+    {% if user.is_authenticated %}
+        {% if user.match_founder_profile or user.match_investor_profile or user.match_seller_profile or user.match_buyer_profile %}
+        <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'diligence_chat' %} active{% endif %}" href="{% url 'matchmaking:diligence_chat' %}"{% if request.resolver_match.url_name == 'diligence_chat' %} aria-current="page"{% endif %}>Messages</a></li>
+        {% endif %}
+    {% endif %}
+    <li class="nav-item dropdown">
+        <button class="nav-link dropdown-toggle text-start" type="button" data-bs-toggle="dropdown" aria-expanded="false">Resources</button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{% url 'blog:blog_view' %}"><i class="bi bi-journal-text me-2" aria-hidden="true"></i>Venture Insights</a></li>
+            <li><a class="dropdown-item" href="{% url 'jobs:index' %}"><i class="bi bi-briefcase me-2" aria-hidden="true"></i>Jobs</a></li>
+            <li><a class="dropdown-item" href="{% url 'pages:contact' %}"><i class="bi bi-envelope me-2" aria-hidden="true"></i>Contact</a></li>
+            {% if user.match_founder_profile %}
+            <li><hr class="dropdown-divider"></li>
+            <li><button class="dropdown-item" type="button" data-bs-toggle="offcanvas" data-bs-target="#globalSearchSidebar" aria-controls="globalSearchSidebar"><i class="bi bi-search me-2" aria-hidden="true"></i>Search Companies</button></li>
+            {% endif %}
+        </ul>
+    </li>
+    {% if user.is_authenticated %}
+    <li class="nav-item dropdown ms-xl-2">
+        <button class="nav-link dropdown-toggle d-flex align-items-center gap-2 text-start" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Account menu for {{ user.username }}">
+            <i class="bi bi-person-circle" aria-hidden="true"></i>
+            <span class="account-name text-truncate" title="{{ user.username }}">{{ user.username }}</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li><h6 class="dropdown-header">Your account</h6></li>
+            <li><a class="dropdown-item" href="/accounts/profile/"><i class="bi bi-person me-2" aria-hidden="true"></i>Profile</a></li>
+            <li><a class="dropdown-item" href="{% url 'usersettings:home' %}"><i class="bi bi-gear me-2" aria-hidden="true"></i>Settings</a></li>
+            <li><a class="dropdown-item" href="{% url 'billing:billing_page' %}"><i class="bi bi-credit-card me-2" aria-hidden="true"></i>Membership</a></li>
+            <li><a class="dropdown-item" href="{% url 'accounts:business_verification' %}"><i class="bi bi-envelope-check me-2" aria-hidden="true"></i>Company Email Verification</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><h6 class="dropdown-header">Zelda Intelligence</h6></li>
+            <li><a class="dropdown-item" href="{% url 'zelda_api:valuation_request' %}"><i class="bi bi-graph-up-arrow me-2" aria-hidden="true"></i>Get a Valuation</a></li>
+            <li><a class="dropdown-item" href="{% url 'zelda_api:valuation_history' %}"><i class="bi bi-collection me-2" aria-hidden="true"></i>My Valuation Reports</a></li>
+            {% if user.is_staff %}
+            <li><hr class="dropdown-divider"></li>
+            <li><h6 class="dropdown-header">Administration</h6></li>
+            <li><a class="dropdown-item" href="{% url 'matchmaking:platform_metrics' %}"><i class="bi bi-speedometer2 me-2" aria-hidden="true"></i>Platform Metrics</a></li>
+            <li><a class="dropdown-item" href="{% url 'ops:dashboard' %}"><i class="bi bi-tools me-2" aria-hidden="true"></i>Operations</a></li>
+            {% endif %}
+            <li><hr class="dropdown-divider"></li>
+            <li><form action="{% url 'logout' %}" method="post" class="m-0">
+                {% csrf_token %}
+                <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>Sign Out</button>
+            </form></li>
+        </ul>
+    </li>
+    {% else %}
+    <li class="nav-item ms-xl-3 py-2 py-xl-0">
+        <a href="{% url 'login' %}" class="btn btn-outline-dark btn-sm rounded-pill px-3">Sign In</a>
+        <a href="{% url 'accounts:signup' %}" class="btn btn-success btn-sm rounded-pill ms-1 px-3">Get Started</a>
+    </li>
+    {% endif %}
+</ul>
