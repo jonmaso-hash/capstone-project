@@ -101,6 +101,8 @@ PYTHON_ALLOWED = {
         "the founder's own dashboard (request.user's profile)",
     ('pages/views.py', 'thank_you_view'):
         "greets the signed-in founder by their own name",
+    ('zelda_api/profile_reconciliation.py', 'reconcile_profile_with_deck'):
+        "returns [] unless the viewer owns the document: the owner's own profile vs their own deck",
     # Already filtered upstream.
     ('accounts/views.py', '_zelda_advantage_payload'):
         'called only after profile() confirms all three figures are visible to the viewer',
