@@ -161,6 +161,23 @@ class Application(models.Model):
     stage = models.CharField(max_length=100, default='Seed')
     raising_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     current_revenue = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    # What period current_revenue covers. Blank means unknown -- every row
+    # saved before this field existed, and any figure written by a path that
+    # does not ask (see set_current_revenue). Never inferred or backfilled:
+    # an unknown period stays unknown.
+    #
+    # 'arr' is a revenue METRIC, not a period, kept here as the smallest
+    # change. A later split into period + metric maps it mechanically to
+    # (annual, recurring). Nothing annualizes or converts between these.
+    REVENUE_PERIOD_CHOICES = [
+        ('monthly', 'Monthly'),
+        ('annual', 'Annual (a full fiscal year)'),
+        ('ttm', 'Trailing 12 months'),
+        ('arr', 'Annual recurring run-rate (ARR)'),
+    ]
+    revenue_period = models.CharField(max_length=10, choices=REVENUE_PERIOD_CHOICES, blank=True, default='')
+    # The date the figure was true, as the founder states it. Optional.
+    revenue_as_of = models.DateField(null=True, blank=True)
     monthly_burn_rate = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
     team_size = models.PositiveIntegerField(null=True, blank=True)
     years_in_business = models.PositiveIntegerField(default=0)
@@ -264,6 +281,24 @@ class Application(models.Model):
         if not self.vector_fields_updated_at:
             return None
         return self.vector_fields_updated_at + VECTOR_FIELD_EDIT_GRACE_PERIOD + VECTOR_FIELD_LOCK_DURATION
+
+    def set_current_revenue(self, value):
+        """
+        Assign the revenue amount from a path that does not ask for its period
+        (the Zelda dashboard sliders, the direct-upload API). If the amount
+        actually changes, the stored period and as-of date no longer describe
+        it, so they become unknown rather than silently attaching to the new
+        figure. An unchanged amount keeps them. Does not save.
+        """
+        from decimal import Decimal, InvalidOperation
+        try:
+            new = Decimal(str(value)) if value not in (None, '') else None
+        except (InvalidOperation, ValueError):
+            new = value     # unparseable: certainly not the stored amount
+        if new != self.current_revenue:
+            self.revenue_period = ''
+            self.revenue_as_of = None
+        self.current_revenue = value
 
     @property
     def completion_percentage(self):

@@ -238,3 +238,65 @@ class NotTruthDeltaTests(ReconciliationFixture):
         for word in ('contradict', 'error', 'mismatch', 'verified', 'false', 'inaccura'):
             with self.subTest(word=word):
                 self.assertNotIn(word, panel)
+
+
+class RevenueBasisTests(ReconciliationFixture):
+    """
+    Revenue is compared only when profile and deck share a basis: the profile
+    says ARR and the deck has an `arr` claim. Nothing is annualized.
+    """
+
+    def test_profile_arr_vs_deck_arr_consistent(self):
+        self.profile(current_revenue=1_200_000, revenue_period='arr')
+        self.claim('arr', 1_200_000.0)
+        self.assertEqual(self.row('current_revenue').status, CONSISTENT)
+
+    def test_profile_arr_vs_deck_arr_differs(self):
+        self.profile(current_revenue=1_200_000, revenue_period='arr')
+        self.claim('arr', 3_000_000.0)
+        row = self.row('current_revenue')
+        self.assertEqual(row.status, DIFFERS)
+        self.assertEqual((row.profile_value, row.deck_values), (1_200_000.0, (3_000_000.0,)))
+
+    def test_profile_arr_vs_deck_revenue_only(self):
+        self.profile(current_revenue=1_200_000, revenue_period='arr')
+        self.claim('revenue', 3_000_000.0)
+        row = self.row('current_revenue')
+        self.assertEqual((row.status, row.reason), (NOT_COMPARABLE, 'deck_period_unknown'))
+        self.assertEqual(row.deck_values, (3_000_000.0,))
+
+    def test_profile_arr_sets_a_revenue_claim_aside_rather_than_calling_it_a_conflict(self):
+        self.profile(current_revenue=1_200_000, revenue_period='arr')
+        self.claim('arr', 1_200_000.0)
+        self.claim('revenue', 9_000_000.0)
+        row = self.row('current_revenue')
+        self.assertEqual(row.status, CONSISTENT)
+        self.assertEqual(row.deck_values, (1_200_000.0,))
+
+    def test_a_period_against_deck_arr_is_a_different_basis(self):
+        for period in ('monthly', 'annual', 'ttm'):
+            with self.subTest(period=period):
+                self.profile(current_revenue=100_000, revenue_period=period)
+                ClaimedDatapoint.objects.filter(document=self.document).delete()
+                self.claim('arr', 1_200_000.0)
+                row = self.row('current_revenue')
+                self.assertEqual((row.status, row.reason), (NOT_COMPARABLE, 'different_revenue_basis'))
+
+    def test_monthly_is_never_annualized(self):
+        """$100K a month is $1.2M a year, and is still not compared with $1.2M ARR."""
+        self.profile(current_revenue=100_000, revenue_period='monthly')
+        self.claim('arr', 1_200_000.0)
+        self.assertEqual(self.row('current_revenue').status, NOT_COMPARABLE)
+
+    def test_a_period_against_deck_revenue_is_deck_period_unknown(self):
+        self.profile(current_revenue=1_200_000, revenue_period='annual')
+        self.claim('revenue', 1_200_000.0)
+        row = self.row('current_revenue')
+        self.assertEqual((row.status, row.reason), (NOT_COMPARABLE, 'deck_period_unknown'))
+        self.assertEqual((row.profile_value, row.deck_values), (1_200_000.0, (1_200_000.0,)))
+
+    def test_every_reason_has_owner_text(self):
+        from .profile_reconciliation import REASON_TEXT
+        for reason in ('profile_period_unknown', 'deck_period_unknown', 'different_revenue_basis'):
+            with self.subTest(reason=reason):
+                self.assertTrue(REASON_TEXT.get(reason))

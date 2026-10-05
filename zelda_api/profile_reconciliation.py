@@ -34,15 +34,25 @@ identify so later memo or investor work does not have to recompute them:
                                prior_amount_raised is 0, which is also the
                                model default; nothing records that a founder
                                entered it, so 0 is not evidence of "none"
-    profile_period_unknown     the profile's revenue field never says annual or
-                               monthly, so no deck revenue figure is comparable
-                               to it. Today this is every revenue pair.
+    profile_period_unknown     the profile does not say what period its revenue
+                               covers (every row saved before revenue_period
+                               existed, or written by a path that does not ask)
+    deck_period_unknown        the deck's figure is a `revenue` claim, and
+                               extraction records no period for those; true of
+                               every revenue claim until deck-period extraction
+    different_revenue_basis    the profile states a period (monthly, annual,
+                               TTM) and the deck gives only ARR, a run-rate:
+                               different measures, never converted
     deck_value_unparsed        the deck claim had no numeric value
     conflicting_deck_claims    the deck's own figures disagree; none is chosen
     deck_claim_may_be_the_raise
                                the deck's "funding raised" equals the profile's
                                raise target, the JoyToys misfiling, so it may be
                                the ask rather than money already raised
+
+Revenue is compared in exactly one case: the profile says ARR and the deck has
+an `arr` claim -- the category carries its own basis. Nothing is annualized,
+and a monthly figure is never multiplied into an annual one.
 
 Dates are what the schema actually has: the profile's last save (the whole
 record, not the field) and the deck's upload time. Neither is when a figure was
@@ -102,6 +112,22 @@ def _agree(a, b):
     return abs(a - b) <= REL_TOLERANCE * max(abs(a), abs(b))
 
 
+def _comparable_revenue_claims(profile_period, claims):
+    """
+    (claims, reason). The deck revenue claims that share the profile's basis,
+    or every claim with the reason none does -- so a not-comparable row still
+    carries the deck's values.
+    """
+    if not profile_period:
+        return claims, 'profile_period_unknown'
+    arr = [c for c in claims if c.category == 'arr']
+    if profile_period == 'arr':
+        # A `revenue` claim beside the ARR one is a different measure, not a
+        # competing figure for the same one, so it is set aside, not chosen against.
+        return (arr, '') if arr else (claims, 'deck_period_unknown')
+    return claims, ('different_revenue_basis' if len(arr) == len(claims) else 'deck_period_unknown')
+
+
 def reconcile_profile_with_deck(document, viewer):
     """
     One Reconciliation per pair the deck has a claim for, for the document's
@@ -126,6 +152,9 @@ def reconcile_profile_with_deck(document, viewer):
             continue
         raw = getattr(app, profile_field, None)
         profile_value = float(raw) if raw is not None else None
+        basis_reason = ''
+        if profile_field == 'current_revenue' and profile_value is not None:
+            pair_claims, basis_reason = _comparable_revenue_claims(app.revenue_period, pair_claims)
         numeric = [c for c in pair_claims if c.claimed_value_numeric is not None]
         deck_values = tuple(c.claimed_value_numeric for c in numeric)
         base = dict(
@@ -142,12 +171,12 @@ def reconcile_profile_with_deck(document, viewer):
             results.append(not_comparable('profile_blank'))
         elif profile_field == 'prior_amount_raised' and profile_value == 0:
             results.append(not_comparable('profile_zero_may_be_default'))
+        elif basis_reason:
+            results.append(not_comparable(basis_reason))
         elif not deck_values:
             results.append(not_comparable('deck_value_unparsed'))
         elif any(not _agree(v, deck_values[0]) for v in deck_values[1:]):
             results.append(not_comparable('conflicting_deck_claims'))
-        elif profile_field == 'current_revenue':
-            results.append(not_comparable('profile_period_unknown'))
         elif (profile_field == 'prior_amount_raised' and app.raising_amount
               and _agree(deck_values[0], float(app.raising_amount))
               and not _agree(deck_values[0], profile_value)):
@@ -166,7 +195,13 @@ REASON_TEXT = {
     'profile_zero_may_be_default': (
         'Your profile shows 0, which is also what an unfilled profile shows, so it was not compared.'),
     'profile_period_unknown': (
-        "Your profile's revenue doesn't say whether it is annual or monthly, so it was not compared."),
+        "Your profile's revenue doesn't say what period it covers, so it was not compared. "
+        'You can add the period on your profile.'),
+    'deck_period_unknown': (
+        "Zelda couldn't tell what period the deck's revenue figure covers, so it was not compared."),
+    'different_revenue_basis': (
+        'The deck gives ARR (a run-rate) and your profile gives revenue for a period. '
+        'They measure different things, so they were not compared.'),
     'deck_value_unparsed': 'Zelda could not read a figure from the deck for this.',
     'conflicting_deck_claims': 'The deck gives more than one figure for this, and they differ.',
     'deck_claim_may_be_the_raise': (

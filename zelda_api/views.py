@@ -611,7 +611,8 @@ class DocumentDirectScraperAPIView(APIView):
         doc_type = serializer.validated_data['document_type']  # FIX: was document_purpose
 
         founder_app = get_object_or_404(Application, user=request.user)
-        founder_app.current_revenue = serializer.validated_data.get('current_revenue')
+        # No period is asked for here, so a changed amount clears the stored one.
+        founder_app.set_current_revenue(serializer.validated_data.get('current_revenue'))
         founder_app.company_size = serializer.validated_data.get('company_size')
         founder_app.years_in_business = serializer.validated_data.get('years_in_business')
         founder_app.save()

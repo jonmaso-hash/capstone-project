@@ -1152,7 +1152,8 @@ def update_criteria(request):
         app = Application.objects.get(user=request.user)
         
         # Update inputs
-        app.current_revenue = request.POST.get('revenue')
+        # No period is asked for here, so a changed amount clears the stored one.
+        app.set_current_revenue(request.POST.get('revenue'))
         app.monthly_burn_rate = request.POST.get('burn')
         app.team_size = request.POST.get('team')
         app.save()

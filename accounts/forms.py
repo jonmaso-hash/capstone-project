@@ -54,6 +54,8 @@ class ApplicationForm(forms.ModelForm):
             "linkedin_url",
             "description",
             "current_revenue",
+            "revenue_period",
+            "revenue_as_of",
             "monthly_burn_rate",  # Added for Zelda Engine
             "team_size",          # Renamed from company_size
             "years_in_business",
@@ -77,6 +79,11 @@ class ApplicationForm(forms.ModelForm):
             "prior_amount_raised": CommaFormattedNumberInput(attrs={"inputmode": "numeric", "class": "currency-input"}),
             "current_revenue": CommaFormattedNumberInput(attrs={"inputmode": "numeric", "class": "currency-input"}),
             "monthly_burn_rate": CommaFormattedNumberInput(attrs={"inputmode": "numeric", "class": "currency-input"}),
+            "revenue_as_of": forms.DateInput(attrs={"type": "date"}),
+        }
+        labels = {
+            "revenue_period": "Revenue period",
+            "revenue_as_of": "Revenue as of (optional)",
         }
 
     def __init__(self, *args, lock_vector_fields=False, **kwargs):
@@ -126,6 +133,25 @@ class ApplicationForm(forms.ModelForm):
 
     def clean_years_in_business(self):
         return self.cleaned_data.get("years_in_business") or 0
+
+    def clean(self):
+        """
+        A revenue figure without its period cannot be compared with anything:
+        $100K a month and $100K a year are different companies. So a positive
+        revenue needs a period. Zero needs none (zero is zero over any period),
+        and with no revenue the period and date are cleared rather than left
+        describing nothing. Nothing here infers a period.
+        """
+        cleaned = super().clean()
+        if "current_revenue" not in self.fields:
+            return cleaned
+        revenue = cleaned.get("current_revenue")
+        if revenue is None:
+            cleaned["revenue_period"] = ""
+            cleaned["revenue_as_of"] = None
+        elif revenue > 0 and not cleaned.get("revenue_period"):
+            self.add_error("revenue_period", "Choose the period this revenue figure covers.")
+        return cleaned
 
 # -----------------------------
 # Investor Application Form
