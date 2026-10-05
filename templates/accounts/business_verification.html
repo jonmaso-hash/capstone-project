@@ -13,14 +13,16 @@
 
     <div class="row justify-content-center">
         <div class="col-lg-7">
-            <h2 class="fw-bold mb-4">Business Verification</h2>
+            <h2 class="fw-bold mb-2">Company Email Verification</h2>
+            <p class="text-muted mb-4">Verify control of an email address on your company domain. Company representation and role authority are separate trust signals.</p>
 
-            {% if already_verified %}
+            {% if email_verified %}
             <div class="card border-success shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">
-                    <span class="badge bg-success mb-2"><i class="bi bi-patch-check-fill me-1"></i>Verified</span>
-                    <h5 class="fw-bold mb-1">Your business email is verified</h5>
-                    <p class="text-muted small mb-0">Your profile now shows the Verified badge.</p>
+                    <span class="badge bg-success mb-2"><i class="bi bi-envelope-check-fill me-1"></i>Company Email Verified</span>
+                    <h5 class="fw-bold mb-1">Your company email is verified</h5>
+                    <p class="text-muted small mb-1">This confirms that you control an email address on the company domain.</p>
+                    <p class="text-muted small mb-0"><strong>It does not verify ownership, job title, or authority to represent the company.</strong></p>
                 </div>
             </div>
 
@@ -38,7 +40,7 @@
                             <input type="text" name="code" class="form-control" maxlength="6" inputmode="numeric" placeholder="123456" required>
                         </div>
                         <button type="submit" class="btn btn-success">
-                            <i class="bi bi-check-circle me-1"></i> Verify
+                            <i class="bi bi-check-circle me-1"></i> Verify Email
                         </button>
                     </form>
                     <form method="post" action="{% url 'accounts:business_verification_request' %}" class="d-inline">
@@ -78,8 +80,8 @@
                 <div class="card-body p-4">
                     <h5 class="fw-bold mb-1">Verify your business email</h5>
                     <p class="text-muted small mb-3">
-                        Submit an email at your company's own domain and we'll send a code to confirm it's really you.
-                        Once verified, your profile shows the Verified badge.
+                        Submit an email at your company's own domain and we'll send a code to confirm you control that mailbox.
+                        This verifies the company email only; it does not verify ownership, title, or authority to act for the company.
                     </p>
                     <form method="post" action="{% url 'accounts:business_verification_request' %}">
                         {% csrf_token %}
