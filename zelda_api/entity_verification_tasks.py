@@ -10,8 +10,7 @@ logger = logging.getLogger(__name__)
 # connection and then never answer, so every check needs a ceiling or one bad
 # host pins a worker indefinitely. The website fetch has its own timeouts
 # (safe_fetch.py); soft_time_limit raises SoftTimeLimitExceeded inside the task
-# as the backstop, and a report left pending by it stops being shared after
-# entity_verification.PENDING_SHARE_WINDOW.
+# as the backstop. Exceptions record failure; abandoned jobs expire when read.
 @shared_task(soft_time_limit=60, time_limit=90)
 def run_entity_check(report_id):
     from .entity_verification import run_identity_check
@@ -22,7 +21,7 @@ def run_entity_check(report_id):
         logger.error(f"[Entity Integrity] Report {report_id} not found")
         return {'status': 'error', 'error': 'Report not found'}
     run_identity_check(report)
-    return {'status': 'success', 'report_id': report.id}
+    return {'status': 'success' if report.status == report.COMPLETE else 'error', 'report_id': report.id}
 
 
 @shared_task(soft_time_limit=60, time_limit=90)
@@ -45,4 +44,7 @@ def verify_entity_integrity(document_id):
     else:
         report = identity_check_now(subject, document=document)
 
-    return {'status': 'success', 'document_id': document_id, 'report_id': report.id}
+    return {
+        'status': 'success' if report.status == report.COMPLETE else report.status,
+        'document_id': document_id, 'report_id': report.id,
+    }

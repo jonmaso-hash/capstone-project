@@ -1,5 +1,5 @@
 <!-- Zelda Truth Delta Verification UI - Complete Dashboard -->
-{% load zelda_sources %}
+{% load zelda_sources static %}
 
 
 <style>
@@ -543,14 +543,16 @@
     {% comment %}
     Entity Integrity — a distinct question from the score below: "does this
     business exist as its profile says?" rather than "are the claims
-    internally consistent?" Server-rendered from context, not part of the JS
-    polling flow the rest of this page uses. Rows come from
+    internally consistent?" Rows are server-rendered; pending checks poll
+    their permission-scoped status endpoint. Rows come from
     zelda_api/entity_verification.py; the section is shown only to viewers
     allowed to see the report, plus the request button for investors, buyers
     and staff. No verdicts, no score.
     {% endcomment %}
     {% if entity_report or identity_check_subject_id %}
-    <div class="truth-delta-container mb-3" style="margin-top: 0;" data-section="entity-integrity">
+    <div class="truth-delta-container mb-3" style="margin-top: 0;" data-section="entity-integrity"
+         data-identity-status="{{ entity_report.status }}"
+         data-identity-status-url="{% if entity_report %}{% url 'zelda_api:identity_check_status' entity_report.id %}{% endif %}">
         <div class="truth-delta-title mb-3">
             <div class="truth-delta-icon" style="font-size: 1.5rem;">🏛️</div>
             <h2 style="font-size: 1.25rem;">Entity Integrity</h2>
@@ -561,6 +563,11 @@
 
         {% if entity_report and entity_report.status == 'pending' %}
         <p class="mb-0" style="font-size: 0.95rem;">Checking public sources for this business…</p>
+        {% elif entity_report and entity_report.status == 'failed' %}
+        <p class="mb-0" style="font-size: 0.95rem;" role="status">{{ identity_check_failed_message }}</p>
+        {% if is_document_owner or request.user.is_staff %}
+        <p class="text-muted mt-2 mb-0" style="font-size: 0.85rem;">Use Run Verification to try again.</p>
+        {% endif %}
         {% elif entity_rows %}
         <div style="overflow-x: auto;">
             <table class="table table-sm align-middle mb-2" style="font-size: 0.9rem;">
@@ -609,52 +616,10 @@
         <div class="mt-3 d-flex align-items-center flex-wrap gap-2">
             <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" id="identityCheckButton"
                     data-url="{% url 'zelda_api:identity_check_request' identity_check_subject_id %}">Check company identity</button>
-            <span id="identityCheckStatus" class="text-muted" style="font-size: 0.85rem;" role="status"></span>
         </div>
-        <script>
-        (function () {
-            const button = document.getElementById('identityCheckButton');
-            const status = document.getElementById('identityCheckStatus');
-            if (!button) return;
-            function csrfToken() {
-                const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
-                return match ? decodeURIComponent(match[1]) : '';
-            }
-            function poll(url, attempt) {
-                if (attempt > 20) {
-                    status.textContent = 'Still checking. Refresh this page in a minute.';
-                    return;
-                }
-                setTimeout(async function () {
-                    try {
-                        const response = await fetch(url, {credentials: 'same-origin'});
-                        const data = await response.json();
-                        if (data.status === 'complete') { window.location.reload(); return; }
-                    } catch (error) { /* try again below */ }
-                    poll(url, attempt + 1);
-                }, 3000);
-            }
-            button.addEventListener('click', async function () {
-                button.disabled = true;
-                status.textContent = 'Checking public sources…';
-                try {
-                    const response = await fetch(button.dataset.url, {
-                        method: 'POST',
-                        credentials: 'same-origin',
-                        headers: {'X-CSRFToken': csrfToken(), 'X-Requested-With': 'XMLHttpRequest'},
-                    });
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.error || 'Request failed');
-                    if (data.status === 'complete') { window.location.reload(); return; }
-                    poll(data.status_url, 0);
-                } catch (error) {
-                    button.disabled = false;
-                    status.textContent = error.message || 'The check could not be started. Please try again.';
-                }
-            });
-        })();
-        </script>
         {% endif %}
+        <p id="identityCheckStatus" class="text-muted mt-2 mb-0" style="font-size: 0.85rem;" role="status"></p>
+        <script src="{% static 'js/entity_identity_check.js' %}" defer></script>
     </div>
     <!-- /entity-integrity -->
     {% endif %}
