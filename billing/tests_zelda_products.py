@@ -207,7 +207,8 @@ class ZeldaProductTests(TestCase):
     def test_library_preserves_owned_documents_when_product_storage_is_unavailable(self):
         from django.db import OperationalError
         from zelda_api.library import build_library
-        with mock.patch('billing.models.ZeldaOrder.objects.only',side_effect=OperationalError('table not migrated')):
+        with mock.patch('billing.models.ZeldaOrder.objects.filter') as orders:
+            orders.return_value.only.side_effect=OperationalError('table not migrated')
             library=build_library(self.user)
         self.assertEqual(library['purchases'],[])
         self.assertIn('temporarily unavailable',library['warnings'][0])

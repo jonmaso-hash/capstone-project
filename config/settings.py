@@ -179,12 +179,13 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    # Form upload refusals need message storage, but must precede CSRF parsing.
+    "django.contrib.messages.middleware.MessageMiddleware",
     # Reject oversized multipart requests before CSRF reads request.POST.
     'shared_utils.upload_limits.UploadSizeLimitMiddleware',
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "allauth.account.middleware.AccountMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 
     # Staff can impersonate and override deal states, so their sessions end

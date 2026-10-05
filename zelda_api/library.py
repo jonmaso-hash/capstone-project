@@ -142,8 +142,8 @@ def build_library(user):
     from .vector_models import DocumentSource
     try:
         with transaction.atomic():
-            ZeldaOrder.objects.only('id').first()
-            list(DocumentSource.objects.values('is_product_input', 'is_external_subject', 'external_cik')[:1])
+            ZeldaOrder.objects.filter(user=user).only('id').first()
+            list(DocumentSource.objects.filter(uploaded_by=user).values('is_product_input', 'is_external_subject', 'external_cik')[:1])
         product_storage = True
     except DatabaseError:
         logger.exception('Zelda purchased report storage unavailable for Library user %s', user.pk)
