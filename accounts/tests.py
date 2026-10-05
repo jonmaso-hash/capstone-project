@@ -191,6 +191,8 @@ class CommaFormattedNumberInputTests(TestCase):
                 'description': 'A test startup description.', 'sector': 'SaaS', 'stage': 'Seed',
                 'raising_amount': '1,500,000', 'team_size': '5', 'prior_amount_raised': '250,000',
                 'years_in_business': '2', 'current_revenue': '10,000', 'monthly_burn_rate': '5,000',
+                # A positive revenue needs its period (matchmaking/tests_revenue_period.py).
+                'revenue_period': 'monthly',
             }
             form = ApplicationForm(data)
             self.assertTrue(form.is_valid(), form.errors)

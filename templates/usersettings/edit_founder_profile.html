@@ -176,7 +176,7 @@
                     </div>
                 </div>
 
-                {% with has_optional_errors=form.phone_number.errors|add:form.company_website.errors|add:form.team_size.errors|add:form.years_in_business.errors|add:form.geography.errors|add:form.reason_for_capital.errors|add:form.extra_info.errors|add:form.prior_amount_raised.errors|add:form.current_revenue.errors|add:form.monthly_burn_rate.errors|add:form.linkedin_url.errors|add:form.pitch_deck.errors|add:form.pitch_video.errors %}
+                {% with has_optional_errors=form.phone_number.errors|add:form.company_website.errors|add:form.team_size.errors|add:form.years_in_business.errors|add:form.geography.errors|add:form.reason_for_capital.errors|add:form.extra_info.errors|add:form.prior_amount_raised.errors|add:form.current_revenue.errors|add:form.revenue_period.errors|add:form.revenue_as_of.errors|add:form.monthly_burn_rate.errors|add:form.linkedin_url.errors|add:form.pitch_deck.errors|add:form.pitch_video.errors %}
                 <button class="btn btn-outline-secondary btn-sm rounded-pill mb-4" type="button"
                         data-bs-toggle="collapse" data-bs-target="#optionalFields" aria-expanded="{% if has_optional_errors %}true{% else %}false{% endif %}" aria-controls="optionalFields">
                     <i class="bi bi-plus-lg me-1"></i> Add more detail (optional)
@@ -262,6 +262,16 @@
                                 {{ form.current_revenue.label_tag }}
                                 {{ form.current_revenue }}
                                 {{ form.current_revenue.errors }}
+                                <div class="mt-2">
+                                    {{ form.revenue_period.label_tag }}
+                                    {{ form.revenue_period }}
+                                    {{ form.revenue_period.errors }}
+                                </div>
+                                <div class="mt-2">
+                                    {{ form.revenue_as_of.label_tag }}
+                                    {{ form.revenue_as_of }}
+                                    {{ form.revenue_as_of.errors }}
+                                </div>
                             </div>
                             <div class="col-md-4">
                                 {{ form.monthly_burn_rate.label_tag }}
