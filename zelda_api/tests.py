@@ -6603,3 +6603,111 @@ class ZeldaGlobalSearchInvestorPrivacyTests(TestCase):
         self.assertEqual(response.status_code, 200)
         urls = [r['url'] for r in response.json()['results']]
         self.assertFalse(any('search_arch_inv' in u for u in urls))
+
+
+class ZeldaSearchAccessTests(TestCase):
+    """Account drilldown and result actions obey marketplace access rules."""
+
+    def setUp(self):
+        from matchmaking.tests import _mock_embedding_generation
+        from matchmaking.models import Application, InvestorApplication, SellerApplication, BuyerApplication
+        _mock_embedding_generation(self)
+        self.models = (Application, InvestorApplication, SellerApplication, BuyerApplication)
+        self.searcher = User.objects.create_user('zelda_access_searcher', password='x')
+        self.client.force_login(self.searcher)
+
+    def _profile(self, role, username, **extra):
+        user = User.objects.create_user(username, password='x')
+        profile = self.models[role].objects.create(
+            user=user, company_name=extra.pop('company_name', f'Venture {username}'), **extra,
+        )
+        return user, profile
+
+    def _search(self, query):
+        response = self.client.post(
+            reverse('zelda_api:global_search_api'), {'q': query, 'bulletins': False},
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 200)
+        return response.json()['results']
+
+    def test_exact_username_and_at_username_hide_non_discoverable_roles(self):
+        from django.utils import timezone
+        states = (
+            {'is_private': True}, {'archived_at': timezone.now()},
+            {'is_internal_profile': True}, {'review_status': 'DENIED'},
+        )
+        for role in range(4):
+            for index, state in enumerate(states):
+                username = f'zelda_hidden_{role}_{index}'
+                self._profile(role, username, **state)
+                for query in (username, '@' + username):
+                    with self.subTest(role=role, state=state, query=query):
+                        results = self._search(query)
+                        self.assertFalse(any(username in r.get('url', '') for r in results))
+
+    def test_public_roles_and_community_accounts_remain_searchable(self):
+        for role in range(4):
+            username = f'zelda_public_{role}'
+            self._profile(role, username)
+            with self.subTest(role=role):
+                results = self._search('@' + username)
+                self.assertTrue(any(username in r.get('url', '') for r in results))
+                self.assertNotIn('Verified', str(results))
+        User.objects.create_user('zelda_community', password='x')
+        self.assertTrue(any('zelda_community' in r['url'] for r in self._search('@zelda_community')))
+
+    def test_hidden_profiles_stay_out_of_discovery_for_owner_and_staff(self):
+        owner, _ = self._profile(0, 'zelda_owner_hidden', is_internal_profile=True)
+        staff = User.objects.create_user('zelda_search_staff', password='x', is_staff=True)
+        for viewer in (owner, staff):
+            self.client.force_login(viewer)
+            self.assertFalse(any(owner.username in r['url'] for r in self._search('@' + owner.username)))
+
+    def test_public_role_does_not_disclose_another_hidden_role(self):
+        user, _ = self._profile(0, 'zelda_multi_role', is_private=True, company_name='HiddenCompanyCanary')
+        self.models[1].objects.create(user=user, company_name='PublicFund')
+        results = self._search('@zelda_multi_role')
+        self.assertTrue(any(user.username in r['url'] for r in results))
+        self.assertNotIn('HiddenCompanyCanary', str(results))
+
+    def test_hidden_founder_name_is_not_searchable_or_returned_by_account_lookup(self):
+        user, _ = self._profile(0, 'zelda_named_founder', field_visibility={'founder_name': 'PRIVATE'})
+        user.first_name = 'HiddenNameCanary'
+        user.save(update_fields=['first_name'])
+        self.assertFalse(any(user.username in r['url'] for r in self._search('HiddenNameCanary')))
+        self.assertNotIn('HiddenNameCanary', str(self._search('@' + user.username)))
+
+    def test_global_and_ask_search_offer_analysis_only_to_investors(self):
+        from zelda_api.views import _founder_to_result_dict
+        founder_user, founder = self._profile(0, 'zelda_action_target', pitch_deck='pitch_decks/test.pdf')
+        for role in range(4):
+            viewer, _ = self._profile(role, f'zelda_action_viewer_{role}')
+            self.client.force_login(viewer)
+            expected = ['analyze_founder'] if role == 1 else []
+            with self.subTest(role=role):
+                result = next(r for r in self._search(founder.company_name) if r['type'] == 'Founder Profile')
+                self.assertEqual(result['available_actions'], expected)
+                # Ask uses this shared serializer with the requesting viewer.
+                with mock.patch('zelda_api.intelligence_pipeline._call_claude_for_query_extraction',
+                                return_value={'constraints': [{'field': 'industry' if role == 3 else 'sector', 'value': 'SaaS'}]}), \
+                     mock.patch('zelda_api.intelligence_pipeline._search_with_relaxation', return_value=([founder], [], False)):
+                    if role != 3:  # Buyers search sellers, not founders.
+                        response = self.client.post(reverse('zelda_api:ask'), {'q': 'Find SaaS founders'}, content_type='application/json')
+                        self.assertEqual(response.status_code, 200)
+                        self.assertEqual(response.json()['results'][0]['available_actions'], expected)
+                if role != 1:
+                    response = self.client.get(reverse('zelda_api:analyze_founder', args=[founder_user.username]))
+                    self.assertEqual(response.status_code, 403)
+        self.assertEqual(_founder_to_result_dict(founder)['available_actions'], [])
+
+    def test_missing_deck_and_hidden_profile_do_not_offer_analysis(self):
+        from zelda_api.views import _founder_to_result_dict
+        viewer, _ = self._profile(1, 'zelda_action_investor')
+        _, no_deck = self._profile(0, 'zelda_action_no_deck')
+        hidden_user, hidden = self._profile(0, 'zelda_action_private', is_private=True, pitch_deck='pitch_decks/test.pdf')
+        self.assertEqual(_founder_to_result_dict(no_deck, viewer)['available_actions'], [])
+        self.assertEqual(_founder_to_result_dict(hidden, viewer)['available_actions'], [])
+        self.client.force_login(viewer)
+        response = self.client.get(reverse('zelda_api:analyze_founder', args=[hidden_user.username]))
+        self.assertEqual(response.status_code, 404)
