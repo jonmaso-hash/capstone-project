@@ -196,8 +196,14 @@ class ZeldaProductTests(TestCase):
         order = self.order()
         retrieve.return_value = self.event(order)
         generate.side_effect = RuntimeError('Broker unavailable')
-        # Execute delivery at on_commit registration to exercise its exception
-        # path even though TestCase itself wraps each test in a transaction.
+        # TestCase delays on_commit beyond the request. Run it explicitly: a
+        # delivery failure must not undo the recorded payment.
+        with self.assertRaises(RuntimeError), self.captureOnCommitCallbacks(execute=True):
+            response = self.client.get(reverse('billing:zelda_order_status',args=[order.id]))
+        self.assertEqual(response.json()['status'],'paid')
+        order.refresh_from_db(); self.assertIsNotNone(order.paid_at)
+        cache.clear()
+        # Already-paid recovery registers delivery outside an atomic block.
         with mock.patch('billing.zelda_views.transaction.on_commit', side_effect=lambda callback: callback()):
             with self.assertLogs('billing.zelda_views', level='ERROR'):
                 response = self.client.get(reverse('billing:zelda_order_status',args=[order.id]))
@@ -205,7 +211,7 @@ class ZeldaProductTests(TestCase):
             order.refresh_from_db(); self.assertIsNotNone(order.paid_at)
             cache.clear(); generate.side_effect = None
             self.client.get(reverse('billing:zelda_order_status',args=[order.id]))
-        self.assertEqual(generate.call_count,2); retrieve.assert_called_once()
+        self.assertEqual(generate.call_count,3); retrieve.assert_called_once()
 
     @mock.patch('stripe.checkout.Session.retrieve')
     def test_processing_and_ready_orders_do_not_recheck_stripe(self, retrieve):
