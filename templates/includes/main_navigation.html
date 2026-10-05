@@ -33,7 +33,7 @@
     <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'explore' or request.resolver_match.url_name == 'pitch_videos' or request.resolver_match.url_name == 'pitch_videos_entry' %} active{% endif %}" href="{% url 'matchmaking:pitch_videos_entry' %}"{% if request.resolver_match.url_name == 'explore' or request.resolver_match.url_name == 'pitch_videos' or request.resolver_match.url_name == 'pitch_videos_entry' %} aria-current="page"{% endif %}>Pitch Videos</a></li>
     {% if user.is_authenticated %}
         {% if user.match_founder_profile or user.match_investor_profile or user.match_seller_profile or user.match_buyer_profile %}
-        <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'diligence_chat' %} active{% endif %}" href="{% url 'matchmaking:diligence_chat' %}"{% if request.resolver_match.url_name == 'diligence_chat' %} aria-current="page"{% endif %}>Messages</a></li>
+        <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'diligence_chat' %} active{% endif %}" href="{% url 'matchmaking:diligence_chat' %}"{% if request.resolver_match.url_name == 'diligence_chat' %} aria-current="page"{% endif %}>Chat Room</a></li>
         {% endif %}
     {% endif %}
     <li class="nav-item dropdown">
