@@ -93,3 +93,65 @@ Artifacts: [`nike/`](nike/), files 01–16 (13 = the rendered surfaces, 15 = the
 **Passing controls:** every parent-versus-subsidiary trap in the key was avoided. Ben & Jerry's was never given the unit's €7.9B, the ~20% share, a stale 1999 SEC figure, or a current Unilever parent. The valuation declined to invent a number. Nothing was labelled verified without a source.
 
 Artifacts: [`ben-jerrys/`](ben-jerrys/). There is no `05_observations.json`, `06_provider_outcomes.json` or Truth Delta report content because no report exists; `07_truth_delta_report.json` records that.
+
+## 3. Qibby Saves (private company)
+
+**Run:** 2026-10-04 on `main` @ `3d05561`. Graded against [qibby/EXPECTATIONS.md](qibby/EXPECTATIONS.md), frozen at `2367924`.
+- **Documents:** 3126 (`pitch_deck`), 3127 (`business_valuation`).
+- **Owner:** `audit_qibby_owner` (user 300, Application 40, Premium, New York NY, no website). Seed Application 6 renamed first.
+- **DataForB2B:** `unresolvable` (no domain); 0 credits.
+- **Model spend:** memo 2,976 / 2,514 tokens; valuation 884 / 942. No Truth Delta call: no establishing evidence and no headlines, so the deterministic branch.
+- **Privacy:** the deck's contact email and phone are redacted in `01` and `02`.
+
+| Expectation | Result | Evidence |
+|---|---|---|
+| Extraction | **PASS** | 11 markers; chunks on pages 1–11 |
+| Claims | **PARTIAL** | `employees` 200 (slide 7) and `revenue` $4.5M (slide 7). The $20M ask was **not** misread as raised. **But the stated "Prior Capital Raised: $20M" was not extracted** (L-010) |
+| Truth Delta | **PASS** | Both claims `no_data`/`no_external_evidence`; SEC `not_found`; score None / `unknown` / `td.3` |
+| Truth Delta page (browser) | **PASS** | "N/A · NOT SCORED · LIMITED PUBLIC EVIDENCE"; 0 verified / 2 not established; all-amber chart; the Limited-public-evidence rollup; no % |
+| Summary text | **Finding Q-1** | The stored summary comes from the older no-evidence branch: "No public data could be found to independently verify these claims (checked SEC EDGAR)…". The rollup and the reports say "Limited public evidence…". Both are true, but one state has two wordings |
+| IC memo / Intelligence Report | **PASS** on coverage | "Evidence Credibility: not scored" plus the Limited sentence; bars "Not established — 2"; no "%", no "Unverified" label |
+| Readiness card | **PASS** | "Not enough comparable public evidence to score" |
+| Entity Integrity | **PASS** | No website, so no website checks are run (`not_applicable`); SEC `not_found` with "Most private companies never file with the SEC" (appropriate here); no Filed line, consistent with a silent miss. Nothing treats missing records as evidence against the company |
+| Memo | **PASS, with findings Q-2 and Q-3** | Every figure is "the company states"; the $20M is correctly "seeking"; no advice; no canary; no contact details |
+| Valuation | **PASS** | $9M–$22.5M (2–5x revenue) on the "disclosed" $4.5M, with "only the low end… defensible". It also spotted on its own that "200 employees and only $4.5M in revenue… revenue-per-employee approximately $22,500, which is low" |
+| Authorization | **PASS** | Canary visible only to the owner and staff; search and RAG 403 for investors |
+
+| ID | Sev | Observation |
+|---|---|---|
+| Q-1 | P3 | Two summary wordings for the same state: the no-evidence branch's fixed text against the coverage sentence |
+| Q-2 | P2 | **The memo and the valuation disagree about funding.** The memo says "Prior funding history: Not found in the extracted evidence"; the deck states "Prior Capital Raised: $20M", and the valuation lists "Funding Disclosed: $20M". The memo's wording is scoped, so technically true, but a reader takes it as "the deck doesn't say" |
+| Q-3 | P3 | The memo's Risk Assessment leads with "Revenue unverified… At Series C, the absence of any third-party corroboration of the top-line number is a notable…". For a private company, missing public corroboration is the normal state; presenting it as the first risk is in tension with the "statement about the evidence, not the company" principle |
+| A-1 | (recurs) | The IC memo shows the paid valuation range ($9M–$22.5M) while the valuation is preview-tier |
+
+Artifacts: [`qibby/`](qibby/).
+
+## Cross-deck summary
+
+| | Nike | Ben & Jerry's | Qibby |
+|---|---|---|---|
+| Claims extracted | 2 of about 25 | **0** | 2 (missed the $20M raised) |
+| Truth Delta | `period_unknown` + `no_external_evidence`; not scored | **no report** (no claims) | `no_external_evidence` ×2; not scored |
+| Presentation (PR #154) | Correct on every surface | **Reads as "never run"** (B-1) | Correct on every surface |
+| Attribution traps | n/a | All avoided (no €7.9B, no current Unilever parent, no stale SEC filer) | n/a |
+| Valuation | $105.6B–$184.8B on the stated $52.8B, with no SEC cross-reference (A-3) | Declined, correctly | $9M–$22.5M on the stated $4.5M; flagged revenue per employee |
+| IC memo leaks the paid valuation range (A-1) | Yes | n/a (no range) | Yes |
+| Raw list syntax in memos (A-2) | Yes | Yes | Yes |
+| Canary / authorization | Held | Held | Held |
+
+**What the audit establishes:**
+- **The evidence layer behaves as designed on all three decks.** States, scores, coverage counts, the not-scored presentation, the attribution boundaries and authorization were all correct. No surface claimed a verification it did not have, and none turned a missing public source into a judgement against the company.
+- **The weaknesses are upstream and adjacent, not in the evidence rules:**
+  - **Extraction (B-2):** 0–2 claims per deck. This is the binding constraint for all three.
+  - **The empty-claims presentation (B-1).**
+  - **A paywall leak through the IC memo (A-1).**
+  - **Memo list rendering (A-2).**
+  - **A valuation that never consults Truth Delta (A-3).**
+
+### Findings by priority (for scoping after the audit, not fixed here)
+
+| Priority | Findings |
+|---|---|
+| P1 | A-1 IC memo paywall leak · B-1 "no claims" shown as "never run" · B-2 claim extraction (L-010) |
+| P2 | A-2 raw list rendering · A-3 valuation does not cross-reference Truth Delta · B-3 test-instruction text kept as insights · B-5 "recommendation" in the Lite upsell · Q-2 memo/valuation funding disagreement |
+| P3 | A-4 stale "Upload a Pitch Deck" action · A-5 "Lite / Upgrade" shown to a Premium founder · A-6 probe GETs counted as engagement (L-025) · A-7 inert USPTO key · B-4 SEC name-match miss and "private company" wording · Q-1 two summary wordings · Q-3 missing public evidence presented as the lead risk |

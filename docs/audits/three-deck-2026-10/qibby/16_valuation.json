@@ -1,0 +1,35 @@
+{
+ "document": {
+  "id": 3127,
+  "filename": "Qibby_Saves_LLC_Pitch_Deck.pptx",
+  "document_type": "business_valuation",
+  "source_entity": "Qibby Saves LLC",
+  "uploaded_by_id": 300,
+  "total_pages": 11,
+  "total_word_count": 235,
+  "status": "analyzed",
+  "confidence_score": 0.775,
+  "intelligence_rank": 0,
+  "error_message": "",
+  "verification_failed_at": null,
+  "verification_error": "",
+  "is_hidden_by_staff": false,
+  "valuation_tier": "preview",
+  "created_at": "2026-10-04 23:57:25.725311+00:00",
+  "updated_at": "2026-10-04 23:57:47.768002+00:00",
+  "processed_at": "2026-10-04 23:57:47.767659+00:00"
+ },
+ "valuation_report": {
+  "id": 25,
+  "document_id": 3127,
+  "business_overview": "Qibby Saves LLC operates a platform that centralizes healthcare operations for hospitals, clinics, and care providers, addressing fragmentation and inefficiency in healthcare workflows. The company has disclosed $4.5M in revenue and a team of 200 employees, suggesting an early-to-mid-stage operational footprint. The business targets a large addressable market in healthcare operations technology, though specific TAM figures were not disclosed in submitted documents.",
+  "financial_summary": "• Annual Revenue: $4.5M\n• Funding Disclosed: $20M\n• Gross Margin: Not disclosed in submitted documents.\n• EBITDA / Net Income: Not disclosed in submitted documents.\n• Monthly Burn Rate: Not disclosed in submitted documents.\n• Revenue Growth Rate: Not disclosed in submitted documents.\n• Customer Retention / Churn Rate: Not disclosed in submitted documents.\n• Use of Proceeds (re: $20M funding): Not disclosed in submitted documents.\n• Total Addressable Market Size: Not disclosed in submitted documents.\n• Note: With 200 employees and only $4.5M in revenue, implied revenue-per-employee is approximately $22,500, which is low for a software/platform business and may indicate significant operating losses or heavy investment-phase spending.",
+  "risk_report": "1. BURN RATE AND CASH POSITION RISK: The company has disclosed $20M in funding but no monthly burn rate. With 200 employees and $4.5M in revenue, labor costs alone likely represent a significant cash drain. Without burn data, runway cannot be assessed, which is a material risk for any prospective acquirer.\n2. REVENUE-TO-HEADCOUNT IMBALANCE: At $4.5M revenue supporting 200 employees, the revenue-per-employee ratio (~$22,500) is far below typical SaaS or health-tech benchmarks (often $100K–$200K+). This suggests the company is pre-profitability and potentially heavily subsidized by its $20M in funding, raising concerns about unit economics.\n3. MISSING GROWTH AND RETENTION METRICS: Neither revenue growth rate nor customer churn was disclosed. For a platform business in healthcare, these are the primary value drivers. Their absence materially limits any buyer's ability to assess trajectory or durability of revenue.\n4. CUSTOMER CONCENTRATION AND SALES PIPELINE UNKNOWN: No customer count, contract structure, or pipeline data was submitted. Healthcare sales cycles are long and complex; without evidence of contracted recurring revenue, the $4.5M figure may not be reliably repeatable.\n5. TRACTION SIGNAL IS LOW-CONFIDENCE: The only traction signal identified was 'Growth Strategy' at 50% confidence, meaning no concrete traction metrics (e.g., ARR growth, customer logos, NPS) were present in the submitted documents. This is a significant omission for a valuation exercise and introduces uncertainty into any forward-looking assumptions.",
+  "valuation_summary": "Given the limited financial disclosure, only a revenue multiple approach can be applied. No EBITDA, margins, or growth rate were provided, making DCF and earnings-based methods inapplicable. For early-to-mid stage healthcare SaaS/platform businesses, revenue multiples typically range from 2x to 5x trailing annual revenue, depending on growth rate, retention, and margin profile. Because none of those qualifying metrics were disclosed, only the low end of this range is defensible with the available data. Applying a 2x multiple yields a low-end estimate of $9,000,000 and a 5x multiple yields a high-end estimate of $22,500,000. The $20M in disclosed funding provides a loose external reference point, suggesting prior investors valued the business above the low-end range, but without a disclosed post-money valuation or round terms, this cannot be used as a precise anchor. Caution is warranted: the high end of this range assumes growth, retention, and scalability metrics that have not been substantiated in the submitted documents.",
+  "valuation_low": "9000000.00",
+  "valuation_high": "22500000.00",
+  "confidence_score": 0.775,
+  "created_at": "2026-10-04 23:57:47.737540+00:00",
+  "updated_at": "2026-10-04 23:57:47.737586+00:00"
+ }
+}

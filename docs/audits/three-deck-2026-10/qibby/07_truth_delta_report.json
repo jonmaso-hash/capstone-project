@@ -1,0 +1,105 @@
+{
+ "report": {
+  "id": 84,
+  "document_id": 3126,
+  "engine_version": "td.3",
+  "overall_truth_score": null,
+  "credibility_risk": "unknown",
+  "summary": "No public data could be found to independently verify these claims (checked SEC EDGAR). This is not a confirmation the claims are accurate — only that no corroborating or contradicting external data was found for \"Qibby Saves LLC\".",
+  "details": {
+   "claims": [
+    {
+     "category": "employees",
+     "claimed_value": "200 employees supporting platform growth",
+     "claimed_value_numeric": 200.0,
+     "unit": ""
+    },
+    {
+     "category": "revenue",
+     "claimed_value": "$4.5M",
+     "claimed_value_numeric": 4500000.0,
+     "unit": ""
+    }
+   ],
+   "observed": [],
+   "source_diagnostics": {
+    "sec": "not_found"
+   },
+   "provider_outcomes": {
+    "dataforb2b": "unresolvable"
+   },
+   "comparison": [
+    {
+     "category": "employees",
+     "claimed_value": "200 employees supporting platform growth",
+     "claimed_value_numeric": 200.0,
+     "observed_value": null,
+     "observed_value_numeric": null,
+     "observed_source": null,
+     "observed_registrant": null,
+     "observed_time_period": null,
+     "discrepancy_pct": null,
+     "claim_raw_text": "200 employees supporting platform growth",
+     "observed_raw_value": null,
+     "source_credibility": null,
+     "claim_period": null,
+     "observed_role": null,
+     "observed_origin": null,
+     "corroboration": [],
+     "context": []
+    },
+    {
+     "category": "revenue",
+     "claimed_value": "$4.5M",
+     "claimed_value_numeric": 4500000.0,
+     "observed_value": null,
+     "observed_value_numeric": null,
+     "observed_source": null,
+     "observed_registrant": null,
+     "observed_time_period": null,
+     "discrepancy_pct": null,
+     "claim_raw_text": "$4.5M",
+     "observed_raw_value": null,
+     "source_credibility": null,
+     "claim_period": null,
+     "observed_role": null,
+     "observed_origin": null,
+     "corroboration": [],
+     "context": []
+    }
+   ],
+   "per_claim": [
+    {
+     "category": "employees",
+     "claimed": "200 employees supporting platform growth",
+     "observed": "No external data found",
+     "assessment": "No external data was found for this claim.",
+     "explanation_source": "zelda"
+    },
+    {
+     "category": "revenue",
+     "claimed": "$4.5M",
+     "observed": "No external data found",
+     "assessment": "No external data was found for this claim.",
+     "explanation_source": "zelda"
+    }
+   ]
+  },
+  "created_at": "2026-10-04 23:56:17.333458+00:00"
+ },
+ "category_states": {
+  "employees": "no_data",
+  "revenue": "no_data"
+ },
+ "grounding_reasons": {
+  "employees": "no_external_evidence",
+  "revenue": "no_external_evidence"
+ },
+ "verifiability_stats": {
+  "total": 2,
+  "verified": 0,
+  "contradicted": 0,
+  "no_data": 2,
+  "pct": 0.0
+ }
+}
