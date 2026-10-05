@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core import signing
 from django.core.cache import cache
-from django.db import transaction
+from django.db import transaction, DatabaseError
 from django.http import JsonResponse, Http404
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -56,11 +56,11 @@ def product_catalog(request):
 @login_required
 @require_POST
 def external_search(request):
-    from zelda_api.sec_company_identity import resolve_company_identity, FOUND
+    from zelda_api.sec_company_identity import resolve_company_identity, search_listed_companies, FOUND
     from zelda_api.sec_identity import SecUnavailable
     name = request.POST.get('q', '').strip()[:255]
-    if len(name) < 3:
-        return JsonResponse({'error': 'Enter a company name of at least three characters.'}, status=400)
+    if len(name) < 1:
+        return JsonResponse({'error': 'Enter a company name or stock ticker.'}, status=400)
     from accounts import rate_limits
     _tokens, refused = rate_limits.reserve_all([
         ('zelda_company_search_user', str(request.user.pk)),
@@ -69,13 +69,25 @@ def external_search(request):
     if refused:
         return JsonResponse({'error': 'Company search is temporarily limited. Please try again later.'}, status=429)
     try:
+        index_unavailable = False
+        try:
+            choices = search_listed_companies(name)
+        except SecUnavailable:
+            choices, index_unavailable = [], True
+        if choices:
+            for choice in choices:
+                choice['token'] = signing.dumps({'name': choice['name'], 'cik': choice['cik']}, salt='zelda-company-selection')
+                choice['source_url'] = f'https://www.sec.gov/edgar/browse/?CIK={choice["cik"]}'
+            return JsonResponse({'results': choices})
         identity = resolve_company_identity(name)
+        if identity.status != FOUND and index_unavailable:
+            raise SecUnavailable('Company index unavailable')
     except SecUnavailable:
         return JsonResponse({'error': 'Public company records are temporarily unavailable. Please try again.'}, status=503)
     if identity.status != FOUND:
         return JsonResponse({'results': [], 'message': (
             'More than one SEC registrant matches. Use a more specific legal company name.' if identity.status == 'ambiguous'
-            else 'No matching SEC registrant was found. SEC records do not cover every private company. You can still upload your own document and name its company.'
+            else 'No matching SEC registrant was found. A brand may not file separately from its parent, and SEC records do not cover every private company. You can still upload its document and enter its company name.'
         )})
     token = signing.dumps({'name': identity.name, 'cik': identity.cik}, salt='zelda-company-selection')
     return JsonResponse({'results': [{'name': identity.name, 'cik': identity.cik, 'token': token,
@@ -131,11 +143,15 @@ def product_intake(request):
         return JsonResponse({'error': 'Upload a document or select a company from external search.'}, status=400)
     if not has_usable_text(raw):
         return JsonResponse({'error': 'The document contains insufficient readable text. Please upload another file.'}, status=422)
-    doc = DocumentSource.objects.create(
-        uploaded_by=request.user, source_entity=name, filename=filename, document_type='research_report',
-        raw_text_full=raw, raw_text_preview=strip_page_markers(raw)[:1000], total_pages=pages,
-        is_external_subject=True, is_product_input=True, external_cik=cik,
-    )
+    try:
+        doc = DocumentSource.objects.create(
+            uploaded_by=request.user, source_entity=name, filename=filename, document_type='research_report',
+            raw_text_full=raw, raw_text_preview=strip_page_markers(raw)[:1000], total_pages=pages,
+            is_external_subject=True, is_product_input=True, external_cik=cik,
+        )
+    except DatabaseError:
+        logger.exception('Could not save Zelda product evidence for user %s', request.user.pk)
+        return JsonResponse({'error': 'The server could not save your document. Please try again shortly. Nothing was purchased.'}, status=503)
     return JsonResponse({'document_id': doc.id, 'company': name, 'evidence': evidence_label}, status=201)
 
 

@@ -3,7 +3,7 @@ from unittest import mock
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from django.test import TestCase, SimpleTestCase, RequestFactory
 from django.urls import reverse
 from django.utils import timezone
 from .models import ZeldaOrder
@@ -19,6 +19,9 @@ class ZeldaProductTests(TestCase):
         _mock_embedding_generation(self)
         cache.clear()
         self.addCleanup(cache.clear)
+        listed = mock.patch('zelda_api.sec_company_identity.search_listed_companies', return_value=[])
+        listed.start()
+        self.addCleanup(listed.stop)
         self.user = User.objects.create_user('product_customer', password='x')
         self.other = User.objects.create_user('product_other', password='x')
         self.client.force_login(self.user)
@@ -181,6 +184,51 @@ class ZeldaProductTests(TestCase):
         response=self.client.post(reverse('billing:zelda_intake'),{'subject_token':'forged'})
         self.assertEqual(response.status_code,400)
 
+    def test_public_name_choices_are_explicit_and_do_not_guess_a_registrant(self):
+        choices=[{'name':'Apple Inc.','ticker':'AAPL','cik':'0000320193'}]
+        with mock.patch('zelda_api.sec_company_identity.search_listed_companies',return_value=choices), mock.patch('zelda_api.sec_company_identity.resolve_company_identity') as resolve:
+            response=self.client.post(reverse('billing:zelda_external_search'),{'q':'apple'})
+        self.assertEqual(response.json()['results'][0]['ticker'],'AAPL')
+        from django.core import signing
+        selected=signing.loads(response.json()['results'][0]['token'],salt='zelda-company-selection')
+        self.assertEqual(selected,{'name':'Apple Inc.','cik':'0000320193'})
+        resolve.assert_not_called()
+
+    def test_database_upload_failure_returns_json_without_purchase(self):
+        from django.db import OperationalError
+        with mock.patch('zelda_api.vector_models.DocumentSource.objects.create',side_effect=OperationalError('schema unavailable')):
+            response=self.client.post(reverse('billing:zelda_intake'),{'company':'ManyChat','file':SimpleUploadedFile('deck.txt',b'Private company evidence.')})
+        self.assertEqual(response.status_code,503)
+        self.assertIn('could not save your document',response.json()['error'])
+        self.assertFalse(ZeldaOrder.objects.exists())
+
+    def test_library_preserves_owned_documents_when_product_storage_is_unavailable(self):
+        from django.db import OperationalError
+        from zelda_api.library import build_library
+        with mock.patch('billing.models.ZeldaOrder.objects.only',side_effect=OperationalError('table not migrated')):
+            library=build_library(self.user)
+        self.assertEqual(library['purchases'],[])
+        self.assertIn('temporarily unavailable',library['warnings'][0])
+        documents=library['sections'][0]['documents']
+        self.assertEqual(documents[0]['document_id'],self.source.id)
+        self.assertFalse(documents[0]['can_open_brief'])
+
+    def test_real_pptx_upload_is_read_and_staged_without_checkout(self):
+        import io
+        from pptx import Presentation
+        deck=Presentation()
+        slide=deck.slides.add_slide(deck.slide_layouts[1])
+        slide.shapes.title.text='ManyChat'
+        slide.placeholders[1].text='Private company pitch deck: customer messaging platform and product overview.'
+        stream=io.BytesIO();deck.save(stream)
+        response=self.client.post(reverse('billing:zelda_intake'),{'company':'ManyChat','file':SimpleUploadedFile('manychat.pptx',stream.getvalue())})
+        self.assertEqual(response.status_code,201)
+        source=DocumentSource.objects.get(pk=response.json()['document_id'])
+        self.assertEqual(source.source_entity,'ManyChat')
+        self.assertEqual(source.total_pages,1)
+        self.assertIn('customer messaging',source.raw_text_full)
+        self.assertFalse(ZeldaOrder.objects.exists())
+
     def test_existing_active_stripe_price_must_match_amount_and_currency(self):
         from .zelda_views import stripe_price
         price={'id':'price_real','unit_amount':499,'currency':'usd','type':'one_time','active':True}
@@ -189,3 +237,40 @@ class ZeldaProductTests(TestCase):
             self.assertEqual(stripe_price('ic_memo'),'price_real')
         with mock.patch('stripe.Price.retrieve',return_value={**price,'unit_amount':500}):
             with self.assertRaises(ValueError): stripe_price('ic_memo')
+
+
+class ProductSearchDiscoveryTests(SimpleTestCase):
+    def test_company_names_legal_suffixes_and_tickers_find_the_same_choices(self):
+        from zelda_api.sec_company_identity import listed_company_matches
+        rows=[{'title':'Apple Inc.','ticker':'AAPL','cik_str':320193},
+              {'title':'Walmart Inc.','ticker':'WMT','cik_str':104169},
+              {'title':'NIKE, Inc.','ticker':'NKE','cik_str':320187},
+              {'title':'Crocs, Inc.','ticker':'CROX','cik_str':1334036},
+              {'title':'Apple Hospitality REIT, Inc.','ticker':'APLE','cik_str':1418121}]
+        for query,cik in [('apple','0000320193'),('Apple Inc','0000320193'),('aapl','0000320193'),
+                          ('walmart','0000104169'),('WMT','0000104169'),('nike','0000320187'),('crocs','0001334036')]:
+            with self.subTest(query=query):
+                self.assertEqual([row['cik'] for row in listed_company_matches(query,rows)],[cik])
+        self.assertEqual(listed_company_matches('Ben and Jerry',rows),[])
+        self.assertEqual(listed_company_matches('appleton',rows),[])
+
+    def test_oversized_product_upload_is_json_and_refused_before_body_processing(self):
+        from shared_utils.upload_limits import UploadSizeLimitMiddleware, MB
+        downstream=mock.Mock()
+        request=RequestFactory().post(reverse('billing:zelda_intake'))
+        request.META['CONTENT_LENGTH']=str(26*MB)
+        response=UploadSizeLimitMiddleware(downstream)(request)
+        self.assertEqual(response.status_code,413)
+        self.assertIn('25 MB',json.loads(response.content)['error'])
+        downstream.assert_not_called()
+
+    def test_source_failure_is_not_cached_as_a_missing_company(self):
+        from zelda_api.sec_company_identity import search_listed_companies
+        from zelda_api.sec_identity import SecUnavailable
+        cache.clear()
+        try:
+            with mock.patch('zelda_api.sec_identity._get',side_effect=SecUnavailable('unavailable')) as get:
+                for _ in range(2):
+                    with self.assertRaises(SecUnavailable): search_listed_companies('Apple')
+                self.assertEqual(get.call_count,2)
+        finally: cache.clear()

@@ -19,6 +19,10 @@ been archived drops out of an investor's list (discoverable()), as it does from
 every other discovery surface.
 """
 from django.urls import reverse
+from django.db import DatabaseError, transaction
+import logging
+
+logger = logging.getLogger(__name__)
 
 LIST_LIMIT = 20
 
@@ -36,12 +40,14 @@ def _status(document):
     return STATUS_LABELS.get(document.status, 'Processing')
 
 
-def _own_documents(user):
+def _own_documents(user, product_storage=True):
     from .vector_models import DocumentSource
-    documents = (
-        DocumentSource.objects.filter(uploaded_by=user)
-        .filter(is_product_input=False)
-        .filter(analysis_orders__isnull=True, valuation_orders__isnull=True)
+    documents = DocumentSource.objects.filter(uploaded_by=user)
+    if product_storage:
+        documents = documents.filter(is_product_input=False, analysis_orders__isnull=True, valuation_orders__isnull=True)
+    else:
+        documents = documents.defer('is_product_input', 'is_external_subject', 'external_cik')
+    documents = (documents
         .exclude(document_type='business_valuation')
         .select_related('memo')
         .order_by('-created_at')[:LIST_LIMIT]
@@ -56,11 +62,14 @@ def _own_documents(user):
     } for document in documents]
 
 
-def _own_valuations(user):
+def _own_valuations(user, product_storage=True):
     from .vector_models import DocumentSource
-    documents = (
-        DocumentSource.objects.filter(uploaded_by=user, document_type='business_valuation')
-        .filter(valuation_orders__isnull=True)
+    documents = DocumentSource.objects.filter(uploaded_by=user, document_type='business_valuation')
+    if product_storage:
+        documents = documents.filter(valuation_orders__isnull=True)
+    else:
+        documents = documents.defer('is_product_input', 'is_external_subject', 'external_cik')
+    documents = (documents
         .exclude(status='error')
         .order_by('-created_at')[:LIST_LIMIT]
     )
@@ -128,20 +137,41 @@ def build_library(user):
     from .report_nav import build_report_nav
 
     sections = []
+    warnings = []
+    from billing.models import ZeldaOrder
+    from .vector_models import DocumentSource
+    try:
+        with transaction.atomic():
+            ZeldaOrder.objects.only('id').first()
+            list(DocumentSource.objects.values('is_product_input', 'is_external_subject', 'external_cik')[:1])
+        product_storage = True
+    except DatabaseError:
+        logger.exception('Zelda purchased report storage unavailable for Library user %s', user.pk)
+        product_storage = False
+        warnings.append('Purchased reports are temporarily unavailable. Existing documents are shown below. Please try again shortly.')
+
+    def available(call, label):
+        try:
+            with transaction.atomic():
+                return call()
+        except DatabaseError:
+            logger.exception('Could not load Zelda Library section %s for user %s', label, user.pk)
+            warnings.append(f'{label} could not be loaded. Please try again shortly.')
+            return []
 
     company_profile = (getattr(user, 'match_founder_profile', None)
                        or getattr(user, 'match_seller_profile', None))
-    documents = _own_documents(user)
+    documents = available(lambda: _own_documents(user, product_storage), 'Your documents')
     if company_profile or documents:
         sections.append({
             'key': 'your_company',
             'title': 'Your company',
             'company': getattr(company_profile, 'company_name', '') or '',
-            'reports': build_report_nav(user, user, None) if company_profile else [],
+            'reports': available(lambda: build_report_nav(user, user, None), 'Your company reports') if company_profile else [],
             'documents': documents,
         })
 
-    valuations = _own_valuations(user)
+    valuations = available(lambda: _own_valuations(user, product_storage), 'Your valuations')
     if valuations:
         sections.append({
             'key': 'valuations',
@@ -154,23 +184,25 @@ def build_library(user):
         sections.append({
             'key': 'recent_companies',
             'title': "Companies you've looked into",
-            'items': _recent_companies(user),
+            'items': available(lambda: _recent_companies(user), 'Recent company reports'),
         })
 
     has_role = any(getattr(user, name, None) is not None for name in (
         'match_founder_profile', 'match_investor_profile', 'match_seller_profile', 'match_buyer_profile'))
-    from billing.models import ZeldaOrder
     from billing.zelda_catalog import PRODUCTS, REPORTS
     from billing.fulfillment import reconcile_order
     purchases = []
-    for order in ZeldaOrder.objects.filter(user=user).exclude(status='canceled').select_related(
-            'source_document', 'analysis_document', 'valuation_document', 'entity_report')[:LIST_LIMIT]:
-        reconcile_order(order)
+    orders = available(lambda: list(ZeldaOrder.objects.filter(user=user).exclude(status='canceled').select_related(
+            'source_document', 'analysis_document', 'valuation_document', 'entity_report')[:LIST_LIMIT]), 'Purchased reports') if product_storage else []
+    for order in orders:
+        if not available(lambda: reconcile_order(order), 'Purchased report status'):
+            continue
         purchases.append({'company': order.source_document.source_entity, 'product': PRODUCTS[order.product][0],
                           'status': order.get_status_display(), 'url': reverse('billing:zelda_order', args=[order.id]),
                           'reports': [{'name': REPORTS[key][0], 'url': reverse('billing:zelda_report', args=[order.id, key])}
                                       for key in order.reports] if order.status == 'ready' else []})
     return {
+        'warnings': warnings,
         'purchases': purchases,
         'sections': sections,
         'profile_analytics_url': (
