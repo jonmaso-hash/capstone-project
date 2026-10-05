@@ -138,3 +138,41 @@ class InternalProfileDiscoveryIsolationTests(TestCase):
         self.assertTrue(
             ProfileVideo.objects.visible_elevator_pitches().filter(pk=video.pk).exists()
         )
+
+
+class InternalProfileAnalyticsIsolationTests(TestCase):
+    def make_founder(self, username, *, internal):
+        user = User.objects.create_user(username=username, password="x")
+        return Application.objects.create(
+            user=user,
+            company_name=username,
+            founder_name=username,
+            email=f"{username}@example.com",
+            description="Profile used for platform analytics isolation.",
+            sector="SaaS",
+            stage="Seed",
+            is_internal_profile=internal,
+        )
+
+    def test_founder_funnel_signup_count_excludes_internal_profiles(self):
+        from matchmaking.analytics import get_founder_investor_funnel
+
+        self.make_founder("analytics_live_founder", internal=False)
+        self.make_founder("analytics_internal_founder", internal=True)
+
+        funnel = get_founder_investor_funnel()["founder"]
+        counts = {row["key"]: row["count"] for row in funnel}
+
+        self.assertEqual(counts["signup_completed"], 1)
+
+    def test_marketplace_liquidity_starting_cohort_excludes_internal_profiles(self):
+        from matchmaking.growth_metrics import get_marketplace_liquidity_funnel
+
+        self.make_founder("liquidity_live_founder", internal=False)
+        self.make_founder("liquidity_internal_founder", internal=True)
+
+        data = get_marketplace_liquidity_funnel()
+        founder_rows = data["founder"]
+        joined = next(row for row in founder_rows if row["label"] == "Founders Joined")
+
+        self.assertEqual(joined["count"], 1)
