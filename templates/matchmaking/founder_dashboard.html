@@ -23,7 +23,7 @@
     <div class="dashboard-header dashboard-header-founder text-white row align-items-center p-4 p-lg-5 mx-0 mb-4">
         <div class="col-lg-7">
             <span class="dashboard-eyebrow">Investor Discovery</span>
-            <h1 class="fw-bold mb-2">Welcome back, {{ application.founder_name|default:application.user.username }}</h1>
+            <h1 class="fw-bold mb-2">Welcome back, {{ dashboard_display_name }}</h1>
             <p class="text-white mb-0 opacity-75">
                 Find investors for your <span class="badge bg-light text-dark border px-2 py-1.5">{{ application.stage|default:"Active" }}</span> stage and <span class="badge bg-light text-dark border px-2 py-1.5">{{ application.sector }}</span> sector profile.
             </p>

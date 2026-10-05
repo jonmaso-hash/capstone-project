@@ -985,6 +985,7 @@ def founder_dashboard(request):
         platform_insights = platform_insights + get_pitch_video_social_signal_insights()
 
     return render(request, 'matchmaking/founder_dashboard.html', {
+        'dashboard_display_name': visible_profile_fields(request.user, application, ['founder_name']).get('founder_name') or request.user.username,
         'matches': match_results,
         'application': application,
         'pending_requests': pending_requests,
