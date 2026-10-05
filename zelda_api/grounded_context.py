@@ -295,15 +295,31 @@ def _statement_items(document, insights):
     return items
 
 
-def _profile_items(document):
-    from matchmaking.models import Application, _normalize_company_string, can_view_profile_field
+def profile_for_document(document):
+    """
+    The uploader's profile, when it describes the company this document is
+    about -- same owner, and one company name contains the other. Otherwise
+    None. The one association between a profile and a document: the memo
+    context and profile/deck reconciliation both read it, so the two can never
+    disagree about which profile a deck belongs to.
+    """
+    from matchmaking.models import Application, _normalize_company_string
 
     app = Application.objects.filter(user=document.uploaded_by).first()
     if app is None:
-        return []
+        return None
     doc_company = _normalize_company_string(document.source_entity)
     app_company = _normalize_company_string(app.company_name)
     if not (doc_company and app_company and (doc_company in app_company or app_company in doc_company)):
+        return None
+    return app
+
+
+def _profile_items(document):
+    from matchmaking.models import can_view_profile_field
+
+    app = profile_for_document(document)
+    if app is None:
         return []
     audience = AnonymousUser()
     items = []

@@ -791,6 +791,45 @@
         {% endif %}
 
         {% comment %}
+        Profile vs deck (B-2): the company's own figures set against each
+        other, before any public source. NOT Truth Delta -- nothing here is
+        verified or contradicted, and it does not touch the score. Owner-only:
+        profile_reconciliation is [] for every other viewer, because the
+        comparison discloses the profile figure.
+        {% endcomment %}
+        {% if profile_reconciliation %}
+        <div class="mt-3 mb-2 p-3 rounded-3" data-section="profile-reconciliation"
+             style="background: rgba(100, 116, 139, 0.06); border-left: 4px solid #94a3b8;">
+            <div class="fw-bold" style="font-size: 0.95rem; color: var(--td-text);">
+                <i class="bi bi-arrow-left-right me-1"></i>Profile and deck figures to review
+            </div>
+            <p class="mb-2 mt-1" style="font-size: 0.8rem; color: #64748b;">
+                Only you can see this. It compares what your Interlink profile says with what this
+                deck says. It is not a verification result and doesn't affect your score.
+            </p>
+            <ul class="mb-1 ps-3" style="font-size: 0.85rem; color: #475569;">
+                {% for row in profile_reconciliation %}
+                <li class="mb-1" data-reconciliation="{{ row.profile_field }}" data-status="{{ row.status }}">
+                    <strong>{{ row.label }}:</strong>
+                    {% if row.status == 'differs' %}
+                    your profile says {{ row.profile_display }}; the deck says {{ row.deck_display }}.
+                    {% elif row.status == 'consistent' %}
+                    your profile and the deck agree ({{ row.profile_display }}).
+                    {% else %}
+                    {{ row.reason_text }}
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            <p class="mb-0" style="font-size: 0.75rem; color: #94a3b8;">
+                Profile last saved {{ profile_reconciliation.0.profile_saved_at|date:"M j, Y" }};
+                deck uploaded {{ profile_reconciliation.0.deck_uploaded_at|date:"M j, Y" }}.
+                These are when each was saved, not when the figures were true.
+            </p>
+        </div>
+        {% endif %}
+
+        {% comment %}
         Which entity the external figures were observed about. Naming only the
         source says where a figure came from and not who it is about, which
         leaves a reader unable to tell this business from another registrant
