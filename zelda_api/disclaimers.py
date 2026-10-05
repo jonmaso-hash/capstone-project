@@ -21,6 +21,14 @@ DUE_DILIGENCE_DISCLAIMER = (
     "qualified professional advisers. It is not a binding representation by Interlink Foundry."
 )
 
+# Truth Delta finished and found nothing to check. One string for the page and
+# the score endpoint. It must never say "no public data found": no claim
+# reached a public source, so nothing about public data was learned.
+NO_CLAIMS_SUMMARY = (
+    "Verification finished with nothing to check: no verifiable claims were extracted from "
+    "this document, so no claim was compared against public sources."
+)
+
 
 def verifying_source_names():
     """

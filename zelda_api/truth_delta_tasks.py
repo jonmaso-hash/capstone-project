@@ -250,9 +250,12 @@ def _record_verification_failure(document_id, exc):
     and raising here would replace the real exception with a worse one.
     """
     try:
+        # A failure supersedes an earlier "nothing to check": the newest
+        # outcome is the one a reader is told.
         DocumentSource.objects.filter(id=document_id).update(
             verification_failed_at=timezone.now(),
             verification_error=str(exc)[:2000],
+            verification_no_claims_at=None,
         )
     except Exception:
         logger.exception(f"[Truth Delta] Could not record the failure for {document_id}")
@@ -286,14 +289,19 @@ def verify_document_truth_delta(document_id):
     # A run that completed clears any earlier failure. Without this the state
     # is permanent once tripped: a document that failed yesterday and verified
     # fine today would still be shown as broken.
+    #
+    # No claims to verify is an ordinary outcome, not a breakage -- but it is
+    # an outcome, and it is recorded as one. Writing nothing left it looking
+    # exactly like a run that never started. Written before the memo is
+    # queued, because the memo reads it.
     DocumentSource.objects.filter(id=document_id).update(
-        verification_failed_at=None, verification_error='')
+        verification_failed_at=None, verification_error='',
+        verification_no_claims_at=timezone.now() if result is None else None)
     # Verified, contradicted or nothing to check: all terminal, all get a memo.
     verification_finished(document_id)
 
     # Return JSON-serializable dict, not a Django model object
     if result is None:
-        # No claims to verify is an ordinary outcome, not a breakage.
         return {'status': 'no_claims', 'document_id': document_id}
 
     return {

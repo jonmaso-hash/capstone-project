@@ -107,6 +107,28 @@ class TruthDeltaScoreView(APIView):
         # .get() — a bare .get() throws MultipleObjectsReturned and 500s
         # the endpoint as soon as a document has ever been re-verified.
         report = TruthDeltaReport.objects.filter(document_id=document_id).order_by('-created_at').first()
+
+        # A run that finished with nothing to check writes no report. Answering
+        # 404 made the page present a completed run as "Verification
+        # Unavailable"; this is a result, so it gets a 200 that says what it is.
+        # After the visibility checks above, and it reveals no more than a
+        # report would. Newest outcome wins, so a stale report is not served.
+        if document is not None and document.verification_state == DocumentSource.NO_CLAIMS:
+            from .disclaimers import NO_CLAIMS_SUMMARY
+            return Response({
+                "status": "no_claims",
+                "overall_truth_score": None,
+                "credibility_risk": "no_claims",
+                "summary": NO_CLAIMS_SUMMARY,
+                "details": {},
+                "category_states": {},
+                "verified_count": 0,
+                "contradicted_count": 0,
+                "unverified_count": 0,
+                "coverage_sentence": '',
+                "grounding_reasons": {},
+            })
+
         if report is None:
             return Response({"error": "Report not found"}, status=404)
 
