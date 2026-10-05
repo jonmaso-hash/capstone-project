@@ -1464,7 +1464,7 @@ class ZeldaIntelligencePipelineV2:
             company_matches = bool(normalized_doc_company) and bool(normalized_app_company) and (
                 normalized_doc_company in normalized_app_company or normalized_app_company in normalized_doc_company
             )
-            if app and company_matches:
+            if app and company_matches and not doc.is_external_subject:
                 if app.current_revenue:
                     profile_values['revenue'] = str(app.current_revenue)
                 if app.raising_amount:

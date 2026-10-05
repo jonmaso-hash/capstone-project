@@ -159,6 +159,15 @@ class ZeldaLibraryAPIView(APIView):
 ZELDA_ASK_DAILY_LIMIT = 30
 
 
+def _founder_analysis_investor(viewer):
+    """The investor role accepted by both search actions and analysis views."""
+    if viewer is None or not viewer.is_authenticated:
+        return None
+    return (
+        getattr(viewer, 'accounts_investor_profile', None) or
+        getattr(viewer, 'match_investor_profile', None)
+    )
+
 def _founder_to_result_dict(app, viewer=None):
     """
     Builds the standard founder search-result dict — shared by
@@ -170,7 +179,8 @@ def _founder_to_result_dict(app, viewer=None):
     except NoReverseMatch:
         url = f"/accounts/profile/{app.user.username}/"
 
-    from matchmaking.models import can_view_profile_field
+    from matchmaking.models import can_view_profile_field, founder_is_visible_to
+    can_analyze = bool(app.pitch_deck and _founder_analysis_investor(viewer) and founder_is_visible_to(viewer, app))
 
     return {
         'type': 'Founder Profile',
@@ -189,6 +199,7 @@ def _founder_to_result_dict(app, viewer=None):
         'executive_summary': (app.description or "")[:200] + '...',
         'funding_stage': getattr(app, 'funding_stage', 'Seed'),
         'has_pitch_deck': bool(app.pitch_deck),
+        'available_actions': ['analyze_founder'] if can_analyze else [],
         'url': url,
     }
 
@@ -351,7 +362,7 @@ class ZeldaGlobalSearchAPIView(APIView):
                     ).exclude(review_status='DENIED').select_related('user')[:5]
 
                     for app in founder_matches:
-                        result = _founder_to_result_dict(app)
+                        result = _founder_to_result_dict(app, viewer=request.user)
                         if result['url'] in seen_urls:
                             continue
 

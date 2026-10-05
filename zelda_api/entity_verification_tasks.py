@@ -38,7 +38,10 @@ def verify_entity_integrity(document_id):
         return {'status': 'error', 'error': 'Document not found'}
 
     subject = subject_for_document(document)
-    if subject is None:
+    if document.is_external_subject:
+        from .entity_verification import build_document_identity_report
+        report = build_document_identity_report(document)
+    elif subject is None:
         # An uploader with no business profile still gets the original domain-age report.
         report = build_entity_verification_report(document)
         report.save()
