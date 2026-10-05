@@ -1343,7 +1343,7 @@ def get_foundry_pulse_events(limit=15):
 
     events = []
 
-    for app in Application.objects.filter(review_status='APPROVED', archived_at__isnull=True).order_by('-created_at')[:limit]:
+    for app in Application.objects.filter(is_internal_profile=False, review_status='APPROVED', archived_at__isnull=True).order_by('-created_at')[:limit]:
         name = app.company_name if not app.is_private else 'A new founder'
         events.append({
             'icon': 'bi-rocket-takeoff-fill',
@@ -1351,7 +1351,7 @@ def get_foundry_pulse_events(limit=15):
             'timestamp': app.created_at,
         })
 
-    for inv in InvestorApplication.objects.filter(review_status='APPROVED', archived_at__isnull=True).order_by('-created_at')[:limit]:
+    for inv in InvestorApplication.objects.filter(is_internal_profile=False, review_status='APPROVED', archived_at__isnull=True).order_by('-created_at')[:limit]:
         name = inv.company_name if not inv.is_private else 'A new investor'
         events.append({
             'icon': 'bi-graph-up-arrow',
@@ -1370,7 +1370,7 @@ def get_foundry_pulse_events(limit=15):
         'ACCEPTED': ('bi-check-circle-fill', 'An introduction was accepted'),
         'FUNDED': ('bi-trophy-fill', 'A deal was Verified Funded'),
     }
-    for conn in Connection.objects.select_related('founder', 'investor').order_by('-updated_at')[:limit]:
+    for conn in Connection.objects.filter(founder__is_internal_profile=False, investor__is_internal_profile=False).select_related('founder', 'investor').order_by('-updated_at')[:limit]:
         icon, label = connection_labels.get(conn.status, ('bi-hand-index-thumb', 'A connection was updated'))
         if not conn.founder.is_private and not conn.investor.is_private:
             label = f"{label}: {conn.investor.company_name} ↔ {conn.founder.company_name}"
@@ -1381,7 +1381,7 @@ def get_foundry_pulse_events(limit=15):
         'ACCEPTED': ('bi-check-circle-fill', 'An introduction was accepted'),
         'CLOSED': ('bi-trophy-fill', 'A deal was Verified Sold'),
     }
-    for conn in AcquisitionConnection.objects.select_related('seller', 'buyer').order_by('-updated_at')[:limit]:
+    for conn in AcquisitionConnection.objects.filter(seller__is_internal_profile=False, buyer__is_internal_profile=False).select_related('seller', 'buyer').order_by('-updated_at')[:limit]:
         icon, label = acquisition_connection_labels.get(conn.status, ('bi-hand-index-thumb', 'A connection was updated'))
         if not conn.seller.is_private and not conn.buyer.is_private:
             label = f"{label}: {conn.buyer.company_name} ↔ {conn.seller.company_name}"
@@ -2301,20 +2301,20 @@ def platform_metrics(request):
     from django.db.models import Count
     from django.db.models.functions import Lower
 
-    founder_count = Application.objects.count()
-    investor_count = InvestorApplication.objects.count()
+    founder_count = Application.objects.filter(is_internal_profile=False).count()
+    investor_count = InvestorApplication.objects.filter(is_internal_profile=False).count()
 
-    founder_vectorized = Application.objects.filter(description_vector__isnull=False).count()
-    investor_vectorized = InvestorApplication.objects.filter(focus_vector__isnull=False).count()
+    founder_vectorized = Application.objects.filter(is_internal_profile=False, description_vector__isnull=False).count()
+    investor_vectorized = InvestorApplication.objects.filter(is_internal_profile=False, focus_vector__isnull=False).count()
     founder_vector_rate = round((founder_vectorized / founder_count) * 100, 1) if founder_count else 0
     investor_vector_rate = round((investor_vectorized / investor_count) * 100, 1) if investor_count else 0
 
     connection_funnel = dict(
-        Connection.objects.values('status').annotate(count=Count('id')).values_list('status', 'count')
+        Connection.objects.filter(founder__is_internal_profile=False, investor__is_internal_profile=False).values('status').annotate(count=Count('id')).values_list('status', 'count')
     )
 
     sector_density = list(
-        Application.objects.annotate(sector_lower=Lower('sector'))
+        Application.objects.filter(is_internal_profile=False).annotate(sector_lower=Lower('sector'))
         .values('sector_lower')
         .annotate(count=Count('id'))
         .order_by('-count')[:10]
@@ -2322,10 +2322,10 @@ def platform_metrics(request):
 
     thirty_days_ago = timezone.now() - timedelta(days=30)
     registrations_by_day = {}
-    for row in Application.objects.filter(created_at__gte=thirty_days_ago).values('created_at__date').annotate(count=Count('id')):
+    for row in Application.objects.filter(is_internal_profile=False, created_at__gte=thirty_days_ago).values('created_at__date').annotate(count=Count('id')):
         day = row['created_at__date'].isoformat()
         registrations_by_day[day] = registrations_by_day.get(day, 0) + row['count']
-    for row in InvestorApplication.objects.filter(created_at__gte=thirty_days_ago).values('created_at__date').annotate(count=Count('id')):
+    for row in InvestorApplication.objects.filter(is_internal_profile=False, created_at__gte=thirty_days_ago).values('created_at__date').annotate(count=Count('id')):
         day = row['created_at__date'].isoformat()
         registrations_by_day[day] = registrations_by_day.get(day, 0) + row['count']
     registrations_sorted = sorted(registrations_by_day.items())
@@ -2346,7 +2346,7 @@ def platform_metrics(request):
     documents_processed = DocumentSource.objects.filter(status='analyzed').count()
     memos_generated = IntelligenceMemo.objects.count()
     truth_delta_runs = TruthDeltaReport.objects.count()
-    zelda_analyses_triggered = InvestorInterestEvent.objects.filter(event_type='analyze').count()
+    zelda_analyses_triggered = InvestorInterestEvent.objects.exclude(investor__match_investor_profile__is_internal_profile=True).filter(founder__is_internal_profile=False, event_type='analyze').count()
 
     # Full activation funnel (all 4 personas) + Zelda feature-usage breakdown —
     # see matchmaking/analytics.py for how each stage is computed.

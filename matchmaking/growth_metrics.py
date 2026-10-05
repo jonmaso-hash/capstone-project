@@ -78,11 +78,11 @@ def get_profile_trust_badges(application):
         return {'trending': False, 'frequently_analyzed': False}
 
     window_start = timezone.now() - timedelta(days=TRENDING_WINDOW_DAYS)
-    recent_unique_viewers = InvestorInterestEvent.objects.filter(
+    recent_unique_viewers = InvestorInterestEvent.objects.exclude(investor__match_investor_profile__is_internal_profile=True).filter(founder__is_internal_profile=False).filter(
         founder=application, event_type='view', created_at__gte=window_start
     ).values('investor_id').distinct().count()
 
-    unique_analysts = InvestorInterestEvent.objects.filter(
+    unique_analysts = InvestorInterestEvent.objects.exclude(investor__match_investor_profile__is_internal_profile=True).filter(founder__is_internal_profile=False).filter(
         founder=application, event_type='analyze'
     ).values('investor_id').distinct().count()
 
@@ -101,7 +101,7 @@ def _avg_investor_views_per_founder(applications_qs):
     founder_ids = list(applications_qs.values_list('id', flat=True))
     if not founder_ids:
         return 0.0
-    total_views = InvestorInterestEvent.objects.filter(founder_id__in=founder_ids, event_type='view').count()
+    total_views = InvestorInterestEvent.objects.exclude(investor__match_investor_profile__is_internal_profile=True).filter(founder__is_internal_profile=False).filter(founder_id__in=founder_ids, event_type='view').count()
     return round(total_views / len(founder_ids), 1)
 
 
@@ -111,7 +111,7 @@ def _intro_rate_pct(applications_qs):
     if not total:
         return 0.0
     with_intro = applications_qs.filter(
-        id__in=Connection.objects.values_list('founder_id', flat=True).distinct()
+        id__in=Connection.objects.filter(investor__is_internal_profile=False, founder__is_internal_profile=False).values_list('founder_id', flat=True).distinct()
     ).count()
     return round(with_intro / total * 100, 1)
 
@@ -130,8 +130,8 @@ def get_platform_insights():
     """
     insights = []
 
-    complete = Application.objects.filter(description_vector__isnull=False)
-    incomplete = Application.objects.filter(description_vector__isnull=True)
+    complete = Application.objects.filter(is_internal_profile=False).filter(description_vector__isnull=False)
+    incomplete = Application.objects.filter(is_internal_profile=False).filter(description_vector__isnull=True)
     if complete.count() >= PLATFORM_INSIGHT_MIN_COHORT_SIZE and incomplete.count() >= PLATFORM_INSIGHT_MIN_COHORT_SIZE:
         insights.append(
             f"Founders with a completed profile have averaged {_avg_investor_views_per_founder(complete)} "
@@ -139,8 +139,8 @@ def get_platform_insights():
             f"based on {complete.count() + incomplete.count()} founders on the platform so far."
         )
 
-    with_deck = Application.objects.exclude(pitch_deck='').exclude(pitch_deck__isnull=True)
-    without_deck = Application.objects.filter(Q(pitch_deck='') | Q(pitch_deck__isnull=True))
+    with_deck = Application.objects.filter(is_internal_profile=False).exclude(pitch_deck='').exclude(pitch_deck__isnull=True)
+    without_deck = Application.objects.filter(is_internal_profile=False).filter(Q(pitch_deck='') | Q(pitch_deck__isnull=True))
     if with_deck.count() >= PLATFORM_INSIGHT_MIN_COHORT_SIZE and without_deck.count() >= PLATFORM_INSIGHT_MIN_COHORT_SIZE:
         insights.append(
             f"{_intro_rate_pct(with_deck)}% of founders with a pitch deck uploaded have received an "
@@ -149,8 +149,8 @@ def get_platform_insights():
         )
 
     recent_cutoff = timezone.now() - timedelta(days=RECENT_UPDATE_WINDOW_DAYS)
-    recently_updated = Application.objects.filter(vector_fields_updated_at__gte=recent_cutoff)
-    stale = Application.objects.filter(
+    recently_updated = Application.objects.filter(is_internal_profile=False).filter(vector_fields_updated_at__gte=recent_cutoff)
+    stale = Application.objects.filter(is_internal_profile=False).filter(
         Q(vector_fields_updated_at__lt=recent_cutoff) | Q(vector_fields_updated_at__isnull=True)
     )
     if recently_updated.count() >= PLATFORM_INSIGHT_MIN_COHORT_SIZE and stale.count() >= PLATFORM_INSIGHT_MIN_COHORT_SIZE:
@@ -178,10 +178,10 @@ def get_pitch_video_funnel(profile, role):
     answers "of the people who watched, how many went further" instead.
     """
     if role == 'founder':
-        events = InvestorInterestEvent.objects.filter(founder=profile)
+        events = InvestorInterestEvent.objects.exclude(investor__match_investor_profile__is_internal_profile=True).filter(founder__is_internal_profile=False).filter(founder=profile)
         actor_field = 'investor_id'
     else:
-        events = AcquisitionInterestEvent.objects.filter(seller=profile)
+        events = AcquisitionInterestEvent.objects.exclude(buyer__match_buyer_profile__is_internal_profile=True).filter(seller__is_internal_profile=False).filter(seller=profile)
         actor_field = 'buyer_id'
 
     def actor_ids(event_type):
@@ -214,7 +214,7 @@ def _founder_intro_hit_count(applications_qs):
     ids = list(applications_qs.values_list('id', flat=True))
     if not ids:
         return 0
-    return InvestorInterestEvent.objects.filter(
+    return InvestorInterestEvent.objects.exclude(investor__match_investor_profile__is_internal_profile=True).filter(founder__is_internal_profile=False).filter(
         founder_id__in=ids, event_type='intro_request'
     ).values('founder_id').distinct().count()
 
@@ -224,7 +224,7 @@ def _seller_intro_hit_count(applications_qs):
     ids = list(applications_qs.values_list('id', flat=True))
     if not ids:
         return 0
-    return AcquisitionInterestEvent.objects.filter(
+    return AcquisitionInterestEvent.objects.exclude(buyer__match_buyer_profile__is_internal_profile=True).filter(seller__is_internal_profile=False).filter(
         seller_id__in=ids, event_type='intro_request'
     ).values('seller_id').distinct().count()
 
@@ -244,8 +244,8 @@ def get_pitch_video_social_signal_insights():
     """
     insights = []
 
-    founders_with_video = Application.objects.exclude(pitch_video='').exclude(pitch_video__isnull=True)
-    sellers_with_video = SellerApplication.objects.exclude(pitch_video='').exclude(pitch_video__isnull=True)
+    founders_with_video = Application.objects.filter(is_internal_profile=False).exclude(pitch_video='').exclude(pitch_video__isnull=True)
+    sellers_with_video = SellerApplication.objects.filter(is_internal_profile=False).exclude(pitch_video='').exclude(pitch_video__isnull=True)
 
     # --- Liked vs not-liked ---
     liked_founders = founders_with_video.filter(pitch_video_likes__isnull=False).distinct()
@@ -341,7 +341,7 @@ def get_time_to_value_metrics():
     def _role_row(label, model, vector_field, completion_time_field,
                   interest_model, interest_fk_field,
                   connection_model, connection_fk_field, connection_status):
-        base = model.objects.all()
+        base = model.objects.filter(is_internal_profile=False)
 
         profile_complete_qs = base.filter(**{f'{vector_field}__isnull': False}).annotate(
             delta=ExpressionWrapper(F(completion_time_field) - F('created_at'), output_field=DurationField())
@@ -403,11 +403,11 @@ def get_conversation_speed_retention_insight():
     new tracking). Only covers founders — that's the cohort the question
     was asked about; the same shape could be extended to other roles later.
     """
-    first_conv_subquery = InvestorInterestEvent.objects.filter(
+    first_conv_subquery = InvestorInterestEvent.objects.exclude(investor__match_investor_profile__is_internal_profile=True).filter(founder__is_internal_profile=False).filter(
         founder_id=OuterRef('pk'), event_type='message_sent'
     ).order_by('created_at').values('created_at')[:1]
 
-    founders_with_conversation = Application.objects.annotate(
+    founders_with_conversation = Application.objects.filter(is_internal_profile=False).annotate(
         first_conversation_at=Subquery(first_conv_subquery)
     ).filter(first_conversation_at__isnull=False).annotate(
         delta=ExpressionWrapper(F('first_conversation_at') - F('created_at'), output_field=DurationField())
@@ -455,36 +455,36 @@ def get_marketplace_liquidity_funnel():
         ]
 
     founder_funnel = _cohort_funnel([
-        ('Founders Joined', Application.objects.count()),
-        ('Completed Profiles', Application.objects.filter(description_vector__isnull=False).count()),
-        ('Were Viewed', Application.objects.filter(
-            id__in=InvestorInterestEvent.objects.filter(event_type='view').values_list('founder_id', flat=True)
+        ('Founders Joined', Application.objects.filter(is_internal_profile=False).count()),
+        ('Completed Profiles', Application.objects.filter(is_internal_profile=False).filter(description_vector__isnull=False).count()),
+        ('Were Viewed', Application.objects.filter(is_internal_profile=False).filter(
+            id__in=InvestorInterestEvent.objects.exclude(investor__match_investor_profile__is_internal_profile=True).filter(founder__is_internal_profile=False).filter(event_type='view').values_list('founder_id', flat=True)
         ).count()),
-        ('Received Investor Interest', Application.objects.filter(
-            id__in=InvestorInterestEvent.objects.filter(event_type__in=['thumbs_up', 'intro_request']).values_list('founder_id', flat=True)
+        ('Received Investor Interest', Application.objects.filter(is_internal_profile=False).filter(
+            id__in=InvestorInterestEvent.objects.exclude(investor__match_investor_profile__is_internal_profile=True).filter(founder__is_internal_profile=False).filter(event_type__in=['thumbs_up', 'intro_request']).values_list('founder_id', flat=True)
         ).count()),
-        ('Conversations Started', Application.objects.filter(
-            id__in=InvestorInterestEvent.objects.filter(event_type='message_sent').values_list('founder_id', flat=True)
+        ('Conversations Started', Application.objects.filter(is_internal_profile=False).filter(
+            id__in=InvestorInterestEvent.objects.exclude(investor__match_investor_profile__is_internal_profile=True).filter(founder__is_internal_profile=False).filter(event_type='message_sent').values_list('founder_id', flat=True)
         ).count()),
-        ('Deals Completed', Application.objects.filter(
-            id__in=Connection.objects.filter(status='FUNDED').values_list('founder_id', flat=True)
+        ('Deals Completed', Application.objects.filter(is_internal_profile=False).filter(
+            id__in=Connection.objects.filter(investor__is_internal_profile=False, founder__is_internal_profile=False).filter(status='FUNDED').values_list('founder_id', flat=True)
         ).count()),
     ])
 
     seller_funnel = _cohort_funnel([
-        ('Sellers Joined', SellerApplication.objects.count()),
-        ('Completed Listings', SellerApplication.objects.filter(description_vector__isnull=False).count()),
-        ('Were Viewed', SellerApplication.objects.filter(
-            id__in=AcquisitionInterestEvent.objects.filter(event_type='view').values_list('seller_id', flat=True)
+        ('Sellers Joined', SellerApplication.objects.filter(is_internal_profile=False).count()),
+        ('Completed Listings', SellerApplication.objects.filter(is_internal_profile=False).filter(description_vector__isnull=False).count()),
+        ('Were Viewed', SellerApplication.objects.filter(is_internal_profile=False).filter(
+            id__in=AcquisitionInterestEvent.objects.exclude(buyer__match_buyer_profile__is_internal_profile=True).filter(seller__is_internal_profile=False).filter(event_type='view').values_list('seller_id', flat=True)
         ).count()),
-        ('Received Buyer Interest', SellerApplication.objects.filter(
-            id__in=AcquisitionInterestEvent.objects.filter(event_type__in=['thumbs_up', 'intro_request']).values_list('seller_id', flat=True)
+        ('Received Buyer Interest', SellerApplication.objects.filter(is_internal_profile=False).filter(
+            id__in=AcquisitionInterestEvent.objects.exclude(buyer__match_buyer_profile__is_internal_profile=True).filter(seller__is_internal_profile=False).filter(event_type__in=['thumbs_up', 'intro_request']).values_list('seller_id', flat=True)
         ).count()),
-        ('Conversations Started', SellerApplication.objects.filter(
-            id__in=AcquisitionInterestEvent.objects.filter(event_type='message_sent').values_list('seller_id', flat=True)
+        ('Conversations Started', SellerApplication.objects.filter(is_internal_profile=False).filter(
+            id__in=AcquisitionInterestEvent.objects.exclude(buyer__match_buyer_profile__is_internal_profile=True).filter(seller__is_internal_profile=False).filter(event_type='message_sent').values_list('seller_id', flat=True)
         ).count()),
-        ('Deals Completed', SellerApplication.objects.filter(
-            id__in=AcquisitionConnection.objects.filter(status='CLOSED').values_list('seller_id', flat=True)
+        ('Deals Completed', SellerApplication.objects.filter(is_internal_profile=False).filter(
+            id__in=AcquisitionConnection.objects.filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).filter(status='CLOSED').values_list('seller_id', flat=True)
         ).count()),
     ])
 
@@ -496,7 +496,7 @@ def get_acquisition_metrics():
 
     registrations_by_day = {}
     for model in (Application, InvestorApplication, SellerApplication, BuyerApplication):
-        for row in model.objects.filter(created_at__gte=thirty_days_ago).values('created_at__date').annotate(count=Count('id')):
+        for row in model.objects.filter(is_internal_profile=False, created_at__gte=thirty_days_ago).values('created_at__date').annotate(count=Count('id')):
             day = row['created_at__date'].isoformat()
             registrations_by_day[day] = registrations_by_day.get(day, 0) + row['count']
     registrations_sorted = sorted(registrations_by_day.items())
@@ -537,8 +537,9 @@ def get_activation_metrics():
     rows = []
 
     def _row(label, model, vector_field, completion_time_field, interest_model, actor_fk_field, first_view_source):
-        total = model.objects.count()
-        complete_qs = model.objects.filter(**{f'{vector_field}__isnull': False})
+        base = model.objects.filter(is_internal_profile=False)
+        total = base.count()
+        complete_qs = base.filter(**{f'{vector_field}__isnull': False})
         complete_count = complete_qs.count()
         completion_rate = round((complete_count / total) * 100, 1) if total else 0
 
@@ -555,7 +556,7 @@ def get_activation_metrics():
         first_zelda_subquery = interest_model.objects.filter(
             **{actor_fk_field: OuterRef('pk'), 'event_type__in': ZELDA_EVENT_TYPES}
         ).order_by('created_at').values('created_at')[:1]
-        zelda_qs = model.objects.annotate(
+        zelda_qs = base.annotate(
             first_zelda=Subquery(first_zelda_subquery)
         ).filter(first_zelda__isnull=False).annotate(
             delta=ExpressionWrapper(F('first_zelda') - F('created_at'), output_field=DurationField())
@@ -565,7 +566,7 @@ def get_activation_metrics():
         first_match_subquery = interest_model.objects.filter(
             **{actor_fk_field: OuterRef('pk'), 'event_type': 'view'}
         ).order_by('created_at').values('created_at')[:1]
-        match_qs = model.objects.annotate(
+        match_qs = base.annotate(
             first_match=Subquery(first_match_subquery)
         ).filter(first_match__isnull=False).annotate(
             delta=ExpressionWrapper(F('first_match') - F('created_at'), output_field=DurationField())
@@ -594,10 +595,10 @@ def get_engagement_metrics():
     week_ago = timezone.now() - timedelta(days=7)
 
     wau = {
-        'founder': User.objects.filter(last_login__gte=week_ago, match_founder_profile__isnull=False).count(),
-        'investor': User.objects.filter(last_login__gte=week_ago, match_investor_profile__isnull=False).count(),
-        'seller': User.objects.filter(last_login__gte=week_ago, match_seller_profile__isnull=False).count(),
-        'buyer': User.objects.filter(last_login__gte=week_ago, match_buyer_profile__isnull=False).count(),
+        'founder': User.objects.filter(last_login__gte=week_ago, match_founder_profile__isnull=False, match_founder_profile__is_internal_profile=False).count(),
+        'investor': User.objects.filter(last_login__gte=week_ago, match_investor_profile__isnull=False, match_investor_profile__is_internal_profile=False).count(),
+        'seller': User.objects.filter(last_login__gte=week_ago, match_seller_profile__isnull=False, match_seller_profile__is_internal_profile=False).count(),
+        'buyer': User.objects.filter(last_login__gte=week_ago, match_buyer_profile__isnull=False, match_buyer_profile__is_internal_profile=False).count(),
     }
 
     recent_searches = SearchEvent.objects.filter(created_at__gte=week_ago)
@@ -606,8 +607,8 @@ def get_engagement_metrics():
     searches_per_user = round(total_searches / distinct_searchers, 1) if distinct_searchers else 0
 
     matches_viewed_7d = (
-        InvestorInterestEvent.objects.filter(event_type='view', created_at__gte=week_ago).count()
-        + AcquisitionInterestEvent.objects.filter(event_type='view', created_at__gte=week_ago).count()
+        InvestorInterestEvent.objects.exclude(investor__match_investor_profile__is_internal_profile=True).filter(founder__is_internal_profile=False).filter(event_type='view', created_at__gte=week_ago).count()
+        + AcquisitionInterestEvent.objects.exclude(buyer__match_buyer_profile__is_internal_profile=True).filter(seller__is_internal_profile=False).filter(event_type='view', created_at__gte=week_ago).count()
     )
 
     messages_initiated_7d = MessageThread.objects.filter(created_at__gte=week_ago).count()
@@ -625,20 +626,20 @@ def get_engagement_metrics():
 
 
 def get_value_creation_metrics():
-    introductions_made = Connection.objects.count() + AcquisitionConnection.objects.count()
+    introductions_made = Connection.objects.filter(investor__is_internal_profile=False, founder__is_internal_profile=False).count() + AcquisitionConnection.objects.filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).count()
 
     # "Meetings scheduled" isn't trackable — there's no calendar feature —
     # so this counts actual message_sent events as an honest proxy instead.
     conversations_started = (
-        InvestorInterestEvent.objects.filter(event_type='message_sent').count()
-        + AcquisitionInterestEvent.objects.filter(event_type='message_sent').count()
+        InvestorInterestEvent.objects.exclude(investor__match_investor_profile__is_internal_profile=True).filter(founder__is_internal_profile=False).filter(event_type='message_sent').count()
+        + AcquisitionInterestEvent.objects.exclude(buyer__match_buyer_profile__is_internal_profile=True).filter(seller__is_internal_profile=False).filter(event_type='message_sent').count()
     )
 
-    funding_conversations = Connection.objects.filter(status='ACCEPTED').count()
-    acquisition_conversations = AcquisitionConnection.objects.filter(status='ACCEPTED').count()
+    funding_conversations = Connection.objects.filter(investor__is_internal_profile=False, founder__is_internal_profile=False).filter(status='ACCEPTED').count()
+    acquisition_conversations = AcquisitionConnection.objects.filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).filter(status='ACCEPTED').count()
     completed_deals = (
-        Connection.objects.filter(status='FUNDED').count()
-        + AcquisitionConnection.objects.filter(status='CLOSED').count()
+        Connection.objects.filter(investor__is_internal_profile=False, founder__is_internal_profile=False).filter(status='FUNDED').count()
+        + AcquisitionConnection.objects.filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).filter(status='CLOSED').count()
     )
 
     return {
@@ -651,8 +652,8 @@ def get_value_creation_metrics():
 
 
 def get_feature_adoption_metrics():
-    founder_count = Application.objects.count()
-    seller_count = SellerApplication.objects.count()
+    founder_count = Application.objects.filter(is_internal_profile=False).count()
+    seller_count = SellerApplication.objects.filter(is_internal_profile=False).count()
 
     def _feature_row(label, adopted_count, eligible_count):
         adoption_pct = round((adopted_count / eligible_count) * 100, 1) if eligible_count else 0
@@ -665,20 +666,20 @@ def get_feature_adoption_metrics():
         }
 
     zelda_adopted = (
-        Application.objects.filter(
-            id__in=InvestorInterestEvent.objects.filter(event_type__in=ZELDA_EVENT_TYPES).values_list('founder_id', flat=True)
+        Application.objects.filter(is_internal_profile=False).filter(
+            id__in=InvestorInterestEvent.objects.exclude(investor__match_investor_profile__is_internal_profile=True).filter(founder__is_internal_profile=False).filter(event_type__in=ZELDA_EVENT_TYPES).values_list('founder_id', flat=True)
         ).count()
-        + SellerApplication.objects.filter(
-            id__in=AcquisitionInterestEvent.objects.filter(event_type__in=ZELDA_EVENT_TYPES).values_list('seller_id', flat=True)
+        + SellerApplication.objects.filter(is_internal_profile=False).filter(
+            id__in=AcquisitionInterestEvent.objects.exclude(buyer__match_buyer_profile__is_internal_profile=True).filter(seller__is_internal_profile=False).filter(event_type__in=ZELDA_EVENT_TYPES).values_list('seller_id', flat=True)
         ).count()
     )
 
     match_list_adopted = PageEvent.objects.filter(event_type='dashboard_view').exclude(user__isnull=True).values('user').distinct().count()
-    match_list_eligible = founder_count + InvestorApplication.objects.count()
+    match_list_eligible = founder_count + InvestorApplication.objects.filter(is_internal_profile=False).count()
 
-    pitch_deck_adopted = Application.objects.exclude(pitch_deck='').count()
-    milestones_adopted = Application.objects.filter(milestones__isnull=False).distinct().count()
-    valuation_adopted = Application.objects.filter(
+    pitch_deck_adopted = Application.objects.filter(is_internal_profile=False).exclude(pitch_deck='').count()
+    milestones_adopted = Application.objects.filter(is_internal_profile=False).filter(milestones__isnull=False).distinct().count()
+    valuation_adopted = Application.objects.filter(is_internal_profile=False).filter(
         user__in=DocumentSource.objects.filter(valuation_report__isnull=False).values_list('uploaded_by', flat=True)
     ).count()
 

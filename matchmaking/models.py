@@ -56,7 +56,7 @@ class ApplicationQuerySet(models.QuerySet):
         between ventures, pausing fundraising) now get the same treatment
         without needing every call site updated by hand.
         """
-        return self.filter(is_private=False, archived_at__isnull=True)
+        return self.filter(is_private=False, archived_at__isnull=True, is_internal_profile=False)
 
 
 class Application(models.Model):
@@ -184,6 +184,15 @@ class Application(models.Model):
     
     # Metadata
     is_private = models.BooleanField(default=False)
+    is_internal_profile = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text=(
+            "Staff-only test/demo/audit profile. Internal profiles remain usable by "
+            "their owner and by explicit Zelda workflows, but are excluded from "
+            "marketplace discovery, matching, public feeds, and Explore."
+        ),
+    )
     # Per-field disclosure, {field_name: level}. Absent keys fall back to the
     # declared default in NEW_PROFILE_FIELD_VISIBILITY -- never to PUBLIC. See
     # can_view_profile_field, the single authority every surface asks.
@@ -405,7 +414,7 @@ class Application(models.Model):
 class InvestorApplicationQuerySet(models.QuerySet):
     def discoverable(self):
         """See ApplicationQuerySet.discoverable — same is_private/archived_at pattern."""
-        return self.filter(is_private=False, archived_at__isnull=True)
+        return self.filter(is_private=False, archived_at__isnull=True, is_internal_profile=False)
 
 
 class InvestorApplication(models.Model):
@@ -504,6 +513,15 @@ class InvestorApplication(models.Model):
 
     # Visibility and Log Infrastructure
     is_private = models.BooleanField(default=False)
+    is_internal_profile = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text=(
+            "Staff-only test/demo/audit profile. Internal profiles remain usable by "
+            "their owner and by explicit Zelda workflows, but are excluded from "
+            "marketplace discovery, matching, public feeds, and Explore."
+        ),
+    )
     archived_at = models.DateTimeField(
         null=True, blank=True,
         help_text="Set when the investor archives this mandate — hidden from discovery like is_private, "
@@ -2087,7 +2105,7 @@ DEAL_STRUCTURE_CHOICES = [
 class SellerApplicationQuerySet(models.QuerySet):
     def discoverable(self):
         """See ApplicationQuerySet.discoverable — same is_private/archived_at pattern."""
-        return self.filter(is_private=False, archived_at__isnull=True)
+        return self.filter(is_private=False, archived_at__isnull=True, is_internal_profile=False)
 
 
 class SellerApplication(models.Model):
@@ -2146,6 +2164,15 @@ class SellerApplication(models.Model):
     )
 
     is_private = models.BooleanField(default=False)
+    is_internal_profile = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text=(
+            "Staff-only test/demo/audit profile. Internal profiles remain usable by "
+            "their owner and by explicit Zelda workflows, but are excluded from "
+            "marketplace discovery, matching, public feeds, and Explore."
+        ),
+    )
     allow_direct_messages = models.BooleanField(
         default=False,
         help_text="If True, verified users can bypass the matchmaking radar to initiate a Deal Room chat."
@@ -2280,7 +2307,7 @@ class SellerApplication(models.Model):
 class BuyerApplicationQuerySet(models.QuerySet):
     def discoverable(self):
         """See ApplicationQuerySet.discoverable — same is_private/archived_at pattern."""
-        return self.filter(is_private=False, archived_at__isnull=True)
+        return self.filter(is_private=False, archived_at__isnull=True, is_internal_profile=False)
 
 
 class BuyerApplication(models.Model):
@@ -2321,6 +2348,15 @@ class BuyerApplication(models.Model):
     )
 
     is_private = models.BooleanField(default=False)
+    is_internal_profile = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text=(
+            "Staff-only test/demo/audit profile. Internal profiles remain usable by "
+            "their owner and by explicit Zelda workflows, but are excluded from "
+            "marketplace discovery, matching, public feeds, and Explore."
+        ),
+    )
     allow_direct_messages = models.BooleanField(
         default=False,
         help_text="If True, verified users can bypass the matchmaking radar to initiate a Deal Room chat."
@@ -2838,6 +2874,7 @@ class ProfileVideoQuerySet(models.QuerySet):
             models.Q(founder__isnull=False)
             & models.Q(founder__is_private=False)
             & models.Q(founder__archived_at__isnull=True)
+            & models.Q(founder__is_internal_profile=False)
             & models.Q(founder__is_hidden_by_staff=False)
             & ~models.Q(founder__review_status='DENIED')
         )
@@ -2845,6 +2882,7 @@ class ProfileVideoQuerySet(models.QuerySet):
             models.Q(seller__isnull=False)
             & models.Q(seller__is_private=False)
             & models.Q(seller__archived_at__isnull=True)
+            & models.Q(seller__is_internal_profile=False)
             & models.Q(seller__is_hidden_by_staff=False)
             & ~models.Q(seller__review_status='DENIED')
         )
