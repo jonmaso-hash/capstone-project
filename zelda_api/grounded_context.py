@@ -303,8 +303,6 @@ def profile_for_document(document):
     context and profile/deck reconciliation both read it, so the two can never
     disagree about which profile a deck belongs to.
     """
-    if document.is_external_subject:
-        return None
     from matchmaking.models import Application, _normalize_company_string
 
     app = Application.objects.filter(user=document.uploaded_by).first()

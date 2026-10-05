@@ -47,10 +47,6 @@ REUSE_WINDOW = timedelta(days=7)
 # A check still marked pending after this long is assumed abandoned (a worker
 # died) rather than shared with every later request forever.
 PENDING_SHARE_WINDOW = timedelta(minutes=15)
-CHECK_FAILED_MESSAGE = (
-    "The company identity check did not finish. This is not a finding about "
-    "the business. Please try checking again."
-)
 
 
 def extract_domain(url_or_domain):
@@ -157,29 +153,6 @@ def build_entity_verification_report(document):
     )
 
 
-def build_document_identity_report(document):
-    """Public registry evidence about the named document subject, never its uploader."""
-    from .entity_verification_models import EntityVerificationReport as R
-    report = R.objects.create(document=document, status=R.PENDING)
-    rows = []
-    def add(check, claim, evidence_source, evidence, result, source_url=''):
-        rows.append(dict(check=check, claim=claim, interlink_source='Selected company / uploaded document',
-                         evidence_source=evidence_source, evidence=evidence, result=result,
-                         source_url=source_url, checked_at=timezone.now().isoformat()))
-    try:
-        sec_identity.sec_findings(
-            add, company_name=document.source_entity, company_claim=f'Company: {document.source_entity}',
-            person_name='', person_claim='No representative authority asserted', claimed_year=None,
-            founding_claim='No founding year asserted',
-        )
-        report.findings, report.checked_at, report.status = rows, timezone.now(), R.COMPLETE
-        report.save(update_fields=['findings', 'checked_at', 'status'])
-    except Exception:
-        mark_identity_check_failed(report)
-        raise
-    return report
-
-
 # --------------------------------------------------------------------------
 # The business being checked
 # --------------------------------------------------------------------------
@@ -204,8 +177,6 @@ def _amount_input(value):
 
 def subject_for_document(document):
     """The business a document belongs to, or None when its uploader has no business profile."""
-    if document.is_external_subject:
-        return None
     user = document.uploaded_by
     founder = getattr(user, 'match_founder_profile', None)
     seller = getattr(user, 'match_seller_profile', None)
@@ -554,7 +525,6 @@ def _find_or_start(subject, document=None):
     # Lock the business row so two simultaneous requests can't both start a check.
     type(subject).objects.select_for_update().filter(pk=subject.pk).exists()
     same_inputs = R.objects.filter(**{field: subject}, inputs_hash=digest)
-    same_inputs.filter(status=R.PENDING, created_at__lt=now - PENDING_SHARE_WINDOW).update(status=R.FAILED)
     report = (
         same_inputs.filter(status=R.COMPLETE, checked_at__gte=now - REUSE_WINDOW).order_by('-checked_at').first()
         or same_inputs.filter(status=R.PENDING, created_at__gte=now - PENDING_SHARE_WINDOW).order_by('-created_at').first()
@@ -611,13 +581,8 @@ def request_identity_check(subject, user, document=None, counts_against_limits=T
     with transaction.atomic():
         report, created = _find_or_start(subject, document)
         if created:
-            def enqueue():
-                try:
-                    run_entity_check.delay(report.id)
-                except Exception:
-                    mark_identity_check_failed(report)
-                    logger.exception('Could not queue company identity check %s', report.id)
-            transaction.on_commit(enqueue)
+            report_id = report.id
+            transaction.on_commit(lambda: run_entity_check.delay(report_id))
         if user is not None and user.is_authenticated:
             EntityReportAccessGrant.objects.get_or_create(report=report, user=user)
 
@@ -640,44 +605,14 @@ def identity_check_now(subject, document=None):
 def run_identity_check(report):
     from .entity_verification_models import EntityVerificationReport as R
 
-    refresh_identity_check_status(report)
-    if report.status != R.PENDING:
+    subject = report.subject
+    if subject is None:
         return report
-    try:
-        subject = report.subject
-        if subject is None:
-            raise ValueError('Company identity check has no business subject')
-        findings = collect_findings(subject)
-        digest = inputs_hash(subject)
-        # A late worker must not overwrite an expired or failed attempt.
-        R.objects.filter(pk=report.pk, status=R.PENDING).update(
-            findings=findings, inputs_hash=digest, checked_at=timezone.now(), status=R.COMPLETE,
-        )
-        report.refresh_from_db()
-    except Exception:
-        mark_identity_check_failed(report)
-        logger.exception('Company identity check %s failed', report.id)
-        raise
-    return report
-
-
-def mark_identity_check_failed(report):
-    """Record a failed attempt without turning it into evidence or a check date."""
-    from .entity_verification_models import EntityVerificationReport as R
-    R.objects.filter(pk=report.pk, status=R.PENDING).update(status=R.FAILED)
-    report.refresh_from_db()
-    return report
-
-
-def refresh_identity_check_status(report):
-    """Recover an abandoned queued/running check when an authorized viewer reads it."""
-    from .entity_verification_models import EntityVerificationReport as R
-    if report.status == R.PENDING:
-        R.objects.filter(
-            pk=report.pk, status=R.PENDING,
-            created_at__lt=timezone.now() - PENDING_SHARE_WINDOW,
-        ).update(status=R.FAILED)
-        report.refresh_from_db()
+    report.findings = collect_findings(subject)
+    report.inputs_hash = inputs_hash(subject)
+    report.checked_at = timezone.now()
+    report.status = R.COMPLETE
+    report.save(update_fields=['findings', 'inputs_hash', 'checked_at', 'status'])
     return report
 
 
@@ -705,10 +640,8 @@ def latest_viewable_report(user, document):
         scope |= Q(**{_describe(subject)['field']: subject})
     reports = EntityVerificationReport.objects.filter(scope).order_by('-created_at', '-id')
     if user.is_staff or user == document.uploaded_by:
-        report = reports.first()
-    else:
-        report = reports.filter(access_grants__user=user).first()
-    return refresh_identity_check_status(report) if report else None
+        return reports.first()
+    return reports.filter(access_grants__user=user).first()
 
 
 def can_request_identity_check(user, subject):

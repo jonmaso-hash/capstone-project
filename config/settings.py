@@ -179,13 +179,10 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    # Form upload refusals need message storage, but must precede CSRF parsing.
-    "django.contrib.messages.middleware.MessageMiddleware",
-    # Reject oversized multipart requests before CSRF reads request.POST.
-    'shared_utils.upload_limits.UploadSizeLimitMiddleware',
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 
     # Staff can impersonate and override deal states, so their sessions end
@@ -195,6 +192,10 @@ MIDDLEWARE = [
     # Staff viewing as a user can't change anything as them (ops/impersonation.py).
     # Needs the session, auth and messages middleware above it.
     'ops.impersonation.ReadOnlyImpersonationMiddleware',
+
+    # Refuses oversized uploads from Content-Length, before CSRF or the
+    # idempotency layer below parses the body. Must stay ahead of both.
+    'shared_utils.upload_limits.UploadSizeLimitMiddleware',
 
     # Your Unique Idempotency Layer
     'shared_utils.middleware.IdempotencyMiddleware',

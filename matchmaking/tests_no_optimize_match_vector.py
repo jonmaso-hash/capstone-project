@@ -56,7 +56,7 @@ class NoOptimizeMatchVectorTests(TestCase):
     def test_the_founder_dashboard_has_no_optimize_button_or_its_script(self):
         response = self._dashboard(self.founder_user, 'matchmaking:founder_dashboard')
         # Positive control: this is the rendered dashboard, not an error page.
-        self.assertContains(response, 'Introduction requests')
+        self.assertContains(response, 'Pending Inbound Requests')
         for text in REMOVED:
             with self.subTest(text=text):
                 self.assertNotContains(response, text)

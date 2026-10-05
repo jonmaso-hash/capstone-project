@@ -47,9 +47,6 @@ class DocumentSource(FoundryStandardMixin, models.Model):
     filename = models.CharField(max_length=255)
     document_type = models.CharField(max_length=20, choices=SOURCE_TYPES, default='pitch_deck')
     source_entity = models.CharField(max_length=255, help_text="Founder name, investor name, or source")
-    is_external_subject = models.BooleanField(default=False, help_text='Evidence about another business, never the uploader profile.')
-    is_product_input = models.BooleanField(default=False, help_text='Unprocessed evidence staged for a one-time Zelda purchase.')
-    external_cik = models.CharField(max_length=10, blank=True, help_text='SEC identity selected through the shared resolver, when available.')
     uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='zelda_documents')
     
     # Content summary

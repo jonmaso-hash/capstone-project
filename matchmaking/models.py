@@ -56,7 +56,7 @@ class ApplicationQuerySet(models.QuerySet):
         between ventures, pausing fundraising) now get the same treatment
         without needing every call site updated by hand.
         """
-        return self.filter(is_private=False, archived_at__isnull=True, is_internal_profile=False)
+        return self.filter(is_private=False, archived_at__isnull=True)
 
 
 class Application(models.Model):
@@ -184,15 +184,6 @@ class Application(models.Model):
     
     # Metadata
     is_private = models.BooleanField(default=False)
-    is_internal_profile = models.BooleanField(
-        default=False,
-        db_index=True,
-        help_text=(
-            "Staff-only test/demo/audit profile. Internal profiles remain usable by "
-            "their owner and by explicit Zelda workflows, but are excluded from "
-            "marketplace discovery, matching, public feeds, and Explore."
-        ),
-    )
     # Per-field disclosure, {field_name: level}. Absent keys fall back to the
     # declared default in NEW_PROFILE_FIELD_VISIBILITY -- never to PUBLIC. See
     # can_view_profile_field, the single authority every surface asks.
@@ -414,7 +405,7 @@ class Application(models.Model):
 class InvestorApplicationQuerySet(models.QuerySet):
     def discoverable(self):
         """See ApplicationQuerySet.discoverable — same is_private/archived_at pattern."""
-        return self.filter(is_private=False, archived_at__isnull=True, is_internal_profile=False)
+        return self.filter(is_private=False, archived_at__isnull=True)
 
 
 class InvestorApplication(models.Model):
@@ -513,15 +504,6 @@ class InvestorApplication(models.Model):
 
     # Visibility and Log Infrastructure
     is_private = models.BooleanField(default=False)
-    is_internal_profile = models.BooleanField(
-        default=False,
-        db_index=True,
-        help_text=(
-            "Staff-only test/demo/audit profile. Internal profiles remain usable by "
-            "their owner and by explicit Zelda workflows, but are excluded from "
-            "marketplace discovery, matching, public feeds, and Explore."
-        ),
-    )
     archived_at = models.DateTimeField(
         null=True, blank=True,
         help_text="Set when the investor archives this mandate — hidden from discovery like is_private, "
@@ -645,40 +627,6 @@ class MatchFeedback(models.Model):
     class Meta:
         verbose_name = "Match Feedback"
         verbose_name_plural = "Match Feedbacks"
-
-
-class InvestorShortlist(models.Model):
-    """
-    Investor-owned saved-company state.
-
-    This is intentionally separate from MatchFeedback: "Relevant / Not
-    Relevant" teaches recommendation quality, while Shortlist means "save this
-    company for my own review." Neither action implies the other.
-    """
-    investor = models.ForeignKey(
-        InvestorApplication,
-        on_delete=models.CASCADE,
-        related_name="shortlist_entries",
-    )
-    application = models.ForeignKey(
-        Application,
-        on_delete=models.CASCADE,
-        related_name="shortlisted_by",
-    )
-    saved_at = models.DateTimeField(auto_now_add=True)
-    note = models.TextField(blank=True)
-
-    class Meta:
-        ordering = ["-saved_at"]
-        constraints = [
-            models.UniqueConstraint(
-                fields=["investor", "application"],
-                name="unique_investor_shortlist_entry",
-            ),
-        ]
-
-    def __str__(self):
-        return f"{self.investor} saved {self.application}"
 
 
 class AIMatch(models.Model):
@@ -2105,7 +2053,7 @@ DEAL_STRUCTURE_CHOICES = [
 class SellerApplicationQuerySet(models.QuerySet):
     def discoverable(self):
         """See ApplicationQuerySet.discoverable — same is_private/archived_at pattern."""
-        return self.filter(is_private=False, archived_at__isnull=True, is_internal_profile=False)
+        return self.filter(is_private=False, archived_at__isnull=True)
 
 
 class SellerApplication(models.Model):
@@ -2164,15 +2112,6 @@ class SellerApplication(models.Model):
     )
 
     is_private = models.BooleanField(default=False)
-    is_internal_profile = models.BooleanField(
-        default=False,
-        db_index=True,
-        help_text=(
-            "Staff-only test/demo/audit profile. Internal profiles remain usable by "
-            "their owner and by explicit Zelda workflows, but are excluded from "
-            "marketplace discovery, matching, public feeds, and Explore."
-        ),
-    )
     allow_direct_messages = models.BooleanField(
         default=False,
         help_text="If True, verified users can bypass the matchmaking radar to initiate a Deal Room chat."
@@ -2307,7 +2246,7 @@ class SellerApplication(models.Model):
 class BuyerApplicationQuerySet(models.QuerySet):
     def discoverable(self):
         """See ApplicationQuerySet.discoverable — same is_private/archived_at pattern."""
-        return self.filter(is_private=False, archived_at__isnull=True, is_internal_profile=False)
+        return self.filter(is_private=False, archived_at__isnull=True)
 
 
 class BuyerApplication(models.Model):
@@ -2348,15 +2287,6 @@ class BuyerApplication(models.Model):
     )
 
     is_private = models.BooleanField(default=False)
-    is_internal_profile = models.BooleanField(
-        default=False,
-        db_index=True,
-        help_text=(
-            "Staff-only test/demo/audit profile. Internal profiles remain usable by "
-            "their owner and by explicit Zelda workflows, but are excluded from "
-            "marketplace discovery, matching, public feeds, and Explore."
-        ),
-    )
     allow_direct_messages = models.BooleanField(
         default=False,
         help_text="If True, verified users can bypass the matchmaking radar to initiate a Deal Room chat."
@@ -2874,7 +2804,6 @@ class ProfileVideoQuerySet(models.QuerySet):
             models.Q(founder__isnull=False)
             & models.Q(founder__is_private=False)
             & models.Q(founder__archived_at__isnull=True)
-            & models.Q(founder__is_internal_profile=False)
             & models.Q(founder__is_hidden_by_staff=False)
             & ~models.Q(founder__review_status='DENIED')
         )
@@ -2882,7 +2811,6 @@ class ProfileVideoQuerySet(models.QuerySet):
             models.Q(seller__isnull=False)
             & models.Q(seller__is_private=False)
             & models.Q(seller__archived_at__isnull=True)
-            & models.Q(seller__is_internal_profile=False)
             & models.Q(seller__is_hidden_by_staff=False)
             & ~models.Q(seller__review_status='DENIED')
         )
