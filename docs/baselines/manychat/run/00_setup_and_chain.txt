@@ -1,0 +1,33 @@
+# Process checks (from inside each process)
+BASELINE-ENV-CHECK [server pid=23216] {'FILED_API_KEY': False, 'COMPANYENRICH_API_KEY': False, 'NEWS_API_KEY': False, 'DATA4B2B_API_KEY': False, 'USPTO_ODP_API_KEY': False, 'CRUNCHBASE_API_KEY': False, 'ANTHROPIC_API_KEY': True}
+CELERY_TASK_ALWAYS_EAGER False
+BROKER-CHECK [server] broker (write)  redis://localhost local=True
+BROKER-CHECK [server] broker (read)   redis://localhost local=True
+BROKER-CHECK [server] result backend  redis://localhost local=True
+BROKER-CHECK [server] cache           redis://localhost local=True
+SCHEMA-CHECK [server] pending=0 []
+SCHEMA-CHECK [server] zelda_api.0035 applied=True matchmaking.0083 applied=True
+ALL CHECKS OK [server]
+BASELINE-ENV-CHECK [worker pid=14632] {'FILED_API_KEY': False, 'COMPANYENRICH_API_KEY': False, 'NEWS_API_KEY': False, 'DATA4B2B_API_KEY': False, 'USPTO_ODP_API_KEY': False, 'CRUNCHBASE_API_KEY': False, 'ANTHROPIC_API_KEY': True}
+CELERY_TASK_ALWAYS_EAGER False
+BROKER-CHECK [worker] broker (write)  redis://localhost local=True
+BROKER-CHECK [worker] broker (read)   redis://localhost local=True
+BROKER-CHECK [worker] result backend  redis://localhost local=True
+BROKER-CHECK [worker] cache           redis://localhost local=True
+SCHEMA-CHECK [worker] pending=0 []
+SCHEMA-CHECK [worker] zelda_api.0035 applied=True matchmaking.0083 applied=True
+ALL CHECKS OK [worker]
+
+# Worker chain for document 3129
+[2026-10-04 23:06:14,986: INFO/MainProcess] Task zelda_api.tasks.process_document_pipeline[3f298df9-2ad1-44af-ba7a-2120e8b35320] received
+[2026-10-04 23:06:15,577: INFO/MainProcess] Task zelda_api.tasks.process_document_pipeline[3f298df9-2ad1-44af-ba7a-2120e8b35320] succeeded in 0.5907733999192715s: {'status': 'success', 'document_id': 3129, 'chunks': 12, 'insights': 1}
+[2026-10-04 23:06:15,582: INFO/MainProcess] Task zelda_api.truth_delta_tasks.extract_claims_from_insights[6d284c77-2777-4f46-a197-6e553f9e25aa] received
+[2026-10-04 23:06:15,615: INFO/MainProcess] Task zelda_api.truth_delta_tasks.extract_claims_from_insights[6d284c77-2777-4f46-a197-6e553f9e25aa] succeeded in 0.032532399985939264s: {'status': 'success', 'claims_created': 1}
+[2026-10-04 23:06:15,620: INFO/MainProcess] Task zelda_api.entity_verification_tasks.verify_entity_integrity[f09ab7e9-b13b-4d4f-a40e-18c5e48190d7] received
+[2026-10-04 23:06:18,991: INFO/MainProcess] Task zelda_api.entity_verification_tasks.verify_entity_integrity[f09ab7e9-b13b-4d4f-a40e-18c5e48190d7] succeeded in 3.3707555001601577s: {'status': 'success', 'document_id': 3129, 'report_id': 30}
+[2026-10-04 23:06:18,997: INFO/MainProcess] Task zelda_api.truth_delta_tasks.verify_document_truth_delta[83a15514-c221-4f2a-928d-1addf781fcba] received
+[2026-10-04 23:06:19,073: INFO/MainProcess] Task zelda_api.truth_delta_tasks.verify_document_truth_delta[83a15514-c221-4f2a-928d-1addf781fcba] succeeded in 0.07601509988307953s: {'status': 'success', 'document_id': 3129, 'report_id': 85}
+[2026-10-04 23:06:19,079: INFO/MainProcess] Task zelda_api.tasks.generate_intelligence_memo[48eb7e73-9b68-45b6-a660-bec3dfd9183d] received
+[2026-10-04 23:07:01,939: INFO/MainProcess] Task zelda_api.tasks.generate_intelligence_memo[48eb7e73-9b68-45b6-a660-bec3dfd9183d] succeeded in 42.85973479994573s: {'status': 'success', 'memo_id': 89}
+[2026-10-04 23:07:01,947: INFO/MainProcess] Task zelda_api.tasks.notify_document_processed[09c8774b-ec14-4249-9088-7643ce2f48fa] received
+[2026-10-04 23:07:02,087: INFO/MainProcess] Task zelda_api.tasks.notify_document_processed[09c8774b-ec14-4249-9088-7643ce2f48fa] succeeded in 0.1397011000663042s: {'status': 'notified', 'user_id': 305}

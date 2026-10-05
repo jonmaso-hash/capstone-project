@@ -1,0 +1,84 @@
+{
+ "pages": {
+  "mc_owner": {
+   "td_page_status": 200,
+   "location": "",
+   "positive_control_page_marker": true,
+   "panel_section": true,
+   "panel_heading": true,
+   "canary": false,
+   "status_api": 200,
+   "verification_state": "complete",
+   "score_api": 200,
+   "score_status": null
+  },
+  "mc_lite": {
+   "td_page_status": 200,
+   "location": "",
+   "positive_control_page_marker": true,
+   "panel_section": false,
+   "panel_heading": false,
+   "canary": false,
+   "status_api": 403,
+   "verification_state": null,
+   "score_api": 200,
+   "score_status": null
+  },
+  "bj_staff": {
+   "td_page_status": 200,
+   "location": "",
+   "positive_control_page_marker": true,
+   "panel_section": false,
+   "panel_heading": false,
+   "canary": false,
+   "status_api": 200,
+   "verification_state": "complete",
+   "score_api": 200,
+   "score_status": null
+  },
+  "anonymous": {
+   "td_page_status": 302,
+   "location": "/accounts/login/?next=/api/v1/zelda/documents/3129/verification/",
+   "positive_control_page_marker": false,
+   "panel_section": false,
+   "panel_heading": false,
+   "canary": false,
+   "status_api": 403,
+   "verification_state": null,
+   "score_api": 403,
+   "score_status": null
+  }
+ },
+ "memo_id": 89,
+ "memo_evidence_level": "LITTLE_EVIDENCE",
+ "memo_hits": {
+  "23.1": [
+   "t is a software company at the Series A stage [P1, P2]. The company states it has raised $23.1M in total funding [S1]. The extracted evidence is highly limited, and no further deta",
+   "nnot be assessed from the available material. • Total funding raised: The company states $23.1M raised [S1]; this figure was checked but could not be confirmed or denied due to abs"
+  ],
+  "Series A": [
+   "ManyChat is a software company at the Series A stage [P1, P2]. The company states it has raised $23.1M in total funding [S1]. Th",
+   "ted from the submitted documents. The company is classified as a Software company [P2] at Series A [P1], but no further detail about how it generates or intends to generate revenue"
+  ],
+  "verified": [
+   "o characterize the trajectory more precisely. If the $23.1M funding figure [S1] cannot be verified upon diligence [C1], and the extensive gaps in product, team, revenue, and tracti",
+   "ed no confirmatory evidence [C1], a distinction — between self-reported and independently verified — that a plain AI summary of the same deck would likely present as an established"
+  ],
+  "currently": [
+   "t is the total addressable market as defined by the company, and what share does ManyChat currently address?', \"Who are the primary competitors, and what is ManyChat's stated basis"
+  ]
+ },
+ "entity_integrity_sec": [
+  {
+   "check": "sec_filer",
+   "claim": "Company name: ManyChat",
+   "interlink_source": "Startup profile",
+   "evidence_source": "SEC EDGAR",
+   "evidence": "No SEC filer with this name was found on EDGAR. Most private companies never file with the SEC.",
+   "result": "not_found",
+   "source_url": "",
+   "checked_at": "2026-10-05T06:06:15.705369+00:00"
+  }
+ ],
+ "verification_state": "complete"
+}
