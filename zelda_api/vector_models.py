@@ -78,6 +78,14 @@ class DocumentSource(FoundryStandardMixin, models.Model):
     # do, never a database error -- see pages/tests_exception_responses.py.
     verification_error = models.TextField(
         blank=True, help_text="Technical cause of the last verification failure. Never shown to end users.")
+    # A run that completed and found nothing to check. Without it that outcome
+    # wrote nothing at all, so it was indistinguishable from a run that never
+    # started: the status endpoint said 'pending' forever and the memo said
+    # verification had not run. It is not "no public data found" -- no claim
+    # ever reached a public source.
+    verification_no_claims_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="When Truth Delta last completed with no claims to verify. Cleared by a report or a failure.")
 
     # Staff moderation — default False means nothing changes for any
     # existing document; only takes effect once a staff member hides one.
@@ -108,12 +116,12 @@ class DocumentSource(FoundryStandardMixin, models.Model):
             models.Index(fields=['source_entity']),
         ]
     
-    PENDING, FAILED, COMPLETE = 'pending', 'failed', 'complete'
+    PENDING, FAILED, COMPLETE, NO_CLAIMS = 'pending', 'failed', 'complete', 'no_claims'
 
     @property
     def verification_state(self):
         """
-        'pending' | 'failed' | 'complete' -- one authority, because the report
+        'pending' | 'failed' | 'complete' | 'no_claims' -- one authority, because the report
         page and the status endpoint each concluded independently that a
         document was fine: the endpoint reports the intelligence pipeline's
         status (still 'analyzed' when verification died), and the page treated
@@ -123,14 +131,26 @@ class DocumentSource(FoundryStandardMixin, models.Model):
         after the failure means a retry worked; a failure after the newest
         report means the retry did not, and a stale report must not be
         presented as the current answer.
+
+        The same rule holds for a run that found no claims: each terminal
+        outcome stands only while it is the newest. The writers clear the
+        superseded timestamps too, but this does not rely on them having done
+        so -- a stale timestamp left behind must still lose. On a tie the
+        report wins, as it always has against a failure.
         """
         from .truth_delta_models import TruthDeltaReport
         latest = (TruthDeltaReport.objects.filter(document=self)
                   .order_by('-created_at').first())
-        if self.verification_failed_at and (
-                latest is None or latest.created_at < self.verification_failed_at):
-            return self.FAILED
-        return self.COMPLETE if latest else self.PENDING
+        outcomes = [
+            (when, rank, state) for when, rank, state in (
+                (latest.created_at if latest else None, 2, self.COMPLETE),
+                (self.verification_failed_at, 1, self.FAILED),
+                (self.verification_no_claims_at, 0, self.NO_CLAIMS),
+            ) if when is not None
+        ]
+        if not outcomes:
+            return self.PENDING
+        return max(outcomes)[2]
 
     def get_serialized_data(self):
         return {

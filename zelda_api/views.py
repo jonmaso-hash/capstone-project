@@ -878,6 +878,15 @@ def truth_delta_ui_view(request, document_id):
         document=document
     ).order_by('-created_at').first()
 
+    # The newest run found nothing to check. An older report is not the
+    # current answer, and showing its figures beside "no verifiable claims
+    # were extracted" would contradict it.
+    from .disclaimers import NO_CLAIMS_SUMMARY
+    verification_state = document.verification_state
+    no_claims = verification_state == DocumentSource.NO_CLAIMS
+    if no_claims:
+        report = None
+
     # Get claims that were extracted
     claims = ClaimedDatapoint.objects.filter(document=document)
 
@@ -949,8 +958,12 @@ def truth_delta_ui_view(request, document_id):
         'claims': claims,
         'has_report': report is not None,
         'truth_score': round(report.overall_truth_score) if report and report.overall_truth_score is not None else None,
-        'credibility_risk': report.credibility_risk if report else 'pending',
-        'summary': report.summary if report else 'Verification pending.',
+        # 'no_claims' is its own answer: finished, with nothing to check. It is
+        # neither "pending" nor "no public data found" -- no claim reached a
+        # public source at all.
+        'credibility_risk': report.credibility_risk if report else ('no_claims' if no_claims else 'pending'),
+        'summary': report.summary if report else (NO_CLAIMS_SUMMARY if no_claims else 'Verification pending.'),
+        'verification_no_claims': no_claims,
         'claims_analyzed': claims_analyzed,
         'details': details,
         'clarification_requests': clarification_requests,
@@ -973,7 +986,7 @@ def truth_delta_ui_view(request, document_id):
         # A crash and a run that never started used to render identically.
         # From DocumentSource.verification_state, the same answer the polling
         # endpoint gives, so the two cannot disagree.
-        'verification_failed': document.verification_state == DocumentSource.FAILED,
+        'verification_failed': verification_state == DocumentSource.FAILED,
         # Staff and logs only: an end user is told that it failed and what to
         # do, never a database error.
         'verification_error': document.verification_error if request.user.is_staff else '',

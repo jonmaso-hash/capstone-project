@@ -753,7 +753,12 @@
                 ({% zelda_source_names %}) verified, contradicted, or could not establish.
             </p>
         </div>
-        {% elif report %}
+        {% elif report or verification_no_claims %}
+        {% comment %}
+        verification_no_claims: the newest run finished and found nothing to
+        check. It writes no report, so without it this sentence was unreachable
+        and the page said "pending" for a run that had ended.
+        {% endcomment %}
         <div class="mt-3 mb-2 small" style="color: #64748b;">
             <i class="bi bi-info-circle me-1"></i>No verifiable claims were extracted from this
             document, so there is nothing to cross-check against public sources yet.
@@ -887,7 +892,7 @@
 </div>
 
 {{ details|json_script:"truth-delta-details-json" }}
-{{ summary|default:"Verification pending — no public data found for this company."|json_script:"truth-delta-summary-json" }}
+{{ summary|default:"Verification pending."|json_script:"truth-delta-summary-json" }}
 {{ credibility_risk|default:"pending"|json_script:"truth-delta-risk-json" }}
 {{ coverage_sentence|default:""|json_script:"truth-delta-coverage-json" }}
 {{ clarification_requests|json_script:"truth-delta-clarifications-json" }}
@@ -922,7 +927,7 @@ const SERVER_TRUTH_DATA = {
     document_id: {{ document.id }},
     overall_truth_score: {% if truth_score is not None %}{{ truth_score }}{% else %}null{% endif %},
     credibility_risk: _readJsonScript('truth-delta-risk-json', 'pending'),
-    summary: _readJsonScript('truth-delta-summary-json', 'Verification pending — no public data found for this company.'),
+    summary: _readJsonScript('truth-delta-summary-json', 'Verification pending.'),
     claims_analyzed: {{ claims_analyzed|default:0 }},
     // ic_memo.coverage_sentence over ic_memo.coverage_counts -- the rollup
     // shows this text and computes nothing (no percentage, no arithmetic).
@@ -1012,6 +1017,13 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
             scoreElement.className = 'score-value medium-risk';
             riskElement.textContent = 'PENDING VERIFICATION';
             riskElement.className = 'score-risk risk-medium';
+        } else if (risk === 'no_claims') {
+            // Finished, with nothing to check -- not pending, and not "no
+            // public data": no claim reached a public source.
+            scoreElement.textContent = '—';
+            scoreElement.className = 'score-value medium-risk';
+            riskElement.textContent = 'NOT SCORED · NO VERIFIABLE CLAIMS';
+            riskElement.className = 'score-risk risk-medium';
         } else if (!hasScore) {
             // Verification ran, but no claim was verified or contradicted, so
             // nothing is scoreable -- distinct from "pending" and from a low
@@ -1032,7 +1044,7 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
 
         // Summary
         document.getElementById('truthSummaryText').textContent = data.summary ||
-            'Verification pending — no public data found for this company.';
+            'Verification pending.';
 
         if (data.coverage_sentence && typeof SERVER_TRUTH_DATA !== 'undefined') {
             SERVER_TRUTH_DATA.coverage_sentence = data.coverage_sentence;   // the API's copy, same helper

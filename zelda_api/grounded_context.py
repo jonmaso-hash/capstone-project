@@ -129,7 +129,7 @@ class GroundedContext:
     built_for: str                 # the principal's label, for the record
     items: Tuple[GroundedItem, ...]
     gaps: Tuple[str, ...]
-    verification: str              # 'complete' | 'failed' | 'not_run'
+    verification: str              # 'complete' | 'failed' | 'no_claims' | 'not_run'
     analysis_confidence: float
     insight_ids: Tuple[int, ...] = field(default=())
 
@@ -166,7 +166,12 @@ class GroundedContext:
         items.extend(_statement_items(document, insights))
         items.extend(_profile_items(document))
 
-        if report is not None:
+        # A run that found nothing to check is finished, not "not run" -- and
+        # it says nothing about public data, because no claim reached a source.
+        # Read from the one authority so a stale timestamp cannot win.
+        if document.verification_state == document.NO_CLAIMS:
+            verification = 'no_claims'
+        elif report is not None:
             verification = 'complete'
         elif document.verification_failed_at:
             verification = 'failed'

@@ -132,6 +132,7 @@ jobs:
           zelda_api.tests_observation_registrant
           zelda_api.tests_identity_chain_of_custody
           zelda_api.tests_verification_failure_is_visible
+          zelda_api.tests_verification_no_claims
           zelda_api.tests_dashboard_authorization
           zelda_api.tests_terminal_notifications
           zelda_api.tests_valuation_disclosure
