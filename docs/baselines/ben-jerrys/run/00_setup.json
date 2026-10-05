@@ -1,0 +1,35 @@
+{
+ "note": "Setup controls for the Ben & Jerry's Pass A run. Every line below was printed from inside the named process by the run wrapper (scratchpad bj_run.py), which blanks the six paid keys in os.environ (present-but-empty, so read_env()'s setdefault keeps the blank), pins broker/result backend/cache to localhost, then refuses to start on any paid key set, any remote target or any pending migration.",
+ "code": {"checkout": "C:\\Users\\jonathan\\Desktop\\KCV (main)", "HEAD": "b9f6867f8628a811a54152a3de1585e124a5abe9", "py_or_template_diff_vs_HEAD": "none (git diff --stat HEAD -- *.py *.html empty; only tracked __pycache__ noise and untracked KCV/ and tools/)"},
+ "deck": {"path": "C:\\Users\\jonathan\\Downloads\\ben_jerrys_public_pitch_deck_test.pptx", "bytes": 18072747, "sha256_disk": "0cb1be12eca73272d044d271877ae7f5c4b561b1d057b6b04d17c49ee4983fea", "sha256_in_page_before_submit": "0cb1be12eca73272d044d271877ae7f5c4b561b1d057b6b04d17c49ee4983fea", "matches_key": true},
+ "env_check": {
+  "server": "BASELINE-ENV-CHECK [server pid=13700] {'FILED_API_KEY': False, 'COMPANYENRICH_API_KEY': False, 'NEWS_API_KEY': False, 'DATA4B2B_API_KEY': False, 'USPTO_ODP_API_KEY': False, 'CRUNCHBASE_API_KEY': False, 'ANTHROPIC_API_KEY': True}",
+  "worker": "BASELINE-ENV-CHECK [worker pid=25028] {'FILED_API_KEY': False, 'COMPANYENRICH_API_KEY': False, 'NEWS_API_KEY': False, 'DATA4B2B_API_KEY': False, 'USPTO_ODP_API_KEY': False, 'CRUNCHBASE_API_KEY': False, 'ANTHROPIC_API_KEY': True}",
+  "negative_control": "BJ_NEGATIVE_CONTROL=1 (overrides removed): FILED, COMPANYENRICH, NEWS, DATA4B2B True; USPTO_ODP and CRUNCHBASE False (empty in .env); all four targets rediss://pumped-koi-212229.upstash.io; wrapper printed REFUSING TO START and exited 1",
+  "CELERY_TASK_ALWAYS_EAGER": false,
+  "worker_running": true
+ },
+ "broker_check": {
+  "server": ["broker (write) redis://localhost local=True", "broker (read) redis://localhost local=True", "result backend redis://localhost local=True", "cache redis://localhost local=True"],
+  "worker": ["broker (write) redis://localhost local=True", "broker (read) redis://localhost local=True", "result backend redis://localhost local=True", "cache redis://localhost local=True"],
+  "manage_py_preflight_local": "broker (write) redis://localhost; broker (read) redis://localhost; result backend redis://localhost; cache redis://localhost; migrations 0 pending; preflight ok (exit 0)",
+  "local_broker": "Memurai started for this run on 127.0.0.1:6379, dbsize 0 at start",
+  "worker_log": "Connected to redis://localhost:6379/0"
+ },
+ "schema_check": {
+  "server": "SCHEMA-CHECK [server] pending=0 []; zelda_api.0035 applied=True matchmaking.0083 applied=True",
+  "worker": "SCHEMA-CHECK [worker] pending=0 []; zelda_api.0035 applied=True matchmaking.0083 applied=True",
+  "migrations_run_for_this_run": "none needed"
+ },
+ "principals": {
+  "bj_owner": {"user_id": 301, "application_id": 41, "is_premium": false},
+  "bj_lite": {"user_id": 302, "investor_profile": "is_premium=False"},
+  "bj_paid": {"user_id": 303, "investor_profile": "is_premium=True", "subscription": "INVESTOR_PREMIUM active, current_period_end +30d (Nike E-1)"},
+  "bj_staff": {"user_id": 304, "is_staff": true, "role_profile": "none"},
+  "anonymous": {}
+ },
+ "profile_fixture": {"company_name": "Ben & Jerry's", "geography": "South Burlington, VT", "company_website": null, "current_revenue": null, "revenue_period": "", "raising_amount": "0.00", "prior_amount_raised": "0.00", "sector": "Consumer", "stage": "Public (mirrors the Nike fixture; not graded)", "canary": "CANARY-BJ-2084 in reason_for_capital, field_visibility PRIVATE"},
+ "pre_existing_rows": "Documents 3124 and 3125 (same filename, source_entity \"Ben & Jerry's\", uploaded by audit_bj_owner, user 299, at 2026-10-04 16:48 and 16:49 PDT) from the earlier pre-fix three-deck audit (commits d0b0877 / c40cee5, not on main). The owner was asked before the upload and chose to proceed and record erratum E-1. That user's Application also has company_name \"Ben & Jerry's\" (see L-012)",
+ "setup_side_effects": "Profile saves enqueued refresh_matches_for_founder_task and refresh_matches_for_investor_task, which the local worker received and ran (a positive control that the worker reads the local broker)",
+ "upload": {"principal": "bj_owner", "surface": "Zelda widget #document-upload-form on /matchmaking/dashboard/founder/", "method": "The deck was served by a one-file local HTTP server (127.0.0.1:8011, stopped right after), fetched in-page into a File, placed in #document-file via DataTransfer; source entity and type set; form.requestSubmit() ran the widget's own handler", "request": "POST /api/v1/zelda/documents/ingest/", "status": 201, "at": "2026-10-05T05:26:17Z", "document_id": 3128, "widget_status_after": "Upload complete! Processing...", "count": 1}
+}

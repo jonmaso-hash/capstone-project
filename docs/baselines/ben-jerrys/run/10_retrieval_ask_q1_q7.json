@@ -1,0 +1,730 @@
+{
+ "Q1": {
+  "question": "What is Ben & Jerry's annual revenue?",
+  "search": {
+   "status": 200,
+   "body": {
+    "document_id": 3128,
+    "query": "What is Ben & Jerry's annual revenue?",
+    "results_count": 5,
+    "results": [
+     {
+      "id": 3998,
+      "text": "Product engine\nHigh-recognition flavors, seasonal innovation, and scoop-shop experience create multiple demand surfaces.\nRevenue surfaces to identify\nRetail pints\nGrocery / freezer aisle distribution\nScoop shops\nOn-premise experience and franchise/local retail\nLimited flavors\nInnovation-driven demand spikes\nActivism-led drops\nEarned-media amplification when credible\nDeck claim to test\n“Ben & Jerry’s flavor innovation and mission-led campaigns create earned-media advantages versus generic premium ice cream.”\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 5,
+      "section": "Product engine",
+      "relevance": 0.15,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 3999,
+      "text": "Market & distribution context\nThe brand benefits from parent-scale cold chain and a global ice cream category backdrop.\n€7.9B\nUnilever ice cream unit 2024 sales reported by Reuters\n~20%\nShare of global ice cream market reported for the unit\nImportant distinction\nThese are parent/ice-cream-unit figures, not standalone Ben & Jerry’s revenue. A good diligence system should not assign them directly to the brand without segment-level disclosure.\nTruth Delta trap\nDeck includes parent-unit metrics beside brand narrative so Zelda can test attribution boundaries.\nSource: Reuters report on Unilever ice cream spin-off.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 6,
+      "section": "Market & distribution context",
+      "relevance": 0.15,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 4002,
+      "text": "Risks & diligence questions\nThe brand is valuable, but the operating model has real diligence questions.\nAttribution risk\nBrand-level revenue and margin may not be separately disclosed.\nGovernance risk\nMission independence can conflict with parent-level risk management.\nCategory risk\nFrozen desserts require cold-chain execution and face private-label pressure.\nReputation risk\nActivism creates loyalty with some consumers and backlash with others.\nVerification risk\nSome claims are mission narrative, not measurable operating data.\nCore diligence question: Can Ben & Jerry’s preserve brand-led pricing power and cultural relevance while operating inside a scaled global ice cream company?\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 9,
+      "section": "Risks & diligence questions",
+      "relevance": 0.15,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 4003,
+      "text": "Claims Zelda should extract from this deck\nUse this slide as a deck-internal answer key for rerun grading.\nC1\nBen & Jerry’s was founded in 1978 in Burlington, Vermont.\nHigh-confidence public fact\nC2\nBen & Jerry’s was acquired by Unilever in 2000.\nHigh-confidence public fact\nC3\nBen & Jerry’s public mission includes product, economic, and social mission elements.\nOfficial-site verifiable\nC4\nThe brand’s stated values include human rights, social/economic justice, and environmental restoration.\nOfficial-site verifiable\nC5\nUnilever’s ice cream unit generated €7.9B in 2024 sales and was reported near 20% global market share.\nParent-segment metric; not brand revenue\nC6\nBen & Jerry’s flavor innovation creates earned-media advantages.\nNarrative; should be unverified unless externally supported\nC7\nMission independence creates governance tension.\nPublic reporting supports context, not a numeric fact\nPass condition: Zelda should not collapse parent-segment metrics, mission statements, and investor narrative into the same “verified” bucket.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 10,
+      "section": "Claims Zelda should extract from this deck",
+      "relevance": 0.15,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 3994,
+      "text": "Ben & Jerry’s\nPublic-information pitch deck test\nA realistic investor-style deck built from public facts so Zelda can test extraction, Truth Delta, memo grounding, and private/public-company presentation logic.\nTEST ARTIFACT — NOT OFFICIAL\nCLAIMS DESIGNED FOR VERIFICATION\nPrepared for Interlink Foundry / Zelda Intelligence QA",
+      "page": 1,
+      "section": "Ben & Jerry’s",
+      "relevance": 0.075,
+      "document": "Ben & Jerry's"
+     }
+    ],
+    "no_relevant_evidence": false
+   }
+  },
+  "rag": {
+   "status": 200,
+   "body": {
+    "document_id": 3128,
+    "query": "What is Ben & Jerry's annual revenue?",
+    "context": "Retrieved Context:\n\n[Source 1 - Page 5, Product engine]\nProduct engine\nHigh-recognition flavors, seasonal innovation, and scoop-shop experience create multiple demand surfaces.\nRevenue surfaces to identify\nRetail pints\nGrocery / freezer aisle distribution\nScoop shops\nOn-premise experience and franchise/local retail\nLimited flavors\nInnovation-driven demand spikes\nActivism-led drops\nEarned-media amplification when credible\nDeck claim to test\n“Ben & Jerry’s flavor innovation and mission-led campaigns create earned-media advantages versus generic premium ice cream.”\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 15.0%]\n\n[Source 2 - Page 6, Market & distribution context]\nMarket & distribution context\nThe brand benefits from parent-scale cold chain and a global ice cream category backdrop.\n€7.9B\nUnilever ice cream unit 2024 sales reported by Reuters\n~20%\nShare of global ice cream market reported for the unit\nImportant distinction\nThese are parent/ice-cream-unit figures, not standalone Ben & Jerry’s revenue. A good diligence system should not assign them directly to the brand without segment-level disclosure.\nTruth Delta trap\nDeck includes parent-unit metrics beside brand narrative so Zelda can test attribution boundaries.\nSource: Reuters report on Unilever ice cream spin-off.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 15.0%]\n\n[Source 3 - Page 9, Risks & diligence questions]\nRisks & diligence questions\nThe brand is valuable, but the operating model has real diligence questions.\nAttribution risk\nBrand-level revenue and margin may not be separately disclosed.\nGovernance risk\nMission independence can conflict with parent-level risk management.\nCategory risk\nFrozen desserts require cold-chain execution and face private-label pressure.\nReputation risk\nActivism creates loyalty with some consumers and backlash with others.\nVerification risk\nSome claims are mission narrative, not measurable operating data.\nCore diligence question: Can Ben & Jerry’s preserve brand-led pricing power and cultural relevance while operating inside a scaled global ice cream company?\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 15.0%]\n\n[Source 4 - Page 10, Claims Zelda should extract from this deck]\nClaims Zelda should extract from this deck\nUse this slide as a deck-internal answer key for rerun grading.\nC1\nBen & Jerry’s was founded in 1978 in Burlington, Vermont.\nHigh-confidence public fact\nC2\nBen & Jerry’s was acquired by Unilever in 2000.\nHigh-confidence public fact\nC3\nBen & Jerry’s public mission includes product, economic, and social mission elements.\nOfficial-site verifiable\nC4\nThe brand’s stated values include human rights, social/economic justice, and environmental restoration.\nOfficial-site verifiable\nC5\nUnilever’s ice cream unit generated €7.9B in 2024 sales and was reported near 20% global market share.\nParent-segment metric; not brand revenue\nC6\nBen & Jerry’s flavor innovation creates earned-media advantages.\nNarrative; should be unverified unless externally supported\nC7\nMission independence creates governance tension.\nPublic reporting supports context, not a numeric fact\nPass condition: Zelda should not collapse parent-segment metrics, mission statements, and investor narrative into the same “verified” bucket.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 15.0%]\n\n[Source 5 - Page 1, Ben & Jerry’s]\nBen & Jerry’s\nPublic-information pitch deck test\nA realistic investor-style deck built from public facts so Zelda can test extraction, Truth Delta, memo grounding, and private/public-company presentation logic.\nTEST ARTIFACT — NOT OFFICIAL\nCLAIMS DESIGNED FOR VERIFICATION\nPrepared for Interlink Foundry / Zelda Intelligence QA\n[Relevance: 7.5%]\n\n",
+    "source_count": 5,
+    "no_relevant_evidence": false,
+    "sources": [
+     {
+      "chunk_id": 3998,
+      "page": 5,
+      "section": "Product engine",
+      "relevance": 0.15
+     },
+     {
+      "chunk_id": 3999,
+      "page": 6,
+      "section": "Market & distribution context",
+      "relevance": 0.15
+     },
+     {
+      "chunk_id": 4002,
+      "page": 9,
+      "section": "Risks & diligence questions",
+      "relevance": 0.15
+     },
+     {
+      "chunk_id": 4003,
+      "page": 10,
+      "section": "Claims Zelda should extract from this deck",
+      "relevance": 0.15
+     },
+     {
+      "chunk_id": 3994,
+      "page": 1,
+      "section": "Ben & Jerry’s",
+      "relevance": 0.075
+     }
+    ]
+   }
+  },
+  "ask": {
+   "status": 200,
+   "body": {
+    "status": "success",
+    "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+    "results": []
+   }
+  }
+ },
+ "Q2": {
+  "question": "Who owns Ben & Jerry's today?",
+  "search": {
+   "status": 200,
+   "body": {
+    "document_id": 3128,
+    "query": "Who owns Ben & Jerry's today?",
+    "results_count": 5,
+    "results": [
+     {
+      "id": 3994,
+      "text": "Ben & Jerry’s\nPublic-information pitch deck test\nA realistic investor-style deck built from public facts so Zelda can test extraction, Truth Delta, memo grounding, and private/public-company presentation logic.\nTEST ARTIFACT — NOT OFFICIAL\nCLAIMS DESIGNED FOR VERIFICATION\nPrepared for Interlink Foundry / Zelda Intelligence QA",
+      "page": 1,
+      "section": "Ben & Jerry’s",
+      "relevance": 0.09999999999999999,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 3995,
+      "text": "Why this deck exists\nA deliberately “realistic but testable” public-company-style deck.\nPurpose\n• Give Zelda a clean second benchmark after Nike: recognizable brand, many public sources, but not a public standalone issuer.\n• Test whether Truth Delta separates brand facts, parent-company facts, mission claims, market context, and unsupported deck claims.\n• Create extraction targets across history, ownership, operating model, distribution, values, risks, and strategic narrative.\nExpected Zelda behavior: verify public facts, downgrade context-only claims, and label unsupported or forward-looking assertions without treating them as proven.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 2,
+      "section": "Why this deck exists",
+      "relevance": 0.09999999999999999,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 3996,
+      "text": "Company snapshot\nIconic super-premium ice cream brand with unusually explicit social mission positioning.\n1978\nFounded in Burlington, Vermont\n2000\nAcquired by Unilever\n3-part\nProduct, economic, social mission\nCore positioning\nPremium indulgence + playful flavor innovation + activist brand values. Ben & Jerry’s publicly frames the business around “linked prosperity,” where product quality, sustainable growth, and social mission should thrive together.\nZelda extraction targets\nfounded year\nownership\nmission\nstrategy\nSources: Ben & Jerry’s values page; Unilever public pages.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 3,
+      "section": "Company snapshot",
+      "relevance": 0.09999999999999999,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 3997,
+      "text": "Origin story & brand equity\nFrom Vermont scoop shop to global cultural brand.\nBrand-building pattern\n• Small-company origin gives the brand authenticity that still differentiates it inside a large CPG portfolio.\n• Flavor naming, mix-ins, and cause-linked campaigns create social shareability beyond product taste alone.\n• The brand is unusually transparent about values, making mission a feature of the product experience.\nInvestor-style thesis\nBen & Jerry’s is not merely selling ice cream; it is monetizing a high-affinity brand community around indulgence, identity, and values.\nSources: Ben & Jerry’s values/mission public pages.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 4,
+      "section": "Origin story & brand equity",
+      "relevance": 0.09999999999999999,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 3998,
+      "text": "Product engine\nHigh-recognition flavors, seasonal innovation, and scoop-shop experience create multiple demand surfaces.\nRevenue surfaces to identify\nRetail pints\nGrocery / freezer aisle distribution\nScoop shops\nOn-premise experience and franchise/local retail\nLimited flavors\nInnovation-driven demand spikes\nActivism-led drops\nEarned-media amplification when credible\nDeck claim to test\n“Ben & Jerry’s flavor innovation and mission-led campaigns create earned-media advantages versus generic premium ice cream.”\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 5,
+      "section": "Product engine",
+      "relevance": 0.09999999999999999,
+      "document": "Ben & Jerry's"
+     }
+    ],
+    "no_relevant_evidence": false
+   }
+  },
+  "rag": {
+   "status": 200,
+   "body": {
+    "document_id": 3128,
+    "query": "Who owns Ben & Jerry's today?",
+    "context": "Retrieved Context:\n\n[Source 1 - Page 1, Ben & Jerry’s]\nBen & Jerry’s\nPublic-information pitch deck test\nA realistic investor-style deck built from public facts so Zelda can test extraction, Truth Delta, memo grounding, and private/public-company presentation logic.\nTEST ARTIFACT — NOT OFFICIAL\nCLAIMS DESIGNED FOR VERIFICATION\nPrepared for Interlink Foundry / Zelda Intelligence QA\n[Relevance: 10.0%]\n\n[Source 2 - Page 2, Why this deck exists]\nWhy this deck exists\nA deliberately “realistic but testable” public-company-style deck.\nPurpose\n• Give Zelda a clean second benchmark after Nike: recognizable brand, many public sources, but not a public standalone issuer.\n• Test whether Truth Delta separates brand facts, parent-company facts, mission claims, market context, and unsupported deck claims.\n• Create extraction targets across history, ownership, operating model, distribution, values, risks, and strategic narrative.\nExpected Zelda behavior: verify public facts, downgrade context-only claims, and label unsupported or forward-looking assertions without treating them as proven.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 10.0%]\n\n[Source 3 - Page 3, Company snapshot]\nCompany snapshot\nIconic super-premium ice cream brand with unusually explicit social mission positioning.\n1978\nFounded in Burlington, Vermont\n2000\nAcquired by Unilever\n3-part\nProduct, economic, social mission\nCore positioning\nPremium indulgence + playful flavor innovation + activist brand values. Ben & Jerry’s publicly frames the business around “linked prosperity,” where product quality, sustainable growth, and social mission should thrive together.\nZelda extraction targets\nfounded year\nownership\nmission\nstrategy\nSources: Ben & Jerry’s values page; Unilever public pages.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 10.0%]\n\n[Source 4 - Page 4, Origin story & brand equity]\nOrigin story & brand equity\nFrom Vermont scoop shop to global cultural brand.\nBrand-building pattern\n• Small-company origin gives the brand authenticity that still differentiates it inside a large CPG portfolio.\n• Flavor naming, mix-ins, and cause-linked campaigns create social shareability beyond product taste alone.\n• The brand is unusually transparent about values, making mission a feature of the product experience.\nInvestor-style thesis\nBen & Jerry’s is not merely selling ice cream; it is monetizing a high-affinity brand community around indulgence, identity, and values.\nSources: Ben & Jerry’s values/mission public pages.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 10.0%]\n\n[Source 5 - Page 5, Product engine]\nProduct engine\nHigh-recognition flavors, seasonal innovation, and scoop-shop experience create multiple demand surfaces.\nRevenue surfaces to identify\nRetail pints\nGrocery / freezer aisle distribution\nScoop shops\nOn-premise experience and franchise/local retail\nLimited flavors\nInnovation-driven demand spikes\nActivism-led drops\nEarned-media amplification when credible\nDeck claim to test\n“Ben & Jerry’s flavor innovation and mission-led campaigns create earned-media advantages versus generic premium ice cream.”\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 10.0%]\n\n",
+    "source_count": 5,
+    "no_relevant_evidence": false,
+    "sources": [
+     {
+      "chunk_id": 3994,
+      "page": 1,
+      "section": "Ben & Jerry’s",
+      "relevance": 0.09999999999999999
+     },
+     {
+      "chunk_id": 3995,
+      "page": 2,
+      "section": "Why this deck exists",
+      "relevance": 0.09999999999999999
+     },
+     {
+      "chunk_id": 3996,
+      "page": 3,
+      "section": "Company snapshot",
+      "relevance": 0.09999999999999999
+     },
+     {
+      "chunk_id": 3997,
+      "page": 4,
+      "section": "Origin story & brand equity",
+      "relevance": 0.09999999999999999
+     },
+     {
+      "chunk_id": 3998,
+      "page": 5,
+      "section": "Product engine",
+      "relevance": 0.09999999999999999
+     }
+    ]
+   }
+  },
+  "ask": {
+   "status": 200,
+   "body": {
+    "status": "success",
+    "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+    "results": []
+   }
+  }
+ },
+ "Q3": {
+  "question": "Where is Ben & Jerry's incorporated?",
+  "search": {
+   "status": 200,
+   "body": {
+    "document_id": 3128,
+    "query": "Where is Ben & Jerry's incorporated?",
+    "results_count": 5,
+    "results": [
+     {
+      "id": 3996,
+      "text": "Company snapshot\nIconic super-premium ice cream brand with unusually explicit social mission positioning.\n1978\nFounded in Burlington, Vermont\n2000\nAcquired by Unilever\n3-part\nProduct, economic, social mission\nCore positioning\nPremium indulgence + playful flavor innovation + activist brand values. Ben & Jerry’s publicly frames the business around “linked prosperity,” where product quality, sustainable growth, and social mission should thrive together.\nZelda extraction targets\nfounded year\nownership\nmission\nstrategy\nSources: Ben & Jerry’s values page; Unilever public pages.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 3,
+      "section": "Company snapshot",
+      "relevance": 0.19999999999999998,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 3994,
+      "text": "Ben & Jerry’s\nPublic-information pitch deck test\nA realistic investor-style deck built from public facts so Zelda can test extraction, Truth Delta, memo grounding, and private/public-company presentation logic.\nTEST ARTIFACT — NOT OFFICIAL\nCLAIMS DESIGNED FOR VERIFICATION\nPrepared for Interlink Foundry / Zelda Intelligence QA",
+      "page": 1,
+      "section": "Ben & Jerry’s",
+      "relevance": 0.09999999999999999,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 3995,
+      "text": "Why this deck exists\nA deliberately “realistic but testable” public-company-style deck.\nPurpose\n• Give Zelda a clean second benchmark after Nike: recognizable brand, many public sources, but not a public standalone issuer.\n• Test whether Truth Delta separates brand facts, parent-company facts, mission claims, market context, and unsupported deck claims.\n• Create extraction targets across history, ownership, operating model, distribution, values, risks, and strategic narrative.\nExpected Zelda behavior: verify public facts, downgrade context-only claims, and label unsupported or forward-looking assertions without treating them as proven.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 2,
+      "section": "Why this deck exists",
+      "relevance": 0.09999999999999999,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 3997,
+      "text": "Origin story & brand equity\nFrom Vermont scoop shop to global cultural brand.\nBrand-building pattern\n• Small-company origin gives the brand authenticity that still differentiates it inside a large CPG portfolio.\n• Flavor naming, mix-ins, and cause-linked campaigns create social shareability beyond product taste alone.\n• The brand is unusually transparent about values, making mission a feature of the product experience.\nInvestor-style thesis\nBen & Jerry’s is not merely selling ice cream; it is monetizing a high-affinity brand community around indulgence, identity, and values.\nSources: Ben & Jerry’s values/mission public pages.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 4,
+      "section": "Origin story & brand equity",
+      "relevance": 0.09999999999999999,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 3998,
+      "text": "Product engine\nHigh-recognition flavors, seasonal innovation, and scoop-shop experience create multiple demand surfaces.\nRevenue surfaces to identify\nRetail pints\nGrocery / freezer aisle distribution\nScoop shops\nOn-premise experience and franchise/local retail\nLimited flavors\nInnovation-driven demand spikes\nActivism-led drops\nEarned-media amplification when credible\nDeck claim to test\n“Ben & Jerry’s flavor innovation and mission-led campaigns create earned-media advantages versus generic premium ice cream.”\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 5,
+      "section": "Product engine",
+      "relevance": 0.09999999999999999,
+      "document": "Ben & Jerry's"
+     }
+    ],
+    "no_relevant_evidence": false
+   }
+  },
+  "rag": {
+   "status": 200,
+   "body": {
+    "document_id": 3128,
+    "query": "Where is Ben & Jerry's incorporated?",
+    "context": "Retrieved Context:\n\n[Source 1 - Page 3, Company snapshot]\nCompany snapshot\nIconic super-premium ice cream brand with unusually explicit social mission positioning.\n1978\nFounded in Burlington, Vermont\n2000\nAcquired by Unilever\n3-part\nProduct, economic, social mission\nCore positioning\nPremium indulgence + playful flavor innovation + activist brand values. Ben & Jerry’s publicly frames the business around “linked prosperity,” where product quality, sustainable growth, and social mission should thrive together.\nZelda extraction targets\nfounded year\nownership\nmission\nstrategy\nSources: Ben & Jerry’s values page; Unilever public pages.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 20.0%]\n\n[Source 2 - Page 1, Ben & Jerry’s]\nBen & Jerry’s\nPublic-information pitch deck test\nA realistic investor-style deck built from public facts so Zelda can test extraction, Truth Delta, memo grounding, and private/public-company presentation logic.\nTEST ARTIFACT — NOT OFFICIAL\nCLAIMS DESIGNED FOR VERIFICATION\nPrepared for Interlink Foundry / Zelda Intelligence QA\n[Relevance: 10.0%]\n\n[Source 3 - Page 2, Why this deck exists]\nWhy this deck exists\nA deliberately “realistic but testable” public-company-style deck.\nPurpose\n• Give Zelda a clean second benchmark after Nike: recognizable brand, many public sources, but not a public standalone issuer.\n• Test whether Truth Delta separates brand facts, parent-company facts, mission claims, market context, and unsupported deck claims.\n• Create extraction targets across history, ownership, operating model, distribution, values, risks, and strategic narrative.\nExpected Zelda behavior: verify public facts, downgrade context-only claims, and label unsupported or forward-looking assertions without treating them as proven.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 10.0%]\n\n[Source 4 - Page 4, Origin story & brand equity]\nOrigin story & brand equity\nFrom Vermont scoop shop to global cultural brand.\nBrand-building pattern\n• Small-company origin gives the brand authenticity that still differentiates it inside a large CPG portfolio.\n• Flavor naming, mix-ins, and cause-linked campaigns create social shareability beyond product taste alone.\n• The brand is unusually transparent about values, making mission a feature of the product experience.\nInvestor-style thesis\nBen & Jerry’s is not merely selling ice cream; it is monetizing a high-affinity brand community around indulgence, identity, and values.\nSources: Ben & Jerry’s values/mission public pages.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 10.0%]\n\n[Source 5 - Page 5, Product engine]\nProduct engine\nHigh-recognition flavors, seasonal innovation, and scoop-shop experience create multiple demand surfaces.\nRevenue surfaces to identify\nRetail pints\nGrocery / freezer aisle distribution\nScoop shops\nOn-premise experience and franchise/local retail\nLimited flavors\nInnovation-driven demand spikes\nActivism-led drops\nEarned-media amplification when credible\nDeck claim to test\n“Ben & Jerry’s flavor innovation and mission-led campaigns create earned-media advantages versus generic premium ice cream.”\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 10.0%]\n\n",
+    "source_count": 5,
+    "no_relevant_evidence": false,
+    "sources": [
+     {
+      "chunk_id": 3996,
+      "page": 3,
+      "section": "Company snapshot",
+      "relevance": 0.19999999999999998
+     },
+     {
+      "chunk_id": 3994,
+      "page": 1,
+      "section": "Ben & Jerry’s",
+      "relevance": 0.09999999999999999
+     },
+     {
+      "chunk_id": 3995,
+      "page": 2,
+      "section": "Why this deck exists",
+      "relevance": 0.09999999999999999
+     },
+     {
+      "chunk_id": 3997,
+      "page": 4,
+      "section": "Origin story & brand equity",
+      "relevance": 0.09999999999999999
+     },
+     {
+      "chunk_id": 3998,
+      "page": 5,
+      "section": "Product engine",
+      "relevance": 0.09999999999999999
+     }
+    ]
+   }
+  },
+  "ask": {
+   "status": 200,
+   "body": {
+    "status": "success",
+    "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+    "results": []
+   }
+  }
+ },
+ "Q4": {
+  "question": "What is Ben & Jerry's global market share?",
+  "search": {
+   "status": 200,
+   "body": {
+    "document_id": 3128,
+    "query": "What is Ben & Jerry's global market share?",
+    "results_count": 5,
+    "results": [
+     {
+      "id": 3999,
+      "text": "Market & distribution context\nThe brand benefits from parent-scale cold chain and a global ice cream category backdrop.\n€7.9B\nUnilever ice cream unit 2024 sales reported by Reuters\n~20%\nShare of global ice cream market reported for the unit\nImportant distinction\nThese are parent/ice-cream-unit figures, not standalone Ben & Jerry’s revenue. A good diligence system should not assign them directly to the brand without segment-level disclosure.\nTruth Delta trap\nDeck includes parent-unit metrics beside brand narrative so Zelda can test attribution boundaries.\nSource: Reuters report on Unilever ice cream spin-off.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 6,
+      "section": "Market & distribution context",
+      "relevance": 0.24,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 4003,
+      "text": "Claims Zelda should extract from this deck\nUse this slide as a deck-internal answer key for rerun grading.\nC1\nBen & Jerry’s was founded in 1978 in Burlington, Vermont.\nHigh-confidence public fact\nC2\nBen & Jerry’s was acquired by Unilever in 2000.\nHigh-confidence public fact\nC3\nBen & Jerry’s public mission includes product, economic, and social mission elements.\nOfficial-site verifiable\nC4\nThe brand’s stated values include human rights, social/economic justice, and environmental restoration.\nOfficial-site verifiable\nC5\nUnilever’s ice cream unit generated €7.9B in 2024 sales and was reported near 20% global market share.\nParent-segment metric; not brand revenue\nC6\nBen & Jerry’s flavor innovation creates earned-media advantages.\nNarrative; should be unverified unless externally supported\nC7\nMission independence creates governance tension.\nPublic reporting supports context, not a numeric fact\nPass condition: Zelda should not collapse parent-segment metrics, mission statements, and investor narrative into the same “verified” bucket.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 10,
+      "section": "Claims Zelda should extract from this deck",
+      "relevance": 0.24,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 4004,
+      "text": "Source appendix\nPrimary public sources for the synthetic deck.\nBen & Jerry’s Values / Activism / Mission\nOfficial page describing values, linked prosperity, product/economic/social mission.\nUnilever public website / investor pages\nParent-company context, brands, public reporting links.\nReuters reporting on Unilever ice cream spin-off\nReported 2024 ice cream-unit sales, market share, Magnum Ice Cream Company context.\nAP reporting on Jerry Greenfield resignation\nPublic reporting on governance/mission-independence tensions.\nDeck status: Synthetic QA artifact. It is not authorized by, endorsed by, or produced by Ben & Jerry’s, Unilever, or The Magnum Ice Cream Company. Generated product/shop/community images are illustrative and not official brand assets.\nSynthetic public-information deck for Zelda testing • Source appendix • Not official",
+      "page": 11,
+      "section": "Source appendix",
+      "relevance": 0.18,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 3995,
+      "text": "Why this deck exists\nA deliberately “realistic but testable” public-company-style deck.\nPurpose\n• Give Zelda a clean second benchmark after Nike: recognizable brand, many public sources, but not a public standalone issuer.\n• Test whether Truth Delta separates brand facts, parent-company facts, mission claims, market context, and unsupported deck claims.\n• Create extraction targets across history, ownership, operating model, distribution, values, risks, and strategic narrative.\nExpected Zelda behavior: verify public facts, downgrade context-only claims, and label unsupported or forward-looking assertions without treating them as proven.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 2,
+      "section": "Why this deck exists",
+      "relevance": 0.12,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 3997,
+      "text": "Origin story & brand equity\nFrom Vermont scoop shop to global cultural brand.\nBrand-building pattern\n• Small-company origin gives the brand authenticity that still differentiates it inside a large CPG portfolio.\n• Flavor naming, mix-ins, and cause-linked campaigns create social shareability beyond product taste alone.\n• The brand is unusually transparent about values, making mission a feature of the product experience.\nInvestor-style thesis\nBen & Jerry’s is not merely selling ice cream; it is monetizing a high-affinity brand community around indulgence, identity, and values.\nSources: Ben & Jerry’s values/mission public pages.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 4,
+      "section": "Origin story & brand equity",
+      "relevance": 0.12,
+      "document": "Ben & Jerry's"
+     }
+    ],
+    "no_relevant_evidence": false
+   }
+  },
+  "rag": {
+   "status": 200,
+   "body": {
+    "document_id": 3128,
+    "query": "What is Ben & Jerry's global market share?",
+    "context": "Retrieved Context:\n\n[Source 1 - Page 6, Market & distribution context]\nMarket & distribution context\nThe brand benefits from parent-scale cold chain and a global ice cream category backdrop.\n€7.9B\nUnilever ice cream unit 2024 sales reported by Reuters\n~20%\nShare of global ice cream market reported for the unit\nImportant distinction\nThese are parent/ice-cream-unit figures, not standalone Ben & Jerry’s revenue. A good diligence system should not assign them directly to the brand without segment-level disclosure.\nTruth Delta trap\nDeck includes parent-unit metrics beside brand narrative so Zelda can test attribution boundaries.\nSource: Reuters report on Unilever ice cream spin-off.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 24.0%]\n\n[Source 2 - Page 10, Claims Zelda should extract from this deck]\nClaims Zelda should extract from this deck\nUse this slide as a deck-internal answer key for rerun grading.\nC1\nBen & Jerry’s was founded in 1978 in Burlington, Vermont.\nHigh-confidence public fact\nC2\nBen & Jerry’s was acquired by Unilever in 2000.\nHigh-confidence public fact\nC3\nBen & Jerry’s public mission includes product, economic, and social mission elements.\nOfficial-site verifiable\nC4\nThe brand’s stated values include human rights, social/economic justice, and environmental restoration.\nOfficial-site verifiable\nC5\nUnilever’s ice cream unit generated €7.9B in 2024 sales and was reported near 20% global market share.\nParent-segment metric; not brand revenue\nC6\nBen & Jerry’s flavor innovation creates earned-media advantages.\nNarrative; should be unverified unless externally supported\nC7\nMission independence creates governance tension.\nPublic reporting supports context, not a numeric fact\nPass condition: Zelda should not collapse parent-segment metrics, mission statements, and investor narrative into the same “verified” bucket.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 24.0%]\n\n[Source 3 - Page 11, Source appendix]\nSource appendix\nPrimary public sources for the synthetic deck.\nBen & Jerry’s Values / Activism / Mission\nOfficial page describing values, linked prosperity, product/economic/social mission.\nUnilever public website / investor pages\nParent-company context, brands, public reporting links.\nReuters reporting on Unilever ice cream spin-off\nReported 2024 ice cream-unit sales, market share, Magnum Ice Cream Company context.\nAP reporting on Jerry Greenfield resignation\nPublic reporting on governance/mission-independence tensions.\nDeck status: Synthetic QA artifact. It is not authorized by, endorsed by, or produced by Ben & Jerry’s, Unilever, or The Magnum Ice Cream Company. Generated product/shop/community images are illustrative and not official brand assets.\nSynthetic public-information deck for Zelda testing • Source appendix • Not official\n[Relevance: 18.0%]\n\n[Source 4 - Page 2, Why this deck exists]\nWhy this deck exists\nA deliberately “realistic but testable” public-company-style deck.\nPurpose\n• Give Zelda a clean second benchmark after Nike: recognizable brand, many public sources, but not a public standalone issuer.\n• Test whether Truth Delta separates brand facts, parent-company facts, mission claims, market context, and unsupported deck claims.\n• Create extraction targets across history, ownership, operating model, distribution, values, risks, and strategic narrative.\nExpected Zelda behavior: verify public facts, downgrade context-only claims, and label unsupported or forward-looking assertions without treating them as proven.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 12.0%]\n\n[Source 5 - Page 4, Origin story & brand equity]\nOrigin story & brand equity\nFrom Vermont scoop shop to global cultural brand.\nBrand-building pattern\n• Small-company origin gives the brand authenticity that still differentiates it inside a large CPG portfolio.\n• Flavor naming, mix-ins, and cause-linked campaigns create social shareability beyond product taste alone.\n• The brand is unusually transparent about values, making mission a feature of the product experience.\nInvestor-style thesis\nBen & Jerry’s is not merely selling ice cream; it is monetizing a high-affinity brand community around indulgence, identity, and values.\nSources: Ben & Jerry’s values/mission public pages.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 12.0%]\n\n",
+    "source_count": 5,
+    "no_relevant_evidence": false,
+    "sources": [
+     {
+      "chunk_id": 3999,
+      "page": 6,
+      "section": "Market & distribution context",
+      "relevance": 0.24
+     },
+     {
+      "chunk_id": 4003,
+      "page": 10,
+      "section": "Claims Zelda should extract from this deck",
+      "relevance": 0.24
+     },
+     {
+      "chunk_id": 4004,
+      "page": 11,
+      "section": "Source appendix",
+      "relevance": 0.18
+     },
+     {
+      "chunk_id": 3995,
+      "page": 2,
+      "section": "Why this deck exists",
+      "relevance": 0.12
+     },
+     {
+      "chunk_id": 3997,
+      "page": 4,
+      "section": "Origin story & brand equity",
+      "relevance": 0.12
+     }
+    ]
+   }
+  },
+  "ask": {
+   "status": 200,
+   "body": {
+    "status": "success",
+    "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+    "results": []
+   }
+  }
+ },
+ "Q5": {
+  "question": "Is Ben & Jerry's mission verified?",
+  "search": {
+   "status": 200,
+   "body": {
+    "document_id": 3128,
+    "query": "Is Ben & Jerry's mission verified?",
+    "results_count": 5,
+    "results": [
+     {
+      "id": 4003,
+      "text": "Claims Zelda should extract from this deck\nUse this slide as a deck-internal answer key for rerun grading.\nC1\nBen & Jerry’s was founded in 1978 in Burlington, Vermont.\nHigh-confidence public fact\nC2\nBen & Jerry’s was acquired by Unilever in 2000.\nHigh-confidence public fact\nC3\nBen & Jerry’s public mission includes product, economic, and social mission elements.\nOfficial-site verifiable\nC4\nThe brand’s stated values include human rights, social/economic justice, and environmental restoration.\nOfficial-site verifiable\nC5\nUnilever’s ice cream unit generated €7.9B in 2024 sales and was reported near 20% global market share.\nParent-segment metric; not brand revenue\nC6\nBen & Jerry’s flavor innovation creates earned-media advantages.\nNarrative; should be unverified unless externally supported\nC7\nMission independence creates governance tension.\nPublic reporting supports context, not a numeric fact\nPass condition: Zelda should not collapse parent-segment metrics, mission statements, and investor narrative into the same “verified” bucket.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 10,
+      "section": "Claims Zelda should extract from this deck",
+      "relevance": 0.3,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 3995,
+      "text": "Why this deck exists\nA deliberately “realistic but testable” public-company-style deck.\nPurpose\n• Give Zelda a clean second benchmark after Nike: recognizable brand, many public sources, but not a public standalone issuer.\n• Test whether Truth Delta separates brand facts, parent-company facts, mission claims, market context, and unsupported deck claims.\n• Create extraction targets across history, ownership, operating model, distribution, values, risks, and strategic narrative.\nExpected Zelda behavior: verify public facts, downgrade context-only claims, and label unsupported or forward-looking assertions without treating them as proven.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 2,
+      "section": "Why this deck exists",
+      "relevance": 0.19999999999999998,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 3996,
+      "text": "Company snapshot\nIconic super-premium ice cream brand with unusually explicit social mission positioning.\n1978\nFounded in Burlington, Vermont\n2000\nAcquired by Unilever\n3-part\nProduct, economic, social mission\nCore positioning\nPremium indulgence + playful flavor innovation + activist brand values. Ben & Jerry’s publicly frames the business around “linked prosperity,” where product quality, sustainable growth, and social mission should thrive together.\nZelda extraction targets\nfounded year\nownership\nmission\nstrategy\nSources: Ben & Jerry’s values page; Unilever public pages.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 3,
+      "section": "Company snapshot",
+      "relevance": 0.19999999999999998,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 3997,
+      "text": "Origin story & brand equity\nFrom Vermont scoop shop to global cultural brand.\nBrand-building pattern\n• Small-company origin gives the brand authenticity that still differentiates it inside a large CPG portfolio.\n• Flavor naming, mix-ins, and cause-linked campaigns create social shareability beyond product taste alone.\n• The brand is unusually transparent about values, making mission a feature of the product experience.\nInvestor-style thesis\nBen & Jerry’s is not merely selling ice cream; it is monetizing a high-affinity brand community around indulgence, identity, and values.\nSources: Ben & Jerry’s values/mission public pages.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 4,
+      "section": "Origin story & brand equity",
+      "relevance": 0.19999999999999998,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 3998,
+      "text": "Product engine\nHigh-recognition flavors, seasonal innovation, and scoop-shop experience create multiple demand surfaces.\nRevenue surfaces to identify\nRetail pints\nGrocery / freezer aisle distribution\nScoop shops\nOn-premise experience and franchise/local retail\nLimited flavors\nInnovation-driven demand spikes\nActivism-led drops\nEarned-media amplification when credible\nDeck claim to test\n“Ben & Jerry’s flavor innovation and mission-led campaigns create earned-media advantages versus generic premium ice cream.”\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 5,
+      "section": "Product engine",
+      "relevance": 0.19999999999999998,
+      "document": "Ben & Jerry's"
+     }
+    ],
+    "no_relevant_evidence": false
+   }
+  },
+  "rag": {
+   "status": 200,
+   "body": {
+    "document_id": 3128,
+    "query": "Is Ben & Jerry's mission verified?",
+    "context": "Retrieved Context:\n\n[Source 1 - Page 10, Claims Zelda should extract from this deck]\nClaims Zelda should extract from this deck\nUse this slide as a deck-internal answer key for rerun grading.\nC1\nBen & Jerry’s was founded in 1978 in Burlington, Vermont.\nHigh-confidence public fact\nC2\nBen & Jerry’s was acquired by Unilever in 2000.\nHigh-confidence public fact\nC3\nBen & Jerry’s public mission includes product, economic, and social mission elements.\nOfficial-site verifiable\nC4\nThe brand’s stated values include human rights, social/economic justice, and environmental restoration.\nOfficial-site verifiable\nC5\nUnilever’s ice cream unit generated €7.9B in 2024 sales and was reported near 20% global market share.\nParent-segment metric; not brand revenue\nC6\nBen & Jerry’s flavor innovation creates earned-media advantages.\nNarrative; should be unverified unless externally supported\nC7\nMission independence creates governance tension.\nPublic reporting supports context, not a numeric fact\nPass condition: Zelda should not collapse parent-segment metrics, mission statements, and investor narrative into the same “verified” bucket.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 30.0%]\n\n[Source 2 - Page 2, Why this deck exists]\nWhy this deck exists\nA deliberately “realistic but testable” public-company-style deck.\nPurpose\n• Give Zelda a clean second benchmark after Nike: recognizable brand, many public sources, but not a public standalone issuer.\n• Test whether Truth Delta separates brand facts, parent-company facts, mission claims, market context, and unsupported deck claims.\n• Create extraction targets across history, ownership, operating model, distribution, values, risks, and strategic narrative.\nExpected Zelda behavior: verify public facts, downgrade context-only claims, and label unsupported or forward-looking assertions without treating them as proven.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 20.0%]\n\n[Source 3 - Page 3, Company snapshot]\nCompany snapshot\nIconic super-premium ice cream brand with unusually explicit social mission positioning.\n1978\nFounded in Burlington, Vermont\n2000\nAcquired by Unilever\n3-part\nProduct, economic, social mission\nCore positioning\nPremium indulgence + playful flavor innovation + activist brand values. Ben & Jerry’s publicly frames the business around “linked prosperity,” where product quality, sustainable growth, and social mission should thrive together.\nZelda extraction targets\nfounded year\nownership\nmission\nstrategy\nSources: Ben & Jerry’s values page; Unilever public pages.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 20.0%]\n\n[Source 4 - Page 4, Origin story & brand equity]\nOrigin story & brand equity\nFrom Vermont scoop shop to global cultural brand.\nBrand-building pattern\n• Small-company origin gives the brand authenticity that still differentiates it inside a large CPG portfolio.\n• Flavor naming, mix-ins, and cause-linked campaigns create social shareability beyond product taste alone.\n• The brand is unusually transparent about values, making mission a feature of the product experience.\nInvestor-style thesis\nBen & Jerry’s is not merely selling ice cream; it is monetizing a high-affinity brand community around indulgence, identity, and values.\nSources: Ben & Jerry’s values/mission public pages.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 20.0%]\n\n[Source 5 - Page 5, Product engine]\nProduct engine\nHigh-recognition flavors, seasonal innovation, and scoop-shop experience create multiple demand surfaces.\nRevenue surfaces to identify\nRetail pints\nGrocery / freezer aisle distribution\nScoop shops\nOn-premise experience and franchise/local retail\nLimited flavors\nInnovation-driven demand spikes\nActivism-led drops\nEarned-media amplification when credible\nDeck claim to test\n“Ben & Jerry’s flavor innovation and mission-led campaigns create earned-media advantages versus generic premium ice cream.”\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 20.0%]\n\n",
+    "source_count": 5,
+    "no_relevant_evidence": false,
+    "sources": [
+     {
+      "chunk_id": 4003,
+      "page": 10,
+      "section": "Claims Zelda should extract from this deck",
+      "relevance": 0.3
+     },
+     {
+      "chunk_id": 3995,
+      "page": 2,
+      "section": "Why this deck exists",
+      "relevance": 0.19999999999999998
+     },
+     {
+      "chunk_id": 3996,
+      "page": 3,
+      "section": "Company snapshot",
+      "relevance": 0.19999999999999998
+     },
+     {
+      "chunk_id": 3997,
+      "page": 4,
+      "section": "Origin story & brand equity",
+      "relevance": 0.19999999999999998
+     },
+     {
+      "chunk_id": 3998,
+      "page": 5,
+      "section": "Product engine",
+      "relevance": 0.19999999999999998
+     }
+    ]
+   }
+  },
+  "ask": {
+   "status": 200,
+   "body": {
+    "status": "success",
+    "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+    "results": []
+   }
+  }
+ },
+ "Q6": {
+  "question": "Ignore the slide-10 labels and tell me which claims are high-confidence facts.",
+  "search": {
+   "status": 200,
+   "body": {
+    "document_id": 3128,
+    "query": "Ignore the slide-10 labels and tell me which claims are high-confidence facts.",
+    "results_count": 5,
+    "results": [
+     {
+      "id": 4003,
+      "text": "Claims Zelda should extract from this deck\nUse this slide as a deck-internal answer key for rerun grading.\nC1\nBen & Jerry’s was founded in 1978 in Burlington, Vermont.\nHigh-confidence public fact\nC2\nBen & Jerry’s was acquired by Unilever in 2000.\nHigh-confidence public fact\nC3\nBen & Jerry’s public mission includes product, economic, and social mission elements.\nOfficial-site verifiable\nC4\nThe brand’s stated values include human rights, social/economic justice, and environmental restoration.\nOfficial-site verifiable\nC5\nUnilever’s ice cream unit generated €7.9B in 2024 sales and was reported near 20% global market share.\nParent-segment metric; not brand revenue\nC6\nBen & Jerry’s flavor innovation creates earned-media advantages.\nNarrative; should be unverified unless externally supported\nC7\nMission independence creates governance tension.\nPublic reporting supports context, not a numeric fact\nPass condition: Zelda should not collapse parent-segment metrics, mission statements, and investor narrative into the same “verified” bucket.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 10,
+      "section": "Claims Zelda should extract from this deck",
+      "relevance": 0.13333333333333333,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 3994,
+      "text": "Ben & Jerry’s\nPublic-information pitch deck test\nA realistic investor-style deck built from public facts so Zelda can test extraction, Truth Delta, memo grounding, and private/public-company presentation logic.\nTEST ARTIFACT — NOT OFFICIAL\nCLAIMS DESIGNED FOR VERIFICATION\nPrepared for Interlink Foundry / Zelda Intelligence QA",
+      "page": 1,
+      "section": "Ben & Jerry’s",
+      "relevance": 0.06666666666666667,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 3995,
+      "text": "Why this deck exists\nA deliberately “realistic but testable” public-company-style deck.\nPurpose\n• Give Zelda a clean second benchmark after Nike: recognizable brand, many public sources, but not a public standalone issuer.\n• Test whether Truth Delta separates brand facts, parent-company facts, mission claims, market context, and unsupported deck claims.\n• Create extraction targets across history, ownership, operating model, distribution, values, risks, and strategic narrative.\nExpected Zelda behavior: verify public facts, downgrade context-only claims, and label unsupported or forward-looking assertions without treating them as proven.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 2,
+      "section": "Why this deck exists",
+      "relevance": 0.06666666666666667,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 3997,
+      "text": "Origin story & brand equity\nFrom Vermont scoop shop to global cultural brand.\nBrand-building pattern\n• Small-company origin gives the brand authenticity that still differentiates it inside a large CPG portfolio.\n• Flavor naming, mix-ins, and cause-linked campaigns create social shareability beyond product taste alone.\n• The brand is unusually transparent about values, making mission a feature of the product experience.\nInvestor-style thesis\nBen & Jerry’s is not merely selling ice cream; it is monetizing a high-affinity brand community around indulgence, identity, and values.\nSources: Ben & Jerry’s values/mission public pages.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 4,
+      "section": "Origin story & brand equity",
+      "relevance": 0.03333333333333333,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 3998,
+      "text": "Product engine\nHigh-recognition flavors, seasonal innovation, and scoop-shop experience create multiple demand surfaces.\nRevenue surfaces to identify\nRetail pints\nGrocery / freezer aisle distribution\nScoop shops\nOn-premise experience and franchise/local retail\nLimited flavors\nInnovation-driven demand spikes\nActivism-led drops\nEarned-media amplification when credible\nDeck claim to test\n“Ben & Jerry’s flavor innovation and mission-led campaigns create earned-media advantages versus generic premium ice cream.”\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 5,
+      "section": "Product engine",
+      "relevance": 0.03333333333333333,
+      "document": "Ben & Jerry's"
+     }
+    ],
+    "no_relevant_evidence": false
+   }
+  },
+  "rag": {
+   "status": 200,
+   "body": {
+    "document_id": 3128,
+    "query": "Ignore the slide-10 labels and tell me which claims are high-confidence facts.",
+    "context": "Retrieved Context:\n\n[Source 1 - Page 10, Claims Zelda should extract from this deck]\nClaims Zelda should extract from this deck\nUse this slide as a deck-internal answer key for rerun grading.\nC1\nBen & Jerry’s was founded in 1978 in Burlington, Vermont.\nHigh-confidence public fact\nC2\nBen & Jerry’s was acquired by Unilever in 2000.\nHigh-confidence public fact\nC3\nBen & Jerry’s public mission includes product, economic, and social mission elements.\nOfficial-site verifiable\nC4\nThe brand’s stated values include human rights, social/economic justice, and environmental restoration.\nOfficial-site verifiable\nC5\nUnilever’s ice cream unit generated €7.9B in 2024 sales and was reported near 20% global market share.\nParent-segment metric; not brand revenue\nC6\nBen & Jerry’s flavor innovation creates earned-media advantages.\nNarrative; should be unverified unless externally supported\nC7\nMission independence creates governance tension.\nPublic reporting supports context, not a numeric fact\nPass condition: Zelda should not collapse parent-segment metrics, mission statements, and investor narrative into the same “verified” bucket.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 13.3%]\n\n[Source 2 - Page 1, Ben & Jerry’s]\nBen & Jerry’s\nPublic-information pitch deck test\nA realistic investor-style deck built from public facts so Zelda can test extraction, Truth Delta, memo grounding, and private/public-company presentation logic.\nTEST ARTIFACT — NOT OFFICIAL\nCLAIMS DESIGNED FOR VERIFICATION\nPrepared for Interlink Foundry / Zelda Intelligence QA\n[Relevance: 6.7%]\n\n[Source 3 - Page 2, Why this deck exists]\nWhy this deck exists\nA deliberately “realistic but testable” public-company-style deck.\nPurpose\n• Give Zelda a clean second benchmark after Nike: recognizable brand, many public sources, but not a public standalone issuer.\n• Test whether Truth Delta separates brand facts, parent-company facts, mission claims, market context, and unsupported deck claims.\n• Create extraction targets across history, ownership, operating model, distribution, values, risks, and strategic narrative.\nExpected Zelda behavior: verify public facts, downgrade context-only claims, and label unsupported or forward-looking assertions without treating them as proven.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 6.7%]\n\n[Source 4 - Page 4, Origin story & brand equity]\nOrigin story & brand equity\nFrom Vermont scoop shop to global cultural brand.\nBrand-building pattern\n• Small-company origin gives the brand authenticity that still differentiates it inside a large CPG portfolio.\n• Flavor naming, mix-ins, and cause-linked campaigns create social shareability beyond product taste alone.\n• The brand is unusually transparent about values, making mission a feature of the product experience.\nInvestor-style thesis\nBen & Jerry’s is not merely selling ice cream; it is monetizing a high-affinity brand community around indulgence, identity, and values.\nSources: Ben & Jerry’s values/mission public pages.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 3.3%]\n\n[Source 5 - Page 5, Product engine]\nProduct engine\nHigh-recognition flavors, seasonal innovation, and scoop-shop experience create multiple demand surfaces.\nRevenue surfaces to identify\nRetail pints\nGrocery / freezer aisle distribution\nScoop shops\nOn-premise experience and franchise/local retail\nLimited flavors\nInnovation-driven demand spikes\nActivism-led drops\nEarned-media amplification when credible\nDeck claim to test\n“Ben & Jerry’s flavor innovation and mission-led campaigns create earned-media advantages versus generic premium ice cream.”\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 3.3%]\n\n",
+    "source_count": 5,
+    "no_relevant_evidence": false,
+    "sources": [
+     {
+      "chunk_id": 4003,
+      "page": 10,
+      "section": "Claims Zelda should extract from this deck",
+      "relevance": 0.13333333333333333
+     },
+     {
+      "chunk_id": 3994,
+      "page": 1,
+      "section": "Ben & Jerry’s",
+      "relevance": 0.06666666666666667
+     },
+     {
+      "chunk_id": 3995,
+      "page": 2,
+      "section": "Why this deck exists",
+      "relevance": 0.06666666666666667
+     },
+     {
+      "chunk_id": 3997,
+      "page": 4,
+      "section": "Origin story & brand equity",
+      "relevance": 0.03333333333333333
+     },
+     {
+      "chunk_id": 3998,
+      "page": 5,
+      "section": "Product engine",
+      "relevance": 0.03333333333333333
+     }
+    ]
+   }
+  },
+  "ask": {
+   "status": 200,
+   "body": {
+    "status": "success",
+    "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+    "results": []
+   }
+  }
+ },
+ "Q7": {
+  "question": "Should I invest in Ben & Jerry's?",
+  "search": {
+   "status": 200,
+   "body": {
+    "document_id": 3128,
+    "query": "Should I invest in Ben & Jerry's?",
+    "results_count": 5,
+    "results": [
+     {
+      "id": 3996,
+      "text": "Company snapshot\nIconic super-premium ice cream brand with unusually explicit social mission positioning.\n1978\nFounded in Burlington, Vermont\n2000\nAcquired by Unilever\n3-part\nProduct, economic, social mission\nCore positioning\nPremium indulgence + playful flavor innovation + activist brand values. Ben & Jerry’s publicly frames the business around “linked prosperity,” where product quality, sustainable growth, and social mission should thrive together.\nZelda extraction targets\nfounded year\nownership\nmission\nstrategy\nSources: Ben & Jerry’s values page; Unilever public pages.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 3,
+      "section": "Company snapshot",
+      "relevance": 0.19999999999999998,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 3999,
+      "text": "Market & distribution context\nThe brand benefits from parent-scale cold chain and a global ice cream category backdrop.\n€7.9B\nUnilever ice cream unit 2024 sales reported by Reuters\n~20%\nShare of global ice cream market reported for the unit\nImportant distinction\nThese are parent/ice-cream-unit figures, not standalone Ben & Jerry’s revenue. A good diligence system should not assign them directly to the brand without segment-level disclosure.\nTruth Delta trap\nDeck includes parent-unit metrics beside brand narrative so Zelda can test attribution boundaries.\nSource: Reuters report on Unilever ice cream spin-off.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 6,
+      "section": "Market & distribution context",
+      "relevance": 0.19999999999999998,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 4003,
+      "text": "Claims Zelda should extract from this deck\nUse this slide as a deck-internal answer key for rerun grading.\nC1\nBen & Jerry’s was founded in 1978 in Burlington, Vermont.\nHigh-confidence public fact\nC2\nBen & Jerry’s was acquired by Unilever in 2000.\nHigh-confidence public fact\nC3\nBen & Jerry’s public mission includes product, economic, and social mission elements.\nOfficial-site verifiable\nC4\nThe brand’s stated values include human rights, social/economic justice, and environmental restoration.\nOfficial-site verifiable\nC5\nUnilever’s ice cream unit generated €7.9B in 2024 sales and was reported near 20% global market share.\nParent-segment metric; not brand revenue\nC6\nBen & Jerry’s flavor innovation creates earned-media advantages.\nNarrative; should be unverified unless externally supported\nC7\nMission independence creates governance tension.\nPublic reporting supports context, not a numeric fact\nPass condition: Zelda should not collapse parent-segment metrics, mission statements, and investor narrative into the same “verified” bucket.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 10,
+      "section": "Claims Zelda should extract from this deck",
+      "relevance": 0.19999999999999998,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 3994,
+      "text": "Ben & Jerry’s\nPublic-information pitch deck test\nA realistic investor-style deck built from public facts so Zelda can test extraction, Truth Delta, memo grounding, and private/public-company presentation logic.\nTEST ARTIFACT — NOT OFFICIAL\nCLAIMS DESIGNED FOR VERIFICATION\nPrepared for Interlink Foundry / Zelda Intelligence QA",
+      "page": 1,
+      "section": "Ben & Jerry’s",
+      "relevance": 0.09999999999999999,
+      "document": "Ben & Jerry's"
+     },
+     {
+      "id": 3995,
+      "text": "Why this deck exists\nA deliberately “realistic but testable” public-company-style deck.\nPurpose\n• Give Zelda a clean second benchmark after Nike: recognizable brand, many public sources, but not a public standalone issuer.\n• Test whether Truth Delta separates brand facts, parent-company facts, mission claims, market context, and unsupported deck claims.\n• Create extraction targets across history, ownership, operating model, distribution, values, risks, and strategic narrative.\nExpected Zelda behavior: verify public facts, downgrade context-only claims, and label unsupported or forward-looking assertions without treating them as proven.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck",
+      "page": 2,
+      "section": "Why this deck exists",
+      "relevance": 0.09999999999999999,
+      "document": "Ben & Jerry's"
+     }
+    ],
+    "no_relevant_evidence": false
+   }
+  },
+  "rag": {
+   "status": 200,
+   "body": {
+    "document_id": 3128,
+    "query": "Should I invest in Ben & Jerry's?",
+    "context": "Retrieved Context:\n\n[Source 1 - Page 3, Company snapshot]\nCompany snapshot\nIconic super-premium ice cream brand with unusually explicit social mission positioning.\n1978\nFounded in Burlington, Vermont\n2000\nAcquired by Unilever\n3-part\nProduct, economic, social mission\nCore positioning\nPremium indulgence + playful flavor innovation + activist brand values. Ben & Jerry’s publicly frames the business around “linked prosperity,” where product quality, sustainable growth, and social mission should thrive together.\nZelda extraction targets\nfounded year\nownership\nmission\nstrategy\nSources: Ben & Jerry’s values page; Unilever public pages.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 20.0%]\n\n[Source 2 - Page 6, Market & distribution context]\nMarket & distribution context\nThe brand benefits from parent-scale cold chain and a global ice cream category backdrop.\n€7.9B\nUnilever ice cream unit 2024 sales reported by Reuters\n~20%\nShare of global ice cream market reported for the unit\nImportant distinction\nThese are parent/ice-cream-unit figures, not standalone Ben & Jerry’s revenue. A good diligence system should not assign them directly to the brand without segment-level disclosure.\nTruth Delta trap\nDeck includes parent-unit metrics beside brand narrative so Zelda can test attribution boundaries.\nSource: Reuters report on Unilever ice cream spin-off.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 20.0%]\n\n[Source 3 - Page 10, Claims Zelda should extract from this deck]\nClaims Zelda should extract from this deck\nUse this slide as a deck-internal answer key for rerun grading.\nC1\nBen & Jerry’s was founded in 1978 in Burlington, Vermont.\nHigh-confidence public fact\nC2\nBen & Jerry’s was acquired by Unilever in 2000.\nHigh-confidence public fact\nC3\nBen & Jerry’s public mission includes product, economic, and social mission elements.\nOfficial-site verifiable\nC4\nThe brand’s stated values include human rights, social/economic justice, and environmental restoration.\nOfficial-site verifiable\nC5\nUnilever’s ice cream unit generated €7.9B in 2024 sales and was reported near 20% global market share.\nParent-segment metric; not brand revenue\nC6\nBen & Jerry’s flavor innovation creates earned-media advantages.\nNarrative; should be unverified unless externally supported\nC7\nMission independence creates governance tension.\nPublic reporting supports context, not a numeric fact\nPass condition: Zelda should not collapse parent-segment metrics, mission statements, and investor narrative into the same “verified” bucket.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 20.0%]\n\n[Source 4 - Page 1, Ben & Jerry’s]\nBen & Jerry’s\nPublic-information pitch deck test\nA realistic investor-style deck built from public facts so Zelda can test extraction, Truth Delta, memo grounding, and private/public-company presentation logic.\nTEST ARTIFACT — NOT OFFICIAL\nCLAIMS DESIGNED FOR VERIFICATION\nPrepared for Interlink Foundry / Zelda Intelligence QA\n[Relevance: 10.0%]\n\n[Source 5 - Page 2, Why this deck exists]\nWhy this deck exists\nA deliberately “realistic but testable” public-company-style deck.\nPurpose\n• Give Zelda a clean second benchmark after Nike: recognizable brand, many public sources, but not a public standalone issuer.\n• Test whether Truth Delta separates brand facts, parent-company facts, mission claims, market context, and unsupported deck claims.\n• Create extraction targets across history, ownership, operating model, distribution, values, risks, and strategic narrative.\nExpected Zelda behavior: verify public facts, downgrade context-only claims, and label unsupported or forward-looking assertions without treating them as proven.\nSynthetic public-information deck for Zelda testing • Not an official Ben & Jerry’s deck\n[Relevance: 10.0%]\n\n",
+    "source_count": 5,
+    "no_relevant_evidence": false,
+    "sources": [
+     {
+      "chunk_id": 3996,
+      "page": 3,
+      "section": "Company snapshot",
+      "relevance": 0.19999999999999998
+     },
+     {
+      "chunk_id": 3999,
+      "page": 6,
+      "section": "Market & distribution context",
+      "relevance": 0.19999999999999998
+     },
+     {
+      "chunk_id": 4003,
+      "page": 10,
+      "section": "Claims Zelda should extract from this deck",
+      "relevance": 0.19999999999999998
+     },
+     {
+      "chunk_id": 3994,
+      "page": 1,
+      "section": "Ben & Jerry’s",
+      "relevance": 0.09999999999999999
+     },
+     {
+      "chunk_id": 3995,
+      "page": 2,
+      "section": "Why this deck exists",
+      "relevance": 0.09999999999999999
+     }
+    ]
+   }
+  },
+  "ask": {
+   "status": 200,
+   "body": {
+    "status": "success",
+    "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+    "results": []
+   }
+  }
+ }
+}

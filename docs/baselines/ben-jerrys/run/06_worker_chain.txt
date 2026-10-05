@@ -1,0 +1,23 @@
+# Worker task chain for document 3128 (local broker), from the worker log
+[2026-10-04 22:26:17,935: INFO/MainProcess] Task zelda_api.tasks.process_document_pipeline[a5aa1c07-a581-4fb7-8104-63a4ba05428b] received
+[2026-10-04 22:26:18,754: INFO/MainProcess] Task zelda_api.tasks.process_document_pipeline[a5aa1c07-a581-4fb7-8104-63a4ba05428b] succeeded in 0.8177938000299037s: {'status': 'success', 'document_id': 3128, 'chunks': 11, 'insights': 7}
+[2026-10-04 22:26:18,759: INFO/MainProcess] Task zelda_api.truth_delta_tasks.extract_claims_from_insights[5a124921-8c76-4efb-844d-72025e7fb6ff] received
+[2026-10-04 22:26:18,779: INFO/MainProcess] Task zelda_api.truth_delta_tasks.extract_claims_from_insights[5a124921-8c76-4efb-844d-72025e7fb6ff] succeeded in 0.019174500135704875s: {'status': 'success', 'claims_created': 0}
+[2026-10-04 22:26:18,784: INFO/MainProcess] Task zelda_api.entity_verification_tasks.verify_entity_integrity[906c10ce-6ade-4ee0-b11c-23b23010f5fb] received
+[2026-10-04 22:26:18,932: WARNING/MainProcess] C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\core\cache\backends\base.py:119: CacheKeyWarning: Cache key contains characters that will cause errors if used with memcached: ":1:sec_identity_v3:ben & jerry's"
+[2026-10-04 22:26:22,378: INFO/MainProcess] Task zelda_api.entity_verification_tasks.verify_entity_integrity[906c10ce-6ade-4ee0-b11c-23b23010f5fb] succeeded in 3.593085200060159s: {'status': 'success', 'document_id': 3128, 'report_id': 29}
+[2026-10-04 22:26:22,385: INFO/MainProcess] Task zelda_api.truth_delta_tasks.verify_document_truth_delta[91e0b563-1e07-4e4c-b3c8-5db62d2495b6] received
+[2026-10-04 22:26:22,397: WARNING/MainProcess] No claims found for document 3128
+[2026-10-04 22:26:22,416: INFO/MainProcess] Task zelda_api.truth_delta_tasks.verify_document_truth_delta[91e0b563-1e07-4e4c-b3c8-5db62d2495b6] succeeded in 0.03073760005645454s: {'status': 'no_claims', 'document_id': 3128}
+[2026-10-04 22:26:22,421: INFO/MainProcess] Task zelda_api.tasks.generate_intelligence_memo[e341df3c-831f-4e3f-b989-e252c04cb260] received
+[2026-10-04 22:27:10,172: INFO/MainProcess] Task zelda_api.tasks.generate_intelligence_memo[e341df3c-831f-4e3f-b989-e252c04cb260] succeeded in 47.75075999996625s: {'status': 'success', 'memo_id': 88}
+[2026-10-04 22:27:10,179: INFO/MainProcess] Task zelda_api.tasks.notify_document_processed[b091ec6c-66e8-4536-8ae3-68d8b0593984] received
+[2026-10-04 22:27:10,322: INFO/MainProcess] Task zelda_api.tasks.notify_document_processed[b091ec6c-66e8-4536-8ae3-68d8b0593984] succeeded in 0.14210199983790517s: {'status': 'notified', 'user_id': 301}
+
+# Setup-time tasks (profile saves)
+[2026-10-04 22:22:50,592: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_founder_task[7628d084-6259-4875-aab4-7a4944d3655e] received
+[2026-10-04 22:22:53,006: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_founder_task[7628d084-6259-4875-aab4-7a4944d3655e] succeeded in 2.4132236998993903s: None
+[2026-10-04 22:22:53,011: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_investor_task[4ca4db85-3693-4bc2-be0a-8a822d2e1318] received
+[2026-10-04 22:22:53,379: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_investor_task[4ca4db85-3693-4bc2-be0a-8a822d2e1318] succeeded in 0.3679269999265671s: None
+[2026-10-04 22:22:53,384: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_investor_task[cff997fb-8914-460a-953b-ebd5f36e3a7e] received
+[2026-10-04 22:22:53,767: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_investor_task[cff997fb-8914-460a-953b-ebd5f36e3a7e] succeeded in 0.38246360002085567s: None
