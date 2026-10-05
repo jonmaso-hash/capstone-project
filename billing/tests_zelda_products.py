@@ -46,7 +46,7 @@ class ZeldaProductTests(TestCase):
         return self.client.post(reverse('billing:zelda_checkout'), json.dumps(data), content_type='application/json')
 
     def event(self, order, **kwargs):
-        data = dict(id=order.stripe_session_id, currency='usd', amount_total=order.amount, payment_status='paid',
+        data = dict(id=order.stripe_session_id, mode='payment', status='complete', currency='usd', amount_total=order.amount, payment_status='paid',
                     metadata={'purpose':'zelda_product','order_id':str(order.id),'user_id':str(self.user.id)})
         data.update(kwargs)
         return data
@@ -133,6 +133,85 @@ class ZeldaProductTests(TestCase):
         self.assertEqual(self.client.get(reverse('billing:zelda_report',args=[order.id,'ic_memo'])).status_code,404)
         self.client.force_login(self.other)
         self.assertEqual(self.client.get(reverse('billing:zelda_order_status',args=[order.id])).status_code,404)
+
+    @mock.patch('stripe.checkout.Session.retrieve')
+    @mock.patch('billing.tasks.fulfill_zelda_order.delay')
+    def test_paid_business_valuation_recovers_without_webhook_or_new_charge(self, generate, retrieve):
+        order = self.order(product='valuation', reports=['valuation'], amount=99)
+        retrieve.return_value = self.event(order)
+        with self.captureOnCommitCallbacks(execute=True), mock.patch('stripe.checkout.Session.create') as create:
+            response = self.client.get(reverse('billing:zelda_order_status', args=[order.id]))
+        self.assertEqual(response.json()['status'], 'paid')
+        self.assertEqual(response['Cache-Control'], 'no-store')
+        order.refresh_from_db(); self.assertIsNotNone(order.paid_at)
+        retrieve.assert_called_once_with(order.stripe_session_id, api_key='sk_test_zelda_ci_only')
+        generate.assert_called_once_with(str(order.id)); create.assert_not_called()
+        self.client.get(reverse('billing:zelda_order_status', args=[order.id]))
+        retrieve.assert_called_once(); generate.assert_called_once()
+
+    @mock.patch('stripe.checkout.Session.retrieve')
+    @mock.patch('billing.tasks.fulfill_zelda_order.delay')
+    def test_unpaid_open_pending_and_expired_checkout_never_unlock(self, generate, retrieve):
+        order = self.order()
+        for checkout_state in ('open', 'complete', 'expired'):
+            cache.clear()
+            retrieve.return_value = self.event(order, status=checkout_state, payment_status='unpaid')
+            response = self.client.get(reverse('billing:zelda_order_status', args=[order.id]))
+            self.assertEqual(response.json()['checkout_state'], checkout_state)
+            self.assertEqual(response.json()['status'], 'canceled' if checkout_state == 'expired' else 'awaiting_payment')
+            self.assertEqual(self.client.get(reverse('billing:zelda_report',args=[order.id,'ic_memo'])).status_code,404)
+        generate.assert_not_called()
+
+    @mock.patch('stripe.checkout.Session.retrieve')
+    @mock.patch('billing.tasks.fulfill_zelda_order.delay')
+    def test_payment_recovery_refuses_wrong_session_and_payment_binding(self, generate, retrieve):
+        order = self.order()
+        for override in ({'id':'cs_other'}, {'mode':'subscription'}, {'amount_total':1}, {'currency':'eur'},
+                         {'status':'open'}, {'metadata':{'purpose':'subscription','order_id':str(order.id),'user_id':str(self.user.id)}},
+                         {'metadata':{'purpose':'zelda_product','order_id':str(order.id),'user_id':str(self.other.id)}},
+                         {'metadata':{'purpose':'zelda_product','order_id':'wrong','user_id':str(self.user.id)}}):
+            cache.clear(); retrieve.return_value = self.event(order, **override)
+            with self.assertLogs('billing.zelda_views', level='ERROR'):
+                response = self.client.get(reverse('billing:zelda_order_status',args=[order.id]))
+            self.assertEqual(response.json()['status'], 'awaiting_payment')
+            self.assertTrue(response.json()['payment_check_unavailable'])
+        generate.assert_not_called()
+
+    @mock.patch('stripe.checkout.Session.retrieve', side_effect=RuntimeError('Stripe unavailable'))
+    def test_failed_payment_check_is_throttled_and_owner_only(self, retrieve):
+        order = self.order()
+        url = reverse('billing:zelda_order_status',args=[order.id])
+        self.client.force_login(self.other)
+        self.assertEqual(self.client.get(url).status_code,404); retrieve.assert_not_called()
+        self.client.force_login(self.user)
+        with self.assertLogs('billing.zelda_views', level='ERROR'):
+            self.assertTrue(self.client.get(url).json()['payment_check_unavailable'])
+        self.assertTrue(self.client.get(url).json()['payment_check_unavailable'])
+        retrieve.assert_called_once()
+        order.refresh_from_db(); self.assertIsNone(order.paid_at)
+
+    @mock.patch('stripe.checkout.Session.retrieve')
+    @mock.patch('billing.tasks.fulfill_zelda_order.delay')
+    def test_queue_delivery_failure_retains_payment_and_can_recover(self, generate, retrieve):
+        order = self.order()
+        retrieve.return_value = self.event(order)
+        generate.side_effect = RuntimeError('Broker unavailable')
+        # Execute delivery at on_commit registration to exercise its exception
+        # path even though TestCase itself wraps each test in a transaction.
+        with mock.patch('billing.zelda_views.transaction.on_commit', side_effect=lambda callback: callback()):
+            with self.assertLogs('billing.zelda_views', level='ERROR'):
+                response = self.client.get(reverse('billing:zelda_order_status',args=[order.id]))
+            self.assertEqual(response.json()['status'],'paid')
+            order.refresh_from_db(); self.assertIsNotNone(order.paid_at)
+            cache.clear(); generate.side_effect = None
+            self.client.get(reverse('billing:zelda_order_status',args=[order.id]))
+        self.assertEqual(generate.call_count,2); retrieve.assert_called_once()
+
+    @mock.patch('stripe.checkout.Session.retrieve')
+    def test_processing_and_ready_orders_do_not_recheck_stripe(self, retrieve):
+        order = self.order(status='processing', paid_at=timezone.now())
+        self.client.get(reverse('billing:zelda_order_status',args=[order.id]))
+        retrieve.assert_not_called()
 
     def test_ready_report_is_saved_in_owner_library_and_not_another_library(self):
         from zelda_api.library import build_library
