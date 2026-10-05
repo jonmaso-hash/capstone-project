@@ -20,6 +20,8 @@ class ZeldaProductTests(TestCase):
         _mock_embedding_generation(self)
         cache.clear()
         self.addCleanup(cache.clear)
+        from zelda_api.sec_company_identity import search_listed_companies
+        self.real_listed_search = search_listed_companies
         listed = mock.patch('zelda_api.sec_company_identity.search_listed_companies', return_value=[])
         listed.start()
         self.addCleanup(listed.stop)
@@ -196,6 +198,42 @@ class ZeldaProductTests(TestCase):
         self.assertEqual(selected,{'name':'Apple Inc.','cik':'0000320193'})
         resolve.assert_not_called()
 
+    def test_search_allows_more_than_thirty_daily_attempts_and_reports_hourly_retry(self):
+        from accounts import rate_limits
+        for _ in range(30):
+            self.assertIsNotNone(rate_limits.reserve('zelda_company_search_user',str(self.user.pk)))
+        with mock.patch('zelda_api.sec_company_identity.search_listed_companies',return_value=[{'name':'Walmart Inc.','ticker':'WMT','cik':'0000104169'}]):
+            self.assertEqual(self.client.post(reverse('billing:zelda_external_search'),{'q':'Walmart'}).status_code,200)
+        for _ in range(89):
+            self.assertIsNotNone(rate_limits.reserve('zelda_company_search_user',str(self.user.pk)))
+        response=self.client.post(reverse('billing:zelda_external_search'),{'q':'Microsoft'})
+        self.assertEqual(response.status_code,429)
+        self.assertIn('120 company searches per hour',response.json()['error'])
+        self.assertIn('Try again in',response.json()['error'])
+        self.assertGreater(int(response['Retry-After']),0)
+
+    def test_cached_name_search_does_not_spend_the_shared_sec_budget(self):
+        from accounts.models import RateLimitEvent
+        cache.set('sec_listed_company_index_v1',[{'title':'Microsoft Corp','ticker':'MSFT','cik_str':789019}],3600)
+        with mock.patch('zelda_api.sec_company_identity.search_listed_companies',wraps=self.real_listed_search), mock.patch('zelda_api.sec_identity._get') as get:
+            response=self.client.post(reverse('billing:zelda_external_search'),{'q':'Microsoft'})
+        self.assertEqual(response.status_code,200)
+        self.assertEqual(response.json()['results'][0]['cik'],'0000789019')
+        self.assertFalse(RateLimitEvent.objects.filter(scope='identity_check_global').exists())
+        get.assert_not_called()
+
+    def test_cached_choices_work_when_shared_source_budget_is_full(self):
+        from accounts import rate_limits
+        for _ in range(200):
+            self.assertIsNotNone(rate_limits.reserve('identity_check_global',rate_limits.GLOBAL_KEY))
+        choices=[{'name':'Microsoft Corp','ticker':'MSFT','cik':'0000789019'}]
+        with mock.patch('zelda_api.sec_company_identity.search_listed_companies',return_value=choices):
+            response=self.client.post(reverse('billing:zelda_external_search'),{'q':'Microsoft'})
+        self.assertEqual(response.status_code,200)
+        response=self.client.post(reverse('billing:zelda_external_search'),{'q':'Private Co'})
+        self.assertEqual(response.status_code,429)
+        self.assertIn('Public-record lookups',response.json()['error'])
+
     def test_database_upload_failure_returns_json_without_purchase(self):
         from django.db import OperationalError
         with mock.patch('zelda_api.vector_models.DocumentSource.objects.create',side_effect=OperationalError('schema unavailable')):
@@ -254,6 +292,19 @@ class ZeldaProductTests(TestCase):
 
 
 class ProductSearchDiscoveryTests(SimpleTestCase):
+    def test_index_fetch_reserves_once_and_cached_queries_reserve_nothing(self):
+        from zelda_api.sec_company_identity import search_listed_companies
+        cache.clear()
+        try:
+            response=mock.Mock()
+            response.json.return_value={'0':{'title':'Microsoft Corp','ticker':'MSFT','cik_str':789019}}
+            reserve=mock.Mock()
+            with mock.patch('zelda_api.sec_identity._get',return_value=response) as get:
+                self.assertEqual(search_listed_companies('Microsoft',before_fetch=reserve)[0]['ticker'],'MSFT')
+                self.assertEqual(search_listed_companies('MSFT',before_fetch=reserve)[0]['ticker'],'MSFT')
+            reserve.assert_called_once();get.assert_called_once()
+        finally: cache.clear()
+
     def test_company_names_legal_suffixes_and_tickers_find_the_same_choices(self):
         from zelda_api.sec_company_identity import listed_company_matches
         rows=[{'title':'Apple Inc.','ticker':'AAPL','cik_str':320193},

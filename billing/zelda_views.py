@@ -23,6 +23,25 @@ class ProductPaymentConfigurationError(ValueError):
     pass
 
 
+class CompanySearchLimitError(Exception):
+    pass
+
+
+def search_limit_response(scope, identifier):
+    from accounts import rate_limits
+    minutes = rate_limits.minutes_until_allowed(scope, identifier)
+    wait = f'in {minutes} minute{"s" if minutes != 1 else ""}' if minutes is not None else 'in a few minutes'
+    if scope == 'zelda_company_search_user':
+        limit, _ = rate_limits.LIMITS[scope]
+        message = f'You have reached {limit} company searches per hour. Try again {wait}. You can still upload a pitch deck.'
+    else:
+        message = f'Public-record lookups are temporarily busy. Try again {wait}, or upload a pitch deck.'
+    response = JsonResponse({'error': message, 'retry_after_seconds': minutes * 60 if minutes is not None else None}, status=429)
+    if minutes is not None:
+        response['Retry-After'] = str(minutes * 60)
+    return response
+
+
 def plain(value):
     return value.to_dict() if isinstance(value, stripe.StripeObject) else value
 
@@ -69,16 +88,22 @@ def external_search(request):
     if len(name) < 1:
         return JsonResponse({'error': 'Enter a company name or stock ticker.'}, status=400)
     from accounts import rate_limits
-    _tokens, refused = rate_limits.reserve_all([
-        ('zelda_company_search_user', str(request.user.pk)),
-        ('identity_check_global', rate_limits.GLOBAL_KEY),
-    ])
-    if refused:
-        return JsonResponse({'error': 'Company search is temporarily limited. Please try again later.'}, status=429)
+    user_key = str(request.user.pk)
+    if rate_limits.reserve('zelda_company_search_user', user_key) is None:
+        return search_limit_response('zelda_company_search_user', user_key)
+    source_reserved = False
+
+    def reserve_source():
+        nonlocal source_reserved
+        if source_reserved:
+            return
+        if rate_limits.reserve('identity_check_global', rate_limits.GLOBAL_KEY) is None:
+            raise CompanySearchLimitError()
+        source_reserved = True
     try:
         index_unavailable = False
         try:
-            choices = search_listed_companies(name)
+            choices = search_listed_companies(name, before_fetch=reserve_source)
         except SecUnavailable:
             choices, index_unavailable = [], True
         if choices:
@@ -86,9 +111,12 @@ def external_search(request):
                 choice['token'] = signing.dumps({'name': choice['name'], 'cik': choice['cik']}, salt='zelda-company-selection')
                 choice['source_url'] = f'https://www.sec.gov/edgar/browse/?CIK={choice["cik"]}'
             return JsonResponse({'results': choices})
+        reserve_source()
         identity = resolve_company_identity(name)
         if identity.status != FOUND and index_unavailable:
             raise SecUnavailable('Company index unavailable')
+    except CompanySearchLimitError:
+        return search_limit_response('identity_check_global', rate_limits.GLOBAL_KEY)
     except SecUnavailable:
         return JsonResponse({'error': 'Public company records are temporarily unavailable. Please try again.'}, status=503)
     if identity.status != FOUND:
