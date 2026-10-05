@@ -157,6 +157,29 @@ def build_entity_verification_report(document):
     )
 
 
+def build_document_identity_report(document):
+    """Public registry evidence about the named document subject, never its uploader."""
+    from .entity_verification_models import EntityVerificationReport as R
+    report = R.objects.create(document=document, status=R.PENDING)
+    rows = []
+    def add(check, claim, evidence_source, evidence, result, source_url=''):
+        rows.append(dict(check=check, claim=claim, interlink_source='Selected company / uploaded document',
+                         evidence_source=evidence_source, evidence=evidence, result=result,
+                         source_url=source_url, checked_at=timezone.now().isoformat()))
+    try:
+        sec_identity.sec_findings(
+            add, company_name=document.source_entity, company_claim=f'Company: {document.source_entity}',
+            person_name='', person_claim='No representative authority asserted', claimed_year=None,
+            founding_claim='No founding year asserted',
+        )
+        report.findings, report.checked_at, report.status = rows, timezone.now(), R.COMPLETE
+        report.save(update_fields=['findings', 'checked_at', 'status'])
+    except Exception:
+        mark_identity_check_failed(report)
+        raise
+    return report
+
+
 # --------------------------------------------------------------------------
 # The business being checked
 # --------------------------------------------------------------------------
@@ -181,6 +204,8 @@ def _amount_input(value):
 
 def subject_for_document(document):
     """The business a document belongs to, or None when its uploader has no business profile."""
+    if document.is_external_subject:
+        return None
     user = document.uploaded_by
     founder = getattr(user, 'match_founder_profile', None)
     seller = getattr(user, 'match_seller_profile', None)

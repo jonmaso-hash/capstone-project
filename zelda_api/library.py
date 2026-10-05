@@ -40,6 +40,8 @@ def _own_documents(user):
     from .vector_models import DocumentSource
     documents = (
         DocumentSource.objects.filter(uploaded_by=user)
+        .filter(is_product_input=False)
+        .filter(analysis_orders__isnull=True, valuation_orders__isnull=True)
         .exclude(document_type='business_valuation')
         .select_related('memo')
         .order_by('-created_at')[:LIST_LIMIT]
@@ -58,6 +60,7 @@ def _own_valuations(user):
     from .vector_models import DocumentSource
     documents = (
         DocumentSource.objects.filter(uploaded_by=user, document_type='business_valuation')
+        .filter(valuation_orders__isnull=True)
         .exclude(status='error')
         .order_by('-created_at')[:LIST_LIMIT]
     )
@@ -156,7 +159,19 @@ def build_library(user):
 
     has_role = any(getattr(user, name, None) is not None for name in (
         'match_founder_profile', 'match_investor_profile', 'match_seller_profile', 'match_buyer_profile'))
+    from billing.models import ZeldaOrder
+    from billing.zelda_catalog import PRODUCTS, REPORTS
+    from billing.fulfillment import reconcile_order
+    purchases = []
+    for order in ZeldaOrder.objects.filter(user=user).exclude(status='canceled').select_related(
+            'source_document', 'analysis_document', 'valuation_document', 'entity_report')[:LIST_LIMIT]:
+        reconcile_order(order)
+        purchases.append({'company': order.source_document.source_entity, 'product': PRODUCTS[order.product][0],
+                          'status': order.get_status_display(), 'url': reverse('billing:zelda_order', args=[order.id]),
+                          'reports': [{'name': REPORTS[key][0], 'url': reverse('billing:zelda_report', args=[order.id, key])}
+                                      for key in order.reports] if order.status == 'ready' else []})
     return {
+        'purchases': purchases,
         'sections': sections,
         'profile_analytics_url': (
             reverse('accounts:profile_analysis', kwargs={'username': user.username}) if has_role else None),
