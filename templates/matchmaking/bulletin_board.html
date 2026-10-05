@@ -556,7 +556,7 @@
                     {# Recommendation feedback and Shortlist are intentionally separate investor actions. #}
                     {% if user.is_authenticated and user.match_investor_profile %}
                     <div class="thumbs-row">
-                        <span style="font-size:0.7rem;color:#8b6914;font-weight:700;">Recommendation:</span>
+                        <span style="font-size:0.7rem;color:#8b6914;font-weight:700;">Relevance:</span>
                         <button class="thumb-btn {% if pitch.investor_vote == 1 %}active-up{% endif %}" onclick="recordVote({{ pitch.id }}, 'up', this)"
                                 title="Relevant">👍</button>
                         <button class="thumb-btn {% if pitch.investor_vote == -1 %}active-down{% endif %}" onclick="recordVote({{ pitch.id }}, 'down', this)"
