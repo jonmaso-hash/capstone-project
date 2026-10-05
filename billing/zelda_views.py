@@ -2,6 +2,7 @@
 import json
 import logging
 import hashlib
+import uuid
 import stripe
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -240,13 +241,15 @@ def product_checkout(request):
 
 
 def handle_product_event(event_type, session):
-    """Called only after the existing webhook verified Stripe's signature."""
+    """Accept only a signed webhook or a session retrieved directly from Stripe."""
     from .tasks import fulfill_zelda_order
     with transaction.atomic():
         order = ZeldaOrder.objects.select_for_update().filter(stripe_session_id=session.get('id')).first()
         if not order or session.get('metadata', {}).get('order_id') != str(order.pk):
             raise ValueError('Unknown product order/session')
-        if (str(order.user_id) != session.get('metadata', {}).get('user_id')
+        if (session.get('mode') != 'payment'
+                or session.get('metadata', {}).get('purpose') != 'zelda_product'
+                or str(order.user_id) != session.get('metadata', {}).get('user_id')
                 or session.get('currency') != order.currency or session.get('amount_total') != order.amount):
             raise ValueError('Product order payment mismatch')
         if event_type in ('checkout.session.completed', 'checkout.session.async_payment_succeeded'):
@@ -261,14 +264,83 @@ def handle_product_event(event_type, session):
                 order.save(update_fields=['status'])
 
 
+def recover_order_payment(order):
+    """Recover missed webhooks/queue delivery without creating another charge.
+
+    Poll only the owner's stored session, at most once every 15 seconds. Cached
+    checkout state is display information, never authorization to fulfill.
+    """
+    if order.status not in ('awaiting_payment', 'paid'):
+        return {}
+    account = hashlib.sha256(settings.STRIPE_SECRET_KEY.encode()).hexdigest()[:12]
+    key = f'zelda_payment_check:{account}:{order.id}'
+    try:
+        details = cache.get(key + ':display') or {}
+        if not cache.add(key, True, 15):
+            return details
+    except Exception:
+        # An unavailable cache must not take down the saved order status, or
+        # cause unthrottled Stripe calls on every browser poll.
+        logger.exception('Zelda payment check cache unavailable for order %s', order.pk)
+        return {'payment_check_unavailable': True}
+    try:
+        if order.status == 'paid' and order.paid_at:
+            # A paid order can still be waiting for broker delivery. The worker
+            # locks the order and ignores duplicate deliveries once processing.
+            from .tasks import fulfill_zelda_order
+            transaction.on_commit(lambda: fulfill_zelda_order.delay(str(order.pk)))
+            return {}
+        api_key = settings.STRIPE_SECRET_KEY.strip()
+        if not api_key or not order.stripe_session_id:
+            raise ProductPaymentConfigurationError('Payment verification is not configured')
+        session = plain(stripe.checkout.Session.retrieve(order.stripe_session_id, api_key=api_key))
+        # Do not let an unexpected response confirm a different stored order.
+        if session.get('id') != order.stripe_session_id:
+            raise ValueError('Retrieved product session mismatch')
+        status = session.get('status')
+        if status not in ('open', 'complete', 'expired'):
+            raise ValueError('Unknown Checkout session state')
+        if session.get('payment_status') == 'paid' and status != 'complete':
+            raise ValueError('Paid Checkout session is not complete')
+        event = 'checkout.session.expired' if status == 'expired' else 'checkout.session.completed'
+        # Validate metadata, amount and currency even for unpaid/expired sessions.
+        handle_product_event(event, session)
+        details = {'checkout_state': status}
+    except Exception:
+        logger.exception('Could not reconcile Zelda payment for order %s', order.pk)
+        details = {'payment_check_unavailable': True}
+    finally:
+        # on_commit delivery errors may occur after payment is safely recorded.
+        order.refresh_from_db()
+    try:
+        cache.set(key + ':display', details, 15)
+    except Exception:
+        logger.exception('Could not cache Zelda payment check for order %s', order.pk)
+    return details
+
+
 @login_required
 def order_status(request, order_id):
     from .fulfillment import reconcile_order
-    order = get_object_or_404(ZeldaOrder, pk=order_id, user=request.user)
-    reconcile_order(order)
-    return JsonResponse({'status': order.status, 'reports': [
+    try:
+        order = get_object_or_404(ZeldaOrder, pk=order_id, user=request.user)
+        payment_details = recover_order_payment(order)
+        reconcile_order(order)
+    except Http404:
+        raise
+    except Exception:
+        reference = uuid.uuid4().hex[:12]
+        logger.exception('Zelda order status failed reference=%s order=%s user=%s', reference, order_id, request.user.pk)
+        response = JsonResponse({'error': 'The server could not check this order right now. If you already paid, do not pay again.',
+                                 'reference': reference}, status=503)
+        response['Cache-Control'] = 'no-store'
+        response['Retry-After'] = '5'
+        return response
+    response = JsonResponse({'status': order.status, **payment_details, 'reports': [
         {'name': REPORTS[key][0], 'url': reverse('billing:zelda_report', args=[order.id, key])}
         for key in order.reports] if order.status == 'ready' else []})
+    response['Cache-Control'] = 'no-store'
+    return response
 
 
 @login_required
