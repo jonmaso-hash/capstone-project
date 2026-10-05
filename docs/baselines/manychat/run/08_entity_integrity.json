@@ -1,0 +1,69 @@
+[
+ {
+  "id": 30,
+  "founder_profile_id": 42,
+  "seller_profile_id": null,
+  "document_id": 3129,
+  "status": "complete",
+  "checked_at": "2026-10-05T06:06:18.974020+00:00",
+  "inputs_hash": "c0fc49dd76cd7356926293034a73e96620ebbf99de76e5b97fcc98a63e981736",
+  "findings": [
+   {
+    "check": "website",
+    "claim": "Website: not on the profile",
+    "interlink_source": "Startup profile",
+    "evidence_source": "Company website",
+    "evidence": "The profile has no website to check.",
+    "result": "not_applicable",
+    "source_url": "",
+    "checked_at": "2026-10-05T06:06:15.705369+00:00"
+   },
+   {
+    "check": "company_name",
+    "claim": "Company name: ManyChat",
+    "interlink_source": "Startup profile",
+    "evidence_source": "Company website",
+    "evidence": "The profile has no website to check.",
+    "result": "not_applicable",
+    "source_url": "",
+    "checked_at": "2026-10-05T06:06:15.705369+00:00"
+   },
+   {
+    "check": "person_name",
+    "claim": "Founder: MC Audit Owner",
+    "interlink_source": "Startup profile",
+    "evidence_source": "Company website",
+    "evidence": "The profile has no website to check.",
+    "result": "not_applicable",
+    "source_url": "",
+    "checked_at": "2026-10-05T06:06:15.705369+00:00"
+   },
+   {
+    "check": "founding_year",
+    "claim": "Founding year: not on the profile",
+    "interlink_source": "Startup profile",
+    "evidence_source": "Domain registration",
+    "evidence": "The profile has no website to check.",
+    "result": "not_applicable",
+    "source_url": "",
+    "checked_at": "2026-10-05T06:06:15.705369+00:00"
+   },
+   {
+    "check": "sec_filer",
+    "claim": "Company name: ManyChat",
+    "interlink_source": "Startup profile",
+    "evidence_source": "SEC EDGAR",
+    "evidence": "No SEC filer with this name was found on EDGAR. Most private companies never file with the SEC.",
+    "result": "not_found",
+    "source_url": "",
+    "checked_at": "2026-10-05T06:06:15.705369+00:00"
+   }
+  ],
+  "domain": "",
+  "domain_registered_date": null,
+  "domain_lookup_error": "",
+  "claimed_founding_year": null,
+  "timeline_flags": [],
+  "created_at": "2026-10-05T06:06:15.694651+00:00"
+ }
+]

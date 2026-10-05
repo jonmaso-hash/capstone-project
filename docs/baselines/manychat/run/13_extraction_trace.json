@@ -1,0 +1,177 @@
+{
+ "3128": {
+  "chunks": 11,
+  "categories": {
+   "Problem": {
+    "candidates": 1,
+    "candidate_slides": [
+     8
+    ],
+    "kept": [
+     {
+      "slide": 8,
+      "text": "Zelda challenge",
+      "conf": 50.0,
+      "claim_gate": "category not mapped"
+     }
+    ]
+   },
+   "Market": {
+    "candidates": 3,
+    "candidate_slides": [
+     2,
+     6,
+     7
+    ],
+    "kept": [
+     {
+      "slide": 2,
+      "text": "• Test whether Truth Delta separates brand facts, parent-company facts, mission claims, market context, and unsupported deck claims",
+      "conf": 70.0,
+      "claim_gate": "no_number"
+     }
+    ]
+   },
+   "Revenue": {
+    "candidates": 4,
+    "candidate_slides": [
+     5,
+     6,
+     9,
+     10
+    ],
+    "kept": [
+     {
+      "slide": 6,
+      "text": "These are parent/ice-cream-unit figures, not standalone Ben & Jerry’s revenue",
+      "conf": 70.0,
+      "claim_gate": "no_number"
+     }
+    ]
+   },
+   "Team": {
+    "candidates": 2,
+    "candidate_slides": [
+     4,
+     5
+    ],
+    "kept": [
+     {
+      "slide": 4,
+      "text": "• The brand is unusually transparent about values, making mission a feature of the product experience",
+      "conf": 70.0,
+      "claim_gate": "inadmissible"
+     }
+    ]
+   },
+   "Product": {
+    "candidates": 5,
+    "candidate_slides": [
+     3,
+     4,
+     5,
+     10,
+     11
+    ],
+    "kept": [
+     {
+      "slide": 3,
+      "text": "Ben & Jerry’s publicly frames the business around “linked prosperity,” where product quality, sustainable growth, and social mission should ",
+      "conf": 70.0,
+      "claim_gate": "category not mapped"
+     }
+    ]
+   },
+   "Traction": {
+    "candidates": 2,
+    "candidate_slides": [
+     3,
+     10
+    ],
+    "kept": [
+     {
+      "slide": 3,
+      "text": "Ben & Jerry’s publicly frames the business around “linked prosperity,” where product quality, sustainable growth, and social mission should ",
+      "conf": 70.0,
+      "claim_gate": "inadmissible"
+     }
+    ]
+   },
+   "Funding": {
+    "candidates": 0,
+    "candidate_slides": [],
+    "kept": []
+   },
+   "Risk": {
+    "candidates": 2,
+    "candidate_slides": [
+     2,
+     9
+    ],
+    "kept": [
+     {
+      "slide": 2,
+      "text": "• Create extraction targets across history, ownership, operating model, distribution, values, risks, and strategic narrative",
+      "conf": 70.0,
+      "claim_gate": "category not mapped"
+     }
+    ]
+   }
+  }
+ },
+ "3129": {
+  "chunks": 12,
+  "categories": {
+   "Problem": {
+    "candidates": 0,
+    "candidate_slides": [],
+    "kept": []
+   },
+   "Market": {
+    "candidates": 0,
+    "candidate_slides": [],
+    "kept": []
+   },
+   "Revenue": {
+    "candidates": 0,
+    "candidate_slides": [],
+    "kept": []
+   },
+   "Team": {
+    "candidates": 0,
+    "candidate_slides": [],
+    "kept": []
+   },
+   "Product": {
+    "candidates": 0,
+    "candidate_slides": [],
+    "kept": []
+   },
+   "Traction": {
+    "candidates": 0,
+    "candidate_slides": [],
+    "kept": []
+   },
+   "Funding": {
+    "candidates": 2,
+    "candidate_slides": [
+     1,
+     2
+    ],
+    "kept": [
+     {
+      "slide": 2,
+      "text": "$23.1M raised",
+      "conf": 95.0,
+      "claim_gate": "claim"
+     }
+    ]
+   },
+   "Risk": {
+    "candidates": 0,
+    "candidate_slides": [],
+    "kept": []
+   }
+  }
+ }
+}
