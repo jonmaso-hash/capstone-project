@@ -28,7 +28,7 @@ from django.utils import timezone
 from .models import Follow
 
 # Internal Services & Models
-from matchmaking.models import Application, Connection, InvestorApplication, MatchFeedback, ConnectionRequest, log_investor_event, PitchDeckViewSession, PitchDeckSlideTime, FundraisingLead, FounderMilestone, log_training_example, MessageThread, PitchVideoView, ProfileView, log_page_event, log_search_event, SearchEvent
+from matchmaking.models import Application, Connection, InvestorApplication, MatchFeedback, InvestorShortlist, ConnectionRequest, log_investor_event, PitchDeckViewSession, PitchDeckSlideTime, FundraisingLead, FounderMilestone, log_training_example, MessageThread, PitchVideoView, ProfileView, log_page_event, log_search_event, SearchEvent
 from matchmaking.models import DataRoomDocument, DataRoomAccessRequest, DataRoomDocumentView, DataRoomInformationRequest, can_view_data_room, can_download_data_room_document, can_view_deal_workspace
 from matchmaking.models import ExternalDealRoom, ExternalDealRoomGrant, ExternalDealRoomEvent, can_view_external_deal_room_url
 from matchmaking.models import (
@@ -802,31 +802,30 @@ def buyer_dashboard(request):
 @login_required
 def investor_shortlist(request):
     """
-    Founders this investor has thumbs-up'd (MatchFeedback.vote=1) — the
-    "only show liked profiles" / favorites view for investors.
+    Founders this investor explicitly saved for later review.
+
+    Shortlist is private saved-company state and is deliberately independent
+    from MatchFeedback recommendation feedback.
     """
     investor_profile = getattr(request.user, 'match_investor_profile', None)
     if not investor_profile:
         messages.info(request, "Please complete your investor profile to view your shortlist.")
         return redirect('usersettings:edit_investor_profile')
 
-    liked_founder_ids = MatchFeedback.objects.filter(
-        investor=investor_profile, vote=1
+    shortlisted_founder_ids = InvestorShortlist.objects.filter(
+        investor=investor_profile
     ).values_list('application_id', flat=True)
 
     founders = Application.objects.discoverable().filter(
-        id__in=liked_founder_ids
+        id__in=shortlisted_founder_ids
     ).exclude(review_status='DENIED').select_related('user')
 
     requested_ids = Connection.objects.filter(investor=investor_profile).values_list('founder_id', flat=True)
 
     shortlist = []
     for founder in founders:
-        # The +10 thumbs-up nudge that used to be applied here is gone.
-        # Feedback is a statement about the person, not about the fit, so
-        # it must never move the canonical result. It was also redundant:
-        # this list is already filtered to founders this investor liked,
-        # so the nudge lifted every row equally and ordered nothing.
+        # Shortlisting is private saved-company state, not a match signal.
+        # It must never move the canonical match result.
         result = evaluate_venture_match(founder, investor_profile)
 
         shortlist.append({
@@ -845,6 +844,54 @@ def investor_shortlist(request):
         'shortlist': shortlist,
         'investor': investor_profile,
     })
+
+
+@login_required
+@require_POST
+def toggle_investor_shortlist(request):
+    """Save or remove one founder from the current investor's private shortlist."""
+    investor_profile = getattr(request.user, 'match_investor_profile', None)
+    if not investor_profile:
+        return JsonResponse({'status': 'error', 'message': 'Investor account required.'}, status=403)
+
+    is_json = request.content_type == 'application/json'
+    if is_json:
+        try:
+            payload = json.loads(request.body)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({'status': 'error', 'message': 'Invalid request body.'}, status=400)
+        application_id = payload.get('application_id')
+    else:
+        application_id = request.POST.get('application_id')
+
+    founder_app = get_object_or_404(
+        Application.objects.discoverable().exclude(review_status='DENIED'),
+        id=application_id,
+    )
+
+    entry = InvestorShortlist.objects.filter(
+        investor=investor_profile,
+        application=founder_app,
+    ).first()
+
+    if entry:
+        entry.delete()
+        saved = False
+    else:
+        InvestorShortlist.objects.create(
+            investor=investor_profile,
+            application=founder_app,
+        )
+        saved = True
+
+    if is_json:
+        return JsonResponse({'status': 'success', 'saved': saved})
+
+    messages.success(
+        request,
+        "Added to your shortlist." if saved else "Removed from your shortlist.",
+    )
+    return redirect(request.META.get('HTTP_REFERER', 'matchmaking:investor_shortlist'))
 
 
 @login_required
@@ -1385,12 +1432,18 @@ def founder_bulletin_board(request):
         investor_profile = getattr(request.user, 'match_investor_profile', None)
 
     feedback_map = {}
+    shortlist_ids = set()
     connection_status_map = {}
     if investor_profile:
         feedback_map = dict(
             MatchFeedback.objects.filter(
                 investor=investor_profile, application__in=pitches_queryset
             ).values_list('application_id', 'vote')
+        )
+        shortlist_ids = set(
+            InvestorShortlist.objects.filter(
+                investor=investor_profile, application__in=pitches_queryset
+            ).values_list('application_id', flat=True)
         )
         connection_status_map = dict(
             Connection.objects.filter(investor=investor_profile).values_list('founder_id', 'status')
@@ -1435,6 +1488,7 @@ def founder_bulletin_board(request):
         # It used to shift the displayed number by +/-10, which made a
         # personal opinion look like a property of the pairing.
         pitch.investor_vote = feedback_map.get(pitch.id) or 0
+        pitch.is_shortlisted = pitch.id in shortlist_ids
         pitch.profile_url = public_profile_link(request, pitch.user.username)
         pitch.match = result
         pitch.band = result.band.label if result else None
