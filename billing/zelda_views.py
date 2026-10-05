@@ -2,6 +2,7 @@
 import json
 import logging
 import hashlib
+import uuid
 import stripe
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -273,9 +274,15 @@ def recover_order_payment(order):
         return {}
     account = hashlib.sha256(settings.STRIPE_SECRET_KEY.encode()).hexdigest()[:12]
     key = f'zelda_payment_check:{account}:{order.id}'
-    details = cache.get(key + ':display') or {}
-    if not cache.add(key, True, 15):
-        return details
+    try:
+        details = cache.get(key + ':display') or {}
+        if not cache.add(key, True, 15):
+            return details
+    except Exception:
+        # An unavailable cache must not take down the saved order status, or
+        # cause unthrottled Stripe calls on every browser poll.
+        logger.exception('Zelda payment check cache unavailable for order %s', order.pk)
+        return {'payment_check_unavailable': True}
     try:
         if order.status == 'paid' and order.paid_at:
             # A paid order can still be waiting for broker delivery. The worker
@@ -305,16 +312,30 @@ def recover_order_payment(order):
     finally:
         # on_commit delivery errors may occur after payment is safely recorded.
         order.refresh_from_db()
-    cache.set(key + ':display', details, 15)
+    try:
+        cache.set(key + ':display', details, 15)
+    except Exception:
+        logger.exception('Could not cache Zelda payment check for order %s', order.pk)
     return details
 
 
 @login_required
 def order_status(request, order_id):
     from .fulfillment import reconcile_order
-    order = get_object_or_404(ZeldaOrder, pk=order_id, user=request.user)
-    payment_details = recover_order_payment(order)
-    reconcile_order(order)
+    try:
+        order = get_object_or_404(ZeldaOrder, pk=order_id, user=request.user)
+        payment_details = recover_order_payment(order)
+        reconcile_order(order)
+    except Http404:
+        raise
+    except Exception:
+        reference = uuid.uuid4().hex[:12]
+        logger.exception('Zelda order status failed reference=%s order=%s user=%s', reference, order_id, request.user.pk)
+        response = JsonResponse({'error': 'The server could not check this order right now. If you already paid, do not pay again.',
+                                 'reference': reference}, status=503)
+        response['Cache-Control'] = 'no-store'
+        response['Retry-After'] = '5'
+        return response
     response = JsonResponse({'status': order.status, **payment_details, 'reports': [
         {'name': REPORTS[key][0], 'url': reverse('billing:zelda_report', args=[order.id, key])}
         for key in order.reports] if order.status == 'ready' else []})
