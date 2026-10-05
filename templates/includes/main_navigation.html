@@ -63,8 +63,16 @@
             <li><a class="dropdown-item" href="{% url 'accounts:business_verification' %}"><i class="bi bi-envelope-check me-2" aria-hidden="true"></i>Company Email Verification</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><h6 class="dropdown-header">Zelda Intelligence</h6></li>
-            <li><a class="dropdown-item" href="{% url 'zelda_api:valuation_request' %}"><i class="bi bi-graph-up-arrow me-2" aria-hidden="true"></i>Get a Valuation</a></li>
-            <li><a class="dropdown-item" href="{% url 'zelda_api:valuation_history' %}"><i class="bi bi-collection me-2" aria-hidden="true"></i>My Valuation Reports</a></li>
+            {% if user.match_founder_profile %}
+            <li><button class="dropdown-item" type="button" data-bs-toggle="offcanvas" data-bs-target="#aiAgentSidebar" aria-controls="aiAgentSidebar" data-zelda-product="truth_delta"><i class="bi bi-shield-check me-2" aria-hidden="true"></i>Truth Delta Report</button></li>
+            {% elif user.match_investor_profile %}
+            <li><button class="dropdown-item" type="button" data-bs-toggle="offcanvas" data-bs-target="#aiAgentSidebar" aria-controls="aiAgentSidebar" data-zelda-product="complete_bundle"><i class="bi bi-stack me-2" aria-hidden="true"></i>Zelda Complete Intelligence Bundle</button></li>
+            {% elif user.match_seller_profile %}
+            <li><button class="dropdown-item" type="button" data-bs-toggle="offcanvas" data-bs-target="#aiAgentSidebar" aria-controls="aiAgentSidebar" data-zelda-product="valuation"><i class="bi bi-graph-up-arrow me-2" aria-hidden="true"></i>Business Valuation</button></li>
+            {% elif user.match_buyer_profile %}
+            <li><button class="dropdown-item" type="button" data-bs-toggle="offcanvas" data-bs-target="#aiAgentSidebar" aria-controls="aiAgentSidebar" data-zelda-product="entity"><i class="bi bi-building-check me-2" aria-hidden="true"></i>Entity Integrity Report</button></li>
+            {% endif %}
+            <li><button class="dropdown-item" type="button" data-bs-toggle="offcanvas" data-bs-target="#aiAgentSidebar" aria-controls="aiAgentSidebar" data-zelda-tab="library"><i class="bi bi-collection me-2" aria-hidden="true"></i>Saved Reports</button></li>
             {% if user.is_staff %}
             <li><hr class="dropdown-divider"></li>
             <li><h6 class="dropdown-header">Administration</h6></li>
