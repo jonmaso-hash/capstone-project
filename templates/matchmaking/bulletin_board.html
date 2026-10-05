@@ -553,17 +553,25 @@
                         </a>
                     </div>
 
-                    {# Thumbs up/down — investors only, for match vector tuning #}
+                    {# Recommendation feedback and Shortlist are intentionally separate investor actions. #}
                     {% if user.is_authenticated and user.match_investor_profile %}
                     <div class="thumbs-row">
-                        <span style="font-size:0.7rem;color:#8b6914;font-weight:700;">Tune match:</span>
-                        <button class="thumb-btn" onclick="recordVote({{ pitch.id }}, 'up', this)"
-                                title="Interested — boost match score">👍</button>
-                        <button class="thumb-btn" onclick="recordVote({{ pitch.id }}, 'down', this)"
-                                title="Pass — lower match score">👎</button>
+                        <span style="font-size:0.7rem;color:#8b6914;font-weight:700;">Relevance:</span>
+                        <button class="thumb-btn {% if pitch.investor_vote == 1 %}active-up{% endif %}" onclick="recordVote({{ pitch.id }}, 'up', this)"
+                                title="Relevant">👍</button>
+                        <button class="thumb-btn {% if pitch.investor_vote == -1 %}active-down{% endif %}" onclick="recordVote({{ pitch.id }}, 'down', this)"
+                                title="Not Relevant">👎</button>
                         <span id="vote-status-{{ pitch.id }}" class="ms-1"
                               style="font-size:0.7rem;color:#8b6914;"></span>
                     </div>
+                    <form method="post" action="{% url 'matchmaking:toggle_investor_shortlist' %}" class="mt-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="application_id" value="{{ pitch.id }}">
+                        <button type="submit" class="btn btn-sm {% if pitch.is_shortlisted %}btn-dark{% else %}btn-outline-dark{% endif %} w-100">
+                            <i class="bi {% if pitch.is_shortlisted %}bi-bookmark-check-fill{% else %}bi-bookmark-plus{% endif %} me-1"></i>
+                            {% if pitch.is_shortlisted %}Saved to Shortlist{% else %}Save to Shortlist{% endif %}
+                        </button>
+                    </form>
 
                     <div class="mt-2">
                         {% if pitch.connection_status == 'ACCEPTED' or pitch.connection_status == 'FUNDED' %}
@@ -645,11 +653,11 @@ function recordVote(pitchId, direction, btn) {
         if (data.status === 'success' || data.status === 'ok') {
             if (direction === 'up') {
                 btn.classList.add('active-up');
-                btn.closest('.thumbs-row').querySelector('[title^="Pass"]').classList.remove('active-down');
+                btn.closest('.thumbs-row').querySelector('[title="Not Relevant"]').classList.remove('active-down');
                 if (statusEl) statusEl.textContent = '✓ Interested';
             } else {
                 btn.classList.add('active-down');
-                btn.closest('.thumbs-row').querySelector('[title^="Interested"]').classList.remove('active-up');
+                btn.closest('.thumbs-row').querySelector('[title="Relevant"]').classList.remove('active-up');
                 if (statusEl) statusEl.textContent = '✓ Passed';
             }
         }
