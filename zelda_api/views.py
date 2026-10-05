@@ -401,7 +401,7 @@ class ZeldaGlobalSearchAPIView(APIView):
                     # Privacy Gatekeeper: same rule as founder_matches above — this
                     # previously had no is_private/archived filter at all, letting
                     # Zelda search surface private and archived investor mandates.
-                    investor_matches = InvestorApplication.objects.discoverable().filter(
+                    investor_matches = InvestorApplication.objects.discoverable().exclude(review_status='DENIED').filter(
                         Q(company_name__icontains=user_query)
                         | Q(investment_focus__icontains=user_query)
                         | Q(location__icontains=user_query)
