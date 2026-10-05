@@ -319,7 +319,7 @@
     #aiAgentSidebar.zelda-fullscreen .offcanvas-body {
         display: grid !important;
         grid-template-columns: 240px minmax(0, 1fr);
-        grid-template-rows: minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr) auto;
         min-height: 0;
         gap: 0;
         overflow: hidden;
@@ -350,7 +350,7 @@
        Bound it to the second grid cell so long reports scroll independently. */
     #aiAgentSidebar.zelda-fullscreen .offcanvas-body > .tab-content {
         grid-column: 2;
-        grid-row: 1;
+        grid-row: 1 / span 2;
         min-width: 0;
         min-height: 0;
         overflow-y: auto;
@@ -362,11 +362,16 @@
     #aiAgentSidebar .offcanvas-body { min-height: 0; }
     #aiAgentSidebar { max-width: 100vw; }
     #aiAgentSidebar .offcanvas-header { flex-shrink: 0; }
+    body:has(#aiAgentSidebar.show, #aiAgentSidebar.showing) #ai-agent-toggle { visibility: hidden; }
+    #aiAgentSidebar .zelda-activity { flex-shrink: 0; margin-top: 1rem; color: #64748b; font-size: 0.8rem; }
+    #aiAgentSidebar .zelda-activity summary { cursor: pointer; padding: 0.5rem; }
+    #aiAgentSidebar .zelda-activity .zelda-log { max-height: 180px; margin-top: 0.5rem; }
+    #aiAgentSidebar.zelda-fullscreen .zelda-activity { grid-column: 1; grid-row: 2; min-width: 0; }
 
     @media (max-width: 767.98px) {
         #aiAgentSidebar.zelda-fullscreen .offcanvas-body {
             grid-template-columns: minmax(0, 1fr);
-            grid-template-rows: auto minmax(0, 1fr);
+            grid-template-rows: auto minmax(0, 1fr) auto;
         }
         #aiAgentSidebar.zelda-fullscreen .zelda-tabs {
             flex-direction: row;
@@ -384,6 +389,8 @@
             grid-row: 2;
             padding: 1rem 0;
         }
+        #aiAgentSidebar.zelda-fullscreen .zelda-activity { grid-row: 3; margin-top: 0; }
+        #aiAgentSidebar.zelda-fullscreen .zelda-activity .zelda-log { max-height: 15dvh; }
     }
 
     #aiAgentSidebar.zelda-fullscreen .zelda-tab.active {
@@ -799,6 +806,8 @@
         </div>
 
         <!-- EXECUTION LOG -->
+        <details class="zelda-activity">
+        <summary>Processing activity</summary>
         <div class="zelda-log" id="agent-response-log">
             <div style="padding-right: 1rem; position: relative; z-index: 10;">
                 <div class="log-entry info">
@@ -809,6 +818,7 @@
                 </div>
             </div>
         </div>
+        </details>
     </div>
 </div>
 
@@ -856,7 +866,7 @@
             const tabName = this.dataset.tab;
             
             // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(content => {
+            document.querySelectorAll('#aiAgentSidebar .tab-content').forEach(content => {
                 content.style.display = 'none';
             });
             
