@@ -341,7 +341,7 @@ def get_time_to_value_metrics():
     def _role_row(label, model, vector_field, completion_time_field,
                   interest_model, interest_fk_field,
                   connection_model, connection_fk_field, connection_status):
-        base = model.objects.all()
+        base = model.objects.filter(is_internal_profile=False)
 
         profile_complete_qs = base.filter(**{f'{vector_field}__isnull': False}).annotate(
             delta=ExpressionWrapper(F(completion_time_field) - F('created_at'), output_field=DurationField())
@@ -496,7 +496,7 @@ def get_acquisition_metrics():
 
     registrations_by_day = {}
     for model in (Application, InvestorApplication, SellerApplication, BuyerApplication):
-        for row in model.objects.filter(created_at__gte=thirty_days_ago).values('created_at__date').annotate(count=Count('id')):
+        for row in model.objects.filter(is_internal_profile=False, created_at__gte=thirty_days_ago).values('created_at__date').annotate(count=Count('id')):
             day = row['created_at__date'].isoformat()
             registrations_by_day[day] = registrations_by_day.get(day, 0) + row['count']
     registrations_sorted = sorted(registrations_by_day.items())
@@ -537,8 +537,9 @@ def get_activation_metrics():
     rows = []
 
     def _row(label, model, vector_field, completion_time_field, interest_model, actor_fk_field, first_view_source):
-        total = model.objects.count()
-        complete_qs = model.objects.filter(**{f'{vector_field}__isnull': False})
+        base = model.objects.filter(is_internal_profile=False)
+        total = base.count()
+        complete_qs = base.filter(**{f'{vector_field}__isnull': False})
         complete_count = complete_qs.count()
         completion_rate = round((complete_count / total) * 100, 1) if total else 0
 
@@ -555,7 +556,7 @@ def get_activation_metrics():
         first_zelda_subquery = interest_model.objects.filter(
             **{actor_fk_field: OuterRef('pk'), 'event_type__in': ZELDA_EVENT_TYPES}
         ).order_by('created_at').values('created_at')[:1]
-        zelda_qs = model.objects.annotate(
+        zelda_qs = base.annotate(
             first_zelda=Subquery(first_zelda_subquery)
         ).filter(first_zelda__isnull=False).annotate(
             delta=ExpressionWrapper(F('first_zelda') - F('created_at'), output_field=DurationField())
@@ -565,7 +566,7 @@ def get_activation_metrics():
         first_match_subquery = interest_model.objects.filter(
             **{actor_fk_field: OuterRef('pk'), 'event_type': 'view'}
         ).order_by('created_at').values('created_at')[:1]
-        match_qs = model.objects.annotate(
+        match_qs = base.annotate(
             first_match=Subquery(first_match_subquery)
         ).filter(first_match__isnull=False).annotate(
             delta=ExpressionWrapper(F('first_match') - F('created_at'), output_field=DurationField())
@@ -594,10 +595,10 @@ def get_engagement_metrics():
     week_ago = timezone.now() - timedelta(days=7)
 
     wau = {
-        'founder': User.objects.filter(last_login__gte=week_ago, match_founder_profile__isnull=False).count(),
-        'investor': User.objects.filter(last_login__gte=week_ago, match_investor_profile__isnull=False).count(),
-        'seller': User.objects.filter(last_login__gte=week_ago, match_seller_profile__isnull=False).count(),
-        'buyer': User.objects.filter(last_login__gte=week_ago, match_buyer_profile__isnull=False).count(),
+        'founder': User.objects.filter(last_login__gte=week_ago, match_founder_profile__isnull=False, match_founder_profile__is_internal_profile=False).count(),
+        'investor': User.objects.filter(last_login__gte=week_ago, match_investor_profile__isnull=False, match_investor_profile__is_internal_profile=False).count(),
+        'seller': User.objects.filter(last_login__gte=week_ago, match_seller_profile__isnull=False, match_seller_profile__is_internal_profile=False).count(),
+        'buyer': User.objects.filter(last_login__gte=week_ago, match_buyer_profile__isnull=False, match_buyer_profile__is_internal_profile=False).count(),
     }
 
     recent_searches = SearchEvent.objects.filter(created_at__gte=week_ago)
