@@ -48,7 +48,9 @@ class FixtureIntegrityTests(SimpleTestCase):
         for name in ('manychat', 'ben_jerrys'):
             fixture = load_fixture(name)
             path = Path(settings.BASE_DIR) / fixture['source']['path']
-            raw = path.read_bytes()
+            # Git stores these files with LF; a Windows checkout writes CRLF. Hash the
+            # LF form so the check means the same thing on every machine and in CI.
+            raw = path.read_bytes().replace(b'\r\n', b'\n')
             self.assertEqual(hashlib.sha256(raw).hexdigest(), fixture['source']['sha256'], name)
             stored = [(r['page_number'], r['raw_text']) for r in json.loads(raw.decode('utf-8'))]
             self.assertEqual([(c['page_number'], c['raw_text']) for c in fixture['chunks']], stored, name)

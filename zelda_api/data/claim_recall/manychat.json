@@ -4,7 +4,7 @@
   "note": "Frozen BEFORE the PR 1 code change (claim-extraction recall). Chunk text is copied verbatim from the stored audit run; nothing was re-uploaded. Do not edit to make a test pass: a changed expectation is a new decision and needs its own justification. The answer key and ledger it derives from are frozen and are not edited.",
   "source": {
     "path": "docs/baselines/manychat/run/02_chunks.json",
-    "sha256": "3938e252b7d2c91680b3ea8313ddc747b320c925defda476759032de933bee11",
+    "sha256": "8269af1c3e8e12f758c92f714ca6979783df1869291adef49ab70942b4db32ba",
     "answer_key": "docs/baselines/manychat/ANSWER_KEY.md",
     "ledger": "docs/baselines/manychat/LEDGER.md"
   },

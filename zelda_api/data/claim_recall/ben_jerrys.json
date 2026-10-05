@@ -4,7 +4,7 @@
   "note": "Frozen BEFORE the PR 1 code change (claim-extraction recall). Chunk text is copied verbatim from the stored audit run; nothing was re-uploaded. Do not edit to make a test pass: a changed expectation is a new decision and needs its own justification. The answer key and ledger it derives from are frozen and are not edited.",
   "source": {
     "path": "docs/baselines/ben-jerrys/run/02_chunks.json",
-    "sha256": "8ee90244413c2dfd69da127b2bbce6cb963ca304cc25019dc5773e135f39af53",
+    "sha256": "e3a9866ead0f7f98e051ccc9e4775c137150bbb0083c22a51488902da10ee8ab",
     "answer_key": "docs/baselines/ben-jerrys/ANSWER_KEY.md",
     "ledger": "docs/baselines/ben-jerrys/LEDGER.md"
   },
