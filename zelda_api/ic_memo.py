@@ -335,6 +335,14 @@ def zelda_report_observations(memo, pitch_deck_doc):
     return {'noticed': noticed[:3], 'worth_investigating': deduped[:4]}
 
 
+# What the memo says in place of a valuation the founder has not unlocked.
+# States the fact, names no price, and never hints at the number.
+VALUATION_LOCKED_NOTE = (
+    'The valuation range and methodology are in the full valuation report, '
+    'which has not been unlocked.'
+)
+
+
 def build_ic_memo_context(founder_application, tier='full', viewer=None):
     """
     Assembles everything an IC memo needs for one founder. Every piece is
@@ -411,19 +419,34 @@ def build_ic_memo_context(founder_application, tier='full', viewer=None):
     if tier == 'full':
         if valuation_doc and hasattr(valuation_doc, 'valuation_report'):
             vr = valuation_doc.valuation_report
+            # The memo follows the valuation's OWN paywall. A 'preview'-tier
+            # valuation hides its range and methodology on the valuation page
+            # (valuation_preview.build_valuation_response) until the founder
+            # unlocks it, for every viewer including staff. The memo used to
+            # copy both straight from the report, so a founder's unpaid range
+            # was readable here -- and an IC memo is built to be shared with
+            # investors (three-deck audit, A-1). Locked fields are never put in
+            # the context, so they cannot leak through the page or the export.
+            unlocked = valuation_doc.valuation_tier == 'full'
             valuation = {
-                'valuation_low': vr.valuation_low,
-                'valuation_high': vr.valuation_high,
-                'valuation_summary': vr.valuation_summary,
+                'unlocked': unlocked,
                 # "Disclosure Coverage" (was labelled "Analysis confidence"):
                 # BusinessValuationReport.confidence_score is stored 0-1
                 # (compute_overall_confidence — the average across 8 business
                 # dimensions of how explicitly the documents cover each).
                 # Present it 0-100 to sit next to the memo's other figures.
                 # It measures the founder's documents, not confidence in the
-                # valuation. See PR #14.
+                # valuation. See PR #14. Shown in the free preview too.
                 'disclosure_coverage': round((vr.confidence_score or 0) * 100),
             }
+            if not unlocked:
+                valuation['locked_note'] = VALUATION_LOCKED_NOTE
+            else:
+                valuation.update({
+                    'valuation_low': vr.valuation_low,
+                    'valuation_high': vr.valuation_high,
+                    'valuation_summary': vr.valuation_summary,
+                })
 
         deck_engagement = get_deck_engagement_stats(founder_application)
 
@@ -529,13 +552,15 @@ def render_ic_memo_markdown(context):
     if context['valuation']:
         v = context['valuation']
         lines.append('## Valuation')
-        if v['valuation_low'] is not None and v['valuation_high'] is not None:
+        if not v['unlocked']:
+            lines.append(VALUATION_LOCKED_NOTE)
+        elif v['valuation_low'] is not None and v['valuation_high'] is not None:
             lines.append(f"**Range:** ${v['valuation_low']:,.0f} – ${v['valuation_high']:,.0f}")
         # "Disclosure Coverage" — how fully the founder's documents cover the
         # 8 business dimensions the valuation uses; a read on the documents,
         # not confidence in the valuation. Matches the full Valuation report.
         lines.append(f"**Disclosure Coverage:** {v['disclosure_coverage']}/100 — how fully the submitted documents cover the dimensions this valuation uses, not confidence in the valuation itself")
-        if v['valuation_summary']:
+        if v.get('valuation_summary'):
             lines.append(v['valuation_summary'])
         lines.append('')
 

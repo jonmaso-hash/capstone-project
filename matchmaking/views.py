@@ -1028,13 +1028,20 @@ def seller_dashboard(request):
     # Zelda tie-in: surface the seller's most recent business valuation as a
     # suggested asking-price reference, if they've run one.
     suggested_valuation = None
+    suggested_valuation_locked = False
     try:
         from zelda_api.vector_models import DocumentSource
         recent_doc = DocumentSource.objects.filter(
             uploaded_by=request.user, document_type='business_valuation'
         ).order_by('-created_at').first()
         if recent_doc and hasattr(recent_doc, 'valuation_report'):
-            suggested_valuation = recent_doc.valuation_report
+            # Same paywall as the valuation page: a 'preview' valuation's range
+            # is the thing the seller has not unlocked, so it is never passed
+            # to the template (three-deck audit, A-1).
+            if recent_doc.valuation_tier == 'full':
+                suggested_valuation = recent_doc.valuation_report
+            else:
+                suggested_valuation_locked = True
     except Exception as e:
         logger.warning(f"Failed to look up business valuation for seller dashboard: {str(e)}")
 
@@ -1049,6 +1056,7 @@ def seller_dashboard(request):
         'pending_requests': pending_requests,
         'accepted_connections': accepted_connections,
         'suggested_valuation': suggested_valuation,
+        'suggested_valuation_locked': suggested_valuation_locked,
         'platform_insights': platform_insights,
         'filters': {
             'structure': filter_structure,
