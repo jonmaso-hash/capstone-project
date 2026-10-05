@@ -159,6 +159,41 @@ class ZeldaLibraryAPIView(APIView):
 ZELDA_ASK_DAILY_LIMIT = 30
 
 
+def _founder_analysis_investor(viewer):
+    """The investor role accepted by both search actions and analysis views."""
+    if viewer is None or not viewer.is_authenticated:
+        return None
+    return (
+        getattr(viewer, 'accounts_investor_profile', None) or
+        getattr(viewer, 'match_investor_profile', None)
+    )
+
+
+def _discoverable_accounts():
+    """Username lookup follows the same discovery gates as company lookup.
+
+    A community account without any marketplace role remains searchable.
+    Holding a hidden role does not conceal another discoverable role, but
+    the account result never describes that hidden role or its company.
+    Owners and staff use their direct profile links for hidden profiles;
+    search is a discovery surface even for them.
+    """
+    from matchmaking.models import (
+        Application, InvestorApplication, SellerApplication, BuyerApplication,
+        DM_ROLE_PROFILE_ATTRS,
+    )
+
+    no_roles = Q(**{f'{attr}__isnull': True for attr in DM_ROLE_PROFILE_ATTRS})
+    discoverable = no_roles
+    for model in (Application, InvestorApplication, SellerApplication, BuyerApplication):
+        discoverable |= Q(pk__in=model.objects.discoverable().exclude(
+            review_status='DENIED',
+        ).values('user_id'))
+    return UserClass.objects.filter(discoverable).filter(
+        is_staff=False, is_superuser=False, is_active=True,
+    )
+
+
 def _founder_to_result_dict(app, viewer=None):
     """
     Builds the standard founder search-result dict — shared by
@@ -170,7 +205,12 @@ def _founder_to_result_dict(app, viewer=None):
     except NoReverseMatch:
         url = f"/accounts/profile/{app.user.username}/"
 
-    from matchmaking.models import can_view_profile_field
+    from matchmaking.models import can_view_profile_field, founder_is_visible_to
+
+    can_analyze = bool(
+        app.pitch_deck and _founder_analysis_investor(viewer)
+        and founder_is_visible_to(viewer, app)
+    )
 
     return {
         'type': 'Founder Profile',
@@ -189,6 +229,7 @@ def _founder_to_result_dict(app, viewer=None):
         'executive_summary': (app.description or "")[:200] + '...',
         'funding_stage': getattr(app, 'funding_stage', 'Seed'),
         'has_pitch_deck': bool(app.pitch_deck),
+        'available_actions': ['analyze_founder'] if can_analyze else [],
         'url': url,
     }
 
@@ -265,13 +306,22 @@ class ZeldaGlobalSearchAPIView(APIView):
 
         try:
             # 1. Username / account drilldown
-            user_matches = UserClass.objects.filter(
+            user_matches = _discoverable_accounts().filter(
                 Q(username__icontains=clean_username_query)
                 | Q(first_name__icontains=clean_username_query)
                 | Q(last_name__icontains=clean_username_query)
-            ).filter(is_staff=False, is_superuser=False, is_active=True).distinct()[:5]
+            ).select_related('match_founder_profile').distinct()[:5]
 
             for matched_user in user_matches:
+                # Account-name search must not act as an oracle for a hidden
+                # founder_name. Username lookup remains available for public
+                # profiles, without disclosing the person's account name.
+                founder = getattr(matched_user, 'match_founder_profile', None)
+                from matchmaking.models import can_view_profile_field
+                if (founder is not None
+                        and clean_username_query.lower() not in matched_user.username.lower()
+                        and not can_view_profile_field(request.user, founder, 'founder_name')):
+                    continue
                 try:
                     url = reverse('accounts:profile', kwargs={'username': matched_user.username})
                 except NoReverseMatch:
@@ -280,21 +330,10 @@ class ZeldaGlobalSearchAPIView(APIView):
                 if url in seen_urls:
                     continue
 
-                if hasattr(matched_user, 'match_investor_profile'):
-                    role_label = "Investor Profile Account"
-                    desc = f"Verified Investor mandate profile for @{matched_user.username}."
-                elif hasattr(matched_user, 'match_founder_profile'):
-                    role_label = "Founder Profile Account"
-                    founder_app = matched_user.match_founder_profile
-                    desc = f"Founder profile for @{matched_user.username} managing {founder_app.company_name or 'a registered venture'}."
-                else:
-                    role_label = "User Network Profile"
-                    desc = f"Community member profile page for @{matched_user.username}."
-
                 results.append({
-                    'type': role_label,
-                    'title': f"User Profile: {matched_user.get_full_name() or matched_user.username}",
-                    'description': desc,
+                    'type': 'User Network Profile',
+                    'title': f"User Profile: @{matched_user.username}",
+                    'description': f"Profile page for @{matched_user.username}.",
                     'url': url,
                 })
                 seen_urls.add(url)
@@ -351,7 +390,7 @@ class ZeldaGlobalSearchAPIView(APIView):
                     ).exclude(review_status='DENIED').select_related('user')[:5]
 
                     for app in founder_matches:
-                        result = _founder_to_result_dict(app)
+                        result = _founder_to_result_dict(app, viewer=request.user)
                         if result['url'] in seen_urls:
                             continue
 
@@ -362,7 +401,7 @@ class ZeldaGlobalSearchAPIView(APIView):
                     # Privacy Gatekeeper: same rule as founder_matches above — this
                     # previously had no is_private/archived filter at all, letting
                     # Zelda search surface private and archived investor mandates.
-                    investor_matches = InvestorApplication.objects.discoverable().filter(
+                    investor_matches = InvestorApplication.objects.discoverable().exclude(review_status='DENIED').filter(
                         Q(company_name__icontains=user_query)
                         | Q(investment_focus__icontains=user_query)
                         | Q(location__icontains=user_query)
@@ -1248,10 +1287,7 @@ def _founder_investor_context(request, founder_username):
     from django.contrib.auth import get_user_model
     User = get_user_model()
 
-    investor_profile = (
-        getattr(request.user, 'accounts_investor_profile', None) or
-        getattr(request.user, 'match_investor_profile', None)
-    )
+    investor_profile = _founder_analysis_investor(request.user)
     if not investor_profile:
         return None, JsonResponse({'status': 'error', 'message': 'Investor access required'}, status=403)
 
