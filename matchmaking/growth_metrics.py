@@ -484,7 +484,7 @@ def get_marketplace_liquidity_funnel():
             id__in=AcquisitionInterestEvent.objects.filter(buyer__match_buyer_profile__is_internal_profile=False, seller__is_internal_profile=False).filter(event_type='message_sent').values_list('seller_id', flat=True)
         ).count()),
         ('Deals Completed', SellerApplication.objects.filter(is_internal_profile=False).filter(
-            id__in=AcquisitionConnection.objects.filter(investor__is_internal_profile=False, founder__is_internal_profile=False).filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).filter(status='CLOSED').values_list('seller_id', flat=True)
+            id__in=AcquisitionConnection.objects.filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).filter(status='CLOSED').values_list('seller_id', flat=True)
         ).count()),
     ])
 
@@ -626,7 +626,7 @@ def get_engagement_metrics():
 
 
 def get_value_creation_metrics():
-    introductions_made = Connection.objects.filter(investor__is_internal_profile=False, founder__is_internal_profile=False).count() + AcquisitionConnection.objects.filter(investor__is_internal_profile=False, founder__is_internal_profile=False).filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).count()
+    introductions_made = Connection.objects.filter(investor__is_internal_profile=False, founder__is_internal_profile=False).count() + AcquisitionConnection.objects.filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).count()
 
     # "Meetings scheduled" isn't trackable — there's no calendar feature —
     # so this counts actual message_sent events as an honest proxy instead.
@@ -636,10 +636,10 @@ def get_value_creation_metrics():
     )
 
     funding_conversations = Connection.objects.filter(investor__is_internal_profile=False, founder__is_internal_profile=False).filter(status='ACCEPTED').count()
-    acquisition_conversations = AcquisitionConnection.objects.filter(investor__is_internal_profile=False, founder__is_internal_profile=False).filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).filter(status='ACCEPTED').count()
+    acquisition_conversations = AcquisitionConnection.objects.filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).filter(status='ACCEPTED').count()
     completed_deals = (
         Connection.objects.filter(investor__is_internal_profile=False, founder__is_internal_profile=False).filter(status='FUNDED').count()
-        + AcquisitionConnection.objects.filter(investor__is_internal_profile=False, founder__is_internal_profile=False).filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).filter(status='CLOSED').count()
+        + AcquisitionConnection.objects.filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).filter(status='CLOSED').count()
     )
 
     return {
