@@ -1046,10 +1046,11 @@ def truth_delta_ui_view(request, document_id):
     # owner, staff, or someone granted it -- and never depends on the founder's
     # Premium. See zelda_api/entity_verification.py.
     from .entity_verification import (
-        can_request_identity_check, display_rows, latest_viewable_report, subject_for_document,
+        CHECK_FAILED_MESSAGE, can_request_identity_check, display_rows, latest_viewable_report, subject_for_document,
     )
     entity_report = latest_viewable_report(request.user, document)
     context['entity_report'] = entity_report
+    context['identity_check_failed_message'] = CHECK_FAILED_MESSAGE
     context['entity_rows'] = display_rows(entity_report) if entity_report else []
     identity_subject = subject_for_document(document)
     context['identity_check_subject_id'] = (
@@ -1068,7 +1069,7 @@ def identity_check_request(request, profile_id):
     requester that report. A hidden company answers like a missing one.
     """
     from matchmaking.models import Application, founder_is_visible_to
-    from .entity_verification import IdentityCheckLimited, can_request_identity_check, request_identity_check
+    from .entity_verification import CHECK_FAILED_MESSAGE, IdentityCheckLimited, can_request_identity_check, request_identity_check
     from .entity_verification_models import EntityVerificationReport
 
     application = Application.objects.filter(pk=profile_id).first()
@@ -1089,20 +1090,23 @@ def identity_check_request(request, profile_id):
         'status': report.status,
         'checked_at': report.checked_at.isoformat() if report.checked_at else None,
         'status_url': reverse('zelda_api:identity_check_status', args=[report.id]),
+        'message': CHECK_FAILED_MESSAGE if report.status == EntityVerificationReport.FAILED else '',
     }, status=202 if report.status == EntityVerificationReport.PENDING else 200)
 
 
 @login_required
 def identity_check_status(request, report_id):
-    from .entity_verification import can_view_entity_report
+    from .entity_verification import CHECK_FAILED_MESSAGE, can_view_entity_report, refresh_identity_check_status
     from .entity_verification_models import EntityVerificationReport
 
     report = EntityVerificationReport.objects.filter(pk=report_id).first()
     if report is None or not can_view_entity_report(request.user, report):
         return JsonResponse({'error': 'Not found.'}, status=404)
+    refresh_identity_check_status(report)
     return JsonResponse({
         'status': report.status,
         'checked_at': report.checked_at.isoformat() if report.checked_at else None,
+        'message': CHECK_FAILED_MESSAGE if report.status == EntityVerificationReport.FAILED else '',
     })
 
 
