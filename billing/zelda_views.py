@@ -19,6 +19,10 @@ from .zelda_catalog import PRODUCTS, REPORTS, catalog, selected_reports
 logger = logging.getLogger(__name__)
 
 
+class ProductPaymentConfigurationError(ValueError):
+    pass
+
+
 def plain(value):
     return value.to_dict() if isinstance(value, stripe.StripeObject) else value
 
@@ -26,25 +30,28 @@ def plain(value):
 def stripe_price(product):
     """Use an existing active catalog Price; never create a replacement product."""
     name, amount, _ = PRODUCTS[product]
+    api_key = settings.STRIPE_SECRET_KEY.strip()
+    if not api_key:
+        raise ProductPaymentConfigurationError('STRIPE_SECRET_KEY is missing on the web service')
     account = hashlib.sha256(settings.STRIPE_SECRET_KEY.encode()).hexdigest()[:12]
     key = f'zelda_price:{account}:{product}'
     price_id = cache.get(key)
     if not price_id:
-        products = stripe.Product.list(active=True, limit=100)
+        products = stripe.Product.list(active=True, limit=100, api_key=api_key)
         matches = [plain(p) for p in products.auto_paging_iter() if plain(p).get('name', '').casefold() == name.casefold()]
         if len(matches) != 1:
-            raise ValueError('The product must have one matching active Stripe catalog entry.')
-        prices = plain(stripe.Price.list(product=matches[0]['id'], active=True, limit=100)).get('data', [])
+            raise ProductPaymentConfigurationError('The product must have one matching active Stripe catalog entry.')
+        prices = plain(stripe.Price.list(product=matches[0]['id'], active=True, limit=100, api_key=api_key)).get('data', [])
         matches = [plain(p) for p in prices if plain(p).get('currency') == 'usd'
                    and plain(p).get('unit_amount') == amount and plain(p).get('type') == 'one_time']
         if len(matches) != 1:
-            raise ValueError('The product must have one matching active USD one-time price.')
+            raise ProductPaymentConfigurationError('The product must have one matching active USD one-time price.')
         price_id = matches[0]['id']
         cache.set(key, price_id, 3600)
-    price = plain(stripe.Price.retrieve(price_id))
+    price = plain(stripe.Price.retrieve(price_id, api_key=api_key))
     if not price.get('active') or price.get('currency') != 'usd' or price.get('unit_amount') != amount or price.get('type') != 'one_time':
         cache.delete(key)
-        raise ValueError('The configured catalog price does not match the product.')
+        raise ProductPaymentConfigurationError('The configured catalog price does not match the product.')
     return price_id
 
 
@@ -191,9 +198,13 @@ def product_checkout(request):
             success_url=order_url, cancel_url=order_url,
             metadata={'purpose': 'zelda_product', 'order_id': str(order.id), 'user_id': str(request.user.id)},
             idempotency_key=f'zelda-order-{order.id}',
+            api_key=settings.STRIPE_SECRET_KEY.strip(),
         ))
         order.stripe_session_id, order.checkout_url = session['id'], session['url']
         order.save(update_fields=['stripe_session_id', 'checkout_url'])
+    except ProductPaymentConfigurationError:
+        logger.exception('Zelda product payment configuration unavailable for order %s', order.id)
+        return JsonResponse({'error': 'Payments are not configured for this product yet. Please try again later. Nothing was charged.'}, status=503)
     except Exception:
         logger.exception('Could not create Zelda product checkout %s', order.id)
         return JsonResponse({'error': 'Checkout is currently unavailable. Nothing was charged. Please try again.'}, status=503)

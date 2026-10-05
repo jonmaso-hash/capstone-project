@@ -3,7 +3,7 @@ from unittest import mock
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase, SimpleTestCase, RequestFactory
+from django.test import TestCase, SimpleTestCase, RequestFactory, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from .models import ZeldaOrder
@@ -13,6 +13,7 @@ from zelda_api.vector_models import DocumentSource, IntelligenceMemo, BusinessVa
 User = get_user_model()
 
 
+@override_settings(STRIPE_SECRET_KEY='sk_test_zelda_ci_only')
 class ZeldaProductTests(TestCase):
     def setUp(self):
         from matchmaking.tests import _mock_embedding_generation
@@ -69,6 +70,7 @@ class ZeldaProductTests(TestCase):
         checkout.assert_called_once()
         self.assertEqual(checkout.call_args.kwargs['line_items'], [{'price':'price_ic','quantity':1}])
         self.assertEqual(checkout.call_args.kwargs['mode'],'payment')
+        self.assertEqual(checkout.call_args.kwargs['api_key'],'sk_test_zelda_ci_only')
         generate.assert_not_called()
         self.assertEqual(ZeldaOrder.objects.get().amount,499)
 
@@ -232,11 +234,22 @@ class ZeldaProductTests(TestCase):
     def test_existing_active_stripe_price_must_match_amount_and_currency(self):
         from .zelda_views import stripe_price
         price={'id':'price_real','unit_amount':499,'currency':'usd','type':'one_time','active':True}
-        with mock.patch('stripe.Product.list') as products, mock.patch('stripe.Price.list',return_value={'data':[price]}), mock.patch('stripe.Price.retrieve',return_value=price):
+        with mock.patch('stripe.Product.list') as products, mock.patch('stripe.Price.list',return_value={'data':[price]}) as prices, mock.patch('stripe.Price.retrieve',return_value=price) as retrieve:
             products.return_value.auto_paging_iter.return_value=iter([{'id':'prod_real','name':'Zelda IC Memo'}])
             self.assertEqual(stripe_price('ic_memo'),'price_real')
+            self.assertEqual(products.call_args.kwargs['api_key'],'sk_test_zelda_ci_only')
+            self.assertEqual(prices.call_args.kwargs['api_key'],'sk_test_zelda_ci_only')
+            self.assertEqual(retrieve.call_args.kwargs['api_key'],'sk_test_zelda_ci_only')
         with mock.patch('stripe.Price.retrieve',return_value={**price,'unit_amount':500}):
             with self.assertRaises(ValueError): stripe_price('ic_memo')
+
+    @override_settings(STRIPE_SECRET_KEY='')
+    def test_missing_stripe_key_is_explained_before_any_stripe_request(self):
+        with mock.patch('stripe.Product.list') as products, mock.patch('stripe.checkout.Session.create') as checkout:
+            response=self.checkout()
+        self.assertEqual(response.status_code,503)
+        self.assertIn('Payments are not configured',response.json()['error'])
+        products.assert_not_called();checkout.assert_not_called()
 
 
 class ProductSearchDiscoveryTests(SimpleTestCase):
