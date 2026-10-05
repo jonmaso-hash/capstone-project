@@ -133,10 +133,10 @@ def get_seller_buyer_funnel():
         id__in=AcquisitionInterestEvent.objects.filter(buyer__match_buyer_profile__is_internal_profile=False, seller__is_internal_profile=False).values_list('seller_id', flat=True).distinct()
     ).count()
     seller_intro_sent = SellerApplication.objects.filter(is_internal_profile=False).filter(
-        id__in=AcquisitionConnection.objects.filter(investor__is_internal_profile=False, founder__is_internal_profile=False).filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).values_list('seller_id', flat=True).distinct()
+        id__in=AcquisitionConnection.objects.filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).values_list('seller_id', flat=True).distinct()
     ).count()
     seller_intro_accepted = SellerApplication.objects.filter(is_internal_profile=False).filter(
-        id__in=AcquisitionConnection.objects.filter(investor__is_internal_profile=False, founder__is_internal_profile=False).filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).filter(status='ACCEPTED').values_list('seller_id', flat=True).distinct()
+        id__in=AcquisitionConnection.objects.filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).filter(status='ACCEPTED').values_list('seller_id', flat=True).distinct()
     ).count()
     seller_deal_room = SellerApplication.objects.filter(is_internal_profile=False).filter(
         id__in=AcquisitionInterestEvent.objects.filter(buyer__match_buyer_profile__is_internal_profile=False, seller__is_internal_profile=False).filter(event_type='message_sent').values_list('seller_id', flat=True).distinct()
@@ -165,10 +165,10 @@ def get_seller_buyer_funnel():
         user__in=AcquisitionInterestEvent.objects.filter(buyer__match_buyer_profile__is_internal_profile=False, seller__is_internal_profile=False).values_list('buyer_id', flat=True).distinct()
     ).count()
     buyer_intro_sent = BuyerApplication.objects.filter(is_internal_profile=False).filter(
-        id__in=AcquisitionConnection.objects.filter(investor__is_internal_profile=False, founder__is_internal_profile=False).filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).values_list('buyer_id', flat=True).distinct()
+        id__in=AcquisitionConnection.objects.filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).values_list('buyer_id', flat=True).distinct()
     ).count()
     buyer_intro_accepted = BuyerApplication.objects.filter(is_internal_profile=False).filter(
-        id__in=AcquisitionConnection.objects.filter(investor__is_internal_profile=False, founder__is_internal_profile=False).filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).filter(status='ACCEPTED').values_list('buyer_id', flat=True).distinct()
+        id__in=AcquisitionConnection.objects.filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).filter(status='ACCEPTED').values_list('buyer_id', flat=True).distinct()
     ).count()
     buyer_deal_room = BuyerApplication.objects.filter(is_internal_profile=False).filter(
         user__in=AcquisitionInterestEvent.objects.filter(buyer__match_buyer_profile__is_internal_profile=False, seller__is_internal_profile=False).filter(event_type='message_sent').values_list('buyer_id', flat=True).distinct()
