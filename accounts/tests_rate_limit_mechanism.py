@@ -47,6 +47,8 @@ class LockedLimitsTests(TestCase):
             # platform and a global one protects SEC's fair-access policy.
             'identity_check_user': (10, timedelta(days=1)),
             'identity_check_global': (200, timedelta(hours=1)),
+            'zelda_company_search_user': (30, timedelta(days=1)),
+            'zelda_product_intake_user': (20, timedelta(days=1)),
         })
 
     def test_each_scope_allows_exactly_its_limit(self):
