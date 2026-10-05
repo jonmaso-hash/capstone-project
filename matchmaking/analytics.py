@@ -60,7 +60,7 @@ def get_founder_investor_funnel():
     founder_signups = Application.objects.filter(is_internal_profile=False).count()
     founder_profile_complete = Application.objects.filter(is_internal_profile=False).filter(description_vector__isnull=False).count()
     founder_matched = Application.objects.filter(is_internal_profile=False).filter(
-        id__in=InvestorInterestEvent.objects.filter(investor__match_investor_profile__is_internal_profile=False, founder__is_internal_profile=False).values_list('founder_id', flat=True).distinct()
+        id__in=InvestorInterestEvent.objects.exclude(investor__match_investor_profile__is_internal_profile=True).filter(founder__is_internal_profile=False).values_list('founder_id', flat=True).distinct()
     ).count()
     founder_intro_sent = Application.objects.filter(is_internal_profile=False).filter(
         id__in=Connection.objects.filter(investor__is_internal_profile=False, founder__is_internal_profile=False).values_list('founder_id', flat=True).distinct()
@@ -69,10 +69,10 @@ def get_founder_investor_funnel():
         id__in=Connection.objects.filter(investor__is_internal_profile=False, founder__is_internal_profile=False).filter(status='ACCEPTED').values_list('founder_id', flat=True).distinct()
     ).count()
     founder_deal_room = Application.objects.filter(is_internal_profile=False).filter(
-        id__in=InvestorInterestEvent.objects.filter(investor__match_investor_profile__is_internal_profile=False, founder__is_internal_profile=False).filter(event_type='message_sent').values_list('founder_id', flat=True).distinct()
+        id__in=InvestorInterestEvent.objects.exclude(investor__match_investor_profile__is_internal_profile=True).filter(founder__is_internal_profile=False).filter(event_type='message_sent').values_list('founder_id', flat=True).distinct()
     ).count()
     founder_zelda_used = Application.objects.filter(is_internal_profile=False).filter(
-        id__in=InvestorInterestEvent.objects.filter(investor__match_investor_profile__is_internal_profile=False, founder__is_internal_profile=False).filter(event_type__in=ZELDA_EVENT_TYPES).values_list('founder_id', flat=True).distinct()
+        id__in=InvestorInterestEvent.objects.exclude(investor__match_investor_profile__is_internal_profile=True).filter(founder__is_internal_profile=False).filter(event_type__in=ZELDA_EVENT_TYPES).values_list('founder_id', flat=True).distinct()
     ).count()
     founder_premium = Application.objects.filter(is_internal_profile=False).filter(is_premium=True).count()
 
@@ -92,7 +92,7 @@ def get_founder_investor_funnel():
     investor_signups = InvestorApplication.objects.filter(is_internal_profile=False).count()
     investor_profile_complete = InvestorApplication.objects.filter(is_internal_profile=False).filter(focus_vector__isnull=False).count()
     investor_matched = InvestorApplication.objects.filter(is_internal_profile=False).filter(
-        user__in=InvestorInterestEvent.objects.filter(investor__match_investor_profile__is_internal_profile=False, founder__is_internal_profile=False).values_list('investor_id', flat=True).distinct()
+        user__in=InvestorInterestEvent.objects.exclude(investor__match_investor_profile__is_internal_profile=True).filter(founder__is_internal_profile=False).values_list('investor_id', flat=True).distinct()
     ).count()
     investor_intro_sent = InvestorApplication.objects.filter(is_internal_profile=False).filter(
         id__in=Connection.objects.filter(investor__is_internal_profile=False, founder__is_internal_profile=False).values_list('investor_id', flat=True).distinct()
@@ -101,10 +101,10 @@ def get_founder_investor_funnel():
         id__in=Connection.objects.filter(investor__is_internal_profile=False, founder__is_internal_profile=False).filter(status='ACCEPTED').values_list('investor_id', flat=True).distinct()
     ).count()
     investor_deal_room = InvestorApplication.objects.filter(is_internal_profile=False).filter(
-        user__in=InvestorInterestEvent.objects.filter(investor__match_investor_profile__is_internal_profile=False, founder__is_internal_profile=False).filter(event_type='message_sent').values_list('investor_id', flat=True).distinct()
+        user__in=InvestorInterestEvent.objects.exclude(investor__match_investor_profile__is_internal_profile=True).filter(founder__is_internal_profile=False).filter(event_type='message_sent').values_list('investor_id', flat=True).distinct()
     ).count()
     investor_zelda_used = InvestorApplication.objects.filter(is_internal_profile=False).filter(
-        user__in=InvestorInterestEvent.objects.filter(investor__match_investor_profile__is_internal_profile=False, founder__is_internal_profile=False).filter(event_type__in=ZELDA_EVENT_TYPES).values_list('investor_id', flat=True).distinct()
+        user__in=InvestorInterestEvent.objects.exclude(investor__match_investor_profile__is_internal_profile=True).filter(founder__is_internal_profile=False).filter(event_type__in=ZELDA_EVENT_TYPES).values_list('investor_id', flat=True).distinct()
     ).count()
     investor_premium = InvestorApplication.objects.filter(is_internal_profile=False).filter(is_premium=True).count()
 
@@ -130,7 +130,7 @@ def get_seller_buyer_funnel():
     seller_signups = SellerApplication.objects.filter(is_internal_profile=False).count()
     seller_profile_complete = SellerApplication.objects.filter(is_internal_profile=False).filter(description_vector__isnull=False).count()
     seller_matched = SellerApplication.objects.filter(is_internal_profile=False).filter(
-        id__in=AcquisitionInterestEvent.objects.filter(buyer__match_buyer_profile__is_internal_profile=False, seller__is_internal_profile=False).values_list('seller_id', flat=True).distinct()
+        id__in=AcquisitionInterestEvent.objects.exclude(buyer__match_buyer_profile__is_internal_profile=True).filter(seller__is_internal_profile=False).values_list('seller_id', flat=True).distinct()
     ).count()
     seller_intro_sent = SellerApplication.objects.filter(is_internal_profile=False).filter(
         id__in=AcquisitionConnection.objects.filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).values_list('seller_id', flat=True).distinct()
@@ -139,10 +139,10 @@ def get_seller_buyer_funnel():
         id__in=AcquisitionConnection.objects.filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).filter(status='ACCEPTED').values_list('seller_id', flat=True).distinct()
     ).count()
     seller_deal_room = SellerApplication.objects.filter(is_internal_profile=False).filter(
-        id__in=AcquisitionInterestEvent.objects.filter(buyer__match_buyer_profile__is_internal_profile=False, seller__is_internal_profile=False).filter(event_type='message_sent').values_list('seller_id', flat=True).distinct()
+        id__in=AcquisitionInterestEvent.objects.exclude(buyer__match_buyer_profile__is_internal_profile=True).filter(seller__is_internal_profile=False).filter(event_type='message_sent').values_list('seller_id', flat=True).distinct()
     ).count()
     seller_zelda_used = SellerApplication.objects.filter(is_internal_profile=False).filter(
-        id__in=AcquisitionInterestEvent.objects.filter(buyer__match_buyer_profile__is_internal_profile=False, seller__is_internal_profile=False).filter(event_type__in=ZELDA_EVENT_TYPES).values_list('seller_id', flat=True).distinct()
+        id__in=AcquisitionInterestEvent.objects.exclude(buyer__match_buyer_profile__is_internal_profile=True).filter(seller__is_internal_profile=False).filter(event_type__in=ZELDA_EVENT_TYPES).values_list('seller_id', flat=True).distinct()
     ).count()
     seller_premium = SellerApplication.objects.filter(is_internal_profile=False).filter(is_premium=True).count()
 
@@ -162,7 +162,7 @@ def get_seller_buyer_funnel():
     buyer_signups = BuyerApplication.objects.filter(is_internal_profile=False).count()
     buyer_profile_complete = BuyerApplication.objects.filter(is_internal_profile=False).filter(focus_vector__isnull=False).count()
     buyer_matched = BuyerApplication.objects.filter(is_internal_profile=False).filter(
-        user__in=AcquisitionInterestEvent.objects.filter(buyer__match_buyer_profile__is_internal_profile=False, seller__is_internal_profile=False).values_list('buyer_id', flat=True).distinct()
+        user__in=AcquisitionInterestEvent.objects.exclude(buyer__match_buyer_profile__is_internal_profile=True).filter(seller__is_internal_profile=False).values_list('buyer_id', flat=True).distinct()
     ).count()
     buyer_intro_sent = BuyerApplication.objects.filter(is_internal_profile=False).filter(
         id__in=AcquisitionConnection.objects.filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).values_list('buyer_id', flat=True).distinct()
@@ -171,10 +171,10 @@ def get_seller_buyer_funnel():
         id__in=AcquisitionConnection.objects.filter(buyer__is_internal_profile=False, seller__is_internal_profile=False).filter(status='ACCEPTED').values_list('buyer_id', flat=True).distinct()
     ).count()
     buyer_deal_room = BuyerApplication.objects.filter(is_internal_profile=False).filter(
-        user__in=AcquisitionInterestEvent.objects.filter(buyer__match_buyer_profile__is_internal_profile=False, seller__is_internal_profile=False).filter(event_type='message_sent').values_list('buyer_id', flat=True).distinct()
+        user__in=AcquisitionInterestEvent.objects.exclude(buyer__match_buyer_profile__is_internal_profile=True).filter(seller__is_internal_profile=False).filter(event_type='message_sent').values_list('buyer_id', flat=True).distinct()
     ).count()
     buyer_zelda_used = BuyerApplication.objects.filter(is_internal_profile=False).filter(
-        user__in=AcquisitionInterestEvent.objects.filter(buyer__match_buyer_profile__is_internal_profile=False, seller__is_internal_profile=False).filter(event_type__in=ZELDA_EVENT_TYPES).values_list('buyer_id', flat=True).distinct()
+        user__in=AcquisitionInterestEvent.objects.exclude(buyer__match_buyer_profile__is_internal_profile=True).filter(seller__is_internal_profile=False).filter(event_type__in=ZELDA_EVENT_TYPES).values_list('buyer_id', flat=True).distinct()
     ).count()
     buyer_premium = BuyerApplication.objects.filter(is_internal_profile=False).filter(is_premium=True).count()
 
@@ -208,7 +208,7 @@ def get_zelda_feature_usage():
     for event_type, label in feature_labels.items():
         rows.append({
             'label': label,
-            'investor': InvestorInterestEvent.objects.filter(investor__match_investor_profile__is_internal_profile=False, founder__is_internal_profile=False).filter(event_type=event_type).count(),
-            'buyer': AcquisitionInterestEvent.objects.filter(buyer__match_buyer_profile__is_internal_profile=False, seller__is_internal_profile=False).filter(event_type=event_type).count(),
+            'investor': InvestorInterestEvent.objects.exclude(investor__match_investor_profile__is_internal_profile=True).filter(founder__is_internal_profile=False).filter(event_type=event_type).count(),
+            'buyer': AcquisitionInterestEvent.objects.exclude(buyer__match_buyer_profile__is_internal_profile=True).filter(seller__is_internal_profile=False).filter(event_type=event_type).count(),
         })
     return rows
