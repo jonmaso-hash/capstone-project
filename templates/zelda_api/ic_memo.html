@@ -189,7 +189,14 @@
     {% if valuation %}
     <div class="mb-4 ic-memo-section">
         <h5 class="fw-bold border-bottom pb-2 mb-2">Valuation</h5>
-        {% if valuation.valuation_low is not None and valuation.valuation_high is not None %}
+        {% comment %}
+        The memo follows the valuation's own paywall: range and methodology
+        only once the founder has unlocked the valuation (valuation.unlocked);
+        until then they are absent from the context, not hidden here.
+        {% endcomment %}
+        {% if not valuation.unlocked %}
+        <p class="mb-1 text-muted">{{ valuation.locked_note }}</p>
+        {% elif valuation.valuation_low is not None and valuation.valuation_high is not None %}
         <p class="mb-1"><strong>Range:</strong> ${{ valuation.valuation_low|floatformat:0|intcomma }} – ${{ valuation.valuation_high|floatformat:0|intcomma }}</p>
         {% endif %}
         {% comment %}

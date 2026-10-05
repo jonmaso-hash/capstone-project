@@ -73,6 +73,8 @@
                             <em>not enough data to estimate yet</em>
                         {% endif %}
                     </p>
+                    {% elif suggested_valuation_locked %}
+                    <p class="text-muted small mb-0">Your most recent Zelda valuation is a free preview. Unlock it to see the valuation range.</p>
                     {% else %}
                     <p class="text-muted small mb-0">Upload your financials to Zelda AI and get an evidence-grounded valuation range before you set your asking price.</p>
                     {% endif %}
