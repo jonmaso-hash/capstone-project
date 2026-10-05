@@ -766,7 +766,7 @@ class ZeldaIntelligencePipelineV2:
     # ("140 000+ bots"), an abbreviated or spelled multiplier ("500M
     # messages"), a trailing "+". _COUNT_FIGURE read "140 000" as two figures,
     # 140 and 000, and could not see "500M" at all.
-    _TRACTION_NUMBER = (r'(?<![\w.,])(?:\d{1,3}(?:[   ]\d{3})+(?![\d.,])|[\d,]*\.?\d+)'
+    _TRACTION_NUMBER = (r'(?<![\w.,])(?:\d{1,3}(?:[ \u00a0\u202f]\d{3})+(?![\d.,])|[\d,]*\.?\d+)'
                         r'(?:[KkMmBb](?![A-Za-z])|\s*(?:thousand|million|billion)\b|(?!\w))\+?')
 
     def _figure_spans(self, category, sentence):

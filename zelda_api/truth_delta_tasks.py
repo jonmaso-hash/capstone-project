@@ -224,7 +224,7 @@ def _extract_numeric_value(text: str) -> float:
     # longer number, so "In 2016 500 customers" stays 500 and "12 50" stays 12.
     # A trailing "+" needs nothing: it is not a letter, so it ends the figure.
     for match in re.finditer(
-        r'(\$)?((?<![\d.,])\d{1,3}(?:[   ]\d{3})+(?![\d.,])|[\d,]*\.?\d+)'
+        r'(\$)?((?<![\d.,])\d{1,3}(?:[ \u00a0\u202f]\d{3})+(?![\d.,])|[\d,]*\.?\d+)'
         r'\s*(thousand\b|million\b|billion\b|[kmb])?(?![a-zA-Z])',
         text, re.IGNORECASE,
     ):
