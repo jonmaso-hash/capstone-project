@@ -219,6 +219,52 @@ class ZeldaProductTests(TestCase):
         self.client.get(reverse('billing:zelda_order_status',args=[order.id]))
         retrieve.assert_not_called()
 
+    @mock.patch('stripe.checkout.Session.retrieve')
+    def test_cache_read_or_lock_failure_does_not_hide_saved_order_status(self, retrieve):
+        order = self.order()
+        for operation in ('get', 'add'):
+            with mock.patch('billing.zelda_views.cache.' + operation, side_effect=RuntimeError('Cache offline')):
+                with self.assertLogs('billing.zelda_views', level='ERROR'):
+                    response = self.client.get(reverse('billing:zelda_order_status',args=[order.id]))
+            self.assertEqual(response.status_code,200)
+            self.assertEqual(response.json()['status'],'awaiting_payment')
+            self.assertTrue(response.json()['payment_check_unavailable'])
+        retrieve.assert_not_called()
+
+    @mock.patch('stripe.checkout.Session.retrieve')
+    def test_cache_write_failure_does_not_hide_confirmed_payment(self, retrieve):
+        order = self.order()
+        retrieve.return_value = self.event(order)
+        with mock.patch('billing.zelda_views.cache.set', side_effect=RuntimeError('Cache offline')):
+            with self.assertLogs('billing.zelda_views', level='ERROR'), mock.patch('billing.tasks.fulfill_zelda_order.delay') as generate:
+                with self.captureOnCommitCallbacks(execute=True):
+                    response = self.client.get(reverse('billing:zelda_order_status',args=[order.id]))
+        self.assertEqual(response.status_code,200)
+        self.assertEqual(response.json()['status'],'paid')
+        generate.assert_called_once_with(str(order.id))
+
+    @mock.patch('billing.fulfillment.reconcile_order', side_effect=RuntimeError('Private backend detail'))
+    def test_status_failure_returns_logged_reference_without_private_details(self, reconcile):
+        order = self.order(status='processing', paid_at=timezone.now())
+        with self.assertLogs('billing.zelda_views', level='ERROR') as logs:
+            response = self.client.get(reverse('billing:zelda_order_status',args=[order.id]))
+        self.assertEqual(response.status_code,503)
+        self.assertEqual(response['Retry-After'],'5')
+        self.assertEqual(response['Cache-Control'],'no-store')
+        reference = response.json()['reference']
+        self.assertRegex(reference,r'^[a-f0-9]{12}$')
+        self.assertTrue(any('reference=' + reference in line for line in logs.output))
+        self.assertNotIn('Private backend detail',response.content.decode())
+        self.assertNotIn('reports', response.json())
+
+    @mock.patch('billing.zelda_views.get_object_or_404', side_effect=RuntimeError('Database unavailable'))
+    def test_status_lookup_failure_also_has_an_error_reference(self, lookup):
+        order = self.order()
+        with self.assertLogs('billing.zelda_views', level='ERROR'):
+            response = self.client.get(reverse('billing:zelda_order_status',args=[order.id]))
+        self.assertEqual(response.status_code,503)
+        self.assertIn('reference',response.json())
+
     def test_ready_report_is_saved_in_owner_library_and_not_another_library(self):
         from zelda_api.library import build_library
         doc=DocumentSource.objects.create(uploaded_by=self.user,source_entity='External Example Inc',filename='deck.txt',status='analyzed',is_external_subject=True)
