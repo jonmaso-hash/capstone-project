@@ -313,7 +313,7 @@ class SellerApplicationAdmin(admin.ModelAdmin):
     list_editable = ('is_verified',)
     search_fields = ('company_name', 'user__username', 'email')
     readonly_fields = ('created_at', 'updated_at')
-    actions = [approve_profiles, deny_profiles]
+    actions = [mark_internal_profiles, mark_live_profiles, approve_profiles, deny_profiles]
 
 
 @admin.register(BuyerApplication)
@@ -323,7 +323,7 @@ class BuyerApplicationAdmin(admin.ModelAdmin):
     list_editable = ('is_verified', 'is_premium')
     search_fields = ('company_name', 'full_name', 'email', 'acquisition_thesis')
     readonly_fields = ('created_at', 'updated_at')
-    actions = [approve_profiles, deny_profiles]
+    actions = [mark_internal_profiles, mark_live_profiles, approve_profiles, deny_profiles]
 
 
 @admin.register(AcquisitionConnection)
