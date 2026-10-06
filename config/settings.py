@@ -485,8 +485,8 @@ ADMIN_EMAIL = env('ADMIN_EMAIL')
 
 
 # --- THIRD-PARTY API INTEGRATIONS & EMBEDDING ENGINES ---
-STREAM_API_KEY = env('STREAM_API_KEY')
-STREAM_API_SECRET = env('STREAM_API_SECRET')
+STREAM_API_KEY = env('STREAM_API_KEY').strip()
+STREAM_API_SECRET = env('STREAM_API_SECRET').strip()
 ANTHROPIC_API_KEY = env('ANTHROPIC_API_KEY')
 # Explicit ceilings for every Anthropic client (zelda_api/anthropic_client.py)
 # instead of the SDK's 10-minute timeout with 2 retries. A web-request call's
