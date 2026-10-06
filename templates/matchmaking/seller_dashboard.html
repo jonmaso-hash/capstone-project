@@ -16,18 +16,19 @@
 {% endblock css %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row align-items-center mb-4">
-        <div class="col-md-8">
-            <h1 class="h2 fw-bold mb-1 text-dark"><i class="bi bi-shop text-warning me-2"></i>Business Marketplace</h1>
-            <p class="text-secondary mb-0">
-                Matching acquirers for your <span class="badge bg-light text-dark border px-2 py-1.5">{{ seller_profile.industry }}</span> business
+<div class="container dashboard-page">
+    <div class="dashboard-header dashboard-header-seller text-white row align-items-center p-4 p-lg-5 mx-0 mb-4">
+        <div class="col-lg-7">
+            <span class="dashboard-eyebrow">Buyer Discovery</span>
+            <h1 class="fw-bold mb-2">Welcome back, {{ seller_profile.seller_name|default:seller_profile.user.username }}</h1>
+            <p class="text-white mb-0 opacity-75">
+                Find buyers for your <span class="badge bg-light text-dark border px-2 py-1.5">{{ seller_profile.industry }}</span> business
                 asking <span class="badge bg-light text-dark border px-2 py-1.5">{{ seller_profile.asking_price|asking_price_display }}</span>.
             </p>
         </div>
-        <div class="col-md-4 text-md-end mt-3 mt-md-0 d-flex gap-2 justify-content-md-end">
+        <div class="col-lg-5 mt-3 mt-lg-0 d-flex gap-2 justify-content-lg-end dashboard-actions">
             {% if seller_profile.is_premium %}
-            <a href="{% url 'matchmaking:seller_interest_analytics' %}" class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-medium">
+            <a href="{% url 'matchmaking:seller_interest_analytics' %}" class="btn btn-outline-light btn-sm rounded-pill px-3 fw-medium">
                 <i class="bi bi-bar-chart-fill me-1"></i> Interest Analytics
             </a>
             {% else %}
@@ -35,11 +36,13 @@
                 <i class="bi bi-star-fill me-1"></i> Upgrade for Interest Analytics
             </a>
             {% endif %}
-            <a href="{% url 'usersettings:edit_seller_profile' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-medium">
+            <a href="{% url 'usersettings:edit_seller_profile' %}" class="btn btn-outline-light btn-sm rounded-pill px-3 fw-medium">
                 <i class="bi bi-pencil-square me-1"></i> Edit Listing
             </a>
         </div>
     </div>
+
+    {% include "includes/dashboard_summary.html" %}
 
     {% badge_embed_snippet %}
 
@@ -131,9 +134,9 @@
     </div>
     {% endif %}
 
-    <div class="mb-5">
+    <section id="introduction-requests" class="mb-5 dashboard-section" aria-labelledby="requests-heading">
         <div class="d-flex align-items-center gap-2 mb-3">
-            <h3 class="h5 fw-bold mb-0 text-dark">Pending Inbound Interest</h3>
+            <h2 id="requests-heading" class="h5 fw-bold mb-0 text-dark">Introduction requests</h2>
             {% if pending_requests %}
                 <span class="badge bg-danger rounded-pill small px-2.5 py-1 fw-semibold">{{ pending_requests|length }} New</span>
             {% endif %}
@@ -165,11 +168,10 @@
                 </div>
             {% endfor %}
         </div>
-    </div>
+    </section>
 
-    {% if accepted_connections %}
-    <div class="mb-5">
-        <h3 class="h5 fw-bold mb-3 text-dark">Accepted Deals</h3>
+    <section id="connections" class="mb-5 dashboard-section" aria-labelledby="connections-heading">
+        <h2 id="connections-heading" class="h5 fw-bold mb-3 text-dark">Connections</h2>
         <div class="row g-3">
             {% for conn in accepted_connections %}
             <div class="col-12" id="accepted-card-{{ conn.id }}">
@@ -198,16 +200,21 @@
                     </div>
                 </div>
             </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="card bg-white border rounded-3 p-4">
+                    <p class="text-muted small mb-0">Your connections will appear here after an introduction is accepted.</p>
+                </div>
+            </div>
             {% endfor %}
         </div>
-    </div>
-    {% endif %}
+    </section>
 
     <hr class="my-5 opacity-25">
 
-    <h3 class="h5 fw-bold mb-4 text-dark d-flex align-items-center gap-2">
-        <i class="bi bi-briefcase text-warning"></i> Ranked Acquirer Matches
-    </h3>
+    <h2 id="recommendations" class="h5 fw-bold mb-4 text-dark d-flex align-items-center gap-2 dashboard-section">
+        <i class="bi bi-briefcase text-warning"></i> Recommended Buyers
+    </h2>
 
     <div class="card bg-light border-0 rounded-3 mb-4 p-3 shadow-sm">
         <form method="get" class="row g-2 align-items-end">

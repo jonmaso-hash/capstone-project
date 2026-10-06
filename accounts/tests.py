@@ -363,7 +363,7 @@ class ProfileAnalysisPaywallTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.context['has_analytics_paywall'])
-        self.assertContains(response, 'Profile Analysis')
+        self.assertContains(response, 'Investor Analytics')
         # Narrower than a bare 'Unlock' substring check — the sidebar's
         # globally-included Zelda widget script now contains that word in
         # its own (unrelated) locked-memo-card JS string literal, so a
@@ -458,9 +458,9 @@ class InvestorBuyerProfileViewTrackingTests(TestCase):
 class BusinessVerificationViewTests(TestCase):
     """
     accounts/views.py::business_verification / _request / _confirm — the
-    self-serve flow that flips is_verified on whichever role profile(s) a
-    user has. EMAIL_BACKEND is overridden to locmem so the real Gmail SMTP
-    configured in settings is never hit by the test suite.
+    self-serve flow that proves control of a company-domain mailbox without
+    granting broader role/company authority. EMAIL_BACKEND is overridden to
+    locmem so the configured SMTP backend is never hit by the test suite.
     """
 
     def setUp(self):
@@ -524,7 +524,7 @@ class BusinessVerificationViewTests(TestCase):
         self.client.post(reverse('accounts:business_verification_request'), {'business_email': 'jon@interlinkfoundry.com'})
         self.assertEqual(BusinessEmailVerification.objects.filter(user=self.founder_user).count(), 1)
 
-    def test_correct_code_verifies_all_of_a_multi_role_users_profiles(self):
+    def test_correct_code_verifies_email_without_granting_role_authority(self):
         from matchmaking.models import BusinessEmailVerification, InvestorApplication
         InvestorApplication.objects.create(
             user=self.founder_user, full_name='F', company_name='Interlink Foundry', email='f2@t.com',
@@ -534,14 +534,20 @@ class BusinessVerificationViewTests(TestCase):
         self.client.post(reverse('accounts:business_verification_request'), {'business_email': 'jon@interlinkfoundry.com'})
         verification = BusinessEmailVerification.objects.get(user=self.founder_user)
 
-        self.client.post(reverse('accounts:business_verification_confirm'), {'code': verification.code})
+        response = self.client.post(
+            reverse('accounts:business_verification_confirm'),
+            {'code': verification.code},
+            follow=True,
+        )
 
         verification.refresh_from_db()
         self.assertEqual(verification.status, 'VERIFIED')
         self.assertIsNotNone(verification.verified_at)
         self.founder.refresh_from_db()
-        self.assertTrue(self.founder.is_verified)
-        self.assertTrue(InvestorApplication.objects.get(user=self.founder_user).is_verified)
+        self.assertFalse(self.founder.is_verified)
+        self.assertFalse(InvestorApplication.objects.get(user=self.founder_user).is_verified)
+        self.assertContains(response, 'Company Email Verified')
+        self.assertContains(response, 'does not verify ownership')
 
     def test_wrong_code_does_not_verify_and_increments_attempts(self):
         from matchmaking.models import BusinessEmailVerification

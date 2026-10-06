@@ -34,6 +34,7 @@ UPLOAD_LIMITS_MB = {
     'blog:edit_article': BLOG_IMAGE_MAX_MB,
     'jobs:apply': RESUME_MAX_MB,
     'zelda_api:pitch_analysis': PITCH_ANALYSIS_MAX_MB,
+    'billing:zelda_intake': PITCH_ANALYSIS_MAX_MB,
 }
 
 
@@ -79,7 +80,7 @@ def _content_length(request):
 
 def _refuse(request, limit_mb):
     message = f"That file is too large. The limit is {limit_mb} MB."
-    if request.path_info.startswith('/api/'):
+    if request.path_info.startswith('/api/') or _is_product_intake(request.path_info):
         return JsonResponse({'error': message}, status=413)
 
     # A form post: back to the page it came from, with the reason shown there.
@@ -88,3 +89,10 @@ def _refuse(request, limit_mb):
     if not url_has_allowed_host_and_scheme(page, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
         page = '/'
     return HttpResponseRedirect(page)
+
+
+def _is_product_intake(path):
+    try:
+        return resolve(path).view_name == 'billing:zelda_intake'
+    except Resolver404:
+        return False

@@ -11,6 +11,7 @@ urlpatterns = [
     # =====================================================================
     path('dashboard/investor/', views.investor_dashboard, name='investor_dashboard'),
     path('dashboard/investor/shortlist/', views.investor_shortlist, name='investor_shortlist'),
+    path('dashboard/investor/shortlist/toggle/', views.toggle_investor_shortlist, name='toggle_investor_shortlist'),
     path('dashboard/founder/', views.founder_dashboard, name='founder_dashboard'),
     path('dashboard/buyer/', views.buyer_dashboard, name='buyer_dashboard'),
     path('dashboard/seller/', views.seller_dashboard, name='seller_dashboard'),

@@ -28,7 +28,7 @@ from django.utils import timezone
 from .models import Follow
 
 # Internal Services & Models
-from matchmaking.models import Application, Connection, InvestorApplication, MatchFeedback, ConnectionRequest, log_investor_event, PitchDeckViewSession, PitchDeckSlideTime, FundraisingLead, FounderMilestone, log_training_example, MessageThread, PitchVideoView, ProfileView, log_page_event, log_search_event, SearchEvent
+from matchmaking.models import Application, Connection, InvestorApplication, MatchFeedback, InvestorShortlist, ConnectionRequest, log_investor_event, PitchDeckViewSession, PitchDeckSlideTime, FundraisingLead, FounderMilestone, log_training_example, MessageThread, PitchVideoView, ProfileView, log_page_event, log_search_event, SearchEvent
 from matchmaking.models import DataRoomDocument, DataRoomAccessRequest, DataRoomDocumentView, DataRoomInformationRequest, can_view_data_room, can_download_data_room_document, can_view_deal_workspace
 from matchmaking.models import ExternalDealRoom, ExternalDealRoomGrant, ExternalDealRoomEvent, can_view_external_deal_room_url
 from matchmaking.models import (
@@ -802,31 +802,30 @@ def buyer_dashboard(request):
 @login_required
 def investor_shortlist(request):
     """
-    Founders this investor has thumbs-up'd (MatchFeedback.vote=1) — the
-    "only show liked profiles" / favorites view for investors.
+    Founders this investor explicitly saved for later review.
+
+    Shortlist is private saved-company state and is deliberately independent
+    from MatchFeedback recommendation feedback.
     """
     investor_profile = getattr(request.user, 'match_investor_profile', None)
     if not investor_profile:
         messages.info(request, "Please complete your investor profile to view your shortlist.")
         return redirect('usersettings:edit_investor_profile')
 
-    liked_founder_ids = MatchFeedback.objects.filter(
-        investor=investor_profile, vote=1
+    shortlisted_founder_ids = InvestorShortlist.objects.filter(
+        investor=investor_profile
     ).values_list('application_id', flat=True)
 
     founders = Application.objects.discoverable().filter(
-        id__in=liked_founder_ids
+        id__in=shortlisted_founder_ids
     ).exclude(review_status='DENIED').select_related('user')
 
     requested_ids = Connection.objects.filter(investor=investor_profile).values_list('founder_id', flat=True)
 
     shortlist = []
     for founder in founders:
-        # The +10 thumbs-up nudge that used to be applied here is gone.
-        # Feedback is a statement about the person, not about the fit, so
-        # it must never move the canonical result. It was also redundant:
-        # this list is already filtered to founders this investor liked,
-        # so the nudge lifted every row equally and ordered nothing.
+        # Shortlisting is private saved-company state, not a match signal.
+        # It must never move the canonical match result.
         result = evaluate_venture_match(founder, investor_profile)
 
         shortlist.append({
@@ -845,6 +844,54 @@ def investor_shortlist(request):
         'shortlist': shortlist,
         'investor': investor_profile,
     })
+
+
+@login_required
+@require_POST
+def toggle_investor_shortlist(request):
+    """Save or remove one founder from the current investor's private shortlist."""
+    investor_profile = getattr(request.user, 'match_investor_profile', None)
+    if not investor_profile:
+        return JsonResponse({'status': 'error', 'message': 'Investor account required.'}, status=403)
+
+    is_json = request.content_type == 'application/json'
+    if is_json:
+        try:
+            payload = json.loads(request.body)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({'status': 'error', 'message': 'Invalid request body.'}, status=400)
+        application_id = payload.get('application_id')
+    else:
+        application_id = request.POST.get('application_id')
+
+    founder_app = get_object_or_404(
+        Application.objects.discoverable().exclude(review_status='DENIED'),
+        id=application_id,
+    )
+
+    entry = InvestorShortlist.objects.filter(
+        investor=investor_profile,
+        application=founder_app,
+    ).first()
+
+    if entry:
+        entry.delete()
+        saved = False
+    else:
+        InvestorShortlist.objects.create(
+            investor=investor_profile,
+            application=founder_app,
+        )
+        saved = True
+
+    if is_json:
+        return JsonResponse({'status': 'success', 'saved': saved})
+
+    messages.success(
+        request,
+        "Added to your shortlist." if saved else "Removed from your shortlist.",
+    )
+    return redirect(request.META.get('HTTP_REFERER', 'matchmaking:investor_shortlist'))
 
 
 @login_required
@@ -938,6 +985,7 @@ def founder_dashboard(request):
         platform_insights = platform_insights + get_pitch_video_social_signal_insights()
 
     return render(request, 'matchmaking/founder_dashboard.html', {
+        'dashboard_display_name': visible_profile_fields(request.user, application, ['founder_name']).get('founder_name') or request.user.username,
         'matches': match_results,
         'application': application,
         'pending_requests': pending_requests,
@@ -1296,7 +1344,7 @@ def get_foundry_pulse_events(limit=15):
 
     events = []
 
-    for app in Application.objects.filter(review_status='APPROVED', archived_at__isnull=True).order_by('-created_at')[:limit]:
+    for app in Application.objects.filter(is_internal_profile=False, review_status='APPROVED', archived_at__isnull=True).order_by('-created_at')[:limit]:
         name = app.company_name if not app.is_private else 'A new founder'
         events.append({
             'icon': 'bi-rocket-takeoff-fill',
@@ -1304,7 +1352,7 @@ def get_foundry_pulse_events(limit=15):
             'timestamp': app.created_at,
         })
 
-    for inv in InvestorApplication.objects.filter(review_status='APPROVED', archived_at__isnull=True).order_by('-created_at')[:limit]:
+    for inv in InvestorApplication.objects.filter(is_internal_profile=False, review_status='APPROVED', archived_at__isnull=True).order_by('-created_at')[:limit]:
         name = inv.company_name if not inv.is_private else 'A new investor'
         events.append({
             'icon': 'bi-graph-up-arrow',
@@ -1323,7 +1371,7 @@ def get_foundry_pulse_events(limit=15):
         'ACCEPTED': ('bi-check-circle-fill', 'An introduction was accepted'),
         'FUNDED': ('bi-trophy-fill', 'A deal was Verified Funded'),
     }
-    for conn in Connection.objects.select_related('founder', 'investor').order_by('-updated_at')[:limit]:
+    for conn in Connection.objects.filter(founder__is_internal_profile=False, investor__is_internal_profile=False).select_related('founder', 'investor').order_by('-updated_at')[:limit]:
         icon, label = connection_labels.get(conn.status, ('bi-hand-index-thumb', 'A connection was updated'))
         if not conn.founder.is_private and not conn.investor.is_private:
             label = f"{label}: {conn.investor.company_name} ↔ {conn.founder.company_name}"
@@ -1334,7 +1382,7 @@ def get_foundry_pulse_events(limit=15):
         'ACCEPTED': ('bi-check-circle-fill', 'An introduction was accepted'),
         'CLOSED': ('bi-trophy-fill', 'A deal was Verified Sold'),
     }
-    for conn in AcquisitionConnection.objects.select_related('seller', 'buyer').order_by('-updated_at')[:limit]:
+    for conn in AcquisitionConnection.objects.filter(seller__is_internal_profile=False, buyer__is_internal_profile=False).select_related('seller', 'buyer').order_by('-updated_at')[:limit]:
         icon, label = acquisition_connection_labels.get(conn.status, ('bi-hand-index-thumb', 'A connection was updated'))
         if not conn.seller.is_private and not conn.buyer.is_private:
             label = f"{label}: {conn.buyer.company_name} ↔ {conn.seller.company_name}"
@@ -1385,12 +1433,18 @@ def founder_bulletin_board(request):
         investor_profile = getattr(request.user, 'match_investor_profile', None)
 
     feedback_map = {}
+    shortlist_ids = set()
     connection_status_map = {}
     if investor_profile:
         feedback_map = dict(
             MatchFeedback.objects.filter(
                 investor=investor_profile, application__in=pitches_queryset
             ).values_list('application_id', 'vote')
+        )
+        shortlist_ids = set(
+            InvestorShortlist.objects.filter(
+                investor=investor_profile, application__in=pitches_queryset
+            ).values_list('application_id', flat=True)
         )
         connection_status_map = dict(
             Connection.objects.filter(investor=investor_profile).values_list('founder_id', 'status')
@@ -1435,6 +1489,7 @@ def founder_bulletin_board(request):
         # It used to shift the displayed number by +/-10, which made a
         # personal opinion look like a property of the pairing.
         pitch.investor_vote = feedback_map.get(pitch.id) or 0
+        pitch.is_shortlisted = pitch.id in shortlist_ids
         pitch.profile_url = public_profile_link(request, pitch.user.username)
         pitch.match = result
         pitch.band = result.band.label if result else None
@@ -2247,20 +2302,20 @@ def platform_metrics(request):
     from django.db.models import Count
     from django.db.models.functions import Lower
 
-    founder_count = Application.objects.count()
-    investor_count = InvestorApplication.objects.count()
+    founder_count = Application.objects.filter(is_internal_profile=False).count()
+    investor_count = InvestorApplication.objects.filter(is_internal_profile=False).count()
 
-    founder_vectorized = Application.objects.filter(description_vector__isnull=False).count()
-    investor_vectorized = InvestorApplication.objects.filter(focus_vector__isnull=False).count()
+    founder_vectorized = Application.objects.filter(is_internal_profile=False, description_vector__isnull=False).count()
+    investor_vectorized = InvestorApplication.objects.filter(is_internal_profile=False, focus_vector__isnull=False).count()
     founder_vector_rate = round((founder_vectorized / founder_count) * 100, 1) if founder_count else 0
     investor_vector_rate = round((investor_vectorized / investor_count) * 100, 1) if investor_count else 0
 
     connection_funnel = dict(
-        Connection.objects.values('status').annotate(count=Count('id')).values_list('status', 'count')
+        Connection.objects.filter(founder__is_internal_profile=False, investor__is_internal_profile=False).values('status').annotate(count=Count('id')).values_list('status', 'count')
     )
 
     sector_density = list(
-        Application.objects.annotate(sector_lower=Lower('sector'))
+        Application.objects.filter(is_internal_profile=False).annotate(sector_lower=Lower('sector'))
         .values('sector_lower')
         .annotate(count=Count('id'))
         .order_by('-count')[:10]
@@ -2268,10 +2323,10 @@ def platform_metrics(request):
 
     thirty_days_ago = timezone.now() - timedelta(days=30)
     registrations_by_day = {}
-    for row in Application.objects.filter(created_at__gte=thirty_days_ago).values('created_at__date').annotate(count=Count('id')):
+    for row in Application.objects.filter(is_internal_profile=False, created_at__gte=thirty_days_ago).values('created_at__date').annotate(count=Count('id')):
         day = row['created_at__date'].isoformat()
         registrations_by_day[day] = registrations_by_day.get(day, 0) + row['count']
-    for row in InvestorApplication.objects.filter(created_at__gte=thirty_days_ago).values('created_at__date').annotate(count=Count('id')):
+    for row in InvestorApplication.objects.filter(is_internal_profile=False, created_at__gte=thirty_days_ago).values('created_at__date').annotate(count=Count('id')):
         day = row['created_at__date'].isoformat()
         registrations_by_day[day] = registrations_by_day.get(day, 0) + row['count']
     registrations_sorted = sorted(registrations_by_day.items())
@@ -2292,7 +2347,7 @@ def platform_metrics(request):
     documents_processed = DocumentSource.objects.filter(status='analyzed').count()
     memos_generated = IntelligenceMemo.objects.count()
     truth_delta_runs = TruthDeltaReport.objects.count()
-    zelda_analyses_triggered = InvestorInterestEvent.objects.filter(event_type='analyze').count()
+    zelda_analyses_triggered = InvestorInterestEvent.objects.exclude(investor__match_investor_profile__is_internal_profile=True).filter(founder__is_internal_profile=False, event_type='analyze').count()
 
     # Full activation funnel (all 4 personas) + Zelda feature-usage breakdown —
     # see matchmaking/analytics.py for how each stage is computed.
@@ -3165,7 +3220,7 @@ def external_deal_room_set_active(request, username):
 def deal_pulse(request):
     """
     Investor-side pipeline board over their real platform Connections,
-    bucketed into Active / Needs Attention / Completed. Mirrors the
+    bucketed into Active / Needs Attention / Outcomes. Mirrors the
     founder-side Fundraising CRM's visual pattern, but tracks actual
     Connection records rather than a separate off-platform lead list —
     investors' deal flow already lives on-platform via Connection.
@@ -3193,7 +3248,7 @@ def deal_pulse(request):
     columns = [
         {'key': 'ACTIVE', 'label': 'Active', 'connections': board['ACTIVE']},
         {'key': 'NEEDS_ATTENTION', 'label': 'Needs Attention', 'connections': board['NEEDS_ATTENTION']},
-        {'key': 'COMPLETED', 'label': 'Completed', 'connections': board['COMPLETED']},
+        {'key': 'COMPLETED', 'label': 'Outcomes', 'connections': board['COMPLETED']},
     ]
 
     return render(request, 'matchmaking/deal_pulse.html', {
