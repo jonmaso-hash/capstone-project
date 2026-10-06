@@ -36,15 +36,16 @@ class UnfinishedProfileTests(TestCase):
         self.assertContains(page, 'Introduction requests')
         self.assertContains(page, 'Connections')
         self.assertContains(page, 'Fundraising CRM')
-        self.assertContains(page, 'Create a Profile')
-        self.assertContains(page, reverse('usersettings:edit_founder_profile'))
+        self.assertNotContains(page, 'Create a Profile')
+        self.assertNotContains(page, 'Milestones')
         self.assertNotContains(page, reverse('matchmaking:post_milestone'))
 
     def test_founder_dashboard_retains_investor_requests_crm_and_deal_room(self):
-        from matchmaking.models import Application, InvestorApplication, Connection
+        from matchmaking.models import Application, InvestorApplication, Connection, FounderMilestone
         from matchmaking.tests import _mock_embedding_generation
         _mock_embedding_generation(self)
         founder = Application.objects.create(user=self.user, company_name='Founder Workspace')
+        FounderMilestone.objects.create(founder=founder, milestone_type='product_launch', title='Platform launched')
         for status in ('PENDING', 'ACCEPTED'):
             investor_user = get_user_model().objects.create_user(f'workspace_investor_{status}')
             investor = InvestorApplication.objects.create(
@@ -59,7 +60,19 @@ class UnfinishedProfileTests(TestCase):
         self.assertContains(page, 'Fund ACCEPTED')
         self.assertContains(page, reverse('matchmaking:fundraising_crm'))
         self.assertContains(page, reverse('matchmaking:deal_workspace', args=[accepted.pk]))
+        self.assertContains(page, 'Milestones')
+        self.assertContains(page, reverse('matchmaking:post_milestone'))
+        self.assertContains(page, 'Platform launched')
+        profile_page = self.client.get(reverse('accounts:profile', args=[self.user.username]))
+        self.assertContains(profile_page, 'Platform launched')
         self.assertEqual(len(page.context['pending_requests']), 1)
+
+    def test_founder_workspace_crm_and_data_room_open_for_founder(self):
+        from matchmaking.models import Application
+        founder = Application.objects.create(user=self.user, company_name='Workspace Founder')
+        self.assertEqual(self.client.get(reverse('matchmaking:fundraising_crm')).status_code, 200)
+        self.assertEqual(self.client.get(reverse('matchmaking:data_room', args=[self.user.username])).status_code, 200)
+        self.assertEqual(founder.user.username, self.user.username)
 
     def test_investor_still_routes_to_investor_dashboard(self):
         from matchmaking.models import InvestorApplication
