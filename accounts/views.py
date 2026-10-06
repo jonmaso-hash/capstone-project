@@ -859,6 +859,23 @@ def profile_analysis(request, username):
     seller_application = getattr(viewed_user, "match_seller_profile", None)
     buyer_application = getattr(viewed_user, "match_buyer_profile", None)
 
+    # Profile Analysis is a Premium-member feature for every marketplace role.
+    # Gate only this owner-only analytics view, before any analytics/match
+    # queries run, so free accounts receive the upgrade surface but no data.
+    role_profile = application or investor_application or seller_application or buyer_application
+    is_premium_member = bool(role_profile and getattr(role_profile, 'is_premium', False))
+    if not is_premium_member:
+        return render(request, 'accounts/profile_analysis.html', {
+            'profile_user': viewed_user,
+            'application': application,
+            'investor_application': investor_application,
+            'seller_application': seller_application,
+            'buyer_application': buyer_application,
+            'profile_analysis_locked': True,
+            'has_analytics_paywall': True,
+            'is_premium_insights': False,
+        })
+
     from matchmaking.models import (
         ProfileView, PitchVideoView,
         InvestorInterestEvent, AcquisitionInterestEvent, MessageThread,
@@ -1006,13 +1023,42 @@ def profile_analysis(request, username):
             'Analyses Run': events.filter(event_type='analyze').count(),
         }
 
+    # Founder network snapshot moved from the dashboard summary strip into
+    # Premium Profile Analysis. The workspaces themselves stay on Dashboard.
+    network_summary = None
+    if application:
+        pending_count = Connection.objects.filter(
+            founder=application,
+            status__iexact='pending',
+        ).exclude(initiated_by='FOUNDER').count()
+        accepted_count = Connection.objects.filter(
+            founder=application,
+            status__in=['ACCEPTED', 'FUNDED_PENDING'],
+        ).count()
+
+        from matchmaking.match_components import evaluate_venture_match
+        from matchmaking.match_score import Band
+        recommendation_count = 0
+        investors = InvestorApplication.objects.discoverable().exclude(review_status='DENIED')
+        for investor in investors:
+            if evaluate_venture_match(application, investor).band > Band.UNRANKED:
+                recommendation_count += 1
+
+        network_summary = {
+            'pending_requests': pending_count,
+            'accepted_connections': accepted_count,
+            'recommendations': recommendation_count,
+        }
+
     context = {
         'profile_user': viewed_user,
         'application': application,
         'investor_application': investor_application,
         'seller_application': seller_application,
         'buyer_application': buyer_application,
-        'has_analytics_paywall': bool(application or seller_application),
+        'profile_analysis_locked': False,
+        'network_summary': network_summary,
+        'has_analytics_paywall': True,
         'is_premium_insights': is_premium_insights,
         'show_full_engagement_summary': is_premium_insights or not (application or seller_application),
         'free_intro_requests': free_intro_requests,
