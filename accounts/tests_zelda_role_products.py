@@ -9,7 +9,7 @@ User = get_user_model()
 
 
 class ZeldaFounderProductSurfaceTests(TestCase):
-    def test_founder_sidebar_shows_four_individual_reports_but_not_packs(self):
+    def test_founder_sidebar_shows_exact_seven_zelda_products(self):
         user = User.objects.create_user('zelda_surface_founder', password='x')
         Application.objects.create(
             user=user,
@@ -27,9 +27,15 @@ class ZeldaFounderProductSurfaceTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         body = response.content.decode()
-        for key in ('truth_delta', 'valuation', 'ic_memo', 'entity'):
+        for key in (
+            'intelligence_memo',
+            'ic_memo',
+            'truth_delta',
+            'complete_bundle',
+            'three_pack',
+            'entity',
+            'valuation',
+        ):
             with self.subTest(key=key):
                 self.assertIn(f'tab-product-{key}', body)
         self.assertIn('data-tab="library"', body)
-        self.assertNotIn('tab-product-complete_bundle', body)
-        self.assertNotIn('tab-product-three_pack', body)
