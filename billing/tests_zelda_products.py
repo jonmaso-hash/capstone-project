@@ -463,7 +463,7 @@ class ZeldaProductTests(TestCase):
 
     def test_intelligence_memo_uses_stored_orientation_analysis(self):
         from billing.fulfillment import report_sections
-        from zelda_api.principal import Principal
+        from zelda_api.principal import Principal, ORIGIN_TASK
 
         analysis = DocumentSource.objects.create(
             uploaded_by=self.user,
@@ -493,7 +493,7 @@ class ZeldaProductTests(TestCase):
             sections = report_sections(
                 order,
                 'intelligence_memo',
-                Principal.for_user(self.user, 'request', 'test'),
+                Principal.for_user(self.user, ORIGIN_TASK, 'test'),
             )
 
         self.assertEqual([section['title'] for section in sections], [
