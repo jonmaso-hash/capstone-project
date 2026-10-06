@@ -199,7 +199,10 @@ def dashboard(request):
     for role in ROLE_PROFILE_URLS:
         if getattr(request.user, f'match_{role}_profile', None):
             return redirect(f'matchmaking:{role}_dashboard')
-    return redirect('accounts:profile_self')
+    role = request.session.get('pending_profile_role')
+    if role not in ROLE_PROFILE_URLS:
+        role = 'founder'
+    return redirect(f'matchmaking:{role}_dashboard')
 
 
 def admin_login_redirect(request):

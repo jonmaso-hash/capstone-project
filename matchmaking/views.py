@@ -895,7 +895,6 @@ def toggle_investor_shortlist(request):
 
 
 @login_required
-@founder_required
 def founder_dashboard(request):
     """
     Founder-facing dashboard: View matching investors ranked by a blended 
@@ -904,8 +903,16 @@ def founder_dashboard(request):
     application = getattr(request.user, 'match_founder_profile', None) or Application.objects.filter(user=request.user).first()
 
     if not application:
-        messages.info(request, "Complete your founder profile to see investor matches.")
-        return redirect('usersettings:edit_founder_profile')
+        if any(getattr(request.user, f'match_{role}_profile', None)
+               for role in ('investor', 'seller', 'buyer')):
+            raise PermissionDenied("Access restricted.")
+        # The Dashboard destination remains the connections workspace while
+        # onboarding is unfinished. Do not create a placeholder role profile.
+        return render(request, 'matchmaking/founder_dashboard.html', {
+            'dashboard_display_name': request.user.username,
+            'application': None, 'matches': [], 'pending_requests': [],
+            'accepted_connections': [], 'platform_insights': [], 'filters': {},
+        })
 
     log_page_event(request, 'dashboard_view', role='founder', user=request.user)
 
