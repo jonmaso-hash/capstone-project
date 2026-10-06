@@ -52,6 +52,32 @@ def clone_source(order, kind):
 
 def report_sections(order, key, principal):
     """Stored engine outputs, never a new prompt or another evidence verdict."""
+    if key == 'intelligence_memo':
+        from zelda_api.ic_memo import zelda_report_observations
+        memo = order.analysis_document.memo
+        observations = zelda_report_observations(memo, order.analysis_document)
+        noticed = '\n'.join(f'• {point}' for point in observations['noticed'])
+        investigating = '\n'.join(
+            f"• {item['topic']}" for item in observations['worth_investigating']
+        )
+        return [
+            {
+                'title': 'Executive Summary',
+                'text': memo.executive_summary or 'Insufficient disclosed evidence.',
+            },
+            {
+                'title': 'What Zelda Noticed',
+                'text': noticed or 'The available evidence does not support an additional observation.',
+            },
+            {
+                'title': 'Worth Investigating',
+                'text': investigating or 'No additional investigation topic was established from the available evidence.',
+            },
+            {
+                'title': 'Information Readiness',
+                'text': memo.information_readiness or 'Insufficient disclosed evidence.',
+            },
+        ]
     if key == 'ic_memo':
         from zelda_api.ic_memo import MEMO_SECTIONS
         memo = order.analysis_document.memo
