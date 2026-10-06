@@ -152,6 +152,20 @@ class BlueprintWiringTests(SimpleTestCase):
                     self.assertIn(item['fromService']['envVarKey'], web_env)
                     self.assertIs(web_env[item['fromService']['envVarKey']].get('sync'), False)
 
+    def test_corroboration_provider_keys_are_wired_to_web_and_worker(self):
+        required = {'COMPANYENRICH_API_KEY', 'FILED_API_KEY', 'DATA4B2B_API_KEY'}
+        web_env = _env(self.services['interlink-web'])
+        worker_env = _env(self.services['interlink-worker'])
+        self.assertTrue(required.issubset(web_env))
+        self.assertTrue(required.issubset(worker_env))
+        for key in required:
+            with self.subTest(key=key):
+                self.assertIs(web_env[key].get('sync'), False)
+                self.assertEqual(
+                    worker_env[key]['fromService'],
+                    {'type': 'web', 'name': 'interlink-web', 'envVarKey': key},
+                )
+
     def test_key_value_is_private_and_never_evicts_queued_tasks(self):
         keyvalue = self.services['interlink-keyvalue']
         self.assertEqual(keyvalue['ipAllowList'], [])
