@@ -23,7 +23,7 @@ def fulfill_zelda_order(order_id):
             auth = authorize(Principal.for_user(order.user, ORIGIN_TASK, 'paid Zelda product'))
             if not auth.text_permitted(order.source_document):
                 raise ValueError('Evidence access refused')
-            if any(key in order.reports for key in ('ic_memo', 'truth_delta')) and not order.analysis_document_id:
+            if any(key in order.reports for key in ('intelligence_memo', 'ic_memo', 'truth_delta')) and not order.analysis_document_id:
                 order.analysis_document = clone_source(order, 'pitch_deck')
             if 'valuation' in order.reports and not order.valuation_document_id:
                 order.valuation_document = clone_source(order, 'business_valuation')

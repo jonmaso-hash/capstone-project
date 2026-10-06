@@ -51,15 +51,21 @@ class ZeldaProductTests(TestCase):
         data.update(kwargs)
         return data
 
-    def test_catalog_matches_all_six_names_and_prices(self):
+    def test_catalog_matches_all_seven_names_and_prices(self):
         response = self.client.get(reverse('billing:zelda_catalog'))
         products = response.json()['products']
         self.assertEqual({p['name']:p['amount'] for p in products}, {
-            'Business valuation':99, 'Zelda IC Memo':499, 'Entity Integrity Report':999, 'Truth Delta Report':1999,
-            'Zelda 3-Report Pack':2499, 'Zelda Complete Intelligence Bundle':4999})
+            'Zelda Intelligence Memo':199,
+            'Zelda IC Memo':499,
+            'Truth Delta Report':1999,
+            'Zelda Complete Intelligence Bundle':4999,
+            'Zelda 3-Report Pack':2499,
+            'Entity Integrity Report':999,
+            'Business valuation':99,
+        })
 
-    def test_pack_requires_three_distinct_reports_and_complete_bundle_has_four(self):
-        self.assertEqual(len(selected_reports('complete_bundle')), 4)
+    def test_pack_requires_three_distinct_reports_and_complete_bundle_has_five(self):
+        self.assertEqual(len(selected_reports('complete_bundle')), 5)
         for reports in ([], ['ic_memo'], ['ic_memo']*3, ['ic_memo','entity','unknown']):
             with self.assertRaises(ValueError): selected_reports('three_pack', reports)
         self.assertEqual(len(selected_reports('three_pack', ['ic_memo','entity','truth_delta'])),3)
@@ -454,6 +460,48 @@ class ZeldaProductTests(TestCase):
         self.assertEqual(source.total_pages,1)
         self.assertIn('customer messaging',source.raw_text_full)
         self.assertFalse(ZeldaOrder.objects.exists())
+
+    def test_intelligence_memo_uses_stored_orientation_analysis(self):
+        from billing.fulfillment import report_sections
+        from zelda_api.principal import Principal, ORIGIN_TASK
+
+        analysis = DocumentSource.objects.create(
+            uploaded_by=self.user,
+            source_entity='External Example Inc',
+            filename='analysis.txt',
+            document_type='pitch_deck',
+            raw_text_full='Evidence',
+            status='analyzed',
+        )
+        memo = IntelligenceMemo.objects.create(
+            document=analysis,
+            executive_summary='Concise company orientation.',
+            business_model_analysis='Business model.',
+            information_readiness='72/100 — useful evidence with gaps.',
+            retrieved_context='context',
+        )
+        order = self.order(
+            product='intelligence_memo',
+            reports=['intelligence_memo'],
+            amount=199,
+            analysis_document=analysis,
+        )
+        with mock.patch('zelda_api.ic_memo.zelda_report_observations', return_value={
+            'noticed': ['Revenue evidence is specific.'],
+            'worth_investigating': [{'topic': 'Customer concentration', 'target': 'ic_memo'}],
+        }):
+            sections = report_sections(
+                order,
+                'intelligence_memo',
+                Principal.for_user(self.user, ORIGIN_TASK, 'test'),
+            )
+
+        self.assertEqual([section['title'] for section in sections], [
+            'Executive Summary', 'What Zelda Noticed', 'Worth Investigating', 'Information Readiness',
+        ])
+        self.assertEqual(sections[0]['text'], memo.executive_summary)
+        self.assertIn('Revenue evidence is specific.', sections[1]['text'])
+        self.assertIn('Customer concentration', sections[2]['text'])
 
     def test_existing_active_stripe_price_must_match_amount_and_currency(self):
         from .zelda_views import stripe_price
