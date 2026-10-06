@@ -148,7 +148,13 @@ services:
         sync: false
       - key: FACEBOOK_OAUTH_SECRET
         sync: false
-      # Truth Delta data sources
+      # Truth Delta / corroboration data sources
+      - key: COMPANYENRICH_API_KEY
+        sync: false
+      - key: FILED_API_KEY
+        sync: false
+      - key: DATA4B2B_API_KEY
+        sync: false
       - key: CRUNCHBASE_API_KEY
         sync: false
       - key: NEWS_API_KEY
@@ -255,6 +261,21 @@ services:
           type: web
           name: interlink-web
           envVarKey: SENTRY_DSN
+      - key: COMPANYENRICH_API_KEY
+        fromService:
+          type: web
+          name: interlink-web
+          envVarKey: COMPANYENRICH_API_KEY
+      - key: FILED_API_KEY
+        fromService:
+          type: web
+          name: interlink-web
+          envVarKey: FILED_API_KEY
+      - key: DATA4B2B_API_KEY
+        fromService:
+          type: web
+          name: interlink-web
+          envVarKey: DATA4B2B_API_KEY
       - key: CRUNCHBASE_API_KEY
         fromService:
           type: web
