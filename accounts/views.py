@@ -550,19 +550,6 @@ def profile(request, username=None, pk=None):
             founder_milestones = []
         show_contact_info = viewed_user_settings.show_contact_info
 
-    # 3c. Founder Activity — an investor's first question is "is this founder
-    # active?"; last_milestone respects the show_milestones gate above by
-    # reading founder_milestones after it's already been zeroed out for
-    # non-owners who opted out, rather than re-querying independently.
-    founder_activity = None
-    if application:
-        founder_activity = {
-            'last_login': viewed_user.last_login,
-            'profile_updated_at': application.updated_at,
-            'deck_uploaded_at': application.pitch_deck_uploaded_at,
-            'last_milestone': founder_milestones[0] if founder_milestones else None,
-        }
-
     # 4. Privacy Gatekeeper — matchmaking.Application has no allowed_viewers
     # whitelist (that field only exists on the legacy accounts models and is
     # never populated anywhere), so a private profile is owner-only for now.
@@ -649,7 +636,6 @@ def profile(request, username=None, pk=None):
     # IC Memo entry point — founder-only, gated the same way the memo view
     # itself is gated (owner, staff, or an accepted-connection investor).
     ic_memo_document_id = None
-    investor_readiness = None
     if application:
         from zelda_api.ic_memo import can_view_ic_memo
         if can_view_ic_memo(request.user, application):
@@ -659,12 +645,6 @@ def profile(request, username=None, pk=None):
             ).order_by('-created_at').first()
             if pitch_deck_doc:
                 ic_memo_document_id = pitch_deck_doc.id
-
-            # Same viewer gate as the IC Memo itself (owner, staff, or an
-            # accepted-connection investor) — the whole point of this panel
-            # is "here's my verified dossier," which only makes sense to
-            # show a founder themselves or an investor already introduced.
-            investor_readiness = _get_investor_readiness(application)
 
     # Privacy-preserving trust badges — thresholded booleans only, never the
     # underlying view/analyze counts. See matchmaking/growth_metrics.py::get_profile_trust_badges.
@@ -759,7 +739,6 @@ def profile(request, username=None, pk=None):
         "application": application,
         "elevator_pitch": elevator_pitch,
         "ic_memo_document_id": ic_memo_document_id,
-        "investor_readiness": investor_readiness,
         "profile_trust_badges": profile_trust_badges,
         "has_verified_funded": has_verified_funded,
         "has_verified_sold": has_verified_sold,
@@ -790,7 +769,6 @@ def profile(request, username=None, pk=None):
         "visible_seller_fields": visible_seller_fields,
         "mutual_connections": mutual_connections,
         "founder_milestones": founder_milestones,
-        "founder_activity": founder_activity,
         "profile_picture": viewed_user_settings.profile_picture,
 
     }
@@ -875,6 +853,19 @@ def profile_analysis(request, username):
             'has_analytics_paywall': True,
             'is_premium_insights': False,
         })
+
+    # Founder-only private diagnostics now live inside Premium Founder
+    # Insights rather than on the public/profile surface.
+    investor_readiness = _get_investor_readiness(application) if application else None
+    founder_activity = None
+    if application:
+        from matchmaking.models import FounderMilestone
+        founder_activity = {
+            'last_login': viewed_user.last_login,
+            'profile_updated_at': application.updated_at,
+            'deck_uploaded_at': application.pitch_deck_uploaded_at,
+            'last_milestone': FounderMilestone.objects.filter(founder=application).order_by('-created_at').first(),
+        }
 
     from matchmaking.models import (
         ProfileView, PitchVideoView,
@@ -1057,6 +1048,8 @@ def profile_analysis(request, username):
         'seller_application': seller_application,
         'buyer_application': buyer_application,
         'profile_analysis_locked': False,
+        'investor_readiness': investor_readiness,
+        'founder_activity': founder_activity,
         'network_summary': network_summary,
         'has_analytics_paywall': True,
         'is_premium_insights': is_premium_insights,
