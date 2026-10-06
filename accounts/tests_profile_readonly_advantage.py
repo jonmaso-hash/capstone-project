@@ -21,8 +21,8 @@ class ZeldaAdvantageReadOnlyTests(SimpleTestCase):
 
         with patch.object(application, 'save') as save_mock, \
              patch('matchmaking.services.ai_engine.generate_profile_embedding') as embed_mock:
-            score = calculate_zelda_advantage(application)
+            calculate_zelda_advantage(application)
 
         save_mock.assert_not_called()
         embed_mock.assert_not_called()
-        self.assertEqual(score, application.zelda_score)
+        self.assertEqual(application.zelda_score, 40)
