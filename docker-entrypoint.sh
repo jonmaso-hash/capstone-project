@@ -7,10 +7,12 @@ set -e
 # Safe to run on every container start: it's idempotent.
 python manage.py collectstatic --noinput
 
-# Deliberately NOT running `manage.py migrate` here. Auto-migrating on every
-# container boot is fine for a single instance but races when multiple
-# instances start at once — run migrations as an explicit, separate step
-# in your deploy process instead (see the production-readiness checklist's
-# note on migration strategy: blue-green/canary/rolling).
+# The live Render service is not currently managed by render.yaml, so its
+# preDeployCommand is not applied. Allow exactly one service (the web
+# service) to opt into migrations explicitly via RUN_MIGRATIONS=1.
+# The worker leaves this unset, preventing concurrent migration races.
+if [ "${RUN_MIGRATIONS:-0}" = "1" ]; then
+    python manage.py migrate --noinput
+fi
 
 exec "$@"
