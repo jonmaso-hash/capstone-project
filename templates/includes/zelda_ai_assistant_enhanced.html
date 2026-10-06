@@ -511,7 +511,17 @@
             </button>
             {% load zelda_products %}{% zelda_products as zelda_catalog %}
             {% for product in zelda_catalog %}
-            <button class="zelda-tab" data-tab="product-{{ product.key }}"><i class="bi bi-file-earmark-text me-2"></i>{{ product.name }}</button>
+                {% if user.match_founder_profile and product.key == 'truth_delta' %}
+                <button class="zelda-tab" data-tab="product-{{ product.key }}"><i class="bi bi-shield-check me-2"></i>{{ product.name }}</button>
+                {% elif user.match_investor_profile and product.key == 'complete_bundle' %}
+                <button class="zelda-tab" data-tab="product-{{ product.key }}"><i class="bi bi-stack me-2"></i>{{ product.name }}</button>
+                {% elif user.match_seller_profile and product.key == 'valuation' %}
+                <button class="zelda-tab" data-tab="product-{{ product.key }}"><i class="bi bi-graph-up-arrow me-2"></i>{{ product.name }}</button>
+                {% elif user.match_buyer_profile and product.key == 'entity' %}
+                <button class="zelda-tab" data-tab="product-{{ product.key }}"><i class="bi bi-building-check me-2"></i>{{ product.name }}</button>
+                {% elif not user.match_founder_profile and not user.match_investor_profile and not user.match_seller_profile and not user.match_buyer_profile %}
+                <button class="zelda-tab" data-tab="product-{{ product.key }}"><i class="bi bi-file-earmark-text me-2"></i>{{ product.name }}</button>
+                {% endif %}
             {% endfor %}
         </div>
 
