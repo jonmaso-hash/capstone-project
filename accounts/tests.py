@@ -846,34 +846,20 @@ class ProfileShareButtonTests(TestCase):
 
 @override_settings(MEDIA_ROOT=tempfile.mkdtemp())
 class InvestorReadinessCenterTests(TestCase):
-    """
-    accounts.views._get_investor_readiness — every dimension must come from
-    real, already-computed data (confidence_breakdown, TruthDeltaReport,
-    is_verified), never a fabricated score. Gated by the same
-    can_view_ic_memo rule as the IC Memo itself (owner, staff, or an
-    investor with an ACCEPTED Connection) — deliberately reusing that gate
-    rather than inventing a second visibility rule for a closely related
-    panel.
-    """
+    """Investor Readiness is owner-only Premium Founder Insights diagnostics."""
 
     def setUp(self):
         _mock_embedding_generation(self)
         from matchmaking.models import Connection
         self.Connection = Connection
-
         self.founder_user = User.objects.create_user('irc_founder', password='x')
         self.application = Application.objects.create(
             user=self.founder_user, company_name='ReadyCo', founder_name='F', email='irc@t.com',
-            description='test', sector='SaaS', stage='Seed',
+            description='test', sector='SaaS', stage='Seed', is_premium=True,
         )
         self.investor_user = User.objects.create_user('irc_investor', password='x')
         self.investor = InvestorApplication.objects.create(
             user=self.investor_user, full_name='I', company_name='Fund', email='irci@t.com',
-            investment_focus='SaaS', investment_stage='Seed',
-        )
-        self.stranger_investor_user = User.objects.create_user('irc_stranger', password='x')
-        InvestorApplication.objects.create(
-            user=self.stranger_investor_user, full_name='S', company_name='OtherFund', email='ircs@t.com',
             investment_focus='SaaS', investment_stage='Seed',
         )
         self.staff_user = User.objects.create_user('irc_staff', password='x', is_staff=True)
@@ -881,35 +867,33 @@ class InvestorReadinessCenterTests(TestCase):
     def _profile_url(self):
         return reverse('accounts:profile', args=[self.founder_user.username])
 
-    def test_panel_hidden_for_unrelated_investor(self):
-        self.client.force_login(self.stranger_investor_user)
-        response = self.client.get(self._profile_url())
-        self.assertIsNone(response.context['investor_readiness'])
-        self.assertNotContains(response, 'Investor Readiness')
+    def _insights_url(self):
+        return reverse('accounts:profile_analysis', args=[self.founder_user.username])
 
-    def test_panel_visible_to_owner(self):
+    def _owner_insights(self):
         self.client.force_login(self.founder_user)
-        response = self.client.get(self._profile_url())
-        self.assertIsNotNone(response.context['investor_readiness'])
-        self.assertContains(response, 'Investor Readiness')
+        return self.client.get(self._insights_url())
 
-    def test_panel_visible_to_staff(self):
-        self.client.force_login(self.staff_user)
-        response = self.client.get(self._profile_url())
-        self.assertIsNotNone(response.context['investor_readiness'])
-        self.assertContains(response, 'Investor Readiness')
-
-    def test_panel_visible_to_accepted_investor(self):
-        self.Connection.objects.create(founder=self.application, investor=self.investor, status='ACCEPTED', initiated_by='INVESTOR')
+    def test_panel_hidden_from_profile_for_owner_staff_and_connected_investor(self):
+        for user in (self.founder_user, self.staff_user):
+            self.client.force_login(user)
+            response = self.client.get(self._profile_url())
+            self.assertNotContains(response, 'Investor Readiness')
+        self.Connection.objects.create(
+            founder=self.application, investor=self.investor,
+            status='ACCEPTED', initiated_by='INVESTOR',
+        )
         self.client.force_login(self.investor_user)
         response = self.client.get(self._profile_url())
+        self.assertNotContains(response, 'Investor Readiness')
+
+    def test_panel_visible_to_premium_owner_in_founder_insights(self):
+        response = self._owner_insights()
         self.assertIsNotNone(response.context['investor_readiness'])
         self.assertContains(response, 'Investor Readiness')
 
     def test_no_analyzed_documents_renders_dashes_not_fabricated_zeros(self):
-        """A founder who's never uploaded anything gets `None` (rendered as —), not a fake 0%."""
-        self.client.force_login(self.founder_user)
-        response = self.client.get(self._profile_url())
+        response = self._owner_insights()
         readiness = response.context['investor_readiness']
         self.assertIsNone(readiness['market_evidence_pct'])
         self.assertIsNone(readiness['financial_disclosure_pct'])
@@ -922,8 +906,7 @@ class InvestorReadinessCenterTests(TestCase):
     def test_is_verified_founder_shows_100_percent_founder_verification(self):
         self.application.is_verified = True
         self.application.save(update_fields=['is_verified'])
-        self.client.force_login(self.founder_user)
-        response = self.client.get(self._profile_url())
+        response = self._owner_insights()
         self.assertEqual(response.context['investor_readiness']['founder_verification_pct'], 100)
 
     def test_market_evidence_pct_derives_from_real_insight_confidence(self):
@@ -935,8 +918,7 @@ class InvestorReadinessCenterTests(TestCase):
         IntelligenceInsight.objects.create(
             document=doc, category='Market', insight_text='TAM is $10B', confidence_score=82,
         )
-        self.client.force_login(self.founder_user)
-        response = self.client.get(self._profile_url())
+        response = self._owner_insights()
         self.assertEqual(response.context['investor_readiness']['market_evidence_pct'], 82)
 
     def test_company_credibility_derives_from_real_truth_delta_score(self):
@@ -947,17 +929,16 @@ class InvestorReadinessCenterTests(TestCase):
             document_type='pitch_deck', status='analyzed',
         )
         TruthDeltaReport.objects.create(document=doc, overall_truth_score=73.4, credibility_risk='medium')
-        self.client.force_login(self.founder_user)
-        response = self.client.get(self._profile_url())
+        response = self._owner_insights()
         readiness = response.context['investor_readiness']
-        self.assertEqual((readiness['company_credibility_score'], readiness['company_credibility_status']),
-                         (73, 'scored'))
-        # A credibility score, not a verification percentage (R-003b).
+        self.assertEqual(
+            (readiness['company_credibility_score'], readiness['company_credibility_status']),
+            (73, 'scored'),
+        )
         self.assertContains(response, '73/100')
         self.assertNotContains(response, 'Company Verification')
 
     def test_an_analyzed_deck_with_nothing_scoreable_says_so(self):
-        # Nike: verified, but 0 verified / 0 contradicted. Not "not analyzed yet".
         from zelda_api.vector_models import DocumentSource
         from zelda_api.truth_delta_models import TruthDeltaReport
         doc = DocumentSource.objects.create(
@@ -965,11 +946,12 @@ class InvestorReadinessCenterTests(TestCase):
             document_type='pitch_deck', status='analyzed',
         )
         TruthDeltaReport.objects.create(document=doc, overall_truth_score=None, credibility_risk='unknown')
-        self.client.force_login(self.founder_user)
-        response = self.client.get(self._profile_url())
+        response = self._owner_insights()
         readiness = response.context['investor_readiness']
-        self.assertEqual((readiness['company_credibility_score'], readiness['company_credibility_status']),
-                         (None, 'insufficient_evidence'))
+        self.assertEqual(
+            (readiness['company_credibility_score'], readiness['company_credibility_status']),
+            (None, 'insufficient_evidence'),
+        )
         self.assertContains(response, 'Not enough comparable public evidence to score')
 
     def test_no_truth_delta_report_leaves_company_credibility_unanalyzed(self):
@@ -978,11 +960,12 @@ class InvestorReadinessCenterTests(TestCase):
             uploaded_by=self.founder_user, filename='deck.pdf', source_entity='ReadyCo',
             document_type='pitch_deck', status='analyzed',
         )
-        self.client.force_login(self.founder_user)
-        response = self.client.get(self._profile_url())
+        response = self._owner_insights()
         readiness = response.context['investor_readiness']
-        self.assertEqual((readiness['company_credibility_score'], readiness['company_credibility_status']),
-                         (None, 'not_analyzed'))
+        self.assertEqual(
+            (readiness['company_credibility_score'], readiness['company_credibility_status']),
+            (None, 'not_analyzed'),
+        )
 
     def test_financial_disclosure_pct_derives_from_real_structured_facts(self):
         from zelda_api.vector_models import DocumentSource, IntelligenceInsight
@@ -994,11 +977,9 @@ class InvestorReadinessCenterTests(TestCase):
         IntelligenceInsight.objects.create(
             document=doc, category='Revenue', insight_text='ARR is $1M', confidence_score=70,
         )
-        # 3 of the 7 FINANCIAL_COMPLETENESS_FIELDS disclosed -> 3/7 -> round(42.857) == 43
         facts = {'arr': '$1M', 'raise_amount': '$5M', 'market_size': '$10B'}
         with mock.patch.object(ZeldaIntelligencePipelineV2, '_build_structured_context', return_value=facts):
-            self.client.force_login(self.founder_user)
-            response = self.client.get(self._profile_url())
+            response = self._owner_insights()
         self.assertEqual(response.context['investor_readiness']['financial_disclosure_pct'], 43)
 
     def test_materials_checklist_only_lists_genuinely_existing_artifacts(self):
@@ -1017,17 +998,14 @@ class InvestorReadinessCenterTests(TestCase):
             founder=self.application, category='CAP_TABLE', label='Cap Table',
             file=SimpleUploadedFile('captable.csv', b'a,b,c', content_type='text/csv'),
         )
-
-        self.client.force_login(self.founder_user)
-        response = self.client.get(self._profile_url())
+        response = self._owner_insights()
         materials = response.context['investor_readiness']['materials']
-
         self.assertIn('Zelda Intelligence Report', materials)
         self.assertIn('Truth Delta Verification', materials)
         self.assertIn('Cap Table', materials)
         self.assertNotIn('Pitch Deck', materials)
         for _, label in DataRoomDocument.CATEGORY_CHOICES:
-            if label not in ('Cap Table',):
+            if label != 'Cap Table':
                 self.assertNotIn(label, materials)
 
 
