@@ -120,5 +120,13 @@ def calculate_zelda_advantage(application):
     # Stability (3pts/year) + Runway Score + Efficiency
     total_score = 40 + eff_pts + min(20, (runway / 36) * 20) + min(15, years * 3)
     application.zelda_score = int(max(1, min(99, total_score)))
-    
-    application.save()
+
+    # Profile rendering calls this helper during GET requests. Persist only
+    # the computed scalar fields without calling Application.save(): the
+    # post_save signal generates embeddings synchronously and can load the
+    # SentenceTransformer model into the constrained web process.
+    if application.pk:
+        type(application).objects.filter(pk=application.pk).update(
+            zelda_score=application.zelda_score,
+            runway_months=application.runway_months,
+        )
