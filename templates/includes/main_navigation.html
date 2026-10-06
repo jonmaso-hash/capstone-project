@@ -2,15 +2,15 @@
     {% if user.is_authenticated %}
         <li class="nav-item">
             {% if user.match_founder_profile %}
-                <a class="nav-link{% if request.resolver_match.url_name == 'founder_dashboard' %} active{% endif %}" href="{% url 'matchmaking:founder_dashboard' %}"{% if request.resolver_match.url_name == 'founder_dashboard' %} aria-current="page"{% endif %}>Match Room</a>
+                <a class="nav-link{% if request.resolver_match.url_name == 'founder_dashboard' %} active{% endif %}" href="{% url 'matchmaking:founder_dashboard' %}"{% if request.resolver_match.url_name == 'founder_dashboard' %} aria-current="page"{% endif %}>Dashboard</a>
             {% elif user.match_investor_profile %}
-                <a class="nav-link{% if request.resolver_match.url_name == 'investor_dashboard' %} active{% endif %}" href="{% url 'matchmaking:investor_dashboard' %}"{% if request.resolver_match.url_name == 'investor_dashboard' %} aria-current="page"{% endif %}>Match Room</a>
+                <a class="nav-link{% if request.resolver_match.url_name == 'investor_dashboard' %} active{% endif %}" href="{% url 'matchmaking:investor_dashboard' %}"{% if request.resolver_match.url_name == 'investor_dashboard' %} aria-current="page"{% endif %}>Dashboard</a>
             {% elif user.match_seller_profile %}
                 <a class="nav-link{% if request.resolver_match.url_name == 'seller_dashboard' %} active{% endif %}" href="{% url 'matchmaking:seller_dashboard' %}"{% if request.resolver_match.url_name == 'seller_dashboard' %} aria-current="page"{% endif %}>Dashboard</a>
             {% elif user.match_buyer_profile %}
                 <a class="nav-link{% if request.resolver_match.url_name == 'buyer_dashboard' %} active{% endif %}" href="{% url 'matchmaking:buyer_dashboard' %}"{% if request.resolver_match.url_name == 'buyer_dashboard' %} aria-current="page"{% endif %}>Dashboard</a>
             {% else %}
-                <a class="nav-link" href="{% url 'pages:home' %}">Home</a>
+                <a class="nav-link" href="{% url 'accounts:dashboard' %}">Dashboard</a>
             {% endif %}
         </li>
         {% if user.match_founder_profile %}
@@ -33,9 +33,7 @@
     {% endif %}
     <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'explore' or request.resolver_match.url_name == 'pitch_videos' or request.resolver_match.url_name == 'pitch_videos_entry' %} active{% endif %}" href="{% url 'matchmaking:pitch_videos_entry' %}"{% if request.resolver_match.url_name == 'explore' or request.resolver_match.url_name == 'pitch_videos' or request.resolver_match.url_name == 'pitch_videos_entry' %} aria-current="page"{% endif %}>Pitch Videos</a></li>
     {% if user.is_authenticated %}
-        {% if user.match_founder_profile or user.match_investor_profile or user.match_seller_profile or user.match_buyer_profile %}
-        <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'diligence_chat' %} active{% endif %}" href="{% url 'matchmaking:diligence_chat' %}"{% if request.resolver_match.url_name == 'diligence_chat' %} aria-current="page"{% endif %}>Deal Room</a></li>
-        {% endif %}
+        <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'diligence_chat' %} active{% endif %}" href="{% url 'matchmaking:diligence_chat' %}"{% if request.resolver_match.url_name == 'diligence_chat' %} aria-current="page"{% endif %}>Chat</a></li>
     {% endif %}
     <li class="nav-item dropdown">
         <button class="nav-link dropdown-toggle text-start" type="button" data-bs-toggle="dropdown" aria-expanded="false">Resources</button>

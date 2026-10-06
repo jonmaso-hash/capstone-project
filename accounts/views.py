@@ -128,6 +128,7 @@ def signup_view(request):
                 recipient=user, notification_type='SYSTEM', message=PLATFORM_DISCLAIMER_MESSAGE,
             )
             log_page_event(request, 'signup_completed', role=role, user=user)
+            request.session['pending_profile_role'] = role
             messages.success(request, f"Welcome to Interlink Foundry, {user.username}!")
             return redirect(ROLE_PROFILE_URLS[role])
     else:
@@ -181,8 +182,24 @@ def choose_role(request):
         Notification.objects.get_or_create(
             recipient=request.user, notification_type='SYSTEM', message=PLATFORM_DISCLAIMER_MESSAGE,
         )
+        request.session['pending_profile_role'] = role
         return redirect(ROLE_PROFILE_URLS[role])
     return render(request, "accounts/choose_role.html")
+
+
+@login_required
+def create_profile(request):
+    """Resume the selected role's existing form without creating a blank profile."""
+    role = request.session.get('pending_profile_role')
+    return redirect(ROLE_PROFILE_URLS.get(role, 'accounts:choose_role'))
+
+
+@login_required
+def dashboard(request):
+    for role in ROLE_PROFILE_URLS:
+        if getattr(request.user, f'match_{role}_profile', None):
+            return redirect(f'matchmaking:{role}_dashboard')
+    return redirect('accounts:profile_self')
 
 
 def admin_login_redirect(request):

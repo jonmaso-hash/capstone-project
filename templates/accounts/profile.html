@@ -710,14 +710,24 @@
                     <p class="text-muted mx-auto mb-4" style="max-width: 450px;">
                         While our ecosystem alignment engines map your network credentials, dive directly into active deal flow updates and network insights.
                     </p>
-                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <div class="d-flex flex-column flex-lg-row justify-content-center gap-3">
                         <a href="{% url 'matchmaking:bulletin_board' %}" class="btn btn-dark rounded-pill px-4">
                             <i class="bi bi-grid-3x3-gap me-2"></i> Browse Bulletin Board
                         </a>
                         <a href="{% url 'blog:blog_view' %}" class="btn btn-outline-secondary rounded-pill px-4">
                             <i class="bi bi-newspaper me-2"></i> Read Network Blog
                         </a>
+                        <a href="{% url 'jobs:create' %}" class="btn btn-outline-secondary rounded-pill px-4">
+                            <i class="bi bi-briefcase me-2"></i> Post a Job
+                        </a>
                     </div>
+                    {% if request.user == profile_user %}
+                    <div class="mt-4">
+                        <a href="{% url 'accounts:create_profile' %}" class="btn btn-primary rounded-pill px-4">
+                            <i class="bi bi-person-plus me-2"></i> Create a Profile
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
             {% endif %}
