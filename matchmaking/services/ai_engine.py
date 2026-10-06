@@ -120,5 +120,9 @@ def calculate_zelda_advantage(application):
     # Stability (3pts/year) + Runway Score + Efficiency
     total_score = 40 + eff_pts + min(20, (runway / 36) * 20) + min(15, years * 3)
     application.zelda_score = int(max(1, min(99, total_score)))
-    
-    application.save()
+
+    # Profile rendering calls this helper during GET requests. Keep the
+    # calculated values on the in-memory object for the response, but do not
+    # save here: Application.post_save generates embeddings synchronously,
+    # which can load SentenceTransformer into the constrained web process.
+    # Persist score/runway only from explicit write/background workflows.
