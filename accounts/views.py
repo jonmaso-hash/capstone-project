@@ -424,23 +424,6 @@ def profile(request, username=None, pk=None):
     seller_application = getattr(viewed_user, "match_seller_profile", None)
     buyer_application = getattr(viewed_user, "match_buyer_profile", None)
 
-    # Profile Analysis is a Premium-member feature for every marketplace role.
-    # Gate before any analytics/match queries so free accounts cannot receive
-    # the underlying data merely by loading the page.
-    role_profile = application or investor_application or seller_application or buyer_application
-    is_premium_member = bool(role_profile and getattr(role_profile, 'is_premium', False))
-    if not is_premium_member:
-        return render(request, 'accounts/profile_analysis.html', {
-            'profile_user': viewed_user,
-            'application': application,
-            'investor_application': investor_application,
-            'seller_application': seller_application,
-            'buyer_application': buyer_application,
-            'profile_analysis_locked': True,
-            'has_analytics_paywall': True,
-            'is_premium_insights': False,
-        })
-
     # Verified Track Record — status='FUNDED'/'CLOSED' only reaches this
     # terminal state via the counterpart's confirmation (see
     # matchmaking.views.connection_action_view/acquisition_connection_action_view),
@@ -875,6 +858,23 @@ def profile_analysis(request, username):
     investor_application = getattr(viewed_user, "match_investor_profile", None)
     seller_application = getattr(viewed_user, "match_seller_profile", None)
     buyer_application = getattr(viewed_user, "match_buyer_profile", None)
+
+    # Profile Analysis is a Premium-member feature for every marketplace role.
+    # Gate only this owner-only analytics view, before any analytics/match
+    # queries run, so free accounts receive the upgrade surface but no data.
+    role_profile = application or investor_application or seller_application or buyer_application
+    is_premium_member = bool(role_profile and getattr(role_profile, 'is_premium', False))
+    if not is_premium_member:
+        return render(request, 'accounts/profile_analysis.html', {
+            'profile_user': viewed_user,
+            'application': application,
+            'investor_application': investor_application,
+            'seller_application': seller_application,
+            'buyer_application': buyer_application,
+            'profile_analysis_locked': True,
+            'has_analytics_paywall': True,
+            'is_premium_insights': False,
+        })
 
     from matchmaking.models import (
         ProfileView, PitchVideoView,
