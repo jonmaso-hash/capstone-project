@@ -226,6 +226,64 @@
                 </div>
             </div>
 
+            {% if request.user == profile_user and application %}
+            <div class="card border-0 shadow-sm rounded-4 mb-5">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-1">Founder workspace</h5>
+                            <p class="text-muted small mb-0">Your profile is the hub for keeping the company current and moving investor conversations forward.</p>
+                        </div>
+                        <a href="{% url 'usersettings:edit_founder_profile' %}" class="btn btn-dark rounded-pill px-4">
+                            <i class="bi bi-pencil-square me-1"></i> Edit Profile
+                        </a>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6 col-lg-3">
+                            <a href="{% url 'matchmaking:founder_dashboard' %}" class="btn btn-outline-primary w-100 h-100 py-3">
+                                <i class="bi bi-speedometer2 d-block fs-5 mb-1"></i> Dashboard
+                            </a>
+                        </div>
+                        <div class="col-6 col-lg-3">
+                            <a href="{% url 'matchmaking:fundraising_crm' %}" class="btn btn-outline-success w-100 h-100 py-3">
+                                <i class="bi bi-kanban-fill d-block fs-5 mb-1"></i> Fundraising CRM
+                            </a>
+                        </div>
+                        <div class="col-6 col-lg-3">
+                            <a href="{% url 'matchmaking:data_room' profile_user.username %}" class="btn btn-outline-secondary w-100 h-100 py-3">
+                                <i class="bi bi-folder-fill d-block fs-5 mb-1"></i> Data Room
+                            </a>
+                        </div>
+                        <div class="col-6 col-lg-3">
+                            <a href="{% url 'accounts:zelda_dashboard' %}" class="btn btn-outline-warning w-100 h-100 py-3">
+                                <i class="bi bi-stars d-block fs-5 mb-1"></i> Zelda Intelligence
+                            </a>
+                        </div>
+                        <div class="col-6 col-lg-3">
+                            <a href="{% url 'accounts:profile_analysis' profile_user.username %}" class="btn btn-outline-dark w-100 h-100 py-3">
+                                <i class="bi bi-bar-chart-fill d-block fs-5 mb-1"></i> Profile Analysis
+                            </a>
+                        </div>
+                        <div class="col-6 col-lg-3">
+                            <a href="#milestonesCollapse" class="btn btn-outline-dark w-100 h-100 py-3">
+                                <i class="bi bi-flag-fill d-block fs-5 mb-1"></i> Milestones
+                            </a>
+                        </div>
+                        <div class="col-6 col-lg-3">
+                            <a href="{% url 'jobs:create' %}" class="btn btn-outline-dark w-100 h-100 py-3">
+                                <i class="bi bi-briefcase-fill d-block fs-5 mb-1"></i> Post a Job
+                            </a>
+                        </div>
+                        <div class="col-6 col-lg-3">
+                            <a href="{% url 'accounts:business_verification' %}" class="btn btn-outline-dark w-100 h-100 py-3">
+                                <i class="bi bi-patch-check-fill d-block fs-5 mb-1"></i> Verify Email
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             {% if application %}
                 <div class="section-title mb-4 d-flex align-items-center">
                     <h3 class="fw-bold mb-0">Company Details</h3>
@@ -370,7 +428,10 @@
                                         {% endif %}
                                     {% else %}
                                         <div class="card border-0 shadow-sm mb-4 rounded-4 bg-light p-4 text-center">
-                                            <p class="text-muted small mb-0"><i class="bi bi-camera-video-off"></i> No pitch video uploaded yet.</p>
+                                            <p class="text-muted small mb-2"><i class="bi bi-camera-video-off"></i> No pitch video uploaded yet.</p>
+                                            {% if request.user == profile_user %}
+                                            <a href="{% url 'usersettings:edit_founder_profile' %}" class="btn btn-sm btn-outline-dark rounded-pill px-3">Add Pitch Video</a>
+                                            {% endif %}
                                         </div>
                                     {% endif %}
                                 
@@ -383,7 +444,10 @@
                                         </a>
                                     {% else %}
                                         <div class="card border-0 shadow-sm mb-4 rounded-4 bg-light p-4 text-center">
-                                            <p class="text-muted small mb-0"><i class="bi bi-file-earmark-pdf"></i> No pitch deck uploaded yet.</p>
+                                            <p class="text-muted small mb-2"><i class="bi bi-file-earmark-pdf"></i> No pitch deck uploaded yet.</p>
+                                            {% if request.user == profile_user %}
+                                            <a href="{% url 'usersettings:edit_founder_profile' %}" class="btn btn-sm btn-outline-dark rounded-pill px-3">Add Pitch Deck</a>
+                                            {% endif %}
                                         </div>
                                     {% endif %}
                                 </div>
@@ -1055,7 +1119,12 @@
         </div>
     {% else %}
         <div class="p-4 text-center border rounded-4 bg-light">
-            <p class="text-muted mb-0">No milestones posted yet.</p>
+            <p class="text-muted mb-2">No milestones posted yet.</p>
+            {% if request.user == profile_user %}
+            <a href="{% url 'matchmaking:founder_dashboard' %}#milestones" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                <i class="bi bi-plus-circle me-1"></i> Post your first milestone
+            </a>
+            {% endif %}
         </div>
     {% endif %}
     </div>
