@@ -5,6 +5,7 @@
      data-intake-url="{% url 'billing:zelda_intake' %}"
      data-checkout-url="{% url 'billing:zelda_checkout' %}"></div>
 {% for product in products %}
+{% if user.match_founder_profile and product.key == 'truth_delta' or user.match_investor_profile and product.key == 'complete_bundle' or user.match_seller_profile and product.key == 'valuation' or user.match_buyer_profile and product.key == 'entity' or not user.match_founder_profile and not user.match_investor_profile and not user.match_seller_profile and not user.match_buyer_profile %}
 <div id="tab-product-{{ product.key }}" class="tab-content zelda-product-panel" data-product="{{ product.key }}"
      style="display: none; flex-direction: column; gap: 1rem;">
     <div class="zelda-card p-4">
@@ -47,5 +48,6 @@
         <p class="small mt-2 mb-0 zelda-product-status" role="status" aria-live="polite"></p>
     </div>
 </div>
+{% endif %}
 {% endfor %}
 <script src="{% static 'js/zelda_products.js' %}" defer></script>
