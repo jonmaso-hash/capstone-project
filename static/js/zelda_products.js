@@ -54,7 +54,8 @@
                     'The server returned an unexpected response. Refresh this page and try again.';
                 throw new Error(message);
             }
-            if(!response.ok)throw new Error(data.error||'The request could not finish. Please try again.');
+            if(!response.ok)throw new Error((data.error||'The request could not finish. Please try again.') +
+                (data.reference ? ` Error reference: ${data.reference}` : ''));
             return data;
         } catch(error) {
             if(error.name==='AbortError')throw new Error('The request took too long. Please try again.');

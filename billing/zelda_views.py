@@ -204,21 +204,47 @@ def product_checkout(request):
         document_id = int(data['document_id'])
     except (ValueError, KeyError, TypeError):
         return JsonResponse({'error': 'Select a product, evidence and the required reports.'}, status=400)
-    with transaction.atomic():
-        doc = get_object_or_404(DocumentSource.objects.select_for_update(), pk=document_id,
-                                uploaded_by=request.user, is_product_input=True)
-        order = ZeldaOrder.objects.filter(user=request.user, source_document=doc, product=product,
-                                          status__in=['awaiting_payment', 'paid', 'processing', 'ready', 'failed']).first()
-        if order and order.reports != reports:
-            return JsonResponse({'error': 'This evidence already has a different pack selection. Upload a fresh evidence set for a different pack.'}, status=409)
-        if order and order.status != 'awaiting_payment':
-            return JsonResponse({'order_url': reverse('billing:zelda_order', args=[order.id])})
-        if not order:
-            order = ZeldaOrder.objects.create(user=request.user, source_document=doc, product=product,
-                                             reports=reports, amount=PRODUCTS[product][1])
-    if order.checkout_url:
-        return JsonResponse({'checkout_url': order.checkout_url})
     try:
+        # Lock the evidence while selecting/creating an order. Concurrent retries
+        # then share the same order and Stripe idempotency key.
+        for attempt in range(2):
+            with transaction.atomic():
+                doc = get_object_or_404(DocumentSource.objects.select_for_update(), pk=document_id,
+                                        uploaded_by=request.user, is_product_input=True)
+                order = ZeldaOrder.objects.filter(user=request.user, source_document=doc, product=product,
+                                                  status__in=['awaiting_payment', 'paid', 'processing', 'ready', 'failed']).first()
+                if order and order.reports != reports:
+                    return JsonResponse({'error': 'This evidence already has a different pack selection. Upload a fresh evidence set for a different pack.'}, status=409)
+                if order and order.status != 'awaiting_payment':
+                    return JsonResponse({'order_url': reverse('billing:zelda_order', args=[order.id])})
+                if not order:
+                    order = ZeldaOrder.objects.create(user=request.user, source_document=doc, product=product,
+                                                     reports=reports, amount=PRODUCTS[product][1])
+            if not order.stripe_session_id:
+                break
+            # A saved URL can outlive its Checkout session. Ask Stripe before
+            # redirecting or replacing it; never start a second payment for a
+            # complete session, including an asynchronously pending payment.
+            session = plain(stripe.checkout.Session.retrieve(
+                order.stripe_session_id, api_key=settings.STRIPE_SECRET_KEY.strip()))
+            if session.get('id') != order.stripe_session_id:
+                raise ValueError('Retrieved product session mismatch')
+            checkout_state = session.get('status')
+            if checkout_state not in ('open', 'complete', 'expired'):
+                raise ValueError('Unknown Checkout session state')
+            if session.get('payment_status') == 'paid' and checkout_state != 'complete':
+                raise ValueError('Paid Checkout session is not complete')
+            handle_product_event('checkout.session.expired' if checkout_state == 'expired'
+                                 else 'checkout.session.completed', session)
+            if checkout_state == 'expired':
+                continue
+            if checkout_state == 'complete':
+                return JsonResponse({'order_url': reverse('billing:zelda_order', args=[order.id])})
+            if not session.get('url'):
+                raise ProductPaymentConfigurationError('Open Checkout session has no hosted URL')
+            return JsonResponse({'checkout_url': session['url']})
+        else:
+            raise ProductPaymentConfigurationError('Checkout sessions expired during retry')
         price_id = stripe_price(product)
         order_url = request.build_absolute_uri(reverse('billing:zelda_order', args=[order.id]))
         session = plain(stripe.checkout.Session.create(
@@ -229,15 +255,22 @@ def product_checkout(request):
             idempotency_key=f'zelda-order-{order.id}',
             api_key=settings.STRIPE_SECRET_KEY.strip(),
         ))
+        if not session.get('id') or not session.get('url'):
+            raise ProductPaymentConfigurationError('Stripe did not return a hosted Checkout session')
         order.stripe_session_id, order.checkout_url = session['id'], session['url']
         order.save(update_fields=['stripe_session_id', 'checkout_url'])
+    except Http404:
+        raise
     except ProductPaymentConfigurationError:
         logger.exception('Zelda product payment configuration unavailable for order %s', order.id)
         return JsonResponse({'error': 'Payments are not configured for this product yet. Please try again later. Nothing was charged.'}, status=503)
     except Exception:
-        logger.exception('Could not create Zelda product checkout %s', order.id)
-        return JsonResponse({'error': 'Checkout is currently unavailable. Nothing was charged. Please try again.'}, status=503)
+        reference = uuid.uuid4().hex[:12]
+        logger.exception('Could not open Zelda product checkout reference=%s user=%s', reference, request.user.pk)
+        return JsonResponse({'error': 'Checkout is currently unavailable. If you already submitted payment, do not pay again. Please try again shortly.',
+                             'reference': reference}, status=503)
     return JsonResponse({'checkout_url': order.checkout_url})
+
 
 
 def handle_product_event(event_type, session):

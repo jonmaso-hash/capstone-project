@@ -68,13 +68,67 @@ class ZeldaProductTests(TestCase):
     @mock.patch('stripe.checkout.Session.create', return_value={'id':'cs_created','url':'https://checkout.stripe.com/c/test'})
     def test_checkout_uses_catalog_price_and_reuses_session_without_starting_generation(self, checkout, price):
         with mock.patch('billing.tasks.fulfill_zelda_order.delay') as generate:
-            for _ in range(2): self.assertEqual(self.checkout().status_code, 200)
+            self.assertEqual(self.checkout().status_code, 200)
+            order = ZeldaOrder.objects.get()
+            with mock.patch('stripe.checkout.Session.retrieve', return_value=self.event(
+                    order, status='open', payment_status='unpaid', url='https://checkout.stripe.com/c/test')):
+                self.assertEqual(self.checkout().status_code, 200)
         checkout.assert_called_once()
         self.assertEqual(checkout.call_args.kwargs['line_items'], [{'price':'price_ic','quantity':1}])
         self.assertEqual(checkout.call_args.kwargs['mode'],'payment')
         self.assertEqual(checkout.call_args.kwargs['api_key'],'sk_test_zelda_ci_only')
         generate.assert_not_called()
         self.assertEqual(ZeldaOrder.objects.get().amount,499)
+
+    @mock.patch('billing.zelda_views.stripe_price', return_value='price_entity')
+    @mock.patch('stripe.checkout.Session.create', return_value={'id':'cs_replacement','url':'https://checkout.stripe.com/c/new'})
+    def test_expired_entity_checkout_can_resume_with_same_uploaded_evidence(self, create, price):
+        old = self.order(product='entity', reports=['entity'], amount=999,
+                         checkout_url='https://checkout.stripe.com/c/expired')
+        with mock.patch('stripe.checkout.Session.retrieve', return_value=self.event(
+                old, status='expired', payment_status='unpaid')):
+            response = self.checkout(product='entity')
+        self.assertEqual(response.json()['checkout_url'], 'https://checkout.stripe.com/c/new')
+        old.refresh_from_db()
+        self.assertEqual(old.status, 'canceled')
+        replacement = ZeldaOrder.objects.exclude(pk=old.pk).get()
+        self.assertEqual(replacement.source_document_id, self.source.pk)
+        self.assertEqual(create.call_args.kwargs['idempotency_key'], f'zelda-order-{replacement.pk}')
+
+    def test_complete_checkout_does_not_start_another_payment(self):
+        for payment_status in ('paid', 'unpaid'):
+            with self.subTest(payment_status=payment_status):
+                ZeldaOrder.objects.all().delete()
+                order = self.order(checkout_url='https://checkout.stripe.com/c/old')
+                with mock.patch('stripe.checkout.Session.retrieve', return_value=self.event(
+                        order, payment_status=payment_status)), mock.patch('stripe.checkout.Session.create') as create, \
+                        mock.patch('billing.tasks.fulfill_zelda_order.delay'):
+                    response = self.checkout()
+                self.assertEqual(response.json()['order_url'], reverse('billing:zelda_order', args=[order.pk]))
+                create.assert_not_called()
+                order.refresh_from_db()
+                self.assertEqual(order.status, 'paid' if payment_status == 'paid' else 'awaiting_payment')
+
+    def test_checkout_refuses_unverified_or_mismatched_saved_session(self):
+        order = self.order(checkout_url='https://checkout.stripe.com/c/old')
+        for session in (self.event(order, id='cs_other', status='expired', payment_status='unpaid'),
+                        self.event(order, amount_total=1, status='expired', payment_status='unpaid')):
+            with mock.patch('stripe.checkout.Session.retrieve', return_value=session), \
+                    mock.patch('stripe.checkout.Session.create') as create:
+                self.assertEqual(self.checkout().status_code, 503)
+                create.assert_not_called()
+        with mock.patch('stripe.checkout.Session.retrieve', side_effect=RuntimeError('Stripe unavailable')), \
+                mock.patch('stripe.checkout.Session.create') as create:
+            self.assertEqual(self.checkout().status_code, 503)
+            create.assert_not_called()
+        order.refresh_from_db()
+        self.assertEqual(order.status, 'awaiting_payment')
+
+    def test_order_has_checkout_action_even_if_session_creation_failed(self):
+        order = self.order(stripe_session_id=None)
+        page = self.client.get(reverse('billing:zelda_order', args=[order.pk]))
+        self.assertContains(page, 'id="order-checkout"')
+        self.assertContains(page, reverse('billing:zelda_checkout'))
 
     def test_checkout_refuses_other_users_evidence_and_invalid_pack(self):
         self.client.force_login(self.other)
