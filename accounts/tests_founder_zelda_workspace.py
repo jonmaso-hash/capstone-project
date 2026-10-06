@@ -37,11 +37,18 @@ class FounderProfileZeldaWorkspaceTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
         self.assertContains(response, 'Put Zelda to work on Workspace Co')
-        self.assertContains(response, 'Truth Delta')
+        self.assertContains(response, 'Zelda Intelligence Memo')
         self.assertContains(response, 'Zelda IC Memo')
-        self.assertContains(response, 'Entity Integrity')
-        self.assertContains(response, 'Business Valuation')
+        self.assertContains(response, 'Truth Delta Report')
+        self.assertContains(response, 'Zelda Complete Intelligence Bundle')
+        self.assertContains(response, 'Zelda 3-Report Pack')
+        self.assertContains(response, 'Entity Integrity Report')
+        self.assertContains(response, 'Business valuation')
         self.assertContains(response, 'Saved Reports')
+        self.assertNotContains(response, 'Founder Premium')
+        self.assertNotContains(response, 'Investor premium')
+        self.assertNotContains(response, 'Seller Premium')
+        self.assertNotContains(response, 'Buyer Premium')
 
         # Operational actions belong in navigation/dashboard, not this profile card.
         self.assertNotContains(response, '> Post a Job</a>')
