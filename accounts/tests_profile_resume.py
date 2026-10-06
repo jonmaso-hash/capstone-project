@@ -27,7 +27,48 @@ class UnfinishedProfileTests(TestCase):
         self.assertRedirects(self.client.get(reverse('accounts:create_profile')),
                              reverse('accounts:choose_role'))
         self.assertRedirects(self.client.get(reverse('accounts:dashboard')),
-                             reverse('accounts:profile_self'), fetch_redirect_response=False)
+                             reverse('matchmaking:founder_dashboard'), fetch_redirect_response=False)
+
+    def test_dashboard_without_profile_shows_founder_connections_workspace(self):
+        page = self.client.get(reverse('accounts:dashboard'), follow=True)
+        self.assertEqual(page.status_code, 200)
+        self.assertTemplateUsed(page, 'matchmaking/founder_dashboard.html')
+        self.assertContains(page, 'Introduction requests')
+        self.assertContains(page, 'Connections')
+        self.assertContains(page, 'Fundraising CRM')
+        self.assertContains(page, 'Create a Profile')
+        self.assertContains(page, reverse('usersettings:edit_founder_profile'))
+        self.assertNotContains(page, reverse('matchmaking:post_milestone'))
+
+    def test_founder_dashboard_retains_investor_requests_crm_and_deal_room(self):
+        from matchmaking.models import Application, InvestorApplication, Connection
+        from matchmaking.tests import _mock_embedding_generation
+        _mock_embedding_generation(self)
+        founder = Application.objects.create(user=self.user, company_name='Founder Workspace')
+        for status in ('PENDING', 'ACCEPTED'):
+            investor_user = get_user_model().objects.create_user(f'workspace_investor_{status}')
+            investor = InvestorApplication.objects.create(
+                user=investor_user, full_name=f'Investor {status}', company_name=f'Fund {status}')
+            connection = Connection.objects.create(
+                founder=founder, investor=investor, status=status, initiated_by='INVESTOR')
+            if status == 'ACCEPTED':
+                accepted = connection
+        page = self.client.get(reverse('accounts:dashboard'), follow=True)
+        self.assertTemplateUsed(page, 'matchmaking/founder_dashboard.html')
+        self.assertContains(page, 'Fund PENDING')
+        self.assertContains(page, 'Fund ACCEPTED')
+        self.assertContains(page, reverse('matchmaking:fundraising_crm'))
+        self.assertContains(page, reverse('matchmaking:deal_workspace', args=[accepted.pk]))
+        self.assertEqual(len(page.context['pending_requests']), 1)
+
+    def test_investor_still_routes_to_investor_dashboard(self):
+        from matchmaking.models import InvestorApplication
+        from matchmaking.tests import _mock_embedding_generation
+        _mock_embedding_generation(self)
+        InvestorApplication.objects.create(user=self.user, company_name='Investor Workspace')
+        self.assertRedirects(self.client.get(reverse('accounts:dashboard')),
+                             reverse('matchmaking:investor_dashboard'), fetch_redirect_response=False)
+        self.assertEqual(self.client.get(reverse('matchmaking:founder_dashboard')).status_code, 403)
 
     def test_other_users_canvas_does_not_offer_profile_creation(self):
         other = get_user_model().objects.create_user('another_unfinished_profile')
