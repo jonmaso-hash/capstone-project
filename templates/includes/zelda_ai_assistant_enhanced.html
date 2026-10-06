@@ -309,6 +309,7 @@
     #aiAgentSidebar.zelda-fullscreen {
         width: 100vw !important;
         height: 100vh !important;
+        height: 100dvh !important;
         top: 0 !important;
         right: 0 !important;
         border-radius: 0 !important;
@@ -316,8 +317,10 @@
     }
 
     #aiAgentSidebar.zelda-fullscreen .offcanvas-body {
-        display: grid;
-        grid-template-columns: 260px 1fr;
+        display: grid !important;
+        grid-template-columns: 240px minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr) auto;
+        min-height: 0;
         gap: 0;
         overflow: hidden;
     }
@@ -326,18 +329,70 @@
         flex-direction: column;
         border-right: 1px solid rgba(255,255,255,0.1);
         border-bottom: none;
-        padding: 1rem 0.5rem;
-        margin: 0;
+        padding: 1rem 0.5rem !important;
+        margin: 0 !important;
         min-width: 220px;
-        height: 100%;
+        min-height: 0;
+        overflow-y: auto;
+        grid-column: 1;
+        grid-row: 1;
     }
 
     #aiAgentSidebar.zelda-fullscreen .zelda-tab {
         text-align: left;
+        white-space: normal;
+        overflow-wrap: anywhere;
         border-bottom: none;
         border-left: 3px solid transparent;
         border-radius: 6px;
         margin-bottom: 0.25rem;
+    }
+
+    /* Only the active tab is displayed by the existing tab controller.
+       Bound it to the second grid cell so long reports scroll independently. */
+    #aiAgentSidebar.zelda-fullscreen .offcanvas-body > .tab-content {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        min-width: 0;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-wrap: anywhere;
+        padding: 1rem;
+        overscroll-behavior: contain;
+    }
+
+    #aiAgentSidebar .offcanvas-body { min-height: 0; }
+    #aiAgentSidebar { max-width: 100vw; }
+    #aiAgentSidebar .offcanvas-header { flex-shrink: 0; }
+    body:has(#aiAgentSidebar.show, #aiAgentSidebar.showing) #ai-agent-toggle { visibility: hidden; }
+    #aiAgentSidebar .zelda-activity { flex-shrink: 0; margin-top: 1rem; color: #64748b; font-size: 0.8rem; }
+    #aiAgentSidebar .zelda-activity summary { cursor: pointer; padding: 0.5rem; }
+    #aiAgentSidebar .zelda-activity .zelda-log { max-height: 180px; margin-top: 0.5rem; }
+    #aiAgentSidebar.zelda-fullscreen .zelda-activity { grid-column: 1; grid-row: 2; min-width: 0; }
+
+    @media (max-width: 767.98px) {
+        #aiAgentSidebar.zelda-fullscreen .offcanvas-body {
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-rows: auto minmax(0, 1fr) auto;
+        }
+        #aiAgentSidebar.zelda-fullscreen .zelda-tabs {
+            flex-direction: row;
+            grid-column: 1;
+            grid-row: 1;
+            border-right: none;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 !important;
+            min-width: 0;
+            max-height: none;
+            overflow-y: hidden;
+        }
+        #aiAgentSidebar.zelda-fullscreen .offcanvas-body > .tab-content {
+            grid-column: 1;
+            grid-row: 2;
+            padding: 1rem 0;
+        }
+        #aiAgentSidebar.zelda-fullscreen .zelda-activity { grid-row: 3; margin-top: 0; }
+        #aiAgentSidebar.zelda-fullscreen .zelda-activity .zelda-log { max-height: 15dvh; }
     }
 
     #aiAgentSidebar.zelda-fullscreen .zelda-tab.active {
@@ -425,7 +480,7 @@
     </div>
     
     <!-- Body -->
-    <div class="offcanvas-body p-4 d-flex flex-column h-100">
+    <div class="offcanvas-body p-4 d-flex flex-column">
         
         <!-- TAB NAVIGATION -->
         <div class="zelda-tabs" style="margin: -1rem -1rem 0 -1rem; padding: 0 1rem;">
@@ -442,19 +497,25 @@
             <button class="zelda-tab" data-tab="upload">
                 <i class="bi bi-cloud-upload me-2"></i>Upload
             </button>
-            <button class="zelda-tab" data-tab="memo">
+            <button class="zelda-tab" data-tab="memo" style="display: none;" aria-hidden="true">
                 <i class="bi bi-file-text me-2"></i>Memos
             </button>
-            <button class="zelda-tab" data-tab="intelligence">
+            <button class="zelda-tab" data-tab="intelligence" style="display: none;" aria-hidden="true">
                 <i class="bi bi-cpu me-2"></i>Intelligence
             </button>
-            <button class="zelda-tab" data-tab="truth-delta">
+            <button class="zelda-tab" data-tab="truth-delta" style="display: none;" aria-hidden="true">
                 <i class="bi bi-shield-check me-2"></i>Truth Delta
             </button>
             <button class="zelda-tab" data-tab="progress">
                 <i class="bi bi-signpost-2 me-2"></i>My Progress
             </button>
+            {% load zelda_products %}{% zelda_products as zelda_catalog %}
+            {% for product in zelda_catalog %}
+            <button class="zelda-tab" data-tab="product-{{ product.key }}"><i class="bi bi-file-earmark-text me-2"></i>{{ product.name }}</button>
+            {% endfor %}
         </div>
+
+        {% include 'includes/zelda_product_panels.html' %}
 
         <!-- TAB: NOTIFICATIONS -->
         <div id="tab-notifications" class="tab-content" style="display: none; flex-direction: column; gap: 1rem;">
@@ -704,7 +765,7 @@
         <div id="tab-truth-delta" class="tab-content" style="display: none; flex-direction: column; gap: 1rem; flex-grow: 1;">
             <div class="zelda-card p-4">
                 <h6 class="fw-bold text-dark mb-3">
-                    <i class="bi bi-shield-check text-success me-2"></i>Truth Delta Verification
+                    <i class="bi bi-shield-check text-success me-2"></i>Truth Delta
                 </h6>
                 <div id="truth-delta-loading" class="text-center py-4" style="display:none;">
                     <div class="spinner-border spinner-border-sm text-warning me-2"></div>
@@ -753,6 +814,8 @@
         </div>
 
         <!-- EXECUTION LOG -->
+        <details class="zelda-activity">
+        <summary>Processing activity</summary>
         <div class="zelda-log" id="agent-response-log">
             <div style="padding-right: 1rem; position: relative; z-index: 10;">
                 <div class="log-entry info">
@@ -763,6 +826,7 @@
                 </div>
             </div>
         </div>
+        </details>
     </div>
 </div>
 
@@ -810,7 +874,7 @@
             const tabName = this.dataset.tab;
             
             // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(content => {
+            document.querySelectorAll('#aiAgentSidebar .tab-content').forEach(content => {
                 content.style.display = 'none';
             });
             
@@ -1045,13 +1109,15 @@
     });
 
     // ──────────────────────────────────────────────────────────────────────────
-    // SEARCH RESULT CARDS — founders get a one-click "Analyze with Zelda" button
-    // instead of forcing a trip to their profile page first.
+    // SEARCH RESULT CARDS — actions come from the server's access checks.
     // ──────────────────────────────────────────────────────────────────────────
 
     function renderSearchResults(results) {
         const card = document.getElementById('search-results-card');
         const list = document.getElementById('search-results-list');
+        const escapeResult = value => String(value ?? '').replace(/[&<>"']/g, char => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[char]));
 
         if (!results.length) {
             card.style.display = 'none';
@@ -1066,13 +1132,15 @@
 
             let analyzeBtn = '';
             if (result.type === 'Founder Profile' && result.username) {
-                if (result.has_pitch_deck) {
+                if (Array.isArray(result.available_actions) && result.available_actions.includes('analyze_founder')) {
                     analyzeBtn = `
                         <button class="zelda-button" style="padding: 0.4rem 0.9rem; font-size: 0.8rem;"
-                                onclick="analyzeFounderWithZelda(this, '${result.username}', '${(result.startup_name || title).replace(/'/g, "\\'")}', {statusElementId: '${statusId}', preferredTab: 'intelligence'})">
+                                data-zelda-founder="${escapeResult(result.username)}"
+                                data-zelda-company="${escapeResult(result.startup_name || title)}"
+                                data-zelda-status="${statusId}">
                             <i class="bi bi-cpu me-1"></i>Analyze with Zelda
                         </button>`;
-                } else {
+                } else if (!result.has_pitch_deck) {
                     analyzeBtn = `<span class="text-muted small"><i class="bi bi-file-earmark-x me-1"></i>No pitch deck uploaded yet</span>`;
                 }
             }
@@ -1081,8 +1149,8 @@
                 <div class="zelda-card p-3">
                     <div class="d-flex justify-content-between align-items-start gap-2">
                         <div>
-                            <a href="${result.url}" class="fw-bold text-dark text-decoration-none small d-block mb-1">${title}</a>
-                            <p class="text-muted small mb-0">${desc}</p>
+                            <a href="${escapeResult(result.url)}" class="fw-bold text-dark text-decoration-none small d-block mb-1">${escapeResult(title)}</a>
+                            <p class="text-muted small mb-0">${escapeResult(desc)}</p>
                         </div>
                     </div>
                     ${analyzeBtn ? `<div class="mt-2">${analyzeBtn}</div>` : ''}
@@ -1090,6 +1158,13 @@
                 </div>
             `;
         }).join('');
+
+        list.querySelectorAll('[data-zelda-founder]').forEach(button => {
+            button.addEventListener('click', () => analyzeFounderWithZelda(
+                button, button.dataset.zeldaFounder, button.dataset.zeldaCompany,
+                {statusElementId: button.dataset.zeldaStatus, preferredTab: 'intelligence'}
+            ));
+        });
 
         card.style.display = 'block';
     }
@@ -1220,6 +1295,7 @@
 
     function renderLibrary(data) {
         const cards = [];
+        (data.warnings || []).forEach(message => cards.push(`<p class="small text-danger border border-danger rounded p-2" role="status">${zeldaEscape(message)}</p>`));
         (data.sections || []).forEach(section => {
             if (section.key === 'your_company') {
                 const docs = (section.documents || []).map(d => `
@@ -1259,6 +1335,14 @@
                 </div>`);
             }
         });
+        if (data.purchases && data.purchases.length) {
+            const rows = data.purchases.map(purchase => `<div class="p-3 bg-light rounded-3">
+                <a href="${zeldaEscape(purchase.url)}" class="small fw-bold">${zeldaEscape(purchase.company)} · ${zeldaEscape(purchase.product)}</a>
+                <div class="small text-muted">${zeldaEscape(purchase.status)}</div>
+                ${(purchase.reports || []).map(report => `<a class="d-block small mt-1" href="${zeldaEscape(report.url)}">${zeldaEscape(report.name)}</a>`).join('')}
+            </div>`).join('');
+            cards.unshift(`<div class="zelda-card p-3"><h6 class="fw-bold">Purchased intelligence</h6><div class="d-grid gap-2">${rows}</div></div>`);
+        }
         if (!cards.length) {
             cards.push(`<div class="zelda-card p-3" data-library-empty="true">
                 <h6 class="fw-bold text-dark mb-1">Nothing here yet</h6>
@@ -1276,17 +1360,21 @@
         const content = document.getElementById('library-content');
         loading.style.display = 'block';
         content.style.display = 'none';
+        const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 30000);
         try {
             const response = await fetch(`${ZELDA_API}/library/`, {
                 credentials: 'same-origin',
+                signal: controller.signal,
                 headers: { 'X-CSRFToken': getCookie('csrftoken') }
             });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            if (response.redirected || response.status === 401 || response.status === 403) throw new Error('Refresh this page and sign in again to load your Library.');
+            if (!response.ok) throw new Error('Library is temporarily unavailable. Please try again shortly.');
             content.innerHTML = renderLibrary(await response.json());
         } catch (err) {
-            content.innerHTML = `<p class="small text-danger mb-0">Couldn't load your library right now.</p>`;
+            content.innerHTML = `<p class="small text-danger border border-danger rounded p-2 mb-0" role="status">${zeldaEscape(err.name === 'AbortError' ? 'Library took too long to load. Please try again.' : err.message)}</p>`;
             addLogEntry(`Library load error: ${err.message}`, 'error');
         } finally {
+            clearTimeout(timer);
             loading.style.display = 'none';
             content.style.display = 'flex';
         }

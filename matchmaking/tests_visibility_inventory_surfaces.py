@@ -18,7 +18,7 @@ from django.contrib.auth.models import User
 from django.test import override_settings
 from django.urls import reverse
 
-from .models import FIELD_CONNECTED, FIELD_PRIVATE, FIELD_PUBLIC, MatchFeedback
+from .models import FIELD_CONNECTED, FIELD_PRIVATE, FIELD_PUBLIC, InvestorShortlist
 from .tests_field_visibility import RAISE, _Cast
 
 AMOUNT = ('1,000,000', '1000000')
@@ -85,11 +85,11 @@ class GlobalSearchResultsDisplayTests(_Cast):
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
 class InvestorShortlistTests(_Cast):
-    """Liking a founder is not the founder accepting you."""
+    """Saving a founder is not the founder accepting you."""
 
     def shortlist_for(self, investor_user, investor_profile):
-        MatchFeedback.objects.create(
-            user=investor_user, application=self.founder, investor=investor_profile, vote=1,
+        InvestorShortlist.objects.create(
+            investor=investor_profile, application=self.founder,
         )
         self.client.force_login(investor_user)
         response = self.client.get(reverse('matchmaking:investor_shortlist'))

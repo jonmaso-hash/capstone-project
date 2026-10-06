@@ -15,6 +15,8 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(next_page='pages:home'), name='logout'),
     path('post-login/', views.post_login_router, name='post_login_router'),
     path('choose-role/', views.choose_role, name='choose_role'),
+    path('create-profile/', views.create_profile, name='create_profile'),
+    path('my-dashboard/', views.dashboard, name='dashboard'),
 
     # ==========================================
     # USER PROFILE DISPATCH LAYER

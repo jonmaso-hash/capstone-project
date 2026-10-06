@@ -452,6 +452,15 @@ def stripe_webhook(request):
     data_object = event['data']['object']
     User = get_user_model()
 
+    if (data_object.get('metadata') or {}).get('purpose') == 'zelda_product':
+        from .zelda_views import handle_product_event
+        try:
+            handle_product_event(event_type, data_object)
+        except (ValueError, TypeError):
+            logger.exception('Invalid Zelda product payment event')
+            return HttpResponseBadRequest('Invalid product payment')
+        return HttpResponse(status=200)
+
     if event_type == 'checkout.session.completed':
         metadata = data_object.get('metadata') or {}
         user_id = metadata.get('user_id') or data_object.get('client_reference_id')

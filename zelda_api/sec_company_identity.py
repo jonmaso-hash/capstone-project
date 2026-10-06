@@ -223,6 +223,46 @@ def resolve_from_candidates(company_name, records, today=None):
 MAX_CANDIDATES = 10
 
 
+def listed_company_matches(query, rows):
+    """Discovery choices only: a name/ticker match is not an identity verdict."""
+    wanted = _core(query)
+    symbol = (query or '').strip().upper()
+    exact, partial = {}, {}
+    for row in rows:
+        name, ticker = row.get('title', ''), row.get('ticker', '')
+        cik = str(row.get('cik_str', ''))
+        if not isinstance(name, str) or not isinstance(ticker, str) or not cik.isdigit() or not 0 < int(cik) < 10**10:
+            continue
+        core = _core(name)
+        match = {'name': name, 'ticker': ticker, 'cik': cik.zfill(10)}
+        if core == wanted or ticker.upper() == symbol:
+            exact[match['cik']] = match
+        elif wanted and f' {wanted} ' in f' {core} ':
+            partial[match['cik']] = match
+    return list(exact.values() or partial.values())[:MAX_CANDIDATES]
+
+
+def search_listed_companies(query, before_fetch=None):
+    """Search the SEC's public issuer index by real name as well as ticker.
+
+    Return explicit choices; do not attribute a brand's parent financials to
+    that brand or change the shared filing-based identity authority.
+    """
+    from django.core.cache import cache
+    from . import sec_identity
+    key = 'sec_listed_company_index_v1'
+    rows = cache.get(key)
+    if rows is None:
+        if before_fetch:
+            before_fetch()
+        payload = sec_identity._json(sec_identity._get('https://www.sec.gov/files/company_tickers.json'))
+        if not isinstance(payload, dict) or not payload or not all(isinstance(row, dict) for row in payload.values()):
+            raise sec_identity.SecUnavailable(sec_identity.UNREACHABLE)
+        rows = list(payload.values())
+        cache.set(key, rows, 3600)
+    return listed_company_matches(query, rows)
+
+
 def candidate_ciks(company_name):
     """
     (CIKs, truncated) -- every CIK EDGAR's company search offers for this

@@ -36,6 +36,26 @@ def deny_profiles(modeladmin, request, queryset):
     })
 
 
+@admin.action(description="Mark selected profile(s) as Internal/Test")
+def mark_internal_profiles(modeladmin, request, queryset):
+    updated = queryset.update(is_internal_profile=True)
+    modeladmin.message_user(
+        request,
+        f"Marked {updated} profile(s) Internal/Test. They are excluded from marketplace discovery.",
+        messages.SUCCESS,
+    )
+
+
+@admin.action(description="Mark selected profile(s) as Live")
+def mark_live_profiles(modeladmin, request, queryset):
+    updated = queryset.update(is_internal_profile=False)
+    modeladmin.message_user(
+        request,
+        f"Marked {updated} profile(s) Live. They can appear in discovery again if other visibility gates allow it.",
+        messages.SUCCESS,
+    )
+
+
 @admin.action(description="Forward selected Founder(s) to an Investor")
 def forward_to_investor(modeladmin, request, queryset):
     """
@@ -118,24 +138,24 @@ def forward_to_investor(modeladmin, request, queryset):
 @admin.register(Application)
 class ApplicationAdmin(admin.ModelAdmin):
     # Merged the fields from both snippets so you keep all your columns and filters
-    list_display = ('user', 'company_name', 'sector', 'stage', 'is_verified', 'review_status', 'created_at')
-    list_filter = ('sector', 'stage', 'is_private', 'is_verified', 'review_status')
+    list_display = ('user', 'company_name', 'sector', 'stage', 'is_internal_profile', 'is_verified', 'review_status', 'created_at')
+    list_filter = ('sector', 'stage', 'is_private', 'is_internal_profile', 'is_verified', 'review_status')
     list_editable = ('is_verified',)
     search_fields = ('company_name', 'user__username', 'email')
     readonly_fields = ('created_at', 'updated_at')
 
     # Registered the custom action here
-    actions = [forward_to_investor, approve_profiles, deny_profiles]
+    actions = [forward_to_investor, mark_internal_profiles, mark_live_profiles, approve_profiles, deny_profiles]
 
 
 @admin.register(InvestorApplication)
 class InvestorApplicationAdmin(admin.ModelAdmin):
-    list_display = ("company_name", "full_name", "investment_stage", "investment_amount", "is_private", "is_verified", "is_premium", "review_status", "created_at")
-    list_filter = ("investment_stage", "is_private", "is_verified", "is_premium", "review_status")
+    list_display = ("company_name", "full_name", "investment_stage", "investment_amount", "is_private", "is_internal_profile", "is_verified", "is_premium", "review_status", "created_at")
+    list_filter = ("investment_stage", "is_private", "is_internal_profile", "is_verified", "is_premium", "review_status")
     list_editable = ("is_verified", "is_premium")
     search_fields = ("company_name", "full_name", "email", "investment_focus")
     readonly_fields = ("created_at", "updated_at")
-    actions = [approve_profiles, deny_profiles]
+    actions = [mark_internal_profiles, mark_live_profiles, approve_profiles, deny_profiles]
 
 
 @admin.register(AIMatch)
@@ -288,22 +308,22 @@ class InvestorPredictionSnapshotAdmin(admin.ModelAdmin):
 
 @admin.register(SellerApplication)
 class SellerApplicationAdmin(admin.ModelAdmin):
-    list_display = ('user', 'company_name', 'industry', 'asking_price', 'is_verified', 'review_status', 'created_at')
-    list_filter = ('industry', 'deal_structure', 'is_private', 'is_verified', 'review_status')
+    list_display = ('user', 'company_name', 'industry', 'asking_price', 'is_internal_profile', 'is_verified', 'review_status', 'created_at')
+    list_filter = ('industry', 'deal_structure', 'is_private', 'is_internal_profile', 'is_verified', 'review_status')
     list_editable = ('is_verified',)
     search_fields = ('company_name', 'user__username', 'email')
     readonly_fields = ('created_at', 'updated_at')
-    actions = [approve_profiles, deny_profiles]
+    actions = [mark_internal_profiles, mark_live_profiles, approve_profiles, deny_profiles]
 
 
 @admin.register(BuyerApplication)
 class BuyerApplicationAdmin(admin.ModelAdmin):
-    list_display = ('company_name', 'full_name', 'budget_min', 'budget_max', 'is_private', 'is_verified', 'is_premium', 'review_status', 'created_at')
-    list_filter = ('is_private', 'is_verified', 'is_premium', 'review_status')
+    list_display = ('company_name', 'full_name', 'budget_min', 'budget_max', 'is_private', 'is_internal_profile', 'is_verified', 'is_premium', 'review_status', 'created_at')
+    list_filter = ('is_private', 'is_internal_profile', 'is_verified', 'is_premium', 'review_status')
     list_editable = ('is_verified', 'is_premium')
     search_fields = ('company_name', 'full_name', 'email', 'acquisition_thesis')
     readonly_fields = ('created_at', 'updated_at')
-    actions = [approve_profiles, deny_profiles]
+    actions = [mark_internal_profiles, mark_live_profiles, approve_profiles, deny_profiles]
 
 
 @admin.register(AcquisitionConnection)

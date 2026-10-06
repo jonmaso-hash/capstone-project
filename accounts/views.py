@@ -128,6 +128,7 @@ def signup_view(request):
                 recipient=user, notification_type='SYSTEM', message=PLATFORM_DISCLAIMER_MESSAGE,
             )
             log_page_event(request, 'signup_completed', role=role, user=user)
+            request.session['pending_profile_role'] = role
             messages.success(request, f"Welcome to Interlink Foundry, {user.username}!")
             return redirect(ROLE_PROFILE_URLS[role])
     else:
@@ -181,8 +182,24 @@ def choose_role(request):
         Notification.objects.get_or_create(
             recipient=request.user, notification_type='SYSTEM', message=PLATFORM_DISCLAIMER_MESSAGE,
         )
+        request.session['pending_profile_role'] = role
         return redirect(ROLE_PROFILE_URLS[role])
     return render(request, "accounts/choose_role.html")
+
+
+@login_required
+def create_profile(request):
+    """Resume the selected role's existing form without creating a blank profile."""
+    role = request.session.get('pending_profile_role')
+    return redirect(ROLE_PROFILE_URLS.get(role, 'accounts:choose_role'))
+
+
+@login_required
+def dashboard(request):
+    for role in ROLE_PROFILE_URLS:
+        if getattr(request.user, f'match_{role}_profile', None):
+            return redirect(f'matchmaking:{role}_dashboard')
+    return redirect('accounts:profile_self')
 
 
 def admin_login_redirect(request):
@@ -1219,20 +1236,21 @@ BUSINESS_VERIFICATION_RESEND_COOLDOWN = 60  # seconds
 @login_required
 def business_verification(request):
     """
-    Self-serve business-email verification for the existing per-role
-    'Verified' badge. Renders current status: already verified, a pending
-    code awaiting entry, locked out (too many wrong attempts), or the
-    initial request-email form.
+    Self-serve company-email verification.
+
+    This flow proves control of a mailbox whose domain matches the company
+    name on the user's profile. It deliberately does not grant the broader
+    per-role is_verified state: mailbox control is not proof of ownership,
+    title, or authority to represent a company.
     """
-    already_verified = any(
-        getattr(request.user, attr, None) and getattr(request.user, attr).is_verified
-        for attr, _ in ROLE_PROFILE_ATTRS
-    )
     resolved_company_name = _resolve_company_name(request.user)
     current_verification = BusinessEmailVerification.objects.filter(user=request.user).first()
+    email_verified = bool(
+        current_verification and current_verification.status == "VERIFIED"
+    )
 
     return render(request, "accounts/business_verification.html", {
-        "already_verified": already_verified,
+        "email_verified": email_verified,
         "resolved_company_name": resolved_company_name,
         "current_verification": current_verification,
     })
@@ -1268,9 +1286,9 @@ def business_verification_request(request):
 
     try:
         send_mail(
-            subject="Your Interlink Foundry verification code",
+            subject="Your Interlink Foundry company-email verification code",
             message=(
-                f"Your Interlink Foundry business verification code is: {verification.code}\n\n"
+                f"Your Interlink Foundry company-email verification code is: {verification.code}\n\n"
                 f"This code expires in 30 minutes. If you didn't request this, you can safely ignore this email."
             ),
             from_email=settings.DEFAULT_FROM_EMAIL,
@@ -1315,17 +1333,10 @@ def business_verification_confirm(request):
     verification.verified_at = timezone.now()
     verification.save(update_fields=["status", "verified_at"])
 
-    verified_roles = []
-    for attr, label in ROLE_PROFILE_ATTRS:
-        profile = getattr(request.user, attr, None)
-        if profile:
-            profile.is_verified = True
-            profile.save(update_fields=["is_verified"])
-            verified_roles.append(label)
-
-    if verified_roles:
-        messages.success(request, f"You're now a verified {'/'.join(verified_roles)}!")
-    else:
-        messages.success(request, "Your business email is verified.")
+    messages.success(
+        request,
+        "Your company email is verified. This confirms control of the email address; "
+        "it does not verify ownership, job title, or authority to represent the company.",
+    )
 
     return redirect("accounts:business_verification")
