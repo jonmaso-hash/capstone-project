@@ -353,23 +353,32 @@ class ProfileAnalysisPaywallTests(TestCase):
         self.assertTrue(response.context['is_premium_insights'])
         self.assertContains(response, 'Marketplace Score')
 
-    def test_investor_analytics_unaffected_by_paywall(self):
-        """Investor/Buyer's own outbound-activity stats were never gated — must keep rendering exactly as before."""
-        user = User.objects.create_user('paywall_investor_unaffected', password='x')
-        InvestorApplication.objects.create(user=user, investment_stage='Seed', investment_focus='SaaS')
+    def test_free_investor_analytics_is_paywalled(self):
+        user = User.objects.create_user('paywall_free_investor_role', password='x')
+        InvestorApplication.objects.create(
+            user=user, investment_stage='Seed', investment_focus='SaaS', is_premium=False
+        )
         self.client.force_login(user)
 
         response = self.client.get(reverse('accounts:profile_analysis', args=[user.username]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertFalse(response.context['has_analytics_paywall'])
+        self.assertTrue(response.context['profile_analysis_locked'])
+        self.assertContains(response, 'Unlock Investor Analytics')
+        self.assertNotContains(response, 'Engagement Summary')
+
+    def test_premium_investor_analytics_renders(self):
+        user = User.objects.create_user('paywall_premium_investor_role', password='x')
+        InvestorApplication.objects.create(
+            user=user, investment_stage='Seed', investment_focus='SaaS', is_premium=True
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('accounts:profile_analysis', args=[user.username]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['profile_analysis_locked'])
         self.assertContains(response, 'Investor Analytics')
-        # Narrower than a bare 'Unlock' substring check — the sidebar's
-        # globally-included Zelda widget script now contains that word in
-        # its own (unrelated) locked-memo-card JS string literal, so a
-        # page-wide substring match isn't a reliable signal anymore.
-        self.assertNotContains(response, 'Unlock Founder Insights')
-        self.assertNotContains(response, 'Unlock Seller Insights')
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
@@ -430,7 +439,7 @@ class InvestorBuyerProfileViewTrackingTests(TestCase):
         self.founder_user = User.objects.create_user('view_tracking_founder', password='x')
         InvestorApplication.objects.create(
             user=self.investor_user, full_name='Inv', company_name='Firm', email='i@t.com',
-            investment_focus='SaaS', investment_stage='Seed',
+            investment_focus='SaaS', investment_stage='Seed', is_premium=True,
         )
 
     def test_viewing_investor_profile_creates_a_profile_view_row(self):
