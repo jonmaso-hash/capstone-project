@@ -366,10 +366,16 @@ def founder_required(view_func):
     def _wrapped_view(request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect('accounts:login')
-        if getattr(request.user, 'is_founder', False) or hasattr(request.user, 'match_founder_profile'):
+        if getattr(request.user, 'is_founder', False) or _founder_application(request.user):
             return view_func(request, *args, **kwargs)
         raise PermissionDenied("Access restricted.")
     return _wrapped_view
+
+
+def _founder_application(user):
+    """Resolve the marketplace founder record used by dashboard features."""
+    return (getattr(user, 'match_founder_profile', None)
+            or Application.objects.filter(user=user).first())
 
 
 # ==========================================
@@ -900,7 +906,7 @@ def founder_dashboard(request):
     Founder-facing dashboard: View matching investors ranked by a blended 
     AI + Rule algorithm. Filters out private investor mandates explicitly by default.
     """
-    application = getattr(request.user, 'match_founder_profile', None) or Application.objects.filter(user=request.user).first()
+    application = _founder_application(request.user)
 
     if not application:
         if any(getattr(request.user, f'match_{role}_profile', None)
@@ -1131,7 +1137,7 @@ def activate_founder_highlight(request):
     Replaces the old "see investor identity in your digest" perk — see
     matchmaking/digest.py's module docstring for why.
     """
-    application = getattr(request.user, 'match_founder_profile', None)
+    application = _founder_application(request.user)
     if not application:
         messages.error(request, "Complete your founder profile first.")
         return redirect('matchmaking:founder_dashboard')
@@ -1177,7 +1183,7 @@ FREE_CRM_LEAD_LIMIT = 15
 def fundraising_crm(request):
     """Personal outreach Kanban board — see FundraisingLead docstring for why
     this is decoupled from Connection."""
-    application = getattr(request.user, 'match_founder_profile', None)
+    application = _founder_application(request.user)
     if not application:
         messages.info(request, "Complete your founder profile to use the Fundraising CRM.")
         return redirect('usersettings:edit_founder_profile')
@@ -1209,7 +1215,7 @@ def fundraising_crm(request):
 @login_required
 @require_POST
 def create_lead(request):
-    application = getattr(request.user, 'match_founder_profile', None)
+    application = _founder_application(request.user)
     if not application:
         raise Http404("Founder profile required.")
 
@@ -2732,7 +2738,12 @@ def data_room(request, username):
     so the owner/staff view shows all documents plus pending requests to
     decide on, while an investor view shows a per-document status instead.
     """
-    founder_application = get_object_or_404(Application, user__username=username)
+    founder_application = Application.objects.filter(user__username=username).first()
+    if founder_application is None:
+        if request.user.username == username:
+            messages.info(request, "Complete your founder profile to open the Data Room.")
+            return redirect('usersettings:edit_founder_profile')
+        raise Http404("Founder profile not found")
     if not can_view_data_room(request.user, founder_application):
         raise Http404("Access Denied")
 
@@ -3460,7 +3471,7 @@ def toggle_follow(request, username):
 @login_required
 @require_POST
 def post_milestone(request):
-    application = getattr(request.user, 'match_founder_profile', None)
+    application = _founder_application(request.user)
     if not application:
         raise PermissionDenied("Only founders can post milestones.")
 
