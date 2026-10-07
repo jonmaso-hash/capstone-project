@@ -15,7 +15,7 @@ class UnfinishedProfileTests(TestCase):
                 page = self.client.get(reverse('accounts:profile_self'), follow=True)
                 self.assertContains(page, 'Create a Profile')
                 self.assertContains(page, reverse('jobs:create'))
-                self.assertContains(page, '>Chat</a>')
+                self.assertContains(page, '>Messages</a>')
                 self.assertContains(page, '>Dashboard</a>')
                 self.assertRedirects(
                     self.client.get(reverse('accounts:create_profile')),
