@@ -178,14 +178,15 @@
                         {% endif %}
 
                         <button type="button" class="btn btn-sm btn-outline-secondary px-3 rounded-pill"
-                                onclick="openContentShare('PROFILE', {{ profile_user.id }}, '{% firstof application.company_name investor_application.company_name seller_application.company_name buyer_application.company_name profile_user.username %}', '{{ request.scheme }}://{{ request.get_host }}{% url 'accounts:profile' profile_user.username %}')">
+                                {% firstof application.company_name investor_application.company_name seller_application.company_name buyer_application.company_name profile_user.username as profile_share_title %}
+                                onclick="openContentShare('PROFILE', {{ profile_user.id }}, '{{ profile_share_title|escapejs }}', '{{ request.scheme }}://{{ request.get_host }}{% url 'accounts:profile' profile_user.username %}')">
                             <i class="bi bi-share me-1"></i> Share Profile
                         </button>
 
                         {# ── Track 1: Analyze with Zelda (investors only, on founder profiles) ── #}
                         {% if request.user != profile_user and application and viewer_is_investor %}
                         <button 
-                            onclick="analyzeFounderWithZelda(this, '{{ profile_user.username }}', '{{ application.company_name|default:profile_user.username }}', {statusElementId: 'zelda-analyze-status'})"
+                            onclick="analyzeFounderWithZelda(this, '{{ profile_user.username }}', '{{ application.company_name|default:profile_user.username|escapejs }}', {statusElementId: 'zelda-analyze-status'})"
                             class="btn btn-warning btn-sm px-3 rounded-pill fw-bold shadow-sm"
                             id="zelda-analyze-btn"
                             title="Run Zelda Intelligence Analysis on this founder">
