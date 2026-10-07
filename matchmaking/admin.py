@@ -197,11 +197,21 @@ class APIKeyAdmin(admin.ModelAdmin):
     list_editable = ['is_active']
     list_filter = ['is_active', 'created_at']
     search_fields = ['firm_name', 'owner__username']
-    readonly_fields = ['key', 'created_at', 'last_used_at']
+    readonly_fields = ['key_prefix', 'created_at', 'last_used_at']
+    exclude = ['key_hash']
 
     def key_preview(self, obj):
-        return f"···{obj.key[-4:]}" if obj.key else "—"
+        return f"{obj.key_prefix}…" if obj.key_prefix else "—"
     key_preview.short_description = 'Key'
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        if obj.issued_raw_key:
+            self.message_user(
+                request,
+                f"Enterprise API key (shown once): {obj.issued_raw_key}",
+                level=messages.WARNING,
+            )
 
 
 @admin.register(BusinessEmailVerification)
@@ -209,7 +219,8 @@ class BusinessEmailVerificationAdmin(admin.ModelAdmin):
     list_display = ['user', 'business_email', 'status', 'attempts', 'created_at', 'expires_at']
     list_filter = ['status', 'created_at']
     search_fields = ['user__username', 'business_email']
-    readonly_fields = ['code', 'created_at', 'verified_at']
+    readonly_fields = ['created_at', 'verified_at']
+    exclude = ['code_hash']
 
 
 @admin.register(CompanyRepresentationAttestation)
