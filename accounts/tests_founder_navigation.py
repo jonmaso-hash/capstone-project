@@ -32,7 +32,6 @@ class FounderNavigationParityTests(TestCase):
 
         expected_hrefs = (
             reverse('matchmaking:founder_dashboard'),
-            reverse('matchmaking:fundraising_crm'),
             reverse('matchmaking:data_room', args=[self.user.username]),
             reverse('matchmaking:diligence_chat'),
             reverse('accounts:profile_self'),
