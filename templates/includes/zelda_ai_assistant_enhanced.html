@@ -982,9 +982,13 @@
     function addLogEntry(message, type = 'info') {
         const log = document.getElementById('agent-response-log');
         const entry = document.createElement('div');
-        entry.className = `log-entry ${type}`;
-        const timestamp = new Date().toLocaleTimeString();
-        entry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+        const allowedTypes = new Set(['info', 'success', 'warning', 'error']);
+        entry.classList.add('log-entry', allowedTypes.has(type) ? type : 'info');
+
+        const timestamp = document.createElement('strong');
+        timestamp.textContent = `[${new Date().toLocaleTimeString()}]`;
+        entry.append(timestamp, document.createTextNode(' ' + String(message ?? '')));
+
         log.appendChild(entry);
         log.scrollTop = log.scrollHeight;
     }
