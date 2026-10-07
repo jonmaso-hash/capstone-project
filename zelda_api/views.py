@@ -1785,6 +1785,13 @@ class JourneyStatusAPIView(APIView):
                     }
                 break
 
+        journey_mode = 'setup'
+        if next_best_action is None:
+            from .next_actions import momentum_next_action
+            next_best_action = momentum_next_action(user)
+            next_action_url = next_best_action.get('action_url') if next_best_action else None
+            journey_mode = 'momentum'
+
         unread_notifications = Notification.objects.filter(recipient=user, is_read=False).count()
 
         from .quotas import _is_premium_user, usage_nearing_limit, upgrade_message
@@ -1798,6 +1805,7 @@ class JourneyStatusAPIView(APIView):
             'unread_notifications': unread_notifications,
             'next_action_url': next_action_url,
             'next_best_action': next_best_action,
+            'journey_mode': journey_mode,
             'profile_strength': compute_profile_strength(stage['checklist']),
             'ai_usage_warning': ai_usage_warning,
             'is_premium': is_premium,
