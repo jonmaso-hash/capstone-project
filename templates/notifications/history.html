@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Notification History | Interlink Foundry{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width: 900px;">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+        <h1 class="h3 mb-0">Notification history</h1>
+        <a href="{% url 'usersettings:home' %}#notification-history" class="btn btn-outline-secondary btn-sm">History settings</a>
+    </div>
+    <p class="text-secondary">Read updates stay here unless you close them or enable automatic removal. Important account, payment, and outcome notices are retained.</p>
+    <div id="history-status" class="small text-danger mb-3" role="status"></div>
+    <div id="notification-history-list" class="d-flex flex-column gap-3">
+        {% for notice in notification_page %}
+        <article class="card shadow-sm" data-notification-id="{{ notice.id }}">
+            <div class="card-body d-flex align-items-start gap-3">
+                <div class="flex-grow-1">
+                    <p class="mb-1">{{ notice.message }}</p>
+                    <div class="small text-secondary">{{ notice.created_at|date:'M j, Y, g:i a' }}{% if not notice.is_read %} · New{% endif %}{% if not notice.can_dismiss %} · Retained notice{% endif %}</div>
+                </div>
+                {% if notice.can_dismiss %}
+                <form method="post" action="{% url 'notification-close' notice.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="page" value="{{ notification_page.number }}">
+                    <button type="submit" class="btn-close" aria-label="Dismiss notification" title="Dismiss notification"></button>
+                </form>
+                {% endif %}
+            </div>
+        </article>
+        {% empty %}
+        <p class="text-secondary py-4">No notifications to show.</p>
+        {% endfor %}
+    </div>
+    <nav aria-label="Notification history pages" class="d-flex align-items-center justify-content-between mt-4">
+        {% if notification_page.has_previous %}<a class="btn btn-outline-primary btn-sm" href="?page={{ notification_page.previous_page_number }}">Previous</a>{% else %}<span></span>{% endif %}
+        <span class="small text-secondary">Page {{ notification_page.number }} of {{ notification_page.paginator.num_pages }}</span>
+        {% if notification_page.has_next %}<a class="btn btn-outline-primary btn-sm" href="?page={{ notification_page.next_page_number }}">Next</a>{% else %}<span></span>{% endif %}
+    </nav>
+    <form id="history-csrf" class="d-none">{% csrf_token %}</form>
+</div>
+<script>
+(async function () {
+    const ids = Array.from(document.querySelectorAll('#notification-history-list [data-notification-id]'), el => Number(el.dataset.notificationId));
+    if (!ids.length) return;
+    try {
+        const response = await fetch('{% url "api-read" %}', {
+            method: 'POST', credentials: 'same-origin',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('#history-csrf input').value},
+            body: JSON.stringify({ids}),
+        });
+        if (!response.ok) throw new Error('Read status unavailable');
+        const state = await response.json();
+        if (typeof updateUnreadBadge === 'function') updateUnreadBadge(state.count);
+    } catch (_) {
+        document.getElementById('history-status').textContent = 'Your notifications are shown, but read status could not be updated. Refresh to try again.';
+    }
+})();
+</script>
+{% endblock %}

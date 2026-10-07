@@ -74,7 +74,7 @@ class NotificationHistoryTests(TestCase):
 
     def test_dismissal_keeps_record_but_removes_it_from_history_and_badge(self):
         notice = self._notice()
-        self.assertEqual(self.client.post(reverse('api-delete', args=[notice.id])).json(), {'dismissed': True})
+        self.assertEqual(self.client.post(reverse('api-delete', args=[notice.id])).json(), {'dismissed': True, 'count': 0})
         notice.refresh_from_db()
         self.assertIsNotNone(notice.dismissed_at)
         self.assertTrue(notice.is_read)
@@ -141,3 +141,92 @@ class NotificationHistoryTests(TestCase):
         notice.refresh_from_db()
         self.assertFalse(notice.is_read)
         self.assertIsNone(notice.dismissed_at)
+
+
+    def test_preview_is_five_and_leaves_older_notices_unread(self):
+        notices = [self._notice() for _ in range(7)]
+        preview = self.client.get(reverse('api-list'), {'limit': 5}).json()
+        self.assertEqual(len(preview), 5)
+        self.assertEqual(self._read([item['id'] for item in preview]).json()['count'], 2)
+        self.assertEqual(self.client.post(reverse('api-delete', args=[notices[0].id])).json()['count'], 1)
+        self.assertEqual(self.client.post(reverse('api-delete', args=[notices[1].id])).json()['count'], 0)
+
+    def test_history_pages_are_owned_and_read_only(self):
+        from django.http import HttpResponse
+        for _ in range(26):
+            self._notice()
+        Notification.objects.create(recipient=self.other, message='Private other notice')
+        with patch('notifications.views.render', return_value=HttpResponse('history')) as render:
+            self.assertEqual(self.client.get(reverse('notification-history')).status_code, 200)
+            page = render.call_args.args[2]['notification_page']
+            self.assertEqual(len(page), 25)
+            self.assertTrue(page.has_next())
+            self.assertTrue(all(item.recipient_id == self.user.id for item in page))
+            self.client.get(reverse('notification-history'), {'page': 2})
+            self.assertEqual(len(render.call_args.args[2]['notification_page']), 1)
+        self.assertEqual(Notification.objects.filter(recipient=self.user, is_read=False).count(), 26)
+
+    def test_auto_remove_after_reading_preserves_unread_and_important(self):
+        from usersettings.models import UserSettings
+        UserSettings.objects.create(user=self.user, notification_retention_days=-1)
+        ordinary = self._notice()
+        unread = self._notice()
+        important = self._notice(notification_type='PAYMENT')
+        self._read([ordinary.id, important.id])
+        self.assertEqual({x['id'] for x in self.client.get(reverse('api-list')).json()}, {unread.id, important.id})
+        ordinary.refresh_from_db()
+        self.assertIsNotNone(ordinary.dismissed_at)
+        self.assertEqual(Notification.objects.filter(recipient=self.user).count(), 3)
+
+    def test_age_based_removal_keeps_new_read_and_old_unread(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        from usersettings.models import UserSettings
+        UserSettings.objects.create(user=self.user, notification_retention_days=7)
+        old_read = self._notice(is_read=True)
+        old_unread = self._notice()
+        old_important = self._notice(is_read=True, notification_type='payment')
+        new_read = self._notice(is_read=True)
+        Notification.objects.filter(id__in=[old_read.id, old_unread.id, old_important.id]).update(created_at=timezone.now() - timedelta(days=8))
+        data = self.client.get(reverse('api-list')).json()
+        self.assertEqual({x['id'] for x in data}, {old_unread.id, old_important.id, new_read.id})
+        old_read.refresh_from_db()
+        self.assertIsNone(old_read.dismissed_at)  # Safe GET has no write side effects.
+
+    def test_retention_settings_validate_and_only_change_owner(self):
+        from usersettings.models import UserSettings
+        other = UserSettings.objects.create(user=self.other)
+        url = reverse('notification-settings')
+        self.assertEqual(self.client.get(url).status_code, 405)
+        self.assertEqual(self.client.post(url, {'retention_days': 'garbage'}).status_code, 400)
+        self.assertEqual(self.client.post(url, {'retention_days': 5}).status_code, 400)
+        self.assertEqual(self.client.post(url, {'retention_days': 30}).status_code, 302)
+        self.assertEqual(UserSettings.objects.get(user=self.user).notification_retention_days, 30)
+        other.refresh_from_db()
+        self.assertEqual(other.notification_retention_days, 0)
+
+    def test_close_form_dismisses_and_redirects_to_history_page(self):
+        notice = self._notice()
+        response = self.client.post(reverse('notification-close', args=[notice.id]), {'page': 2})
+        self.assertRedirects(response, reverse('notification-history') + '?page=2', fetch_redirect_response=False)
+        notice.refresh_from_db()
+        self.assertIsNotNone(notice.dismissed_at)
+
+
+    def test_history_page_renders_pagination_dismissal_and_escaped_messages(self):
+        from pathlib import Path
+        template_dir = str(Path(__file__).resolve().parent.parent / 'templates')
+        templates = [{'BACKEND': 'django.template.backends.django.DjangoTemplates', 'OPTIONS': {
+            'loaders': [('django.template.loaders.locmem.Loader', {'base.html': '{% block content %}{% endblock %}'}),
+                        ('django.template.loaders.filesystem.Loader', [template_dir])],
+        }}]
+        for _ in range(26):
+            self._notice()
+        notice = Notification.objects.create(recipient=self.user, message='<script>unsafe</script>')
+        with override_settings(TEMPLATES=templates):
+            response = self.client.get(reverse('notification-history'))
+        self.assertContains(response, 'Page 1 of 2')
+        self.assertContains(response, 'aria-label="Dismiss notification"', count=25)
+        self.assertContains(response, '&lt;script&gt;unsafe&lt;/script&gt;')
+        self.assertContains(response, reverse('notification-close', args=[notice.id]))
+        self.assertContains(response, 'name="csrfmiddlewaretoken"')

@@ -42,6 +42,9 @@
                 <a href="#messaging" class="list-group-item list-group-item-action fw-semibold">
                     <i class="bi bi-chat-left-text me-2"></i>Messaging
                 </a>
+                <a href="#notification-history" class="list-group-item list-group-item-action fw-semibold">
+                    <i class="bi bi-bell me-2"></i>Notification History
+                </a>
                 <a href="#invitations" class="list-group-item list-group-item-action fw-semibold">
                     <i class="bi bi-envelope-paper me-2"></i>Invitation Requests
                 </a>
@@ -166,6 +169,24 @@
                         </label>
                     </div>
                     <div id="fb-dm" class="small mt-2 fw-medium d-none"></div>
+                </div>
+            </div>
+
+            <div class="card mb-4 shadow-sm border-0 rounded-4" id="notification-history">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold">Notification History</h5>
+                    <p class="small text-secondary">Automatically remove ordinary read updates from your history. Unread updates and important account, payment, and outcome notices are kept. Age is measured from when an update was sent.</p>
+                    <form method="post" action="{% url 'notification-settings' %}" class="d-flex align-items-center gap-2 flex-wrap">
+                        {% csrf_token %}
+                        <label for="notification-retention" class="visually-hidden">Automatic notification removal</label>
+                        <select id="notification-retention" name="retention_days" class="form-select" style="max-width: 360px;">
+                            {% for value, label in user_settings.NOTIFICATION_RETENTION_CHOICES %}
+                            <option value="{{ value }}" {% if user_settings.notification_retention_days == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-outline-primary">Save</button>
+                    </form>
+                    <a href="{% url 'notification-history' %}" class="small d-inline-block mt-3">View all notifications</a>
                 </div>
             </div>
 

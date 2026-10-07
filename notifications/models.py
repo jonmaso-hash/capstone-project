@@ -39,8 +39,10 @@ class Notification(models.Model):
     def can_dismiss(self):
         """Keep account, payment, moderation and confirmed-outcome notices visible."""
         kind = self.notification_type.upper()
-        return kind not in {
-            'SYSTEM', 'PAYMENT', 'PROFILE_VISIBILITY_DEFAULTS',
-            'FUNDED_CONFIRMATION', 'CLOSED_CONFIRMATION',
-            'TRUTH_DELTA_DISPUTE', 'ELEVATOR_PITCH_REPORT',
-        } and not kind.startswith(('SECURITY', 'AUDIT'))
+        return kind not in self.RETAINED_TYPES and not kind.startswith(('SECURITY', 'AUDIT'))
+
+    RETAINED_TYPES = (
+        'SYSTEM', 'PAYMENT', 'PROFILE_VISIBILITY_DEFAULTS',
+        'FUNDED_CONFIRMATION', 'CLOSED_CONFIRMATION',
+        'TRUTH_DELTA_DISPUTE', 'ELEVATOR_PITCH_REPORT',
+    )

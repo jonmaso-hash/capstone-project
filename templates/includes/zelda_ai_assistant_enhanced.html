@@ -599,10 +599,10 @@
                     <i class="bi bi-bell-slash fs-4 d-block mb-2"></i>
                     No notifications to show.
                 </div>
-                <p class="small text-muted">Read notifications stay in your history. You can dismiss ordinary updates; account, payment, and outcome notices are retained.</p>
+                <p class="small text-muted">Your five latest notifications. Manage automatic history removal in Settings. You can dismiss ordinary updates; account, payment, and outcome notices are retained.</p>
                 <div id="notifications-error" class="small text-danger" role="status" style="display:none;"></div>
                 <div id="notifications-list" class="d-flex flex-column gap-2"></div>
-                <button id="notifications-more" type="button" class="btn btn-outline-secondary btn-sm mt-3" style="display:none;">Load older notifications</button>
+                <a href="{% url 'notification-history' %}" class="btn btn-outline-secondary btn-sm mt-3">View all notifications</a>
             </div>
         </div>
 
@@ -1007,13 +1007,16 @@
     // items are acknowledged; dismissing an update retains its database row.
     // ──────────────────────────────────────────────────────────────────────────
 
+    let notificationBadgeRevision = 0;
     function updateUnreadBadge(count) {
+        notificationBadgeRevision += 1;
         const iconBadge = document.getElementById('zelda-unread-badge');
         const tabBadge = document.getElementById('zelda-tab-notif-badge');
-        const display = count > 0 ? (count > 9 ? '9+' : String(count)) : '';
+        const display = count > 0 ? String(count) : '';
         [iconBadge, tabBadge].forEach(el => {
             if (!el) return;
             el.textContent = display;
+            el.setAttribute('aria-label', `${count} unread notifications`);
             el.style.display = count > 0 ? 'flex' : 'none';
         });
     }
@@ -1047,7 +1050,22 @@
         }, 1000);
     }
 
-    let oldestNotificationId = null;
+    async function refreshNotificationBadge() {
+        if (document.hidden) return;
+        const revision = notificationBadgeRevision;
+        try {
+            const response = await fetch('/notifications/api/unread-count/', {credentials: 'same-origin'});
+            if (response.ok) {
+                const state = await response.json();
+                if (revision === notificationBadgeRevision) updateUnreadBadge(state.count);
+            }
+        } catch (_) { /* Preserve the last known count during a connection failure. */ }
+    }
+    refreshNotificationBadge();
+    window.setInterval(refreshNotificationBadge, 15000);
+    document.addEventListener('visibilitychange', refreshNotificationBadge);
+    window.addEventListener('focus', refreshNotificationBadge);
+
     let notificationLoadInProgress = false;
 
     function notificationCard(item) {
@@ -1091,31 +1109,22 @@
         return card;
     }
 
-    async function loadNotifications(loadOlder = false) {
+    async function loadNotifications() {
         if (notificationLoadInProgress) return;
         notificationLoadInProgress = true;
         const loading = document.getElementById('notifications-loading');
         const empty = document.getElementById('notifications-empty');
         const list = document.getElementById('notifications-list');
-        const more = document.getElementById('notifications-more');
         const error = document.getElementById('notifications-error');
         loading.style.display = 'block';
         empty.style.display = 'none';
         error.style.display = 'none';
-        more.disabled = true;
-        if (!loadOlder) {
-            list.replaceChildren();
-            oldestNotificationId = null;
-            more.style.display = 'none';
-        }
+        list.replaceChildren();
         try {
-            const cursor = loadOlder && oldestNotificationId ? `?before=${oldestNotificationId}` : '';
-            const response = await fetch('/notifications/api/list/' + cursor, {credentials: 'same-origin'});
+            const response = await fetch('/notifications/api/list/?limit=5', {credentials: 'same-origin'});
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const items = await response.json();
             items.forEach(item => list.appendChild(notificationCard(item)));
-            if (items.length) oldestNotificationId = items[items.length - 1].id;
-            more.style.display = items.length === 50 ? 'inline-block' : 'none';
             empty.style.display = list.children.length ? 'none' : 'block';
             if (items.length && document.getElementById('tab-notifications').style.display !== 'none') {
                 const readResponse = await fetch('/notifications/api/read/', {
@@ -1133,12 +1142,10 @@
             addLogEntry(`Notifications load error: ${err.message}`, 'error');
         } finally {
             loading.style.display = 'none';
-            more.disabled = false;
             notificationLoadInProgress = false;
         }
     }
 
-    document.getElementById('notifications-more').addEventListener('click', () => loadNotifications(true));
 
     document.getElementById('notifications-list').addEventListener('click', async (e) => {
         const delBtn = e.target.closest('.zelda-notif-delete');
@@ -1155,7 +1162,9 @@
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const result = await response.json();
             if (!result.dismissed) throw new Error('Notification was not dismissed');
+            updateUnreadBadge(result.count);
             if (cardEl) cardEl.remove();
+            await loadNotifications();
             const list = document.getElementById('notifications-list');
             if (list && !list.children.length) {
                 document.getElementById('notifications-empty').style.display = 'block';
@@ -1926,7 +1935,7 @@
                 }
             }
 
-            updateUnreadBadge(data.unread_notifications);
+            refreshNotificationBadge();
 
             document.getElementById('progress-loading').style.display = 'none';
             const content = document.getElementById('progress-content');
