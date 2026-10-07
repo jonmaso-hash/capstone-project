@@ -320,9 +320,9 @@ function renderFull(data) {
 
     const confidenceRows = (data.confidence_breakdown || []).map((row, i) => `
         <tr>
-            <td class="fw-semibold">${row.category}</td>
+            <td class="fw-semibold">${escapeHtml(row.category)}</td>
             <td>${row.confidence.toFixed(1)}/10</td>
-            <td class="text-muted">${row.why}</td>
+            <td class="text-muted">${escapeHtml(row.why)}</td>
             <td class="text-end">
                 <button type="button" class="btn btn-link btn-sm p-0" onclick="toggleEvidence(${i})">View evidence</button>
             </td>
