@@ -27,8 +27,9 @@ from matchmaking.services.ai_engine import calculate_zelda_advantage
 from matchmaking.utils import clean_financial_input
 from matchmaking.models import (
     Application, InvestorApplication, SellerApplication, BuyerApplication, Connection, Follow,
-    log_page_event, BusinessEmailVerification, company_matches_email_domain, _resolve_company_name,
-    ProfileVideo,
+    log_page_event, BusinessEmailVerification, CompanyRepresentationAttestation,
+    business_email_verified, company_matches_email_domain, current_company_representation,
+    _resolve_company_name, ProfileVideo,
 )
 from notifications.models import Notification
 
@@ -1293,14 +1294,15 @@ def business_verification(request):
     """
     resolved_company_name = _resolve_company_name(request.user)
     current_verification = BusinessEmailVerification.objects.filter(user=request.user).first()
-    email_verified = bool(
-        current_verification and current_verification.status == "VERIFIED"
-    )
+    email_verified = business_email_verified(request.user)
+    representation = current_company_representation(request.user, resolved_company_name)
 
     return render(request, "accounts/business_verification.html", {
         "email_verified": email_verified,
         "resolved_company_name": resolved_company_name,
         "current_verification": current_verification,
+        "representation": representation,
+        "representation_relationship_choices": CompanyRepresentationAttestation.RELATIONSHIP_CHOICES,
     })
 
 
@@ -1386,5 +1388,64 @@ def business_verification_confirm(request):
         "Your company email is verified. This confirms control of the email address; "
         "it does not verify ownership, job title, or authority to represent the company.",
     )
+    return redirect("accounts:business_verification")
 
+
+@login_required
+@require_POST
+def company_representation_attest(request):
+    resolved_company_name = _resolve_company_name(request.user)
+    if not resolved_company_name:
+        messages.error(request, "Add a company name to your profile before attesting representation.")
+        return redirect("accounts:business_verification")
+
+    if not business_email_verified(request.user):
+        messages.error(
+            request,
+            "Verify a company email first. Email control and representation are recorded as separate trust signals.",
+        )
+        return redirect("accounts:business_verification")
+
+    authorized = request.POST.get("authorized_to_represent") == "on"
+    relationship = (request.POST.get("relationship") or "").strip()
+    role_title = (request.POST.get("role_title") or "").strip()[:255]
+    valid_relationships = {value for value, _ in CompanyRepresentationAttestation.RELATIONSHIP_CHOICES}
+
+    if not authorized:
+        messages.error(request, "You must explicitly attest that you are authorized to represent this company.")
+        return redirect("accounts:business_verification")
+    if relationship not in valid_relationships:
+        messages.error(request, "Select your relationship to the company.")
+        return redirect("accounts:business_verification")
+
+    CompanyRepresentationAttestation.objects.filter(
+        user=request.user,
+        withdrawn_at__isnull=True,
+    ).update(withdrawn_at=timezone.now())
+
+    CompanyRepresentationAttestation.objects.create(
+        user=request.user,
+        company_name=resolved_company_name,
+        relationship=relationship,
+        role_title=role_title,
+        authorized_to_represent=True,
+    )
+    messages.success(
+        request,
+        "Representation recorded as a self-attestation. Interlink has not independently verified your legal authority.",
+    )
+    return redirect("accounts:business_verification")
+
+
+@login_required
+@require_POST
+def company_representation_withdraw(request):
+    updated = CompanyRepresentationAttestation.objects.filter(
+        user=request.user,
+        withdrawn_at__isnull=True,
+    ).update(withdrawn_at=timezone.now())
+    if updated:
+        messages.success(request, "Your representation self-attestation was withdrawn.")
+    else:
+        messages.info(request, "No active representation self-attestation was found.")
     return redirect("accounts:business_verification")
