@@ -35,6 +35,10 @@ UPLOAD_LIMITS_MB = {
     'jobs:apply': RESUME_MAX_MB,
     'zelda_api:pitch_analysis': PITCH_ANALYSIS_MAX_MB,
     'billing:zelda_intake': PITCH_ANALYSIS_MAX_MB,
+    # Data-room model validation also enforces 25 MB, but without this
+    # middleware entry Django parses the entire multipart body before the
+    # model validator gets a chance to refuse it.
+    'matchmaking:data_room_upload': PITCH_ANALYSIS_MAX_MB,
 }
 
 
