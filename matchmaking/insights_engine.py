@@ -38,7 +38,7 @@ FUNNEL_STAGES = [
     ('view', 'Profile Views'),
     ('memo_view', 'Memo Views'),
     ('truth_delta_view', 'Truth Delta Views'),
-    ('thumbs_up', 'Thumbs Up'),
+    ('thumbs_up', 'Marked Relevant'),
     ('intro_request', 'Intro Requests'),
     ('message_sent', 'Messages'),
 ]
@@ -48,7 +48,7 @@ TIMELINE_EVENT_LABELS = {
     'memo_view': 'Memo opened',
     'truth_delta_view': 'Truth Delta viewed',
     'analyze': 'Analyzed with Zelda',
-    'thumbs_up': 'Thumbs up received',
+    'thumbs_up': 'Marked relevant',
     'intro_request': 'Introduction requested',
     'message_sent': 'Message sent',
 }
