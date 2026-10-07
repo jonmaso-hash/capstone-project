@@ -597,9 +597,12 @@
                 </div>
                 <div id="notifications-empty" class="text-center py-4 text-muted small" style="display:none;">
                     <i class="bi bi-bell-slash fs-4 d-block mb-2"></i>
-                    Nothing new.
+                    No notifications to show.
                 </div>
+                <p class="small text-muted">Your five latest notifications. Manage automatic history removal in Settings. Close updates with X or view your full history. Automatic cleanup keeps important notices.</p>
+                <div id="notifications-error" class="small text-danger" role="status" style="display:none;"></div>
                 <div id="notifications-list" class="d-flex flex-column gap-2"></div>
+                <a href="{% url 'notification-history' %}" class="btn btn-outline-secondary btn-sm mt-3">View all notifications</a>
             </div>
         </div>
 
@@ -1000,21 +1003,20 @@
     });
 
     // ──────────────────────────────────────────────────────────────────────────
-    // NOTIFICATIONS — the red badge on the Zelda icon reflects unread
-    // Notification rows (intro requests, matches, etc). Viewing this tab is
-    // what actually tells the user what they were notified about; the list
-    // endpoint marks everything read as a side effect of fetching it
-    // (notifications/views.py::notification_list_api), so the badge clears
-    // the moment they look, instead of persisting forever.
+    // NOTIFICATIONS — history stays available after reading. Only displayed
+    // items are acknowledged; dismissing an update retains its database row.
     // ──────────────────────────────────────────────────────────────────────────
 
+    let notificationBadgeRevision = 0;
     function updateUnreadBadge(count) {
+        notificationBadgeRevision += 1;
         const iconBadge = document.getElementById('zelda-unread-badge');
         const tabBadge = document.getElementById('zelda-tab-notif-badge');
-        const display = count > 0 ? (count > 9 ? '9+' : String(count)) : '';
+        const display = count > 0 ? String(count) : '';
         [iconBadge, tabBadge].forEach(el => {
             if (!el) return;
             el.textContent = display;
+            el.setAttribute('aria-label', `${count} unread notifications`);
             el.style.display = count > 0 ? 'flex' : 'none';
         });
     }
@@ -1048,77 +1050,131 @@
         }, 1000);
     }
 
+    async function refreshNotificationBadge() {
+        if (document.hidden) return;
+        const revision = notificationBadgeRevision;
+        try {
+            const response = await fetch('/notifications/api/unread-count/', {credentials: 'same-origin'});
+            if (response.ok) {
+                const state = await response.json();
+                if (revision === notificationBadgeRevision) updateUnreadBadge(state.count);
+            }
+        } catch (_) { /* Preserve the last known count during a connection failure. */ }
+    }
+    refreshNotificationBadge();
+    window.setInterval(refreshNotificationBadge, 15000);
+    document.addEventListener('visibilitychange', refreshNotificationBadge);
+    window.addEventListener('focus', refreshNotificationBadge);
+
+    let notificationLoadInProgress = false;
+
+    function notificationCard(item) {
+        const card = document.createElement('div');
+        card.className = 'zelda-card p-3';
+        const row = document.createElement('div');
+        row.className = 'd-flex align-items-start gap-2';
+        const content = document.createElement('div');
+        content.className = 'small text-dark flex-grow-1';
+        let message = document.createElement('span');
+        if (item.target_url) {
+            try {
+                const target = new URL(item.target_url, window.location.origin);
+                if (target.origin === window.location.origin && ['http:', 'https:'].includes(target.protocol)) {
+                    message = document.createElement('a');
+                    message.href = target.href;
+                    message.className = 'text-decoration-none';
+                }
+            } catch (_) { /* Show the message even if its destination is invalid. */ }
+        }
+        message.textContent = item.message;
+        content.appendChild(message);
+        const meta = document.createElement('div');
+        meta.className = 'small text-muted mt-1';
+        const created = new Date(item.created_at);
+        meta.textContent = Number.isNaN(created.getTime()) ? '' : created.toLocaleString();
+        if (!item.can_dismiss) meta.textContent += ' · Retained notice';
+        content.appendChild(meta);
+        row.appendChild(content);
+        if (item.can_dismiss) {
+            const dismiss = document.createElement('button');
+            dismiss.type = 'button';
+            dismiss.className = 'btn-close ms-2 flex-shrink-0 zelda-notif-delete';
+            dismiss.dataset.id = item.id;
+            dismiss.setAttribute('aria-label', 'Dismiss notification');
+            dismiss.title = 'Dismiss notification';
+            dismiss.style.fontSize = '0.65rem';
+            row.appendChild(dismiss);
+        }
+        card.appendChild(row);
+        return card;
+    }
+
     async function loadNotifications() {
+        if (notificationLoadInProgress) return;
+        notificationLoadInProgress = true;
         const loading = document.getElementById('notifications-loading');
         const empty = document.getElementById('notifications-empty');
         const list = document.getElementById('notifications-list');
-
+        const error = document.getElementById('notifications-error');
         loading.style.display = 'block';
         empty.style.display = 'none';
-        list.innerHTML = '';
-
+        error.style.display = 'none';
+        list.replaceChildren();
         try {
-            const response = await fetch('/notifications/api/list/', { credentials: 'same-origin' });
+            const response = await fetch('/notifications/api/list/?limit=5', {credentials: 'same-origin'});
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const items = await response.json();
-
-            loading.style.display = 'none';
-
-            if (!items.length) {
-                empty.style.display = 'block';
-            } else {
-                list.innerHTML = items.map(item => {
-                    const body = `
-                        <div class="d-flex align-items-start gap-2">
-                            <i class="bi bi-info-circle-fill text-primary mt-1"></i>
-                            <span class="small text-dark flex-grow-1">${item.message}</span>
-                            <button type="button" class="btn-close ms-2 flex-shrink-0 zelda-notif-delete"
-                                    data-id="${item.id}" aria-label="Delete notification"
-                                    title="Delete notification" style="font-size:0.65rem;"></button>
-                        </div>`;
-                    return item.target_url
-                        ? `<a href="${item.target_url}" class="zelda-card p-3 text-decoration-none" style="display:block;">${body}</a>`
-                        : `<div class="zelda-card p-3">${body}</div>`;
-                }).join('');
+            items.forEach(item => list.appendChild(notificationCard(item)));
+            empty.style.display = list.children.length ? 'none' : 'block';
+            if (items.length && document.getElementById('tab-notifications').style.display !== 'none') {
+                const readResponse = await fetch('/notifications/api/read/', {
+                    method: 'POST', credentials: 'same-origin',
+                    headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+                    body: JSON.stringify({ids: items.map(item => item.id)}),
+                });
+                if (!readResponse.ok) throw new Error(`Read status HTTP ${readResponse.status}`);
+                const readState = await readResponse.json();
+                updateUnreadBadge(readState.count);
             }
-
-            // The list endpoint already marked these rows read server-side —
-            // reflect that immediately instead of waiting for the next
-            // full-page loadJourneyStatus() call.
-            updateUnreadBadge(0);
         } catch (err) {
-            loading.style.display = 'none';
+            error.textContent = 'Could not refresh notifications or their read status. Please reopen this tab to try again.';
+            error.style.display = 'block';
             addLogEntry(`Notifications load error: ${err.message}`, 'error');
+        } finally {
+            loading.style.display = 'none';
+            notificationLoadInProgress = false;
         }
     }
 
-    // Deletes a notification the user has already read but doesn't want to
-    // keep seeing in the list. Card is scoped via .closest('.zelda-card')
-    // since a card may render as either an <a> (has target_url) or a <div>.
+
     document.getElementById('notifications-list').addEventListener('click', async (e) => {
         const delBtn = e.target.closest('.zelda-notif-delete');
         if (!delBtn) return;
         e.preventDefault();
         e.stopPropagation();
-
         const cardEl = delBtn.closest('.zelda-card');
         delBtn.disabled = true;
-
         try {
             const response = await fetch(`/notifications/api/${delBtn.dataset.id}/delete/`, {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                method: 'POST', credentials: 'same-origin',
+                headers: {'X-CSRFToken': getCookie('csrftoken')},
             });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
+            const result = await response.json();
+            if (!result.dismissed) throw new Error('Notification was not dismissed');
+            updateUnreadBadge(result.count);
             if (cardEl) cardEl.remove();
+            await loadNotifications();
             const list = document.getElementById('notifications-list');
             if (list && !list.children.length) {
                 document.getElementById('notifications-empty').style.display = 'block';
             }
         } catch (err) {
             delBtn.disabled = false;
-            addLogEntry(`Notification delete error: ${err.message}`, 'error');
+            const error = document.getElementById('notifications-error');
+            error.textContent = 'Could not dismiss this notification. Please try again.';
+            error.style.display = 'block';
+            addLogEntry(`Notification dismiss error: ${err.message}`, 'error');
         }
     });
 
@@ -1879,7 +1935,7 @@
                 }
             }
 
-            updateUnreadBadge(data.unread_notifications);
+            refreshNotificationBadge();
 
             document.getElementById('progress-loading').style.display = 'none';
             const content = document.getElementById('progress-content');

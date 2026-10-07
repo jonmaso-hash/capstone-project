@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase, override_settings
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
+from unittest.mock import patch
 
 from .models import Notification
 
@@ -8,129 +9,225 @@ User = get_user_model()
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
-class NotificationListApiTests(TestCase):
-    """
-    notification_list_api is what the Zelda icon's Notifications tab calls —
-    it both returns the unread notifications' content (message/target_url,
-    so the user can see what they were notified about) and marks them read
-    as a side effect of being fetched, which is what makes the badge
-    actually clear instead of persisting forever.
-    """
-
+class NotificationHistoryTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user('notif_api_user', password='x')
+        self.user = User.objects.create_user('notification_owner', password='x')
+        self.other = User.objects.create_user('notification_other', password='x')
         self.client.force_login(self.user)
 
-    def test_returns_message_and_target_url_for_unread_notifications(self):
-        Notification.objects.create(
-            recipient=self.user, message='Someone requested an intro with you.', target_url='/some/path/',
-        )
-        response = self.client.get(reverse('api-list'))
-        data = response.json()
-        self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]['message'], 'Someone requested an intro with you.')
+    def _notice(self, **kwargs):
+        return Notification.objects.create(recipient=self.user, message='An update.', **kwargs)
+
+    def _read(self, ids):
+        return self.client.post(reverse('api-read'), {'ids': ids}, content_type='application/json')
+
+    def test_history_includes_read_items_and_get_does_not_acknowledge(self):
+        read = self._notice(is_read=True)
+        unread = self._notice(target_url='/some/path/')
+        data = self.client.get(reverse('api-list')).json()
+        self.assertEqual([item['id'] for item in data], [unread.id, read.id])
+        self.assertEqual(data[0]['message'], 'An update.')
         self.assertEqual(data[0]['target_url'], '/some/path/')
+        self.assertFalse(data[0]['is_read'])
+        self.assertTrue(data[0]['can_dismiss'])
+        self.assertIn('created_at', data[0])
+        unread.refresh_from_db()
+        self.assertFalse(unread.is_read)
+        self.assertEqual(self.client.get(reverse('api-unread-count')).json()['count'], 1)
 
-    def test_fetching_the_list_marks_notifications_read(self):
-        notif = Notification.objects.create(recipient=self.user, message='Test notification.')
-        self.assertFalse(notif.is_read)
+    def test_acknowledging_does_not_remove_history(self):
+        notice = self._notice()
+        self.assertEqual(self._read([notice.id]).json(), {'updated': 1, 'count': 0})
+        self.assertEqual(self._read([notice.id]).json(), {'updated': 0, 'count': 0})
+        self.assertEqual(self.client.get(reverse('api-list')).json()[0]['id'], notice.id)
+        self.assertTrue(self.client.get(reverse('api-list')).json()[0]['is_read'])
 
+    def test_acknowledgement_keeps_new_arrivals_unread(self):
+        displayed = self._notice()
         self.client.get(reverse('api-list'))
+        arrived_later = self._notice()
+        self.assertEqual(self._read([displayed.id]).json(), {'updated': 1, 'count': 1})
+        arrived_later.refresh_from_db()
+        self.assertFalse(arrived_later.is_read)
 
-        notif.refresh_from_db()
-        self.assertTrue(notif.is_read)
+    def test_pagination_is_stable_when_a_new_notification_arrives(self):
+        notices = [self._notice() for _ in range(51)]
+        first = self.client.get(reverse('api-list')).json()
+        self.assertEqual(len(first), 50)
+        self._notice()
+        second = self.client.get(reverse('api-list'), {'before': first[-1]['id']}).json()
+        self.assertEqual([item['id'] for item in second], [notices[0].id])
 
-    def test_already_read_notifications_are_excluded(self):
-        Notification.objects.create(recipient=self.user, message='Old, already read.', is_read=True)
-        response = self.client.get(reverse('api-list'))
-        self.assertEqual(response.json(), [])
+    def test_invalid_history_cursor_is_rejected(self):
+        for cursor in ('bad', '0', '-1'):
+            with self.subTest(cursor=cursor):
+                self.assertEqual(self.client.get(reverse('api-list'), {'before': cursor}).status_code, 400)
 
-    def test_second_fetch_returns_empty_since_first_fetch_already_marked_read(self):
-        Notification.objects.create(recipient=self.user, message='Only shows up once.')
+    def test_other_users_records_cannot_be_read_or_dismissed(self):
+        other_notice = Notification.objects.create(recipient=self.other, message='Private update.')
+        self.assertEqual(self.client.get(reverse('api-list')).json(), [])
+        self.assertEqual(self._read([other_notice.id]).json(), {'updated': 0, 'count': 0})
+        self.assertEqual(self.client.post(reverse('api-delete', args=[other_notice.id])).json(), {'dismissed': False})
+        other_notice.refresh_from_db()
+        self.assertFalse(other_notice.is_read)
+        self.assertIsNone(other_notice.dismissed_at)
 
-        first = self.client.get(reverse('api-list'))
-        second = self.client.get(reverse('api-list'))
+    def test_dismissal_keeps_record_but_removes_it_from_history_and_badge(self):
+        notice = self._notice()
+        self.assertEqual(self.client.post(reverse('api-delete', args=[notice.id])).json(), {'dismissed': True, 'count': 0})
+        notice.refresh_from_db()
+        self.assertIsNotNone(notice.dismissed_at)
+        self.assertTrue(notice.is_read)
+        self.assertEqual(self.client.get(reverse('api-list')).json(), [])
+        self.assertEqual(self.client.get(reverse('api-unread-count')).json(), {'count': 0})
+        self.assertEqual(self.client.post(reverse('api-delete', args=[notice.id])).json(), {'dismissed': False})
 
-        self.assertEqual(len(first.json()), 1)
-        self.assertEqual(second.json(), [])
+    def test_dismissed_terminal_notification_still_prevents_duplicate_creation(self):
+        notice = self._notice(notification_type='ZELDA_ANALYSIS_READY', target_url='/report/1/')
+        self.client.post(reverse('api-delete', args=[notice.id]))
+        repeated, created = Notification.objects.get_or_create(
+            recipient=self.user, notification_type='ZELDA_ANALYSIS_READY', target_url='/report/1/',
+            defaults={'message': 'Ready again.'},
+        )
+        self.assertFalse(created)
+        self.assertEqual(repeated.id, notice.id)
 
-    def test_anonymous_user_gets_empty_list(self):
+    def test_important_notices_can_be_closed_without_destroying_records(self):
+        for kind in ('SYSTEM', 'PAYMENT', 'PROFILE_VISIBILITY_DEFAULTS', 'SECURITY_ALERT', 'AUDIT_EVENT',
+                     'FUNDED_CONFIRMATION', 'CLOSED_CONFIRMATION', 'TRUTH_DELTA_DISPUTE', 'ELEVATOR_PITCH_REPORT'):
+            with self.subTest(kind=kind):
+                notice = self._notice(notification_type=kind)
+                data = self.client.get(reverse('api-list')).json()
+                self.assertTrue(next(item for item in data if item['id'] == notice.id)['can_dismiss'])
+                self.assertEqual(self.client.post(reverse('api-delete', args=[notice.id])).status_code, 200)
+                notice.refresh_from_db()
+                self.assertIsNotNone(notice.dismissed_at)
+                self.assertTrue(Notification.objects.filter(id=notice.id).exists())
+                self.assertEqual(self._read([notice.id]).status_code, 200)
+
+    def test_invalid_read_payload_cannot_mark_anything_read(self):
+        notice = self._notice()
+        for body in ('bad', '[]', '{}', '{"ids":"all"}', '{"ids":[true]}', '{"ids":[0]}',
+                     '{"ids":["1"]}', '{"ids":[' + ','.join(['1'] * 51) + ']}'):
+            with self.subTest(body=body):
+                self.assertEqual(self.client.post(reverse('api-read'), body, content_type='application/json').status_code, 400)
+        notice.refresh_from_db()
+        self.assertFalse(notice.is_read)
+
+    def test_write_endpoints_require_post_and_authentication(self):
+        notice = self._notice()
+        for url in (reverse('api-read'), reverse('api-delete', args=[notice.id])):
+            self.assertEqual(self.client.get(url).status_code, 405)
         self.client.logout()
-        response = self.client.get(reverse('api-list'))
-        self.assertEqual(response.json(), [])
+        self.assertEqual(self.client.get(reverse('api-list')).json(), [])
+        self.assertEqual(self.client.get(reverse('api-unread-count')).json(), {'count': 0})
+        self.assertEqual(self._read([notice.id]).status_code, 403)
+        self.assertEqual(self.client.post(reverse('api-delete', args=[notice.id])).status_code, 403)
 
-    def test_unread_count_api_reflects_actual_count(self):
-        Notification.objects.create(recipient=self.user, message='One.')
-        Notification.objects.create(recipient=self.user, message='Two.')
-        Notification.objects.create(recipient=self.user, message='Already read.', is_read=True)
+    def test_impersonation_cannot_acknowledge_or_dismiss(self):
+        notice = self._notice()
+        with patch('ops.impersonation.is_impersonating', return_value=True):
+            self.assertEqual(self._read([notice.id]).status_code, 403)
+            self.assertEqual(self.client.post(reverse('api-delete', args=[notice.id])).status_code, 403)
+        notice.refresh_from_db()
+        self.assertFalse(notice.is_read)
+        self.assertIsNone(notice.dismissed_at)
 
-        response = self.client.get(reverse('api-unread-count'))
-
-        self.assertEqual(response.json()['count'], 2)
-
-    def test_unread_count_drops_after_list_api_marks_read(self):
-        Notification.objects.create(recipient=self.user, message='One.')
-
-        self.client.get(reverse('api-list'))
-        response = self.client.get(reverse('api-unread-count'))
-
-        self.assertEqual(response.json()['count'], 0)
-
-    def test_list_response_includes_id_for_delete_targeting(self):
-        notif = Notification.objects.create(recipient=self.user, message='Has an id.')
-
-        response = self.client.get(reverse('api-list'))
-
-        self.assertEqual(response.json()[0]['id'], notif.id)
+    def test_write_endpoints_require_csrf_token(self):
+        notice = self._notice()
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(self.user)
+        self.assertEqual(client.post(reverse('api-read'), {'ids': [notice.id]}, content_type='application/json').status_code, 403)
+        self.assertEqual(client.post(reverse('api-delete', args=[notice.id])).status_code, 403)
+        notice.refresh_from_db()
+        self.assertFalse(notice.is_read)
+        self.assertIsNone(notice.dismissed_at)
 
 
-@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
-class NotificationDeleteApiTests(TestCase):
-    """
-    The Zelda widget's Notifications tab shows a small "X" so a user can
-    dismiss a notification they've already read and don't want to keep
-    seeing in the list — this is what that button calls.
-    """
+    def test_preview_is_five_and_leaves_older_notices_unread(self):
+        notices = [self._notice() for _ in range(7)]
+        preview = self.client.get(reverse('api-list'), {'limit': 5}).json()
+        self.assertEqual(len(preview), 5)
+        self.assertEqual(self._read([item['id'] for item in preview]).json()['count'], 2)
+        self.assertEqual(self.client.post(reverse('api-delete', args=[notices[0].id])).json()['count'], 1)
+        self.assertEqual(self.client.post(reverse('api-delete', args=[notices[1].id])).json()['count'], 0)
 
-    def setUp(self):
-        self.user = User.objects.create_user('notif_delete_user', password='x')
-        self.other_user = User.objects.create_user('notif_delete_other', password='x')
-        self.client.force_login(self.user)
+    def test_history_pages_are_owned_and_read_only(self):
+        from django.http import HttpResponse
+        for _ in range(26):
+            self._notice()
+        Notification.objects.create(recipient=self.other, message='Private other notice')
+        with patch('notifications.views.render', return_value=HttpResponse('history')) as render:
+            self.assertEqual(self.client.get(reverse('notification-history')).status_code, 200)
+            page = render.call_args.args[2]['notification_page']
+            self.assertEqual(len(page), 25)
+            self.assertTrue(page.has_next())
+            self.assertTrue(all(item.recipient_id == self.user.id for item in page))
+            self.client.get(reverse('notification-history'), {'page': 2})
+            self.assertEqual(len(render.call_args.args[2]['notification_page']), 1)
+        self.assertEqual(Notification.objects.filter(recipient=self.user, is_read=False).count(), 26)
 
-    def test_delete_removes_the_notification(self):
-        notif = Notification.objects.create(recipient=self.user, message='Delete me.')
+    def test_auto_remove_after_reading_preserves_unread_and_important(self):
+        from usersettings.models import UserSettings
+        UserSettings.objects.create(user=self.user, notification_retention_days=-1)
+        ordinary = self._notice()
+        unread = self._notice()
+        important = self._notice(notification_type='PAYMENT')
+        self._read([ordinary.id, important.id])
+        self.assertEqual({x['id'] for x in self.client.get(reverse('api-list')).json()}, {unread.id, important.id})
+        ordinary.refresh_from_db()
+        self.assertIsNotNone(ordinary.dismissed_at)
+        self.assertEqual(Notification.objects.filter(recipient=self.user).count(), 3)
 
-        response = self.client.post(reverse('api-delete', args=[notif.id]))
+    def test_age_based_removal_keeps_new_read_and_old_unread(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        from usersettings.models import UserSettings
+        UserSettings.objects.create(user=self.user, notification_retention_days=7)
+        old_read = self._notice(is_read=True)
+        old_unread = self._notice()
+        old_important = self._notice(is_read=True, notification_type='payment')
+        new_read = self._notice(is_read=True)
+        Notification.objects.filter(id__in=[old_read.id, old_unread.id, old_important.id]).update(created_at=timezone.now() - timedelta(days=8))
+        data = self.client.get(reverse('api-list')).json()
+        self.assertEqual({x['id'] for x in data}, {old_unread.id, old_important.id, new_read.id})
+        old_read.refresh_from_db()
+        self.assertIsNone(old_read.dismissed_at)  # Safe GET has no write side effects.
 
-        self.assertEqual(response.json(), {'deleted': True})
-        self.assertFalse(Notification.objects.filter(id=notif.id).exists())
+    def test_retention_settings_validate_and_only_change_owner(self):
+        from usersettings.models import UserSettings
+        other = UserSettings.objects.create(user=self.other)
+        url = reverse('notification-settings')
+        self.assertEqual(self.client.get(url).status_code, 405)
+        self.assertEqual(self.client.post(url, {'retention_days': 'garbage'}).status_code, 400)
+        self.assertEqual(self.client.post(url, {'retention_days': 5}).status_code, 400)
+        self.assertEqual(self.client.post(url, {'retention_days': 30}).status_code, 302)
+        self.assertEqual(UserSettings.objects.get(user=self.user).notification_retention_days, 30)
+        other.refresh_from_db()
+        self.assertEqual(other.notification_retention_days, 0)
 
-    def test_cannot_delete_another_users_notification(self):
-        notif = Notification.objects.create(recipient=self.other_user, message='Not yours.')
+    def test_close_form_dismisses_and_redirects_to_history_page(self):
+        notice = self._notice()
+        response = self.client.post(reverse('notification-close', args=[notice.id]), {'page': 2})
+        self.assertRedirects(response, reverse('notification-history') + '?page=2', fetch_redirect_response=False)
+        notice.refresh_from_db()
+        self.assertIsNotNone(notice.dismissed_at)
 
-        response = self.client.post(reverse('api-delete', args=[notif.id]))
 
-        self.assertEqual(response.json(), {'deleted': False})
-        self.assertTrue(Notification.objects.filter(id=notif.id).exists())
-
-    def test_delete_nonexistent_id_reports_not_deleted(self):
-        response = self.client.post(reverse('api-delete', args=[999999]))
-
-        self.assertEqual(response.json(), {'deleted': False})
-
-    def test_get_request_not_allowed(self):
-        notif = Notification.objects.create(recipient=self.user, message='Still here.')
-
-        response = self.client.get(reverse('api-delete', args=[notif.id]))
-
-        self.assertEqual(response.status_code, 405)
-        self.assertTrue(Notification.objects.filter(id=notif.id).exists())
-
-    def test_anonymous_user_forbidden(self):
-        self.client.logout()
-        notif = Notification.objects.create(recipient=self.user, message='Protected.')
-
-        response = self.client.post(reverse('api-delete', args=[notif.id]))
-
-        self.assertEqual(response.status_code, 403)
-        self.assertTrue(Notification.objects.filter(id=notif.id).exists())
+    def test_history_page_renders_pagination_dismissal_and_escaped_messages(self):
+        from pathlib import Path
+        template_dir = str(Path(__file__).resolve().parent.parent / 'templates')
+        templates = [{'BACKEND': 'django.template.backends.django.DjangoTemplates', 'OPTIONS': {
+            'loaders': [('django.template.loaders.locmem.Loader', {'base.html': '{% block content %}{% endblock %}'}),
+                        ('django.template.loaders.filesystem.Loader', [template_dir])],
+        }}]
+        for _ in range(26):
+            self._notice()
+        notice = Notification.objects.create(recipient=self.user, message='<script>unsafe</script>')
+        with override_settings(TEMPLATES=templates):
+            response = self.client.get(reverse('notification-history'))
+        self.assertContains(response, 'Page 1 of 2')
+        self.assertContains(response, 'aria-label="Dismiss notification"', count=25)
+        self.assertContains(response, '&lt;script&gt;unsafe&lt;/script&gt;')
+        self.assertContains(response, reverse('notification-close', args=[notice.id]))
+        self.assertContains(response, 'name="csrfmiddlewaretoken"')

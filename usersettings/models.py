@@ -30,6 +30,16 @@ class UserSettings(models.Model):
         help_text="Populated from Google/Facebook/LinkedIn on first social signup; replaceable anytime from Settings."
     )
 
+    NOTIFICATION_RETENTION_CHOICES = (
+        (0, 'Keep notification history'),
+        (-1, 'Remove ordinary updates after reading'),
+        (7, 'Remove read updates older than 7 days'),
+        (30, 'Remove read updates older than 30 days'),
+    )
+    notification_retention_days = models.SmallIntegerField(
+        default=0, choices=NOTIFICATION_RETENTION_CHOICES,
+    )
+
     updated_at = models.DateTimeField(auto_now=True)
 
     TOGGLE_FIELDS = [
