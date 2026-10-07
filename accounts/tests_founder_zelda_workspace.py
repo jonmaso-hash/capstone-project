@@ -3,8 +3,11 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
+from billing.models import ZeldaOrder
 from matchmaking.models import Application
+from zelda_api.vector_models import DocumentSource
 
 
 User = get_user_model()
@@ -52,6 +55,33 @@ class FounderProfileZeldaWorkspaceTests(TestCase):
 
         # Operational actions belong in navigation/dashboard, not this profile card.
         self.assertNotContains(response, '> Post a Job</a>')
+
+    def test_purchased_report_shows_checkmark_last_updated_and_update_prompt(self):
+        source = DocumentSource.objects.create(
+            uploaded_by=self.user,
+            source_entity='Workspace Co',
+            filename='workspace-evidence.txt',
+            raw_text_full='Evidence',
+            is_external_subject=True,
+            is_product_input=True,
+        )
+        purchased_at = timezone.now()
+        ZeldaOrder.objects.create(
+            user=self.user,
+            source_document=source,
+            product='truth_delta',
+            reports=['truth_delta'],
+            amount=1999,
+            status='ready',
+            paid_at=purchased_at,
+            stripe_session_id='cs_workspace_truth',
+        )
+
+        response = self.client.get(reverse('accounts:profile', args=[self.user.username]))
+
+        self.assertContains(response, 'Purchased')
+        self.assertContains(response, 'Report last updated')
+        self.assertContains(response, 'Update report')
 
     def test_founder_navbar_keeps_crm_one_click_away(self):
         response = self.client.get(reverse('accounts:profile', args=[self.user.username]))
