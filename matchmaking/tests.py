@@ -146,8 +146,10 @@ class JourneyStageTests(TestCase):
         stage = compute_founder_journey_stage(self.user)
         self.assertFalse(self._checklist_done(stage, 'Verify your business email'))
 
-        app.is_verified = True
-        app.save(update_fields=['is_verified'])
+        BusinessEmailVerification.objects.create(
+            user=self.user, business_email='founder@testco.com',
+            status='VERIFIED', verified_at=timezone.now(),
+        )
         stage = compute_founder_journey_stage(self.user)
         self.assertTrue(self._checklist_done(stage, 'Verify your business email'))
 
@@ -160,8 +162,10 @@ class JourneyStageTests(TestCase):
         stage = compute_investor_journey_stage(self.user)
         self.assertFalse(self._checklist_done(stage, 'Verify your business email'))
 
-        investor.is_verified = True
-        investor.save(update_fields=['is_verified'])
+        BusinessEmailVerification.objects.create(
+            user=self.user, business_email='investor@test.vc',
+            status='VERIFIED', verified_at=timezone.now(),
+        )
         stage = compute_investor_journey_stage(self.user)
         self.assertTrue(self._checklist_done(stage, 'Verify your business email'))
 
@@ -175,8 +179,10 @@ class JourneyStageTests(TestCase):
         stage = compute_seller_journey_stage(self.user)
         self.assertFalse(self._checklist_done(stage, 'Verify your business email'))
 
-        seller.is_verified = True
-        seller.save(update_fields=['is_verified'])
+        BusinessEmailVerification.objects.create(
+            user=self.user, business_email='seller@testwidgets.com',
+            status='VERIFIED', verified_at=timezone.now(),
+        )
         stage = compute_seller_journey_stage(self.user)
         self.assertTrue(self._checklist_done(stage, 'Verify your business email'))
 
@@ -189,8 +195,10 @@ class JourneyStageTests(TestCase):
         stage = compute_buyer_journey_stage(self.user)
         self.assertFalse(self._checklist_done(stage, 'Verify your business email'))
 
-        buyer.is_verified = True
-        buyer.save(update_fields=['is_verified'])
+        BusinessEmailVerification.objects.create(
+            user=self.user, business_email='buyer@acquisitions.com',
+            status='VERIFIED', verified_at=timezone.now(),
+        )
         stage = compute_buyer_journey_stage(self.user)
         self.assertTrue(self._checklist_done(stage, 'Verify your business email'))
 
@@ -4069,7 +4077,7 @@ class InsightsEngineTests(TestCase):
         funnel = get_funnel_stats(InvestorInterestEvent.objects.filter(founder=self.app))
         recs = get_recommendations(funnel, self.app)
         actions = [r['action'] for r in recs]
-        self.assertIn('Complete Verification', actions)
+        self.assertIn('Verify Company Email', actions)
         self.assertIn('Upload a Pitch Deck or Video', actions)
         for rec in recs:
             self.assertIn(rec['impact'], ('High', 'Medium'))
