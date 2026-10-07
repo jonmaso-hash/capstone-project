@@ -29,6 +29,68 @@ class ZeldaOrder(models.Model):
         ordering = ['-created_at']
 
 
+class TruthDeltaCreditWallet(models.Model):
+    """Reusable Truth Delta credits purchased by investors/buyers."""
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='truth_delta_credit_wallet',
+    )
+    balance = models.PositiveIntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username} — {self.balance} Truth Delta credits"
+
+
+class TruthDeltaCreditPurchase(models.Model):
+    """One Stripe purchase that grants reusable Truth Delta credits."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='truth_delta_credit_purchases',
+    )
+    credits = models.PositiveSmallIntegerField(default=3)
+    amount = models.PositiveIntegerField(default=2500)
+    currency = models.CharField(max_length=3, default='usd')
+    status = models.CharField(max_length=24, default='awaiting_payment', choices=[
+        ('awaiting_payment', 'Awaiting payment'),
+        ('paid', 'Paid'),
+        ('canceled', 'Canceled'),
+    ])
+    stripe_session_id = models.CharField(max_length=255, null=True, blank=True, unique=True)
+    checkout_url = models.URLField(max_length=1000, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+class TruthDeltaCreditRedemption(models.Model):
+    """Audit trail: one wallet credit consumed to create one Truth Delta order."""
+
+    wallet = models.ForeignKey(
+        TruthDeltaCreditWallet,
+        on_delete=models.PROTECT,
+        related_name='redemptions',
+    )
+    order = models.OneToOneField(
+        ZeldaOrder,
+        on_delete=models.PROTECT,
+        related_name='truth_delta_credit_redemption',
+    )
+    credits_used = models.PositiveSmallIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+
 class Subscription(models.Model):
     """
     Source of truth for a user's Stripe subscription lifecycle. Stripe
