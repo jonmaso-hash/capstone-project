@@ -204,8 +204,21 @@ class HomepagePositioningCopyTests(TestCase):
         response = self._home()
         self.assertContains(response, 'It does not provide')
         self.assertContains(response, 'investment recommendations')
-        self.assertContains(response, 'execute, negotiate, or guarantee securities or business transactions')
+        self.assertContains(response, 'does not solicit investments for issuers')
+        self.assertContains(response, 'accept investment commitments')
+        self.assertContains(response, 'business information, not securities offerings hosted by Interlink')
         self.assertContains(response, reverse('pages:regulatory_positioning'))
+
+    def test_regulatory_page_states_offering_and_solicitation_boundaries(self):
+        response = self.client.get(reverse('pages:regulatory_positioning'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'No securities-offering intermediary functions')
+        self.assertContains(response, 'not a registered funding portal')
+        self.assertContains(response, 'does not accept investment commitments')
+        self.assertContains(response, 'No issuer-side solicitation by Interlink')
+        self.assertContains(response, 'does not contact users to persuade them to invest')
+        self.assertContains(response, 'No single disclaimer or compensation term determines regulatory status')
+        self.assertContains(response, 'actual conduct controls')
 
     def test_zelda_advantage_is_personalized_and_non_directive(self):
         response = self._home()
