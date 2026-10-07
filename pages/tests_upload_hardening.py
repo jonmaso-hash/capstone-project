@@ -279,6 +279,29 @@ class OversizedUploadsAreRefusedBeforeParsingTests(TestCase):
         self.assertEqual(response.status_code, 413)
         scan.assert_not_called()
 
+    def test_oversized_zelda_ingest_is_refused_before_drf_parses_multipart(self):
+        response = self._post_claiming(
+            reverse('zelda_api:document_ingest'), 'file', 26 * MB,
+        )
+        self.assertEqual(response.status_code, 413)
+        self.assertEqual(response.json()['error'], 'That file is too large. The limit is 25 MB.')
+
+    def test_other_authenticated_upload_surfaces_are_preparse_limited(self):
+        page = 'http://testserver/settings/'
+        cases = (
+            (reverse('matchmaking:data_room_upload', args=['upload_gate']), 'file', 26),
+            (reverse('matchmaking:manage_elevator_pitch'), 'video', 31),
+            (reverse('usersettings:edit_founder_profile'), 'pitch_video', 201),
+            (reverse('usersettings:edit_seller_profile'), 'pitch_video', 201),
+        )
+        for url, field, claimed_mb in cases:
+            with self.subTest(url=url):
+                response = self._post_claiming(
+                    url, field, claimed_mb * MB, HTTP_REFERER=page,
+                )
+                self.assertEqual(response.status_code, 302)
+                self.assertEqual(response['Location'], page)
+
     def test_oversized_form_uploads_go_back_to_the_page_without_being_parsed(self):
         poster = User.objects.create_user('upload_gate_poster', password='x')
         job = JobListing.objects.create(poster=poster, company_name='Co', title='Engineer', description='desc')
