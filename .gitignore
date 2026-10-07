@@ -12,3 +12,9 @@ media/cim_documents/
 db.sqlite3
 /media/*
 !/media/img/
+
+# AI/editor scratch artifacts and flattened Windows temp-path exports.
+.claude/**/scratchpad*
+**/scratchpad/
+**/*scratchpad*
+Users*AppData*Temp*claude*
