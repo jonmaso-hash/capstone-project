@@ -234,6 +234,27 @@
     .status-processing { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid #f59e0b; }
     .status-error { background: rgba(239, 68, 68, 0.1); color: var(--zelda-danger); border: 1px solid var(--zelda-danger); }
 
+    /* Shared subject context: every Zelda product acts on one selected subject. */
+    .zelda-subject-context {
+        border: 1px solid #dbeafe;
+        background: #eff6ff;
+        border-radius: 0.9rem;
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.75rem;
+        flex-shrink: 0;
+    }
+    .zelda-subject-context .zelda-subject-label {
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: #64748b;
+        font-weight: 700;
+    }
+    .zelda-subject-context .zelda-subject-name {
+        color: #0f172a;
+        font-weight: 700;
+    }
+
     /* Tabs */
     .zelda-tabs {
         display: flex;
@@ -540,20 +561,52 @@
     <!-- Body -->
     <div class="offcanvas-body p-4 d-flex flex-column">
         
-        <!-- TAB NAVIGATION -->
-        <div class="zelda-tabs" style="margin: -1rem -1rem 0 -1rem; padding: 0 1rem;">
-            <button class="zelda-tab" data-tab="notifications">
-                <i class="bi bi-bell me-2"></i>Notifications
-                <span id="zelda-tab-notif-badge" class="badge bg-danger rounded-pill ms-1" style="display:none; font-size: 0.65rem;"></span>
+        <!-- SHARED SUBJECT CONTEXT -->
+        <div class="zelda-subject-context" id="zelda-subject-context">
+            <div class="zelda-subject-label">Current subject</div>
+            <div class="d-flex align-items-center justify-content-between gap-2">
+                <div class="zelda-subject-name" id="zelda-subject-name">
+                    {% if user.match_founder_profile %}
+                        {{ user.match_founder_profile.company_name|default:"Your company" }}
+                    {% elif user.match_seller_profile %}
+                        {{ user.match_seller_profile.company_name|default:"Your business" }}
+                    {% else %}
+                        No company selected
+                    {% endif %}
+                </div>
+                <button type="button" class="btn btn-sm btn-link text-decoration-none p-0" data-zelda-open-tab="find">
+                    {% if user.match_investor_profile or user.match_buyer_profile %}Choose company{% else %}Find company{% endif %}
+                </button>
+            </div>
+            <div class="small text-muted" id="zelda-subject-help">
+                {% if user.match_founder_profile or user.match_seller_profile %}
+                    Your own business is the default subject. Choose another company only when reviewing a separate opportunity.
+                {% else %}
+                    Choose a company before opening company-specific intelligence products.
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- HUB NAVIGATION -->
+        <div class="zelda-tabs" style="margin: 0 -1rem 0 -1rem; padding: 0 1rem;">
+            <button class="zelda-tab{% if not user.match_investor_profile and not user.match_buyer_profile %} active{% endif %}" data-tab="ask">
+                <i class="bi bi-stars me-2"></i>Ask Zelda
             </button>
-            <button class="zelda-tab{% if not user.match_investor_profile and not user.match_buyer_profile %} active{% endif %}" data-tab="search">
-                <i class="bi bi-search me-2"></i>Search
+            <button class="zelda-tab" data-tab="find">
+                <i class="bi bi-search me-2"></i>Find Company
+            </button>
+            <button class="zelda-tab{% if user.match_investor_profile or user.match_buyer_profile %} active{% endif %}" data-tab="upload">
+                <i class="bi bi-cloud-upload me-2"></i>Upload
             </button>
             <button class="zelda-tab" data-tab="library">
                 <i class="bi bi-collection me-2"></i>Library
             </button>
-            <button class="zelda-tab{% if user.match_investor_profile or user.match_buyer_profile %} active{% endif %}" data-tab="upload">
-                <i class="bi bi-cloud-upload me-2"></i>Upload
+            <button class="zelda-tab" data-tab="progress">
+                <i class="bi bi-signpost-2 me-2"></i>Progress
+            </button>
+            <button class="zelda-tab" data-tab="notifications">
+                <i class="bi bi-bell me-2"></i>Notifications
+                <span id="zelda-tab-notif-badge" class="badge bg-danger rounded-pill ms-1" style="display:none; font-size: 0.65rem;"></span>
             </button>
             <button class="zelda-tab" data-tab="memo" style="display: none;" aria-hidden="true">
                 <i class="bi bi-file-text me-2"></i>Memos
@@ -563,9 +616,6 @@
             </button>
             <button class="zelda-tab" data-tab="truth-delta" style="display: none;" aria-hidden="true">
                 <i class="bi bi-shield-check me-2"></i>Truth Delta
-            </button>
-            <button class="zelda-tab" data-tab="progress">
-                <i class="bi bi-signpost-2 me-2"></i>My Progress
             </button>
             {% load zelda_products %}{% zelda_role_products as zelda_catalog %}
             {% for product in zelda_catalog %}
@@ -606,9 +656,8 @@
             </div>
         </div>
 
-        <!-- TAB: SEARCH -->
-        <div id="tab-search" class="tab-content{% if not user.match_investor_profile and not user.match_buyer_profile %} active{% endif %}" style="display: {% if user.match_investor_profile or user.match_buyer_profile %}none{% else %}flex{% endif %}; flex-direction: column; gap: 1rem;">
-
+        <!-- TAB: ASK ZELDA -->
+        <div id="tab-ask" class="tab-content{% if not user.match_investor_profile and not user.match_buyer_profile %} active{% endif %}" style="display: {% if user.match_investor_profile or user.match_buyer_profile %}none{% else %}flex{% endif %}; flex-direction: column; gap: 1rem;">
             <!-- Ask Zelda -->
             <div class="zelda-card p-4">
                 <h6 class="fw-bold text-dark mb-3">
@@ -625,11 +674,24 @@
                     </button>
                 </form>
             </div>
+            <div class="zelda-card p-4" id="ask-results-card" style="display: none;">
+                <h6 class="fw-bold text-dark mb-3"><i class="bi bi-list-ul text-success me-2"></i>Results</h6>
+                <div id="ask-results-list" class="d-flex flex-column gap-2"></div>
+            </div>
+        </div>
 
+        <!-- TAB: FIND COMPANY -->
+        <div id="tab-find" class="tab-content" style="display: none; flex-direction: column; gap: 1rem;">
+            <div class="zelda-card p-4 border-primary-subtle">
+                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-building text-primary me-2"></i>Find Company</h6>
+                <p class="small text-muted mb-0">
+                    Find an Interlink company or business profile. External-company identity resolution will be added in Phase 2.2.
+                </p>
+            </div>
             <!-- Global Search -->
             <div class="zelda-card p-4">
                 <h6 class="fw-bold text-dark mb-3">
-                    <i class="bi bi-search text-primary me-2"></i>Global Platform Search
+                    <i class="bi bi-search text-primary me-2"></i>Company & Platform Lookup
                 </h6>
                 <form id="global-agent-form">
                     <div class="input-group" style="gap: 0.5rem;">
@@ -637,7 +699,7 @@
                             type="text" 
                             id="globalAgentQuery" 
                             class="zelda-input flex-grow-1" 
-                            placeholder="Search founders, investors, pitches..."
+                            placeholder="Search company or business name..."
                             autocomplete="off">
                         <button type="submit" class="zelda-button" style="padding: 0.75rem 1.25rem;">
                             <i class="bi bi-arrow-right"></i>
@@ -645,15 +707,10 @@
                     </div>
                 </form>
             </div>
-
-            <!-- Search Results -->
-            <div class="zelda-card p-4" id="search-results-card" style="display: none;">
-                <h6 class="fw-bold text-dark mb-3">
-                    <i class="bi bi-list-ul text-success me-2"></i>Results
-                </h6>
-                <div id="search-results-list" class="d-flex flex-column gap-2"></div>
+            <div class="zelda-card p-4" id="find-results-card" style="display: none;">
+                <h6 class="fw-bold text-dark mb-3"><i class="bi bi-list-ul text-success me-2"></i>Results</h6>
+                <div id="find-results-list" class="d-flex flex-column gap-2"></div>
             </div>
-
             <!-- Vector Search (Document-specific): a developer tool that needs a raw
                  document ID, so it is shown to staff only. The elements stay in the
                  page for everyone because the panel's script attaches to them. -->
@@ -975,6 +1032,14 @@
     // TAB NAVIGATION
     // ──────────────────────────────────────────────────────────────────────────
 
+    document.querySelectorAll('[data-zelda-open-tab]').forEach(button => {
+        button.addEventListener('click', () => {
+            const tabName = button.dataset.zeldaOpenTab;
+            const target = document.querySelector(`.zelda-tab[data-tab="${tabName}"]`);
+            if (target) target.click();
+        });
+    });
+
     document.querySelectorAll('.zelda-tab').forEach(tab => {
         tab.addEventListener('click', function() {
             const tabName = this.dataset.tab;
@@ -1207,7 +1272,7 @@
                 addLogEntry(data.response, 'success');
             }
 
-            renderSearchResults(data.results || []);
+            renderSearchResults(data.results || [], 'find');
 
             if (data.results && data.results.length > 0) {
                 addLogEntry(`Found ${data.results.length} results`, 'success');
@@ -1252,12 +1317,12 @@
 
             if (data.status === 'error') {
                 addLogEntry(data.message || `Error: HTTP ${response.status}`, 'error');
-                renderSearchResults([]);
+                renderSearchResults([], 'ask');
             } else {
                 if (data.response) {
                     addLogEntry(data.response, 'success');
                 }
-                renderSearchResults(data.results || []);
+                renderSearchResults(data.results || [], 'ask');
             }
 
         } catch (err) {
@@ -1271,9 +1336,9 @@
     // SEARCH RESULT CARDS — actions come from the server's access checks.
     // ──────────────────────────────────────────────────────────────────────────
 
-    function renderSearchResults(results) {
-        const card = document.getElementById('search-results-card');
-        const list = document.getElementById('search-results-list');
+    function renderSearchResults(results, target = 'find') {
+        const card = document.getElementById(`${target}-results-card`);
+        const list = document.getElementById(`${target}-results-list`);
         const escapeResult = value => String(value ?? '').replace(/[&<>"']/g, char => ({
             '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
         }[char]));
@@ -1287,7 +1352,7 @@
         list.innerHTML = results.slice(0, 8).map((result, i) => {
             const title = result.title || result.company_name || 'Result';
             const desc = result.executive_summary || result.description || '';
-            const statusId = `search-result-status-${i}`;
+            const statusId = `${target}-result-status-${i}`;
 
             let analyzeBtn = '';
             if (result.type === 'Founder Profile' && result.username) {

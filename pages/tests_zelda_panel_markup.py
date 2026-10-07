@@ -19,7 +19,7 @@ from matchmaking.tests import _mock_embedding_generation
 User = get_user_model()
 
 PANEL_SECTIONS = [
-    'tab-notifications', 'tab-search', 'tab-library', 'tab-upload',
+    'tab-notifications', 'tab-ask', 'tab-find', 'tab-library', 'tab-upload',
     'tab-memo', 'tab-intelligence', 'tab-truth-delta', 'tab-progress',
     'agent-response-log',
 ]
