@@ -268,9 +268,9 @@ class GetsRecordAndGrantNothingTests(_Impersonating):
         unread.refresh_from_db()
         self.assertFalse(unread.is_read)
 
-    def test_control_the_user_opening_notifications_marks_them_read(self):
+    def test_control_the_user_acknowledging_notifications_marks_them_read(self):
         unread = Notification.objects.create(recipient=self.target, message='for the user')
         self.client.force_login(self.target)
-        self.client.get(reverse('api-list'))
+        self.client.post(reverse('api-read'), {'ids': [unread.id]}, content_type='application/json')
         unread.refresh_from_db()
         self.assertTrue(unread.is_read)

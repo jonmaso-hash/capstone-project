@@ -6,5 +6,6 @@ from . import views
 urlpatterns = [
     path('api/list/', views.notification_list_api, name='api-list'),
     path('api/unread-count/', views.unread_count_api, name='api-unread-count'),
+    path('api/read/', views.notification_mark_read_api, name='api-read'),
     path('api/<int:notification_id>/delete/', views.notification_delete_api, name='api-delete'),
 ]

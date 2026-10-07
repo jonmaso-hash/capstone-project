@@ -20,6 +20,7 @@ class Notification(models.Model):
     notification_type = models.CharField(max_length=50, default='INFO') 
     message = models.CharField(max_length=255)
     is_read = models.BooleanField(default=False)
+    dismissed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     target_url = models.URLField(blank=True, null=True)
 
@@ -33,3 +34,13 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.notification_type} for {self.recipient.username}: {self.message[:20]}..."
+
+    @property
+    def can_dismiss(self):
+        """Keep account, payment, moderation and confirmed-outcome notices visible."""
+        kind = self.notification_type.upper()
+        return kind not in {
+            'SYSTEM', 'PAYMENT', 'PROFILE_VISIBILITY_DEFAULTS',
+            'FUNDED_CONFIRMATION', 'CLOSED_CONFIRMATION',
+            'TRUTH_DELTA_DISPUTE', 'ELEVATOR_PITCH_REPORT',
+        } and not kind.startswith(('SECURITY', 'AUDIT'))
