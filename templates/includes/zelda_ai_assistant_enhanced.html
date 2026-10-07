@@ -35,6 +35,11 @@
         50% { filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.8)); }
     }
 
+    @keyframes diamondTwinkle {
+        0%, 100% { transform: scale(0.75) rotate(0deg); opacity: 0.55; }
+        50% { transform: scale(1.2) rotate(18deg); opacity: 1; }
+    }
+
     .dynamic-pulse { animation: subtlePulse 4s infinite ease-in-out; }
     .dynamic-glow { animation: glowPulse 2s infinite ease-in-out; }
     .zelda-shimmer { 
@@ -67,6 +72,48 @@
     #ai-agent-toggle.zelda-stage-green { border-color: var(--zelda-success) !important; }
     #ai-agent-toggle.zelda-stage-green .zelda-stage-pulse-dot { background: var(--zelda-success) !important; }
     #ai-agent-toggle.zelda-stage-green i.bi-robot { color: var(--zelda-success) !important; }
+
+    /* Premium is a separate visual layer from journey progress. The red /
+       yellow / green color still communicates stage; premium adds the
+       diamond treatment instead of replacing that meaning. */
+    #ai-agent-toggle.zelda-premium-diamond {
+        border-color: #e0f2fe !important;
+        box-shadow:
+            0 0 0 2px rgba(255,255,255,0.72),
+            0 0 18px rgba(125,211,252,0.8),
+            0 0 32px rgba(255,255,255,0.45) !important;
+    }
+    #ai-agent-toggle.zelda-premium-diamond .zelda-icon-shell::before,
+    #ai-agent-toggle.zelda-premium-diamond .zelda-icon-shell::after {
+        position: absolute;
+        z-index: 5;
+        color: #fff;
+        line-height: 1;
+        text-shadow:
+            0 0 5px #fff,
+            0 0 10px #7dd3fc,
+            0 0 16px #fde68a;
+        animation: diamondTwinkle 1.8s infinite ease-in-out;
+        pointer-events: none;
+    }
+    #ai-agent-toggle.zelda-premium-diamond .zelda-icon-shell::before {
+        content: "◆";
+        font-size: 0.72rem;
+        top: -8px;
+        left: -5px;
+    }
+    #ai-agent-toggle.zelda-premium-diamond .zelda-icon-shell::after {
+        content: "✦";
+        font-size: 0.9rem;
+        right: -8px;
+        bottom: -4px;
+        animation-delay: 0.55s;
+    }
+    #ai-agent-toggle.zelda-premium-diamond i.bi-robot {
+        filter:
+            drop-shadow(0 0 3px #fff)
+            drop-shadow(0 0 7px rgba(125,211,252,0.95));
+    }
 
     #zelda-unread-badge {
         position: absolute;
@@ -407,7 +454,7 @@
     class="btn btn-primary rounded-circle position-fixed bottom-0 end-0 m-4 d-flex align-items-center justify-content-center shadow-lg"
     style="width: 70px; height: 70px; z-index: 1050;"
     title="{% if user.match_investor_profile or user.match_buyer_profile %}Open Zelda to upload deal materials{% elif user.match_founder_profile or user.match_seller_profile %}Open Zelda to review your company{% else %}Open Zelda Intelligence Panel{% endif %}">
-    <div style="position: relative; width: 40px; height: 40px;">
+    <div class="zelda-icon-shell" style="position: relative; width: 40px; height: 40px;">
         <div class="position-absolute w-100 h-100 rounded-circle bg-warning dynamic-pulse zelda-stage-pulse-dot"></div>
         <i class="bi bi-robot text-warning fs-2 dynamic-glow position-relative z-3"></i>
     </div>
@@ -837,6 +884,25 @@
                         </div>
                     </div>
                     <p id="progress-headline" class="text-secondary small mb-3"></p>
+
+                    <div class="p-3 rounded-3 border bg-light mb-3" id="progress-color-guide">
+                        <div class="small fw-bold text-dark mb-1">
+                            <i class="bi bi-palette me-1"></i>Why Zelda changes color
+                        </div>
+                        <p class="text-muted mb-2" style="font-size:0.75rem;">
+                            Zelda's color reflects your progress through Interlink — not the quality,
+                            value, or investment potential of your company.
+                        </p>
+                        <div class="d-flex flex-column gap-1" style="font-size:0.75rem;">
+                            <span><i class="bi bi-circle-fill text-danger me-2"></i><strong>Red:</strong> getting started; important setup steps are still open.</span>
+                            <span><i class="bi bi-circle-fill text-warning me-2"></i><strong>Yellow:</strong> building momentum; your profile and activity are taking shape.</span>
+                            <span><i class="bi bi-circle-fill text-success me-2"></i><strong>Green:</strong> core journey steps are complete; Zelda shifts to ongoing guidance.</span>
+                            <span id="progress-premium-status" class="mt-1">
+                                <i class="bi bi-gem me-2"></i><strong>Premium:</strong> your Zelda icon becomes diamond-encrusted while its journey color still shows your progress.
+                            </span>
+                        </div>
+                    </div>
+
                     <div id="progress-checklist" class="d-flex flex-column gap-2 mb-3"></div>
                     <div id="progress-next-best-action" class="zelda-card p-3" style="display:none;">
                         <div class="small text-muted mb-2"><i class="bi bi-stars me-1"></i>Next best improvement</div>
@@ -1787,6 +1853,7 @@
             if (toggleBtn) {
                 toggleBtn.classList.remove('zelda-stage-red', 'zelda-stage-yellow', 'zelda-stage-green');
                 toggleBtn.classList.add(`zelda-stage-${data.stage_color}`);
+                toggleBtn.classList.toggle('zelda-premium-diamond', Boolean(data.is_premium));
             }
 
             // Explain *why* the icon just changed color — headline is the
@@ -1817,6 +1884,13 @@
             document.getElementById('progress-loading').style.display = 'none';
             const content = document.getElementById('progress-content');
             document.getElementById('progress-headline').textContent = data.headline;
+
+            const premiumStatus = document.getElementById('progress-premium-status');
+            if (premiumStatus) {
+                premiumStatus.innerHTML = data.is_premium
+                    ? '<i class="bi bi-gem me-2"></i><strong>Premium unlocked:</strong> your Zelda icon is diamond-encrusted while its journey color still shows your progress.'
+                    : '<i class="bi bi-gem me-2"></i><strong>Premium:</strong> upgrade your membership and Zelda becomes diamond-encrusted while its journey color still shows your progress.';
+            }
 
             const checklist = document.getElementById('progress-checklist');
             checklist.innerHTML = data.checklist.map(item => `

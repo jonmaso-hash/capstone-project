@@ -183,6 +183,16 @@ class YellowFounderNextBestActionTests(TestCase):
                          'Post a 30-second elevator pitch to Explore')
         self.assertTrue(data['next_best_action']['action_url'])
 
+    def test_journey_status_exposes_premium_for_icon_treatment(self):
+        response = self.client.get('/api/v1/zelda/journey-status/')
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()['is_premium'])
+
+        Application.objects.filter(user=self.user).update(is_premium=True)
+        response = self.client.get('/api/v1/zelda/journey-status/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['is_premium'])
+
     def test_the_heavier_pitch_asset_is_still_asked_for_second(self):
         response = self.client.get('/api/v1/zelda/journey-status/')
         labels = [i['label'] for i in response.json()['checklist']]
