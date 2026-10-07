@@ -33,7 +33,7 @@
     {% endif %}
     <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'explore' or request.resolver_match.url_name == 'pitch_videos' or request.resolver_match.url_name == 'pitch_videos_entry' %} active{% endif %}" href="{% url 'matchmaking:pitch_videos_entry' %}"{% if request.resolver_match.url_name == 'explore' or request.resolver_match.url_name == 'pitch_videos' or request.resolver_match.url_name == 'pitch_videos_entry' %} aria-current="page"{% endif %}>Pitch Videos</a></li>
     {% if user.is_authenticated %}
-        <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'diligence_chat' %} active{% endif %}" href="{% url 'matchmaking:diligence_chat' %}"{% if request.resolver_match.url_name == 'diligence_chat' %} aria-current="page"{% endif %}>Chat</a></li>
+        <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'diligence_chat' %} active{% endif %}" href="{% url 'matchmaking:diligence_chat' %}"{% if request.resolver_match.url_name == 'diligence_chat' %} aria-current="page"{% endif %}>Messages</a></li>
     {% endif %}
     <li class="nav-item dropdown">
         <button class="nav-link dropdown-toggle text-start" type="button" data-bs-toggle="dropdown" aria-expanded="false">Resources</button>
