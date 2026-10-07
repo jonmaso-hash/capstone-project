@@ -253,7 +253,13 @@
     <!-- Marketplace Score — hero card -->
     <div class="card border-0 shadow-sm rounded-4 mb-4 bg-dark text-white">
         <div class="card-body p-4">
-            <h6 class="text-uppercase small text-white-50 mb-2">Marketplace Score</h6>
+            <h6 class="text-uppercase small text-white-50 mb-2">
+                Marketplace Score
+                <i class="bi bi-info-circle field-info-icon text-white-50"
+                   role="button" tabindex="0"
+                   data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom"
+                   data-bs-content="Your Marketplace Score is a 0–100 engagement score for your own Interlink profile — not a ranking of your company or a prediction of funding. It averages four signals: Visibility (profile-view volume), Interest (relevance signals and introduction requests relative to views), Trust (verified company email plus profile completeness), and Responsiveness (how often introduction requests lead to messages)."></i>
+            </h6>
             <h1 class="fw-bold mb-3">{{ engagement_score.overall }}<span class="fs-4 text-white-50">/100</span></h1>
             <div class="row g-3 mb-3">
                 <div class="col-6 col-md-3">
