@@ -26,6 +26,9 @@ PROFILE_PICTURE_MAX_MB = 5
 BLOG_IMAGE_MAX_MB = 5
 RESUME_MAX_MB = 10
 PITCH_ANALYSIS_MAX_MB = 25  # the same limit as pitch decks on profiles and in the deal room
+DATA_ROOM_MAX_MB = 25
+ELEVATOR_PITCH_MAX_MB = 30
+PROFILE_MEDIA_MAX_MB = 200
 
 # URL name -> the largest file that endpoint accepts.
 UPLOAD_LIMITS_MB = {
@@ -34,7 +37,12 @@ UPLOAD_LIMITS_MB = {
     'blog:edit_article': BLOG_IMAGE_MAX_MB,
     'jobs:apply': RESUME_MAX_MB,
     'zelda_api:pitch_analysis': PITCH_ANALYSIS_MAX_MB,
+    'zelda_api:document_ingest': PITCH_ANALYSIS_MAX_MB,
     'billing:zelda_intake': PITCH_ANALYSIS_MAX_MB,
+    'matchmaking:data_room_upload': DATA_ROOM_MAX_MB,
+    'matchmaking:manage_elevator_pitch': ELEVATOR_PITCH_MAX_MB,
+    'usersettings:edit_founder_profile': PROFILE_MEDIA_MAX_MB,
+    'usersettings:edit_seller_profile': PROFILE_MEDIA_MAX_MB,
 }
 
 
