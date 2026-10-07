@@ -96,4 +96,5 @@ class ZeldaCurrentSubjectHubTests(TestCase):
         self.assertIn('config.dataset.searchUrl', source)
         self.assertIn('config.dataset.intakeUrl', source)
         self.assertIn("select.textContent = 'Company selected'", source)
+        self.assertIn('Found: ${evidence.company}', source)
         self.assertIn('Scroll down to finish checkout.', source)
