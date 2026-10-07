@@ -1,6 +1,7 @@
 import re
 import uuid
 from django.db import models
+from django.db.models import Q
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
@@ -1948,6 +1949,40 @@ def direct_messages_open(user):
     the settings toggle would each have had to be fixed separately to agree.
     """
     return any(profile.allow_direct_messages for profile in role_profiles(user))
+
+
+def direct_message_permitted(sender, target):
+    """
+    Server-side authority for opening/resolving a direct chat.
+
+    A target's allow_direct_messages toggle must not be a UI-only control.
+    Direct messaging is allowed when the target opted in, or when the two
+    accounts already have an accepted/confirmed marketplace relationship.
+    Staff/superuser accounts are never cold-message targets through this route.
+    """
+    if not sender or not target or sender == target:
+        return False
+    if not getattr(sender, 'is_authenticated', False) or not getattr(target, 'is_active', False):
+        return False
+    if getattr(target, 'is_staff', False) or getattr(target, 'is_superuser', False):
+        return False
+    if direct_messages_open(target):
+        return True
+
+    venture_statuses = ('ACCEPTED', 'FUNDED_PENDING', 'FUNDED')
+    if Connection.objects.filter(
+        Q(founder__user=sender, investor__user=target) |
+        Q(founder__user=target, investor__user=sender),
+        status__in=venture_statuses,
+    ).exists():
+        return True
+
+    acquisition_statuses = ('ACCEPTED', 'CLOSED_PENDING', 'CLOSED')
+    return AcquisitionConnection.objects.filter(
+        Q(seller__user=sender, buyer__user=target) |
+        Q(seller__user=target, buyer__user=sender),
+        status__in=acquisition_statuses,
+    ).exists()
 
 
 def founder_is_visible_to(request_user, founder_application):

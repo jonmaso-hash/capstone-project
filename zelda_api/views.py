@@ -721,6 +721,9 @@ class InvestmentMemoGeneratorAPIView(APIView):
         tone = serializer.validated_data['tone']
 
         founder_app = get_object_or_404(Application, id=founder_id)
+        from matchmaking.models import founder_is_visible_to
+        if not founder_is_visible_to(request.user, founder_app):
+            raise Http404("Not found.")
 
         memo_markdown = (
             f"# INVESTMENT MEMO: {founder_app.company_name or 'Ecosystem Venture'}\n"

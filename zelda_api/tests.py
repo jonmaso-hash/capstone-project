@@ -1545,11 +1545,11 @@ class DocumentIngestViewTests(TestCase):
         response = self._post(f)
         self.assertEqual(response.status_code, 400)
 
-    def test_oversized_file_returns_400_not_500(self):
+    def test_oversized_file_returns_413_before_parsing(self):
         # 26MB — over the 25MB cap MaxFileSizeValidator enforces here.
         f = SimpleUploadedFile('huge.txt', b'x' * (26 * 1024 * 1024), content_type='text/plain')
         response = self._post(f)
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 413)
         self.assertIn('too large', response.json()['error'].lower())
 
     def test_valid_upload_creates_document_and_queues_pipeline_task(self):

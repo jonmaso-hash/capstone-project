@@ -254,6 +254,20 @@ class UploadGateHeaderTests(SimpleTestCase):
         self.assertEqual(self.gate(self._request(huge, method='get')).content, b'view')
 
 
+    def test_all_major_upload_routes_have_a_pre_parse_body_limit(self):
+        from shared_utils.upload_limits import _limit_for
+        routes = {
+            reverse('zelda_api:document_ingest'): 25,
+            reverse('matchmaking:data_room_upload', args=['owner']): 25,
+            reverse('matchmaking:manage_elevator_pitch'): 30,
+            reverse('usersettings:edit_founder_profile'): 200,
+            reverse('usersettings:edit_seller_profile'): 200,
+        }
+        for path, expected_mb in routes.items():
+            with self.subTest(path=path):
+                self.assertEqual(_limit_for(path), expected_mb)
+
+
 @override_settings(MEDIA_ROOT=tempfile.mkdtemp())
 class OversizedUploadsAreRefusedBeforeParsingTests(TestCase):
     """
@@ -294,3 +308,27 @@ class OversizedUploadsAreRefusedBeforeParsingTests(TestCase):
                 self.assertEqual(response['Location'], page)
         self.assertFalse(Article.objects.exists())
         self.assertFalse(JobApplication.objects.exists())
+
+
+
+class SecurityAuditStaticRegressionTests(SimpleTestCase):
+    def test_staff_metrics_chart_never_injects_json_with_safe(self):
+        from pathlib import Path
+        from django.conf import settings
+
+        template = (
+            Path(settings.BASE_DIR) / 'templates' / 'matchmaking' / 'platform_metrics.html'
+        ).read_text(encoding='utf-8')
+        self.assertIn('sector_labels|json_script', template)
+        self.assertNotIn('sector_labels|safe', template)
+        self.assertNotIn('registration_labels|safe', template)
+
+    def test_legacy_crawlers_use_the_ssrf_safe_fetcher(self):
+        from pathlib import Path
+        from django.conf import settings
+
+        for rel in ('matchmaking/services.py', 'matchmaking/services/web_crawling.py'):
+            with self.subTest(path=rel):
+                source = (Path(settings.BASE_DIR) / rel).read_text(encoding='utf-8')
+                self.assertIn('fetch_public_page', source)
+                self.assertNotIn('requests.get(', source)
