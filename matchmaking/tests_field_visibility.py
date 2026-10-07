@@ -702,12 +702,12 @@ class CrossSurfaceInvariantTests(_Cast):
             caption='Our pitch',
             video=SimpleUploadedFile('p.mp4', b'x', content_type='video/mp4'),
         )
-        self.api_key = self._make_api_key()
+        self.api_key, self.raw_api_key = self._make_api_key()
 
     def _make_api_key(self):
         from .models import APIKey
         owner = User.objects.create_user('fv_api', password='x')
-        return APIKey.objects.create(owner=owner, firm_name='Test Firm', is_active=True)
+        return APIKey.issue(owner=owner, firm_name='Test Firm', is_active=True)
 
     def assert_absent(self, text, where):
         for form in self.AMOUNT_FORMS:
@@ -737,7 +737,7 @@ class CrossSurfaceInvariantTests(_Cast):
     def api_body(self):
         return self.client.get(
             '/api/v1/enterprise/founders/',
-            HTTP_AUTHORIZATION=f'Api-Key {self.api_key.key}',
+            HTTP_AUTHORIZATION=f'Api-Key {self.raw_api_key}',
         ).content.decode(errors='ignore')
 
     def explore_body(self):
@@ -810,7 +810,7 @@ class CrossSurfaceInvariantTests(_Cast):
     def _appears_in_api_filtered(self, threshold):
         body = self.client.get(
             '/api/v1/enterprise/founders/', {'capital': str(threshold)},
-            HTTP_AUTHORIZATION=f'Api-Key {self.api_key.key}',
+            HTTP_AUTHORIZATION=f'Api-Key {self.raw_api_key}',
         ).content.decode(errors='ignore')
         return 'FV Co' in body
 
