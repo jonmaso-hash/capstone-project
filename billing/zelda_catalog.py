@@ -59,13 +59,58 @@ def selected_reports(product, selected=()):
 
 
 def catalog():
-    return [
-        dict(
-            key=key,
-            name=value[0],
-            amount=value[1],
-            price=f'{value[1] / 100:.2f}',
-            description=value[2],
+    return sorted(
+        [
+            dict(
+                key=key,
+                name=value[0],
+                amount=value[1],
+                price=f'{value[1] / 100:.2f}',
+                description=value[2],
+            )
+            for key, value in PRODUCTS.items()
+        ],
+        key=lambda product: (product['amount'], product['name']),
+    )
+
+
+def catalog_with_purchase_state(user):
+    """Founder-workspace catalog annotated from the user's actual paid orders.
+
+    Individual reports count as purchased whether bought alone or inside a
+    pack/bundle. Package cards count only direct purchases of that package.
+    paid_at is the purchase/update timestamp because Stripe payment is the
+    authoritative point at which the user bought the new report run.
+    """
+    products = catalog()
+    if not user or not getattr(user, 'is_authenticated', False):
+        return products
+
+    from .models import ZeldaOrder
+
+    orders = list(
+        ZeldaOrder.objects.filter(user=user, paid_at__isnull=False)
+        .only('product', 'reports', 'paid_at')
+        .order_by('-paid_at')
+    )
+    latest_report_purchase = {}
+    latest_product_purchase = {}
+    for order in orders:
+        latest_product_purchase.setdefault(order.product, order.paid_at)
+        for report_key in order.reports or []:
+            latest_report_purchase.setdefault(report_key, order.paid_at)
+
+    for product in products:
+        key = product['key']
+        if key in REPORTS:
+            purchased_at = latest_report_purchase.get(key)
+            product['purchase_kind'] = 'report'
+        else:
+            purchased_at = latest_product_purchase.get(key)
+            product['purchase_kind'] = 'package'
+        product['purchased'] = purchased_at is not None
+        product['last_purchased_at'] = purchased_at
+        product['cta_label'] = 'Update report' if purchased_at else (
+            'Buy package' if product['purchase_kind'] == 'package' else 'Create report'
         )
-        for key, value in PRODUCTS.items()
-    ]
+    return products
