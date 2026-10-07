@@ -208,7 +208,11 @@ const ContentShare = {
         await StreamChatController.connect();
 
         const res = await fetch(`/matchmaking/chat/initiate/${this.selectedUser.id}/`, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
             credentials: 'same-origin',
         });
         const data = await res.json();
