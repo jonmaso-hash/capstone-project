@@ -81,11 +81,10 @@ def diligence_catalog():
 def role_catalog(user):
     if not user or not getattr(user, 'is_authenticated', False):
         return catalog()
-    try:
-        if user.match_investor_profile or user.match_buyer_profile:
-            return diligence_catalog()
-    except Exception:
-        pass
+    investor_profile = getattr(user, 'match_investor_profile', None)
+    buyer_profile = getattr(user, 'match_buyer_profile', None)
+    if investor_profile is not None or buyer_profile is not None:
+        return diligence_catalog()
     return catalog()
 
 
