@@ -201,6 +201,54 @@
 
     {% endif %}
 
+    {% if application and peer_market_benchmark %}
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4 d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+            <div>
+                <div class="small text-uppercase fw-bold text-primary mb-1">Peer Market Benchmark</div>
+                <h5 class="fw-bold mb-1">How {{ application.company_name }} compares</h5>
+                <p class="text-muted small mb-0">
+                    Live Interlink peer position plus a cited external market snapshot refreshed every 30 days.
+                </p>
+            </div>
+            <div class="text-lg-end">
+                {% if peer_market_benchmark.status == 'ready' %}
+                    <a href="{% url 'accounts:peer_market_benchmark_detail' peer_market_benchmark.id %}" class="btn btn-primary rounded-pill px-4">View Benchmark</a>
+                    <div class="small text-muted mt-2">Next refresh {{ peer_market_benchmark.refresh_eligible_at|date:"M j, Y" }}</div>
+                {% elif peer_market_benchmark.status == 'failed' %}
+                    <a href="{% url 'accounts:peer_market_benchmark_detail' peer_market_benchmark.id %}" class="btn btn-outline-danger rounded-pill px-4">Review Benchmark</a>
+                {% else %}
+                    <span class="badge bg-primary-subtle text-primary px-3 py-2">Monthly benchmark is being prepared</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if seller_application and peer_market_benchmark_seller %}
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4 d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+            <div>
+                <div class="small text-uppercase fw-bold text-primary mb-1">Peer Market Benchmark</div>
+                <h5 class="fw-bold mb-1">How {{ seller_application.company_name }} compares</h5>
+                <p class="text-muted small mb-0">
+                    Live Interlink buyer-engagement benchmarks plus a cited external market snapshot refreshed every 30 days.
+                </p>
+            </div>
+            <div class="text-lg-end">
+                {% if peer_market_benchmark_seller.status == 'ready' %}
+                    <a href="{% url 'accounts:peer_market_benchmark_detail' peer_market_benchmark_seller.id %}" class="btn btn-primary rounded-pill px-4">View Benchmark</a>
+                    <div class="small text-muted mt-2">Next refresh {{ peer_market_benchmark_seller.refresh_eligible_at|date:"M j, Y" }}</div>
+                {% elif peer_market_benchmark_seller.status == 'failed' %}
+                    <a href="{% url 'accounts:peer_market_benchmark_detail' peer_market_benchmark_seller.id %}" class="btn btn-outline-danger rounded-pill px-4">Review Benchmark</a>
+                {% else %}
+                    <span class="badge bg-primary-subtle text-primary px-3 py-2">Monthly benchmark is being prepared</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     {% if engagement_score %}
     <!-- Marketplace Score — hero card -->
     <div class="card border-0 shadow-sm rounded-4 mb-4 bg-dark text-white">
