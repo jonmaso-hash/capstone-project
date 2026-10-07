@@ -1362,6 +1362,34 @@ def business_verification_confirm(request):
         messages.error(request, "Request a verification code first.")
         return redirect("accounts:business_verification")
 
+    if timezone.now() > verification.expires_at:
+        verification.status = "EXPIRED"
+        verification.save(update_fields=["status"])
+        messages.error(request, "That code has expired. Request a new one.")
+        return redirect("accounts:business_verification")
+
+    if submitted_code != verification.code:
+        verification.attempts += 1
+        if verification.attempts >= BusinessEmailVerification.MAX_ATTEMPTS:
+            verification.status = "LOCKED"
+            verification.save(update_fields=["attempts", "status"])
+            messages.error(request, "Too many incorrect attempts. Request a new code.")
+        else:
+            verification.save(update_fields=["attempts"])
+            messages.error(request, "That code is incorrect.")
+        return redirect("accounts:business_verification")
+
+    verification.status = "VERIFIED"
+    verification.verified_at = timezone.now()
+    verification.save(update_fields=["status", "verified_at"])
+
+    messages.success(
+        request,
+        "Your company email is verified. This confirms control of the email address; "
+        "it does not verify ownership, job title, or authority to represent the company.",
+    )
+    return redirect("accounts:business_verification")
+
 
 @login_required
 @require_POST
@@ -1420,34 +1448,4 @@ def company_representation_withdraw(request):
         messages.success(request, "Your representation self-attestation was withdrawn.")
     else:
         messages.info(request, "No active representation self-attestation was found.")
-    return redirect("accounts:business_verification")
-
-
-    if timezone.now() > verification.expires_at:
-        verification.status = "EXPIRED"
-        verification.save(update_fields=["status"])
-        messages.error(request, "That code has expired. Request a new one.")
-        return redirect("accounts:business_verification")
-
-    if submitted_code != verification.code:
-        verification.attempts += 1
-        if verification.attempts >= BusinessEmailVerification.MAX_ATTEMPTS:
-            verification.status = "LOCKED"
-            verification.save(update_fields=["attempts", "status"])
-            messages.error(request, "Too many incorrect attempts. Request a new code.")
-        else:
-            verification.save(update_fields=["attempts"])
-            messages.error(request, "That code is incorrect.")
-        return redirect("accounts:business_verification")
-
-    verification.status = "VERIFIED"
-    verification.verified_at = timezone.now()
-    verification.save(update_fields=["status", "verified_at"])
-
-    messages.success(
-        request,
-        "Your company email is verified. This confirms control of the email address; "
-        "it does not verify ownership, job title, or authority to represent the company.",
-    )
-
     return redirect("accounts:business_verification")
