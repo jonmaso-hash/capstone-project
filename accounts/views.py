@@ -455,28 +455,28 @@ def profile(request, username=None, pk=None):
         transactions = application.connections.filter(status='FUNDED').select_related('investor').order_by('-updated_at')
         count = application.verified_funding_count
         verified_track_record.append({
-            'label': f"Funded by {count} investor{'s' if count != 1 else ''}",
+            'label': f"Funding outcome confirmed with {count} investor{'s' if count != 1 else ''}",
             'transactions': [{'counterparty': c.investor.company_name, 'date': c.updated_at} for c in transactions],
         })
     if investor_application and investor_application.has_verified_funding:
         transactions = investor_application.connections.filter(status='FUNDED').select_related('founder').order_by('-updated_at')
         count = investor_application.verified_funding_count
         verified_track_record.append({
-            'label': f"{count} compan{'y' if count == 1 else 'ies'} funded",
+            'label': f"Funding outcomes confirmed for {count} compan{'y' if count == 1 else 'ies'}",
             'transactions': [{'counterparty': c.founder.company_name, 'date': c.updated_at} for c in transactions],
         })
     if seller_application and seller_application.has_verified_sale:
         transactions = seller_application.acquisition_connections.filter(status='CLOSED').select_related('buyer').order_by('-updated_at')
         count = seller_application.verified_sale_count
         verified_track_record.append({
-            'label': f"Sold to {count} buyer{'s' if count != 1 else ''}",
+            'label': f"Sale outcome confirmed with {count} buyer{'s' if count != 1 else ''}",
             'transactions': [{'counterparty': c.buyer.company_name, 'date': c.updated_at} for c in transactions],
         })
     if buyer_application and buyer_application.has_verified_sale:
         transactions = buyer_application.acquisition_connections.filter(status='CLOSED').select_related('seller').order_by('-updated_at')
         count = buyer_application.verified_sale_count
         verified_track_record.append({
-            'label': f"{count} compan{'y' if count == 1 else 'ies'} acquired",
+            'label': f"Sale outcomes confirmed for {count} compan{'y' if count == 1 else 'ies'}",
             'transactions': [{'counterparty': c.seller.company_name, 'date': c.updated_at} for c in transactions],
         })
 
