@@ -1038,7 +1038,9 @@
         const entry = document.createElement('div');
         entry.className = `log-entry ${type}`;
         const timestamp = new Date().toLocaleTimeString();
-        entry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+        const stamp = document.createElement('strong');
+        stamp.textContent = `[${timestamp}]`;
+        entry.append(stamp, document.createTextNode(` ${String(message ?? '')}`));
         log.appendChild(entry);
         log.scrollTop = log.scrollHeight;
     }
