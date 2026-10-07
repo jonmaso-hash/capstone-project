@@ -6242,3 +6242,28 @@ class AcceptedConnectionOpensAConversationTests(TestCase):
         self.assertEqual(response.json()['new_status'], 'DECLINED')
         self.assertIsNone(response.json()['chat_channel_cid'])
         client.upsert_users.assert_not_called()
+
+
+class PlatformMetricsStoredXssTests(TestCase):
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.staff = User.objects.create_user('metrics_security_staff', password='x', is_staff=True)
+        self.attacker = User.objects.create_user('metrics_xss_founder', password='x')
+        Application.objects.create(
+            user=self.attacker,
+            company_name='Chart Injection Co',
+            founder_name='Attacker',
+            email='xss@example.com',
+            description='Test',
+            sector='</script><script>window.__interlink_xss=1</script>',
+            stage='Seed',
+        )
+        self.client.force_login(self.staff)
+
+    def test_sector_labels_cannot_break_out_of_json_script(self):
+        response = self.client.get(reverse('matchmaking:platform_metrics'))
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode('utf-8')
+        self.assertNotIn('</script><script>window.__interlink_xss=1</script>', html)
+        self.assertIn('\\u003C/script\\u003E', html)
+        self.assertContains(response, 'id="sector-labels-data"')
