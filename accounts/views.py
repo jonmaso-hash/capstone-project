@@ -27,8 +27,9 @@ from matchmaking.services.ai_engine import calculate_zelda_advantage
 from matchmaking.utils import clean_financial_input
 from matchmaking.models import (
     Application, InvestorApplication, SellerApplication, BuyerApplication, Connection, Follow,
-    log_page_event, BusinessEmailVerification, company_matches_email_domain, _resolve_company_name,
-    ProfileVideo,
+    log_page_event, BusinessEmailVerification, CompanyRepresentationAttestation,
+    business_email_verified, company_matches_email_domain, current_company_representation,
+    _resolve_company_name, ProfileVideo,
 )
 from notifications.models import Notification
 
@@ -455,28 +456,28 @@ def profile(request, username=None, pk=None):
         transactions = application.connections.filter(status='FUNDED').select_related('investor').order_by('-updated_at')
         count = application.verified_funding_count
         verified_track_record.append({
-            'label': f"Funded by {count} investor{'s' if count != 1 else ''}",
+            'label': f"Funding outcome confirmed with {count} investor{'s' if count != 1 else ''}",
             'transactions': [{'counterparty': c.investor.company_name, 'date': c.updated_at} for c in transactions],
         })
     if investor_application and investor_application.has_verified_funding:
         transactions = investor_application.connections.filter(status='FUNDED').select_related('founder').order_by('-updated_at')
         count = investor_application.verified_funding_count
         verified_track_record.append({
-            'label': f"{count} compan{'y' if count == 1 else 'ies'} funded",
+            'label': f"Funding outcomes confirmed for {count} compan{'y' if count == 1 else 'ies'}",
             'transactions': [{'counterparty': c.founder.company_name, 'date': c.updated_at} for c in transactions],
         })
     if seller_application and seller_application.has_verified_sale:
         transactions = seller_application.acquisition_connections.filter(status='CLOSED').select_related('buyer').order_by('-updated_at')
         count = seller_application.verified_sale_count
         verified_track_record.append({
-            'label': f"Sold to {count} buyer{'s' if count != 1 else ''}",
+            'label': f"Sale outcome confirmed with {count} buyer{'s' if count != 1 else ''}",
             'transactions': [{'counterparty': c.buyer.company_name, 'date': c.updated_at} for c in transactions],
         })
     if buyer_application and buyer_application.has_verified_sale:
         transactions = buyer_application.acquisition_connections.filter(status='CLOSED').select_related('seller').order_by('-updated_at')
         count = buyer_application.verified_sale_count
         verified_track_record.append({
-            'label': f"{count} compan{'y' if count == 1 else 'ies'} acquired",
+            'label': f"Sale outcomes confirmed for {count} compan{'y' if count == 1 else 'ies'}",
             'transactions': [{'counterparty': c.seller.company_name, 'date': c.updated_at} for c in transactions],
         })
 
@@ -981,42 +982,42 @@ def profile_analysis(request, username):
         events = InvestorInterestEvent.objects.filter(founder=application)
         engagement = {
             'Intro Requests Received': events.filter(event_type='intro_request').count(),
-            'Thumbs Up Received': events.filter(event_type='thumbs_up').count(),
+            'Marked Relevant by Buyers': events.filter(event_type='thumbs_up').count(),
             'Memo Views': events.filter(event_type='memo_view').count(),
             'Truth Delta Views': events.filter(event_type='truth_delta_view').count(),
             'Times Analyzed': events.filter(event_type='analyze').count(),
         }
         is_premium_insights = application.is_premium
         free_intro_requests = engagement['Intro Requests Received']
-        free_thumbs_up = engagement['Thumbs Up Received']
+        free_thumbs_up = engagement['Marked Relevant by Buyers']
         if is_premium_insights:
             insights_engine_context = _build_insights_engine_context(events, role='founder', role_profile=application)
     elif seller_application:
         events = AcquisitionInterestEvent.objects.filter(seller=seller_application)
         engagement = {
             'Intro Requests Received': events.filter(event_type='intro_request').count(),
-            'Thumbs Up Received': events.filter(event_type='thumbs_up').count(),
+            'Marked Relevant by Buyers': events.filter(event_type='thumbs_up').count(),
             'Memo Views': events.filter(event_type='memo_view').count(),
             'Truth Delta Views': events.filter(event_type='truth_delta_view').count(),
             'Times Analyzed': events.filter(event_type='analyze').count(),
         }
         is_premium_insights = seller_application.is_premium
         free_intro_requests = engagement['Intro Requests Received']
-        free_thumbs_up = engagement['Thumbs Up Received']
+        free_thumbs_up = engagement['Marked Relevant by Buyers']
         if is_premium_insights:
             insights_engine_context = _build_insights_engine_context(events, role='seller', role_profile=seller_application)
     elif investor_application:
         events = InvestorInterestEvent.objects.filter(investor=viewed_user)
         engagement = {
             'Intro Requests Sent': events.filter(event_type='intro_request').count(),
-            'Thumbs Up Given': events.filter(event_type='thumbs_up').count(),
+            'Companies Marked Relevant': events.filter(event_type='thumbs_up').count(),
             'Analyses Run': events.filter(event_type='analyze').count(),
         }
     elif buyer_application:
         events = AcquisitionInterestEvent.objects.filter(buyer=viewed_user)
         engagement = {
             'Intro Requests Sent': events.filter(event_type='intro_request').count(),
-            'Thumbs Up Given': events.filter(event_type='thumbs_up').count(),
+            'Businesses Marked Relevant': events.filter(event_type='thumbs_up').count(),
             'Analyses Run': events.filter(event_type='analyze').count(),
         }
 
@@ -1293,14 +1294,15 @@ def business_verification(request):
     """
     resolved_company_name = _resolve_company_name(request.user)
     current_verification = BusinessEmailVerification.objects.filter(user=request.user).first()
-    email_verified = bool(
-        current_verification and current_verification.status == "VERIFIED"
-    )
+    email_verified = business_email_verified(request.user)
+    representation = current_company_representation(request.user, resolved_company_name)
 
     return render(request, "accounts/business_verification.html", {
         "email_verified": email_verified,
         "resolved_company_name": resolved_company_name,
         "current_verification": current_verification,
+        "representation": representation,
+        "representation_relationship_choices": CompanyRepresentationAttestation.RELATIONSHIP_CHOICES,
     })
 
 
@@ -1386,5 +1388,64 @@ def business_verification_confirm(request):
         "Your company email is verified. This confirms control of the email address; "
         "it does not verify ownership, job title, or authority to represent the company.",
     )
+    return redirect("accounts:business_verification")
 
+
+@login_required
+@require_POST
+def company_representation_attest(request):
+    resolved_company_name = _resolve_company_name(request.user)
+    if not resolved_company_name:
+        messages.error(request, "Add a company name to your profile before attesting representation.")
+        return redirect("accounts:business_verification")
+
+    if not business_email_verified(request.user):
+        messages.error(
+            request,
+            "Verify a company email first. Email control and representation are recorded as separate trust signals.",
+        )
+        return redirect("accounts:business_verification")
+
+    authorized = request.POST.get("authorized_to_represent") == "on"
+    relationship = (request.POST.get("relationship") or "").strip()
+    role_title = (request.POST.get("role_title") or "").strip()[:255]
+    valid_relationships = {value for value, _ in CompanyRepresentationAttestation.RELATIONSHIP_CHOICES}
+
+    if not authorized:
+        messages.error(request, "You must explicitly attest that you are authorized to represent this company.")
+        return redirect("accounts:business_verification")
+    if relationship not in valid_relationships:
+        messages.error(request, "Select your relationship to the company.")
+        return redirect("accounts:business_verification")
+
+    CompanyRepresentationAttestation.objects.filter(
+        user=request.user,
+        withdrawn_at__isnull=True,
+    ).update(withdrawn_at=timezone.now())
+
+    CompanyRepresentationAttestation.objects.create(
+        user=request.user,
+        company_name=resolved_company_name,
+        relationship=relationship,
+        role_title=role_title,
+        authorized_to_represent=True,
+    )
+    messages.success(
+        request,
+        "Representation recorded as a self-attestation. Interlink has not independently verified your legal authority.",
+    )
+    return redirect("accounts:business_verification")
+
+
+@login_required
+@require_POST
+def company_representation_withdraw(request):
+    updated = CompanyRepresentationAttestation.objects.filter(
+        user=request.user,
+        withdrawn_at__isnull=True,
+    ).update(withdrawn_at=timezone.now())
+    if updated:
+        messages.success(request, "Your representation self-attestation was withdrawn.")
+    else:
+        messages.info(request, "No active representation self-attestation was found.")
     return redirect("accounts:business_verification")

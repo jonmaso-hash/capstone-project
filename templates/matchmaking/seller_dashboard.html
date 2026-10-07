@@ -94,10 +94,10 @@
         <i class="bi bi-signpost-2-fill fs-4"></i>
         <div>
             {% if matches %}
-                <strong>You have {{ matches|length }} acquirer match{{ matches|pluralize:"es" }}.</strong>
+                <strong>You have {{ matches|length }} aligned buyer profile{{ matches|pluralize }}.</strong>
                 Request an introduction below to get started.
             {% else %}
-                <strong>No matches yet.</strong> Matches appear here as buyers join — check back soon, or broaden your listing details in your profile.
+                <strong>No aligned profiles yet.</strong> Recommendations appear here as buyers join — check back soon, or broaden your listing details in your profile.
             {% endif %}
         </div>
     </div>
@@ -182,7 +182,7 @@
                             {% if conn.status == 'CLOSED_PENDING' %}
                             <span class="badge bg-warning-subtle text-warning-emphasis border border-warning small">Awaiting Buyer Confirmation</span>
                             {% else %}
-                            <span class="badge bg-success-subtle text-success border border-success small">Accepted</span>
+                            <span class="badge bg-success-subtle text-success border border-success small">Connected</span>
                             {% endif %}
                         </div>
                         <div class="d-flex align-items-center gap-2">
@@ -260,7 +260,7 @@
                             </span>
                         {% elif match.connection_status == 'ACCEPTED' %}
                             <span class="badge bg-primary px-3 py-2 small fw-semibold w-100">
-                                <i class="bi bi-check-circle-fill me-1"></i> Accepted
+                                <i class="bi bi-check-circle-fill me-1"></i> Connected
                             </span>
                         {% elif match.already_requested %}
                             <button class="btn btn-secondary btn-sm w-100 disabled" disabled>
@@ -282,9 +282,9 @@
         <div class="col-12">
             <div class="card border border-dashed border-secondary-subtle py-4 text-center bg-white rounded-3">
                 {% if filters.structure or filters.min_budget %}
-                <p class="text-muted small mb-0"><i class="bi bi-briefcase me-2"></i>No matches for the current filters. Try broadening or clearing them.</p>
+                <p class="text-muted small mb-0"><i class="bi bi-briefcase me-2"></i>No recommendations for the current filters. Try broadening or clearing them.</p>
                 {% else %}
-                <p class="text-muted small mb-0"><i class="bi bi-briefcase me-2"></i>No acquirer matches yet — update your listing to improve matching.</p>
+                <p class="text-muted small mb-0"><i class="bi bi-briefcase me-2"></i>No aligned buyer profiles yet — update your listing to improve discovery.</p>
                 {% endif %}
             </div>
         </div>

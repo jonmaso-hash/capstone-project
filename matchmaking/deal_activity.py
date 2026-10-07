@@ -43,13 +43,13 @@ def get_deal_activity_timeline(connection, limit=25):
     # relationship," so that access check can't live here.
     if connection.accepted_at:
         events.append({
-            'icon': 'bi-check-circle-fill', 'label': 'Connection accepted', 'timestamp': connection.accepted_at,
+            'icon': 'bi-check-circle-fill', 'label': 'Connected', 'timestamp': connection.accepted_at,
             'category': 'relationship',
         })
 
     if connection.status == 'FUNDED' and connection.funded_at:
         events.append({
-            'icon': 'bi-patch-check-fill', 'label': 'Verified Funded', 'timestamp': connection.funded_at,
+            'icon': 'bi-patch-check-fill', 'label': 'Funding Outcome Confirmed', 'timestamp': connection.funded_at,
             'category': 'verified_outcome',
         })
 
@@ -150,13 +150,13 @@ def get_acquisition_deal_activity_timeline(acquisition_connection, limit=25):
 
     if acquisition_connection.accepted_at:
         events.append({
-            'icon': 'bi-check-circle-fill', 'label': 'Connection accepted', 'timestamp': acquisition_connection.accepted_at,
+            'icon': 'bi-check-circle-fill', 'label': 'Connected', 'timestamp': acquisition_connection.accepted_at,
             'category': 'relationship',
         })
 
     if acquisition_connection.status == 'CLOSED' and acquisition_connection.closed_at:
         events.append({
-            'icon': 'bi-patch-check-fill', 'label': 'Verified Sold', 'timestamp': acquisition_connection.closed_at,
+            'icon': 'bi-patch-check-fill', 'label': 'Sale Outcome Confirmed', 'timestamp': acquisition_connection.closed_at,
             'category': 'verified_outcome',
         })
 

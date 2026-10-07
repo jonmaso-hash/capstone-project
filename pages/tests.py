@@ -190,14 +190,14 @@ class HomepagePositioningCopyTests(TestCase):
         self.assertEqual(response.status_code, 200)
         return response
 
-    def test_hero_leads_with_relationship_context(self):
+    def test_hero_leads_with_business_marketplace(self):
         import re
         response = self._home()
         content = response.content.decode('utf-8')
         h1_match = re.search(r'<h1[^>]*>(.*?)</h1>', content, re.DOTALL)
         self.assertIsNotNone(h1_match)
-        self.assertIn('Build business relationships with better context.', h1_match.group(1))
-        self.assertContains(response, 'Neutral business networking + Zelda intelligence')
+        self.assertIn('A business marketplace powered by Zelda intelligence.', h1_match.group(1))
+        self.assertContains(response, 'Business marketplace + Zelda intelligence')
         self.assertContains(response, 'without telling you what decision to make')
 
     def test_regulatory_boundary_is_visible_and_linked(self):

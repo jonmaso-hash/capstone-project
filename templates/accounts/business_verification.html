@@ -101,6 +101,78 @@
                 </div>
             </div>
             {% endif %}
+
+            <hr class="my-5">
+
+            <h2 class="fw-bold mb-2">Company Representation</h2>
+            <p class="text-muted mb-4">
+                Representation is separate from email verification. This records what <strong>you attest</strong>
+                about your authority; Interlink does not independently verify legal authority through this form.
+            </p>
+
+            {% if representation %}
+            <div class="card border-primary shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <span class="badge bg-primary mb-2"><i class="bi bi-person-check-fill me-1"></i>Representation Self-Attested</span>
+                    <h5 class="fw-bold mb-1">{{ representation.company_name }}</h5>
+                    <p class="text-muted small mb-1">
+                        You attested that you are authorized to represent this company on Interlink Foundry as
+                        <strong>{{ representation.get_relationship_display }}</strong>{% if representation.role_title %} — {{ representation.role_title }}{% endif %}.
+                    </p>
+                    <p class="text-muted small mb-3">
+                        Recorded {{ representation.attested_at|date:"F j, Y" }}.
+                        <strong>This is a user statement, not independent verification by Interlink.</strong>
+                    </p>
+                    <form method="post" action="{% url 'accounts:company_representation_withdraw' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">Withdraw attestation</button>
+                    </form>
+                </div>
+            </div>
+            {% elif email_verified and resolved_company_name %}
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-2">Attest your authority to represent {{ resolved_company_name }}</h5>
+                    <p class="text-muted small mb-3">
+                        This does not turn the email verification into legal verification. It records your explicit
+                        representation so viewers can distinguish a verified mailbox from a self-attested role.
+                    </p>
+                    <form method="post" action="{% url 'accounts:company_representation_attest' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Your relationship to the company</label>
+                            <select name="relationship" class="form-select" required>
+                                <option value="">Select one</option>
+                                {% for value, label in representation_relationship_choices %}
+                                <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Role or title <span class="text-muted">(optional)</span></label>
+                            <input type="text" name="role_title" class="form-control" maxlength="255" placeholder="e.g. Founder, CFO, Partner">
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" name="authorized_to_represent" id="authorizedToRepresent" required>
+                            <label class="form-check-label small" for="authorizedToRepresent">
+                                I attest that I am authorized to represent {{ resolved_company_name }} on Interlink Foundry.
+                            </label>
+                        </div>
+                        <p class="text-muted small">
+                            Interlink records this as <strong>self-attested</strong>. It does not independently establish
+                            ownership, employment, agency, signing authority, or legal authority.
+                        </p>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-person-check me-1"></i> Record Representation Attestation
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-light border rounded-4">
+                Verify a company email above before recording a representation self-attestation.
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>

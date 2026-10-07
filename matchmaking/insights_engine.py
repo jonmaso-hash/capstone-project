@@ -48,7 +48,7 @@ TIMELINE_EVENT_LABELS = {
     'memo_view': 'Memo opened',
     'truth_delta_view': 'Truth Delta viewed',
     'analyze': 'Analyzed with Zelda',
-    'thumbs_up': 'Thumbs up received',
+    'thumbs_up': 'Marked relevant',
     'intro_request': 'Introduction requested',
     'message_sent': 'Message sent',
 }
@@ -59,6 +59,11 @@ VISIBILITY_VIEWS_FOR_MAX_SCORE = 50
 INTEREST_RATE_FOR_MAX_SCORE = 0.5  # (thumbs_up + intro_requests) / views
 STALE_PROFILE_DAYS = 45
 REPEAT_VIEWER_ALERT_THRESHOLD = 3  # same investor/buyer viewing the memo this many times this week
+
+
+def _has_verified_company_email(role_profile):
+    from .models import business_email_verified
+    return business_email_verified(getattr(role_profile, 'user', None))
 
 
 def get_funnel_stats(events_qs):
@@ -176,7 +181,7 @@ def get_engagement_score(funnel_stats, role_profile):
     visibility = min(100, round(views / VISIBILITY_VIEWS_FOR_MAX_SCORE * 100))
     interest_rate = (thumbs_up + intro_requests) / views if views else 0
     interest = min(100, round(interest_rate / INTEREST_RATE_FOR_MAX_SCORE * 100))
-    trust = round(((100 if getattr(role_profile, 'is_verified', False) else 40) + _completion_percentage(role_profile)) / 2)
+    trust = round(((100 if _has_verified_company_email(role_profile) else 40) + _completion_percentage(role_profile)) / 2)
     responsiveness = min(100, round(messages / intro_requests * 100)) if intro_requests else 0
 
     overall = round((visibility + interest + trust + responsiveness) / 4)
@@ -202,10 +207,10 @@ def get_strengths_and_improvements(engagement_score, role_profile):
         improvements.append("Add traction data — interest relative to views is below average.")
 
     if engagement_score['trust'] >= 80:
-        strengths.append("Strong profile completion and verification.")
+        strengths.append("Strong profile completion and verified company email.")
     else:
-        if not getattr(role_profile, 'is_verified', False):
-            improvements.append("Complete business-email verification to build trust with viewers.")
+        if not _has_verified_company_email(role_profile):
+            improvements.append("Verify a company email so viewers can distinguish mailbox control from self-attested representation.")
         if _completion_percentage(role_profile) < 80:
             improvements.append("Finish filling out your profile — incomplete fields hurt credibility.")
 
@@ -322,10 +327,10 @@ def get_recommendations(funnel_stats, role_profile):
     recommendations = []
     counts = {row['event_type']: row['count'] for row in funnel_stats}
 
-    if not getattr(role_profile, 'is_verified', False):
+    if not _has_verified_company_email(role_profile):
         recommendations.append({
-            'action': 'Complete Verification', 'impact': 'High',
-            'reason': 'Verified profiles receive more introduction requests.',
+            'action': 'Verify Company Email', 'impact': 'High',
+            'reason': 'A verified company email records mailbox control as a separate trust signal.',
         })
 
     has_deck_or_video = bool(getattr(role_profile, 'pitch_deck', None) or getattr(role_profile, 'pitch_video', None)

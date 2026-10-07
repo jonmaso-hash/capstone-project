@@ -749,7 +749,7 @@ class VerifiedFundedSoldBadgeProfileTests(TestCase):
         self.client.force_login(self.founder_user)
         response = self.client.get(reverse('accounts:profile', args=[self.founder_user.username]))
         self.assertTrue(response.context['has_verified_funded'])
-        self.assertContains(response, 'Verified Funded')
+        self.assertContains(response, 'Funding Outcome Confirmed')
 
     def test_funded_pending_connection_does_not_show_badge(self):
         """A founder's unilateral claim (FUNDED_PENDING) is not yet a verified fact."""
@@ -757,21 +757,21 @@ class VerifiedFundedSoldBadgeProfileTests(TestCase):
         self.client.force_login(self.founder_user)
         response = self.client.get(reverse('accounts:profile', args=[self.founder_user.username]))
         self.assertFalse(response.context['has_verified_funded'])
-        self.assertNotContains(response, 'Verified Funded')
+        self.assertNotContains(response, 'Funding Outcome Confirmed')
 
     def test_closed_acquisition_connection_shows_verified_sold_badge(self):
         self.AcquisitionConnection.objects.create(seller=self.seller, buyer=self.buyer, status='CLOSED', initiated_by='SELLER')
         self.client.force_login(self.seller_user)
         response = self.client.get(reverse('accounts:profile', args=[self.seller_user.username]))
         self.assertTrue(response.context['has_verified_sold'])
-        self.assertContains(response, 'Verified Sold')
+        self.assertContains(response, 'Sale Outcome Confirmed')
 
     def test_closed_pending_acquisition_connection_does_not_show_badge(self):
         self.AcquisitionConnection.objects.create(seller=self.seller, buyer=self.buyer, status='CLOSED_PENDING', initiated_by='SELLER')
         self.client.force_login(self.seller_user)
         response = self.client.get(reverse('accounts:profile', args=[self.seller_user.username]))
         self.assertFalse(response.context['has_verified_sold'])
-        self.assertNotContains(response, 'Verified Sold')
+        self.assertNotContains(response, 'Sale Outcome Confirmed')
 
     def test_founder_with_no_deals_has_no_badge(self):
         self.client.force_login(self.founder_user)
@@ -779,7 +779,7 @@ class VerifiedFundedSoldBadgeProfileTests(TestCase):
         self.assertFalse(response.context['has_verified_funded'])
         self.assertFalse(response.context['has_verified_sold'])
         self.assertEqual(response.context['verified_track_record'], [])
-        self.assertNotContains(response, 'Verified Track Record')
+        self.assertNotContains(response, 'Confirmed Outcomes')
 
     def test_founder_track_record_shows_investor_company_and_is_drillable(self):
         self.Connection.objects.create(founder=self.application, investor=self.investor, status='FUNDED', initiated_by='FOUNDER')
@@ -787,10 +787,10 @@ class VerifiedFundedSoldBadgeProfileTests(TestCase):
         response = self.client.get(reverse('accounts:profile', args=[self.founder_user.username]))
         record = response.context['verified_track_record']
         self.assertEqual(len(record), 1)
-        self.assertEqual(record[0]['label'], 'Funded by 1 investor')
+        self.assertEqual(record[0]['label'], 'Funding outcome confirmed with 1 investor')
         self.assertEqual(record[0]['transactions'][0]['counterparty'], 'Fund')
-        self.assertContains(response, 'Verified Track Record')
-        self.assertContains(response, 'Funded by 1 investor')
+        self.assertContains(response, 'Confirmed Outcomes')
+        self.assertContains(response, 'Funding outcome confirmed with 1 investor')
         self.assertContains(response, 'Fund')
 
     def test_investor_with_funded_connection_shows_verified_funded_badge_and_track_record(self):
@@ -798,9 +798,9 @@ class VerifiedFundedSoldBadgeProfileTests(TestCase):
         self.client.force_login(self.investor_user)
         response = self.client.get(reverse('accounts:profile', args=[self.investor_user.username]))
         self.assertTrue(response.context['has_verified_funded'])
-        self.assertContains(response, 'Verified Funded')
+        self.assertContains(response, 'Funding Outcome Confirmed')
         record = response.context['verified_track_record']
-        self.assertEqual(record[0]['label'], '1 company funded')
+        self.assertEqual(record[0]['label'], 'Funding outcomes confirmed for 1 company')
         self.assertEqual(record[0]['transactions'][0]['counterparty'], 'FundedCo')
 
     def test_buyer_with_closed_connection_shows_verified_sold_badge_and_track_record(self):
@@ -808,9 +808,9 @@ class VerifiedFundedSoldBadgeProfileTests(TestCase):
         self.client.force_login(self.buyer_user)
         response = self.client.get(reverse('accounts:profile', args=[self.buyer_user.username]))
         self.assertTrue(response.context['has_verified_sold'])
-        self.assertContains(response, 'Verified Sold')
+        self.assertContains(response, 'Sale Outcome Confirmed')
         record = response.context['verified_track_record']
-        self.assertEqual(record[0]['label'], '1 company acquired')
+        self.assertEqual(record[0]['label'], 'Sale outcomes confirmed for 1 company')
         self.assertEqual(record[0]['transactions'][0]['counterparty'], 'SoldCo')
 
 

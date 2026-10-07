@@ -1059,14 +1059,15 @@ def _resolve_company_name(user):
 
 class BusinessEmailVerification(models.Model):
     """
-    Self-serve verification for the existing per-role 'Verified' badge
-    (Application/InvestorApplication/SellerApplication/BuyerApplication.is_verified,
-    all already BooleanField(default=False)). A user submits a business email
-    whose domain must match their company name, gets a 6-digit code by real
-    email, and typing it back here flips is_verified=True on every role
-    profile they have — 'verified' describes the person/business, not one
-    role view. FK (not OneToOne) so past attempts stay visible to staff for
-    support; the "current" one is the latest PENDING row for a user.
+    Evidence that the user controlled a mailbox whose domain matched the
+    company name on their Interlink profile at verification time.
+
+    This is deliberately narrower than the per-role is_verified flag and
+    narrower than authority to represent the company. Completing this OTP
+    flow does not mutate a role profile and does not establish ownership,
+    title, employment, or legal authority. FK (not OneToOne) preserves past
+    attempts for support/audit; callers should treat a VERIFIED row as the
+    mailbox-control fact.
     """
     STATUS_CHOICES = [
         ('PENDING', 'Pending'),
@@ -1102,6 +1103,73 @@ class BusinessEmailVerification(models.Model):
 
     def __str__(self):
         return f"{self.user.username} — {self.business_email} [{self.status}]"
+
+
+def business_email_verified(user):
+    """Whether Interlink has a completed company-email OTP for this user."""
+    if not user or not getattr(user, 'is_authenticated', False):
+        return False
+    return BusinessEmailVerification.objects.filter(user=user, status='VERIFIED').exists()
+
+
+class CompanyRepresentationAttestation(models.Model):
+    """
+    A user's explicit statement that they are authorized to represent the
+    named company on Interlink Foundry.
+
+    This is a SELF-ATTESTATION, not independent verification by Interlink.
+    It is intentionally separate from BusinessEmailVerification (mailbox
+    control) and role-profile is_verified (staff/admin verification).
+    History is preserved: updating or withdrawing an attestation closes the
+    previous row instead of overwriting it.
+    """
+    RELATIONSHIP_CHOICES = [
+        ('FOUNDER_OWNER', 'Founder / Owner'),
+        ('OFFICER_EXECUTIVE', 'Officer / Executive'),
+        ('EMPLOYEE', 'Employee'),
+        ('INVESTOR_REPRESENTATIVE', 'Investor / Fund Representative'),
+        ('BUYER_REPRESENTATIVE', 'Buyer / Acquirer Representative'),
+        ('SELLER_REPRESENTATIVE', 'Seller Representative'),
+        ('AUTHORIZED_ADVISOR', 'Authorized Advisor'),
+        ('OTHER', 'Other'),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='company_representation_attestations',
+    )
+    company_name = models.CharField(max_length=255)
+    relationship = models.CharField(max_length=32, choices=RELATIONSHIP_CHOICES)
+    role_title = models.CharField(max_length=255, blank=True)
+    authorized_to_represent = models.BooleanField(default=False)
+    attested_at = models.DateTimeField(auto_now_add=True)
+    withdrawn_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-attested_at']
+        indexes = [
+            models.Index(fields=['user', 'withdrawn_at'], name='matchmaking_user_id_bdb29f_idx'),
+            models.Index(fields=['company_name'], name='matchmaking_company_75861a_idx'),
+        ]
+
+    def __str__(self):
+        state = 'active' if self.withdrawn_at is None else 'withdrawn'
+        return f"{self.user.username} — {self.company_name} [{state}]"
+
+
+def current_company_representation(user, company_name=None):
+    """Return the user's current active self-attestation, if one exists."""
+    if not user or not getattr(user, 'is_authenticated', False):
+        return None
+    qs = CompanyRepresentationAttestation.objects.filter(
+        user=user,
+        authorized_to_represent=True,
+        withdrawn_at__isnull=True,
+    )
+    if company_name:
+        qs = qs.filter(company_name__iexact=company_name)
+    return qs.first()
 
 
 class Firm(models.Model):
