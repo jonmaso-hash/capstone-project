@@ -89,7 +89,9 @@ class ZeldaCurrentSubjectHubTests(TestCase):
         content = PANEL_PATH.read_text(encoding='utf-8')
         self.assertIn('id="zelda-subject-context"', content)
         self.assertIn('Current subject', content)
-        self.assertIn('Selecting a company inside any Zelda intelligence product updates this subject automatically.', content)
+        self.assertIn('id="zelda-subject-search"', content)
+        self.assertIn('aria-label="Search for a company"', content)
+        self.assertIn('Choose another company only when reviewing a separate opportunity.', content)
 
     def test_product_search_keeps_external_company_resolver(self):
         source = (ROOT / 'static' / 'js' / 'zelda_products.js').read_text(encoding='utf-8')
