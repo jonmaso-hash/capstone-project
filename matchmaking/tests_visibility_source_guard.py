@@ -105,6 +105,10 @@ PYTHON_ALLOWED = {
         'write-path bookkeeping: compares the old amount with the new one and returns nothing',
     ('zelda_api/profile_reconciliation.py', 'reconcile_profile_with_deck'):
         "returns [] unless the viewer owns the document: the owner's own profile vs their own deck",
+    ('zelda_api/peer_benchmark.py', 'subject_snapshot'):
+        "owner-only Founder/Seller benchmark input: reads the signed-in owner's own controlled profile fields",
+    ('zelda_api/peer_benchmark.py', 'interlink_benchmark'):
+        "peer controlled values enter aggregates only through _visible_peer_value, which calls can_view_profile_field for the benchmark owner",
     # Already filtered upstream.
     ('accounts/views.py', '_zelda_advantage_payload'):
         'called only after profile() confirms all three figures are visible to the viewer',
