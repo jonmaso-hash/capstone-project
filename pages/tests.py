@@ -198,7 +198,8 @@ class HomepagePositioningCopyTests(TestCase):
         self.assertIsNotNone(h1_match)
         self.assertIn('A business marketplace powered by Zelda intelligence.', h1_match.group(1))
         self.assertContains(response, 'Business marketplace + Zelda intelligence')
-        self.assertContains(response, 'without telling you what decision to make')
+        self.assertContains(response, 'Zelda adds source-linked business analysis.')
+        self.assertNotContains(response, 'without telling you what decision to make')
 
     def test_regulatory_boundary_is_visible_and_linked(self):
         response = self._home()
@@ -207,12 +208,11 @@ class HomepagePositioningCopyTests(TestCase):
         self.assertContains(response, 'execute, negotiate, or guarantee securities or business transactions')
         self.assertContains(response, reverse('pages:regulatory_positioning'))
 
-    def test_zelda_advantage_is_personalized_and_non_directive(self):
+    def test_standalone_zelda_advantage_marketing_block_is_removed(self):
         response = self._home()
-        self.assertContains(response, 'The Zelda Advantage')
-        self.assertContains(response, 'Personalized guidance, grounded in your activity.')
-        self.assertContains(response, 'Keep the decision with the user.')
-        self.assertContains(response, 'does not recommend whether to invest, buy, sell, or raise')
+        self.assertNotContains(response, 'The Zelda Advantage')
+        self.assertNotContains(response, 'Personalized guidance, grounded in your activity.')
+        self.assertNotContains(response, 'Keep the decision with the user.')
 
     def test_four_roles_use_discovery_and_relationship_language(self):
         response = self._home()
