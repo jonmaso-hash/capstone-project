@@ -14,7 +14,7 @@ from django.utils import timezone
 from .models import (
     Application, InvestorApplication, MatchFeedback,
     SellerApplication, BuyerApplication, DealFeedback,
-    MatchTrainingExample, log_training_example, Connection,
+    MatchTrainingExample, log_training_example, Connection, BusinessEmailVerification,
     PitchVideoComment, InvestorInterestEvent, AcquisitionInterestEvent,
     AcquisitionConnection, log_buyer_event,
 )
