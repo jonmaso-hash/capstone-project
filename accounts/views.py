@@ -1353,13 +1353,14 @@ def business_verification_request(request):
     verification = BusinessEmailVerification.objects.create(
         user=request.user, business_email=business_email,
     )
+    raw_code = verification.issued_raw_code
     cache.set(cooldown_key, True, timeout=BUSINESS_VERIFICATION_RESEND_COOLDOWN)
 
     try:
         send_mail(
             subject="Your Interlink Foundry company-email verification code",
             message=(
-                f"Your Interlink Foundry company-email verification code is: {verification.code}\n\n"
+                f"Your Interlink Foundry company-email verification code is: {raw_code}\n\n"
                 f"This code expires in 30 minutes. If you didn't request this, you can safely ignore this email."
             ),
             from_email=settings.DEFAULT_FROM_EMAIL,
@@ -1389,7 +1390,7 @@ def business_verification_confirm(request):
         messages.error(request, "That code has expired. Request a new one.")
         return redirect("accounts:business_verification")
 
-    if submitted_code != verification.code:
+    if not verification.check_code(submitted_code):
         verification.attempts += 1
         if verification.attempts >= BusinessEmailVerification.MAX_ATTEMPTS:
             verification.status = "LOCKED"
