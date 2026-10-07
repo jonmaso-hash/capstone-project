@@ -1016,7 +1016,7 @@ def profile_analysis(request, username):
         events = AcquisitionInterestEvent.objects.filter(buyer=viewed_user)
         engagement = {
             'Intro Requests Sent': events.filter(event_type='intro_request').count(),
-            'Companies Marked Relevant': events.filter(event_type='thumbs_up').count(),
+            'Businesses Marked Relevant': events.filter(event_type='thumbs_up').count(),
             'Analyses Run': events.filter(event_type='analyze').count(),
         }
 
