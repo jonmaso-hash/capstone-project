@@ -1221,53 +1221,9 @@
     });
 
     // ──────────────────────────────────────────────────────────────────────────
-    // GLOBAL SEARCH
-    // ──────────────────────────────────────────────────────────────────────────
-
-    document.getElementById('global-agent-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const query = document.getElementById('globalAgentQuery').value.trim();
-        if (!query) return;
-
-        addLogEntry(`Searching for: "${query}"`, 'info');
-
-        try {
-            const response = await fetch(`${ZELDA_API}/search/`, {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken'),
-                },
-                body: JSON.stringify({ q: query })
-            });
-
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
-
-            if (data.response) {
-                addLogEntry(data.response, 'success');
-            }
-
-            renderSearchResults(data.results || [], 'find');
-
-            if (data.results && data.results.length > 0) {
-                addLogEntry(`Found ${data.results.length} results`, 'success');
-            } else {
-                addLogEntry('No results found', 'warning');
-            }
-
-        } catch (err) {
-            addLogEntry(`Error: ${err.message}`, 'error');
-        }
-
-        document.getElementById('globalAgentQuery').value = '';
-    });
-
-    // ──────────────────────────────────────────────────────────────────────────
     // ASK ZELDA — natural-language founder search. Claude only extracts
     // filters server-side; the response text and results are always real
-    // query results, so unlike globalAgentQuery's handler we read the JSON
+    // query results, so we read the JSON
     // body even on a non-2xx response (429 rate limit, 503 circuit open)
     // instead of throwing, so the server's actual message reaches the user.
     // ──────────────────────────────────────────────────────────────────────────

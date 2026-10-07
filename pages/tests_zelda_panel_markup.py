@@ -10,6 +10,7 @@ checks the nesting.
 """
 from html.parser import HTMLParser
 from pathlib import Path
+import re
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -60,8 +61,20 @@ class ZeldaPanelMarkupTests(TestCase):
         _mock_embedding_generation(self)
         self.client.force_login(User.objects.create_user('panel_markup', password='x'))
         parser = _DivNesting()
-        parser.feed(self.client.get(reverse('billing:billing_page')).content.decode())
+        self.rendered = self.client.get(reverse('billing:billing_page')).content.decode()
+        parser.feed(self.rendered)
         self.nesting = parser
+
+    def test_startup_event_handlers_reference_existing_elements(self):
+        # A missing form aborts the script before the floating icon is wired.
+        targets = re.findall(
+            r"document\.getElementById\(['\"]([^'\"]+)['\"]\)\.addEventListener\(",
+            self.rendered,
+        )
+        self.assertTrue(targets)
+        for target in targets:
+            with self.subTest(target=target):
+                self.assertIn(f'id="{target}"', self.rendered)
 
     def test_every_tab_section_and_the_log_are_inside_the_panel_body(self):
         for section in PANEL_SECTIONS:
