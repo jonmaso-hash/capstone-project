@@ -330,6 +330,10 @@ def create_monthly_benchmark(user, role):
         return latest, False
     if latest and latest.refresh_eligible_at and timezone.now() < latest.refresh_eligible_at:
         return latest, False
+    if latest and latest.status == 'failed' and latest.created_at > timezone.now() - timedelta(hours=1):
+        # A temporary provider/search failure must not turn page refreshes
+        # into repeated paid web-search attempts.
+        return latest, False
 
     benchmark = PeerMarketBenchmark.objects.create(
         user=user,
