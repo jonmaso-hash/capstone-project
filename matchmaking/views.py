@@ -1175,7 +1175,7 @@ def activate_seller_highlight(request):
     return redirect('matchmaking:seller_dashboard')
 
 
-FREE_CRM_LEAD_LIMIT = 15
+FREE_CRM_LEAD_LIMIT = 7
 
 
 @login_required
