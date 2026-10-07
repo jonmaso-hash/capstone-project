@@ -587,6 +587,33 @@ def stripe_webhook(request):
                 message="Your premium subscription has ended.",
             )
 
+    elif event_type == 'invoice.paid':
+        # Founder/Seller Premium includes one Peer Market Benchmark refresh
+        # per monthly period. create_monthly_benchmark is itself idempotent
+        # inside the 30-day window, so duplicate/retried Stripe events do not
+        # create duplicate research spend.
+        stripe_customer_id = data_object.get('customer')
+        sub = Subscription.objects.filter(
+            stripe_customer_id=stripe_customer_id,
+            status=Subscription.Status.ACTIVE,
+        ).first()
+        if sub and sub.plan in (
+            Subscription.Plan.FOUNDER_PREMIUM,
+            Subscription.Plan.SELLER_PREMIUM,
+        ):
+            role = 'founder' if sub.plan == Subscription.Plan.FOUNDER_PREMIUM else 'seller'
+            try:
+                from zelda_api.peer_benchmark import create_monthly_benchmark
+                from zelda_api.tasks import generate_peer_market_benchmark
+                benchmark, created = create_monthly_benchmark(sub.user, role)
+                if created:
+                    generate_peer_market_benchmark.delay(benchmark.id)
+            except (PermissionError, AttributeError):
+                # The subscription can arrive before the user finishes the
+                # corresponding marketplace profile. Founder/Seller Insights
+                # will enqueue the first snapshot once the profile exists.
+                pass
+
     elif event_type == 'invoice.payment_failed':
         stripe_customer_id = data_object.get('customer')
         sub = Subscription.objects.filter(
