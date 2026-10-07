@@ -110,7 +110,8 @@ def catalog_with_purchase_state(user):
             product['purchase_kind'] = 'package'
         product['purchased'] = purchased_at is not None
         product['last_purchased_at'] = purchased_at
-        product['cta_label'] = 'Update report' if purchased_at else (
-            'Buy package' if product['purchase_kind'] == 'package' else 'Create report'
-        )
+        if purchased_at:
+            product['cta_label'] = 'Update reports' if product['purchase_kind'] == 'package' else 'Update report'
+        else:
+            product['cta_label'] = 'Buy package' if product['purchase_kind'] == 'package' else 'Create report'
     return products
