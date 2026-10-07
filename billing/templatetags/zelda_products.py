@@ -17,3 +17,12 @@ def zelda_individual_reports():
 @register.simple_tag(takes_context=True)
 def zelda_role_products(context):
     return role_catalog(context.get('user'))
+
+
+@register.simple_tag(takes_context=True)
+def truth_delta_credit_balance(context):
+    user = context.get('user')
+    if not user or not getattr(user, 'is_authenticated', False):
+        return 0
+    from billing.models import TruthDeltaCreditWallet
+    return TruthDeltaCreditWallet.objects.filter(user=user).values_list('balance', flat=True).first() or 0
