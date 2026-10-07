@@ -7,60 +7,115 @@
 
 {% block content %}
 
-<!-- Hero -->
-<section class="hero-section text-white text-center">
+<section class="hero-section text-white">
     <div class="container py-5">
-        <span class="badge rounded-pill bg-light text-dark px-3 py-2 mb-4 fw-semibold">
-            <i class="bi bi-stars text-primary me-1"></i> Powered by Zelda
-            <i class="bi bi-info-circle field-info-icon" role="button" tabindex="0"
-               data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom"
-               data-bs-content="Zelda reads submitted documents, labels every claim it evaluates with its source and status, and powers matching and confirmed deal outcomes."></i>
-        </span>
-        <h1 class="display-4 fw-bold mb-3">Make better decisions<br>about businesses.</h1>
-        <p class="fs-4 fw-semibold text-white-50 mb-3">Raise capital. Source deals. Buy or sell a business.</p>
-        <p class="lead text-white-50 mb-4 mx-auto" style="max-width: 620px;">
-            Interlink Foundry connects founders, investors, buyers, and sellers through
-            first-pass investment intelligence you can trace, semantic matching, and verified deal outcomes.
-        </p>
-        <div class="d-flex justify-content-center gap-2 flex-wrap">
-            {% if user.is_authenticated %}
-                <a href="{% url 'accounts:post_login_router' %}" class="btn btn-light btn-lg rounded-pill fw-bold px-4">
-                    Go to My Dashboard
-                </a>
-            {% else %}
-                <a href="{% url 'accounts:signup' %}" class="btn btn-light btn-lg rounded-pill fw-bold px-4">
-                    Get Started Free
-                </a>
-                <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg rounded-pill px-4">
-                    Sign In
-                </a>
-            {% endif %}
+        <div class="row align-items-center g-5">
+            <div class="col-lg-7">
+                <span class="badge rounded-pill bg-light text-dark px-3 py-2 mb-4 fw-semibold">
+                    <i class="bi bi-stars text-primary me-1"></i> Neutral business networking + Zelda intelligence
+                </span>
+                <h1 class="display-4 fw-bold mb-3">Build business relationships with better context.</h1>
+                <p class="lead text-white-50 mb-4" style="max-width: 720px;">
+                    Interlink Foundry helps founders, investors, sellers, and buyers discover one another,
+                    exchange business materials, organize evidence, and manage relationships. Zelda adds
+                    source-linked business analysis without telling you what decision to make.
+                </p>
+
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'accounts:post_login_router' %}" class="btn btn-light btn-lg rounded-pill fw-bold px-4">Open My Workspace</a>
+                    {% else %}
+                    <a href="{% url 'accounts:signup' %}" class="btn btn-light btn-lg rounded-pill fw-bold px-4">Create a Free Account</a>
+                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg rounded-pill px-4">Sign In</a>
+                    {% endif %}
+                    <a href="{% url 'explore' %}" class="btn btn-link btn-lg text-white text-decoration-none">
+                        Explore 30-second pitches <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+
+                <div class="small text-white-50" style="max-width: 760px;">
+                    <i class="bi bi-shield-check me-1"></i>
+                    Interlink provides networking, business-information, and workflow tools. It does not provide
+                    investment recommendations. It does not execute, negotiate, or guarantee securities or business transactions.
+                    <a href="{% url 'pages:regulatory_positioning' %}" class="link-light fw-semibold">See our regulatory positioning.</a>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="rounded-4 border border-light border-opacity-25 p-4 p-lg-5" style="background: rgba(255,255,255,.06); backdrop-filter: blur(10px);">
+                    <div class="text-uppercase small fw-bold text-white-50 mb-2">The Zelda Advantage</div>
+                    <h2 class="h4 fw-bold mb-4">Personalized guidance, grounded in your activity.</h2>
+
+                    <div class="mb-4">
+                        <div class="fw-bold mb-1">Know what is incomplete.</div>
+                        <p class="small text-white-50 mb-0">Zelda surfaces the next useful setup or relationship task based on your role and progress.</p>
+                    </div>
+                    <div class="mb-4">
+                        <div class="fw-bold mb-1">Keep evidence attached to the claim.</div>
+                        <p class="small text-white-50 mb-0">Every claim Zelda evaluates carries its source, evidence role, and verification status.</p>
+                    </div>
+                    <div>
+                        <div class="fw-bold mb-1">Keep the decision with the user.</div>
+                        <p class="small text-white-50 mb-0">Zelda organizes information and questions; it does not recommend whether to invest, buy, sell, or raise.</p>
+                    </div>
+                </div>
+            </div>
         </div>
-        <p class="mt-3 mb-0">
-            <a href="{% url 'explore' %}" class="link-light text-decoration-none fw-semibold">
-                <i class="bi bi-lightning-charge-fill me-1"></i>Just curious? Explore 30-second pitches — no signup
-                <i class="bi bi-arrow-right ms-1"></i>
-            </a>
-        </p>
     </div>
 </section>
 
-<!-- Four Personas -->
+{% if user.is_authenticated %}
+<section class="py-4 bg-light border-bottom">
+    <div class="container">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-4">
+                <div class="row align-items-center g-4">
+                    <div class="col-lg-4">
+                        <div class="small text-uppercase fw-bold text-muted mb-1">Welcome back</div>
+                        <h2 class="h4 fw-bold mb-1">{{ user.first_name|default:user.username }}</h2>
+                        <p class="text-muted small mb-0">Zelda is checking the best next step for your current role.</p>
+                    </div>
+                    <div class="col-lg-5">
+                        <div id="home-journey-loading" class="small text-muted">
+                            <span class="spinner-border spinner-border-sm me-2"></span>Checking your progress...
+                        </div>
+                        <div id="home-journey-content" class="d-none">
+                            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                <span id="home-journey-stage" class="badge rounded-pill text-bg-secondary"></span>
+                                <span id="home-journey-strength" class="small fw-semibold text-muted"></span>
+                            </div>
+                            <h3 class="h6 fw-bold mb-1" id="home-next-label">Your next step</h3>
+                            <p class="text-muted small mb-0" id="home-next-why"></p>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 text-lg-end">
+                        <a id="home-next-action" href="{% url 'accounts:post_login_router' %}" class="btn btn-dark rounded-pill px-4 fw-semibold">Go to My Dashboard</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
 <section class="py-5 bg-white">
     <div class="container">
-        <h2 class="text-center fw-bold mb-2">One network. Four ways in.</h2>
-        <p class="text-center text-muted mb-5">Whichever seat you're in, Interlink Foundry brings the same evidence, matching, and verified outcomes to your side of the deal.</p>
+        <h2 class="text-center fw-bold mb-2">One network. Four roles.</h2>
+        <p class="text-center text-muted mb-5 mx-auto" style="max-width: 760px;">
+            Discover people and businesses by stated criteria. Alignment is a discovery signal—not an endorsement,
+            recommendation, prediction of a transaction, or assessment of business quality.
+        </p>
 
         <div class="row g-4">
             <div class="col-md-6 col-lg-3">
                 <div class="card h-100 border-0 shadow-sm rounded-4 persona-card">
                     <div class="card-body p-4">
-                        <span class="badge bg-success-subtle text-success fw-semibold mb-3">Raising Capital</span>
-                        <h5 class="fw-bold mb-3"><i class="bi bi-rocket-takeoff-fill me-2 text-success"></i>Founder</h5>
+                        <span class="badge bg-success-subtle text-success fw-semibold mb-3">Founder</span>
+                        <h5 class="fw-bold mb-3">Build investor relationships</h5>
                         <ul class="list-unstyled small text-secondary mb-4">
-                            <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i>Matched to investors who fit your stage & sector</li>
-                            <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i>Upload your pitch deck & video for investors to review</li>
-                            <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i>One CRM to track every conversation</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i>Publish a business profile and pitch materials.</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i>See investors whose stated criteria align with your profile.</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i>Track introductions and follow-up in your fundraising CRM.</li>
                         </ul>
                         <a href="{% url 'accounts:signup' %}" class="btn btn-outline-success rounded-pill w-100 fw-semibold">Join as a Founder</a>
                     </div>
@@ -70,12 +125,12 @@
             <div class="col-md-6 col-lg-3">
                 <div class="card h-100 border-0 shadow-sm rounded-4 persona-card">
                     <div class="card-body p-4">
-                        <span class="badge bg-primary-subtle text-primary fw-semibold mb-3">Sourcing Deals</span>
-                        <h5 class="fw-bold mb-3"><i class="bi bi-briefcase-fill me-2 text-primary"></i>Investor</h5>
+                        <span class="badge bg-primary-subtle text-primary fw-semibold mb-3">Investor</span>
+                        <h5 class="fw-bold mb-3">Organize company discovery</h5>
                         <ul class="list-unstyled small text-secondary mb-4">
-                            <li class="mb-2"><i class="bi bi-check2 text-primary me-1"></i>Deal flow ranked by semantic profile match, not keyword filters</li>
-                            <li class="mb-2"><i class="bi bi-check2 text-primary me-1"></i>Browse pitch decks & videos directly</li>
-                            <li class="mb-2"><i class="bi bi-check2 text-primary me-1"></i>Direct intro requests, no cold outreach</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-primary me-1"></i>Surface companies from your stated stage, sector, and thesis criteria.</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-primary me-1"></i>Review company-provided materials and Zelda reports.</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-primary me-1"></i>Request introductions and manage relationships directly.</li>
                         </ul>
                         <a href="{% url 'accounts:signup' %}" class="btn btn-outline-primary rounded-pill w-100 fw-semibold">Join as an Investor</a>
                     </div>
@@ -85,12 +140,12 @@
             <div class="col-md-6 col-lg-3">
                 <div class="card h-100 border-0 shadow-sm rounded-4 persona-card">
                     <div class="card-body p-4">
-                        <span class="badge bg-warning-subtle text-warning-emphasis fw-semibold mb-3">Selling a Business</span>
-                        <h5 class="fw-bold mb-3"><i class="bi bi-shop me-2 text-warning-emphasis"></i>Seller</h5>
+                        <span class="badge bg-warning-subtle text-warning-emphasis fw-semibold mb-3">Seller</span>
+                        <h5 class="fw-bold mb-3">Present a business clearly</h5>
                         <ul class="list-unstyled small text-secondary mb-4">
-                            <li class="mb-2"><i class="bi bi-check2 text-warning-emphasis me-1"></i>List your business for qualified acquirers only</li>
-                            <li class="mb-2"><i class="bi bi-check2 text-warning-emphasis me-1"></i>Free AI valuation preview, with paid unlock for the full report</li>
-                            <li class="mb-2"><i class="bi bi-check2 text-warning-emphasis me-1"></i>Deal-room chat once there's mutual interest</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-warning-emphasis me-1"></i>Create a seller profile and share acquisition materials.</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-warning-emphasis me-1"></i>Surface buyers whose stated acquisition criteria align.</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-warning-emphasis me-1"></i>Use Deal Room and Data Room tools when both sides choose to proceed.</li>
                         </ul>
                         <a href="{% url 'accounts:signup' %}" class="btn btn-outline-warning rounded-pill w-100 fw-semibold">Join as a Seller</a>
                     </div>
@@ -100,12 +155,12 @@
             <div class="col-md-6 col-lg-3">
                 <div class="card h-100 border-0 shadow-sm rounded-4 persona-card">
                     <div class="card-body p-4">
-                        <span class="badge bg-info-subtle text-info-emphasis fw-semibold mb-3">Acquiring a Business</span>
-                        <h5 class="fw-bold mb-3"><i class="bi bi-cash-coin me-2 text-info-emphasis"></i>Buyer</h5>
+                        <span class="badge bg-info-subtle text-info-emphasis fw-semibold mb-3">Buyer</span>
+                        <h5 class="fw-bold mb-3">Review acquisition opportunities</h5>
                         <ul class="list-unstyled small text-secondary mb-4">
-                            <li class="mb-2"><i class="bi bi-check2 text-info-emphasis me-1"></i>Matched to sellers within your budget & thesis</li>
-                            <li class="mb-2"><i class="bi bi-check2 text-info-emphasis me-1"></i>Uncapped intro requests with Buyer Premium</li>
-                            <li class="mb-2"><i class="bi bi-check2 text-info-emphasis me-1"></i>Track every deal in one pipeline</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-info-emphasis me-1"></i>Define your acquisition criteria and budget range.</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-info-emphasis me-1"></i>Discover seller profiles with corresponding stated criteria.</li>
+                            <li class="mb-2"><i class="bi bi-check2 text-info-emphasis me-1"></i>Keep introductions, materials, and relationship activity organized.</li>
                         </ul>
                         <a href="{% url 'accounts:signup' %}" class="btn btn-outline-info rounded-pill w-100 fw-semibold">Join as a Buyer</a>
                     </div>
@@ -116,18 +171,20 @@
 </section>
 
 {% if featured_founders or featured_sellers %}
-<!-- Featured Companies -->
 <section class="py-5 bg-light">
     <div class="container">
-        <h2 class="fw-bold mb-2 text-center">Featured on Interlink Foundry</h2>
-        <p class="text-center text-muted mb-5">A hand-picked look at what's on the platform right now.</p>
+        <h2 class="fw-bold mb-2 text-center">Featured profiles on Interlink</h2>
+        <p class="text-center text-muted mb-5 mx-auto" style="max-width:760px;">
+            Featured placement is promotional visibility only. It is not a recommendation, endorsement,
+            verification of a business, or indication of stronger alignment.
+        </p>
 
         <div class="row g-4">
             {% for founder in featured_founders %}
             <div class="col-md-6 col-lg-4">
                 <div class="card h-100 border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
-                        <span class="badge bg-success-subtle text-success fw-semibold mb-2">Founder</span>
+                        <span class="badge bg-success-subtle text-success fw-semibold mb-2">Founder profile</span>
                         <h5 class="fw-bold mb-1">{{ founder.company_name }}</h5>
                         <p class="text-muted small mb-0">{{ founder.sector }} &middot; {{ founder.stage }}</p>
                     </div>
@@ -138,7 +195,7 @@
             <div class="col-md-6 col-lg-4">
                 <div class="card h-100 border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
-                        <span class="badge bg-warning-subtle text-warning-emphasis fw-semibold mb-2">For Sale</span>
+                        <span class="badge bg-warning-subtle text-warning-emphasis fw-semibold mb-2">Seller profile</span>
                         <h5 class="fw-bold mb-1">{{ seller.company_name }}</h5>
                         <p class="text-muted small mb-0">{{ seller.industry }}</p>
                     </div>
@@ -150,268 +207,269 @@
 </section>
 {% endif %}
 
-<!-- Zelda AI Pipeline -->
 <section class="py-5 bg-white overflow-hidden">
     <div class="container py-4">
-
         <div class="row align-items-center mb-5">
             <div class="col-lg-7">
                 <span class="badge bg-dark text-uppercase tracking-wide mb-3 px-3 py-2 rounded-pill">The Intelligence Layer</span>
-                <h2 class="display-6 fw-bolder text-dark mb-3" style="letter-spacing: -1px;">Meet Zelda.</h2>
-                <p class="lead text-muted pe-lg-5 mb-2">
-                    Zelda analyzes private-company materials, separates company-reported claims from the
-                    supporting evidence it can find, and surfaces potential counterparties through semantic
-                    matching. Every claim Zelda evaluates carries its source, evidence role, and verification status.
+                <h2 class="display-6 fw-bolder text-dark mb-3">Meet Zelda.</h2>
+                <p class="lead text-muted pe-lg-5 mb-3">
+                    Zelda turns authorized business materials into structured, source-linked reports and keeps
+                    missing, unavailable, contradictory, and supporting evidence distinct.
                 </p>
-                <p class="fw-semibold text-dark mb-0">
-                    Information <i class="bi bi-arrow-right mx-1 text-muted"></i> Matching <i class="bi bi-arrow-right mx-1 text-muted"></i> Intelligence <i class="bi bi-arrow-right mx-1 text-muted"></i> Verified Outcomes
+                <p class="text-muted mb-0">
+                    For most private companies, public sources report little, so many claims will read &lsquo;not established&rsquo;; that is a statement about the evidence, not about the company.
                 </p>
             </div>
         </div>
 
         <div class="row g-0 rounded-4 shadow-lg overflow-hidden border">
-
-            <!-- LEFT: The 4-Step Pipeline -->
             <div class="col-lg-5 bg-light p-5 d-flex flex-column justify-content-center border-end">
-
                 <div class="d-flex align-items-start mb-4">
-                    <div class="bg-white border rounded-circle d-flex align-items-center justify-content-center shadow-sm me-4" style="width: 48px; height: 48px; flex-shrink: 0;">
-                        <i class="bi bi-file-earmark-arrow-up text-dark fs-5"></i>
-                    </div>
+                    <div class="bg-white border rounded-circle d-flex align-items-center justify-content-center shadow-sm me-4" style="width:48px;height:48px;flex-shrink:0;"><i class="bi bi-file-earmark-arrow-up text-dark fs-5"></i></div>
                     <div>
-                        <h5 class="fw-bold mb-1">1. Understand the Business</h5>
-                        <p class="text-muted small mb-0">Founders, investors, buyers, and sellers bring their real materials into the platform — pitch decks, financials, listings — ingested securely, reducing manual data entry.</p>
+                        <h5 class="fw-bold mb-1">1. Bring in authorized materials</h5>
+                        <p class="text-muted small mb-0">Pitch decks, financials, seller materials, and other documents stay tied to the user and subject that supplied them.</p>
                     </div>
                 </div>
-
                 <div class="d-flex align-items-start mb-4">
-                    <div class="bg-white border rounded-circle d-flex align-items-center justify-content-center shadow-sm me-4" style="width: 48px; height: 48px; flex-shrink: 0;">
-                        <i class="bi bi-cpu text-primary fs-5"></i>
-                    </div>
+                    <div class="bg-white border rounded-circle d-flex align-items-center justify-content-center shadow-sm me-4" style="width:48px;height:48px;flex-shrink:0;"><i class="bi bi-diagram-3 text-primary fs-5"></i></div>
                     <div>
-                        <h5 class="fw-bold mb-1">2. Find the Right Opportunities</h5>
-                        <p class="text-muted small mb-0">Semantic matching connects businesses with capital or acquisition partners, ranked by how closely the stated profiles align, not by keyword filters.</p>
+                        <h5 class="fw-bold mb-1">2. Surface alignment</h5>
+                        <p class="text-muted small mb-0">Semantic similarity helps order discovery around stated profile criteria. The result is an alignment signal, not a forecast.</p>
                     </div>
                 </div>
-
                 <div class="d-flex align-items-start mb-4">
-                    <div class="bg-white border rounded-circle d-flex align-items-center justify-content-center shadow-sm me-4" style="width: 48px; height: 48px; flex-shrink: 0;">
-                        <i class="bi bi-lightning-charge text-success fs-5"></i>
-                    </div>
+                    <div class="bg-white border rounded-circle d-flex align-items-center justify-content-center shadow-sm me-4" style="width:48px;height:48px;flex-shrink:0;"><i class="bi bi-search text-success fs-5"></i></div>
                     <div>
-                        <h5 class="fw-bold mb-1">3. Analyze the Evidence</h5>
-                        <p class="text-muted small mb-0">Truth Delta checks the claims Zelda extracts against public sources where those sources report the figure, and labels each one verified, contradicted, or not established — with the reason — so you can see which is which before you decide.</p>
+                        <h5 class="fw-bold mb-1">3. Compare claims with evidence</h5>
+                        <p class="text-muted small mb-0">Truth Delta compares extracted claims against available public sources where those sources report the figure and labels each one verified, contradicted, or not established — with the reason.</p>
                     </div>
                 </div>
-
                 <div class="d-flex align-items-start">
-                    <div class="bg-white border rounded-circle d-flex align-items-center justify-content-center shadow-sm me-4" style="width: 48px; height: 48px; flex-shrink: 0;">
-                        <i class="bi bi-patch-check-fill text-success fs-5"></i>
-                    </div>
+                    <div class="bg-white border rounded-circle d-flex align-items-center justify-content-center shadow-sm me-4" style="width:48px;height:48px;flex-shrink:0;"><i class="bi bi-people text-secondary fs-5"></i></div>
                     <div>
-                        <h5 class="fw-bold mb-1">4. Build a Verified Track Record</h5>
-                        <p class="text-muted small mb-0">When a deal actually closes, both sides confirm the outcome — never a one-sided claim. Verified Funded and Verified Sold outcomes become part of the network's durable track record.</p>
+                        <h5 class="fw-bold mb-1">4. Record confirmed outcomes</h5>
+                        <p class="text-muted small mb-0">When both counterparties confirm a funding or sale outcome on Interlink, the platform records that mutual confirmation as an outcome event.</p>
                     </div>
                 </div>
-
             </div>
 
-            <!-- RIGHT: The "Live" Terminal -->
-            <div class="col-lg-7 bg-dark text-white p-5 position-relative">
+            <div class="col-lg-7 bg-dark text-white p-5">
                 <div class="d-flex gap-2 mb-4">
-                    <div class="rounded-circle bg-danger" style="width: 12px; height: 12px;"></div>
-                    <div class="rounded-circle bg-warning" style="width: 12px; height: 12px;"></div>
-                    <div class="rounded-circle bg-success" style="width: 12px; height: 12px;"></div>
+                    <div class="rounded-circle bg-danger" style="width:12px;height:12px;"></div>
+                    <div class="rounded-circle bg-warning" style="width:12px;height:12px;"></div>
+                    <div class="rounded-circle bg-success" style="width:12px;height:12px;"></div>
                 </div>
-
-                <h6 class="text-uppercase text-muted small fw-bold mb-4" style="letter-spacing: 2px;">Live Engine Output</h6>
-
-                <div class="font-monospace small" style="color: #00ff41; line-height: 1.8;">
-                    <div class="mb-2"><span class="text-secondary">[INGEST]</span> Parsing uploaded pitch deck (Founder_App_ID:492)...</div>
-                    <div class="mb-2"><span class="text-secondary">[VECTOR]</span> Embedding profile against 340 active investor mandates.</div>
-                    <div class="mb-2 text-white"><span class="text-secondary">[MATCH]</span> Calibrating alignment score... <span class="badge bg-success ms-2">94.2% SEMANTIC MATCH</span></div>
-                    <div class="mb-2"><span class="text-secondary">[TRUTH DELTA]</span> Comparing extracted claims against public sources...</div>
-                    <div class="mb-2 text-white"><span class="text-secondary">[MEMO]</span> Generating Intelligence Memo + Truth Delta report...</div>
-                    <div class="mb-4 text-white"><span class="text-secondary">[VERIFIED]</span> Deal confirmed by both parties. <span class="badge bg-success ms-2">FUNDED</span></div>
-
-                    <div class="d-inline-block bg-success" style="width: 8px; height: 16px; animation: blink 1s step-end infinite;"></div>
+                <h6 class="text-uppercase text-muted small fw-bold mb-4" style="letter-spacing:2px;">Illustrative Zelda workflow</h6>
+                <div class="font-monospace small" style="color:#d1fae5;line-height:1.9;">
+                    <div><span class="text-info">[PROFILE]</span> Business and counterparty criteria loaded.</div>
+                    <div><span class="text-info">[ALIGN]</span> Stated-criteria band: <strong>NOTABLE</strong>.</div>
+                    <div><span class="text-info">[INTRO]</span> User chooses whether to request an introduction.</div>
+                    <div><span class="text-warning">[TRUTH DELTA]</span> Claim compared with qualifying public evidence.</div>
+                    <div><span class="text-warning">[REPORT]</span> Source, status, reason, and limitations attached.</div>
+                    <div><span class="text-warning">[OUTCOME]</span> Recorded only after both parties confirm.</div>
                 </div>
-
-                {% comment %}
-                    An illustration of the pipeline, not a live feed. The
-                    caption is load-bearing: a bare percentage beside a deal
-                    reads as a quality or success score, and this one measures
-                    similarity between stated criteria.
-                {% endcomment %}
-                {# text-white-50, not text-secondary: the grey utility is a light-background colour and clears only 3.3:1 on this panel. #}
-                <p class="small text-white-50 mt-4 mb-0" style="max-width: 46rem;">
-                    Illustrative. A semantic match score measures how closely stated company and investor
-                    criteria align. It is not investment advice, a prediction of outcome, or an assessment
-                    of quality.
+                <p class="small text-white-50 mt-4 mb-0">
+                    Illustrative only. Alignment reflects similarity between stated criteria. It is not investment advice,
+                    a prediction of transaction success, a valuation, or an assessment of company quality.
                 </p>
-
-                <div class="position-absolute top-0 end-0 bottom-0 w-50" style="background: radial-gradient(circle at right, rgba(0, 255, 65, 0.05), transparent); pointer-events: none;"></div>
             </div>
-
         </div>
     </div>
 </section>
 
-<!-- What You Get -->
 <section class="services-section py-5">
-  <div class="container">
-    <h2 class="fw-bold mb-2 text-center">What you get</h2>
-    <p class="text-center text-muted mb-5">Free gets you found. Premium unlocks Zelda's full intelligence layer.</p>
+    <div class="container">
+        <h2 class="fw-bold mb-2 text-center">What you can do</h2>
+        <p class="text-center text-muted mb-5">Use networking, relationship workflow, and Zelda analysis as separate tools—not as substitutes for your own judgment.</p>
 
-    <div class="services-grid">
-      <div class="service-card">
-        <div class="icon">🧠</div>
-        <h5>AI Intelligence Memos <span class="badge bg-warning-subtle text-warning-emphasis" style="font-size: 0.65rem; vertical-align: middle;">Premium</span></h5>
-        <p>Claude synthesizes a structured brief from your materials, with each finding traceable to the passage it came from.</p>
-      </div>
-
-      <div class="service-card">
-        <div class="icon">🔍</div>
-        <h5>Truth Delta Verification <span class="badge bg-warning-subtle text-warning-emphasis" style="font-size: 0.65rem; vertical-align: middle;">Premium</span></h5>
-        <p>Claims Zelda extracts from the deck are compared against public sources where those sources report the figure, and each is labelled verified, contradicted, or not established, with the reason. For most private companies, public sources report little, so many claims will read &lsquo;not established&rsquo;; that is a statement about the evidence, not about the company.</p>
-      </div>
-
-      <div class="service-card">
-        <div class="icon">🛡️</div>
-        <h5>Verified Funded / Verified Sold</h5>
-        <p>When a deal closes, both sides confirm it — never a self-reported claim. Verified outcomes build your track record on the network.</p>
-      </div>
-
-      <div class="service-card">
-        <div class="icon">🎯</div>
-        <h5>Semantic Matching</h5>
-        <p>Embeddings surface counterparties whose stated profile aligns with yours, not just keyword or filter matches.</p>
-      </div>
-
-      <div class="service-card">
-        <div class="icon">📊</div>
-        <h5>Instant Valuation Reports <span class="badge bg-warning-subtle text-warning-emphasis" style="font-size: 0.65rem; vertical-align: middle;">Premium</span></h5>
-        <p>Upload financials and get an AI-generated business valuation estimate — a free preview, full report with Premium.</p>
-      </div>
-
-      <div class="service-card">
-        <div class="icon">🗂️</div>
-        <h5>Deal Pipeline CRM</h5>
-        <p>Track every conversation from first touch to close on a Kanban board.</p>
-      </div>
-
-      <div class="service-card">
-        <div class="icon">🤝</div>
-        <h5>Direct Deal Room Chat</h5>
-        <p>Message counterparties directly once there's mutual interest — no middleman.</p>
-      </div>
-
-      <div class="service-card">
-        <div class="icon">🏦</div>
-        <h5>Capital Raises & M&amp;A, One Platform</h5>
-        <p>Raise a round or buy/sell a business without switching tools.</p>
-      </div>
-
-      <div class="service-card">
-        <div class="icon">⭐</div>
-        <h5>Membership Perks</h5>
-        <p>Featured placement, uncapped introductions, and CSV exports for power users.</p>
-      </div>
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="icon">🧠</div>
+                <h5>Intelligence &amp; IC Memos</h5>
+                <p>Structured business summaries, scenarios, risks, open questions, and evidence context from authorized materials.</p>
+            </div>
+            <div class="service-card">
+                <div class="icon">🔍</div>
+                <h5>Truth Delta</h5>
+                <p>Claim-by-claim evidence comparison that keeps contradiction, missing evidence, and unavailable evidence separate.</p>
+            </div>
+            <div class="service-card">
+                <div class="icon">🛡️</div>
+                <h5>Entity Integrity</h5>
+                <p>Public identity and registration evidence, with explicit limits when records are unavailable or incomplete.</p>
+            </div>
+            <div class="service-card">
+                <div class="icon">📊</div>
+                <h5>Business Valuation</h5>
+                <p>Model-based valuation output with assumptions and limitations. It is not an appraisal, fairness opinion, or transaction price.</p>
+            </div>
+            <div class="service-card">
+                <div class="icon">🎯</div>
+                <h5>Semantic Alignment</h5>
+                <p>Embeddings surface counterparties whose stated profile criteria resemble yours without treating similarity as investment quality.</p>
+            </div>
+            <div class="service-card">
+                <div class="icon">🗂️</div>
+                <h5>Relationship CRM</h5>
+                <p>Keep introductions, conversations, follow-up, and relationship stages organized in one workspace.</p>
+            </div>
+            <div class="service-card">
+                <div class="icon">🤝</div>
+                <h5>Deal Room &amp; Data Room</h5>
+                <p>Communicate and share authorized materials once users choose to continue a relationship.</p>
+            </div>
+            <div class="service-card">
+                <div class="icon">📚</div>
+                <h5>Library &amp; History</h5>
+                <p>Revisit generated reports and prior business materials with their source and timing context intact.</p>
+            </div>
+        </div>
     </div>
-  </div>
 </section>
 
-<!-- Membership Teaser -->
 <section class="py-5 bg-white">
     <div class="container">
-        <h2 class="fw-bold mb-2 text-center">Free to join. Upgrade when you're ready.</h2>
-        <p class="text-center text-muted mb-5">Free gets you discovered. Membership unlocks Zelda's intelligence — the full Memo, Truth Delta, and valuations.</p>
+        <h2 class="fw-bold mb-2 text-center">Free to join. Premium adds role-specific workflow benefits.</h2>
+        <p class="text-center text-muted mb-5 mx-auto" style="max-width:760px;">
+            Membership and individual Zelda report purchases are separate product concepts. Current benefits, report prices,
+            and billing terms are shown before checkout.
+        </p>
 
         <div class="row g-4 justify-content-center">
             <div class="col-md-6 col-lg-3">
                 <div class="card h-100 border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
-                        <h5 class="fw-bold mb-1">Founder Premium</h5>
-                        <p class="text-success small fw-semibold mb-3">${{ founder_price }}/mo</p>
-                        <ul class="text-secondary small mb-0 ps-3">
-                            <li class="mb-2">Featured Placement on the bulletin board</li>
-                            <li class="mb-2">Monthly Highlight — 24 hrs boosted across your listing, video, blog &amp; jobs</li>
-                            <li class="mb-2">Priority Match Alerts on new investor fits</li>
-                            <li class="mb-2">Unlimited Fundraising CRM leads (free: {{ free_crm_lead_limit }})</li>
-                            <li class="mb-2">{{ premium_ai_credits }} monthly Zelda AI analyses (free: {{ free_ai_credits }})</li>
-                            <li class="mb-2">Full Intelligence Memo, Truth Delta verification &amp; history, and AI Investment Committee Memo — free for investors to view once you unlock them</li>
-                            <li>Business valuations for ${{ valuation_report_price|floatformat:2 }}/report (pay-per-use, not bundled)</li>
-                        </ul>
+                        <div class="small text-uppercase fw-bold text-success mb-2">Founder Premium</div>
+                        <h5 class="fw-bold mb-3">${{ founder_price }}/mo</h5>
+                        <p class="small text-muted mb-0">Premium visibility, expanded relationship workflow, priority alerts, and role-specific Zelda benefits.</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-6 col-lg-3">
                 <div class="card h-100 border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
-                        <h5 class="fw-bold mb-1">Investor Premium</h5>
-                        <p class="text-primary small fw-semibold mb-3">${{ investor_price }}/mo</p>
-                        <ul class="text-secondary small mb-0 ps-3">
-                            <li class="mb-2">Uncapped introduction requests (free: {{ daily_intro_limit }}/day)</li>
-                            <li class="mb-2">Direct CRM export (CSV)</li>
-                            <li class="mb-2">Priority Match Alerts on new founder fits</li>
-                            <li class="mb-2">{{ premium_ai_credits }} monthly Zelda AI analyses (free: {{ free_ai_credits }})</li>
-                            <li class="mb-2">Full founder identity in your weekly match digest</li>
-                            <li class="mb-2">{{ valuation_investor_buyer_monthly_limit }} business valuations/month included (${{ valuation_overage_price|floatformat:2 }}/report after that)</li>
-                            <li>Any founder's full Intelligence Memo, Truth Delta &amp; AI Investment Committee Memo, free to view once <em>they've</em> gone Premium</li>
-                        </ul>
+                        <div class="small text-uppercase fw-bold text-primary mb-2">Investor Premium</div>
+                        <h5 class="fw-bold mb-3">${{ investor_price }}/mo</h5>
+                        <p class="small text-muted mb-0">Expanded introduction workflow, export tools, priority alerts, and role-specific Zelda benefits.</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-6 col-lg-3">
                 <div class="card h-100 border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
-                        <h5 class="fw-bold mb-1">Seller Premium</h5>
-                        <p class="small fw-semibold mb-3" style="color:#997404;">${{ seller_price }}/mo</p>
-                        <ul class="text-secondary small mb-0 ps-3">
-                            <li class="mb-2">Featured Listing in the marketplace</li>
-                            <li class="mb-2">Monthly Highlight — 24 hrs boosted across your listing &amp; pitch video</li>
-                            <li class="mb-2">Priority Match Alerts on new buyer fits</li>
-                            <li class="mb-2">Detailed Buyer Interest Analytics</li>
-                            <li class="mb-2">{{ premium_ai_credits }} monthly Zelda AI analyses (free: {{ free_ai_credits }})</li>
-                            <li>Business valuations for ${{ valuation_report_price|floatformat:2 }}/report (pay-per-use, not bundled)</li>
-                        </ul>
+                        <div class="small text-uppercase fw-bold text-warning-emphasis mb-2">Seller Premium</div>
+                        <h5 class="fw-bold mb-3">${{ seller_price }}/mo</h5>
+                        <p class="small text-muted mb-0">Premium visibility, buyer-interest tools, priority alerts, and role-specific Zelda benefits.</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-6 col-lg-3">
                 <div class="card h-100 border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
-                        <h5 class="fw-bold mb-1">Buyer Premium</h5>
-                        <p class="text-info-emphasis small fw-semibold mb-3">${{ buyer_price }}/mo</p>
-                        <ul class="text-secondary small mb-0 ps-3">
-                            <li class="mb-2">Uncapped introduction requests (free: {{ daily_intro_limit }}/day)</li>
-                            <li class="mb-2">Direct CRM export (CSV)</li>
-                            <li class="mb-2">Priority Match Alerts on new listing fits</li>
-                            <li class="mb-2">{{ premium_ai_credits }} monthly Zelda AI analyses (free: {{ free_ai_credits }})</li>
-                            <li>{{ valuation_investor_buyer_monthly_limit }} business valuations/month included (${{ valuation_overage_price|floatformat:2 }}/report after that)</li>
-                        </ul>
+                        <div class="small text-uppercase fw-bold text-info-emphasis mb-2">Buyer Premium</div>
+                        <h5 class="fw-bold mb-3">${{ buyer_price }}/mo</h5>
+                        <p class="small text-muted mb-0">Expanded introduction workflow, export tools, priority alerts, and role-specific Zelda benefits.</p>
                     </div>
                 </div>
             </div>
         </div>
-        <p class="text-center text-muted small mt-4 mb-0">Each AI analysis generates new Zelda intelligence — viewing reports you've already generated stays unlimited.</p>
 
         <div class="text-center mt-4">
+            {% if user.is_authenticated %}
+            <a href="{% url 'billing:billing_page' %}" class="btn btn-dark btn-lg rounded-pill fw-bold px-5">View My Membership Options</a>
+            {% else %}
             <a href="{% url 'accounts:signup' %}" class="btn btn-primary btn-lg rounded-pill fw-bold px-5">Create Your Free Account</a>
+            {% endif %}
         </div>
     </div>
 </section>
 
+<section class="py-5 bg-dark text-white">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <span class="badge bg-light text-dark mb-3">Neutral network boundary</span>
+                <h2 class="h3 fw-bold">Information and networking are not transaction advice.</h2>
+            </div>
+            <div class="col-lg-8">
+                <p class="text-white-50">
+                    Interlink Foundry provides networking, business-information, workflow, and software tools.
+                    Zelda outputs are informational business analyses generated from available materials and evidence.
+                    Interlink does not provide legal, tax, accounting, investment, brokerage, appraisal, or fairness-opinion services.
+                </p>
+                <p class="text-white-50">
+                    Interlink does not recommend that any person invest in, purchase, sell, or hold a security or business;
+                    does not negotiate or execute securities transactions; and does not guarantee that an introduction,
+                    connection, analysis, or conversation will result in financing or a transaction.
+                </p>
+                <a href="{% url 'pages:regulatory_positioning' %}" class="btn btn-outline-light rounded-pill">Read Regulatory Positioning</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if user.is_authenticated %}
+<script>
+document.addEventListener('DOMContentLoaded', async function () {
+    const loading = document.getElementById('home-journey-loading');
+    const content = document.getElementById('home-journey-content');
+    if (!loading || !content) return;
+
+    try {
+        const response = await fetch('/api/v1/zelda/journey-status/', {credentials: 'same-origin'});
+        if (!response.ok) throw new Error('journey status unavailable');
+        const data = await response.json();
+
+        const stage = document.getElementById('home-journey-stage');
+        const strength = document.getElementById('home-journey-strength');
+        const label = document.getElementById('home-next-label');
+        const why = document.getElementById('home-next-why');
+        const action = document.getElementById('home-next-action');
+
+        const stageNames = {red: 'Getting started', yellow: 'Building momentum', green: 'Core steps complete'};
+        stage.textContent = stageNames[data.stage_color] || 'Your progress';
+        if (data.stage_color === 'red') stage.className = 'badge rounded-pill text-bg-danger';
+        else if (data.stage_color === 'green') stage.className = 'badge rounded-pill text-bg-success';
+        else stage.className = 'badge rounded-pill text-bg-warning';
+
+        strength.textContent = data.profile_strength && data.profile_strength.label
+            ? 'Profile strength: ' + data.profile_strength.label
+            : '';
+
+        if (data.next_best_action) {
+            label.textContent = data.next_best_action.label;
+            why.textContent = data.next_best_action.why_it_matters || data.headline || '';
+            if (data.next_best_action.action_url) {
+                action.href = data.next_best_action.action_url;
+                action.textContent = data.next_best_action.action_label || 'Continue';
+            }
+        } else {
+            label.textContent = 'Keep your network current';
+            why.textContent = data.headline || 'Your core setup is complete. Zelda will surface ongoing updates and next steps here.';
+        }
+
+        loading.classList.add('d-none');
+        content.classList.remove('d-none');
+    } catch (error) {
+        loading.innerHTML = '<span class="text-muted">Open your dashboard to review current progress and next steps.</span>';
+    }
+});
+</script>
+{% endif %}
+
 <style>
     .hero-section {
-        background: radial-gradient(circle at 30% 20%, #1e293b 0%, #0f172a 55%, #0b1120 100%);
+        background:
+            radial-gradient(circle at 20% 10%, rgba(37,99,235,.28), transparent 38%),
+            radial-gradient(circle at 90% 20%, rgba(16,185,129,.12), transparent 32%),
+            linear-gradient(135deg, #0b1120 0%, #111827 55%, #0f172a 100%);
         padding-top: 2rem;
     }
-    .tracking-wide { letter-spacing: 0.1em; }
-    @keyframes blink { 50% { opacity: 0; } }
-
-    .persona-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-    .persona-card:hover { transform: translateY(-5px); box-shadow: 0 1rem 2rem rgba(0,0,0,0.1) !important; }
+    .tracking-wide { letter-spacing: .1em; }
+    .persona-card { transition: transform .2s ease, box-shadow .2s ease; }
+    .persona-card:hover { transform: translateY(-4px); box-shadow: 0 1rem 2rem rgba(0,0,0,.1) !important; }
 </style>
 
 {% endblock %}
