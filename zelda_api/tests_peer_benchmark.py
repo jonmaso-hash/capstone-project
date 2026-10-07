@@ -53,10 +53,12 @@ class PeerMarketBenchmarkTests(TestCase):
         self.founder(
             'bench_peer1', 'PeerOne', prior_amount_raised=1000000,
             raising_amount=1000000, team_size=8, years_in_business=3,
+            field_visibility={'prior_amount_raised': 'PUBLIC', 'raising_amount': 'PUBLIC'},
         )
         self.founder(
             'bench_peer2', 'PeerTwo', prior_amount_raised=5000000,
             raising_amount=4000000, team_size=20, years_in_business=6,
+            field_visibility={'prior_amount_raised': 'PUBLIC', 'raising_amount': 'PUBLIC'},
         )
         data = interlink_benchmark(subject, 'founder')
         self.assertEqual(data['site']['peer_count'], 2)
@@ -72,11 +74,33 @@ class PeerMarketBenchmarkTests(TestCase):
         self.seller(
             'bench_seller_peer', 'SellerPeer', annual_revenue=1000000,
             ebitda=200000, asking_price=2000000, team_size=7, years_in_business=6,
+            field_visibility={'annual_revenue': 'PUBLIC', 'ebitda': 'PUBLIC', 'asking_price': 'PUBLIC'},
         )
         data = interlink_benchmark(subject, 'seller')
         self.assertEqual(data['site']['peer_count'], 1)
         self.assertEqual(data['site']['metrics']['annual_revenue']['percentile'], 100)
         self.assertEqual(data['site']['metrics']['asking_price']['median'], 2000000)
+
+    def test_hidden_peer_financials_do_not_enter_benchmark_aggregates(self):
+        _, subject = self.founder(
+            'privacy_subject', 'PrivacySubject', prior_amount_raised=3000000,
+            raising_amount=2000000, team_size=12, years_in_business=4,
+        )
+        self.founder(
+            'privacy_peer', 'PrivacyPeer', prior_amount_raised=9000000,
+            raising_amount=8000000, team_size=9, years_in_business=3,
+            field_visibility={'prior_amount_raised': 'PRIVATE', 'raising_amount': 'PRIVATE'},
+        )
+
+        data = interlink_benchmark(subject, 'founder')
+        funding = data['site']['metrics']['funding_raised']
+        current_raise = data['site']['metrics']['current_raise']
+
+        self.assertIsNone(funding['median'])
+        self.assertIsNone(funding['percentile'])
+        self.assertEqual(funding['peer_values_available'], 0)
+        self.assertIsNone(current_raise['median'])
+        self.assertEqual(current_raise['peer_values_available'], 0)
 
     def test_monthly_gate_prevents_duplicate_research_spend(self):
         user, app = self.founder('monthly_founder', 'MonthlyCo')
