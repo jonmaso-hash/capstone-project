@@ -317,18 +317,12 @@ def generate_benchmark(benchmark_id):
         raise
 
 
-def create_monthly_benchmark(user):
-    founder = getattr(user, 'match_founder_profile', None)
-    seller = getattr(user, 'match_seller_profile', None)
+def create_monthly_benchmark(user, role):
+    founder = getattr(user, 'match_founder_profile', None) if role == 'founder' else None
+    seller = getattr(user, 'match_seller_profile', None) if role == 'seller' else None
     profile = founder or seller
-    if founder:
-        role = 'founder'
-    elif seller:
-        role = 'seller'
-    else:
-        role = None
 
-    if not profile or not getattr(profile, 'is_premium', False):
+    if role not in ('founder', 'seller') or not profile or not getattr(profile, 'is_premium', False):
         raise PermissionError('Peer Market Benchmark requires Founder or Seller Premium.')
 
     latest = PeerMarketBenchmark.objects.filter(user=user, role=role).first()
