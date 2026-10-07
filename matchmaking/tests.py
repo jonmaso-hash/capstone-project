@@ -6231,3 +6231,81 @@ class AcceptedConnectionOpensAConversationTests(TestCase):
         self.assertEqual(response.json()['new_status'], 'DECLINED')
         self.assertIsNone(response.json()['chat_channel_cid'])
         client.upsert_users.assert_not_called()
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class HiddenTargetActionSecurityTests(TestCase):
+    """Raw numeric IDs must not bypass marketplace discovery/privacy gates."""
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('sec_hidden_founder', password='x')
+        self.founder = Application.objects.create(
+            user=self.founder_user, founder_name='Hidden Founder',
+            email='hf@example.com', company_name='Hidden Founder Co',
+            description='private founder', sector='SaaS', stage='Seed',
+            is_private=True,
+        )
+        self.investor_user = User.objects.create_user('sec_actor_investor', password='x')
+        self.investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='Investor', email='inv@example.com',
+            company_name='Investor Co', investment_focus='SaaS',
+            investment_stage='Seed',
+        )
+
+        self.seller_user = User.objects.create_user('sec_hidden_seller', password='x')
+        self.seller = SellerApplication.objects.create(
+            user=self.seller_user, seller_name='Hidden Seller',
+            email='hs@example.com', company_name='Hidden Seller Co',
+            description='private seller', industry='SaaS',
+            is_private=True,
+        )
+        self.buyer_user = User.objects.create_user('sec_actor_buyer', password='x')
+        self.buyer = BuyerApplication.objects.create(
+            user=self.buyer_user, full_name='Buyer', email='buyer@example.com',
+            company_name='Buyer Co', acquisition_thesis='SaaS',
+        )
+
+    def test_investor_cannot_intro_hidden_founder_by_guessed_id(self):
+        self.client.force_login(self.investor_user)
+        response = self.client.post(reverse(
+            'matchmaking:request_intro', args=[self.founder.id, self.investor.id]
+        ))
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(Connection.objects.filter(
+            founder=self.founder, investor=self.investor
+        ).exists())
+
+    def test_buyer_cannot_intro_hidden_seller_by_guessed_id(self):
+        self.client.force_login(self.buyer_user)
+        response = self.client.post(reverse(
+            'matchmaking:request_acquisition_intro', args=[self.seller.id, self.buyer.id]
+        ))
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(AcquisitionConnection.objects.filter(
+            seller=self.seller, buyer=self.buyer
+        ).exists())
+
+    def test_investor_cannot_poison_hidden_founder_feedback_by_guessed_id(self):
+        self.client.force_login(self.investor_user)
+        response = self.client.post(
+            reverse('matchmaking:record_vote'),
+            data=json.dumps({'application_id': self.founder.id, 'vote': 'up'}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(MatchFeedback.objects.filter(
+            application=self.founder, investor=self.investor
+        ).exists())
+
+    def test_buyer_cannot_poison_hidden_seller_feedback_by_guessed_id(self):
+        self.client.force_login(self.buyer_user)
+        response = self.client.post(
+            reverse('matchmaking:record_deal_vote'),
+            data=json.dumps({'seller_id': self.seller.id, 'vote': 'up'}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(DealFeedback.objects.filter(
+            seller=self.seller, buyer=self.buyer
+        ).exists())
