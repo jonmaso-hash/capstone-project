@@ -5031,7 +5031,7 @@ class DealWorkspaceViewTests(TestCase):
         response = self.client.get(reverse('matchmaking:deal_workspace', args=[self.connection.id]))
         self.assertEqual(response.status_code, 200)
         activity_labels = [e['label'] for e in response.context['activity']]
-        self.assertNotIn('Verified Funded', activity_labels)
+        self.assertNotIn('Funding Outcome Confirmed', activity_labels)
 
     def test_confirmed_funded_renders_as_verified_outcome(self):
         self.connection.status = 'FUNDED'
@@ -5040,8 +5040,8 @@ class DealWorkspaceViewTests(TestCase):
         self.client.force_login(self.founder_user)
         response = self.client.get(reverse('matchmaking:deal_workspace', args=[self.connection.id]))
         activity_labels = [e['label'] for e in response.context['activity']]
-        self.assertIn('Verified Funded', activity_labels)
-        self.assertContains(response, 'Verified Funded')
+        self.assertIn('Funding Outcome Confirmed', activity_labels)
+        self.assertContains(response, 'Funding Outcome Confirmed')
 
     def test_zelda_summary_never_triggers_generation(self):
         """Read-only: loading the workspace must not call into the memo
@@ -5164,7 +5164,7 @@ class DealWorkspaceViewTests(TestCase):
         Data Room titles just as much as the document-list panel does.
 
         Positive side: 'relationship' and 'verified_outcome' events
-        (Connection accepted, Verified Funded) are NOT Data Room
+        (Connected, Funding Outcome Confirmed) are NOT Data Room
         information at all and must remain visible regardless — the fix
         must not overcorrect into hiding the whole timeline.
 
@@ -5202,8 +5202,8 @@ class DealWorkspaceViewTests(TestCase):
         self.assertContains(response, 'Data Room access is limited to active accepted connections.')
 
         # Positive side — non-Data-Room events still render, at the HTML level.
-        self.assertContains(response, 'Connection accepted')
-        self.assertContains(response, 'Verified Funded')
+        self.assertContains(response, 'Connected')
+        self.assertContains(response, 'Funding Outcome Confirmed')
 
         # The founder, meanwhile, always retains Data Room access
         # regardless of status (can_view_data_room grants the owner
@@ -5263,20 +5263,20 @@ class DealActivityTimelineTests(TestCase):
         self.assertNotEqual(self.connection.updated_at, accepted_time)
 
         events = get_deal_activity_timeline(self.connection)
-        accepted_events = [e for e in events if e['label'] == 'Connection accepted']
+        accepted_events = [e for e in events if e['label'] == 'Connected']
         self.assertEqual(len(accepted_events), 1)
         self.assertEqual(accepted_events[0]['timestamp'], accepted_time)
 
     def test_verified_funded_event_only_appears_once_actually_funded(self):
         from .deal_activity import get_deal_activity_timeline
         events = get_deal_activity_timeline(self.connection)
-        self.assertFalse(any(e['label'] == 'Verified Funded' for e in events))
+        self.assertFalse(any(e['label'] == 'Funding Outcome Confirmed' for e in events))
 
         self.connection.status = 'FUNDED'
         self.connection.funded_at = timezone.now()
         self.connection.save()
         events = get_deal_activity_timeline(self.connection)
-        self.assertTrue(any(e['label'] == 'Verified Funded' for e in events))
+        self.assertTrue(any(e['label'] == 'Funding Outcome Confirmed' for e in events))
 
     def test_document_upload_appears_for_any_connected_investor(self):
         from .models import DataRoomDocument
@@ -5548,7 +5548,7 @@ class AcquisitionDealWorkspaceViewTests(TestCase):
         self.client.force_login(self.buyer_user)
         response = self.client.get(reverse('matchmaking:acquisition_deal_workspace', args=[self.connection.id]))
         self.assertFalse(response.context['is_verified_outcome'])
-        self.assertNotContains(response, 'Verified Sold')
+        self.assertNotContains(response, 'Sale Outcome Confirmed')
 
     def test_confirmed_closed_renders_as_verified_outcome(self):
         self.connection.status = 'CLOSED'
@@ -5557,7 +5557,7 @@ class AcquisitionDealWorkspaceViewTests(TestCase):
         self.client.force_login(self.seller_user)
         response = self.client.get(reverse('matchmaking:acquisition_deal_workspace', args=[self.connection.id]))
         self.assertTrue(response.context['is_verified_outcome'])
-        self.assertContains(response, 'Verified Sold')
+        self.assertContains(response, 'Sale Outcome Confirmed')
 
     def test_zelda_summary_uses_seller_completion_percentage_and_never_generates(self):
         """SellerApplication has no .completion_percentage property of its
@@ -5647,20 +5647,20 @@ class AcquisitionDealActivityTimelineTests(TestCase):
         self.assertNotEqual(self.connection.updated_at, accepted_time)
 
         events = get_acquisition_deal_activity_timeline(self.connection)
-        accepted_events = [e for e in events if e['label'] == 'Connection accepted']
+        accepted_events = [e for e in events if e['label'] == 'Connected']
         self.assertEqual(len(accepted_events), 1)
         self.assertEqual(accepted_events[0]['timestamp'], accepted_time)
 
     def test_verified_sold_only_appears_once_actually_closed(self):
         from .deal_activity import get_acquisition_deal_activity_timeline
         events = get_acquisition_deal_activity_timeline(self.connection)
-        self.assertFalse(any(e['label'] == 'Verified Sold' for e in events))
+        self.assertFalse(any(e['label'] == 'Sale Outcome Confirmed' for e in events))
 
         self.connection.status = 'CLOSED'
         self.connection.closed_at = timezone.now()
         self.connection.save()
         events = get_acquisition_deal_activity_timeline(self.connection)
-        self.assertTrue(any(e['label'] == 'Verified Sold' for e in events))
+        self.assertTrue(any(e['label'] == 'Sale Outcome Confirmed' for e in events))
 
     def test_closed_pending_does_not_render_as_verified_sold(self):
         """A seller's unconfirmed claim must never read as verified here —
@@ -5669,7 +5669,7 @@ class AcquisitionDealActivityTimelineTests(TestCase):
         self.connection.status = 'CLOSED_PENDING'
         self.connection.save(update_fields=['status'])
         events = get_acquisition_deal_activity_timeline(self.connection)
-        self.assertFalse(any(e['label'] == 'Verified Sold' for e in events))
+        self.assertFalse(any(e['label'] == 'Sale Outcome Confirmed' for e in events))
 
     def test_historical_row_with_terminal_status_but_null_timestamp_fabricates_nothing(self):
         from .deal_activity import get_acquisition_deal_activity_timeline
@@ -5843,7 +5843,7 @@ class FoundryPulseAcquisitionParityTests(TestCase):
 class FoundryPulseVerifiedWordingTests(TestCase):
     """
     get_foundry_pulse_events()'s FUNDED/CLOSED labels now say "Verified
-    Funded"/"Verified Sold" explicitly — presentation only, same event
+    Funded"/"Sale Outcome Confirmed" explicitly — presentation only, same event
     architecture, same statuses (see matchmaking/views.py's
     connection_labels/acquisition_connection_labels). Gives the feed the
     same public trust contract as the profile and bulletin-card badges.
@@ -5879,29 +5879,29 @@ class FoundryPulseVerifiedWordingTests(TestCase):
         from .views import get_foundry_pulse_events
         self.Connection.objects.create(founder=self.founder, investor=self.investor, status='FUNDED', initiated_by='FOUNDER')
         messages = [e['message'] for e in get_foundry_pulse_events()]
-        self.assertTrue(any('Verified Funded' in m for m in messages))
+        self.assertTrue(any('Funding Outcome Confirmed' in m for m in messages))
 
     def test_confirmed_closed_produces_verified_sold_wording(self):
         from .views import get_foundry_pulse_events
         self.AcquisitionConnection.objects.create(seller=self.seller, buyer=self.buyer, status='CLOSED', initiated_by='SELLER')
         messages = [e['message'] for e in get_foundry_pulse_events()]
-        self.assertTrue(any('Verified Sold' in m for m in messages))
+        self.assertTrue(any('Sale Outcome Confirmed' in m for m in messages))
 
     def test_funded_pending_cannot_produce_verified_wording(self):
         """A founder's unconfirmed claim must never read as verified on the feed."""
         from .views import get_foundry_pulse_events
         self.Connection.objects.create(founder=self.founder, investor=self.investor, status='FUNDED_PENDING', initiated_by='FOUNDER')
         messages = [e['message'] for e in get_foundry_pulse_events()]
-        self.assertFalse(any('Verified Funded' in m for m in messages))
-        self.assertFalse(any('Verified Sold' in m for m in messages))
+        self.assertFalse(any('Funding Outcome Confirmed' in m for m in messages))
+        self.assertFalse(any('Sale Outcome Confirmed' in m for m in messages))
 
     def test_closed_pending_cannot_produce_verified_wording(self):
         """A seller's unconfirmed claim must never read as verified on the feed."""
         from .views import get_foundry_pulse_events
         self.AcquisitionConnection.objects.create(seller=self.seller, buyer=self.buyer, status='CLOSED_PENDING', initiated_by='SELLER')
         messages = [e['message'] for e in get_foundry_pulse_events()]
-        self.assertFalse(any('Verified Sold' in m for m in messages))
-        self.assertFalse(any('Verified Funded' in m for m in messages))
+        self.assertFalse(any('Sale Outcome Confirmed' in m for m in messages))
+        self.assertFalse(any('Funding Outcome Confirmed' in m for m in messages))
 
     def test_pending_and_accepted_wording_unchanged(self):
         """This wording pass touched only the FUNDED/CLOSED labels — pending
@@ -5917,13 +5917,13 @@ class FoundryPulseVerifiedWordingTests(TestCase):
         """Wording-only change: icon, keys, and timestamp field are untouched."""
         from .views import get_foundry_pulse_events
         self.Connection.objects.create(founder=self.founder, investor=self.investor, status='FUNDED', initiated_by='FOUNDER')
-        event = next(e for e in get_foundry_pulse_events() if 'Verified Funded' in e['message'])
+        event = next(e for e in get_foundry_pulse_events() if 'Funding Outcome Confirmed' in e['message'])
         self.assertEqual(set(event.keys()), {'icon', 'message', 'timestamp'})
         self.assertEqual(event['icon'], 'bi-trophy-fill')
 
 
 class VerifiedBadgeBulletinBoardTests(TestCase):
-    """Verified Funded/Sold badges on bulletin board cards — same terminal,
+    """Funding Outcome Confirmed/Sold badges on bulletin board cards — same terminal,
     mutually-confirmed statuses as the profile page badges (see
     accounts.tests / accounts.views.profile). Must only appear for the
     genuine FUNDED/CLOSED state, never the self-reported _PENDING one."""
@@ -5955,14 +5955,14 @@ class VerifiedBadgeBulletinBoardTests(TestCase):
         response = self.client.get(reverse('matchmaking:bulletin_board'))
         pitches = {p.id: p for p in response.context['pitches']}
         self.assertTrue(pitches[self.founder.id].has_verified_funded)
-        self.assertContains(response, 'Verified Funded')
+        self.assertContains(response, 'Funding Outcome Confirmed')
 
     def test_funded_pending_connection_does_not_show_badge(self):
         Connection.objects.create(founder=self.founder, investor=self.investor, status='FUNDED_PENDING', initiated_by='FOUNDER')
         response = self.client.get(reverse('matchmaking:bulletin_board'))
         pitches = {p.id: p for p in response.context['pitches']}
         self.assertFalse(pitches[self.founder.id].has_verified_funded)
-        self.assertNotContains(response, 'Verified Funded')
+        self.assertNotContains(response, 'Funding Outcome Confirmed')
 
     def test_closed_acquisition_connection_shows_verified_sold_badge(self):
         from .models import AcquisitionConnection
@@ -5970,7 +5970,7 @@ class VerifiedBadgeBulletinBoardTests(TestCase):
         response = self.client.get(reverse('matchmaking:acquisition_bulletin_board'))
         listings = {l.id: l for l in response.context['listings']}
         self.assertTrue(listings[self.seller.id].has_verified_sold)
-        self.assertContains(response, 'Verified Sold')
+        self.assertContains(response, 'Sale Outcome Confirmed')
 
     def test_closed_pending_acquisition_connection_does_not_show_badge(self):
         from .models import AcquisitionConnection
@@ -5978,7 +5978,7 @@ class VerifiedBadgeBulletinBoardTests(TestCase):
         response = self.client.get(reverse('matchmaking:acquisition_bulletin_board'))
         listings = {l.id: l for l in response.context['listings']}
         self.assertFalse(listings[self.seller.id].has_verified_sold)
-        self.assertNotContains(response, 'Verified Sold')
+        self.assertNotContains(response, 'Sale Outcome Confirmed')
 
     def test_multiple_funded_connections_show_count_on_the_badge(self):
         second_investor_user = User.objects.create_user('vb_investor2', password='x')
@@ -5991,7 +5991,7 @@ class VerifiedBadgeBulletinBoardTests(TestCase):
         response = self.client.get(reverse('matchmaking:bulletin_board'))
         pitches = {p.id: p for p in response.context['pitches']}
         self.assertEqual(pitches[self.founder.id].verified_funded_count, 2)
-        self.assertContains(response, 'Verified Funded')
+        self.assertContains(response, 'Funding Outcome Confirmed')
         self.assertContains(response, '(2)')
 
 
