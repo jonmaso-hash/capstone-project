@@ -1149,8 +1149,8 @@ class CompanyRepresentationAttestation(models.Model):
     class Meta:
         ordering = ['-attested_at']
         indexes = [
-            models.Index(fields=['user', 'withdrawn_at']),
-            models.Index(fields=['company_name']),
+            models.Index(fields=['user', 'withdrawn_at'], name='matchmaking_user_id_bdb29f_idx'),
+            models.Index(fields=['company_name'], name='matchmaking_company_75861a_idx'),
         ]
 
     def __str__(self):
