@@ -157,6 +157,7 @@ jobs:
           zelda_api.tests_summary_follows_verdict
           zelda_api.tests_score_follows_verdict
           zelda_api.tests_private_company_presentation
+          zelda_api.tests_peer_benchmark
           zelda_api.tests_valuation_paywall
           pages.tests_no_network_in_tests
           zelda_api.tests_filed
