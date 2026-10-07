@@ -120,4 +120,4 @@ class ZeldaDiligenceIntakeTests(TestCase):
             'class="zelda-tab active" data-tab="upload"',
             html=False,
         )
-        self.assertContains(response, 'For a CIM or diligence package, choose Other below.')
+        self.assertContains(response, 'For a CIM or other acquisition materials, choose Other below.')
