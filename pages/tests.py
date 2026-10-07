@@ -176,6 +176,57 @@ class HomepageMembershipCopyTests(TestCase):
         self.assertContains(response, "Current benefits, report prices")
         self.assertContains(response, "billing terms are shown before checkout")
 
+    def test_anonymous_visitors_see_role_join_choices_and_all_premium_plans(self):
+        response = self.client.get(reverse('pages:home'))
+        self.assertContains(response, "One network. Four roles.")
+        for phrase in (
+            "Join as a Founder",
+            "Join as an Investor",
+            "Join as a Seller",
+            "Join as a Buyer",
+            "Founder Premium",
+            "Investor Premium",
+            "Seller Premium",
+            "Buyer Premium",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertContains(response, phrase)
+
+    def test_logged_in_founder_sees_no_join_choices_and_only_founder_premium(self):
+        from django.contrib.auth import get_user_model
+        from matchmaking.models import Application
+
+        user = get_user_model().objects.create_user("homepage_founder_role", password="x")
+        Application.objects.create(
+            user=user,
+            company_name="Homepage Founder Co",
+            founder_name="Homepage Founder",
+            email="founder@example.com",
+            description="Test founder profile",
+            sector="SaaS",
+            stage="Seed",
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('pages:home'))
+
+        self.assertNotContains(response, "One network. Four roles.")
+        for phrase in (
+            "Join as a Founder",
+            "Join as an Investor",
+            "Join as a Seller",
+            "Join as a Buyer",
+            "Investor Premium",
+            "Seller Premium",
+            "Buyer Premium",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertNotContains(response, phrase)
+
+        self.assertContains(response, "Upgrade your Founder workspace.")
+        self.assertContains(response, "Founder Premium")
+        self.assertContains(response, "View Founder Premium")
+
 
 class HomepagePositioningCopyTests(TestCase):
     """Public positioning stays neutral: discovery, evidence and workflow
