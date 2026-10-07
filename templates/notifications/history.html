@@ -6,7 +6,7 @@
         <h1 class="h3 mb-0">Notification history</h1>
         <a href="{% url 'usersettings:home' %}#notification-history" class="btn btn-outline-secondary btn-sm">History settings</a>
     </div>
-    <p class="text-secondary">Read updates stay here unless you close them or enable automatic removal. Important account, payment, and outcome notices are retained.</p>
+    <p class="text-secondary">Read updates stay here unless you close them or enable automatic removal. Automatic cleanup keeps important account, payment, and outcome notices.</p>
     <div id="history-status" class="small text-danger mb-3" role="status"></div>
     <div id="notification-history-list" class="d-flex flex-column gap-3">
         {% for notice in notification_page %}

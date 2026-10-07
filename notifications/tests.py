@@ -92,16 +92,17 @@ class NotificationHistoryTests(TestCase):
         self.assertFalse(created)
         self.assertEqual(repeated.id, notice.id)
 
-    def test_protected_notices_cannot_be_dismissed(self):
+    def test_important_notices_can_be_closed_without_destroying_records(self):
         for kind in ('SYSTEM', 'PAYMENT', 'PROFILE_VISIBILITY_DEFAULTS', 'SECURITY_ALERT', 'AUDIT_EVENT',
                      'FUNDED_CONFIRMATION', 'CLOSED_CONFIRMATION', 'TRUTH_DELTA_DISPUTE', 'ELEVATOR_PITCH_REPORT'):
             with self.subTest(kind=kind):
                 notice = self._notice(notification_type=kind)
                 data = self.client.get(reverse('api-list')).json()
-                self.assertFalse(next(item for item in data if item['id'] == notice.id)['can_dismiss'])
-                self.assertEqual(self.client.post(reverse('api-delete', args=[notice.id])).status_code, 403)
+                self.assertTrue(next(item for item in data if item['id'] == notice.id)['can_dismiss'])
+                self.assertEqual(self.client.post(reverse('api-delete', args=[notice.id])).status_code, 200)
                 notice.refresh_from_db()
-                self.assertIsNone(notice.dismissed_at)
+                self.assertIsNotNone(notice.dismissed_at)
+                self.assertTrue(Notification.objects.filter(id=notice.id).exists())
                 self.assertEqual(self._read([notice.id]).status_code, 200)
 
     def test_invalid_read_payload_cannot_mark_anything_read(self):

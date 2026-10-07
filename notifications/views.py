@@ -81,7 +81,7 @@ def notification_mark_read_api(request):
 
 
 def notification_delete_api(request, notification_id):
-    """Legacy route: dismiss ordinary notices without destroying their records."""
+    """Legacy route: close a notice without destroying its record."""
     if not request.user.is_authenticated:
         return JsonResponse({'error': 'Not authenticated'}, status=403)
     if request.method != 'POST':
@@ -92,8 +92,6 @@ def notification_delete_api(request, notification_id):
     item = _visible_notifications(request.user).filter(id=notification_id).first()
     if item is None:
         return JsonResponse({'dismissed': False})
-    if not item.can_dismiss:
-        return JsonResponse({'error': 'This system notice is retained in your history'}, status=403)
     _visible_notifications(request.user).filter(id=item.id).update(dismissed_at=timezone.now(), is_read=True)
     return JsonResponse({'dismissed': True, 'count': _visible_notifications(request.user).filter(is_read=False).count()})
 

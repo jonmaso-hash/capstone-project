@@ -37,9 +37,8 @@ class Notification(models.Model):
 
     @property
     def can_dismiss(self):
-        """Keep account, payment, moderation and confirmed-outcome notices visible."""
-        kind = self.notification_type.upper()
-        return kind not in self.RETAINED_TYPES and not kind.startswith(('SECURITY', 'AUDIT'))
+        """Owners may close any notice; dismissal preserves its audit record."""
+        return True
 
     RETAINED_TYPES = (
         'SYSTEM', 'PAYMENT', 'PROFILE_VISIBILITY_DEFAULTS',
