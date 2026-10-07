@@ -171,7 +171,8 @@
                                 if (companyInput) companyInput.value = evidence.company;
                             });
                             statusBox.className = 'small text-success';
-                            statusBox.textContent = `Company selected: ${evidence.company}. Zelda products will use this subject.`;
+                            select.textContent = 'Company selected';
+                            statusBox.textContent = `Found: ${evidence.company}. Scroll down to finish checkout.`;
                         } catch (error) {
                             statusBox.className = 'small text-danger';
                             statusBox.textContent = error.message;
@@ -271,7 +272,8 @@
                                     const companyInput = p.querySelector('[name="company"]');
                                     if (companyInput) companyInput.value = evidence.company;
                                 });
-                                status(panel, `Company selected: ${evidence.company}. Upload company documents for better financial and claim analysis.`, 'success', 'search');
+                                select.textContent = 'Company selected';
+                                status(panel, `Found: ${evidence.company}. Scroll down to finish checkout.`, 'success', 'search');
                             } catch (error) {
                                 status(panel, error.message, 'error', 'search');
                             } finally {

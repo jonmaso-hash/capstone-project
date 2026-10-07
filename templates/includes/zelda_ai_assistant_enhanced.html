@@ -574,15 +574,19 @@
                         No company selected
                     {% endif %}
                 </div>
-                <button type="button" class="btn btn-sm btn-link text-decoration-none p-0" data-zelda-open-tab="find">
-                    {% if user.match_investor_profile or user.match_buyer_profile %}Choose company{% else %}Find company{% endif %}
+                <button type="button"
+                        class="btn btn-sm btn-link text-decoration-none p-0"
+                        id="zelda-subject-search"
+                        aria-label="Search for a company"
+                        title="Search for a company">
+                    <i class="bi bi-search fs-5" aria-hidden="true"></i>
                 </button>
             </div>
             <div class="small text-muted" id="zelda-subject-help">
                 {% if user.match_founder_profile or user.match_seller_profile %}
                     Your own business is the default subject. Choose another company only when reviewing a separate opportunity.
                 {% else %}
-                    Choose a company before opening company-specific intelligence products.
+                    Select a company inside any Zelda intelligence product below. Your selection will appear here automatically.
                 {% endif %}
             </div>
         </div>
@@ -591,9 +595,6 @@
         <div class="zelda-tabs" style="margin: 0 -1rem 0 -1rem; padding: 0 1rem;">
             <button class="zelda-tab{% if not user.match_investor_profile and not user.match_buyer_profile %} active{% endif %}" data-tab="ask">
                 <i class="bi bi-stars me-2"></i>Ask Zelda
-            </button>
-            <button class="zelda-tab" data-tab="find">
-                <i class="bi bi-search me-2"></i>Find Company
             </button>
             <button class="zelda-tab{% if user.match_investor_profile or user.match_buyer_profile %} active{% endif %}" data-tab="upload">
                 <i class="bi bi-cloud-upload me-2"></i>Upload
@@ -680,60 +681,6 @@
             </div>
         </div>
 
-        <!-- TAB: FIND COMPANY -->
-        <div id="tab-find" class="tab-content" style="display: none; flex-direction: column; gap: 1rem;">
-            <div class="zelda-card p-4 border-primary-subtle">
-                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-building text-primary me-2"></i>Find Company</h6>
-                <p class="small text-muted mb-0">
-                    Find a company on Interlink or search companies outside Interlink by legal name or stock ticker.
-                </p>
-            </div>
-
-            <!-- External company search: reuses the existing SEC-backed Zelda product resolver. -->
-            <div class="zelda-card p-4">
-                <h6 class="fw-bold text-dark mb-2">
-                    <i class="bi bi-globe2 text-success me-2"></i>Companies outside Interlink
-                </h6>
-                <p class="small text-muted mb-3">
-                    Search SEC public registration records by company name or ticker, then select the company as Zelda's current subject.
-                </p>
-                <form id="zelda-hub-external-search" class="d-grid gap-2">
-                    {% csrf_token %}
-                    <div class="d-flex gap-2">
-                        <input type="text" name="q" class="zelda-input flex-grow-1" maxlength="255" required
-                               placeholder="Company name or stock ticker" autocomplete="off">
-                        <button type="submit" class="zelda-button flex-shrink-0">
-                            <i class="bi bi-search me-1"></i>Search
-                        </button>
-                    </div>
-                    <div id="zelda-hub-external-status" class="small" role="status" aria-live="polite" hidden></div>
-                    <div id="zelda-hub-external-results" class="d-grid gap-2"></div>
-                </form>
-            </div>
-
-            <!-- Interlink platform search -->
-            <div class="zelda-card p-4">
-                <h6 class="fw-bold text-dark mb-3">
-                    <i class="bi bi-search text-primary me-2"></i>Company & Platform Lookup
-                </h6>
-                <form id="global-agent-form">
-                    <div class="input-group" style="gap: 0.5rem;">
-                        <input 
-                            type="text" 
-                            id="globalAgentQuery" 
-                            class="zelda-input flex-grow-1" 
-                            placeholder="Search company or business name..."
-                            autocomplete="off">
-                        <button type="submit" class="zelda-button" style="padding: 0.75rem 1.25rem;">
-                            <i class="bi bi-arrow-right"></i>
-                        </button>
-                    </div>
-                </form>
-            </div>
-            <div class="zelda-card p-4" id="find-results-card" style="display: none;">
-                <h6 class="fw-bold text-dark mb-3"><i class="bi bi-list-ul text-success me-2"></i>Results</h6>
-                <div id="find-results-list" class="d-flex flex-column gap-2"></div>
-            </div>
             <!-- Vector Search (Document-specific): a developer tool that needs a raw
                  document ID, so it is shown to staff only. The elements stay in the
                  page for everyone because the panel's script attaches to them. -->
@@ -764,7 +711,6 @@
                     </div>
                 </form>
             </div>
-        </div>
 
         <!-- TAB: LIBRARY — your analyses and reports; see zelda_api/library.py -->
         <div id="tab-library" class="tab-content" style="display: none; flex-direction: column; gap: 1rem;">
@@ -1054,6 +1000,14 @@
     // ──────────────────────────────────────────────────────────────────────────
     // TAB NAVIGATION
     // ──────────────────────────────────────────────────────────────────────────
+
+    const subjectSearchButton = document.getElementById('zelda-subject-search');
+    if (subjectSearchButton) {
+        subjectSearchButton.addEventListener('click', () => {
+            const firstProductTab = document.querySelector('.zelda-tab[data-tab^="product-"]');
+            if (firstProductTab) firstProductTab.click();
+        });
+    }
 
     document.querySelectorAll('[data-zelda-open-tab]').forEach(button => {
         button.addEventListener('click', () => {

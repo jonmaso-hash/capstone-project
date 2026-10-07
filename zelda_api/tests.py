@@ -6750,7 +6750,7 @@ class ZeldaSearchAccessTests(TestCase):
 class ZeldaHubShellContractTests(TestCase):
     """Phase 2 shell contract: one subject context and distinct hub jobs."""
 
-    def test_hub_template_separates_ask_and_find_with_shared_subject(self):
+    def test_hub_template_keeps_shared_subject_without_redundant_find_tab(self):
         from pathlib import Path
         from django.conf import settings
 
@@ -6764,9 +6764,10 @@ class ZeldaHubShellContractTests(TestCase):
         self.assertIn('id="zelda-subject-context"', content)
         self.assertIn('id="zelda-subject-name"', content)
         self.assertIn('data-tab="ask"', content)
-        self.assertIn('data-tab="find"', content)
         self.assertIn('>Ask Zelda', content)
-        self.assertIn('>Find Company', content)
+        self.assertNotIn('data-tab="find"', content)
+        self.assertNotIn('>Find Company', content)
+        self.assertIn('id="zelda-subject-search"', content)
         self.assertIn('data-tab="upload"', content)
         self.assertIn('data-tab="library"', content)
         self.assertIn('data-tab="progress"', content)
@@ -6786,4 +6787,4 @@ class ZeldaHubShellContractTests(TestCase):
         self.assertNotIn('data-tab="search"', content)
         self.assertNotIn('id="tab-search"', content)
         self.assertIn('id="tab-ask"', content)
-        self.assertIn('id="tab-find"', content)
+        self.assertNotIn('id="tab-find"', content)
