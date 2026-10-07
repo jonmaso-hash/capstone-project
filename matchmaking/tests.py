@@ -5866,21 +5866,22 @@ class FoundryPulseVerifiedWordingTests(TestCase):
         self.founder_user = User.objects.create_user('fpw_founder', password='x')
         self.founder = Application.objects.create(
             user=self.founder_user, company_name='WordingCo', founder_name='F', email='f@t.com',
-            description='test', sector='SaaS', stage='Seed',
+            description='test', sector='SaaS', stage='Seed', is_internal_profile=False,
         )
         self.investor_user = User.objects.create_user('fpw_investor', password='x')
         self.investor = InvestorApplication.objects.create(
             user=self.investor_user, full_name='I', company_name='WordingFund', email='i@t.com',
-            investment_focus='SaaS', investment_stage='Seed',
+            investment_focus='SaaS', investment_stage='Seed', is_internal_profile=False,
         )
         self.seller_user = User.objects.create_user('fpw_seller', password='x')
         self.seller = SellerApplication.objects.create(
             user=self.seller_user, company_name='WordingSellCo', seller_name='S', email='s@t.com',
-            description='test', industry='SaaS',
+            description='test', industry='SaaS', is_internal_profile=False,
         )
         self.buyer_user = User.objects.create_user('fpw_buyer', password='x')
         self.buyer = BuyerApplication.objects.create(
             user=self.buyer_user, full_name='B', company_name='WordingAcquirer', email='b@t.com',
+            is_internal_profile=False,
         )
 
     def test_confirmed_funded_produces_verified_funded_wording(self):
