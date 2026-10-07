@@ -20,6 +20,7 @@ class Notification(models.Model):
     notification_type = models.CharField(max_length=50, default='INFO') 
     message = models.CharField(max_length=255)
     is_read = models.BooleanField(default=False)
+    dismissed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     target_url = models.URLField(blank=True, null=True)
 
@@ -30,6 +31,17 @@ class Notification(models.Model):
             models.Index(fields=['created_at']),
         ]
         ordering = ['-created_at']
+
+    RETENTION_PROTECTED_TYPES = frozenset({
+        'SYSTEM',
+        'PAYMENT',
+        'TRUTH_DELTA_DISPUTE',
+    })
+
+    @property
+    def is_retention_protected(self):
+        """Audit/security-sensitive rows remain in history and cannot be dismissed."""
+        return self.notification_type in self.RETENTION_PROTECTED_TYPES
 
     def __str__(self):
         return f"{self.notification_type} for {self.recipient.username}: {self.message[:20]}..."
