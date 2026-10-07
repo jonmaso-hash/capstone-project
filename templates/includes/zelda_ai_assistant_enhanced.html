@@ -597,7 +597,7 @@
                 </div>
                 <div id="notifications-empty" class="text-center py-4 text-muted small" style="display:none;">
                     <i class="bi bi-bell-slash fs-4 d-block mb-2"></i>
-                    Nothing new.
+                    No notifications yet.
                 </div>
                 <div id="notifications-list" class="d-flex flex-column gap-2"></div>
             </div>
@@ -1067,13 +1067,23 @@
                 empty.style.display = 'block';
             } else {
                 list.innerHTML = items.map(item => {
+                    const dismissButton = item.can_dismiss
+                        ? `<button type="button" class="btn-close ms-2 flex-shrink-0 zelda-notif-dismiss"
+                                   data-id="${item.id}" aria-label="Dismiss notification"
+                                   title="Dismiss notification" style="font-size:0.65rem;"></button>`
+                        : '';
+                    const retainedLabel = item.can_dismiss
+                        ? ''
+                        : '<span class="badge bg-light text-secondary border ms-2">Retained</span>';
+                    const readClass = item.is_read ? 'text-muted' : 'text-dark fw-semibold';
                     const body = `
                         <div class="d-flex align-items-start gap-2">
                             <i class="bi bi-info-circle-fill text-primary mt-1"></i>
-                            <span class="small text-dark flex-grow-1">${item.message}</span>
-                            <button type="button" class="btn-close ms-2 flex-shrink-0 zelda-notif-delete"
-                                    data-id="${item.id}" aria-label="Delete notification"
-                                    title="Delete notification" style="font-size:0.65rem;"></button>
+                            <div class="flex-grow-1">
+                                <span class="small ${readClass}">${item.message}</span>
+                                ${retainedLabel}
+                            </div>
+                            ${dismissButton}
                         </div>`;
                     return item.target_url
                         ? `<a href="${item.target_url}" class="zelda-card p-3 text-decoration-none" style="display:block;">${body}</a>`
@@ -1091,25 +1101,27 @@
         }
     }
 
-    // Deletes a notification the user has already read but doesn't want to
-    // keep seeing in the list. Card is scoped via .closest('.zelda-card')
-    // since a card may render as either an <a> (has target_url) or a <div>.
+    // Dismiss hides an ordinary history item without deleting its database
+    // row. Protected system/payment/audit rows render without a dismiss button.
     document.getElementById('notifications-list').addEventListener('click', async (e) => {
-        const delBtn = e.target.closest('.zelda-notif-delete');
-        if (!delBtn) return;
+        const dismissBtn = e.target.closest('.zelda-notif-dismiss');
+        if (!dismissBtn) return;
         e.preventDefault();
         e.stopPropagation();
 
-        const cardEl = delBtn.closest('.zelda-card');
-        delBtn.disabled = true;
+        const cardEl = dismissBtn.closest('.zelda-card');
+        dismissBtn.disabled = true;
 
         try {
-            const response = await fetch(`/notifications/api/${delBtn.dataset.id}/delete/`, {
+            const response = await fetch(`/notifications/api/${dismissBtn.dataset.id}/dismiss/`, {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: { 'X-CSRFToken': getCookie('csrftoken') },
             });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+            const data = await response.json();
+            if (!data.dismissed) throw new Error('Notification was not dismissed');
 
             if (cardEl) cardEl.remove();
             const list = document.getElementById('notifications-list');
@@ -1117,8 +1129,8 @@
                 document.getElementById('notifications-empty').style.display = 'block';
             }
         } catch (err) {
-            delBtn.disabled = false;
-            addLogEntry(`Notification delete error: ${err.message}`, 'error');
+            dismissBtn.disabled = false;
+            addLogEntry(`Notification dismiss error: ${err.message}`, 'error');
         }
     });
 
