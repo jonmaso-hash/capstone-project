@@ -558,8 +558,8 @@ document.addEventListener("DOMContentLoaded", function () {
     new Chart(document.getElementById('registrationChart').getContext('2d'), {
         type: 'line',
         data: {
-            labels: {{ registration_labels|safe }},
-            datasets: [{ label: 'New Registrations', data: {{ registration_counts|safe }}, borderColor: '#0d6efd', tension: 0.3 }]
+            labels: registrationLabels,
+            datasets: [{ label: 'New Registrations', data: registrationCounts, borderColor: '#0d6efd', tension: 0.3 }]
         }
     });
 });
