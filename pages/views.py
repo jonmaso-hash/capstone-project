@@ -81,6 +81,14 @@ def terms(request):
         'last_updated': LEGAL_LAST_UPDATED,
     })
 
+
+def regulatory_positioning(request):
+    return render(request, 'pages/regulatory_positioning.html', {
+        'page_title': 'Regulatory Positioning',
+        'last_updated': 'October 2026',
+    })
+
+
 def bulletin_board(request):
     return render(request, 'pages/bulletin_board.html')
 
