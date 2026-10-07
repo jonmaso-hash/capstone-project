@@ -6717,3 +6717,45 @@ class ZeldaSearchAccessTests(TestCase):
         self.client.force_login(viewer)
         response = self.client.get(reverse('zelda_api:analyze_founder', args=[hidden_user.username]))
         self.assertEqual(response.status_code, 404)
+
+
+class ZeldaHubShellContractTests(TestCase):
+    """Phase 2 shell contract: one subject context and distinct hub jobs."""
+
+    def test_hub_template_separates_ask_and_find_with_shared_subject(self):
+        from pathlib import Path
+        from django.conf import settings
+
+        content = (
+            Path(settings.BASE_DIR)
+            / 'templates'
+            / 'includes'
+            / 'zelda_ai_assistant_enhanced.html'
+        ).read_text(encoding='utf-8')
+
+        self.assertIn('id="zelda-subject-context"', content)
+        self.assertIn('id="zelda-subject-name"', content)
+        self.assertIn('data-tab="ask"', content)
+        self.assertIn('data-tab="find"', content)
+        self.assertIn('>Ask Zelda', content)
+        self.assertIn('>Find Company', content)
+        self.assertIn('data-tab="upload"', content)
+        self.assertIn('data-tab="library"', content)
+        self.assertIn('data-tab="progress"', content)
+        self.assertIn('data-tab="notifications"', content)
+
+    def test_legacy_combined_search_tab_is_retired(self):
+        from pathlib import Path
+        from django.conf import settings
+
+        content = (
+            Path(settings.BASE_DIR)
+            / 'templates'
+            / 'includes'
+            / 'zelda_ai_assistant_enhanced.html'
+        ).read_text(encoding='utf-8')
+
+        self.assertNotIn('data-tab="search"', content)
+        self.assertNotIn('id="tab-search"', content)
+        self.assertIn('id="tab-ask"', content)
+        self.assertIn('id="tab-find"', content)
