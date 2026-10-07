@@ -1975,7 +1975,7 @@
             // action button instead of a generic "Continue" link.
             const nextBestCard = document.getElementById('progress-next-best-action');
             if (data.next_best_action) {
-                document.getElementById('progress-action-why').textContent = `Zelda recommendation: ${data.next_best_action.why_it_matters}`;
+                document.getElementById('progress-action-why').textContent = `Why now: ${data.next_best_action.why_it_matters}`;
                 document.getElementById('progress-action-time').textContent = `~${data.next_best_action.estimated_minutes} min`;
                 document.getElementById('progress-action-label').textContent = data.next_best_action.action_label;
 
