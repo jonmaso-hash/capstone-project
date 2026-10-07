@@ -16,7 +16,7 @@ from .models import (
     SellerApplication, BuyerApplication, DealFeedback,
     MatchTrainingExample, log_training_example, Connection, BusinessEmailVerification,
     PitchVideoComment, InvestorInterestEvent, AcquisitionInterestEvent,
-    AcquisitionConnection, log_buyer_event,
+    AcquisitionConnection, log_buyer_event, MessageThread,
 )
 from .utils import (
     _is_adjacent_stage,
