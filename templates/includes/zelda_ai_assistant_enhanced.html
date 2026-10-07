@@ -520,12 +520,12 @@
             <button class="zelda-tab" data-tab="progress">
                 <i class="bi bi-signpost-2 me-2"></i>My Progress
             </button>
-            {% load zelda_products %}{% zelda_products as zelda_catalog %}
+            {% load zelda_products %}{% zelda_role_products as zelda_catalog %}
             {% for product in zelda_catalog %}
-                {% if user.match_founder_profile %}
                 <button class="zelda-tab" data-tab="product-{{ product.key }}">
                     {% if product.key == 'intelligence_memo' %}<i class="bi bi-stars me-2"></i>
-                    {% elif product.key == 'truth_delta' %}<i class="bi bi-shield-check me-2"></i>
+                    {% elif product.key == 'truth_delta' or product.key == 'truth_delta_diligence' %}<i class="bi bi-shield-check me-2"></i>
+                    {% elif product.key == 'truth_delta_credit_pack' %}<i class="bi bi-ticket-perforated me-2"></i>
                     {% elif product.key == 'ic_memo' %}<i class="bi bi-file-earmark-text me-2"></i>
                     {% elif product.key == 'entity' %}<i class="bi bi-building-check me-2"></i>
                     {% elif product.key == 'valuation' %}<i class="bi bi-graph-up-arrow me-2"></i>
@@ -533,24 +533,6 @@
                     {% elif product.key == 'three_pack' %}<i class="bi bi-files me-2"></i>
                     {% endif %}{{ product.name }}
                 </button>
-                {% elif user.match_investor_profile and product.key == 'complete_bundle' %}
-                <button class="zelda-tab" data-tab="product-{{ product.key }}"><i class="bi bi-stack me-2"></i>{{ product.name }}</button>
-                {% elif user.match_seller_profile %}
-                <button class="zelda-tab" data-tab="product-{{ product.key }}">
-                    {% if product.key == 'intelligence_memo' %}<i class="bi bi-stars me-2"></i>
-                    {% elif product.key == 'truth_delta' %}<i class="bi bi-shield-check me-2"></i>
-                    {% elif product.key == 'ic_memo' %}<i class="bi bi-file-earmark-text me-2"></i>
-                    {% elif product.key == 'entity' %}<i class="bi bi-building-check me-2"></i>
-                    {% elif product.key == 'valuation' %}<i class="bi bi-graph-up-arrow me-2"></i>
-                    {% elif product.key == 'complete_bundle' %}<i class="bi bi-stack me-2"></i>
-                    {% elif product.key == 'three_pack' %}<i class="bi bi-files me-2"></i>
-                    {% endif %}{{ product.name }}
-                </button>
-                {% elif user.match_buyer_profile and product.key == 'entity' %}
-                <button class="zelda-tab" data-tab="product-{{ product.key }}"><i class="bi bi-building-check me-2"></i>{{ product.name }}</button>
-                {% elif not user.match_founder_profile and not user.match_investor_profile and not user.match_seller_profile and not user.match_buyer_profile %}
-                <button class="zelda-tab" data-tab="product-{{ product.key }}"><i class="bi bi-file-earmark-text me-2"></i>{{ product.name }}</button>
-                {% endif %}
             {% endfor %}
         </div>
 
