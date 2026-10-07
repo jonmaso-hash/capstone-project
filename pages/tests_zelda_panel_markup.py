@@ -9,6 +9,7 @@ siblings of the body instead of inside it. This parses the rendered page and
 checks the nesting.
 """
 from html.parser import HTMLParser
+from pathlib import Path
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -17,6 +18,8 @@ from django.urls import reverse
 from matchmaking.tests import _mock_embedding_generation
 
 User = get_user_model()
+ROOT = Path(__file__).resolve().parents[1]
+PANEL_PATH = ROOT / 'templates' / 'includes' / 'zelda_ai_assistant_enhanced.html'
 
 PANEL_SECTIONS = [
     'tab-notifications', 'tab-ask', 'tab-find', 'tab-library', 'tab-upload',
