@@ -283,10 +283,19 @@ class OversizedUploadsAreRefusedBeforeParsingTests(TestCase):
         poster = User.objects.create_user('upload_gate_poster', password='x')
         job = JobListing.objects.create(poster=poster, company_name='Co', title='Engineer', description='desc')
         page = 'http://testserver/settings/'
+        from matchmaking.models import Application
+        founder = User.objects.create_user('upload_gate_founder', password='x')
+        Application.objects.create(
+            user=founder, founder_name='Founder', email='gate@example.com',
+            company_name='Gate Co', description='Gate', sector='SaaS', stage='Seed',
+        )
+        self.client.force_login(founder)
+
         for url, field, limit_mb in (
             (reverse('usersettings:update_profile_picture'), 'profile_picture', 5),
             (reverse('blog:blog_view'), 'image', 5),
             (reverse('jobs:apply', args=[job.pk]), 'resume_attachment', 10),
+            (reverse('matchmaking:data_room_upload', args=[founder.username]), 'file', 25),
         ):
             with self.subTest(url=url):
                 response = self._post_claiming(url, field, (limit_mb + 1) * MB, HTTP_REFERER=page)
