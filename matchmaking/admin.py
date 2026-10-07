@@ -197,11 +197,21 @@ class APIKeyAdmin(admin.ModelAdmin):
     list_editable = ['is_active']
     list_filter = ['is_active', 'created_at']
     search_fields = ['firm_name', 'owner__username']
-    readonly_fields = ['key', 'created_at', 'last_used_at']
+    readonly_fields = ['key_prefix', 'key_hash', 'created_at', 'last_used_at']
 
     def key_preview(self, obj):
-        return f"···{obj.key[-4:]}" if obj.key else "—"
-    key_preview.short_description = 'Key'
+        return f"{obj.key_prefix}…" if obj.key_prefix else "—"
+    key_preview.short_description = 'Key prefix'
+
+    def response_add(self, request, obj, post_url_continue=None):
+        raw_key = getattr(obj, '_issued_key', None)
+        if raw_key:
+            self.message_user(
+                request,
+                f"Copy this API key now — it will not be shown again: {raw_key}",
+                level='WARNING',
+            )
+        return super().response_add(request, obj, post_url_continue)
 
 
 @admin.register(BusinessEmailVerification)
