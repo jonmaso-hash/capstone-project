@@ -111,7 +111,7 @@ class TheApprovedPromiseIsServedTests(TestCase):
     def test_the_home_page_keeps_the_private_company_sentence(self):
         content = self.client.get(reverse('pages:home')).content.decode('utf8')
         self.assertIn(PRIVATE_COMPANY_SENTENCE, content)
-        self.assertIn('Every claim Zelda evaluates carries its source, evidence role, and verification status.', content)
+        self.assertIn('Zelda adds source-linked business analysis.', content)
 
     def test_the_pricing_page_makes_no_absolute_screening_claim(self):
         # The template, not one rendered role: each plan card shows to its own role only.
