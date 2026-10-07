@@ -1,5 +1,5 @@
 from django import template
-from billing.zelda_catalog import catalog, REPORTS
+from billing.zelda_catalog import catalog, role_catalog, REPORTS
 
 register = template.Library()
 
@@ -12,3 +12,8 @@ def zelda_products():
 @register.simple_tag
 def zelda_individual_reports():
     return [{'key': key, 'name': value[0]} for key, value in REPORTS.items()]
+
+
+@register.simple_tag(takes_context=True)
+def zelda_role_products(context):
+    return role_catalog(context.get('user'))
