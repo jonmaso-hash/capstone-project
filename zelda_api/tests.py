@@ -6438,7 +6438,7 @@ class JourneyStatusAPIViewNextBestActionTests(TestCase):
         self.assertIn('Zelda Intelligence Brief', data['next_best_action']['why_it_matters'])
         self.assertEqual(data['next_best_action']['estimated_minutes'], 2)
 
-    def test_founder_fully_complete_profile_has_no_next_best_action_and_is_strong(self):
+    def test_founder_fully_complete_profile_switches_to_momentum_mode(self):
         from django.core.files.uploadedfile import SimpleUploadedFile
         from matchmaking.models import Application, Follow
         user = get_user_model().objects.create_user('nba_founder_green', password='x')
@@ -6476,8 +6476,36 @@ class JourneyStatusAPIViewNextBestActionTests(TestCase):
         response = self.client.get(reverse('zelda_api:journey_status'))
 
         data = response.json()
-        self.assertIsNone(data['next_best_action'])
+        self.assertEqual(data['journey_mode'], 'momentum')
+        self.assertEqual(data['next_best_action']['label'], 'Start your fundraising CRM')
+        self.assertEqual(data['next_best_action']['source'], 'crm')
         self.assertEqual(data['profile_strength'], {'ratio': 1.0, 'label': 'Strong'})
+
+    def test_unread_message_beats_lower_priority_momentum_actions(self):
+        from notifications.models import Notification
+        from unittest import mock
+
+        user = get_user_model().objects.create_user('nba_message_priority', password='x')
+        Notification.objects.create(
+            recipient=user,
+            notification_type='MESSAGE',
+            message='An investor sent you a message.',
+            target_url='/matchmaking/deal-room/',
+        )
+        self.client.force_login(user)
+
+        complete = {
+            'stage_color': 'green',
+            'headline': 'Core setup complete.',
+            'checklist': [{'label': 'Complete setup', 'done': True}],
+        }
+        with mock.patch('matchmaking.utils.compute_founder_journey_stage', return_value=complete):
+            data = self.client.get(reverse('zelda_api:journey_status')).json()
+
+        self.assertEqual(data['journey_mode'], 'momentum')
+        self.assertEqual(data['next_best_action']['label'], 'Reply to your new message')
+        self.assertEqual(data['next_best_action']['source'], 'message')
+        self.assertEqual(data['next_best_action']['action_url'], '/matchmaking/deal-room/')
 
     def test_investor_incomplete_mandate_gets_complete_mandate_action(self):
         from matchmaking.models import InvestorApplication
