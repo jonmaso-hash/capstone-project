@@ -406,7 +406,7 @@
     id="ai-agent-toggle"
     class="btn btn-primary rounded-circle position-fixed bottom-0 end-0 m-4 d-flex align-items-center justify-content-center shadow-lg"
     style="width: 70px; height: 70px; z-index: 1050;"
-    title="Open Zelda Intelligence Panel">
+    title="{% if user.match_investor_profile or user.match_buyer_profile %}Open Zelda to upload deal materials{% elif user.match_founder_profile or user.match_seller_profile %}Open Zelda to review your company{% else %}Open Zelda Intelligence Panel{% endif %}">
     <div style="position: relative; width: 40px; height: 40px;">
         <div class="position-absolute w-100 h-100 rounded-circle bg-warning dynamic-pulse zelda-stage-pulse-dot"></div>
         <i class="bi bi-robot text-warning fs-2 dynamic-glow position-relative z-3"></i>
@@ -463,6 +463,17 @@
                     <span class="d-inline-block" style="width: 8px; height: 8px; background: var(--zelda-success); border-radius: 50%; animation: glowPulse 1s infinite;"></span>
                     Pipeline Active
                 </div>
+                <div class="small text-white-50 mt-2">
+                    {% if user.match_founder_profile %}
+                    Review your own company the way an investor may see it. Save, update and share Zelda reports.
+                    {% elif user.match_seller_profile %}
+                    Review your business the way a buyer may see it. Save, update and share Zelda reports.
+                    {% elif user.match_investor_profile %}
+                    Upload deal materials and let Zelda organize first-pass diligence.
+                    {% elif user.match_buyer_profile %}
+                    Upload acquisition materials and let Zelda organize first-pass diligence.
+                    {% endif %}
+                </div>
             </div>
         </div>
     <div class="d-flex align-items-center gap-2">
@@ -488,13 +499,13 @@
                 <i class="bi bi-bell me-2"></i>Notifications
                 <span id="zelda-tab-notif-badge" class="badge bg-danger rounded-pill ms-1" style="display:none; font-size: 0.65rem;"></span>
             </button>
-            <button class="zelda-tab active" data-tab="search">
+            <button class="zelda-tab{% if not user.match_investor_profile and not user.match_buyer_profile %} active{% endif %}" data-tab="search">
                 <i class="bi bi-search me-2"></i>Search
             </button>
             <button class="zelda-tab" data-tab="library">
                 <i class="bi bi-collection me-2"></i>Library
             </button>
-            <button class="zelda-tab" data-tab="upload">
+            <button class="zelda-tab{% if user.match_investor_profile or user.match_buyer_profile %} active{% endif %}" data-tab="upload">
                 <i class="bi bi-cloud-upload me-2"></i>Upload
             </button>
             <button class="zelda-tab" data-tab="memo" style="display: none;" aria-hidden="true">
@@ -524,8 +535,17 @@
                 </button>
                 {% elif user.match_investor_profile and product.key == 'complete_bundle' %}
                 <button class="zelda-tab" data-tab="product-{{ product.key }}"><i class="bi bi-stack me-2"></i>{{ product.name }}</button>
-                {% elif user.match_seller_profile and product.key == 'valuation' %}
-                <button class="zelda-tab" data-tab="product-{{ product.key }}"><i class="bi bi-graph-up-arrow me-2"></i>{{ product.name }}</button>
+                {% elif user.match_seller_profile %}
+                <button class="zelda-tab" data-tab="product-{{ product.key }}">
+                    {% if product.key == 'intelligence_memo' %}<i class="bi bi-stars me-2"></i>
+                    {% elif product.key == 'truth_delta' %}<i class="bi bi-shield-check me-2"></i>
+                    {% elif product.key == 'ic_memo' %}<i class="bi bi-file-earmark-text me-2"></i>
+                    {% elif product.key == 'entity' %}<i class="bi bi-building-check me-2"></i>
+                    {% elif product.key == 'valuation' %}<i class="bi bi-graph-up-arrow me-2"></i>
+                    {% elif product.key == 'complete_bundle' %}<i class="bi bi-stack me-2"></i>
+                    {% elif product.key == 'three_pack' %}<i class="bi bi-files me-2"></i>
+                    {% endif %}{{ product.name }}
+                </button>
                 {% elif user.match_buyer_profile and product.key == 'entity' %}
                 <button class="zelda-tab" data-tab="product-{{ product.key }}"><i class="bi bi-building-check me-2"></i>{{ product.name }}</button>
                 {% elif not user.match_founder_profile and not user.match_investor_profile and not user.match_seller_profile and not user.match_buyer_profile %}
@@ -555,7 +575,7 @@
         </div>
 
         <!-- TAB: SEARCH -->
-        <div id="tab-search" class="tab-content active" style="display: flex; flex-direction: column; gap: 1rem;">
+        <div id="tab-search" class="tab-content{% if not user.match_investor_profile and not user.match_buyer_profile %} active{% endif %}" style="display: {% if user.match_investor_profile or user.match_buyer_profile %}none{% else %}flex{% endif %}; flex-direction: column; gap: 1rem;">
 
             <!-- Ask Zelda -->
             <div class="zelda-card p-4">
@@ -644,11 +664,27 @@
         </div>
 
         <!-- TAB: UPLOAD -->
-        <div id="tab-upload" class="tab-content" style="display: none; flex-direction: column; gap: 1rem;">
-            
+        <div id="tab-upload" class="tab-content{% if user.match_investor_profile or user.match_buyer_profile %} active{% endif %}" style="display: {% if user.match_investor_profile or user.match_buyer_profile %}flex{% else %}none{% endif %}; flex-direction: column; gap: 1rem;">
+
+            <div class="zelda-card p-4 border border-warning-subtle">
+                {% if user.match_founder_profile %}
+                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-eye me-2 text-warning"></i>See your company from the outside</h6>
+                <p class="small text-muted mb-0">Think of this like reviewing your own business credit file before someone else does. Upload your company materials, generate Zelda reports, save them, and share the finished reports with investors when you choose.</p>
+                {% elif user.match_seller_profile %}
+                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-eye me-2 text-warning"></i>See your business from a buyer's perspective</h6>
+                <p class="small text-muted mb-0">Upload your own business materials to see what Zelda surfaces before a buyer does. Save, update, and share the reports when you are ready.</p>
+                {% elif user.match_investor_profile %}
+                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-briefcase me-2 text-warning"></i>Start diligence with the documents you already have</h6>
+                <p class="small text-muted mb-0">Upload a pitch deck, business plan, financial model, research report, or other company material. Zelda will organize the evidence so you can decide what deserves deeper diligence.</p>
+                {% elif user.match_buyer_profile %}
+                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-building-check me-2 text-warning"></i>Build a diligence file for the business you're evaluating</h6>
+                <p class="small text-muted mb-0">Upload a CIM, business plan, financial statements/model, pitch deck, research, or other diligence material. For a CIM or other acquisition materials, choose Other below.</p>
+                {% endif %}
+            </div>
+
             <div class="zelda-card p-4">
                 <h6 class="fw-bold text-dark mb-3">
-                    <i class="bi bi-cloud-upload text-success me-2"></i>Upload Document
+                    <i class="bi bi-cloud-upload text-success me-2"></i>{% if user.match_investor_profile or user.match_buyer_profile %}Upload Deal Materials{% else %}Upload Company Materials{% endif %}
                 </h6>
                 
                 <!-- Upload Form -->

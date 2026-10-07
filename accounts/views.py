@@ -734,6 +734,11 @@ def profile(request, username=None, pk=None):
         if _ep and (_ep.status == ProfileVideo.STATUS_PUBLISHED or viewed_user == request.user):
             elevator_pitch = _ep
 
+    founder_zelda_products = []
+    if application and viewed_user == request.user:
+        from billing.zelda_catalog import catalog_with_purchase_state
+        founder_zelda_products = catalog_with_purchase_state(request.user)
+
     context = {
         "profile_user": viewed_user,
         "application": application,
@@ -770,6 +775,7 @@ def profile(request, username=None, pk=None):
         "mutual_connections": mutual_connections,
         "founder_milestones": founder_milestones,
         "profile_picture": viewed_user_settings.profile_picture,
+        "founder_zelda_products": founder_zelda_products,
 
     }
 

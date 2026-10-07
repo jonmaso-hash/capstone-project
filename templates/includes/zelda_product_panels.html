@@ -5,7 +5,7 @@
      data-intake-url="{% url 'billing:zelda_intake' %}"
      data-checkout-url="{% url 'billing:zelda_checkout' %}"></div>
 {% for product in products %}
-{% if user.match_founder_profile or user.match_investor_profile and product.key == 'complete_bundle' or user.match_seller_profile and product.key == 'valuation' or user.match_buyer_profile and product.key == 'entity' or not user.match_founder_profile and not user.match_investor_profile and not user.match_seller_profile and not user.match_buyer_profile %}
+{% if user.match_founder_profile or user.match_seller_profile or user.match_investor_profile and product.key == 'complete_bundle' or user.match_buyer_profile and product.key == 'entity' or not user.match_founder_profile and not user.match_investor_profile and not user.match_seller_profile and not user.match_buyer_profile %}
 <div id="tab-product-{{ product.key }}" class="tab-content zelda-product-panel" data-product="{{ product.key }}"
      style="display: none; flex-direction: column; gap: 1rem;">
     <div class="zelda-card p-4">
@@ -15,8 +15,20 @@
         <p class="h3 fw-bold mb-0">${{ product.price }} <span class="small fw-normal text-muted">USD</span></p>
     </div>
     <div class="zelda-card p-3">
-        <h3 class="h6 fw-bold">Select the company and evidence</h3>
-        <p class="small text-muted zelda-selected-evidence">Upload a document or select a company below. Nothing is purchased by searching or uploading.</p>
+        <h3 class="h6 fw-bold">{% if user.match_founder_profile or user.match_seller_profile %}Review your company and evidence{% else %}Select the company and evidence{% endif %}</h3>
+        <p class="small text-muted zelda-selected-evidence">
+            {% if user.match_founder_profile %}
+            Use your own company materials to see what Zelda may surface to an investor. Save the finished report in Library and share it when you choose.
+            {% elif user.match_seller_profile %}
+            Use your own business materials to see what Zelda may surface to a buyer. Save the finished report in Library and share it when you choose.
+            {% elif user.match_investor_profile %}
+            Upload a pitch deck, business plan, financial model, research, or other company material for diligence. Nothing is purchased by searching or uploading.
+            {% elif user.match_buyer_profile %}
+            Upload a CIM, business plan, financials/model, pitch deck, research, or other diligence material. Nothing is purchased by searching or uploading.
+            {% else %}
+            Upload a document or select a company below. Nothing is purchased by searching or uploading.
+            {% endif %}
+        </p>
         <form class="zelda-product-search d-grid gap-2">
             {% csrf_token %}
             <label class="small fw-semibold" for="product-search-{{ product.key }}">Search companies outside Interlink</label>
@@ -30,7 +42,7 @@
             {% csrf_token %}
             <label class="small fw-semibold" for="product-company-{{ product.key }}">Company name</label>
             <input id="product-company-{{ product.key }}" name="company" required maxlength="255" class="form-control form-control-sm" placeholder="Company name">
-            <label class="small fw-semibold" for="product-file-{{ product.key }}">Upload a pitch deck or document</label>
+            <label class="small fw-semibold" for="product-file-{{ product.key }}">{% if user.match_buyer_profile %}Upload CIM or diligence document{% elif user.match_investor_profile %}Upload pitch deck or diligence document{% else %}Upload company document{% endif %}</label>
             <input id="product-file-{{ product.key }}" name="file" type="file" accept=".pdf,.pptx,.txt" required class="form-control form-control-sm">
             <span class="small text-muted">PDF, PPTX or TXT · up to 25 MB · use only evidence you are authorized to provide</span>
             <button type="submit" class="btn btn-outline-dark btn-sm">Use this document</button>
