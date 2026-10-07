@@ -2007,6 +2007,18 @@ def initiate_direct_chat(request, target_user_id):
     current_user_id = str(request.user.id)
     target_id_str = str(target_user.id)
 
+    if current_user_id != target_id_str:
+        from .models import direct_messages_open
+        if not direct_messages_open(target_user):
+            # Match the privacy behavior of the profile UI and do not reveal
+            # anything beyond "this direct-message route is unavailable".
+            if is_ajax:
+                return JsonResponse(
+                    {'status': 'error', 'message': 'Direct messaging is unavailable for this user.'},
+                    status=403,
+                )
+            raise PermissionDenied("Direct messaging is disabled.")
+
     if current_user_id == target_id_str:
         if is_ajax:
             return JsonResponse({'status': 'error', 'message': "You can't message yourself."}, status=400)
