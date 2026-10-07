@@ -27,6 +27,9 @@ urlpatterns = [
     path('profile/toggle-privacy/', views.toggle_privacy_view, name='toggle_privacy'),
     
     path('profile/<str:username>/analysis/', views.profile_analysis, name='profile_analysis'),
+    path('peer-benchmark/<int:benchmark_id>/', views.peer_market_benchmark_detail, name='peer_market_benchmark_detail'),
+    path('peer-benchmark/<int:benchmark_id>/share-toggle/', views.peer_market_benchmark_share_toggle, name='peer_market_benchmark_share_toggle'),
+    path('peer-benchmark/share/<uuid:share_token>/', views.peer_market_benchmark_share, name='peer_market_benchmark_share'),
 
     path('business-verification/', views.business_verification, name='business_verification'),
     path('business-verification/request/', views.business_verification_request, name='business_verification_request'),
