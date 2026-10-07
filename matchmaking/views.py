@@ -1683,7 +1683,10 @@ def request_intro(request, application_id, investor_id):
     """
     The Intro Workflow: Creates a Connection record and dispatches an alert to the broker.
     """
-    founder_app = get_object_or_404(Application, id=application_id)
+    founder_app = get_object_or_404(
+        Application.objects.discoverable().exclude(review_status='DENIED'),
+        id=application_id,
+    )
     investor_profile = getattr(request.user, 'match_investor_profile', None)
 
     if not investor_profile or str(investor_profile.id) != str(investor_id):
@@ -1765,7 +1768,10 @@ def request_intro_from_founder(request, investor_id):
     Reverse of request_intro: a founder extends a hand to an investor.
     The investor is the one who accepts/declines (see connection_action_view).
     """
-    investor_app = get_object_or_404(InvestorApplication, id=investor_id)
+    investor_app = get_object_or_404(
+        InvestorApplication.objects.discoverable().exclude(review_status='DENIED'),
+        id=investor_id,
+    )
     founder_profile = getattr(request.user, 'match_founder_profile', None)
 
     if not founder_profile:
@@ -1805,7 +1811,10 @@ def request_acquisition_intro(request, seller_id, buyer_id):
     Business Marketplace equivalent of request_intro: a buyer requests an
     introduction to a seller's listing.
     """
-    seller_app = get_object_or_404(SellerApplication, id=seller_id)
+    seller_app = get_object_or_404(
+        SellerApplication.objects.discoverable().exclude(review_status='DENIED'),
+        id=seller_id,
+    )
     buyer_profile = getattr(request.user, 'match_buyer_profile', None)
 
     if not buyer_profile or str(buyer_profile.id) != str(buyer_id):
@@ -1857,7 +1866,10 @@ def request_intro_from_seller(request, buyer_id):
     Reverse of request_acquisition_intro: a seller extends a hand to a
     buyer. The buyer is the one who accepts/declines.
     """
-    buyer_app = get_object_or_404(BuyerApplication, id=buyer_id)
+    buyer_app = get_object_or_404(
+        BuyerApplication.objects.discoverable().exclude(review_status='DENIED'),
+        id=buyer_id,
+    )
     seller_profile = getattr(request.user, 'match_seller_profile', None)
 
     if not seller_profile:
@@ -1915,7 +1927,10 @@ def record_vote(request):
             return JsonResponse({'status': 'error', 'message': 'Investor account required.'}, status=403)
         return redirect('matchmaking:investor_dashboard')
 
-    founder_app = get_object_or_404(Application, id=application_id)
+    founder_app = get_object_or_404(
+        Application.objects.discoverable().exclude(review_status='DENIED'),
+        id=application_id,
+    )
     numerical_vote = 1 if vote_value == 'up' else -1
 
     MatchFeedback.objects.update_or_create(
@@ -1965,7 +1980,10 @@ def record_deal_vote(request):
             return JsonResponse({'status': 'error', 'message': 'Buyer account required.'}, status=403)
         return redirect('matchmaking:buyer_dashboard')
 
-    seller_app = get_object_or_404(SellerApplication, id=seller_id)
+    seller_app = get_object_or_404(
+        SellerApplication.objects.discoverable().exclude(review_status='DENIED'),
+        id=seller_id,
+    )
     numerical_vote = 1 if vote_value == 'up' else -1
 
     DealFeedback.objects.update_or_create(
@@ -2003,7 +2021,7 @@ def initiate_direct_chat(request, target_user_id):
     channel, deal_ is reserved for a specific accepted Connection.
     """
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-    target_user = get_object_or_404(User, id=target_user_id)
+    target_user = get_object_or_404(User, id=target_user_id, is_active=True)
     current_user_id = str(request.user.id)
     target_id_str = str(target_user.id)
 
@@ -2011,6 +2029,12 @@ def initiate_direct_chat(request, target_user_id):
         if is_ajax:
             return JsonResponse({'status': 'error', 'message': "You can't message yourself."}, status=400)
         return redirect('matchmaking:deal_room_view')
+
+    from .models import direct_message_permitted
+    if not direct_message_permitted(request.user, target_user):
+        if is_ajax:
+            return JsonResponse({'status': 'error', 'message': 'Messaging is not available for this profile.'}, status=404)
+        raise Http404("Profile not available for direct messaging.")
 
     client = StreamChat(api_key=settings.STREAM_API_KEY, api_secret=settings.STREAM_API_SECRET)
     
