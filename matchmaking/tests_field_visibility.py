@@ -760,6 +760,19 @@ class CrossSurfaceInvariantTests(_Cast):
         self.assertIn('FV Co', body)  # still listed, value withheld
         self.assert_absent(body, 'CSV export')
 
+    def test_suspended_api_key_owner_cannot_use_enterprise_api(self):
+        owner = self.api_key.owner
+        owner.is_active = False
+        owner.save(update_fields=['is_active'])
+
+        response = self.client.get(
+            '/api/v1/enterprise/founders/',
+            HTTP_AUTHORIZATION=f'Api-Key {self.api_key.key}',
+        )
+
+        self.assertIn(response.status_code, (401, 403))
+        self.assertNotIn('FV Co', response.content.decode(errors='ignore'))
+
     def test_private_amount_never_reaches_the_enterprise_api(self):
         self.set_level('raising_amount', FIELD_PUBLIC)
         body = self.api_body()
