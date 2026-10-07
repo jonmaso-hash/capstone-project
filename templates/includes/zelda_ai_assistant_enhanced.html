@@ -574,11 +574,17 @@
                         No company selected
                     {% endif %}
                 </div>
-
+                <button type="button"
+                        class="btn btn-sm btn-link text-decoration-none p-0"
+                        id="zelda-subject-search"
+                        aria-label="Search for a company"
+                        title="Search for a company">
+                    <i class="bi bi-search fs-5" aria-hidden="true"></i>
+                </button>
             </div>
             <div class="small text-muted" id="zelda-subject-help">
                 {% if user.match_founder_profile or user.match_seller_profile %}
-                    Your own business is the default subject. Selecting a company inside any Zelda intelligence product updates this subject automatically.
+                    Your own business is the default subject. Choose another company only when reviewing a separate opportunity.
                 {% else %}
                     Select a company inside any Zelda intelligence product below. Your selection will appear here automatically.
                 {% endif %}
@@ -954,6 +960,14 @@
     // ──────────────────────────────────────────────────────────────────────────
     // TAB NAVIGATION
     // ──────────────────────────────────────────────────────────────────────────
+
+    const subjectSearchButton = document.getElementById('zelda-subject-search');
+    if (subjectSearchButton) {
+        subjectSearchButton.addEventListener('click', () => {
+            const firstProductTab = document.querySelector('.zelda-tab[data-tab^="product-"]');
+            if (firstProductTab) firstProductTab.click();
+        });
+    }
 
     document.querySelectorAll('[data-zelda-open-tab]').forEach(button => {
         button.addEventListener('click', () => {
