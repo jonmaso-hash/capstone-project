@@ -46,8 +46,52 @@ PRODUCTS = {
     'valuation': REPORTS['valuation'],
 }
 
+DILIGENCE_PRODUCTS = {
+    'truth_delta_diligence': (
+        'Truth Delta Report',
+        1000,
+        'One Truth Delta report for an investor or buyer evaluating a company.',
+    ),
+    'truth_delta_credit_pack': (
+        'Truth Delta 3-Report Credit Pack',
+        2500,
+        'Three reusable Truth Delta credits. Redeem one credit for one new Truth Delta report on any company you evaluate.',
+    ),
+}
+
+ALL_STRIPE_PRODUCTS = {**PRODUCTS, **DILIGENCE_PRODUCTS}
+
+
+def diligence_catalog():
+    return sorted(
+        [
+            dict(
+                key=key,
+                name=value[0],
+                amount=value[1],
+                price=f'{value[1] / 100:.2f}',
+                description=value[2],
+            )
+            for key, value in DILIGENCE_PRODUCTS.items()
+        ],
+        key=lambda product: (product['amount'], product['name']),
+    )
+
+
+def role_catalog(user):
+    if not user or not getattr(user, 'is_authenticated', False):
+        return catalog()
+    investor_profile = getattr(user, 'match_investor_profile', None)
+    buyer_profile = getattr(user, 'match_buyer_profile', None)
+    if investor_profile is not None or buyer_profile is not None:
+        return diligence_catalog()
+    return catalog()
+
+
 
 def selected_reports(product, selected=()):
+    if product == 'truth_delta_diligence':
+        return ['truth_delta']
     if product in REPORTS:
         return [product]
     if product == 'complete_bundle':

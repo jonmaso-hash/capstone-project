@@ -189,7 +189,7 @@ def build_library(user):
 
     has_role = any(getattr(user, name, None) is not None for name in (
         'match_founder_profile', 'match_investor_profile', 'match_seller_profile', 'match_buyer_profile'))
-    from billing.zelda_catalog import PRODUCTS, REPORTS
+    from billing.zelda_catalog import ALL_STRIPE_PRODUCTS, REPORTS
     from billing.fulfillment import reconcile_order
     purchases = []
     orders = available(lambda: list(ZeldaOrder.objects.filter(user=user).exclude(status='canceled').select_related(
@@ -197,7 +197,7 @@ def build_library(user):
     for order in orders:
         if not available(lambda: reconcile_order(order), 'Purchased report status'):
             continue
-        purchases.append({'company': order.source_document.source_entity, 'product': PRODUCTS[order.product][0],
+        purchases.append({'company': order.source_document.source_entity, 'product': ALL_STRIPE_PRODUCTS[order.product][0],
                           'status': order.get_status_display(), 'url': reverse('billing:zelda_order', args=[order.id]),
                           'reports': [{'name': REPORTS[key][0], 'url': reverse('billing:zelda_report', args=[order.id, key])}
                                       for key in order.reports] if order.status == 'ready' else []})

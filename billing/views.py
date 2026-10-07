@@ -461,6 +461,15 @@ def stripe_webhook(request):
             return HttpResponseBadRequest('Invalid product payment')
         return HttpResponse(status=200)
 
+    if (data_object.get('metadata') or {}).get('purpose') == 'truth_delta_credit_pack':
+        from .zelda_views import handle_truth_delta_credit_event
+        try:
+            handle_truth_delta_credit_event(event_type, data_object)
+        except (ValueError, TypeError):
+            logger.exception('Invalid Truth Delta credit-pack payment event')
+            return HttpResponseBadRequest('Invalid credit-pack payment')
+        return HttpResponse(status=200)
+
     if event_type == 'checkout.session.completed':
         metadata = data_object.get('metadata') or {}
         user_id = metadata.get('user_id') or data_object.get('client_reference_id')
