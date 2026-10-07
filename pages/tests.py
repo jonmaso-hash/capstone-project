@@ -238,20 +238,21 @@ class HomepagePositioningCopyTests(TestCase):
         self.assertIn('not a recommendation, endorsement', content)
         self.assertIn('or indication of stronger alignment', content)
 
-    def test_zelda_section_keeps_evidence_states_and_private_company_limit(self):
+    def test_zelda_section_leads_with_strengths_and_keeps_truth_delta_states(self):
         response = self._home()
         content = response.content.decode('utf-8')
         self.assertIn('Meet Zelda.', content)
         self.assertIn('The Intelligence Layer', content)
+        self.assertIn('Zelda works best with the documents closest to the business', content)
+        self.assertIn('Search public companies with richer filing coverage', content)
+        self.assertIn('funding raised', content)
+        self.assertIn('revenue', content)
+        self.assertIn('headcount', content)
         self.assertIn(
             'labels each one verified, contradicted, or not established — with the reason',
             content,
         )
-        self.assertIn(
-            'For most private companies, public sources report little, so many claims will read '
-            '&lsquo;not established&rsquo;; that is a statement about the evidence, not about the company.',
-            content,
-        )
+        self.assertNotIn('For most private companies, public sources report little', content)
 
     def test_alignment_example_uses_band_not_percentage(self):
         response = self._home()
