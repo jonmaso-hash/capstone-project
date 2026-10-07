@@ -172,7 +172,7 @@
                             });
                             statusBox.className = 'small text-success';
                             select.textContent = 'Company selected';
-                            statusBox.textContent = `${evidence.company}. Scroll down to finish checkout.`;
+                            statusBox.textContent = `Found: ${evidence.company}. Scroll down to finish checkout.`;
                         } catch (error) {
                             statusBox.className = 'small text-danger';
                             statusBox.textContent = error.message;
@@ -273,7 +273,7 @@
                                     if (companyInput) companyInput.value = evidence.company;
                                 });
                                 select.textContent = 'Company selected';
-                                status(panel, `${evidence.company}. Scroll down to finish checkout.`, 'success', 'search');
+                                status(panel, `Found: ${evidence.company}. Scroll down to finish checkout.`, 'success', 'search');
                             } catch (error) {
                                 status(panel, error.message, 'error', 'search');
                             } finally {
