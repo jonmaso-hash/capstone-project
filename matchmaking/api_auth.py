@@ -27,6 +27,9 @@ class APIKeyAuthentication(BaseAuthentication):
         except APIKey.DoesNotExist:
             raise AuthenticationFailed('Invalid or inactive API key.')
 
+        if not api_key.owner.is_active:
+            raise AuthenticationFailed('Invalid or inactive API key.')
+
         api_key.last_used_at = timezone.now()
         api_key.save(update_fields=['last_used_at'])
 
