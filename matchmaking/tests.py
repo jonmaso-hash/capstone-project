@@ -16,7 +16,7 @@ from .models import (
     SellerApplication, BuyerApplication, DealFeedback,
     MatchTrainingExample, log_training_example, Connection, BusinessEmailVerification,
     PitchVideoComment, InvestorInterestEvent, AcquisitionInterestEvent,
-    AcquisitionConnection, log_buyer_event,
+    AcquisitionConnection, log_buyer_event, MessageThread,
 )
 from .utils import (
     _is_adjacent_stage,
@@ -6013,17 +6013,18 @@ class InitiateDirectChatAjaxTests(TestCase):
     """
 
     def setUp(self):
+        _mock_embedding_generation(self)
         self.user_a = User.objects.create_user('idc_user_a', password='x')
         self.user_b = User.objects.create_user('idc_user_b', password='x')
-        Application.objects.create(
-            user=self.user_a, company_name='IDC A', founder_name='A',
-            email='a@idc.test', description='A', sector='SaaS', stage='Seed',
-            allow_direct_messages=True,
+        self.profile_a = Application.objects.create(
+            user=self.user_a, founder_name='A', email='a@example.com',
+            company_name='A Co', sector='SaaS', stage='Seed',
+            description='A', allow_direct_messages=True,
         )
-        self.user_b_profile = Application.objects.create(
-            user=self.user_b, company_name='IDC B', founder_name='B',
-            email='b@idc.test', description='B', sector='SaaS', stage='Seed',
-            allow_direct_messages=True,
+        self.profile_b = Application.objects.create(
+            user=self.user_b, founder_name='B', email='b@example.com',
+            company_name='B Co', sector='SaaS', stage='Seed',
+            description='B', allow_direct_messages=True,
         )
         self.client.force_login(self.user_a)
 
@@ -6050,15 +6051,19 @@ class InitiateDirectChatAjaxTests(TestCase):
         mock_client.upsert_users.assert_called_once()
         mock_client.channel.assert_called_once_with('messaging', data['channel_id'])
 
-    def test_direct_url_cannot_bypass_recipient_dm_consent(self):
-        self.user_b_profile.allow_direct_messages = False
-        self.user_b_profile.save(update_fields=['allow_direct_messages'])
-        with mock.patch('matchmaking.views.StreamChat') as stream:
+    def test_direct_url_cannot_bypass_target_dm_opt_out(self):
+        self.profile_b.allow_direct_messages = False
+        self.profile_b.save(update_fields=['allow_direct_messages'])
+        with mock.patch('matchmaking.views.StreamChat') as mock_stream_chat_cls:
             response = self._post_ajax(self.user_b.id)
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json()['status'], 'error')
-        stream.assert_not_called()
+        mock_stream_chat_cls.assert_not_called()
+        self.assertFalse(MessageThread.objects.filter(
+            user_a_id__in=[self.user_a.id, self.user_b.id],
+            user_b_id__in=[self.user_a.id, self.user_b.id],
+        ).exists())
 
     def test_ajax_self_message_returns_error_not_a_redirect(self):
         with mock.patch('matchmaking.views.StreamChat'):
@@ -6226,3 +6231,81 @@ class AcceptedConnectionOpensAConversationTests(TestCase):
         self.assertEqual(response.json()['new_status'], 'DECLINED')
         self.assertIsNone(response.json()['chat_channel_cid'])
         client.upsert_users.assert_not_called()
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+class HiddenTargetActionSecurityTests(TestCase):
+    """Raw numeric IDs must not bypass marketplace discovery/privacy gates."""
+
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.founder_user = User.objects.create_user('sec_hidden_founder', password='x')
+        self.founder = Application.objects.create(
+            user=self.founder_user, founder_name='Hidden Founder',
+            email='hf@example.com', company_name='Hidden Founder Co',
+            description='private founder', sector='SaaS', stage='Seed',
+            is_private=True,
+        )
+        self.investor_user = User.objects.create_user('sec_actor_investor', password='x')
+        self.investor = InvestorApplication.objects.create(
+            user=self.investor_user, full_name='Investor', email='inv@example.com',
+            company_name='Investor Co', investment_focus='SaaS',
+            investment_stage='Seed',
+        )
+
+        self.seller_user = User.objects.create_user('sec_hidden_seller', password='x')
+        self.seller = SellerApplication.objects.create(
+            user=self.seller_user, seller_name='Hidden Seller',
+            email='hs@example.com', company_name='Hidden Seller Co',
+            description='private seller', industry='SaaS',
+            is_private=True,
+        )
+        self.buyer_user = User.objects.create_user('sec_actor_buyer', password='x')
+        self.buyer = BuyerApplication.objects.create(
+            user=self.buyer_user, full_name='Buyer', email='buyer@example.com',
+            company_name='Buyer Co', acquisition_thesis='SaaS',
+        )
+
+    def test_investor_cannot_intro_hidden_founder_by_guessed_id(self):
+        self.client.force_login(self.investor_user)
+        response = self.client.post(reverse(
+            'matchmaking:request_intro', args=[self.founder.id, self.investor.id]
+        ))
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(Connection.objects.filter(
+            founder=self.founder, investor=self.investor
+        ).exists())
+
+    def test_buyer_cannot_intro_hidden_seller_by_guessed_id(self):
+        self.client.force_login(self.buyer_user)
+        response = self.client.post(reverse(
+            'matchmaking:request_acquisition_intro', args=[self.seller.id, self.buyer.id]
+        ))
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(AcquisitionConnection.objects.filter(
+            seller=self.seller, buyer=self.buyer
+        ).exists())
+
+    def test_investor_cannot_poison_hidden_founder_feedback_by_guessed_id(self):
+        self.client.force_login(self.investor_user)
+        response = self.client.post(
+            reverse('matchmaking:record_vote'),
+            data=json.dumps({'application_id': self.founder.id, 'vote': 'up'}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(MatchFeedback.objects.filter(
+            application=self.founder, investor=self.investor
+        ).exists())
+
+    def test_buyer_cannot_poison_hidden_seller_feedback_by_guessed_id(self):
+        self.client.force_login(self.buyer_user)
+        response = self.client.post(
+            reverse('matchmaking:record_deal_vote'),
+            data=json.dumps({'seller_id': self.seller.id, 'vote': 'up'}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(DealFeedback.objects.filter(
+            seller=self.seller, buyer=self.buyer
+        ).exists())
