@@ -28,8 +28,15 @@ class LegalPagesAreReachableTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Terms of Service')
 
+    def test_regulatory_positioning_is_readable_without_an_account(self):
+        response = self.client.get(reverse('pages:regulatory_positioning'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Regulatory Positioning')
+        self.assertContains(response, 'No success fees or transaction-based compensation')
+        self.assertContains(response, 'neutral third-party network')
+
     def test_both_pages_say_when_they_were_last_updated(self):
-        for name in ('pages:privacy', 'pages:terms'):
+        for name in ('pages:privacy', 'pages:terms', 'pages:regulatory_positioning'):
             with self.subTest(page=name):
                 self.assertContains(self.client.get(reverse(name)), 'Last updated')
 
@@ -45,6 +52,7 @@ class LegalPagesAreLinkedTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'href="%s"' % reverse('pages:privacy'))
         self.assertContains(response, 'href="%s"' % reverse('pages:terms'))
+        self.assertContains(response, 'href="%s"' % reverse('pages:regulatory_positioning'))
 
     def test_footer_no_longer_points_privacy_or_terms_at_a_dead_anchor(self):
         html = self.client.get(reverse('accounts:signup')).content.decode()
