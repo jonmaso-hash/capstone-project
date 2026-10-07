@@ -14,12 +14,22 @@ async function runZeldaSummarizer() {
 
     const data = await response.json();
     
-    // Render the structured 3-bullet breakdown
-    display.innerHTML = `
-        <ul class="list-unstyled mb-0">
-            <li class="mb-2"><strong>Traction:</strong> ${data.traction}</li>
-            <li class="mb-2"><strong>Tech:</strong> ${data.tech}</li>
-            <li><strong>Ask:</strong> ${data.ask}</li>
-        </ul>
-    `;
+    // LLM output is untrusted text. Never interpret it as HTML.
+    const list = document.createElement('ul');
+    list.className = 'list-unstyled mb-0';
+
+    [
+        ['Traction:', data.traction, 'mb-2'],
+        ['Tech:', data.tech, 'mb-2'],
+        ['Ask:', data.ask, ''],
+    ].forEach(([label, value, className]) => {
+        const item = document.createElement('li');
+        item.className = className;
+        const strong = document.createElement('strong');
+        strong.textContent = label;
+        item.append(strong, document.createTextNode(' ' + (value || '')));
+        list.appendChild(item);
+    });
+
+    display.replaceChildren(list);
 }
