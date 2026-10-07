@@ -13,12 +13,7 @@
                 <a class="nav-link" href="{% url 'accounts:dashboard' %}">Dashboard</a>
             {% endif %}
         </li>
-        {% if user.match_founder_profile %}
-        <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'fundraising_crm' %} active{% endif %}" href="{% url 'matchmaking:fundraising_crm' %}"{% if request.resolver_match.url_name == 'fundraising_crm' %} aria-current="page"{% endif %}>CRM</a></li>
-        <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'data_room' and request.resolver_match.kwargs.username == user.username %} active{% endif %}" href="{% url 'matchmaking:data_room' user.username %}"{% if request.resolver_match.url_name == 'data_room' and request.resolver_match.kwargs.username == user.username %} aria-current="page"{% endif %}>Data Room</a></li>
-        {% elif user.match_investor_profile %}
-        <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'deal_pulse' %} active{% endif %}" href="{% url 'matchmaking:deal_pulse' %}"{% if request.resolver_match.url_name == 'deal_pulse' %} aria-current="page"{% endif %}>CRM</a></li>
-        {% endif %}
+
         <li class="nav-item">
             {% if user.match_founder_profile or user.match_investor_profile %}
                 <a class="nav-link{% if request.resolver_match.url_name == 'bulletin_board' %} active{% endif %}" href="{% url 'matchmaking:bulletin_board' %}"{% if request.resolver_match.url_name == 'bulletin_board' %} aria-current="page"{% endif %}>Bulletin</a>

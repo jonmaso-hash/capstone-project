@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.conf import settings
+from pathlib import Path
 
 from matchmaking.models import Application
 
@@ -30,7 +32,6 @@ class FounderNavigationParityTests(TestCase):
 
         expected_hrefs = (
             reverse('matchmaking:founder_dashboard'),
-            reverse('matchmaking:fundraising_crm'),
             reverse('matchmaking:data_room', args=[self.user.username]),
             reverse('matchmaking:diligence_chat'),
             reverse('accounts:profile_self'),
@@ -38,6 +39,14 @@ class FounderNavigationParityTests(TestCase):
         for href in expected_hrefs:
             with self.subTest(href=href):
                 self.assertIn(f'href="{href}"', body)
+
+    def test_top_nav_does_not_duplicate_crm_or_data_room(self):
+        nav = (Path(settings.BASE_DIR) / 'templates' / 'includes' / 'main_navigation.html').read_text(encoding='utf-8')
+        self.assertNotIn("matchmaking:fundraising_crm", nav)
+        self.assertNotIn("matchmaking:data_room", nav)
+        self.assertNotIn("matchmaking:deal_pulse", nav)
+        self.assertNotIn(">CRM</a>", nav)
+        self.assertNotIn(">Data Room</a>", nav)
 
     def test_profile_self_redirects_to_named_founder_profile(self):
         response = self.client.get(reverse('accounts:profile_self'))

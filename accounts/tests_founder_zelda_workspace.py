@@ -83,7 +83,9 @@ class FounderProfileZeldaWorkspaceTests(TestCase):
         self.assertContains(response, 'Report last updated')
         self.assertContains(response, 'Update report')
 
-    def test_founder_navbar_keeps_crm_one_click_away(self):
-        response = self.client.get(reverse('accounts:profile', args=[self.user.username]))
-        self.assertContains(response, reverse('matchmaking:fundraising_crm'))
-        self.assertContains(response, '>CRM</a>')
+    def test_founder_dashboard_keeps_crm_available_after_navbar_cleanup(self):
+        profile = self.client.get(reverse('accounts:profile', args=[self.user.username]))
+        self.assertNotContains(profile, '>CRM</a>')
+
+        dashboard = self.client.get(reverse('matchmaking:founder_dashboard'))
+        self.assertContains(dashboard, reverse('matchmaking:fundraising_crm'))
