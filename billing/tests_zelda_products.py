@@ -1,4 +1,5 @@
 import json
+from datetime import timedelta
 from unittest import mock
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -7,7 +8,7 @@ from django.test import TestCase, SimpleTestCase, RequestFactory, override_setti
 from django.urls import reverse
 from django.utils import timezone
 from .models import ZeldaOrder
-from .zelda_catalog import PRODUCTS, selected_reports
+from .zelda_catalog import PRODUCTS, catalog, catalog_with_purchase_state, selected_reports
 from zelda_api.vector_models import DocumentSource, IntelligenceMemo, BusinessValuationReport
 
 User = get_user_model()
@@ -63,6 +64,48 @@ class ZeldaProductTests(TestCase):
             'Entity Integrity Report':999,
             'Business valuation':99,
         })
+
+    def test_catalog_is_sorted_lowest_price_to_highest(self):
+        products = catalog()
+        self.assertEqual([p['amount'] for p in products], sorted(p['amount'] for p in products))
+        self.assertEqual(products[0]['name'], 'Business valuation')
+        self.assertEqual(products[-1]['name'], 'Zelda Complete Intelligence Bundle')
+
+    def test_purchase_state_marks_reports_from_bundle_and_uses_latest_paid_time(self):
+        older = timezone.now() - timedelta(days=3)
+        newer = timezone.now() - timedelta(hours=2)
+        self.order(
+            product='complete_bundle',
+            reports=['intelligence_memo', 'ic_memo', 'truth_delta', 'entity', 'valuation'],
+            amount=4999,
+            stripe_session_id='cs_bundle_purchase',
+            status='ready',
+            paid_at=older,
+        )
+        self.order(
+            product='truth_delta',
+            reports=['truth_delta'],
+            amount=1999,
+            stripe_session_id='cs_truth_update',
+            status='ready',
+            paid_at=newer,
+        )
+
+        products = {p['key']: p for p in catalog_with_purchase_state(self.user)}
+
+        self.assertTrue(products['complete_bundle']['purchased'])
+        self.assertEqual(products['complete_bundle']['last_purchased_at'], older)
+        self.assertEqual(products['complete_bundle']['cta_label'], 'Update reports')
+
+        for key in ('intelligence_memo', 'ic_memo', 'truth_delta', 'entity', 'valuation'):
+            with self.subTest(key=key):
+                self.assertTrue(products[key]['purchased'])
+                self.assertEqual(products[key]['cta_label'], 'Update report')
+
+        self.assertEqual(products['truth_delta']['last_purchased_at'], newer)
+        self.assertEqual(products['ic_memo']['last_purchased_at'], older)
+        self.assertFalse(products['three_pack']['purchased'])
+        self.assertEqual(products['three_pack']['cta_label'], 'Buy package')
 
     def test_pack_requires_three_distinct_reports_and_complete_bundle_has_five(self):
         self.assertEqual(len(selected_reports('complete_bundle')), 5)
