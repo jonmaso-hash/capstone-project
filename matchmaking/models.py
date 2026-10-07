@@ -995,25 +995,51 @@ def log_investor_event(investor_user, founder_application, event_type, metadata=
 class APIKey(models.Model):
     """
     Enterprise API tier — lets external firms consume the public matchmaking
-    data programmatically. Distinct from the internal SessionAuthentication/
-    TokenAuthentication used by the site's own logged-in-user API calls.
-    Keys are issued manually by staff via admin for now (no self-serve UI).
+    data programmatically. Raw API keys are never stored: staff sees a newly
+    issued key once, while the database keeps only SHA-256(key) plus a short
+    non-secret prefix for identification.
     """
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='api_keys')
     firm_name = models.CharField(max_length=255, help_text="External firm/organization this key belongs to")
-    key = models.CharField(max_length=64, unique=True, editable=False)
+    key_hash = models.CharField(max_length=64, unique=True, editable=False)
+    key_prefix = models.CharField(max_length=12, editable=False)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_used_at = models.DateTimeField(null=True, blank=True)
 
+    @staticmethod
+    def digest(raw_key):
+        import hashlib
+        return hashlib.sha256(raw_key.encode('utf-8')).hexdigest()
+
+    @classmethod
+    def issue(cls, *, owner, firm_name, is_active=True):
+        import secrets
+        raw_key = secrets.token_urlsafe(32)
+        obj = cls(
+            owner=owner,
+            firm_name=firm_name,
+            is_active=is_active,
+            key_hash=cls.digest(raw_key),
+            key_prefix=raw_key[:12],
+        )
+        obj.save()
+        obj._issued_key = raw_key
+        return obj, raw_key
+
     def save(self, *args, **kwargs):
-        if not self.key:
+        # Admin-created rows are issued a secret automatically. The transient
+        # value exists only on this Python object and is never persisted.
+        if not self.key_hash:
             import secrets
-            self.key = secrets.token_hex(32)
+            raw_key = secrets.token_urlsafe(32)
+            self.key_hash = self.digest(raw_key)
+            self.key_prefix = raw_key[:12]
+            self._issued_key = raw_key
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.firm_name} ({self.key[:8]}...)"
+        return f"{self.firm_name} ({self.key_prefix}...)"
 
 
 COMPANY_SUFFIXES_RE = re.compile(r'(inc|llc|corp|ltd|co|group|holdings)$')
