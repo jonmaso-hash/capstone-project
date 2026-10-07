@@ -721,15 +721,29 @@ class InvestmentMemoGeneratorAPIView(APIView):
         tone = serializer.validated_data['tone']
 
         founder_app = get_object_or_404(Application, id=founder_id)
+        from matchmaking.models import can_view_profile_field, founder_is_visible_to
+        if not founder_is_visible_to(request.user, founder_app):
+            raise Http404
+
+        description = (
+            founder_app.description
+            if can_view_profile_field(request.user, founder_app, 'description')
+            else 'Not disclosed to this viewer.'
+        )
+        sector = (
+            founder_app.sector
+            if can_view_profile_field(request.user, founder_app, 'sector')
+            else 'Not disclosed to this viewer.'
+        )
 
         memo_markdown = (
             f"# INVESTMENT MEMO: {founder_app.company_name or 'Ecosystem Venture'}\n"
             f"**Classification:** Internal Venture Review\n"
             f"**Tone Profile:** {tone.upper()}\n\n"
             f"## Executive Overview\n"
-            f"{founder_app.description or 'No registry description summary documented.'}\n\n"
+            f"{description or 'No registry description summary documented.'}\n\n"
             f"## Diligence Parameters & Vector Context\n"
-            f"- **Sector:** {founder_app.sector or 'Infrastructure General'}\n"
+            f"- **Sector:** {sector or 'Infrastructure General'}\n"
             f"- **Assigned Owner:** @{founder_app.user.username}\n"
             f"- **System Verification Ring:** Digital footprints match deck specifications."
         )
