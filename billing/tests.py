@@ -216,7 +216,8 @@ class BillingPageCopyTests(TestCase):
         self.client.force_login(self.founder_user)
         response = self.client.get(reverse('billing:billing_page'))
 
-        self.assertContains(response, f"free tier is capped at {FREE_CRM_LEAD_LIMIT}")
+        self.assertContains(response, f"free tier can add {FREE_CRM_LEAD_LIMIT} new leads per month")
+        self.assertContains(response, "existing leads are retained")
 
     def test_founder_premium_shows_new_price_and_highlight_perk(self):
         self.client.force_login(self.founder_user)
