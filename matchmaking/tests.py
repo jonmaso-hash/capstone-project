@@ -6013,8 +6013,19 @@ class InitiateDirectChatAjaxTests(TestCase):
     """
 
     def setUp(self):
+        _mock_embedding_generation(self)
         self.user_a = User.objects.create_user('idc_user_a', password='x')
         self.user_b = User.objects.create_user('idc_user_b', password='x')
+        self.profile_a = Application.objects.create(
+            user=self.user_a, founder_name='A', email='a@example.com',
+            company_name='A Co', sector='SaaS', stage='Seed',
+            description='A', allow_direct_messages=True,
+        )
+        self.profile_b = Application.objects.create(
+            user=self.user_b, founder_name='B', email='b@example.com',
+            company_name='B Co', sector='SaaS', stage='Seed',
+            description='B', allow_direct_messages=True,
+        )
         self.client.force_login(self.user_a)
 
     def _post_ajax(self, target_user_id):
@@ -6039,6 +6050,20 @@ class InitiateDirectChatAjaxTests(TestCase):
         self.assertEqual(data['channel_id'], f"chat_{expected_sorted[0]}_and_{expected_sorted[1]}")
         mock_client.upsert_users.assert_called_once()
         mock_client.channel.assert_called_once_with('messaging', data['channel_id'])
+
+    def test_direct_url_cannot_bypass_target_dm_opt_out(self):
+        self.profile_b.allow_direct_messages = False
+        self.profile_b.save(update_fields=['allow_direct_messages'])
+        with mock.patch('matchmaking.views.StreamChat') as mock_stream_chat_cls:
+            response = self._post_ajax(self.user_b.id)
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json()['status'], 'error')
+        mock_stream_chat_cls.assert_not_called()
+        self.assertFalse(MessageThread.objects.filter(
+            user_a_id__in=[self.user_a.id, self.user_b.id],
+            user_b_id__in=[self.user_a.id, self.user_b.id],
+        ).exists())
 
     def test_ajax_self_message_returns_error_not_a_redirect(self):
         with mock.patch('matchmaking.views.StreamChat'):
