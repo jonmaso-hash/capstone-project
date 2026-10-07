@@ -190,7 +190,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             const item = document.createElement("div");
             item.className = "p-2 mb-2 border rounded channel-row";
             item.setAttribute("data-cid", ch.cid);
-            item.innerHTML = `<div class="fw-medium">${ch.data.name || 'Chat'}</div>`;
+            const channelName = document.createElement("div");
+            channelName.className = "fw-medium";
+            channelName.textContent = ch.data.name || 'Chat';
+            item.appendChild(channelName);
             
             item.onclick = async () => {
                 StreamChatController.activeChannel = ch;
