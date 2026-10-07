@@ -14,6 +14,9 @@ from .models import (
 from django.core.mail import EmailMessage
 from django.conf import settings
 from django.template.loader import render_to_string
+from django.template.response import TemplateResponse
+from django.utils.cache import add_never_cache_headers
+from django.urls import reverse
 
 @admin.action(description="Approve selected profile(s)")
 def approve_profiles(modeladmin, request, queryset):
@@ -197,11 +200,28 @@ class APIKeyAdmin(admin.ModelAdmin):
     list_editable = ['is_active']
     list_filter = ['is_active', 'created_at']
     search_fields = ['firm_name', 'owner__username']
-    readonly_fields = ['key', 'created_at', 'last_used_at']
+    readonly_fields = ['key_preview', 'created_at', 'last_used_at']
+    exclude = ['key_hash', 'key_suffix']
 
     def key_preview(self, obj):
-        return f"···{obj.key[-4:]}" if obj.key else "—"
+        return f"···{obj.key_suffix}" if obj.key_suffix else "—"
     key_preview.short_description = 'Key'
+
+    def response_add(self, request, obj, post_url_continue=None):
+        raw_key = obj.take_issued_key()
+        if raw_key is None:
+            return super().response_add(request, obj, post_url_continue)
+        response = TemplateResponse(request, 'admin/matchmaking/api_key_issued.html', {
+            **self.admin_site.each_context(request),
+            'title': 'Enterprise API key created',
+            'opts': self.model._meta,
+            'issued_key': raw_key,
+            'change_url': reverse('admin:matchmaking_apikey_change', args=[obj.pk]),
+        })
+        # Keep the secret out of sessions/messages, caches and referrers.
+        add_never_cache_headers(response)
+        response['Referrer-Policy'] = 'no-referrer'
+        return response
 
 
 @admin.register(BusinessEmailVerification)

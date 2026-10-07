@@ -23,7 +23,9 @@ class APIKeyAuthentication(BaseAuthentication):
 
         key_value = auth_header[len(self.keyword) + 1:].strip()
         try:
-            api_key = APIKey.objects.select_related('owner').get(key=key_value, is_active=True, owner__is_active=True)
+            api_key = APIKey.objects.select_related('owner').get(
+                key_hash=APIKey.digest(key_value), is_active=True, owner__is_active=True,
+            )
         except APIKey.DoesNotExist:
             raise AuthenticationFailed('Invalid or inactive API key.')
 
@@ -40,4 +42,4 @@ class APIKeyRateThrottle(SimpleRateThrottle):
         auth = getattr(request, 'auth', None)
         if not isinstance(auth, APIKey):
             return None  # not an API-key request — nothing for this throttle to do
-        return self.cache_format % {'scope': self.scope, 'ident': auth.key}
+        return self.cache_format % {'scope': self.scope, 'ident': auth.pk}
