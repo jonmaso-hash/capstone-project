@@ -303,6 +303,8 @@ class ProfileAnalysisPaywallTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context['is_premium_insights'])
         self.assertContains(response, 'Marketplace Score')
+        self.assertContains(response, 'not a ranking of your company or a prediction of funding')
+        self.assertContains(response, 'Visibility (profile-view volume)')
         self.assertContains(response, 'Profile Funnel')
         self.assertContains(response, 'Conversion Rates')
         self.assertContains(response, 'Zelda Insights')

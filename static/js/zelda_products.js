@@ -116,6 +116,83 @@
         }
     }
 
+    const hubExternalForm = document.getElementById('zelda-hub-external-search');
+    if (hubExternalForm) {
+        hubExternalForm.addEventListener('submit', async event => {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const button = form.querySelector('button[type="submit"]');
+            const statusBox = document.getElementById('zelda-hub-external-status');
+            const results = document.getElementById('zelda-hub-external-results');
+            button.disabled = true;
+            results.replaceChildren();
+            statusBox.hidden = false;
+            statusBox.className = 'small text-muted';
+            statusBox.textContent = 'Searching company names and stock tickers…';
+            try {
+                const data = await post(config.dataset.searchUrl, new FormData(form));
+                const companies = data.results || [];
+                statusBox.className = companies.length ? 'small text-success' : 'small text-muted';
+                statusBox.textContent = data.message || (companies.length
+                    ? 'Company results found. Select the company you want Zelda to use.'
+                    : 'No company results found. Try its legal name or upload company materials.');
+
+                companies.forEach(company => {
+                    const item = document.createElement('div');
+                    const title = document.createElement('div');
+                    const select = document.createElement('button');
+                    item.className = 'p-3 bg-light rounded-3 border';
+                    title.className = 'small mb-2';
+                    title.textContent = `${company.name}${company.ticker ? ' · ' + company.ticker : ''} · SEC CIK ${company.cik}`;
+                    select.type = 'button';
+                    select.className = 'btn btn-outline-primary btn-sm';
+                    select.textContent = 'Use this company';
+                    select.addEventListener('click', async () => {
+                        if (pendingEvidence) return;
+                        select.disabled = true;
+                        evidence = null;
+                        pendingEvidence++;
+                        sync();
+                        statusBox.className = 'small text-muted';
+                        statusBox.textContent = 'Loading the company record…';
+                        const body = new FormData();
+                        body.set('subject_token', company.token);
+                        try {
+                            evidence = await post(config.dataset.intakeUrl, body);
+                            selectedSubject = company;
+
+                            const subjectName = document.getElementById('zelda-subject-name');
+                            const subjectHelp = document.getElementById('zelda-subject-help');
+                            if (subjectName) subjectName.textContent = evidence.company;
+                            if (subjectHelp) subjectHelp.textContent = 'External company selected. Upload authorized materials for deeper analysis.';
+
+                            panels.forEach(p => {
+                                const companyInput = p.querySelector('[name="company"]');
+                                if (companyInput) companyInput.value = evidence.company;
+                            });
+                            statusBox.className = 'small text-success';
+                            statusBox.textContent = `Company selected: ${evidence.company}. Zelda products will use this subject.`;
+                        } catch (error) {
+                            statusBox.className = 'small text-danger';
+                            statusBox.textContent = error.message;
+                        } finally {
+                            pendingEvidence--;
+                            select.disabled = false;
+                            sync();
+                        }
+                    });
+                    item.append(title, select);
+                    results.append(item);
+                });
+            } catch (error) {
+                statusBox.className = 'small text-danger';
+                statusBox.textContent = error.message;
+            } finally {
+                button.disabled = false;
+            }
+        });
+    }
+
     panels.forEach(panel => {
         panel.querySelectorAll('[name="pack-report"]').forEach(input => input.addEventListener('change', sync));
 

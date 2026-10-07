@@ -317,6 +317,18 @@ class HomepagePositioningCopyTests(TestCase):
         self.assertContains(response, '/api/v1/zelda/journey-status/')
         self.assertContains(response, 'home-next-action')
 
+    def test_founder_premium_explains_founder_insights_concretely(self):
+        from pathlib import Path
+        from django.conf import settings
+        content = (Path(settings.BASE_DIR) / 'templates' / 'pages' / 'home.html').read_text(encoding='utf-8')
+        self.assertIn('Founder Insights', content)
+        self.assertIn('profile views', content)
+        self.assertIn('pitch-deck and pitch-video activity', content)
+        self.assertIn('Intelligence Memo and Truth Delta opens', content)
+        self.assertIn('Visibility, Interest, Trust, and Responsiveness', content)
+        self.assertIn('opening a report does not necessarily mean a new report was generated', content)
+        self.assertNotIn('Founder-specific Zelda benefits', content)
+
     def test_no_role_specific_landing_pages_introduced(self):
         content = self._home().content.decode('utf-8')
         for path in ('href="/founders', 'href="/investors', 'href="/buyers', 'href="/sellers'):
