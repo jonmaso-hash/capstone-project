@@ -99,6 +99,9 @@ class ZeldaDiligenceIntakeTests(TestCase):
             'id="tab-upload" class="tab-content active"',
             html=False,
         )
+        self.assertContains(response, 'tab-product-truth_delta_diligence')
+        self.assertContains(response, 'tab-product-truth_delta_credit_pack')
+        self.assertNotContains(response, 'tab-product-complete_bundle')
 
     def test_buyer_opens_zelda_on_upload_with_acquisition_material_guidance(self):
         user = User.objects.create_user('zelda_surface_buyer', password='x')
@@ -121,3 +124,6 @@ class ZeldaDiligenceIntakeTests(TestCase):
             html=False,
         )
         self.assertContains(response, 'For a CIM or other acquisition materials, choose Other below.')
+        self.assertContains(response, 'tab-product-truth_delta_diligence')
+        self.assertContains(response, 'tab-product-truth_delta_credit_pack')
+        self.assertNotContains(response, 'tab-product-entity')
