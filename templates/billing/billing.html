@@ -93,7 +93,7 @@
 
                     <h6 class="text-uppercase small fw-bold text-success mb-2 mt-4">Grow relationships</h6>
                     <ul class="text-secondary small mb-3">
-                        <li>Unlimited Fundraising CRM leads (free tier is capped at {{ free_crm_lead_limit }})</li>
+                        <li>Unlimited new Fundraising CRM leads (free tier can add {{ free_crm_lead_limit }} new leads per month; existing leads are retained)</li>
                     </ul>
 
                     <form method="post" action="{% url 'billing:create_checkout_session' %}">
@@ -127,7 +127,7 @@
                             </thead>
                             <tbody class="small">
                                 <tr><td>Zelda AI analyses</td><td>{{ free_ai_credits }}/month</td><td class="fw-semibold text-success">{{ premium_ai_credits }}/month</td></tr>
-                                <tr><td>Fundraising CRM leads</td><td>{{ free_crm_lead_limit }}</td><td class="fw-semibold text-success">Unlimited</td></tr>
+                                <tr><td>New Fundraising CRM leads</td><td>{{ free_crm_lead_limit }}/month</td><td class="fw-semibold text-success">Unlimited</td></tr>
                                 <tr><td>Bulletin board placement</td><td>Standard</td><td class="fw-semibold text-success">Featured</td></tr>
                                 <tr><td>Monthly Highlight boost</td><td>—</td><td class="fw-semibold text-success">24 hrs, once/month</td></tr>
                                 <tr><td>Match alerts</td><td>Standard</td><td class="fw-semibold text-success">Priority</td></tr>

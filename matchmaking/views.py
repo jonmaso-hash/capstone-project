@@ -1175,7 +1175,7 @@ def activate_seller_highlight(request):
     return redirect('matchmaking:seller_dashboard')
 
 
-FREE_CRM_LEAD_LIMIT = 15
+FREE_CRM_LEAD_LIMIT = 7  # new lead additions per calendar month for Free founders
 
 
 @login_required
@@ -1188,12 +1188,18 @@ def fundraising_crm(request):
         messages.info(request, "Complete your founder profile to use the Fundraising CRM.")
         return redirect('usersettings:edit_founder_profile')
 
-    leads = FundraisingLead.objects.filter(founder=application)
+    leads = FundraisingLead.objects.filter(founder=application, deleted_at__isnull=True)
     leads_by_stage = {stage_key: [] for stage_key, _ in FundraisingLead.STAGE_CHOICES}
     for lead in leads:
         leads_by_stage[lead.stage].append(lead)
 
     lead_count = leads.count()
+    month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    next_month_start = (month_start + timedelta(days=32)).replace(day=1)
+    monthly_additions = FundraisingLead.objects.filter(
+        founder=application,
+        created_at__gte=month_start,
+    ).count()
 
     # A list of {key, label, leads} dicts — Django templates can't do a
     # variable dict-key lookup (board.key doesn't substitute key's value),
@@ -1209,6 +1215,8 @@ def fundraising_crm(request):
         'stage_choices': FundraisingLead.STAGE_CHOICES,
         'lead_count': lead_count,
         'lead_limit': FREE_CRM_LEAD_LIMIT,
+        'monthly_additions': monthly_additions,
+        'next_month_start': next_month_start,
     })
 
 
@@ -1219,8 +1227,17 @@ def create_lead(request):
     if not application:
         raise Http404("Founder profile required.")
 
-    if not application.is_premium and FundraisingLead.objects.filter(founder=application).count() >= FREE_CRM_LEAD_LIMIT:
-        messages.error(request, f"Free tier is limited to {FREE_CRM_LEAD_LIMIT} CRM leads. Upgrade to Founder Premium for unlimited leads.")
+    month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    additions_this_month = FundraisingLead.objects.filter(
+        founder=application,
+        created_at__gte=month_start,
+    ).count()
+    if not application.is_premium and additions_this_month >= FREE_CRM_LEAD_LIMIT:
+        messages.error(
+            request,
+            f"Free tier includes {FREE_CRM_LEAD_LIMIT} new CRM leads per month. "
+            "Upgrade to Founder Premium for unlimited new leads.",
+        )
         return redirect('matchmaking:fundraising_crm')
 
     investor_name = request.POST.get('investor_name', '').strip()
@@ -1266,10 +1283,11 @@ def update_lead_stage(request, lead_id):
 @login_required
 @require_POST
 def delete_lead(request, lead_id):
-    lead = get_object_or_404(FundraisingLead, id=lead_id)
+    lead = get_object_or_404(FundraisingLead, id=lead_id, deleted_at__isnull=True)
     if lead.founder.user != request.user:
         raise Http404("Access Denied")
-    lead.delete()
+    lead.deleted_at = timezone.now()
+    lead.save(update_fields=['deleted_at', 'updated_at'])
     return redirect('matchmaking:fundraising_crm')
 
 
