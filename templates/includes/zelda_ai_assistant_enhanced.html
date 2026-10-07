@@ -681,6 +681,46 @@
             </div>
         </div>
 
+            <!-- Vector Search (Document-specific): a developer tool that needs a raw
+                 document ID, so it is shown to staff only. The elements stay in the
+                 page for everyone because the panel's script attaches to them. -->
+            <div class="zelda-card p-4{% if not user.is_staff %} d-none{% endif %}" id="vector-search-card">
+                <h6 class="fw-bold text-dark mb-3">
+                    <i class="bi bi-lightning text-warning me-2"></i>Vector Search Document
+                </h6>
+                <div class="mb-3">
+                    <label class="small text-muted d-block mb-2">Document ID</label>
+                    <input 
+                        type="number" 
+                        id="searchDocId" 
+                        class="zelda-input w-100" 
+                        placeholder="Enter document ID"
+                        min="1">
+                </div>
+                <form id="vector-search-form">
+                    <div class="input-group" style="gap: 0.5rem;">
+                        <input 
+                            type="text" 
+                            id="vectorQuery" 
+                            class="zelda-input flex-grow-1" 
+                            placeholder="Search within document..."
+                            autocomplete="off">
+                        <button type="submit" class="zelda-button" style="padding: 0.75rem 1.25rem;">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        <!-- TAB: LIBRARY — your analyses and reports; see zelda_api/library.py -->
+        <div id="tab-library" class="tab-content" style="display: none; flex-direction: column; gap: 1rem;">
+            <div id="library-loading" class="text-center py-4" style="display: none;">
+                <div class="spinner-border spinner-border-sm text-warning me-2"></div>
+                <span class="small text-muted">Loading your library...</span>
+            </div>
+            <div id="library-content" class="d-flex flex-column gap-3"></div>
+        </div>
+
         <!-- TAB: UPLOAD -->
         <div id="tab-upload" class="tab-content{% if user.match_investor_profile or user.match_buyer_profile %} active{% endif %}" style="display: {% if user.match_investor_profile or user.match_buyer_profile %}flex{% else %}none{% endif %}; flex-direction: column; gap: 1rem;">
 
