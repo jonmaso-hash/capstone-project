@@ -864,6 +864,7 @@ class FundraisingLead(models.Model):
     contact_email = models.EmailField(blank=True)
     stage = models.CharField(max_length=20, choices=STAGE_CHOICES, default='LEADS')
     notes = models.TextField(blank=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

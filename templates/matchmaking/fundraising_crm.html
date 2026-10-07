@@ -38,9 +38,10 @@
             {% if not application.is_premium %}
             <p class="small mb-0 mt-1">
                 <span class="{% if lead_count >= lead_limit %}text-danger fw-semibold{% else %}text-muted{% endif %}">
-                    {{ lead_count }}/{{ lead_limit }} leads used (Free tier)
+                    {{ monthly_additions }} of {{ lead_limit }} new leads added this month
                 </span>
-                — <a href="{% url 'billing:billing_page' %}" class="text-decoration-none">Upgrade for unlimited</a>
+                — resets {{ next_month_start|date:"M j" }} ·
+                <a href="{% url 'billing:billing_page' %}" class="text-decoration-none">Founder Premium has unlimited new leads</a>
             </p>
             {% endif %}
         </div>
