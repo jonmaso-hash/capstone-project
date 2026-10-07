@@ -17,6 +17,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+from django.views.decorators.cache import never_cache
 
 from . import rate_limits
 from .forms import SignupForm
@@ -1478,6 +1479,7 @@ def _peer_benchmark_for_owner(user, benchmark_id):
 
 
 @login_required
+@never_cache
 def peer_market_benchmark_detail(request, benchmark_id):
     benchmark = _peer_benchmark_for_owner(request.user, benchmark_id)
     return render(request, 'accounts/peer_market_benchmark.html', {
@@ -1499,6 +1501,7 @@ def peer_market_benchmark_share_toggle(request, benchmark_id):
     return redirect('accounts:peer_market_benchmark_detail', benchmark_id=benchmark.id)
 
 
+@never_cache
 def peer_market_benchmark_share(request, share_token):
     from matchmaking.models import PeerMarketBenchmark
     benchmark = get_object_or_404(
