@@ -254,6 +254,20 @@ class UploadGateHeaderTests(SimpleTestCase):
         self.assertEqual(self.gate(self._request(huge, method='get')).content, b'view')
 
 
+    def test_all_major_upload_routes_have_a_pre_parse_body_limit(self):
+        from shared_utils.upload_limits import _limit_for
+        routes = {
+            reverse('zelda_api:document_ingest'): 25,
+            reverse('matchmaking:data_room_upload', args=['owner']): 25,
+            reverse('matchmaking:manage_elevator_pitch'): 30,
+            reverse('usersettings:edit_founder_profile'): 200,
+            reverse('usersettings:edit_seller_profile'): 200,
+        }
+        for path, expected_mb in routes.items():
+            with self.subTest(path=path):
+                self.assertEqual(_limit_for(path), expected_mb)
+
+
 @override_settings(MEDIA_ROOT=tempfile.mkdtemp())
 class OversizedUploadsAreRefusedBeforeParsingTests(TestCase):
     """
