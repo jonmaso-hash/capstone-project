@@ -143,6 +143,29 @@ class TruthDeltaCreditFlowTests(TestCase):
         self.assertEqual(kwargs['metadata']['purpose'], 'truth_delta_credit_pack')
         self.assertNotIn('document_id', kwargs['metadata'])
 
+    @mock.patch('billing.views.stripe.Webhook.construct_event')
+    def test_signed_webhook_dispatch_grants_credit_pack_once(self, construct):
+        purchase = TruthDeltaCreditPurchase.objects.create(
+            user=self.investor_user,
+            stripe_session_id='cs_credit_webhook',
+        )
+        construct.return_value = {
+            'type': 'checkout.session.completed',
+            'data': {'object': self._credit_session(purchase)},
+        }
+
+        response = self.client.post(
+            reverse('billing:stripe_webhook'),
+            data='{}',
+            content_type='application/json',
+            HTTP_STRIPE_SIGNATURE='signed',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            TruthDeltaCreditWallet.objects.get(user=self.investor_user).balance,
+            3,
+        )
+
     def test_duplicate_paid_events_grant_exactly_three_credits_once(self):
         purchase = TruthDeltaCreditPurchase.objects.create(
             user=self.investor_user,
