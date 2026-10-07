@@ -14,8 +14,8 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
-from .models import ZeldaOrder
-from .zelda_catalog import PRODUCTS, REPORTS, catalog, selected_reports
+from .models import ZeldaOrder, TruthDeltaCreditPurchase, TruthDeltaCreditWallet, TruthDeltaCreditRedemption
+from .zelda_catalog import PRODUCTS, REPORTS, ALL_STRIPE_PRODUCTS, DILIGENCE_PRODUCTS, role_catalog, selected_reports
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ def plain(value):
 
 def stripe_price(product):
     """Use an existing active catalog Price; never create a replacement product."""
-    name, amount, _ = PRODUCTS[product]
+    name, amount, _ = ALL_STRIPE_PRODUCTS[product]
     api_key = settings.STRIPE_SECRET_KEY.strip()
     if not api_key:
         raise ProductPaymentConfigurationError('STRIPE_SECRET_KEY is missing on the web service')
@@ -77,7 +77,14 @@ def stripe_price(product):
 
 @login_required
 def product_catalog(request):
-    return JsonResponse({'products': catalog(), 'reports': [{'key': key, 'name': value[0]} for key, value in REPORTS.items()]})
+    wallet_balance = 0
+    if getattr(request.user, 'match_investor_profile', None) or getattr(request.user, 'match_buyer_profile', None):
+        wallet_balance = TruthDeltaCreditWallet.objects.filter(user=request.user).values_list('balance', flat=True).first() or 0
+    return JsonResponse({
+        'products': role_catalog(request.user),
+        'reports': [{'key': key, 'name': value[0]} for key, value in REPORTS.items()],
+        'truth_delta_credit_balance': wallet_balance,
+    })
 
 
 @login_required
@@ -199,7 +206,15 @@ def product_checkout(request):
         data = json.loads(request.body)
         product = data['product']
         reports = selected_reports(product, data.get('reports', []))
-        if product not in PRODUCTS:
+        if product not in ALL_STRIPE_PRODUCTS or product == 'truth_delta_credit_pack':
+            raise ValueError()
+        is_diligence_user = bool(
+            getattr(request.user, 'match_investor_profile', None)
+            or getattr(request.user, 'match_buyer_profile', None)
+        )
+        if product == 'truth_delta_diligence' and not is_diligence_user:
+            raise ValueError()
+        if product in PRODUCTS and is_diligence_user:
             raise ValueError()
         document_id = int(data['document_id'])
     except (ValueError, KeyError, TypeError):
@@ -219,7 +234,7 @@ def product_checkout(request):
                     return JsonResponse({'order_url': reverse('billing:zelda_order', args=[order.id])})
                 if not order:
                     order = ZeldaOrder.objects.create(user=request.user, source_document=doc, product=product,
-                                                     reports=reports, amount=PRODUCTS[product][1])
+                                                     reports=reports, amount=ALL_STRIPE_PRODUCTS[product][1])
             if not order.stripe_session_id:
                 break
             # A saved URL can outlive its Checkout session. Ask Stripe before
@@ -296,6 +311,168 @@ def handle_product_event(event_type, session):
                 order.status = 'canceled'
                 order.save(update_fields=['status'])
 
+
+
+def _is_diligence_user(user):
+    return bool(
+        getattr(user, 'match_investor_profile', None)
+        or getattr(user, 'match_buyer_profile', None)
+    )
+
+
+@login_required
+@require_POST
+def truth_delta_credit_pack_checkout(request):
+    if not _is_diligence_user(request.user):
+        return JsonResponse({'error': 'Truth Delta credit packs are available to investors and buyers.'}, status=403)
+
+    amount = DILIGENCE_PRODUCTS['truth_delta_credit_pack'][1]
+    purchase = TruthDeltaCreditPurchase.objects.filter(
+        user=request.user,
+        status='awaiting_payment',
+    ).order_by('-created_at').first()
+    if not purchase:
+        purchase = TruthDeltaCreditPurchase.objects.create(user=request.user, amount=amount)
+
+    try:
+        if purchase.stripe_session_id:
+            session = plain(stripe.checkout.Session.retrieve(
+                purchase.stripe_session_id,
+                api_key=settings.STRIPE_SECRET_KEY.strip(),
+            ))
+            if session.get('payment_status') == 'paid' and session.get('status') == 'complete':
+                handle_truth_delta_credit_event('checkout.session.completed', session)
+                return JsonResponse({'credit_balance': TruthDeltaCreditWallet.objects.filter(
+                    user=request.user
+                ).values_list('balance', flat=True).first() or 0})
+            if session.get('status') == 'open' and session.get('url'):
+                return JsonResponse({'checkout_url': session['url']})
+            if session.get('status') == 'expired':
+                purchase.status = 'canceled'
+                purchase.save(update_fields=['status'])
+                purchase = TruthDeltaCreditPurchase.objects.create(user=request.user, amount=amount)
+
+        price_id = stripe_price('truth_delta_credit_pack')
+        return_url = request.build_absolute_uri(
+            reverse('accounts:profile', args=[request.user.username])
+        ) + '?zelda=truth-delta-credits'
+        session = plain(stripe.checkout.Session.create(
+            mode='payment',
+            line_items=[{'price': price_id, 'quantity': 1}],
+            client_reference_id=str(request.user.id),
+            customer_email=request.user.email or None,
+            success_url=return_url,
+            cancel_url=return_url,
+            metadata={
+                'purpose': 'truth_delta_credit_pack',
+                'credit_purchase_id': str(purchase.id),
+                'user_id': str(request.user.id),
+            },
+            idempotency_key=f'truth-delta-credit-pack-{purchase.id}',
+            api_key=settings.STRIPE_SECRET_KEY.strip(),
+        ))
+        if not session.get('id') or not session.get('url'):
+            raise ProductPaymentConfigurationError('Stripe did not return a hosted Checkout session')
+        purchase.stripe_session_id = session['id']
+        purchase.checkout_url = session['url']
+        purchase.save(update_fields=['stripe_session_id', 'checkout_url'])
+        return JsonResponse({'checkout_url': purchase.checkout_url})
+    except Exception:
+        reference = uuid.uuid4().hex[:12]
+        logger.exception('Could not open Truth Delta credit checkout reference=%s user=%s', reference, request.user.pk)
+        return JsonResponse({
+            'error': 'Checkout is currently unavailable. If you already submitted payment, do not pay again.',
+            'reference': reference,
+        }, status=503)
+
+
+def handle_truth_delta_credit_event(event_type, session):
+    metadata = session.get('metadata') or {}
+    with transaction.atomic():
+        purchase = TruthDeltaCreditPurchase.objects.select_for_update().filter(
+            stripe_session_id=session.get('id')
+        ).first()
+        if (
+            not purchase
+            or metadata.get('credit_purchase_id') != str(purchase.pk)
+            or metadata.get('purpose') != 'truth_delta_credit_pack'
+            or metadata.get('user_id') != str(purchase.user_id)
+            or session.get('mode') != 'payment'
+            or session.get('currency') != purchase.currency
+            or session.get('amount_total') != purchase.amount
+        ):
+            raise ValueError('Truth Delta credit purchase payment mismatch')
+
+        if event_type in ('checkout.session.completed', 'checkout.session.async_payment_succeeded'):
+            if session.get('payment_status') != 'paid':
+                return
+            if purchase.status == 'awaiting_payment':
+                wallet, _ = TruthDeltaCreditWallet.objects.select_for_update().get_or_create(
+                    user=purchase.user
+                )
+                wallet.balance += purchase.credits
+                wallet.save(update_fields=['balance', 'updated_at'])
+                purchase.status = 'paid'
+                purchase.paid_at = timezone.now()
+                purchase.save(update_fields=['status', 'paid_at'])
+        elif event_type in ('checkout.session.expired', 'checkout.session.async_payment_failed'):
+            if purchase.status == 'awaiting_payment':
+                purchase.status = 'canceled'
+                purchase.save(update_fields=['status'])
+
+
+@login_required
+@require_POST
+def redeem_truth_delta_credit(request):
+    if not _is_diligence_user(request.user):
+        return JsonResponse({'error': 'Truth Delta credits are available to investors and buyers.'}, status=403)
+    try:
+        data = json.loads(request.body)
+        document_id = int(data['document_id'])
+    except (ValueError, KeyError, TypeError):
+        return JsonResponse({'error': 'Select company evidence before using a Truth Delta credit.'}, status=400)
+
+    from zelda_api.vector_models import DocumentSource
+    from .tasks import fulfill_zelda_order
+
+    with transaction.atomic():
+        doc = get_object_or_404(
+            DocumentSource.objects.select_for_update(),
+            pk=document_id,
+            uploaded_by=request.user,
+            is_product_input=True,
+        )
+        wallet = TruthDeltaCreditWallet.objects.select_for_update().filter(user=request.user).first()
+        if not wallet or wallet.balance < 1:
+            return JsonResponse({'error': 'You do not have a Truth Delta credit available.'}, status=409)
+
+        existing = ZeldaOrder.objects.filter(
+            user=request.user,
+            source_document=doc,
+            product='truth_delta_diligence',
+            status__in=['paid', 'processing', 'ready'],
+        ).first()
+        if existing:
+            return JsonResponse({'order_url': reverse('billing:zelda_order', args=[existing.id])})
+
+        order = ZeldaOrder.objects.create(
+            user=request.user,
+            source_document=doc,
+            product='truth_delta_diligence',
+            reports=['truth_delta'],
+            amount=0,
+            status='paid',
+            paid_at=timezone.now(),
+        )
+        wallet.balance -= 1
+        wallet.save(update_fields=['balance', 'updated_at'])
+        TruthDeltaCreditRedemption.objects.create(wallet=wallet, order=order, credits_used=1)
+        transaction.on_commit(lambda: fulfill_zelda_order.delay(str(order.id)))
+
+    return JsonResponse({
+        'order_url': reverse('billing:zelda_order', args=[order.id]),
+        'credit_balance': wallet.balance,
+    })
 
 def recover_order_payment(order):
     """Recover missed webhooks/queue delivery without creating another charge.
@@ -379,7 +556,7 @@ def order_status(request, order_id):
 @login_required
 def order_page(request, order_id):
     order = get_object_or_404(ZeldaOrder, pk=order_id, user=request.user)
-    return render(request, 'billing/zelda_order.html', {'order': order, 'product_name': PRODUCTS[order.product][0]})
+    return render(request, 'billing/zelda_order.html', {'order': order, 'product_name': ALL_STRIPE_PRODUCTS[order.product][0]})
 
 
 @login_required
