@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Peer Market Benchmark | Interlink Foundry{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 1100px;">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-start gap-3 mb-4">
+        <div>
+            <div class="small text-uppercase fw-bold text-primary mb-1">Peer Market Benchmark</div>
+            <h1 class="h3 fw-bold mb-1">{{ benchmark.subject_name }}</h1>
+            <p class="text-muted mb-0">
+                {{ benchmark.get_role_display }} benchmark
+                {% if benchmark.generated_at %} · generated {{ benchmark.generated_at|date:"M j, Y" }}{% endif %}
+            </p>
+        </div>
+        {% if not is_public_share %}
+        <div class="d-flex flex-wrap gap-2">
+            {% if benchmark.status == 'ready' %}
+            <form method="post" action="{% url 'accounts:peer_market_benchmark_share_toggle' benchmark.id %}">
+                {% csrf_token %}
+                <button class="btn {% if benchmark.sharing_enabled %}btn-outline-danger{% else %}btn-outline-primary{% endif %} rounded-pill">
+                    {% if benchmark.sharing_enabled %}Disable Share Link{% else %}Enable Share Link{% endif %}
+                </button>
+            </form>
+            {% endif %}
+            <a href="{% url 'accounts:profile_analysis' benchmark.user.username %}" class="btn btn-outline-secondary rounded-pill">Back to Insights</a>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if benchmark.status == 'pending' or benchmark.status == 'running' %}
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-5 text-center">
+            <div class="spinner-border text-primary mb-3" role="status"></div>
+            <h5 class="fw-bold">Building your monthly peer benchmark</h5>
+            <p class="text-muted mb-0">Zelda is researching cited external peers and calculating your Interlink peer position.</p>
+        </div>
+    </div>
+    <script>setTimeout(() => window.location.reload(), 8000);</script>
+    {% elif benchmark.status == 'failed' %}
+    <div class="alert alert-danger">
+        <strong>Benchmark generation did not finish.</strong>
+        <div class="small mt-1">{{ benchmark.error_message }}</div>
+    </div>
+    {% else %}
+
+    {% if benchmark.sharing_enabled and not is_public_share %}
+    <div class="alert alert-primary d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+        <div>
+            <strong>Shareable report is on.</strong>
+            <div class="small">Anyone with this link can view this frozen benchmark snapshot.</div>
+        </div>
+        <button type="button" class="btn btn-sm btn-primary" id="copy-benchmark-link"
+                data-url="{% url 'accounts:peer_market_benchmark_share' benchmark.share_token %}">
+            Copy share link
+        </button>
+    </div>
+    {% endif %}
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-2">External market snapshot</h5>
+            <p class="text-muted mb-3">{{ benchmark.cohort_label }}</p>
+            {% if benchmark.narrative %}
+            <p class="mb-0">{{ benchmark.narrative }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-1">External peer metrics</h5>
+            <p class="small text-muted mb-3">Percentiles are calculated by Interlink from disclosed numeric values in the frozen peer set. They are descriptive comparisons, not rankings of business quality.</p>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead><tr><th>Metric</th><th>Your value</th><th>Peer median</th><th>Percentile</th><th>Peer values</th></tr></thead>
+                    <tbody>
+                    {% for name, row in benchmark.external_benchmark.items %}
+                    <tr>
+                        <td class="benchmark-metric-name">{{ name }}</td>
+                        <td>{{ row.value|default_if_none:"—" }}</td>
+                        <td>{{ row.median|default_if_none:"—" }}</td>
+                        <td>{% if row.percentile != None %}{{ row.percentile }}th{% else %}—{% endif %}</td>
+                        <td>{{ row.peer_values_available }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-muted">No comparable public numeric values were established.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-1">Interlink peer position</h5>
+            <p class="small text-muted mb-4">
+                Compares this profile with same-sector/stage Founder peers or same-industry Seller peers on Interlink.
+                Geography is shown where enough comparable profiles exist.
+            </p>
+            {% for level, cohort in benchmark.interlink_benchmark.items %}
+                {% if cohort.peer_count %}
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <strong class="text-capitalize">{{ level }}</strong>
+                        <span class="small text-muted">{{ cohort.peer_count }} peers</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead><tr><th>Metric</th><th>Your value</th><th>Peer median</th><th>Percentile</th></tr></thead>
+                            <tbody>
+                            {% for name, row in cohort.metrics.items %}
+                            <tr>
+                                <td class="benchmark-metric-name">{{ name }}</td>
+                                <td>{{ row.value|default_if_none:"—" }}</td>
+                                <td>{{ row.median|default_if_none:"—" }}</td>
+                                <td>{% if row.percentile != None %}{{ row.percentile }}th{% else %}—{% endif %}</td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-3">External peer set</h5>
+            <div class="row g-3">
+                {% for peer in benchmark.external_peers %}
+                <div class="col-md-6">
+                    <div class="border rounded-3 p-3 h-100">
+                        <strong>{{ peer.company_name }}</strong>
+                        <div class="small text-muted">{{ peer.location|default:"Location not established" }}</div>
+                        <div class="small mt-2">{{ peer.sector_or_industry }}{% if peer.stage_or_type %} · {{ peer.stage_or_type }}{% endif %}</div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted mb-0">No external peers were established for this snapshot.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-2">Sources</h5>
+            <p class="small text-muted">External facts are frozen with the source set used for this monthly snapshot.</p>
+            <ol class="mb-0">
+                {% for source in benchmark.sources %}
+                <li class="mb-2">
+                    <a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.title }}</a>
+                    {% if source.cited_text %}<div class="small text-muted">{{ source.cited_text }}</div>{% endif %}
+                </li>
+                {% empty %}
+                <li class="text-muted">No external source citations were returned.</li>
+                {% endfor %}
+            </ol>
+        </div>
+    </div>
+
+    <div class="alert alert-light border small text-muted">
+        <strong>Benchmark note:</strong> Peer Market Benchmark compares disclosed data and Interlink marketplace activity.
+        Missing public figures are left blank rather than estimated. Percentiles describe the selected cohort and are not
+        investment recommendations, appraisals, fairness opinions, or predictions of financing or transaction success.
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.querySelectorAll('.benchmark-metric-name').forEach((el) => {
+    el.textContent = el.textContent.replaceAll('_', ' ').replace(/\b\w/g, c => c.toUpperCase());
+});
+const copy = document.getElementById('copy-benchmark-link');
+if (copy) {
+    copy.addEventListener('click', async () => {
+        const url = new URL(copy.dataset.url, window.location.origin).href;
+        await navigator.clipboard.writeText(url);
+        copy.textContent = 'Copied';
+    });
+}
+</script>
+{% endblock %}
