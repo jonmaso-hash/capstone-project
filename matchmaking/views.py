@@ -1990,6 +1990,7 @@ def record_deal_vote(request):
 
 
 @login_required
+@require_POST
 def initiate_direct_chat(request, target_user_id):
     """
     Creates (or resolves) the deterministic chat_<sorted numeric ids>
@@ -2003,14 +2004,27 @@ def initiate_direct_chat(request, target_user_id):
     channel, deal_ is reserved for a specific accepted Connection.
     """
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-    target_user = get_object_or_404(User, id=target_user_id)
+    target_user = get_object_or_404(User, id=target_user_id, is_active=True)
     current_user_id = str(request.user.id)
     target_id_str = str(target_user.id)
 
     if current_user_id == target_id_str:
         if is_ajax:
             return JsonResponse({'status': 'error', 'message': "You can't message yourself."}, status=400)
-        return redirect('matchmaking:deal_room_view')
+        return redirect('matchmaking:diligence_chat')
+
+    # The UI's disabled Message button is not an authorization boundary.
+    # Enforce the recipient's account-level direct-message consent here so
+    # walking /chat/initiate/<user_id>/ cannot create a Stream channel for a
+    # person who opted out.
+    from .models import direct_messages_open
+    if not direct_messages_open(target_user):
+        if is_ajax:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'{target_user.username} has Direct Messages turned off.',
+            }, status=403)
+        raise PermissionDenied("This user has Direct Messages turned off.")
 
     client = StreamChat(api_key=settings.STREAM_API_KEY, api_secret=settings.STREAM_API_SECRET)
     
