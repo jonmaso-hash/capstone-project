@@ -20,7 +20,7 @@ class ArticlePostSerializer(serializers.ModelSerializer):
 # These remain for incoming requests, but we ensure they are 
 # strictly validated before they hit the Zelda logic.
 class MemoGenerationSerializer(serializers.Serializer):
-    founder_id = serializers.CharField()
+    founder_id = serializers.IntegerField(min_value=1)
     tone = serializers.CharField(default="professional")
 
     def validate_founder_id(self, value):
