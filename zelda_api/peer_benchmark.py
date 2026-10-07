@@ -13,6 +13,7 @@ from matchmaking.models import (
     InvestorInterestEvent,
     PeerMarketBenchmark,
     SellerApplication,
+    can_view_profile_field,
 )
 from .anthropic_client import background_anthropic_client
 
@@ -108,6 +109,13 @@ def metric(value, peers):
     }
 
 
+def _visible_peer_value(viewer, peer, field):
+    """Only include a peer's controlled field when Interlink's authority allows it."""
+    if not can_view_profile_field(viewer, peer, field):
+        return None
+    return getattr(peer, field)
+
+
 def interlink_benchmark(profile, role):
     if role == 'founder':
         base = Application.objects.discoverable().filter(
@@ -144,17 +152,17 @@ def interlink_benchmark(profile, role):
         if role == 'founder':
             metrics = {
                 'investor_interest_events': metric(subject_interest, [counts.get(peer.id, 0) for peer in peers]),
-                'funding_raised': metric(profile.prior_amount_raised, [peer.prior_amount_raised for peer in peers]),
-                'current_raise': metric(profile.raising_amount, [peer.raising_amount for peer in peers]),
+                'funding_raised': metric(profile.prior_amount_raised, [_visible_peer_value(profile.user, peer, 'prior_amount_raised') for peer in peers]),
+                'current_raise': metric(profile.raising_amount, [_visible_peer_value(profile.user, peer, 'raising_amount') for peer in peers]),
                 'employee_count': metric(profile.team_size, [peer.team_size for peer in peers]),
                 'years_in_business': metric(profile.years_in_business, [peer.years_in_business for peer in peers]),
             }
         else:
             metrics = {
                 'buyer_interest_events': metric(subject_interest, [counts.get(peer.id, 0) for peer in peers]),
-                'annual_revenue': metric(profile.annual_revenue, [peer.annual_revenue for peer in peers]),
-                'ebitda': metric(profile.ebitda, [peer.ebitda for peer in peers]),
-                'asking_price': metric(profile.asking_price, [peer.asking_price for peer in peers]),
+                'annual_revenue': metric(profile.annual_revenue, [_visible_peer_value(profile.user, peer, 'annual_revenue') for peer in peers]),
+                'ebitda': metric(profile.ebitda, [_visible_peer_value(profile.user, peer, 'ebitda') for peer in peers]),
+                'asking_price': metric(profile.asking_price, [_visible_peer_value(profile.user, peer, 'asking_price') for peer in peers]),
                 'employee_count': metric(profile.team_size, [peer.team_size for peer in peers]),
                 'years_in_business': metric(profile.years_in_business, [peer.years_in_business for peer in peers]),
             }
