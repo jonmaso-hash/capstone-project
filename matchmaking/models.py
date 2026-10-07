@@ -1,10 +1,13 @@
+import hashlib
 import re
+import secrets
 import uuid
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.contrib.auth.models import User
+from django.contrib.auth.hashers import check_password, make_password
 from django.utils import timezone
 from datetime import timedelta
 from pgvector.django import VectorField
@@ -994,26 +997,35 @@ def log_investor_event(investor_user, founder_application, event_type, metadata=
 
 class APIKey(models.Model):
     """
-    Enterprise API tier — lets external firms consume the public matchmaking
-    data programmatically. Distinct from the internal SessionAuthentication/
-    TokenAuthentication used by the site's own logged-in-user API calls.
-    Keys are issued manually by staff via admin for now (no self-serve UI).
+    Enterprise API tier. Raw bearer keys are generated once and never stored.
+    Only a SHA-256 lookup hash and a non-secret display prefix live in Postgres.
     """
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='api_keys')
     firm_name = models.CharField(max_length=255, help_text="External firm/organization this key belongs to")
-    key = models.CharField(max_length=64, unique=True, editable=False)
+    key_prefix = models.CharField(max_length=12, editable=False, db_index=True)
+    key_hash = models.CharField(max_length=64, unique=True, editable=False)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_used_at = models.DateTimeField(null=True, blank=True)
 
+    @staticmethod
+    def hash_key(raw_key):
+        return hashlib.sha256(raw_key.encode('utf-8')).hexdigest()
+
     def save(self, *args, **kwargs):
-        if not self.key:
-            import secrets
-            self.key = secrets.token_hex(32)
+        if not self.key_hash:
+            raw = secrets.token_hex(32)
+            self.key_prefix = raw[:12]
+            self.key_hash = self.hash_key(raw)
+            self._issued_raw_key = raw
         super().save(*args, **kwargs)
 
+    @property
+    def issued_raw_key(self):
+        return getattr(self, '_issued_raw_key', None)
+
     def __str__(self):
-        return f"{self.firm_name} ({self.key[:8]}...)"
+        return f"{self.firm_name} ({self.key_prefix}...)"
 
 
 COMPANY_SUFFIXES_RE = re.compile(r'(inc|llc|corp|ltd|co|group|holdings)$')
@@ -1082,7 +1094,7 @@ class BusinessEmailVerification(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='business_email_verifications')
     business_email = models.EmailField(max_length=254)
-    code = models.CharField(max_length=6, editable=False)
+    code_hash = models.CharField(max_length=128, blank=True, editable=False)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
     attempts = models.PositiveSmallIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -1095,12 +1107,20 @@ class BusinessEmailVerification(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.pk:
-            if not self.code:
-                import secrets
-                self.code = f"{secrets.randbelow(1000000):06d}"
+            if self.status == 'PENDING' and not self.code_hash:
+                raw = f"{secrets.randbelow(1000000):06d}"
+                self.code_hash = make_password(raw)
+                self._issued_raw_code = raw
             if not self.expires_at:
                 self.expires_at = timezone.now() + self.CODE_EXPIRY
         super().save(*args, **kwargs)
+
+    @property
+    def issued_raw_code(self):
+        return getattr(self, '_issued_raw_code', None)
+
+    def check_code(self, raw_code):
+        return bool(raw_code) and bool(self.code_hash) and check_password(raw_code, self.code_hash)
 
     def __str__(self):
         return f"{self.user.username} — {self.business_email} [{self.status}]"
