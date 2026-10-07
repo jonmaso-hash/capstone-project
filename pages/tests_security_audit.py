@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APIRequestFactory, force_authenticate
 
-from matchmaking.models import Application
+from matchmaking.models import APIKey, Application
 from zelda_api.views import InvestmentMemoGeneratorAPIView
 
 
@@ -52,6 +52,28 @@ class SecurityAuditRegressionTests(TestCase):
         self.assertNotIn(payload, body)
         self.assertIn(r'\u003C/script\u003E\u003Cscript\u003E', body)
         self.assertIn('id="sector-labels-data"', body)
+
+    def test_enterprise_api_key_is_hashed_at_rest_and_authenticates(self):
+        owner = User.objects.create_user('enterprise_key_owner', password='secure-test-pass')
+        api_key, raw_key = APIKey.issue(owner=owner, firm_name='Secure Firm')
+
+        api_key.refresh_from_db()
+        self.assertNotEqual(api_key.key_hash, raw_key)
+        self.assertEqual(api_key.key_hash, APIKey.digest(raw_key))
+        self.assertEqual(api_key.key_prefix, raw_key[:12])
+        self.assertFalse(hasattr(api_key, 'key'))
+
+        response = self.client.get(
+            '/api/v1/enterprise/stats/',
+            HTTP_AUTHORIZATION=f'Api-Key {raw_key}',
+        )
+        self.assertEqual(response.status_code, 200)
+
+        bad = self.client.get(
+            '/api/v1/enterprise/stats/',
+            HTTP_AUTHORIZATION='Api-Key definitely-not-the-key',
+        )
+        self.assertEqual(bad.status_code, 403)
 
     def test_dormant_memo_generator_hides_private_founder_from_stranger(self):
         owner, founder = self._founder('hidden_memo_owner', is_private=True)
