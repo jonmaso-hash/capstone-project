@@ -1,22 +1,19 @@
-import requests # Ensure you have this installed
+from zelda_api.safe_fetch import FetchError, fetch_public_page
+
 
 def perform_live_crawl(url):
     """
-    Centralized logic to scrape data. 
-    This can be called by both WebExplorationAPIView and MemoIntelligenceView.
+    Legacy crawl helper retained for compatibility.
+
+    Any URL reaching this helper is untrusted. Route it through the same
+    DNS/IP/redirect/body-size protections used by Zelda's public-page fetcher
+    so a future caller cannot turn this helper into an SSRF primitive.
     """
     try:
-        # Replace this with your actual scraping implementation
-        # e.g., using BeautifulSoup, Scrapy, or an external API
-        response = requests.get(url, timeout=5)
-        response.raise_for_status()
-        
-        # Example logic: extract headcounts or job openings
-        # In a real scenario, you'd parse response.text here
+        fetch_public_page(url)
         return {
-            'linkedin_headcount': 45, 
-            'job_board_openings': 2
+            'linkedin_headcount': 45,
+            'job_board_openings': 2,
         }
-    except Exception as e:
-        # Log the error here
+    except FetchError:
         return {'linkedin_headcount': 0, 'job_board_openings': 0}
