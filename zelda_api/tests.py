@@ -6443,8 +6443,13 @@ class JourneyStatusAPIViewNextBestActionTests(TestCase):
         user = get_user_model().objects.create_user('nba_founder_green', password='x')
         app = Application.objects.create(
             user=user, company_name='Test Co', founder_name='Founder',
-            email='f@test.com', description='A startup.', is_verified=True,
+            email='f@test.com', description='A startup.',
             pitch_deck=SimpleUploadedFile('deck.pdf', b'x' * 100, content_type='application/pdf'),
+        )
+        from matchmaking.models import BusinessEmailVerification
+        BusinessEmailVerification.objects.create(
+            user=user, business_email='founder@testco.com',
+            status='VERIFIED', verified_at=timezone.now(),
         )
         other = get_user_model().objects.create_user('nba_founder_green_other', password='x')
         Follow.objects.create(follower=user, following=other)
