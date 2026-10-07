@@ -1117,7 +1117,7 @@
             if (items.length) oldestNotificationId = items[items.length - 1].id;
             more.style.display = items.length === 50 ? 'inline-block' : 'none';
             empty.style.display = list.children.length ? 'none' : 'block';
-            if (items.length) {
+            if (items.length && document.getElementById('tab-notifications').style.display !== 'none') {
                 const readResponse = await fetch('/notifications/api/read/', {
                     method: 'POST', credentials: 'same-origin',
                     headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
