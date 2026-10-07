@@ -1787,8 +1787,9 @@ class JourneyStatusAPIView(APIView):
 
         unread_notifications = Notification.objects.filter(recipient=user, is_read=False).count()
 
-        from .quotas import usage_nearing_limit, upgrade_message
+        from .quotas import _is_premium_user, usage_nearing_limit, upgrade_message
         ai_usage_warning = upgrade_message(user) if usage_nearing_limit(user) else None
+        is_premium = _is_premium_user(user)
 
         return Response({
             'stage_color': stage['stage_color'],
@@ -1799,4 +1800,5 @@ class JourneyStatusAPIView(APIView):
             'next_best_action': next_best_action,
             'profile_strength': compute_profile_strength(stage['checklist']),
             'ai_usage_warning': ai_usage_warning,
+            'is_premium': is_premium,
         })
