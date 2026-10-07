@@ -1,4 +1,4 @@
-Django==6.0.4
+Django==6.0.9
 Jinja2==3.1.6
 MarkupSafe==3.0.3
 PyJWT==2.12.1
@@ -115,7 +115,7 @@ typing-inspection==0.4.2
 typing_extensions==4.15.0
 tzdata==2026.2
 tzlocal==5.3.1
-urllib3==2.7.0
+urllib3==2.8.0
 vine==5.1.0
 wcwidth==0.7.0
 whitenoise==6.12.0
