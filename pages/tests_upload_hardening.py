@@ -308,3 +308,27 @@ class OversizedUploadsAreRefusedBeforeParsingTests(TestCase):
                 self.assertEqual(response['Location'], page)
         self.assertFalse(Article.objects.exists())
         self.assertFalse(JobApplication.objects.exists())
+
+
+
+class SecurityAuditStaticRegressionTests(SimpleTestCase):
+    def test_staff_metrics_chart_never_injects_json_with_safe(self):
+        from pathlib import Path
+        from django.conf import settings
+
+        template = (
+            Path(settings.BASE_DIR) / 'templates' / 'matchmaking' / 'platform_metrics.html'
+        ).read_text(encoding='utf-8')
+        self.assertIn('sector_labels|json_script', template)
+        self.assertNotIn('sector_labels|safe', template)
+        self.assertNotIn('registration_labels|safe', template)
+
+    def test_legacy_crawlers_use_the_ssrf_safe_fetcher(self):
+        from pathlib import Path
+        from django.conf import settings
+
+        for rel in ('matchmaking/services.py', 'matchmaking/services/web_crawling.py'):
+            with self.subTest(path=rel):
+                source = (Path(settings.BASE_DIR) / rel).read_text(encoding='utf-8')
+                self.assertIn('fetch_public_page', source)
+                self.assertNotIn('requests.get(', source)
