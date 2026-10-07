@@ -40,10 +40,10 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name='companyrepresentationattestation',
-            index=models.Index(fields=['user', 'withdrawn_at'], name='matchmaking_user_id_43a739_idx'),
+            index=models.Index(fields=['user', 'withdrawn_at'], name='matchmaking_user_id_bdb29f_idx'),
         ),
         migrations.AddIndex(
             model_name='companyrepresentationattestation',
-            index=models.Index(fields=['company_name'], name='matchmaking_company_9d8735_idx'),
+            index=models.Index(fields=['company_name'], name='matchmaking_company_75861a_idx'),
         ),
     ]
