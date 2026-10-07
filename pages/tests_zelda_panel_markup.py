@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PANEL_PATH = ROOT / 'templates' / 'includes' / 'zelda_ai_assistant_enhanced.html'
 
 PANEL_SECTIONS = [
-    'tab-notifications', 'tab-ask', 'tab-find', 'tab-library', 'tab-upload',
+    'tab-notifications', 'tab-ask', 'tab-library', 'tab-upload',
     'tab-memo', 'tab-intelligence', 'tab-truth-delta', 'tab-progress',
     'agent-response-log',
 ]
@@ -77,17 +77,23 @@ class ZeldaPanelMarkupTests(TestCase):
         self.assertEqual(self.nesting.id_counts.get('agent-response-log'), 1)
 
 
-class ZeldaExternalCompanySearchHubTests(TestCase):
-    def test_find_company_tab_exposes_external_company_search(self):
+class ZeldaCurrentSubjectHubTests(TestCase):
+    def test_standalone_find_company_tab_is_removed(self):
         content = PANEL_PATH.read_text(encoding='utf-8')
-        self.assertIn('id="zelda-hub-external-search"', content)
-        self.assertIn('Companies outside Interlink', content)
-        self.assertIn('Company name or stock ticker', content)
-        self.assertNotIn('External-company identity resolution will be added in Phase 2.2.', content)
+        self.assertNotIn('id="tab-find"', content)
+        self.assertNotIn('data-tab="find"', content)
+        self.assertNotIn('id="zelda-hub-external-search"', content)
+        self.assertNotIn('Company & Platform Lookup', content)
 
-    def test_external_search_uses_existing_product_resolver(self):
+    def test_current_subject_remains_as_shared_context(self):
+        content = PANEL_PATH.read_text(encoding='utf-8')
+        self.assertIn('id="zelda-subject-context"', content)
+        self.assertIn('Current subject', content)
+        self.assertIn('Selecting a company inside any Zelda intelligence product updates this subject automatically.', content)
+
+    def test_product_search_keeps_external_company_resolver(self):
         source = (ROOT / 'static' / 'js' / 'zelda_products.js').read_text(encoding='utf-8')
-        self.assertIn("document.getElementById('zelda-hub-external-search')", source)
         self.assertIn('config.dataset.searchUrl', source)
         self.assertIn('config.dataset.intakeUrl', source)
-        self.assertIn("document.getElementById('zelda-subject-name')", source)
+        self.assertIn("select.textContent = 'Company selected'", source)
+        self.assertIn('Scroll down to finish checkout.', source)
