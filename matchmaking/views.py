@@ -1373,16 +1373,13 @@ def get_foundry_pulse_events(limit=15):
             'timestamp': inv.created_at,
         })
 
-    # 'FUNDED'/'CLOSED' say "Verified" explicitly — same public contract as
-    # the profile and bulletin-card badges (see Application.has_verified_funding
-    # / SellerApplication.has_verified_sale in matchmaking/models.py). This
-    # is presentation only: FUNDED_PENDING/CLOSED_PENDING (the self-reported,
-    # unconfirmed claim) fall through to the generic 'A connection was
-    # updated' default below, same as before this wording pass.
+    # FUNDED/CLOSED are mutually confirmed outcome states. Presentation names
+    # that fact directly rather than implying Interlink independently audited
+    # the transaction. Pending self-reports keep the generic update wording.
     connection_labels = {
         'pending': ('bi-hand-index-thumb', 'A new introduction was requested'),
         'ACCEPTED': ('bi-check-circle-fill', 'An introduction was accepted'),
-        'FUNDED': ('bi-trophy-fill', 'A deal was Verified Funded'),
+        'FUNDED': ('bi-trophy-fill', 'Funding Outcome Confirmed'),
     }
     for conn in Connection.objects.filter(founder__is_internal_profile=False, investor__is_internal_profile=False).select_related('founder', 'investor').order_by('-updated_at')[:limit]:
         icon, label = connection_labels.get(conn.status, ('bi-hand-index-thumb', 'A connection was updated'))
@@ -1393,7 +1390,7 @@ def get_foundry_pulse_events(limit=15):
     acquisition_connection_labels = {
         'pending': ('bi-hand-index-thumb', 'A new introduction was requested'),
         'ACCEPTED': ('bi-check-circle-fill', 'An introduction was accepted'),
-        'CLOSED': ('bi-trophy-fill', 'A deal was Verified Sold'),
+        'CLOSED': ('bi-trophy-fill', 'Sale Outcome Confirmed'),
     }
     for conn in AcquisitionConnection.objects.filter(seller__is_internal_profile=False, buyer__is_internal_profile=False).select_related('seller', 'buyer').order_by('-updated_at')[:limit]:
         icon, label = acquisition_connection_labels.get(conn.status, ('bi-hand-index-thumb', 'A connection was updated'))
