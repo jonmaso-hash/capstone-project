@@ -46,8 +46,8 @@ RETIRED = {
     'request evidence from investors': re.compile(r'request evidence from investors', re.I),
 }
 
-PRIVATE_COMPANY_SENTENCE = ('For most private companies, public sources report little, so many claims will read '
-                            '&lsquo;not established&rsquo;; that is a statement about the evidence, not about the company.')
+PRODUCT_EVIDENCE_NOTE = ('Some claims may read &ldquo;not established.&rdquo; '
+                         'That describes the available evidence for that claim, not the company.')
 
 
 def retired_phrases(text):
@@ -108,10 +108,26 @@ class NoRetiredPromiseRemainsTests(SimpleTestCase):
 
 class TheApprovedPromiseIsServedTests(TestCase):
 
-    def test_the_home_page_keeps_the_private_company_sentence(self):
+    def test_homepage_leads_with_zelda_strengths_not_evidence_scarcity(self):
         content = self.client.get(reverse('pages:home')).content.decode('utf8')
-        self.assertIn(PRIVATE_COMPANY_SENTENCE, content)
-        self.assertIn('Zelda adds source-linked business analysis.', content)
+        self.assertNotIn('For most private companies, public sources report little', content)
+        self.assertIn('Zelda works best with the documents closest to the business', content)
+        self.assertIn('funding raised', content)
+        self.assertIn('revenue', content)
+        self.assertIn('headcount', content)
+
+    def test_product_surfaces_carry_the_evidence_note(self):
+        from pathlib import Path
+        templates = (
+            'templates/truth_delta_dashboard.html',
+            'templates/matchmaking/memo_detail.html',
+            'templates/zelda_api/ic_memo.html',
+            'templates/zelda_valuation_report.html',
+        )
+        for rel in templates:
+            with self.subTest(template=rel):
+                content = (Path(settings.BASE_DIR) / rel).read_text(encoding='utf8')
+                self.assertIn('includes/zelda_evidence_note.html', content)
 
     def test_the_pricing_page_makes_no_absolute_screening_claim(self):
         # The template, not one rendered role: each plan card shows to its own role only.
