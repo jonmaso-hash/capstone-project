@@ -143,18 +143,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // 5. Render dynamic payload responses gracefully
             if (data.results && data.results.length > 0) {
-                let htmlPayload = '<div class="list-group list-group-flush w-100">';
+                const list = document.createElement('div');
+                list.className = 'list-group list-group-flush w-100';
+
                 data.results.forEach(item => {
-                    htmlPayload += `
-                        <div class="list-group-item px-0 py-3 border-bottom">
-                            <span class="badge bg-primary-subtle text-primary mb-2 text-uppercase font-monospace text-xs">${item.type || 'Match'}</span>
-                            <h6 class="fw-bold text-dark mb-1">${item.title}</h6>
-                            <p class="text-muted small mb-0">${item.description || ''}</p>
-                        </div>
-                    `;
+                    const row = document.createElement('div');
+                    row.className = 'list-group-item px-0 py-3 border-bottom';
+
+                    const type = document.createElement('span');
+                    type.className = 'badge bg-primary-subtle text-primary mb-2 text-uppercase font-monospace text-xs';
+                    type.textContent = item.type || 'Match';
+
+                    const title = document.createElement('h6');
+                    title.className = 'fw-bold text-dark mb-1';
+                    title.textContent = item.title || '';
+
+                    const description = document.createElement('p');
+                    description.className = 'text-muted small mb-0';
+                    description.textContent = item.description || '';
+
+                    row.append(type, title, description);
+                    list.appendChild(row);
                 });
-                htmlPayload += '</div>';
-                outputContent.innerHTML = htmlPayload;
+
+                outputContent.replaceChildren(list);
             } else {
                 outputContent.innerHTML = `
                     <div class="alert alert-light border text-center py-4" role="alert">
