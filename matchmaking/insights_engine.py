@@ -48,7 +48,7 @@ TIMELINE_EVENT_LABELS = {
     'memo_view': 'Memo opened',
     'truth_delta_view': 'Truth Delta viewed',
     'analyze': 'Analyzed with Zelda',
-    'thumbs_up': 'Thumbs up received',
+    'thumbs_up': 'Marked relevant',
     'intro_request': 'Introduction requested',
     'message_sent': 'Message sent',
 }

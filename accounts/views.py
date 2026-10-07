@@ -982,42 +982,42 @@ def profile_analysis(request, username):
         events = InvestorInterestEvent.objects.filter(founder=application)
         engagement = {
             'Intro Requests Received': events.filter(event_type='intro_request').count(),
-            'Thumbs Up Received': events.filter(event_type='thumbs_up').count(),
+            'Marked Relevant by Buyers': events.filter(event_type='thumbs_up').count(),
             'Memo Views': events.filter(event_type='memo_view').count(),
             'Truth Delta Views': events.filter(event_type='truth_delta_view').count(),
             'Times Analyzed': events.filter(event_type='analyze').count(),
         }
         is_premium_insights = application.is_premium
         free_intro_requests = engagement['Intro Requests Received']
-        free_thumbs_up = engagement['Thumbs Up Received']
+        free_thumbs_up = engagement['Marked Relevant by Buyers']
         if is_premium_insights:
             insights_engine_context = _build_insights_engine_context(events, role='founder', role_profile=application)
     elif seller_application:
         events = AcquisitionInterestEvent.objects.filter(seller=seller_application)
         engagement = {
             'Intro Requests Received': events.filter(event_type='intro_request').count(),
-            'Thumbs Up Received': events.filter(event_type='thumbs_up').count(),
+            'Marked Relevant by Buyers': events.filter(event_type='thumbs_up').count(),
             'Memo Views': events.filter(event_type='memo_view').count(),
             'Truth Delta Views': events.filter(event_type='truth_delta_view').count(),
             'Times Analyzed': events.filter(event_type='analyze').count(),
         }
         is_premium_insights = seller_application.is_premium
         free_intro_requests = engagement['Intro Requests Received']
-        free_thumbs_up = engagement['Thumbs Up Received']
+        free_thumbs_up = engagement['Marked Relevant by Buyers']
         if is_premium_insights:
             insights_engine_context = _build_insights_engine_context(events, role='seller', role_profile=seller_application)
     elif investor_application:
         events = InvestorInterestEvent.objects.filter(investor=viewed_user)
         engagement = {
             'Intro Requests Sent': events.filter(event_type='intro_request').count(),
-            'Thumbs Up Given': events.filter(event_type='thumbs_up').count(),
+            'Companies Marked Relevant': events.filter(event_type='thumbs_up').count(),
             'Analyses Run': events.filter(event_type='analyze').count(),
         }
     elif buyer_application:
         events = AcquisitionInterestEvent.objects.filter(buyer=viewed_user)
         engagement = {
             'Intro Requests Sent': events.filter(event_type='intro_request').count(),
-            'Thumbs Up Given': events.filter(event_type='thumbs_up').count(),
+            'Businesses Marked Relevant': events.filter(event_type='thumbs_up').count(),
             'Analyses Run': events.filter(event_type='analyze').count(),
         }
 
