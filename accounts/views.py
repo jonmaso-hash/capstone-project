@@ -861,6 +861,25 @@ def profile_analysis(request, username):
             'is_premium_insights': False,
         })
 
+    # Peer Market Benchmark: Founder/Seller Premium gets one external
+    # research refresh every 30 days. Page loads only enqueue when a new
+    # monthly snapshot is actually due, so refreshes do not consume extra
+    # model/web-search spend.
+    peer_market_benchmark = None
+    peer_market_benchmark_seller = None
+    if application and application.is_premium:
+        from zelda_api.peer_benchmark import create_monthly_benchmark
+        from zelda_api.tasks import generate_peer_market_benchmark
+        peer_market_benchmark, created = create_monthly_benchmark(viewed_user, 'founder')
+        if created:
+            generate_peer_market_benchmark.delay(peer_market_benchmark.id)
+    if seller_application and seller_application.is_premium:
+        from zelda_api.peer_benchmark import create_monthly_benchmark
+        from zelda_api.tasks import generate_peer_market_benchmark
+        peer_market_benchmark_seller, created = create_monthly_benchmark(viewed_user, 'seller')
+        if created:
+            generate_peer_market_benchmark.delay(peer_market_benchmark_seller.id)
+
     # Founder-only private diagnostics now live inside Premium Founder
     # Insights rather than on the public/profile surface.
     investor_readiness = _get_investor_readiness(application) if application else None
@@ -1076,6 +1095,8 @@ def profile_analysis(request, username):
         'founders_funded': founders_funded,
         'deals_closed': deals_closed,
         'engagement': engagement,
+        'peer_market_benchmark': peer_market_benchmark,
+        'peer_market_benchmark_seller': peer_market_benchmark_seller,
     }
     return render(request, 'accounts/profile_analysis.html', context)
 
@@ -1449,3 +1470,44 @@ def company_representation_withdraw(request):
     else:
         messages.info(request, "No active representation self-attestation was found.")
     return redirect("accounts:business_verification")
+
+
+def _peer_benchmark_for_owner(user, benchmark_id):
+    from matchmaking.models import PeerMarketBenchmark
+    return get_object_or_404(PeerMarketBenchmark, pk=benchmark_id, user=user)
+
+
+@login_required
+def peer_market_benchmark_detail(request, benchmark_id):
+    benchmark = _peer_benchmark_for_owner(request.user, benchmark_id)
+    return render(request, 'accounts/peer_market_benchmark.html', {
+        'benchmark': benchmark,
+        'is_public_share': False,
+    })
+
+
+@require_POST
+@login_required
+def peer_market_benchmark_share_toggle(request, benchmark_id):
+    benchmark = _peer_benchmark_for_owner(request.user, benchmark_id)
+    benchmark.sharing_enabled = not benchmark.sharing_enabled
+    benchmark.save(update_fields=['sharing_enabled'])
+    if benchmark.sharing_enabled:
+        messages.success(request, 'Share link enabled.')
+    else:
+        messages.success(request, 'Share link disabled.')
+    return redirect('accounts:peer_market_benchmark_detail', benchmark_id=benchmark.id)
+
+
+def peer_market_benchmark_share(request, share_token):
+    from matchmaking.models import PeerMarketBenchmark
+    benchmark = get_object_or_404(
+        PeerMarketBenchmark,
+        share_token=share_token,
+        sharing_enabled=True,
+        status='ready',
+    )
+    return render(request, 'accounts/peer_market_benchmark.html', {
+        'benchmark': benchmark,
+        'is_public_share': True,
+    })

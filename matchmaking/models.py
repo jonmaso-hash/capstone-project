@@ -3183,3 +3183,71 @@ class ProfileVideoReport(models.Model):
     def __str__(self):
         return f"{self.get_reason_display()} report on video #{self.video_id}"
 
+
+
+class PeerMarketBenchmark(models.Model):
+    """
+    Monthly Founder/Seller peer-market snapshot.
+
+    The numeric comparisons are deterministic and stored as data. Model prose
+    may explain the snapshot, but it never decides percentile/rank values.
+    External peers are researched with cited public sources and frozen into the
+    snapshot so a shared report never silently changes underneath its URL.
+    """
+    ROLE_CHOICES = [('founder', 'Founder'), ('seller', 'Seller')]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='peer_market_benchmarks',
+    )
+    role = models.CharField(max_length=12, choices=ROLE_CHOICES)
+    founder = models.ForeignKey(
+        'Application', on_delete=models.CASCADE, null=True, blank=True,
+        related_name='peer_market_benchmarks',
+    )
+    seller = models.ForeignKey(
+        'SellerApplication', on_delete=models.CASCADE, null=True, blank=True,
+        related_name='peer_market_benchmarks',
+    )
+    subject_name = models.CharField(max_length=255)
+    cohort_label = models.CharField(max_length=255, blank=True)
+    subject_snapshot = models.JSONField(default=dict, blank=True)
+    interlink_benchmark = models.JSONField(default=dict, blank=True)
+    external_peers = models.JSONField(default=list, blank=True)
+    external_benchmark = models.JSONField(default=dict, blank=True)
+    sources = models.JSONField(default=list, blank=True)
+    narrative = models.TextField(blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('pending', 'Pending'),
+            ('running', 'Running'),
+            ('ready', 'Ready'),
+            ('failed', 'Failed'),
+        ],
+        default='pending',
+    )
+    error_message = models.TextField(blank=True)
+    generated_at = models.DateTimeField(null=True, blank=True)
+    refresh_eligible_at = models.DateTimeField(null=True, blank=True)
+    share_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    sharing_enabled = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def clean(self):
+        super().clean()
+        if self.role == 'founder' and (not self.founder_id or self.seller_id):
+            raise ValidationError('Founder benchmarks require exactly one founder profile.')
+        if self.role == 'seller' and (not self.seller_id or self.founder_id):
+            raise ValidationError('Seller benchmarks require exactly one seller profile.')
+
+    @property
+    def can_refresh(self):
+        return not self.refresh_eligible_at or timezone.now() >= self.refresh_eligible_at
+
+    def __str__(self):
+        return f"{self.subject_name} — {self.get_role_display()} Peer Market Benchmark"

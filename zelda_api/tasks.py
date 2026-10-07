@@ -343,3 +343,14 @@ def cleanup_old_documents(days: int = 30):
     except Exception as exc:
         logger.error(f"Cleanup error: {str(exc)}")
         return {'status': 'error', 'error': str(exc)}
+
+@shared_task
+def generate_peer_market_benchmark(benchmark_id: int):
+    """Generate one Founder/Seller Peer Market Benchmark in the worker."""
+    from .peer_benchmark import generate_benchmark
+    try:
+        benchmark = generate_benchmark(benchmark_id)
+        return {'status': benchmark.status, 'benchmark_id': benchmark.id}
+    except Exception as exc:
+        logger.error("Peer Market Benchmark generation error for %s: %s", benchmark_id, exc)
+        return {'status': 'error', 'benchmark_id': benchmark_id, 'error': str(exc)}
