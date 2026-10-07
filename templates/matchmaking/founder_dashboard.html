@@ -28,7 +28,7 @@
                 {% if application %}
                 Find investors for your <span class="badge bg-light text-dark border px-2 py-1.5">{{ application.stage|default:"Active" }}</span> stage and <span class="badge bg-light text-dark border px-2 py-1.5">{{ application.sector }}</span> sector profile.
                 {% else %}
-                Manage investor introductions and connections. Complete your founder profile to start matching.
+                Manage investor introductions and connections. Complete your founder profile to improve discovery.
                 {% endif %}
             </p>
         </div>
@@ -71,10 +71,10 @@
         <i class="bi bi-signpost-2-fill fs-4"></i>
         <div>
             {% if matches %}
-                <strong>You have {{ matches|length }} investor match{{ matches|pluralize:"es" }}.</strong>
+                <strong>You have {{ matches|length }} aligned investor profile{{ matches|pluralize }}.</strong>
                 Request an introduction below to get started.
             {% else %}
-                <strong>No matches yet.</strong> Matches appear here as investors join. You can also update your stage, sector, and location to improve discovery.
+                <strong>No aligned profiles yet.</strong> Recommendations appear here as investors join. You can also update your stage, sector, and location to improve discovery.
                 <a href="{% url 'usersettings:edit_founder_profile' %}" class="alert-link ms-1">Review profile criteria</a>.
             {% endif %}
         </div>
@@ -160,7 +160,7 @@
                             {% if conn.status == 'FUNDED_PENDING' %}
                             <span class="badge bg-warning-subtle text-warning-emphasis border border-warning small">Awaiting Investor Confirmation</span>
                             {% else %}
-                            <span class="badge bg-success-subtle text-success border border-success small">Accepted</span>
+                            <span class="badge bg-success-subtle text-success border border-success small">Connected</span>
                             {% endif %}
                         </div>
                         <div class="d-flex align-items-center gap-2">
@@ -184,10 +184,10 @@
                     <p class="text-muted small mb-3">Your connections will appear here after an introduction is accepted. Once connected, the Deal Room and conversation controls appear here automatically.</p>
                     <div class="d-flex flex-wrap gap-2">
                         <a href="#recommendations" class="btn btn-primary btn-sm rounded-pill px-3">
-                            <i class="bi bi-radar me-1"></i> Find Investor Matches
+                            <i class="bi bi-radar me-1"></i> Find Investors
                         </a>
                         <a href="{% url 'matchmaking:diligence_chat' %}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
-                            <i class="bi bi-chat-dots me-1"></i> Open Chat
+                            <i class="bi bi-chat-dots me-1"></i> Open Messages
                         </a>
                     </div>
                 </div>
@@ -309,7 +309,7 @@
                             </span>
                         {% elif match.connection_status == 'ACCEPTED' %}
                             <span class="badge bg-primary px-3 py-2 small fw-semibold w-100">
-                                <i class="bi bi-check-circle-fill me-1"></i> Accepted
+                                <i class="bi bi-check-circle-fill me-1"></i> Connected
                             </span>
                         {% elif match.already_requested %}
                             <button class="btn btn-secondary btn-sm w-100 disabled" disabled>
@@ -331,9 +331,9 @@
         <div class="col-12">
             <div class="card border border-dashed border-secondary-subtle py-4 text-center bg-white rounded-3">
                 {% if filters.stage or filters.focus or filters.location %}
-                <p class="text-muted small mb-0"><i class="bi bi-radar me-2"></i>No matches for the current filters. Try broadening or clearing them.</p>
+                <p class="text-muted small mb-0"><i class="bi bi-radar me-2"></i>No recommendations for the current filters. Try broadening or clearing them.</p>
                 {% else %}
-                <p class="text-muted small mb-0"><i class="bi bi-radar me-2"></i>No investor matches yet — update your profile to improve matching.</p>
+                <p class="text-muted small mb-0"><i class="bi bi-radar me-2"></i>No aligned investor profiles yet — update your profile to improve discovery.</p>
                 {% endif %}
             </div>
         </div>

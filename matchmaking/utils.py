@@ -5,6 +5,12 @@ from django.core.cache import cache
 
 HARD_FILTER_CACHE_TTL = 60 * 60 * 24 * 7  # 7 days — these fields change rarely
 
+
+def _business_email_verified(user):
+    # Local import avoids models -> utils import cycles during Django startup.
+    from .models import business_email_verified
+    return business_email_verified(user)
+
 def _is_adjacent_stage(stage1, stage2):
     """Helper to determine if two stages are close enough to be relevant."""
     adjacents = {
@@ -273,7 +279,7 @@ def compute_founder_journey_stage(user):
             {'label': 'Post a job to show you\'re growing', 'done': has_job},
             {'label': 'Connect with other businesses', 'done': has_follow},
             {'label': 'Upload your business plan to Zelda for a competitiveness match', 'done': has_zelda_doc},
-            {'label': 'Verify your business email', 'done': application.is_verified},
+            {'label': 'Verify your business email', 'done': _business_email_verified(user)},
         ],
     }
 
@@ -320,7 +326,7 @@ def compute_investor_journey_stage(user):
             {'label': 'Create your investor profile', 'done': True},
             {'label': 'Complete every mandate field', 'done': True},
             {'label': 'Upload your portfolio for a similarity match', 'done': has_portfolio},
-            {'label': 'Verify your business email', 'done': investor_profile.is_verified},
+            {'label': 'Verify your business email', 'done': _business_email_verified(user)},
         ],
         'uncontacted_high_matches': uncontacted_count,
     }
@@ -399,7 +405,7 @@ def compute_seller_journey_stage(user):
              'done': has_published_elevator_pitch(seller_profile, 'seller')},
             {'label': 'Get a Zelda valuation to price your asking price with confidence', 'done': has_zelda_doc},
             {'label': 'Connect with other businesses', 'done': has_follow},
-            {'label': 'Verify your business email', 'done': seller_profile.is_verified},
+            {'label': 'Verify your business email', 'done': _business_email_verified(user)},
         ],
     }
 
@@ -445,7 +451,7 @@ def compute_buyer_journey_stage(user):
         'checklist': [
             {'label': 'Create your buyer profile', 'done': True},
             {'label': 'Complete every mandate field', 'done': True},
-            {'label': 'Verify your business email', 'done': buyer_profile.is_verified},
+            {'label': 'Verify your business email', 'done': _business_email_verified(user)},
         ],
         'uncontacted_high_matches': uncontacted_count,
     }

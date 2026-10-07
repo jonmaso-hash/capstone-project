@@ -7,7 +7,7 @@ from .models import (
     Application, InvestorApplication, AIMatch, Connection, MatchFeedback, InvestorInterestEvent,
     APIKey, InvestorPredictionSnapshot,
     SellerApplication, BuyerApplication, AcquisitionConnection, DealFeedback, AcquisitionInterestEvent,
-    BuyerPredictionSnapshot, BusinessEmailVerification,
+    BuyerPredictionSnapshot, BusinessEmailVerification, CompanyRepresentationAttestation,
     DataRoomDocument, DataRoomAccessRequest, DataRoomDocumentView,
     PitchVideoComment, ProfileVideo, ProfileVideoReport,
 )
@@ -210,6 +210,14 @@ class BusinessEmailVerificationAdmin(admin.ModelAdmin):
     list_filter = ['status', 'created_at']
     search_fields = ['user__username', 'business_email']
     readonly_fields = ['code', 'created_at', 'verified_at']
+
+
+@admin.register(CompanyRepresentationAttestation)
+class CompanyRepresentationAttestationAdmin(admin.ModelAdmin):
+    list_display = ['user', 'company_name', 'relationship', 'authorized_to_represent', 'attested_at', 'withdrawn_at']
+    list_filter = ['relationship', 'authorized_to_represent', 'attested_at']
+    search_fields = ['user__username', 'company_name', 'role_title']
+    readonly_fields = ['attested_at', 'withdrawn_at']
 
 
 @admin.register(DataRoomDocument)

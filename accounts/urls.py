@@ -31,6 +31,8 @@ urlpatterns = [
     path('business-verification/', views.business_verification, name='business_verification'),
     path('business-verification/request/', views.business_verification_request, name='business_verification_request'),
     path('business-verification/confirm/', views.business_verification_confirm, name='business_verification_confirm'),
+    path('business-verification/representation/attest/', views.company_representation_attest, name='company_representation_attest'),
+    path('business-verification/representation/withdraw/', views.company_representation_withdraw, name='company_representation_withdraw'),
 
     path('profile/<str:username>/', views.profile, name='profile'),
 

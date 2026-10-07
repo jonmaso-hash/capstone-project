@@ -74,10 +74,10 @@
         <i class="bi bi-signpost-2-fill fs-4"></i>
         <div>
             {% if matches %}
-                <strong>You have {{ matches|length }} business match{{ matches|pluralize:"es" }}.</strong>
+                <strong>You have {{ matches|length }} aligned seller profile{{ matches|pluralize }}.</strong>
                 Request an introduction below to get started.
             {% else %}
-                <strong>No matches yet.</strong> Matches appear here as sellers list businesses — check back soon, or broaden your acquisition thesis in your profile.
+                <strong>No aligned profiles yet.</strong> Recommendations appear here as sellers list businesses — check back soon, or broaden your acquisition thesis in your profile.
             {% endif %}
         </div>
     </div>
@@ -131,7 +131,7 @@
                             {% if conn.status == 'CLOSED_PENDING' %}
                             <span class="badge bg-warning-subtle text-warning-emphasis border border-warning small">Seller Claims Closed</span>
                             {% else %}
-                            <span class="badge bg-success-subtle text-success border border-success small">Accepted</span>
+                            <span class="badge bg-success-subtle text-success border border-success small">Connected</span>
                             {% endif %}
                         </div>
                         <div class="d-flex align-items-center gap-2">
@@ -147,7 +147,7 @@
                                 Not Closed
                             </button>
                             {% else %}
-                            <span class="text-muted small text-end">Only the seller can mark this deal as Closed.</span>
+                            <span class="text-muted small text-end">Only the seller can report a sale outcome; the buyer must confirm it.</span>
                             {% endif %}
                         </div>
                     </div>
@@ -292,7 +292,7 @@
                                         </span>
                                     {% elif match.connection_status == 'ACCEPTED' %}
                                         <span class="badge bg-primary px-3 py-2 rounded-2 small fw-semibold">
-                                            <i class="bi bi-check-circle-fill me-1"></i> Accepted
+                                            <i class="bi bi-check-circle-fill me-1"></i> Connected
                                         </span>
                                     {% elif match.already_requested %}
                                         <button class="btn btn-secondary px-4 py-2 rounded-2 disabled small fw-semibold" disabled>
@@ -320,9 +320,9 @@
                         </div>
                         <h4 class="fw-bold text-dark">No business recommendations yet</h4>
                         {% if filters.industry or filters.structure or filters.max_price %}
-                        <p class="text-muted mx-auto max-width-md mb-4" style="max-width: 500px;">No matches for the current filters. Try broadening or clearing them.</p>
+                        <p class="text-muted mx-auto max-width-md mb-4" style="max-width: 500px;">No recommendations for the current filters. Try broadening or clearing them.</p>
                         {% else %}
-                        <p class="text-muted mx-auto max-width-md mb-4" style="max-width: 500px;">Update your acquisition thesis or budget range to broaden your matches.</p>
+                        <p class="text-muted mx-auto max-width-md mb-4" style="max-width: 500px;">Update your acquisition thesis or budget range to broaden discovery.</p>
                         {% endif %}
                     </div>
                 </div>

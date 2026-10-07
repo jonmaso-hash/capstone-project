@@ -503,7 +503,7 @@
                     <span class="badge bg-success ms-1" role="button" tabindex="0"
                           data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top"
                           data-bs-content="Confirmed by both this founder and an investor — not a self-reported claim.">
-                        <i class="bi bi-patch-check-fill"></i> Verified Funded
+                        <i class="bi bi-patch-check-fill"></i> Funding Outcome Confirmed
                         {% if pitch.verified_funded_count > 1 %}({{ pitch.verified_funded_count }}){% endif %}
                     </span>
                     {% endif %}
@@ -514,7 +514,7 @@
 
                         {% if user.is_authenticated and user.match_investor_profile %}
                         <div class="d-flex flex-column align-items-end gap-1" id="match-wrap-{{ pitch.id }}">
-                            <span class="match-score-label">Match</span>
+                            <span class="match-score-label">Alignment</span>
                             <span class="badge bg-dark text-white">{{ pitch.band|default:"—" }}</span>
                         </div>
                         {% endif %}
