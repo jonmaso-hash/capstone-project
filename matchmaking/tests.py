@@ -6013,12 +6013,23 @@ class InitiateDirectChatAjaxTests(TestCase):
     """
 
     def setUp(self):
+        _mock_embedding_generation(self)
         self.user_a = User.objects.create_user('idc_user_a', password='x')
         self.user_b = User.objects.create_user('idc_user_b', password='x')
+        self.target_profile = Application.objects.create(
+            user=self.user_b,
+            company_name='DM Target Co',
+            founder_name='Target',
+            email='target@example.com',
+            description='Target profile',
+            sector='SaaS',
+            stage='Seed',
+            allow_direct_messages=True,
+        )
         self.client.force_login(self.user_a)
 
     def _post_ajax(self, target_user_id):
-        return self.client.get(
+        return self.client.post(
             reverse('matchmaking:initiate_direct_chat', args=[target_user_id]),
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
         )
@@ -6049,15 +6060,40 @@ class InitiateDirectChatAjaxTests(TestCase):
     def test_non_ajax_request_still_redirects_as_before(self):
         with mock.patch('matchmaking.views.StreamChat') as mock_stream_chat_cls:
             mock_stream_chat_cls.return_value = mock.MagicMock()
-            response = self.client.get(reverse('matchmaking:initiate_direct_chat', args=[self.user_b.id]))
+            response = self.client.post(reverse('matchmaking:initiate_direct_chat', args=[self.user_b.id]))
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('matchmaking:diligence_chat'))
+
+    def test_get_cannot_create_a_channel(self):
+        with mock.patch('matchmaking.views.StreamChat') as stream:
+            response = self.client.get(reverse('matchmaking:initiate_direct_chat', args=[self.user_b.id]))
+        self.assertEqual(response.status_code, 405)
+        stream.assert_not_called()
+
+    def test_direct_url_cannot_bypass_recipient_dm_opt_out(self):
+        self.target_profile.allow_direct_messages = False
+        self.target_profile.save(update_fields=['allow_direct_messages'])
+        with mock.patch('matchmaking.views.StreamChat') as stream:
+            response = self._post_ajax(self.user_b.id)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json()['status'], 'error')
+        stream.assert_not_called()
 
     def test_channel_id_is_the_same_regardless_of_who_initiates(self):
         with mock.patch('matchmaking.views.StreamChat') as mock_stream_chat_cls:
             mock_stream_chat_cls.return_value = mock.MagicMock()
             response_a_to_b = self._post_ajax(self.user_b.id)
 
+        Application.objects.create(
+            user=self.user_a,
+            company_name='DM Sender Co',
+            founder_name='Sender',
+            email='sender@example.com',
+            description='Sender profile',
+            sector='SaaS',
+            stage='Seed',
+            allow_direct_messages=True,
+        )
         self.client.force_login(self.user_b)
         with mock.patch('matchmaking.views.StreamChat') as mock_stream_chat_cls:
             mock_stream_chat_cls.return_value = mock.MagicMock()
