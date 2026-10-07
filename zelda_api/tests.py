@@ -1545,11 +1545,11 @@ class DocumentIngestViewTests(TestCase):
         response = self._post(f)
         self.assertEqual(response.status_code, 400)
 
-    def test_oversized_file_returns_400_not_500(self):
+    def test_oversized_file_returns_413_before_parsing(self):
         # 26MB — over the 25MB cap MaxFileSizeValidator enforces here.
         f = SimpleUploadedFile('huge.txt', b'x' * (26 * 1024 * 1024), content_type='text/plain')
         response = self._post(f)
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 413)
         self.assertIn('too large', response.json()['error'].lower())
 
     def test_valid_upload_creates_document_and_queues_pipeline_task(self):
@@ -6750,7 +6750,7 @@ class ZeldaSearchAccessTests(TestCase):
 class ZeldaHubShellContractTests(TestCase):
     """Phase 2 shell contract: one subject context and distinct hub jobs."""
 
-    def test_hub_template_separates_ask_and_find_with_shared_subject(self):
+    def test_hub_template_keeps_shared_subject_without_redundant_find_tab(self):
         from pathlib import Path
         from django.conf import settings
 
@@ -6764,9 +6764,10 @@ class ZeldaHubShellContractTests(TestCase):
         self.assertIn('id="zelda-subject-context"', content)
         self.assertIn('id="zelda-subject-name"', content)
         self.assertIn('data-tab="ask"', content)
-        self.assertIn('data-tab="find"', content)
         self.assertIn('>Ask Zelda', content)
-        self.assertIn('>Find Company', content)
+        self.assertNotIn('data-tab="find"', content)
+        self.assertNotIn('>Find Company', content)
+        self.assertIn('id="zelda-subject-search"', content)
         self.assertIn('data-tab="upload"', content)
         self.assertIn('data-tab="library"', content)
         self.assertIn('data-tab="progress"', content)
@@ -6786,4 +6787,4 @@ class ZeldaHubShellContractTests(TestCase):
         self.assertNotIn('data-tab="search"', content)
         self.assertNotIn('id="tab-search"', content)
         self.assertIn('id="tab-ask"', content)
-        self.assertIn('id="tab-find"', content)
+        self.assertNotIn('id="tab-find"', content)

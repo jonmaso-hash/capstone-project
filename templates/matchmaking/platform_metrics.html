@@ -544,13 +544,21 @@
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{{ sector_labels|json_script:"sector-labels-data" }}
+{{ sector_counts|json_script:"sector-counts-data" }}
+{{ registration_labels|json_script:"registration-labels-data" }}
+{{ registration_counts|json_script:"registration-counts-data" }}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+    const sectorLabels = JSON.parse(document.getElementById("sector-labels-data").textContent);
+    const sectorCounts = JSON.parse(document.getElementById("sector-counts-data").textContent);
+    const registrationLabels = JSON.parse(document.getElementById("registration-labels-data").textContent);
+    const registrationCounts = JSON.parse(document.getElementById("registration-counts-data").textContent);
     new Chart(document.getElementById('sectorChart').getContext('2d'), {
         type: 'bar',
         data: {
-            labels: {{ sector_labels|safe }},
-            datasets: [{ label: 'Founders', data: {{ sector_counts|safe }}, backgroundColor: '#198754' }]
+            labels: sectorLabels,
+            datasets: [{ label: 'Founders', data: sectorCounts, backgroundColor: '#198754' }]
         },
         options: { indexAxis: 'y', plugins: { legend: { display: false } } }
     });
