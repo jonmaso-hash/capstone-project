@@ -2,11 +2,14 @@
 from django.urls import path
 from django.contrib.auth.views import LogoutView
 from . import views
+from . import staff_mfa
 from zelda_api.views import ZeldaGlobalSearchAPIView
 
 app_name = 'accounts' 
 
 urlpatterns = [
+    path('staff-mfa/setup/', staff_mfa.setup, name='staff_mfa_setup'),
+    path('staff-mfa/verify/', staff_mfa.verify, name='staff_mfa_verify'),
     # ==========================================
     # AUTHENTICATION ENGINE ROUTES
     # ==========================================

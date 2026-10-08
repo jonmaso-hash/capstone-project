@@ -81,6 +81,7 @@ environ.Env.read_env(BASE_DIR / '.env')
 # --- CORE SECURITY CONFIGURATION ---
 # Throws an ImproperlyConfigured error if SECRET_KEY is missing in production
 SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY_FALLBACKS = env.list('SECRET_KEY_FALLBACKS', default=[])
 DEBUG = env('DEBUG')
 ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 
@@ -191,6 +192,7 @@ MIDDLEWARE = [
     # Staff can impersonate and override deal states, so their sessions end
     # when idle (accounts/staff_sessions.py). Needs auth + messages above it.
     'accounts.staff_sessions.StaffSessionTimeoutMiddleware',
+    'accounts.staff_mfa.StaffMFAMiddleware',
 
     # Staff viewing as a user can't change anything as them (ops/impersonation.py).
     # Needs the session, auth and messages middleware above it.

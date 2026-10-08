@@ -2,6 +2,15 @@
 from django.db import models
 from django.conf import settings
 
+
+class StaffMFA(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    encrypted_secret = models.TextField()
+    enabled_at = models.DateTimeField(null=True, blank=True)
+    last_counter = models.BigIntegerField(default=-1)
+    recovery_hashes = models.JSONField(default=list)
+
+
 class InvestorApplication(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='accounts_investor_profile')
     
