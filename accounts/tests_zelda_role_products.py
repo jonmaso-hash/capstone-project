@@ -68,7 +68,7 @@ class ZeldaSellerProductSurfaceTests(TestCase):
         for key in PRODUCT_KEYS:
             with self.subTest(key=key):
                 self.assertIn(f'tab-product-{key}', body)
-        self.assertContains(response, "See your business from a buyer's perspective")
+        self.assertContains(response, 'Review your business the way a buyer may see it.')
 
 
 class ZeldaDiligenceProductSurfaceTests(TestCase):
