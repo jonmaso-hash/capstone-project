@@ -18,13 +18,16 @@ from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import Resolver404, resolve, reverse
 from django.utils import timezone
 
-from matchmaking.models import Application, Connection, InvestorApplication, InvestorInterestEvent
+from matchmaking.models import Application, Connection, DataRoomDocument, DataRoomReportLink, InvestorApplication, InvestorInterestEvent
+from matchmaking.data_room_quota import FREE_LIMIT_BYTES, PREMIUM_LIMIT_BYTES, try_save_report
 from matchmaking.tests import _mock_embedding_generation
 from billing.models import ZeldaOrder
+from billing.fulfillment import reconcile_order
 from zelda_api.models import AnalysisCreditCharge, LibraryHiddenItem
 from zelda_api.vector_models import DocumentSource, IntelligenceMemo
 
@@ -97,7 +100,38 @@ class LibraryAccessTests(TestCase):
         self.client.force_login(User.objects.get(username='lib_empty'))
         data = self.client.get(URL).json()
         self.assertEqual(data['sections'], [])
-        self.assertIsNone(data['profile_analytics_url'])
+        self.assertNotIn('profile_analytics_url', data)
+
+    def test_library_pages_five_entries_across_sections_and_keeps_full_history_reachable(self):
+        me, _ = _founder('lib_pages', 'MyCo')
+        for n in range(12):
+            DocumentSource.objects.create(uploaded_by=me, filename=f'deck-{n}.pdf',
+                                          source_entity=f'Subject {n}', document_type='pitch_deck')
+        self.client.force_login(me)
+        pages = [self.client.get(URL, {'page': number}).json() for number in (1, 2, 3)]
+        self.assertEqual([len(page['sections'][0]['documents']) for page in pages], [5, 5, 2])
+        self.assertEqual([page['pagination']['page'] for page in pages], [1, 2, 3])
+        self.assertEqual(pages[0]['pagination']['total'], 12)
+        self.assertEqual(pages[0]['pagination']['pages'], 3)
+        self.assertTrue(pages[0]['archive_url'].endswith('#zelda-reports'))
+        self.assertNotIn('profile_analytics_url', pages[0])
+
+    def test_pagination_counts_orders_and_documents_together(self):
+        me, _ = _founder('lib_mixed', 'MyCo')
+        for n in range(4):
+            DocumentSource.objects.create(uploaded_by=me, filename=f'deck-{n}.pdf',
+                                          source_entity=f'Deck {n}', document_type='pitch_deck')
+        source = DocumentSource.objects.create(uploaded_by=me, filename='buy.pdf', source_entity='Bought',
+                                                document_type='pitch_deck', is_product_input=True)
+        for _ in range(3):
+            ZeldaOrder.objects.create(user=me, source_document=source, product='intelligence_memo',
+                                      reports=['intelligence_memo'], amount=199)
+        self.client.force_login(me)
+        first = self.client.get(URL).json()
+        second = self.client.get(URL, {'page': 2}).json()
+        first_count = len(first['purchases']) + sum(len(s.get('documents', [])) for s in first['sections'])
+        second_count = len(second['purchases']) + sum(len(s.get('documents', [])) for s in second['sections'])
+        self.assertEqual((first_count, second_count), (5, 2))
 
     def test_processing_deck_can_be_removed_without_deleting_its_evidence(self):
         me, _ = _founder('lib_qibby', 'Interlink Foundry')
@@ -223,8 +257,7 @@ class InvestorRecentCompaniesTests(TestCase):
         self.assertEqual([i['company'] for i in items], ['PaidCo', 'ViewedCo'])
         self.assertEqual(items[0]['activity'], 'You ran a Zelda analysis')
         self.assertEqual(items[1]['activity'], 'You opened its Zelda brief')
-        self.assertEqual(data['profile_analytics_url'],
-                         reverse('accounts:profile_analysis', kwargs={'username': 'lib_investor'}))
+        self.assertNotIn('profile_analytics_url', data)
 
     def test_a_company_that_went_private_drops_out(self):
         _, private = _founder('lib_private', 'PrivateCo', is_private=True)
@@ -295,6 +328,113 @@ class LibraryPanelTests(TestCase):
         html = self._panel(User.objects.create_user('lib_staff', password='x', is_staff=True))
         self.assertRegex(html, r'class="zelda-card p-4" id="vector-search-card"')
         self.assertNotIn('id="memo-library-hint"', html)
+
+
+class DataRoomReportArchiveTests(TestCase):
+    def setUp(self):
+        _mock_embedding_generation(self)
+        self.owner, self.founder = _founder('archive_owner', 'FoundryCo')
+        self.source = DocumentSource.objects.create(
+            uploaded_by=self.owner, filename='input.pdf', source_entity='Tesla, Inc.',
+            document_type='research', is_product_input=True, is_external_subject=True,
+        )
+        self.order = ZeldaOrder.objects.create(
+            user=self.owner, source_document=self.source, product='intelligence_memo',
+            reports=['intelligence_memo'], amount=199, status='ready', paid_at=timezone.now(),
+        )
+        self.room_url = reverse('matchmaking:data_room', args=[self.owner.username])
+
+    def test_owner_can_search_paid_reports_even_after_removing_library_entry(self):
+        self.assertTrue(try_save_report(self.owner, 'order', self.order.id, 'intelligence_memo', 1024))
+        self.client.force_login(self.owner)
+        self.client.post(reverse('zelda_api:library_dismiss', args=['order', self.order.id]))
+        self.assertEqual(self.client.get(URL).json()['purchases'], [])
+        response = self.client.get(self.room_url, {'q': 'Tesla'})
+        self.assertContains(response, 'Zelda report archive')
+        self.assertContains(response, 'Tesla, Inc.')
+        self.assertContains(response, reverse('billing:zelda_report', args=[self.order.id, 'intelligence_memo']))
+        self.assertContains(response, 'Memos')
+        self.assertNotContains(self.client.get(self.room_url, {'q': 'NoSuchCompany'}), 'Tesla, Inc.')
+
+    def test_new_memo_is_saved_to_archive_automatically(self):
+        document = _analyzed_deck(self.owner, 'FoundryCo')
+        self.assertTrue(DataRoomReportLink.objects.filter(
+            founder=self.founder, source_kind='document', source_id=str(document.id), report_key='memo').exists())
+
+    def test_fulfilled_purchase_saves_report_automatically(self):
+        analysis = DocumentSource.objects.create(
+            uploaded_by=self.owner, filename='analysis.pdf', source_entity='Tesla, Inc.',
+            document_type='pitch_deck', status='analyzed', is_product_input=True,
+        )
+        self.order.status = 'processing'
+        self.order.product = 'ic_memo'
+        self.order.reports = ['ic_memo']
+        self.order.analysis_document = analysis
+        self.order.save(update_fields=['status', 'product', 'reports', 'analysis_document'])
+        IntelligenceMemo.objects.create(document=analysis, executive_summary='A report', business_model_analysis='Evidence')
+        reconcile_order(self.order)
+        self.assertEqual(self.order.status, 'ready')
+        self.assertTrue(DataRoomReportLink.objects.filter(
+            founder=self.founder, source_kind='order', source_id=str(self.order.id), report_key='ic_memo').exists())
+
+    def test_connected_investor_does_not_see_owner_only_report_index(self):
+        self.assertTrue(try_save_report(self.owner, 'order', self.order.id, 'intelligence_memo', 1024))
+        viewer = User.objects.create_user('archive_investor', password='x')
+        investor = InvestorApplication.objects.create(user=viewer, full_name='I', company_name='Fund',
+                                                       email='i@t.test', investment_focus='SaaS', investment_stage='Seed')
+        Connection.objects.create(investor=investor, founder=self.founder, status='ACCEPTED', initiated_by='INVESTOR')
+        self.client.force_login(viewer)
+        response = self.client.get(self.room_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Zelda report archive')
+        self.assertNotContains(response, 'Tesla, Inc.')
+
+    def test_data_room_upload_categories_include_pitch_deck_and_memo(self):
+        labels = dict(DataRoomDocument.CATEGORY_CHOICES)
+        self.assertEqual(labels['PITCH_DECK'], 'Pitch Deck')
+        self.assertEqual(labels['MEMO'], 'Memo')
+        self.client.force_login(self.owner)
+        response = self.client.get(self.room_url)
+        self.assertContains(response, '<option value="PITCH_DECK">Pitch Deck</option>', html=True)
+
+    def test_free_storage_limit_preserves_purchases_and_existing_archive_after_downgrade(self):
+        self.assertEqual(FREE_LIMIT_BYTES, 500 * 1024 * 1024)
+        self.assertEqual(PREMIUM_LIMIT_BYTES, 5 * 1024 * 1024 * 1024)
+        self.founder.is_premium = True
+        self.founder.save(update_fields=['is_premium'])
+        DataRoomDocument.objects.create(founder=self.founder, file='data_room/old.pdf', label='Old file',
+                                        size_bytes=FREE_LIMIT_BYTES)
+        self.assertTrue(try_save_report(self.owner, 'order', self.order.id, 'intelligence_memo', 1024))
+        self.founder.is_premium = False
+        self.founder.save(update_fields=['is_premium'])
+
+        new_order = ZeldaOrder.objects.create(user=self.owner, source_document=self.source,
+                                              product='ic_memo', reports=['ic_memo'], amount=499,
+                                              status='ready', paid_at=timezone.now())
+        self.assertFalse(try_save_report(self.owner, 'order', new_order.id, 'ic_memo', 1024))
+        self.assertEqual(DataRoomReportLink.objects.filter(founder=self.founder).count(), 1)
+        self.client.force_login(self.owner)
+        self.assertContains(self.client.get(self.room_url), 'Tesla, Inc.')
+        self.assertEqual(len(self.client.get(URL).json()['purchases']), 2)
+
+    def test_full_room_refuses_new_upload_without_affecting_existing_files(self):
+        DataRoomDocument.objects.create(founder=self.founder, file='data_room/old.pdf', label='Old file',
+                                        size_bytes=FREE_LIMIT_BYTES)
+        self.client.force_login(self.owner)
+        response = self.client.post(reverse('matchmaking:data_room_upload', args=[self.owner.username]), {
+            'category': 'PITCH_DECK', 'label': 'New deck',
+            'file': SimpleUploadedFile('deck.pdf', b'a short file', content_type='application/pdf'),
+        }, follow=True)
+        self.assertContains(response, 'Data Room storage is full')
+        self.assertEqual(DataRoomDocument.objects.filter(founder=self.founder).count(), 1)
+
+    def test_new_paid_report_can_be_bought_when_room_is_full_and_stays_in_library(self):
+        DataRoomDocument.objects.create(founder=self.founder, file='data_room/old.pdf', label='Old file',
+                                        size_bytes=FREE_LIMIT_BYTES)
+        self.assertFalse(try_save_report(self.owner, 'order', self.order.id, 'intelligence_memo', 1024))
+        self.client.force_login(self.owner)
+        self.assertEqual(len(self.client.get(URL).json()['purchases']), 1)
+        self.assertNotContains(self.client.get(self.room_url), 'Tesla, Inc.')
 
 
 class GlobalSearchPageLinkTests(TestCase):

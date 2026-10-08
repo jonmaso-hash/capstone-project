@@ -1248,6 +1248,10 @@ class DataRoomDocument(models.Model):
     depends on `visibility` (see can_download_data_room_document).
     """
     CATEGORY_CHOICES = [
+        ('PITCH_DECK', 'Pitch Deck'),
+        ('BUSINESS_PLAN', 'Business Plan'),
+        ('MEMO', 'Memo'),
+        ('ZELDA_REPORT', 'Zelda Report'),
         ('CAP_TABLE', 'Cap Table'),
         ('FINANCIALS', 'Financials'),
         ('CUSTOMER_METRICS', 'Customer Metrics'),
@@ -1279,6 +1283,7 @@ class DataRoomDocument(models.Model):
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='OTHER')
     visibility = models.CharField(max_length=20, choices=VISIBILITY_CHOICES, default='INVESTOR_APPROVED')
     label = models.CharField(max_length=255)
+    size_bytes = models.PositiveBigIntegerField(null=True, blank=True, help_text='Stored file size for Data Room quota accounting.')
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -1286,6 +1291,24 @@ class DataRoomDocument(models.Model):
 
     def __str__(self):
         return f"{self.label} ({self.get_category_display()}) — {self.founder.company_name}"
+
+
+class DataRoomReportLink(models.Model):
+    """Private owner archive reference to an existing Zelda report.
+
+    This grants no investor access. Destination views still check permission.
+    """
+    founder = models.ForeignKey('matchmaking.Application', on_delete=models.CASCADE, related_name='data_room_report_links')
+    source_kind = models.CharField(max_length=12, choices=[('document', 'Document'), ('order', 'Order')])
+    source_id = models.CharField(max_length=40)
+    report_key = models.CharField(max_length=32)
+    size_bytes = models.PositiveBigIntegerField(default=0)
+    saved_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['founder', 'source_kind', 'source_id', 'report_key'],
+                                               name='unique_data_room_report_link')]
+        ordering = ['-saved_at']
 
 
 class DataRoomAccessRequest(models.Model):

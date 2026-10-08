@@ -1329,27 +1329,38 @@
                 <p class="small text-muted mb-0">Analyses you run and reports you open will be collected here.</p>
             </div>`);
         }
-        if (data.profile_analytics_url) {
-            cards.push(`<a href="${zeldaEscape(data.profile_analytics_url)}" class="small"><i class="bi bi-bar-chart me-1"></i>Your profile analytics</a>`);
+        if (data.archive_url) {
+            cards.push(`<a href="${zeldaEscape(data.archive_url)}" class="small"><i class="bi bi-folder me-1"></i>Search all reports in Data Room</a>`);
+        }
+        if (data.pagination && data.pagination.pages > 1) {
+            const paging = data.pagination;
+            cards.push(`<nav aria-label="Library pages" class="d-flex align-items-center justify-content-between gap-2 small">
+                ${paging.has_previous ? `<button type="button" class="btn btn-outline-secondary btn-sm zelda-library-page" data-page="${paging.page - 1}">Previous</button>` : '<span></span>'}
+                <span>Page ${paging.page} of ${paging.pages}</span>
+                ${paging.has_next ? `<button type="button" class="btn btn-outline-secondary btn-sm zelda-library-page" data-page="${paging.page + 1}">Next</button>` : '<span></span>'}
+            </nav>`);
         }
         return cards.join('');
     }
 
-    async function loadLibrary() {
+    let libraryPage = 1;
+    async function loadLibrary(page = libraryPage) {
         const loading = document.getElementById('library-loading');
         const content = document.getElementById('library-content');
         loading.style.display = 'block';
         content.style.display = 'none';
         const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 30000);
         try {
-            const response = await fetch(`${ZELDA_API}/library/`, {
+            const response = await fetch(`${ZELDA_API}/library/?page=${encodeURIComponent(page)}`, {
                 credentials: 'same-origin',
                 signal: controller.signal,
                 headers: { 'X-CSRFToken': getCookie('csrftoken') }
             });
             if (response.redirected || response.status === 401 || response.status === 403) throw new Error('Refresh this page and sign in again to load your Library.');
             if (!response.ok) throw new Error('Library is temporarily unavailable. Please try again shortly.');
-            content.innerHTML = renderLibrary(await response.json());
+            const data = await response.json();
+            libraryPage = data.pagination?.page || 1;
+            content.innerHTML = renderLibrary(data);
         } catch (err) {
             content.innerHTML = `<p class="small text-danger border border-danger rounded p-2 mb-0" role="status">${zeldaEscape(err.name === 'AbortError' ? 'Library took too long to load. Please try again.' : err.message)}</p>`;
             addLogEntry(`Library load error: ${err.message}`, 'error');
@@ -1361,6 +1372,12 @@
     }
 
     document.getElementById('library-content').addEventListener('click', async (event) => {
+        const pageButton = event.target.closest('.zelda-library-page');
+        if (pageButton) {
+            event.preventDefault();
+            await loadLibrary(Number(pageButton.dataset.page));
+            return;
+        }
         const button = event.target.closest('.zelda-library-dismiss');
         if (!button) return;
         event.preventDefault();
