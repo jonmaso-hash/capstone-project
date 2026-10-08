@@ -38,7 +38,7 @@ _OWNER_ONLY = "Only this company can open its own valuation"
 _INVESTOR_ONLY = 'Investor accounts only'
 
 
-def build_report_nav(viewer, founder_user, current):
+def build_report_nav(viewer, founder_user, current, hidden_document_ids=()):
     """
     The four-item strip for one company, from the point of view of
     `viewer`. `current` is one of the module constants and marks the
@@ -62,6 +62,12 @@ def build_report_nav(viewer, founder_user, current):
         .order_by('-created_at')
         .first()
     )
+    # Library dismissal affects navigation inside Library only. Direct report
+    # links, billing records and access checks remain intact.
+    if pitch_deck_doc and pitch_deck_doc.id in hidden_document_ids:
+        pitch_deck_doc, memo = None, None
+    if valuation_doc and valuation_doc.id in hidden_document_ids:
+        valuation_doc = None
 
     is_staff = bool(getattr(viewer, 'is_staff', False))
     is_owner = viewer == founder_user

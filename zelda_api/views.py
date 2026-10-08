@@ -156,6 +156,18 @@ class ZeldaLibraryAPIView(APIView):
         return Response(build_library(request.user))
 
 
+class ZeldaLibraryDismissAPIView(APIView):
+    """Remove one owned entry from Library, preserving reports and Stripe history."""
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+
+    def post(self, request, item_type, item_id):
+        from .library import dismiss_library_item
+        if not dismiss_library_item(request.user, item_type, item_id):
+            raise Http404
+        return Response({'dismissed': True})
+
+
 ZELDA_ASK_DAILY_LIMIT = 30
 
 

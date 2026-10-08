@@ -21,6 +21,7 @@ every other discovery surface.
 from django.urls import reverse
 from django.db import DatabaseError, transaction
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -40,9 +41,9 @@ def _status(document):
     return STATUS_LABELS.get(document.status, 'Processing')
 
 
-def _own_documents(user, product_storage=True):
+def _own_documents(user, product_storage=True, hidden_ids=()):
     from .vector_models import DocumentSource
-    documents = DocumentSource.objects.filter(uploaded_by=user)
+    documents = DocumentSource.objects.filter(uploaded_by=user).exclude(pk__in=hidden_ids)
     if product_storage:
         documents = documents.filter(is_product_input=False, analysis_orders__isnull=True, valuation_orders__isnull=True)
     else:
@@ -62,9 +63,9 @@ def _own_documents(user, product_storage=True):
     } for document in documents]
 
 
-def _own_valuations(user, product_storage=True):
+def _own_valuations(user, product_storage=True, hidden_ids=()):
     from .vector_models import DocumentSource
-    documents = DocumentSource.objects.filter(uploaded_by=user, document_type='business_valuation')
+    documents = DocumentSource.objects.filter(uploaded_by=user, document_type='business_valuation').exclude(pk__in=hidden_ids)
     if product_storage:
         documents = documents.filter(valuation_orders__isnull=True)
     else:
@@ -74,6 +75,7 @@ def _own_valuations(user, product_storage=True):
         .order_by('-created_at')[:LIST_LIMIT]
     )
     return [{
+        'document_id': document.id,
         'name': document.source_entity or document.filename,
         'status': _status(document),
         'url': reverse('zelda_api:valuation_report', args=[document.id]),
@@ -81,7 +83,7 @@ def _own_valuations(user, product_storage=True):
     } for document in documents]
 
 
-def _recent_companies(user):
+def _recent_companies(user, hidden_ids=()):
     """Companies this investor analyzed or opened reports for, newest activity first."""
     from matchmaking.models import Application, InvestorInterestEvent
     from .ic_memo import latest_analyzed_pitch_deck_and_memo
@@ -113,7 +115,7 @@ def _recent_companies(user):
 
     applications = (
         Application.objects.discoverable().exclude(review_status='DENIED')
-        .filter(id__in=latest).select_related('user')
+        .filter(id__in=latest).exclude(id__in=hidden_ids).select_related('user')
     )
     ordered = sorted(applications, key=lambda application: latest[application.id][0], reverse=True)
 
@@ -123,6 +125,7 @@ def _recent_companies(user):
         document, memo = latest_analyzed_pitch_deck_and_memo(application.user)
         can_open_brief = bool(document and memo is not None and not document.is_hidden_by_staff)
         items.append({
+            'company_id': application.id,
             'company': application.company_name or application.user.username,
             'activity': label,
             'last_activity': when.isoformat(),
@@ -135,6 +138,7 @@ def _recent_companies(user):
 
 def build_library(user):
     from .report_nav import build_report_nav
+    from .models import LibraryHiddenItem
 
     sections = []
     warnings = []
@@ -159,19 +163,31 @@ def build_library(user):
             warnings.append(f'{label} could not be loaded. Please try again shortly.')
             return []
 
+    hidden = {key: set() for key in ('document', 'valuation', 'order', 'company')}
+    for item_type, item_id in available(
+        lambda: list(LibraryHiddenItem.objects.filter(user=user).values_list('item_type', 'item_id')),
+        'Hidden Library items',
+    ):
+        if item_type in hidden:
+            hidden[item_type].add(item_id)
+
+    def visible_document_ids(kind):
+        return {int(value) for value in hidden[kind] if value.isdecimal()}
+
     company_profile = (getattr(user, 'match_founder_profile', None)
                        or getattr(user, 'match_seller_profile', None))
-    documents = available(lambda: _own_documents(user, product_storage), 'Your documents')
+    documents = available(lambda: _own_documents(user, product_storage, visible_document_ids('document')), 'Your documents')
     if company_profile or documents:
         sections.append({
             'key': 'your_company',
             'title': 'Your company',
             'company': getattr(company_profile, 'company_name', '') or '',
-            'reports': available(lambda: build_report_nav(user, user, None), 'Your company reports') if company_profile else [],
+            'reports': available(lambda: build_report_nav(user, user, None,
+                visible_document_ids('document') | visible_document_ids('valuation')), 'Your company reports') if company_profile else [],
             'documents': documents,
         })
 
-    valuations = available(lambda: _own_valuations(user, product_storage), 'Your valuations')
+    valuations = available(lambda: _own_valuations(user, product_storage, visible_document_ids('valuation')), 'Your valuations')
     if valuations:
         sections.append({
             'key': 'valuations',
@@ -184,7 +200,7 @@ def build_library(user):
         sections.append({
             'key': 'recent_companies',
             'title': "Companies you've looked into",
-            'items': available(lambda: _recent_companies(user), 'Recent company reports'),
+            'items': available(lambda: _recent_companies(user, visible_document_ids('company')), 'Recent company reports'),
         })
 
     has_role = any(getattr(user, name, None) is not None for name in (
@@ -192,12 +208,12 @@ def build_library(user):
     from billing.zelda_catalog import ALL_STRIPE_PRODUCTS, REPORTS
     from billing.fulfillment import reconcile_order
     purchases = []
-    orders = available(lambda: list(ZeldaOrder.objects.filter(user=user).exclude(status='canceled').select_related(
+    orders = available(lambda: list(ZeldaOrder.objects.filter(user=user).exclude(status='canceled').exclude(id__in=hidden['order']).select_related(
             'source_document', 'analysis_document', 'valuation_document', 'entity_report')[:LIST_LIMIT]), 'Purchased reports') if product_storage else []
     for order in orders:
         if not available(lambda: reconcile_order(order), 'Purchased report status'):
             continue
-        purchases.append({'company': order.source_document.source_entity, 'product': ALL_STRIPE_PRODUCTS[order.product][0],
+        purchases.append({'order_id': str(order.id), 'company': order.source_document.source_entity, 'product': ALL_STRIPE_PRODUCTS[order.product][0],
                           'status': order.get_status_display(), 'url': reverse('billing:zelda_order', args=[order.id]),
                           'reports': [{'name': REPORTS[key][0], 'url': reverse('billing:zelda_report', args=[order.id, key])}
                                       for key in order.reports] if order.status == 'ready' else []})
@@ -208,3 +224,35 @@ def build_library(user):
         'profile_analytics_url': (
             reverse('accounts:profile_analysis', kwargs={'username': user.username}) if has_role else None),
     }
+
+
+def dismiss_library_item(user, item_type, item_id):
+    """Hide only a currently owned/listed item. Never erase source or billing data."""
+    from billing.models import ZeldaOrder
+    from .models import LibraryHiddenItem
+    from .vector_models import DocumentSource
+
+    if item_type == 'order':
+        try:
+            item_id = str(uuid.UUID(item_id))
+        except (ValueError, AttributeError):
+            return False
+        exists = ZeldaOrder.objects.filter(user=user, pk=item_id).exclude(status='canceled').exists()
+    elif item_type in ('document', 'valuation', 'company') and len(item_id) <= 18 and item_id.isdecimal():
+        item_id = str(int(item_id))
+        if item_type == 'company':
+            exists = any(str(item['company_id']) == item_id for item in _recent_companies(user))
+        else:
+            documents = DocumentSource.objects.filter(uploaded_by=user, pk=item_id)
+            if item_type == 'valuation':
+                exists = documents.filter(document_type='business_valuation', valuation_orders__isnull=True).exists()
+            else:
+                exists = documents.exclude(document_type='business_valuation').filter(
+                    is_product_input=False, analysis_orders__isnull=True, valuation_orders__isnull=True,
+                ).exists()
+    else:
+        return False
+    if not exists:
+        return False
+    LibraryHiddenItem.objects.get_or_create(user=user, item_type=item_type, item_id=item_id)
+    return True
