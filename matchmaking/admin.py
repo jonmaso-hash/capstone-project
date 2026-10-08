@@ -229,7 +229,8 @@ class BusinessEmailVerificationAdmin(admin.ModelAdmin):
     list_display = ['user', 'business_email', 'status', 'attempts', 'created_at', 'expires_at']
     list_filter = ['status', 'created_at']
     search_fields = ['user__username', 'business_email']
-    readonly_fields = ['code', 'created_at', 'verified_at']
+    readonly_fields = ['created_at', 'verified_at']
+    exclude = ['code_hash']
 
 
 @admin.register(CompanyRepresentationAttestation)
