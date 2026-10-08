@@ -211,10 +211,7 @@ services:
           name: interlink-web
           envVarKey: STREAM_API_SECRET
       - key: STREAM_ID_NAMESPACE
-        fromService:
-          type: web
-          name: interlink-web
-          envVarKey: STREAM_ID_NAMESPACE
+        value: production
       - key: STRIPE_SECRET_KEY
         fromService:
           type: web
