@@ -1254,6 +1254,13 @@
             : '';
     }
 
+    function renderLibraryDismiss(type, id, name) {
+        return `<button type="button" class="btn-close zelda-library-dismiss ms-2 flex-shrink-0"
+            data-library-type="${zeldaEscape(type)}" data-library-id="${zeldaEscape(id)}"
+            aria-label="Remove ${zeldaEscape(name)} from Library" title="Remove from Library"
+            style="font-size: 0.65rem;"></button>`;
+    }
+
     function renderLibrary(data) {
         const cards = [];
         (data.warnings || []).forEach(message => cards.push(`<p class="small text-danger border border-danger rounded p-2" role="status">${zeldaEscape(message)}</p>`));
@@ -1261,7 +1268,10 @@
             if (section.key === 'your_company') {
                 const docs = (section.documents || []).map(d => `
                     <div class="p-2 bg-light rounded-3">
-                        <div class="small fw-semibold text-dark">${zeldaEscape(d.name)}</div>
+                        <div class="d-flex justify-content-between align-items-start gap-2">
+                            <div class="small fw-semibold text-dark">${zeldaEscape(d.name)}</div>
+                            ${renderLibraryDismiss('document', d.document_id, d.name)}
+                        </div>
                         <div class="small text-muted">${zeldaEscape(d.kind)} · ${zeldaEscape(d.status)} · ${zeldaDate(d.created_at)}</div>
                         ${d.can_open_brief ? renderLibraryBriefButton(d.document_id) : ''}
                     </div>`).join('');
@@ -1272,10 +1282,13 @@
                 </div>`);
             } else if (section.key === 'valuations') {
                 const rows = section.items.map(v => `
-                    <a href="${zeldaEscape(v.url)}" class="d-block p-2 bg-light rounded-3 text-decoration-none">
-                        <span class="small fw-semibold text-dark">${zeldaEscape(v.name)}</span>
-                        <span class="small text-muted d-block">${zeldaEscape(v.status)} · ${zeldaDate(v.created_at)}</span>
-                    </a>`).join('');
+                    <div class="d-flex justify-content-between align-items-start gap-2 p-2 bg-light rounded-3">
+                        <a href="${zeldaEscape(v.url)}" class="d-block text-decoration-none">
+                            <span class="small fw-semibold text-dark">${zeldaEscape(v.name)}</span>
+                            <span class="small text-muted d-block">${zeldaEscape(v.status)} · ${zeldaDate(v.created_at)}</span>
+                        </a>
+                        ${renderLibraryDismiss('valuation', v.document_id, v.name)}
+                    </div>`).join('');
                 cards.push(`<div class="zelda-card p-3">
                     <h6 class="fw-bold text-dark mb-2">${zeldaEscape(section.title)}</h6>
                     <div class="d-flex flex-column gap-2">${rows}</div>
@@ -1284,7 +1297,10 @@
             } else if (section.key === 'recent_companies') {
                 const rows = section.items.map(c => `
                     <div class="p-2 bg-light rounded-3">
-                        <a href="${zeldaEscape(c.profile_url)}" class="small fw-semibold text-dark">${zeldaEscape(c.company)}</a>
+                        <div class="d-flex justify-content-between align-items-start gap-2">
+                            <a href="${zeldaEscape(c.profile_url)}" class="small fw-semibold text-dark">${zeldaEscape(c.company)}</a>
+                            ${renderLibraryDismiss('company', c.company_id, c.company)}
+                        </div>
                         <div class="small text-muted">${zeldaEscape(c.activity)} · ${zeldaDate(c.last_activity)}</div>
                         ${renderLibraryReports(c.reports)}
                         ${renderLibraryBriefButton(c.brief_document_id)}
@@ -1298,7 +1314,10 @@
         });
         if (data.purchases && data.purchases.length) {
             const rows = data.purchases.map(purchase => `<div class="p-3 bg-light rounded-3">
-                <a href="${zeldaEscape(purchase.url)}" class="small fw-bold">${zeldaEscape(purchase.company)} · ${zeldaEscape(purchase.product)}</a>
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <a href="${zeldaEscape(purchase.url)}" class="small fw-bold">${zeldaEscape(purchase.company)} · ${zeldaEscape(purchase.product)}</a>
+                    ${renderLibraryDismiss('order', purchase.order_id, purchase.company + ' · ' + purchase.product)}
+                </div>
                 <div class="small text-muted">${zeldaEscape(purchase.status)}</div>
                 ${(purchase.reports || []).map(report => `<a class="d-block small mt-1" href="${zeldaEscape(report.url)}">${zeldaEscape(report.name)}</a>`).join('')}
             </div>`).join('');
@@ -1340,6 +1359,30 @@
             content.style.display = 'flex';
         }
     }
+
+    document.getElementById('library-content').addEventListener('click', async (event) => {
+        const button = event.target.closest('.zelda-library-dismiss');
+        if (!button) return;
+        event.preventDefault();
+        const label = button.getAttribute('aria-label');
+        if (!window.confirm(`${label}? This only removes the entry from your Library. It does not delete the report, source document, or payment record.`)) return;
+        button.disabled = true;
+        try {
+            const response = await fetch(`${ZELDA_API}/library/${encodeURIComponent(button.dataset.libraryType)}/${encodeURIComponent(button.dataset.libraryId)}/dismiss/`, {
+                method: 'POST', credentials: 'same-origin',
+                headers: {'X-CSRFToken': getCookie('csrftoken')},
+            });
+            if (!response.ok || !(await response.json()).dismissed) throw new Error('Unable to remove this Library entry.');
+            await loadLibrary();
+        } catch (error) {
+            button.disabled = false;
+            const notice = document.createElement('p');
+            notice.className = 'small text-danger mb-0';
+            notice.setAttribute('role', 'alert');
+            notice.textContent = error.message;
+            button.closest('.bg-light').appendChild(notice);
+        }
+    });
 
     document.getElementById('vector-search-form').addEventListener('submit', async (e) => {
         e.preventDefault();

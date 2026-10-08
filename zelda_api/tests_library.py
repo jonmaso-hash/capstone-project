@@ -18,13 +18,14 @@ from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.urls import Resolver404, resolve, reverse
 from django.utils import timezone
 
 from matchmaking.models import Application, Connection, InvestorApplication, InvestorInterestEvent
 from matchmaking.tests import _mock_embedding_generation
-from zelda_api.models import AnalysisCreditCharge
+from billing.models import ZeldaOrder
+from zelda_api.models import AnalysisCreditCharge, LibraryHiddenItem
 from zelda_api.vector_models import DocumentSource, IntelligenceMemo
 
 User = get_user_model()
@@ -97,6 +98,93 @@ class LibraryAccessTests(TestCase):
         data = self.client.get(URL).json()
         self.assertEqual(data['sections'], [])
         self.assertIsNone(data['profile_analytics_url'])
+
+    def test_processing_deck_can_be_removed_without_deleting_its_evidence(self):
+        me, _ = _founder('lib_qibby', 'Interlink Foundry')
+        deck = DocumentSource.objects.create(
+            uploaded_by=me, filename='qibby.pdf', source_entity='Qibby Saves LLC',
+            document_type='pitch_deck', status='analyzing',
+        )
+        self.client.force_login(me)
+        data = self.client.get(URL).json()
+        self.assertEqual(data['sections'][0]['documents'][0]['status'], 'Processing')
+        self.assertEqual(data['sections'][0]['documents'][0]['document_id'], deck.pk)
+
+        dismiss = reverse('zelda_api:library_dismiss', args=['document', deck.pk])
+        self.assertEqual(self.client.post(dismiss).json(), {'dismissed': True})
+        self.assertEqual(self.client.post(dismiss).json(), {'dismissed': True})
+        self.assertEqual(self.client.get(URL).json()['sections'][0]['documents'], [])
+        self.assertTrue(DocumentSource.objects.filter(pk=deck.pk).exists())
+        self.assertEqual(LibraryHiddenItem.objects.filter(user=me, item_type='document').count(), 1)
+
+    def test_hiding_an_analyzed_deck_also_hides_its_report_buttons_in_library(self):
+        me, _ = _founder('lib_hide_nav', 'MyCo')
+        deck = _analyzed_deck(me, 'MyCo')
+        self.client.force_login(me)
+        self.assertIn('evidence', [r['key'] for r in self.client.get(URL).json()['sections'][0]['reports']])
+        self.client.post(reverse('zelda_api:library_dismiss', args=['document', deck.pk]))
+        report_keys = [r['key'] for r in self.client.get(URL).json()['sections'][0]['reports']]
+        self.assertNotIn('evidence', report_keys)
+        self.assertNotIn('analysis', report_keys)
+        self.assertTrue(IntelligenceMemo.objects.filter(document=deck).exists())
+
+    def test_awaiting_payment_order_can_be_removed_without_canceling_or_unlocking_it(self):
+        me, _ = _founder('lib_buyer', 'BuyerCo')
+        source = DocumentSource.objects.create(
+            uploaded_by=me, filename='deck.pdf', source_entity='Tesla, Inc.',
+            document_type='pitch_deck', is_product_input=True,
+        )
+        order = ZeldaOrder.objects.create(
+            user=me, source_document=source, product='intelligence_memo',
+            reports=['intelligence_memo'], amount=999, status='awaiting_payment',
+        )
+        self.client.force_login(me)
+        self.assertEqual(self.client.get(URL).json()['purchases'][0]['order_id'], str(order.pk))
+        dismiss = reverse('zelda_api:library_dismiss', args=['order', order.pk])
+        self.assertEqual(self.client.post(dismiss).status_code, 200)
+        self.assertEqual(self.client.get(URL).json()['purchases'], [])
+        order.refresh_from_db()
+        self.assertEqual(order.status, 'awaiting_payment')
+        self.assertTrue(DocumentSource.objects.filter(pk=source.pk).exists())
+
+    def test_dismissal_is_private_and_cannot_hide_another_users_items(self):
+        me, _ = _founder('lib_hide_me', 'MyCo')
+        other, _ = _founder('lib_hide_other', 'OtherCo')
+        deck = _analyzed_deck(other, 'OtherCo')
+        self.client.force_login(me)
+        url = reverse('zelda_api:library_dismiss', args=['document', deck.pk])
+        self.assertEqual(self.client.post(url).status_code, 404)
+        self.assertEqual(self.client.post(reverse('zelda_api:library_dismiss', args=['order', 'not-a-uuid'])).status_code, 404)
+        self.assertEqual(LibraryHiddenItem.objects.count(), 0)
+        self.client.force_login(other)
+        self.assertEqual(self.client.get(URL).json()['sections'][0]['documents'][0]['document_id'], deck.pk)
+
+    def test_dismiss_requires_authentication_and_session_csrf(self):
+        owner, _ = _founder('lib_csrf', 'MyCo')
+        deck = _analyzed_deck(owner, 'MyCo')
+        url = reverse('zelda_api:library_dismiss', args=['document', deck.pk])
+        self.assertIn(self.client.post(url).status_code, (401, 403))
+        csrf_client = Client(enforce_csrf_checks=True)
+        csrf_client.force_login(owner)
+        self.assertEqual(csrf_client.post(url).status_code, 403)
+        self.assertFalse(LibraryHiddenItem.objects.exists())
+
+    def test_dismissed_valuation_and_recent_company_leave_original_records(self):
+        me = User.objects.create_user('lib_hide_investor', password='x')
+        InvestorApplication.objects.create(user=me, full_name='I', company_name='Fund', email='i@t.test',
+                                           investment_focus='SaaS', investment_stage='Seed')
+        _, founder = _founder('lib_hide_founder', 'RecentCo')
+        InvestorInterestEvent.objects.create(investor=me, founder=founder, event_type='analyze')
+        valuation = DocumentSource.objects.create(uploaded_by=me, filename='v.pdf', source_entity='ValueCo',
+                                                  document_type='business_valuation', status='analyzed')
+        self.client.force_login(me)
+        self.assertEqual(self.client.post(reverse('zelda_api:library_dismiss', args=['valuation', valuation.pk])).status_code, 200)
+        self.assertEqual(self.client.post(reverse('zelda_api:library_dismiss', args=['company', founder.pk])).status_code, 200)
+        sections = {section['key']: section for section in self.client.get(URL).json()['sections']}
+        self.assertNotIn('valuations', sections)
+        self.assertEqual(sections['recent_companies']['items'], [])
+        self.assertTrue(DocumentSource.objects.filter(pk=valuation.pk).exists())
+        self.assertTrue(InvestorInterestEvent.objects.filter(investor=me, founder=founder).exists())
 
 
 class InvestorRecentCompaniesTests(TestCase):
@@ -184,6 +272,8 @@ class LibraryPanelTests(TestCase):
         html = self._panel(User.objects.create_user('lib_panel', password='x'))
         self.assertIn('data-tab="library"', html)
         self.assertIn('id="tab-library"', html)
+        self.assertIn('zelda-library-dismiss', html)
+        self.assertIn("method: 'POST', credentials: 'same-origin'", html)
 
     def test_the_raw_document_id_tools_are_hidden_from_non_staff(self):
         html = self._panel(User.objects.create_user('lib_member', password='x'))

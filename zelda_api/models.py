@@ -8,6 +8,22 @@ from .truth_delta_models import ClaimedDatapoint, TruthDeltaReport
 from .entity_verification_models import EntityVerificationReport  # noqa: F401 - imported so Django registers the model at app load, not via admin.py
 
 
+class LibraryHiddenItem(models.Model):
+    """A user's Library dismissal, without deleting evidence or payment history."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='zelda_library_hidden_items')
+    item_type = models.CharField(max_length=20, choices=[
+        ('document', 'Document'), ('valuation', 'Valuation'),
+        ('order', 'Order'), ('company', 'Recently viewed company'),
+    ])
+    item_id = models.CharField(max_length=40)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = 'zelda_api'
+        constraints = [models.UniqueConstraint(fields=['user', 'item_type', 'item_id'], name='unique_library_hidden_item')]
+
+
 # ==========================================
 # CONTENT & KNOWLEDGE ENGINE MODELS
 # ==========================================
