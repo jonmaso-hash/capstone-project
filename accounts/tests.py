@@ -483,6 +483,13 @@ class BusinessVerificationViewTests(TestCase):
             description='test', sector='SaaS', stage='Seed',
         )
 
+    def _sent_code(self):
+        from django.core import mail
+        return mail.outbox[-1].body.split('is: ', 1)[1].splitlines()[0]
+
+    def _wrong_code(self):
+        return '000000' if self._sent_code() != '000000' else '111111'
+
     def test_unauthenticated_redirects_to_login(self):
         response = self.client.get(reverse('accounts:business_verification'))
         self.assertEqual(response.status_code, 302)
@@ -507,7 +514,8 @@ class BusinessVerificationViewTests(TestCase):
         verification = BusinessEmailVerification.objects.get(user=self.founder_user)
         self.assertEqual(verification.status, 'PENDING')
         self.assertEqual(len(mail.outbox), 1)
-        self.assertIn(verification.code, mail.outbox[0].body)
+        self.assertTrue(verification.matches_code(self._sent_code()))
+        self.assertNotEqual(verification.code_hash, self._sent_code())
 
     def test_mismatched_domain_creates_no_row_and_sends_no_mail(self):
         from django.core import mail
@@ -547,7 +555,7 @@ class BusinessVerificationViewTests(TestCase):
 
         response = self.client.post(
             reverse('accounts:business_verification_confirm'),
-            {'code': verification.code},
+            {'code': self._sent_code()},
             follow=True,
         )
 
@@ -566,7 +574,7 @@ class BusinessVerificationViewTests(TestCase):
         self.client.post(reverse('accounts:business_verification_request'), {'business_email': 'jon@interlinkfoundry.com'})
         verification = BusinessEmailVerification.objects.get(user=self.founder_user)
 
-        self.client.post(reverse('accounts:business_verification_confirm'), {'code': '000000'})
+        self.client.post(reverse('accounts:business_verification_confirm'), {'code': self._wrong_code()})
 
         verification.refresh_from_db()
         self.assertEqual(verification.status, 'PENDING')
@@ -581,13 +589,13 @@ class BusinessVerificationViewTests(TestCase):
         verification = BusinessEmailVerification.objects.get(user=self.founder_user)
 
         for _ in range(BusinessEmailVerification.MAX_ATTEMPTS):
-            self.client.post(reverse('accounts:business_verification_confirm'), {'code': '000000'})
+            self.client.post(reverse('accounts:business_verification_confirm'), {'code': self._wrong_code()})
 
         verification.refresh_from_db()
         self.assertEqual(verification.status, 'LOCKED')
 
         # even the correct code is now rejected — there's no PENDING row left
-        self.client.post(reverse('accounts:business_verification_confirm'), {'code': verification.code})
+        self.client.post(reverse('accounts:business_verification_confirm'), {'code': self._sent_code()})
         self.founder.refresh_from_db()
         self.assertFalse(self.founder.is_verified)
 
@@ -600,7 +608,7 @@ class BusinessVerificationViewTests(TestCase):
             expires_at=timezone.now() - timedelta(minutes=1)
         )
 
-        self.client.post(reverse('accounts:business_verification_confirm'), {'code': verification.code})
+        self.client.post(reverse('accounts:business_verification_confirm'), {'code': self._sent_code()})
 
         verification.refresh_from_db()
         self.assertEqual(verification.status, 'EXPIRED')

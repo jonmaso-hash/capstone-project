@@ -1809,15 +1809,20 @@ class BusinessEmailVerificationModelTests(TestCase):
         from .models import BusinessEmailVerification
         user = User.objects.create_user('bev_code_user', password='x')
         verification = BusinessEmailVerification.objects.create(user=user, business_email='jon@interlinkfoundry.com')
-        self.assertEqual(len(verification.code), 6)
-        self.assertTrue(verification.code.isdigit())
+        code = verification.take_issued_code()
+        self.assertEqual(len(code), 6)
+        self.assertTrue(code.isdigit())
+        self.assertTrue(verification.matches_code(code))
+        self.assertIsNone(verification.take_issued_code())
 
     def test_codes_are_not_all_identical(self):
         from .models import BusinessEmailVerification
         user = User.objects.create_user('bev_random_user', password='x')
         codes = {
-            BusinessEmailVerification.objects.create(user=user, business_email='jon@interlinkfoundry.com').code
-            for _ in range(5)
+            BusinessEmailVerification.objects.create(
+                user=User.objects.create_user(f'bev_random_{i}'),
+                business_email='jon@interlinkfoundry.com').take_issued_code()
+            for i in range(5)
         }
         self.assertGreater(len(codes), 1)
 

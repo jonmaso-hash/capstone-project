@@ -8,6 +8,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password, check_password
 from django.utils import timezone
 from datetime import timedelta
 from pgvector.django import VectorField
@@ -1098,7 +1099,7 @@ class BusinessEmailVerification(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='business_email_verifications')
     business_email = models.EmailField(max_length=254)
-    code = models.CharField(max_length=6, editable=False)
+    code_hash = models.CharField(max_length=128, editable=False)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
     attempts = models.PositiveSmallIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -1108,15 +1109,28 @@ class BusinessEmailVerification(models.Model):
     class Meta:
         ordering = ['-created_at']
         indexes = [models.Index(fields=['user', 'status'])]
+        constraints = [models.UniqueConstraint(
+            fields=['user'], condition=models.Q(status='PENDING'),
+            name='one_pending_business_email_code',
+        )]
 
     def save(self, *args, **kwargs):
         if not self.pk:
-            if not self.code:
-                import secrets
-                self.code = f"{secrets.randbelow(1000000):06d}"
+            if not self.code_hash and self.status == 'PENDING':
+                raw_code = f"{secrets.randbelow(1000000):06d}"
+                self.code_hash = make_password(raw_code)
+                self._issued_code = raw_code
             if not self.expires_at:
                 self.expires_at = timezone.now() + self.CODE_EXPIRY
         super().save(*args, **kwargs)
+
+    def take_issued_code(self):
+        return self.__dict__.pop('_issued_code', None)
+
+    def matches_code(self, submitted_code):
+        return (len(submitted_code) == 6 and submitted_code.isascii()
+                and submitted_code.isdigit() and bool(self.code_hash)
+                and check_password(submitted_code, self.code_hash))
 
     def __str__(self):
         return f"{self.user.username} — {self.business_email} [{self.status}]"

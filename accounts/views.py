@@ -12,6 +12,7 @@ from django.contrib.auth.views import PasswordResetView
 from django.core.cache import cache
 from django.core.mail import send_mail
 from django.db.models import Avg, Count, Q
+from django.db import transaction
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -1329,6 +1330,7 @@ def business_verification(request):
 
 @login_required
 @require_POST
+@transaction.atomic
 def business_verification_request(request):
     business_email = (request.POST.get("business_email") or "").strip()
 
@@ -1345,21 +1347,26 @@ def business_verification_request(request):
         messages.error(request, "That email domain doesn't match your company name.")
         return redirect("accounts:business_verification")
 
-    cooldown_key = f"business_verify_cooldown:{request.user.id}"
-    if cache.get(cooldown_key):
+    # Serialize issuance and confirmation even when there is no pending row.
+    get_user_model().objects.select_for_update().get(pk=request.user.pk)
+    latest = BusinessEmailVerification.objects.filter(user=request.user).order_by('-created_at', '-pk').first()
+    if latest and (timezone.now() - latest.created_at).total_seconds() < BUSINESS_VERIFICATION_RESEND_COOLDOWN:
         messages.error(request, "Please wait a bit before requesting another code.")
         return redirect("accounts:business_verification")
 
+    BusinessEmailVerification.objects.filter(user=request.user, status='PENDING').update(
+        status='EXPIRED', code_hash='',
+    )
     verification = BusinessEmailVerification.objects.create(
         user=request.user, business_email=business_email,
     )
-    cache.set(cooldown_key, True, timeout=BUSINESS_VERIFICATION_RESEND_COOLDOWN)
+    raw_code = verification.take_issued_code()
 
     try:
         send_mail(
             subject="Your Interlink Foundry company-email verification code",
             message=(
-                f"Your Interlink Foundry company-email verification code is: {verification.code}\n\n"
+                f"Your Interlink Foundry company-email verification code is: {raw_code}\n\n"
                 f"This code expires in 30 minutes. If you didn't request this, you can safely ignore this email."
             ),
             from_email=settings.DEFAULT_FROM_EMAIL,
@@ -1375,25 +1382,29 @@ def business_verification_request(request):
 
 @login_required
 @require_POST
+@transaction.atomic
 def business_verification_confirm(request):
     submitted_code = (request.POST.get("code") or "").strip()
-    verification = BusinessEmailVerification.objects.filter(user=request.user, status="PENDING").first()
+    get_user_model().objects.select_for_update().get(pk=request.user.pk)
+    verification = BusinessEmailVerification.objects.filter(user=request.user).order_by('-created_at', '-pk').first()
 
-    if not verification:
+    if not verification or verification.status != 'PENDING':
         messages.error(request, "Request a verification code first.")
         return redirect("accounts:business_verification")
 
-    if timezone.now() > verification.expires_at:
+    if timezone.now() >= verification.expires_at:
         verification.status = "EXPIRED"
-        verification.save(update_fields=["status"])
+        verification.code_hash = ''
+        verification.save(update_fields=["status", "code_hash"])
         messages.error(request, "That code has expired. Request a new one.")
         return redirect("accounts:business_verification")
 
-    if submitted_code != verification.code:
+    if verification.attempts >= BusinessEmailVerification.MAX_ATTEMPTS or not verification.matches_code(submitted_code):
         verification.attempts += 1
         if verification.attempts >= BusinessEmailVerification.MAX_ATTEMPTS:
             verification.status = "LOCKED"
-            verification.save(update_fields=["attempts", "status"])
+            verification.code_hash = ''
+            verification.save(update_fields=["attempts", "status", "code_hash"])
             messages.error(request, "Too many incorrect attempts. Request a new code.")
         else:
             verification.save(update_fields=["attempts"])
@@ -1402,7 +1413,8 @@ def business_verification_confirm(request):
 
     verification.status = "VERIFIED"
     verification.verified_at = timezone.now()
-    verification.save(update_fields=["status", "verified_at"])
+    verification.code_hash = ''
+    verification.save(update_fields=["status", "verified_at", "code_hash"])
 
     messages.success(
         request,
