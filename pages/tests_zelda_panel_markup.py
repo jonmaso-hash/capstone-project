@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PANEL_PATH = ROOT / 'templates' / 'includes' / 'zelda_ai_assistant_enhanced.html'
 
 PANEL_SECTIONS = [
-    'tab-notifications', 'tab-ask', 'tab-library', 'tab-upload',
+    'tab-notifications', 'tab-ask', 'tab-library',
     'tab-memo', 'tab-intelligence', 'tab-truth-delta', 'tab-progress',
     'agent-response-log',
 ]
@@ -88,6 +88,12 @@ class ZeldaPanelMarkupTests(TestCase):
 
     def test_the_execution_log_is_rendered_once(self):
         self.assertEqual(self.nesting.id_counts.get('agent-response-log'), 1)
+
+    def test_duplicate_global_upload_tab_is_removed(self):
+        content = PANEL_PATH.read_text(encoding='utf-8')
+        self.assertNotIn('data-tab="upload"', content)
+        self.assertNotIn('id="tab-upload"', content)
+        self.assertNotIn('id="document-upload-form"', content)
 
 
 class ZeldaCurrentSubjectHubTests(TestCase):

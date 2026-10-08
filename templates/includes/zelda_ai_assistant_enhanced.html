@@ -474,7 +474,7 @@
     id="ai-agent-toggle"
     class="btn btn-primary rounded-circle position-fixed bottom-0 end-0 m-4 d-flex align-items-center justify-content-center shadow-lg"
     style="width: 70px; height: 70px; z-index: 1050;"
-    title="{% if user.match_investor_profile or user.match_buyer_profile %}Open Zelda to upload deal materials{% elif user.match_founder_profile or user.match_seller_profile %}Open Zelda to review your company{% else %}Open Zelda Intelligence Panel{% endif %}">
+    title="Open Zelda Intelligence Panel">
     <div class="zelda-icon-shell" style="position: relative; width: 40px; height: 40px;">
         <div class="position-absolute w-100 h-100 rounded-circle bg-warning dynamic-pulse zelda-stage-pulse-dot"></div>
         <i class="bi bi-robot text-warning fs-2 dynamic-glow position-relative z-3"></i>
@@ -537,9 +537,9 @@
                     {% elif user.match_seller_profile %}
                     Review your business the way a buyer may see it. Save, update and share Zelda reports.
                     {% elif user.match_investor_profile %}
-                    Upload deal materials and let Zelda organize first-pass diligence.
+                    Choose a Zelda intelligence product to organize first-pass diligence.
                     {% elif user.match_buyer_profile %}
-                    Upload acquisition materials and let Zelda organize first-pass diligence.
+                    Choose a Zelda intelligence product to organize first-pass diligence.
                     {% endif %}
                 </div>
             </div>
@@ -593,11 +593,8 @@
 
         <!-- HUB NAVIGATION -->
         <div class="zelda-tabs" style="margin: 0 -1rem 0 -1rem; padding: 0 1rem;">
-            <button class="zelda-tab{% if not user.match_investor_profile and not user.match_buyer_profile %} active{% endif %}" data-tab="ask">
+            <button class="zelda-tab active" data-tab="ask">
                 <i class="bi bi-stars me-2"></i>Ask Zelda
-            </button>
-            <button class="zelda-tab{% if user.match_investor_profile or user.match_buyer_profile %} active{% endif %}" data-tab="upload">
-                <i class="bi bi-cloud-upload me-2"></i>Upload
             </button>
             <button class="zelda-tab" data-tab="library">
                 <i class="bi bi-collection me-2"></i>Library
@@ -658,7 +655,7 @@
         </div>
 
         <!-- TAB: ASK ZELDA -->
-        <div id="tab-ask" class="tab-content{% if not user.match_investor_profile and not user.match_buyer_profile %} active{% endif %}" style="display: {% if user.match_investor_profile or user.match_buyer_profile %}none{% else %}flex{% endif %}; flex-direction: column; gap: 1rem;">
+        <div id="tab-ask" class="tab-content active" style="display: flex; flex-direction: column; gap: 1rem;">
             <!-- Ask Zelda -->
             <div class="zelda-card p-4">
                 <h6 class="fw-bold text-dark mb-3">
@@ -719,98 +716,6 @@
                 <span class="small text-muted">Loading your library...</span>
             </div>
             <div id="library-content" class="d-flex flex-column gap-3"></div>
-        </div>
-
-        <!-- TAB: UPLOAD -->
-        <div id="tab-upload" class="tab-content{% if user.match_investor_profile or user.match_buyer_profile %} active{% endif %}" style="display: {% if user.match_investor_profile or user.match_buyer_profile %}flex{% else %}none{% endif %}; flex-direction: column; gap: 1rem;">
-
-            <div class="zelda-card p-4 border border-warning-subtle">
-                {% if user.match_founder_profile %}
-                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-eye me-2 text-warning"></i>See your company from the outside</h6>
-                <p class="small text-muted mb-0">Think of this like reviewing your own business credit file before someone else does. Upload your company materials, generate Zelda reports, save them, and share the finished reports with investors when you choose.</p>
-                {% elif user.match_seller_profile %}
-                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-eye me-2 text-warning"></i>See your business from a buyer's perspective</h6>
-                <p class="small text-muted mb-0">Upload your own business materials to see what Zelda surfaces before a buyer does. Save, update, and share the reports when you are ready.</p>
-                {% elif user.match_investor_profile %}
-                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-briefcase me-2 text-warning"></i>Start diligence with the documents you already have</h6>
-                <p class="small text-muted mb-0">Upload a pitch deck, business plan, financial model, research report, or other company material. Zelda will organize the evidence so you can decide what deserves deeper diligence.</p>
-                {% elif user.match_buyer_profile %}
-                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-building-check me-2 text-warning"></i>Build a diligence file for the business you're evaluating</h6>
-                <p class="small text-muted mb-0">Upload a CIM, business plan, financial statements/model, pitch deck, research, or other diligence material. For a CIM or other acquisition materials, choose Other below.</p>
-                {% endif %}
-            </div>
-
-            <div class="zelda-card p-4">
-                <h6 class="fw-bold text-dark mb-3">
-                    <i class="bi bi-cloud-upload text-success me-2"></i>{% if user.match_investor_profile or user.match_buyer_profile %}Upload Deal Materials{% else %}Upload Company Materials{% endif %}
-                </h6>
-                
-                <!-- Upload Form -->
-                <form id="document-upload-form" style="display: flex; flex-direction: column; gap: 1rem;">
-                    
-                    <!-- Drop Zone -->
-                    <div class="zelda-dropzone" id="upload-dropzone">
-                        <i class="bi bi-cloud-upload" style="font-size: 2rem; color: var(--zelda-accent); display: block; margin-bottom: 0.5rem;"></i>
-                        <p class="mb-1 fw-bold text-dark">Drop files here or click to upload</p>
-                        <p class="text-muted small mb-0">PDF, PPTX, or TXT (Max 10MB)</p>
-                        <input type="file" id="document-file" style="display: none;" accept=".pdf,.pptx,.txt">
-                    </div>
-
-                    <!-- File Info -->
-                    <div id="file-info" style="display: none; padding: 1rem; background: #f0fdf4; border-radius: 0.75rem; border: 1px solid var(--zelda-success);">
-                        <div class="small text-dark">
-                            <strong>File:</strong> <span id="file-name"></span> 
-                            (<span id="file-size"></span>)
-                        </div>
-                    </div>
-
-                    <!-- Fields -->
-                    <div>
-                        <label class="small text-muted d-block mb-2">Source Entity (Company/Investor)</label>
-                        <input 
-                            type="text" 
-                            id="source-entity" 
-                            class="zelda-input w-100" 
-                            placeholder="e.g., Acme Corp"
-                            required>
-                    </div>
-
-                    <div>
-                        <label class="small text-muted d-block mb-2">Document Type</label>
-                        <select id="document-type" class="zelda-input w-100" required>
-                            <option value="">Select type...</option>
-                            <option value="pitch_deck">Pitch Deck</option>
-                            <option value="financial_model">Financial Model</option>
-                            <option value="business_plan">Business Plan</option>
-                            <option value="whitepaper">Whitepaper</option>
-                            <option value="research">Research Report</option>
-                            <option value="portfolio">Investor Portfolio</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-
-                    <!-- Submit -->
-                    <button type="submit" class="zelda-button" style="width: 100%;">
-                        <i class="bi bi-upload me-2"></i>Upload & Analyze
-                    </button>
-                </form>
-            </div>
-
-            <!-- Upload Status -->
-            <div class="zelda-card p-4" id="upload-status-card" style="display: none;">
-                <h6 class="fw-bold text-dark mb-3">Upload Status</h6>
-                <div id="upload-progress">
-                    <div class="mb-3">
-                        <div class="small text-muted mb-2">
-                            <span id="status-text">Initializing...</span>
-                        </div>
-                        <div class="zelda-progress">
-                            <div class="zelda-progress-bar" id="upload-progress-bar" style="width: 0%;"></div>
-                        </div>
-                    </div>
-                    <div id="upload-message" class="small text-muted"></div>
-                </div>
-            </div>
         </div>
 
         <!-- TAB: MEMOS -->
@@ -954,7 +859,7 @@
                     <strong>[System]</strong> Zelda Intelligence Pipeline Ready
                 </div>
                 <div class="log-entry info">
-                    <strong>[Ready]</strong> Awaiting input... Global search, document upload, or memo retrieval
+                    <strong>[Ready]</strong> Awaiting input... Search, product analysis, or memo retrieval
                 </div>
             </div>
         </div>
@@ -987,14 +892,6 @@
         entry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
         log.appendChild(entry);
         log.scrollTop = log.scrollHeight;
-    }
-
-    function formatBytes(bytes) {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -1325,99 +1222,6 @@
 
         card.style.display = 'block';
     }
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // DOCUMENT UPLOAD
-    // ──────────────────────────────────────────────────────────────────────────
-
-    const dropzone = document.getElementById('upload-dropzone');
-    const fileInput = document.getElementById('document-file');
-
-    dropzone.addEventListener('click', () => fileInput.click());
-
-    dropzone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropzone.classList.add('dragover');
-    });
-
-    dropzone.addEventListener('dragleave', () => {
-        dropzone.classList.remove('dragover');
-    });
-
-    dropzone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('dragover');
-        fileInput.files = e.dataTransfer.files;
-        updateFileInfo();
-    });
-
-    fileInput.addEventListener('change', updateFileInfo);
-
-    function updateFileInfo() {
-        const file = fileInput.files[0];
-        if (file) {
-            document.getElementById('file-info').style.display = 'block';
-            document.getElementById('file-name').textContent = file.name;
-            document.getElementById('file-size').textContent = formatBytes(file.size);
-        }
-    }
-
-    document.getElementById('document-upload-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const file = fileInput.files[0];
-        const sourceEntity = document.getElementById('source-entity').value.trim();
-        const documentType = document.getElementById('document-type').value;
-
-        if (!file || !sourceEntity || !documentType) {
-            addLogEntry('Please fill all fields and select a file', 'error');
-            return;
-        }
-
-        // Show upload status
-        document.getElementById('upload-status-card').style.display = 'block';
-        document.getElementById('upload-progress-bar').style.width = '0%';
-        document.getElementById('status-text').textContent = 'Uploading file...';
-
-        try {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('source_entity', sourceEntity);
-            formData.append('document_type', documentType);
-
-            const response = await fetch(`${ZELDA_API}/documents/ingest/`, {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                },
-                body: formData
-            });
-
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
-
-            document.getElementById('upload-progress-bar').style.width = '100%';
-            document.getElementById('status-text').textContent = 'Upload complete! Processing...';
-            document.getElementById('upload-message').innerHTML = `
-                <strong>Document Ingested!</strong><br>
-                ID: <strong>${data.document_id}</strong><br>
-                <a href="javascript:loadMemoById(${data.document_id})" style="color: var(--zelda-accent); text-decoration: none;">View progress →</a>
-            `;
-
-            addLogEntry(`Document uploaded: ${file.name} (ID: ${data.document_id})`, 'success');
-
-            // Reset form
-            setTimeout(() => {
-                document.getElementById('document-upload-form').reset();
-                document.getElementById('file-info').style.display = 'none';
-            }, 2000);
-
-        } catch (err) {
-            addLogEntry(`Upload error: ${err.message}`, 'error');
-            document.getElementById('upload-message').innerHTML = `<span style="color: var(--zelda-danger);">Error: ${err.message}</span>`;
-        }
-    });
 
     // ──────────────────────────────────────────────────────────────────────────
     // VECTOR SEARCH
