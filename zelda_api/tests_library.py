@@ -117,6 +117,13 @@ class LibraryAccessTests(TestCase):
         self.assertTrue(DocumentSource.objects.filter(pk=deck.pk).exists())
         self.assertEqual(LibraryHiddenItem.objects.filter(user=me, item_type='document').count(), 1)
 
+    def test_ingested_deck_is_not_labeled_as_processing(self):
+        me, _ = _founder('lib_ingested', 'Interlink Foundry')
+        DocumentSource.objects.create(uploaded_by=me, filename='qibby.pptx', source_entity='Qibby Saves LLC',
+                                      document_type='pitch_deck', status='ingested')
+        self.client.force_login(me)
+        self.assertEqual(self.client.get(URL).json()['sections'][0]['documents'][0]['status'], 'Uploaded — not analyzed')
+
     def test_hiding_an_analyzed_deck_also_hides_its_report_buttons_in_library(self):
         me, _ = _founder('lib_hide_nav', 'MyCo')
         deck = _analyzed_deck(me, 'MyCo')
