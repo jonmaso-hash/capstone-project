@@ -34,7 +34,11 @@ RECENT_ACTIVITY = {
 }
 PAID_ANALYSIS = 'You ran a Zelda analysis'
 
-STATUS_LABELS = {'analyzed': 'Ready', 'error': "Couldn't finish"}
+STATUS_LABELS = {
+    'ingested': 'Uploaded — not analyzed',
+    'analyzed': 'Ready',
+    'error': "Couldn't finish",
+}
 
 
 def _status(document):
