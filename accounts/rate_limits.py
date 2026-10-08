@@ -32,6 +32,8 @@ logger = logging.getLogger(__name__)
 
 # Locked with the owner on 2026-09-14: scope -> (attempts allowed, window).
 LIMITS = {
+    'staff_mfa_user': (5, timedelta(minutes=15)),
+    'staff_mfa_ip': (30, timedelta(minutes=15)),
     'login_username': (5, timedelta(minutes=15)),
     'login_ip': (30, timedelta(minutes=15)),
     'signup_ip': (5, timedelta(hours=1)),

@@ -14,9 +14,9 @@ rate-limited login, carrying `next` so the visitor still lands in the admin.
 Staff sessions also expire after an idle period, since staff can impersonate
 users and override deal states.
 
-Staff 2FA stays a post-launch item: with the guessing path closed and the
-superuser password rotated, it is defence in depth rather than the control
-holding the boundary.
+Staff MFA is required in addition to these controls. Unrelated tests that
+force authentication also provision an MFA fixture; password login alone
+must still stop at enrollment/challenge.
 """
 from datetime import timedelta
 from urllib.parse import parse_qs, urlparse
@@ -28,6 +28,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .models import RateLimitEvent
+from .mfa_test_support import grant_staff_mfa
 
 User = get_user_model()
 
@@ -78,6 +79,8 @@ class AdminLoginGoesThroughTheLockoutTests(TestCase):
         )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, ADMIN)
+        self.assertEqual(self.client.get(ADMIN).status_code, 302)
+        grant_staff_mfa(self.client, self.staff)
         self.assertEqual(self.client.get(ADMIN).status_code, 200)
 
 
@@ -97,6 +100,7 @@ class AdminLoginGoesThroughTheLockoutTests(TestCase):
             reverse('accounts:login'),
             {'username': 'al_staff', 'password': PASSWORD, 'next': ADMIN},
         )
+        grant_staff_mfa(self.client, self.staff)
         index = self.client.get(ADMIN)
         self.assertContains(index, 'Site administration')
         # A real changelist, not just the index page.

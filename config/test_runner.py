@@ -374,8 +374,22 @@ class InterlinkTestRunner(DiscoverRunner):
         self._fast_hashers = override_settings(
             PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
         self._fast_hashers.enable()
+        # force_login bypasses authentication by design. For unrelated tests,
+        # also provision a verified MFA fixture. MFA tests opt out and exercise
+        # the real enrollment/challenge; password logins are never patched.
+        from django.test import Client
+        from unittest.mock import patch
+        from accounts.mfa_test_support import grant_staff_mfa
+        original_force_login = Client.force_login
+        def force_login(client, user, backend=None):
+            original_force_login(client, user, backend=backend)
+            if user.is_staff and getattr(client, 'auto_staff_mfa', True):
+                grant_staff_mfa(client, user)
+        self._staff_mfa_fixture = patch.object(Client, 'force_login', force_login)
+        self._staff_mfa_fixture.start()
 
     def teardown_test_environment(self, **kwargs):
+        self._staff_mfa_fixture.stop()
         for name in ('_fast_hashers', '_local_cache'):
             override = getattr(self, name, None)
             if override is not None:
