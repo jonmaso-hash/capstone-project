@@ -5118,7 +5118,7 @@ class DealWorkspaceViewTests(TestCase):
         expected_members = sorted([str(self.founder_user.id), str(self.investor_user.id)])
         self.assertEqual(
             response.context['chat_channel_cid'],
-            f"messaging:deal_{expected_members[0]}_{expected_members[1]}",
+            f"messaging:development_deal_{expected_members[0]}_{expected_members[1]}",
         )
 
     def test_zelda_summary_with_no_reports_yet(self):
@@ -5552,7 +5552,7 @@ class AcquisitionDealWorkspaceViewTests(TestCase):
         expected_members = sorted([str(self.seller_user.id), str(self.buyer_user.id)])
         self.assertEqual(
             response.context['chat_channel_cid'],
-            f"messaging:deal_{expected_members[0]}_{expected_members[1]}",
+            f"messaging:development_deal_{expected_members[0]}_{expected_members[1]}",
         )
 
     def test_closed_pending_does_not_render_as_verified_sold(self):
@@ -6040,7 +6040,7 @@ class InitiateDirectChatAjaxTests(TestCase):
         )
 
     def test_ajax_request_returns_json_with_the_correct_channel_id(self):
-        """chat_ uses a NUMERIC sort of the two user ids — deliberately
+        """Direct chat uses a NUMERIC sort of the two user ids — deliberately
         different from createDealRoom's lexicographic string sort — so this
         pins the exact scheme rather than just checking *a* channel_id came back."""
         with mock.patch('matchmaking.views.StreamChat') as mock_stream_chat_cls:
@@ -6052,8 +6052,10 @@ class InitiateDirectChatAjaxTests(TestCase):
         data = response.json()
         self.assertEqual(data['status'], 'success')
         expected_sorted = sorted([self.user_a.id, self.user_b.id])
-        self.assertEqual(data['channel_id'], f"chat_{expected_sorted[0]}_and_{expected_sorted[1]}")
+        self.assertEqual(data['channel_id'], f"development_chat_{expected_sorted[0]}_and_{expected_sorted[1]}")
         mock_client.upsert_users.assert_called_once()
+        self.assertEqual({u['id'] for u in mock_client.upsert_users.call_args[0][0]},
+                         {f'development_user_{self.user_a.id}', f'development_user_{self.user_b.id}'})
         mock_client.channel.assert_called_once_with('messaging', data['channel_id'])
 
     def test_direct_url_cannot_bypass_target_dm_opt_out(self):
@@ -6150,7 +6152,7 @@ class AcceptedConnectionOpensAConversationTests(TestCase):
 
     def _expected_cid(self):
         members = sorted([str(self.founder_user.id), str(self.investor_user.id)])
-        return f"messaging:deal_{members[0]}_{members[1]}"
+        return f"messaging:development_deal_{members[0]}_{members[1]}"
 
     def test_accepting_provisions_the_channel_server_side(self):
         response, stream = self._accept()
@@ -6160,7 +6162,8 @@ class AcceptedConnectionOpensAConversationTests(TestCase):
         # browser could not perform and the reason the old path 400'd.
         stream.upsert_users.assert_called_once()
         upserted = {u['id'] for u in stream.upsert_users.call_args[0][0]}
-        self.assertEqual(upserted, {str(self.founder_user.id), str(self.investor_user.id)})
+        self.assertEqual(upserted, {f'development_user_{self.founder_user.id}',
+                                  f'development_user_{self.investor_user.id}'})
 
     def test_accepting_returns_the_conversation_to_open(self):
         response, _ = self._accept()
@@ -6186,7 +6189,7 @@ class AcceptedConnectionOpensAConversationTests(TestCase):
         data = created.call_args.kwargs['data']
         self.assertEqual(
             set(data['members']),
-            {str(self.founder_user.id), str(self.investor_user.id)},
+            {f'development_user_{self.founder_user.id}', f'development_user_{self.investor_user.id}'},
         )
         # Stream refuses a server-side channel with no creator attributed.
         self.assertIn('created_by_id', data)
@@ -6236,6 +6239,37 @@ class AcceptedConnectionOpensAConversationTests(TestCase):
         self.assertEqual(response.json()['new_status'], 'DECLINED')
         self.assertIsNone(response.json()['chat_channel_cid'])
         client.upsert_users.assert_not_called()
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'],
+                   STREAM_API_KEY='test-key', STREAM_API_SECRET='test-secret')
+class StreamEnvironmentIsolationTests(TestCase):
+    def test_both_token_routes_use_the_environment_scoped_identity(self):
+        user = User.objects.create_user('stream_isolation', password='x')
+        self.client.force_login(user)
+        for route, patch_target in (
+            ('matchmaking:stream_token', 'matchmaking.views.StreamChat'),
+            ('accounts:stream_token', 'accounts.views.StreamChat'),
+        ):
+            with self.subTest(route=route), override_settings(STREAM_ID_NAMESPACE='production'), \
+                    mock.patch(patch_target) as client_class:
+                client_class.return_value.create_token.return_value = 'signed-token'
+                response = self.client.get(reverse(route))
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.json()['user_id'], f'production_user_{user.id}')
+                client_class.return_value.create_token.assert_called_once_with(f'production_user_{user.id}')
+                self.assertEqual(client_class.return_value.upsert_user.call_args.args[0]['id'],
+                                 f'production_user_{user.id}')
+
+    def test_same_database_ids_never_share_stream_members_or_channels_across_environments(self):
+        from .stream_identity import stream_user_id, direct_channel_id
+        from .stream_provisioning import deal_channel_cid
+        with override_settings(STREAM_ID_NAMESPACE='production'):
+            production = (stream_user_id(1), direct_channel_id(1, 2), deal_channel_cid(1, 2))
+        with override_settings(STREAM_ID_NAMESPACE='development'):
+            development = (stream_user_id(1), direct_channel_id(1, 2), deal_channel_cid(1, 2))
+        self.assertTrue(all(a != b for a, b in zip(production, development)))
+        self.assertNotEqual(production[0], '1')
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])

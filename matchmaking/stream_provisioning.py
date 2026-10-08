@@ -25,6 +25,7 @@ import logging
 
 from django.conf import settings
 from stream_chat import StreamChat
+from .stream_identity import stream_namespace, stream_user_id
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,7 @@ def deal_channel_id(user_id_a, user_id_b):
     numeric order, but both sides only need to agree with each other.
     """
     member_ids = sorted([str(user_id_a), str(user_id_b)])
-    return f"deal_{member_ids[0]}_{member_ids[1]}"
+    return f"{stream_namespace()}_deal_{member_ids[0]}_{member_ids[1]}"
 
 
 def deal_channel_cid(user_id_a, user_id_b):
@@ -71,7 +72,7 @@ def ensure_deal_channel(user_a, user_b, name=None):
         logger.warning("Stream is not configured; skipping deal channel provisioning.")
         return None
 
-    a_id, b_id = str(user_a.id), str(user_b.id)
+    a_id, b_id = stream_user_id(user_a.id), stream_user_id(user_b.id)
     if a_id == b_id:
         return None
 
@@ -86,7 +87,7 @@ def ensure_deal_channel(user_a, user_b, name=None):
             {'id': b_id, 'name': user_b.username},
         ])
 
-        channel = client.channel(CHANNEL_TYPE, deal_channel_id(a_id, b_id))
+        channel = client.channel(CHANNEL_TYPE, deal_channel_id(user_a.id, user_b.id))
         channel.create(
             user_id=a_id,
             data={
@@ -95,7 +96,7 @@ def ensure_deal_channel(user_a, user_b, name=None):
                 'name': name or f"{user_a.username} & {user_b.username}",
             },
         )
-        return deal_channel_cid(a_id, b_id)
+        return deal_channel_cid(user_a.id, user_b.id)
     except Exception as exc:
         logger.error("Deal channel provisioning failed for %s/%s: %s", a_id, b_id, exc)
         return None

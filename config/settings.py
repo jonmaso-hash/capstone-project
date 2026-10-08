@@ -30,6 +30,7 @@ env = environ.Env(
     DATA4B2B_API_KEY=(str, ''),
     STREAM_API_KEY=(str, ''),
     STREAM_API_SECRET=(str, ''),
+    STREAM_ID_NAMESPACE=(str, 'development'),
     EMAIL_HOST_USER=(str, ''),
     EMAIL_HOST_PASSWORD=(str, ''),
     ADMIN_URL_PATH=(str, 'admin/'),
@@ -489,6 +490,7 @@ ADMIN_EMAIL = env('ADMIN_EMAIL')
 # --- THIRD-PARTY API INTEGRATIONS & EMBEDDING ENGINES ---
 STREAM_API_KEY = env('STREAM_API_KEY').strip()
 STREAM_API_SECRET = env('STREAM_API_SECRET').strip()
+STREAM_ID_NAMESPACE = env('STREAM_ID_NAMESPACE').strip()
 ANTHROPIC_API_KEY = env('ANTHROPIC_API_KEY')
 # Explicit ceilings for every Anthropic client (zelda_api/anthropic_client.py)
 # instead of the SDK's 10-minute timeout with 2 retries. A web-request call's
