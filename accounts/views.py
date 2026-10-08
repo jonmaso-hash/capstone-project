@@ -1120,8 +1120,8 @@ def get_stream_token(request):
             
         client = StreamChat(api_key=api_key, api_secret=api_secret)
         
-        # IMPORTANT: Use the user's integer ID as a string, because JS passes integer targetIDs
-        user_id = str(request.user.id)
+        from matchmaking.stream_identity import stream_user_id
+        user_id = stream_user_id(request.user.id)
         username = request.user.username
         
         # 1. Create the token

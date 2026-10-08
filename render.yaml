@@ -87,6 +87,10 @@ services:
         sync: false
       - key: STREAM_API_SECRET
         sync: false
+      # Keep Stream user/channel IDs separate from local and test databases,
+      # even if their numeric user IDs and Stream app credentials overlap.
+      - key: STREAM_ID_NAMESPACE
+        value: production
       # Payments -- live keys only here, never in a DEBUG environment.
       - key: STRIPE_SECRET_KEY
         sync: false
@@ -206,6 +210,8 @@ services:
           type: web
           name: interlink-web
           envVarKey: STREAM_API_SECRET
+      - key: STREAM_ID_NAMESPACE
+        value: production
       - key: STRIPE_SECRET_KEY
         fromService:
           type: web

@@ -20,6 +20,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from stream_chat import StreamChat
 from .stream_provisioning import ensure_deal_channel, deal_channel_cid
+from .stream_identity import stream_user_id, direct_channel_id
 from .utils import clean_financial_input
 from .models import Application
 from django.http import FileResponse, Http404
@@ -2022,8 +2023,8 @@ def initiate_direct_chat(request, target_user_id):
     """
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     target_user = get_object_or_404(User, id=target_user_id, is_active=True)
-    current_user_id = str(request.user.id)
-    target_id_str = str(target_user.id)
+    current_user_id = stream_user_id(request.user.id)
+    target_id_str = stream_user_id(target_user.id)
 
     if current_user_id == target_id_str:
         if is_ajax:
@@ -2045,8 +2046,7 @@ def initiate_direct_chat(request, target_user_id):
     ])
 
     # 2. Deterministic Channel ID
-    sorted_ids = sorted([int(current_user_id), int(target_id_str)])
-    channel_id = f"chat_{sorted_ids[0]}_and_{sorted_ids[1]}"
+    channel_id = direct_channel_id(request.user.id, target_user.id)
 
     # 3. Create the channel with explicit server-side creator mapping
     channel = client.channel("messaging", channel_id)
@@ -2490,7 +2490,7 @@ def get_stream_token(request):
     """
     try:
         client = StreamChat(api_key=settings.STREAM_API_KEY, api_secret=settings.STREAM_API_SECRET)
-        user_id = str(request.user.id)
+        user_id = stream_user_id(request.user.id)
 
         # Use Stream's native token generator, not custom JWT
         token = client.create_token(user_id)
