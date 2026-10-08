@@ -35,6 +35,8 @@ class LockedLimitsTests(TestCase):
 
     def test_the_numbers_agreed_for_launch(self):
         self.assertEqual(rate_limits.LIMITS, {
+            'staff_mfa_user': (5, timedelta(minutes=15)),
+    	    'staff_mfa_ip': (30, timedelta(minutes=15)),
             'login_username': (5, timedelta(minutes=15)),
             'login_ip': (30, timedelta(minutes=15)),
             'signup_ip': (5, timedelta(hours=1)),
