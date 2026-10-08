@@ -1,0 +1,7 @@
+{% extends 'admin/base_site.html' %}
+{% block content %}
+<p>Copy this key now and store it securely. It will not be shown again.</p>
+<p><code id="issued-api-key">{{ issued_key }}</code></p>
+<p>If you lose it, revoke this key and issue a replacement.</p>
+<p><a href="{{ change_url }}">Continue to key details</a></p>
+{% endblock %}

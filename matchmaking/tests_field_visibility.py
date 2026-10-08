@@ -703,6 +703,7 @@ class CrossSurfaceInvariantTests(_Cast):
             video=SimpleUploadedFile('p.mp4', b'x', content_type='video/mp4'),
         )
         self.api_key = self._make_api_key()
+        self.api_raw_key = self.api_key.take_issued_key()
 
     def _make_api_key(self):
         from .models import APIKey
@@ -737,7 +738,7 @@ class CrossSurfaceInvariantTests(_Cast):
     def api_body(self):
         return self.client.get(
             '/api/v1/enterprise/founders/',
-            HTTP_AUTHORIZATION=f'Api-Key {self.api_key.key}',
+            HTTP_AUTHORIZATION=f'Api-Key {self.api_raw_key}',
         ).content.decode(errors='ignore')
 
     def explore_body(self):
@@ -767,7 +768,7 @@ class CrossSurfaceInvariantTests(_Cast):
 
         response = self.client.get(
             '/api/v1/enterprise/founders/',
-            HTTP_AUTHORIZATION=f'Api-Key {self.api_key.key}',
+            HTTP_AUTHORIZATION=f'Api-Key {self.api_raw_key}',
         )
 
         self.assertIn(response.status_code, (401, 403))
@@ -823,7 +824,7 @@ class CrossSurfaceInvariantTests(_Cast):
     def _appears_in_api_filtered(self, threshold):
         body = self.client.get(
             '/api/v1/enterprise/founders/', {'capital': str(threshold)},
-            HTTP_AUTHORIZATION=f'Api-Key {self.api_key.key}',
+            HTTP_AUTHORIZATION=f'Api-Key {self.api_raw_key}',
         ).content.decode(errors='ignore')
         return 'FV Co' in body
 

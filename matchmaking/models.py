@@ -1,5 +1,7 @@
 import re
 import uuid
+import hashlib
+import secrets
 from django.db import models
 from django.db.models import Q
 from django.conf import settings
@@ -1002,19 +1004,32 @@ class APIKey(models.Model):
     """
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='api_keys')
     firm_name = models.CharField(max_length=255, help_text="External firm/organization this key belongs to")
-    key = models.CharField(max_length=64, unique=True, editable=False)
+    key_hash = models.CharField(max_length=64, unique=True, editable=False)
+    key_suffix = models.CharField(max_length=4, editable=False)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_used_at = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
-        if not self.key:
-            import secrets
-            self.key = secrets.token_hex(32)
+        if not self.key_hash:
+            raw_key = secrets.token_hex(32)
+            self.key_hash = self.digest(raw_key)
+            self.key_suffix = raw_key[-4:]
+            self._issued_key = raw_key
         super().save(*args, **kwargs)
 
+    @staticmethod
+    def digest(raw_key):
+        # Keys have 256 bits of randomness; SHA-256 supports indexed lookup
+        # without storing a reusable credential or depending on SECRET_KEY.
+        return hashlib.sha256(raw_key.encode('utf-8')).hexdigest()
+
+    def take_issued_key(self):
+        """Only available once on the instance that generated the key."""
+        return self.__dict__.pop('_issued_key', None)
+
     def __str__(self):
-        return f"{self.firm_name} ({self.key[:8]}...)"
+        return f"{self.firm_name} (···{self.key_suffix})"
 
 
 COMPANY_SUFFIXES_RE = re.compile(r'(inc|llc|corp|ltd|co|group|holdings)$')
