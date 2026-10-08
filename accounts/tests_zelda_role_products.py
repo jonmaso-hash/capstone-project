@@ -71,8 +71,8 @@ class ZeldaSellerProductSurfaceTests(TestCase):
         self.assertContains(response, "See your business from a buyer's perspective")
 
 
-class ZeldaDiligenceIntakeTests(TestCase):
-    def test_investor_opens_zelda_on_upload_with_deal_material_guidance(self):
+class ZeldaDiligenceProductSurfaceTests(TestCase):
+    def test_investor_uses_product_tabs_for_deal_materials(self):
         user = User.objects.create_user('zelda_surface_investor', password='x')
         InvestorApplication.objects.create(
             user=user,
@@ -87,23 +87,15 @@ class ZeldaDiligenceIntakeTests(TestCase):
         response = self.client.get(reverse('accounts:profile', args=[user.username]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Start diligence with the documents you already have')
-        self.assertContains(response, 'pitch deck, business plan, financial model')
-        self.assertContains(
-            response,
-            'class="zelda-tab active" data-tab="upload"',
-            html=False,
-        )
-        self.assertContains(
-            response,
-            'id="tab-upload" class="tab-content active"',
-            html=False,
-        )
+        self.assertContains(response, 'Choose a Zelda intelligence product to organize first-pass diligence.')
+        self.assertNotContains(response, 'data-tab="upload"', html=False)
+        self.assertNotContains(response, 'id="tab-upload"', html=False)
+        self.assertNotContains(response, 'id="document-upload-form"', html=False)
         self.assertContains(response, 'tab-product-truth_delta_diligence')
         self.assertContains(response, 'tab-product-truth_delta_credit_pack')
         self.assertNotContains(response, 'tab-product-complete_bundle')
 
-    def test_buyer_opens_zelda_on_upload_with_acquisition_material_guidance(self):
+    def test_buyer_uses_product_tabs_for_acquisition_materials(self):
         user = User.objects.create_user('zelda_surface_buyer', password='x')
         BuyerApplication.objects.create(
             user=user,
@@ -116,14 +108,10 @@ class ZeldaDiligenceIntakeTests(TestCase):
         response = self.client.get(reverse('accounts:profile', args=[user.username]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Build a diligence file for the business you're evaluating")
-        self.assertContains(response, 'Upload a CIM, business plan, financial statements/model')
-        self.assertContains(
-            response,
-            'class="zelda-tab active" data-tab="upload"',
-            html=False,
-        )
-        self.assertContains(response, 'For a CIM or other acquisition materials, choose Other below.')
+        self.assertContains(response, 'Choose a Zelda intelligence product to organize first-pass diligence.')
+        self.assertNotContains(response, 'data-tab="upload"', html=False)
+        self.assertNotContains(response, 'id="tab-upload"', html=False)
+        self.assertNotContains(response, 'id="document-upload-form"', html=False)
         self.assertContains(response, 'tab-product-truth_delta_diligence')
         self.assertContains(response, 'tab-product-truth_delta_credit_pack')
         self.assertNotContains(response, 'tab-product-entity')
