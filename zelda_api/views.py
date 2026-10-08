@@ -153,7 +153,7 @@ class ZeldaLibraryAPIView(APIView):
 
     def get(self, request):
         from .library import build_library
-        return Response(build_library(request.user))
+        return Response(build_library(request.user, page=request.query_params.get('page', 1)))
 
 
 class ZeldaLibraryDismissAPIView(APIView):

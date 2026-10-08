@@ -274,6 +274,46 @@
     </div>
     {% endif %}
 
+    <form method="get" action="{% url 'matchmaking:data_room' founder_application.user.username %}#zelda-reports" class="d-flex gap-2 mb-4" role="search">
+        <label for="data-room-search" class="visually-hidden">Search Data Room files and reports</label>
+        <input id="data-room-search" name="q" value="{{ archive_search }}" class="form-control" maxlength="100" placeholder="Search documents, reports, or categories">
+        <button type="submit" class="btn btn-outline-dark">Search</button>
+    </form>
+
+    {% if is_room_owner %}
+    <div class="alert alert-light border mb-4" role="status">
+        <div class="d-flex justify-content-between gap-2 small"><strong>Data Room storage</strong><span>{{ room_storage.used_mb }} MB of {{ room_storage.limit_mb|floatformat:0 }} MB {% if room_storage.premium %}(Premium){% else %}(Free){% endif %}</span></div>
+        <div class="progress mt-2" role="progressbar" aria-label="Data Room storage used" aria-valuenow="{{ room_storage.percent }}" aria-valuemin="0" aria-valuemax="100" style="height: 6px;"><div class="progress-bar" style="width: {{ room_storage.percent }}%"></div></div>
+        {% if room_storage.full %}<p class="small mb-0 mt-2">Your existing files and reports remain here. New Zelda reports will stay in Library until you free space or upgrade.</p>{% endif %}
+        {% if not room_storage.premium %}<a href="{% url 'billing:billing_page' %}" class="small d-inline-block mt-2">Upgrade for 5 GB of Data Room storage</a>{% endif %}
+    </div>
+    <section class="card border-0 shadow-sm rounded-4 mb-4" id="zelda-reports" aria-labelledby="zelda-reports-heading">
+        <div class="card-body p-4">
+            <h2 id="zelda-reports-heading" class="h5 fw-bold mb-2">Zelda report archive</h2>
+            <p class="small text-secondary mb-3">Completed reports save here automatically while you have space, and remain here if your membership changes. Reports beyond the limit stay in Zelda's Library. This archive is visible only to you; report links retain their own access rules.</p>
+            {% for folder in report_folders %}
+            <div class="mb-3">
+                <h3 class="h6 text-uppercase fw-bold text-muted small border-bottom pb-2">{{ folder.name }}</h3>
+                {% for entry in folder.entries %}
+                <div class="d-flex justify-content-between align-items-center gap-2 py-2 border-bottom">
+                    <div>
+                        <a href="{{ entry.url }}" class="fw-semibold">{{ entry.subject }} · {{ entry.title }}</a>
+                        <span class="small text-muted ms-2">{{ entry.date|date:"M j, Y" }}</span>
+                    </div>
+                    {% if entry.shareable %}
+                    <button type="button" class="btn btn-outline-secondary btn-sm text-nowrap data-room-copy-report" data-report-path="{{ entry.url }}" title="Recipient access is checked when they open it">Copy restricted link</button>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% empty %}
+            <p class="text-secondary small mb-0">{% if archive_search %}No reports match your search.{% else %}Completed Zelda reports will appear here automatically.{% endif %}</p>
+            {% endfor %}
+            <div id="report-copy-status" class="small mt-2" role="status" aria-live="polite"></div>
+        </div>
+    </section>
+    {% endif %}
+
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-body p-4">
             {% if not documents %}
@@ -349,4 +389,19 @@
         </div>
     </div>
 </div>
+{% if is_room_owner %}
+<script>
+document.querySelectorAll('.data-room-copy-report').forEach(button => button.addEventListener('click', async () => {
+    const status = document.getElementById('report-copy-status');
+    try {
+        await navigator.clipboard.writeText(new URL(button.dataset.reportPath, window.location.origin).href);
+        status.className = 'small text-success mt-2';
+        status.textContent = 'Link copied. The recipient still needs permission to open this report.';
+    } catch (_) {
+        status.className = 'small text-danger mt-2';
+        status.textContent = 'Could not copy the link. Open the report and copy its address instead.';
+    }
+}));
+</script>
+{% endif %}
 {% endblock %}

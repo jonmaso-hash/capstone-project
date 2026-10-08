@@ -10,7 +10,7 @@ from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.mail import send_mail
-from django.db import connection
+from django.db import connection, transaction
 from django.db.models import Q, F
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -2787,7 +2787,30 @@ def data_room(request, username):
         raise Http404("Access Denied")
 
     is_owner_or_staff = request.user == founder_application.user or request.user.is_staff
-    documents = list(founder_application.data_room_documents.all())
+    search = request.GET.get('q', '').strip()[:100]
+    documents_query = founder_application.data_room_documents.all()
+    if search:
+        categories = [value for value, label in DataRoomDocument.CATEGORY_CHOICES
+                      if search.casefold() in label.casefold()]
+        documents_query = documents_query.filter(Q(label__icontains=search) | Q(category__in=categories))
+    documents = list(documents_query)
+
+    # Generated reports remain private to their owner here. A connected
+    # investor can see approved uploaded files, but does not inherit access to
+    # the owner's purchases or personal Zelda analysis history.
+    report_folders = []
+    room_storage = None
+    if request.user == founder_application.user:
+        from zelda_api.archive import report_archive_for_owner
+        from .data_room_quota import room_limit, room_usage
+        report_folders = report_archive_for_owner(request.user, search)
+        used = room_usage(founder_application)
+        limit = room_limit(founder_application)
+        room_storage = {'used_mb': round(used / (1024 * 1024), 1),
+                        'limit_mb': limit // (1024 * 1024),
+                        'percent': min(100, round(used * 100 / limit)),
+                        'full': used >= limit,
+                        'premium': founder_application.is_premium}
 
     pending_requests = []
     pending_information_requests = []
@@ -2861,6 +2884,9 @@ def data_room(request, username):
     return render(request, 'matchmaking/data_room.html', {
         'founder_application': founder_application,
         'documents': documents,
+        'report_folders': report_folders,
+        'archive_search': search,
+        'room_storage': room_storage,
         'is_owner_or_staff': is_owner_or_staff,
         'pending_requests': pending_requests,
         'pending_information_requests': pending_information_requests,
@@ -2884,11 +2910,20 @@ def data_room_upload(request, username):
 
     form = DataRoomDocumentForm(request.POST, request.FILES)
     if form.is_valid():
-        document = form.save(commit=False)
-        document.founder = founder_application
-        if not document.visibility:
-            document.visibility = 'INVESTOR_APPROVED'
-        document.save()
+        from .data_room_quota import room_limit, room_usage
+        file_size = form.cleaned_data['file'].size
+        with transaction.atomic():
+            founder_application = Application.objects.select_for_update().get(pk=founder_application.pk)
+            if room_usage(founder_application) + file_size > room_limit(founder_application):
+                limit_mb = room_limit(founder_application) // (1024 * 1024)
+                messages.error(request, f'Data Room storage is full ({limit_mb:,} MB limit). Existing files remain available. Upgrade or remove a file before adding another.')
+                return redirect('matchmaking:data_room', username=username)
+            document = form.save(commit=False)
+            document.founder = founder_application
+            document.size_bytes = file_size
+            if not document.visibility:
+                document.visibility = 'INVESTOR_APPROVED'
+            document.save()
         messages.success(request, f'"{document.label}" uploaded to the data room.')
 
         # Uploading a document satisfies any investor's outstanding

@@ -20,12 +20,13 @@ every other discovery surface.
 """
 from django.urls import reverse
 from django.db import DatabaseError, transaction
+from django.core.paginator import Paginator
 import logging
 import uuid
 
 logger = logging.getLogger(__name__)
 
-LIST_LIMIT = 20
+PAGE_SIZE = 5
 
 RECENT_ACTIVITY = {
     'analyze': 'You analyzed this company with Zelda',
@@ -55,7 +56,7 @@ def _own_documents(user, product_storage=True, hidden_ids=()):
     documents = (documents
         .exclude(document_type='business_valuation')
         .select_related('memo')
-        .order_by('-created_at')[:LIST_LIMIT]
+        .order_by('-created_at')
     )
     return [{
         'document_id': document.id,
@@ -76,7 +77,7 @@ def _own_valuations(user, product_storage=True, hidden_ids=()):
         documents = documents.defer('is_product_input', 'is_external_subject', 'external_cik')
     documents = (documents
         .exclude(status='error')
-        .order_by('-created_at')[:LIST_LIMIT]
+        .order_by('-created_at')
     )
     return [{
         'document_id': document.id,
@@ -124,7 +125,7 @@ def _recent_companies(user, hidden_ids=()):
     ordered = sorted(applications, key=lambda application: latest[application.id][0], reverse=True)
 
     items = []
-    for application in ordered[:LIST_LIMIT]:
+    for application in ordered:
         when, label = latest[application.id]
         document, memo = latest_analyzed_pitch_deck_and_memo(application.user)
         can_open_brief = bool(document and memo is not None and not document.is_hidden_by_staff)
@@ -140,7 +141,7 @@ def _recent_companies(user, hidden_ids=()):
     return items
 
 
-def build_library(user):
+def build_library(user, page=1):
     from .report_nav import build_report_nav
     from .models import LibraryHiddenItem
 
@@ -207,26 +208,62 @@ def build_library(user):
             'items': available(lambda: _recent_companies(user, visible_document_ids('company')), 'Recent company reports'),
         })
 
-    has_role = any(getattr(user, name, None) is not None for name in (
-        'match_founder_profile', 'match_investor_profile', 'match_seller_profile', 'match_buyer_profile'))
     from billing.zelda_catalog import ALL_STRIPE_PRODUCTS, REPORTS
     from billing.fulfillment import reconcile_order
     purchases = []
     orders = available(lambda: list(ZeldaOrder.objects.filter(user=user).exclude(status='canceled').exclude(id__in=hidden['order']).select_related(
-            'source_document', 'analysis_document', 'valuation_document', 'entity_report')[:LIST_LIMIT]), 'Purchased reports') if product_storage else []
+            'source_document', 'analysis_document', 'valuation_document', 'entity_report')), 'Purchased reports') if product_storage else []
     for order in orders:
         if not available(lambda: reconcile_order(order), 'Purchased report status'):
             continue
         purchases.append({'order_id': str(order.id), 'company': order.source_document.source_entity, 'product': ALL_STRIPE_PRODUCTS[order.product][0],
+                          'created_at': order.created_at.isoformat(),
                           'status': order.get_status_display(), 'url': reverse('billing:zelda_order', args=[order.id]),
                           'reports': [{'name': REPORTS[key][0], 'url': reverse('billing:zelda_report', args=[order.id, key])}
                                       for key in order.reports] if order.status == 'ready' else []})
+
+    # Page the combined activity, rather than allowing five entries *per*
+    # section. Data Room has the complete searchable archive.
+    entries = [(p['created_at'], 'order', p['order_id']) for p in purchases]
+    for section in sections:
+        if section['key'] == 'your_company':
+            entries.extend((d['created_at'], 'document', d['document_id']) for d in section['documents'])
+        elif section['key'] == 'valuations':
+            entries.extend((v['created_at'], 'valuation', v['document_id']) for v in section['items'])
+        elif section['key'] == 'recent_companies':
+            entries.extend((c['last_activity'], 'company', c['company_id']) for c in section['items'])
+    entries.sort(key=lambda item: item[0], reverse=True)
+    page_obj = Paginator(entries, PAGE_SIZE).get_page(page)
+    shown = {(kind, str(item_id)) for _, kind, item_id in page_obj.object_list}
+    purchases = [p for p in purchases if ('order', p['order_id']) in shown]
+    visible_sections = []
+    for section in sections:
+        key = section['key']
+        if key == 'your_company':
+            section['documents'] = [d for d in section['documents'] if ('document', str(d['document_id'])) in shown]
+            if page_obj.number != 1:
+                section['reports'] = []
+            if section['documents'] or (page_obj.number == 1 and company_profile):
+                visible_sections.append(section)
+        elif key == 'valuations':
+            section['items'] = [v for v in section['items'] if ('valuation', str(v['document_id'])) in shown]
+            if section['items']:
+                visible_sections.append(section)
+        elif key == 'recent_companies':
+            section['items'] = [c for c in section['items'] if ('company', str(c['company_id'])) in shown]
+            if section['items'] or page_obj.number == 1:
+                visible_sections.append(section)
     return {
         'warnings': warnings,
         'purchases': purchases,
-        'sections': sections,
-        'profile_analytics_url': (
-            reverse('accounts:profile_analysis', kwargs={'username': user.username}) if has_role else None),
+        'sections': visible_sections,
+        'pagination': {
+            'page': page_obj.number, 'pages': page_obj.paginator.num_pages,
+            'total': page_obj.paginator.count,
+            'has_previous': page_obj.has_previous(), 'has_next': page_obj.has_next(),
+        },
+        'archive_url': (reverse('matchmaking:data_room', args=[user.username]) + '#zelda-reports')
+                       if getattr(user, 'match_founder_profile', None) is not None else None,
     }
 
 

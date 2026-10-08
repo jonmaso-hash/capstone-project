@@ -1,8 +1,27 @@
 """Compose existing Zelda engines and outputs for an owned, paid evidence set."""
+import json
+import logging
 from django.db import transaction
 from django.urls import reverse
 from django.utils import timezone
 from .models import ZeldaOrder
+
+logger = logging.getLogger(__name__)
+
+
+def archive_ready_order(order):
+    """Save report references when space allows; a paid report always stays in Library."""
+    from matchmaking.data_room_quota import try_save_report
+    from zelda_api.principal import Principal, ORIGIN_TASK
+    if order.status != 'ready' or not order.paid_at:
+        return
+    for key in order.reports:
+        try:
+            sections = report_sections(order, key, Principal.for_user(order.user, ORIGIN_TASK, 'report archive sizing'))
+            size = len(json.dumps(sections, ensure_ascii=False).encode('utf-8'))
+            try_save_report(order.user, 'order', order.id, key, size)
+        except Exception:
+            logger.exception('Could not save paid report %s for order %s in Data Room', key, order.pk)
 
 
 def notify(order):
@@ -36,6 +55,8 @@ def reconcile_order(order):
         order.refresh_from_db()
         if changed:
             notify(order)
+            if state == 'ready':
+                archive_ready_order(order)
     return order
 
 
