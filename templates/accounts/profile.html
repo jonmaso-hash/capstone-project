@@ -310,6 +310,14 @@
                     <div class="ms-3 flex-grow-1 border-bottom"></div>
                 </div>
                 
+                {% if request.user.is_authenticated and request.user == profile_user and not founder_pitch_core_complete %}
+                <div class="alert alert-info rounded-4 mb-4" role="status">
+                    <h4 class="h6 fw-bold mb-2">Finish your company pitch profile</h4>
+                    <p class="mb-3">Add your executive summary and growth strategy to complete the essential pitch details. Pitch videos and decks are optional.</p>
+                    <a class="btn btn-primary" href="{% url 'usersettings:edit_founder_profile' %}">Complete your pitch profile</a>
+                </div>
+                {% endif %}
+
                 <div class="card shadow-sm border-0 rounded-4 mb-5">
                     <div class="card-body p-4 p-md-5">
                         <div class="row">

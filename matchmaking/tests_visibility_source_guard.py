@@ -97,6 +97,8 @@ PYTHON_ALLOWED = {
     ('zelda_api/entity_verification.py', '_describe'):
         'input to entity verification; not rendered to other users',
     # Owner reading their own profile.
+    ('accounts/views.py', 'profile'):
+        'the founder completion flag is a boolean only; the CTA is rendered solely when request.user == profile_user, and no controlled field value is disclosed',
     ('accounts/views.py', 'zelda_dashboard_view'):
         "the founder's own dashboard (request.user's profile)",
     ('pages/views.py', 'thank_you_view'):

@@ -744,6 +744,7 @@ def profile(request, username=None, pk=None):
     context = {
         "profile_user": viewed_user,
         "application": application,
+        "founder_pitch_core_complete": bool(application and (application.description or "").strip() and (application.reason_for_capital or "").strip()),
         "elevator_pitch": elevator_pitch,
         "ic_memo_document_id": ic_memo_document_id,
         "profile_trust_badges": profile_trust_badges,
