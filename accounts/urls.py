@@ -2,7 +2,8 @@
 from django.urls import path
 from django.contrib.auth.views import LogoutView
 from . import views
-from .professional_views import (edit_professional_profile, edit_education, delete_education,\n    edit_organization_relationship, delete_organization_relationship)
+from .professional_views import (edit_professional_profile, edit_education, delete_education,
+    edit_organization_relationship, delete_organization_relationship)
 from . import staff_mfa
 from zelda_api.views import ZeldaGlobalSearchAPIView
 
