@@ -6,6 +6,8 @@
   </nav>
   <header class="mb-4">
     <h1>Professional profile</h1>
+    <p>Public visibility is off by default. Turn on “Is public” below to publish your overview. Education and organizations must each be marked public separately.</p>
+    {% if form.instance.pk and form.instance.is_public %}<p><a href="{% url 'accounts:public_professional_profile' request.user.username %}">View public professional profile</a></p>{% endif %}
     <p class="text-muted">Add your professional identity and background. These details are separate from your marketplace application, financial information, and Zelda reports.</p>
   </header>
   <div class="row g-4">
