@@ -97,3 +97,16 @@ def delete_organization_relationship(request, pk):
         org.delete()
     messages.success(request, "Organization relationship removed.")
     return redirect("accounts:edit_professional_profile")
+
+
+@require_http_methods(["GET"])
+def public_professional_profile(request, username):
+    """Opt-in public overview with independently opted-in child records only."""
+    from django.contrib.auth import get_user_model
+    user = get_object_or_404(get_user_model(), username=username, is_active=True)
+    profile = get_object_or_404(PersonProfile, user=user, is_public=True)
+    education = EducationRecord.objects.filter(person=profile, is_public=True).order_by("-started_on", "-pk")
+    relationships = OrganizationRelationship.objects.filter(person=profile, is_public=True).select_related("organization").order_by("-started_on", "-pk")
+    return render(request, "accounts/public_professional_profile.html", {
+        "profile": profile, "education": education, "relationships": relationships,
+    })
