@@ -5,7 +5,7 @@ from .models import PersonProfile
 class PersonProfileForm(forms.ModelForm):
     class Meta:
         model = PersonProfile
-        fields = ("display_name", "headline", "biography", "location", "website", "linkedin_url")
+        fields = ("display_name", "headline", "biography", "location", "website", "linkedin_url", "is_public")
         widgets = {
             "biography": forms.Textarea(attrs={"rows": 5}),
             "display_name": forms.TextInput(attrs={"autocomplete": "name"}),
