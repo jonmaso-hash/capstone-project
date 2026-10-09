@@ -174,3 +174,7 @@ class RateLimitEvent(models.Model):
 
     def __str__(self):
         return f"{self.scope} at {self.created_at:%Y-%m-%d %H:%M}"
+
+
+# Additive professional identity records (separate from marketplace applications).
+from .professional_models import PersonProfile, ProfessionalOrganization, OrganizationRelationship, EducationRecord  # noqa: E402,F401
