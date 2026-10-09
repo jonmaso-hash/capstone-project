@@ -128,6 +128,7 @@ def create_checkout_session(request):
     try:
         session = stripe.checkout.Session.create(
             mode='subscription',
+            allow_promotion_codes=True,
             payment_method_types=['card'],
             line_items=[{'price': price_id, 'quantity': 1}],
             customer_email=request.user.email or None,
