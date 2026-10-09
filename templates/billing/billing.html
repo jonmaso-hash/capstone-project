@@ -16,7 +16,7 @@
         <div class="col-lg-8">
             <h2 class="fw-bold mb-1">Membership</h2>
             <p class="text-muted mb-4">
-                Free membership includes marketplace discovery, introductions, and Zelda Lite previews. Premium adds marketplace tools, profile analytics, and the Investment Committee Memo. Other full Zelda intelligence reports are purchased separately; subscription access does not make them free.
+                Discover businesses and build connections with Free membership. Upgrade to Premium for more visibility, relationship tools, and Zelda-powered insights tailored to your marketplace role.
             </p>
 
             {% if subscription and subscription.is_active %}
@@ -66,35 +66,57 @@
             </div>
 
             {% elif plan == 'FOUNDER_PREMIUM' %}
-            <div class="card border-0 shadow-sm rounded-4 mb-4">
-                <div class="card-body p-4">
-                    <h5 class="fw-bold mb-1">Founder Premium — ${{ founder_price }}/mo</h5>
-                    <p class="text-muted small mb-3">Founder Insights tracks engagement across your profile, pitch materials, report opens, introductions, and messages. Zelda summarizes Visibility, Interest, Trust, Responsiveness, trends, and practical next steps. Individual Zelda report purchases remain separate.</p>
+            <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+                <div class="card-body p-4 p-md-5">
+                    <span class="badge rounded-pill bg-success-subtle text-success-emphasis border border-success-subtle mb-3">For founders building connections</span>
+                    <h2 class="fw-bold mb-2">Founder Premium</h2>
+                    <div class="d-flex align-items-baseline gap-2 mb-3">
+                        <span class="display-6 fw-bold">${{ founder_price }}/mo</span>
+                    </div>
+                    <p class="lead mb-2">Make your founder profile work harder for you.</p>
+                    <p class="text-secondary mb-4">
+                        Get greater visibility in the Interlink marketplace, find investors whose publicly shared criteria align with your business,
+                        understand how visitors engage with your company, and prepare for better conversations with Zelda Intelligence.
+                    </p>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="border rounded-3 p-3 h-100">
+                                <h3 class="h6 fw-bold"><i class="bi bi-graph-up-arrow text-success me-2" aria-hidden="true"></i>Know what's working</h3>
+                                <p class="small text-secondary mb-0">Founder Insights shows engagement across your profile, pitches, report opens, introductions, and messages. Zelda summarizes Visibility, Interest, Trust, Responsiveness, trends, and practical next steps.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded-3 p-3 h-100">
+                                <h3 class="h6 fw-bold"><i class="bi bi-people text-success me-2" aria-hidden="true"></i>Find relevant connections</h3>
+                                <p class="small text-secondary mb-0">Get timely Premium Match Alerts when relevant investors and your business are highly compatible, based on shared preferences and criteria.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded-3 p-3 h-100">
+                                <h3 class="h6 fw-bold"><i class="bi bi-megaphone text-success me-2" aria-hidden="true"></i>Stand out in the marketplace</h3>
+                                <p class="small text-secondary mb-0">Featured bulletin-board placement and one 24-hour Monthly Highlight for your listing, pitch video, blog posts, and job posts.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded-3 p-3 h-100">
+                                <h3 class="h6 fw-bold"><i class="bi bi-journal-text text-success me-2" aria-hidden="true"></i>Prepare and keep momentum</h3>
+                                <p class="small text-secondary mb-0">Investment Committee Memo access is included with Premium, alongside unlimited new Fundraising CRM leads to organize outreach and relationships.</p>
+                            </div>
+                        </div>
+                    </div>
 
-                    <h6 class="text-uppercase small fw-bold text-success mb-2 mt-4">Get discovered faster</h6>
-                    <ul class="text-secondary small mb-0">
-                        <li>Featured Placement on the bulletin board</li>
-                        <li>Monthly Highlight — a 24-hour visibility boost across your bulletin listing, pitch video, blog posts, and job posts</li>
-                        <li>Premium Match Alerts — notifications when investor criteria align with your pitch; no investment endorsement</li>
-                    </ul>
-
-                    <h6 class="text-uppercase small fw-bold text-success mb-2 mt-4">Understand &amp; improve your company</h6>
-                    <ul class="text-secondary small mb-0">
-                        <li>Zelda Lite previews are available without buying a full report. Full reports require a separate purchase unless explicitly included in your plan or covered by a valid promotion.</li>
-                        <li>Full Intelligence Memo — purchased separately; Zelda Lite preview available</li>
-                        <li>Truth Delta verification — purchased separately</li>
-                        <li>Zelda business valuation — ${{ valuation_report_price|floatformat:2 }}/report, pay-per-use (not included in your subscription)</li>
-                        <li>Investment Committee Memo — included with Premium; sharing remains subject to access controls</li>
-                    </ul>
-
-                    <h6 class="text-uppercase small fw-bold text-success mb-2 mt-4">Grow relationships</h6>
-                    <ul class="text-secondary small mb-3">
-                        <li>Unlimited new Fundraising CRM leads (free tier can add {{ free_crm_lead_limit }} new leads per month; existing leads are retained)</li>
-                    </ul>
+                    <div class="bg-body-tertiary border rounded-3 p-3 mb-4">
+                        <h3 class="h6 fw-bold mb-2">Zelda Intelligence: what's included?</h3>
+                        <p class="small text-secondary mb-2">Zelda Lite previews are free. Premium includes Investment Committee Memo access, subject to sharing and access controls. Other full reports are optional, separate purchases:</p>
+                        <ul class="small text-secondary mb-0">
+                            <li>Full Intelligence Memo — purchased separately</li>
+                            <li>Truth Delta verification — purchased separately</li>
+                            <li>Zelda business valuation — ${{ valuation_report_price|floatformat:2 }}/report, pay-per-use (not included in your subscription)</li>
+                        </ul>
+                    </div>
 
                     <form method="post" action="{% url 'billing:create_checkout_session' %}">
                         {% csrf_token %}
-                        {# Terms shown before any payment detail is collected; same sentence is stored with the consent. #}
                         <p class="small text-muted mb-2">{{ renewal_terms }}</p>
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="checkbox" name="agree_to_renewal" id="agree_to_renewal_{{ plan|lower }}" required>
@@ -102,18 +124,18 @@
                                 I understand this subscription renews automatically until I cancel.
                             </label>
                         </div>
-                        <p class="small text-muted mb-2">Have a promotional code? Enter it securely at Stripe Checkout before paying. Discounts apply only to eligible products and periods.</p>
-                        <button type="submit" class="btn btn-success" {% if not stripe_configured %}disabled{% endif %}>
-                            <i class="bi bi-star-fill me-1"></i> Subscribe
+                        <button type="submit" class="btn btn-success btn-lg px-4" {% if not stripe_configured %}disabled{% endif %}>
+                            <i class="bi bi-star-fill me-2" aria-hidden="true"></i>Start Founder Premium
                         </button>
+                        <p class="small text-muted mt-3 mb-0">Have a promotional code? Enter it securely at Stripe Checkout before paying. Discounts apply only to eligible products and periods.</p>
                     </form>
                 </div>
             </div>
 
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">
-                    <h6 class="fw-bold mb-3">Free vs. Premium</h6>
-                    <p class="small text-muted mt-3 mb-0">Compatibility alerts reflect profile and saved-criteria alignment, not investment quality, recommendations, or expected returns. Full Zelda reports and report-credit packs are purchased separately unless explicitly listed as included.</p>
+                    <h3 class="h5 fw-bold mb-2">Free vs. Premium</h3>
+                    <p class="small text-muted mb-3">Start with free discovery and Zelda Lite. Upgrade when you're ready for more visibility, deeper engagement insights, and investor compatibility alerts.</p>
                     <div class="table-responsive">
                         <table class="table table-sm align-middle mb-0">
                             <thead>
@@ -124,18 +146,19 @@
                                 </tr>
                             </thead>
                             <tbody class="small">
-                                <tr><td>Zelda Lite</td><td>Preview</td><td>Preview</td></tr><tr><td>Full Zelda reports</td><td>Purchased separately</td><td>Purchased separately unless explicitly included</td></tr>
+                                <tr><td>Marketplace discovery</td><td>Included</td><td>Included</td></tr>
+                                <tr><td>Founder Insights analytics</td><td>—</td><td class="fw-semibold text-success">Engagement trends and Zelda guidance</td></tr>
                                 <tr><td>New Fundraising CRM leads</td><td>{{ free_crm_lead_limit }}/month</td><td class="fw-semibold text-success">Unlimited</td></tr>
                                 <tr><td>Bulletin board placement</td><td>Standard</td><td class="fw-semibold text-success">Featured</td></tr>
                                 <tr><td>Monthly Highlight boost</td><td>—</td><td class="fw-semibold text-success">24 hrs, once/month</td></tr>
-                                <tr><td>Criteria-based compatibility alerts</td><td>—</td><td>Priority alerts for matching saved criteria; no investment endorsement</td></tr>
-                                <tr><td>Business valuations</td><td>Paid report</td><td>Paid report; promotions may apply</td></tr>
-                                <tr><td>Intelligence Memo</td><td>Paid report</td><td>Paid report</td></tr>
-                                <tr><td>Truth Delta verification &amp; history</td><td>Paid report</td><td>Paid report</td></tr>
-                                <tr><td>Investment Committee Memo</td><td>Paid separately</td><td>Included</td></tr>
+                                <tr><td>Criteria-based compatibility alerts</td><td>—</td><td>Priority alerts for highly compatible investor criteria</td></tr>
+                                <tr><td>Zelda Lite</td><td>Preview</td><td>Preview</td></tr>
+                                <tr><td>Investment Committee Memo</td><td>Paid separately</td><td class="fw-semibold text-success">Included</td></tr>
+                                <tr><td>Full Zelda reports</td><td>Purchased separately</td><td>Purchased separately unless explicitly included</td></tr>
                             </tbody>
                         </table>
                     </div>
+                    <p class="small text-muted mt-3 mb-0">With the free plan, existing leads are retained; it can add {{ free_crm_lead_limit }} new leads per month. </p>
                 </div>
             </div>
 
