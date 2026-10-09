@@ -589,6 +589,27 @@ def stripe_webhook(request):
             )
 
     elif event_type == 'invoice.paid':
+        # Record each paid invoice once per Stripe invoice ID. Replayed webhooks
+        # preserve the original occurrence time and Mixpanel deduplication key.
+        stripe_customer_id = data_object.get('customer')
+        invoice_id = data_object.get('id')
+        if invoice_id and stripe_customer_id and data_object.get('amount_paid', 0) > 0:
+            paid_subscription = Subscription.objects.filter(
+                stripe_customer_id=stripe_customer_id,
+                status=Subscription.Status.ACTIVE,
+            ).first()
+            if paid_subscription:
+                from datetime import datetime, timezone as dt_timezone
+                from matchmaking.product_analytics import track
+                created = data_object.get('created')
+                occurred_at = datetime.fromtimestamp(created, tz=dt_timezone.utc) if created is not None else None
+                track(
+                    'purchase_completed', paid_subscription.user_id, f'invoice:{invoice_id}',
+                    occurred_at=occurred_at, product='premium_membership',
+                    amount_minor=data_object['amount_paid'],
+                    currency=(data_object.get('currency') or 'usd').lower(),
+                    payment_kind='subscription',
+                )
         # Founder/Seller Premium includes one Peer Market Benchmark refresh
         # per monthly period. create_monthly_benchmark is itself idempotent
         # inside the 30-day window, so duplicate/retried Stripe events do not
