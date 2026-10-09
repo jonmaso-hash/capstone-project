@@ -387,7 +387,14 @@ CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND')
 CELERY_IMPORTS = (
     'zelda_api.entity_verification_tasks',
     'zelda_api.truth_delta_tasks',
+    'matchmaking.product_analytics',
 )
+
+# Optional. Configure the production token on both web and worker services.
+# Separate development projects/tokens prevent testing from polluting launch data.
+MIXPANEL_TOKEN = env('MIXPANEL_TOKEN', default='')
+MIXPANEL_ID_NAMESPACE = env('MIXPANEL_ID_NAMESPACE', default='development')
+MIXPANEL_TRACK_URL = env('MIXPANEL_TRACK_URL', default='https://api.mixpanel.com/track')
 
 # Off in prod/dev (tasks go to a real worker). CI/test runs set EAGER True so
 # `.delay()` executes in-process — no broker, no worker, and no dependency on

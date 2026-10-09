@@ -54,6 +54,11 @@ def reconcile_order(order):
         changed = ZeldaOrder.objects.filter(pk=order.pk, status='processing').update(status=state, finished_at=timezone.now())
         order.refresh_from_db()
         if changed:
+            if state == 'ready':
+                from matchmaking.product_analytics import track
+                track('zelda_reports_ready', order.user_id, f'order:{order.pk}',
+                      occurred_at=order.finished_at,
+                      product=order.product, reports=list(order.reports))
             notify(order)
             if state == 'ready':
                 archive_ready_order(order)

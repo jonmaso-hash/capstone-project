@@ -130,6 +130,9 @@ def signup_view(request):
                 recipient=user, notification_type='SYSTEM', message=PLATFORM_DISCLAIMER_MESSAGE,
             )
             log_page_event(request, 'signup_completed', role=role, user=user)
+            from matchmaking.product_analytics import track
+            track('signup_completed', user.pk, f'user:{user.pk}', occurred_at=user.date_joined,
+                  role=role, method='password')
             request.session['pending_profile_role'] = role
             messages.success(request, f"Welcome to Interlink Foundry, {user.username}!")
             return redirect(ROLE_PROFILE_URLS[role])

@@ -305,6 +305,11 @@ def handle_product_event(event_type, session):
                 if order.status == 'awaiting_payment':
                     order.status, order.paid_at = 'paid', timezone.now()
                     order.save(update_fields=['status', 'paid_at'])
+                    from matchmaking.product_analytics import track
+                    track('purchase_completed', order.user_id, f'checkout:{order.stripe_session_id}',
+                          occurred_at=order.paid_at,
+                          product=order.product, amount_minor=order.amount, currency=order.currency,
+                          payment_kind='one_time')
                 transaction.on_commit(lambda: fulfill_zelda_order.delay(str(order.pk)))
         elif event_type in ('checkout.session.expired', 'checkout.session.async_payment_failed'):
             if order.status == 'awaiting_payment':
@@ -415,6 +420,11 @@ def handle_truth_delta_credit_event(event_type, session):
                 purchase.status = 'paid'
                 purchase.paid_at = timezone.now()
                 purchase.save(update_fields=['status', 'paid_at'])
+                from matchmaking.product_analytics import track
+                track('purchase_completed', purchase.user_id, f'checkout:{purchase.stripe_session_id}',
+                      occurred_at=purchase.paid_at,
+                      product='truth_delta_credit_pack', amount_minor=purchase.amount,
+                      currency=purchase.currency, payment_kind='one_time')
         elif event_type in ('checkout.session.expired', 'checkout.session.async_payment_failed'):
             if purchase.status == 'awaiting_payment':
                 purchase.status = 'canceled'
