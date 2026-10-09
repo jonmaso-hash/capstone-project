@@ -16,9 +16,7 @@
         <div class="col-lg-8">
             <h2 class="fw-bold mb-1">Membership</h2>
             <p class="text-muted mb-4">
-                Free gets you discovered — a profile, pitch deck &amp; video, bulletin and pitch-video placement,
-                introductions, and messaging. Premium unlocks Zelda's intelligence on top of that — the full
-                Intelligence Memo, Truth Delta verification, valuations, AI Investment Committee Memo, and profile analytics.
+                Free membership includes marketplace discovery, introductions, and Zelda Lite previews. Premium adds marketplace tools, profile analytics, and the Investment Committee Memo. Other full Zelda intelligence reports are purchased separately; subscription access does not make them free.
             </p>
 
             {% if subscription and subscription.is_active %}
@@ -77,18 +75,16 @@
                     <ul class="text-secondary small mb-0">
                         <li>Featured Placement on the bulletin board</li>
                         <li>Monthly Highlight — a 24-hour visibility boost across your bulletin listing, pitch video, blog posts, and job posts</li>
-                        <li>Priority Match Alerts — notified the moment a new investor mandate fits your pitch</li>
+                        <li>Compatibility alerts for saved investor criteria (not investment recommendations)</li>
                     </ul>
 
                     <h6 class="text-uppercase small fw-bold text-success mb-2 mt-4">Understand &amp; improve your company</h6>
                     <ul class="text-secondary small mb-0">
-                        <li>{{ premium_ai_credits }} monthly AI analyses for Zelda memos, valuations, and Truth Delta verification (free tier: {{ free_ai_credits }}/month)
-                            <div class="text-muted" style="font-size:0.78rem;">Each analysis produces a new Zelda report — viewing reports you've already generated stays unlimited.</div>
-                        </li>
-                        <li>Full Intelligence Memo — AI business summary, strengths, weaknesses, and improvement recommendations</li>
-                        <li>Truth Delta: your deck's claims checked against public sources where they report the figure, plus your full verification history and trend</li>
+                        <li>Zelda Lite previews are available without buying a full report. Full reports require a separate purchase unless explicitly included in your plan or covered by a valid promotion.</li>
+                        <li>Full Intelligence Memo — purchased separately; Zelda Lite preview available</li>
+                        <li>Truth Delta verification — purchased separately</li>
                         <li>Zelda business valuation — ${{ valuation_report_price|floatformat:2 }}/report, pay-per-use (not included in your subscription)</li>
-                        <li>Investment Committee Memo — generate and share a one-page executive report with connected investors, free for them to view</li>
+                        <li>Investment Committee Memo — included with Premium; sharing remains subject to access controls</li>
                     </ul>
 
                     <h6 class="text-uppercase small fw-bold text-success mb-2 mt-4">Grow relationships</h6>
@@ -106,6 +102,7 @@
                                 I understand this subscription renews automatically until I cancel.
                             </label>
                         </div>
+                        <p class="small text-muted mb-2">Have a promotional code? Enter it securely at Stripe Checkout before paying. Discounts apply only to eligible products and periods.</p>
                         <button type="submit" class="btn btn-success" {% if not stripe_configured %}disabled{% endif %}>
                             <i class="bi bi-star-fill me-1"></i> Subscribe
                         </button>
@@ -126,15 +123,15 @@
                                 </tr>
                             </thead>
                             <tbody class="small">
-                                <tr><td>Zelda AI analyses</td><td>{{ free_ai_credits }}/month</td><td class="fw-semibold text-success">{{ premium_ai_credits }}/month</td></tr>
+                                <tr><td>Zelda Lite</td><td>Preview</td><td>Preview</td></tr><tr><td>Full Zelda reports</td><td>Purchased separately</td><td>Purchased separately unless explicitly included</td></tr>
                                 <tr><td>New Fundraising CRM leads</td><td>{{ free_crm_lead_limit }}/month</td><td class="fw-semibold text-success">Unlimited</td></tr>
                                 <tr><td>Bulletin board placement</td><td>Standard</td><td class="fw-semibold text-success">Featured</td></tr>
                                 <tr><td>Monthly Highlight boost</td><td>—</td><td class="fw-semibold text-success">24 hrs, once/month</td></tr>
-                                <tr><td>Match alerts</td><td>Standard</td><td class="fw-semibold text-success">Priority</td></tr>
-                                <tr><td>Business valuations</td><td>${{ valuation_report_price|floatformat:2 }}/report</td><td class="fw-semibold text-success">${{ valuation_report_price|floatformat:2 }}/report (pay-per-use, not bundled)</td></tr>
-                                <tr><td>Intelligence Memo</td><td>—</td><td class="fw-semibold text-success">Full memo</td></tr>
-                                <tr><td>Truth Delta verification &amp; history</td><td>—</td><td class="fw-semibold text-success">Included</td></tr>
-                                <tr><td>Investment Committee Memo</td><td>—</td><td class="fw-semibold text-success">Included</td></tr>
+                                <tr><td>Criteria-based compatibility alerts</td><td>Standard</td><td>Priority delivery; no endorsement or investment advice</td></tr>
+                                <tr><td>Business valuations</td><td>Paid report</td><td>Paid report; promotions may apply</td></tr>
+                                <tr><td>Intelligence Memo</td><td>Paid report</td><td>Paid report</td></tr>
+                                <tr><td>Truth Delta verification &amp; history</td><td>Paid report</td><td>Paid report</td></tr>
+                                <tr><td>Investment Committee Memo</td><td>Paid separately</td><td>Included</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -150,7 +147,7 @@
                     <h6 class="text-uppercase small fw-bold text-primary mb-2 mt-4">See the best opportunities first</h6>
                     <ul class="text-secondary small mb-0">
                         <li>See the founder's full identity in your weekly match digest, not just an anonymized teaser</li>
-                        <li>Priority Match Alerts — notified the moment a new founder matches your thesis</li>
+                        <li>Priority compatibility alerts for saved criteria (not investment recommendations)</li>
                     </ul>
 
                     <h6 class="text-uppercase small fw-bold text-primary mb-2 mt-4">Move faster</h6>
@@ -161,14 +158,10 @@
 
                     <h6 class="text-uppercase small fw-bold text-primary mb-2 mt-4">First-pass investment intelligence</h6>
                     <ul class="text-secondary small mb-3">
-                        <li>{{ premium_ai_credits }} monthly AI analyses for Zelda memos, valuations, and Truth Delta verification (free tier: {{ free_ai_credits }}/month)
-                            <div class="text-muted" style="font-size:0.78rem;">Each analysis produces a new Zelda report — viewing reports you've already generated stays unlimited.</div>
-                        </li>
-                        <li>Truth Delta: claims checked against public sources where they report the figure</li>
-                        <li>Zelda business valuation — {{ valuation_investor_buyer_monthly_limit }} included every month (${{ valuation_overage_price|floatformat:2 }}/report after that)</li>
-                        <li>Full access to any founder's Intelligence Memo, Truth Delta verification, and AI Investment Committee Memo once <em>they've</em> upgraded to Premium
-                            <div class="text-muted" style="font-size:0.78rem;">Free for you to view — that's the founder's subscription unlocking it, not yours.</div>
-                        </li>
+                        <li>Zelda Lite previews are available without buying a full report. Full reports require a separate purchase unless explicitly included in your plan or covered by a valid promotion.</li>
+                        <li>Truth Delta verification — purchased separately</li>
+                        <li>Zelda business valuation — purchased separately; see report checkout for current price</li>
+                        <li>Access to another user's purchased reports requires that user's sharing authorization; Premium alone does not unlock them.</li>
                     </ul>
 
                     <form method="post" action="{% url 'billing:create_checkout_session' %}">
@@ -181,6 +174,7 @@
                                 I understand this subscription renews automatically until I cancel.
                             </label>
                         </div>
+                        <p class="small text-muted mb-2">Have a promotional code? Enter it securely at Stripe Checkout before paying. Discounts apply only to eligible products and periods.</p>
                         <button type="submit" class="btn btn-primary" {% if not stripe_configured %}disabled{% endif %}>
                             <i class="bi bi-star-fill me-1"></i> Subscribe
                         </button>
@@ -201,12 +195,12 @@
                                 </tr>
                             </thead>
                             <tbody class="small">
-                                <tr><td>Zelda AI analyses</td><td>{{ free_ai_credits }}/month</td><td class="fw-semibold text-primary">{{ premium_ai_credits }}/month</td></tr>
+                                <tr><td>Zelda Lite</td><td>Preview</td><td>Preview</td></tr><tr><td>Full Zelda reports</td><td>Purchased separately</td><td>Purchased separately unless explicitly included</td></tr>
                                 <tr><td>Introduction requests</td><td>{{ daily_intro_limit }}/day</td><td class="fw-semibold text-primary">Uncapped</td></tr>
                                 <tr><td>CRM export (CSV)</td><td>—</td><td class="fw-semibold text-primary">Included</td></tr>
                                 <tr><td>Founder identity in digest</td><td>Anonymized teaser</td><td class="fw-semibold text-primary">Full identity</td></tr>
-                                <tr><td>Match alerts</td><td>Standard</td><td class="fw-semibold text-primary">Priority</td></tr>
-                                <tr><td>Business valuations</td><td>Not available</td><td class="fw-semibold text-primary">{{ valuation_investor_buyer_monthly_limit }}/month included, then ${{ valuation_overage_price|floatformat:2 }}/report</td></tr>
+                                <tr><td>Criteria-based compatibility alerts</td><td>Standard</td><td>Priority delivery; no endorsement or investment advice</td></tr>
+                                <tr><td>Business valuations</td><td>Paid report</td><td>Paid report; promotions may apply</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -263,15 +257,13 @@
                     <ul class="text-secondary small mb-0">
                         <li>Featured Listing in the business marketplace</li>
                         <li>Monthly Highlight — a 24-hour visibility boost across your marketplace listing and pitch video</li>
-                        <li>Priority Match Alerts — notified when a new buyer mandate fits your listing</li>
+                        <li>Compatibility alerts for saved buyer criteria (not acquisition recommendations)</li>
                     </ul>
 
                     <h6 class="text-uppercase small fw-bold mb-2 mt-4" style="color:#997404;">AI-powered deal prep</h6>
                     <ul class="text-secondary small mb-0">
-                        <li>{{ premium_ai_credits }} monthly AI analyses for Zelda memos, valuations, and Truth Delta verification (free tier: {{ free_ai_credits }}/month)
-                            <div class="text-muted" style="font-size:0.78rem;">Each analysis produces a new Zelda report — viewing reports you've already generated stays unlimited.</div>
-                        </li>
-                        <li>Truth Delta: claims checked against public sources where they report the figure</li>
+                        <li>Zelda Lite previews are available without buying a full report. Full reports require a separate purchase unless explicitly included in your plan or covered by a valid promotion.</li>
+                        <li>Truth Delta verification — purchased separately</li>
                         <li>Zelda business valuation — ${{ valuation_report_price|floatformat:2 }}/report, pay-per-use (not included in your subscription)</li>
                     </ul>
 
@@ -290,6 +282,7 @@
                                 I understand this subscription renews automatically until I cancel.
                             </label>
                         </div>
+                        <p class="small text-muted mb-2">Have a promotional code? Enter it securely at Stripe Checkout before paying. Discounts apply only to eligible products and periods.</p>
                         <button type="submit" class="btn btn-warning" {% if not stripe_configured %}disabled{% endif %}>
                             <i class="bi bi-star-fill me-1"></i> Subscribe
                         </button>
@@ -310,12 +303,12 @@
                                 </tr>
                             </thead>
                             <tbody class="small">
-                                <tr><td>Zelda AI analyses</td><td>{{ free_ai_credits }}/month</td><td class="fw-semibold" style="color:#997404;">{{ premium_ai_credits }}/month</td></tr>
+                                <tr><td>Zelda Lite</td><td>Preview</td><td>Preview</td></tr><tr><td>Full Zelda reports</td><td>Purchased separately</td><td>Purchased separately unless explicitly included</td></tr>
                                 <tr><td>Marketplace listing</td><td>Standard</td><td class="fw-semibold" style="color:#997404;">Featured</td></tr>
                                 <tr><td>Monthly Highlight boost</td><td>—</td><td class="fw-semibold" style="color:#997404;">24 hrs, once/month</td></tr>
                                 <tr><td>Buyer interest analytics</td><td>Basic</td><td class="fw-semibold" style="color:#997404;">Detailed</td></tr>
-                                <tr><td>Match alerts</td><td>Standard</td><td class="fw-semibold" style="color:#997404;">Priority</td></tr>
-                                <tr><td>Business valuations</td><td>${{ valuation_report_price|floatformat:2 }}/report</td><td class="fw-semibold" style="color:#997404;">${{ valuation_report_price|floatformat:2 }}/report (pay-per-use, not bundled)</td></tr>
+                                <tr><td>Criteria-based compatibility alerts</td><td>Standard</td><td>Priority delivery; no endorsement or investment advice</td></tr>
+                                <tr><td>Business valuations</td><td>Paid report</td><td>Paid report; promotions may apply</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -332,16 +325,14 @@
                     <ul class="text-secondary small mb-0">
                         <li>Uncapped introduction requests (free tier: {{ daily_intro_limit }}/day)</li>
                         <li>Direct CRM export (CSV) of matching listings</li>
-                        <li>Priority Match Alerts — notified when a new listing matches your acquisition thesis</li>
+                        <li>Priority compatibility alerts for saved criteria (not acquisition recommendations)</li>
                     </ul>
 
                     <h6 class="text-uppercase small fw-bold text-info-emphasis mb-2 mt-4">First-pass acquisition intelligence</h6>
                     <ul class="text-secondary small mb-3">
-                        <li>{{ premium_ai_credits }} monthly AI analyses for Zelda memos, valuations, and Truth Delta verification (free tier: {{ free_ai_credits }}/month)
-                            <div class="text-muted" style="font-size:0.78rem;">Each analysis produces a new Zelda report — viewing reports you've already generated stays unlimited.</div>
-                        </li>
-                        <li>Truth Delta: claims checked against public sources where they report the figure</li>
-                        <li>Zelda business valuation — {{ valuation_investor_buyer_monthly_limit }} included every month (${{ valuation_overage_price|floatformat:2 }}/report after that)</li>
+                        <li>Zelda Lite previews are available without buying a full report. Full reports require a separate purchase unless explicitly included in your plan or covered by a valid promotion.</li>
+                        <li>Truth Delta verification — purchased separately</li>
+                        <li>Zelda business valuation — purchased separately; see report checkout for current price</li>
                     </ul>
 
                     <form method="post" action="{% url 'billing:create_checkout_session' %}">
@@ -354,6 +345,7 @@
                                 I understand this subscription renews automatically until I cancel.
                             </label>
                         </div>
+                        <p class="small text-muted mb-2">Have a promotional code? Enter it securely at Stripe Checkout before paying. Discounts apply only to eligible products and periods.</p>
                         <button type="submit" class="btn btn-primary" {% if not stripe_configured %}disabled{% endif %}>
                             <i class="bi bi-star-fill me-1"></i> Subscribe
                         </button>
@@ -374,11 +366,11 @@
                                 </tr>
                             </thead>
                             <tbody class="small">
-                                <tr><td>Zelda AI analyses</td><td>{{ free_ai_credits }}/month</td><td class="fw-semibold text-info-emphasis">{{ premium_ai_credits }}/month</td></tr>
+                                <tr><td>Zelda Lite</td><td>Preview</td><td>Preview</td></tr><tr><td>Full Zelda reports</td><td>Purchased separately</td><td>Purchased separately unless explicitly included</td></tr>
                                 <tr><td>Introduction requests</td><td>{{ daily_intro_limit }}/day</td><td class="fw-semibold text-info-emphasis">Uncapped</td></tr>
                                 <tr><td>CRM export (CSV)</td><td>—</td><td class="fw-semibold text-info-emphasis">Included</td></tr>
-                                <tr><td>Match alerts</td><td>Standard</td><td class="fw-semibold text-info-emphasis">Priority</td></tr>
-                                <tr><td>Business valuations</td><td>Not available</td><td class="fw-semibold text-info-emphasis">{{ valuation_investor_buyer_monthly_limit }}/month included, then ${{ valuation_overage_price|floatformat:2 }}/report</td></tr>
+                                <tr><td>Criteria-based compatibility alerts</td><td>Standard</td><td>Priority delivery; no endorsement or investment advice</td></tr>
+                                <tr><td>Business valuations</td><td>Paid report</td><td>Paid report; promotions may apply</td></tr>
                             </tbody>
                         </table>
                     </div>
