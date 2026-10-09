@@ -202,13 +202,12 @@ class BillingPageCopyTests(TestCase):
         )
 
     def test_billing_page_shows_real_ai_credit_numbers(self):
-        from zelda_api.quotas import FREE_CREDITS, PREMIUM_CREDITS
-
         self.client.force_login(self.founder_user)
         response = self.client.get(reverse('billing:billing_page'))
 
-        self.assertContains(response, f"{PREMIUM_CREDITS} monthly AI analyses")
-        self.assertContains(response, f"free tier: {FREE_CREDITS}/month")
+        self.assertContains(response, "Zelda Lite")
+        self.assertContains(response, "Full Zelda reports")
+        self.assertNotContains(response, "100 monthly AI analyses")
 
     def test_billing_page_shows_real_crm_lead_limit(self):
         from matchmaking.views import FREE_CRM_LEAD_LIMIT
@@ -288,7 +287,6 @@ class BillingPageCopyTests(TestCase):
         )
 
     def test_investor_premium_shows_included_valuation_allowance(self):
-        from zelda_api.quotas import VALUATION_INVESTOR_BUYER_MONTHLY_LIMIT, VALUATION_OVERAGE_PRICE_USD
 
         investor_user = User.objects.create_user('copy_investor_val', password='x')
         InvestorApplication.objects.create(
@@ -298,14 +296,10 @@ class BillingPageCopyTests(TestCase):
         self.client.force_login(investor_user)
         response = self.client.get(reverse('billing:billing_page'))
 
-        self.assertContains(
-            response,
-            f"{VALUATION_INVESTOR_BUYER_MONTHLY_LIMIT} included every month "
-            f"(${VALUATION_OVERAGE_PRICE_USD:.2f}/report after that)",
-        )
+        self.assertContains(response, "Zelda business valuation — purchased separately")
+        self.assertNotContains(response, "included every month")
 
     def test_buyer_premium_shows_included_valuation_allowance(self):
-        from zelda_api.quotas import VALUATION_INVESTOR_BUYER_MONTHLY_LIMIT, VALUATION_OVERAGE_PRICE_USD
 
         buyer_user = User.objects.create_user('copy_buyer_val', password='x')
         BuyerApplication.objects.create(
@@ -314,11 +308,8 @@ class BillingPageCopyTests(TestCase):
         self.client.force_login(buyer_user)
         response = self.client.get(reverse('billing:billing_page'))
 
-        self.assertContains(
-            response,
-            f"{VALUATION_INVESTOR_BUYER_MONTHLY_LIMIT} included every month "
-            f"(${VALUATION_OVERAGE_PRICE_USD:.2f}/report after that)",
-        )
+        self.assertContains(response, "Zelda business valuation — purchased separately")
+        self.assertNotContains(response, "included every month")
 
     def test_firm_section_shows_included_valuation_allowance(self):
         from zelda_api.quotas import VALUATION_FIRM_MONTHLY_LIMIT, VALUATION_FIRM_OVERAGE_PRICE_USD
