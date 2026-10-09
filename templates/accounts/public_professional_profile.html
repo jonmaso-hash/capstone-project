@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<main class="container py-5" style="max-width: 800px;">
+  <header class="mb-4"><h1>{{ profile.display_name|default:profile.user.username }}</h1>
+    {% if profile.headline %}<p class="lead">{{ profile.headline }}</p>{% endif %}
+    {% if profile.location %}<p>{{ profile.location }}</p>{% endif %}
+    {% if profile.biography %}<p>{{ profile.biography|linebreaks }}</p>{% endif %}
+    {% if profile.website %}<p><a href="{{ profile.website }}" rel="noopener noreferrer nofollow">Website</a></p>{% endif %}
+    {% if profile.linkedin_url %}<p><a href="{{ profile.linkedin_url }}" rel="noopener noreferrer nofollow">LinkedIn</a></p>{% endif %}
+  </header>
+  {% if education %}<section><h2>Education</h2>{% for item in education %}<article class="mb-3"><h3 class="h5">{{ item.institution }}</h3><p>{{ item.credential }} {{ item.field_of_study }}</p>{% if item.started_on %}<p>{{ item.started_on }}{% if item.ended_on %} – {{ item.ended_on }}{% endif %}</p>{% endif %}</article>{% endfor %}</section>{% endif %}
+  {% if relationships %}<section><h2>Organizations and career</h2>{% for item in relationships %}<article class="mb-3"><h3 class="h5">{{ item.organization.name }}</h3><p>{{ item.get_role_display }}{% if item.title %} — {{ item.title }}{% endif %}</p>{% if item.started_on %}<p>{{ item.started_on }}{% if item.ended_on %} – {{ item.ended_on }}{% endif %}</p>{% endif %}</article>{% endfor %}</section>{% endif %}
+  {% if request.user.is_authenticated and request.user.pk == profile.user_id %}<a href="{% url 'accounts:edit_professional_profile' %}">Edit my professional profile</a>{% endif %}
+</main>
+{% endblock %}
