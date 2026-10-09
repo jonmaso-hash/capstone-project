@@ -2,7 +2,7 @@
 from django.urls import path
 from django.contrib.auth.views import LogoutView
 from . import views
-from .professional_views import edit_professional_profile
+from .professional_views import (edit_professional_profile, edit_education, delete_education,\n    edit_organization_relationship, delete_organization_relationship)
 from . import staff_mfa
 from zelda_api.views import ZeldaGlobalSearchAPIView
 
@@ -27,6 +27,12 @@ urlpatterns = [
     # ==========================================
     path('profile/', views.redirect_to_own_profile, name='profile_self'),
     path('professional/edit/', edit_professional_profile, name='edit_professional_profile'),
+    path('professional/education/add/', edit_education, name='add_professional_education'),
+    path('professional/education/<int:pk>/edit/', edit_education, name='edit_professional_education'),
+    path('professional/education/<int:pk>/delete/', delete_education, name='delete_professional_education'),
+    path('professional/organizations/add/', edit_organization_relationship, name='add_professional_organization'),
+    path('professional/organizations/<int:pk>/edit/', edit_organization_relationship, name='edit_professional_organization'),
+    path('professional/organizations/<int:pk>/delete/', delete_organization_relationship, name='delete_professional_organization'),
     
     # 👑 FIXED: Exact matches must live ABOVE dynamic parameters
     path('profile/toggle-privacy/', views.toggle_privacy_view, name='toggle_privacy'),
