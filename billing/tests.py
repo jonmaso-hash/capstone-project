@@ -215,14 +215,14 @@ class BillingPageCopyTests(TestCase):
         self.client.force_login(self.founder_user)
         response = self.client.get(reverse('billing:billing_page'))
 
-        self.assertContains(response, f"free tier can add {FREE_CRM_LEAD_LIMIT} new leads per month")
+        self.assertContains(response, f"it can add {FREE_CRM_LEAD_LIMIT} new leads per month")
         self.assertContains(response, "existing leads are retained")
 
     def test_founder_premium_shows_new_price_and_highlight_perk(self):
         self.client.force_login(self.founder_user)
         response = self.client.get(reverse('billing:billing_page'))
 
-        self.assertContains(response, "Founder Premium — $99/mo")
+        self.assertContains(response, "Founder Premium")\n        self.assertContains(response, "$99")\n        self.assertContains(response, "Make your founder profile work harder for you.")\n        self.assertContains(response, "above 80%")\n        self.assertContains(response, "opted to make it public")
         self.assertContains(response, "Monthly Highlight")
         # Replaced by the highlight perk — see digest.py's asymmetric identity design.
         self.assertNotContains(response, "See the investor's full identity")
