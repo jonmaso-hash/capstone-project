@@ -48,7 +48,7 @@
     <div class="alert alert-primary d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
         <div>
             <strong>Shareable report is on.</strong>
-            <div class="small">Anyone with this link can view this frozen benchmark snapshot.</div>
+            <div class="small">Anyone with this link can view the benchmark. Your field privacy settings apply to the shared report, including values and percentiles.</div>
         </div>
         <button type="button" class="btn btn-sm btn-primary" id="copy-benchmark-link"
                 data-url="{% url 'accounts:peer_market_benchmark_share' benchmark.share_token %}">
@@ -169,7 +169,12 @@
 
     <div class="alert alert-light border small text-muted">
         <strong>Benchmark note:</strong> Peer Market Benchmark compares disclosed company data.
-        Missing public figures are left blank rather than estimated. Percentiles describe the selected cohort and are not
+        Missing public figures are left blank rather than estimated.
+        Zero values for funding raised, current raise, asking price, and years in business are treated as unknown
+        because these fields cannot distinguish an entered zero from an unfilled default.
+        This also excludes genuinely bootstrapped companies with $0 raised from the funding-raised comparison;
+        they can still contribute to other metrics with disclosed values.
+        Percentiles describe the selected cohort and are not
         investment recommendations, appraisals, fairness opinions, or predictions of financing or transaction success.
     </div>
     {% endif %}
