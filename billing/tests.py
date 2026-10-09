@@ -222,7 +222,10 @@ class BillingPageCopyTests(TestCase):
         self.client.force_login(self.founder_user)
         response = self.client.get(reverse('billing:billing_page'))
 
-        self.assertContains(response, "Founder Premium")\n        self.assertContains(response, "$99")\n        self.assertContains(response, "Make your founder profile work harder for you.")\n        self.assertContains(response, "above 80%")\n        self.assertContains(response, "opted to make it public")
+        self.assertContains(response, "Founder Premium")
+        self.assertContains(response, "$99/mo")
+        self.assertContains(response, "Make your founder profile work harder for you.")
+        self.assertContains(response, "Get timely Premium Match Alerts")
         self.assertContains(response, "Monthly Highlight")
         # Replaced by the highlight perk — see digest.py's asymmetric identity design.
         self.assertNotContains(response, "See the investor's full identity")
