@@ -4,20 +4,25 @@ import re
 from datetime import timedelta
 from decimal import Decimal
 
-from django.db.models import Count
 from django.utils import timezone
 
 from matchmaking.models import (
-    AcquisitionInterestEvent,
     Application,
-    InvestorInterestEvent,
     PeerMarketBenchmark,
     SellerApplication,
     can_view_profile_field,
+    restrict_queryset_for_field_filter,
 )
 from .anthropic_client import background_anthropic_client
 
 logger = logging.getLogger(__name__)
+
+MIN_INTERLINK_PEERS = 5
+INTERLINK_PRIVACY_VERSION = 1
+INTERLINK_METRICS = {
+    'founder': {'funding_raised', 'current_raise', 'employee_count', 'years_in_business'},
+    'seller': {'annual_revenue', 'ebitda', 'asking_price', 'employee_count', 'years_in_business'},
+}
 
 
 def as_number(value):
@@ -87,6 +92,8 @@ def cohort_groups(rows, geography):
     geo = geography_parts(geography)
 
     def same(row, level):
+        if not can_view_profile_field(None, row, 'geography'):
+            return False
         expected = geo.get(level) or ''
         actual = geography_parts(getattr(row, 'geography', '')).get(level) or ''
         return bool(expected) and expected.lower() == actual.lower()
@@ -116,57 +123,82 @@ def _visible_peer_value(viewer, peer, field):
     return getattr(peer, field)
 
 
+def interlink_metric(value, peers):
+    """Publish aggregates only with five publicly visible numeric contributors."""
+    values = [x for x in peers if as_number(x) is not None]
+    if len(values) < MIN_INTERLINK_PEERS:
+        return {'value': as_number(value), 'median': None, 'percentile': None,
+                'peer_values_available': 0}
+    return metric(value, values)
+
+
+def safe_interlink_snapshot(snapshot, role):
+    """Fail closed on old snapshots: their aggregates had no privacy boundary.
+
+    Used by both owner and public views, so existing share links are protected
+    without regenerating reports or spending on external research.
+    """
+    output = {}
+    for level in ('site', 'city', 'state', 'country'):
+        cohort = snapshot.get(level, {}) if isinstance(snapshot, dict) else {}
+        safe = {'peer_count': 0, 'metrics': {}}
+        if (isinstance(cohort, dict)
+                and cohort.get('privacy_version') == INTERLINK_PRIVACY_VERSION
+                and isinstance(cohort.get('peer_count'), int)
+                and cohort['peer_count'] >= MIN_INTERLINK_PEERS):
+            safe['peer_count'] = cohort['peer_count']
+            metrics = cohort.get('metrics', {})
+            if isinstance(metrics, dict):
+                for name, row in metrics.items():
+                    if name not in INTERLINK_METRICS.get(role, set()) or not isinstance(row, dict):
+                        continue
+                    count = row.get('peer_values_available')
+                    if isinstance(count, int) and count >= MIN_INTERLINK_PEERS:
+                        safe['metrics'][name] = row
+                    else:
+                        safe['metrics'][name] = interlink_metric(row.get('value'), [])
+        output[level] = safe
+    return output
+
+
 def interlink_benchmark(profile, role):
     if role == 'founder':
-        base = Application.objects.discoverable().filter(
+        base = Application.objects.discoverable()
+        # Cohort membership also discloses a field; authorize before filtering.
+        for field in ('sector', 'stage'):
+            base = restrict_queryset_for_field_filter(base, None, field)
+        base = base.filter(
             sector__iexact=profile.sector,
             stage__iexact=profile.stage,
         ).exclude(pk=profile.pk)
-        event_model = InvestorInterestEvent
-        owner_field = 'founder_id'
-        subject_events = event_model.objects.filter(founder=profile)
     else:
         base = SellerApplication.objects.discoverable().filter(
             industry__iexact=profile.industry,
         ).exclude(pk=profile.pk)
-        event_model = AcquisitionInterestEvent
-        owner_field = 'seller_id'
-        subject_events = event_model.objects.filter(seller=profile)
-
-    interest_types = ('thumbs_up', 'intro_request', 'message_sent', 'analyze', 'memo_view', 'truth_delta_view')
-    subject_interest = subject_events.filter(event_type__in=interest_types).count()
     groups = cohort_groups(base, profile.geography)
 
     output = {}
     for level, peers in groups.items():
-        if not peers:
-            output[level] = {'peer_count': 0, 'metrics': {}}
+        if len(peers) < MIN_INTERLINK_PEERS:
+            output[level] = {'peer_count': 0, 'metrics': {}, 'privacy_version': INTERLINK_PRIVACY_VERSION}
             continue
-        ids = [peer.id for peer in peers]
-        counts = dict(
-            event_model.objects.filter(
-                **{owner_field + '__in': ids},
-                event_type__in=interest_types,
-            ).values(owner_field).annotate(n=Count('id')).values_list(owner_field, 'n')
-        )
         if role == 'founder':
             metrics = {
-                'investor_interest_events': metric(subject_interest, [counts.get(peer.id, 0) for peer in peers]),
-                'funding_raised': metric(profile.prior_amount_raised, [_visible_peer_value(profile.user, peer, 'prior_amount_raised') for peer in peers]),
-                'current_raise': metric(profile.raising_amount, [_visible_peer_value(profile.user, peer, 'raising_amount') for peer in peers]),
-                'employee_count': metric(profile.team_size, [peer.team_size for peer in peers]),
-                'years_in_business': metric(profile.years_in_business, [peer.years_in_business for peer in peers]),
+                'funding_raised': interlink_metric(profile.prior_amount_raised, [_visible_peer_value(None, peer, 'prior_amount_raised') for peer in peers]),
+                'current_raise': interlink_metric(profile.raising_amount, [_visible_peer_value(None, peer, 'raising_amount') for peer in peers]),
+                'employee_count': interlink_metric(profile.team_size, [_visible_peer_value(None, peer, 'team_size') for peer in peers]),
+                'years_in_business': interlink_metric(profile.years_in_business, [_visible_peer_value(None, peer, 'years_in_business') for peer in peers]),
             }
         else:
             metrics = {
-                'buyer_interest_events': metric(subject_interest, [counts.get(peer.id, 0) for peer in peers]),
-                'annual_revenue': metric(profile.annual_revenue, [_visible_peer_value(profile.user, peer, 'annual_revenue') for peer in peers]),
-                'ebitda': metric(profile.ebitda, [_visible_peer_value(profile.user, peer, 'ebitda') for peer in peers]),
-                'asking_price': metric(profile.asking_price, [_visible_peer_value(profile.user, peer, 'asking_price') for peer in peers]),
-                'employee_count': metric(profile.team_size, [peer.team_size for peer in peers]),
-                'years_in_business': metric(profile.years_in_business, [peer.years_in_business for peer in peers]),
+                'annual_revenue': interlink_metric(profile.annual_revenue, [_visible_peer_value(None, peer, 'annual_revenue') for peer in peers]),
+                'ebitda': interlink_metric(profile.ebitda, [_visible_peer_value(None, peer, 'ebitda') for peer in peers]),
+                'asking_price': interlink_metric(profile.asking_price, [_visible_peer_value(None, peer, 'asking_price') for peer in peers]),
+                'employee_count': interlink_metric(profile.team_size, [_visible_peer_value(None, peer, 'team_size') for peer in peers]),
+                'years_in_business': interlink_metric(profile.years_in_business, [_visible_peer_value(None, peer, 'years_in_business') for peer in peers]),
             }
-        output[level] = {'peer_count': len(peers), 'metrics': metrics}
+        output[level] = {'peer_count': len(peers), 'metrics': metrics,
+                         'privacy_version': INTERLINK_PRIVACY_VERSION}
     return output
 
 

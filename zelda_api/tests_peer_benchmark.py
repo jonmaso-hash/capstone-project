@@ -7,8 +7,14 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from matchmaking.models import Application, PeerMarketBenchmark, SellerApplication
-from zelda_api.peer_benchmark import create_monthly_benchmark, generate_benchmark, interlink_benchmark
+from matchmaking.models import (
+    AcquisitionInterestEvent, Application, InvestorInterestEvent,
+    PeerMarketBenchmark, SellerApplication,
+)
+from zelda_api.peer_benchmark import (
+    INTERLINK_PRIVACY_VERSION, MIN_INTERLINK_PEERS, create_monthly_benchmark,
+    generate_benchmark, interlink_benchmark, safe_interlink_snapshot,
+)
 
 User = get_user_model()
 
@@ -60,24 +66,30 @@ class PeerMarketBenchmarkTests(TestCase):
             raising_amount=4000000, team_size=20, years_in_business=6,
             field_visibility={'prior_amount_raised': 'PUBLIC', 'raising_amount': 'PUBLIC'},
         )
+        for i, funding in enumerate((1000000, 3000000, 5000000)):
+            self.founder(
+                f'bench_extra{i}', f'Extra{i}', prior_amount_raised=funding, team_size=8,
+                field_visibility={'prior_amount_raised': 'PUBLIC', 'raising_amount': 'PUBLIC'},
+            )
         data = interlink_benchmark(subject, 'founder')
-        self.assertEqual(data['site']['peer_count'], 2)
-        self.assertEqual(data['city']['peer_count'], 2)
+        self.assertEqual(data['site']['peer_count'], 5)
+        self.assertEqual(data['city']['peer_count'], 5)
         self.assertEqual(data['site']['metrics']['funding_raised']['median'], 3000000)
-        self.assertEqual(data['site']['metrics']['employee_count']['percentile'], 50)
+        self.assertEqual(data['site']['metrics']['employee_count']['percentile'], 80)
 
     def test_seller_interlink_benchmark_uses_industry(self):
         _, subject = self.seller(
             'bench_seller', 'SellerCo', annual_revenue=2000000,
             ebitda=400000, asking_price=3000000, team_size=10, years_in_business=8,
         )
-        self.seller(
-            'bench_seller_peer', 'SellerPeer', annual_revenue=1000000,
-            ebitda=200000, asking_price=2000000, team_size=7, years_in_business=6,
-            field_visibility={'annual_revenue': 'PUBLIC', 'ebitda': 'PUBLIC', 'asking_price': 'PUBLIC'},
-        )
+        for i in range(MIN_INTERLINK_PEERS):
+            self.seller(
+                f'bench_seller_peer{i}', f'SellerPeer{i}', annual_revenue=1000000,
+                ebitda=200000, asking_price=2000000, team_size=7, years_in_business=6,
+                field_visibility={'annual_revenue': 'PUBLIC', 'ebitda': 'PUBLIC', 'asking_price': 'PUBLIC'},
+            )
         data = interlink_benchmark(subject, 'seller')
-        self.assertEqual(data['site']['peer_count'], 1)
+        self.assertEqual(data['site']['peer_count'], 5)
         self.assertEqual(data['site']['metrics']['annual_revenue']['percentile'], 100)
         self.assertEqual(data['site']['metrics']['asking_price']['median'], 2000000)
 
@@ -86,11 +98,12 @@ class PeerMarketBenchmarkTests(TestCase):
             'privacy_subject', 'PrivacySubject', prior_amount_raised=3000000,
             raising_amount=2000000, team_size=12, years_in_business=4,
         )
-        self.founder(
-            'privacy_peer', 'PrivacyPeer', prior_amount_raised=9000000,
-            raising_amount=8000000, team_size=9, years_in_business=3,
-            field_visibility={'prior_amount_raised': 'PRIVATE', 'raising_amount': 'PRIVATE'},
-        )
+        for i in range(MIN_INTERLINK_PEERS):
+            self.founder(
+                f'privacy_peer{i}', f'PrivacyPeer{i}', prior_amount_raised=9000000,
+                raising_amount=8000000, team_size=9, years_in_business=3,
+                field_visibility={'prior_amount_raised': 'PRIVATE', 'raising_amount': 'PRIVATE'},
+            )
 
         data = interlink_benchmark(subject, 'founder')
         funding = data['site']['metrics']['funding_raised']
@@ -101,6 +114,125 @@ class PeerMarketBenchmarkTests(TestCase):
         self.assertEqual(funding['peer_values_available'], 0)
         self.assertIsNone(current_raise['median'])
         self.assertEqual(current_raise['peer_values_available'], 0)
+
+    def test_small_geographic_cohorts_are_suppressed(self):
+        _, subject = self.founder('small_subject', 'Subject')
+        for i in range(MIN_INTERLINK_PEERS):
+            self.founder(f'small_peer{i}', f'Peer{i}', geography=(
+                'San Diego, CA, US' if i == 0 else 'Austin, TX, US'
+            ))
+        data = interlink_benchmark(subject, 'founder')
+        for level in ('city', 'state'):
+            self.assertEqual(data[level]['peer_count'], 0)
+            self.assertEqual(data[level]['metrics'], {})
+        self.assertEqual(data['site']['peer_count'], 5)
+        self.assertEqual(data['country']['peer_count'], 5)
+
+    def test_four_peers_are_suppressed_and_five_are_available_for_both_roles(self):
+        for role, factory in (('founder', self.founder), ('seller', self.seller)):
+            _, subject = factory(f'boundary_{role}', 'Subject', team_size=10)
+            for i in range(MIN_INTERLINK_PEERS - 1):
+                factory(f'boundary_{role}{i}', f'Peer{i}', team_size=8)
+            data = interlink_benchmark(subject, role)
+            self.assertTrue(all(row['peer_count'] == 0 and row['metrics'] == {}
+                                for row in data.values()))
+            factory(f'boundary_{role}_fifth', 'Fifth', team_size=8)
+            data = interlink_benchmark(subject, role)
+            self.assertEqual(data['site']['metrics']['employee_count']['median'], 8)
+            self.assertEqual(data['site']['metrics']['employee_count']['peer_values_available'], 5)
+            self.assertEqual(safe_interlink_snapshot(data, role)['site']['metrics'], data['site']['metrics'])
+
+    def test_minimum_applies_to_each_visible_metric_and_hidden_equals_absent(self):
+        _, subject = self.founder('metric_subject', 'Subject', team_size=10)
+        hidden = []
+        for i in range(MIN_INTERLINK_PEERS):
+            _, peer = self.founder(
+                f'metric_peer{i}', f'Peer{i}', team_size=777,
+                field_visibility={'team_size': 'PUBLIC' if i == 0 else 'PRIVATE'},
+            )
+            if i:
+                hidden.append(peer)
+        before = interlink_benchmark(subject, 'founder')
+        row = before['site']['metrics']['employee_count']
+        self.assertIsNone(row['median'])
+        self.assertIsNone(row['percentile'])
+        self.assertEqual(row['peer_values_available'], 0)
+        for peer in hidden:
+            peer.team_size = None
+            peer.save(update_fields=['team_size'])
+        self.assertEqual(before, interlink_benchmark(subject, 'founder'))
+
+    def test_private_cohort_fields_and_geography_cannot_affect_results(self):
+        _, subject = self.founder('cohort_subject', 'Subject')
+        for i in range(MIN_INTERLINK_PEERS):
+            self.founder(f'cohort_peer{i}', f'Peer{i}', field_visibility={'geography': 'PRIVATE'})
+        _, hidden = self.founder('cohort_hidden', 'Hidden', field_visibility={'sector': 'PRIVATE'})
+        before = interlink_benchmark(subject, 'founder')
+        self.assertEqual(before['site']['peer_count'], 5)
+        for level in ('city', 'state', 'country'):
+            self.assertEqual(before[level]['peer_count'], 0)
+        hidden.sector = 'Healthcare'
+        hidden.save(update_fields=['sector'])
+        self.assertEqual(before, interlink_benchmark(subject, 'founder'))
+
+    def test_activity_never_enters_founder_or_seller_benchmark(self):
+        for role, factory, event_model, owner_field in (
+            ('founder', self.founder, InvestorInterestEvent, 'founder'),
+            ('seller', self.seller, AcquisitionInterestEvent, 'seller'),
+        ):
+            _, subject = factory(f'activity_{role}', 'Subject')
+            peers = [factory(f'activity_{role}{i}', f'Peer{i}')[1]
+                     for i in range(MIN_INTERLINK_PEERS)]
+            before = interlink_benchmark(subject, role)
+            for event_type in ('memo_view', 'truth_delta_view', 'message_sent', 'intro_request'):
+                actor_field = 'investor' if role == 'founder' else 'buyer'
+                event_model.objects.create(
+                    **{owner_field: peers[0], actor_field: subject.user}, event_type=event_type,
+                )
+            self.assertEqual(before, interlink_benchmark(subject, role))
+            for cohort in before.values():
+                self.assertNotIn('investor_interest_events', cohort['metrics'])
+                self.assertNotIn('buyer_interest_events', cohort['metrics'])
+
+    def test_legacy_saved_aggregates_are_suppressed_on_owner_and_share_pages(self):
+        user, app = self.founder('legacy_owner', 'LegacyCo')
+        for count in (1, 20):
+            benchmark = PeerMarketBenchmark.objects.create(
+                user=user, role='founder', founder=app, subject_name=app.company_name,
+                status='ready', sharing_enabled=True, interlink_benchmark={
+                    'site': {'peer_count': count, 'metrics': {
+                        'investor_interest_events': {'value': 1, 'median': 987654321, 'percentile': 100},
+                        'funding_raised': {'value': 2, 'median': 987654321, 'percentile': 100},
+                    }},
+                },
+            )
+            share_url = reverse('accounts:peer_market_benchmark_share', args=[benchmark.share_token])
+            detail_url = reverse('accounts:peer_market_benchmark_detail', args=[benchmark.id])
+            for url in (share_url, detail_url):
+                if url == detail_url:
+                    self.client.force_login(user)
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, 200)
+                self.assertNotContains(response, '987654321')
+                self.assertNotContains(response, 'investor_interest_events')
+                self.assertEqual(response.context['benchmark'].interlink_benchmark['site']['metrics'], {})
+            benchmark.refresh_from_db()
+            self.assertIn('investor_interest_events', benchmark.interlink_benchmark['site']['metrics'])
+            self.client.logout()
+
+    def test_snapshot_reader_requires_supported_metrics_and_five_contributors(self):
+        data = safe_interlink_snapshot({'site': {
+            'privacy_version': INTERLINK_PRIVACY_VERSION, 'peer_count': 10,
+            'metrics': {
+                'funding_raised': {'value': 1, 'median': 2, 'percentile': 50, 'peer_values_available': 5},
+                'employee_count': {'value': 3, 'median': 4, 'percentile': 50, 'peer_values_available': 1},
+                'investor_interest_events': {'median': 777, 'peer_values_available': 10},
+            },
+        }}, 'founder')
+        self.assertEqual(data['site']['metrics']['funding_raised']['median'], 2)
+        self.assertIsNone(data['site']['metrics']['employee_count']['median'])
+        self.assertEqual(data['site']['metrics']['employee_count']['peer_values_available'], 0)
+        self.assertNotIn('investor_interest_events', data['site']['metrics'])
 
     def test_monthly_gate_prevents_duplicate_research_spend(self):
         user, app = self.founder('monthly_founder', 'MonthlyCo')

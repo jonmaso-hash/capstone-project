@@ -97,7 +97,8 @@
             <h5 class="fw-bold mb-1">Interlink peer position</h5>
             <p class="small text-muted mb-4">
                 Compares this profile with same-sector/stage Founder peers or same-industry Seller peers on Interlink.
-                Geography is shown where enough comparable profiles exist.
+                Comparisons require at least five peers with publicly visible values for each metric.
+                Investor and buyer activity is excluded.
             </p>
             {% for level, cohort in benchmark.interlink_benchmark.items %}
                 {% if cohort.peer_count %}
@@ -124,6 +125,9 @@
                 </div>
                 {% endif %}
             {% endfor %}
+            {% if not benchmark.interlink_benchmark.site.peer_count %}
+            <p class="small text-muted mb-0">No comparable Interlink cohort is available for this snapshot.</p>
+            {% endif %}
         </div>
     </div>
 
@@ -164,7 +168,7 @@
     </div>
 
     <div class="alert alert-light border small text-muted">
-        <strong>Benchmark note:</strong> Peer Market Benchmark compares disclosed data and Interlink marketplace activity.
+        <strong>Benchmark note:</strong> Peer Market Benchmark compares disclosed company data.
         Missing public figures are left blank rather than estimated. Percentiles describe the selected cohort and are not
         investment recommendations, appraisals, fairness opinions, or predictions of financing or transaction success.
     </div>
