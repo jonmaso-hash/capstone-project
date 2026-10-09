@@ -14,8 +14,8 @@
         <h2 class="h5">Profile sections</h2>
         <ul class="list-unstyled mb-0">
           <li><strong>Overview</strong></li>
-          <li class="text-muted">Career and education — coming next</li>
-          <li class="text-muted">Organizations — coming next</li>
+          <li class="text-muted">Career and education</li>
+          <li class="text-muted">Organizations</li>
           <li class="text-muted">Marketplace roles — existing profile editors</li>
         </ul>
       </div></div>
@@ -35,6 +35,36 @@
           {% endfor %}
           <button class="btn btn-primary" type="submit">Save professional details</button>
         </form>
+      </div></section>
+
+      <section id="education" class="card mt-4"><div class="card-body">
+        <h2 class="h4">Career and education</h2>
+        <p>Employment and founder roles are managed under Organizations.</p>
+        <p><a class="btn btn-outline-primary" href="{% url 'accounts:add_professional_education' %}">Add education</a></p>
+        {% for item in education %}
+          <div class="border-top py-3">
+            <strong>{{ item.institution }}</strong> — {{ item.credential }} {{ item.field_of_study }}
+            <p class="small">{% if item.is_public %}Public selection{% else %}Private{% endif %}</p>
+            <a href="{% url 'accounts:edit_professional_education' item.pk %}">Edit</a>
+            <form method="post" action="{% url 'accounts:delete_professional_education' item.pk %}" class="d-inline">
+              {% csrf_token %}<button type="submit" class="btn btn-link text-danger">Delete</button>
+            </form>
+          </div>
+        {% empty %}<p>No education records yet.</p>{% endfor %}
+      </div></section>
+      <section id="organizations" class="card mt-4"><div class="card-body">
+        <h2 class="h4">Organizations</h2>
+        <p><a class="btn btn-outline-primary" href="{% url 'accounts:add_professional_organization' %}">Add organization</a></p>
+        {% for item in relationships %}
+          <div class="border-top py-3">
+            <strong>{{ item.organization.name }}</strong> — {{ item.get_role_display }} {{ item.title }}
+            <p class="small">{% if item.is_public %}Public selection{% else %}Private{% endif %}</p>
+            <a href="{% url 'accounts:edit_professional_organization' item.pk %}">Edit</a>
+            <form method="post" action="{% url 'accounts:delete_professional_organization' item.pk %}" class="d-inline">
+              {% csrf_token %}<button type="submit" class="btn btn-link text-danger">Delete</button>
+            </form>
+          </div>
+        {% empty %}<p>No organizations yet.</p>{% endfor %}
       </div></section>
     </div>
   </div>
