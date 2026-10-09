@@ -2,6 +2,7 @@
 from django.urls import path
 from django.contrib.auth.views import LogoutView
 from . import views
+from .professional_views import edit_professional_profile
 from . import staff_mfa
 from zelda_api.views import ZeldaGlobalSearchAPIView
 
@@ -25,6 +26,7 @@ urlpatterns = [
     # USER PROFILE DISPATCH LAYER
     # ==========================================
     path('profile/', views.redirect_to_own_profile, name='profile_self'),
+    path('professional/edit/', edit_professional_profile, name='edit_professional_profile'),
     
     # 👑 FIXED: Exact matches must live ABOVE dynamic parameters
     path('profile/toggle-privacy/', views.toggle_privacy_view, name='toggle_privacy'),
