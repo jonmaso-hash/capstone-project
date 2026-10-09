@@ -20,8 +20,10 @@ logger = logging.getLogger(__name__)
 MIN_INTERLINK_PEERS = 5
 INTERLINK_PRIVACY_VERSION = 1
 INTERLINK_METRICS = {
-    'founder': {'funding_raised', 'current_raise', 'employee_count', 'years_in_business'},
-    'seller': {'annual_revenue', 'ebitda', 'asking_price', 'employee_count', 'years_in_business'},
+    'founder': {'funding_raised': 'prior_amount_raised', 'current_raise': 'raising_amount',
+                'employee_count': 'team_size', 'years_in_business': 'years_in_business'},
+    'seller': {'annual_revenue': 'annual_revenue', 'ebitda': 'ebitda', 'asking_price': 'asking_price',
+               'employee_count': 'team_size', 'years_in_business': 'years_in_business'},
 }
 
 
@@ -132,6 +134,14 @@ def interlink_metric(value, peers):
     return metric(value, values)
 
 
+def profile_metric(value, peers, field):
+    visible = [(peer.pk, _visible_peer_value(None, peer, field)) for peer in peers]
+    contributors = [(pk, number) for pk, number in visible if as_number(number) is not None]
+    row = interlink_metric(value, [number for _, number in contributors])
+    row['contributor_ids'] = [pk for pk, _ in contributors] if row['peer_values_available'] else []
+    return row
+
+
 def safe_interlink_snapshot(snapshot, role):
     """Fail closed on old snapshots: their aggregates had no privacy boundary.
 
@@ -139,6 +149,8 @@ def safe_interlink_snapshot(snapshot, role):
     without regenerating reports or spending on external research.
     """
     output = {}
+    model = Application if role == 'founder' else SellerApplication
+    fields = INTERLINK_METRICS.get(role, {})
     for level in ('site', 'city', 'state', 'country'):
         cohort = snapshot.get(level, {}) if isinstance(snapshot, dict) else {}
         safe = {'peer_count': 0, 'metrics': {}}
@@ -146,15 +158,37 @@ def safe_interlink_snapshot(snapshot, role):
                 and cohort.get('privacy_version') == INTERLINK_PRIVACY_VERSION
                 and isinstance(cohort.get('peer_count'), int)
                 and cohort['peer_count'] >= MIN_INTERLINK_PEERS):
+            ids = cohort.get('peer_ids')
+            if (not isinstance(ids, list) or any(type(pk) is not int for pk in ids)
+                    or len(set(ids)) != cohort['peer_count']):
+                output[level] = safe
+                continue
+            peers = {peer.pk: peer for peer in model.objects.discoverable().filter(pk__in=ids)}
+            cohort_fields = (('sector', 'stage') if role == 'founder' else ('industry',))
+            if level != 'site':
+                cohort_fields += ('geography',)
+            if (len(peers) != len(ids) or any(
+                    not can_view_profile_field(None, peer, field)
+                    for peer in peers.values() for field in cohort_fields)):
+                output[level] = safe
+                continue
             safe['peer_count'] = cohort['peer_count']
             metrics = cohort.get('metrics', {})
             if isinstance(metrics, dict):
                 for name, row in metrics.items():
-                    if name not in INTERLINK_METRICS.get(role, set()) or not isinstance(row, dict):
+                    if name not in fields or not isinstance(row, dict):
                         continue
                     count = row.get('peer_values_available')
-                    if isinstance(count, int) and count >= MIN_INTERLINK_PEERS:
-                        safe['metrics'][name] = row
+                    contributors = row.get('contributor_ids')
+                    if (isinstance(count, int) and count >= MIN_INTERLINK_PEERS
+                            and isinstance(contributors, list)
+                            and all(type(pk) is int for pk in contributors)
+                            and len(set(contributors)) == count
+                            and all(pk in peers and can_view_profile_field(None, peers[pk], fields[name])
+                                    for pk in contributors)):
+                        safe['metrics'][name] = {key: row.get(key) for key in (
+                            'value', 'median', 'percentile', 'peer_values_available',
+                        )}
                     else:
                         safe['metrics'][name] = interlink_metric(row.get('value'), [])
         output[level] = safe
@@ -184,20 +218,21 @@ def interlink_benchmark(profile, role):
             continue
         if role == 'founder':
             metrics = {
-                'funding_raised': interlink_metric(profile.prior_amount_raised, [_visible_peer_value(None, peer, 'prior_amount_raised') for peer in peers]),
-                'current_raise': interlink_metric(profile.raising_amount, [_visible_peer_value(None, peer, 'raising_amount') for peer in peers]),
-                'employee_count': interlink_metric(profile.team_size, [_visible_peer_value(None, peer, 'team_size') for peer in peers]),
-                'years_in_business': interlink_metric(profile.years_in_business, [_visible_peer_value(None, peer, 'years_in_business') for peer in peers]),
+                'funding_raised': profile_metric(profile.prior_amount_raised, peers, 'prior_amount_raised'),
+                'current_raise': profile_metric(profile.raising_amount, peers, 'raising_amount'),
+                'employee_count': profile_metric(profile.team_size, peers, 'team_size'),
+                'years_in_business': profile_metric(profile.years_in_business, peers, 'years_in_business'),
             }
         else:
             metrics = {
-                'annual_revenue': interlink_metric(profile.annual_revenue, [_visible_peer_value(None, peer, 'annual_revenue') for peer in peers]),
-                'ebitda': interlink_metric(profile.ebitda, [_visible_peer_value(None, peer, 'ebitda') for peer in peers]),
-                'asking_price': interlink_metric(profile.asking_price, [_visible_peer_value(None, peer, 'asking_price') for peer in peers]),
-                'employee_count': interlink_metric(profile.team_size, [_visible_peer_value(None, peer, 'team_size') for peer in peers]),
-                'years_in_business': interlink_metric(profile.years_in_business, [_visible_peer_value(None, peer, 'years_in_business') for peer in peers]),
+                'annual_revenue': profile_metric(profile.annual_revenue, peers, 'annual_revenue'),
+                'ebitda': profile_metric(profile.ebitda, peers, 'ebitda'),
+                'asking_price': profile_metric(profile.asking_price, peers, 'asking_price'),
+                'employee_count': profile_metric(profile.team_size, peers, 'team_size'),
+                'years_in_business': profile_metric(profile.years_in_business, peers, 'years_in_business'),
             }
         output[level] = {'peer_count': len(peers), 'metrics': metrics,
+                         'peer_ids': [peer.pk for peer in peers],
                          'privacy_version': INTERLINK_PRIVACY_VERSION}
     return output
 

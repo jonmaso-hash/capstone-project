@@ -140,7 +140,10 @@ class PeerMarketBenchmarkTests(TestCase):
             data = interlink_benchmark(subject, role)
             self.assertEqual(data['site']['metrics']['employee_count']['median'], 8)
             self.assertEqual(data['site']['metrics']['employee_count']['peer_values_available'], 5)
-            self.assertEqual(safe_interlink_snapshot(data, role)['site']['metrics'], data['site']['metrics'])
+            safe = safe_interlink_snapshot(data, role)
+            self.assertEqual(safe['site']['metrics']['employee_count']['median'], 8)
+            self.assertNotIn('contributor_ids', safe['site']['metrics']['employee_count'])
+            self.assertNotIn('peer_ids', safe['site'])
 
     def test_minimum_applies_to_each_visible_metric_and_hidden_equals_absent(self):
         _, subject = self.founder('metric_subject', 'Subject', team_size=10)
@@ -221,10 +224,15 @@ class PeerMarketBenchmarkTests(TestCase):
             self.client.logout()
 
     def test_snapshot_reader_requires_supported_metrics_and_five_contributors(self):
+        ids = [self.founder(
+            f'snapshot_peer{i}', f'Peer{i}',
+            field_visibility={'prior_amount_raised': 'PUBLIC'},
+        )[1].pk for i in range(MIN_INTERLINK_PEERS)]
         data = safe_interlink_snapshot({'site': {
-            'privacy_version': INTERLINK_PRIVACY_VERSION, 'peer_count': 10,
+            'privacy_version': INTERLINK_PRIVACY_VERSION, 'peer_count': 5, 'peer_ids': ids,
             'metrics': {
-                'funding_raised': {'value': 1, 'median': 2, 'percentile': 50, 'peer_values_available': 5},
+                'funding_raised': {'value': 1, 'median': 2, 'percentile': 50,
+                                   'peer_values_available': 5, 'contributor_ids': ids},
                 'employee_count': {'value': 3, 'median': 4, 'percentile': 50, 'peer_values_available': 1},
                 'investor_interest_events': {'median': 777, 'peer_values_available': 10},
             },
@@ -233,6 +241,34 @@ class PeerMarketBenchmarkTests(TestCase):
         self.assertIsNone(data['site']['metrics']['employee_count']['median'])
         self.assertEqual(data['site']['metrics']['employee_count']['peer_values_available'], 0)
         self.assertNotIn('investor_interest_events', data['site']['metrics'])
+
+    def test_visibility_revocation_suppresses_saved_aggregates_on_both_pages(self):
+        for role, factory, field, metric_name in (
+            ('founder', self.founder, 'team_size', 'employee_count'),
+            ('seller', self.seller, 'asking_price', 'asking_price'),
+        ):
+            user, subject = factory(f'revoke_{role}', 'Subject')
+            peers = [factory(f'revoke_{role}{i}', f'Peer{i}', **{field: 777})[1]
+                     for i in range(MIN_INTERLINK_PEERS)]
+            benchmark = PeerMarketBenchmark.objects.create(
+                user=user, role=role, subject_name='Subject', status='ready', sharing_enabled=True,
+                **{role: subject}, interlink_benchmark=interlink_benchmark(subject, role),
+            )
+            public_url = reverse('accounts:peer_market_benchmark_share', args=[benchmark.share_token])
+            owner_url = reverse('accounts:peer_market_benchmark_detail', args=[benchmark.id])
+            self.assertContains(self.client.get(public_url), '777')
+            peers[0].field_visibility = {field: 'PRIVATE'}
+            peers[0].save(update_fields=['field_visibility'])
+            self.client.force_login(user)
+            for url in (public_url, owner_url):
+                response = self.client.get(url)
+                row = response.context['benchmark'].interlink_benchmark['site']['metrics'][metric_name]
+                self.assertIsNone(row['median'])
+                self.assertEqual(row['peer_values_available'], 0)
+                self.assertNotContains(response, '777')
+            peers[0].delete()
+            self.assertEqual(self.client.get(public_url).context['benchmark'].interlink_benchmark['site']['peer_count'], 0)
+            self.client.logout()
 
     def test_monthly_gate_prevents_duplicate_research_spend(self):
         user, app = self.founder('monthly_founder', 'MonthlyCo')
