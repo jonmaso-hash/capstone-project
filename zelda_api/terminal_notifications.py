@@ -103,6 +103,17 @@ def notify_terminal_state(document, succeeded):
             message = (READY_MESSAGE if succeeded else FAILED_MESSAGE) % _document_label(document)
             target_url = _report_url(document)
 
+        # Paid report clones are counted when the complete order is ready.
+        if succeeded and document.status == 'analyzed' and not (
+            document.is_product_input or document.analysis_orders.exists()
+            or document.valuation_orders.exists()
+        ):
+            from matchmaking.product_analytics import track
+            track('zelda_reports_ready', recipient.pk, f'document:{document.pk}',
+                  occurred_at=document.processed_at or document.created_at,
+                  product=document.document_type,
+                  reports=['valuation' if document.document_type == 'business_valuation' else 'memo'])
+
         Notification.objects.get_or_create(
             recipient=recipient,
             notification_type=ANALYSIS_READY if succeeded else ANALYSIS_FAILED,

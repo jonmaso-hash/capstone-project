@@ -34,6 +34,7 @@ _WORKER_STARTUP_PROBE = (
 # Every task the app queues with .delay() from a module other than an app's
 # tasks.py -- the ones autodiscovery cannot find on its own.
 MUST_BE_REGISTERED = (
+    'matchmaking.product_analytics.deliver_mixpanel_event',
     'zelda_api.entity_verification_tasks.verify_entity_integrity',
     'zelda_api.truth_delta_tasks.verify_document_truth_delta',
     'zelda_api.truth_delta_tasks.extract_claims_from_insights',
