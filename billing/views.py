@@ -128,6 +128,7 @@ def create_checkout_session(request):
     try:
         session = stripe.checkout.Session.create(
             mode='subscription',
+            allow_promotion_codes=True,
             payment_method_types=['card'],
             line_items=[{'price': price_id, 'quantity': 1}],
             customer_email=request.user.email or None,
@@ -498,13 +499,6 @@ def stripe_webhook(request):
                     return HttpResponse(status=200)
 
                 unlock_valuation_document(document, purchase_type, data_object.get('id') or '')
-                if data_object.get('payment_status') == 'paid' and data_object.get('created'):
-                    from datetime import datetime, timezone as datetime_timezone
-                    from matchmaking.product_analytics import track
-                    track('purchase_completed', user.pk, f"checkout:{data_object['id']}",
-                          occurred_at=datetime.fromtimestamp(data_object['created'], datetime_timezone.utc),
-                          product='valuation_unlock', amount_minor=data_object.get('amount_total', 0),
-                          currency=data_object.get('currency', 'usd'), payment_kind='one_time')
                 Notification.objects.create(
                     recipient=user, sender=None, notification_type='PAYMENT',
                     message=f"Payment received — your business valuation report for {document.source_entity} is fully unlocked.",
@@ -595,19 +589,6 @@ def stripe_webhook(request):
             )
 
     elif event_type == 'invoice.paid':
-        # Invoice IDs distinguish initial payments from later renewals. Do not
-        # count checkout completion as a payment: trials/unpaid sessions exist.
-        from matchmaking.product_analytics import track
-        invoice_sub_id = data_object.get('subscription') or (
-            ((data_object.get('parent') or {}).get('subscription_details') or {}).get('subscription')
-        )
-        invoice_sub = Subscription.objects.filter(stripe_subscription_id=invoice_sub_id).first()
-        if invoice_sub and data_object.get('id') and data_object.get('created') and data_object.get('amount_paid', 0) > 0:
-            from datetime import datetime, timezone as datetime_timezone
-            track('purchase_completed', invoice_sub.user_id, f"invoice:{data_object['id']}",
-                  occurred_at=datetime.fromtimestamp(data_object['created'], datetime_timezone.utc),
-                  product=invoice_sub.plan, amount_minor=data_object['amount_paid'],
-                  currency=data_object.get('currency', 'usd'), payment_kind='subscription')
         # Founder/Seller Premium includes one Peer Market Benchmark refresh
         # per monthly period. create_monthly_benchmark is itself idempotent
         # inside the 30-day window, so duplicate/retried Stripe events do not
