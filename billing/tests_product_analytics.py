@@ -54,7 +54,7 @@ class ConfirmedProductEventTests(TestCase):
             stripe_subscription_id='sub_analytics', stripe_customer_id='cus_analytics', status='active')
         event = {'type': 'invoice.paid', 'data': {'object': {
             'id': 'in_analytics', 'created': 1700000000, 'amount_paid': 9900,
-            'currency': 'usd', 'subscription': 'sub_analytics'}}}
+            'currency': 'usd', 'customer': 'cus_analytics', 'subscription': 'sub_analytics'}}}
         with mock.patch('stripe.Webhook.construct_event', return_value=event), \
                 mock.patch('matchmaking.product_analytics.track') as track:
             for _ in range(2):

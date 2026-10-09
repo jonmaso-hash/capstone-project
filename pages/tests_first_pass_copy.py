@@ -132,7 +132,7 @@ class TheApprovedPromiseIsServedTests(TestCase):
     def test_the_pricing_page_makes_no_absolute_screening_claim(self):
         # The template, not one rendered role: each plan card shows to its own role only.
         content = (Path(settings.BASE_DIR) / 'templates' / 'billing' / 'billing.html').read_text(encoding='utf8')
-        self.assertIn('screen decks with first-pass investment intelligence', content)
-        self.assertIn('screen listings with first-pass acquisition intelligence', content)
+        self.assertIn('Premium compatibility alerts', content)
+        self.assertIn('not investment quality, recommendations, or expected returns', content)
         self.assertNotIn('every deck', content)
         self.assertNotIn('every listing', content)
