@@ -6,6 +6,7 @@ from django.db import models
 class PersonProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="professional_profile")
     display_name = models.CharField(max_length=255, blank=True)
+    is_public = models.BooleanField(default=False, help_text="Publish my professional overview publicly.")
     headline = models.CharField(max_length=255, blank=True)
     biography = models.TextField(blank=True)
     location = models.CharField(max_length=255, blank=True)
