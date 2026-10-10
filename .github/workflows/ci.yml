@@ -130,6 +130,7 @@ jobs:
           zelda_api.tests_source_capabilities
           zelda_api.tests_sec_company_identity
           zelda_api.tests_identity_authority
+          zelda_api.tests_selected_identity
           zelda_api.tests_observation_registrant
           zelda_api.tests_identity_chain_of_custody
           zelda_api.tests_verification_failure_is_visible
