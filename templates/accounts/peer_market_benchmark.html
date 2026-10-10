@@ -169,6 +169,7 @@
                             <div class="mt-2 text-muted">{{ figure.basis|default:"Basis not established" }}{% if figure.period_end %} · annual period ending {{ figure.period_end }}{% elif figure.as_of %} · as of {{ figure.as_of }}{% endif %}</div>
                             <blockquote class="border-start ps-2 my-2">{{ figure.source_quote }}</blockquote>
                             <a href="{{ figure.source_url }}" target="_blank" rel="noopener noreferrer">{{ figure.source_title }}</a>
+                            {% if figure.name_differs %}<div class="text-muted mt-1">{% if figure.source_company_name %}The source names {{ figure.source_company_name }}; this figure is attributed to {{ peer.company_name }}.{% else %}The source may use a longer company name than {{ peer.company_name }}.{% endif %} Check they are the same company.</div>{% endif %}
                             {% if figure.exclusion_reason %}<div class="text-muted mt-1">Excluded from calculations: {{ figure.exclusion_reason }}.</div>{% endif %}
                         </details>
                         {% endfor %}
