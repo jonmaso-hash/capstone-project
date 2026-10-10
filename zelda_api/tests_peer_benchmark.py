@@ -1,8 +1,10 @@
 
 from datetime import timedelta
+from io import StringIO
 from unittest import mock
 
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -13,7 +15,8 @@ from matchmaking.models import (
 )
 from zelda_api.peer_benchmark import (
     INTERLINK_PRIVACY_VERSION, MIN_INTERLINK_PEERS, create_monthly_benchmark,
-    generate_benchmark, interlink_benchmark, safe_interlink_snapshot, subject_snapshot,
+    generate_benchmark, interlink_benchmark, interlink_snapshot_is_current,
+    refresh_interlink_snapshot, safe_interlink_snapshot, subject_snapshot,
 )
 
 User = get_user_model()
@@ -479,3 +482,149 @@ class PeerMarketBenchmarkTests(TestCase):
         benchmark.sharing_enabled = False
         benchmark.save(update_fields=['sharing_enabled'])
         self.assertEqual(self.client.get(url).status_code, 404)
+
+
+    # --- one-time Interlink rebuild of snapshots saved under older privacy rules ---
+
+    V1_SNAPSHOT = {'site': {'peer_count': 20, 'privacy_version': 1, 'peer_ids': [], 'metrics': {
+        'investor_interest_events': {'value': 1, 'median': 987654321, 'percentile': 100},
+        'years_in_business': {'value': 4, 'median': 0, 'percentile': 100, 'peer_values_available': 5},
+    }}}
+    FROZEN_EXTERNAL = {
+        'external_benchmark': {'funding_raised': {'value': 2000000, 'median': 1000000, 'percentile': 100,
+                                                  'peer_values_available': 8}},
+        'external_peers': [{'company_name': 'Peer A', 'funding_raised': 1000000}],
+        'sources': [{'url': 'https://example.com/peer-a', 'title': 'Peer A', 'cited_text': 'Raised $1M'}],
+        'narrative': 'Frozen model summary.',
+        'cohort_label': 'Seed SaaS peers',
+        'subject_snapshot': {'company_name': 'RefreshCo'},
+    }
+
+    def stale_benchmark(self, username='refresh_owner', **kwargs):
+        user, app = self.founder(username, 'RefreshCo', years_in_business=4,
+                                 field_visibility={'prior_amount_raised': 'PUBLIC'})
+        generated = timezone.now() - timedelta(days=3)
+        fields = dict(self.FROZEN_EXTERNAL, interlink_benchmark=self.V1_SNAPSHOT)
+        fields.update(kwargs)
+        return user, PeerMarketBenchmark.objects.create(
+            user=user, role='founder', founder=app, subject_name=app.company_name, sharing_enabled=True,
+            status=fields.pop('status', 'ready'), generated_at=generated,
+            refresh_eligible_at=generated + timedelta(days=30), **fields,
+        )
+
+    def public_peers(self, count, prefix='refresh_peer', public_funding=None):
+        public_funding = count if public_funding is None else public_funding
+        for i in range(count):
+            visibility = {'prior_amount_raised': 'PUBLIC'} if i < public_funding else {}
+            self.founder(f'{prefix}{i}', f'{prefix}Co{i}', prior_amount_raised=(i + 1) * 1000000,
+                         years_in_business=i + 1, field_visibility=visibility)
+
+    def test_refresh_rebuilds_only_the_interlink_half_without_research(self):
+        self.public_peers(5)
+        _, benchmark = self.stale_benchmark()
+        before = PeerMarketBenchmark.objects.values().get(pk=benchmark.pk)
+        with mock.patch('zelda_api.peer_benchmark.external_research',
+                        side_effect=AssertionError('paid research must not run')) as research:
+            self.assertTrue(refresh_interlink_snapshot(benchmark.pk))
+        research.assert_not_called()
+        after = PeerMarketBenchmark.objects.values().get(pk=benchmark.pk)
+        changed = {key for key in before if before[key] != after[key]}
+        self.assertEqual(changed, {'interlink_benchmark'})
+        snapshot = after['interlink_benchmark']
+        self.assertTrue(interlink_snapshot_is_current(snapshot))
+        self.assertEqual(snapshot['recalculated']['from_privacy_version'], 1)
+        metrics = snapshot['site']['metrics']
+        self.assertNotIn('investor_interest_events', metrics)
+        self.assertEqual(metrics['years_in_business']['median'], 3)
+        self.assertEqual(metrics['funding_raised']['peer_values_available'], 5)
+
+    def test_refresh_is_idempotent(self):
+        self.public_peers(5)
+        _, benchmark = self.stale_benchmark()
+        self.assertTrue(refresh_interlink_snapshot(benchmark.pk))
+        first = PeerMarketBenchmark.objects.get(pk=benchmark.pk).interlink_benchmark
+        self.assertFalse(refresh_interlink_snapshot(benchmark.pk))
+        self.assertEqual(PeerMarketBenchmark.objects.get(pk=benchmark.pk).interlink_benchmark, first)
+
+    def test_refresh_deleted_report_is_skipped(self):
+        _, benchmark = self.stale_benchmark()
+        benchmark_id = benchmark.pk
+        benchmark.delete()
+        self.assertFalse(refresh_interlink_snapshot(benchmark_id))
+
+    def test_refresh_seller_uses_seller_peers_and_preserves_other_columns(self):
+        user, seller = self.seller('refresh_seller', 'SellerCo', asking_price=2000)
+        for i in range(MIN_INTERLINK_PEERS):
+            self.seller(f'refresh_seller_peer{i}', f'SellerPeer{i}', asking_price=1000)
+        benchmark = PeerMarketBenchmark.objects.create(
+            user=user, role='seller', seller=seller, subject_name=seller.company_name,
+            status='ready', interlink_benchmark=self.V1_SNAPSHOT,
+            generated_at=timezone.now() - timedelta(days=3),
+            refresh_eligible_at=timezone.now() + timedelta(days=27),
+            **self.FROZEN_EXTERNAL,
+        )
+        before = PeerMarketBenchmark.objects.values().get(pk=benchmark.pk)
+        with mock.patch('zelda_api.peer_benchmark.external_research',
+                        side_effect=AssertionError('paid research must not run')):
+            self.assertTrue(refresh_interlink_snapshot(benchmark.pk))
+        after = PeerMarketBenchmark.objects.values().get(pk=benchmark.pk)
+        self.assertEqual({key for key in before if before[key] != after[key]}, {'interlink_benchmark'})
+        metrics = after['interlink_benchmark']['site']['metrics']
+        self.assertEqual(metrics['asking_price']['median'], 1000)
+        self.assertEqual(metrics['asking_price']['percentile'], 100)
+
+    def test_rebuilt_metric_with_four_public_contributors_stays_suppressed(self):
+        self.public_peers(5, public_funding=4)
+        _, benchmark = self.stale_benchmark()
+        self.assertTrue(refresh_interlink_snapshot(benchmark.pk))
+        benchmark.refresh_from_db()
+        site = safe_interlink_snapshot(benchmark.interlink_benchmark, 'founder')['site']
+        self.assertEqual(site['peer_count'], 5)
+        self.assertIsNone(site['metrics']['funding_raised']['median'])
+        self.assertEqual(site['metrics']['funding_raised']['peer_values_available'], 0)
+        self.assertEqual(site['metrics']['years_in_business']['median'], 3)  # positive control
+
+    def test_refresh_skips_reports_that_are_not_ready(self):
+        self.public_peers(5)
+        for status in ('pending', 'running', 'failed'):
+            _, benchmark = self.stale_benchmark(f'refresh_{status}', status=status)
+            self.assertFalse(refresh_interlink_snapshot(benchmark.pk))
+            benchmark.refresh_from_db()
+            self.assertEqual(benchmark.interlink_benchmark, self.V1_SNAPSHOT)
+
+    def test_command_is_a_dry_run_unless_applied(self):
+        self.public_peers(5)
+        _, benchmark = self.stale_benchmark()
+        out = StringIO()
+        call_command('refresh_peer_benchmark_interlink', stdout=out)
+        self.assertIn('Dry run', out.getvalue())
+        benchmark.refresh_from_db()
+        self.assertEqual(benchmark.interlink_benchmark, self.V1_SNAPSHOT)
+        out = StringIO()
+        with mock.patch('zelda_api.peer_benchmark.external_research',
+                        side_effect=AssertionError('paid research must not run')):
+            call_command('refresh_peer_benchmark_interlink', '--apply', stdout=out)
+        self.assertIn(f'Rebuilt 1: [{benchmark.pk}]', out.getvalue())
+        self.assertNotIn('RefreshCo', out.getvalue())
+        benchmark.refresh_from_db()
+        self.assertTrue(interlink_snapshot_is_current(benchmark.interlink_benchmark))
+        out = StringIO()
+        call_command('refresh_peer_benchmark_interlink', '--apply', stdout=out)
+        self.assertIn('0 ready benchmark(s)', out.getvalue())
+
+    def test_rebuilt_comparison_renders_with_its_own_date_on_both_pages(self):
+        self.public_peers(5)
+        user, benchmark = self.stale_benchmark()
+        share_url = reverse('accounts:peer_market_benchmark_share', args=[benchmark.share_token])
+        detail_url = reverse('accounts:peer_market_benchmark_detail', args=[benchmark.id])
+        self.assertNotContains(self.client.get(share_url), 'recalculated')  # control: stale stays hidden
+        refresh_interlink_snapshot(benchmark.pk)
+        for url in (share_url, detail_url):
+            if url == detail_url:
+                self.client.force_login(user)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, 'Interlink comparison recalculated')
+            self.assertNotContains(response, '987654321')
+            self.assertEqual(response.context['benchmark'].interlink_benchmark['site']['peer_count'], 5)
+            self.assertNotIn('recalculated', response.context['benchmark'].interlink_benchmark)

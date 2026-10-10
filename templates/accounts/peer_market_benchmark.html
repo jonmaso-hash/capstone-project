@@ -100,6 +100,12 @@
                 Comparisons require at least five peers with publicly visible values for each metric.
                 Investor and buyer activity is excluded.
             </p>
+            {% if benchmark.interlink_recalculated_at %}
+            <p class="small text-muted mb-4">
+                Interlink comparison recalculated {{ benchmark.interlink_recalculated_at|date:"M j, Y" }} under current privacy rules.
+                The external snapshot is from {{ benchmark.generated_at|date:"M j, Y" }}.
+            </p>
+            {% endif %}
             {% for level, cohort in benchmark.interlink_benchmark.items %}
                 {% if cohort.peer_count %}
                 <div class="mb-4">

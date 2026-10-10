@@ -1495,8 +1495,11 @@ def _peer_benchmark_for_owner(user, benchmark_id):
 
 @login_required
 def peer_market_benchmark_detail(request, benchmark_id):
-    from zelda_api.peer_benchmark import safe_interlink_snapshot, safe_external_snapshot
+    from zelda_api.peer_benchmark import (
+        interlink_recalculated_at, safe_external_snapshot, safe_interlink_snapshot,
+    )
     benchmark = _peer_benchmark_for_owner(request.user, benchmark_id)
+    benchmark.interlink_recalculated_at = interlink_recalculated_at(benchmark.interlink_benchmark)
     benchmark.interlink_benchmark = safe_interlink_snapshot(benchmark.interlink_benchmark, benchmark.role)
     benchmark.external_benchmark = safe_external_snapshot(benchmark.external_benchmark, benchmark.role)
     return render(request, 'accounts/peer_market_benchmark.html', {
@@ -1520,13 +1523,16 @@ def peer_market_benchmark_share_toggle(request, benchmark_id):
 
 def peer_market_benchmark_share(request, share_token):
     from matchmaking.models import PeerMarketBenchmark
-    from zelda_api.peer_benchmark import safe_interlink_snapshot, safe_external_snapshot, protect_public_subject
+    from zelda_api.peer_benchmark import (
+        interlink_recalculated_at, protect_public_subject, safe_external_snapshot, safe_interlink_snapshot,
+    )
     benchmark = get_object_or_404(
         PeerMarketBenchmark,
         share_token=share_token,
         sharing_enabled=True,
         status='ready',
     )
+    benchmark.interlink_recalculated_at = interlink_recalculated_at(benchmark.interlink_benchmark)
     benchmark.interlink_benchmark = safe_interlink_snapshot(benchmark.interlink_benchmark, benchmark.role)
     benchmark.external_benchmark = safe_external_snapshot(benchmark.external_benchmark, benchmark.role)
     protect_public_subject(benchmark)
