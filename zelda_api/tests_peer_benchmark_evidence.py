@@ -247,6 +247,54 @@ class PeerFigureAdmissionTests(SimpleTestCase):
         self.assertEqual(result['cohort_label'], 'Seed SaaS')
         self.assertEqual(result['metrics']['funding_raised']['evidence_version'], EVIDENCE_VERSION)
 
+    # --- P-2a: a qualifier just outside the chosen quote still disqualifies it ---
+
+    def surround(self, metric, basis, before, role, after='', values=(1000000, 2000000, 3000000), **kw):
+        """Peer 0's excerpt gains text around its quote; the quote is unchanged."""
+        peers, sources = fixture(values=values, metric=metric, basis=basis, **kw)
+        sources[0]['cited_text'] = before + peers[0]['facts'][metric]['source_quote'] + after
+        return normalized_peers(peers, sources, role)[0]['facts'][metric]
+
+    def test_qualifier_in_the_quoted_sentence_but_outside_the_quote_excludes_the_figure(self):
+        for metric, basis, before, role, kw in (
+            ('annual_revenue', 'reported_revenue', 'Analysts estimated that ', 'seller', {}),
+            ('ebitda', 'reported_ebitda', 'On an adjusted basis, ', 'seller', {}),
+            ('funding_raised', 'total_equity_funding', 'While seeking more capital, ', 'founder', {}),
+            ('transaction_value', 'enterprise_value', 'In a pending deal, ', 'seller', {}),
+            ('employee_count', 'employees', 'According to LinkedIn, ', 'founder',
+             {'values': (10, 20, 30), 'unit': 'employees'}),
+        ):
+            with self.subTest(metric=metric):
+                fact = self.surround(metric, basis, before, role, **kw)
+                self.assertIsNone(fact['basis'])
+                self.assertFalse(fact['eligible'])
+                self.assertIn('Measurement basis not established', fact['exclusion_reason'])
+                # Control: the same quote with neutral surrounding text is admitted.
+                self.assertTrue(self.surround(metric, basis, 'Public filings show that ', role, **kw)['eligible'])
+
+    def test_qualifier_in_another_sentence_of_the_excerpt_does_not_exclude_the_figure(self):
+        fact = self.surround('annual_revenue', 'reported_revenue',
+                             'Analysts estimated Beta Corp revenue of USD 4.5 million. ', 'seller',
+                             after=' Gamma Ltd projected further growth.')
+        self.assertTrue(fact['eligible'])
+
+    def test_a_qualifier_in_any_excerpt_holding_the_quote_excludes_the_figure(self):
+        peers, sources = fixture(metric='annual_revenue', basis='reported_revenue')
+        quote = peers[0]['facts']['annual_revenue']['source_quote']
+        sources.append(dict(url=sources[0]['url'], title='second', cited_text='Analysts estimated that ' + quote))
+        self.assertFalse(normalized_peers(peers, sources, 'seller')[0]['facts']['annual_revenue']['eligible'])
+        sources[-1]['cited_text'] = 'Public filings show that ' + quote  # control
+        self.assertTrue(normalized_peers(peers, sources, 'seller')[0]['facts']['annual_revenue']['eligible'])
+
+    def test_quote_context_spans_only_the_sentences_holding_the_quote(self):
+        from .peer_benchmark_evidence import quote_contexts
+        excerpt = 'Beta raised USD 1.5 million. Analysts estimated that Acme earned USD 12.5 million. Gamma grew.'
+        self.assertEqual(quote_contexts('Acme earned USD 12.5 million.', [excerpt]),
+                         ['Analysts estimated that Acme earned USD 12.5 million.'])
+        spanning = 'Beta grew. Acme Inc. Reported revenue of USD 3 million. Gamma grew.'
+        self.assertEqual(quote_contexts('Acme Inc. Reported revenue', [spanning]),
+                         ['Acme Inc. Reported revenue of USD 3 million.'])
+        self.assertEqual(quote_contexts('absent', [excerpt]), [])
 
 class FrozenPeerEvidenceViewTests(TestCase):
     def setUp(self):
