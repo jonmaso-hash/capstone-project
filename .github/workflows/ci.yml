@@ -124,6 +124,7 @@ jobs:
           zelda_api.tests_source_unavailable
           zelda_api.tests_claim_field_binding
           zelda_api.tests_claim_extraction_recall
+          zelda_api.tests_claim_attribution
           zelda_api.tests_claim_currency
           zelda_api.tests_source_failure_reaches_the_report
           zelda_api.tests_source_naming
@@ -168,3 +169,4 @@ jobs:
           zelda_api.tests_filed_authority
           zelda_api.tests_filed_outcomes
           zelda_api.tests_registry_source
+

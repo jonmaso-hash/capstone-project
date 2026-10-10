@@ -84,6 +84,14 @@ class ClaimedDatapoint(models.Model):
     currency = models.CharField(max_length=3, blank=True, help_text="Explicit monetary currency code; blank means unknown, including a bare $.")
     time_period = models.CharField(max_length=100, blank=True, help_text="E.g., 'YoY', 'Q3 2024'")
     source_chunk = models.CharField(max_length=255, blank=True, help_text="Which slide/section in deck")
+    # Whose figure this is (zelda_api/claim_attribution.py). Both values are
+    # company-provided claims, never evidence. Blank means the claim was stored
+    # before ownership was recorded: unknown, and never backfilled.
+    OWNERSHIP_CHOICES = [
+        ('named', 'Source sentence names the company'),
+        ('implied', "Company's own document; no other owner named"),
+    ]
+    ownership = models.CharField(max_length=10, choices=OWNERSHIP_CHOICES, blank=True)
 
     # Provenance — full traceability back to the source chunk this claim came from
     page_number = models.IntegerField(null=True, blank=True, help_text="Page this claim's source chunk came from")
@@ -777,3 +785,4 @@ def diff_verification_reports(newer, older):
         if older_states[cat] == 'verified' and newer_states[cat] != 'verified'
     )
     return {'newly_verified': newly_verified, 'lost_verification': lost_verification}
+

@@ -13,6 +13,7 @@ from .financial_metrics import (
     MONEY_CATEGORIES, claim_is_admissible, currency_amount, usage_unit,
 )
 from .truth_delta_models import ClaimedDatapoint
+from .claim_attribution import claim_ownership, company_names, source_sentence
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +79,7 @@ def extract_claims_from_insights(document_id: int):
         insights = IntelligenceInsight.objects.filter(document=document)
 
         claims_created = 0
+        names = company_names(document)
 
         # Map insight categories to claim categories
         category_mapping = {
@@ -119,6 +121,18 @@ def extract_claims_from_insights(document_id: int):
                     insight.category, matched_category, text[:80])
                 continue
 
+            # A figure another organisation owns is not this company's claim,
+            # however well it parses: Messenger's users, a parent's revenue.
+            # Ownership is read from the whole source sentence, because the
+            # extracted span can drop the possessive that names the owner.
+            source_chunk_obj = insight.source_chunks.first()
+            sentence = source_sentence(text, source_chunk_obj.raw_text if source_chunk_obj else '')
+            ownership, owner = claim_ownership(sentence, names)
+            if ownership is None:
+                logger.debug("[Truth Delta] %s figure belongs to %r, not the company: %r",
+                             matched_category, owner, sentence[:80])
+                continue
+
             # Money categories read MONEY. The general extractor matches
             # percentages first, which is how "Bank line: 75% utilized" became
             # $75 raised while the $20K actually raised sat unread in the same
@@ -134,13 +148,13 @@ def extract_claims_from_insights(document_id: int):
                 continue
             
             # Create claimed datapoint, with full provenance back to the source chunk
-            source_chunk_obj = insight.source_chunks.first()
             claim = ClaimedDatapoint.objects.create(
                 document=document,
                 category=matched_category,
                 claimed_value=insight.insight_text[:255],  # Truncate if needed
                 claimed_value_numeric=numeric_value,
                 unit=unit,
+                ownership=ownership,
                 currency=currency,
                 source_chunk=f"Insight: {insight.category}",
                 confidence_in_extraction=insight.confidence_score,
@@ -326,3 +340,4 @@ def verify_document_truth_delta(document_id):
         'document_id': document_id,
         'report_id': result.id if hasattr(result, 'id') else None,
     }
+
