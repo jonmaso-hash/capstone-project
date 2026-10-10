@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from accounts.redirects import safe_destination
 from billing.pricing import subscription_prices
 from .forms import contactForm  # Added your form import back
+from .home_journeys import home_journey_context
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +28,7 @@ def home_view(request):
     featured_sellers = SellerApplication.objects.discoverable().filter(is_staff_featured=True).exclude(review_status='DENIED')[:6]
 
     return render(request, 'pages/home.html', {
+        **home_journey_context(request),
         **subscription_prices(),
         'featured_founders': featured_founders,
         'featured_sellers': featured_sellers,

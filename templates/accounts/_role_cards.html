@@ -61,4 +61,11 @@ function selectRole(role, el) {
     const btn = document.getElementById('roleSubmitBtn');
     if (btn) btn.disabled = false;
 }
+document.addEventListener('DOMContentLoaded', function () {
+    const hidden = document.getElementById('selectedRole');
+    if (!hidden || !hidden.value) return;
+    const card = [...document.querySelectorAll('#roleSelector [data-role]')]
+        .find(el => el.dataset.role === hidden.value);
+    if (card) selectRole(hidden.value, card);
+});
 </script>

@@ -102,6 +102,9 @@ def signup_view(request):
     # exactly like the referral code above. Validated here, at the door.
     remember_destination(request, requested_destination(request))
 
+    selected_role = request.POST.get('role') if request.method == 'POST' else request.GET.get('role')
+    selected_role = selected_role if selected_role in ROLE_PROFILE_URLS else ''
+
     if request.method == "POST":
         role = request.POST.get('role', '')
         if role not in ROLE_PROFILE_URLS:
@@ -118,6 +121,7 @@ def signup_view(request):
             return render(request, "accounts/signup.html", {
                 "form": SignupForm(),
                 "next_destination": requested_destination(request),
+                "selected_role": selected_role,
             }, status=429)
 
         form = SignupForm(request.POST)
@@ -143,6 +147,7 @@ def signup_view(request):
     return render(request, "accounts/signup.html", {
         "form": form,
         "next_destination": requested_destination(request),
+        "selected_role": selected_role,
     })
 
 
