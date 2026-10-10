@@ -333,6 +333,7 @@ def profile_for_document(document):
 
 def _profile_items(document):
     from matchmaking.models import can_view_profile_field
+    from matchmaking.currencies import MONEY_FIELDS, profile_currency
 
     app = profile_for_document(document)
     if app is None:
@@ -343,6 +344,8 @@ def _profile_items(document):
         value = getattr(app, field_name, None)
         if value in (None, '') or not can_view_profile_field(audience, app, field_name):
             continue
+        if field_name in MONEY_FIELDS:
+            value = f'{value} {profile_currency(app) or "(currency unknown)"}'
         items.append(GroundedItem(
             ref=f'P{len(items) + 1}', kind='profile', category=label, statement=_excerpt(f'{label}: {value}'),
             status=SELF_REPORTED, sources=(SourceRef(document_id=None, profile_field=field_name),),

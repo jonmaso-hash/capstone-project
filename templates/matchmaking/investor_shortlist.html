@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load deal_display %}
 {% load static humanize %}
 
 {% block title %}My Shortlist | Interlink Foundry{% endblock title %}
@@ -64,7 +65,7 @@
                         </div>
                         <p class="text-muted mb-3">{{ entry.founder.description|truncatewords:40 }}</p>
                         <span class="badge bg-light text-dark border">
-                            {% if 'raising_amount' in entry.founder.visible_fields %}Seeking {% if entry.founder.raising_amount %}${{ entry.founder.raising_amount|floatformat:0|intcomma }}{% else %}--{% endif %}{% else %}Raise not disclosed{% endif %}
+                            {% if 'raising_amount' in entry.founder.visible_fields %}Seeking {% if entry.founder.raising_amount %}{{ entry.founder.raising_amount|money_display:entry.founder.reporting_currency }}{% else %}--{% endif %}{% else %}Raise not disclosed{% endif %}
                         </span>
                     </div>
 

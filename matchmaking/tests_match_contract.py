@@ -241,7 +241,7 @@ class DealComponentTests(TestCase):
         return SellerApplication.objects.create(
             user=self.seller_user, company_name='Meridian', seller_name='S', email='s@t.com',
             description='Signage installer.', industry=industry, asking_price=asking,
-            deal_structure=structure,
+            deal_structure=structure, reporting_currency='USD',
         )
 
     def _buyer(self, thesis='Buy profitable facilities services businesses.',
@@ -249,7 +249,7 @@ class DealComponentTests(TestCase):
         return BuyerApplication.objects.create(
             user=self.buyer_user, full_name='B', company_name='Hale', email='b@t.com',
             acquisition_thesis=thesis, budget_min=lo, budget_max=hi,
-            preferred_deal_structure=preference,
+            preferred_deal_structure=preference, reporting_currency='USD',
         )
 
     def test_no_preference_is_none_not_a_match(self):

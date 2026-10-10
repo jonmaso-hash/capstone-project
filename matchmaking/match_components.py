@@ -202,6 +202,9 @@ def deal_size_signal(seller, buyer):
     lo, hi = buyer.budget_min, buyer.budget_max
     if not asking or lo is None or hi is None:
         return Signal(DEAL_SIZE, None, DEAL_SIZE, DECLARED, detail='asking price or budget not stated')
+    from .currencies import currencies_match
+    if not currencies_match(seller, buyer):
+        return Signal(DEAL_SIZE, None, DEAL_SIZE, DECLARED, detail='asking price and budget currencies are unknown or different')
     if lo <= asking <= hi:
         return Signal(DEAL_SIZE, 100.0, DEAL_SIZE, DECLARED, detail='asking price sits inside the budget')
     bound = lo if asking < lo else hi

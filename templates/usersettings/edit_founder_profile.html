@@ -167,6 +167,13 @@
                     </div>
 
                     <div class="mb-3">
+                        {{ form.reporting_currency.label_tag }}
+                        {{ form.reporting_currency }}
+                        {{ form.reporting_currency.errors }}
+                        <div class="form-text">{{ form.reporting_currency.help_text }}</div>
+                    </div>
+
+                    <div class="mb-3">
                         {{ form.raising_amount.label_tag }}
                         <i class="bi bi-info-circle field-info-icon" role="button" tabindex="0"
                            data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top"

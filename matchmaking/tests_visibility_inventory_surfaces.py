@@ -213,6 +213,7 @@ class HiddenRaiseDoesNotDecideDiscoveryTests(_Cast):
         from .models import Application
         user = User.objects.create_user(username, password='x')
         return Application.objects.create(
+            reporting_currency='USD',
             user=user, company_name=company, founder_name='T', email=f'{username}@t.com',
             description='We build things.', sector='SaaS', stage='Seed',
             geography='San Diego CA', raising_amount=amount, review_status='APPROVED',

@@ -54,6 +54,7 @@ class ApplicationForm(forms.ModelForm):
             "linkedin_url",
             "description",
             "current_revenue",
+            "reporting_currency",
             "revenue_period",
             "revenue_as_of",
             "monthly_burn_rate",  # Added for Zelda Engine
@@ -170,6 +171,7 @@ class InvestorForm(forms.ModelForm):
             "investment_focus",
             "investment_stage",
             "investment_amount",
+            "reporting_currency",
             "ticket_size_min",
             "ticket_size_max",
             "investment_thesis_summary",
@@ -202,7 +204,7 @@ class InvestorForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         optional_fields = [
             "phone", "website", "linkedin_url", "location",
-            "ticket_size_min", "ticket_size_max", "investment_thesis_summary",
+            "ticket_size_min", "ticket_size_max", "investment_thesis_summary", "reporting_currency",
             "weight_problem_solution", "weight_capital_plan", "weight_market_context",
         ]
 
@@ -235,6 +237,7 @@ class SellerForm(forms.ModelForm):
             "industry",
             "geography",
             "annual_revenue",
+            "reporting_currency",
             "ebitda",
             "asking_price",
             "deal_structure",
@@ -303,6 +306,7 @@ class BuyerForm(forms.ModelForm):
             "target_ebitda_min",
             "target_ebitda_max",
             "budget_min",
+            "reporting_currency",
             "budget_max",
             "preferred_deal_structure",
         ]
@@ -315,7 +319,7 @@ class BuyerForm(forms.ModelForm):
         optional_fields = [
             "phone", "website", "linkedin_url", "location",
             "target_revenue_min", "target_revenue_max",
-            "target_ebitda_min", "target_ebitda_max",
+            "target_ebitda_min", "target_ebitda_max", "reporting_currency",
         ]
 
         self.fields["acquisition_thesis"].widget.attrs["placeholder"] = (

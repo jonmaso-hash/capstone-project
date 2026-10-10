@@ -1,3 +1,4 @@
+{% load deal_display %}
 {% if application %}
     <div class="mb-4 d-flex align-items-center">
         <h5 class="mb-0 fw-bold text-dark">Application Configuration Matrix</h5>
@@ -37,7 +38,7 @@
                 <div class="bg-white border rounded-3 p-3 shadow-sm">
                     <small class="text-uppercase text-muted fw-bold d-block mb-1" style="font-size: 0.75rem;">Prior Capital Secured</small>
                     <span class="fs-5 fw-bold text-dark">
-                        {% if application.prior_amount_raised and "$" not in application.prior_amount_raised %}${% endif %}{{ application.prior_amount_raised|default:"0" }}
+                        {{ application.prior_amount_raised|money_display:application.reporting_currency }}
                     </span>
                 </div>
             </div>
@@ -46,7 +47,7 @@
                 <div class="bg-white border rounded-3 p-3 shadow-sm">
                     <small class="text-uppercase text-muted fw-bold d-block mb-1" style="font-size: 0.75rem;">Target Vector Raise</small>
                     <span class="fs-5 fw-bold text-success">
-                        {% if application.raising_amount and "$" not in application.raising_amount %}${% endif %}{{ application.raising_amount|default:"-" }}
+                        {{ application.raising_amount|money_display:application.reporting_currency }}
                     </span>
                 </div>
             </div>

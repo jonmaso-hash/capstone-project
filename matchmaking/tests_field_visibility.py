@@ -59,6 +59,7 @@ class _Cast(TestCase):
         _mock_embedding_generation(self)
         self.founder_user = User.objects.create_user('fv_founder', password='x')
         self.founder = Application.objects.create(
+            reporting_currency='USD',
             user=self.founder_user, company_name='FV Co', founder_name='Dana Founder',
             email='fv@t.com', description='We build things.', sector='SaaS', stage='Seed',
             geography='San Diego CA', raising_amount=RAISE, current_revenue=REVENUE,
@@ -68,6 +69,7 @@ class _Cast(TestCase):
 
         self.connected_user = User.objects.create_user('fv_connected', password='x')
         self.connected_investor = InvestorApplication.objects.create(
+            reporting_currency='USD',
             user=self.connected_user, full_name='C', company_name='ConnectedFund',
             email='fvc@t.com', investment_focus='SaaS', investment_stage='Seed',
         )
@@ -78,6 +80,7 @@ class _Cast(TestCase):
 
         self.stranger_user = User.objects.create_user('fv_stranger', password='x')
         self.stranger_investor = InvestorApplication.objects.create(
+            reporting_currency='USD',
             user=self.stranger_user, full_name='S', company_name='StrangerFund',
             email='fvs@t.com', investment_focus='SaaS', investment_stage='Seed',
         )
@@ -244,6 +247,7 @@ class FilterInferenceTests(_Cast):
         # worthless. The control proves filtering genuinely works on this data.
         self.control_user = User.objects.create_user('fv_control', password='x')
         self.control = Application.objects.create(
+            reporting_currency='USD',
             user=self.control_user, company_name='Control Co', founder_name='Kim Control',
             email='fvk@t.com', description='We build things.', sector='SaaS', stage='Seed',
             geography='San Diego CA', raising_amount=RAISE, current_revenue=REVENUE,
@@ -252,6 +256,7 @@ class FilterInferenceTests(_Cast):
         )
 
     def search(self, **params):
+        params.setdefault('currency', 'USD')
         return self.client.get(reverse('matchmaking:global_search'), params)
 
     def appears(self, response, name='FV Co'):
@@ -507,6 +512,7 @@ class SimilarStartupsTests(_Cast):
         self.founder.refresh_from_db()
         self.similar_user = User.objects.create_user('fv_similar', password='x')
         self.similar = Application.objects.create(
+            reporting_currency='USD',
             user=self.similar_user, company_name='Similar Co', founder_name='S Founder',
             email='sim@t.com', description='We build things.', sector='SaaS', stage='Seed',
             geography='San Diego CA', raising_amount=RAISE, review_status='APPROVED',
@@ -663,6 +669,7 @@ class FounderControlsTests(_Cast):
         """The editor works on request.user's own profile, never one named in a POST."""
         other = User.objects.create_user('fv_other_founder', password='x')
         Application.objects.create(
+            reporting_currency='USD',
             user=other, company_name='Other Co', founder_name='O', email='o2@t.com',
             description='d', sector='SaaS', stage='Seed', review_status='APPROVED',
         )
@@ -806,7 +813,7 @@ class CrossSurfaceInvariantTests(_Cast):
         stranger_profile.is_premium = True
         stranger_profile.save()
         body = self.client.get(
-            reverse('matchmaking:export_search_csv'), {'capital': str(threshold)}
+            reverse('matchmaking:export_search_csv'), {'currency': 'USD', 'capital': str(threshold)}
         ).content.decode(errors='ignore')
         return 'FV Co' in body
 
@@ -823,7 +830,7 @@ class CrossSurfaceInvariantTests(_Cast):
 
     def _appears_in_api_filtered(self, threshold):
         body = self.client.get(
-            '/api/v1/enterprise/founders/', {'capital': str(threshold)},
+            '/api/v1/enterprise/founders/', {'currency': 'USD', 'capital': str(threshold)},
             HTTP_AUTHORIZATION=f'Api-Key {self.api_raw_key}',
         ).content.decode(errors='ignore')
         return 'FV Co' in body

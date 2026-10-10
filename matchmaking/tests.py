@@ -511,10 +511,12 @@ class HardFilterCacheCorrectnessTests(TestCase):
         self.founder_user = User.objects.create_user('hfc_founder', password='x')
         self.investor_user = User.objects.create_user('hfc_investor', password='x')
         self.investor = InvestorApplication.objects.create(
+            reporting_currency='USD',
             user=self.investor_user, full_name='I', email='i@t.com', company_name='ICo',
             investment_focus='SaaS', investment_stage='Seed', ticket_size_min=100000, ticket_size_max=500000,
         )
         self.app = Application.objects.create(
+            reporting_currency='USD',
             user=self.founder_user, company_name='FCo', founder_name='F', email='f@t.com',
             description='test', sector='SaaS', stage='Seed', raising_amount=250000,
             # Public, so the cache key is expected to follow the amount. A hidden
@@ -612,11 +614,13 @@ class FunnelAnalyticsTests(TestCase):
 
         founder_user = User.objects.create_user('funnel_founder', password='x')
         founder = Application.objects.create(
+            reporting_currency='USD',
             user=founder_user, founder_name='F', email='f@t.com', company_name='FCo',
             sector='SaaS', stage='Seed', description='test', is_private=False,
         )
         investor_user = User.objects.create_user('funnel_investor', password='x')
         investor = InvestorApplication.objects.create(
+            reporting_currency='USD',
             user=investor_user, full_name='I', email='i@t.com', company_name='ICo',
             investment_focus='SaaS', investment_stage='Seed', is_private=False,
         )
@@ -639,11 +643,13 @@ class FunnelAnalyticsTests(TestCase):
 
         seller_user = User.objects.create_user('funnel_seller', password='x')
         SellerApplication.objects.create(
+            reporting_currency='USD',
             user=seller_user, seller_name='S', email='s@t.com', company_name='SCo',
             description='test biz', is_premium=True,
         )
         buyer_user = User.objects.create_user('funnel_buyer', password='x')
         BuyerApplication.objects.create(
+            reporting_currency='USD',
             user=buyer_user, full_name='B', email='b@t.com', company_name='BCo',
             acquisition_thesis='test',
         )
@@ -675,6 +681,7 @@ class PassesHardFiltersTests(TestCase):
 
     def _investor(self, ticket_min=None, ticket_max=None, stage=''):
         return InvestorApplication.objects.create(
+            reporting_currency='USD',
             user=self.investor_user, full_name='I', email='i@t.com', company_name='ICo',
             investment_focus='SaaS', investment_stage=stage,
             ticket_size_min=ticket_min, ticket_size_max=ticket_max,
@@ -687,6 +694,7 @@ class PassesHardFiltersTests(TestCase):
         # HiddenRaiseDoesNotDecideDiscoveryTests). The amount is made public
         # here so that logic is what these tests actually reach.
         return Application.objects.create(
+            reporting_currency='USD',
             user=self.founder_user, company_name='FCo', founder_name='F', email='f@t.com',
             description='test', sector='SaaS', stage=stage, raising_amount=raising_amount,
             field_visibility={'raising_amount': 'PUBLIC'},
@@ -4251,7 +4259,7 @@ class StandaloneMemoRealDataTests(TestCase):
         _mock_embedding_generation(self)
         self.founder_user = User.objects.create_user('smd_founder', password='x')
         self.founder_app = Application.objects.create(
-            user=self.founder_user, company_name='SMDCo', founder_name='F', email='f@t.com',
+            reporting_currency='USD', user=self.founder_user, company_name='SMDCo', founder_name='F', email='f@t.com',
             description='SMDCo profile description.', sector='SaaS', stage='Seed',
             raising_amount=750000, current_revenue=120000, team_size=8, is_premium=True,
         )
@@ -4446,7 +4454,7 @@ class StandaloneMemoRealDataTests(TestCase):
     def test_fact_strip_uses_real_fields_and_omits_blanks(self):
         self._memo(self._deck())
         r = self._get()
-        self.assertContains(r, '$750,000')          # raising_amount, formatted
+        self.assertContains(r, '750,000 USD')          # raising_amount, formatted
         self.assertNotContains(r, '$750000.00')
         self.assertContains(r, 'Team size')         # team_size = 8 is set
         self.assertNotContains(r, 'not disclosed')  # blanks are omitted, not labelled

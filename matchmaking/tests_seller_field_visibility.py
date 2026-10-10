@@ -65,6 +65,7 @@ class _SellerCast(TestCase):
 
     def _seller(self, user, company, price, **extra):
         fields = dict(
+            reporting_currency='USD',
             user=user, company_name=company, seller_name='S', email=f'{user.username}@t.com',
             description='A steady regional manufacturer.', industry='Manufacturing',
             geography='Ohio', asking_price=price, annual_revenue=REVENUE, ebitda=EBITDA,
@@ -76,6 +77,7 @@ class _SellerCast(TestCase):
     def _buyer(self, username, **extra):
         user = User.objects.create_user(username, password='x')
         fields = dict(
+            reporting_currency='USD',
             user=user, full_name='B', email=f'{username}@t.com', company_name=f'{username} LLC',
             acquisition_thesis='We acquire manufacturing businesses.',
             budget_min=500_000, budget_max=2_000_000,
@@ -267,7 +269,7 @@ class AskZeldaSellerJSONTests(_SellerCast):
         with mock.patch('zelda_api.intelligence_pipeline._call_claude_for_query_extraction',
                         return_value={'constraints': constraints}):
             response = self.client.post(
-                reverse('zelda_api:ask'), data=json.dumps({'q': 'businesses'}),
+                reverse('zelda_api:ask'), data=json.dumps({'q': 'businesses', 'currency': 'USD'}),
                 content_type='application/json',
             )
         self.assertEqual(response.status_code, 200)
@@ -338,6 +340,7 @@ class AskZeldaFounderBisectionTests(TestCase):
         _mock_embedding_generation(self)
         founder_user = User.objects.create_user('azf_founder', password='x')
         self.founder = Application.objects.create(
+            reporting_currency='USD',
             user=founder_user, company_name='Hidden Raise Co', founder_name='F', email='azf@t.com',
             description='test', sector='SaaS', stage='Seed', raising_amount=1_000_000,
             review_status='APPROVED',
@@ -348,6 +351,7 @@ class AskZeldaFounderBisectionTests(TestCase):
         if not Application.objects.filter(company_name='Decoy Raise Co').exists():
             decoy_user = User.objects.create_user('azf_decoy', password='x')
             Application.objects.create(
+                reporting_currency='USD',
                 user=decoy_user, company_name='Decoy Raise Co', founder_name='D', email='azfd@t.com',
                 description='test', sector='SaaS', stage='Seed', raising_amount=100_000,
                 review_status='APPROVED', field_visibility={'raising_amount': FIELD_PUBLIC},
@@ -357,7 +361,7 @@ class AskZeldaFounderBisectionTests(TestCase):
         with mock.patch('zelda_api.intelligence_pipeline._call_claude_for_query_extraction',
                         return_value={'constraints': constraints}):
             response = self.client.post(
-                reverse('zelda_api:ask'), data=json.dumps({'q': 'founders raising under'}),
+                reverse('zelda_api:ask'), data=json.dumps({'q': 'founders raising under', 'currency': 'USD'}),
                 content_type='application/json',
             )
         # Founder results carry the company as `startup_name`, not

@@ -1464,8 +1464,10 @@ class ZeldaIntelligencePipelineV2:
         # value silently pre-populating `facts` and never being checked
         # against what the document itself says.
         profile_values = {}
+        profile_reporting_currency = ''
         try:
             from matchmaking.models import Application, _normalize_company_string
+            from matchmaking.currencies import profile_currency
             app = Application.objects.filter(user=doc.uploaded_by).first()
             normalized_doc_company = _normalize_company_string(doc.source_entity)
             normalized_app_company = _normalize_company_string(app.company_name) if app else ''
@@ -1473,6 +1475,7 @@ class ZeldaIntelligencePipelineV2:
                 normalized_doc_company in normalized_app_company or normalized_app_company in normalized_doc_company
             )
             if app and company_matches and not doc.is_external_subject:
+                profile_reporting_currency = profile_currency(app)
                 if app.current_revenue:
                     profile_values['revenue'] = str(app.current_revenue)
                 if app.raising_amount:
@@ -1619,7 +1622,12 @@ class ZeldaIntelligencePipelineV2:
 
             if document_value and profile_value:
                 facts[field] = document_value
-                status = 'confirmed' if self._values_agree(document_value, profile_value) else 'conflict'
+                from .financial_metrics import currency_comparison_reason
+                document_currency = currency_amount(source_insight.insight_text if source_insight else document_value)[1]
+                currency_reason = (currency_comparison_reason('revenue', profile_reporting_currency, document_currency)
+                                   if field in ('revenue', 'raise_amount') else None)
+                status = ('not_comparable' if currency_reason else
+                          ('confirmed' if self._values_agree(document_value, profile_value) else 'conflict'))
                 facts['_provenance'][field] = {
                     'status': status,
                     'source': 'document',
@@ -1628,6 +1636,9 @@ class ZeldaIntelligencePipelineV2:
                     'document_id': doc.id,
                     'confidence': source_insight.confidence_score if source_insight else None,
                 }
+                if field in ('revenue', 'raise_amount'):
+                    facts['_provenance'][field].update(profile_currency=profile_reporting_currency,
+                        document_currency=document_currency, comparison_reason=currency_reason)
             elif document_value:
                 facts[field] = document_value
                 facts['_provenance'][field] = {
@@ -1648,6 +1659,8 @@ class ZeldaIntelligencePipelineV2:
                     'document_id': None,
                     'confidence': None,
                 }
+                if field in ('revenue', 'raise_amount'):
+                    facts['_provenance'][field]['profile_currency'] = profile_reporting_currency
 
         # Identify missing fields
         # 'revenue' stands for the whole metric family here: any of

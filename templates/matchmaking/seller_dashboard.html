@@ -23,7 +23,7 @@
             <h1 class="fw-bold mb-2">Welcome back, {{ seller_profile.seller_name|default:seller_profile.user.username }}</h1>
             <p class="text-white mb-0 opacity-75">
                 Find buyers for your <span class="badge bg-light text-dark border px-2 py-1.5">{{ seller_profile.industry }}</span> business
-                asking <span class="badge bg-light text-dark border px-2 py-1.5">{{ seller_profile.asking_price|asking_price_display }}</span>.
+                asking <span class="badge bg-light text-dark border px-2 py-1.5">{{ seller_profile.asking_price|asking_price_display:seller_profile.reporting_currency }}</span>.
             </p>
         </div>
         <div class="col-lg-5 mt-3 mt-lg-0 d-flex gap-2 justify-content-lg-end dashboard-actions">
@@ -229,7 +229,7 @@
                 </select>
             </div>
             <div class="col-md-4">
-                <label class="form-label small fw-semibold text-muted mb-1">Minimum Budget ($)</label>
+                <label class="form-label small fw-semibold text-muted mb-1">Minimum Budget ({{ seller_profile.reporting_currency|default:"currency not stated" }})</label>
                 <input type="number" name="min_budget" class="form-control form-control-sm" placeholder="e.g. 1000000" value="{{ filters.min_budget }}">
             </div>
             <div class="col-md-4 d-flex gap-2">

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load deal_display %}
 
 {% block title %}Search Results - Interlink Foundry{% endblock title %}
 
@@ -42,10 +43,10 @@
                 <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm">Location keyword: <strong>"{{ filters.state }}"</strong></span>
             {% endif %}
             {% if filters.capital %}
-                <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm">Max Raising: <strong>${{ filters.capital }}</strong></span>
+                <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm">Max Raising: <strong>{{ filters.capital }} {{ filters.currency|default:"(currency unknown)" }}</strong></span>
             {% endif %}
             {% if filters.revenue %}
-                <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm">Min Revenue: <strong>${{ filters.revenue }}</strong></span>
+                <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm">Min Revenue: <strong>{{ filters.revenue }} {{ filters.currency|default:"(currency unknown)" }}</strong></span>
             {% endif %}
             {% if not filters.stage and not filters.state and not filters.industry and not filters.location and not filters.capital and not filters.revenue %}
                 <span class="text-muted small italic">None applied (Showing entire database portfolio)</span>
@@ -93,11 +94,11 @@
                             <div class="row g-2 border-top pt-3 bg-light rounded-3 px-1 py-2 mx-0 text-center">
                                 <div class="col-6 border-end">
                                     <span class="text-muted d-block font-monospace small" style="font-size: 0.75rem;">TARGET TARGET</span>
-                                    {% if 'raising_amount' in app.visible_fields %}<strong class="text-dark font-monospace">${{ app.raising_amount|default:"0" }}</strong>{% else %}<span class="text-muted small">Not disclosed</span>{% endif %}
+                                    {% if 'raising_amount' in app.visible_fields %}<strong class="text-dark font-monospace">{{ app.raising_amount|money_display:app.reporting_currency }}</strong>{% else %}<span class="text-muted small">Not disclosed</span>{% endif %}
                                 </div>
                                 <div class="col-6">
                                     <span class="text-muted d-block font-monospace small" style="font-size: 0.75rem;">CURRENT ARR</span>
-                                    {% if 'current_revenue' in app.visible_fields %}<strong class="text-success font-monospace">${{ app.current_revenue|default:"0" }}</strong>{% else %}<span class="text-muted small">Not disclosed</span>{% endif %}
+                                    {% if 'current_revenue' in app.visible_fields %}<strong class="text-success font-monospace">{{ app.current_revenue|money_display:app.reporting_currency }}</strong>{% else %}<span class="text-muted small">Not disclosed</span>{% endif %}
                                 </div>
                             </div>
 

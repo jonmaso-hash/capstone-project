@@ -367,7 +367,7 @@
                                                     {% if 'prior_amount_raised' not in visible_founder_fields %}
                                                         <span class="text-muted fw-normal">Private</span>
                                                     {% elif application.prior_amount_raised %}
-                                                        ${{ application.prior_amount_raised|floatformat:0|intcomma }}
+                                                        {{ application.prior_amount_raised|money_display:application.reporting_currency }}
                                                     {% else %}
                                                         --
                                                     {% endif %}
@@ -518,7 +518,7 @@
                                         <div class="bg-white border rounded-3 p-3 text-center h-100 shadow-sm">
                                             <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem;">Raising</small>
                                             {% if 'raising_amount' in visible_founder_fields %}
-                                            <span class="fw-bold text-success">${{ application.raising_amount|floatformat:0|intcomma }}</span>
+                                            <span class="fw-bold text-success">{{ application.raising_amount|money_display:application.reporting_currency }}</span>
                                             {% else %}
                                             <span class="text-muted" title="The founder shares this with investors they have accepted.">Private</span>
                                             {% endif %}
@@ -528,7 +528,7 @@
                                         <div class="bg-white border rounded-3 p-3 text-center h-100 shadow-sm">
                                             <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem;">Revenue</small>
                                             {% if 'current_revenue' in visible_founder_fields %}
-                                            <span class="fw-bold text-dark">{% if application.current_revenue %}${{ application.current_revenue|floatformat:0|intcomma }}{% else %}--{% endif %}</span>
+                                            <span class="fw-bold text-dark">{% if application.current_revenue %}{{ application.current_revenue|money_display:application.reporting_currency }}{% else %}--{% endif %}</span>
                                             {% else %}
                                             <span class="text-muted">Private</span>
                                             {% endif %}
@@ -538,7 +538,7 @@
                                         <div class="bg-white border rounded-3 p-3 text-center h-100 shadow-sm">
                                             <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem;">Burn Rate</small>
                                             {% if 'monthly_burn_rate' in visible_founder_fields %}
-                                            <span class="fw-bold text-danger">{% if application.monthly_burn_rate %}${{ application.monthly_burn_rate|floatformat:0|intcomma }}/mo{% else %}--{% endif %}</span>
+                                            <span class="fw-bold text-danger">{% if application.monthly_burn_rate %}{{ application.monthly_burn_rate|money_display:application.reporting_currency }}/mo{% else %}--{% endif %}</span>
                                             {% else %}
                                             <span class="text-muted">Private</span>
                                             {% endif %}
@@ -583,7 +583,7 @@
                             <div class="col-md-4 mt-4 mt-md-0 text-center">
                                 <div class="bg-primary-subtle p-4 rounded-4 border border-primary">
                                     <small class="text-primary text-uppercase fw-bold d-block mb-1">Target Ticket Size</small>
-                                    <h3 class="fw-bold text-primary mb-0">{% if "$" not in investor_application.investment_amount %}${% endif %}{{ investor_application.investment_amount }}</h3>
+                                    <h3 class="fw-bold text-primary mb-0">{{ investor_application.investment_amount }} {{ investor_application.reporting_currency|default:"(currency unknown)" }}</h3>
                                 </div>
                             </div>
                         </div>
@@ -696,19 +696,19 @@
                             <div class="col-md-5">
                                 <div class="bg-warning-subtle p-4 rounded-4 border border-warning text-center mb-3">
                                     <small class="text-warning-emphasis text-uppercase fw-bold d-block mb-1">Asking Price</small>
-                                    <h3 class="fw-bold text-warning-emphasis mb-0">{% if 'asking_price' in visible_seller_fields %}{{ seller_application.asking_price|asking_price_display }}{% else %}Not stated{% endif %}</h3>
+                                    <h3 class="fw-bold text-warning-emphasis mb-0">{% if 'asking_price' in visible_seller_fields %}{{ seller_application.asking_price|asking_price_display:seller_application.reporting_currency }}{% else %}Not stated{% endif %}</h3>
                                 </div>
                                 <div class="row g-2">
                                     <div class="col-6">
                                         <div class="bg-light p-2 rounded border small text-center">
                                             <span class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.65rem;">Annual Revenue</span>
-                                            <span class="fw-bold text-dark">{% if 'annual_revenue' in visible_seller_fields and seller_application.annual_revenue %}${{ seller_application.annual_revenue|floatformat:0|intcomma }}{% else %}--{% endif %}</span>
+                                            <span class="fw-bold text-dark">{% if 'annual_revenue' in visible_seller_fields and seller_application.annual_revenue %}{{ seller_application.annual_revenue|money_display:seller_application.reporting_currency }}{% else %}--{% endif %}</span>
                                         </div>
                                     </div>
                                     <div class="col-6">
                                         <div class="bg-light p-2 rounded border small text-center">
                                             <span class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.65rem;">EBITDA</span>
-                                            <span class="fw-bold text-dark">{% if 'ebitda' in visible_seller_fields and seller_application.ebitda %}${{ seller_application.ebitda|floatformat:0|intcomma }}{% else %}--{% endif %}</span>
+                                            <span class="fw-bold text-dark">{% if 'ebitda' in visible_seller_fields and seller_application.ebitda %}{{ seller_application.ebitda|money_display:seller_application.reporting_currency }}{% else %}--{% endif %}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -756,7 +756,7 @@
                             <div class="col-md-4 mt-4 mt-md-0 text-center">
                                 <div class="bg-info-subtle p-4 rounded-4 border border-info">
                                     <small class="text-info-emphasis text-uppercase fw-bold d-block mb-1">Acquisition Budget</small>
-                                    <h4 class="fw-bold text-info-emphasis mb-0">${{ buyer_application.budget_min|floatformat:0|intcomma }} &ndash; ${{ buyer_application.budget_max|floatformat:0|intcomma }}</h4>
+                                    <h4 class="fw-bold text-info-emphasis mb-0">{{ buyer_application.budget_min|money_display:buyer_application.reporting_currency }} &ndash; {{ buyer_application.budget_max|money_display:buyer_application.reporting_currency }}</h4>
                                 </div>
                             </div>
                         </div>

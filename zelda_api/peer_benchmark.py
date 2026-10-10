@@ -16,6 +16,7 @@ from matchmaking.models import (
     restrict_queryset_for_field_filter,
 )
 from .anthropic_client import background_anthropic_client
+from matchmaking.currencies import MONEY_FIELDS, KNOWN_CURRENCIES, profile_currency
 from .peer_benchmark_evidence import (
     EVIDENCE_VERSION, METRICS as EXTERNAL_TARGETS, descriptive_summary,
     external_metrics, normalized_peers, source_set,
@@ -24,7 +25,7 @@ from .peer_benchmark_evidence import (
 logger = logging.getLogger(__name__)
 
 MIN_INTERLINK_PEERS = 5
-INTERLINK_PRIVACY_VERSION = 2
+INTERLINK_PRIVACY_VERSION = 3
 INTERLINK_METRICS = {
     'founder': {'funding_raised': 'prior_amount_raised', 'current_raise': 'raising_amount',
                 'employee_count': 'team_size', 'years_in_business': 'years_in_business'},
@@ -91,6 +92,7 @@ def subject_snapshot(profile, role):
     if role == 'founder':
         return {
             'company_name': profile.company_name,
+            'reporting_currency': profile_currency(profile),
             'sector': profile.sector,
             'stage': profile.stage,
             'geography': profile.geography or '',
@@ -102,6 +104,7 @@ def subject_snapshot(profile, role):
         }
     return {
         'company_name': profile.company_name,
+        'reporting_currency': profile_currency(profile),
         'industry': profile.industry,
         'geography': profile.geography or '',
         'annual_revenue': as_number(profile.annual_revenue),
@@ -156,11 +159,15 @@ def interlink_metric(value, peers):
     return metric(value, values)
 
 
-def profile_metric(value, peers, field):
-    visible = [(peer.pk, _visible_peer_value(None, peer, field)) for peer in peers]
+def profile_metric(value, peers, field, currency=''):
+    visible = [(peer.pk, _visible_peer_value(None, peer, field)) for peer in peers
+               if field not in MONEY_FIELDS or (currency and profile_currency(peer) == currency)]
     contributors = [(pk, number) for pk, number in visible if as_number(number) is not None]
     row = interlink_metric(value, [number for _, number in contributors])
     row['contributor_ids'] = [pk for pk, _ in contributors] if row['peer_values_available'] else []
+    if field in MONEY_FIELDS:
+        row['currency'] = currency
+        row['is_money'] = True
     return row
 
 
@@ -206,13 +213,19 @@ def safe_interlink_snapshot(snapshot, role):
                             and isinstance(contributors, list)
                             and all(type(pk) is int for pk in contributors)
                             and len(set(contributors)) == count
+                            and (fields[name] not in MONEY_FIELDS or (
+                                row.get('currency') in KNOWN_CURRENCIES
+                                and all(pk in peers and profile_currency(peers[pk]) == row['currency'] for pk in contributors)))
                             and all(pk in peers and _visible_peer_value(None, peers[pk], fields[name]) is not None
                                     for pk in contributors)):
                         safe['metrics'][name] = {key: row.get(key) for key in (
-                            'value', 'median', 'percentile', 'peer_values_available',
+                            'value', 'median', 'percentile', 'peer_values_available', 'currency', 'is_money',
                         )}
                     else:
                         safe['metrics'][name] = interlink_metric(row.get('value'), [])
+                    if fields[name] in MONEY_FIELDS:
+                        safe['metrics'][name]['is_money'] = True
+                        safe['metrics'][name]['currency'] = row.get('currency') if row.get('currency') in KNOWN_CURRENCIES else ''
         output[level] = safe
     return output
 
@@ -238,7 +251,7 @@ def interlink_benchmark(profile, role):
         if len(peers) < MIN_INTERLINK_PEERS:
             output[level] = {'peer_count': 0, 'metrics': {}, 'privacy_version': INTERLINK_PRIVACY_VERSION}
             continue
-        metrics = {name: profile_metric(profile_number(profile, field), peers, field)
+        metrics = {name: profile_metric(profile_number(profile, field), peers, field, profile_currency(profile))
                    for name, field in INTERLINK_METRICS[role].items()}
         output[level] = {'peer_count': len(peers), 'metrics': metrics,
                          'peer_ids': [peer.pk for peer in peers],

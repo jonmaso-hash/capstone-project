@@ -512,7 +512,9 @@ def grade_buyer_prediction_snapshots(buyer_id, actual_closed_seller_id):
 
         pred_price = predicted.asking_price
         actual_price = actual_seller.asking_price
-        if pred_price is not None and actual_price is not None and actual_price > 0:
+        from .currencies import currencies_match
+        if (pred_price is not None and actual_price is not None and actual_price > 0
+                and currencies_match(predicted, actual_seller)):
             price_diff_pct = abs(pred_price - actual_price) / actual_price
             if price_diff_pct <= 0.15:
                 size_score = 20

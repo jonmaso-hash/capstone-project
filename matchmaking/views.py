@@ -757,7 +757,11 @@ def buyer_dashboard(request):
             # boundary applies: sellers who have not disclosed it to this buyer
             # sit out of this filter, silently.
             sellers = restrict_queryset_for_field_filter(sellers, request.user, 'asking_price')
-            sellers = sellers.filter(asking_price__lte=threshold)
+            from .currencies import profile_currency
+            currency = profile_currency(buyer_profile)
+            sellers = sellers.filter(reporting_currency=currency, asking_price__lte=threshold) if currency else sellers.none()
+            if not currency:
+                messages.info(request, 'Choose a reporting currency on your profile to filter asking prices.')
 
     # Resolved once, before deal_size_signal reads it inside evaluate_deal_match,
     # so whether a hidden price may shape the band costs no query per seller.
@@ -1067,7 +1071,12 @@ def seller_dashboard(request):
         buyers = buyers.filter(preferred_deal_structure=filter_structure)
     if filter_min_budget:
         try:
-            buyers = buyers.filter(budget_max__gte=float(filter_min_budget))
+            from .currencies import profile_currency
+            threshold = float(filter_min_budget)
+            currency = profile_currency(seller_profile)
+            buyers = buyers.filter(reporting_currency=currency, budget_max__gte=threshold) if currency else buyers.none()
+            if not currency:
+                messages.info(request, 'Choose a reporting currency on your profile to filter budgets.')
         except ValueError:
             pass
 
@@ -2121,6 +2130,8 @@ def _filtered_public_applications(request):
     stage = request.GET.get('stage', '').strip()
     max_capital = request.GET.get('capital', '').strip()
     min_revenue = request.GET.get('revenue', '').strip()
+    from .currencies import KNOWN_CURRENCIES
+    currency = request.GET.get('currency', '').strip()
 
     # Privacy Gatekeeper: Public matching index only
     queryset = Application.objects.discoverable().select_related('user').exclude(review_status='DENIED')
@@ -2141,10 +2152,12 @@ def _filtered_public_applications(request):
 
     if max_capital and max_capital.isdigit():
         queryset = restrict_queryset_for_field_filter(queryset, request.user, 'raising_amount')
+        queryset = queryset.filter(reporting_currency=currency) if currency in KNOWN_CURRENCIES else queryset.none()
         queryset = queryset.filter(raising_amount__lte=int(max_capital))
 
     if min_revenue and min_revenue.isdigit():
         queryset = restrict_queryset_for_field_filter(queryset, request.user, 'current_revenue')
+        queryset = queryset.filter(reporting_currency=currency) if currency in KNOWN_CURRENCIES else queryset.none()
         queryset = queryset.filter(current_revenue__gte=int(min_revenue))
 
     filters = {
@@ -2154,6 +2167,7 @@ def _filtered_public_applications(request):
         'stage': stage,
         'capital': max_capital,
         'revenue': min_revenue,
+        'currency': currency if currency in KNOWN_CURRENCIES else '',
     }
     return queryset, filters
 
@@ -2215,7 +2229,7 @@ def export_search_csv(request):
     writer = csv.writer(response)
     writer.writerow([
         'Company Name', 'Sector', 'Stage', 'Location', 'Raising Amount',
-        'Current Revenue', 'Team Size', 'Years in Business', 'Website',
+        'Current Revenue', 'Team Size', 'Years in Business', 'Website', 'Reporting Currency',
     ])
     controlled = ('sector', 'stage', 'geography', 'raising_amount',
                   'current_revenue', 'team_size', 'years_in_business', 'company_website')
@@ -2231,6 +2245,7 @@ def export_search_csv(request):
             shown.get('team_size', ''),
             shown.get('years_in_business', ''),
             shown.get('company_website', ''),
+            app.reporting_currency if any(k in shown for k in ('raising_amount', 'current_revenue')) else '',
         ])
 
     return response
@@ -2272,7 +2287,7 @@ def export_acquisition_csv(request):
     writer = csv.writer(response)
     writer.writerow([
         'Company Name', 'Industry', 'Location', 'Asking Price',
-        'Annual Revenue', 'EBITDA', 'Deal Structure', 'Years in Business', 'Website',
+        'Annual Revenue', 'EBITDA', 'Deal Structure', 'Years in Business', 'Website', 'Reporting Currency',
     ])
     # A bulk extraction surface -- every discoverable listing to any premium
     # buyer -- so it goes through the same authority as the listing page. One
@@ -2295,6 +2310,7 @@ def export_acquisition_csv(request):
             listing.get_deal_structure_display(),
             listing.years_in_business,
             listing.company_website,
+            listing.reporting_currency if any(k in shown for k in ('asking_price', 'annual_revenue', 'ebitda')) else '',
         ])
 
     return response

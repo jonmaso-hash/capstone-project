@@ -50,9 +50,9 @@ identify so later memo or investor work does not have to recompute them:
                                raise target, the JoyToys misfiling, so it may be
                                the ask rather than money already raised
 
-Profiles do not record a currency, so monetary pairs are not comparable even
-when their numbers and ARR basis agree. Deck currencies remain visible. Count
-pairs can still be compared. Nothing is annualized or currency converted.
+Monetary pairs require the profile's explicitly selected reporting currency
+and matching explicit deck currencies. Count pairs need no currency.
+Nothing is annualized or currency converted.
 
 Dates are what the schema actually has: the profile's last save (the whole
 record, not the field) and the deck's upload time. Neither is when a figure was
@@ -60,6 +60,7 @@ true, and the owner panel says so.
 """
 from dataclasses import dataclass
 from typing import Optional, Tuple
+from matchmaking.currencies import profile_currency
 
 CONSISTENT, DIFFERS, NOT_COMPARABLE = 'consistent', 'differs', 'not_comparable'
 
@@ -88,6 +89,7 @@ class Reconciliation:
     profile_saved_at: object = None            # Application.updated_at: the record, not the field
     deck_uploaded_at: object = None            # DocumentSource.created_at
     deck_currencies: Tuple[str, ...] = ()
+    profile_currency: str = ''
 
     def display(self, value, currency=''):
         if value is None:
@@ -97,7 +99,7 @@ class Reconciliation:
 
     @property
     def profile_display(self):
-        return self.display(self.profile_value)
+        return self.display(self.profile_value, self.profile_currency)
 
     @property
     def deck_display(self):
@@ -166,6 +168,7 @@ def reconcile_profile_with_deck(document, viewer):
             deck_claim_ids=tuple(c.id for c in numeric),
             profile_saved_at=app.updated_at, deck_uploaded_at=document.created_at,
             deck_currencies=tuple(c.currency for c in numeric),
+            profile_currency=profile_currency(app),
         )
 
         def not_comparable(reason):
@@ -179,10 +182,12 @@ def reconcile_profile_with_deck(document, viewer):
             results.append(not_comparable(basis_reason))
         elif not deck_values:
             results.append(not_comparable('deck_value_unparsed'))
-        elif kind == 'money':
-            # Profiles have no currency field. Neither their UI's dollar sign
-            # nor a matching deck number establishes a compatible currency.
+        elif kind == 'money' and not base['profile_currency']:
             results.append(not_comparable('profile_currency_unknown'))
+        elif kind == 'money' and any(not c.currency for c in numeric):
+            results.append(not_comparable('deck_currency_unknown'))
+        elif kind == 'money' and any(c.currency != base['profile_currency'] for c in numeric):
+            results.append(not_comparable('currency_mismatch'))
         elif any(not _agree(v, deck_values[0]) for v in deck_values[1:]):
             results.append(not_comparable('conflicting_deck_claims'))
         elif (profile_field == 'prior_amount_raised' and app.raising_amount
@@ -199,7 +204,9 @@ def reconcile_profile_with_deck(document, viewer):
 # What the owner is told for each not-comparable reason. Neutral: none of these
 # is an error, and none says which figure is right.
 REASON_TEXT = {
-    'profile_currency_unknown': 'Your profile does not record a monetary currency, so these figures were not compared.',
+    'profile_currency_unknown': 'Choose a reporting currency on your profile before comparing these figures.',
+    'deck_currency_unknown': 'The deck does not establish a currency for these figures, so they were not compared.',
+    'currency_mismatch': 'The profile and deck currencies differ, so these figures were not compared. No conversion was applied.',
     'profile_blank': 'Your profile leaves this blank, so there is nothing to compare the deck figure with.',
     'profile_zero_may_be_default': (
         'Your profile shows 0, which is also what an unfilled profile shows, so it was not compared.'),

@@ -267,6 +267,7 @@ def _seller_to_result_dict(seller, viewer=None):
         'seller_name': seller.user.get_full_name() or seller.user.username,
         'username': seller.user.username,
         'company_name': seller.company_name,
+        'reporting_currency': seller.reporting_currency if seller.asking_price and can_view_profile_field(viewer, seller, 'asking_price') else '',
         'industry': seller.industry or 'General',
         'executive_summary': (seller.description or "")[:200] + '...',
         # A hidden price serialises exactly like an unstated one -- None, key
@@ -578,6 +579,13 @@ class ZeldaAskAPIView(APIView):
                     'results': [],
                 }, status=status.HTTP_200_OK)
 
+            from matchmaking.currencies import MONEY_FIELDS, KNOWN_CURRENCIES, query_currency
+            money_search = any(c.get('field') in MONEY_FIELDS for c in constraints)
+            currency = request.data.get('currency', '') or query_currency(question)
+            if money_search and (not isinstance(currency, str) or currency not in KNOWN_CURRENCIES):
+                return Response({'status': 'success', 'results': [], 'requires_currency': True,
+                    'response': 'Include an explicit currency such as USD or EUR when searching money amounts.'})
+
             if target == 'seller':
                 base_queryset = SellerApplication.objects.discoverable().select_related('user').exclude(review_status='DENIED')
                 to_result_dict = _seller_to_result_dict
@@ -585,6 +593,8 @@ class ZeldaAskAPIView(APIView):
                 base_queryset = Application.objects.discoverable().select_related('user').exclude(review_status='DENIED')
                 to_result_dict = _founder_to_result_dict
 
+            if money_search:
+                base_queryset = base_queryset.filter(reporting_currency=currency)
             matches, dropped_labels, widened = _search_with_relaxation(base_queryset, constraints, allowed_fields=allowed_fields, viewer=request.user)
 
             summary = ', '.join(f"{c['field']}={c['value']}" for c in constraints)
