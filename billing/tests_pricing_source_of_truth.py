@@ -11,8 +11,9 @@ configuring Stripe test prices: a proposed $99 Buyer and $499 Firm would have
 been created against pages still advertising $250 and $5,000, so a customer
 would have read one number and been charged another.
 
-These tests hold the line two ways: the rendered pages must show the constants,
-and neither template may reintroduce a bare price literal.
+These tests hold the line two ways: billing must show the constants, and
+neither template may reintroduce a bare price literal. The homepage directs
+visitors to billing rather than quoting prices.
 """
 import re
 
@@ -87,15 +88,12 @@ class RenderedPagesQuoteTheConstantsTests(TestCase):
     def setUp(self):
         _mock_embedding_generation(self)
 
-    def test_home_page_quotes_the_constants(self):
+    def test_home_page_directs_visitors_to_billing_without_prices(self):
         response = self.client.get(reverse('pages:home'))
         self.assertEqual(response.status_code, 200)
         html = response.content.decode(errors='ignore')
-
-        self.assertIn('$%d/mo' % FOUNDER_PRICE_USD, html)
-        self.assertIn('$%d/mo' % INVESTOR_PRICE_USD, html)
-        self.assertIn('$%d/mo' % SELLER_PRICE_USD, html)
-        self.assertIn('$%d/mo' % BUYER_PRICE_USD, html)
+        self.assertIn(reverse('billing:billing_page'), html)
+        self.assertNotRegex(html, BARE_MONTHLY_PRICE)
 
     def _billing_html_for(self, username, make_profile):
         """
