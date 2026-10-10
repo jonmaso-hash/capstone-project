@@ -158,23 +158,15 @@ class ZeldaNotificationDeleteButtonTests(TestCase):
 
 
 class HomepageMembershipCopyTests(TestCase):
-    """Homepage quotes current subscription prices but leaves detailed
-    entitlements and one-time Zelda pricing to the billing/product surfaces."""
+    """Detailed plans and prices belong on the billing surface."""
 
-    def test_homepage_shows_current_subscription_prices(self):
+    def test_homepage_links_to_billing_without_subscription_prices(self):
         response = self.client.get(reverse('pages:home'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "$99/mo")
-        self.assertContains(response, "$250/mo")
-
-    def test_homepage_says_membership_and_report_purchases_are_separate(self):
-        response = self.client.get(reverse('pages:home'))
-        self.assertContains(
-            response,
-            "Membership and individual Zelda report purchases are separate product concepts.",
-        )
-        self.assertContains(response, "Current benefits, report prices")
-        self.assertContains(response, "billing terms are shown before checkout")
+        self.assertContains(response, reverse('billing:billing_page'))
+        self.assertContains(response, 'View plans and report pricing')
+        self.assertNotContains(response, '$99/mo')
+        self.assertNotContains(response, '$250/mo')
 
 
 class HomepagePositioningCopyTests(TestCase):
@@ -190,22 +182,22 @@ class HomepagePositioningCopyTests(TestCase):
         self.assertEqual(response.status_code, 200)
         return response
 
-    def test_hero_leads_with_business_marketplace(self):
+    def test_hero_explains_connections_and_zelda(self):
         import re
         response = self._home()
         content = response.content.decode('utf-8')
         h1_match = re.search(r'<h1[^>]*>(.*?)</h1>', content, re.DOTALL)
         self.assertIsNotNone(h1_match)
-        self.assertIn('A business marketplace powered by Zelda intelligence.', h1_match.group(1))
+        self.assertIn('Build relevant business connections. Understand the evidence.', h1_match.group(1))
         self.assertContains(response, 'Business marketplace + Zelda intelligence')
-        self.assertContains(response, 'Zelda adds source-linked business analysis.')
+        self.assertContains(response, 'Zelda is your business intelligence tool')
         self.assertNotContains(response, 'without telling you what decision to make')
 
     def test_regulatory_boundary_is_visible_and_linked(self):
         response = self._home()
-        self.assertContains(response, 'It does not provide')
+        self.assertContains(response, 'No investment recommendations or guaranteed outcomes.')
         self.assertContains(response, 'investment recommendations')
-        self.assertContains(response, 'execute, negotiate, or guarantee securities or business transactions')
+        self.assertContains(response, 'does not negotiate or execute securities transactions')
         self.assertContains(response, reverse('pages:regulatory_positioning'))
 
     def test_standalone_zelda_advantage_marketing_block_is_removed(self):
@@ -226,7 +218,7 @@ class HomepagePositioningCopyTests(TestCase):
             with self.subTest(phrase=phrase):
                 self.assertContains(response, phrase)
         self.assertContains(response, 'Alignment reflects similarity between stated criteria.')
-        self.assertContains(response, 'It is not investment advice')
+        self.assertContains(response, 'it is not investment advice')
 
     def test_featured_placement_is_not_presented_as_alignment(self):
         # The section only renders when staff-featured profiles exist, so pin
@@ -255,15 +247,14 @@ class HomepagePositioningCopyTests(TestCase):
         )
         self.assertNotIn('For most private companies, public sources report little', content)
 
-    def test_alignment_example_uses_band_not_percentage(self):
+    def test_evidence_example_is_explicitly_illustrative(self):
         response = self._home()
-        content = response.content.decode('utf-8')
-        self.assertIn('Stated-criteria band:', content)
-        self.assertIn('NOTABLE', content)
-        self.assertNotIn('94.2% SEMANTIC MATCH', content)
-        self.assertNotIn('94.2% MATCH', content)
-        self.assertIn('Alignment reflects similarity between stated criteria.', content)
-        self.assertIn('not investment advice', content)
+        self.assertContains(response, 'fictional company')
+        self.assertContains(response, 'not a real report or live verification')
+        self.assertContains(response, 'Insufficient evidence. This does not mean the claim is false.')
+        self.assertNotContains(response, 'Stated-criteria band:')
+        self.assertNotContains(response, '94.2% MATCH')
+        self.assertContains(response, 'Alignment reflects similarity between stated criteria.')
 
     def test_confirmed_outcomes_are_mutual_confirmation_not_verification_claims(self):
         response = self._home()
@@ -276,8 +267,9 @@ class HomepagePositioningCopyTests(TestCase):
 
     def test_business_valuation_states_its_limits(self):
         response = self._home()
-        self.assertContains(response, 'Model-based valuation output with assumptions and limitations.')
+        self.assertContains(response, 'A model-based estimate using available inputs and stated assumptions.')
         self.assertContains(response, 'not an appraisal, fairness opinion, or transaction price')
+        self.assertContains(response, 'aria-label="About Business Valuation"')
 
     def test_no_transaction_or_advisory_marketing_claims(self):
         content = self._squeeze(self._home().content.decode('utf-8'))
@@ -317,18 +309,6 @@ class HomepagePositioningCopyTests(TestCase):
         self.assertContains(response, 'home-journey-loading')
         self.assertContains(response, '/api/v1/zelda/journey-status/')
         self.assertContains(response, 'home-next-action')
-
-    def test_founder_premium_explains_founder_insights_concretely(self):
-        from pathlib import Path
-        from django.conf import settings
-        content = (Path(settings.BASE_DIR) / 'templates' / 'pages' / 'home.html').read_text(encoding='utf-8')
-        self.assertIn('Founder Insights', content)
-        self.assertIn('profile views', content)
-        self.assertIn('pitch-deck and pitch-video activity', content)
-        self.assertIn('Intelligence Memo and Truth Delta opens', content)
-        self.assertIn('Visibility, Interest, Trust, and Responsiveness', content)
-        self.assertIn('opening a report does not necessarily mean a new report was generated', content)
-        self.assertNotIn('Founder-specific Zelda benefits', content)
 
     def test_no_role_specific_landing_pages_introduced(self):
         content = self._home().content.decode('utf-8')

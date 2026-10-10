@@ -198,3 +198,11 @@
 .services-section {
   background: #f8f9fb;
 }
+
+/* Native disclosures work with touch, keyboard, and without JavaScript. */
+.home-supporting-tools > summary { cursor: pointer; padding: 16px; border: 1px solid #dce6e2; border-radius: 12px; background: #fff; }
+.home-valuation-info > summary { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; cursor: pointer; list-style: none; color: #176c58; }
+.home-valuation-info > summary::-webkit-details-marker { display: none; }
+.home-valuation-info p { max-width: 360px; padding: 14px; border: 1px solid #dce6e2; border-radius: 10px; background: #fff; color: #152e2e; font-size: .875rem; line-height: 1.6; margin: 0 0 12px; }
+.home-valuation-info > summary:focus-visible, .home-supporting-tools > summary:focus-visible { outline: 3px solid #176c58; outline-offset: 3px; }
+#zelda-example { scroll-margin-top: 6rem; }
