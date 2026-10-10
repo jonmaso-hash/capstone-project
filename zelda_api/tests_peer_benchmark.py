@@ -13,7 +13,7 @@ from matchmaking.models import (
 )
 from zelda_api.peer_benchmark import (
     INTERLINK_PRIVACY_VERSION, MIN_INTERLINK_PEERS, create_monthly_benchmark,
-    generate_benchmark, interlink_benchmark, safe_interlink_snapshot,
+    generate_benchmark, interlink_benchmark, safe_interlink_snapshot, subject_snapshot,
 )
 
 User = get_user_model()
@@ -226,6 +226,7 @@ class PeerMarketBenchmarkTests(TestCase):
     def test_snapshot_reader_requires_supported_metrics_and_five_contributors(self):
         ids = [self.founder(
             f'snapshot_peer{i}', f'Peer{i}',
+            prior_amount_raised=10,
             field_visibility={'prior_amount_raised': 'PUBLIC'},
         )[1].pk for i in range(MIN_INTERLINK_PEERS)]
         data = safe_interlink_snapshot({'site': {
@@ -242,13 +243,163 @@ class PeerMarketBenchmarkTests(TestCase):
         self.assertEqual(data['site']['metrics']['employee_count']['peer_values_available'], 0)
         self.assertNotIn('investor_interest_events', data['site']['metrics'])
 
+    def test_default_zeros_are_unknown_and_do_not_meet_contributor_threshold(self):
+        for role, factory, names in (
+            ('founder', self.founder, ('funding_raised', 'current_raise', 'years_in_business')),
+            ('seller', self.seller, ('asking_price', 'years_in_business')),
+        ):
+            _, subject = factory(f'zeros_{role}', 'Subject', years_in_business=3)
+            visibility = {'prior_amount_raised': 'PUBLIC', 'raising_amount': 'PUBLIC'} if role == 'founder' else {}
+            peers = [factory(f'zeros_{role}{i}', f'Peer{i}', field_visibility=visibility)[1]
+                     for i in range(MIN_INTERLINK_PEERS)]
+            data = interlink_benchmark(subject, role)
+            for name in names:
+                row = data['site']['metrics'][name]
+                self.assertIsNone(row['median'])
+                self.assertIsNone(row['percentile'])
+                self.assertEqual(row['peer_values_available'], 0)
+                self.assertEqual(row['contributor_ids'], [])
+            self.assertIsNone(subject_snapshot(peers[0], role)['years_in_business'])
+            # Four disclosed nonzero values plus one default still fail.
+            for peer in peers[:4]:
+                peer.years_in_business = 2
+                peer.save(update_fields=['years_in_business'])
+            self.assertIsNone(interlink_benchmark(subject, role)['site']['metrics']['years_in_business']['median'])
+            peers[4].years_in_business = 2
+            peers[4].save(update_fields=['years_in_business'])
+            row = interlink_benchmark(subject, role)['site']['metrics']['years_in_business']
+            self.assertEqual(row['median'], 2)
+            self.assertEqual(row['percentile'], 100)
+
+    def test_zero_nullable_financials_remain_disclosed_values(self):
+        _, subject = self.seller('real_zero_subject', 'Subject', annual_revenue=0, ebitda=-10)
+        for i in range(MIN_INTERLINK_PEERS):
+            self.seller(f'real_zero_peer{i}', f'Peer{i}', annual_revenue=0, ebitda=-20,
+                        field_visibility={'annual_revenue': 'PUBLIC', 'ebitda': 'PUBLIC'})
+        rows = interlink_benchmark(subject, 'seller')['site']['metrics']
+        self.assertEqual(rows['annual_revenue']['median'], 0)
+        self.assertEqual(rows['annual_revenue']['peer_values_available'], 5)
+        self.assertEqual(rows['ebitda']['median'], -20)
+
+    def test_version_one_aggregates_are_suppressed(self):
+        _, subject = self.founder('old_zero_subject', 'Subject')
+        for i in range(MIN_INTERLINK_PEERS):
+            self.founder(f'old_zero_peer{i}', f'Peer{i}', team_size=2)
+        data = interlink_benchmark(subject, 'founder')
+        for cohort in data.values():
+            cohort['privacy_version'] = 1
+        self.assertTrue(all(row['metrics'] == {} for row in safe_interlink_snapshot(data, 'founder').values()))
+
+    def test_old_external_subject_defaults_have_no_value_or_percentile_on_either_page(self):
+        user, subject = self.seller('external_zero_owner', 'Subject')
+        benchmark = PeerMarketBenchmark.objects.create(
+            user=user, role='seller', seller=subject, subject_name='Subject',
+            status='ready', sharing_enabled=True, external_benchmark={
+                'asking_or_transaction_value': {
+                    'value': 0, 'median': 500, 'percentile': 0, 'peer_values_available': 5,
+                },
+            },
+        )
+        self.client.force_login(user)
+        for url in (
+            reverse('accounts:peer_market_benchmark_detail', args=[benchmark.id]),
+            reverse('accounts:peer_market_benchmark_share', args=[benchmark.share_token]),
+        ):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            row = response.context['benchmark'].external_benchmark['asking_or_transaction_value']
+            self.assertIsNone(row['value'])
+            self.assertIsNone(row['percentile'])
+            self.assertEqual(row['median'], 500)
+
+    def test_cleared_contributor_suppresses_saved_metric(self):
+        _, subject = self.seller('clear_subject', 'Subject', asking_price=1000)
+        peers = [self.seller(f'clear_peer{i}', f'Peer{i}', asking_price=500)[1]
+                 for i in range(MIN_INTERLINK_PEERS)]
+        data = interlink_benchmark(subject, 'seller')
+        peers[0].asking_price = 0
+        peers[0].save(update_fields=['asking_price'])
+        row = safe_interlink_snapshot(data, 'seller')['site']['metrics']['asking_price']
+        self.assertIsNone(row['median'])
+        self.assertIsNone(row['percentile'])
+        self.assertEqual(row['peer_values_available'], 0)
+
+    def test_public_share_masks_owner_values_and_percentiles_after_revocation(self):
+        for role, factory, field, internal_name, external_name in (
+            ('founder', self.founder, 'raising_amount', 'current_raise', 'latest_round_size'),
+            ('seller', self.seller, 'asking_price', 'asking_price', 'asking_or_transaction_value'),
+        ):
+            user, subject = factory(f'owner_mask_{role}', 'Subject', **{field: 987654321},
+                                    field_visibility={field: 'PUBLIC'})
+            for i in range(MIN_INTERLINK_PEERS):
+                factory(f'owner_mask_{role}{i}', f'Peer{i}', **{field: 500},
+                        field_visibility={field: 'PUBLIC'})
+            benchmark = PeerMarketBenchmark.objects.create(
+                user=user, role=role, subject_name='Subject', status='ready', sharing_enabled=True,
+                **{role: subject}, interlink_benchmark=interlink_benchmark(subject, role),
+                external_benchmark={external_name: {
+                    'value': 987654321, 'median': 500, 'percentile': 100, 'peer_values_available': 5,
+                }}, narrative='Private figure: 987654321', cohort_label='987654321',
+                sources=[{'url': 'https://example.com', 'title': 'Public source', 'cited_text': '987654321'}],
+            )
+            public_url = reverse('accounts:peer_market_benchmark_share', args=[benchmark.share_token])
+            owner_url = reverse('accounts:peer_market_benchmark_detail', args=[benchmark.id])
+            self.assertContains(self.client.get(public_url), '987654321')
+            for visibility in ('CONNECTED', 'PRIVATE'):
+                subject.field_visibility = {field: visibility}
+                subject.save(update_fields=['field_visibility'])
+                # Public URL never carries owner privileges, even when logged in.
+                for logged_in in (False, True):
+                    if logged_in:
+                        self.client.force_login(user)
+                    else:
+                        self.client.logout()
+                    response = self.client.get(public_url)
+                    self.assertEqual(response.status_code, 200)
+                    self.assertNotContains(response, '987654321')
+                    safe = response.context['benchmark']
+                    for row in (safe.external_benchmark[external_name],
+                                safe.interlink_benchmark['site']['metrics'][internal_name]):
+                        self.assertIsNone(row['value'])
+                        self.assertIsNone(row['percentile'])
+                        self.assertEqual(row['median'], 500)
+            self.client.force_login(user)
+            self.assertContains(self.client.get(owner_url), '987654321')
+            benchmark.refresh_from_db()
+            self.assertEqual(benchmark.external_benchmark[external_name]['value'], 987654321)
+            self.assertEqual(benchmark.narrative, 'Private figure: 987654321')
+            self.client.logout()
+
+    def test_private_subject_geography_and_cohort_are_not_inferred_by_sharing(self):
+        user, subject = self.founder('hidden_cohort_owner', 'Subject', field_visibility={'geography': 'PRIVATE'})
+        for i in range(MIN_INTERLINK_PEERS):
+            self.founder(f'hidden_cohort_peer{i}', f'Peer{i}', team_size=5)
+        benchmark = PeerMarketBenchmark.objects.create(
+            user=user, role='founder', founder=subject, subject_name='Subject',
+            status='ready', sharing_enabled=True, interlink_benchmark=interlink_benchmark(subject, 'founder'),
+            cohort_label='San Diego', narrative='San Diego',
+            external_peers=[{'company_name': 'San Diego peer'}],
+        )
+        url = reverse('accounts:peer_market_benchmark_share', args=[benchmark.share_token])
+        response = self.client.get(url)
+        safe = response.context['benchmark']
+        self.assertNotContains(response, 'San Diego peer')
+        self.assertEqual(safe.cohort_label, '')
+        self.assertEqual(safe.narrative, '')
+        self.assertEqual(safe.interlink_benchmark['city']['peer_count'], 0)
+        self.assertEqual(safe.interlink_benchmark['site']['peer_count'], 5)
+        subject.field_visibility = {'sector': 'PRIVATE'}
+        subject.save(update_fields=['field_visibility'])
+        safe = self.client.get(url).context['benchmark']
+        self.assertEqual(safe.interlink_benchmark['site']['peer_count'], 0)
+
     def test_visibility_revocation_suppresses_saved_aggregates_on_both_pages(self):
         for role, factory, field, metric_name in (
             ('founder', self.founder, 'team_size', 'employee_count'),
             ('seller', self.seller, 'asking_price', 'asking_price'),
         ):
             user, subject = factory(f'revoke_{role}', 'Subject')
-            peers = [factory(f'revoke_{role}{i}', f'Peer{i}', **{field: 777})[1]
+            peers = [factory(f'revoke_{role}{i}', f'Peer{i}', **{field: 7771234})[1]
                      for i in range(MIN_INTERLINK_PEERS)]
             benchmark = PeerMarketBenchmark.objects.create(
                 user=user, role=role, subject_name='Subject', status='ready', sharing_enabled=True,
@@ -256,7 +407,7 @@ class PeerMarketBenchmarkTests(TestCase):
             )
             public_url = reverse('accounts:peer_market_benchmark_share', args=[benchmark.share_token])
             owner_url = reverse('accounts:peer_market_benchmark_detail', args=[benchmark.id])
-            self.assertContains(self.client.get(public_url), '777')
+            self.assertContains(self.client.get(public_url), '7771234')
             peers[0].field_visibility = {field: 'PRIVATE'}
             peers[0].save(update_fields=['field_visibility'])
             self.client.force_login(user)
@@ -265,7 +416,7 @@ class PeerMarketBenchmarkTests(TestCase):
                 row = response.context['benchmark'].interlink_benchmark['site']['metrics'][metric_name]
                 self.assertIsNone(row['median'])
                 self.assertEqual(row['peer_values_available'], 0)
-                self.assertNotContains(response, '777')
+                self.assertNotContains(response, '7771234')
             peers[0].delete()
             self.assertEqual(self.client.get(public_url).context['benchmark'].interlink_benchmark['site']['peer_count'], 0)
             self.client.logout()

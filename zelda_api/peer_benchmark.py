@@ -18,13 +18,28 @@ from .anthropic_client import background_anthropic_client
 logger = logging.getLogger(__name__)
 
 MIN_INTERLINK_PEERS = 5
-INTERLINK_PRIVACY_VERSION = 1
+INTERLINK_PRIVACY_VERSION = 2
 INTERLINK_METRICS = {
     'founder': {'funding_raised': 'prior_amount_raised', 'current_raise': 'raising_amount',
                 'employee_count': 'team_size', 'years_in_business': 'years_in_business'},
     'seller': {'annual_revenue': 'annual_revenue', 'ebitda': 'ebitda', 'asking_price': 'asking_price',
                'employee_count': 'team_size', 'years_in_business': 'years_in_business'},
 }
+EXTERNAL_METRICS = {
+    'founder': {**INTERLINK_METRICS['founder'], 'latest_round_size': 'raising_amount'},
+    'seller': {**INTERLINK_METRICS['seller'], 'asking_or_transaction_value': 'asking_price'},
+}
+ZERO_DEFAULT_FIELDS = {'prior_amount_raised', 'raising_amount', 'asking_price', 'years_in_business'}
+
+
+def profile_number(profile, field):
+    """A legacy zero default has no evidence of explicit disclosure."""
+    return disclosed_number(getattr(profile, field), field)
+
+
+def disclosed_number(value, field):
+    value = as_number(value)
+    return None if field in ZERO_DEFAULT_FIELDS and value == 0 else value
 
 
 def as_number(value):
@@ -72,10 +87,10 @@ def subject_snapshot(profile, role):
             'sector': profile.sector,
             'stage': profile.stage,
             'geography': profile.geography or '',
-            'funding_raised': as_number(profile.prior_amount_raised),
-            'current_raise': as_number(profile.raising_amount),
+            'funding_raised': profile_number(profile, 'prior_amount_raised'),
+            'current_raise': profile_number(profile, 'raising_amount'),
             'employee_count': profile.team_size,
-            'years_in_business': profile.years_in_business,
+            'years_in_business': profile_number(profile, 'years_in_business'),
             'revenue': as_number(profile.current_revenue),
         }
     return {
@@ -84,9 +99,9 @@ def subject_snapshot(profile, role):
         'geography': profile.geography or '',
         'annual_revenue': as_number(profile.annual_revenue),
         'ebitda': as_number(profile.ebitda),
-        'asking_price': as_number(profile.asking_price),
+        'asking_price': profile_number(profile, 'asking_price'),
         'employee_count': profile.team_size,
-        'years_in_business': profile.years_in_business,
+        'years_in_business': profile_number(profile, 'years_in_business'),
     }
 
 
@@ -122,7 +137,7 @@ def _visible_peer_value(viewer, peer, field):
     """Only include a peer's controlled field when Interlink's authority allows it."""
     if not can_view_profile_field(viewer, peer, field):
         return None
-    return getattr(peer, field)
+    return profile_number(peer, field)
 
 
 def interlink_metric(value, peers):
@@ -184,7 +199,7 @@ def safe_interlink_snapshot(snapshot, role):
                             and isinstance(contributors, list)
                             and all(type(pk) is int for pk in contributors)
                             and len(set(contributors)) == count
-                            and all(pk in peers and can_view_profile_field(None, peers[pk], fields[name])
+                            and all(pk in peers and _visible_peer_value(None, peers[pk], fields[name]) is not None
                                     for pk in contributors)):
                         safe['metrics'][name] = {key: row.get(key) for key in (
                             'value', 'median', 'percentile', 'peer_values_available',
@@ -216,24 +231,74 @@ def interlink_benchmark(profile, role):
         if len(peers) < MIN_INTERLINK_PEERS:
             output[level] = {'peer_count': 0, 'metrics': {}, 'privacy_version': INTERLINK_PRIVACY_VERSION}
             continue
-        if role == 'founder':
-            metrics = {
-                'funding_raised': profile_metric(profile.prior_amount_raised, peers, 'prior_amount_raised'),
-                'current_raise': profile_metric(profile.raising_amount, peers, 'raising_amount'),
-                'employee_count': profile_metric(profile.team_size, peers, 'team_size'),
-                'years_in_business': profile_metric(profile.years_in_business, peers, 'years_in_business'),
-            }
-        else:
-            metrics = {
-                'annual_revenue': profile_metric(profile.annual_revenue, peers, 'annual_revenue'),
-                'ebitda': profile_metric(profile.ebitda, peers, 'ebitda'),
-                'asking_price': profile_metric(profile.asking_price, peers, 'asking_price'),
-                'employee_count': profile_metric(profile.team_size, peers, 'team_size'),
-                'years_in_business': profile_metric(profile.years_in_business, peers, 'years_in_business'),
-            }
+        metrics = {name: profile_metric(profile_number(profile, field), peers, field)
+                   for name, field in INTERLINK_METRICS[role].items()}
         output[level] = {'peer_count': len(peers), 'metrics': metrics,
                          'peer_ids': [peer.pk for peer in peers],
                          'privacy_version': INTERLINK_PRIVACY_VERSION}
+    return output
+
+
+def protect_public_subject(benchmark):
+    """Apply current public permissions to a report instance, never its saved data.
+
+    Mask derived percentiles as well as values. Free text was generated with
+    owner data and cannot be reliably redacted, so withhold it when any supplied
+    subject field is private. Missing subject profiles fail closed.
+    """
+    profile = benchmark.founder if benchmark.role == 'founder' else benchmark.seller
+    fields = EXTERNAL_METRICS.get(benchmark.role, {})
+    cohort_fields = ('sector', 'stage', 'geography') if benchmark.role == 'founder' else ('industry', 'geography')
+
+    def public(field):
+        return profile is not None and can_view_profile_field(None, profile, field)
+
+    def mask(rows, mapping):
+        output = {}
+        for name, row in rows.items() if isinstance(rows, dict) else []:
+            if name not in mapping or not isinstance(row, dict):
+                continue
+            output[name] = {key: row.get(key) for key in (
+                'value', 'median', 'percentile', 'peer_values_available',
+            )}
+            if not public(mapping[name]):
+                output[name]['value'] = None
+                output[name]['percentile'] = None
+        return output
+
+    benchmark.external_benchmark = mask(benchmark.external_benchmark, fields)
+    for level, cohort in benchmark.interlink_benchmark.items():
+        if (not all(public(field) for field in cohort_fields if field != 'geography')
+                or level != 'site' and not public('geography')):
+            cohort['peer_count'], cohort['metrics'] = 0, {}
+        else:
+            cohort['metrics'] = mask(cohort['metrics'], INTERLINK_METRICS.get(benchmark.role, {}))
+    supplied_fields = set(fields.values()) | set(cohort_fields)
+    if benchmark.role == 'founder':
+        supplied_fields.add('current_revenue')
+    if not all(public(field) for field in supplied_fields):
+        benchmark.narrative = ''
+        benchmark.cohort_label = ''
+        benchmark.sources = [{key: source.get(key) for key in ('url', 'title')}
+                             for source in benchmark.sources if isinstance(source, dict)]
+    if not all(public(field) for field in cohort_fields):
+        benchmark.external_benchmark = {}
+        benchmark.external_peers = []
+        benchmark.sources = []
+    benchmark.subject_snapshot = {}
+
+
+def safe_external_snapshot(snapshot, role):
+    """Normalize ambiguous subject zeros in existing external tables too."""
+    output = {}
+    for name, row in snapshot.items() if isinstance(snapshot, dict) else []:
+        field = EXTERNAL_METRICS.get(role, {}).get(name)
+        if not field or not isinstance(row, dict):
+            continue
+        output[name] = dict(row)
+        output[name]['value'] = disclosed_number(row.get('value'), field)
+        if output[name]['value'] is None:
+            output[name]['percentile'] = None
     return output
 
 
