@@ -24,7 +24,7 @@
 
                 <form method="post">
                     {% csrf_token %}
-                    <input type="hidden" name="role" id="selectedRole" value="">
+                    <input type="hidden" name="role" id="selectedRole" value="{{ selected_role }}">
                     {% comment %}
                     Belt-and-braces with the session copy stashed at GET: the
                     session is what actually survives the role-form hop, but a

@@ -1,0 +1,64 @@
+{% load static %}
+<section class="py-5 bg-white" id="home-role-journeys" aria-labelledby="home-role-heading">
+  <div class="container">
+    <div class="role-journey-surface">
+      <header class="text-center mb-4">
+        <p class="role-journey-eyebrow">{% if home_journey_signed_in %}Your role. Your path forward.{% else %}Four roles. Four paths forward.{% endif %}</p>
+        <h2 class="fw-bold" id="home-role-heading">{% if home_journey_signed_in %}Your path forward{% else %}Select your role{% endif %}</h2>
+        <p class="text-muted mb-0">{% if home_journey_signed_in %}See what comes next.{% else %}Sign up. See what comes next.{% endif %}</p>
+      </header>
+
+      {% if not home_journey_signed_in %}
+      <div class="role-journey-cards" role="group" aria-label="Select your role">
+        {% for journey in home_journeys %}
+        <button type="button" class="role-journey-card" data-journey-role="{{ journey.key }}" aria-controls="role-path-{{ journey.key }}" aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}">
+          <span class="role-journey-name">{{ journey.label }}</span>
+          <span class="role-journey-card-goal">{{ journey.card_goal }}</span>
+          <span class="role-journey-description">{{ journey.description }}</span>
+          <span class="role-journey-link">View {{ journey.label }} path <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
+        </button>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% for journey in home_journeys %}
+      <div class="role-journey-panel" id="role-path-{{ journey.key }}" data-journey-panel="{{ journey.key }}" aria-labelledby="role-path-title-{{ journey.key }}">
+        <div class="role-journey-heading">
+          <h3 class="h5 fw-semibold mb-0" id="role-path-title-{{ journey.key }}">{{ journey.title }}</h3>
+          <div class="role-journey-goal">
+            <span>{{ journey.goal }}</span>
+            {% if journey.key == 'founder' %}
+            <details class="role-funding-info">
+              <summary aria-label="How funding and negotiations work"><i class="bi bi-info-circle" aria-hidden="true"></i></summary>
+              <p>Interlink Foundry does not directly fund businesses. All funding is handled off-site. Negotiations are private between the two parties, with no fees to access those negotiations.</p>
+            </details>
+            {% endif %}
+          </div>
+        </div>
+        <details class="role-journey-details">
+          <summary>View {{ journey.label }} path <span class="text-muted">· {{ journey.steps|length }} steps</span></summary>
+          <ol class="role-journey-steps{% if journey.steps|length == 6 %} role-journey-steps-six{% endif %}">
+            {% for step in journey.steps %}
+            <li><span class="role-journey-number" aria-hidden="true">{{ forloop.counter|stringformat:'02d' }}</span><div><h4>{{ step.title }}</h4><p>{{ step.description }}</p></div></li>
+            {% endfor %}
+          </ol>
+        </details>
+        <div class="role-journey-footer">
+          <div><span class="role-journey-eyebrow">The Zelda advantage</span><p class="text-muted small mb-0 mt-2">Premium guidance helps you choose your next step.</p></div>
+          <div class="text-center">
+            {% if home_journey_signed_in %}
+            <a href="{% url 'accounts:post_login_router' %}" class="btn btn-dark">Continue your {{ journey.label }} journey <i class="bi bi-arrow-up-right ms-2" aria-hidden="true"></i></a>
+            {% else %}
+            <a href="{% url 'accounts:signup' %}?role={{ journey.key }}" class="btn btn-dark">Start as {% if journey.key == 'investor' %}an{% else %}a{% endif %} {{ journey.label }} <i class="bi bi-arrow-up-right ms-2" aria-hidden="true"></i></a>
+            <p class="text-muted small mb-0 mt-2">Free membership available</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="text-center"><p class="text-muted">Select your role to see your path forward.</p><a href="{% url 'accounts:choose_role' %}" class="btn btn-dark">Select your role</a></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+<script src="{% static 'js/home-role-journeys.js' %}" defer></script>

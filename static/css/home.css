@@ -157,6 +157,44 @@
   line-height: 1.4;
 }
 
+/* Public role selector and the signed-in path; details stay collapsed at first. */
+.role-journey-surface { max-width: 960px; margin: auto; padding: 28px; border: 1px solid #dce6e2; border-radius: 20px; background: #f8faf9; color: #152e2e; }
+.role-journey-eyebrow { color: #176c58; font-size: .75rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+.role-journey-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 30px; }
+.role-journey-card { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 18px; border: 1px solid #dce6e2; border-radius: 12px; background: #fff; color: #152e2e; text-align: left; cursor: pointer; }
+.role-journey-card[aria-pressed="true"] { border-color: #176c58; }
+.role-journey-card:focus-visible, .role-journey-details > summary:focus-visible, .role-funding-info > summary:focus-visible { outline: 3px solid #176c58; outline-offset: 3px; }
+.role-journey-name, .role-journey-link { color: #176c58; font-size: .8rem; }
+.role-journey-card-goal { font-size: 1.2rem; font-weight: 600; }
+.role-journey-description { color: #526764; font-size: .875rem; }
+.role-journey-link { margin-top: 6px; }
+.role-journey-panel[hidden] { display: none; }
+.role-journey-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 20px; }
+.role-journey-goal { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; color: #176c58; font-size: .8rem; }
+.role-funding-info { max-width: 100%; }
+.role-funding-info > summary { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; list-style: none; cursor: pointer; }
+.role-funding-info > summary::-webkit-details-marker { display: none; }
+.role-funding-info p { max-width: 560px; padding: 14px 16px; margin: 8px 0 0; background: #fff; border: 1px solid #dce6e2; border-radius: 10px; color: #152e2e; font-size: .875rem; line-height: 1.65; }
+.role-journey-details > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 14px 16px; min-height: 48px; border: 1px solid #dce6e2; border-radius: 10px; background: #fff; list-style: none; cursor: pointer; font-weight: 600; }
+.role-journey-details > summary::-webkit-details-marker { display: none; }
+.role-journey-details > summary::after { content: '+'; margin-left: auto; }
+.role-journey-details[open] > summary::after { content: '−'; }
+.role-journey-steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); list-style: none; gap: 18px; padding: 24px 0 0; margin: 0; }
+.role-journey-steps-six { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 26px; }
+.role-journey-number { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; margin-bottom: 14px; border: 1px solid #dce6e2; border-radius: 50%; background: #fff; color: #176c58; font-size: .8rem; }
+.role-journey-steps h4 { font-size: .9rem; font-weight: 600; margin: 0 0 8px; }
+.role-journey-steps p { color: #526764; font-size: .8rem; line-height: 1.65; margin: 0; }
+.role-journey-footer { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-top: 22px; margin-top: 28px; border-top: 1px solid #dce6e2; }
+@media (max-width: 767px) {
+    .role-journey-surface { padding: 22px 18px; }
+    .role-journey-steps, .role-journey-steps-six { grid-template-columns: 1fr; gap: 20px; }
+    .role-journey-steps li { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 16px; }
+    .role-journey-number { margin-bottom: 0; }
+    .role-journey-footer { align-items: stretch; flex-direction: column; }
+    .role-journey-card { padding: 14px; }
+}
+@media (max-width: 390px) { .role-journey-cards { grid-template-columns: 1fr; } }
+
 .services-section {
   background: #f8f9fb;
 }
