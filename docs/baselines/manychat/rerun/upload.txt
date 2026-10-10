@@ -1,0 +1,3 @@
+UPLOAD login {"status": 302, "redirect": "/accounts/post-login/", "session": true}
+UPLOAD deck {"bytes": 175622, "sha256": "be7a7171bbc84b9895a45adfbc41f2533f3d23b3a4a561c82a8d9de6b94f3ef1", "matches_key": true}
+UPLOAD response {"status": 201, "at": "2026-10-10T22:41:00+00:00", "body": {"status": "ingested", "document_id": 3131, "filename": "manychat_series_a_audit_deck.pptx", "source_entity": "ManyChat", "polling_url": "/api/v1/zelda/documents/3131/status/", "memo_url": "/api/v1/zelda/documents/3131/memo/", "verification_url": "/api/v1/zelda/documents/3131/truth-delta/", "message": "Document queued for both Zelda Intelligence and Truth Delta verification."}}
