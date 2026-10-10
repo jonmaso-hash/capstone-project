@@ -1,0 +1,261 @@
+{
+ "document": {
+  "id": 3130,
+  "filename": "ben_jerrys_public_pitch_deck_test.pptx",
+  "source_entity": "Ben & Jerry's",
+  "document_type": "pitch_deck",
+  "status": "error",
+  "verification_state": "no_claims",
+  "uploaded_by": 308,
+  "company_names_for_attribution": [
+   "Ben & Jerry's"
+  ]
+ },
+ "chunks": [
+  {
+   "page": 1,
+   "index": 0,
+   "sha256": "13ae2badd3eb923c4eaced8a31f6b5745b8143054db6774ac4eb704a7a05955a",
+   "chars": 327
+  },
+  {
+   "page": 2,
+   "index": 1,
+   "sha256": "fc0b1fc689fa2d711880674854f8a3210d884e9e08c122a26f22c75d470bd0e0",
+   "chars": 732
+  },
+  {
+   "page": 3,
+   "index": 2,
+   "sha256": "b91bf85d2e929414c4d041e57037495208de37dad72803f8386b2ba197833483",
+   "chars": 667
+  },
+  {
+   "page": 4,
+   "index": 3,
+   "sha256": "c4832d4ea1544826610195bb698aed0b4627ae1a6fec74502491ccff5db69771",
+   "chars": 722
+  },
+  {
+   "page": 5,
+   "index": 4,
+   "sha256": "00b7a9a49a339f09cc9eeb4878b2f9e49b12f698128ea3cd1267024ef6c45786",
+   "chars": 601
+  },
+  {
+   "page": 6,
+   "index": 5,
+   "sha256": "e093a8c793fead5b456362e904129d244f977af532d422b3d24b97d9b100b992",
+   "chars": 704
+  },
+  {
+   "page": 7,
+   "index": 6,
+   "sha256": "a1a30838596d5668405d6f788b7a03a7ef8898441d6753523ea946d30609f548",
+   "chars": 625
+  },
+  {
+   "page": 8,
+   "index": 7,
+   "sha256": "bde368a09700b2a5fd3ca9ff79d5f1dc607e3e7005a9bb66c2b79625e017fa2a",
+   "chars": 843
+  },
+  {
+   "page": 9,
+   "index": 8,
+   "sha256": "24337efc39c7a0b77ef50e2f9b77f3ea0d0cde97b32ab49c6cd7b9f82433cbe0",
+   "chars": 779
+  },
+  {
+   "page": 10,
+   "index": 9,
+   "sha256": "6d43b0b351eddf5ce467b56f7f7d666f77a83c4bad3125d33b1a415ad09523b5",
+   "chars": 1132
+  },
+  {
+   "page": 11,
+   "index": 10,
+   "sha256": "c025bd048573abad3c2304d8a789493d5aad2780f3c1bb0f3efa01ed8f8c9222",
+   "chars": 846
+  }
+ ],
+ "insights": [
+  {
+   "category": "Problem",
+   "text": "Zelda challenge",
+   "page": 8,
+   "source_sentence": "Zelda challenge",
+   "replayed_gate": {
+    "mapped_category": null
+   }
+  },
+  {
+   "category": "Market",
+   "text": "• Test whether Truth Delta separates brand facts, parent-company facts, mission claims, market context, and unsupported deck claims",
+   "page": 2,
+   "source_sentence": "• Test whether Truth Delta separates brand facts, parent-company facts, mission claims, market context, and unsupported deck claims",
+   "replayed_gate": {
+    "mapped_category": "market_size",
+    "admissible": true,
+    "ownership": [
+     "implied",
+     ""
+    ],
+    "period": {
+     "kind": "",
+     "fiscal_year": null,
+     "period_end": null,
+     "phrase": ""
+    },
+    "currency_amount": [
+     null,
+     ""
+    ]
+   }
+  },
+  {
+   "category": "Revenue",
+   "text": "These are parent/ice-cream-unit figures, not standalone Ben & Jerry’s revenue",
+   "page": 6,
+   "source_sentence": "These are parent/ice-cream-unit figures, not standalone Ben & Jerry’s revenue",
+   "replayed_gate": {
+    "mapped_category": "revenue",
+    "admissible": true,
+    "ownership": [
+     "named",
+     ""
+    ],
+    "period": {
+     "kind": "",
+     "fiscal_year": null,
+     "period_end": null,
+     "phrase": ""
+    },
+    "currency_amount": [
+     null,
+     ""
+    ]
+   }
+  },
+  {
+   "category": "Team",
+   "text": "• The brand is unusually transparent about values, making mission a feature of the product experience",
+   "page": 4,
+   "source_sentence": "• The brand is unusually transparent about values, making mission a feature of the product experience",
+   "replayed_gate": {
+    "mapped_category": "employees",
+    "admissible": false,
+    "ownership": [
+     "implied",
+     ""
+    ],
+    "period": {
+     "kind": "",
+     "fiscal_year": null,
+     "period_end": null,
+     "phrase": ""
+    }
+   }
+  },
+  {
+   "category": "Product",
+   "text": "Ben & Jerry’s publicly frames the business around “linked prosperity,” where product quality, sustainable growth, and social mission should thrive together",
+   "page": 3,
+   "source_sentence": "Ben & Jerry’s publicly frames the business around “linked prosperity,” where product quality, sustainable growth, and social mission should thrive together",
+   "replayed_gate": {
+    "mapped_category": null
+   }
+  },
+  {
+   "category": "Traction",
+   "text": "Ben & Jerry’s publicly frames the business around “linked prosperity,” where product quality, sustainable growth, and social mission should thrive together",
+   "page": 3,
+   "source_sentence": "Ben & Jerry’s publicly frames the business around “linked prosperity,” where product quality, sustainable growth, and social mission should thrive together",
+   "replayed_gate": {
+    "mapped_category": "customers",
+    "admissible": false,
+    "ownership": [
+     "named",
+     ""
+    ],
+    "period": {
+     "kind": "",
+     "fiscal_year": null,
+     "period_end": null,
+     "phrase": ""
+    }
+   }
+  },
+  {
+   "category": "Risk",
+   "text": "• Create extraction targets across history, ownership, operating model, distribution, values, risks, and strategic narrative",
+   "page": 2,
+   "source_sentence": "• Create extraction targets across history, ownership, operating model, distribution, values, risks, and strategic narrative",
+   "replayed_gate": {
+    "mapped_category": null
+   }
+  }
+ ],
+ "claims": [],
+ "observations": [],
+ "truth_delta_reports": [],
+ "entity_reports": [
+  {
+   "id": 31,
+   "status": "complete",
+   "findings": [
+    {
+     "check": "website",
+     "claim": "Website: not on the profile",
+     "interlink_source": "Startup profile",
+     "evidence_source": "Company website",
+     "evidence": "The profile has no website to check.",
+     "result": "not_applicable",
+     "source_url": "",
+     "checked_at": "2026-10-10T22:22:24.348130+00:00"
+    },
+    {
+     "check": "company_name",
+     "claim": "Company name: Ben & Jerry's",
+     "interlink_source": "Startup profile",
+     "evidence_source": "Company website",
+     "evidence": "The profile has no website to check.",
+     "result": "not_applicable",
+     "source_url": "",
+     "checked_at": "2026-10-10T22:22:24.348130+00:00"
+    },
+    {
+     "check": "person_name",
+     "claim": "Founder: Rerun Owner",
+     "interlink_source": "Startup profile",
+     "evidence_source": "Company website",
+     "evidence": "The profile has no website to check.",
+     "result": "not_applicable",
+     "source_url": "",
+     "checked_at": "2026-10-10T22:22:24.348130+00:00"
+    },
+    {
+     "check": "founding_year",
+     "claim": "Founding year: not on the profile",
+     "interlink_source": "Startup profile",
+     "evidence_source": "Domain registration",
+     "evidence": "The profile has no website to check.",
+     "result": "not_applicable",
+     "source_url": "",
+     "checked_at": "2026-10-10T22:22:24.348130+00:00"
+    },
+    {
+     "check": "sec_filer",
+     "claim": "Company name: Ben & Jerry's",
+     "interlink_source": "Startup profile",
+     "evidence_source": "SEC EDGAR",
+     "evidence": "No SEC filer with this name was found on EDGAR. Most private companies never file with the SEC.",
+     "result": "not_found",
+     "source_url": "",
+     "checked_at": "2026-10-10T22:22:24.348130+00:00"
+    }
+   ]
+  }
+ ],
+ "memo_and_summary_trap_hits": {}
+}
