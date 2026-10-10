@@ -1,0 +1,52 @@
+{
+ "_recorded": {
+  "full_payload_sha256": "d7aeceae21e6649e163d195729849349b27d909ab1a6eb4630a7c0c227acd890",
+  "note": "Verbatim fact rows from the full payload; only the rows these tests need are kept.",
+  "retrieved": "2026-10-10",
+  "source": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000320187.json"
+ },
+ "cik": 320187,
+ "entityName": "NIKE, Inc.",
+ "facts": {
+  "us-gaap": {
+   "RevenueFromContractWithCustomerExcludingAssessedTax": {
+    "units": {
+     "USD": [
+      {
+       "accn": "0000320187-25-000047",
+       "end": "2025-05-31",
+       "filed": "2025-07-17",
+       "form": "10-K",
+       "fp": "FY",
+       "fy": 2025,
+       "start": "2024-06-01",
+       "val": 46309000000
+      },
+      {
+       "accn": "0000320187-26-000088",
+       "end": "2025-05-31",
+       "filed": "2026-07-15",
+       "form": "10-K",
+       "fp": "FY",
+       "frame": "CY2024",
+       "fy": 2026,
+       "start": "2024-06-01",
+       "val": 46309000000
+      },
+      {
+       "accn": "0000320187-26-000088",
+       "end": "2026-05-31",
+       "filed": "2026-07-15",
+       "form": "10-K",
+       "fp": "FY",
+       "frame": "CY2025",
+       "fy": 2026,
+       "start": "2025-06-01",
+       "val": 46398000000
+      }
+     ]
+    }
+   }
+  }
+ }
+}

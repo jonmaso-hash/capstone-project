@@ -55,6 +55,11 @@ def fake_sec(revenue, period='FY2026 10-K (period ending 2026-05-31)'):
         def extract_time_period(self, data):
             return period
 
+        def extract_period(self, data):
+            # The structured form of the default period text: Nike's FY2026.
+            from datetime import date
+            return {'kind': 'annual', 'fiscal_year': 2026, 'period_end': date(2026, 5, 31)}
+
         def extract_revenue(self, data):
             return (revenue, 'USD')  # Explicit currency in this verdict control.
 
@@ -105,6 +110,9 @@ class _Verify(TestCase):
                 rows = real(engine, claims, observed)
                 for row in rows:
                     row['claim_period'] = row.get('observed_time_period')
+                    # td.5 reads structured periods: the claim states the same one.
+                    for part in ('period_kind', 'fiscal_year', 'period_end'):
+                        row[f'claim_{part}'] = row.get(f'observed_{part}')
                 return rows
             patches.append(mock.patch.object(TruthDeltaEngine, '_build_comparison', with_period))
         for patch in patches:
@@ -236,7 +244,7 @@ class TheModelCannotShapeTheTableTests(_Verify):
         self.claim('revenue', '$52.8 billion', 52.8e9)
         self.verify(model_says([]), revenue=46.398e9)
         self.assertEqual(self.report.engine_version, TRUTH_DELTA_SEMANTICS)
-        self.assertEqual(TRUTH_DELTA_SEMANTICS, 'td.4')  # Currency guard retains R-003/R-003b.
+        self.assertEqual(TRUTH_DELTA_SEMANTICS, 'td.5')  # Structured periods retain R-003/R-003b.
 
     def test_the_models_score_is_not_stored(self):
         # R-003b: the score is Zelda's too (zelda_api/tests_score_follows_verdict.py).

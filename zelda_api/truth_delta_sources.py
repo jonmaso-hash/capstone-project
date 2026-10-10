@@ -12,6 +12,7 @@ here on purpose.
 import logging
 import re
 import requests
+from datetime import date
 from typing import Dict, List, Optional, Tuple
 from django.conf import settings
 from .source_capabilities import capability_for, may_store, origin_for
@@ -19,6 +20,15 @@ from .truth_delta_models import ObservedDatapoint, ExternalDataSource
 from .financial_metrics import currency_code
 
 logger = logging.getLogger(__name__)
+
+
+def _full_year(fact):
+    """A fact covering one fiscal year: 52/53-week years run 357-371 days."""
+    try:
+        days = (date.fromisoformat(fact['end']) - date.fromisoformat(fact['start'])).days
+    except (KeyError, TypeError, ValueError):
+        return False
+    return 350 <= days <= 380
 
 
 class DataSourceIntegration:
@@ -384,7 +394,11 @@ class SECFilingsIntegration(DataSourceIntegration):
             if not concept:
                 continue
             usd_facts = concept.get('units', {}).get('USD', [])
-            all_annual.extend(f for f in usd_facts if f.get('form') == '10-K' and f.get('val') is not None)
+            # A 10-K can also tag a 90-day Q4 that ends on the same day as the
+            # year (Apple FY2020). Only a full fiscal year may be chosen, never
+            # whichever row happens to be listed first.
+            all_annual.extend(f for f in usd_facts if f.get('form') == '10-K' and f.get('val') is not None
+                              and _full_year(f))
 
         if not all_annual:
             return None
@@ -421,6 +435,29 @@ class SECFilingsIntegration(DataSourceIntegration):
 
     def extract_growth_rate(self, data: Dict) -> Optional[float]:
         return None
+
+    def extract_period(self, data: Dict) -> Optional[Dict]:
+        """
+        The revenue figure's structured period: an annual period ending on
+        the fact's own end date, labelled with the FILER'S fiscal year.
+
+        `fy` on a fact is the fiscal year of the filing that carried it, so a
+        prior year restated in a later 10-K carries the later year (Nike's
+        FY2025 also appears with fy 2026). The original filing's label is the
+        lowest fy among 10-K rows for exactly that period.
+        """
+        fact = self._latest_annual_fact(data, self.REVENUE_TAGS)
+        if not fact:
+            return None
+        facts = (data or {}).get('facts', {}).get('us-gaap', {})
+        labels = [
+            row.get('fy') for tag in self.REVENUE_TAGS
+            for row in facts.get(tag, {}).get('units', {}).get('USD', [])
+            if row.get('form') == '10-K' and row.get('start') == fact.get('start')
+            and row.get('end') == fact.get('end') and isinstance(row.get('fy'), int)
+        ]
+        return {'kind': 'annual', 'fiscal_year': min(labels) if labels else None,
+                'period_end': date.fromisoformat(fact['end'])}
 
     def extract_time_period(self, data: Dict) -> Optional[str]:
         fact = self._latest_annual_fact(data, self.REVENUE_TAGS)
@@ -598,6 +635,9 @@ class DataSourceManager:
 
             origin = origin_for(source_type)
 
+            read_period = getattr(integration, 'extract_period', None)
+            structured = (read_period(data) if callable(read_period) else None) or {}
+
             def store(category, value_numeric, observed_value, unit, credibility):
                 # Stored for every declared role but UNAVAILABLE, stamped with
                 # that role: storing is not authority. Only a can_establish row
@@ -612,6 +652,11 @@ class DataSourceManager:
                     observed_value=observed_value, observed_value_numeric=value_numeric, unit=unit,
                     currency=currency,
                     time_period=time_period, source=external_source, source_credibility=credibility,
+                    # The structured period describes the revenue fact only; a
+                    # headcount from the same payload is not an annual figure.
+                    period_kind=structured.get('kind', '') if category == 'revenue' else '',
+                    period_fiscal_year=structured.get('fiscal_year') if category == 'revenue' else None,
+                    period_end=structured.get('period_end') if category == 'revenue' else None,
                     extraction_method='api', role=capability_for(source_type, category),
                     evidence_origin=origin,
                 ))

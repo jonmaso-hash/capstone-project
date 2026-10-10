@@ -199,6 +199,8 @@ NO_DATA_PHRASES = {
     'currency_unknown': 'the monetary currencies for {cats} are not explicitly known on both sides',
     'currency_mismatch': 'the claim and external figure for {cats} use different currencies and were not compared',
     'period_unknown': 'an external figure was found for {cats}, but its period could not be confirmed as comparable',
+    'period_mismatch': 'the claim and external figure for {cats} describe different periods and were not compared',
+    'period_unresolved': 'an external figure was found for {cats}, but the exact period could not be confirmed on both sides',
     'corroboration_only': 'only lower-authority (LinkedIn-derived) data was found for {cats}',
     'source_unavailable': 'the public source could not be reached to check {cats}',
 }
