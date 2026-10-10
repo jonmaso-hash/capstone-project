@@ -201,7 +201,7 @@ class DocumentStatusView(APIView):
             
             # Add error if failed
             if doc.status == 'error':
-                response['error'] = doc.error_message
+                response['error'] = "Zelda couldn't complete this analysis. Please try again later."
             
             # Add memo link if complete
             if doc.status == 'analyzed' and hasattr(doc, 'memo'):

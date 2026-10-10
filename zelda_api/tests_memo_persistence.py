@@ -142,3 +142,66 @@ class MemoPersistsThroughTheRealWriterTests(TestCase):
         result = self.generate({'error': 'Claude unavailable'})
         self.assertIn('error', result)
         self.assertFalse(IntelligenceMemo.objects.filter(document=self.doc).exists())
+
+    def test_list_sections_survive_the_writer_and_automatic_archive(self):
+        """R-001: a billed response must survive the post_save archive signal."""
+        from django.db import models
+        from matchmaking.models import Application, DataRoomReportLink
+        from matchmaking.tests import _mock_embedding_generation
+        _mock_embedding_generation(self)
+        founder = Application.objects.create(
+            user=self.user, company_name=self.doc.source_entity, founder_name='F',
+            email='memo@test.invalid', description='test', sector='SaaS', stage='Seed',
+        )
+        sections = {key: f'{key} text' for key in MEMO_JSON_KEYS}
+        sections['evidence_level'] = 'PARTLY_EVIDENCED'
+        sections['questions_for_management'] = ['What is retention? [1]', 'Who owns café IP? [2]']
+        sections['supported_points'] = ['A cited point [1]']
+        sections['open_concerns'] = {'gap': 'Revenue period not disclosed [2]'}
+
+        result = self.generate(sections)
+
+        self.assertNotIn('error', result, result.get('error'))
+        memo = IntelligenceMemo.objects.get(document=self.doc)
+        self.assertEqual(memo.questions_for_management, str(sections['questions_for_management']))
+        self.assertEqual(memo.supported_points, str(sections['supported_points']))
+        self.assertEqual(memo.open_concerns, str(sections['open_concerns']))
+        link = DataRoomReportLink.objects.get(founder=founder, report_key='memo')
+        expected = sum(len(getattr(memo, field.name).encode('utf-8'))
+                       for field in memo._meta.fields if isinstance(field, models.TextField))
+        self.assertEqual(link.size_bytes, expected)
+        self.assertNotIn('error', self.generate(sections))
+        self.assertEqual(DataRoomReportLink.objects.filter(founder=founder, report_key='memo').count(), 1)
+
+    def test_list_section_memo_task_reaches_analyzed(self):
+        from .tasks import generate_intelligence_memo, intelligence_pipeline
+        with mock.patch.object(intelligence_pipeline, '_call_claude_for_memo', return_value={
+            'executive_summary': 'A supported summary [1]',
+            'questions_for_management': ['What remains unknown? [1]'],
+        }), mock.patch('zelda_api.tasks.notify_document_processed.delay') as notify:
+            result = generate_intelligence_memo(self.doc.pk)
+        self.assertEqual(result['status'], 'success', result)
+        self.doc.refresh_from_db()
+        self.assertEqual(self.doc.status, 'analyzed')
+        self.assertTrue(IntelligenceMemo.objects.filter(document=self.doc).exists())
+        notify.assert_called_once_with(self.doc.pk)
+
+    def test_archive_failure_does_not_roll_back_generated_memo(self):
+        with mock.patch('matchmaking.data_room_quota.try_save_report', side_effect=RuntimeError('archive unavailable')), \
+             self.assertLogs('zelda_api.signals', level='ERROR'):
+            result = self.generate({'executive_summary': 'Supported summary [1]'})
+        self.assertNotIn('error', result)
+        self.assertEqual(IntelligenceMemo.objects.get(document=self.doc).executive_summary, 'Supported summary [1]')
+
+    def test_failed_status_keeps_internal_exception_out_of_the_response(self):
+        self.doc.status = 'error'
+        self.doc.error_message = "Memo error: 'list' object has no attribute 'encode'"
+        self.doc.save(update_fields=['status', 'error_message'])
+        self.client.force_login(self.user)
+        response = self.client.get(f'/api/v1/zelda/documents/{self.doc.pk}/status/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['status'], 'error')
+        self.assertIn("couldn't complete", response.json()['error'])
+        self.assertNotIn('encode', response.content.decode())
+        self.doc.refresh_from_db()
+        self.assertIn('encode', self.doc.error_message)

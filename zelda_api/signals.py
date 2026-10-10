@@ -51,12 +51,21 @@ def handle_document_error(sender, instance, created, update_fields, **kwargs):
 
 def _archive_generated_report(document, key, size_bytes):
     from matchmaking.data_room_quota import try_save_report
-    if document.is_product_input or document.analysis_orders.exists() or document.valuation_orders.exists():
-        return  # Paid clones are archived together with their order after fulfillment.
     try:
+        if document.is_product_input or document.analysis_orders.exists() or document.valuation_orders.exists():
+            return  # Paid clones are archived together with their order after fulfillment.
         try_save_report(document.uploaded_by, 'document', document.pk, key, size_bytes)
     except Exception:
         logger.exception('Could not save Zelda report %s for document %s in Data Room', key, document.pk)
+
+
+def _report_text_size(instance):
+    # post_save still sees the original Python attributes: TextField writes
+    # lists/dicts as strings without replacing those attributes in memory.
+    # Use the field's database conversion so archive sizing measures the text
+    # actually stored, including UTF-8 bytes, without breaking the report save.
+    return sum(len((field.get_prep_value(getattr(instance, field.name)) or '').encode('utf-8'))
+               for field in instance._meta.fields if isinstance(field, models.TextField))
 
 
 @receiver(post_save, sender=IntelligenceMemo)
@@ -64,23 +73,19 @@ def archive_generated_memo(sender, instance, **kwargs):
     document = instance.document
     if document.document_type != 'pitch_deck' or document.is_external_subject:
         return
-    size = sum(len((getattr(instance, field.name) or '').encode('utf-8'))
-               for field in instance._meta.fields if isinstance(field, models.TextField))
-    _archive_generated_report(document, 'memo', size)
+    _archive_generated_report(document, 'memo', _report_text_size(instance))
 
 
 @receiver(post_save, sender=TruthDeltaReport)
 def archive_generated_evidence(sender, instance, **kwargs):
     import json
-    size = len((instance.summary or '').encode('utf-8')) + len(json.dumps(instance.details).encode('utf-8'))
+    size = _report_text_size(instance) + len(json.dumps(instance.details).encode('utf-8'))
     _archive_generated_report(instance.document, 'truth_delta', size)
 
 
 @receiver(post_save, sender=BusinessValuationReport)
 def archive_generated_valuation(sender, instance, **kwargs):
-    fields = ('business_overview', 'financial_summary', 'risk_report', 'valuation_summary')
-    size = sum(len((getattr(instance, field, '') or '').encode('utf-8')) for field in fields)
-    _archive_generated_report(instance.document, 'valuation', size)
+    _archive_generated_report(instance.document, 'valuation', _report_text_size(instance))
 
 
 def ready():
