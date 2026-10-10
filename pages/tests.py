@@ -217,15 +217,16 @@ class HomepagePositioningCopyTests(TestCase):
     def test_four_roles_use_discovery_and_relationship_language(self):
         response = self._home()
         for phrase in (
-            'Build investor relationships',
-            'Organize company discovery',
-            'Present a business clearly',
-            'Review acquisition opportunities',
+            'Select your role',
+            'Publish your pitch and connect with investors.',
+            'Discover companies and manage your pipeline.',
+            'Present your business and connect with buyers.',
+            'Explore businesses and connect with sellers.',
         ):
             with self.subTest(phrase=phrase):
                 self.assertContains(response, phrase)
-        self.assertContains(response, 'Alignment is a discovery signal')
-        self.assertContains(response, 'not an endorsement')
+        self.assertContains(response, 'Alignment reflects similarity between stated criteria.')
+        self.assertContains(response, 'It is not investment advice')
 
     def test_featured_placement_is_not_presented_as_alignment(self):
         # The section only renders when staff-featured profiles exist, so pin
