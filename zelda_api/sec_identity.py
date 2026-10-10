@@ -193,7 +193,7 @@ def _single_company(name):
     return (cik.zfill(10), conformed_name) if cik and conformed_name else None
 
 
-def find_sec_filer(company_name):
+def find_sec_filer(company_name, selected_cik=None):
     """
     The one EDGAR registrant that is this company, or why there isn't one.
 
@@ -212,10 +212,18 @@ def find_sec_filer(company_name):
     filed only a Form D is its own registrant, and Entity Integrity's Form D
     pathway depends on finding it. Whether that registrant can support a
     revenue figure is a separate question the identity answers separately.
-    """
-    from .sec_company_identity import AMBIGUOUS, FOUND, resolve_company_identity
 
-    identity = resolve_company_identity(company_name)
+    `selected_cik` is a registrant the user already chose; it is used as the
+    identity and the name is never searched (see resolve_selected_identity).
+    """
+    from .sec_company_identity import (
+        AMBIGUOUS, FOUND, resolve_company_identity, resolve_selected_identity,
+    )
+
+    if selected_cik:
+        identity = resolve_selected_identity(selected_cik)
+    else:
+        identity = resolve_company_identity(company_name)
     if identity.status == FOUND:
         return FilerLookup('found', cik=identity.cik, name=identity.name)
     if identity.status == AMBIGUOUS:
@@ -339,17 +347,18 @@ def parse_form_d(xml_text):
 
 def sec_findings(add, *, company_name, company_claim, person_name, person_claim, claimed_year, founding_claim,
                  capital_claim='Prior capital raised: not on the profile', revenue_claim='Revenue: not on the profile',
-                 revenue_amount=None, revenue_is_annual=False):
+                 revenue_amount=None, revenue_is_annual=False, selected_cik=None):
     """Adds the SEC rows for one business through entity_verification.collect_findings's `add`."""
     from .entity_verification import _company_core, _normalize
     from .entity_verification_models import EntityVerificationReport as R
 
-    if len(_company_core(company_name)) < 3:
+    # A selected CIK is not searched by name, so a short name cannot weaken it.
+    if not selected_cik and len(_company_core(company_name)) < 3:
         add('sec_filer', company_claim, 'SEC EDGAR',
             'The company name is too short to search SEC filings reliably.', R.NOT_APPLICABLE)
         return
     try:
-        filer = find_sec_filer(company_name)
+        filer = find_sec_filer(company_name, selected_cik=selected_cik)
     except SecUnavailable as error:
         add('sec_filer', company_claim, 'SEC EDGAR', str(error), R.COULDNT_CHECK)
         return

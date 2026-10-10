@@ -260,7 +260,8 @@ class SECFilingsIntegration(DataSourceIntegration):
         cik, _reason = self.resolve_with_diagnostics(company_name)
         return cik
 
-    def resolve_with_diagnostics(self, company_name: str) -> Tuple[Optional[str], Optional[str]]:
+    def resolve_with_diagnostics(self, company_name: str,
+                                 selected_cik: str = None) -> Tuple[Optional[str], Optional[str]]:
         """
         Which SEC registrant this company is, and WHY when there isn't one:
         'not_found' | 'ambiguous' | 'timeout' | 'request_error'.
@@ -289,11 +290,18 @@ class SECFilingsIntegration(DataSourceIntegration):
         which cross-references 'not_found' against the corpus's own
         is_real_public_company annotation.
         """
-        from .sec_company_identity import AMBIGUOUS, FOUND, resolve_company_identity
+        from .sec_company_identity import (
+            AMBIGUOUS, FOUND, resolve_company_identity, resolve_selected_identity,
+        )
         from .sec_identity import SecUnavailable
 
         try:
-            identity = resolve_company_identity(company_name)
+            # A user-selected registrant is the identity; searching the name
+            # again would be a second decision (see resolve_selected_identity).
+            if selected_cik:
+                identity = resolve_selected_identity(selected_cik)
+            else:
+                identity = resolve_company_identity(company_name)
         except SecUnavailable as unreachable:
             # An unreachable source is a statement about the attempt, never an
             # absence of a registrant -- and never cached, so the next attempt
@@ -307,7 +315,8 @@ class SECFilingsIntegration(DataSourceIntegration):
         return (None, 'not_found')
 
 
-    def fetch_company_data(self, company_name: str, domain: str = None) -> Dict:
+    def fetch_company_data(self, company_name: str, domain: str = None,
+                           selected_cik: str = None) -> Dict:
         """
         Resolves the company to a CIK, then pulls its full XBRL company
         facts payload (all tagged financial figures it has ever filed).
@@ -320,7 +329,7 @@ class SECFilingsIntegration(DataSourceIntegration):
         """
         self.last_failure_reason = None
 
-        cik, reason = self.resolve_with_diagnostics(company_name)
+        cik, reason = self.resolve_with_diagnostics(company_name, selected_cik=selected_cik)
         if not cik:
             self.last_failure_reason = reason
             return {}
@@ -498,7 +507,7 @@ class DataSourceManager:
 
     @classmethod
     def fetch_company_data(cls, company_name: str, domain: str = None,
-                           diagnostics: dict = None) -> Dict[str, Dict]:
+                           diagnostics: dict = None, selected_cik: str = None) -> Dict[str, Dict]:
         """
         Fetch company data from all available sources. Returns {source_type: data}.
 
@@ -512,7 +521,13 @@ class DataSourceManager:
         for integration in cls.get_all_active():
             logger.info(f"Fetching {company_name} from {integration.source_name}")
             try:
-                data = integration.fetch_company_data(company_name, domain)
+                if selected_cik and integration.source_type == 'sec':
+                    # Only SEC speaks to registrant identity. The argument is
+                    # passed only when present, so integrations and doubles
+                    # without it behave exactly as before.
+                    data = integration.fetch_company_data(company_name, domain, selected_cik=selected_cik)
+                else:
+                    data = integration.fetch_company_data(company_name, domain)
                 if data:
                     results[integration.source_type] = data
                 elif diagnostics is not None and integration.last_failure_reason:
@@ -534,7 +549,10 @@ class DataSourceManager:
         Returns the list of created ObservedDatapoint objects.
         """
         created_points = []
-        all_data = cls.fetch_company_data(company_name, domain, diagnostics=diagnostics)
+        all_data = cls.fetch_company_data(
+            company_name, domain, diagnostics=diagnostics,
+            selected_cik=getattr(document, 'external_cik', '') or None,
+        )
 
         if not all_data:
             logger.info(f"No external data found for {company_name}")

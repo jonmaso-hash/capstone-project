@@ -187,6 +187,14 @@ def resolve_from_candidates(company_name, records, today=None):
                 candidate_ciks=tuple(str(r.get('cik', '')).zfill(10) for r, _ in ranked),
             )
 
+    return _identity_from_record(
+        best, matched_on, today,
+        candidate_ciks=tuple(str(r.get('cik', '')).zfill(10) for r, _ in ranked),
+    )
+
+
+def _identity_from_record(best, matched_on, today, candidate_ciks=()):
+    """What one chosen registrant is and supports, however it was chosen."""
     annual = _newest(best, ANNUAL_FORMS)
     newest_periodic = _newest(best, PERIODIC_FORMS)
     deregistered = _newest(best, DEREGISTRATION_FORMS) is not None
@@ -209,8 +217,54 @@ def resolve_from_candidates(company_name, records, today=None):
         files_periodically=bool(newest_periodic),
         is_stale=stale,
         annual_filing_date=annual,
-        candidate_ciks=tuple(str(r.get('cik', '')).zfill(10) for r, _ in ranked),
+        candidate_ciks=tuple(candidate_ciks),
     )
+
+
+def identity_from_selected_record(cik, record, today=None):
+    """
+    The identity of a registrant the user chose explicitly, from its own record.
+
+    A selection is already an identity decision: the user picked one SEC
+    issuer from the SEC's own index, by CIK. Searching the name again could
+    only re-decide it -- return ambiguous for a registrant the user named
+    exactly, or a different registrant that shares the name -- so no name
+    matching happens here. Filing history still decides what the registrant
+    can support, through the same helper the name resolver uses.
+
+    A record that is not this CIK's is a malformed answer about the attempt,
+    never evidence about the company.
+    """
+    from . import sec_identity
+
+    wanted = str(cik or '').strip()
+    if not wanted.isdigit() or not 0 < int(wanted) < 10**10:
+        raise ValueError(f'Not an SEC CIK: {cik!r}')
+    wanted = wanted.zfill(10)
+    if not isinstance(record, dict) or str(record.get('cik', '')).zfill(10) != wanted:
+        raise sec_identity.SecUnavailable(sec_identity.UNREACHABLE)
+    return _identity_from_record(record, 'selected', today or date.today(), candidate_ciks=(wanted,))
+
+
+def resolve_selected_identity(cik):
+    """
+    The identity for a user-selected CIK, without consulting the name.
+
+    Raises sec_identity.SecUnavailable when SEC cannot return that CIK's
+    record. Callers must report that as an unreachable source and must NOT
+    fall back to a name search: a fallback is a second identity decision.
+    """
+    from django.core.cache import cache
+
+    from . import sec_identity
+
+    key = f'sec_selected_identity_v1:{str(cik).strip().zfill(10)}'
+    cached = cache.get(key)
+    if cached is not None:
+        return cached
+    identity = identity_from_selected_record(cik, sec_identity.company_record(cik))
+    cache.set(key, identity, 60 * 60 * 6)
+    return identity
 
 
 # --------------------------------------------------------------------------
