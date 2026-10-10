@@ -86,7 +86,7 @@ class _GroundingCast(TestCase):
         )
         return ObservedDatapoint.objects.create(
             document=self.document, category=category, observed_value=value,
-            observed_value_numeric=numeric, source=source,
+            observed_value_numeric=numeric, source=source, currency='USD',
         )
 
 
@@ -156,10 +156,12 @@ class EngineDoesNotPromoteProseToEvidenceTests(_GroundingCast):
         from .truth_delta_engine import TruthDeltaEngine
         ClaimedDatapoint.objects.create(
             document=self.document, category='arr', claimed_value='$4M ARR', claimed_value_numeric=4000000.0,
+            currency='USD',
         )
         ClaimedDatapoint.objects.create(
             document=self.document, category='funding_raised', claimed_value='$2M seed',
             claimed_value_numeric=2000000.0,
+            currency='USD',
         )
         engine = TruthDeltaEngine()
         with mock.patch.object(engine, '_call_claude_for_verification', return_value=claude_result), \

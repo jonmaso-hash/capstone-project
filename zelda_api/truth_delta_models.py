@@ -8,6 +8,7 @@ from django.db import models
 from django.utils import timezone
 from django.conf import settings
 from .vector_models import DocumentSource
+from .financial_metrics import MONETARY_CATEGORIES, currency_comparison_reason
 
 
 class ExternalDataSource(models.Model):
@@ -80,6 +81,7 @@ class ClaimedDatapoint(models.Model):
     claimed_value = models.CharField(max_length=255, help_text="E.g., '500', '$1M', '200%'")
     claimed_value_numeric = models.FloatField(null=True, blank=True, help_text="Numeric value for comparison")
     unit = models.CharField(max_length=50, blank=True, help_text="E.g., 'customers', '$', '%'")
+    currency = models.CharField(max_length=3, blank=True, help_text="Explicit monetary currency code; blank means unknown, including a bare $.")
     time_period = models.CharField(max_length=100, blank=True, help_text="E.g., 'YoY', 'Q3 2024'")
     source_chunk = models.CharField(max_length=255, blank=True, help_text="Which slide/section in deck")
     # Whose figure this is (zelda_api/claim_attribution.py). Both values are
@@ -123,6 +125,7 @@ class ObservedDatapoint(models.Model):
     observed_value = models.CharField(max_length=255)
     observed_value_numeric = models.FloatField(null=True, blank=True)
     unit = models.CharField(max_length=50, blank=True)
+    currency = models.CharField(max_length=3, blank=True, help_text="Currency explicitly supplied by this observation's source; blank means unknown.")
     time_period = models.CharField(max_length=100, blank=True)
     
     # Source information
@@ -225,7 +228,9 @@ class ObservedDatapoint(models.Model):
 #            score and 'unknown' risk when nothing is scoreable. td.1 and td.2
 #            scores were chosen by the model.
 UNKNOWN_SEMANTICS = 'unknown'
-TRUTH_DELTA_SEMANTICS = 'td.3'
+#   td.4     Monetary comparisons require identical, explicitly known
+#            currencies. No guessed USD, FX conversion or cross-currency gap.
+TRUTH_DELTA_SEMANTICS = 'td.4'
 
 
 class TruthDeltaReport(models.Model):
@@ -337,8 +342,21 @@ class TruthDeltaReport(models.Model):
             # state, but it is not nothing either -- say so, rather than
             # reporting "no external evidence" when some was found.
             if row.get('corroboration'):
+                comparisons = [r.get('comparison_reason') for r in row['corroboration']]
+                if comparisons and all(comparisons):
+                    reason = 'currency_unknown' if 'currency_unknown' in comparisons else 'currency_mismatch'
+                    return 'no_data', reason, tolerance
                 return 'no_data', 'corroboration_only', tolerance
             return 'no_data', self._absence_reason(), tolerance
+
+        # Historical stamped reports keep the rules they were recorded under.
+        # New comparison rows always carry these keys, even for unknown codes;
+        # they cannot bypass the gate if a writer forgets the semantics stamp.
+        if (self.engine_version not in ('unknown', 'td.1', 'td.2', 'td.3')
+                or 'claim_currency' in row or 'observed_currency' in row):
+            reason = currency_comparison_reason(category, row.get('claim_currency'), row.get('observed_currency'))
+            if reason:
+                return 'no_data', reason, tolerance
 
         within = abs(claimed - observed) / abs(observed) <= tolerance
         if within:
@@ -395,12 +413,15 @@ class TruthDeltaReport(models.Model):
     def grounding_reasons(self):
         """{category: why no comparison could be made}, only where none could."""
         reasons = {}
+        if not self._comparison_rows() and self.engine_version not in ('unknown', 'td.1', 'td.2', 'td.3'):
+            return {category: 'currency_unknown' for category in self.grounded_categories()
+                    if category in MONETARY_CATEGORIES}
         for category, rows in self.grounding_chain().items():
             if any(r['state'] != 'no_data' for r in rows):
                 continue
             # The most specific reason present, so "we had evidence but could
             # not compare the periods" never reads as "we found nothing".
-            for preferred in ('period_unknown', 'extraction_insufficient',
+            for preferred in ('currency_unknown', 'currency_mismatch', 'period_unknown', 'extraction_insufficient',
                               'ambiguous_pairing', 'no_comparable_claim',
                               'corroboration_only',
                               'source_unavailable', 'no_external_evidence'):
@@ -478,6 +499,10 @@ class TruthDeltaReport(models.Model):
             return states
 
         grounded = self.grounded_categories()
+        if self.engine_version not in ('unknown', 'td.1', 'td.2', 'td.3'):
+            # The historical existence-only fallback has no monetary pairing
+            # or currencies to establish agreement under current rules.
+            grounded -= MONETARY_CATEGORIES
         per_claim = self.details.get('per_claim', [])
         if per_claim:
             return {
@@ -508,10 +533,17 @@ class TruthDeltaReport(models.Model):
         grounded = self.grounded_categories()
         states = self.category_states()
         reasons = self.grounding_reasons()
+        pairings = {row.get('claim_id'): row for row in self._comparison_rows() if row.get('claim_id')}
+        def verdict(row):
+            pairing = pairings.get(row.get('claim_id'))
+            if pairing is not None:
+                state, reason, _ = self._row_state(pairing)
+                return {'state': state, 'reason': reason or ''}
+            return {'state': states.get(row.get('category'), 'no_data'),
+                    'reason': reasons.get(row.get('category'), '')}
         return [
             {**row, 'grounded': row.get('category') in grounded,
-             'state': states.get(row.get('category'), 'no_data'),
-             'reason': reasons.get(row.get('category'), '')}
+             **verdict(row)}
             for row in self.details.get('per_claim', []) or []
         ]
 
@@ -753,3 +785,4 @@ def diff_verification_reports(newer, older):
         if older_states[cat] == 'verified' and newer_states[cat] != 'verified'
     )
     return {'newly_verified': newly_verified, 'lost_verification': lost_verification}
+

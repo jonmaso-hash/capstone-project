@@ -110,6 +110,14 @@ class ClaimExtractionOwnershipTests(TestCase):
         chunk = "Unilever's ice cream unit generated $7.9B in 2024 sales"
         self.assertEqual(self.claims_for("Ben & Jerry's", chunk, 'generated $7.9B in 2024 sales'), [])
 
+    def test_currency_parsing_does_not_admit_the_parents_euro_revenue(self):
+        chunk = "Unilever's ice cream unit generated €7.9bn in 2024 sales"
+        self.assertEqual(self.claims_for("Ben & Jerry's", chunk, 'generated €7.9bn in 2024 sales'), [])
+        control = self.claims_for("Ben & Jerry's", "Ben & Jerry's generated €790M in 2024 sales",
+                                  'generated €790M in 2024 sales')
+        self.assertEqual([(c.claimed_value_numeric, c.currency, c.ownership) for c in control],
+                         [(790_000_000, 'EUR', NAMED)])
+
     def test_named_and_implied_company_figures_are_stored_with_their_ownership(self):
         named = self.claims_for("Ben & Jerry's", "Ben & Jerry's generated $790M in 2024 sales",
                                 'generated $790M in 2024 sales')
@@ -129,3 +137,4 @@ class ClaimExtractionOwnershipTests(TestCase):
         self.assertEqual(self.claims_for('ManyChat', 'Telegram has 100M users', '100M users', 'Traction'), [])
         control = self.claims_for('ManyChat', 'ManyChat has 2,000 customers', '2,000 customers', 'Traction')
         self.assertEqual([(c.category, c.ownership) for c in control], [('customers', NAMED)])
+

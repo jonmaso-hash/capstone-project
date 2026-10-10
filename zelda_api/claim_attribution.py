@@ -142,3 +142,4 @@ def claim_ownership(sentence, names):
     if _COMPANY in masked:
         return NAMED, ''
     return IMPLIED, ''
+

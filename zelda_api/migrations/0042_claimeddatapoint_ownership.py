@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('zelda_api', '0040_hide_misplaced_qibby_upload'),
+        ('zelda_api', '0041_monetary_currency'),
     ]
 
     operations = [
@@ -16,3 +16,4 @@ class Migration(migrations.Migration):
             field=models.CharField(blank=True, choices=[('named', 'Source sentence names the company'), ('implied', "Company's own document; no other owner named")], max_length=10),
         ),
     ]
+

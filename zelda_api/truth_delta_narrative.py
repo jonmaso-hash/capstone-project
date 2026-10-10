@@ -30,15 +30,18 @@ is still one implementation of the grounding rules.
 """
 import logging
 import re
+from .financial_metrics import MONETARY_CATEGORIES, currency_code
 
 logger = logging.getLogger(__name__)
 
-MONEY_CATEGORIES = {'revenue', 'funding_raised'}
+MONEY_CATEGORIES = MONETARY_CATEGORIES
 EXPLANATION_MAX_CHARS = 300
 
 # Zelda's own sentence for each state / reason. Used when the model gave no
 # explanation, or gave one the guard refused.
 REASON_SENTENCES = {
+    'currency_unknown': 'The monetary currency is not explicitly known on both sides, so this claim was not compared.',
+    'currency_mismatch': 'The claim and external figure use different currencies, so this claim was not compared. No currency conversion was applied.',
     'period_unknown': ('An external figure was found, but its period could not be confirmed as '
                        'comparable, so this claim is not verified.'),
     'no_external_evidence': 'No external data was found for this claim.',
@@ -94,26 +97,31 @@ def explanation_consistent(text, state, reason=None):
     return True
 
 
-def format_figure(value, category):
+def format_figure(value, category, currency=None):
     """A stored number as a reader would write it: $46.4 billion, 81,500."""
     if value is None:
         return None
     if category in MONEY_CATEGORIES:
+        # None is the historical formatter contract; new rows pass even a
+        # blank code explicitly, so they cannot acquire a dollar sign.
+        code = currency_code(currency)
+        prefix = '$' if currency is None else {'USD': '$', 'EUR': '€', 'GBP': '£', 'CAD': 'C$', 'AUD': 'A$'}.get(code, '')
+        suffix = '' if currency is None else f' {code}' if code else ' (currency unknown)'
         magnitude = abs(value)
         for size, word in ((1e12, 'trillion'), (1e9, 'billion'), (1e6, 'million')):
             if magnitude >= size:
-                return f"${value / size:,.1f} {word}"
-        return f"${value:,.0f}"
+                return f"{prefix}{value / size:,.1f} {word}{suffix}"
+        return f"{prefix}{value:,.0f}{suffix}"
     return f"{value:,.0f}" if float(value).is_integer() else f"{value:,}"
 
 
 def observed_text(row, reason=None):
     """The evidence a row was compared against, written from the stored row alone."""
-    figure = format_figure(row.get('observed_value_numeric'), row.get('category'))
+    figure = format_figure(row.get('observed_value_numeric'), row.get('category'), row.get('observed_currency'))
     if figure is not None:
         detail = ', '.join(part for part in (row.get('observed_source'), row.get('observed_time_period')) if part)
         return f"{figure} ({detail})" if detail else figure
-    if reason == 'corroboration_only':
+    if reason == 'corroboration_only' or row.get('corroboration'):
         return 'Lower-authority data only'
     if reason == 'source_unavailable':
         return 'Source could not be reached'
@@ -122,7 +130,7 @@ def observed_text(row, reason=None):
 
 def state_sentence(row, state, reason):
     """Zelda's own explanation of a row, from the state alone."""
-    figure = format_figure(row.get('observed_value_numeric'), row.get('category'))
+    figure = format_figure(row.get('observed_value_numeric'), row.get('category'), row.get('observed_currency'))
     where = ', '.join(part for part in (row.get('observed_source'), row.get('observed_time_period')) if part)
     if state == 'verified':
         return f"Matches the {where} figure of {figure}." if figure else 'Matches the external figure.'
@@ -146,8 +154,8 @@ def claim_rows(comparison, states, reasons, explanations=None):
     rows = []
     for row in comparison:
         category = row.get('category')
-        state = states.get(category, 'no_data')
-        reason = reasons.get(category) if state == 'no_data' else None
+        state = row.get('zelda_state', states.get(category, 'no_data'))
+        reason = row.get('zelda_reason', reasons.get(category)) if state == 'no_data' else None
         offered = explanations.get(category)
         if offered and explanation_consistent(offered, state, reason):
             assessment, source = offered.strip(), 'model'
@@ -158,6 +166,7 @@ def claim_rows(comparison, states, reasons, explanations=None):
             assessment, source = state_sentence(row, state, reason), 'zelda'
         rows.append({
             'category': category,
+            'claim_id': row.get('claim_id'),
             'claimed': row.get('claimed_value'),
             'observed': observed_text(row, reason),
             'assessment': assessment,
@@ -179,12 +188,14 @@ def summary(states, reasons, comparison, stats, headlines=()):
 
     first = {}
     for row in comparison:
-        first.setdefault(row.get('category'), row)
+        category = row.get('category')
+        if category not in first or row.get('zelda_state') == states.get(category):
+            first[category] = row
     sentences = [coverage_sentence(stats)]
     for category, state in states.items():
         row = first.get(category, {})
         reason = reasons.get(category)
-        figure = format_figure(row.get('observed_value_numeric'), category)
+        figure = format_figure(row.get('observed_value_numeric'), category, row.get('observed_currency'))
         where = ', '.join(part for part in (row.get('observed_source'), row.get('observed_time_period')) if part)
         label = _label(category).capitalize()
         if state == 'verified':

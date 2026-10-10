@@ -88,15 +88,17 @@ class EachPairEachOutcomeTests(ReconciliationFixture):
         self.assertEqual(row.profile_saved_at, self.app.updated_at)
         self.assertEqual(row.deck_uploaded_at, self.document.created_at)
 
-    def test_prior_raised_differs(self):
+    def test_prior_raised_different_numbers_have_unknown_profile_currency(self):
         self.profile(prior_amount_raised=500_000, raising_amount=3_000_000)
         self.claim('funding_raised', 2_000_000.0)
-        self.assertEqual(self.row('prior_amount_raised').status, DIFFERS)
+        self.assertEqual((self.row('prior_amount_raised').status, self.row('prior_amount_raised').reason),
+                         (NOT_COMPARABLE, 'profile_currency_unknown'))
 
-    def test_prior_raised_consistent(self):
+    def test_prior_raised_equal_numbers_do_not_establish_currency(self):
         self.profile(prior_amount_raised=2_000_000, raising_amount=3_000_000)
         self.claim('funding_raised', 2_000_000.0)
-        self.assertEqual(self.row('prior_amount_raised').status, CONSISTENT)
+        self.assertEqual((self.row('prior_amount_raised').status, self.row('prior_amount_raised').reason),
+                         (NOT_COMPARABLE, 'profile_currency_unknown'))
 
     def test_a_pair_with_no_deck_claim_is_omitted(self):
         self.profile(team_size=12)
@@ -158,7 +160,7 @@ class TheTrapsAreNotComparedTests(ReconciliationFixture):
         """The JoyToys misfiling: a $250K raise filed as funding already raised."""
         self.profile(prior_amount_raised=50_000, raising_amount=250_000)
         self.claim('funding_raised', 250_000.0)
-        self.assertNotComparable('prior_amount_raised', 'deck_claim_may_be_the_raise')
+        self.assertNotComparable('prior_amount_raised', 'profile_currency_unknown')
 
 
 class OneAssociationTests(ReconciliationFixture):
@@ -246,16 +248,17 @@ class RevenueBasisTests(ReconciliationFixture):
     says ARR and the deck has an `arr` claim. Nothing is annualized.
     """
 
-    def test_profile_arr_vs_deck_arr_consistent(self):
+    def test_profile_arr_vs_deck_arr_equal_amounts_need_currency_too(self):
         self.profile(current_revenue=1_200_000, revenue_period='arr')
         self.claim('arr', 1_200_000.0)
-        self.assertEqual(self.row('current_revenue').status, CONSISTENT)
+        self.assertEqual((self.row('current_revenue').status, self.row('current_revenue').reason),
+                         (NOT_COMPARABLE, 'profile_currency_unknown'))
 
-    def test_profile_arr_vs_deck_arr_differs(self):
+    def test_profile_arr_vs_deck_arr_different_amounts_need_currency_too(self):
         self.profile(current_revenue=1_200_000, revenue_period='arr')
         self.claim('arr', 3_000_000.0)
         row = self.row('current_revenue')
-        self.assertEqual(row.status, DIFFERS)
+        self.assertEqual((row.status, row.reason), (NOT_COMPARABLE, 'profile_currency_unknown'))
         self.assertEqual((row.profile_value, row.deck_values), (1_200_000.0, (3_000_000.0,)))
 
     def test_profile_arr_vs_deck_revenue_only(self):
@@ -270,7 +273,7 @@ class RevenueBasisTests(ReconciliationFixture):
         self.claim('arr', 1_200_000.0)
         self.claim('revenue', 9_000_000.0)
         row = self.row('current_revenue')
-        self.assertEqual(row.status, CONSISTENT)
+        self.assertEqual((row.status, row.reason), (NOT_COMPARABLE, 'profile_currency_unknown'))
         self.assertEqual(row.deck_values, (1_200_000.0,))
 
     def test_a_period_against_deck_arr_is_a_different_basis(self):
@@ -297,6 +300,6 @@ class RevenueBasisTests(ReconciliationFixture):
 
     def test_every_reason_has_owner_text(self):
         from .profile_reconciliation import REASON_TEXT
-        for reason in ('profile_period_unknown', 'deck_period_unknown', 'different_revenue_basis'):
+        for reason in ('profile_period_unknown', 'deck_period_unknown', 'different_revenue_basis', 'profile_currency_unknown'):
             with self.subTest(reason=reason):
                 self.assertTrue(REASON_TEXT.get(reason))

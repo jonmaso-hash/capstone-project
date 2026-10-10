@@ -56,7 +56,7 @@ def fake_sec(revenue, period='FY2026 10-K (period ending 2026-05-31)'):
             return period
 
         def extract_revenue(self, data):
-            return (revenue, '$')
+            return (revenue, 'USD')  # Explicit currency in this verdict control.
 
         def extract_customers(self, data):
             return None
@@ -88,6 +88,7 @@ class _Verify(TestCase):
     def claim(self, category, value, numeric, page=3):
         return ClaimedDatapoint.objects.create(
             document=self.doc, category=category, claimed_value=value, claimed_value_numeric=numeric,
+            currency='USD' if category in ('revenue', 'arr', 'funding_raised', 'market_size') else '',
             page_number=page, chunk_hash='h', confidence_in_extraction=95.0)
 
     def verify(self, model_result, revenue=None, headlines=(), comparable_period=False):
@@ -187,7 +188,7 @@ class EachCanonicalOutcomeWinsOverTheModelTests(_Verify):
             source_type='dataforb2b', defaults={'source_name': 'DataForB2B'})
         ObservedDatapoint.objects.create(
             document=self.doc, category='funding_raised', observed_value='$865,000,000',
-            observed_value_numeric=865e6, source=source, role=CAN_CORROBORATE, evidence_origin=LINKEDIN_DERIVED)
+            observed_value_numeric=865e6, currency='USD', source=source, role=CAN_CORROBORATE, evidence_origin=LINKEDIN_DERIVED)
         self.verify(model_says([{'category': 'funding_raised', 'assessment': 'Verified by LinkedIn data.'}],
                                summary='MODEL SUMMARY: funding verified.'),
                     revenue=None, headlines=['Nike raises'])
@@ -228,14 +229,14 @@ class TheModelCannotShapeTheTableTests(_Verify):
         ]), revenue=46.398e9)
         rows = self.rows()
         self.assertEqual(set(rows), {'revenue', 'employees'})
-        self.assertEqual(rows['revenue']['observed'], '$46.4 billion (SEC EDGAR, FY2026 10-K (period ending 2026-05-31))')
+        self.assertEqual(rows['revenue']['observed'], '$46.4 billion USD (SEC EDGAR, FY2026 10-K (period ending 2026-05-31))')
         self.assertEqual(rows['employees']['observed'], 'No external data found')
 
     def test_the_report_is_stamped_with_the_new_semantics(self):
         self.claim('revenue', '$52.8 billion', 52.8e9)
         self.verify(model_says([]), revenue=46.398e9)
         self.assertEqual(self.report.engine_version, TRUTH_DELTA_SEMANTICS)
-        self.assertIn(TRUTH_DELTA_SEMANTICS, ('td.2', 'td.3'))   # td.3 = R-003b, which keeps R-003
+        self.assertEqual(TRUTH_DELTA_SEMANTICS, 'td.4')  # Currency guard retains R-003/R-003b.
 
     def test_the_models_score_is_not_stored(self):
         # R-003b: the score is Zelda's too (zelda_api/tests_score_follows_verdict.py).
