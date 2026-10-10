@@ -26,6 +26,8 @@ Boundaries (owner decisions, 2026-10-10):
     claimed end date only against the observed end date.
   * A bare year ("a 2015 Series A deck", "founded in 1978") is not a period.
   * Two conflicting bases in one sentence leave the period unknown.
+  * Two distinct fiscal years or end dates in one sentence leave the period
+    unresolved: the amount is not bound to either.
 """
 import re
 from dataclasses import dataclass
@@ -93,23 +95,31 @@ def claim_period(sentence):
     if RUN_RATE in found:
         # "annual run-rate" and "annual recurring revenue" are run-rates.
         found.pop(ANNUAL, None)
-    fiscal = _FISCAL_YEAR.search(text)
-    ended = _YEAR_ENDED.search(text)
+    # Every fiscal-year and end-date marker, not just the first: "Our FY2026
+    # results improved on FY2025 revenue of USD 52.8 billion" names two years
+    # and the amount is FY2025's. Which marker an amount belongs to is not
+    # decided here -- guessing by proximity is the same misattribution in a
+    # new place -- so two or more DISTINCT periods leave the period unresolved.
+    fiscal = [(_fiscal_year(m), m.group(0)) for m in _FISCAL_YEAR.finditer(text)]
+    ended = [(_end_date(m), m.group(0)) for m in _YEAR_ENDED.finditer(text)]
+    ended = [(day, phrase) for day, phrase in ended if day]
+    markers = {('fy', year) for year, _ in fiscal} | {('end', day) for day, _ in ended}
     if len(found) > 1:
         return ClaimPeriod()
-    if not found and not (fiscal or ended):
+    if not found and not markers:
         return ClaimPeriod()
     kind = next(iter(found)) if found else ANNUAL
-    phrases = [m.group(0) for m in found.values()]
+    phrases = [m.group(0) for m in found.values()] + [phrase for _, phrase in fiscal + ended]
     fiscal_year = period_end = None
-    if kind == ANNUAL:
+    if kind == ANNUAL and len(markers) == 1:
         # Dates only qualify an annual figure; a fiscal year does not name a month.
-        if ended:
-            period_end = _end_date(ended)
-            phrases.append(ended.group(0))
-        if fiscal and not ended:
-            fiscal_year = _fiscal_year(fiscal)
-            phrases.append(fiscal.group(0))
+        (which, value), = markers
+        if which == 'end':
+            period_end = value
+        else:
+            fiscal_year = value
+    elif kind != ANNUAL:
+        phrases = [m.group(0) for m in found.values()]
     return ClaimPeriod(kind, fiscal_year, period_end, '; '.join(dict.fromkeys(p.strip() for p in phrases))[:100])
 
 

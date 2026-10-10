@@ -176,3 +176,39 @@ class FrozenDeckPeriodTests(TestCase):
         claim = ClaimedDatapoint.objects.get(document=doc)
         self.assertEqual((claim.period_kind, claim.period_fiscal_year, claim.period_end), ('annual', 2026, None))
         self.assertIn('FY2026', claim.time_period)
+
+    def extract_and_compare(self, text):
+        """Real analyzer-free path: insight -> claim gate -> comparison against Nike FY2026."""
+        from unittest import mock
+        from . import truth_delta_tasks
+        from .vector_models import DocumentChunk, IntelligenceInsight
+        owner = get_user_model().objects.create_user(f'verdict_{abs(hash(text))}', password='x')
+        doc = DocumentSource.objects.create(filename='n.pptx', source_entity='Nike', uploaded_by=owner,
+                                            document_type='pitch_deck')
+        chunk = DocumentChunk.objects.create(document=doc, chunk_index=0, page_number=2, section_title='',
+                                             raw_text=text, token_count=10)
+        insight = IntelligenceInsight.objects.create(document=doc, insight_type='statement', category='Revenue',
+                                                     insight_text=text, confidence_score=80)
+        insight.source_chunks.set([chunk])
+        with mock.patch.object(truth_delta_tasks.verify_document_truth_delta, 'delay'):
+            truth_delta_tasks.extract_claims_from_insights(doc.id)
+        claim = ClaimedDatapoint.objects.get(document=doc)
+        spec = EXPECTED['observed']['nike_fy2026']
+        source = ExternalDataSource.objects.create(source_type='sec', source_name='SEC EDGAR')
+        observed = ObservedDatapoint.objects.create(
+            document=doc, category='revenue', observed_value=str(spec['value']),
+            observed_value_numeric=spec['value'], source=source, role='can_establish', source_credibility=.95,
+            currency='USD', time_period='FY2026 10-K', period_kind=spec['kind'],
+            period_fiscal_year=spec['fiscal_year'], period_end=as_date(spec['period_end']))
+        rows = TruthDeltaEngine()._build_comparison([claim], [observed])
+        return claim, TruthDeltaReport(engine_version=TRUTH_DELTA_SEMANTICS, details={'comparison': rows})
+
+    def test_an_amount_beside_two_fiscal_years_is_never_contradicted_by_either(self):
+        claim, report = self.extract_and_compare('Our FY2026 results improved on FY2025 revenue of USD 52.8 billion')
+        self.assertEqual((claim.period_kind, claim.period_fiscal_year), ('annual', None))
+        self.assertEqual(report.category_states()['revenue'], 'no_data')
+        self.assertEqual(report.grounding_reasons()['revenue'], 'period_unresolved')
+        # Control: one fiscal year, the same amount, the frozen C01 contradiction.
+        claim, report = self.extract_and_compare('FY2026 revenue reached USD 52.8 billion')
+        self.assertEqual(claim.period_fiscal_year, 2026)
+        self.assertEqual(report.category_states()['revenue'], 'contradicted')
