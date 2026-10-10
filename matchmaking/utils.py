@@ -68,13 +68,15 @@ def passes_hard_filters(application, investor):
     # watching the founder come and go. So a hidden value is treated exactly
     # like an undeclared one: the check is skipped, the founder is shown.
     raise_visible, stage_visible = _hard_filter_visibility(application, investor)
+    from .currencies import profile_currency
 
     # The key carries each field only when it is visible, and carries the
     # visibility decision itself -- so a result cached while the raise was
     # visible is not served after the founder hides it. v3: every v2 entry was
     # keyed on the raw amount whether or not the investor could see it.
     key_material = (
-        f"v3:{investor.id}:{investor.ticket_size_min}:{investor.investment_stage}:{application.id}:"
+        f"v4:{investor.id}:{investor.ticket_size_min}:{investor.investment_stage}:{application.id}:"
+        f"{profile_currency(investor)}:{profile_currency(application) if raise_visible else 'hidden'}:"
         f"{application.raising_amount if raise_visible else 'hidden'}:"
         f"{application.stage if stage_visible else 'hidden'}"
     )
@@ -138,7 +140,8 @@ def _compute_hard_filters(application, investor, raise_visible=True, stage_visib
     # one, for the reason above: absent data never counts against the founder,
     # and a hidden value must not become evidence either.
     raising_amount = application.raising_amount if raise_visible else None
-    if investor.ticket_size_min is not None and raising_amount:
+    from .currencies import currencies_match
+    if investor.ticket_size_min is not None and raising_amount and currencies_match(application, investor):
         if investor.ticket_size_min > raising_amount:
             return False
 

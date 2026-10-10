@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load deal_display %}
 {% load humanize %}
 
 {% block title %}Intelligence Memo: {{ founder_app.company_name }} | Interlink Foundry{% endblock %}
@@ -81,8 +82,8 @@
             {% if founder_app.stage or founder_app.team_size or 'raising_amount' in founder_app.visible_fields or 'current_revenue' in founder_app.visible_fields %}
             <div class="fact-strip mt-3 pt-3 border-top">
                 {% if founder_app.stage %}<div class="fact"><small>Stage</small><span>{{ founder_app.stage }}</span></div>{% endif %}
-                {% if 'raising_amount' in founder_app.visible_fields and founder_app.raising_amount %}<div class="fact"><small>Raising</small><span>${{ founder_app.raising_amount|floatformat:0|intcomma }}</span></div>{% endif %}
-                {% if 'current_revenue' in founder_app.visible_fields and founder_app.current_revenue is not None %}<div class="fact"><small>Current revenue</small><span>${{ founder_app.current_revenue|floatformat:0|intcomma }}</span></div>{% endif %}
+                {% if 'raising_amount' in founder_app.visible_fields and founder_app.raising_amount %}<div class="fact"><small>Raising</small><span>{{ founder_app.raising_amount|money_display:founder_app.reporting_currency }}</span></div>{% endif %}
+                {% if 'current_revenue' in founder_app.visible_fields and founder_app.current_revenue is not None %}<div class="fact"><small>Current revenue</small><span>{{ founder_app.current_revenue|money_display:founder_app.reporting_currency }}</span></div>{% endif %}
                 {% if founder_app.team_size %}<div class="fact"><small>Team size</small><span>{{ founder_app.team_size }}</span></div>{% endif %}
             </div>
             {% endif %}

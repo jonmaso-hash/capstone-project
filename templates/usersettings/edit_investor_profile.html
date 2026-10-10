@@ -84,13 +84,14 @@
                         {{ form.company_name|as_crispy_field }}
                         {{ form.investment_focus|as_crispy_field }}
                         {{ form.investment_stage|as_crispy_field }}
+                        {{ form.reporting_currency|as_crispy_field }}
 
                         <div class="mb-4">
                             <label for="id_investment_amount" class="form-label">
                                 Target Check Size Range
                             </label>
                             <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                                <span class="input-group-text">{{ form.reporting_currency.value|default:"Currency" }}</span>
                                 <input type="text"
                                        name="investment_amount"
                                        id="id_investment_amount"

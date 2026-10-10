@@ -1243,6 +1243,7 @@ class AskZeldaAPIViewTests(TestCase):
         from matchmaking.models import Application
         u = User.objects.create_user(username, password='x')
         defaults = dict(
+            reporting_currency='USD',
             company_name=f'{username}Co', founder_name='F', email=f'{username}@t.com',
             description='test', sector='SaaS', stage='Series C',
             field_visibility={'raising_amount': 'PUBLIC', 'monthly_burn_rate': 'PUBLIC'},
@@ -1253,7 +1254,7 @@ class AskZeldaAPIViewTests(TestCase):
     def _post(self, question):
         import json as json_module
         return self.client.post(
-            reverse('zelda_api:ask'), data=json_module.dumps({'q': question}), content_type='application/json',
+            reverse('zelda_api:ask'), data=json_module.dumps({'q': question, 'currency': 'USD'}), content_type='application/json',
         )
 
     def test_empty_question_returns_prompt_with_no_results(self):
@@ -1411,6 +1412,7 @@ class AskZeldaBuyerSellerSearchTests(TestCase):
         from matchmaking.models import SellerApplication
         u = User.objects.create_user(username, password='x')
         defaults = dict(
+            reporting_currency='USD',
             company_name=f'{username}Co', seller_name='S', email=f'{username}@t.com',
             description='A steady regional business.', industry='Manufacturing',
             # These tests exercise the constraint logic, which only runs on a
@@ -1424,7 +1426,7 @@ class AskZeldaBuyerSellerSearchTests(TestCase):
     def _post(self, question):
         import json as json_module
         return self.client.post(
-            reverse('zelda_api:ask'), data=json_module.dumps({'q': question}), content_type='application/json',
+            reverse('zelda_api:ask'), data=json_module.dumps({'q': question, 'currency': 'USD'}), content_type='application/json',
         )
 
     def test_buyer_question_searches_sellers_not_founders(self):
@@ -5071,10 +5073,10 @@ class ProvenancePrecedenceTests(TestCase):
         founder = User.objects.create_user('precedence_founder3', password='x')
         Application.objects.create(
             user=founder, company_name='Qibby Saves LLC', founder_name='F', email='f@t.com',
-            description='test', raising_amount=500_000,  # stale
+            description='test', raising_amount=500_000, reporting_currency='USD',  # stale
         )
         doc = self._doc(founder)
-        self._insight(doc, 'Funding', 'Seeking: $20M Series-C funding.', 85)
+        self._insight(doc, 'Funding', 'Seeking: US$20M Series-C funding.', 85)
         insights = doc.insights.all()
 
         pipeline = ZeldaIntelligencePipelineV2()
@@ -5094,10 +5096,10 @@ class ProvenancePrecedenceTests(TestCase):
         founder = User.objects.create_user('precedence_founder4', password='x')
         Application.objects.create(
             user=founder, company_name='Qibby Saves LLC', founder_name='F', email='f@t.com',
-            description='test', current_revenue=4_500_000,  # matches what the deck itself says
+            description='test', current_revenue=4_500_000, reporting_currency='USD',  # matches the deck
         )
         doc = self._doc(founder)
-        self._insight(doc, 'Revenue', 'Current Revenue: $4.5M', 95)
+        self._insight(doc, 'Revenue', 'Current Revenue: US$4.5M', 95)
         insights = doc.insights.all()
 
         pipeline = ZeldaIntelligencePipelineV2()

@@ -45,6 +45,7 @@ class FundedInvestorKeepsVisibilityTests(_Cast):
     def investor_with(self, status):
         user = User.objects.create_user(f'fiv_{status.lower()}', password='x')
         investor = InvestorApplication.objects.create(
+            reporting_currency='USD',
             user=user, full_name='I', company_name=f'{status} Fund', email=f'{status}@t.com',
             investment_focus='SaaS', investment_stage='Seed',
         )
@@ -105,7 +106,7 @@ class FundedInvestorKeepsVisibilityTests(_Cast):
         """A threshold above the amount: the founder matches if the filter may see it."""
         self.client.force_login(user)
         body = self.client.get(
-            reverse('matchmaking:global_search'), {'capital': '5000000'}
+            reverse('matchmaking:global_search'), {'currency': 'USD', 'capital': '5000000'}
         ).content.decode(errors='ignore')
         return 'FV Co' in body
 

@@ -13,6 +13,7 @@ from django.utils import timezone
 from datetime import timedelta
 from pgvector.django import VectorField
 from .validators import MaxFileSizeValidator
+from .currencies import CURRENCY_CHOICES
 
 REVIEW_STATUS_CHOICES = [
     ('APPROVED', 'Approved'),
@@ -69,6 +70,8 @@ class Application(models.Model):
     VECTOR_FIELDS = ['description', 'sector', 'stage', 'extra_info', 'reason_for_capital', 'geography']
 
     objects = ApplicationQuerySet.as_manager()
+    reporting_currency = models.CharField(max_length=3, blank=True, default='', choices=CURRENCY_CHOICES,
+        help_text='The reporting currency for every money amount on this profile. Choose only after confirming all amounts use it.')
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -427,6 +430,8 @@ class InvestorApplication(models.Model):
     Manages search priority targets and ticket capacities for venture funds and angels.
     """
     objects = InvestorApplicationQuerySet.as_manager()
+    reporting_currency = models.CharField(max_length=3, blank=True, default='', choices=CURRENCY_CHOICES,
+        help_text='The reporting currency for every money amount on this profile. Choose only after confirming all amounts use it.')
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -2274,6 +2279,8 @@ class SellerApplication(models.Model):
     VECTOR_FIELDS = ['description', 'industry', 'geography', 'reason_for_sale', 'extra_info']
 
     objects = SellerApplicationQuerySet.as_manager()
+    reporting_currency = models.CharField(max_length=3, blank=True, default='', choices=CURRENCY_CHOICES,
+        help_text='The reporting currency for every money amount on this profile. Choose only after confirming all amounts use it.')
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -2474,6 +2481,8 @@ class BuyerApplication(models.Model):
     actual numbers to compare against a seller's asking_price.
     """
     objects = BuyerApplicationQuerySet.as_manager()
+    reporting_currency = models.CharField(max_length=3, blank=True, default='', choices=CURRENCY_CHOICES,
+        help_text='The reporting currency for every money amount on this profile. Choose only after confirming all amounts use it.')
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,

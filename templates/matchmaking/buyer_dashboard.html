@@ -53,7 +53,7 @@
                     <i class="bi bi-briefcase-fill me-1"></i> Buyer Discovery Profile
                 </span>
                 <h1 class="fw-bold mb-1">Welcome back, {{ buyer.full_name|default:buyer.user.username }}</h1>
-                <p class="mb-0 opacity-75">Acquisition budget: <strong class="text-white">${{ buyer.budget_min|floatformat:0|intcomma }} &ndash; ${{ buyer.budget_max|floatformat:0|intcomma }}</strong></p>
+                <p class="mb-0 opacity-75">Acquisition budget: <strong class="text-white">{{ buyer.budget_min|money_display:buyer.reporting_currency }} &ndash; {{ buyer.budget_max|money_display:buyer.reporting_currency }}</strong></p>
             </div>
             <div class="d-flex flex-column align-items-md-end gap-2">
                 <div class="bg-white bg-opacity-10 p-3 rounded-3 border border-white border-opacity-15 text-md-end">
@@ -187,7 +187,7 @@
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label small fw-semibold text-muted mb-1">Max Asking Price ($)</label>
+                        <label class="form-label small fw-semibold text-muted mb-1">Max Asking Price ({{ buyer.reporting_currency|default:"currency not stated" }})</label>
                         <input type="number" name="max_price" class="form-control form-control-sm" placeholder="e.g. 2000000" value="{{ filters.max_price }}">
                     </div>
                     <div class="col-md-12 d-flex gap-2 mt-2">
@@ -214,7 +214,7 @@
                                             <i class="bi bi-tag-fill me-1"></i>{{ match.seller.industry }}
                                         </span>
                                         <span class="badge bg-warning-subtle text-warning-emphasis rounded-2 px-2 py-1 small">
-                                            <i class="bi bi-cash-coin me-1"></i>Asking: {% if 'asking_price' in match.seller.visible_fields %}{{ match.seller.asking_price|asking_price_display }}{% else %}Not stated{% endif %}
+                                            <i class="bi bi-cash-coin me-1"></i>Asking: {% if 'asking_price' in match.seller.visible_fields %}{{ match.seller.asking_price|asking_price_display:match.seller.reporting_currency }}{% else %}Not stated{% endif %}
                                         </span>
                                         {% if match.seller.geography %}
                                             <span class="text-muted small ms-1">

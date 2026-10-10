@@ -3,6 +3,7 @@
 <head>
     {% load static %}
     {% load auth_extras %}
+    {% load deal_display %}
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -215,17 +216,18 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label fw-bold small text-muted">Max Capital Raising ($)</label>
+                    <label class="form-label fw-bold small text-muted">Max Capital Raising</label>
                     <input type="number" name="capital" class="form-control rounded-3"
                         placeholder="e.g. 5000000">
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label fw-bold small text-muted">Min Revenue ($)</label>
+                    <label class="form-label fw-bold small text-muted">Min Revenue</label>
                     <input type="number" name="revenue" class="form-control rounded-3"
                         placeholder="e.g. 100000">
                 </div>
 
+                {% currency_filter %}
                 <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold">
                     <i class="bi bi-search me-2"></i>Search Founders
                 </button>

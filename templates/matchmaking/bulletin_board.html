@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load deal_display %}
 {% load static %}
 {% load humanize %}
 
@@ -545,7 +546,7 @@
                                 {{ pitch.user.get_full_name|default:pitch.user.username }}
                             </div>
                             <span class="seeking-chip">
-                                {% if 'raising_amount' in pitch.visible_fields %}Seeking {% if pitch.raising_amount %}${{ pitch.raising_amount|floatformat:0|intcomma }}{% else %}--{% endif %}{% else %}Raise not disclosed{% endif %}
+                                {% if 'raising_amount' in pitch.visible_fields %}Seeking {% if pitch.raising_amount %}{{ pitch.raising_amount|money_display:pitch.reporting_currency }}{% else %}--{% endif %}{% else %}Raise not disclosed{% endif %}
                             </span>
                         </div>
                         <a href="{{ pitch.profile_url }}" class="view-btn">

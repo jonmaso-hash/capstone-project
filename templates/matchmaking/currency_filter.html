@@ -1,0 +1,7 @@
+<div class="mb-3">
+    <label for="filter_currency" class="form-label fw-bold small text-muted">Currency for money filters</label>
+    <select id="filter_currency" name="currency" class="form-select rounded-3">
+        {% for code, label in currency_choices %}<option value="{{ code }}"{% if code == selected_currency %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <div class="form-text">Choose a currency when filtering money amounts.</div>
+</div>

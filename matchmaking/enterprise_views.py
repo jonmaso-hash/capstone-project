@@ -53,6 +53,9 @@ class EnterpriseFounderSearchView(APIView):
                     continue
                 value = shown[field]
                 row[key] = str(value) if field in ('raising_amount', 'current_revenue') and value is not None else value
+            if any(field in shown for field in ('raising_amount', 'current_revenue')):
+                from .currencies import profile_currency
+                row['reporting_currency'] = profile_currency(app)
             results.append(row)
 
         return Response({

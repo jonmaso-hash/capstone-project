@@ -83,12 +83,13 @@
                         {{ form.email|as_crispy_field }}
                         {{ form.company_name|as_crispy_field }}
                         {{ form.acquisition_thesis|as_crispy_field }}
+                        {{ form.reporting_currency|as_crispy_field }}
 
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Acquisition Budget — Minimum</label>
                                 <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                                    <span class="input-group-text">{{ form.reporting_currency.value|default:"Currency" }}</span>
                                     {{ form.budget_min }}
                                 </div>
                                 {{ form.budget_min.errors }}
@@ -96,7 +97,7 @@
                             <div class="col-md-6">
                                 <label class="form-label">Acquisition Budget — Maximum</label>
                                 <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                                    <span class="input-group-text">{{ form.reporting_currency.value|default:"Currency" }}</span>
                                     {{ form.budget_max }}
                                 </div>
                                 {{ form.budget_max.errors }}

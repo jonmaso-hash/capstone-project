@@ -136,8 +136,8 @@
                             {% for name, row in cohort.metrics.items %}
                             <tr>
                                 <td class="benchmark-metric-name">{{ name }}</td>
-                                <td>{{ row.value|default_if_none:"—" }}</td>
-                                <td>{{ row.median|default_if_none:"—" }}</td>
+                                <td>{{ row.value|default_if_none:"—" }}{% if row.is_money %} {{ row.currency|default:"(currency unknown)" }}{% endif %}</td>
+                                <td>{{ row.median|default_if_none:"—" }}{% if row.median != None and row.currency %} {{ row.currency }}{% endif %}</td>
                                 <td>{% if row.percentile != None %}{{ row.percentile }}th{% else %}—{% endif %}</td>
                             </tr>
                             {% endfor %}

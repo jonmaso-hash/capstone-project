@@ -1,3 +1,4 @@
+{% load deal_display %}
 <!DOCTYPE html>
 {% load static %}
 <html>
@@ -31,9 +32,9 @@
 
         {% if 'raising_amount' in visible_fields or 'current_revenue' in visible_fields or 'prior_amount_raised' in visible_fields %}
         <h3 style="border-bottom: 2px solid #007bff; padding-bottom: 5px;">Business Metrics</h3>
-        <p>{% if 'raising_amount' in visible_fields %}<strong>Raising Amount:</strong> ${{ founder.raising_amount }}<br>{% endif %}
-           {% if 'current_revenue' in visible_fields %}<strong>Current Revenue:</strong> ${{ founder.current_revenue }}<br>{% endif %}
-           {% if 'prior_amount_raised' in visible_fields %}<strong>Prior Capital Raised:</strong> ${{ founder.prior_amount_raised }}{% endif %}</p>
+        <p>{% if 'raising_amount' in visible_fields %}<strong>Raising Amount:</strong> {{ founder.raising_amount|money_display:founder.reporting_currency }}<br>{% endif %}
+           {% if 'current_revenue' in visible_fields %}<strong>Current Revenue:</strong> {{ founder.current_revenue|money_display:founder.reporting_currency }}<br>{% endif %}
+           {% if 'prior_amount_raised' in visible_fields %}<strong>Prior Capital Raised:</strong> {{ founder.prior_amount_raised|money_display:founder.reporting_currency }}{% endif %}</p>
         {% endif %}
 
         {% if 'reason_for_capital' in visible_fields %}

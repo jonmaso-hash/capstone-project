@@ -17,6 +17,7 @@ next template to show an asking price inherits it instead of re-deciding.
 """
 from django import template
 from django.contrib.humanize.templatetags.humanize import intcomma
+from matchmaking.currencies import CURRENCY_CHOICES, KNOWN_CURRENCIES
 
 register = template.Library()
 
@@ -26,16 +27,30 @@ UNSTATED_LABEL = 'Not stated'
 
 
 @register.filter(name='asking_price_display')
-def asking_price_display(value):
+def asking_price_display(value, currency=''):
     """
-    `$4,200,000` when a price was given, `Not stated` when it was not.
+    `4,200,000 USD` with a confirmed currency; `Not stated` without a price.
 
     0 and None both mean "not stated" -- the field cannot distinguish them, and
     a business genuinely priced at zero is not a case this marketplace serves.
     """
     if not value:
         return UNSTATED_LABEL
+    return money_display(value, currency)
+
+
+@register.filter(name='money_display')
+def money_display(value, currency=''):
+    if value is None or value == '':
+        return UNSTATED_LABEL
     try:
-        return '$%s' % intcomma(int(round(float(value))))
+        number = intcomma(int(round(float(value))))
     except (TypeError, ValueError):
         return UNSTATED_LABEL
+    return f'{number} {currency if currency in KNOWN_CURRENCIES else "(currency unknown)"}'
+
+
+@register.inclusion_tag('matchmaking/currency_filter.html', takes_context=True)
+def currency_filter(context):
+    request = context.get('request')
+    return {'currency_choices': CURRENCY_CHOICES, 'selected_currency': request.GET.get('currency', '') if request else ''}

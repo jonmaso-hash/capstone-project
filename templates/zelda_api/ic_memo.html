@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load deal_display %}
 {% load humanize %}
 {% load zelda_sources %}
 
@@ -218,9 +219,9 @@
     <div class="mb-4 ic-memo-section">
         <h5 class="fw-bold border-bottom pb-2 mb-2">Financial Snapshot</h5>
         <ul class="list-unstyled mb-0">
-            <li>Raising: {% if financials.raising_amount %}${{ financials.raising_amount|floatformat:0|intcomma }}{% else %}not disclosed{% endif %}</li>
-            <li>Current revenue: {% if financials.current_revenue is not None %}${{ financials.current_revenue|floatformat:0|intcomma }}{% else %}not disclosed{% endif %}</li>
-            <li>Monthly burn: {% if financials.monthly_burn_rate is not None %}${{ financials.monthly_burn_rate|floatformat:0|intcomma }}{% else %}not disclosed{% endif %}</li>
+            <li>Raising: {% if financials.raising_amount %}{{ financials.raising_amount|money_display:financials.reporting_currency }}{% else %}not disclosed{% endif %}</li>
+            <li>Current revenue: {% if financials.current_revenue is not None %}{{ financials.current_revenue|money_display:financials.reporting_currency }}{% else %}not disclosed{% endif %}</li>
+            <li>Monthly burn: {% if financials.monthly_burn_rate is not None %}{{ financials.monthly_burn_rate|money_display:financials.reporting_currency }}{% else %}not disclosed{% endif %}</li>
             <li>Runway: {% if financials.runway_months %}{{ financials.runway_months }} months{% else %}not calculated{% endif %}</li>
             <li>Team size: {% if financials.team_size %}{{ financials.team_size }}{% else %}not disclosed{% endif %}</li>
         </ul>

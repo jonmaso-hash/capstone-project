@@ -478,7 +478,9 @@ def build_ic_memo_context(founder_application, tier='full', viewer=None):
             # see, rather than assuming the most permissive reader.
             return None if profile_field_level(founder_application, field) == FIELD_PRIVATE else value
 
+        from matchmaking.currencies import profile_currency
         financials = {
+            'reporting_currency': profile_currency(founder_application),
             'raising_amount': _disclosed('raising_amount', founder_application.raising_amount),
             'current_revenue': _disclosed('current_revenue', founder_application.current_revenue),
             'monthly_burn_rate': _disclosed('monthly_burn_rate', founder_application.monthly_burn_rate),
@@ -569,10 +571,11 @@ def render_ic_memo_markdown(context):
         lines.append('')
 
     fin = context['financials']
+    currency = fin['reporting_currency'] or '(currency unknown)'
     lines.append('## Financial Snapshot')
-    lines.append(f"- Raising: ${fin['raising_amount']:,.0f}" if fin['raising_amount'] else "- Raising: not disclosed")
-    lines.append(f"- Current revenue: ${fin['current_revenue']:,.0f}" if fin['current_revenue'] is not None else "- Current revenue: not disclosed")
-    lines.append(f"- Monthly burn: ${fin['monthly_burn_rate']:,.0f}" if fin['monthly_burn_rate'] is not None else "- Monthly burn: not disclosed")
+    lines.append(f"- Raising: {fin['raising_amount']:,.0f} {currency}" if fin['raising_amount'] else "- Raising: not disclosed")
+    lines.append(f"- Current revenue: {fin['current_revenue']:,.0f} {currency}" if fin['current_revenue'] is not None else "- Current revenue: not disclosed")
+    lines.append(f"- Monthly burn: {fin['monthly_burn_rate']:,.0f} {currency}" if fin['monthly_burn_rate'] is not None else "- Monthly burn: not disclosed")
     lines.append(f"- Runway: {fin['runway_months']} months" if fin['runway_months'] else "- Runway: not calculated")
     lines.append(f"- Team size: {fin['team_size']}" if fin['team_size'] else "- Team size: not disclosed")
     lines.append('')

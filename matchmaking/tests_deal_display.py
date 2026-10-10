@@ -27,7 +27,7 @@ class AskingPriceDisplayTests(TestCase):
     """The filter itself."""
 
     def test_a_stated_price_is_formatted_as_money(self):
-        self.assertEqual(asking_price_display(4200000), '$4,200,000')
+        self.assertEqual(asking_price_display(4200000, 'USD'), '4,200,000 USD')
 
     def test_zero_is_not_a_price(self):
         self.assertEqual(asking_price_display(0), UNSTATED_LABEL)
@@ -37,7 +37,7 @@ class AskingPriceDisplayTests(TestCase):
 
     def test_decimals_round_to_whole_dollars(self):
         from decimal import Decimal
-        self.assertEqual(asking_price_display(Decimal('4200000.49')), '$4,200,000')
+        self.assertEqual(asking_price_display(Decimal('4200000.49'), 'USD'), '4,200,000 USD')
 
     def test_garbage_degrades_to_unstated_rather_than_raising(self):
         self.assertEqual(asking_price_display('not a number'), UNSTATED_LABEL)
@@ -63,7 +63,7 @@ class BuyerDashboardDoesNotShowZeroTests(TestCase):
         self.seller = SellerApplication.objects.create(
             user=seller_user, company_name='Unpriced Co', seller_name='S',
             email='s@t.com', description='A business with no price yet.',
-            industry='Facilities Services', asking_price=0)
+            industry='Facilities Services', asking_price=0, reporting_currency='USD')
 
         self.client.force_login(buyer_user)
 
@@ -85,4 +85,4 @@ class BuyerDashboardDoesNotShowZeroTests(TestCase):
 
         html = self._dashboard_html()
         self.assertIn('Unpriced Co', html, 'positive control')
-        self.assertIn('$4,200,000', html)
+        self.assertIn('4,200,000 USD', html)
