@@ -133,9 +133,12 @@ def claim_ownership(sentence, names):
     for match in _POSSESSIVE.finditer(masked):
         if _is_owner(match.group(1)):
             return None, _owner_name(match.group(1))
-    if _COMPANY in masked:
-        return NAMED, ''
+    # Another organisation as the subject owns the figure even when the
+    # company is mentioned later: "Telegram has 100M users and integrates
+    # with ManyChat" is Telegram's count, not ManyChat's.
     subject = _SUBJECT.match(masked)
     if subject and _is_owner(subject.group(1)):
         return None, _owner_name(subject.group(1))
+    if _COMPANY in masked:
+        return NAMED, ''
     return IMPLIED, ''

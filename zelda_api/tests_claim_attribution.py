@@ -34,6 +34,12 @@ class ClaimOwnershipTests(SimpleTestCase):
         self.assertEqual(claim_ownership("FB Messenger's 900M people", ['ManyChat']), (None, 'FB Messenger'))
         self.assertEqual(claim_ownership('ManyChat has 140,000 bots', ['ManyChat']), (NAMED, ''))  # control
 
+    def test_another_subject_owns_the_figure_even_when_the_company_is_mentioned_later(self):
+        sentence = 'Telegram has 100M users and integrates with ManyChat'
+        self.assertEqual(claim_ownership(sentence, ['ManyChat']), (None, 'Telegram'))
+        control = 'ManyChat has 2,000 customers and integrates with Telegram'
+        self.assertEqual(claim_ownership(control, ['ManyChat']), (NAMED, ''))
+
     def test_a_third_party_source_about_the_company_keeps_the_company_as_owner(self):
         sentence = 'Source: Pitch Deck Hunt lists ManyChat as a 2015 Series A deck with $23.1M raised'
         self.assertEqual(claim_ownership(sentence, ['ManyChat']), (NAMED, ''))
@@ -110,6 +116,14 @@ class ClaimExtractionOwnershipTests(TestCase):
         self.assertEqual([(c.claimed_value_numeric, c.ownership) for c in named], [(790_000_000, NAMED)])
         implied = self.claims_for('Acme', 'Revenue: $4.5M', 'Revenue: $4.5M')
         self.assertEqual([(c.claimed_value_numeric, c.ownership) for c in implied], [(4_500_000, IMPLIED)])
+
+    def test_a_platform_count_mentioning_the_company_later_is_not_stored(self):
+        sentence = 'Telegram has 100M users and integrates with ManyChat'
+        self.assertEqual(self.claims_for('ManyChat', sentence, sentence, 'Traction'), [])
+        control = 'ManyChat has 2,000 customers and integrates with Telegram'
+        stored = self.claims_for('ManyChat', control, control, 'Traction')
+        self.assertEqual([(c.category, c.claimed_value_numeric, c.ownership) for c in stored],
+                         [('customers', 2000, NAMED)])
 
     def test_a_platform_user_count_is_not_stored_as_customers(self):
         self.assertEqual(self.claims_for('ManyChat', 'Telegram has 100M users', '100M users', 'Traction'), [])
