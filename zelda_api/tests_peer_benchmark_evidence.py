@@ -295,6 +295,34 @@ class PeerFigureAdmissionTests(SimpleTestCase):
         self.assertEqual(quote_contexts('Acme Inc. Reported revenue', [spanning]),
                          ['Acme Inc. Reported revenue of USD 3 million.'])
         self.assertEqual(quote_contexts('absent', [excerpt]), [])
+    # --- P-2b: tolerant name matching, with the source's longer name reported ---
+
+    def test_a_longer_source_name_still_counts_and_is_reported_on_the_figure(self):
+        peers, sources = fixture()
+        peers[0]['company_name'] = 'Peer 0'  # the source says "Peer 0 Holdings"
+        fact = normalized_peers(peers, sources, 'founder')[0]['facts']['funding_raised']
+        self.assertTrue(fact['eligible'])
+        self.assertTrue(fact['name_differs'])
+        self.assertEqual(fact['source_company_name'], 'Peer 0 Holdings')
+        row = rows(peers, sources)['funding_raised']
+        self.assertEqual((row['median'], row['peer_values_available']), (2000000, 3))
+        # Control: the exact name raises no notice.
+        exact = normalized_peers(*fixture(), 'founder')[0]['facts']['funding_raised']
+        self.assertEqual((exact['name_differs'], exact['source_company_name']), (False, ''))
+
+    def test_longer_name_detection_ignores_suffixes_possessives_and_sentence_starts(self):
+        from .peer_benchmark_evidence import longer_source_name
+        for quote, expected in (
+            ("Acme Brands' annual revenue was USD 12 million", 'Acme Brands'),
+            ('Shares of Global Acme rose on USD 12 million revenue', 'Global Acme'),
+            ("Acme's annual revenue was USD 12 million", None),
+            ('Acme Inc. reported revenue of USD 12 million', None),
+            ('Acme, Inc. reported revenue of USD 12 million', None),
+            ('Yesterday Acme reported revenue of USD 12 million', None),
+            ('Revenue rose. Acme reported USD 12 million', None),
+        ):
+            with self.subTest(quote=quote):
+                self.assertEqual(longer_source_name('Acme', quote), expected)
 
 class FrozenPeerEvidenceViewTests(TestCase):
     def setUp(self):
@@ -368,3 +396,17 @@ class FrozenPeerEvidenceViewTests(TestCase):
         response = self.client.get(reverse('accounts:peer_market_benchmark_share', args=[report.share_token]))
         self.assertNotContains(response, 'Peer 0 Holdings')
         self.assertNotContains(response, self.sources[0]['url'])
+
+    def test_longer_source_name_notice_on_owner_page_and_withheld_with_private_excerpts(self):
+        self.peers[0]['company_name'] = 'Peer 0'
+        report = self.report()
+        self.client.force_login(self.user)
+        owner = self.client.get(reverse('accounts:peer_market_benchmark_detail', args=[report.pk]))
+        self.assertContains(owner, 'The source names Peer 0 Holdings; this figure is attributed to Peer 0.')
+        public = self.client.get(reverse('accounts:peer_market_benchmark_share', args=[report.share_token]))
+        self.assertContains(public, 'The source names Peer 0 Holdings')  # control: public subject fields
+        self.profile.field_visibility = {'prior_amount_raised': 'PRIVATE'}
+        self.profile.save(update_fields=['field_visibility'])
+        public = self.client.get(reverse('accounts:peer_market_benchmark_share', args=[report.share_token]))
+        self.assertNotContains(public, 'The source names')
+        self.assertContains(public, 'The source may use a longer company name than Peer 0.')

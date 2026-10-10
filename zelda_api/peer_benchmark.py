@@ -345,15 +345,16 @@ def protect_public_subject(benchmark):
                              for source in benchmark.sources if isinstance(source, dict)]
         # The existing P-1 rule withholds citation excerpts when supplied
         # subject fields are private. New per-figure excerpts obey it too.
+        # The source's own name for the company is quoted text too.
         for peer in benchmark.external_peers:
             for figure in peer.get('figures', []):
-                figure['source_quote'] = ''
+                figure['source_quote'] = figure['source_company_name'] = ''
             for fact in peer.get('facts', {}).values():
-                fact['source_quote'] = ''
+                fact['source_quote'] = fact['source_company_name'] = ''
         for row in benchmark.external_benchmark.values():
             for group in row.get('groups', []):
                 for figure in group.get('figures', []):
-                    figure['source_quote'] = ''
+                    figure['source_quote'] = figure['source_company_name'] = ''
     if not all(public(field) for field in cohort_fields):
         benchmark.external_benchmark = {}
         benchmark.external_peers = []

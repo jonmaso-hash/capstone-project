@@ -78,6 +78,40 @@ def company_key(value):
     return _text(value)
 
 
+_LEGAL_SUFFIXES = {'inc', 'incorporated', 'corp', 'corporation', 'llc', 'limited', 'ltd', 'co', 'company', 'plc'}
+_NAME_WORD = r"[A-Z][\w&-]*"
+
+
+def longer_source_name(name, quote):
+    """The fuller company name a quote uses around the peer's name, or None.
+
+    Matching stays tolerant: "Acme Brands" still supports a figure for the
+    peer "Acme", because genuine name variants look the same ("Notion" and
+    "Notion Labs"). This only reports the longer name so a reader can check
+    the attribution. Capitalised words directly before or after the peer's
+    name are treated as part of a longer name; legal suffixes are not, and a
+    word that merely starts the sentence is ignored, accepting a missed
+    notice over a misleading one.
+    """
+    words = company_key(name).split()
+    if not words:
+        return None
+    pattern = r'(?<!\w)' + r'\W+'.join(re.escape(w) for w in words) + r'(?!\w)'
+    for match in re.finditer(pattern, quote, re.I):
+        before = re.search(r'((?:' + _NAME_WORD + r'\s+)+)$', quote[:match.start()])
+        prefix = before[1].split() if before else []
+        start = before.start(1) if before else match.start()
+        if prefix and (start == 0 or re.search(r'[.!?]\s*$', quote[:start])):
+            prefix = prefix[1:]  # sentence-initial capital, not evidence of a name
+        after = re.match(r'((?:\s+' + _NAME_WORD + r')+)', quote[match.end():])
+        suffix = after[1].split() if after else []
+        while suffix and suffix[-1].lower().strip('.') in _LEGAL_SUFFIXES:
+            suffix.pop()
+        if prefix or suffix:
+            return ' '.join(prefix + [match[0]] + suffix)
+    return None
+
+
 def source_set(sources):
     """Retain every distinct excerpt for a URL, not just its first citation."""
     output = {}
@@ -250,10 +284,12 @@ def normalized_peers(peers, sources, role):
                 reasons.append('Annual reporting period not established')
             if not annual and not as_of:
                 reasons.append('Measurement date not established')
+            longer = longer_source_name(name, quote)
             clean = dict(value=value, unit=unit, basis=basis, as_of=as_of,
                          period_kind=period_kind, period_end=period_end,
                          source_url=source['url'], source_title=source['title'], source_quote=quote,
-                         eligible=not reasons, exclusion_reason='; '.join(reasons))
+                         eligible=not reasons, exclusion_reason='; '.join(reasons),
+                         name_differs=bool(longer), source_company_name=longer or '')
             row['facts'][metric] = clean
             row['figures'].append(dict(clean, metric=metric, label=LABELS[metric], company_name=name))
         output.append(row)
