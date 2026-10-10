@@ -167,6 +167,34 @@ def _basis_in_quote(metric, basis, quote):
     return bool(re.search(r'\b(years in business|years of operation|operating years)\b', text))
 
 
+# A sentence ends at . ! or ? followed by whitespace and a capital letter, so
+# decimals ("12.5 million") and most lowercase-continued abbreviations do not
+# split a sentence. Excerpts are whitespace-collapsed by _text.
+_SENTENCE_BREAK = re.compile(r'(?<=[.!?])\s+(?=[A-Z])')
+
+
+def quote_contexts(quote, excerpts):
+    """Every source sentence span that contains the quote, in each excerpt.
+
+    The model chooses where a quote starts and ends, so a qualifier just
+    outside it ("Analysts estimated that ...") would otherwise go unseen. The
+    span runs from the start of the sentence holding the quote's first word to
+    the end of the sentence holding its last, and no further: another
+    company's projection elsewhere in the excerpt must not disqualify this one.
+    """
+    contexts = []
+    for excerpt in excerpts:
+        start = excerpt.find(quote)
+        while start >= 0:
+            end = start + len(quote)
+            breaks = [m.end() for m in _SENTENCE_BREAK.finditer(excerpt)]
+            left = max((b for b in breaks if b <= start), default=0)
+            right = min((m.start() for m in _SENTENCE_BREAK.finditer(excerpt, end)), default=len(excerpt))
+            contexts.append(excerpt[left:right])
+            start = excerpt.find(quote, start + 1)
+    return contexts
+
+
 def normalized_peers(peers, sources, role):
     by_url = {s['url']: s for s in source_set(sources)}
     output = []
@@ -202,7 +230,11 @@ def normalized_peers(peers, sources, role):
             else:
                 unit = unit if _currency_in_quote(unit, quote) else None
             basis = fact.get('basis') if fact.get('basis') in BASES[metric] else None
-            if basis and not _basis_in_quote(metric, basis, quote):
+            # The basis must be stated in the quote, and no qualifier may
+            # appear in any source sentence the quote was cut from.
+            if basis and not (_basis_in_quote(metric, basis, quote) and all(
+                    _basis_in_quote(metric, basis, context)
+                    for context in quote_contexts(quote, source['excerpts']))):
                 basis = None
             as_of = _source_date(fact.get('as_of'), quote)
             period_end = _source_date(fact.get('period_end'), quote)
