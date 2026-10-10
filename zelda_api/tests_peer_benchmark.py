@@ -399,7 +399,7 @@ class PeerMarketBenchmarkTests(TestCase):
             ('seller', self.seller, 'asking_price', 'asking_price'),
         ):
             user, subject = factory(f'revoke_{role}', 'Subject')
-            peers = [factory(f'revoke_{role}{i}', f'Peer{i}', **{field: 777})[1]
+            peers = [factory(f'revoke_{role}{i}', f'Peer{i}', **{field: 7771234})[1]
                      for i in range(MIN_INTERLINK_PEERS)]
             benchmark = PeerMarketBenchmark.objects.create(
                 user=user, role=role, subject_name='Subject', status='ready', sharing_enabled=True,
@@ -407,7 +407,7 @@ class PeerMarketBenchmarkTests(TestCase):
             )
             public_url = reverse('accounts:peer_market_benchmark_share', args=[benchmark.share_token])
             owner_url = reverse('accounts:peer_market_benchmark_detail', args=[benchmark.id])
-            self.assertContains(self.client.get(public_url), '777')
+            self.assertContains(self.client.get(public_url), '7771234')
             peers[0].field_visibility = {field: 'PRIVATE'}
             peers[0].save(update_fields=['field_visibility'])
             self.client.force_login(user)
@@ -416,7 +416,7 @@ class PeerMarketBenchmarkTests(TestCase):
                 row = response.context['benchmark'].interlink_benchmark['site']['metrics'][metric_name]
                 self.assertIsNone(row['median'])
                 self.assertEqual(row['peer_values_available'], 0)
-                self.assertNotContains(response, '777')
+                self.assertNotContains(response, '7771234')
             peers[0].delete()
             self.assertEqual(self.client.get(public_url).context['benchmark'].interlink_benchmark['site']['peer_count'], 0)
             self.client.logout()
