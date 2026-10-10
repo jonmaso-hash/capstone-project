@@ -42,6 +42,15 @@ withheld when supplied subject fields are not public, since they may repeat
 owner-only data. Owner pages retain their private values. Rendering does not
 rewrite saved reports, incur research charges or alter sharing controls.
 
+Interlink refresh: `manage.py refresh_peer_benchmark_interlink` (dry run
+unless `--apply`) rebuilds only the Interlink half of ready reports saved under
+an older privacy version, from current data under current public-viewer rules.
+It never runs external research and leaves the external half, sources,
+narrative and the 30-day refresh allowance unchanged. The rebuild date is
+stored with the snapshot and both pages state it beside the external snapshot
+date, because the two halves then describe different dates. Current snapshots
+are skipped, so the command is safe to repeat.
+
 `zelda_api.tests_peer_benchmark` checks both roles, four/five-peer boundaries,
 small city/state cohorts, per-metric suppression, hidden-versus-absent parity,
 private cohort fields, activity independence and legacy owner/public rendering.

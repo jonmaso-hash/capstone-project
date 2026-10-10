@@ -4,7 +4,9 @@ import re
 from datetime import timedelta
 from decimal import Decimal
 
+from django.db import transaction
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 
 from matchmaking.models import (
     Application,
@@ -237,6 +239,59 @@ def interlink_benchmark(profile, role):
                          'peer_ids': [peer.pk for peer in peers],
                          'privacy_version': INTERLINK_PRIVACY_VERSION}
     return output
+
+
+INTERLINK_LEVELS = ('site', 'city', 'state', 'country')
+
+
+def interlink_snapshot_is_current(snapshot):
+    return isinstance(snapshot, dict) and all(
+        isinstance(snapshot.get(level), dict)
+        and snapshot[level].get('privacy_version') == INTERLINK_PRIVACY_VERSION
+        for level in INTERLINK_LEVELS
+    )
+
+
+def interlink_recalculated_at(snapshot):
+    """When a stored Interlink half was rebuilt after its report was generated."""
+    meta = snapshot.get('recalculated') if isinstance(snapshot, dict) else None
+    return parse_datetime(meta.get('at') or '') if isinstance(meta, dict) else None
+
+
+def refresh_interlink_snapshot(benchmark_id):
+    """One-time rebuild of an Interlink half saved under older privacy rules.
+
+    Only the Interlink half is recalculated, from current data under current
+    public-viewer rules. External research is never called, and the external
+    half, sources, narrative and the owner's 30-day refresh allowance are left
+    exactly as saved. The rebuild date is stored so the page can say the two
+    halves describe different dates. Returns True only when a row changed.
+    """
+    with transaction.atomic():
+        benchmark = (
+            PeerMarketBenchmark.objects.select_for_update()
+            .filter(pk=benchmark_id).first()
+        )
+        # Both profile relations are nullable. Lock only the benchmark row;
+        # PostgreSQL cannot apply FOR UPDATE to a nullable outer-join side.
+        # A report may also have been deleted since the command listed it.
+        if benchmark is None:
+            return False
+        old = benchmark.interlink_benchmark
+        if benchmark.status != 'ready' or interlink_snapshot_is_current(old):
+            return False
+        profile = benchmark.founder if benchmark.role == 'founder' else benchmark.seller
+        if profile is None or benchmark.role not in INTERLINK_METRICS:
+            return False
+        site = old.get('site') if isinstance(old, dict) else None
+        snapshot = interlink_benchmark(profile, benchmark.role)
+        snapshot['recalculated'] = {
+            'at': timezone.now().isoformat(),
+            'from_privacy_version': site.get('privacy_version') if isinstance(site, dict) else None,
+        }
+        benchmark.interlink_benchmark = snapshot
+        benchmark.save(update_fields=['interlink_benchmark'])
+        return True
 
 
 def protect_public_subject(benchmark):
