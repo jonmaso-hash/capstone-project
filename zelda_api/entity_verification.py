@@ -170,7 +170,7 @@ def build_document_identity_report(document):
         sec_identity.sec_findings(
             add, company_name=document.source_entity, company_claim=f'Company: {document.source_entity}',
             person_name='', person_claim='No representative authority asserted', claimed_year=None,
-            founding_claim='No founding year asserted',
+            founding_claim='No founding year asserted', selected_cik=document.external_cik or None,
         )
         report.findings, report.checked_at, report.status = rows, timezone.now(), R.COMPLETE
         report.save(update_fields=['findings', 'checked_at', 'status'])
