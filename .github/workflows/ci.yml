@@ -125,6 +125,7 @@ jobs:
           zelda_api.tests_claim_field_binding
           zelda_api.tests_claim_extraction_recall
           zelda_api.tests_claim_attribution
+          zelda_api.tests_claim_periods
           zelda_api.tests_claim_currency
           zelda_api.tests_source_failure_reaches_the_report
           zelda_api.tests_source_naming

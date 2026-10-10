@@ -4083,8 +4083,8 @@ class SECEdgarIntegrationTests(TestCase):
                     'Revenues': {
                         'units': {
                             'USD': [
-                                {'val': 900_000_000, 'end': '2023-12-31', 'form': '10-K', 'fy': 2023},
-                                {'val': 1_100_000_000, 'end': '2024-12-31', 'form': '10-K', 'fy': 2024},
+                                {'val': 900_000_000, 'start': '2023-01-01', 'end': '2023-12-31', 'form': '10-K', 'fy': 2023},
+                                {'val': 1_100_000_000, 'start': '2024-01-02', 'end': '2024-12-31', 'form': '10-K', 'fy': 2024},
                                 {'val': 300_000_000, 'end': '2025-03-31', 'form': '10-Q', 'fy': 2025},  # quarterly — must be ignored
                             ]
                         }
@@ -4119,11 +4119,11 @@ class SECEdgarIntegrationTests(TestCase):
                 'us-gaap': {
                     # Checked first (higher priority tag) but only has old data.
                     'Revenues': {
-                        'units': {'USD': [{'val': 200_000_000, 'end': '2017-09-30', 'form': '10-K', 'fy': 2017}]}
+                        'units': {'USD': [{'val': 200_000_000, 'start': '2016-10-01', 'end': '2017-09-30', 'form': '10-K', 'fy': 2017}]}
                     },
                     # Checked second, but has the genuinely current figure.
                     'RevenueFromContractWithCustomerExcludingAssessedTax': {
-                        'units': {'USD': [{'val': 391_000_000_000, 'end': '2024-09-28', 'form': '10-K', 'fy': 2024}]}
+                        'units': {'USD': [{'val': 391_000_000_000, 'start': '2023-09-30', 'end': '2024-09-28', 'form': '10-K', 'fy': 2024}]}
                     },
                 }
             }

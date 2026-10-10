@@ -92,6 +92,15 @@ class ClaimedDatapoint(models.Model):
         ('implied', "Company's own document; no other owner named"),
     ]
     ownership = models.CharField(max_length=10, choices=OWNERSHIP_CHOICES, blank=True)
+    # Structured period (zelda_api/claim_periods.py). Blank kind means no
+    # usable period: recorded before periods existed, or none was stated.
+    # Never backfilled. A fiscal year never implies an end date.
+    period_kind = models.CharField(max_length=12, blank=True, choices=[
+        ('annual', 'Annual'), ('quarterly', 'Quarterly'), ('monthly', 'Monthly'),
+        ('ttm', 'Trailing twelve months'), ('run_rate', 'Run-rate'), ('cumulative', 'Cumulative'),
+    ])
+    period_fiscal_year = models.PositiveSmallIntegerField(null=True, blank=True)
+    period_end = models.DateField(null=True, blank=True)
 
     # Provenance — full traceability back to the source chunk this claim came from
     page_number = models.IntegerField(null=True, blank=True, help_text="Page this claim's source chunk came from")
@@ -127,6 +136,15 @@ class ObservedDatapoint(models.Model):
     unit = models.CharField(max_length=50, blank=True)
     currency = models.CharField(max_length=3, blank=True, help_text="Currency explicitly supplied by this observation's source; blank means unknown.")
     time_period = models.CharField(max_length=100, blank=True)
+    # Structured period (zelda_api/claim_periods.py). Blank kind means no
+    # usable period: recorded before periods existed, or the source gave none.
+    # Never backfilled. A fiscal year never implies an end date.
+    period_kind = models.CharField(max_length=12, blank=True, choices=[
+        ('annual', 'Annual'), ('quarterly', 'Quarterly'), ('monthly', 'Monthly'),
+        ('ttm', 'Trailing twelve months'), ('run_rate', 'Run-rate'), ('cumulative', 'Cumulative'),
+    ])
+    period_fiscal_year = models.PositiveSmallIntegerField(null=True, blank=True)
+    period_end = models.DateField(null=True, blank=True)
     
     # Source information
     source = models.ForeignKey(ExternalDataSource, on_delete=models.SET_NULL, null=True)
@@ -230,7 +248,9 @@ class ObservedDatapoint(models.Model):
 UNKNOWN_SEMANTICS = 'unknown'
 #   td.4     Monetary comparisons require identical, explicitly known
 #            currencies. No guessed USD, FX conversion or cross-currency gap.
-TRUTH_DELTA_SEMANTICS = 'td.4'
+# td.5: claims carry structured periods; an explicit period mismatch blocks
+# verified and contradicted, and a contradiction needs a comparable period.
+TRUTH_DELTA_SEMANTICS = 'td.5'
 
 
 class TruthDeltaReport(models.Model):
@@ -306,6 +326,26 @@ class TruthDeltaReport(models.Model):
     def _tolerance_for(self, category):
         return self.GROUNDING_TOLERANCE.get(category, self.DEFAULT_TOLERANCE)
 
+    # Semantics versions recorded before structured periods (td.5).
+    PRE_PERIOD_SEMANTICS = ('unknown', 'td.1', 'td.2', 'td.3', 'td.4')
+
+    @staticmethod
+    def _period_comparison(row):
+        """comparable | mismatch | unresolved | unknown, from the row's structured periods."""
+        from datetime import date
+        from .claim_periods import compare_periods
+
+        def day(value):
+            try:
+                return date.fromisoformat(value) if value else None
+            except (TypeError, ValueError):
+                return None
+
+        return compare_periods(
+            row.get('claim_period_kind') or '', row.get('claim_fiscal_year'), day(row.get('claim_period_end')),
+            row.get('observed_period_kind') or '', row.get('observed_fiscal_year'), day(row.get('observed_period_end')),
+        )
+
     @staticmethod
     def _periods_comparable(row):
         """
@@ -358,6 +398,16 @@ class TruthDeltaReport(models.Model):
             if reason:
                 return 'no_data', reason, tolerance
 
+        # td.5 and later: a period stated on both sides decides comparability.
+        # Rows recorded under earlier semantics keep the rule they were made
+        # under (no structured period keys, or an older engine_version).
+        structured = self.engine_version not in self.PRE_PERIOD_SEMANTICS
+        period = self._period_comparison(row) if structured else None
+        if period == 'mismatch':
+            # Two different stated periods: neither agreement nor a gap means
+            # anything, so this blocks verified as well as contradicted.
+            return 'no_data', 'period_mismatch', tolerance
+
         within = abs(claimed - observed) / abs(observed) <= tolerance
         if within:
             return 'verified', None, tolerance
@@ -368,6 +418,12 @@ class TruthDeltaReport(models.Model):
             return 'no_data', 'no_comparable_claim', tolerance
         if any(not row.get(field) for field in self.REQUIRED_PROVENANCE):
             return 'no_data', 'extraction_insufficient', tolerance
+        if structured:
+            if period == 'unresolved':
+                return 'no_data', 'period_unresolved', tolerance
+            if period != 'comparable':
+                return 'no_data', 'period_unknown', tolerance
+            return 'contradicted', None, tolerance
         if not self._periods_comparable(row):
             return 'no_data', 'period_unknown', tolerance
         return 'contradicted', None, tolerance
@@ -421,7 +477,7 @@ class TruthDeltaReport(models.Model):
                 continue
             # The most specific reason present, so "we had evidence but could
             # not compare the periods" never reads as "we found nothing".
-            for preferred in ('currency_unknown', 'currency_mismatch', 'period_unknown', 'extraction_insufficient',
+            for preferred in ('currency_unknown', 'currency_mismatch', 'period_mismatch', 'period_unresolved', 'period_unknown', 'extraction_insufficient',
                               'ambiguous_pairing', 'no_comparable_claim',
                               'corroboration_only',
                               'source_unavailable', 'no_external_evidence'):
