@@ -16,6 +16,7 @@ from typing import Dict, List, Optional, Tuple
 from django.conf import settings
 from .source_capabilities import capability_for, may_store, origin_for
 from .truth_delta_models import ObservedDatapoint, ExternalDataSource
+from .financial_metrics import currency_code
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,10 @@ class DataSourceIntegration:
     # report's grounding reads this to tell an absence from an outage.
     last_failure_reason = None
     source_name = None
+
+    def extract_currency(self, data: Dict, category: str) -> str:
+        """Only the source's explicit currency metadata can fill this code."""
+        return ''
 
     def authenticate(self) -> bool:
         """Check if API credentials are valid"""
@@ -76,6 +81,10 @@ class CrunchbaseIntegration(DataSourceIntegration):
 
     source_type = 'crunchbase'
     source_name = 'Crunchbase'
+
+    def extract_currency(self, data: Dict, category: str) -> str:
+        # annual_revenue is unqualified; total_funding_usd names its currency.
+        return 'USD' if category == 'funding_raised' and data.get('total_funding_usd') is not None else ''
 
     def __init__(self):
         self.api_key = getattr(settings, 'CRUNCHBASE_API_KEY', None)
@@ -388,6 +397,10 @@ class SECFilingsIntegration(DataSourceIntegration):
             return None
         return float(fact['val']), '$'
 
+    def extract_currency(self, data: Dict, category: str) -> str:
+        # _latest_annual_fact selects the XBRL USD unit, not a formatter's $.
+        return 'USD' if category == 'revenue' and self._latest_annual_fact(data, self.REVENUE_TAGS) else ''
+
     def extract_employees(self, data: Dict) -> Optional[int]:
         dei = (data or {}).get('facts', {}).get('dei', {})
         concept = dei.get('EntityNumberOfEmployees')
@@ -591,9 +604,13 @@ class DataSourceManager:
                 # ever decides a claim's state (TruthDeltaEngine._build_comparison).
                 if not may_store(source_type, category):
                     return
+                read_currency = getattr(integration, 'extract_currency', None)
+                currency = currency_code(read_currency(data, category)) if callable(read_currency) else ''
+                currency = currency or currency_code(unit)
                 created_points.append(ObservedDatapoint.objects.create(
                     document=document, category=category, registrant=registrant,
                     observed_value=observed_value, observed_value_numeric=value_numeric, unit=unit,
+                    currency=currency,
                     time_period=time_period, source=external_source, source_credibility=credibility,
                     extraction_method='api', role=capability_for(source_type, category),
                     evidence_origin=origin,

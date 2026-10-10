@@ -23,6 +23,7 @@ not asked at all. Every outcome is returned for the report; none of them is a
 statement about the company.
 """
 import logging
+from .financial_metrics import currency_code
 
 from .dataforb2b import (
     SOURCE_TYPE, SUCCESS, UNCONFIGURED, UNRESOLVABLE, DataForB2BClient, normalize_domain, supports,
@@ -96,6 +97,7 @@ def observe(document, claims, client=None):
         ObservedDatapoint.objects.create(
             document=document, category=fact.category,
             observed_value=_display(fact), observed_value_numeric=fact.value, unit=fact.unit,
+            currency=currency_code(fact.unit),
             time_period=f'as of {retrieved}', source=source, registrant=record.provider_id,
             source_url=record.linkedin_url[:200] if record.linkedin_url.startswith('https://') else '',
             source_date=record.retrieved_at.date(), source_credibility=CORROBORATION_CREDIBILITY,

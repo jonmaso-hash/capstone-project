@@ -1,0 +1,33 @@
+{
+  "frozen": "2026-10-10 before currency implementation, base 2222058",
+  "scope": "Currency only; no FX conversion, period extraction or attribution changes. PR 1 fixtures and original answer keys remain unchanged.",
+  "decks": {
+    "manychat": {"claim_count": 3, "money_currency": "", "reason": "The source says $23.1M, not USD. Bots and messages remain counts. Existing stage, date and attribution gaps remain recorded in PR 1's key."},
+    "ben_jerrys": {"claim_count": 0, "reason": "Broadening currency recognition does not add sales keywords, join slide lines, or attribute parent figures to the brand. The parent-unit EUR amount must parse correctly in isolation, but the unchanged company-claim gates still produce no claim."}
+  },
+  "amounts": [
+    ["Revenue of €7.9bn", 7900000000, "EUR"],
+    ["Revenue of £2.4 million", 2400000, "GBP"],
+    ["Revenue of USD 1.2M", 1200000, "USD"],
+    ["Revenue of US$1.2M", 1200000, "USD"],
+    ["Revenue of C$1.2M", 1200000, "CAD"],
+    ["Revenue of A$1.2M", 1200000, "AUD"],
+    ["Revenue of 1.2 million EUR", 1200000, "EUR"],
+    ["Revenue of CAD 1,250,000", 1250000, "CAD"],
+    ["Revenue of $1.2M", 1200000, ""],
+    ["Revenue of $1.2M CAD", 1200000, "CAD"],
+    ["Revenue of €1.2M USD", 1200000, ""],
+    ["75% utilized; previously raised US$20K", 20000, "USD"],
+    ["Revenue of €7,9bn", null, ""],
+    ["Revenue of €1.2Mbps", null, ""],
+    ["Founded in 2015", null, ""],
+    ["900M Messenger users", null, ""]
+  ],
+  "comparisons": {
+    "matching_known_currency": "Other existing authority, category, tolerance, provenance and period rules still apply.",
+    "different_known_currency": "no_data / currency_mismatch; no discrepancy percentage, score or conversion",
+    "either_currency_missing": "no_data / currency_unknown; a bare $ or matching number cannot establish currency",
+    "counts": "Currency gate does not apply.",
+    "profiles": "No recorded profile currency: monetary reconciliation is not comparable; display the deck's recorded currency without relabelling it as dollars."
+  }
+}

@@ -82,7 +82,7 @@ class AReportRecordsTheRulesThatProducedItTests(TestCase):
         ClaimedDatapoint.objects.create(
             document=self.document, category='revenue',
             claimed_value='$416 billion', claimed_value_numeric=416_000_000_000.0,
-            unit='$', source_chunk='Insight: Revenue', text_excerpt='about $416 billion.',
+            unit='$', currency='USD', source_chunk='Insight: Revenue', text_excerpt='about $416 billion.',
         )
         with mock.patch.object(DataSourceManager, 'INTEGRATIONS', {'sec': SECFilingsIntegration}), \
              mock.patch.object(DataSourceManager, 'fetch_news_headlines', return_value=[]), \
@@ -115,13 +115,13 @@ class AReportRecordsTheRulesThatProducedItTests(TestCase):
         ClaimedDatapoint.objects.create(
             document=self.document, category='revenue',
             claimed_value='$416 billion', claimed_value_numeric=416_000_000_000.0,
-            unit='$', source_chunk='Insight: Revenue', text_excerpt='about $416 billion.',
+            unit='$', currency='USD', source_chunk='Insight: Revenue', text_excerpt='about $416 billion.',
         )
         source, _ = ExternalDataSource.objects.get_or_create(
             source_type='sec', defaults={'source_name': 'SEC EDGAR', 'is_active': True})
         ObservedDatapoint.objects.create(
             document=self.document, category='revenue', observed_value='416161000000',
-            observed_value_numeric=416_161_000_000.0, unit='$', time_period='FY2025',
+            observed_value_numeric=416_161_000_000.0, unit='$', currency='USD', time_period='FY2025',
             source=source, source_credibility=0.95, extraction_method='api',
         )
 

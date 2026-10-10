@@ -18,6 +18,7 @@ from .utils import strip_page_markers
 from .embeddings import embedding_engine
 import json
 from django.conf import settings
+from .financial_metrics import MONEY_FIGURE, currency_amount
 
 logger = logging.getLogger(__name__)
 
@@ -598,8 +599,14 @@ class ZeldaIntelligencePipelineV2:
 
         from .truth_delta_tasks import _extract_numeric_value
 
+        def figure_key(text):
+            if category in ('Revenue', 'Funding', 'Market'):
+                value, currency = currency_amount(text)
+                return (value, currency) if value is not None else None
+            return _extract_numeric_value(text)
+
         selected = [best_insight]
-        seen = {_extract_numeric_value(best_insight[0])}
+        seen = {figure_key(best_insight[0])}
         for candidate in sorted(candidates, key=lambda c: -c[1]):
             if len(selected) >= self.MAX_INSIGHTS_PER_NUMERIC_CATEGORY:
                 break
@@ -610,7 +617,7 @@ class ZeldaIntelligencePipelineV2:
             # percentage parses as a number, but it is neither.
             if not self._has_figure(category, candidate[0]):
                 continue
-            value = _extract_numeric_value(candidate[0])
+            value = figure_key(candidate[0])
             if value is None or value in seen:
                 continue
             seen.add(value)
@@ -670,7 +677,9 @@ class ZeldaIntelligencePipelineV2:
             if category in self.NUMERIC_CATEGORIES and self.THIRD_PARTY_ATTRIBUTION_PATTERN.search(clean_sentence):
                 continue
 
-            if category == 'Traction' and matched_keywords == ['growth'] and self.REVENUE_DOLLAR_CONTEXT_PATTERN.search(clean_sentence):
+            if (category == 'Traction' and matched_keywords == ['growth']
+                    and re.search(r'\brevenue\b', clean_sentence, re.I)
+                    and MONEY_FIGURE.search(clean_sentence)):
                 continue
 
             # Skip short fragments
@@ -706,8 +715,8 @@ class ZeldaIntelligencePipelineV2:
 
             if confidence > best_confidence or (
                 confidence == best_confidence and
-                re.search(r'\$[\d,]+[MBK]?', clean_sentence) and
-                not re.search(r'\$[\d,]+[MBK]?', best_match or '')
+                MONEY_FIGURE.search(clean_sentence) and
+                not MONEY_FIGURE.search(best_match or '')
             ):
                 cleaned_value = self._extract_clean_value(category, clean_sentence)
                 if cleaned_value is None:
@@ -760,7 +769,7 @@ class ZeldaIntelligencePipelineV2:
     USAGE_LABEL = r'\b(?:bots?|messages?)\b'
 
     # A currency amount, or a bare count for the categories that count things.
-    _MONEY_FIGURE = r'\$\s?[\d,]*\.?\d+\s*(?:thousand|million|billion|trillion|[KkMmBb])?'
+    _MONEY_FIGURE = MONEY_FIGURE.pattern
     _COUNT_FIGURE = r'\b[\d,]*\.?\d+\b'
     # Traction counts as decks write them: a spaced thousands separator
     # ("140 000+ bots"), an abbreviated or spelled multiplier ("500M
@@ -939,8 +948,7 @@ class ZeldaIntelligencePipelineV2:
     # writing "$416 billion" scored no better than prose -- and lost to the
     # ten-words-or-more rule, which is how a risks sentence beat Apple's
     # revenue. Matched case-insensitively against the raw sentence.
-    MONEY_FIGURE = re.compile(
-        r'\$\s?[\d,]*\.?\d+\s*(?:thousand|million|billion|trillion|[KkMmBb])?\b', re.IGNORECASE)
+    MONEY_FIGURE = MONEY_FIGURE
 
     # A headcount or unit count stated next to the noun it counts. Not a
     # currency figure, so Team and Traction need their own shape.

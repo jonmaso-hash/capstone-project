@@ -97,6 +97,8 @@ class External:
     discrepancy_pct: Optional[float] = None
     agrees: Optional[bool] = None
     independent: Optional[bool] = None
+    currency: str = ''
+    comparison_reason: str = ''
 
 
 @dataclass(frozen=True)
@@ -114,6 +116,7 @@ class GroundedItem:
     external: Tuple[External, ...] = ()
     insight_id: Optional[int] = None
     claim_id: Optional[int] = None
+    currency: str = ''
 
     def __post_init__(self):
         if self.status not in STATES:
@@ -236,7 +239,13 @@ def _claim_items(document, claims, report):
     chain = report.grounding_chain() if report is not None else {}
     items = []
     for n, claim in enumerate(claims, 1):
+        category_rows = chain.get(claim.category, [])
+        own_rows = [r for r in category_rows if r.get('claim_id') == claim.pk]
+        rows = own_rows or category_rows
         canonical = states.get(claim.category)
+        own_reason = None
+        if own_rows:
+            canonical, own_reason = own_rows[0]['state'], own_rows[0]['reason']
         if report is None:
             status, reason = INSUFFICIENT, ('verification_failed' if document.verification_failed_at
                                             else 'verification_not_run')
@@ -244,9 +253,9 @@ def _claim_items(document, claims, report):
             status, reason = SELF_REPORTED, 'not_checked'
         else:
             status = _CANONICAL_TO_STATE[canonical]
-            reason = reasons.get(claim.category, '') if status == INSUFFICIENT else ''
+            reason = (own_reason or reasons.get(claim.category, '')) if status == INSUFFICIENT else ''
         external = []
-        for row in chain.get(claim.category, []):
+        for row in rows:
             if row.get('observed_value') is not None:
                 external.append(External(
                     value=row.get('observed_value_numeric', row.get('observed_value')),
@@ -255,6 +264,7 @@ def _claim_items(document, claims, report):
                     period=row.get('observed_time_period') or '',
                     registrant=row.get('observed_registrant') or '',
                     discrepancy_pct=row.get('discrepancy_pct'),
+                    currency=row.get('observed_currency') or '',
                 ))
             for entry in row.get('corroboration') or []:
                 external.append(External(
@@ -262,11 +272,14 @@ def _claim_items(document, claims, report):
                     role=CORROBORATES, origin=entry.get('origin') or '', period=entry.get('period') or '',
                     discrepancy_pct=entry.get('discrepancy_pct'), agrees=entry.get('agrees'),
                     independent=entry.get('independent'),
+                    currency=entry.get('currency') or '',
+                    comparison_reason=entry.get('comparison_reason') or '',
                 ))
             for entry in row.get('context') or []:
                 external.append(External(
                     value=entry.get('value'), source=entry.get('source') or '', role=CONTEXT,
                     origin=entry.get('origin') or '', period=entry.get('period') or '',
+                    currency=entry.get('currency') or '',
                 ))
         external = tuple(external)
         items.append(GroundedItem(
@@ -275,6 +288,7 @@ def _claim_items(document, claims, report):
             sources=(SourceRef(document_id=document.id, page_number=claim.page_number,
                                chunk_hash=claim.chunk_hash or ''),),
             confidence=claim.confidence_in_extraction, value=claim.claimed_value_numeric,
+            currency=claim.currency,
             external=external, claim_id=claim.id,
         ))
     return items
