@@ -53,7 +53,7 @@ class TheEngineStoresZeldasScoreTests(_Verify):
         self.assertEqual(self.report.grounding_reasons()['revenue'], 'period_unknown')
         self.assertEqual((self.report.overall_truth_score, self.report.credibility_risk), (None, 'unknown'))
         self.assertEqual(self.report.engine_version, TRUTH_DELTA_SEMANTICS)
-        self.assertEqual(TRUTH_DELTA_SEMANTICS, 'td.3')
+        self.assertEqual(TRUTH_DELTA_SEMANTICS, 'td.4')
 
     def test_verified_scores_100_even_when_the_model_says_12(self):
         self.claim('revenue', '$46.4 billion', 46.4e9)

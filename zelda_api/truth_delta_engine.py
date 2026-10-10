@@ -17,6 +17,7 @@ from .truth_delta_models import (
 from .truth_delta_sources import data_source_manager
 from .source_capabilities import CAN_CORROBORATE, CAN_ESTABLISH, INFORMATIONAL_ONLY
 from . import truth_delta_narrative as narrative
+from .financial_metrics import currency_comparison_reason
 
 logger = logging.getLogger(__name__)
 
@@ -245,8 +246,11 @@ class TruthDeltaEngine:
         TruthDeltaReport's own rules on an unsaved report -- so there is still
         exactly one implementation of what a pairing establishes.
         """
-        canonical = TruthDeltaReport(details={'comparison': comparison,
+        canonical = TruthDeltaReport(engine_version=TruthDeltaEngine.semantics_version,
+                                     details={'comparison': comparison,
                                               'source_diagnostics': source_diagnostics})
+        for row in comparison:
+            row['zelda_state'], row['zelda_reason'], _ = canonical._row_state(row)
         return canonical.category_states(), canonical.grounding_reasons(), canonical.verifiability_stats()
 
     # --- helpers ---
@@ -290,20 +294,28 @@ class TruthDeltaEngine:
             # establishing source. This is the single place a claim is paired
             # with evidence, so it is the single place that rule lives.
             establishing = [o for o in matches if o.role == CAN_ESTABLISH]
-            best = max(establishing, key=lambda o: o.source_credibility) if establishing else None
+            compatible = [o for o in establishing if not currency_comparison_reason(
+                claim.category, claim.currency, o.currency)]
+            candidates = compatible or establishing
+            best = max(candidates, key=lambda o: o.source_credibility) if candidates else None
+            currency_reason = (currency_comparison_reason(claim.category, claim.currency, best.currency)
+                               if best else None)
 
             discrepancy_pct = None
-            if best and claim.claimed_value_numeric is not None and best.observed_value_numeric:
+            if best and not currency_reason and claim.claimed_value_numeric is not None and best.observed_value_numeric:
                 discrepancy_pct = round(
                     (claim.claimed_value_numeric - best.observed_value_numeric) / best.observed_value_numeric * 100, 1
                 )
 
             rows.append({
                 'category': claim.category,
+                'claim_id': claim.pk,
                 'claimed_value': claim.claimed_value,
                 'claimed_value_numeric': claim.claimed_value_numeric,
+                'claim_currency': claim.currency,
                 'observed_value': best.observed_value if best else None,
                 'observed_value_numeric': best.observed_value_numeric if best else None,
+                'observed_currency': best.currency if best else None,
                 'observed_source': best.source.source_name if best and best.source else None,
                 # WHICH SOURCE is not WHICH COMPANY AT THAT SOURCE. "SEC EDGAR"
                 # alone cannot distinguish this business from a dormant
@@ -334,7 +346,8 @@ class TruthDeltaEngine:
                 ],
                 'context': [
                     {'value': obs.observed_value, 'source': obs.source.source_name if obs.source else None,
-                     'origin': obs.evidence_origin or None, 'period': obs.time_period or None}
+                     'origin': obs.evidence_origin or None, 'period': obs.time_period or None,
+                     'currency': obs.currency}
                     for obs in matches if obs.role == INFORMATIONAL_ONLY
                 ],
             })
@@ -353,13 +366,16 @@ class TruthDeltaEngine:
         tolerance = TruthDeltaReport.GROUNDING_TOLERANCE.get(claim.category, TruthDeltaReport.DEFAULT_TOLERANCE)
         agrees = None
         discrepancy_pct = None
-        if claim.claimed_value_numeric is not None and obs.observed_value_numeric:
+        currency_reason = currency_comparison_reason(claim.category, claim.currency, obs.currency)
+        if not currency_reason and claim.claimed_value_numeric is not None and obs.observed_value_numeric:
             gap = (claim.claimed_value_numeric - obs.observed_value_numeric) / obs.observed_value_numeric
             discrepancy_pct = round(gap * 100, 1)
             agrees = abs(gap) <= tolerance
         return {
             'value': obs.observed_value,
             'value_numeric': obs.observed_value_numeric,
+            'currency': obs.currency,
+            'comparison_reason': currency_reason,
             'source': obs.source.source_name if obs.source else None,
             'origin': obs.evidence_origin or None,
             'period': obs.time_period or None,
@@ -372,7 +388,8 @@ class TruthDeltaEngine:
     @staticmethod
     def _serialize_claims(claims):
         return [
-            {'category': c.category, 'claimed_value': c.claimed_value, 'claimed_value_numeric': c.claimed_value_numeric, 'unit': c.unit}
+            {'category': c.category, 'claimed_value': c.claimed_value, 'claimed_value_numeric': c.claimed_value_numeric,
+             'unit': c.unit, 'currency': c.currency}
             for c in claims
         ]
 
@@ -381,6 +398,7 @@ class TruthDeltaEngine:
         return [
             {
                 'category': o.category, 'observed_value': o.observed_value,
+                'currency': o.currency,
                 'source': o.source.source_name if o.source else None, 'time_period': o.time_period,
                 'role': o.role, 'origin': o.evidence_origin or None,
             }
@@ -409,8 +427,8 @@ class TruthDeltaEngine:
         # Each row carries the verdict the model is to explain, never decide.
         states, reasons = states or {}, reasons or {}
         rows = [
-            {**row, 'zelda_state': states.get(row.get('category'), 'no_data'),
-             'zelda_reason': reasons.get(row.get('category'))}
+            {**row, 'zelda_state': row.get('zelda_state', states.get(row.get('category'), 'no_data')),
+             'zelda_reason': row.get('zelda_reason', reasons.get(row.get('category')))}
             for row in comparison
         ]
         user_content = json.dumps({

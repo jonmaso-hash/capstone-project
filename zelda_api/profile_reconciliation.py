@@ -50,9 +50,9 @@ identify so later memo or investor work does not have to recompute them:
                                raise target, the JoyToys misfiling, so it may be
                                the ask rather than money already raised
 
-Revenue is compared in exactly one case: the profile says ARR and the deck has
-an `arr` claim -- the category carries its own basis. Nothing is annualized,
-and a monthly figure is never multiplied into an annual one.
+Profiles do not record a currency, so monetary pairs are not comparable even
+when their numbers and ARR basis agree. Deck currencies remain visible. Count
+pairs can still be compared. Nothing is annualized or currency converted.
 
 Dates are what the schema actually has: the profile's last save (the whole
 record, not the field) and the deck's upload time. Neither is when a figure was
@@ -87,11 +87,13 @@ class Reconciliation:
     deck_claim_ids: Tuple[int, ...] = ()
     profile_saved_at: object = None            # Application.updated_at: the record, not the field
     deck_uploaded_at: object = None            # DocumentSource.created_at
+    deck_currencies: Tuple[str, ...] = ()
 
-    def display(self, value):
+    def display(self, value, currency=''):
         if value is None:
             return ''
-        return f'${value:,.0f}' if self.kind == 'money' else f'{value:,.0f}'
+        return (f'{value:,.0f} {currency or "(currency unknown)"}'
+                if self.kind == 'money' else f'{value:,.0f}')
 
     @property
     def profile_display(self):
@@ -99,7 +101,8 @@ class Reconciliation:
 
     @property
     def deck_display(self):
-        return ', '.join(self.display(v) for v in self.deck_values)
+        return ', '.join(self.display(v, self.deck_currencies[i] if i < len(self.deck_currencies) else '')
+                         for i, v in enumerate(self.deck_values))
 
     @property
     def reason_text(self):
@@ -162,6 +165,7 @@ def reconcile_profile_with_deck(document, viewer):
             profile_value=profile_value, deck_values=deck_values,
             deck_claim_ids=tuple(c.id for c in numeric),
             profile_saved_at=app.updated_at, deck_uploaded_at=document.created_at,
+            deck_currencies=tuple(c.currency for c in numeric),
         )
 
         def not_comparable(reason):
@@ -175,6 +179,10 @@ def reconcile_profile_with_deck(document, viewer):
             results.append(not_comparable(basis_reason))
         elif not deck_values:
             results.append(not_comparable('deck_value_unparsed'))
+        elif kind == 'money':
+            # Profiles have no currency field. Neither their UI's dollar sign
+            # nor a matching deck number establishes a compatible currency.
+            results.append(not_comparable('profile_currency_unknown'))
         elif any(not _agree(v, deck_values[0]) for v in deck_values[1:]):
             results.append(not_comparable('conflicting_deck_claims'))
         elif (profile_field == 'prior_amount_raised' and app.raising_amount
@@ -191,6 +199,7 @@ def reconcile_profile_with_deck(document, viewer):
 # What the owner is told for each not-comparable reason. Neutral: none of these
 # is an error, and none says which figure is right.
 REASON_TEXT = {
+    'profile_currency_unknown': 'Your profile does not record a monetary currency, so these figures were not compared.',
     'profile_blank': 'Your profile leaves this blank, so there is nothing to compare the deck figure with.',
     'profile_zero_may_be_default': (
         'Your profile shows 0, which is also what an unfilled profile shows, so it was not compared.'),

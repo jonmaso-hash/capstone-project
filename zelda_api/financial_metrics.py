@@ -26,6 +26,7 @@ are INTENTIONALLY different contracts. The claim category genuinely means ARR.
 Do not unify them.
 """
 import re
+import math
 
 _IS_ARR = re.compile(r"\bARR\b|annual\s+recurring", re.IGNORECASE)
 _IS_MRR = re.compile(r"\bMRR\b|monthly\s+recurring", re.IGNORECASE)
@@ -120,16 +121,62 @@ _PEOPLE_NOUN = re.compile(
     r"\bpeople\b|\bperson\s+team\b",
     re.IGNORECASE,
 )
-# A $-denominated amount. Deliberately anchored on the currency mark so a
-# percentage elsewhere in the sentence cannot be read as a sum of money.
-_CURRENCY = re.compile(
-    r"\$\s*([\d,]+(?:\.\d+)?)\s*([KMB]|thousand|million|billion)?", re.IGNORECASE
-)
+# Currency is separate from the amount and from a count's unit. A bare dollar
+# symbol is deliberately unknown, including in a US company's deck.
+CURRENCY_CODES = frozenset({'USD', 'EUR', 'GBP', 'CAD', 'AUD', 'NZD', 'JPY',
+                            'CNY', 'INR', 'CHF', 'SGD', 'HKD', 'MXN', 'BRL', 'ZAR'})
+CURRENCY_SYMBOLS = {'US$': 'USD', 'C$': 'CAD', 'A$': 'AUD', 'NZ$': 'NZD',
+                    'HK$': 'HKD', 'S$': 'SGD', '€': 'EUR', '£': 'GBP', '$': ''}
+MONETARY_CATEGORIES = MONEY_CATEGORIES | {'arr'}
+_CURRENCY_TOKEN = '(?:' + '|'.join(re.escape(t) for t in sorted(
+    CURRENCY_CODES | set(CURRENCY_SYMBOLS), key=lambda t: (-len(t), t))) + ')'
+_AMOUNT = r'(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?'
+_SCALE = r'(?:thousand\b|million\b|billion\b|trillion\b|bn\b|mn\b|[kmbt](?![A-Za-z]))'
+MONEY_FIGURE = re.compile(
+    rf'(?<![\w.,])(?:(?P<prefix>{_CURRENCY_TOKEN})\s*(?P<amount>{_AMOUNT})'
+    rf'\s*(?P<scale>{_SCALE})?(?:\s*(?P<suffix>{_CURRENCY_TOKEN})(?!\w))?'
+    rf'|(?P<suffix_amount>{_AMOUNT})\s*(?P<suffix_scale>{_SCALE})?\s*'
+    rf'(?P<suffix_only>{_CURRENCY_TOKEN})(?!\w))'
+    r'(?![\w]|[.,]\d)', re.IGNORECASE)
 _MULTIPLIER = {
     "k": 1_000, "thousand": 1_000,
     "m": 1_000_000, "million": 1_000_000,
     "b": 1_000_000_000, "billion": 1_000_000_000,
+    "bn": 1_000_000_000, "mn": 1_000_000,
+    "t": 1_000_000_000_000, "trillion": 1_000_000_000_000,
 }
+
+
+def currency_code(value):
+    """An explicit supported ISO code or qualified symbol; never infer USD."""
+    if not isinstance(value, str):
+        return ''
+    value = value.strip().upper()
+    return value if value in CURRENCY_CODES else CURRENCY_SYMBOLS.get(value, '')
+
+
+def currency_amount(text):
+    """First monetary amount and its explicit currency, or (None, '')."""
+    match = MONEY_FIGURE.search(text or '')
+    if not match:
+        return None, ''
+    digits = match['amount'] or match['suffix_amount']
+    scale = (match['scale'] or match['suffix_scale'] or '').lower()
+    value = float(digits.replace(',', '')) * _MULTIPLIER.get(scale, 1)
+    if not math.isfinite(value):
+        return None, ''
+    codes = {currency_code(token) for token in (match['prefix'], match['suffix'], match['suffix_only'])
+             if token and currency_code(token)}
+    return value, next(iter(codes)) if len(codes) == 1 else ''
+
+
+def currency_comparison_reason(category, claim_currency, observed_currency):
+    if category not in MONETARY_CATEGORIES:
+        return None
+    a, b = currency_code(claim_currency), currency_code(observed_currency)
+    if not a or not b:
+        return 'currency_unknown'
+    return 'currency_mismatch' if a != b else None
 
 
 def claim_is_admissible(category, text):
@@ -176,19 +223,12 @@ def usage_unit(text):
 
 def currency_value(text):
     """
-    The first $-denominated amount, or None.
+    The first explicitly monetary amount, or None. Currency is returned by
+    currency_amount; this compatibility helper returns just the number.
 
     Used for money categories so a percentage cannot win: the general numeric
     extractor matches percentages FIRST, which is how "Bank line: 75% utilized"
     became $75 of capital raised while the $20K actually raised sat unread in
     the same sentence.
     """
-    match = _CURRENCY.search(text or "")
-    if not match:
-        return None
-    try:
-        value = float(match.group(1).replace(",", ""))
-    except ValueError:
-        return None
-    suffix = (match.group(2) or "").lower()
-    return value * _MULTIPLIER.get(suffix, 1)
+    return currency_amount(text)[0]

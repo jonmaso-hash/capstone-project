@@ -55,6 +55,7 @@ class _Adapter(TestCase):
     def claim(self, category='funding_raised', value=850e6):
         return ClaimedDatapoint.objects.create(
             document=self.doc, category=category, claimed_value=f'{category}: {value}',
+            currency='USD' if category == 'funding_raised' else '',
             claimed_value_numeric=value, page_number=2, chunk_hash='h', confidence_in_extraction=90.0)
 
     def provider(self, routes=None):
@@ -154,6 +155,7 @@ class EndToEndTests(_Adapter):
                     source_type='corporate', defaults={'source_name': 'Corporate filing'})[0]
                 ObservedDatapoint.objects.create(
                     document=document, category='funding_raised', observed_value=str(establishing_funding),
+                    currency='USD',
                     observed_value_numeric=establishing_funding, source=filing, source_credibility=0.95,
                     role=CAN_ESTABLISH, evidence_origin='company_document', time_period='to date')
             return []

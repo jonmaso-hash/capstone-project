@@ -10,7 +10,7 @@ from django.utils import timezone
 from .vector_models import DocumentSource
 from .truth_delta_engine import TruthDeltaEngine
 from .financial_metrics import (
-    MONEY_CATEGORIES, claim_is_admissible, currency_value, usage_unit,
+    MONEY_CATEGORIES, claim_is_admissible, currency_amount, usage_unit,
 )
 from .truth_delta_models import ClaimedDatapoint
 
@@ -124,9 +124,10 @@ def extract_claims_from_insights(document_id: int):
             # $75 raised while the $20K actually raised sat unread in the same
             # sentence.
             if matched_category in MONEY_CATEGORIES:
-                numeric_value = currency_value(text)
+                numeric_value, currency = currency_amount(text)
             else:
                 numeric_value = _extract_numeric_value(text)
+                currency = ''
 
             if numeric_value is None:
                 logger.debug(f"Could not extract numeric value from insight: {insight.insight_text}")
@@ -140,6 +141,7 @@ def extract_claims_from_insights(document_id: int):
                 claimed_value=insight.insight_text[:255],  # Truncate if needed
                 claimed_value_numeric=numeric_value,
                 unit=unit,
+                currency=currency,
                 source_chunk=f"Insight: {insight.category}",
                 confidence_in_extraction=insight.confidence_score,
                 page_number=source_chunk_obj.page_number if source_chunk_obj else None,

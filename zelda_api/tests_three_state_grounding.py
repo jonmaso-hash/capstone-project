@@ -314,11 +314,11 @@ class TheEngineBuildsAndKeepsTheComparisonTests(TestCase):
         ClaimedDatapoint.objects.create(
             document=self.document, category='revenue',
             claimed_value='$11.4 million in annual recurring revenue',
-            claimed_value_numeric=11_400_000.0)
+            claimed_value_numeric=11_400_000.0, currency='USD')
         ObservedDatapoint.objects.create(
             document=self.document, category='revenue', observed_value='4000000.0',
             observed_value_numeric=4_000_000.0, source=source, source_credibility=0.95,
-            time_period='FY2025 10-K')
+            time_period='FY2025 10-K', currency='USD')
 
     def comparison(self):
         from .truth_delta_engine import TruthDeltaEngine

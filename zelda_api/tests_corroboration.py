@@ -68,11 +68,13 @@ class _Evidence(TestCase):
     def claim(self, category='funding_raised', value=25e6):
         return ClaimedDatapoint.objects.create(
             document=self.doc, category=category, claimed_value=f'{category} {value}',
+            currency='USD' if category in ('revenue', 'arr', 'funding_raised', 'market_size') else '',
             claimed_value_numeric=value, page_number=3, chunk_hash='h', confidence_in_extraction=90.0)
 
     def observe(self, value, role, origin, source='crunchbase', category='funding_raised', credibility=0.8):
         return ObservedDatapoint.objects.create(
             document=self.doc, category=category, observed_value=str(value), observed_value_numeric=value,
+            currency='USD' if category in ('revenue', 'arr', 'funding_raised', 'market_size') else '',
             source=self.sources[source], source_credibility=credibility, role=role, evidence_origin=origin,
             time_period='FY2025')
 
