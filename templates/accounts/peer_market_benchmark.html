@@ -70,19 +70,35 @@
     <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-body p-4">
             <h5 class="fw-bold mb-1">External peer metrics</h5>
-            <p class="small text-muted mb-3">Percentiles are calculated by Interlink from disclosed numeric values in the frozen peer set. They are descriptive comparisons, not rankings of business quality.</p>
+            <p class="small text-muted mb-3">Each median uses at least three distinct peers with source-linked figures of the same unit, measurement basis and date or reporting period. Percentiles also require a compatible recorded basis for your own figure. These describe the cited sample, not business quality or the whole market.</p>
+            {% if benchmark.external_provenance_legacy %}
+            <p class="small text-muted">This older snapshot has no figure-level evidence. Its external calculations are withheld; peer discovery and source links remain available. No paid research was rerun.</p>
+            {% endif %}
             <div class="table-responsive">
                 <table class="table align-middle mb-0">
-                    <thead><tr><th>Metric</th><th>Your value</th><th>Peer median</th><th>Percentile</th><th>Peer values</th></tr></thead>
+                    <thead><tr><th>Metric and basis</th><th>Your comparable value</th><th>Peer median</th><th>Percentile</th><th>Distinct peers</th></tr></thead>
                     <tbody>
                     {% for name, row in benchmark.external_benchmark.items %}
+                    {% for group in row.groups %}
                     <tr>
-                        <td class="benchmark-metric-name">{{ name }}</td>
-                        <td>{{ row.value|default_if_none:"—" }}</td>
-                        <td>{{ row.median|default_if_none:"—" }}</td>
-                        <td>{% if row.percentile != None %}{{ row.percentile }}th{% else %}—{% endif %}</td>
-                        <td>{{ row.peer_values_available }}</td>
+                        <td>
+                            <strong>{{ row.label }}</strong>
+                            <div class="small text-muted">{{ group.unit }} · {{ group.basis }}</div>
+                            <div class="small text-muted">{% if group.period_end %}Annual period ending {{ group.period_end }}{% else %}As of {{ group.as_of }}{% endif %}</div>
+                            {% if row.value != None and group.value == None %}<div class="small">Your recorded figure: {{ row.value }} (comparison basis not established).</div>{% endif %}
+                        </td>
+                        <td>{{ group.value|default_if_none:"—" }}</td>
+                        <td>{{ group.median|default_if_none:"—" }}</td>
+                        <td>{% if group.percentile != None %}{{ group.percentile }}th{% else %}—{% endif %}</td>
+                        <td>{{ group.peer_values_available }}</td>
                     </tr>
+                    {% if group.comparison_note %}<tr><td colspan="5" class="small text-muted border-0 pt-0">{{ group.comparison_note }}</td></tr>{% endif %}
+                    {% empty %}
+                    <tr>
+                        <td>{{ row.label }}{% if row.value != None %}<div class="small">Your recorded figure: {{ row.value }}.</div>{% endif %}</td>
+                        <td colspan="4" class="small text-muted">No comparable source-linked peer figures are available.</td>
+                    </tr>
+                    {% endfor %}
                     {% empty %}
                     <tr><td colspan="5" class="text-muted">No comparable public numeric values were established.</td></tr>
                     {% endfor %}
@@ -147,6 +163,15 @@
                         <strong>{{ peer.company_name }}</strong>
                         <div class="small text-muted">{{ peer.location|default:"Location not established" }}</div>
                         <div class="small mt-2">{{ peer.sector_or_industry }}{% if peer.stage_or_type %} · {{ peer.stage_or_type }}{% endif %}</div>
+                        {% for figure in peer.figures %}
+                        <details class="mt-3 small">
+                            <summary>{{ figure.label }}: {{ figure.value }} {{ figure.unit|default:"(unit not established)" }}</summary>
+                            <div class="mt-2 text-muted">{{ figure.basis|default:"Basis not established" }}{% if figure.period_end %} · annual period ending {{ figure.period_end }}{% elif figure.as_of %} · as of {{ figure.as_of }}{% endif %}</div>
+                            <blockquote class="border-start ps-2 my-2">{{ figure.source_quote }}</blockquote>
+                            <a href="{{ figure.source_url }}" target="_blank" rel="noopener noreferrer">{{ figure.source_title }}</a>
+                            {% if figure.exclusion_reason %}<div class="text-muted mt-1">Excluded from calculations: {{ figure.exclusion_reason }}.</div>{% endif %}
+                        </details>
+                        {% endfor %}
                     </div>
                 </div>
                 {% empty %}
@@ -159,7 +184,7 @@
     <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-body p-4">
             <h5 class="fw-bold mb-2">Sources</h5>
-            <p class="small text-muted">External facts are frozen with the source set used for this monthly snapshot.</p>
+            <p class="small text-muted">Each displayed peer figure links to its supporting citation passage. Source-linked extraction is not independent verification. Figures and sources are frozen for this monthly snapshot.</p>
             <ol class="mb-0">
                 {% for source in benchmark.sources %}
                 <li class="mb-2">

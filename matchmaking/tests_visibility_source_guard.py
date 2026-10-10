@@ -171,6 +171,12 @@ FIELD_NAME_TABLES = {
     ('zelda_api/grounded_context.py', 'PROFILE_FIELDS'):
         'read only by _profile_items, which admits each value solely when '
         'can_view_profile_field allows an anonymous viewer (PUBLIC); filters on none',
+    ('zelda_api/peer_benchmark_evidence.py', 'LABELS'):
+        'display labels for frozen external evidence; no profile queries or filters; '
+        'shared owner values are gated by protect_public_subject before rendering',
+    ('zelda_api/peer_benchmark_evidence.py', 'BASES'):
+        'allowed measurement meanings for cited external figures; no profile queries '
+        'or filters; shared owner values are gated by protect_public_subject',
 }
 
 

@@ -310,10 +310,10 @@ class PeerMarketBenchmarkTests(TestCase):
         ):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            row = response.context['benchmark'].external_benchmark['asking_or_transaction_value']
+            row = response.context['benchmark'].external_benchmark['asking_price']
             self.assertIsNone(row['value'])
             self.assertIsNone(row['percentile'])
-            self.assertEqual(row['median'], 500)
+            self.assertIsNone(row['median'])  # P-2: no legacy figure-level evidence
 
     def test_cleared_contributor_suppresses_saved_metric(self):
         _, subject = self.seller('clear_subject', 'Subject', asking_price=1000)
@@ -361,11 +361,12 @@ class PeerMarketBenchmarkTests(TestCase):
                     self.assertEqual(response.status_code, 200)
                     self.assertNotContains(response, '987654321')
                     safe = response.context['benchmark']
-                    for row in (safe.external_benchmark[external_name],
+                    for row in (safe.external_benchmark[internal_name],
                                 safe.interlink_benchmark['site']['metrics'][internal_name]):
                         self.assertIsNone(row['value'])
                         self.assertIsNone(row['percentile'])
-                        self.assertEqual(row['median'], 500)
+                    self.assertIsNone(safe.external_benchmark[internal_name]['median'])
+                    self.assertEqual(safe.interlink_benchmark['site']['metrics'][internal_name]['median'], 500)
             self.client.force_login(user)
             self.assertContains(self.client.get(owner_url), '987654321')
             benchmark.refresh_from_db()
