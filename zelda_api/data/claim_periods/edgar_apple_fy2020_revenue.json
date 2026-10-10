@@ -1,0 +1,62 @@
+{
+ "_recorded": {
+  "full_payload_sha256": "73a86c6aedc31f77cac2ea4df5f80f0b3bd7e6eb58bb4e01444fbedf3afb9c43",
+  "note": "Verbatim fact rows from the full payload; only the rows these tests need are kept.",
+  "retrieved": "2026-10-10",
+  "source": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000320193.json"
+ },
+ "cik": 320193,
+ "entityName": "Apple Inc.",
+ "facts": {
+  "us-gaap": {
+   "RevenueFromContractWithCustomerExcludingAssessedTax": {
+    "units": {
+     "USD": [
+      {
+       "accn": "0000320193-20-000096",
+       "end": "2020-09-26",
+       "filed": "2020-10-30",
+       "form": "10-K",
+       "fp": "FY",
+       "fy": 2020,
+       "start": "2019-09-29",
+       "val": 274515000000
+      },
+      {
+       "accn": "0000320193-21-000105",
+       "end": "2020-09-26",
+       "filed": "2021-10-29",
+       "form": "10-K",
+       "fp": "FY",
+       "fy": 2021,
+       "start": "2019-09-29",
+       "val": 274515000000
+      },
+      {
+       "accn": "0000320193-22-000108",
+       "end": "2020-09-26",
+       "filed": "2022-10-28",
+       "form": "10-K",
+       "fp": "FY",
+       "frame": "CY2020",
+       "fy": 2022,
+       "start": "2019-09-29",
+       "val": 274515000000
+      },
+      {
+       "accn": "0000320193-20-000096",
+       "end": "2020-09-26",
+       "filed": "2020-10-30",
+       "form": "10-K",
+       "fp": "FY",
+       "frame": "CY2020Q3",
+       "fy": 2020,
+       "start": "2020-06-28",
+       "val": 64698000000
+      }
+     ]
+    }
+   }
+  }
+ }
+}

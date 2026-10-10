@@ -1,0 +1,56 @@
+{
+ "frozen": "2026-10-10, BEFORE the claim-period code change. A changed expectation is a new decision and needs its own justification.",
+ "decisions": {
+  "D1": "Explicit period mismatches block both verified and contradicted: insufficient evidence, period mismatch. Today's verification behaviour is kept only when the claim has no usable period information.",
+  "D2": "The SEC quarter-selection bug was not reproduced from the recorded payloads (the tie exists; list order saved it), so the full-year check ships here as a guard.",
+  "B1": "FY2024 does not imply December 31. A fiscal year is matched only against the filer's own fiscal-year label for the observed period; a claimed date is matched only against the observed period end.",
+  "B2": "Periods attach from the claim's own sentence only. A slide heading on another line ('Traction by Apr-16') never attaches.",
+  "B3": "Historical reports keep their semantics version; the new rules apply to newly generated reports only."
+ },
+ "kinds": ["annual", "quarterly", "monthly", "ttm", "run_rate", "cumulative"],
+ "phrases": [
+  {"text": "FY2024 revenue of $5.2M", "kind": "annual", "fiscal_year": 2024, "period_end": null, "why": "B1: a fiscal-year label, no end date"},
+  {"text": "FY26 revenue reached $52.8B", "kind": "annual", "fiscal_year": 2026, "period_end": null, "why": "two-digit fiscal year"},
+  {"text": "Fiscal 2025 sales were $46.3B", "kind": "annual", "fiscal_year": 2025, "period_end": null, "why": "'Fiscal 2025' is a fiscal-year label"},
+  {"text": "Revenue of $4.1M for the fiscal year ended December 31, 2024", "kind": "annual", "fiscal_year": null, "period_end": "2024-12-31", "why": "an explicit end date"},
+  {"text": "Revenue for the year ended May 31, 2026 was $46.4B", "kind": "annual", "fiscal_year": null, "period_end": "2026-05-31", "why": "an explicit end date"},
+  {"text": "Annual revenue of $5M", "kind": "annual", "fiscal_year": null, "period_end": null, "why": "annual basis, period unresolved"},
+  {"text": "$300K revenue per month", "kind": "monthly", "fiscal_year": null, "period_end": null, "why": "D1: 'per month' is a monthly basis without a date"},
+  {"text": "500M messages/month", "kind": "monthly", "fiscal_year": null, "period_end": null, "why": "ManyChat slide 12 phrase, as one sentence"},
+  {"text": "MRR of $250K", "kind": "monthly", "fiscal_year": null, "period_end": null, "why": "monthly recurring revenue"},
+  {"text": "ARR of $3.6M", "kind": "run_rate", "fiscal_year": null, "period_end": null, "why": "an annualised run-rate, not reported annual revenue"},
+  {"text": "$3.6M annualized revenue", "kind": "run_rate", "fiscal_year": null, "period_end": null, "why": "JoyToys: annualised is derived, not reported"},
+  {"text": "TTM revenue of $12M", "kind": "ttm", "fiscal_year": null, "period_end": null, "why": "trailing twelve months"},
+  {"text": "Revenue over the trailing twelve months was $12M", "kind": "ttm", "fiscal_year": null, "period_end": null, "why": "spelled out"},
+  {"text": "Q3 2024 revenue of $1.2M", "kind": "quarterly", "fiscal_year": null, "period_end": null, "why": "a quarter label is not an end date"},
+  {"text": "$23.1M raised to date", "kind": "cumulative", "fiscal_year": null, "period_end": null, "why": "a cumulative total"},
+  {"text": "140 000+ bots by Apr-16", "kind": "cumulative", "fiscal_year": null, "period_end": null, "why": "'by Apr-16' in the SAME sentence is cumulative to that date; the month is not resolved to a day"},
+  {"text": "Source: Pitch Deck Hunt lists ManyChat as a 2015 Series A deck with $23.1M raised", "kind": "", "fiscal_year": null, "period_end": null, "why": "a bare year is not a period marker (ManyChat key D, '2015')"},
+  {"text": "Founded in 1978 with 600 employees", "kind": "", "fiscal_year": null, "period_end": null, "why": "an event year (Ben & Jerry's key D)"},
+  {"text": "Revenue was $5M", "kind": "", "fiscal_year": null, "period_end": null, "why": "no period information"},
+  {"text": "ARR of $3.6M, or $300K per month", "kind": "", "fiscal_year": null, "period_end": null, "why": "two conflicting bases in one sentence: no usable period"}
+ ],
+ "frozen_decks": {
+  "manychat": {"claims": 3, "with_period": 0, "why": "'Traction by Apr-16' is a heading on its own line (B2); '2015' is a bare year; '500M messages' carries no marker"},
+  "ben_jerrys": {"claims": 0, "with_period": 0, "why": "no claims"}
+ },
+ "comparisons": [
+  {"name": "no claim period, figures agree", "claim": {}, "observed": "nike_fy2026", "claimed": 46400000000, "state": "verified", "reason": null},
+  {"name": "no claim period, figures diverge", "claim": {}, "observed": "nike_fy2026", "claimed": 52800000000, "state": "no_data", "reason": "period_unknown"},
+  {"name": "Nike C01: FY2026 claim diverges from FY2026 evidence", "claim": {"kind": "annual", "fiscal_year": 2026}, "observed": "nike_fy2026", "claimed": 52800000000, "state": "contradicted", "reason": null},
+  {"name": "FY2026 claim agrees with FY2026 evidence", "claim": {"kind": "annual", "fiscal_year": 2026}, "observed": "nike_fy2026", "claimed": 46400000000, "state": "verified", "reason": null},
+  {"name": "FY2025 claim against FY2026 evidence, agreeing figure", "claim": {"kind": "annual", "fiscal_year": 2025}, "observed": "nike_fy2026", "claimed": 46400000000, "state": "no_data", "reason": "period_mismatch"},
+  {"name": "claimed end date matches the observed end", "claim": {"kind": "annual", "period_end": "2026-05-31"}, "observed": "nike_fy2026", "claimed": 52800000000, "state": "contradicted", "reason": null},
+  {"name": "claimed end date differs from the observed end", "claim": {"kind": "annual", "period_end": "2025-12-31"}, "observed": "nike_fy2026", "claimed": 46400000000, "state": "no_data", "reason": "period_mismatch"},
+  {"name": "annual basis, unresolved period, figures agree", "claim": {"kind": "annual"}, "observed": "nike_fy2026", "claimed": 46400000000, "state": "verified", "reason": null},
+  {"name": "annual basis, unresolved period, figures diverge", "claim": {"kind": "annual"}, "observed": "nike_fy2026", "claimed": 52800000000, "state": "no_data", "reason": "period_unresolved"},
+  {"name": "monthly claim against annual evidence, agreeing figure", "claim": {"kind": "monthly"}, "observed": "nike_fy2026", "claimed": 46400000000, "state": "no_data", "reason": "period_mismatch"},
+  {"name": "run-rate claim against annual evidence", "claim": {"kind": "run_rate"}, "observed": "nike_fy2026", "claimed": 52800000000, "state": "no_data", "reason": "period_mismatch"},
+  {"name": "TTM claim against annual evidence", "claim": {"kind": "ttm"}, "observed": "nike_fy2026", "claimed": 46400000000, "state": "no_data", "reason": "period_mismatch"},
+  {"name": "quarterly claim against annual evidence", "claim": {"kind": "quarterly"}, "observed": "nike_fy2026", "claimed": 46400000000, "state": "no_data", "reason": "period_mismatch"}
+ ],
+ "observed": {
+  "nike_fy2026": {"fixture": "edgar_nike_fy2026_revenue", "kind": "annual", "fiscal_year": 2026, "period_end": "2026-05-31", "value": 46398000000},
+  "apple_fy2020": {"fixture": "edgar_apple_fy2020_revenue", "kind": "annual", "fiscal_year": 2020, "period_end": "2020-09-26", "value": 274515000000, "why": "the 90-day Q4 row shares the end date and must never be chosen, in either order"}
+ }
+}
