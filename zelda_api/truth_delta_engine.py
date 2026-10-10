@@ -338,6 +338,15 @@ class TruthDeltaEngine:
                 # reads it: an unknown period blocks a contradiction and only
                 # qualifies an agreement.
                 'claim_period': None,
+                # Structured periods (td.5). Stored on the row so a state can
+                # be re-derived from what was recorded, never re-read from the
+                # claim or the source after the fact.
+                'claim_period_kind': claim.period_kind or '',
+                'claim_fiscal_year': claim.period_fiscal_year,
+                'claim_period_end': claim.period_end.isoformat() if claim.period_end else None,
+                'observed_period_kind': (best.period_kind or '') if best else '',
+                'observed_fiscal_year': best.period_fiscal_year if best else None,
+                'observed_period_end': best.period_end.isoformat() if best and best.period_end else None,
                 'observed_role': CAN_ESTABLISH if best else None,
                 'observed_origin': (best.evidence_origin or None) if best else None,
                 'corroboration': [

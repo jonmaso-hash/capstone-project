@@ -8,10 +8,12 @@ from django.test import SimpleTestCase, TestCase
 
 from .financial_metrics import currency_value
 from .truth_delta_engine import TruthDeltaEngine, canonical_score
-from .truth_delta_models import ClaimedDatapoint, ExternalDataSource, ObservedDatapoint, TruthDeltaReport
+from .truth_delta_models import (
+    TRUTH_DELTA_SEMANTICS, ClaimedDatapoint, ExternalDataSource, ObservedDatapoint, TruthDeltaReport,
+)
 from .vector_models import DocumentSource, DocumentChunk
 
-EXPECTED = json.loads((Path(__file__).parent / 'data/claim_currency/expectations.json').read_text())
+EXPECTED = json.loads((Path(__file__).parent / 'data/claim_currency/expectations.json').read_text(encoding='utf-8'))
 
 
 class CurrencyAmountTests(SimpleTestCase):
@@ -48,9 +50,11 @@ class CurrencyExtractionTests(TestCase):
         self.assertEqual(result['status'], 'success')
         return doc, list(ClaimedDatapoint.objects.filter(document=doc).order_by('id'))
 
-    def test_real_pipeline_preserves_euro_and_pound_amounts_without_adding_periods(self):
-        for text, value, code in [('Our revenue is €7.9bn annually', 7.9e9, 'EUR'),
-                                  ('Our revenue is £2.4 million', 2.4e6, 'GBP')]:
+    def test_real_pipeline_preserves_euro_and_pound_amounts_without_inventing_periods(self):
+        # Since claim periods (td.5), "annually" in the claim's own sentence is
+        # an annual basis; currency never adds or removes a period.
+        for text, value, code, period in [('Our revenue is €7.9bn annually', 7.9e9, 'EUR', ('annually', 'annual')),
+                                          ('Our revenue is £2.4 million', 2.4e6, 'GBP', ('', ''))]:
             with self.subTest(text=text):
                 _, claims = self.extract(text)
                 self.assertEqual(len(claims), 1)
@@ -58,7 +62,7 @@ class CurrencyExtractionTests(TestCase):
                 claim.refresh_from_db()
                 self.assertEqual((claim.category, claim.claimed_value_numeric, getattr(claim, 'currency', None)),
                                  ('revenue', value, code))
-                self.assertEqual(claim.time_period, '')
+                self.assertEqual((claim.time_period, claim.period_kind), period)
                 self.assertIn(claim.claimed_value, text)
                 self.assertEqual(claim.page_number, 3)
 
@@ -198,7 +202,7 @@ class CurrencyComparisonTests(TestCase):
             report = TruthDeltaEngine().verify_document(self.doc.id)
         self.assertEqual(report.grounding_reasons(), {'revenue': 'currency_mismatch'})
         self.assertEqual((report.overall_truth_score, report.credibility_risk), (None, 'unknown'))
-        self.assertEqual(report.engine_version, 'td.4')
+        self.assertEqual(report.engine_version, TRUTH_DELTA_SEMANTICS)
         self.assertEqual(report.details['per_claim'][0]['explanation_source'], 'zelda')
         items = _claim_items(self.doc, list(self.doc.claimed_datapoints.all()), report)
         self.assertEqual(getattr(items[0], 'currency', None), 'EUR')
@@ -262,7 +266,7 @@ class CurrencyComparisonTests(TestCase):
     def test_provider_declared_currency_is_persisted_and_unqualified_currency_is_not_invented(self):
         from .truth_delta_sources import DataSourceManager
         sec_data = {'_cik': '0000320187', 'facts': {'us-gaap': {'Revenues': {'units': {'USD': [
-            {'val': 1e6, 'form': '10-K', 'end': '2025-12-31'}]}}}}}
+            {'val': 1e6, 'form': '10-K', 'start': '2025-01-01', 'end': '2025-12-31'}]}}}}}
         cb_data = {'annual_revenue': 2e6, 'total_funding_usd': 3e6}
         with mock.patch.object(DataSourceManager, 'fetch_company_data', return_value={'sec': sec_data, 'crunchbase': cb_data}):
             DataSourceManager.create_observed_datapoints(self.doc, 'Currency Co')
@@ -291,7 +295,7 @@ class ProviderCurrencyTests(SimpleTestCase):
     def test_sec_usd_unit_and_crunchbase_usd_funding_have_source_declared_currency(self):
         from .truth_delta_sources import SECFilingsIntegration, CrunchbaseIntegration
         data = {'facts': {'us-gaap': {'Revenues': {'units': {'USD': [
-            {'val': 1e6, 'form': '10-K', 'end': '2025-12-31'}]}}}}}
+            {'val': 1e6, 'form': '10-K', 'start': '2025-01-01', 'end': '2025-12-31'}]}}}}}
         self.assertEqual(SECFilingsIntegration().extract_currency(data, 'revenue'), 'USD')
         self.assertEqual(CrunchbaseIntegration().extract_currency({'total_funding_usd': 1e6}, 'funding_raised'), 'USD')
         self.assertEqual(CrunchbaseIntegration().extract_currency({'annual_revenue': 1e6}, 'revenue'), '')

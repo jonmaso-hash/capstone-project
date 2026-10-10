@@ -1134,6 +1134,8 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
     // Why a claim is no_data, in a reader's words (grounding_reasons()).
     const NO_DATA_REASONS = {
         period_unknown: 'An external figure was found, but its period could not be confirmed as comparable, so this claim is not verified.',
+        period_mismatch: 'Insufficient evidence: period mismatch. The claim and the external figure describe different periods, so they were not compared.',
+        period_unresolved: 'An external figure was found for the same kind of period, but the exact period could not be confirmed on both sides, so a difference is not treated as a contradiction.',
         currency_unknown: 'The monetary currency is not explicitly known on both sides, so this claim was not compared.',
         currency_mismatch: 'The claim and external figure use different currencies, so this claim was not compared. No currency conversion was applied.',
         corroboration_only: 'Only lower-authority (LinkedIn-derived) data was found. It is shown as corroboration and does not verify the claim.',

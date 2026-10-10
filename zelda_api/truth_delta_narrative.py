@@ -44,6 +44,8 @@ REASON_SENTENCES = {
     'currency_mismatch': 'The claim and external figure use different currencies, so this claim was not compared. No currency conversion was applied.',
     'period_unknown': ('An external figure was found, but its period could not be confirmed as '
                        'comparable, so this claim is not verified.'),
+    'period_mismatch': 'Insufficient evidence: period mismatch. The claim and the external figure describe different periods, so they were not compared.',
+    'period_unresolved': ('An external figure was found for the same kind of period, but the exact period could not be confirmed on both sides, so a difference is not treated as a contradiction.'),
     'no_external_evidence': 'No external data was found for this claim.',
     'source_unavailable': 'The public source could not be reached, so this claim was not checked.',
     'corroboration_only': ('Only lower-authority (LinkedIn-derived) data was found. It is shown for '
@@ -204,6 +206,9 @@ def summary(states, reasons, comparison, stats, headlines=()):
             gap = row.get('discrepancy_pct')
             sentences.append(f"{label} differs from {where} ({figure})"
                              + (f" by {abs(gap)}%" if gap is not None else '') + ', for a comparable period.')
+        elif reason == 'period_mismatch' and figure:
+            sentences.append(f"{label}: {where} reports {figure} for a different period than the deck's "
+                             f"figure, so the two were not compared and the claim is not verified.")
         elif reason == 'period_unknown' and figure:
             sentences.append(f"{label}: {where} reports {figure}, but the deck's figure has no stated period, "
                              f"so the two could not be compared and the claim is not verified.")
