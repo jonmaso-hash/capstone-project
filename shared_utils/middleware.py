@@ -2,6 +2,7 @@ import json
 from django.conf import settings
 from django.core.cache import cache
 from django.http import HttpResponse, JsonResponse
+from django.middleware.csp import get_nonce
 
 class IdempotencyMiddleware:
     """
@@ -67,9 +68,19 @@ class IdempotencyMiddleware:
                     status=409
                 )
             
-            # Reconstruct and serve the identical cached response safely
+            # Rotate only the nonce already generated for trusted template
+            # scripts. Reusing it would violate the per-response CSP contract;
+            # generating a new header without updating the body blocks scripts.
+            content = cached_data['content']
+            cached_nonce = cached_data.get('csp_nonce')
+            request_nonce = get_nonce(request)
+            if cached_nonce and request_nonce is not None:
+                content = content.replace(
+                    cached_nonce.encode('ascii'), str(request_nonce).encode('ascii'))
+
+            # Reconstruct and serve the cached result without rerunning the view.
             response = HttpResponse(
-                content=cached_data['content'],
+                content=content,
                 status=cached_data['status_code'],
                 content_type=cached_data['content_type']
             )
@@ -96,6 +107,9 @@ class IdempotencyMiddleware:
                     'content': response.content,
                     'content_type': content_type
                 }
+                nonce = get_nonce(request)
+                if content_type.split(';', 1)[0].strip().lower() == 'text/html' and nonce:
+                    payload['csp_nonce'] = str(nonce)
                 # Keep the resolution signature active for 24 hours
                 cache.set(cache_key, payload, timeout=86400)
             else:

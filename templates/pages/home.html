@@ -224,7 +224,7 @@
 </section>
 
 {% if user.is_authenticated %}
-<script>
+<script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', async function () {
     const loading = document.getElementById('home-journey-loading');
     const content = document.getElementById('home-journey-content');

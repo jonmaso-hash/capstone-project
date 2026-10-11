@@ -717,8 +717,8 @@
 
 {% block scripts %}
 {% if deck_stats.total_sessions %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
+<script nonce="{{ csp_nonce }}" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script nonce="{{ csp_nonce }}">
 document.addEventListener("DOMContentLoaded", function () {
     new Chart(document.getElementById('slideChart').getContext('2d'), {
         type: 'bar',

@@ -390,7 +390,7 @@
     </div>
 </div>
 {% if is_room_owner %}
-<script>
+<script nonce="{{ csp_nonce }}">
 document.querySelectorAll('.data-room-copy-report').forEach(button => button.addEventListener('click', async () => {
     const status = document.getElementById('report-copy-status');
     try {

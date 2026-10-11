@@ -333,7 +333,7 @@
 {% endblock content %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce }}">
 // getCookie() and StreamChatController are already loaded globally via
 // static/js/matchmaking.js (included in base.html) — reused here as-is,
 // same as seller_dashboard.html's updateAcquisitionConnection()

@@ -52,7 +52,7 @@
 }
 </style>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 function selectRole(role, el) {
     document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');

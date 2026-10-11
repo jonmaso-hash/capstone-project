@@ -177,6 +177,10 @@ REST_FRAMEWORK = {
 
 # FIXED: Removed the duplicate 'shared_utils.middleware.IdempotencyMiddleware' entry
 MIDDLEWARE = [
+    # Outside Security/WhiteNoise/early refusals so all response paths receive
+    # policies, including HTTPS redirects, static files and denied uploads.
+    "django.middleware.csp.ContentSecurityPolicyMiddleware",
+    "shared_utils.browser_policy.BrowserPolicyMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -227,6 +231,7 @@ TEMPLATES = [
             "context_processors": [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
+                "django.template.context_processors.csp",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 'matchmaking.context_processors.investor_status',
@@ -353,6 +358,13 @@ else:
     }
 
 # --- CORE PLATFORM SECURITY & AUTH ROUTING ---
+# Native Django CSP keeps template nonces and response headers tied to one
+# request. Event attributes remain a staged compatibility exception.
+from config.browser_policy import policies as browser_policies
+SECURE_CSP, SECURE_CSP_REPORT_ONLY = browser_policies(AWS_STORAGE_BUCKET_NAME, AWS_S3_REGION_NAME)
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
+
 # LOGIN_REDIRECT_URL is set once, in the social-login section below
 # (accounts:post_login_router). It used to be assigned here too, as
 # accounts:profile_self, which never survived import — the later assignment
