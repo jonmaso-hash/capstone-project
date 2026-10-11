@@ -78,8 +78,8 @@ def build_report_nav(viewer, founder_user, current, hidden_document_ids=()):
     # Company overview — standalone_memo_view: investor profile or staff.
     if application:
         if viewer_is_investor or is_staff:
-            urls[OVERVIEW] = reverse('matchmaking:standalone_memo',
-                                     args=[application.company_name.lower().replace(' ', '-')])
+            # By profile id: company names are not unique (BW-005).
+            urls[OVERVIEW] = reverse('matchmaking:company_overview', args=[application.pk])
         else:
             notes[OVERVIEW] = _INVESTOR_ONLY
 
