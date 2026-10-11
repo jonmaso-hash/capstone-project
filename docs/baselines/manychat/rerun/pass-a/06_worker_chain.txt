@@ -1,0 +1,19 @@
+# Worker task chain for document 3133 (local broker redis://localhost:6379/0), from the worker log
+[2026-10-10 17:55:57,576: INFO/MainProcess] Task zelda_api.tasks.process_document_pipeline[c3c5e521-851d-4937-926e-d8cd8f537128] received
+[2026-10-10 17:55:58,217: INFO/MainProcess] Task zelda_api.tasks.process_document_pipeline[c3c5e521-851d-4937-926e-d8cd8f537128] succeeded in 0.6395954000181518s: {'status': 'success', 'document_id': 3133, 'chunks': 12, 'insights': 3}
+[2026-10-10 17:55:58,222: INFO/MainProcess] Task zelda_api.truth_delta_tasks.extract_claims_from_insights[998939a4-f875-4acc-bc15-267bff3ed197] received
+[2026-10-10 17:55:58,306: INFO/MainProcess] Task zelda_api.truth_delta_tasks.extract_claims_from_insights[998939a4-f875-4acc-bc15-267bff3ed197] succeeded in 0.08300759998383s: {'status': 'success', 'claims_created': 3}
+[2026-10-10 17:55:58,312: INFO/MainProcess] Task zelda_api.entity_verification_tasks.verify_entity_integrity[c756b062-facd-4a66-ba23-2cbe5dc70afa] received
+[2026-10-10 17:55:58,389: INFO/MainProcess] Task zelda_api.entity_verification_tasks.verify_entity_integrity[c756b062-facd-4a66-ba23-2cbe5dc70afa] succeeded in 0.07731750002130866s: {'status': 'success', 'document_id': 3133, 'report_id': 34}
+[2026-10-10 17:55:58,398: INFO/MainProcess] Task zelda_api.truth_delta_tasks.verify_document_truth_delta[4209ced7-59e7-457a-94f4-e646d96e05c2] received
+[2026-10-10 17:55:58,596: INFO/MainProcess] Task zelda_api.truth_delta_tasks.verify_document_truth_delta[4209ced7-59e7-457a-94f4-e646d96e05c2] succeeded in 0.19812570000067353s: {'status': 'success', 'document_id': 3133, 'report_id': 87}
+[2026-10-10 17:55:58,602: INFO/MainProcess] Task zelda_api.tasks.generate_intelligence_memo[1e1abda9-fde4-4861-ae23-36ec1cfb9122] received
+[2026-10-10 17:56:46,742: INFO/MainProcess] Task zelda_api.tasks.generate_intelligence_memo[1e1abda9-fde4-4861-ae23-36ec1cfb9122] succeeded in 48.139500299992505s: {'status': 'success', 'memo_id': 91}
+[2026-10-10 17:56:46,750: INFO/MainProcess] Task zelda_api.tasks.notify_document_processed[696183bb-d2fd-48a6-b9b3-3c6d328ab1cf] received
+[2026-10-10 17:56:46,791: INFO/MainProcess] Task zelda_api.tasks.notify_document_processed[696183bb-d2fd-48a6-b9b3-3c6d328ab1cf] succeeded in 0.04043159994762391s: {'status': 'notified', 'user_id': 314}
+
+# Setup-time tasks (fixture profile saves; positive control that the worker reads the local broker)
+[2026-10-10 17:55:41,179: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_investor_task[0db33b75-e4ee-4d65-9b57-47393b54fd0a] received
+[2026-10-10 17:55:41,716: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_investor_task[0db33b75-e4ee-4d65-9b57-47393b54fd0a] succeeded in 0.5364419999532402s: None
+[2026-10-10 17:55:42,636: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_investor_task[9e4bb384-8878-4b40-9de8-3718ae3d2069] received
+[2026-10-10 17:55:43,120: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_investor_task[9e4bb384-8878-4b40-9de8-3718ae3d2069] succeeded in 0.4839773999992758s: None
