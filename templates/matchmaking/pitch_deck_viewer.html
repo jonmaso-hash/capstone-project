@@ -52,8 +52,8 @@
 
 {% block scripts %}
 {% if is_pdf %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script>
+<script nonce="{{ csp_nonce }}" src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script nonce="{{ csp_nonce }}">
 document.addEventListener("DOMContentLoaded", function () {
     pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
@@ -124,7 +124,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById('prevBtn').addEventListener('click', () => goToPage(currentPage - 1));
     document.getElementById('nextBtn').addEventListener('click', () => goToPage(currentPage + 1));
 
-    pdfjsLib.getDocument({ url: "{% url 'matchmaking:pitch_deck_file' application.id %}", withCredentials: true }).promise.then(function (doc) {
+    pdfjsLib.getDocument({ url: "{% url 'matchmaking:pitch_deck_file' application.id %}", withCredentials: true, isEvalSupported: false }).promise.then(function (doc) {
         pdfDoc = doc;
         totalPages = doc.numPages;
         slideStartTime = performance.now();

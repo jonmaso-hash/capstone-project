@@ -36,8 +36,8 @@
 {% endblock %}
 
 {% block javascript %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
+<script nonce="{{ csp_nonce }}" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script nonce="{{ csp_nonce }}">
 document.addEventListener("DOMContentLoaded", function () {
     const founderData = JSON.parse('{{ founder_data_json|escapejs }}');
     const ctx = document.getElementById('projectionChart').getContext('2d');

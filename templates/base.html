@@ -145,9 +145,9 @@
     
 
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script nonce="{{ csp_nonce }}" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script>
+    <script nonce="{{ csp_nonce }}">
         // Site-wide ⓘ info-icon popovers — any element with data-bs-toggle="popover"
         // gets one automatically, so individual pages/includes don't each need
         // their own init script. Idempotent: skips elements already initialized
@@ -161,12 +161,12 @@
         });
     </script>
 
-    <script type="module">
+    <script nonce="{{ csp_nonce }}" type="module">
         import { StreamChat } from 'https://cdn.jsdelivr.net/npm/stream-chat@8.3.0/+esm';
         window.StreamChat = StreamChat;
     </script>
 
-    <script src="{% static 'js/matchmaking.js' %}"></script>
+    <script nonce="{{ csp_nonce }}" src="{% static 'js/matchmaking.js' %}"></script>
 
     {% if user.is_authenticated %}
         {% include "includes/zelda_ai_assistant_enhanced.html" %}

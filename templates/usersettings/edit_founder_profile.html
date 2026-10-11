@@ -382,7 +382,7 @@
 
 {% block scripts %}
 {{ block.super }}
-<script>
+<script nonce="{{ csp_nonce }}">
     document.addEventListener('DOMContentLoaded', function () {
         // Popover init is now handled globally in base.html.
 

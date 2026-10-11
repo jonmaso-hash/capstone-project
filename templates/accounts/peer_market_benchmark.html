@@ -36,7 +36,7 @@
             <p class="text-muted mb-0">Zelda is researching cited external peers and calculating your Interlink peer position.</p>
         </div>
     </div>
-    <script>setTimeout(() => window.location.reload(), 8000);</script>
+    <script nonce="{{ csp_nonce }}">setTimeout(() => window.location.reload(), 8000);</script>
     {% elif benchmark.status == 'failed' %}
     <div class="alert alert-danger">
         <strong>Benchmark generation did not finish.</strong>
@@ -212,7 +212,7 @@
     {% endif %}
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 document.querySelectorAll('.benchmark-metric-name').forEach((el) => {
     el.textContent = el.textContent.replaceAll('_', ' ').replace(/\b\w/g, c => c.toUpperCase());
 });

@@ -76,12 +76,14 @@ class ReadinessBadgeTests(TestCase):
         response = self.client.get(reverse('growth:readiness_badge', kwargs={'role': 'founder', 'username': 'badge_public_founder'}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Content-Type'], 'image/svg+xml')
+        self.assertEqual(response['Cross-Origin-Resource-Policy'], 'cross-origin')
         self.assertIn(b'87/100', response.content)
 
     def test_private_founder_404s(self):
         self._founder_with_memo('badge_private_founder', 'Score: 90/100', is_private=True)
         response = self.client.get(reverse('growth:readiness_badge', kwargs={'role': 'founder', 'username': 'badge_private_founder'}))
         self.assertEqual(response.status_code, 404)
+        self.assertEqual(response['Cross-Origin-Resource-Policy'], 'same-origin')
 
     def test_unparseable_score_404s(self):
         self._founder_with_memo('badge_no_score_founder', 'No score format here at all.')

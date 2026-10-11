@@ -36,7 +36,7 @@
     </nav>
     <form id="history-csrf" class="d-none">{% csrf_token %}</form>
 </div>
-<script>
+<script nonce="{{ csp_nonce }}">
 (async function () {
     const ids = Array.from(document.querySelectorAll('#notification-history-list [data-notification-id]'), el => Number(el.dataset.notificationId));
     if (!ids.length) return;
