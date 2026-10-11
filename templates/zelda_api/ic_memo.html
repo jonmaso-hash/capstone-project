@@ -122,7 +122,11 @@
         {% for section in memo_sections %}
         <div class="mb-4 ic-memo-section">
             <h5 class="fw-bold border-bottom pb-2 mb-2">{{ section.label }}</h5>
+            {% if section.bullets %}
+            <ul class="text-secondary mb-0 ps-3">{% for item in section.bullets %}<li class="mb-1">{{ item }}</li>{% endfor %}</ul>
+            {% else %}
             <p class="text-secondary mb-0">{{ section.text }}</p>
+            {% endif %}
         </div>
         {% endfor %}
     {% else %}
