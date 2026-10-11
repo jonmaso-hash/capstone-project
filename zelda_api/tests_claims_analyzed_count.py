@@ -8,9 +8,11 @@ sources, so a deck could show "6 analyzed, 3 verified, 1 unverified" with the
 other two unaccounted for. The page script's claims_analyzed -- the total the
 Lite "showing N of M" note compares against -- had the same mismatch.
 
-Now all three cards and the script total come from category_states, and the
+Now all three cards and the script total come from one count, and the
 unused script fields claims_verified and flag_breakdown.verified (which
-repeated the row count as a "verified" figure) are gone.
+repeated the row count as a "verified" figure) are gone. Since RA-104 that
+count is TruthDeltaReport.claim_stats(), one per claim row the report shows
+(here one per category, so 4); see tests_claim_counts_per_claim.
 """
 import re
 

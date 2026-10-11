@@ -116,6 +116,7 @@ jobs:
           zelda_api.tests_library
           zelda_api.tests_truth_delta_visibility
           zelda_api.tests_claims_analyzed_count
+          zelda_api.tests_claim_counts_per_claim
           zelda_api.tests_verify_button
           zelda_api.tests_no_sandbox_scan
           zelda_api.tests_no_investment_advice

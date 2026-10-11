@@ -783,7 +783,9 @@ class ICMemoTests(TestCase):
                          'source': 'SEC EDGAR', 'time_period': 'FY2025'}],
         })
         td = build_ic_memo_context(self.application)['truth_delta']
-        self.assertEqual(td['claims_checked'], 3)
+        # "Claims checked" counts the claims the report represents, so it agrees
+        # with "(of N)" beside it -- not the 3 extracted rows (RA-104).
+        self.assertEqual(td['claims_checked'], 2)
         self.assertEqual(td['counts'], {'verified': 1, 'contradicted': 0, 'not_established': 1,
                                         'total': 2, 'scoreable': 1})
         self.assertNotIn('no_data_count', td)        # the template-side arithmetic is gone

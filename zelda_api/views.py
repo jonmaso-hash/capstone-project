@@ -998,12 +998,13 @@ def truth_delta_ui_view(request, document_id):
     # (ic_memo.coverage_counts) -- never recomputed here. "Not established" and
     # "the evidence disagrees" are different findings; summing them hides the second.
     from .ic_memo import coverage_counts, coverage_sentence
-    counts = coverage_counts(report.verifiability_stats() if report else {})
+    counts = coverage_counts(report.claim_stats() if report else {})
     verified_count = counts['verified']
     contradicted_count = counts['contradicted']
     unverified_count = counts['not_established']     # shown as "Not established"
-    # "Claims Analyzed" counts the same categories as the other cards, not the
-    # extracted ClaimedDatapoint rows, so the cards always add up.
+    # "Claims Analyzed" and the cards count individual claims, the same rows
+    # the claim list shows, so they add up to it (RA-104). Categories stay in
+    # category_states.
     claims_analyzed = counts['total']
 
     # Work Done — concrete analysis work on the underlying document.

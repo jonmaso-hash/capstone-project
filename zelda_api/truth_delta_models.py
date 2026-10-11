@@ -253,6 +253,14 @@ UNKNOWN_SEMANTICS = 'unknown'
 TRUTH_DELTA_SEMANTICS = 'td.5'
 
 
+def claim_state_counts(states):
+    """{'total', 'verified', 'contradicted', 'no_data'} over individual claim states."""
+    states = list(states)
+    verified, contradicted = states.count('verified'), states.count('contradicted')
+    return {'total': len(states), 'verified': verified, 'contradicted': contradicted,
+            'no_data': len(states) - verified - contradicted}
+
+
 class TruthDeltaReport(models.Model):
     document = models.ForeignKey('DocumentSource', on_delete=models.CASCADE)
     # Which rules produced this report. Defaults to UNKNOWN_SEMANTICS so the
@@ -624,9 +632,30 @@ class TruthDeltaReport(models.Model):
             seen.setdefault((source, registrant), None)
         return [f'{source} registrant {registrant}' for source, registrant in seen]
 
+    def claim_stats(self):
+        """
+        Counts of the individual claims this report represents, each in the
+        state its own row shows (per_claim_rows) -- what every label that says
+        "claims" displays. Two usage claims are two claims, not one category
+        (RA-104: "2 claims analyzed" above three claim rows).
+
+        Display only. The score keeps reading the category counts in
+        verifiability_stats(), so changing how claims are counted never
+        changes a score or gives an unscored report one.
+        """
+        rows = self.per_claim_rows()
+        if rows:
+            return claim_state_counts(row['state'] for row in rows)
+        comparison = self._comparison_rows()
+        if comparison:
+            return claim_state_counts(self._row_state(row)[0] for row in comparison)
+        states = self.category_states()
+        return claim_state_counts(states.get(claim.get('category'), 'no_data')
+                                  for claim in (self.details or {}).get('claims', []) if claim.get('category'))
+
     def verifiability_stats(self):
         """
-        {'total', 'verified', 'pct'} — how many of this report's claims
+        {'total', 'verified', 'pct'} — how many of this report's claim CATEGORIES
         actually got cross-referenced against real external data, computed
         from `details` (the single source of truth) rather than stored
         separately, so it can never drift out of sync with the per-claim

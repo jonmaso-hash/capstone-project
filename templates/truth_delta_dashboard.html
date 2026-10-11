@@ -704,9 +704,9 @@
         </div>
 
         {% comment %}
-        Evidence Coverage — a visual of the same category_states the stat cards
-        above count, not a recomputed metric. Verified vs. no-external-data
-        across the distinct claim categories Zelda cross-checked. Canvas has a
+        Evidence Coverage — a visual of the same claim counts the stat cards
+        above show (TruthDeltaReport.claim_stats), not a recomputed metric: one
+        per claim row, so it adds up to the claim list (RA-104). Canvas has a
         fixed pixel size + responsive:false because this template is also
         served as a bare fragment (no <!doctype>, quirks mode) where Chart.js
         responsive container measurement collapses to 0x0.
@@ -715,7 +715,7 @@
             <div class="small fw-bold" style="color: var(--td-text);">Evidence Coverage</div>
             <canvas id="evidenceCoverageChart" width="400" height="92" style="max-width: 100%; margin-top: 0.25rem;"></canvas>
             <p class="mb-0 mt-1" style="font-size: 0.75rem; color: #64748b;">
-                Of the claim categories Zelda cross-checked, how many public sources
+                Of the claims Zelda cross-checked, how many public sources
                 ({% zelda_source_names %}) verified, contradicted, or could not establish.
             </p>
         </div>
@@ -1493,7 +1493,7 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
     new Chart(el.getContext('2d'), {
         type: 'bar',
         data: {
-            labels: ['Claim categories'],
+            labels: ['Claims'],
             datasets: [
                 { label: 'Verified', data: [verified],
                   backgroundColor: GREEN, borderColor: '#ffffff', borderWidth: 2, borderRadius: 4, borderSkipped: false },
