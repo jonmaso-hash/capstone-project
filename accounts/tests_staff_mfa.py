@@ -1,4 +1,5 @@
 import hashlib
+import re
 from unittest.mock import patch
 
 import pyotp
@@ -190,3 +191,113 @@ class StaffMFATests(TestCase):
         call_command('reset_staff_mfa', self.staff.username, confirm_username=self.staff.username, stdout=StringIO())
         self.assertFalse(StaffMFA.objects.filter(user=self.staff).exists())
         self.assertEqual(self.client.get(self.admin).status_code, 302)
+
+
+class StaffMFABrowserCSRFTests(TestCase):
+    """BW-007: the MFA page's own forms must pass CSRF as a browser sends them.
+
+    Under Referrer-Policy: no-referrer, Chrome sends Origin: null on a
+    same-origin form POST, so verify and Sign out were refused and the staff
+    session was stranded. These requests carry the Origin header a browser
+    sends; CSRF enforcement stays on throughout.
+    """
+    SITE = 'http://testserver'
+    CLOCK = 1800000000
+
+    def setUp(self):
+        self.staff = get_user_model().objects.create_user('mfa_csrf_staff', password='StaffMFA!2026xyz', is_staff=True, is_superuser=True)
+        self.verify_url = reverse('accounts:staff_mfa_verify')
+        self.logout_url = reverse('accounts:logout')
+        self.admin = '/' + settings.ADMIN_URL_PATH
+        self.secret = pyotp.random_base32()
+        self.credential = StaffMFA.objects.create(
+            user=self.staff, encrypted_secret=encrypt_secret(self.secret),
+            enabled_at=timezone.now(), last_counter=0)
+        clock = patch('accounts.staff_mfa.time.time', return_value=self.CLOCK)
+        clock.start()
+        self.addCleanup(clock.stop)
+        self.client = PasswordOnlyClient(enforce_csrf_checks=True)
+        self.client.force_login(self.staff)
+
+    def page_token(self, url=None):
+        response = self.client.get(url or self.verify_url)
+        self.assertEqual(response.status_code, 200)
+        match = re.search(r'name="csrfmiddlewaretoken" value="([^"]+)"', response.content.decode())
+        self.assertIsNotNone(match)
+        return match.group(1)
+
+    def post(self, url, data, origin=SITE, token=True):
+        # Always load the page first, as a browser would, so the CSRF cookie
+        # is set and a refusal is about the token or Origin, not the cookie.
+        data, real = dict(data), self.page_token()
+        if token is True:
+            data['csrfmiddlewaretoken'] = real
+        elif token:
+            data['csrfmiddlewaretoken'] = token
+        extra = {'HTTP_ORIGIN': origin} if origin is not None else {}
+        return self.client.post(url, data, **extra)
+
+    def code(self):
+        return pyotp.TOTP(self.secret).at(self.CLOCK)
+
+    def assert_unverified(self):
+        self.assertNotIn(SESSION_KEY, self.client.session)
+        self.credential.refresh_from_db()
+        self.assertEqual(self.credential.last_counter, 0)
+
+    def test_mfa_pages_send_a_referrer_policy_that_keeps_a_real_origin(self):
+        response = self.client.get(self.verify_url)
+        self.assertEqual(response['Referrer-Policy'], 'same-origin')
+        self.assertIn('no-store', response['Cache-Control'])
+        self.assertIn("default-src 'none'", response['Content-Security-Policy'])
+        self.assertIn("form-action 'self'", response['Content-Security-Policy'])
+
+    def test_same_origin_verification_succeeds(self):
+        response = self.post(self.verify_url, {'code': self.code(), 'next': self.admin})
+        self.assertRedirects(response, self.admin, fetch_redirect_response=False)
+        self.assertIn(SESSION_KEY, self.client.session)
+        self.assertEqual(self.client.get(self.admin).status_code, 200)
+
+    def test_invalid_totp_is_rejected_with_valid_csrf(self):
+        wrong = '000000' if self.code() != '000000' else '111111'
+        response = self.post(self.verify_url, {'code': wrong})
+        self.assertContains(response, 'Invalid or already-used code')
+        self.assert_unverified()
+
+    def test_missing_or_invalid_csrf_token_is_rejected(self):
+        self.assertEqual(self.post(self.verify_url, {'code': self.code()}, token=None).status_code, 403)
+        self.assertEqual(self.post(self.verify_url, {'code': self.code()}, token='x' * 64).status_code, 403)
+        self.assert_unverified()
+
+    def test_hostile_and_null_origins_are_rejected_with_a_valid_token(self):
+        for origin in ('null', 'https://attacker.example', 'http://testserver.attacker.example'):
+            with self.subTest(origin=origin):
+                self.assertEqual(self.post(self.verify_url, {'code': self.code()}, origin=origin).status_code, 403)
+                self.assert_unverified()
+
+    def test_logout_works_before_mfa_completion(self):
+        response = self.post(self.logout_url, {})
+        self.assertEqual(response.status_code, 302)
+        self.assertNotIn('_auth_user_id', self.client.session)
+        after = self.client.get(self.admin)
+        self.assertEqual(after.status_code, 302)
+        self.assertNotIn(self.verify_url, after['Location'])
+
+    def test_logout_still_refuses_null_origin(self):
+        response = self.post(self.logout_url, {}, origin='null')
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(self.client.session.get('_auth_user_id'), str(self.staff.pk))
+
+    def test_protected_staff_pages_require_completed_mfa(self):
+        expected = self.verify_url + '?next=' + self.admin.replace('/', '%2F')
+        self.assertRedirects(self.client.get(self.admin), expected, fetch_redirect_response=False)
+        self.assertEqual(self.client.get(reverse('ops:dashboard')).status_code, 302)
+        member = get_user_model().objects.create_user('mfa_csrf_member')
+        token = self.page_token()
+        refused = self.client.post(reverse('ops:start_impersonation', args=[member.pk]),
+                                   {'csrfmiddlewaretoken': token}, HTTP_ORIGIN=self.SITE)
+        self.assertEqual(refused.status_code, 403)
+        self.assertNotIn('impersonator_id', self.client.session)
+        self.post(self.verify_url, {'code': self.code()})
+        self.assertEqual(self.client.get(self.admin).status_code, 200)
+        self.assertEqual(self.client.get(reverse('ops:dashboard')).status_code, 200)

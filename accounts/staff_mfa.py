@@ -115,7 +115,9 @@ def destination(request):
 def response_page(request, **context):
     response = render(request, 'accounts/staff_mfa.html', context)
     add_never_cache_headers(response)
-    response['Referrer-Policy'] = 'no-referrer'
+    # Not no-referrer: under it browsers send Origin: null on this page's own
+    # form POSTs, which CSRF origin checking rightly refuses (BW-007).
+    response['Referrer-Policy'] = 'same-origin'
     response['Content-Security-Policy'] = "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"
     return response
 

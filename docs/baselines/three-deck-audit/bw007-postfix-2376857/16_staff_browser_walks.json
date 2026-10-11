@@ -1,0 +1,96 @@
+{
+ "note": "Post-fix staff browser walks for BW-007. Separate from, and additive to, the baseline walks recorded at 1ea6f06 (docs/two-deck-rerun-458bdc9, PASS_A_BROWSER_WALKS_458bdc9.md), where the staff result stays BLOCKED. Chrome via the Claude in Chrome extension against http://127.0.0.1:8000, server only (no worker), the same dev DB, existing documents 3132 and 3133. Nothing was uploaded, regenerated or verified. Values are what the page rendered after its JavaScript settled (4-5 s wait on Truth Delta pages); canary checks test innerText and outerHTML; status is the navigation entry's responseStatus.",
+ "date": "2026-10-10 PDT (20:14-20:31 local)",
+ "code": {
+  "unfixed": "458bdc9 (origin/main at the time), worktree C:\\Users\\jonathan\\Desktop\\KCV-bw007 before the fix",
+  "fixed": "2376857 on fix/staff-mfa-referrer-policy (458bdc9 + the one-line Referrer-Policy change and its tests)"
+ },
+ "server": {
+  "wrapper": "Pass A run.py (scratchpad) with WT pointed at the fix worktree",
+  "checks": "BASELINE-ENV-CHECK six paid keys False, ANTHROPIC True; BROKER-CHECK all four redis://localhost; SCHEMA-CHECK pending=0 (zelda_api.0035, matchmaking.0083, matchmaking.0095 applied); CELERY_TASK_ALWAYS_EAGER=False",
+  "worker_running": false,
+  "instrumentation": "Scratchpad-only middleware (logs/origin_probe.py.txt) prepended by the wrapper, not repo code. It logs method, path, the request's Origin and Referer headers, the status and the response's Referrer-Policy for /accounts/staff-mfa/ and /accounts/logout/ only. No bodies, cookies, tokens or codes."
+ },
+ "controls": {
+  "browser_positive_control": "GET /?probe=bw007-control from the selected Chrome appeared in the server log (200) and rendered the anonymous home page, so this Chrome reaches this server.",
+  "credentials": "The two staff fixtures (313 rabj_staff, 317 ramc_staff) were given a fresh test password generated in this session, kept in the scratchpad only. TOTP codes were computed per attempt from the stored credential; no setup key or recovery code was displayed or recorded. MFA enrolment was not reset.",
+  "after_walks": "Per-model row counts, max ids and timestamps for documents 3132 and 3133 identical before and after (logs/after_walk_postcheck.txt). Redis: only the stale high_priority (18). Zero live sessions for users 313 and 317 after sign-out. Fixed-server POSTs: login 3, logout 3, staff-mfa verify 3 (1 deliberate invalid code -> 200, 2 valid -> 302), /matchmaking/profile/rabj_owner/duration/ 1 (profile view-time beacon). No verify, identity-check, valuation, analyze or ingest request."
+ },
+ "reproduction_unfixed_458bdc9": {
+  "principal": "ramc_staff (317)",
+  "mfa_page_response": "Referrer-Policy: no-referrer; no <meta name=referrer>; CSP default-src 'none' (so the page cannot fetch, and the header was read server-side)",
+  "verify_post": "valid fresh TOTP via the page's own form: request Origin 'null', Referer absent -> 403 'CSRF verification failed. Origin checking failed - null does not match any trusted origins.' Screenshot browser/p00_unfixed_verify_403_origin_null.jpg",
+  "logout_post": "the MFA page's own Sign out: Origin 'null', Referer absent -> 403, same reason",
+  "stranded_session": "freed by deleting user 317's one DB session row, as in baseline deviation BW-4",
+  "site_default": "The 403 page itself carried Referrer-Policy: same-origin, Django's SECURE_REFERRER_POLICY default; only the MFA view overrode it",
+  "log": "logs/unfixed_458bdc9_origin_probe.log"
+ },
+ "postfix_2376857": {
+  "mfa_page_response": "Referrer-Policy: same-origin on every MFA page GET",
+  "ramc_staff_3133": {
+   "logout_before_mfa": "MFA page Sign out: Origin 'http://127.0.0.1:8000', Referer the MFA page -> 302; /api/v1/zelda/documents/3133/verification/ then redirected to /accounts/login/",
+   "invalid_totp": "000000 with valid token and real Origin -> 200, 'Invalid or already-used code. Try a fresh code or a recovery code.'; not verified",
+   "valid_totp": "Origin 'http://127.0.0.1:8000' -> 302 to the requested next (/api/v1/zelda/documents/3133/verification/)",
+   "truth_delta_page": {
+    "status": 200,
+    "label": "Zelda AI — Full Verification",
+    "credibility": "N/A /100, NOT SCORED · LIMITED PUBLIC EVIDENCE",
+    "cards": "2 CLAIMS ANALYZED",
+    "none_of_the_n": "none of the 2 claims",
+    "claim_rows_rendered": ["FUNDING RAISED", "USAGE", "USAGE"],
+    "no_external_data_line_count": 6,
+    "truthDeltaEmpty_visible": false,
+    "truthDeltaLoading_visible": false,
+    "reconciliation_panel_in_dom": false,
+    "canary": {"rendered": false, "in_html": false},
+    "screenshot": "browser/p01_ramc_staff_truth_delta_3133.jpg"
+   },
+   "ic_memo": {
+    "url": "/api/v1/zelda/documents/3133/ic-memo/",
+    "status": 200,
+    "nav_user": "ramc_staff",
+    "label": "Zelda AI — Full Memo",
+    "raw_python_lists": 3,
+    "raw_list_starts": ["['The company states it has reached 140,000+ bots on its platform [S1]…", "['The two primary scale metrics — 140,000+ bots and 500M messages — are entirely self-report…", "['What is the current annual recurring revenue (ARR) or monthly recurring revenue (MRR), and…"],
+    "to_date_sentence": "The company states it has raised $23.1M to date [S3]",
+    "reconciliation_panel_in_dom": false,
+    "canary": {"rendered": false, "in_html": false},
+    "screenshot": "browser/p02_ramc_staff_ic_memo_3133.jpg"
+   },
+   "company_overview": {"url": "/matchmaking/memo/manychat/", "status": 500, "error": "MultipleObjectsReturned"},
+   "owner_profile": {"url": "/accounts/profile/ramc_owner/", "status": 200, "canary": {"rendered": true, "in_html": true}, "matches_http_matrix": true},
+   "ops_dashboard": {"url": "/ops/", "status": 200},
+   "signed_out": "nav Sign Out button: Origin 'http://127.0.0.1:8000' -> 302; 3133 verification page then redirected to /accounts/login/"
+  },
+  "rabj_staff_3132": {
+   "valid_totp": "Origin 'http://127.0.0.1:8000' -> 302 to /api/v1/zelda/documents/3132/verification/",
+   "truth_delta_page": {
+    "status": 200,
+    "label": "Zelda AI — Full Verification",
+    "credibility": "— /100, NOT SCORED · NO VERIFIABLE CLAIMS",
+    "no_public_data_wording": false,
+    "truthDeltaEmpty_visible": false,
+    "truthDeltaLoading_visible": false,
+    "reconciliation_panel_in_dom": false,
+    "canary": {"rendered": false, "in_html": false},
+    "screenshot": "browser/p03_rabj_staff_truth_delta_3132.jpg"
+   },
+   "ic_memo": {
+    "url": "/api/v1/zelda/documents/3132/ic-memo/",
+    "status": 200,
+    "nav_user": "rabj_staff",
+    "label": "Zelda AI — Full Memo",
+    "questions_for_management": "rendered as one raw list literal: [\"What are Ben & Jerry's audited standalone revenues, gross margins, and operating income, fully separated from Unilever…\", …]",
+    "raw_state_token": "(verification status: no_claims)",
+    "unilever_mentions": "5 matches, all in requests to separate Ben & Jerry's figures from Unilever or questions about Unilever's control",
+    "reconciliation_panel_in_dom": false,
+    "canary": {"rendered": false, "in_html": false},
+    "screenshots": ["browser/p04_rabj_staff_ic_memo_3132.jpg", "browser/p05_rabj_staff_questions_raw_list_3132.jpg"]
+   },
+   "company_overview": {"url": "/matchmaking/memo/ben-%26-jerry's/", "status": 500, "error": "MultipleObjectsReturned, returned 4!"},
+   "owner_profile": {"url": "/accounts/profile/rabj_owner/", "status": 200, "canary": {"rendered": true, "in_html": true}, "matches_http_matrix": true},
+   "signed_out": "nav Sign Out button: Origin 'http://127.0.0.1:8000' -> 302; 3132 verification page then redirected to /accounts/login/"
+  },
+  "log": "logs/fixed_2376857_origin_probe.log"
+ }
+}
