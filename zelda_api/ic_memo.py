@@ -123,12 +123,12 @@ def truth_delta_signal(pitch_deck_doc):
     report = pitch_deck_doc.truthdeltareport_set.first() if pitch_deck_doc else None
     if not report:
         return None
-    from .truth_delta_models import ClaimedDatapoint
-    counts = coverage_counts(report.verifiability_stats())
+    # Claim counts (RA-104): "Claims checked" and "(of N)" count the same rows.
+    counts = coverage_counts(report.claim_stats())
     return {
         'overall_truth_score': report.overall_truth_score,
         'summary': report.summary,
-        'claims_checked': ClaimedDatapoint.objects.filter(document=pitch_deck_doc).count(),
+        'claims_checked': counts['total'],
         # THE display counts. Templates read these and do no arithmetic of
         # their own: `total - verified` here once filed contradicted claims
         # under "No external data" and hid them.
@@ -259,7 +259,7 @@ def zelda_report_observations(memo, pitch_deck_doc):
 
     # 1. Verification coverage — straight from the Truth Delta report.
     if report:
-        counts = coverage_counts(report.verifiability_stats())
+        counts = coverage_counts(report.claim_stats())   # claims, as the sentences say
         states = report.category_states()          # {category: 'verified'|'contradicted'|'no_data'}
         if counts['total']:
             verified_cats = sorted(c for c, s in states.items() if s == 'verified')

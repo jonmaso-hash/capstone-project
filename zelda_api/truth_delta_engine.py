@@ -13,6 +13,7 @@ from django.conf import settings
 
 from .truth_delta_models import (
     TRUTH_DELTA_SEMANTICS, ClaimedDatapoint, ObservedDatapoint, TruthDeltaReport,
+    claim_state_counts,
 )
 from .truth_delta_sources import data_source_manager
 from .source_capabilities import CAN_CORROBORATE, CAN_ESTABLISH, INFORMATIONAL_ONLY
@@ -200,7 +201,10 @@ class TruthDeltaEngine:
         result = self._call_claude_for_verification(
             company_name, comparison, headlines, document, states=states, reasons=reasons)
         explanations = {}
-        summary = narrative.summary(states, reasons, comparison, stats, headlines)
+        # The summary's count sentence counts claims; the score below keeps the
+        # category counts (RA-104).
+        claim_stats = claim_state_counts(row['zelda_state'] for row in comparison)
+        summary = narrative.summary(states, reasons, comparison, claim_stats, headlines)
         if result is None:
             # Claude unavailable (circuit open, API error, malformed JSON).
             # Nothing it would have produced decides anything any more, so the

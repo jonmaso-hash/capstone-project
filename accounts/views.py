@@ -718,8 +718,9 @@ def profile(request, username=None, pk=None):
                     report.stats = report.verifiability_stats()
                     # Counts from the shared helper, never a percentage: "0/3
                     # claims verified (0%)" graded a private company's lack of
-                    # public evidence as a failure.
-                    counts = coverage_counts(report.stats)
+                    # public evidence as a failure. The line counts claims,
+                    # one per claim row (RA-104).
+                    counts = coverage_counts(report.claim_stats())
                     report.coverage_line = coverage_line(counts) if counts['total'] else ''
                     trend = (
                         diff_verification_reports(report, verification_history[i + 1])
