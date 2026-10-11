@@ -163,9 +163,11 @@ class MemoPersistsThroughTheRealWriterTests(TestCase):
 
         self.assertNotIn('error', result, result.get('error'))
         memo = IntelligenceMemo.objects.get(document=self.doc)
-        self.assertEqual(memo.questions_for_management, str(sections['questions_for_management']))
-        self.assertEqual(memo.supported_points, str(sections['supported_points']))
-        self.assertEqual(memo.open_concerns, str(sections['open_concerns']))
+        # Lists are stored as "- item" lines and other structures as JSON,
+        # never as a Python repr (RA-107).
+        self.assertEqual(memo.questions_for_management, '- What is retention? [1]\n- Who owns café IP? [2]')
+        self.assertEqual(memo.supported_points, '- A cited point [1]')
+        self.assertEqual(memo.open_concerns, '{"gap": "Revenue period not disclosed [2]"}')
         link = DataRoomReportLink.objects.get(founder=founder, report_key='memo')
         expected = sum(len(getattr(memo, field.name).encode('utf-8'))
                        for field in memo._meta.fields if isinstance(field, models.TextField))

@@ -1143,6 +1143,13 @@ class ZeldaIntelligencePipelineV2:
                 # the document status='error', but only if we raise here.
                 raise Exception(memo_sections['error'])
 
+            # A section the model answers with a list (or with JSON list text)
+            # is stored as "- item" lines, and any other structure as JSON; a
+            # TextField would otherwise save either as its Python repr (RA-107).
+            from .memo_lists import memo_text
+            memo_sections = {key: memo_text(value) if isinstance(value, (str, list, tuple, dict)) else value
+                             for key, value in memo_sections.items()}
+
             memo, created = IntelligenceMemo.objects.update_or_create(
                 document_id=context.document_id,
                 defaults={

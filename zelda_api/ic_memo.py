@@ -13,6 +13,7 @@ import re
 from .vector_models import DocumentSource, IntelligenceMemo, BusinessValuationReport
 from .truth_delta_models import TruthDeltaReport
 from .work_done import work_done_summary
+from .memo_lists import memo_list_items, memo_text
 
 # Same ordered section list as loadMemo() in
 # templates/includes/zelda_ai_assistant_enhanced.html (~line 1199) — kept in
@@ -356,7 +357,7 @@ def zelda_report_observations(memo, pitch_deck_doc):
     # 3. Worth investigating — the memo's own concern lines, verbatim, as
     #    clickable topics; the full treatment lives in the IC Memo.
     if memo is not None:
-        for point in _first_points(memo.open_concerns, 2):
+        for point in _first_points(memo_text(memo.open_concerns), 2):
             worth.append({'topic': point, 'target': 'ic_memo'})
         if not any(w['target'] == 'ic_memo' for w in worth) and (memo.questions_for_management or '').strip():
             worth.append({'topic': "Open questions the deck doesn't answer", 'target': 'ic_memo'})
@@ -416,11 +417,15 @@ def build_ic_memo_context(founder_application, tier='full', viewer=None):
         section_keys = MEMO_SECTIONS if tier == 'full' else [
             (key, label) for key, label in MEMO_SECTIONS if key in LITE_MEMO_SECTION_KEYS
         ]
-        memo_sections = [
-            {'label': label, 'text': getattr(memo, key, '')}
-            for key, label in section_keys
-            if getattr(memo, key, '')
-        ]
+        # Saved rows may hold a list as JSON text or a Python repr (RA-002,
+        # RA-107); they are read as lists here, never rewritten.
+        memo_sections = []
+        for key, label in section_keys:
+            value = getattr(memo, key, '')
+            bullets = memo_list_items(value)
+            text = memo_text(value)
+            if bullets or (bullets is None and text.strip()):
+                memo_sections.append({'label': label, 'text': text, 'bullets': bullets})
         memo_meta = {
             'evidence_level': memo.get_evidence_level_display(),
             # Despite the model field's name, IntelligenceMemo.completeness_score is

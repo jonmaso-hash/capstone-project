@@ -14,6 +14,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from .truth_delta_tasks import verify_document_truth_delta as initiate_truth_delta_verification
+from .memo_lists import memo_text
 from .vector_models import DocumentSource, IntelligenceMemo, IntelligenceInsight, BusinessValuationReport
 from .intelligence_pipeline import intelligence_pipeline
 from .authorization import authorize
@@ -312,7 +313,7 @@ class DocumentMemoView(APIView):
                     from .disclaimers import DUE_DILIGENCE_DISCLAIMER
                     locked_response['tier'] = 'lite'
                     locked_response['lite_sections'] = {
-                        key: getattr(memo, key) for key in sorted(LITE_MEMO_SECTION_KEYS)
+                        key: memo_text(getattr(memo, key)) for key in sorted(LITE_MEMO_SECTION_KEYS)
                     }
                     locked_response['disclaimer'] = DUE_DILIGENCE_DISCLAIMER
                 return Response(locked_response, status=status.HTTP_200_OK)
@@ -335,14 +336,14 @@ class DocumentMemoView(APIView):
                     'risk_assessment': memo.risk_assessment,
                     'business_model_analysis': memo.business_model_analysis,
                     'information_readiness': memo.information_readiness,
-                    'supported_points': memo.supported_points,
-                    'open_concerns': memo.open_concerns,
-                    'what_would_change_the_picture': memo.what_would_change_the_picture,
+                    'supported_points': memo_text(memo.supported_points),
+                    'open_concerns': memo_text(memo.open_concerns),
+                    'what_would_change_the_picture': memo_text(memo.what_would_change_the_picture),
                     'upside_scenario': memo.upside_scenario,
                     'base_scenario': memo.base_scenario,
                     'downside_scenario': memo.downside_scenario,
                     'zelda_advantage': memo.zelda_advantage,
-                    'questions_for_management': memo.questions_for_management,
+                    'questions_for_management': memo_text(memo.questions_for_management),
                 },
                 'insights_cited': [
                     {
