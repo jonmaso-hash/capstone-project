@@ -124,6 +124,7 @@ jobs:
           zelda_api.tests_finding_disputes
           zelda_api.tests_verification_grounding
           zelda_api.tests_memo_persistence
+          zelda_api.tests_memo_list_rendering
           zelda_api.tests_claim_extraction_scoring
           zelda_api.tests_three_state_grounding
           zelda_api.tests_source_unavailable
