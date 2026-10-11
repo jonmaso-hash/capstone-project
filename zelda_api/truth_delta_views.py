@@ -146,7 +146,7 @@ class TruthDeltaScoreView(APIView):
 
         category_states = report.category_states()
         # The same display counts every surface uses (ic_memo.coverage_counts).
-        from .ic_memo import coverage_counts, coverage_sentence
+        from .ic_memo import coverage_counts, coverage_sentence, display_summary
         # Claim counts, one per claim row (RA-104); categories stay in category_states.
         counts = coverage_counts(report.claim_stats())
 
@@ -154,7 +154,7 @@ class TruthDeltaScoreView(APIView):
             "tier": tier,
             "overall_truth_score": report.overall_truth_score,
             "credibility_risk": report.credibility_risk,
-            "summary": report.summary,
+            "summary": display_summary(report),
             "details": details,
             "category_states": category_states,
             "claims_analyzed": counts['total'],

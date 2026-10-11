@@ -902,7 +902,7 @@
                                         <span class="text-muted small">&middot; {{ report.coverage_line }}</span>
                                         {% endif %}
                                     </div>
-                                    <p class="text-secondary small mb-0">{{ report.summary }}</p>
+                                    <p class="text-secondary small mb-0">{{ report.display_summary }}</p>
                                     {% if report.trend.newly_verified or report.trend.lost_verification %}
                                     <ul class="small mb-1 ps-3">
                                         {% for category in report.trend.newly_verified %}
