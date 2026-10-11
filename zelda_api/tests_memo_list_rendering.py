@@ -179,3 +179,123 @@ class MemoListWriterTests(TestCase):
         self.assertEqual(memo.executive_summary, PROSE)
         self.assertEqual(memo.open_concerns, BULLET_PROSE)
         self.assertEqual(memo.evidence_level, 'LITTLE_EVIDENCE')
+
+
+# Items that themselves contain newlines: a line break, a nested "- " line and
+# a blank line, each with citations. Item boundaries must survive every hop.
+MULTILINE_ITEMS = [
+    'Revenue is not disclosed [S1].\nThe deck gives only usage figures [S2].',
+    'Intro to the gap:\n- no audited statements [S3]\n\nA closing note [C1].',
+    'A single-line item [S4].',
+]
+
+
+class ParserResourceLimitTests(SimpleTestCase):
+    """The size cap applies before BOTH parsers; parser failures keep the text."""
+
+    def test_deeply_nested_json_below_the_cap_is_shown_as_stored(self):
+        for text in ('[' * 20000 + ']' * 20000, '[' * 20000 + '"a"' + ']' * 20000,
+                     '[' * 20000 + "'a'" + ']' * 20000):
+            with self.subTest(length=len(text)):
+                self.assertLess(len(text), MAX_LITERAL_CHARS)
+                self.assertIsNone(memo_list_items(text))       # no RecursionError escapes
+                self.assertEqual(memo_text(text), text)
+
+    def test_oversized_valid_json_is_not_parsed(self):
+        oversized = json.dumps(['x' * 100] * (MAX_LITERAL_CHARS // 100))
+        self.assertGreater(len(oversized), MAX_LITERAL_CHARS)
+        with mock.patch('zelda_api.memo_lists.json.loads', side_effect=AssertionError('json parsed')), \
+             mock.patch('zelda_api.memo_lists.ast.literal_eval', side_effect=AssertionError('literal parsed')):
+            self.assertIsNone(memo_list_items(oversized))
+            self.assertEqual(memo_text(oversized), oversized)
+
+    def test_a_parser_resource_error_keeps_the_text(self):
+        for error in (RecursionError, MemoryError):
+            with self.subTest(error=error.__name__), \
+                 mock.patch('zelda_api.memo_lists.json.loads', side_effect=error), \
+                 mock.patch('zelda_api.memo_lists.ast.literal_eval', side_effect=error):
+                self.assertIsNone(memo_list_items(BJ_STORED))
+                self.assertEqual(memo_text(BJ_STORED), BJ_STORED)
+
+
+class MultilineItemTests(SimpleTestCase):
+
+    def test_items_with_newlines_keep_their_boundaries_through_write_and_read(self):
+        for stored in (MULTILINE_ITEMS, json.dumps(MULTILINE_ITEMS, ensure_ascii=False), str(MULTILINE_ITEMS)):
+            with self.subTest(form=type(stored).__name__ + (stored[:2] if isinstance(stored, str) else '')):
+                text = memo_text(stored)
+                self.assertEqual(memo_list_items(text), MULTILINE_ITEMS)
+                self.assertEqual(text.count('\n- '), len(MULTILINE_ITEMS) - 1)
+        self.assertEqual(memo_text(MULTILINE_ITEMS).split('\n')[:2],
+                         ['- Revenue is not disclosed [S1].', '  The deck gives only usage figures [S2].'])
+
+    def test_trimmed_trailing_whitespace_keeps_blank_lines_inside_an_item(self):
+        # Editors and Markdown tools strip trailing spaces, turning the "  "
+        # continuation of a blank line into an empty line.
+        trimmed = '\n'.join(line.rstrip() for line in memo_text(MULTILINE_ITEMS).split('\n'))
+        self.assertIn('\n\n', trimmed)
+        self.assertEqual(memo_list_items(trimmed), MULTILINE_ITEMS)
+
+    def test_unindented_prose_after_a_bullet_is_still_prose(self):
+        self.assertIsNone(memo_list_items('- a point [S1]\nand an unindented prose line'))
+        self.assertIsNone(memo_list_items('- a point [S1]\n - a one-space line is neither bullet nor continuation'))
+
+
+class MultilineItemSurfaceTests(TestCase):
+    """Multi-line items in both stored formats, on the HTML, Markdown and API surfaces."""
+
+    def setUp(self):
+        from matchmaking.models import Application
+        from matchmaking.tests import _mock_embedding_generation
+        _mock_embedding_generation(self)
+        owner = User.objects.create_user('ml_multi_owner', password='x')
+        Application.objects.create(user=owner, company_name='MultiCo', founder_name='F',
+                                   email='mm@t.test', description='d', sector='Consumer', stage='Seed')
+        self.doc = DocumentSource.objects.create(uploaded_by=owner, filename='deck.pdf', source_entity='MultiCo',
+                                                 document_type='pitch_deck', status='analyzed')
+        self.memo = IntelligenceMemo.objects.create(
+            document=self.doc, executive_summary='MultiCo summary [S1].',
+            questions_for_management=str(MULTILINE_ITEMS),                                 # Python repr
+            supported_points=json.dumps(MULTILINE_ITEMS, ensure_ascii=False),             # JSON text
+            evidence_level='LITTLE_EVIDENCE', completeness_score=0.5, citations_count=5)
+        self.stored = IntelligenceMemo.objects.values().get(pk=self.memo.pk)
+        self.client.force_login(User.objects.create_user('ml_multi_staff', password='x', is_staff=True))
+
+    def test_html_keeps_one_li_per_item_with_line_breaks_inside(self):
+        html = self.client.get(reverse('zelda_api:ic_memo', args=[self.doc.id])).content.decode()
+        for item in MULTILINE_ITEMS:
+            rendered = '<br>'.join(escape(line) for line in item.split('\n'))
+            self.assertEqual(html.count(f'<li class="mb-1">{rendered}</li>'), 2)   # both sections
+        self.assertNotIn('[&quot;Revenue', html)
+        self.assertNotIn('[&#x27;Revenue', html)
+
+    def test_markdown_keeps_items_as_list_entries_with_continuation_lines(self):
+        markdown = self.client.get(reverse('zelda_api:ic_memo_download', args=[self.doc.id])).content.decode()
+        expected = memo_text(MULTILINE_ITEMS)
+        self.assertEqual(markdown.count(expected), 2)
+        self.assertIn('\n- Intro to the gap:\n  - no audited statements [S3]\n  \n  A closing note [C1].\n', markdown)
+
+    def test_api_text_reads_back_as_the_same_items(self):
+        sections = self.client.get(reverse('zelda_api:document_memo', args=[self.doc.id]),
+                                   HTTP_ACCEPT='application/json').json()['sections']
+        for key in ('questions_for_management', 'supported_points'):
+            with self.subTest(key=key):
+                self.assertEqual(sections[key], memo_text(MULTILINE_ITEMS))
+                self.assertEqual(memo_list_items(sections[key]), MULTILINE_ITEMS)
+        self.assertEqual(IntelligenceMemo.objects.values().get(pk=self.memo.pk), self.stored)
+
+    def test_writer_stores_multiline_items_that_read_back_unchanged(self):
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from zelda_api.tests import grounded_context_for
+        owner = User.objects.create_user('ml_multi_writer', password='x')
+        doc = DocumentSource.objects.create(filename='deck.txt', source_entity='WriterCo', uploaded_by=owner,
+                                            document_type='pitch_deck', raw_text_full='Revenue of $1M.')
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value={
+                'executive_summary': PROSE, 'open_concerns': MULTILINE_ITEMS,
+                'evidence_level': 'LITTLE_EVIDENCE'}), \
+             mock.patch.object(pipeline, '_build_structured_context', return_value=''):
+            self.assertNotIn('error', pipeline._generate_memo(grounded_context_for(doc)))
+        stored = IntelligenceMemo.objects.get(document=doc).open_concerns
+        self.assertEqual(stored, memo_text(MULTILINE_ITEMS))
+        self.assertEqual(memo_list_items(stored), MULTILINE_ITEMS)
