@@ -889,7 +889,7 @@
         const entry = document.createElement('div');
         entry.className = `log-entry ${type}`;
         const timestamp = new Date().toLocaleTimeString();
-        entry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+        entry.innerHTML = `<strong>[${timestamp}]</strong> ${zeldaEscape(message)}`;
         log.appendChild(entry);
         log.scrollTop = log.scrollHeight;
     }
@@ -1493,7 +1493,7 @@
         if (!text) return '';
         return `
             <div class="small text-muted mt-4 pt-3 border-top" style="font-size: 0.72rem; line-height: 1.5;">
-                <i class="bi bi-info-circle me-1"></i>${text}
+                <i class="bi bi-info-circle me-1"></i>${zeldaEscape(text)}
             </div>
         `;
     }
@@ -1519,7 +1519,7 @@
         const message = isOwner
             ? `Generate an AI Intelligence Memo &mdash; executive summary, strengths, weaknesses, and improvement
                recommendations &mdash; from your uploaded materials.`
-            : `${documentName || 'This founder'} hasn't unlocked their Intelligence Memo yet. Once they upgrade to
+            : `${zeldaEscape(documentName || 'This founder')} hasn't unlocked their Intelligence Memo yet. Once they upgrade to
                Premium, you'll be able to view it here &mdash; no extra cost to you.`;
         const cta = isOwner
             ? `<a href="/billing/" class="btn btn-sm btn-warning rounded-pill px-3 fw-semibold">View Membership Plans</a>`
@@ -1551,20 +1551,20 @@
 
     function renderLiteMemo(data) {
         let html = `<div class="mb-3">
-            <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill me-1">${data.document_name || 'Intelligence Brief'}</span>
+            <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill me-1">${zeldaEscape(data.document_name || 'Intelligence Brief')}</span>
             <span class="badge bg-secondary-subtle text-secondary px-3 py-2 rounded-pill"><i class="bi bi-lightning-charge-fill me-1"></i>Zelda Lite</span>
         </div>`;
         ZELDA_LITE_SECTIONS.forEach(s => {
             if (data.lite_sections[s.key]) {
                 html += `<div class="mb-3 p-3 bg-light rounded-3">
                     <h6 class="fw-bold text-dark mb-1" style="font-size:0.82rem;">${s.label}</h6>
-                    <p class="text-secondary small mb-0" style="line-height:1.6; white-space: pre-line;">${data.lite_sections[s.key]}</p>
+                    <p class="text-secondary small mb-0" style="line-height:1.6; white-space: pre-line;">${zeldaEscape(data.lite_sections[s.key])}</p>
                 </div>`;
             }
         });
         html += `<p class="small text-muted border-top pt-2 mb-2">
             <i class="bi bi-lock-fill me-1"></i>Some detailed intelligence remains locked until
-            ${data.document_name || 'this company'} unlocks Premium.
+            ${zeldaEscape(data.document_name || 'this company')} unlocks Premium.
         </p>`;
         html += renderDisclaimerFooter(data.disclaimer);
         return html;
@@ -1627,7 +1627,7 @@
 
     function renderMemoFailed(message) {
         return `<div class="p-3 rounded-3 border border-danger-subtle bg-danger-subtle" data-zelda-memo-state="failed">
-            <h6 class="fw-bold text-danger mb-1"><i class="bi bi-exclamation-triangle me-1"></i>${message || "Zelda couldn't finish this analysis."}</h6>
+            <h6 class="fw-bold text-danger mb-1"><i class="bi bi-exclamation-triangle me-1"></i>${zeldaEscape(message || "Zelda couldn't finish this analysis.")}</h6>
             <p class="text-muted small mb-0">Please try again later, or contact support if this keeps happening.</p>
         </div>`;
     }
@@ -1684,15 +1684,15 @@
 
         let memoHTML = `
     <div class="mb-4">
-        <h5 class="fw-bold text-dark mb-3">${data.document_name || 'Untitled'}</h5>
+        <h5 class="fw-bold text-dark mb-3">${zeldaEscape(data.document_name || 'Untitled')}</h5>
         <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
             <div>
                 <div class="small text-muted">Evidence Level</div>
-                <strong style="color: var(--zelda-accent);">${(data.evidence_level || 'not classified').replace(/_/g, ' ').toUpperCase()}</strong>
+                <strong style="color: var(--zelda-accent);">${zeldaEscape(String(data.evidence_level || 'not classified').replace(/_/g, ' ').toUpperCase())}</strong>
             </div>
             <div>
                 <div class="small text-muted">Citations</div>
-                <strong>${data.citations_count ?? '—'}</strong>
+                <strong>${zeldaEscape(data.citations_count ?? '—')}</strong>
             </div>
         </div>
         <div id="memo-confidence-gauge" class="mb-3"></div>
@@ -1723,7 +1723,7 @@
                     memoHTML += `
                         <div class="mb-3">
                             <h6 class="fw-bold text-dark">${section.label}</h6>
-                            <p class="text-secondary small" style="white-space: pre-line;">${data.sections[section.key]}</p>
+                            <p class="text-secondary small" style="white-space: pre-line;">${zeldaEscape(data.sections[section.key])}</p>
                         </div>
                     `;
                 }
@@ -1735,8 +1735,8 @@
                 data.insights_cited.forEach(insight => {
                     memoHTML += `
                         <div class="small mb-2 p-2 bg-light rounded">
-                            <strong>${insight.category}</strong>: ${insight.text}
-                            <br><span class="text-muted" style="font-size: 0.75rem;">Confidence: ${Math.round(insight.confidence)}%</span>
+                            <strong>${zeldaEscape(insight.category)}</strong>: ${zeldaEscape(insight.text)}
+                            <br><span class="text-muted" style="font-size: 0.75rem;">Confidence: ${zeldaEscape(Math.round(insight.confidence))}%</span>
                         </div>
                     `;
                 });
@@ -2107,7 +2107,7 @@
 
             let html = `<div class="mb-3">
                 <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill mb-3">
-                    ${data.document_name || 'Intelligence Brief'}
+                    ${zeldaEscape(data.document_name || 'Intelligence Brief')}
                 </span>
                 <div id="brief-confidence-gauge" class="mt-2 mb-1"></div>`;
 
@@ -2127,7 +2127,7 @@
                     if (data.sections[s.key]) {
                         html += `<div class="mb-3 p-3 bg-light rounded-3">
                             <h6 class="fw-bold text-dark mb-1" style="font-size:0.82rem;">${s.label}</h6>
-                            <p class="text-secondary small mb-0" style="line-height:1.6; white-space: pre-line;">${data.sections[s.key]}</p>
+                            <p class="text-secondary small mb-0" style="line-height:1.6; white-space: pre-line;">${zeldaEscape(data.sections[s.key])}</p>
                         </div>`;
                     }
                 });
@@ -2143,7 +2143,7 @@
         } catch (err) {
             content.innerHTML = `<div class="text-danger small p-3">
                 <i class="bi bi-exclamation-triangle me-2"></i>
-                Could not load brief: ${err.message}
+                Could not load brief: ${zeldaEscape(err.message)}
             </div>`;
             content.style.display = 'block';
             addLogEntry(`Intelligence brief error: ${err.message}`, 'error');
