@@ -1,0 +1,23 @@
+# Worker task chain for document 3132 (local broker redis://localhost:6379/0), from the worker log
+[2026-10-10 17:46:41,068: INFO/MainProcess] Task zelda_api.tasks.process_document_pipeline[67e7ebac-6208-46e1-a993-cea7d72cb450] received
+[2026-10-10 17:46:41,946: INFO/MainProcess] Task zelda_api.tasks.process_document_pipeline[67e7ebac-6208-46e1-a993-cea7d72cb450] succeeded in 0.8772051999694668s: {'status': 'success', 'document_id': 3132, 'chunks': 11, 'insights': 7}
+[2026-10-10 17:46:41,953: INFO/MainProcess] Task zelda_api.truth_delta_tasks.extract_claims_from_insights[36a5a98a-78e2-4a0e-8f48-3742e7d352a1] received
+[2026-10-10 17:46:41,994: INFO/MainProcess] Task zelda_api.truth_delta_tasks.extract_claims_from_insights[36a5a98a-78e2-4a0e-8f48-3742e7d352a1] succeeded in 0.04014970001298934s: {'status': 'success', 'claims_created': 0}
+[2026-10-10 17:46:42,000: INFO/MainProcess] Task zelda_api.entity_verification_tasks.verify_entity_integrity[9b5802d2-63ad-46d3-902e-65c5bbd9b55f] received
+[2026-10-10 17:46:42,364: WARNING/MainProcess] C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\core\cache\backends\base.py:119: CacheKeyWarning: Cache key contains characters that will cause errors if used with memcached: ":1:sec_identity_v3:ben & jerry's"
+[2026-10-10 17:46:44,436: INFO/MainProcess] Task zelda_api.entity_verification_tasks.verify_entity_integrity[9b5802d2-63ad-46d3-902e-65c5bbd9b55f] succeeded in 2.4354814999969676s: {'status': 'success', 'document_id': 3132, 'report_id': 33}
+[2026-10-10 17:46:44,442: INFO/MainProcess] Task zelda_api.truth_delta_tasks.verify_document_truth_delta[4cf873bd-8c47-4d66-b8e9-323af70dd00d] received
+[2026-10-10 17:46:44,454: WARNING/MainProcess] No claims found for document 3132
+[2026-10-10 17:46:44,474: INFO/MainProcess] Task zelda_api.truth_delta_tasks.verify_document_truth_delta[4cf873bd-8c47-4d66-b8e9-323af70dd00d] succeeded in 0.032042200036812574s: {'status': 'no_claims', 'document_id': 3132}
+[2026-10-10 17:46:44,479: INFO/MainProcess] Task zelda_api.tasks.generate_intelligence_memo[c46f1d60-9a43-42f5-b205-39f2054ceba2] received
+[2026-10-10 17:47:33,914: INFO/MainProcess] Task zelda_api.tasks.generate_intelligence_memo[c46f1d60-9a43-42f5-b205-39f2054ceba2] succeeded in 49.434401599981356s: {'status': 'success', 'memo_id': 90}
+[2026-10-10 17:47:33,923: INFO/MainProcess] Task zelda_api.tasks.notify_document_processed[763bfd7c-9f23-4451-b313-1206c500ca8e] received
+[2026-10-10 17:47:34,108: INFO/MainProcess] Task zelda_api.tasks.notify_document_processed[763bfd7c-9f23-4451-b313-1206c500ca8e] succeeded in 0.1850548000074923s: {'status': 'notified', 'user_id': 310}
+
+# Setup-time tasks (fixture profile saves; positive control that the worker reads the local broker)
+[2026-10-10 17:45:29,464: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_founder_task[5c45d124-c197-4035-af36-5d82f4c38eaf] received
+[2026-10-10 17:45:31,909: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_founder_task[5c45d124-c197-4035-af36-5d82f4c38eaf] succeeded in 2.4448898999835365s: None
+[2026-10-10 17:45:31,915: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_investor_task[6907fc8c-8f48-4492-911f-c4c32600b2d7] received
+[2026-10-10 17:45:32,458: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_investor_task[6907fc8c-8f48-4492-911f-c4c32600b2d7] succeeded in 0.542845300049521s: None
+[2026-10-10 17:45:32,586: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_investor_task[f1ee833d-0801-43e7-a2cf-76cddf84fe4d] received
+[2026-10-10 17:45:33,065: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_investor_task[f1ee833d-0801-43e7-a2cf-76cddf84fe4d] succeeded in 0.4784102000412531s: None

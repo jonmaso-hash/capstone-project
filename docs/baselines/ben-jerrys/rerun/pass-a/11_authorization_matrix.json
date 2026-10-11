@@ -1,0 +1,1080 @@
+{
+ "matrix": [
+  {
+   "principal": "OWNER",
+   "surface": "Z_control_home",
+   "url": "/",
+   "status": 200,
+   "location": "",
+   "bytes": 167708,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "OWNER",
+   "surface": "A_profile",
+   "url": "/accounts/profile/rabj_owner/",
+   "status": 200,
+   "location": "",
+   "bytes": 183137,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": true,
+   "canary_in_raw_body": true
+  },
+  {
+   "principal": "OWNER",
+   "surface": "B_profile_analysis",
+   "url": "/accounts/profile/rabj_owner/analysis/",
+   "status": 200,
+   "location": "",
+   "bytes": 149142,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "OWNER",
+   "surface": "C_intel_report",
+   "url": "/matchmaking/memo/ben-%26-jerry's/",
+   "status": 500,
+   "location": "",
+   "bytes": 112727,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "OWNER",
+   "surface": "D_ic_memo",
+   "url": "/api/v1/zelda/documents/3132/ic-memo/",
+   "status": 200,
+   "location": "",
+   "bytes": 161273,
+   "visible_markers": [
+    "Unilever",
+    "no_claims"
+   ],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "OWNER",
+   "surface": "E_ic_memo_dl",
+   "url": "/api/v1/zelda/documents/3132/ic-memo/download/",
+   "status": 302,
+   "location": "/api/v1/zelda/documents/3132/ic-memo/",
+   "bytes": 0,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "OWNER",
+   "surface": "F_truthdelta_ui",
+   "url": "/api/v1/zelda/documents/3132/verification/",
+   "status": 200,
+   "location": "",
+   "bytes": 54233,
+   "visible_markers": [
+    "No verifiable claims"
+   ],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "OWNER",
+   "surface": "G_memo_api",
+   "url": "/api/v1/zelda/documents/3132/memo/",
+   "status": 200,
+   "location": "",
+   "bytes": 145,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "OWNER",
+   "surface": "H_td_api",
+   "url": "/api/v1/zelda/documents/3132/truth-delta/",
+   "status": 200,
+   "location": "",
+   "bytes": 385,
+   "visible_markers": [
+    "no_claims",
+    "No verifiable claims"
+   ],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "OWNER",
+   "surface": "I_status",
+   "url": "/api/v1/zelda/documents/3132/status/",
+   "status": 200,
+   "location": "",
+   "bytes": 274,
+   "visible_markers": [
+    "no_claims"
+   ],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "OWNER",
+   "surface": "J_valuation_api",
+   "url": "/api/v1/zelda/documents/3132/valuation/",
+   "status": 202,
+   "location": "",
+   "bytes": 70,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "OWNER",
+   "surface": "K_valuation_ui",
+   "url": "/api/v1/zelda/valuation/3132/",
+   "status": 404,
+   "location": "",
+   "bytes": 16519,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "OWNER",
+   "surface": "L_identity_status",
+   "url": "/api/v1/zelda/identity-check/33/status/",
+   "status": 200,
+   "location": "",
+   "bytes": 87,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "OWNER",
+   "surface": "O_library",
+   "url": "/api/v1/zelda/library/",
+   "status": 200,
+   "location": "",
+   "bytes": 799,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "OWNER",
+   "surface": "P_analyze_founder",
+   "url": "/api/v1/zelda/analyze/founder/rabj_owner/",
+   "status": 403,
+   "location": "",
+   "bytes": 58,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "OWNER",
+   "surface": "M_search",
+   "url": "/api/v1/zelda/documents/3132/search/",
+   "method": "POST",
+   "status": 200,
+   "location": "",
+   "bytes": 4355,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "OWNER",
+   "surface": "N_rag",
+   "url": "/api/v1/zelda/documents/3132/rag/",
+   "method": "POST",
+   "status": 200,
+   "location": "",
+   "bytes": 4596,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "LITE",
+   "surface": "Z_control_home",
+   "url": "/",
+   "status": 200,
+   "location": "",
+   "bytes": 145210,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "LITE",
+   "surface": "A_profile",
+   "url": "/accounts/profile/rabj_owner/",
+   "status": 200,
+   "location": "",
+   "bytes": 148602,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "LITE",
+   "surface": "B_profile_analysis",
+   "url": "/accounts/profile/rabj_owner/analysis/",
+   "status": 302,
+   "location": "/accounts/profile/rabj_owner/",
+   "bytes": 0,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "LITE",
+   "surface": "C_intel_report",
+   "url": "/matchmaking/memo/ben-%26-jerry's/",
+   "status": 500,
+   "location": "",
+   "bytes": 113005,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "LITE",
+   "surface": "D_ic_memo",
+   "url": "/api/v1/zelda/documents/3132/ic-memo/",
+   "status": 404,
+   "location": "",
+   "bytes": 15295,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "LITE",
+   "surface": "E_ic_memo_dl",
+   "url": "/api/v1/zelda/documents/3132/ic-memo/download/",
+   "status": 404,
+   "location": "",
+   "bytes": 15653,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "LITE",
+   "surface": "F_truthdelta_ui",
+   "url": "/api/v1/zelda/documents/3132/verification/",
+   "status": 200,
+   "location": "",
+   "bytes": 50258,
+   "visible_markers": [
+    "No verifiable claims"
+   ],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "LITE",
+   "surface": "G_memo_api",
+   "url": "/api/v1/zelda/documents/3132/memo/",
+   "status": 200,
+   "location": "",
+   "bytes": 4526,
+   "visible_markers": [
+    "Unilever",
+    "no_claims"
+   ],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "LITE",
+   "surface": "H_td_api",
+   "url": "/api/v1/zelda/documents/3132/truth-delta/",
+   "status": 200,
+   "location": "",
+   "bytes": 385,
+   "visible_markers": [
+    "no_claims",
+    "No verifiable claims"
+   ],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "LITE",
+   "surface": "I_status",
+   "url": "/api/v1/zelda/documents/3132/status/",
+   "status": 403,
+   "location": "",
+   "bytes": 26,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "LITE",
+   "surface": "J_valuation_api",
+   "url": "/api/v1/zelda/documents/3132/valuation/",
+   "status": 403,
+   "location": "",
+   "bytes": 26,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "LITE",
+   "surface": "K_valuation_ui",
+   "url": "/api/v1/zelda/valuation/3132/",
+   "status": 404,
+   "location": "",
+   "bytes": 16519,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "LITE",
+   "surface": "L_identity_status",
+   "url": "/api/v1/zelda/identity-check/33/status/",
+   "status": 404,
+   "location": "",
+   "bytes": 23,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "LITE",
+   "surface": "O_library",
+   "url": "/api/v1/zelda/library/",
+   "status": 200,
+   "location": "",
+   "bytes": 820,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "LITE",
+   "surface": "P_analyze_founder",
+   "url": "/api/v1/zelda/analyze/founder/rabj_owner/",
+   "status": 200,
+   "location": "",
+   "bytes": 140,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "LITE",
+   "surface": "M_search",
+   "url": "/api/v1/zelda/documents/3132/search/",
+   "method": "POST",
+   "status": 403,
+   "location": "",
+   "bytes": 26,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "LITE",
+   "surface": "N_rag",
+   "url": "/api/v1/zelda/documents/3132/rag/",
+   "method": "POST",
+   "status": 403,
+   "location": "",
+   "bytes": 26,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "PAID",
+   "surface": "Z_control_home",
+   "url": "/",
+   "status": 200,
+   "location": "",
+   "bytes": 145210,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "PAID",
+   "surface": "A_profile",
+   "url": "/accounts/profile/rabj_owner/",
+   "status": 200,
+   "location": "",
+   "bytes": 148603,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "PAID",
+   "surface": "B_profile_analysis",
+   "url": "/accounts/profile/rabj_owner/analysis/",
+   "status": 302,
+   "location": "/accounts/profile/rabj_owner/",
+   "bytes": 0,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "PAID",
+   "surface": "C_intel_report",
+   "url": "/matchmaking/memo/ben-%26-jerry's/",
+   "status": 500,
+   "location": "",
+   "bytes": 113005,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "PAID",
+   "surface": "D_ic_memo",
+   "url": "/api/v1/zelda/documents/3132/ic-memo/",
+   "status": 404,
+   "location": "",
+   "bytes": 15295,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "PAID",
+   "surface": "E_ic_memo_dl",
+   "url": "/api/v1/zelda/documents/3132/ic-memo/download/",
+   "status": 404,
+   "location": "",
+   "bytes": 15653,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "PAID",
+   "surface": "F_truthdelta_ui",
+   "url": "/api/v1/zelda/documents/3132/verification/",
+   "status": 200,
+   "location": "",
+   "bytes": 50258,
+   "visible_markers": [
+    "No verifiable claims"
+   ],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "PAID",
+   "surface": "G_memo_api",
+   "url": "/api/v1/zelda/documents/3132/memo/",
+   "status": 200,
+   "location": "",
+   "bytes": 4526,
+   "visible_markers": [
+    "Unilever",
+    "no_claims"
+   ],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "PAID",
+   "surface": "H_td_api",
+   "url": "/api/v1/zelda/documents/3132/truth-delta/",
+   "status": 200,
+   "location": "",
+   "bytes": 385,
+   "visible_markers": [
+    "no_claims",
+    "No verifiable claims"
+   ],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "PAID",
+   "surface": "I_status",
+   "url": "/api/v1/zelda/documents/3132/status/",
+   "status": 403,
+   "location": "",
+   "bytes": 26,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "PAID",
+   "surface": "J_valuation_api",
+   "url": "/api/v1/zelda/documents/3132/valuation/",
+   "status": 403,
+   "location": "",
+   "bytes": 26,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "PAID",
+   "surface": "K_valuation_ui",
+   "url": "/api/v1/zelda/valuation/3132/",
+   "status": 404,
+   "location": "",
+   "bytes": 16519,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "PAID",
+   "surface": "L_identity_status",
+   "url": "/api/v1/zelda/identity-check/33/status/",
+   "status": 404,
+   "location": "",
+   "bytes": 23,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "PAID",
+   "surface": "O_library",
+   "url": "/api/v1/zelda/library/",
+   "status": 200,
+   "location": "",
+   "bytes": 820,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "PAID",
+   "surface": "P_analyze_founder",
+   "url": "/api/v1/zelda/analyze/founder/rabj_owner/",
+   "status": 200,
+   "location": "",
+   "bytes": 140,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "PAID",
+   "surface": "M_search",
+   "url": "/api/v1/zelda/documents/3132/search/",
+   "method": "POST",
+   "status": 403,
+   "location": "",
+   "bytes": 26,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "PAID",
+   "surface": "N_rag",
+   "url": "/api/v1/zelda/documents/3132/rag/",
+   "method": "POST",
+   "status": 403,
+   "location": "",
+   "bytes": 26,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "ANON",
+   "surface": "Z_control_home",
+   "url": "/",
+   "status": 200,
+   "location": "",
+   "bytes": 36001,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "ANON",
+   "surface": "A_profile",
+   "url": "/accounts/profile/rabj_owner/",
+   "status": 302,
+   "location": "/accounts/login/?next=/accounts/profile/rabj_owner/",
+   "bytes": 0,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "ANON",
+   "surface": "B_profile_analysis",
+   "url": "/accounts/profile/rabj_owner/analysis/",
+   "status": 302,
+   "location": "/accounts/login/?next=/accounts/profile/rabj_owner/analysis/",
+   "bytes": 0,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "ANON",
+   "surface": "C_intel_report",
+   "url": "/matchmaking/memo/ben-%26-jerry's/",
+   "status": 302,
+   "location": "/accounts/login/?next=/matchmaking/memo/ben-%26-jerry%27s/",
+   "bytes": 0,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "ANON",
+   "surface": "D_ic_memo",
+   "url": "/api/v1/zelda/documents/3132/ic-memo/",
+   "status": 302,
+   "location": "/accounts/login/?next=/api/v1/zelda/documents/3132/ic-memo/",
+   "bytes": 0,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "ANON",
+   "surface": "E_ic_memo_dl",
+   "url": "/api/v1/zelda/documents/3132/ic-memo/download/",
+   "status": 302,
+   "location": "/accounts/login/?next=/api/v1/zelda/documents/3132/ic-memo/download/",
+   "bytes": 0,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "ANON",
+   "surface": "F_truthdelta_ui",
+   "url": "/api/v1/zelda/documents/3132/verification/",
+   "status": 302,
+   "location": "/accounts/login/?next=/api/v1/zelda/documents/3132/verification/",
+   "bytes": 0,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "ANON",
+   "surface": "G_memo_api",
+   "url": "/api/v1/zelda/documents/3132/memo/",
+   "status": 403,
+   "location": "",
+   "bytes": 58,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "ANON",
+   "surface": "H_td_api",
+   "url": "/api/v1/zelda/documents/3132/truth-delta/",
+   "status": 403,
+   "location": "",
+   "bytes": 58,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "ANON",
+   "surface": "I_status",
+   "url": "/api/v1/zelda/documents/3132/status/",
+   "status": 403,
+   "location": "",
+   "bytes": 58,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "ANON",
+   "surface": "J_valuation_api",
+   "url": "/api/v1/zelda/documents/3132/valuation/",
+   "status": 403,
+   "location": "",
+   "bytes": 58,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "ANON",
+   "surface": "K_valuation_ui",
+   "url": "/api/v1/zelda/valuation/3132/",
+   "status": 302,
+   "location": "/accounts/login/?next=/api/v1/zelda/valuation/3132/",
+   "bytes": 0,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "ANON",
+   "surface": "L_identity_status",
+   "url": "/api/v1/zelda/identity-check/33/status/",
+   "status": 302,
+   "location": "/accounts/login/?next=/api/v1/zelda/identity-check/33/status/",
+   "bytes": 0,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "ANON",
+   "surface": "O_library",
+   "url": "/api/v1/zelda/library/",
+   "status": 403,
+   "location": "",
+   "bytes": 58,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "ANON",
+   "surface": "P_analyze_founder",
+   "url": "/api/v1/zelda/analyze/founder/rabj_owner/",
+   "status": 403,
+   "location": "",
+   "bytes": 58,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "ANON",
+   "surface": "M_search",
+   "url": "/api/v1/zelda/documents/3132/search/",
+   "method": "POST",
+   "status": 403,
+   "location": "",
+   "bytes": 58,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "ANON",
+   "surface": "N_rag",
+   "url": "/api/v1/zelda/documents/3132/rag/",
+   "method": "POST",
+   "status": 403,
+   "location": "",
+   "bytes": 58,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "STAFF",
+   "surface": "Z_control_home",
+   "url": "/",
+   "status": 200,
+   "location": "",
+   "bytes": 165243,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "STAFF",
+   "surface": "A_profile",
+   "url": "/accounts/profile/rabj_owner/",
+   "status": 200,
+   "location": "",
+   "bytes": 170356,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": true,
+   "canary_in_raw_body": true
+  },
+  {
+   "principal": "STAFF",
+   "surface": "B_profile_analysis",
+   "url": "/accounts/profile/rabj_owner/analysis/",
+   "status": 302,
+   "location": "/accounts/profile/rabj_owner/",
+   "bytes": 0,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "STAFF",
+   "surface": "C_intel_report",
+   "url": "/matchmaking/memo/ben-%26-jerry's/",
+   "status": 500,
+   "location": "",
+   "bytes": 113006,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "STAFF",
+   "surface": "D_ic_memo",
+   "url": "/api/v1/zelda/documents/3132/ic-memo/",
+   "status": 200,
+   "location": "",
+   "bytes": 170774,
+   "visible_markers": [
+    "Unilever",
+    "no_claims"
+   ],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "STAFF",
+   "surface": "E_ic_memo_dl",
+   "url": "/api/v1/zelda/documents/3132/ic-memo/download/",
+   "status": 200,
+   "location": "",
+   "bytes": 12019,
+   "visible_markers": [
+    "Unilever",
+    "no_claims"
+   ],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "STAFF",
+   "surface": "F_truthdelta_ui",
+   "url": "/api/v1/zelda/documents/3132/verification/",
+   "status": 200,
+   "location": "",
+   "bytes": 54440,
+   "visible_markers": [
+    "No verifiable claims"
+   ],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "STAFF",
+   "surface": "G_memo_api",
+   "url": "/api/v1/zelda/documents/3132/memo/",
+   "status": 200,
+   "location": "",
+   "bytes": 12795,
+   "visible_markers": [
+    "Unilever",
+    "no_claims"
+   ],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "STAFF",
+   "surface": "H_td_api",
+   "url": "/api/v1/zelda/documents/3132/truth-delta/",
+   "status": 200,
+   "location": "",
+   "bytes": 385,
+   "visible_markers": [
+    "no_claims",
+    "No verifiable claims"
+   ],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "STAFF",
+   "surface": "I_status",
+   "url": "/api/v1/zelda/documents/3132/status/",
+   "status": 200,
+   "location": "",
+   "bytes": 274,
+   "visible_markers": [
+    "no_claims"
+   ],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "STAFF",
+   "surface": "J_valuation_api",
+   "url": "/api/v1/zelda/documents/3132/valuation/",
+   "status": 202,
+   "location": "",
+   "bytes": 70,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "STAFF",
+   "surface": "K_valuation_ui",
+   "url": "/api/v1/zelda/valuation/3132/",
+   "status": 404,
+   "location": "",
+   "bytes": 16519,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "STAFF",
+   "surface": "L_identity_status",
+   "url": "/api/v1/zelda/identity-check/33/status/",
+   "status": 200,
+   "location": "",
+   "bytes": 87,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "STAFF",
+   "surface": "O_library",
+   "url": "/api/v1/zelda/library/",
+   "status": 200,
+   "location": "",
+   "bytes": 145,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "STAFF",
+   "surface": "P_analyze_founder",
+   "url": "/api/v1/zelda/analyze/founder/rabj_owner/",
+   "status": 403,
+   "location": "",
+   "bytes": 58,
+   "visible_markers": [],
+   "b2_panel": false,
+   "canary_in_readable": false,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "STAFF",
+   "surface": "M_search",
+   "url": "/api/v1/zelda/documents/3132/search/",
+   "method": "POST",
+   "status": 200,
+   "location": "",
+   "bytes": 4355,
+   "canary_in_raw_body": false
+  },
+  {
+   "principal": "STAFF",
+   "surface": "N_rag",
+   "url": "/api/v1/zelda/documents/3132/rag/",
+   "method": "POST",
+   "status": 200,
+   "location": "",
+   "bytes": 4596,
+   "canary_in_raw_body": false
+  }
+ ],
+ "session_walks_logout": {
+  "OWNER": {
+   "logout_status": 302,
+   "logout_location": "/home/",
+   "after_logout_profile_status": 302,
+   "after_logout_location": "/accounts/login/?next=/accounts/profile/rabj_owner/"
+  },
+  "LITE": {
+   "logout_status": 302,
+   "logout_location": "/home/",
+   "after_logout_profile_status": 302,
+   "after_logout_location": "/accounts/login/?next=/accounts/profile/rabj_owner/"
+  },
+  "PAID": {
+   "logout_status": 302,
+   "logout_location": "/home/",
+   "after_logout_profile_status": 302,
+   "after_logout_location": "/accounts/login/?next=/accounts/profile/rabj_owner/"
+  },
+  "STAFF": {
+   "logout_status": 302,
+   "logout_location": "/home/",
+   "after_logout_profile_status": 302,
+   "after_logout_location": "/accounts/login/?next=/accounts/profile/rabj_owner/"
+  }
+ },
+ "staff_mfa": {
+  "rabj_staff": {
+   "step": "setup",
+   "status": 200,
+   "recovery_codes_shown": true,
+   "control_home_after_mfa": 200
+  }
+ }
+}

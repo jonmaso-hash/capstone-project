@@ -1,0 +1,48 @@
+{
+ "note": "Setup controls for the Ben & Jerry's Pass A rerun at 458bdc9. Every *-CHECK line was printed from inside the named process by the run wrapper (scratchpad run.py), which blanks the six paid keys in os.environ (present-but-empty, so read_env()'s setdefault keeps the blank), pins broker/result backend/cache to localhost, loads the main checkout's .env and dev DB, then refuses to start on any paid key set, a missing Anthropic key, any remote target or any pending migration.",
+ "code": {
+  "checkout": "C:\\Users\\jonathan\\Desktop\\KCV-rerun-458bdc9 (git worktree, branch docs/two-deck-rerun-458bdc9)",
+  "HEAD": "458bdc9 (PR #270 merge; includes #269 memo-archive list sections and #270 profile reporting currency)",
+  "py_or_template_changes": "none",
+  "why_a_worktree": "The main checkout is on main @ cbda41a with tracked __pycache__ noise and untracked work; it was left untouched"
+ },
+ "deck": {
+  "path": "C:\\Users\\jonathan\\Downloads\\ben_jerrys_public_pitch_deck_test.pptx",
+  "bytes": 18072747,
+  "sha256_disk_before_run": "0cb1be12eca73272d044d271877ae7f5c4b561b1d057b6b04d17c49ee4983fea",
+  "sha256_in_upload_process_before_post": "0cb1be12eca73272d044d271877ae7f5c4b561b1d057b6b04d17c49ee4983fea",
+  "answer_key_sha256": "0cb1be12eca73272d044d271877ae7f5c4b561b1d057b6b04d17c49ee4983fea",
+  "matches_key": true
+ },
+ "env_check": {
+  "server": "BASELINE-ENV-CHECK [server pid=20000] {'FILED_API_KEY': False, 'COMPANYENRICH_API_KEY': False, 'NEWS_API_KEY': False, 'DATA4B2B_API_KEY': False, 'USPTO_ODP_API_KEY': False, 'CRUNCHBASE_API_KEY': False, 'ANTHROPIC_API_KEY': True}",
+  "worker": "BASELINE-ENV-CHECK [worker pid=3816] {'FILED_API_KEY': False, 'COMPANYENRICH_API_KEY': False, 'NEWS_API_KEY': False, 'DATA4B2B_API_KEY': False, 'USPTO_ODP_API_KEY': False, 'CRUNCHBASE_API_KEY': False, 'ANTHROPIC_API_KEY': True}",
+  "negative_control": "RUN_NEGATIVE_CONTROL=1 (overrides removed), pid 21992: FILED, COMPANYENRICH, NEWS, DATA4B2B, USPTO_ODP True; CRUNCHBASE False (empty in .env); all four targets rediss://pumped-koi-212229.upstash.io (REMOTE); wrapper printed REFUSING TO START and exited 1",
+  "uspto_note": "No application code reads USPTO_ODP_API_KEY at this commit; it is blanked and probed via os.environ for parity with the protocol",
+  "CELERY_TASK_ALWAYS_EAGER": false,
+  "worker_running": true
+ },
+ "broker_check": {
+  "server": ["broker (write) redis://localhost local=True", "broker (read) redis://localhost local=True", "result backend redis://localhost local=True", "cache redis://localhost local=True"],
+  "worker": ["broker (write) redis://localhost local=True", "broker (read) redis://localhost local=True", "result backend redis://localhost local=True", "cache redis://localhost local=True"],
+  "manage_py_preflight_local": "broker (write) redis://localhost; broker (read) redis://localhost; result backend redis://localhost; cache redis://localhost; migrations 0 pending; preflight ok (exit 0)",
+  "local_broker": "Memurai on 127.0.0.1:6379; celery list length 0 before the run; a stale high_priority list (5 keys in db 0 incl. bindings) left untouched, not consumed by this worker",
+  "worker_banner": "transport redis://localhost:6379/0, results redis://localhost:6379/1, queue celery"
+ },
+ "schema_check": {
+  "first_check": "SCHEMA-CHECK [check pid=10756] pending=1 ['matchmaking.0095_profile_reporting_currency'] -> REFUSING TO START (gate proven red)",
+  "migration_run": "matchmaking.0095_profile_reporting_currency applied after a DB backup to C:\\Users\\jonathan\\Desktop\\KCV_backups\\db.pre-0095-passa-rerun-2026-10-10.sqlite3",
+  "server": "SCHEMA-CHECK [server pid=20000] pending=0 [] zelda_api.0035 applied=True matchmaking.0083 applied=True matchmaking.0095 applied=True",
+  "worker": "SCHEMA-CHECK [worker pid=3816] pending=0 [] zelda_api.0035 applied=True matchmaking.0083 applied=True matchmaking.0095 applied=True"
+ },
+ "principals": {
+  "rabj_owner": {"user_id": 310, "application_id": 46, "is_premium": false},
+  "rabj_lite": {"user_id": 311, "investor_profile": "is_premium=False"},
+  "rabj_paid": {"user_id": 312, "investor_profile": "is_premium=True", "subscription": "id 7, INVESTOR_PREMIUM, active, current_period_end 2026-11-10 (Nike E-1)"},
+  "rabj_staff": {"user_id": 313, "is_staff": true, "staff_mfa": "TOTP enrolled through the real /accounts/staff-mfa/setup/ page during the probes (fixture secret kept in the scratchpad, never printed)"},
+  "anonymous": {}
+ },
+ "profile_fixture": {"company_name": "Ben & Jerry's", "geography": "South Burlington, VT", "company_website": null, "current_revenue": null, "revenue_period": "", "raising_amount": "0.00", "prior_amount_raised": "0.00", "reporting_currency": "(blank: 'Not stated'; the frozen fixture predates the field)", "sector": "Consumer", "stage": "Public (mirrors the frozen fixture; not graded)", "canary": "CANARY-BJ-2084 in reason_for_capital, field_visibility PRIVATE"},
+ "same_name_profiles": "Applications 39, 41, 44 and 46 are all named \"Ben & Jerry's\" (frozen L-012 named two)",
+ "upload": {"principal": "rabj_owner", "method": "scripted session login, then one POST /api/v1/zelda/documents/ingest/ (source_entity \"Ben & Jerry's\", document_type pitch_deck)", "status": 201, "at": "2026-10-11T00:46:41Z", "document_id": 3132, "count": 1, "note": "An earlier attempt failed at the login step (wrong form field name) before any upload request was sent; server log shows no ingest request from it"}
+}

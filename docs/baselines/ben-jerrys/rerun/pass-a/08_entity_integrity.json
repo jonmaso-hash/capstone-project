@@ -1,0 +1,69 @@
+[
+ {
+  "id": 33,
+  "founder_profile_id": 46,
+  "seller_profile_id": null,
+  "document_id": 3132,
+  "status": "complete",
+  "checked_at": "2026-10-11T00:46:44.417630+00:00",
+  "inputs_hash": "50fe91b018bd66d7372b653e567243d8d39b9650f3243b535da5150900f7089b",
+  "findings": [
+   {
+    "check": "website",
+    "claim": "Website: not on the profile",
+    "interlink_source": "Startup profile",
+    "evidence_source": "Company website",
+    "evidence": "The profile has no website to check.",
+    "result": "not_applicable",
+    "source_url": "",
+    "checked_at": "2026-10-11T00:46:42.301234+00:00"
+   },
+   {
+    "check": "company_name",
+    "claim": "Company name: Ben & Jerry's",
+    "interlink_source": "Startup profile",
+    "evidence_source": "Company website",
+    "evidence": "The profile has no website to check.",
+    "result": "not_applicable",
+    "source_url": "",
+    "checked_at": "2026-10-11T00:46:42.301234+00:00"
+   },
+   {
+    "check": "person_name",
+    "claim": "Founder: Rerun Owner",
+    "interlink_source": "Startup profile",
+    "evidence_source": "Company website",
+    "evidence": "The profile has no website to check.",
+    "result": "not_applicable",
+    "source_url": "",
+    "checked_at": "2026-10-11T00:46:42.301234+00:00"
+   },
+   {
+    "check": "founding_year",
+    "claim": "Founding year: not on the profile",
+    "interlink_source": "Startup profile",
+    "evidence_source": "Domain registration",
+    "evidence": "The profile has no website to check.",
+    "result": "not_applicable",
+    "source_url": "",
+    "checked_at": "2026-10-11T00:46:42.301234+00:00"
+   },
+   {
+    "check": "sec_filer",
+    "claim": "Company name: Ben & Jerry's",
+    "interlink_source": "Startup profile",
+    "evidence_source": "SEC EDGAR",
+    "evidence": "No SEC filer with this name was found on EDGAR. Most private companies never file with the SEC.",
+    "result": "not_found",
+    "source_url": "",
+    "checked_at": "2026-10-11T00:46:42.301234+00:00"
+   }
+  ],
+  "domain": "",
+  "domain_registered_date": null,
+  "domain_lookup_error": "",
+  "claimed_founding_year": null,
+  "timeline_flags": [],
+  "created_at": "2026-10-11T00:46:42.273006+00:00"
+ }
+]
