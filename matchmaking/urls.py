@@ -58,6 +58,7 @@ urlpatterns = [
     path('action/', views.connection_action_view, name='connection_action'),
     path('stream-token/', views.get_stream_token, name='stream_token'),    
     path('memo/<str:company_slug>/', views.standalone_memo_view, name='standalone_memo'),
+    path('memo/profile/<int:application_id>/', views.company_overview_view, name='company_overview'),
     path('follow/<str:username>/', toggle_follow, name='toggle_follow'),
     path('milestones/post/', views.post_milestone, name='post_milestone'),
     path('milestones/<int:milestone_id>/delete/', views.delete_milestone, name='delete_milestone'),

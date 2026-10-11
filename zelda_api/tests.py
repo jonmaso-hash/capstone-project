@@ -301,7 +301,7 @@ class CrossReportNavigationTests(TestCase):
         self.staff = User.objects.create_user('nav_staff', password='x', is_staff=True)
 
         self.urls = {
-            'overview': reverse('matchmaking:standalone_memo', args=['navco']),
+            'overview': reverse('matchmaking:company_overview', args=[self.application.pk]),
             'evidence': reverse('zelda_api:truth_delta_ui', args=[self.deck.id]),
             'analysis': reverse('zelda_api:ic_memo', args=[self.deck.id]),
             'valuation': reverse('zelda_api:valuation_report', args=[self.val_doc.id]),

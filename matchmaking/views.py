@@ -2532,6 +2532,28 @@ def get_stream_token(request):
 @login_required
 def standalone_memo_view(request, company_slug):
     """
+    Legacy name URL for the company overview. Company names are not unique,
+    so it serves the page only when exactly one company this viewer may see
+    has the name; it never picks one of several. Links use
+    company_overview_view, which names the profile by id.
+    """
+    from .models import founder_is_visible_to
+
+    formatted_name = company_slug.replace('-', ' ')
+    matches = [app for app in Application.objects.filter(company_name__iexact=formatted_name)
+               if founder_is_visible_to(request.user, app)]
+    if len(matches) != 1:
+        raise Http404("No Application matches the given query.")
+    return _company_overview(request, matches[0])
+
+
+@login_required
+def company_overview_view(request, application_id):
+    return _company_overview(request, get_object_or_404(Application, pk=application_id))
+
+
+def _company_overview(request, founder_app):
+    """
     The Zelda Intelligence Report — the 30-second orientation layer.
 
     It answers, fast: what is this company, why did it surface for this
@@ -2554,9 +2576,6 @@ def standalone_memo_view(request, company_slug):
     )
     from zelda_api.report_nav import build_report_nav, OVERVIEW as REPORT_OVERVIEW
     from zelda_api.vector_models import DocumentSource
-
-    formatted_name = company_slug.replace('-', ' ')
-    founder_app = get_object_or_404(Application, company_name__iexact=formatted_name)
 
     # A private, archived or denied company answers like one that doesn't exist.
     from .models import founder_is_visible_to
