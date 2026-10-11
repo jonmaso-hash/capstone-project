@@ -15,6 +15,7 @@ from .financial_metrics import (
 from .truth_delta_models import ClaimedDatapoint
 from .claim_attribution import claim_ownership, company_names, source_sentence
 from .claim_periods import claim_period
+from .claim_context import claim_narrator, dated_heading
 
 logger = logging.getLogger(__name__)
 
@@ -134,6 +135,10 @@ def extract_claims_from_insights(document_id: int):
                              matched_category, owner, sentence[:80])
                 continue
             period = claim_period(sentence)
+            # Context, never the period above: who reports the figure, and a
+            # dated slide heading over it ("Traction by Apr-16") -- RA-102/106.
+            narrator = claim_narrator(sentence, names)
+            heading = dated_heading(text, source_chunk_obj.raw_text if source_chunk_obj else '')
 
             # Money categories read MONEY. The general extractor matches
             # percentages first, which is how "Bank line: 75% utilized" became
@@ -157,6 +162,9 @@ def extract_claims_from_insights(document_id: int):
                 claimed_value_numeric=numeric_value,
                 unit=unit,
                 ownership=ownership,
+                source_sentence=bounded_excerpt(sentence),
+                narrator=narrator,
+                source_context=heading,
                 # Read from the claim's own source sentence only, never a
                 # heading on another line (zelda_api/claim_periods.py).
                 time_period=period.phrase,

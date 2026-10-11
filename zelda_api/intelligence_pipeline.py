@@ -1149,6 +1149,17 @@ class ZeldaIntelligencePipelineV2:
             from .memo_lists import memo_text
             memo_sections = {key: memo_text(value) if isinstance(value, (str, list, tuple, dict)) else value
                              for key, value in memo_sections.items()}
+            # A figure whose own source does not say "to date" or "currently"
+            # may not acquire it here: a 2016 listing is not a current total
+            # (ManyChat RA-106). Only sentences citing a claim-backed item.
+            from .claim_context import guard_time_wording
+            allowed = {item.ref: item.time_wording_allowed for item in context.items if item.dated}
+            for key, value in list(memo_sections.items()):
+                guarded, removed = guard_time_wording(value, allowed)
+                if removed:
+                    logger.info('Memo %s: removed unsupported time wording %s for document %s',
+                                key, removed, context.document_id)
+                    memo_sections[key] = guarded
 
             memo, created = IntelligenceMemo.objects.update_or_create(
                 document_id=context.document_id,
@@ -1730,7 +1741,16 @@ class ZeldaIntelligencePipelineV2:
     6. Never use vague phrases like "strong opportunity", "experienced team", or
        "significant market" without immediately citing an item.
     7. Never write placeholder text.
-    8. Write as a skeptical but fair analyst — evidence-driven, not promotional."""
+    8. Write as a skeptical but fair analyst — evidence-driven, not promotional.
+    9. Dates and who is speaking. Each claim-backed item has "as_of": the date its
+       figure was counted, or "not stated". Never call a figure current, a running
+       total, or "to date" / "so far" / "currently" unless its as_of is a stated date,
+       and then give that date. "source_context" (e.g. a slide heading "Traction by
+       Apr-16") dates the slide: give it with the figure as context. "dates_not_as_of"
+       are dates in the same sentence that describe something else, such as the deck's
+       year: never use them as the figure's date. If an item has a "narrator", the
+       figure is that party's statement: write "<narrator> lists/reports ...", not
+       "the company states"."""
 
         user_prompt = f"""Prepare an investment memo for {context.company}.
 
