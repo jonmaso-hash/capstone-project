@@ -18,7 +18,7 @@
     <p class="small text-muted mt-3">Reports are saved automatically in Zelda’s Library. Payment confirmation comes from Stripe; returning to this page does not itself unlock a report.</p>
 </div>
 {{ order.reports|json_script:"order-reports-data" }}
-<script>
+<script nonce="{{ csp_nonce }}">
 (function () {
     const state = document.getElementById('order-state'), reports = document.getElementById('order-reports'), retry = document.getElementById('order-retry'), checkout = document.getElementById('order-checkout');
     const refresh = document.getElementById('order-refresh');

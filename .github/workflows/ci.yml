@@ -104,6 +104,9 @@ jobs:
       - name: Check for missing migrations
         run: python manage.py makemigrations --check --dry-run
 
+      - name: Browser CSP enforcement smoke test
+        run: python tools/browser_policy_smoke.py
+
       - name: Run test suite
         run: >-
           python manage.py test --verbosity=2

@@ -23,7 +23,7 @@
 {% endblock css %}
 
 {% block content %}
-<script>
+<script nonce="{{ csp_nonce }}">
     // Applies a visitor's remembered collapse preference for a profile
     // section before the browser paints it, to avoid a flash of the
     // wrong state. The preference is global across every profile this
@@ -420,7 +420,7 @@
                                             </div>
                                         </div>
                                         {% if request.user != profile_user %}
-                                        <script>
+                                        <script nonce="{{ csp_nonce }}">
                                         document.addEventListener("DOMContentLoaded", function () {
                                             const video = document.getElementById('pitchVideoPlayer');
                                             if (!video) return;
@@ -865,7 +865,7 @@
                         <div class="mb-4" style="max-width: 480px;">
                             <canvas id="truthScoreTimelineChart" height="140"></canvas>
                         </div>
-                        <script id="truth-score-timeline-data" type="application/json">
+                        <script nonce="{{ csp_nonce }}" id="truth-score-timeline-data" type="application/json">
                             [{% for report in verification_history reversed %}{"date": "{{ report.created_at|date:'M j, Y' }}", "score": {% if report.overall_truth_score is not None %}{{ report.overall_truth_score }}{% else %}null{% endif %}}{% if not forloop.last %},{% endif %}{% endfor %}]
                         </script>
                         {% endif %}
@@ -981,7 +981,7 @@
     {% endif %}
     </div>
 </div>
-<script>applyStoredCollapseState('jobs');</script>
+<script nonce="{{ csp_nonce }}">applyStoredCollapseState('jobs');</script>
 
 {% if verified_track_record %}
 <div class="verified-track-record-section mb-5">
@@ -1063,7 +1063,7 @@
     {% endif %}
     </div>
 </div>
-<script>applyStoredCollapseState('milestones');</script>
+<script nonce="{{ csp_nonce }}">applyStoredCollapseState('milestones');</script>
 {% endif %}
 
 {% if request.user != profile_user and mutual_connections %}
@@ -1125,7 +1125,7 @@
         </div>
     </div>
 </div>
-<script>applyStoredCollapseState('connections');</script>
+<script nonce="{{ csp_nonce }}">applyStoredCollapseState('connections');</script>
 
 
         </div>
@@ -1135,7 +1135,7 @@
 {# ── CSRF token: must be INSIDE {% block content %} so Django renders it ── #}
 <form style="display: none;">{% csrf_token %}</form>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 document.addEventListener("DOMContentLoaded", function () {
 
     // Read CSRF token from the hidden form above
@@ -1220,7 +1220,7 @@ function getCookie(name) {
 </script>
 
 {% if request.user.is_authenticated and request.user != profile_user %}
-<script>
+<script nonce="{{ csp_nonce }}">
 document.addEventListener("DOMContentLoaded", function () {
     // Time-on-page for this profile visit — beaconed back to the ProfileView
     // row accounts.views.profile() created on load. Best-effort, single-shot:
@@ -1266,8 +1266,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
 {% block scripts %}
 {% if verification_history|length > 1 %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
+<script nonce="{{ csp_nonce }}" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function () {
     const dataEl = document.getElementById('truth-score-timeline-data');
     const canvas = document.getElementById('truthScoreTimelineChart');

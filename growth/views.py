@@ -185,7 +185,11 @@ def readiness_badge(request, role, username):
         svg = _render_badge_svg(score)
         cache.set(cache_key, svg, BADGE_CACHE_TTL)
 
-    return HttpResponse(svg, content_type='image/svg+xml')
+    response = HttpResponse(svg, content_type='image/svg+xml')
+    # This public SVG is deliberately embeddable on the member's own site.
+    # Private profile/score checks above still apply before it is rendered.
+    response['Cross-Origin-Resource-Policy'] = 'cross-origin'
+    return response
 
 
 @login_required

@@ -84,7 +84,7 @@
 <!-- ================================================================= -->
 <!-- ASYNC SEARCH ENGINE CONTROLLER SCRIPT -->
 <!-- ================================================================= -->
-<script>
+<script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
     const searchBtn = document.getElementById('submitSearchBtn');
     const queryInput = document.getElementById('aiSearchQuery');

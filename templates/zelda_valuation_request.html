@@ -67,7 +67,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce }}">
 function getCookie(name) {
     const cookies = document.cookie.split(';');
     for (let c of cookies) {

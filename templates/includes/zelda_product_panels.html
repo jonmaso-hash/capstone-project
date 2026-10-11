@@ -114,4 +114,4 @@
     {% endif %}
 </div>
 {% endfor %}
-<script src="{% static 'js/zelda_products.js' %}" defer></script>
+<script nonce="{{ csp_nonce }}" src="{% static 'js/zelda_products.js' %}" defer></script>

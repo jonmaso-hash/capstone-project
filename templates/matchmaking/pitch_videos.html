@@ -211,7 +211,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 const PV_IS_AUTHENTICATED = {{ request.user.is_authenticated|yesno:"true,false" }};
 
 function pvRequireAuth() {

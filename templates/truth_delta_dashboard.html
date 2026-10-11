@@ -619,7 +619,7 @@
         </div>
         {% endif %}
         <p id="identityCheckStatus" class="text-muted mt-2 mb-0" style="font-size: 0.85rem;" role="status"></p>
-        <script src="{% static 'js/entity_identity_check.js' %}" defer></script>
+        <script nonce="{{ csp_nonce }}" src="{% static 'js/entity_identity_check.js' %}" defer></script>
     </div>
     <!-- /entity-integrity -->
     {% endif %}
@@ -903,7 +903,7 @@
 {{ clarification_requests|json_script:"truth-delta-clarifications-json" }}
 
 <!-- JAVASCRIPT ENGINE FOR TRUTH DELTA UI -->
-<script>
+<script nonce="{{ csp_nonce }}">
 const TRUTH_DELTA_API = '/api/v1/zelda';
 const DOCUMENT_ID = {{ document.id }};
 const CAN_REQUEST_CLARIFICATION = {{ can_request_clarification|yesno:"true,false" }};
@@ -1467,8 +1467,8 @@ SERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];
     });
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
+<script nonce="{{ csp_nonce }}" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script nonce="{{ csp_nonce }}">
 // Evidence Coverage chart — reads the three counts the view took from
 // ic_memo.coverage_counts() (the same numbers as the stat cards); nothing is
 // recalculated here. Contradicted is its own red series: it was missing, and
