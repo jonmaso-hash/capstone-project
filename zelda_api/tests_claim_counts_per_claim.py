@@ -256,3 +256,114 @@ class VerifiedAndContradictedOneCategoryTests(TestCase):
                          {'total': 2, 'verified': 1, 'contradicted': 1, 'no_data': 0})
         self.assertTrue(self.report.summary.startswith(
             '1 verified · 1 contradicted · 0 not established (of 2).'), self.report.summary)
+
+
+class SavedCategoryCountSummaryTests(SavedReportClaimCountTests):
+    """
+    A summary saved before claim counts: it opens with the deterministic count
+    sentence computed over CATEGORIES ("2 not established (of 2)") beside three
+    claim rows. Every surface shows the sentence recounted over claims; the rest
+    of the narrative, the stored row, the score and the outcomes stay as saved.
+    """
+    OLD_SENTENCE = '0 verified · 0 contradicted · 2 not established (of 2).'
+    NARRATIVE = (' Funding raised: no external data was found for this claim.'
+                 ' Usage: no external data was found for this claim. Checked SEC EDGAR [S1]; 2 sources reviewed.')
+
+    def setUp(self):
+        super().setUp()
+        self.report.summary = self.OLD_SENTENCE + self.NARRATIVE
+        self.report.save(update_fields=['summary'])
+        self.stored = TruthDeltaReport.objects.values().get(pk=self.report.pk)
+        self.states = self.report.category_states()
+        self.rows = [(r['claim_id'], r['state'], r['reason']) for r in self.report.per_claim_rows()]
+        self.staff = User.objects.create_user('rc_summary_staff', password='x', is_staff=True)
+
+    EXPECTED = ('Limited public evidence: none of the 3 claims could be verified or contradicted '
+                'against a public source.')
+
+    def assert_corrected(self, text):
+        self.assertIn(self.EXPECTED + self.NARRATIVE, text)
+        self.assertNotIn('(of 2)', text)
+        self.assertNotIn('2 not established', text)
+
+    def test_display_summary_rewrites_only_the_count_sentence(self):
+        from .ic_memo import display_summary
+        self.assertEqual(display_summary(self.report), self.EXPECTED + self.NARRATIVE)
+
+    def test_every_surface_shows_counts_that_agree_with_the_claim_rows(self):
+        from django.utils.html import escape
+        page = self.page(self.owner)
+        self.assert_corrected(page.context['summary'])
+        self.assertEqual(page.context['claims_analyzed'], 3)
+        self.assertIn(escape(self.EXPECTED), page.content.decode())
+        data = self.api(self.owner)
+        self.assert_corrected(data['summary'])
+        self.assertEqual((data['claims_analyzed'], data['unverified_count']), (3, 3))
+        signal = truth_delta_signal(self.doc)
+        self.assert_corrected(signal['summary'])
+        self.assertEqual((signal['claims_checked'], signal['counts']['total']), (3, 3))
+        from .vector_models import IntelligenceMemo
+        IntelligenceMemo.objects.get_or_create(document=self.doc, defaults=dict(
+            executive_summary='CountCo summary.', evidence_level='LITTLE_EVIDENCE',
+            completeness_score=0.5, citations_count=1))
+        self.client.force_login(self.staff)
+        memo = self.client.get(reverse('zelda_api:ic_memo', args=[self.doc.id])).content.decode()
+        self.assertIn(escape(self.EXPECTED + self.NARRATIVE), memo)
+        self.assertNotIn('(of 2)', memo)
+        history = self.client.get(reverse('accounts:profile', args=[self.owner.username]))
+        self.assertEqual(history.status_code, 200)
+        [shown] = [r for r in history.context['verification_history'] if r.pk == self.report.pk]
+        self.assert_corrected(shown.display_summary)
+        self.assertIn(escape(self.EXPECTED + self.NARRATIVE), history.content.decode())
+
+    def test_stored_fields_score_and_outcomes_are_unchanged(self):
+        self.page(self.investor)
+        self.api(self.owner)
+        truth_delta_signal(self.doc)
+        self.assertEqual(TruthDeltaReport.objects.values().get(pk=self.report.pk), self.stored)
+        self.report.refresh_from_db()
+        self.assertEqual(self.report.summary, self.OLD_SENTENCE + self.NARRATIVE)
+        self.assertEqual((self.report.overall_truth_score, self.report.credibility_risk), (None, 'unknown'))
+        self.assertEqual(self.report.category_states(), self.states)
+        self.assertEqual([(r['claim_id'], r['state'], r['reason']) for r in self.report.per_claim_rows()],
+                         self.rows)
+        self.assertIsNone(self.api(self.investor)['overall_truth_score'])
+
+
+class DisplaySummaryRecognitionTests(TestCase):
+    """Only the recognized deterministic sentence, only at the start, is rewritten."""
+
+    def report(self, summary, states=('no_data', 'no_data', 'no_data')):
+        rows = [{'category': 'usage', 'claim_id': n, 'claimed_value_numeric': 1.0, 'observed_value_numeric': None,
+                 'claim_raw_text': 'x'} for n in range(len(states))]
+        return TruthDeltaReport(engine_version='td.5', summary=summary,
+                                details={'comparison': rows, 'per_claim': [dict(r) for r in rows]})
+
+    def test_each_historical_wording_is_recounted(self):
+        from .ic_memo import display_summary
+        expected = ('Limited public evidence: none of the 3 claims could be verified or contradicted '
+                    'against a public source. Tail.')
+        for opening in ('0 verified · 0 contradicted · 2 not established (of 2).',
+                        'Limited public evidence: none of the 2 claims could be verified or contradicted '
+                        'against a public source.',
+                        'Limited public evidence: the claim could not be verified or contradicted '
+                        'against a public source.',
+                        '0 of 2 checkable claims verified against a public source; 2 could not be confirmed.'):
+            with self.subTest(opening=opening):
+                self.assertEqual(display_summary(self.report(opening + ' Tail.')), expected)
+
+    def test_prose_numbers_and_unrecognized_text_are_left_alone(self):
+        from .ic_memo import display_summary
+        for summary in ('Revenue grew to 2 of 2 regions (of 2) last year.',
+                        'The deck claims 140,000+ bots. 0 verified · 0 contradicted · 2 not established (of 2).',
+                        'No public data could be found to independently verify these claims (checked SEC EDGAR).',
+                        "None of the deck's claims had a public source to check against.",
+                        ''):
+            with self.subTest(summary=summary):
+                self.assertEqual(display_summary(self.report(summary)), summary)
+
+    def test_a_report_with_no_claim_rows_keeps_its_summary(self):
+        from .ic_memo import display_summary
+        report = TruthDeltaReport(engine_version='td.5', details={},
+                                  summary='0 verified · 0 contradicted · 2 not established (of 2). Tail.')
+        self.assertEqual(display_summary(report), report.summary)

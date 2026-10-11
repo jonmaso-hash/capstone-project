@@ -997,7 +997,7 @@ def truth_delta_ui_view(request, document_id):
     # The display counts, from the one helper every surface uses
     # (ic_memo.coverage_counts) -- never recomputed here. "Not established" and
     # "the evidence disagrees" are different findings; summing them hides the second.
-    from .ic_memo import coverage_counts, coverage_sentence
+    from .ic_memo import coverage_counts, coverage_sentence, display_summary
     counts = coverage_counts(report.claim_stats() if report else {})
     verified_count = counts['verified']
     contradicted_count = counts['contradicted']
@@ -1029,7 +1029,7 @@ def truth_delta_ui_view(request, document_id):
         # neither "pending" nor "no public data found" -- no claim reached a
         # public source at all.
         'credibility_risk': report.credibility_risk if report else ('no_claims' if no_claims else 'pending'),
-        'summary': report.summary if report else (NO_CLAIMS_SUMMARY if no_claims else 'Verification pending.'),
+        'summary': display_summary(report) if report else (NO_CLAIMS_SUMMARY if no_claims else 'Verification pending.'),
         'verification_no_claims': no_claims,
         'claims_analyzed': claims_analyzed,
         'details': details,

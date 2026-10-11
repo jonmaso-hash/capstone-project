@@ -8,6 +8,8 @@ persisted model. The memo is assembled fresh from whatever already exists
 for the founder every time it's requested, so it can never go stale the
 way a cached/persisted snapshot would.
 """
+import re
+
 from .vector_models import DocumentSource, IntelligenceMemo, BusinessValuationReport
 from .truth_delta_models import TruthDeltaReport
 from .work_done import work_done_summary
@@ -127,7 +129,7 @@ def truth_delta_signal(pitch_deck_doc):
     counts = coverage_counts(report.claim_stats())
     return {
         'overall_truth_score': report.overall_truth_score,
-        'summary': report.summary,
+        'summary': display_summary(report),
         'claims_checked': counts['total'],
         # THE display counts. Templates read these and do no arithmetic of
         # their own: `total - verified` here once filed contradicted claims
@@ -192,6 +194,38 @@ def coverage_sentence(stats):
         return (f"Limited public evidence: {which} {verb} be verified or contradicted "
                 f"against a public source.")
     return coverage_line(counts) + '.'
+
+
+# The count sentence narrative.summary() opens a stored summary with, in each
+# wording it has had: the current coverage line, the current "limited public
+# evidence" sentence, and the "N of M checkable claims" wording stored between
+# 2b0e895 and 4a3d465. Older summaries counted categories (RA-104).
+_SAVED_COUNT_SENTENCE = re.compile(
+    r"\s*(?:"
+    r"\d+ verified · \d+ contradicted · \d+ not established \(of \d+\)\."
+    r"|Limited public evidence: (?:the claim could not|none of the \d+ claims could) be verified "
+    r"or contradicted against a public source\."
+    r"|\d+ of \d+ checkable claims? verified against a public source"
+    r"(?:; \d+ contradicted)?(?:; \d+ could not be confirmed)?\."
+    r")"
+)
+
+
+def display_summary(report):
+    """
+    The report's stored summary as it should be shown: when it opens with one of
+    the deterministic count sentences above, that sentence is rewritten from
+    claim_stats() so it agrees with the claim rows beside it. Only a recognized
+    sentence at the very start is touched -- the narrative after it, and any
+    number inside it, is left as stored -- and report.summary itself is never
+    changed.
+    """
+    summary = report.summary or ''
+    counts = coverage_counts(report.claim_stats())
+    match = _SAVED_COUNT_SENTENCE.match(summary)
+    if not match or not counts['total']:
+        return summary
+    return summary[:match.start()] + coverage_sentence(counts) + summary[match.end():]
 
 
 # Why a category could not be established, for "What Zelda noticed".
