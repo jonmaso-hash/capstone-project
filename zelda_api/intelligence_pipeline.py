@@ -1161,6 +1161,17 @@ class ZeldaIntelligencePipelineV2:
                     logger.info('Memo %s: removed unsupported time wording %s for document %s',
                                 key, removed, context.document_id)
                     memo_sections[key] = guarded
+            # Every section stands alone in a Lite view, so a narrated figure
+            # keeps its narrator in each one; reported funding is not a raise
+            # in progress; a profile value is not dated by a slide (memo 94).
+            from .funding_fidelity import funding_facts, guard_funding_fidelity
+            facts = funding_facts(context.items)
+            for key, value in list(memo_sections.items()):
+                guarded, changes = guard_funding_fidelity(value, facts)
+                if changes:
+                    logger.info('Memo %s: funding-source fidelity %s for document %s',
+                                key, changes, context.document_id)
+                    memo_sections[key] = guarded
 
             memo, created = IntelligenceMemo.objects.update_or_create(
                 document_id=context.document_id,
@@ -1752,7 +1763,16 @@ class ZeldaIntelligencePipelineV2:
        year: never use them as the figure's date. If an item has a "narrator", the
        figure is that party's statement: write "<narrator> lists/reports ...", not
        "the company states". A question asking management for a current figure is
-       fine; this rule is about what the memo states."""
+       fine; this rule is about what the memo states.
+    10. Funding and the profile. Each section, bullet and question is read on its
+       own: name a narrated figure's narrator every time the figure appears, and
+       never call it "self-reported". A funding_raised figure is money reported as
+       raised at some point; it is not a raise in progress, a round, proceeds or
+       cash on hand. Unless an item states a current raise (such as "Raising
+       (profile)"), do not write "this raise", "the stated raise" or its proceeds or
+       runway as fact; a question may ask whether a raise is planned. Profile items
+       (P...) are the current profile and undated: never date them with a slide's
+       date (not "was Series A as of April 2016")."""
 
         user_prompt = f"""Prepare an investment memo for {context.company}.
 
