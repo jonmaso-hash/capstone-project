@@ -1,0 +1,118 @@
+Code 49663be. One mutation at a time applied to the working tree, zelda_api.tests_funding_fidelity run, file restored; sha256 of funding_fidelity.py and intelligence_pipeline.py verified after every group.
+J*: this change (FF-302/303/305). F/G/H: the earlier 32, rule-list targets retargeted to the new rule list (F10 anchored to its original context).
+J10 first survived twice: no preserved question used the premise wording, then the added question ended '..., if any?', which the 'if' rule also keeps. The test now uses a question that only the question check keeps; J10 and J11 re-run red. Adding tests can only turn a survivor red, so earlier red results stand.
+
+### fid4_J1.txt
+== J1 label left as "reported by X funding raised"
+FAILED (failures=2)
+== J2 parenthetical "(self-reported, ...)" not reworded
+FAILED (failures=3)
+== J3 predicate "is self-reported" not reworded
+FAILED (failures=1)
+== J4 old blind substitution ("reported by X" in place of the word)
+FAILED (failures=4)
+== J5 cited self-reported rule off
+FAILED (failures=6)
+== J6 narrated ref left in the self-reported group
+FAILED (failures=5)
+== J7 funding not marked undated
+FAILED (failures=3)
+== J8 funding note never attached to its clause
+FAILED (failures=4)
+
+### fid4_J2.txt
+== J16 mixed group treated as all narrated (company traction relabelled)
+FAILED (failures=5)
+== J9 cash rule off
+FAILED (failures=4)
+== J10 cash rule rewrites questions
+OK
+== J11 cash rule rewrites qualified scenarios
+FAILED (failures=1)
+== J12 cash rule ignores a real cash balance in the evidence
+FAILED (failures=1)
+== J13 cash rule not limited to funding sentences
+FAILED (failures=1)
+== J14 "This alone would" sufficiency kept
+FAILED (failures=2)
+== J15 a third party's cash figure counts as evidence
+FAILED (failures=1)
+
+### fid4_J10.txt
+== J10 cash rule rewrites questions
+FAILED (failures=1)
+== J11 cash rule rewrites qualified scenarios
+FAILED (failures=1)
+
+### fid4_F1.txt
+== F1 attribution off
+FAILED (failures=36)
+== F2 "self-reported" never reassigned (always insert)
+FAILED (failures=12)
+== F4 reported funding kept as "the $X raise"
+FAILED (failures=2)
+== F5 raise premises kept
+FAILED (failures=24)
+== F6 premises rewritten even when a raise is in the evidence
+FAILED (failures=5)
+== F7 profile values dated by the slide (label off)
+FAILED (failures=3)
+== F8 profile label added without a date
+FAILED (failures=2)
+== F9 pipeline does not apply the guard
+FAILED (failures=9)
+
+### fid4_F2.txt
+== F10 figure phrase not extended
+FAILED (failures=13)
+== F11 a zero "Raising (profile)" counts as a raise
+FAILED (failures=1)
+== F12 narrator inserted even when the sentence already names it
+FAILED (failures=12)
+== F14 "$23.1M listed" split by the attribution
+FAILED (failures=1)
+== G1 "the company states it has raised" left as the company's statement
+FAILED (failures=4)
+== G2 following predicate not given back to the company
+FAILED (failures=3)
+== G3 narrator becomes the recipient ("Pitch Deck Hunt ... has raised")
+FAILED (failures=4)
+== G4 "self-reported" in another clause reassigned
+FAILED (failures=2)
+
+### fid4_F3.txt
+== G5 "self-reported" covering the company's figures reassigned
+FAILED (failures=1)
+== G6 citations split at their commas
+FAILED (failures=6)
+== G7 negated raise counts
+FAILED (failures=1)
+== G8 past or dated raise counts
+FAILED (failures=2)
+== G9 any subject counts (another company)
+FAILED (failures=1)
+== G10 a third party's report counts as the company raising
+FAILED (failures=1)
+== G11 "use of proceeds" / any raise word counts
+FAILED (failures=3)
+== G12 citation ignored (amount alone decides)
+FAILED (failures=11)
+
+### fid4_F4.txt
+== G13 "$23.1M revenue" read as the funding figure
+FAILED (failures=1)
+== G14 another named source ignored
+FAILED (failures=1)
+== G15 uncited figure needs no funding wording
+FAILED (failures=1)
+== H1 tentative raise counts ("considering raising")
+FAILED (failures=3)
+== H2 question counts as a raise
+FAILED (failures=2)
+== H3 condition counts as a raise
+FAILED (failures=2)
+== H4 metric named before the amount ignored
+FAILED (failures=3)
+== H5 ambiguous uncited amount resolved by item order
+FAILED (failures=4)
+

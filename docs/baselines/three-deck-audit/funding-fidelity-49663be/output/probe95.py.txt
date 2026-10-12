@@ -1,0 +1,40 @@
+"""Memo 95's raw model reply (from the committed run evidence, 09b) through the guards in the fix worktree,
+as the pipeline applies them. Prints every section the new code renders differently from stored memo 95.
+No DB access; memo 95 is not changed. Usage: python probe95.py <worktree>"""
+import json, os, re, sys, difflib
+WT = sys.argv[1]
+EV = r'C:\Users\jonathan\Desktop\KCV-mc-ff\docs\baselines\manychat\funding-fidelity-2948998\pass-a'
+sys.path.insert(0, WT)
+from types import SimpleNamespace as NS
+from zelda_api.memo_lists import memo_text
+from zelda_api.claim_context import guard_time_wording
+from zelda_api.funding_fidelity import funding_facts, guard_funding_fidelity
+
+call = json.load(open(os.path.join(EV, '09b_model_call.json'), encoding='utf-8'))
+user = call['request']['messages'][0]['content']
+sent, _ = json.JSONDecoder().raw_decode(user[user.find('{', user.find('## EVIDENCE')):])
+items = [NS(ref=i['ref'], kind=i['kind'], category=i['category'], statement=i['statement'], narrator=i.get('narrator', ''),
+            as_of=i.get('as_of', ''), sources=tuple(NS(profile_field=s.get('profile_field', '')) for s in i['sources']))
+         for i in sent['items']]
+dated = {i['ref']: () for i in sent['items'] if 'as_of' in i}
+facts = funding_facts(items, sent['company'])
+raw = json.loads(re.search(r'\{.*\}', call['response']['text'][0], re.S).group(0))
+stored = json.load(open(os.path.join(EV, '09_memo.json'), encoding='utf-8'))['memo']
+print('FACTS cash_supported=%s raise_supported=%s funding_refs=%s undated=%s' % (
+    facts.cash_supported, facts.raise_supported, sorted(facts.funding_refs), [n.undated for n in facts.narrated]))
+changed = 0
+for key, value in raw.items():
+    if key == 'evidence_level' or key not in stored:
+        continue
+    text = memo_text(value) if isinstance(value, (str, list, tuple, dict)) else value
+    text, _ = guard_time_wording(text, dated)
+    new, changes = guard_funding_fidelity(text, facts)
+    again, _ = guard_funding_fidelity(new, facts)
+    assert again == new, ('not idempotent', key)
+    if new != stored[key]:
+        changed += 1
+        print(f'\n== {key}  {changes}')
+        for line in difflib.unified_diff(stored[key].splitlines(), new.splitlines(), 'memo 95 (stored)', 'new guard', lineterm='', n=0):
+            if line[:1] in '+-' and line[:3] not in ('+++', '---'):
+                print('  ' + line)
+print(f'\n{changed} sections differ from stored memo 95')

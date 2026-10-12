@@ -1,0 +1,107 @@
+"""Mutations for the FF-302/303/305 fix. Usage: python mutate_fidelity4.py <worktree> [ids...]
+F/G/H: the earlier mutations (from mutate_fidelity3.py), rule-list targets retargeted to the new rule list.
+J: this change. One mutation at a time, file restored in `finally`; never wrap this in `timeout`."""
+import os, re, subprocess, sys
+HERE = os.path.dirname(os.path.abspath(__file__))
+WT = sys.argv[1]
+src = open(os.path.join(HERE, 'mutate_fidelity3.py'), encoding='utf-8').read()
+ns = {'sys': type('S', (), {'argv': ['x', WT]})(), 'os': os, 're': re}
+exec(src.split('env = dict(')[0].split('import os, re, subprocess, sys', 1)[1], ns)
+FF, PL = ns['FF'], ns['PL']
+OLD = "        for rule in (_no_event, _no_premise, _attribute, _profile_undated):\n"
+NEW = "        for rule in (_no_event, _no_premise, _cited_self_reported, _attribute, _no_cash_premise, _profile_undated):\n"
+
+
+def without(*names):
+    rules = [r for r in ('_no_event', '_no_premise', '_cited_self_reported', '_attribute', '_no_cash_premise',
+                         '_profile_undated') if r not in names]
+    return f"        for rule in ({', '.join(rules)}):\n"
+
+
+RETARGET = {'F1': without('_attribute'), 'F4': without('_no_event'), 'F5': without('_no_premise'),
+            'F7': without('_profile_undated')}
+MUTATIONS = []
+for name, rel, old, new in ns['MUTATIONS']:
+    key = name.split()[0]
+    if old == OLD:
+        old, new = NEW, RETARGET[key]
+    if key == 'F10':      # the new attributive branch repeats this line, more indented: anchor to its context
+        old, new = (old + "            if _same_figure(", new + "            if _same_figure(")
+    MUTATIONS.append((name, rel, old, new))
+MUTATIONS += [
+    # FF-302: natural wording
+    ('J1 label left as "reported by X funding raised"', FF,
+     "    if label and label.end('lead') == span.start():\n", "    if False:\n"),
+    ('J2 parenthetical "(self-reported, ...)" not reworded', FF,
+     "    if before.count('(') > before.count(')'):\n", "    if False:\n"),
+    ('J3 predicate "is self-reported" not reworded', FF,
+     "    if _PREDICATE.search(before):\n", "    if False:\n"),
+    ('J4 old blind substitution ("reported by X" in place of the word)', FF,
+     "            reworded = _reword_self_reported(sentence, span, entry.narrator)\n"
+     "            if reworded is None:             # attributive",
+     "            reworded = f'{sentence[:span.start()]}reported by {entry.narrator}{sentence[span.end():]}'\n"
+     "            if reworded is None:             # attributive"),
+    # FF-305: mixed references and cited paraphrases
+    ('J5 cited self-reported rule off', FF, NEW, without('_cited_self_reported')),
+    ('J6 narrated ref left in the self-reported group', FF,
+     "            sentence = f'{sentence[:group.start()]}[{kept}]{sentence[group.end():]}'\n",
+     "            sentence = sentence\n"),
+    ('J7 funding not marked undated', FF,
+     "            note = f'(per {entry.narrator}{\", undated\" if entry.undated else \"\"}) [{\", \".join(own)}]'\n",
+     "            note = f'(per {entry.narrator}) [{\", \".join(own)}]'\n"),
+    ('J8 funding note never attached to its clause', FF,
+     "        if _FUNDING_WORDS.search(clause):\n            at = begin", "        if False:\n            at = begin"),
+    ('J16 mixed group treated as all narrated (company traction relabelled)', FF,
+     "            if not (cited - entry.refs - facts.profile_refs):\n                reworded",
+     "            if True:\n                reworded"),
+    # FF-303: reported funding is not cash
+    ('J9 cash rule off', FF, NEW, without('_no_cash_premise')),
+    ('J10 cash rule rewrites questions', FF,
+     "    if facts.cash_supported or _asks(sentence) or _HYPOTHESIS.search(sentence):\n",
+     "    if facts.cash_supported or _HYPOTHESIS.search(sentence):\n"),
+    ('J11 cash rule rewrites qualified scenarios', FF,
+     "    if facts.cash_supported or _asks(sentence) or _HYPOTHESIS.search(sentence):\n",
+     "    if facts.cash_supported or _asks(sentence):\n"),
+    ('J12 cash rule ignores a real cash balance in the evidence', FF,
+     "    if facts.cash_supported or _asks(sentence) or _HYPOTHESIS.search(sentence):\n",
+     "    if _asks(sentence) or _HYPOTHESIS.search(sentence):\n"),
+    ('J13 cash rule not limited to funding sentences', FF,
+     "    if not (_cited(sentence) & facts.funding_refs or any(p.search(sentence) for p in facts.funding_figures)):\n"
+     "        return sentence\n    rewritten = _CASH_PREMISE", "    rewritten = _CASH_PREMISE"),
+    ('J14 "This alone would" sufficiency kept', FF,
+     "        rewritten = _SUFFICIENT_ALONE.sub(r'\\1 \\2', rewritten)\n", ""),
+    ('J15 a third party\'s cash figure counts as evidence', FF,
+     "        if not getattr(item, 'narrator', '') and _CASH_EVIDENCE.search(item.statement or ''):\n",
+     "        if _CASH_EVIDENCE.search(item.statement or ''):\n"),
+]
+env = dict(os.environ, SECRET_KEY='ci-only-placeholder-key-not-for-production-use', DEBUG='True',
+           ALLOWED_HOSTS='localhost,127.0.0.1', EMAIL_HOST_USER='ci@example.invalid', PYTHONIOENCODING='utf-8',
+           CELERY_TASK_ALWAYS_EAGER='True', CELERY_BROKER_URL='memory://', CELERY_RESULT_BACKEND='cache+memory://')
+only = sys.argv[2:] or None
+if only == ['--check']:
+    for name, rel, old, new in MUTATIONS:
+        c = open(os.path.join(WT, rel), encoding='utf-8').read().count(old)
+        if c != 1:
+            print('TARGET', c, name)
+    print(len(MUTATIONS), 'mutations checked')
+    sys.exit(0)
+for name, rel, old, new in MUTATIONS:
+    if only and name.split()[0] not in only:
+        continue
+    path = os.path.join(WT, rel)
+    original = open(path, encoding='utf-8', newline='').read()
+    nl = '\r\n' if '\r\n' in original else '\n'
+    o, n = old.replace('\n', nl), new.replace('\n', nl)
+    if original.count(o) != 1:
+        print('== ' + name + '\nHARNESS: target found %d times' % original.count(o), flush=True)
+        continue
+    try:
+        open(path, 'w', encoding='utf-8', newline='').write(original.replace(o, n))
+        out = subprocess.run([sys.executable, 'manage.py', 'test', '--noinput', '--parallel', '1', 'zelda_api.tests_funding_fidelity'],
+                             cwd=WT, env=env, capture_output=True, text=True, encoding='utf-8', errors='replace')
+        lines = [re.sub(r' \(zelda_api\.tests_funding_fidelity\.\w+\.\w+\)', '', l)
+                 for l in (out.stdout + out.stderr).splitlines() if re.match(r'^(FAIL|ERROR):|^Ran |^OK$|^FAILED', l)]
+        print('==', name)
+        print('\n'.join(lines), flush=True)
+    finally:
+        open(path, 'w', encoding='utf-8', newline='').write(original)

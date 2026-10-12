@@ -1,0 +1,18 @@
+Code 49663be (fix/funding-cash-and-mixed-refs; base main 2948998). CI env as in ci.yml, --parallel 1, isolated test databases, one batch at a time (targeted).
+
+== check
+System check identified no issues (0 silenced).
+== makemigrations --check
+No changes detected
+== zelda_api.tests_funding_fidelity zelda_api.tests_claim_context_dates zelda_api.tests_grounded_context zelda_api.tests_memo_persistence zelda_api.tests_memo_list_rendering zelda_api.tests_claim_counts_per_claim zelda_api.tests_canonical_presentation zelda_api.tests_no_investment_advice zelda_api.tests_private_company_presentation zelda_api.tests_source_naming zelda_api.tests_verification_grounding pages.tests_ci_manifest
+Ran 225 tests in 22.409s
+OK
+== zelda_api.tests
+Ran 428 tests in 63.911s
+OK
+== zelda_api.tests_authorization zelda_api.tests_assistant_panel_escaping zelda_api.tests_library zelda_api.tests_terminal_notifications zelda_api.tests_valuation_paywall matchmaking.tests_company_overview_identity
+Ran 87 tests in 29.283s
+OK
+
+== zelda_api.tests_funding_fidelity, after the docstring-only edit, on the committed code
+Ran 33 tests ... OK
