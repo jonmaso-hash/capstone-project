@@ -1,0 +1,36 @@
+"""Second review cases, in memory, against the guard in the fix worktree. No DB access."""
+import sys
+sys.path.insert(0, r'C:\Users\jonathan\Desktop\KCV-funding-fidelity')
+from types import SimpleNamespace as NS
+from zelda_api.funding_fidelity import funding_facts, guard_funding_fidelity, current_raise
+
+
+def item(ref, kind, category, statement, narrator='', field=''):
+    return NS(ref=ref, kind=kind, category=category, statement=statement, narrator=narrator,
+              sources=(NS(profile_field=field),))
+
+
+print('1. current_raise (company "ManyChat")')
+for s in ['The company is considering raising $5M.', 'Is the company raising $5M?',
+          'If the company is raising $5M, the founders should clarify its terms.',
+          'The company may be raising a $5M round.', 'It is unclear whether the company is raising $5M.',
+          '-- affirmative controls --',
+          'Seeking $5M seed round', 'We are raising a $5M Series A', 'ManyChat is raising $5M']:
+    print('   ', repr(s), '' if s.startswith('--') else current_raise(s, 'ManyChat'))
+
+pdh = item('S3', 'statement', 'Funding', '$23.1M raised', 'Pitch Deck Hunt')
+c1 = item('C1', 'claim', 'funding_raised', '$23.1M raised', 'Pitch Deck Hunt')
+revenue = item('S4', 'statement', 'Revenue', '$23.1M revenue')
+crunchbase = item('S5', 'statement', 'Funding', '$23.1M raised', 'Crunchbase')
+print('\n2a. metric before the amount (Pitch Deck Hunt funding + same-amount revenue item)')
+facts = funding_facts([c1, pdh, revenue], 'ManyChat')
+for t in ['Investors cite annual revenue of $23.1M.', 'Investors are behind the $23.1M raised.']:
+    print('   ', repr(t), '->', repr(guard_funding_fidelity(t, facts)[0]))
+print('\n2b. two narrators, same amount: forward and reversed item order')
+for t in ['- Who are the investors behind the $23.1M raised?', 'The $23.1M raised figure [S3] was checked.',
+          'The $23.1M raised figure [S5] was checked.']:
+    forward = guard_funding_fidelity(t, funding_facts([c1, pdh, crunchbase], 'ManyChat'))[0]
+    reverse = guard_funding_fidelity(t, funding_facts([crunchbase, pdh, c1], 'ManyChat'))[0]
+    print('   ', repr(t))
+    print('       forward ->', repr(forward))
+    print('       reversed->', repr(reverse), '| same:', forward == reverse)

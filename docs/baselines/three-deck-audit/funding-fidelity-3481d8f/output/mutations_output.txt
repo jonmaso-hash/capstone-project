@@ -1,0 +1,91 @@
+Code 3481d8f. One mutation at a time applied to the working tree, zelda_api.tests_funding_fidelity run, file restored; the file was diffed against a0ac9ad after each group.
+Final state: all 32 mutations red (F1, F2, F4-F12, F14; G1-G15; H1-H5). Adding tests can only turn a survivor red, so red results from runs before the run-E test additions stand.
+
+### Run A, clean code: F1-F10 (this run was then killed by a timeout wrapper while F12 was applied; F11 had no result line and is re-run in run B)
+== F1 attribution off
+FAILED (failures=30)
+== F2 "self-reported" never reassigned (always insert)
+FAILED (failures=6)
+== F4 reported funding kept as "the $X raise"
+FAILED (failures=2)
+== F5 raise premises kept
+FAILED (failures=24)
+== F6 premises rewritten even when a raise is in the evidence
+FAILED (failures=5)
+== F7 profile values dated by the slide (label off)
+FAILED (failures=3)
+== F8 profile label added without a date
+FAILED (failures=2)
+== F9 pipeline does not apply the guard
+FAILED (failures=8)
+== F10 figure phrase not extended
+FAILED (failures=13)
+
+### DISCARDED, not shown: two groups (F11..G5) that ran while the F12 mutation was left in the file.
+
+### Run B, restored file (diffed against a0ac9ad): F11, F12, F14, G1-G3
+== F11 a zero "Raising (profile)" counts as a raise
+FAILED (failures=1)
+== F12 narrator inserted even when the sentence already names it
+FAILED (failures=5)
+== F14 "$23.1M listed" split by the attribution
+FAILED (failures=1)
+== G1 "the company states it has raised" left as the company's statement
+FAILED (failures=4)
+== G2 following predicate not given back to the company
+FAILED (failures=3)
+== G3 narrator becomes the recipient ("Pitch Deck Hunt ... has raised")
+FAILED (failures=4)
+
+### Run C: G4-G9
+== G4 "self-reported" in another clause reassigned
+FAILED (failures=2)
+== G5 "self-reported" covering the company's figures reassigned
+FAILED (failures=1)
+== G6 citations split at their commas
+FAILED (failures=1)
+== G7 negated raise counts
+FAILED (failures=1)
+== G8 past or dated raise counts
+FAILED (failures=2)
+== G9 any subject counts (another company)
+FAILED (failures=1)
+
+### Run D: G10-G15. G13-G15 survived here: the new checks shadowed the sentences that isolated them
+== G10 a third party's report counts as the company raising
+FAILED (failures=1)
+== G11 "use of proceeds" / any raise word counts
+FAILED (failures=3)
+== G12 citation ignored (amount alone decides)
+FAILED (failures=10)
+== G13 "$23.1M revenue" read as the funding figure
+OK
+== G14 another named source ignored
+OK
+== G15 uncited figure needs no funding wording
+OK
+
+### Run E, after adding tests that isolate each check: G13-G15, H4, H5
+== G13 "$23.1M revenue" read as the funding figure
+FAILED (failures=1)
+== G14 another named source ignored
+FAILED (failures=1)
+== G15 uncited figure needs no funding wording
+FAILED (failures=1)
+== H4 metric named before the amount ignored
+FAILED (failures=3)
+== H5 ambiguous uncited amount resolved by item order
+FAILED (failures=4)
+
+### Run F, committed code 3481d8f: H1-H5 (this review)
+== H1 tentative raise counts ("considering raising")
+FAILED (failures=3)
+== H2 question counts as a raise
+FAILED (failures=2)
+== H3 condition counts as a raise
+FAILED (failures=2)
+== H4 metric named before the amount ignored
+FAILED (failures=3)
+== H5 ambiguous uncited amount resolved by item order
+FAILED (failures=4)
+

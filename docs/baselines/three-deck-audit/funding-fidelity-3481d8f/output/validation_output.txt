@@ -1,0 +1,24 @@
+Code 3481d8f (fix/funding-source-fidelity). CI env as in ci.yml, --parallel 1, isolated test databases, one batch at a time. Runner output grep'd to result lines.
+
+== check
+System check identified no issues (0 silenced).
+== makemigrations --check
+No changes detected
+== zelda_api.tests_funding_fidelity zelda_api.tests_claim_context_dates zelda_api.tests_grounded_context zelda_api.tests_memo_persistence zelda_api.tests_memo_list_rendering zelda_api.tests_claim_counts_per_claim zelda_api.tests_canonical_presentation zelda_api.tests_no_investment_advice zelda_api.tests_private_company_presentation zelda_api.tests_source_naming zelda_api.tests_verification_grounding pages.tests_ci_manifest
+Ran 213 tests in 18.928s
+OK
+== zelda_api.tests_authorization zelda_api.tests_assistant_panel_escaping zelda_api.tests_library zelda_api.tests_terminal_notifications zelda_api.tests_valuation_paywall
+Ran 76 tests in 37.287s
+OK
+== zelda_api.tests
+Ran 428 tests in 51.326s
+OK
+== matchmaking.tests_company_overview_identity matchmaking.tests_field_visibility matchmaking.tests_visibility_inventory_surfaces matchmaking.tests_visibility_source_guard
+Ran 103 tests in 21.594s
+OK
+== matchmaking.tests
+Ran 426 tests in 45.738s
+OK
+== accounts.tests accounts.tests_zelda_role_products pages.tests_document_endpoint_visibility pages.tests_first_pass_copy pages.tests_pptx_extraction_and_empty_text pages.tests_private_company_visibility
+Ran 147 tests in 49.614s
+OK
