@@ -1165,7 +1165,7 @@ class ZeldaIntelligencePipelineV2:
             # keeps its narrator in each one; reported funding is not a raise
             # in progress; a profile value is not dated by a slide (memo 94).
             from .funding_fidelity import funding_facts, guard_funding_fidelity
-            facts = funding_facts(context.items)
+            facts = funding_facts(context.items, context.company)
             for key, value in list(memo_sections.items()):
                 guarded, changes = guard_funding_fidelity(value, facts)
                 if changes:

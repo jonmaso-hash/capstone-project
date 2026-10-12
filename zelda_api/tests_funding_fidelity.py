@@ -42,8 +42,9 @@ def memo94_items(**extra):
     ]
 
 
-def guard(text, items=None):
-    return guard_funding_fidelity(text, funding_facts(items or memo94_items()))[0]
+def guard(text, items=None, company='ManyChat'):
+    """Memo 94's context: company "ManyChat" (GroundedContext.company), its items unless given."""
+    return guard_funding_fidelity(text, funding_facts(items or memo94_items(), company))[0]
 
 
 class AttributionTests(SimpleTestCase):
@@ -82,7 +83,7 @@ class AttributionTests(SimpleTestCase):
             'table and round-by-round breakdown?'),
         'memo 91 wording': (
             'The company states it has raised $23.1M [S3].',
-            'Pitch Deck Hunt reports it has raised $23.1M [S3].'),
+            'Pitch Deck Hunt lists the company as having raised $23.1M [S3].'),
         'other spelling of the figure': (
             'Funding of $23.1 million [C1] is unconfirmed.',
             'Funding of $23.1 million (per Pitch Deck Hunt) [C1] is unconfirmed.'),
@@ -110,11 +111,31 @@ class AttributionTests(SimpleTestCase):
             with self.subTest(text=text[:60]):
                 self.assertEqual(guard(text), text)
 
-    def test_a_sentence_mixing_sources_names_the_deck_not_the_company_or_the_narrator(self):
-        # The bots are the company's; the $23.1M is Pitch Deck Hunt's listing. Neither may take the other's source.
-        self.assertEqual(
-            guard('The company states it has raised $23.1M [S3] and reports 140,000+ bots [S1].'),
-            'The deck states it has raised $23.1M (per Pitch Deck Hunt) [S3] and reports 140,000+ bots [S1].')
+    def test_attribution_stays_within_its_clause_and_the_company_keeps_the_money(self):
+        # Review blocker 1. The bots are the company's; the $23.1M is Pitch Deck Hunt's listing of money the
+        # company raised. The narrator takes only the funding clause; the company keeps its own predicate.
+        cases = {
+            'bots uncited (the review case)': (
+                'The company states it has raised $23.1M [S3] and reports 140,000+ bots.',
+                'Pitch Deck Hunt lists the company as having raised $23.1M [S3] and the company reports 140,000+ bots.'),
+            'bots cited': (
+                'The company states it has raised $23.1M [S3] and reports 140,000+ bots [S1].',
+                'Pitch Deck Hunt lists the company as having raised $23.1M [S3] and the company reports 140,000+ bots '
+                '[S1].'),
+            'company named, comma before "and"': (
+                'ManyChat says it raised $23.1M [S3], and processed 500M messages.',
+                'Pitch Deck Hunt lists ManyChat as having raised $23.1M [S3], and ManyChat processed 500M messages.'),
+            '"self-reported" in another clause stays the company\'s': (
+                'The reported $23.1M [S3] is unconfirmed, and the evidence reduces to two self-reported usage figures.',
+                'The reported $23.1M (per Pitch Deck Hunt) [S3] is unconfirmed, and the evidence reduces to two '
+                'self-reported usage figures.'),
+        }
+        for name, (before, after) in cases.items():
+            with self.subTest(case=name):
+                result = guard(before)
+                self.assertEqual(result, after)
+                self.assertNotIn('Pitch Deck Hunt reports', result)
+                self.assertNotIn('deck states', result)
 
     def test_the_figure_phrase_is_not_split(self):
         self.assertEqual(guard('- What is the total raised beyond the $23.1M listed [S3]?'),
@@ -181,6 +202,59 @@ class FundingIsNotARaiseTests(SimpleTestCase):
                                      ('profile raising 0', zero_raise, text.replace('this raise', NO_PREMISE))):
             with self.subTest(case=name):
                 self.assertEqual(guard(text, memo94_items(more=[item])), expected)
+
+    def test_only_affirmative_company_specific_current_raises_count(self):
+        # Review blocker 2: a statement that mentions raising is not evidence of a raise now.
+        text = '- What is the intended use of proceeds from this raise, broken down by category?'
+        rewritten = text.replace('this raise', NO_PREMISE)
+        cases = {
+            'negated (the review case)': ('The company is not raising capital', rewritten),
+            'missing section (the review case)': ('Use of proceeds: Not found', rewritten),
+            'dated and past (the review case)': ('In 2015 the company was seeking $5M', rewritten),
+            'negated with an amount': ('The company is not raising a $5M round', rewritten),
+            'past without a year': ('The company was raising a $5M round', rewritten),
+            'another company': ('Telegram is seeking $5M', rewritten),
+            'third party reporting it': ('Seeking $5M seed round', rewritten),          # narrated: not the company
+            'affirmative, opening verb': ('Seeking $5M seed round', text),
+            'affirmative, "we"': ('We are raising a $5M Series A', text),
+            'affirmative, company named': ('ManyChat is raising $5M', text),
+        }
+        for name, (statement, expected) in cases.items():
+            with self.subTest(case=name):
+                item = GroundedItem(ref='S4', kind='statement', category='Funding', statement=statement,
+                                    status=SELF_REPORTED, sources=(SourceRef(document_id=1, page_number=11),),
+                                    narrator='Crunchbase' if name == 'third party reporting it' else '')
+                self.assertEqual(guard(text, memo94_items(more=[item])), expected)
+
+
+class FigureIdentityTests(SimpleTestCase):
+    """Review blocker 3: the same amount is not the same item. Identity comes from the citation, then the wording."""
+
+    def items(self):
+        return memo94_items(more=[
+            GroundedItem(ref='S4', kind='statement', category='Revenue', statement='$23.1M revenue',
+                         status=SELF_REPORTED, sources=(SourceRef(document_id=3136, page_number=5),)),
+            GroundedItem(ref='S5', kind='statement', category='Funding', statement='$23.1M raised',
+                         status=SELF_REPORTED, sources=(SourceRef(document_id=3136, page_number=6),),
+                         narrator='Crunchbase'),
+        ])
+
+    def test_another_item_with_the_same_amount_keeps_its_own_source(self):
+        for text in ('The company reports $23.1M revenue [S4].',      # the review case
+                     'Crunchbase reports $23.1M raised [S5].',        # the review case, its own narrator
+                     'Crunchbase reports $23.1M raised [S4].',        # cited to a non-narrated item
+                     'The company reports $23.1M revenue.',           # uncited, another metric
+                     'Investors cite $23.1M revenue.',                # uncited, another metric beside a funding word
+                     'Crunchbase reports $23.1M raised.',             # uncited, another named source
+                     'Annual revenue reached $23.1M, per the deck.'):  # uncited, no funding wording
+            with self.subTest(text=text):
+                self.assertEqual(guard(text, self.items()), text)
+
+    def test_the_narrated_item_is_still_attributed_beside_them(self):
+        self.assertEqual(guard('Revenue was $23.1M [S4] and $23.1M was raised [S3].', self.items()),
+                         'Revenue was $23.1M [S4] and $23.1M (per Pitch Deck Hunt) was raised [S3].')
+        self.assertEqual(guard('The $23.1M raised figure [S3] was checked.', self.items()),
+                         'The $23.1M raised figure (per Pitch Deck Hunt) [S3] was checked.')
 
 
 class ProfileIsUndatedTests(SimpleTestCase):
