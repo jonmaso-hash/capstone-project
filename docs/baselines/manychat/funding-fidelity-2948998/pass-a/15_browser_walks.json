@@ -1,0 +1,73 @@
+{
+ "browser": "Chrome (Claude in Chrome), one new tab, http://127.0.0.1:8000 served by this run's isolated server (code 2948998)",
+ "session_discipline": "One principal at a time. Sign-in through the real login form (fields set, form.requestSubmit()). Each signed-in walk ended with the nav account menu -> Sign Out, then a protected URL was reloaded to confirm the login redirect. Staff completed the real staff-MFA challenge with a current TOTP code (only the code was computed).",
+ "positive_controls": "anonymous: home; Lite/paid: investor dashboard with their own account menu; owner: founder dashboard; staff: post-MFA page with the staff account menu.",
+ "checker": "In-page script per page: every line (and, for memo pages, every sentence) containing '$23.1', those lacking 'Pitch Deck Hunt', raise premises ('this raise', 'stated raise'), 'to date'/'so far', raw list repr, canary, owner panel, counts. Line-level 'pdhMissing' hits on JSON or Markdown were whole paragraphs truncated at 200-260 characters before the narrator appeared; the sentence-level re-check found none (recorded below).",
+ "walks": {
+  "ANON": {
+   "control": {"url": "/", "h1": "Build relevant business connections. Understand the evidence.", "signed_in": false},
+   "company_overview /matchmaking/memo/profile/50/": "302 -> login",
+   "ic_memo /api/v1/zelda/documents/3137/ic-memo/": "302 -> login",
+   "memo_api": "HTTP 403 Forbidden"
+  },
+  "LITE ffmc_lite": {
+   "control": {"url": "/matchmaking/dashboard/investor/", "account_menu": "Account menu for ffmc_lite"},
+   "company_overview": {"badge": "Zelda Lite Report",
+                        "overview_funding_line": "ManyChat is a Software-sector company, profile-listed as Series A [P1, P2], focused on bot-based messaging. Pitch Deck Hunt lists $23.1M raised [S3], though this figure is undated and could not be independently verified [C1]. ...",
+                        "lines_with_23_1M_missing_narrator": [], "raise_premise": [], "to_date": [], "raw_list": false, "canary": false,
+                        "owner_panel": false, "claims_line": "Limited public evidence: none of the 3 claims could be verified or contradicted against a public source.",
+                        "screenshot": "browser/lite_company_overview.jpg"},
+   "memo_api": {"status": "HTTP 200 OK", "tier": "lite", "locked": true, "raise_premise": [], "canary": false,
+                "information_readiness_line": "• reported by Pitch Deck Hunt funding raised: $23.1M [S3]",
+                "note": "two line-level 'pdhMissing' hits were JSON section strings truncated before the narrator; at sentence level every $23.1M sentence names Pitch Deck Hunt (09f_section_scan.txt)"},
+   "ic_memo": "404",
+   "truth_delta_page": {"stats": "3 CLAIMS ANALYZED | 0 VERIFIED | 3 NOT ESTABLISHED", "verification_not_available": false, "owner_panel": false, "canary": false},
+   "sign_out": "nav menu -> Sign Out; overview -> login"
+  },
+  "PAID ffmc_paid": {
+   "control": {"url": "/matchmaking/dashboard/investor/", "account_menu": "Account menu for ffmc_paid"},
+   "company_overview": {"badge": "Zelda Lite Report", "lines_with_23_1M": 1, "lines_with_23_1M_missing_narrator": [], "raise_premise": [],
+                        "to_date": [], "raw_list": false, "canary": false, "owner_panel": false,
+                        "claims_line": "Limited public evidence: none of the 3 claims could be verified or contradicted against a public source."},
+   "ic_memo": "404",
+   "truth_delta_page": {"stats": "3 CLAIMS ANALYZED | 0 VERIFIED | 3 NOT ESTABLISHED", "verification_not_available": false, "owner_panel": false, "canary": false},
+   "sign_out": "nav menu -> Sign Out; overview -> login"
+  },
+  "OWNER ffmc_owner": {
+   "control": {"url": "/matchmaking/dashboard/founder/", "account_menu": "Account menu for ffmc_owner"},
+   "ic_memo": {"badge": "Zelda Lite Memo", "section_coverage": "31.2%",
+               "lines_with_23_1M": ["• reported by Pitch Deck Hunt funding raised: $23.1M [S3]",
+                                    "• Pitch Deck Hunt lists $23.1M raised [S3]; while unverified, ...",
+                                    "• The $23.1M raised figure [S3] is undated, narrated by Pitch Deck Hunt rather than a primary source, ...",
+                                    "(what_would_change_the_picture paragraph; narrator present at sentence level: '...$23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway.')"],
+               "raise_premise": [], "to_date": [], "raw_list": false, "canary": false, "screenshot": "browser/owner_ic_memo_lite.jpg"},
+   "markdown_download": "redirected to the IC memo page (owner not Premium)",
+   "truth_delta_page": {"stats": "3 CLAIMS ANALYZED | 0 VERIFIED | 3 NOT ESTABLISHED", "owner_panel": true,
+                        "panel_text": "Profile and deck figures to review | Only you can see this. ... | Previously raised: Choose a reporting currency on your profile bef...", "canary": false},
+   "company_overview": "403 Forbidden (by design: investor accounts or staff only)",
+   "sign_out": "nav menu -> Sign Out; IC memo -> login"
+  },
+  "STAFF ffmc_staff": {
+   "control": {"after_mfa_url": "/accounts/choose-role/", "account_menu": "Account menu for ffmc_staff"},
+   "ic_memo": {"badge": "Zelda AI — Full Memo", "section_coverage": "100.0%", "sentences_with_23_1M": 10, "missing_narrator": [],
+               "raise_premise": [], "stage_beside_slide_date": [], "to_date": [], "raw_list": false, "canary": false,
+               "counts": ["Claims checked: 3", "Not established — 3", "(of 3)"], "list_item_counts": [6, 3, 18, 10, 5],
+               "runway_or_remaining_sentences": [
+                 "risk_assessment: '...making it impossible to determine when funds were raised, from whom, or how much remains available.'",
+                 "what_would_change_the_picture: '...would anchor assessment of the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway.'",
+                 "upside_scenario: '...and if the $23.1M raised (per Pitch Deck Hunt) [S3] was deployed efficiently with meaningful runway remaining, ...'",
+                 "questions: 'Who are the investors behind the $23.1M raised (per Pitch Deck Hunt), ... and how much capital remains available [S3, C1]?'",
+                 "questions: 'What is the current monthly cash burn, and what is the implied runway from existing funds?'",
+                 "financial table: 'Runway: not calculated'"],
+               "screenshot": "browser/staff_ic_memo_information_readiness.jpg"},
+   "markdown_download": {"method": "in-page fetch (no browser download; ~/Downloads unchanged)", "status": 200, "content_type": "text/markdown",
+                         "bytes": 10900, "list_items": 15, "sentences_with_23_1M": 10, "missing_narrator": [], "raise_premise": [],
+                         "raw_list": false, "canary": false,
+                         "counts": "Claims checked: 3 / Evidence coverage: 0 verified · 0 contradicted · 3 not established (of 3)",
+                         "section_coverage": "100.0%", "information_readiness_line": "• reported by Pitch Deck Hunt funding raised: $23.1M [S3]"},
+   "company_overview": {"badge": "Zelda AI — Full Report", "pitch_deck_hunt": true, "raise_premise": [], "canary": false, "owner_panel": false},
+   "truth_delta_page": {"stats": "3 CLAIMS ANALYZED | 0 VERIFIED | 3 NOT ESTABLISHED", "owner_panel": false, "canary": false},
+   "sign_out": "nav menu -> Sign Out; IC memo -> login"
+  }
+ }
+}

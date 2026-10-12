@@ -1,0 +1,66 @@
+"""Model input/output vs stored memo 95, section by section (no DB access; reads the run's files)."""
+import json, os, re, sys, difflib
+HERE = os.path.dirname(os.path.abspath(__file__))
+WT = r'C:\Users\jonathan\Desktop\KCV-mc-ff'
+EV = os.path.join(WT, r'docs\baselines\manychat\funding-fidelity-2948998\pass-a')
+sys.path.insert(0, WT)
+from zelda_api.memo_lists import memo_text
+from zelda_api.claim_context import guard_time_wording
+from zelda_api.funding_fidelity import funding_facts, guard_funding_fidelity
+from types import SimpleNamespace as NS
+
+calls = [json.loads(l) for l in open(os.path.join(HERE, 'model_calls.jsonl'), encoding='utf-8') if l.strip()]
+memo_calls = [c for c in calls if 'investment memo' in json.dumps(c['request'].get('messages', ''))]
+assert len(memo_calls) == 1, len(memo_calls)
+call = memo_calls[0]
+call['note'] = ('Recorded in-process by the run wrapper (anthropic Messages.create wrapped; no repo change). Request kwargs '
+                'exactly as sent; the API key is on the client, not in kwargs.')
+json.dump(call, open(os.path.join(EV, '09b_model_call.json'), 'w', encoding='utf-8', newline='\n'), indent=1, ensure_ascii=False)
+user = call['request']['messages'][0]['content']
+start = user.find('{', user.find('## EVIDENCE'))
+sent, _ = json.JSONDecoder().raw_decode(user[start:])
+rebuilt = json.load(open(os.path.join(EV, '09a_grounded_context_rebuilt.json'), encoding='utf-8'))['payload']
+blob = json.dumps(call['request'], ensure_ascii=False)
+report = {
+    'model': call['request'].get('model'), 'response_model': call['response']['model'],
+    'stop_reason': call['response']['stop_reason'], 'usage': call['response']['usage'],
+    'params': {k: v for k, v in call['request'].items() if k not in ('system', 'messages')},
+    'prompt_rule_10_present': '10. Funding and the profile.' in call['request']['system'],
+    'sent_payload_equals_rebuilt': sent == rebuilt,
+    'sent_items': [{k: i.get(k) for k in ('ref', 'kind', 'category', 'statement', 'status', 'as_of', 'narrator',
+                                          'source_context', 'dates_not_as_of')} for i in sent['items']],
+    'absent_from_model_input': {s: (s not in blob) for s in [
+        'Series A deck with', 'SlideShare deck has', 'CANARY', '163000000', '163,000,000', 'Bessemer', 'TechCrunch',
+        'Summit Partners', '2019', '$18M', 'STALENESS', 'ATTRIBUTION ERROR', 'ANSWER_KEY', 'Mike Yan']},
+}
+raw_text = call['response']['text'][0]
+raw = json.loads(re.search(r'\{.*\}', raw_text, re.S).group(0))
+stored = json.load(open(os.path.join(EV, '09_memo.json'), encoding='utf-8'))['memo']
+items = [NS(ref=i['ref'], kind=i['kind'], category=i['category'], statement=i['statement'], narrator=i.get('narrator', ''),
+            sources=tuple(NS(profile_field=s.get('profile_field', '')) for s in i['sources'])) for i in sent['items']]
+dated = {i['ref']: () for i in sent['items'] if 'as_of' in i}
+facts = funding_facts(items, sent['company'])
+sections, changes = {}, {}
+for key, value in raw.items():
+    if key == 'evidence_level' or key not in stored:
+        continue
+    normalized = memo_text(value) if isinstance(value, (str, list, tuple, dict)) else value
+    after_time, removed = guard_time_wording(normalized, dated)
+    replay, fid = guard_funding_fidelity(after_time, facts)
+    sections[key] = {'stored_equals_guard_replay_of_raw': stored[key] == replay, 'time_wording_removed': removed,
+                     'funding_fidelity_changes': fid, 'raw_equals_stored': normalized == stored[key]}
+    if normalized != stored[key]:
+        changes[key] = [l for l in difflib.unified_diff(normalized.splitlines(), stored[key].splitlines(), 'model', 'stored',
+                                                       lineterm='', n=0) if l[:1] in '+-' and l[:3] not in ('+++', '---')]
+report['sections'] = sections
+report['evidence_level'] = {'raw': raw.get('evidence_level'), 'stored': stored.get('evidence_level')}
+json.dump(report, open(os.path.join(EV, '09d_memo_input_output_check.json'), 'w', encoding='utf-8', newline='\n'),
+          indent=1, ensure_ascii=False)
+with open(os.path.join(EV, '09e_guard_changes.txt'), 'w', encoding='utf-8', newline='\n') as f:
+    f.write('Model reply (after list-to-text) vs stored memo 95, per section. Only changed sections are listed.\n\n')
+    for key, lines in changes.items():
+        f.write(f'== {key}  {sections[key]["funding_fidelity_changes"] or ""} {sections[key]["time_wording_removed"] or ""}\n')
+        f.write('\n'.join(lines) + '\n\n')
+print(json.dumps({k: v for k, v in report.items() if k not in ('sent_items', 'sections')}, indent=1))
+print('sections replay ok:', all(s['stored_equals_guard_replay_of_raw'] for s in sections.values()),
+      '| changed:', list(changes))

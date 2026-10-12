@@ -1,0 +1,29 @@
+"""Read-only snapshot: memo hashes and per-document row counts / max pk / latest timestamp.
+Reads only pk and timestamp columns, so it works on a DB with or without migration 0044.
+Usage (via run_ro.py): snapshot_ro.py <memo ids comma-separated> <document ids comma-separated>"""
+import hashlib, json, sys
+from django.apps import apps
+from zelda_api.vector_models import IntelligenceMemo
+memo_ids = [int(x) for x in sys.argv[1].split(',') if x]
+doc_ids = [int(x) for x in sys.argv[2].split(',') if x]
+for pk in memo_ids:
+    m = IntelligenceMemo.objects.values().get(pk=pk)
+    blob = json.dumps(m, sort_keys=True, default=str).encode()
+    print('MEMO', pk, 'sha256', hashlib.sha256(blob).hexdigest(), 'updated', m.get('updated_at') or m.get('created_at'))
+out = {}
+for d in doc_ids:
+    row = {}
+    for model in apps.get_app_config('zelda_api').get_models():
+        names = {f.name for f in model._meta.get_fields()}
+        for fk in ('document', 'source_document'):
+            if fk not in names:
+                continue
+            qs = model.objects.filter(**{fk + '_id': d})
+            n = qs.count()
+            if not n:
+                continue
+            tf = next((t for t in ('updated_at', 'created_at', 'generated_at') if t in names), None)
+            last = qs.order_by('-pk').values('pk', *([tf] if tf else [])).first()
+            row[model.__name__] = {'count': n, 'max_pk': last['pk'], 'latest_ts': str(last.get(tf)) if tf else None}
+    out[d] = row
+print('ROWS', json.dumps(out, indent=1, sort_keys=True, default=str))

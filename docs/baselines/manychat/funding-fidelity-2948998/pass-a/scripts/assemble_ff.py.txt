@@ -1,0 +1,65 @@
+"""Assemble this run's record into the evidence directory (no DB access)."""
+import os, re, json, shutil
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT = r'C:\Users\jonathan\Desktop\KCV-mc-ff\docs\baselines\manychat\funding-fidelity-2948998\pass-a'
+SHOTS = r'C:\Users\jonathan\AppData\Local\Temp\claude-chrome-screenshots-dqHUQg'
+for sub in ('browser', 'process', 'scripts', 'snapshots'):
+    os.makedirs(os.path.join(OUT, sub), exist_ok=True)
+
+
+def read(name, enc='utf-8'):
+    raw = open(os.path.join(HERE, name), 'rb').read()
+    if raw[:2] in (b'\xff\xfe', b'\xfe\xff'):
+        return raw.decode('utf-16')
+    return raw.decode(enc, errors='replace')
+
+
+CHECK = r'^(BASELINE-ENV-CHECK|BROKER-CHECK|DB-CHECK|SCHEMA-CHECK|EAGER-CHECK|MODEL-CALL-LOG|REFUSING|CHECK OK|preflight ok)'
+lines = lambda name: [l for l in read(name).splitlines() if re.match(CHECK, l)]
+setup = {
+    'code': {'worktree': r'C:\Users\jonathan\Desktop\KCV-mc-ff (detached)',
+             'main_commit': '2948998c0af4b27a7b773abd3441f15187cb8e2d',
+             'main_subject': 'Merge pull request #279 from jonmaso-hash/fix/funding-source-fidelity',
+             'merge_type': 'merge commit (not squash); 2befa42, a0ac9ad, 3481d8f, 2230090 are all ancestors',
+             'tree_equals_2230090': True, 'application_code_changes_during_run': 0},
+    'database': {'original': r'C:\Users\jonathan\Desktop\KCV\db.sqlite3', 'run_db': 'sqlite backup copy (scratchpad mcff/db_ff_copy.sqlite3)',
+                 'original_sha256_before': read('orig_db_sha_before.txt').split()[0],
+                 'original_sha256_after': read('orig_db_sha_after.txt').split()[0],
+                 'gate_refusal_before_migrate': lines('gate_refusal_before_migrate.txt'),
+                 'migrate_on_copy': [l for l in read('migrate_copy.txt').splitlines() if 'Applying' in l],
+                 'id_sequences_advanced_in_copy_only': read('sequences.txt').splitlines(),
+                 'why': 'both run copies derive from the same original, so ids would repeat the previous run (document 3136, memo 94)'},
+    'broker': {'isolation': 'local Memurai broker db 11, results 12, cache 13 (all empty before); worker mcff@, queue "celery" on db 11',
+               'redis_after': read('redis_after.txt').splitlines()},
+    'preflight_local': lines('preflight_local.txt'),
+    'server_checks': lines('server.log'), 'worker_checks': lines('worker.log'),
+    'memwatch': read('memwatch.log').splitlines(),
+    'fixtures': json.loads(read('fixtures.txt').split('FIXTURES ', 1)[1]),
+    'deck': {'sha256_on_disk': read('deck_sha_disk.txt').split()[0],
+             'protocol_sha256': 'be7a7171bbc84b9895a45adfbc41f2533f3d23b3a4a561c82a8d9de6b94f3ef1'},
+    'upload': read('upload.txt').splitlines(),
+    'preserved': {'memos_90_91_docs_3132_3133_before': read('orig_snapshot_before.txt').splitlines()[:3],
+                  'identical_after': read('orig_snapshot_before.txt') == read('orig_snapshot_after.txt'),
+                  'memo_94_doc_3136_before': read('memo94_snapshot_before.txt').splitlines()[:2],
+                  'memo_94_identical_after': read('memo94_snapshot_before.txt') == read('memo94_snapshot_after.txt')},
+}
+json.dump(setup, open(os.path.join(OUT, '00_setup.json'), 'w', encoding='utf-8', newline='\n'), indent=1, ensure_ascii=False)
+chain = [l for l in read('worker.log').splitlines()
+         if re.search(r'Task .* (received|succeeded|failed|raised)|funding-source fidelity|time wording|Anthropic usage', l)]
+open(os.path.join(OUT, '06_worker_chain.txt'), 'w', encoding='utf-8', newline='\n').write('\n'.join(chain) + '\n')
+calls = [json.loads(l) for l in read('model_calls.jsonl').splitlines() if l.strip()]
+json.dump({'note': 'Every anthropic Messages.create call in the run processes (1 memo call in the worker, 7 /ask/ '
+                   'query-extraction calls from the HTTP probe in the server).', 'calls': calls},
+          open(os.path.join(OUT, '09c_all_model_calls.json'), 'w', encoding='utf-8', newline='\n'), indent=1, ensure_ascii=False)
+shutil.copy(os.path.join(HERE, 'server.log'), os.path.join(OUT, 'process', 'server.log.txt'))
+shutil.copy(os.path.join(HERE, 'worker.log'), os.path.join(OUT, 'process', 'worker.log.txt'))
+for name in ('orig_snapshot_before.txt', 'orig_snapshot_after.txt', 'memo94_snapshot_before.txt', 'memo94_snapshot_after.txt'):
+    shutil.copy(os.path.join(HERE, name), os.path.join(OUT, 'snapshots', name))
+for name in ('run_ff.py', 'run_ro.py', 'snapshot_ro.py', 'bump_sequences.py', 'setup_fixtures.py', 'upload.py', 'dump_pf.py',
+             'probe.py', 'probe_cfg.json', 'analyze_memo.py', 'assemble_ff.py'):
+    shutil.copy(os.path.join(HERE, name), os.path.join(OUT, 'scripts', name + '.txt'))
+for src, dst in (('screenshot-1791798985327-27.jpg', 'lite_company_overview.jpg'),
+                 ('screenshot-1791799077083-28.jpg', 'owner_ic_memo_lite.jpg'),
+                 ('screenshot-1791799162407-29.jpg', 'staff_ic_memo_information_readiness.jpg')):
+    shutil.copy(os.path.join(SHOTS, src), os.path.join(OUT, 'browser', dst))
+print('assembled')
