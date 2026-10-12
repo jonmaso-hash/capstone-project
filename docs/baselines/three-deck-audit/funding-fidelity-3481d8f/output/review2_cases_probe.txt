@@ -1,0 +1,27 @@
+Second-review cases at 3481d8f, in memory.
+
+1. current_raise (company "ManyChat")
+    'The company is considering raising $5M.' False
+    'Is the company raising $5M?' False
+    'If the company is raising $5M, the founders should clarify its terms.' False
+    'The company may be raising a $5M round.' False
+    'It is unclear whether the company is raising $5M.' False
+    '-- affirmative controls --' 
+    'Seeking $5M seed round' True
+    'We are raising a $5M Series A' True
+    'ManyChat is raising $5M' True
+
+2a. metric before the amount (Pitch Deck Hunt funding + same-amount revenue item)
+    'Investors cite annual revenue of $23.1M.' -> 'Investors cite annual revenue of $23.1M.'
+    'Investors are behind the $23.1M raised.' -> 'Investors are behind the $23.1M raised (per Pitch Deck Hunt).'
+
+2b. two narrators, same amount: forward and reversed item order
+    '- Who are the investors behind the $23.1M raised?'
+       forward -> '- Who are the investors behind the $23.1M raised?'
+       reversed-> '- Who are the investors behind the $23.1M raised?' | same: True
+    'The $23.1M raised figure [S3] was checked.'
+       forward -> 'The $23.1M raised figure (per Pitch Deck Hunt) [S3] was checked.'
+       reversed-> 'The $23.1M raised figure (per Pitch Deck Hunt) [S3] was checked.' | same: True
+    'The $23.1M raised figure [S5] was checked.'
+       forward -> 'The $23.1M raised figure (per Crunchbase) [S5] was checked.'
+       reversed-> 'The $23.1M raised figure (per Crunchbase) [S5] was checked.' | same: True

@@ -319,8 +319,10 @@ class ManyChatExtractionTests(TestCase):
         memo, call = self.generate()
         self.assertNotIn('to date', memo.executive_summary)
         self.assertNotIn('so far', memo.executive_summary)
-        self.assertIn('has raised $23.1M [S', memo.executive_summary)
-        self.assertIn('140,000+ bots [S', memo.executive_summary)
+        # Funding-source fidelity (tests_funding_fidelity): Pitch Deck Hunt takes only the funding clause;
+        # the company keeps the money and its own bot count.
+        self.assertIn('Pitch Deck Hunt lists the company as having raised $23.1M [S', memo.executive_summary)
+        self.assertIn('and the company reports 140,000+ bots [S', memo.executive_summary)
         self.assertNotIn('currently', memo.open_concerns)
         self.assertIn('No revenue has been disclosed to date.', memo.open_concerns)   # cites nothing: kept
         self.assertIn('9. Dates and who is speaking', call['system'])
@@ -339,7 +341,8 @@ class ManyChatExtractionTests(TestCase):
             }
         memo, _ = self.generate(sections)
         self.assertEqual(memo.executive_summary, (
-            'The company has raised $23.1M. [{0}] No revenue has been disclosed to date. The platform reports '
+            'The company has raised $23.1M (per Pitch Deck Hunt). [{0}] No revenue has been disclosed to date. '
+            'The platform reports '
             '140,000+ bots and 500M messages [{1}, {2}].').format(*self.cited(memo.executive_summary)))
         self.assertTrue(memo.supported_points.startswith('- Scale: 500M messages.[S'), memo.supported_points)
         self.assertNotIn('currently', memo.supported_points)
@@ -386,5 +389,5 @@ class ManyChatExtractionTests(TestCase):
         self.assertEqual(overview.status_code, 200)
         for name, html in (('ic_memo', ic_memo), ('overview', overview.content.decode())):
             with self.subTest(surface=name):
-                self.assertIn('has raised $23.1M [S', html)
+                self.assertIn('Pitch Deck Hunt lists the company as having raised $23.1M [S', html)
                 self.assertNotIn('$23.1M to date', html)

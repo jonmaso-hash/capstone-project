@@ -1,0 +1,33 @@
+import sys
+sys.path.insert(0, r'C:\Users\jonathan\Desktop\KCV-funding-fidelity')
+from types import SimpleNamespace as NS
+from zelda_api.funding_fidelity import funding_facts, guard_funding_fidelity, current_raise
+
+
+def item(ref, kind, category, statement, narrator='', field=''):
+    return NS(ref=ref, kind=kind, category=category, statement=statement, narrator=narrator,
+              sources=(NS(profile_field=field),))
+
+
+base = [item('C1', 'claim', 'funding_raised', '$23.1M raised', 'Pitch Deck Hunt'),
+        item('S1', 'statement', 'Traction', '140 000+ bots'),
+        item('S3', 'statement', 'Funding', '$23.1M raised', 'Pitch Deck Hunt'),
+        item('S4', 'statement', 'Revenue', '$23.1M revenue'),
+        item('P1', 'profile', 'Stage (profile)', 'Stage (profile): Series A', field='stage')]
+facts = funding_facts(base, 'ManyChat')
+for t in ['The company states it has raised $23.1M [S3] and reports 140,000+ bots.',
+          'The company states it has raised $23.1M [S3] and reports 140,000+ bots [S1].',
+          'The company states it has raised $23.1M [S3].',
+          'ManyChat says it raised $23.1M [S3], and processed 500M messages.',
+          'The company reports $23.1M revenue [S4].',
+          'Crunchbase reports $23.1M raised [S4].',
+          'Crunchbase reports $23.1M raised.',
+          'The company reports $23.1M revenue.',
+          'Who are the investors behind the $23.1M raised, and can you provide a cap table?',
+          '• Funding raised figure (self-reported, unverified): $23.1M [S3]',
+          'Self-reported traction of 140,000+ bots and $23.1M raised [S3].']:
+    print(repr(t)); print('   ->', repr(guard_funding_fidelity(t, facts)[0]))
+for s in ['The company is not raising capital', 'Use of proceeds: Not found', 'In 2015 the company was seeking $5M',
+          'Telegram is seeking $5M', 'Seeking $5M seed round', 'We are raising a $5M Series A', 'ManyChat is raising $5M',
+          'The company is not raising a $5M round', 'Raising $5M seed (Apr-16)', 'The company was raising a $5M round']:
+    print('current_raise', repr(s), current_raise(s, 'ManyChat'))

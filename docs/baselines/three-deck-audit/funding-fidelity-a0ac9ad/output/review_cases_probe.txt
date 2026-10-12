@@ -1,0 +1,34 @@
+The three review cases and their variants, guard at a0ac9ad, in memory.
+
+'The company states it has raised $23.1M [S3] and reports 140,000+ bots.'
+   -> 'Pitch Deck Hunt lists the company as having raised $23.1M [S3] and the company reports 140,000+ bots.'
+'The company states it has raised $23.1M [S3] and reports 140,000+ bots [S1].'
+   -> 'Pitch Deck Hunt lists the company as having raised $23.1M [S3] and the company reports 140,000+ bots [S1].'
+'The company states it has raised $23.1M [S3].'
+   -> 'Pitch Deck Hunt lists the company as having raised $23.1M [S3].'
+'ManyChat says it raised $23.1M [S3], and processed 500M messages.'
+   -> 'Pitch Deck Hunt lists ManyChat as having raised $23.1M [S3], and ManyChat processed 500M messages.'
+'The company reports $23.1M revenue [S4].'
+   -> 'The company reports $23.1M revenue [S4].'
+'Crunchbase reports $23.1M raised [S4].'
+   -> 'Crunchbase reports $23.1M raised [S4].'
+'Crunchbase reports $23.1M raised.'
+   -> 'Crunchbase reports $23.1M raised.'
+'The company reports $23.1M revenue.'
+   -> 'The company reports $23.1M revenue.'
+'Who are the investors behind the $23.1M raised, and can you provide a cap table?'
+   -> 'Who are the investors behind the $23.1M raised (per Pitch Deck Hunt), and can you provide a cap table?'
+'• Funding raised figure (self-reported, unverified): $23.1M [S3]'
+   -> '• Funding raised figure (reported by Pitch Deck Hunt, unverified): $23.1M [S3]'
+'Self-reported traction of 140,000+ bots and $23.1M raised [S3].'
+   -> 'Self-reported traction of 140,000+ bots and $23.1M raised (per Pitch Deck Hunt) [S3].'
+current_raise 'The company is not raising capital' False
+current_raise 'Use of proceeds: Not found' False
+current_raise 'In 2015 the company was seeking $5M' False
+current_raise 'Telegram is seeking $5M' False
+current_raise 'Seeking $5M seed round' True
+current_raise 'We are raising a $5M Series A' True
+current_raise 'ManyChat is raising $5M' True
+current_raise 'The company is not raising a $5M round' False
+current_raise 'Raising $5M seed (Apr-16)' False
+current_raise 'The company was raising a $5M round' False

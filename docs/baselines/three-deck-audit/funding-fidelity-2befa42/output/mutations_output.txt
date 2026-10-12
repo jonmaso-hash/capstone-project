@@ -1,0 +1,114 @@
+Code 2befa42. One mutation at a time applied to the working tree, tests_funding_fidelity run, file restored.
+
+== F1 attribution off
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API information_readiness')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API open_concerns')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API what_would_change')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff IC memo (full)')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff Markdown')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='owner IC memo (Lite)')
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_a_sentence_mixing_sources_names_the_deck_not_the_company_or_the_narrator
+FAIL: test_memo_94_sentences_name_the_narrator (case='information_readiness (Lite)')
+FAIL: test_memo_94_sentences_name_the_narrator (case='base_scenario')
+FAIL: test_memo_94_sentences_name_the_narrator (case='risk_assessment')
+FAIL: test_memo_94_sentences_name_the_narrator (case='open_concerns (Lite)')
+FAIL: test_memo_94_sentences_name_the_narrator (case='what_would_change_the_picture (Lite), uncited')
+FAIL: test_memo_94_sentences_name_the_narrator (case='zelda_advantage')
+FAIL: test_memo_94_sentences_name_the_narrator (case='question, uncited')
+FAIL: test_memo_94_sentences_name_the_narrator (case='memo 91 wording')
+FAIL: test_memo_94_sentences_name_the_narrator (case='other spelling of the figure')
+FAIL: test_self_reported_covering_other_figures_is_not_reassigned
+FAIL: test_the_figure_phrase_is_not_split
+FAIL: test_reported_funding_is_not_a_financing_event
+FAIL: test_profile_stage_is_kept_apart_from_the_slide_date
+Ran 15 tests in 3.170s
+FAILED (failures=21)
+== F2 "self-reported" left in place (always insert)
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API information_readiness')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff IC memo (full)')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff Markdown')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='owner IC memo (Lite)')
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_memo_94_sentences_name_the_narrator (case='information_readiness (Lite)')
+Ran 15 tests in 3.295s
+FAILED (failures=6)
+== F3 "self-reported" reassigned even when it covers other figures
+FAIL: test_self_reported_covering_other_figures_is_not_reassigned
+FAIL: test_reported_funding_is_not_a_financing_event
+Ran 15 tests in 3.312s
+FAILED (failures=2)
+== F4 reported funding kept as "the $X raise"
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_reported_funding_is_not_a_financing_event
+Ran 15 tests in 3.322s
+FAILED (failures=2)
+== F5 raise premises kept
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API open_concerns')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff IC memo (full)')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff Markdown')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='owner IC memo (Lite)')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_a_raise_in_the_evidence_keeps_its_wording (case='profile raising 0')
+FAIL: test_unsupported_raise_premises_are_removed_and_the_questions_kept (text='- What is the current monthly burn rate, and what ')
+FAIL: test_unsupported_raise_premises_are_removed_and_the_questions_kept (text='- What is the intended use of proceeds from this r')
+FAIL: test_unsupported_raise_premises_are_removed_and_the_questions_kept (text='• No revenue, burn, or financial operating data wa')
+Ran 15 tests in 3.245s
+FAILED (failures=10)
+== F6 premises rewritten even when a raise is in the evidence
+FAIL: test_a_raise_in_the_evidence_keeps_its_wording (case='profile raising 5M')
+FAIL: test_a_raise_in_the_evidence_keeps_its_wording (case='deck says seeking')
+Ran 15 tests in 3.216s
+FAILED (failures=2)
+== F7 profile values dated by the slide (label off)
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_profile_stage_is_kept_apart_from_the_slide_date
+Ran 15 tests in 3.471s
+FAILED (failures=3)
+== F8 profile label added without a date
+FAIL: test_undated_profile_sentences_and_dated_slide_sentences_are_unchanged (text='ManyChat is a software company (the company states')
+FAIL: test_undated_profile_sentences_and_dated_slide_sentences_are_unchanged (text='• Stage classification: Series A [P1]')
+Ran 15 tests in 3.323s
+FAILED (failures=2)
+== F9 pipeline does not apply the guard
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API information_readiness')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API open_concerns')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API what_would_change')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff IC memo (full)')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff Markdown')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='owner IC memo (Lite)')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+Ran 15 tests in 3.451s
+FAILED (failures=8)
+== F10 figure phrase not extended ("$23.1M (per ...) raised")
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_memo_94_sentences_name_the_narrator (case='risk_assessment')
+FAIL: test_memo_94_sentences_name_the_narrator (case='open_concerns (Lite)')
+FAIL: test_memo_94_sentences_name_the_narrator (case='what_would_change_the_picture (Lite), uncited')
+FAIL: test_memo_94_sentences_name_the_narrator (case='zelda_advantage')
+FAIL: test_memo_94_sentences_name_the_narrator (case='question, uncited')
+FAIL: test_the_figure_phrase_is_not_split
+Ran 15 tests in 3.213s
+FAILED (failures=7)
+== F11 a zero "Raising (profile)" counts as a raise
+FAIL: test_a_raise_in_the_evidence_keeps_its_wording (case='profile raising 0')
+Ran 15 tests in 3.220s
+FAILED (failures=1)
+== F12 narrator inserted even when the sentence already names it
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_sentences_that_already_name_it_or_do_not_state_it_are_unchanged (text='Pitch Deck Hunt lists $23.1M raised [S3], though this figure')
+FAIL: test_sentences_that_already_name_it_or_do_not_state_it_are_unchanged (text='• Funding raised: Pitch Deck Hunt lists $23.1M raised [S3]; ')
+FAIL: test_guard_is_idempotent_and_keeps_layout
+Ran 15 tests in 3.254s
+FAILED (failures=4)
+== F13 mixed-source sentence keeps "the company states"
+FAIL: test_a_sentence_mixing_sources_names_the_deck_not_the_company_or_the_narrator
+Ran 15 tests in 3.210s
+FAILED (failures=1)
+== F14 "$23.1M listed" split by the attribution
+FAIL: test_the_figure_phrase_is_not_split
+Ran 15 tests in 3.293s
+FAILED (failures=1)

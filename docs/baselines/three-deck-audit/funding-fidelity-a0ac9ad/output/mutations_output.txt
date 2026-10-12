@@ -1,0 +1,200 @@
+Code a0ac9ad. One mutation at a time applied to the working tree, zelda_api.tests_funding_fidelity run, file restored (all 21 mutation sites verified intact afterwards).
+F*: the original rules retargeted to the corrected code. G*: the three review blockers and the clause fixes.
+An earlier run of this suite had G13 survive: the '$23.1M revenue' check never matched (a '^' anchor with a match position). A test ('Investors cite $23.1M revenue.') was added, failed on the real code, the anchor was fixed, and this full run followed.
+
+== F1 attribution off
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API information_readiness')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API open_concerns')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API what_would_change')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff IC memo (full)')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff Markdown')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='owner IC memo (Lite)')
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='bots uncited (the review case)')
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='bots cited')
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='company named, comma before "and"')
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='"self-reported" in another clause stays the company\'s')
+FAIL: test_memo_94_sentences_name_the_narrator (case='information_readiness (Lite)')
+FAIL: test_memo_94_sentences_name_the_narrator (case='base_scenario')
+FAIL: test_memo_94_sentences_name_the_narrator (case='risk_assessment')
+FAIL: test_memo_94_sentences_name_the_narrator (case='open_concerns (Lite)')
+FAIL: test_memo_94_sentences_name_the_narrator (case='what_would_change_the_picture (Lite), uncited')
+FAIL: test_memo_94_sentences_name_the_narrator (case='zelda_advantage')
+FAIL: test_memo_94_sentences_name_the_narrator (case='question, uncited')
+FAIL: test_memo_94_sentences_name_the_narrator (case='memo 91 wording')
+FAIL: test_memo_94_sentences_name_the_narrator (case='other spelling of the figure')
+FAIL: test_self_reported_covering_other_figures_is_not_reassigned
+FAIL: test_the_figure_phrase_is_not_split
+FAIL: test_the_narrated_item_is_still_attributed_beside_them
+FAIL: test_reported_funding_is_not_a_financing_event
+FAIL: test_profile_stage_is_kept_apart_from_the_slide_date
+Ran 18 tests in 3.204s
+FAILED (failures=25)
+== F2 "self-reported" never reassigned (always insert)
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API information_readiness')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff IC memo (full)')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff Markdown')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='owner IC memo (Lite)')
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_memo_94_sentences_name_the_narrator (case='information_readiness (Lite)')
+Ran 18 tests in 3.189s
+FAILED (failures=6)
+== F4 reported funding kept as "the $X raise"
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_reported_funding_is_not_a_financing_event
+Ran 18 tests in 3.480s
+FAILED (failures=2)
+== F5 raise premises kept
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API open_concerns')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff IC memo (full)')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff Markdown')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='owner IC memo (Lite)')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_a_raise_in_the_evidence_keeps_its_wording (case='profile raising 0')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='negated (the review case)')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='missing section (the review case)')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='dated and past (the review case)')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='negated with an amount')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='past without a year')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='another company')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='third party reporting it')
+FAIL: test_unsupported_raise_premises_are_removed_and_the_questions_kept (text='- What is the current monthly burn rate, and what ')
+FAIL: test_unsupported_raise_premises_are_removed_and_the_questions_kept (text='- What is the intended use of proceeds from this r')
+FAIL: test_unsupported_raise_premises_are_removed_and_the_questions_kept (text='• No revenue, burn, or financial operating data wa')
+Ran 18 tests in 3.243s
+FAILED (failures=17)
+== F6 premises rewritten even when a raise is in the evidence
+FAIL: test_a_raise_in_the_evidence_keeps_its_wording (case='profile raising 5M')
+FAIL: test_a_raise_in_the_evidence_keeps_its_wording (case='deck says seeking')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='affirmative, opening verb')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='affirmative, "we"')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='affirmative, company named')
+Ran 18 tests in 3.447s
+FAILED (failures=5)
+== F7 profile values dated by the slide (label off)
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_profile_stage_is_kept_apart_from_the_slide_date
+Ran 18 tests in 3.189s
+FAILED (failures=3)
+== F8 profile label added without a date
+FAIL: test_undated_profile_sentences_and_dated_slide_sentences_are_unchanged (text='ManyChat is a software company (the company states')
+FAIL: test_undated_profile_sentences_and_dated_slide_sentences_are_unchanged (text='• Stage classification: Series A [P1]')
+Ran 18 tests in 3.231s
+FAILED (failures=2)
+== F9 pipeline does not apply the guard
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API information_readiness')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API open_concerns')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API what_would_change')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff IC memo (full)')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff Markdown')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='owner IC memo (Lite)')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+Ran 18 tests in 3.090s
+FAILED (failures=8)
+== F10 figure phrase not extended
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_memo_94_sentences_name_the_narrator (case='risk_assessment')
+FAIL: test_memo_94_sentences_name_the_narrator (case='open_concerns (Lite)')
+FAIL: test_memo_94_sentences_name_the_narrator (case='what_would_change_the_picture (Lite), uncited')
+FAIL: test_memo_94_sentences_name_the_narrator (case='zelda_advantage')
+FAIL: test_memo_94_sentences_name_the_narrator (case='question, uncited')
+FAIL: test_the_figure_phrase_is_not_split
+FAIL: test_the_narrated_item_is_still_attributed_beside_them
+Ran 18 tests in 3.310s
+FAILED (failures=8)
+== F11 a zero "Raising (profile)" counts as a raise
+FAIL: test_a_raise_in_the_evidence_keeps_its_wording (case='profile raising 0')
+Ran 18 tests in 3.264s
+FAILED (failures=1)
+== F12 narrator inserted even when the sentence already names it
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_sentences_that_already_name_it_or_do_not_state_it_are_unchanged (text='Pitch Deck Hunt lists $23.1M raised [S3], though this figure')
+FAIL: test_sentences_that_already_name_it_or_do_not_state_it_are_unchanged (text='• Funding raised: Pitch Deck Hunt lists $23.1M raised [S3]; ')
+FAIL: test_another_item_with_the_same_amount_keeps_its_own_source (text='Crunchbase reports $23.1M raised [S5].')
+FAIL: test_another_item_with_the_same_amount_keeps_its_own_source (text='Crunchbase reports $23.1M raised.')
+FAIL: test_guard_is_idempotent_and_keeps_layout
+Ran 18 tests in 3.104s
+FAILED (failures=6)
+== F14 "$23.1M listed" split by the attribution
+FAIL: test_the_figure_phrase_is_not_split
+Ran 18 tests in 3.216s
+FAILED (failures=1)
+== G1 "the company states it has raised" left as the company's statement
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='bots uncited (the review case)')
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='bots cited')
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='company named, comma before "and"')
+FAIL: test_memo_94_sentences_name_the_narrator (case='memo 91 wording')
+Ran 18 tests in 4.213s
+FAILED (failures=4)
+== G2 following predicate not given back to the company
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='bots uncited (the review case)')
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='bots cited')
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='company named, comma before "and"')
+Ran 18 tests in 3.308s
+FAILED (failures=3)
+== G3 narrator becomes the recipient ("Pitch Deck Hunt ... has raised")
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='bots uncited (the review case)')
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='bots cited')
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='company named, comma before "and"')
+FAIL: test_memo_94_sentences_name_the_narrator (case='memo 91 wording')
+Ran 18 tests in 3.452s
+FAILED (failures=4)
+== G4 "self-reported" in another clause reassigned
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='"self-reported" in another clause stays the company\'s')
+FAIL: test_reported_funding_is_not_a_financing_event
+Ran 18 tests in 3.170s
+FAILED (failures=2)
+== G5 "self-reported" covering the company's figures reassigned
+FAIL: test_self_reported_covering_other_figures_is_not_reassigned
+Ran 18 tests in 3.183s
+FAILED (failures=1)
+== G6 citations split at their commas
+FAIL: test_self_reported_covering_other_figures_is_not_reassigned
+Ran 18 tests in 3.354s
+FAILED (failures=1)
+== G7 negated raise counts
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='negated with an amount')
+Ran 18 tests in 3.267s
+FAILED (failures=1)
+== G8 past or dated raise counts
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='dated and past (the review case)')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='past without a year')
+Ran 18 tests in 3.196s
+FAILED (failures=2)
+== G9 any subject counts (another company)
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='another company')
+Ran 18 tests in 3.234s
+FAILED (failures=1)
+== G10 a third party's report counts as the company raising
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='third party reporting it')
+Ran 18 tests in 3.279s
+FAILED (failures=1)
+== G11 "use of proceeds" / any raise word counts
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='negated (the review case)')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='missing section (the review case)')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='another company')
+Ran 18 tests in 3.246s
+FAILED (failures=3)
+== G12 citation ignored (amount alone decides)
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='company named, comma before "and"')
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='"self-reported" in another clause stays the company\'s')
+FAIL: test_self_reported_covering_other_figures_is_not_reassigned
+FAIL: test_reported_funding_is_not_a_financing_event
+Ran 18 tests in 3.008s
+FAILED (failures=5)
+== G13 "$23.1M revenue" read as the funding figure
+FAIL: test_another_item_with_the_same_amount_keeps_its_own_source (text='Investors cite $23.1M revenue.')
+Ran 18 tests in 3.025s
+FAILED (failures=1)
+== G14 another named source ignored
+FAIL: test_another_item_with_the_same_amount_keeps_its_own_source (text='Crunchbase reports $23.1M raised.')
+Ran 18 tests in 3.307s
+FAILED (failures=1)
+== G15 uncited figure needs no funding wording
+FAIL: test_another_item_with_the_same_amount_keeps_its_own_source (text='Annual revenue reached $23.1M, per the deck.')
+Ran 18 tests in 3.371s
+FAILED (failures=1)

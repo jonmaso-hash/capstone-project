@@ -1,0 +1,47 @@
+Guard applied in memory to memo 94's STORED sections (read from the committed evidence docs/baselines/manychat/postfix-a975af3/pass-a/09_memo.json) with memo 94's actual memo-input items (09a). No database access; memo 94 is not changed.
+
+FACTS (Narrated(narrator='Pitch Deck Hunt', refs=frozenset({'C1', 'S3'}), figure=re.compile('\\$\\s?23\\.1\\s?(?:m|mn|million)(?!\\w|\\.\\d)', re.IGNORECASE)),) ['\\$\\s?23\\.1\\s?(?:m|mn|million)(?!\\w|\\.\\d)'] ['P1', 'P2'] raise_supported False
+
+== risk_assessment ['attribution:Pitch Deck Hunt']
+  - 1. Unverified funding figure: The $23.1M raised figure [S3] was checked but no external evidence could confirm or contradict it [C1], leaving the capital structure unresolvable from available materials.
+  + 1. Unverified funding figure: The $23.1M raised figure (per Pitch Deck Hunt) [S3] was checked but no external evidence could confirm or contradict it [C1], leaving the capital structure unresolvable from available materials.
+
+== information_readiness ['attribution:Pitch Deck Hunt', 'attribution:Pitch Deck Hunt']
+  - • Funding raised figure (self-reported, unverified): $23.1M [S3]
+  + • Funding raised figure (reported by Pitch Deck Hunt, unverified): $23.1M [S3]
+  - Next evidence to supply: Audited or investor-confirmed financial statements showing revenue, gross margin, and burn rate, alongside an independently sourced cap table or Crunchbase funding record to anchor the $23.1M figure.
+  + Next evidence to supply: Audited or investor-confirmed financial statements showing revenue, gross margin, and burn rate, alongside an independently sourced cap table or Crunchbase funding record to anchor the $23.1M figure (per Pitch Deck Hunt).
+
+== open_concerns ['attribution:Pitch Deck Hunt', 'raise_premise']
+  - • The $23.1M raised figure [S3] was checked and no external evidence could establish or contradict it [C1]; the capital structure and investor base remain unknown, which is critical for evaluating dilution and runway.
+  + • The $23.1M raised figure (per Pitch Deck Hunt) [S3] was checked and no external evidence could establish or contradict it [C1]; the capital structure and investor base remain unknown, which is critical for evaluating dilution and runway.
+  - • No revenue, burn, or financial operating data was extracted, meaning it is not possible to determine whether the platform's usage translates into commercial activity or how long the company can operate on its stated raise.
+  + • No revenue, burn, or financial operating data was extracted, meaning it is not possible to determine whether the platform's usage translates into commercial activity or how long the company can operate on any current or planned raise.
+
+== what_would_change_the_picture ['attribution:Pitch Deck Hunt']
+  - Verified revenue figures—ideally from audited financials or a signed investor data room—alongside an independent confirmation of the $23.1M funding raised would most materially change what is known, as they would simultaneously resolve the company's commercialization status, its capital adequacy, and the credibility of the traction metrics presented.
+  + Verified revenue figures—ideally from audited financials or a signed investor data room—alongside an independent confirmation of the $23.1M funding raised (per Pitch Deck Hunt) would most materially change what is known, as they would simultaneously resolve the company's commercialization status, its capital adequacy, and the credibility of the traction metrics presented.
+
+== upside_scenario ['attribution:Pitch Deck Hunt']
+  - If the self-reported traction figures [S1, S2] accurately reflect the platform's state as of April 2016 and the company had begun monetizing its 140,000+ bot creator base at even modest rates, the scale of message volume (500M) would suggest a sizeable engaged user funnel. This reading requires that the $23.1M raised [S3] was fully deployed into growth, that revenue existed but was simply not extracted, and that the bot and message counts continued to grow—none of which is established by the current evidence.
+  + If the self-reported traction figures [S1, S2] accurately reflect the platform's state as of April 2016 and the company had begun monetizing its 140,000+ bot creator base at even modest rates, the scale of message volume (500M) would suggest a sizeable engaged user funnel. This reading requires that the $23.1M raised (per Pitch Deck Hunt) [S3] was fully deployed into growth, that revenue existed but was simply not extracted, and that the bot and message counts continued to grow—none of which is established by the current evidence.
+
+== base_scenario ['attribution:Pitch Deck Hunt', 'profile_undated']
+  - Taking the extracted evidence at face value: ManyChat was a Series A software company [P1, P2] with meaningful early platform traction as of April 2016 [S1, S2] and stated funding of $23.1M [S3]. Without revenue data, team information, or a verified funding record, the most neutral reading is that the deck establishes early usage activity but leaves commercialization, sustainability, and execution capacity entirely open.
+  + Taking the extracted evidence at face value: ManyChat was a Series A software company [P1, P2] (current profile, undated) with meaningful early platform traction as of April 2016 [S1, S2] and stated funding of $23.1M (per Pitch Deck Hunt) [S3]. Without revenue data, team information, or a verified funding record, the most neutral reading is that the deck establishes early usage activity but leaves commercialization, sustainability, and execution capacity entirely open.
+
+== downside_scenario ['funding_as_event', 'attribution:Pitch Deck Hunt']
+  - If the traction metrics [S1, S2] were not independently validated and the $23.1M raise [S3] cannot be confirmed, the available evidence reduces to two self-reported usage figures from a single contextually dated slide and a stage classification. In the absence of revenue, product, team, or market data—all of which are listed as not extracted—there is no disclosed basis on which to assess whether the platform activity translated into a durable business, and the information gaps themselves represent a material risk to any diligence conclusion.
+  + If the traction metrics [S1, S2] were not independently validated and the reported $23.1M (per Pitch Deck Hunt) [S3] cannot be confirmed, the available evidence reduces to two self-reported usage figures from a single contextually dated slide and a stage classification. In the absence of revenue, product, team, or market data—all of which are listed as not extracted—there is no disclosed basis on which to assess whether the platform activity translated into a durable business, and the information gaps themselves represent a material risk to any diligence conclusion.
+
+== zelda_advantage ['attribution:Pitch Deck Hunt']
+  - The verification pass surfaced that both traction claims (140,000+ bots [C3] and 500M messages [C2]) and the $23.1M funding figure [C1] were checked against external sources and returned no confirming evidence—not because they are wrong, but because no external source could be located. A plain AI summary of the deck would likely present all three figures as disclosed facts; the structured verification flags them as INSUFFICIENT and unverifiable from current materials, which is a materially different analytical position.
+  + The verification pass surfaced that both traction claims (140,000+ bots [C3] and 500M messages [C2]) and the $23.1M funding figure (per Pitch Deck Hunt) [C1] were checked against external sources and returned no confirming evidence—not because they are wrong, but because no external source could be located. A plain AI summary of the deck would likely present all three figures as disclosed facts; the structured verification flags them as INSUFFICIENT and unverifiable from current materials, which is a materially different analytical position.
+
+== questions_for_management ['attribution:Pitch Deck Hunt', 'raise_premise', 'raise_premise']
+  - - Who are the investors behind the $23.1M raised, and can you provide a current cap table and round-by-round breakdown?
+  + - Who are the investors behind the $23.1M raised (per Pitch Deck Hunt), and can you provide a current cap table and round-by-round breakdown?
+  - - What is the current monthly burn rate, and what runway does the stated raise provide at current burn?
+  + - What is the current monthly burn rate, and what runway does any current or planned raise provide at current burn?
+  - - What is the intended use of proceeds from this raise, broken down by category?
+  + - What is the intended use of proceeds from any current or planned raise, broken down by category?
