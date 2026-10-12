@@ -1,0 +1,58 @@
+"""The two review blockers on 49663be, before (49663be) and after (worktree), in memory, no DB.
+Usage: python probe_blockers3.py <worktree-after> <worktree-or-dir-with-49663be-module>"""
+import importlib.util, os, sys
+from types import SimpleNamespace as NS
+
+AFTER, BEFORE = sys.argv[1], sys.argv[2]
+sys.path.insert(0, AFTER)
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+import zelda_api.funding_fidelity as after_mod
+spec = importlib.util.spec_from_file_location('zelda_api.ff_before', os.path.join(BEFORE, 'funding_fidelity_49663be.py'),
+                                              submodule_search_locations=None)
+before_mod = importlib.util.module_from_spec(spec)
+before_mod.__package__ = 'zelda_api'
+spec.loader.exec_module(before_mod)
+
+
+def item(ref, statement, category='Financials', narrator='', as_of='', kind='statement', field=''):
+    return NS(ref=ref, kind=kind, category=category, statement=statement, narrator=narrator, as_of=as_of,
+              sources=(NS(profile_field=field),))
+
+
+BASE = [item('C1', '$23.1M raised', 'funding_raised', 'Pitch Deck Hunt', 'not stated', 'claim'),
+        item('S1', '140 000+ bots', 'Traction', as_of='not stated'),
+        item('S2', '500M messages', 'Traction', as_of='not stated'),
+        item('S3', '$23.1M raised', 'Funding', 'Pitch Deck Hunt', 'not stated'),
+        item('P1', 'Stage (profile): Series A', 'Stage (profile)', kind='profile', field='stage')]
+CB = item('S4', '$22M raised', 'Funding', 'Crunchbase', 'not stated')
+CASH = item('S4', '$2.1M cash in the bank', as_of='2026-06-30')
+BURN = item('S5', 'Net burn of $150K per month', as_of='2026-06-30')
+RUNWAY = 'It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway.'
+MIXED = ('Taking the self-reported figures at face value [S1, S3, S4], ManyChat had meaningful bot-platform traction '
+         'by April 2016 and had raised a material amount of capital.')
+CASES = [
+    ('1. undated company cash (49663be: bypassed the guard)', RUNWAY, BASE + [item('S4', '$2.1M cash in the bank')]),
+    ('1. dated cash only', RUNWAY, BASE + [CASH]),
+    ('1. dated burn only ("neither" was wrong)', RUNWAY, BASE + [BURN]),
+    ('1. historical cash + dated burn', RUNWAY,
+     BASE + [item('S4', 'Previously had $2.1M cash in the bank', as_of='2026-06-30'), BURN]),
+    ('1. negated cash + dated burn', RUNWAY,
+     BASE + [item('S4', 'The company does not hold $2.1M in cash', as_of='2026-06-30'), BURN]),
+    ('1. dated cash + burn from another period', RUNWAY,
+     BASE + [CASH, item('S5', 'Net burn of $150K per month', as_of='2024-12-31')]),
+    ('1. dated cash + compatible dated burn (supported: unchanged)', RUNWAY, BASE + [CASH, BURN]),
+    ('2. traction [S1] + Pitch Deck Hunt [S3] + Crunchbase [S4]', MIXED, BASE + [CB]),
+    ('2. same, items reversed', MIXED, list(reversed(BASE + [CB]))),
+]
+for name, text, items in CASES:
+    out = {}
+    for label, mod in (('49663be', before_mod), ('after', after_mod)):
+        facts = mod.funding_facts(items, 'ManyChat')
+        once = mod.guard_funding_fidelity(text, facts)[0]
+        twice = mod.guard_funding_fidelity(once, facts)[0]
+        out[label] = (once, once == twice)
+    print('==', name)
+    print('   in      :', text)
+    for label, (once, idem) in out.items():
+        print(f'   {label:8}:', once, '' if idem else '   [NOT IDEMPOTENT]')
+    print()
