@@ -1,0 +1,48 @@
+Code d93f2e3 (fix/funding-asof-attribution, base origin/main 485306c). CI env: SECRET_KEY=ci-only… DEBUG=True CELERY_TASK_ALWAYS_EAGER=True CELERY_BROKER_URL=memory:// CELERY_RESULT_BACKEND=cache+memory://
+Runner output grep'd to result lines.
+
+Before writing the new module, existing affected modules on this branch:
+  manage.py test zelda_api.tests_grounded_context tests_claim_attribution tests_claim_periods tests_claim_currency tests_claim_extraction_recall tests_memo_persistence tests_memo_list_rendering zelda_api.tests -> Ran 572 tests OK
+  manage.py test zelda_api.tests_claim_context_dates pages.tests_ci_manifest -> Ran 33 tests OK
+
+System check identified no issues (0 silenced).
+No changes detected
+== manage.py test zelda_api.tests_claim_context_dates -v 2
+test_generated_memo_cannot_present_the_listing_as_a_current_total (zelda_api.tests_claim_context_dates.ManyChatExtractionTests.test_generated_memo_cannot_present_the_listing_as_a_current_total)
+test_ic_memo_and_company_overview_show_the_guarded_text (zelda_api.tests_claim_context_dates.ManyChatExtractionTests.test_ic_memo_and_company_overview_show_the_guarded_text)
+test_the_memo_is_told_as_of_narrator_and_context_but_not_the_sentence (zelda_api.tests_claim_context_dates.ManyChatExtractionTests.test_the_memo_is_told_as_of_narrator_and_context_but_not_the_sentence)
+test_truth_delta_comparison_and_score_are_unchanged (zelda_api.tests_claim_context_dates.ManyChatExtractionTests.test_truth_delta_comparison_and_score_are_unchanged)
+test_a_figures_own_period_is_not_reported_as_an_unbound_date (zelda_api.tests_claim_context_dates.FundingSentenceContextTests.test_a_figures_own_period_is_not_reported_as_an_unbound_date)
+test_the_company_or_no_one_is_not_a_narrator (zelda_api.tests_claim_context_dates.FundingSentenceContextTests.test_the_company_or_no_one_is_not_a_narrator)
+test_the_heading_never_becomes_the_structured_period (zelda_api.tests_claim_context_dates.SlideHeadingContextTests.test_the_heading_never_becomes_the_structured_period)
+test_the_traction_heading_dates_both_figures_under_it (zelda_api.tests_claim_context_dates.SlideHeadingContextTests.test_the_traction_heading_dates_both_figures_under_it)
+test_unrelated_dates_are_not_attached (zelda_api.tests_claim_context_dates.SlideHeadingContextTests.test_unrelated_dates_are_not_attached)
+test_other_current_wording_and_layout (zelda_api.tests_claim_context_dates.TimeWordingGuardTests.test_other_current_wording_and_layout)
+test_refs_that_are_not_claim_backed_are_left_alone (zelda_api.tests_claim_context_dates.TimeWordingGuardTests.test_refs_that_are_not_claim_backed_are_left_alone)
+test_wording_the_source_itself_uses_is_kept (zelda_api.tests_claim_context_dates.TimeWordingGuardTests.test_wording_the_source_itself_uses_is_kept)
+Ran 15 tests in 3.449s
+OK
+== manage.py test zelda_api --parallel 1
+ERROR: test_chunk_text_outside_extracted_statements_never_reaches_the_prompt (zelda_api.tests_grounded_context.NoRawInputTests.test_chunk_text_outside_extracted_statements_never_reaches_the_prompt)
+ERROR: test_memo_records_context_citations (zelda_api.tests_grounded_context.NoRawInputTests.test_memo_records_context_citations)
+ERROR: test_memo_stage_writes_from_the_context_and_notifies (zelda_api.tests_grounded_context.OrchestrationTests.test_memo_stage_writes_from_the_context_and_notifies)
+Ran 1481 tests in 117.224s
+FAILED (errors=3)
+== manage.py test matchmaking --parallel 1
+Ran 884 tests in 87.138s
+OK
+== manage.py test pages --parallel 1
+Ran 517 tests in 89.980s
+OK
+== branch, isolated: manage.py test zelda_api.tests_grounded_context
+Ran 34 tests in 5.961s
+OK
+== main 485306c: manage.py test zelda_api --parallel 1
+ERROR: test_chunk_text_outside_extracted_statements_never_reaches_the_prompt (zelda_api.tests_grounded_context.NoRawInputTests.test_chunk_text_outside_extracted_statements_never_reaches_the_prompt)
+ERROR: test_memo_records_context_citations (zelda_api.tests_grounded_context.NoRawInputTests.test_memo_records_context_citations)
+ERROR: test_memo_stage_writes_from_the_context_and_notifies (zelda_api.tests_grounded_context.OrchestrationTests.test_memo_stage_writes_from_the_context_and_notifies)
+Ran 1466 tests in 116.830s
+FAILED (errors=3)
+
+Note: the 3 tests_grounded_context ERRORs are pre-existing and order-dependent: identical on main 485306c (1466 tests) and on this branch (1481 = +15 new); the module passes 34/34 in isolation here.
+Not run locally: the full CI blocking job in one process (RAM limits); CI gates it.
