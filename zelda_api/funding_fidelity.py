@@ -60,6 +60,13 @@ PROFILE_UNDATED = '(current profile, undated)'
 _RAISE_VERB = r'(?:raising|seeking)\b[^.;]{0,40}?(?:\$\s?\d|\bseed\b|\bseries\s+[a-e]\b|\bround\b)'
 _NEGATED = re.compile(r"\b(?:not|no|never|n't|no\s+longer|without)\b", re.I)
 _PAST = re.compile(r'\b(?:was|were|had|previously|formerly|earlier)\b', re.I)
+# Not yet a raise: "is considering raising", "may be raising", "plans to".
+_TENTATIVE = re.compile(r'\b(?:consider\w*|explor\w*|plan\w*|intend\w*|hop\w*|aim\w*|expect\w*|may|might|could|'
+                        r'would|potential\w*|possib\w*|likely|looking\s+to|thinking\s+about|evaluat\w*)\b', re.I)
+# Not a statement: "Is the company raising $5M?", "If the company is raising $5M, ...".
+_QUESTION_LEAD = re.compile(r'^(?:is|are|was|were|does|do|did|will|would|can|could|has|have|should|how|what|why|when)\b',
+                            re.I)
+_CONDITIONAL = re.compile(r'\b(?:if|unless|whether|assuming|provided|suppose|supposing|should|in\s+case)\b', re.I)
 _YEAR = re.compile(r'\b(?:19|20)\d{2}\b|\b[A-Z][a-z]{2}-\d{2}\b')
 _MONEY = re.compile(r'\$\s?(\d[\d,]*(?:\.\d+)?)\s?(thousand|million|billion|mn|bn|k|m|b)?\b', re.I)
 _UNITS = {'k': r'(?:k|thousand)', 'thousand': r'(?:k|thousand)', 'm': r'(?:m|mn|million)', 'mn': r'(?:m|mn|million)',
@@ -68,8 +75,10 @@ _UNITS = {'k': r'(?:k|thousand)', 'thousand': r'(?:k|thousand)', 'm': r'(?:m|mn|
 _FIGURE_TAIL = re.compile(r'(?:\s+(?:in\s+)?(?:funding|raised|figure|total|listed|reported))*')
 # What makes an uncited figure read as funding, near it in the same clause.
 _FUNDING_WORDS = re.compile(r'\b(?:rais\w*|fund\w*|investors?|invest\w*|capital|financ\w*|rounds?)\b', re.I)
-_OTHER_METRIC = re.compile(r'\s*(?:in\s+)?(?:revenue|arr|mrr|sales|valuation|market|tam|sam|gmv|profit|ebitda|'
-                           r'income|loss|burn|bookings)\b', re.I)
+_METRICS = r'(?:revenue|revenues|arr|mrr|sales|valuation|market|tam|sam|gmv|profit|ebitda|income|loss|burn|bookings)'
+_OTHER_METRIC = re.compile(r'\s*(?:in\s+)?' + _METRICS + r'\b', re.I)       # after: "$23.1M revenue"
+_METRIC_WORD = re.compile(r'\b' + _METRICS + r'\b', re.I)                   # before: "annual revenue of $23.1M"
+_METRIC_WINDOW = 4                                                           # words before the amount
 _CLAUSE_END = re.compile(r'[;,]|\s+(?:and|but|while|whereas)\s+')
 _SELF_REPORTED = re.compile(r'\bself[-\s]reported\b', re.I)
 _COORDINATED_VERB = re.compile(r'(\s*,?\s+and\s+)(?=(?:reports|states|says|claims|lists|has|had|is|was|'
@@ -91,6 +100,9 @@ class FundingFacts:
     profile_refs: FrozenSet[str] = frozenset()
     raise_supported: bool = False
     company: str = ''
+    # Every funding item's amount with its narrator ('' when the company's own), in no
+    # particular order: an uncited amount two of them could be is attributed to neither.
+    funding_items: FrozenSet[Tuple[str, str]] = frozenset()
 
 
 def figure_pattern(statement):
@@ -108,10 +120,16 @@ def current_raise(statement, company=''):
     True only for an affirmative, company-specific, current raise: "Seeking $5M
     seed round", "We are raising a $5M Series A", "ManyChat is raising $5M".
     Never a negation ("is not raising"), a past or dated raise ("In 2015 the
-    company was seeking $5M"), another company, or a missing section ("Use of
-    proceeds: Not found").
+    company was seeking $5M"), another company, a missing section ("Use of
+    proceeds: Not found"), a tentative one ("is considering raising $5M"), a
+    question ("Is the company raising $5M?") or a condition ("If the company is
+    raising $5M, ...").
     """
     text = ' '.join((statement or '').split())
+    if text.rstrip(' .)"\'').endswith('?') or _QUESTION_LEAD.match(text) or _CONDITIONAL.search(text):
+        return False
+    if _TENTATIVE.search(text):
+        return False
     subjects = [r'we', r"we're", r'the\s+company']
     if company:
         subjects.append(re.escape(company))
@@ -129,7 +147,7 @@ def current_raise(statement, company=''):
 
 def funding_facts(items, company=''):
     """What the guard needs from GroundedContext items: narrators, funding figures, profile refs, a live raise."""
-    groups, funding, profile, supported = {}, [], set(), False
+    groups, funding, profile, supported, funding_items = {}, [], set(), False, set()
     for item in items:
         if item.kind == 'profile':
             profile.add(item.ref)
@@ -144,6 +162,7 @@ def funding_facts(items, company=''):
         is_funding = item.category in ('funding_raised', 'Funding')
         if is_funding and pattern:
             funding.append(pattern)
+            funding_items.add((pattern.pattern, (getattr(item, 'narrator', '') or '').lower()))
         if getattr(item, 'narrator', ''):
             key = (item.narrator, pattern.pattern if pattern else item.statement)
             narrator, refs, _, was_funding = groups.get(key, (item.narrator, set(), pattern, False))
@@ -151,7 +170,8 @@ def funding_facts(items, company=''):
             groups[key] = (narrator, refs, pattern, was_funding or is_funding)
     narrated = tuple(Narrated(n, frozenset(r), p, f) for n, r, p, f in groups.values())
     unique = {p.pattern: p for p in funding}
-    return FundingFacts(narrated, tuple(unique.values()), frozenset(profile), supported, company)
+    return FundingFacts(narrated, tuple(unique.values()), frozenset(profile), supported, company,
+                        frozenset(funding_items))
 
 
 def _refs_in(group):
@@ -185,14 +205,21 @@ def _clause_start(sentence, end):
     return starts[-1] if starts else 0
 
 
-def _same_figure(sentence, found, end, entry):
+def _same_figure(sentence, found, end, entry, facts):
     """Is this occurrence of the amount the narrated item, not another item with the same amount?"""
-    clause_end = _clause_end(sentence, end)
+    clause_start, clause_end = _clause_start(sentence, found.start()), _clause_end(sentence, end)
     cite = _REF.search(sentence, end, clause_end) or next(
-        iter(_REF.finditer(sentence, _clause_start(sentence, found.start()), found.start())), None)
+        iter(_REF.finditer(sentence, clause_start, found.start())), None)
     if cite:                                         # cited (after, else before, in its clause): the citation decides
         return bool(_refs_in(cite.group(1)) & entry.refs)
     if _OTHER_METRIC.match(sentence, found.end()):   # "$23.1M revenue"
+        return False
+    before = ' '.join(sentence[clause_start:found.start()].split()[-_METRIC_WINDOW:])
+    if _METRIC_WORD.search(before):                  # "annual revenue of $23.1M"
+        return False
+    rivals = {narrator for pattern, narrator in facts.funding_items
+              if narrator != entry.narrator.lower() and re.compile(pattern, re.I).match(sentence, found.start())}
+    if rivals:                                       # uncited and another item's amount too: attribute to none
         return False
     other = claim_narrator(sentence)
     if other and other.lower() != entry.narrator.lower():    # "Crunchbase reports $23.1M raised"
@@ -210,7 +237,7 @@ def _attribute(sentence, facts, changes):
         found = entry.figure.search(sentence)
         while found:
             end = _FIGURE_TAIL.match(sentence, found.end()).end()
-            if _same_figure(sentence, found, end, entry):
+            if _same_figure(sentence, found, end, entry, facts):
                 break
             found = entry.figure.search(sentence, found.end())
         if not found:

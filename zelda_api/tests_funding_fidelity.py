@@ -215,6 +215,15 @@ class FundingIsNotARaiseTests(SimpleTestCase):
             'past without a year': ('The company was raising a $5M round', rewritten),
             'another company': ('Telegram is seeking $5M', rewritten),
             'third party reporting it': ('Seeking $5M seed round', rewritten),          # narrated: not the company
+            # Second review: tentative, interrogative and conditional statements are not a raise.
+            'tentative (the review case)': ('The company is considering raising $5M.', rewritten),
+            'question (the review case)': ('Is the company raising $5M?', rewritten),
+            'condition (the review case)': ('If the company is raising $5M, the founders should clarify its terms.',
+                                            rewritten),
+            'tentative, "may be"': ('The company may be raising a $5M round.', rewritten),
+            'tentative, "plans"': ('We plan on raising a $5M seed round.', rewritten),
+            'question, trailing': ('ManyChat is raising $5M?', rewritten),
+            'condition, "whether"': ('It is unclear whether the company is raising $5M.', rewritten),
             'affirmative, opening verb': ('Seeking $5M seed round', text),
             'affirmative, "we"': ('We are raising a $5M Series A', text),
             'affirmative, company named': ('ManyChat is raising $5M', text),
@@ -249,6 +258,54 @@ class FigureIdentityTests(SimpleTestCase):
                      'Annual revenue reached $23.1M, per the deck.'):  # uncited, no funding wording
             with self.subTest(text=text):
                 self.assertEqual(guard(text, self.items()), text)
+
+    def test_a_metric_named_before_the_amount_keeps_its_own_identity(self):
+        # Second review: Pitch Deck Hunt's funding item and a separate same-amount revenue item only.
+        items = memo94_items(more=[
+            GroundedItem(ref='S4', kind='statement', category='Revenue', statement='$23.1M revenue',
+                         status=SELF_REPORTED, sources=(SourceRef(document_id=3136, page_number=5),))])
+        for text in ('Investors cite annual revenue of $23.1M.',          # the review case
+                     'Investors note revenue reached $23.1M.',
+                     'Investors expect ARR of $23.1M.'):
+            with self.subTest(text=text):
+                self.assertEqual(guard(text, items), text)
+        # Funding wording, no metric before or after: still attributed.
+        self.assertEqual(guard('Investors are behind the $23.1M raised.', items),
+                         'Investors are behind the $23.1M raised (per Pitch Deck Hunt).')
+
+    def test_each_identity_check_holds_on_its_own(self):
+        # No same-amount rival item and no metric word before the amount, so each check is the only guard.
+        revenue = memo94_items(more=[
+            GroundedItem(ref='S4', kind='statement', category='Revenue', statement='$23.1M revenue',
+                         status=SELF_REPORTED, sources=(SourceRef(document_id=3136, page_number=5),))])
+        cases = {
+            'metric after the amount': ('Investors cite $23.1M revenue.', revenue),
+            'another named source, not an item': ('Crunchbase reports $23.1M raised.', memo94_items()),
+            'no funding wording': ('A figure of $23.1M appears on slide 2.', memo94_items()),
+        }
+        for name, (text, items) in cases.items():
+            with self.subTest(case=name):
+                self.assertEqual(guard(text, items), text)
+
+    def test_an_uncited_amount_two_sources_could_be_is_attributed_to_neither_in_any_order(self):
+        crunchbase = GroundedItem(ref='S5', kind='statement', category='Funding', statement='$23.1M raised',
+                                  status=SELF_REPORTED, sources=(SourceRef(document_id=3136, page_number=6),),
+                                  narrator='Crunchbase')
+        own = GroundedItem(ref='S6', kind='statement', category='Funding', statement='$23.1M raised',
+                           status=SELF_REPORTED, sources=(SourceRef(document_id=3136, page_number=7),))
+        for rival_name, rival in (('another narrator', crunchbase), ("the company's own figure", own)):
+            forward = memo94_items(more=[rival])
+            orders = {'forward': forward, 'reversed': list(reversed(forward))}
+            for order, items in orders.items():
+                with self.subTest(rival=rival_name, order=order):
+                    uncited = '- Who are the investors behind the $23.1M raised?'
+                    self.assertEqual(guard(uncited, items), uncited)
+                    # A citation still decides, the same in either order.
+                    self.assertEqual(guard('The $23.1M raised figure [S3] was checked.', items),
+                                     'The $23.1M raised figure (per Pitch Deck Hunt) [S3] was checked.')
+                    expected = ('The $23.1M raised figure (per Crunchbase) [S5] was checked.'
+                                if rival is crunchbase else 'The $23.1M raised figure [S6] was checked.')
+                    self.assertEqual(guard(f'The $23.1M raised figure [{rival.ref}] was checked.', items), expected)
 
     def test_the_narrated_item_is_still_attributed_beside_them(self):
         self.assertEqual(guard('Revenue was $23.1M [S4] and $23.1M was raised [S3].', self.items()),
