@@ -1,0 +1,56 @@
+"""Review corrections: apply one mutation, run the date-context tests, restore.
+Usage: python mutate_review.py <worktree>. Runs the original D1-D8 again, then R1-R8."""
+import os, re, subprocess, sys
+WT = sys.argv[1]
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import ra106_mutate_defs  # noqa: E402  (D1-D8, copied verbatim from the first validation)
+
+CC = 'zelda_api/claim_context.py'
+MUTATIONS = ra106_mutate_defs.MUTATIONS + [
+    ('R1 citations after the stop move to the next sentence (old splitter)', CC,
+     "_BOUNDARY = re.compile(rf'[.!?][\"”’)]*(?:[ \\t]*{_REF_GROUP})*(?P<sep>\\s+|\\Z)|(?P<nl>\\n+)')\n",
+     "_BOUNDARY = re.compile(rf'[.!?](?P<sep>\\s+|\\Z)|(?P<nl>\\n+)')\n"),
+    ('R2 grouped refs split on commas only', CC,
+     "for r in re.split(r'[,;]', group)]\n", "for r in group.split(',')]\n"),
+    ('R3 questions and requests rewritten like statements', CC,
+     "        if guarded and not _asks(sentence):\n", "        if guarded:\n"),
+    ('R4 requests to management rewritten (questions only kept)', CC,
+     "    return body.rstrip('\"”’) ').endswith('?') or bool(_REQUEST_LEAD.match(body))\n",
+     "    return body.rstrip('\"”’) ').endswith('?')\n"),
+    ('R5 every cited sentence treated as a question (guard off)', CC,
+     "        if guarded and not _asks(sentence):\n", "        if guarded and not True:\n"),
+    ('R6 short numeric prose treated as a sibling figure (old walk)', CC,
+     "        if _figure_line(line):\n            continue                     # a sibling figure in the same list\n",
+     "        if len(line) <= 40 and re.search(r'\\d', line) and not _DATED_HEADING.search(line):\n            continue\n"),
+    ('R7 figure inside a prose line still gets the heading', CC,
+     "    if index is None or not _figure_line(_norm(lines[index])):\n", "    if index is None:\n"),
+    ('R8 citation glued to the text after removal', CC,
+     "                return ' ' if follows == '[' and match.group(0)[:1].isspace() else ''\n",
+     "                return ''\n"),
+]
+D5_HELPER = ra106_mutate_defs.D5_HELPER
+env = dict(os.environ, SECRET_KEY='ci-only-placeholder-key-not-for-production-use', DEBUG='True',
+           ALLOWED_HOSTS='localhost,127.0.0.1', EMAIL_HOST_USER='ci@example.invalid',
+           CELERY_TASK_ALWAYS_EAGER='True', CELERY_BROKER_URL='memory://', CELERY_RESULT_BACKEND='cache+memory://')
+only = sys.argv[2:] or None
+for name, rel, old, new in MUTATIONS:
+    if only and name.split()[0] not in only:
+        continue
+    path = os.path.join(WT, rel)
+    original = open(path, encoding='utf-8', newline='').read()
+    nl = '\r\n' if '\r\n' in original else '\n'
+    o, n = old.replace('\n', nl), new.replace('\n', nl)
+    assert original.count(o) == 1, (name, original.count(o))
+    mutated = original.replace(o, n)
+    if name.startswith('D5'):
+        mutated += D5_HELPER.replace('\n', nl)
+    try:
+        open(path, 'w', encoding='utf-8', newline='').write(mutated)
+        out = subprocess.run([sys.executable, 'manage.py', 'test', '--noinput', '--parallel', '1',
+                              'zelda_api.tests_claim_context_dates'],
+                             cwd=WT, env=env, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=900)
+        lines = [re.sub(r' \(zelda_api\.tests_claim_context_dates\.\w+\.\w+\)', '', l)
+                 for l in (out.stdout + out.stderr).splitlines() if re.match(r'^(FAIL|ERROR):|^Ran |^OK$|^FAILED', l)]
+        print('==', name); print('\n'.join(lines), flush=True)
+    finally:
+        open(path, 'w', encoding='utf-8', newline='').write(original)

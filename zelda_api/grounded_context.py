@@ -117,6 +117,14 @@ class GroundedItem:
     insight_id: Optional[int] = None
     claim_id: Optional[int] = None
     currency: str = ''
+    # Claim context (zelda_api/claim_context.py), never the claim's period:
+    # derived phrases only -- the source sentence itself never crosses here.
+    dated: bool = False                        # backed by a claim; dating rules apply
+    narrator: str = ''                         # who reports the figure, when not the company
+    source_context: str = ''                   # dated heading over it, e.g. "Traction by Apr-16"
+    as_of: str = ''                            # the figure's own period end, or 'not stated'
+    dates_not_as_of: Tuple[str, ...] = ()      # dates in its sentence that are not its as-of date
+    time_wording_allowed: Tuple[str, ...] = () # "to date" etc., only if its own source says so
 
     def __post_init__(self):
         if self.status not in STATES:
@@ -166,7 +174,7 @@ class GroundedContext:
 
         items = []
         items.extend(_claim_items(document, claims, report))
-        items.extend(_statement_items(document, insights))
+        items.extend(_statement_items(document, insights, claims))
         items.extend(_profile_items(document))
 
         # A run that found nothing to check is finished, not "not run" -- and
@@ -214,6 +222,10 @@ class GroundedContext:
                     'status': item.status,
                     **({'reason': item.reason} if item.reason else {}),
                     **({'confidence': round(item.confidence)} if item.confidence is not None else {}),
+                    **({'as_of': item.as_of} if item.dated else {}),
+                    **({'narrator': item.narrator} if item.narrator else {}),
+                    **({'source_context': item.source_context} if item.source_context else {}),
+                    **({'dates_not_as_of': list(item.dates_not_as_of)} if item.dates_not_as_of else {}),
                     **({'external': [
                         {k: v for k, v in (('role', e.role), ('value', e.value), ('source', e.source),
                                            ('origin', e.origin), ('period', e.period),
@@ -290,11 +302,37 @@ def _claim_items(document, claims, report):
             confidence=claim.confidence_in_extraction, value=claim.claimed_value_numeric,
             currency=claim.currency,
             external=external, claim_id=claim.id,
+            **claim_dating(claim),
         ))
     return items
 
 
-def _statement_items(document, insights):
+def claim_dating(claim):
+    """
+    A claim's dating context for the memo (RA-102 / RA-106). `as_of` comes from
+    the claim's own structured period and nothing else: a deck's year or a
+    slide heading is context, not the date a figure was counted.
+    """
+    from .claim_context import time_wording_in, unbound_dates
+
+    if claim.period_end:
+        as_of = claim.period_end.isoformat()
+    elif claim.period_fiscal_year:
+        as_of = f'FY{claim.period_fiscal_year}'
+    else:
+        as_of = 'not stated'
+    sentence = claim.source_sentence or ''
+    return {
+        'dated': True, 'narrator': claim.narrator or '', 'source_context': claim.source_context or '',
+        'as_of': as_of, 'dates_not_as_of': tuple(unbound_dates(sentence, claim.time_period)),
+        'time_wording_allowed': time_wording_in(sentence),
+    }
+
+
+def _statement_items(document, insights, claims=()):
+    by_figure = {}
+    for claim in claims:
+        by_figure.setdefault((' '.join((claim.claimed_value or '').split()), claim.page_number), claim)
     items = []
     for n, insight in enumerate(insights[:MAX_STATEMENTS], 1):
         # Positional metadata only: the chunk boundary forbids reading text here.
@@ -305,8 +343,19 @@ def _statement_items(document, insights):
             ref=f'S{n}', kind='statement', category=insight.category,
             statement=_excerpt(insight.insight_text), status=SELF_REPORTED,
             sources=sources, confidence=insight.confidence_score, insight_id=insight.id,
+            **_statement_dating(insight, locations, by_figure),
         ))
     return items
+
+
+def _statement_dating(insight, locations, by_figure):
+    """A statement that is a claim's own figure carries that claim's dating context."""
+    figure = ' '.join((insight.insight_text or '').split())
+    for page, _ in locations or [(None, None)]:
+        claim = by_figure.get((figure, page))
+        if claim is not None:
+            return claim_dating(claim)
+    return {}
 
 
 def profile_for_document(document):

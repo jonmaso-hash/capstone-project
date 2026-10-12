@@ -1,0 +1,128 @@
+Code d192779 (mutations applied to the working tree one at a time, then restored). D1-D8: the first validation's mutations, re-run. R1-R8: the review corrections.
+R3-R8 were re-run with PYTHONIOENCODING=utf-8 after the first harness run stopped at R3 on a console encoding error while printing (the file was restored by the harness).
+
+== D1 extraction drops narrator and heading
+ERROR: test_the_memo_is_told_as_of_narrator_and_context_but_not_the_sentence (kind='claim')
+ERROR: test_the_memo_is_told_as_of_narrator_and_context_but_not_the_sentence (kind='statement')
+ERROR: test_the_memo_is_told_as_of_narrator_and_context_but_not_the_sentence (statement='500M messages', kind='claim')
+ERROR: test_the_memo_is_told_as_of_narrator_and_context_but_not_the_sentence (statement='140 000+ bots', kind='claim')
+ERROR: test_the_memo_is_told_as_of_narrator_and_context_but_not_the_sentence (statement='140 000+ bots', kind='statement')
+ERROR: test_the_memo_is_told_as_of_narrator_and_context_but_not_the_sentence (statement='500M messages', kind='statement')
+FAIL: test_claims_keep_sentence_narrator_and_heading_but_no_period
+FAIL: test_generated_memo_cannot_present_the_listing_as_a_current_total
+Ran 25 tests in 3.713s
+FAILED (failures=2, errors=6)
+== D2 heading bound as the structured period (owner rule broken)
+FAIL: test_claims_keep_sentence_narrator_and_heading_but_no_period (claim='140 000+ bots')
+FAIL: test_claims_keep_sentence_narrator_and_heading_but_no_period (claim='500M messages')
+FAIL: test_truth_delta_comparison_and_score_are_unchanged
+Ran 25 tests in 3.842s
+FAILED (failures=3)
+== D3 memo time-wording guard disabled
+FAIL: test_generated_memo_cannot_present_the_listing_as_a_current_total
+FAIL: test_ic_memo_and_company_overview_show_the_guarded_text (surface='ic_memo')
+FAIL: test_ic_memo_and_company_overview_show_the_guarded_text (surface='overview')
+FAIL: test_writer_guards_citations_placed_after_the_stop_and_grouped
+FAIL: test_writer_keeps_research_questions_for_current_figures
+Ran 25 tests in 3.924s
+FAILED (failures=5)
+== D4 deck year used as the as-of date
+FAIL: test_the_memo_is_told_as_of_narrator_and_context_but_not_the_sentence (kind='claim')
+FAIL: test_the_memo_is_told_as_of_narrator_and_context_but_not_the_sentence (kind='statement')
+Ran 25 tests in 3.639s
+FAILED (failures=2)
+== D5 source sentence sent to the memo
+FAIL: test_the_memo_is_told_as_of_narrator_and_context_but_not_the_sentence
+Ran 25 tests in 3.734s
+FAILED (failures=1)
+== D6 guard ignores what the source itself says
+FAIL: test_grouped_references
+FAIL: test_wording_the_source_itself_uses_is_kept
+Ran 25 tests in 3.999s
+FAILED (failures=2)
+== D7 bare axis labels accepted as headings
+FAIL: test_prose_with_numbers_between_heading_and_figure_ends_the_block (between='Up 3x in 6 months')
+FAIL: test_prose_with_numbers_between_heading_and_figure_ends_the_block (between='Grew 40% since 2015')
+FAIL: test_prose_with_numbers_between_heading_and_figure_ends_the_block (between='3 markets launched in 2016')
+FAIL: test_prose_with_numbers_between_heading_and_figure_ends_the_block (between='12 employees hired.')
+FAIL: test_prose_with_numbers_between_heading_and_figure_ends_the_block (between='Over 2 years of growth')
+FAIL: test_prose_with_numbers_between_heading_and_figure_ends_the_block (between='Raised in 2015')
+FAIL: test_unrelated_dates_are_not_attached (case='chart axis value under axis month labels')
+Ran 25 tests in 3.578s
+FAILED (failures=7)
+== D8 the company counted as a narrator
+FAIL: test_the_company_or_no_one_is_not_a_narrator (sentence='ManyChat reports 140,000+ bots created.')
+FAIL: test_the_company_or_no_one_is_not_a_narrator (sentence='According to ManyChat, 500M messages were sent.')
+Ran 25 tests in 3.506s
+FAILED (failures=2)
+== R1 citations after the stop move to the next sentence (old splitter)
+FAIL: test_writer_guards_citations_placed_after_the_stop_and_grouped
+FAIL: test_a_citation_after_the_stop_never_moves_to_the_next_sentence
+FAIL: test_a_statement_next_to_a_question_is_still_guarded
+FAIL: test_citation_before_or_after_the_sentence_stop (case='after')
+FAIL: test_citation_before_or_after_the_sentence_stop (case='after, end of line')
+FAIL: test_grouped_references (case='semicolon group, after the stop')
+Ran 25 tests in 3.430s
+FAILED (failures=6)
+== R2 grouped refs split on commas only
+FAIL: test_grouped_references (case='semicolon group, after the stop')
+Ran 25 tests in 3.870s
+FAILED (failures=1)
+== R3 questions and requests rewritten like statements
+FAIL: test_writer_keeps_research_questions_for_current_figures
+FAIL: test_a_statement_next_to_a_question_is_still_guarded
+FAIL: test_questions_and_requests_for_current_figures_are_kept (text='What has ManyChat raised to date [S3]?')
+FAIL: test_questions_and_requests_for_current_figures_are_kept (text='How many bots are live currently? [S1]')
+FAIL: test_questions_and_requests_for_current_figures_are_kept (text='- Is the $23.1M [S3] the total raised to date?')
+FAIL: test_questions_and_requests_for_current_figures_are_kept (text='3. How many messages has the platform sent so far [S1]?')
+FAIL: test_questions_and_requests_for_current_figures_are_kept (text='Confirm the total raised to date [S3].')
+FAIL: test_questions_and_requests_for_current_figures_are_kept (text='• Ask management how many bots are active currently [S1].')
+FAIL: test_questions_and_requests_for_current_figures_are_kept (text='Q2: Verify whether 500M messages is the count to date [S1].')
+Ran 25 tests in 4.147s
+FAILED (failures=9)
+== R4 requests to management rewritten (questions only kept)
+FAIL: test_writer_keeps_research_questions_for_current_figures
+FAIL: test_questions_and_requests_for_current_figures_are_kept (text='Confirm the total raised to date [S3].')
+FAIL: test_questions_and_requests_for_current_figures_are_kept (text='• Ask management how many bots are active currently [S1].')
+FAIL: test_questions_and_requests_for_current_figures_are_kept (text='Q2: Verify whether 500M messages is the count to date [S1].')
+Ran 25 tests in 3.851s
+FAILED (failures=4)
+== R5 every cited sentence treated as a question (guard off)
+FAIL: test_generated_memo_cannot_present_the_listing_as_a_current_total
+FAIL: test_ic_memo_and_company_overview_show_the_guarded_text (surface='ic_memo')
+FAIL: test_ic_memo_and_company_overview_show_the_guarded_text (surface='overview')
+FAIL: test_writer_guards_citations_placed_after_the_stop_and_grouped
+FAIL: test_writer_keeps_research_questions_for_current_figures
+FAIL: test_a_citation_after_the_stop_never_moves_to_the_next_sentence
+FAIL: test_a_statement_next_to_a_question_is_still_guarded
+FAIL: test_citation_before_or_after_the_sentence_stop (case='before')
+FAIL: test_citation_before_or_after_the_sentence_stop (case='after')
+FAIL: test_citation_before_or_after_the_sentence_stop (case='after, no space')
+FAIL: test_citation_before_or_after_the_sentence_stop (case='after, end of line')
+FAIL: test_citation_before_or_after_the_sentence_stop (case='touching the phrase')
+FAIL: test_grouped_references (case='comma group')
+FAIL: test_grouped_references (case='semicolon group, after the stop')
+FAIL: test_grouped_references (case='adjacent groups')
+FAIL: test_grouped_references (case='one source allows, one does not')
+FAIL: test_memo_91s_to_date_is_removed_and_nothing_else_changes
+FAIL: test_other_current_wording_and_layout
+Ran 25 tests in 4.537s
+FAILED (failures=18)
+== R6 short numeric prose treated as a sibling figure (old walk)
+FAIL: test_prose_with_numbers_between_heading_and_figure_ends_the_block (between='Up 3x in 6 months')
+FAIL: test_prose_with_numbers_between_heading_and_figure_ends_the_block (between='Grew 40% since 2015')
+FAIL: test_prose_with_numbers_between_heading_and_figure_ends_the_block (between='3 markets launched in 2016')
+FAIL: test_prose_with_numbers_between_heading_and_figure_ends_the_block (between='12 employees hired.')
+FAIL: test_prose_with_numbers_between_heading_and_figure_ends_the_block (between='Over 2 years of growth')
+FAIL: test_prose_with_numbers_between_heading_and_figure_ends_the_block (between='Raised in 2015')
+Ran 25 tests in 3.948s
+FAILED (failures=6)
+== R7 figure inside a prose line still gets the heading
+FAIL: test_a_figure_inside_prose_gets_no_heading (line='We passed 500M messages in March')
+FAIL: test_a_figure_inside_prose_gets_no_heading (line='500M messages were sent by 40,000 bots')
+Ran 25 tests in 3.849s
+FAILED (failures=2)
+== R8 citation glued to the text after removal
+FAIL: test_citation_before_or_after_the_sentence_stop (case='touching the phrase')
+Ran 25 tests in 3.942s
+FAILED (failures=1)

@@ -92,6 +92,15 @@ class ClaimedDatapoint(models.Model):
         ('implied', "Company's own document; no other owner named"),
     ]
     ownership = models.CharField(max_length=10, choices=OWNERSHIP_CHOICES, blank=True)
+    # Context around the figure (zelda_api/claim_context.py), kept for readers
+    # and the memo, never used as the period below or by Truth Delta. Blank on
+    # rows recorded before it existed; never backfilled (RA-102 / RA-106).
+    source_sentence = models.TextField(blank=True, default='',
+                                       help_text='The whole source sentence the figure came from, as written')
+    narrator = models.CharField(max_length=255, blank=True, default='',
+                                help_text='Who the sentence says reports the figure, when not the company')
+    source_context = models.CharField(max_length=255, blank=True, default='',
+                                      help_text='A dated heading over the figure on its slide; context, not its period')
     # Structured period (zelda_api/claim_periods.py). Blank kind means no
     # usable period: recorded before periods existed, or none was stated.
     # Never backfilled. A fiscal year never implies an end date.

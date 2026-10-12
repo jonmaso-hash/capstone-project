@@ -1,0 +1,50 @@
+== D1 extraction drops narrator and heading
+ERROR: test_the_memo_is_told_as_of_narrator_and_context_but_not_the_sentence (kind='claim')
+ERROR: test_the_memo_is_told_as_of_narrator_and_context_but_not_the_sentence (kind='statement')
+ERROR: test_the_memo_is_told_as_of_narrator_and_context_but_not_the_sentence (statement='500M messages', kind='claim')
+ERROR: test_the_memo_is_told_as_of_narrator_and_context_but_not_the_sentence (statement='140 000+ bots', kind='claim')
+ERROR: test_the_memo_is_told_as_of_narrator_and_context_but_not_the_sentence (statement='140 000+ bots', kind='statement')
+ERROR: test_the_memo_is_told_as_of_narrator_and_context_but_not_the_sentence (statement='500M messages', kind='statement')
+FAIL: test_claims_keep_sentence_narrator_and_heading_but_no_period
+FAIL: test_generated_memo_cannot_present_the_listing_as_a_current_total
+Ran 15 tests in 3.434s
+FAILED (failures=2, errors=6)
+== D2 heading bound as the structured period (owner rule broken)
+FAIL: test_claims_keep_sentence_narrator_and_heading_but_no_period (claim='140 000+ bots')
+FAIL: test_claims_keep_sentence_narrator_and_heading_but_no_period (claim='500M messages')
+FAIL: test_truth_delta_comparison_and_score_are_unchanged
+Ran 15 tests in 3.481s
+FAILED (failures=3)
+== D3 memo time-wording guard disabled
+FAIL: test_generated_memo_cannot_present_the_listing_as_a_current_total
+FAIL: test_ic_memo_and_company_overview_show_the_guarded_text (surface='ic_memo')
+FAIL: test_ic_memo_and_company_overview_show_the_guarded_text (surface='overview')
+Ran 15 tests in 3.287s
+FAILED (failures=3)
+== D4 deck year used as the as-of date
+FAIL: test_the_memo_is_told_as_of_narrator_and_context_but_not_the_sentence (kind='claim')
+FAIL: test_the_memo_is_told_as_of_narrator_and_context_but_not_the_sentence (kind='statement')
+Ran 15 tests in 3.500s
+FAILED (failures=2)
+== D5 source sentence sent to the memo
+FAIL: test_the_memo_is_told_as_of_narrator_and_context_but_not_the_sentence
+Ran 15 tests in 3.629s
+FAILED (failures=1)
+== D6 guard ignores what the source itself says
+FAIL: test_wording_the_source_itself_uses_is_kept
+Ran 15 tests in 3.643s
+FAILED (failures=1)
+== D7 bare axis labels accepted as headings
+FAIL: test_claims_keep_sentence_narrator_and_heading_but_no_period (unit='messages')
+FAIL: test_the_memo_is_told_as_of_narrator_and_context_but_not_the_sentence (statement='500M messages', kind='claim')
+FAIL: test_the_memo_is_told_as_of_narrator_and_context_but_not_the_sentence (statement='500M messages', kind='statement')
+FAIL: test_the_traction_heading_dates_both_figures_under_it
+FAIL: test_unrelated_dates_are_not_attached (case='chart axis value under axis month labels')
+FAIL: test_unrelated_dates_are_not_attached (case='bare-year heading')
+Ran 15 tests in 3.308s
+FAILED (failures=6)
+== D8 the company counted as a narrator
+FAIL: test_the_company_or_no_one_is_not_a_narrator (sentence='ManyChat reports 140,000+ bots created.')
+FAIL: test_the_company_or_no_one_is_not_a_narrator (sentence='According to ManyChat, 500M messages were sent.')
+Ran 15 tests in 3.494s
+FAILED (failures=2)
