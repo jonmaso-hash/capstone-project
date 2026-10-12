@@ -1,0 +1,71 @@
+{
+ "browser": "Chrome (Claude in Chrome, INVENTOROFTUES), one new tab, http://127.0.0.1:8000 served by the run's isolated server",
+ "session_discipline": "One principal at a time. Sign-in through the real login form (fields set, form.requestSubmit()). Each signed-in walk ended with the nav account menu -> Sign Out, then a protected URL was reloaded to confirm the redirect to login. Staff completed the real staff-MFA challenge with a current TOTP code (fixture enrolled during the HTTP probe; only the code was computed, never printed with the key).",
+ "positive_controls": "Every principal: a page that must load was checked first (anonymous: home; Lite/paid: investor dashboard; owner: founder dashboard; staff: post-MFA page with the staff account menu) before any refusal was counted.",
+ "walks": {
+  "ANON": {
+   "control": {"url": "/", "h1": "Build relevant business connections. Understand the evidence.", "signed_in": false},
+   "company_overview /matchmaking/memo/profile/50/": "302 -> /accounts/login/?next=... (login form rendered)",
+   "ic_memo /api/v1/zelda/documents/3136/ic-memo/": "302 -> login",
+   "memo_api /api/v1/zelda/documents/3136/memo/": "HTTP 403 Forbidden (browsable API)"
+  },
+  "LITE pfmc_lite": {
+   "control": {"url": "/matchmaking/dashboard/investor/", "signed_in": true},
+   "company_overview": {"title": "Intelligence Memo: ManyChat | Interlink Foundry", "badge": "Zelda Lite Report",
+                        "overview_text": "ManyChat is a software company (the company states sector is Software [P2]) operating at Series A stage (the company states [P1]). Pitch Deck Hunt lists $23.1M raised [S3], though this figure has not been independently verified. As of the slide context dated 'Traction by Apr-16,' the company states it had deployed 140,000+ bots and processed 500M messages [S1, S2].",
+                        "pitch_deck_hunt": true, "traction_by_apr_16": true, "to_date": false, "so_far": false, "currently": false,
+                        "states_it_has_raised": false, "raw_python_list": false, "owner_review_panel": false, "profile_163m": false, "canary": false,
+                        "claims_line": "Limited public evidence: none of the 3 claims could be verified or contradicted against a public source.",
+                        "screenshot": "browser/lite_company_overview.jpg"},
+   "ic_memo": "404 (Page not found; Lite investors have no IC memo)",
+   "memo_api": {"status": "HTTP 200 OK", "tier": "lite", "locked": true, "pitch_deck_hunt": false, "to_date": false, "canary": false,
+                "note": "lite_sections.information_readiness lists 'Funding raised figure (self-reported, unverified): $23.1M [S3]' without the narrator"},
+   "truth_delta_page": {"stats": "N/A /100 NOT SCORED - LIMITED PUBLIC EVIDENCE | 3 CLAIMS ANALYZED | 0 VERIFIED | 3 NOT ESTABLISHED", "owner_review_panel": false, "canary": false},
+   "sign_out": "first click on the Sign Out element by accessibility ref did not sign out (menu item not visible); the menu was opened by clicking the visible toggle and Sign Out clicked -> /home/, then /matchmaking/memo/profile/50/ -> login"
+  },
+  "PAID pfmc_paid": {
+   "control": {"url": "/matchmaking/dashboard/investor/", "signed_in": true, "account_menu": "Account menu for pfmc_paid"},
+   "company_overview": {"badge": "Zelda Lite Report", "pitch_deck_hunt": true, "traction_by_apr_16": true, "to_date": false, "so_far": false,
+                        "currently": false, "states_it_has_raised": false, "raw_python_list": false, "owner_review_panel": false, "profile_163m": false,
+                        "canary": false, "claims_line": "Limited public evidence: none of the 3 claims could be verified or contradicted against a public source."},
+   "ic_memo": "404",
+   "truth_delta_page": {"stats": "3 CLAIMS ANALYZED | 0 VERIFIED | 3 NOT ESTABLISHED", "verification_not_available_placeholder": false,
+                        "loading_placeholder": false, "owner_review_panel": false, "canary": false,
+                        "note": "RA-113's 'Verification Not Available' text is not present in the rendered page"},
+   "sign_out": "nav menu -> Sign Out; /matchmaking/memo/profile/50/ -> login"
+  },
+  "OWNER pfmc_owner": {
+   "control": {"url": "/matchmaking/dashboard/founder/", "signed_in": true, "account_menu": "Account menu for pfmc_owner"},
+   "ic_memo": {"title": "AI Investment Committee Memo - ManyChat | Interlink Foundry", "badge": "Zelda Lite Memo", "upsell": "Zelda AI unlocks the full memo",
+               "section_coverage_shown": "31.2%", "pitch_deck_hunt": false, "traction_by_apr_16": true, "to_date": false, "so_far": false,
+               "currently": false, "raw_python_list": false, "canary": false, "screenshot": "browser/owner_ic_memo_lite.jpg",
+               "note": "visible funding line: 'Funding raised figure (self-reported, unverified): $23.1M [S3]' (no narrator)"},
+   "markdown_download": "redirected to the IC memo page (owner is not Premium)",
+   "truth_delta_page": {"stats": "3 CLAIMS ANALYZED | 0 VERIFIED | 3 NOT ESTABLISHED", "owner_review_panel": true,
+                        "panel_text": "Profile and deck figures to review | Only you can see this. ... | Previously raised: Choose a reporting currency on your profile before comparing these figures. | Profile last saved Oct 11, 2026; deck uploaded Oct 11, 2026. These are when each was saved, not when the figures were true.",
+                        "canary": false},
+   "company_overview": "403 Forbidden (by design: investor accounts or staff only, matchmaking/views.py _company_overview)",
+   "sign_out": "nav menu -> Sign Out; IC memo -> login"
+  },
+  "STAFF pfmc_staff": {
+   "control": {"after_mfa_url": "/accounts/choose-role/", "title": "Almost done - Interlink Foundry", "account_menu": "Account menu for pfmc_staff",
+               "note": "the staff fixture has no marketplace role, so post-login lands on choose-role"},
+   "ic_memo": {"badge": "Zelda AI - Full Memo", "section_coverage_shown": "100.0%",
+               "pitch_deck_hunt_lines": ["Executive summary: 'Pitch Deck Hunt lists $23.1M raised [S3], though this figure has not been independently verified.'",
+                                         "Financial analysis: 'Funding raised: Pitch Deck Hunt lists $23.1M raised [S3]; ...'"],
+               "as_of_april_2016_lines": ["upside_scenario: '... the platform's state as of April 2016 ...'", "base_scenario: '... meaningful early platform traction as of April 2016 [S1, S2] and stated funding of $23.1M [S3]'"],
+               "to_date": [], "so_far": [], "currently": [], "states_it_has_raised": false, "raw_python_list": false, "canary": false,
+               "counts": ["Claims checked: 3", "Not established - 3", "(of 3)"], "list_item_counts": [6, 3, 18, 10, 5],
+               "questions_for_management": "rendered as a 10-item bulleted list", "screenshot": "browser/staff_ic_memo_questions_list.jpg"},
+   "markdown_download": {"result": "Chrome saved the attachment to ~/Downloads/manychat-ic-memo.md (11,455 bytes, sha256 ed999eed486222dea9e6ee93e4145b6283badb3a2f0a6ad9d437eae0eb2b1a7e); copied as browser/staff_markdown_download.md",
+                         "pitch_deck_hunt": 2, "to_date": false, "raw_python_list": false, "canary": false,
+                         "counts": "Claims checked: 3 / Evidence coverage: 0 verified - 0 contradicted - 3 not established (of 3)",
+                         "section_coverage_shown": "100.0%", "analysis_confidence_shown": "23.8%"},
+   "memo_api": {"status": "HTTP 200 OK", "pitch_deck_hunt": 2, "to_date": false, "questions_for_management": "string of '- ' lines, not a Python list", "canary": false, "completeness_score": 0.2375},
+   "company_overview": {"badge": "Zelda AI - Full Report", "pitch_deck_hunt": true, "traction_by_apr_16": true, "to_date": false,
+                        "owner_review_panel": false, "canary": false, "claims_line": "none of the 3 claims could be verified or contradicted against a public source."},
+   "truth_delta_page": {"stats": "3 CLAIMS ANALYZED | 0 VERIFIED | 3 NOT ESTABLISHED", "owner_review_panel": false, "canary": false},
+   "sign_out": "nav menu -> Sign Out; IC memo -> login"
+  }
+ }
+}

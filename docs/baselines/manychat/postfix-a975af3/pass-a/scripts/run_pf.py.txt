@@ -1,0 +1,120 @@
+"""ManyChat post-fix Pass A run wrapper (scratchpad, not repo code).
+
+Isolation, enforced before Django serves or consumes anything:
+  * code: the detached worktree KCV-mc-postfix at origin/main;
+  * DB: an sqlite backup COPY of the dev DB (never the original);
+  * broker/result/cache: local Memurai DBs 8/9/10, which were empty before the run,
+    so this worker cannot consume any other task and nothing else consumes its tasks;
+  * the six paid keys blanked in os.environ (present-but-empty beats read_env);
+  * any pending migration refuses start (except mode migrate).
+Instrumentation (no repo change): every anthropic Messages.create call made in this
+process is appended to model_calls.jsonl (model, params, system, messages, reply
+text, usage). The API key lives on the client, never in these kwargs.
+"""
+import os, sys, json, datetime
+HERE = os.path.dirname(os.path.abspath(__file__))
+WT = r'C:\Users\jonathan\Desktop\KCV-mc-postfix'
+MAIN_ENV = r'C:\Users\jonathan\Desktop\KCV\.env'
+ORIGINAL_DB = r'C:\Users\jonathan\Desktop\KCV\db.sqlite3'
+COPY_DB = os.path.join(HERE, 'db_postfix_copy.sqlite3')
+PAID = ['FILED_API_KEY', 'COMPANYENRICH_API_KEY', 'NEWS_API_KEY', 'DATA4B2B_API_KEY', 'USPTO_ODP_API_KEY', 'CRUNCHBASE_API_KEY']
+REDIS = {'CELERY_BROKER_URL': 'redis://localhost:6379/8', 'CELERY_RESULT_BACKEND': 'redis://localhost:6379/9',
+         'CACHE_URL': 'redis://localhost:6379/10'}
+mode, rest = sys.argv[1], sys.argv[2:]
+for k in PAID:
+    os.environ[k] = ''
+os.environ.update(REDIS)
+os.environ['DATABASE_URL'] = 'sqlite:///' + COPY_DB.replace('\\', '/')
+os.environ['DJANGO_SETTINGS_MODULE'] = 'config.settings'
+os.chdir(WT)
+sys.path.insert(0, WT)
+import environ
+environ.Env.read_env(MAIN_ENV)
+import django
+django.setup()
+from django.conf import settings
+from django.db import connection
+label = '[%s pid=%d]' % (mode, os.getpid())
+keys = {k: bool(getattr(settings, k, os.environ.get(k))) for k in PAID + ['ANTHROPIC_API_KEY']}
+print('BASELINE-ENV-CHECK', label, keys, flush=True)
+from ops.management.commands.preflight import effective_targets, is_local, redacted, pending_migrations
+problems = []
+for name, uri in effective_targets():
+    loc = is_local(uri)
+    print('BROKER-CHECK', label, name, redacted(uri), 'local=%s' % loc,
+          'redis_db=%s' % (uri.rstrip('/').split('/')[-1] if uri and uri.startswith('redis://') else '-'), flush=True)
+    if not loc:
+        problems.append('remote ' + name)
+    if uri and 'localhost:6379/' in uri and not uri.rstrip('/').split('/')[-1] in ('8', '9', '10'):
+        problems.append('not the isolated redis db: ' + name)
+db_name = str(settings.DATABASES['default']['NAME'])
+same = os.path.normcase(os.path.abspath(db_name)) == os.path.normcase(os.path.abspath(ORIGINAL_DB))
+print('DB-CHECK', label, 'name=%s' % db_name, 'is_copy=%s' % (os.path.normcase(os.path.abspath(db_name)) == os.path.normcase(COPY_DB)),
+      'is_original=%s' % same, flush=True)
+if same or os.path.normcase(os.path.abspath(db_name)) != os.path.normcase(COPY_DB):
+    problems.append('database is not the isolated copy')
+pend = pending_migrations()
+from django.db.migrations.recorder import MigrationRecorder
+applied = MigrationRecorder(connection).applied_migrations()
+def has(app, num):
+    return any(a == app and n.startswith(num) for (a, n) in applied)
+print('SCHEMA-CHECK', label, 'pending=%d' % len(pend), pend,
+      'zelda_api.0035=%s' % has('zelda_api', '0035'), 'zelda_api.0044=%s' % has('zelda_api', '0044'),
+      'matchmaking.0083=%s' % has('matchmaking', '0083'), 'matchmaking.0095=%s' % has('matchmaking', '0095'), flush=True)
+print('EAGER-CHECK', label, 'CELERY_TASK_ALWAYS_EAGER=%s' % settings.CELERY_TASK_ALWAYS_EAGER, flush=True)
+for k in PAID:
+    if keys[k]:
+        problems.append('paid key set ' + k)
+if not keys['ANTHROPIC_API_KEY']:
+    problems.append('anthropic key missing')
+if pend and mode != 'migrate':
+    problems.append('%d pending migrations' % len(pend))
+if problems:
+    print('REFUSING TO START', label, problems, flush=True)
+    sys.exit(1)
+
+
+def instrument():
+    from anthropic.resources.messages.messages import Messages
+    original = Messages.create
+    log = os.path.join(HERE, 'model_calls.jsonl')
+
+    def create(self, *args, **kwargs):
+        started = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        response = original(self, *args, **kwargs)
+        try:
+            record = {'process': label, 'started': started, 'request': {k: v for k, v in kwargs.items()},
+                      'response': {'id': getattr(response, 'id', None), 'model': getattr(response, 'model', None),
+                                   'stop_reason': getattr(response, 'stop_reason', None),
+                                   'text': [getattr(b, 'text', None) for b in (getattr(response, 'content', None) or [])],
+                                   'usage': {k: getattr(response.usage, k, None) for k in ('input_tokens', 'output_tokens')}}}
+            with open(log, 'a', encoding='utf-8') as f:
+                f.write(json.dumps(record, default=str, ensure_ascii=False) + '\n')
+        except Exception as e:                       # logging must never change the run
+            print('INSTRUMENT-ERROR', label, type(e).__name__, flush=True)
+        return response
+    Messages.create = create
+    print('MODEL-CALL-LOG installed', label, log, flush=True)
+
+
+from django.core.management import call_command
+if mode == 'check':
+    print('CHECK OK', label)
+elif mode == 'migrate':
+    call_command('migrate', *rest)
+elif mode == 'preflight':
+    call_command('preflight', local=True)
+elif mode == 'server':
+    instrument()
+    call_command('runserver', '127.0.0.1:8000', use_reloader=False)
+elif mode == 'worker':
+    instrument()
+    from config.celery import app
+    app.worker_main(['worker', '-l', 'info', '--pool=solo', '--concurrency=1', '-n', 'mcpostfix@%h'])
+elif mode == 'script':
+    path = rest[0]
+    sys.argv = [path] + rest[1:]
+    code = open(path, encoding='utf-8').read()
+    exec(compile(code, path, 'exec'), {'__name__': '__main__'})
+else:
+    raise SystemExit('unknown mode ' + mode)

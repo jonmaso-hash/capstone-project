@@ -1,0 +1,108 @@
+Invalid line: Truth_Delta_3-Report_Credit_Pack =price_1UNjeJDsh22gDRCcr3XE4qHO
+BASELINE-ENV-CHECK [worker pid=12900] {'FILED_API_KEY': False, 'COMPANYENRICH_API_KEY': False, 'NEWS_API_KEY': False, 'DATA4B2B_API_KEY': False, 'USPTO_ODP_API_KEY': False, 'CRUNCHBASE_API_KEY': False, 'ANTHROPIC_API_KEY': True}
+BROKER-CHECK [worker pid=12900] broker (write) redis://localhost local=True redis_db=8
+BROKER-CHECK [worker pid=12900] broker (read) redis://localhost local=True redis_db=8
+BROKER-CHECK [worker pid=12900] result backend redis://localhost local=True redis_db=9
+BROKER-CHECK [worker pid=12900] cache redis://localhost local=True redis_db=10
+DB-CHECK [worker pid=12900] name=C:/Users/jonathan/AppData/Local/Temp/claude/C--Users-jonathan-Desktop-KCV/8edb8be9-5c85-488f-a1b8-020dd6a9a3c0/scratchpad/mcpost/db_postfix_copy.sqlite3 is_copy=True is_original=False
+SCHEMA-CHECK [worker pid=12900] pending=0 [] zelda_api.0035=True zelda_api.0044=True matchmaking.0083=True matchmaking.0095=True
+EAGER-CHECK [worker pid=12900] CELERY_TASK_ALWAYS_EAGER=False
+MODEL-CALL-LOG installed [worker pid=12900] C:\Users\jonathan\AppData\Local\Temp\claude\C--Users-jonathan-Desktop-KCV\8edb8be9-5c85-488f-a1b8-020dd6a9a3c0\scratchpad\mcpost\model_calls.jsonl
+ 
+ -------------- mcpostfix@inventoroftues v5.6.3 (recovery)
+--- ***** ----- 
+-- ******* ---- Windows-11-10.0.26200-SP0 2026-10-11 20:17:43
+- *** --- * --- 
+- ** ---------- [config]
+- ** ---------- .> app:         config:0x21720d992b0
+- ** ---------- .> transport:   redis://localhost:6379/8
+- ** ---------- .> results:     redis://localhost:6379/9
+- *** --- * --- .> concurrency: 1 (solo)
+-- ******* ---- .> task events: OFF (enable -E to monitor tasks in this worker)
+--- ***** ----- 
+ -------------- [queues]
+                .> celery           exchange=celery(direct) key=celery
+                
+
+[tasks]
+  . accounts.tasks.delete_stored_file
+  . accounts.tasks.delete_stream_user
+  . accounts.tasks.prune_rate_limit_events
+  . billing.tasks.fulfill_zelda_order
+  . billing.tasks.monitor_zelda_order
+  . growth.tasks.generate_quarterly_insight_report
+  . matchmaking.product_analytics.deliver_mixpanel_event
+  . matchmaking.tasks.ensure_next_month_partition
+  . matchmaking.tasks.grade_buyer_prediction_snapshots
+  . matchmaking.tasks.grade_investor_prediction_snapshots
+  . matchmaking.tasks.mark_milestone_change_task
+  . matchmaking.tasks.refresh_matches_for_founder_task
+  . matchmaking.tasks.refresh_matches_for_investor_task
+  . matchmaking.tasks.send_priority_match_alerts
+  . matchmaking.tasks.send_weekly_digests
+  . matchmaking.tasks.snapshot_buyer_predictions
+  . matchmaking.tasks.snapshot_investor_predictions
+  . ops.tasks.send_bulk_announcement
+  . zelda_api.entity_verification_tasks.run_entity_check
+  . zelda_api.entity_verification_tasks.verify_entity_integrity
+  . zelda_api.tasks.analyze_document_insights
+  . zelda_api.tasks.batch_process_unprocessed_documents
+  . zelda_api.tasks.cleanup_old_documents
+  . zelda_api.tasks.embed_document_chunks
+  . zelda_api.tasks.generate_intelligence_memo
+  . zelda_api.tasks.generate_peer_market_benchmark
+  . zelda_api.tasks.notify_document_processed
+  . zelda_api.tasks.process_document_chunking_only
+  . zelda_api.tasks.process_document_pipeline
+  . zelda_api.tasks.process_valuation_document_task
+  . zelda_api.truth_delta_tasks.extract_claims_from_insights
+  . zelda_api.truth_delta_tasks.verify_document_truth_delta
+
+[2026-10-11 20:17:46,021: INFO/MainProcess] Connected to redis://localhost:6379/8
+[2026-10-11 20:17:48,189: INFO/MainProcess] mingle: searching for neighbors
+[2026-10-11 20:17:55,621: INFO/MainProcess] mingle: all alone
+[2026-10-11 20:18:05,821: INFO/MainProcess] mcpostfix@inventoroftues ready.
+[2026-10-11 20:20:28,270: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_investor_task[07d53367-7114-47fc-9648-7ca5088cd275] received
+[2026-10-11 20:20:30,948: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_investor_task[07d53367-7114-47fc-9648-7ca5088cd275] succeeded in 2.6775260999565944s: None
+[2026-10-11 20:20:30,956: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_investor_task[1f7bbcfb-fd7c-4cd1-ba04-34dc745b8ef8] received
+[2026-10-11 20:20:31,487: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_investor_task[1f7bbcfb-fd7c-4cd1-ba04-34dc745b8ef8] succeeded in 0.5306172999553382s: None
+[2026-10-11 20:21:26,213: INFO/MainProcess] Task zelda_api.tasks.process_document_pipeline[1c993e74-4a8a-40ae-af1c-525d9e2d9865] received
+[2026-10-11 20:21:26,214: INFO/MainProcess] [Celery] Starting pipeline processing for document 3136
+[2026-10-11 20:21:26,232: INFO/MainProcess] Starting pipeline v2 for manychat_series_a_audit_deck.pptx
+[2026-10-11 20:21:26,249: INFO/MainProcess] Chunking: manychat_series_a_audit_deck.pptx
+[2026-10-11 20:21:26,267: INFO/MainProcess] Cleared existing chunks for 3136
+[2026-10-11 20:21:26,439: INFO/MainProcess] Created 12 chunks
+[2026-10-11 20:21:26,452: INFO/MainProcess] Embedding: manychat_series_a_audit_deck.pptx
+[2026-10-11 20:21:26,654: INFO/MainProcess] Embedded 12 chunks
+[2026-10-11 20:21:26,667: INFO/MainProcess] Analyzing: manychat_series_a_audit_deck.pptx
+[2026-10-11 20:21:26,834: INFO/MainProcess] Extracted 3 insights with dynamic confidence
+[2026-10-11 20:21:26,881: INFO/MainProcess] Triggering Truth Delta: manychat_series_a_audit_deck.pptx
+[2026-10-11 20:21:26,888: INFO/MainProcess] Truth Delta queued for document 3136
+[2026-10-11 20:21:26,891: INFO/MainProcess] Entity Integrity queued for document 3136
+[2026-10-11 20:21:26,891: INFO/MainProcess] Pipeline complete for manychat_series_a_audit_deck.pptx; memo follows verification
+[2026-10-11 20:21:26,891: INFO/MainProcess] [Celery] Pipeline complete for document 3136
+[2026-10-11 20:21:26,894: INFO/MainProcess] Task zelda_api.tasks.process_document_pipeline[1c993e74-4a8a-40ae-af1c-525d9e2d9865] succeeded in 0.6797500000102445s: {'status': 'success', 'document_id': 3136, 'chunks': 12, 'insights': 3}
+[2026-10-11 20:21:26,899: INFO/MainProcess] Task zelda_api.truth_delta_tasks.extract_claims_from_insights[9331642e-8e15-42f6-8d5a-c6611415313e] received
+[2026-10-11 20:21:26,900: INFO/MainProcess] [Truth Delta] Extracting claims from insights for document 3136
+[2026-10-11 20:21:27,000: INFO/MainProcess] [Truth Delta] Created 3 claims from insights
+[2026-10-11 20:21:27,004: INFO/MainProcess] Task zelda_api.truth_delta_tasks.extract_claims_from_insights[9331642e-8e15-42f6-8d5a-c6611415313e] succeeded in 0.10399609990417957s: {'status': 'success', 'claims_created': 3}
+[2026-10-11 20:21:27,009: INFO/MainProcess] Task zelda_api.entity_verification_tasks.verify_entity_integrity[161cc29f-50ed-410f-9f48-92e7f2076d46] received
+[2026-10-11 20:21:31,224: INFO/MainProcess] Task zelda_api.entity_verification_tasks.verify_entity_integrity[161cc29f-50ed-410f-9f48-92e7f2076d46] succeeded in 4.214295000070706s: {'status': 'success', 'document_id': 3136, 'report_id': 35}
+[2026-10-11 20:21:31,230: INFO/MainProcess] Task zelda_api.truth_delta_tasks.verify_document_truth_delta[3674dbff-f3a6-4cc3-9635-ad7a707ad94e] received
+[2026-10-11 20:21:31,258: INFO/MainProcess] No Crunchbase API key configured — skipping this source.
+[2026-10-11 20:21:31,259: INFO/MainProcess] Skipping crunchbase — not configured or unreachable.
+[2026-10-11 20:21:31,259: INFO/MainProcess] No News API key configured — skipping this source.
+[2026-10-11 20:21:31,259: INFO/MainProcess] Skipping news — not configured or unreachable.
+[2026-10-11 20:21:31,259: INFO/MainProcess] Fetching ManyChat from SEC EDGAR
+[2026-10-11 20:21:31,261: INFO/MainProcess] No external data found for ManyChat
+[2026-10-11 20:21:31,345: INFO/MainProcess] No News API key configured — skipping this source.
+[2026-10-11 20:21:31,435: INFO/MainProcess] Task zelda_api.truth_delta_tasks.verify_document_truth_delta[3674dbff-f3a6-4cc3-9635-ad7a707ad94e] succeeded in 0.20445960003416985s: {'status': 'success', 'document_id': 3136, 'report_id': 88}
+[2026-10-11 20:21:31,440: INFO/MainProcess] Task zelda_api.tasks.generate_intelligence_memo[3f4a7992-16d0-484f-846b-1c2d96574bed] received
+[2026-10-11 20:22:21,172: INFO/MainProcess] HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+[2026-10-11 20:22:21,258: INFO/MainProcess] [Anthropic usage] memo for document 3136: input_tokens=3026, output_tokens=2288
+[2026-10-11 20:22:21,374: INFO/MainProcess] Claude memo generated for document 3136
+[2026-10-11 20:22:21,387: INFO/MainProcess] Memo generated for document 3136
+[2026-10-11 20:22:21,393: INFO/MainProcess] Task zelda_api.tasks.generate_intelligence_memo[3f4a7992-16d0-484f-846b-1c2d96574bed] succeeded in 49.95270719996188s: {'status': 'success', 'memo_id': 94}
+[2026-10-11 20:22:21,403: INFO/MainProcess] Task zelda_api.tasks.notify_document_processed[83f8288d-1cb0-4738-9f5f-137899f5f212] received
+[2026-10-11 20:22:21,419: INFO/MainProcess] Document manychat_series_a_audit_deck.pptx processed for user pfmc_owner
+[2026-10-11 20:22:21,644: INFO/MainProcess] Task zelda_api.tasks.notify_document_processed[83f8288d-1cb0-4738-9f5f-137899f5f212] succeeded in 0.24017190001904964s: {'status': 'notified', 'user_id': 321}

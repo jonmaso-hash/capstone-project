@@ -1,0 +1,64 @@
+"""Assemble the run record into the post-fix evidence directory (no DB access)."""
+import os, re, json, shutil, hashlib
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT = r'C:\Users\jonathan\Desktop\KCV-mc-postfix\docs\baselines\manychat\postfix-a975af3\pass-a'
+SHOTS = r'C:\Users\jonathan\AppData\Local\Temp\claude-chrome-screenshots-dqHUQg'
+os.makedirs(os.path.join(OUT, 'browser'), exist_ok=True)
+os.makedirs(os.path.join(OUT, 'process'), exist_ok=True)
+os.makedirs(os.path.join(OUT, 'scripts'), exist_ok=True)
+
+
+def read(name, enc='utf-8'):
+    return open(os.path.join(HERE, name), encoding=enc, errors='replace').read()
+
+
+def lines(name, pat):
+    return [l for l in read(name).splitlines() if re.match(pat, l)]
+
+
+CHECK = r'^(BASELINE-ENV-CHECK|BROKER-CHECK|DB-CHECK|SCHEMA-CHECK|EAGER-CHECK|MODEL-CALL-LOG|REFUSING|CHECK OK|preflight ok)'
+fixtures = json.loads(read('fixtures.txt').split('FIXTURES ', 1)[1])
+setup = {
+    'code': {'worktree': r'C:\Users\jonathan\Desktop\KCV-mc-postfix', 'head': 'a975af307f87d6d488762d091fde518ada028817',
+             'head_subject': 'Merge pull request #278 from jonmaso-hash/fix/funding-asof-attribution',
+             'contains': {'d93f2e3': True, 'd192779': True, '8c5253c': True}, 'local_py_or_template_changes': 0},
+    'database': {'original': r'C:\Users\jonathan\Desktop\KCV\db.sqlite3', 'run_db': 'sqlite backup copy in the session scratchpad',
+                 'original_sha256_before': read('orig_db_sha_before.txt').split()[0],
+                 'original_sha256_after': read('orig_db_sha_after.txt').split()[0],
+                 'gate_refusal_before_migrate': lines('gate_refusal_before_migrate.txt', CHECK),
+                 'migrate_on_copy': [l for l in read('migrate_copy.txt').splitlines() if 'Applying' in l],
+                 'check_after_migrate': lines('check_after_migrate.txt', CHECK)},
+    'broker': {'isolation': 'local Memurai, broker db 8, results db 9, cache db 10 (all empty before the run); worker consumes queue "celery" on db 8 only',
+               'redis_before_fixtures_db8': '3 kombu binding keys, no queued tasks', 'redis_after': read('redis_after.txt').splitlines()},
+    'preflight_local': lines('preflight_local.txt', CHECK),
+    'server_checks': lines('server.log', CHECK),
+    'worker_checks': lines('worker.log', CHECK),
+    'memwatch': read('memwatch.log', 'utf-16').splitlines() if read('memwatch.log').startswith('\ufeff') or '\x00' in read('memwatch.log') else read('memwatch.log').splitlines(),
+    'fixtures': fixtures,
+    'deck': {'path': r'~\Downloads\manychat_series_a_audit_deck.pptx', 'sha256_on_disk': read('deck_sha_disk.txt').split()[0],
+             'key_sha256': 'be7a7171bbc84b9895a45adfbc41f2533f3d23b3a4a561c82a8d9de6b94f3ef1'},
+    'upload': read('upload.txt').splitlines(),
+    'frozen_rows': {'memo_hashes_before': read('orig_memo_before.txt').splitlines(), 'memo_hashes_after': read('orig_memo_after.txt').splitlines(),
+                    'docs_3132_3133_rows_identical': read('orig_postcheck_before.txt') == read('orig_postcheck_after.txt')},
+}
+json.dump(setup, open(os.path.join(OUT, '00_setup.json'), 'w', encoding='utf-8', newline='\n'), indent=1, ensure_ascii=False)
+
+chain = [l for l in read('worker.log').splitlines() if re.search(r'Task .* (received|succeeded|failed|raised)|removed unsupported|Anthropic usage', l)]
+open(os.path.join(OUT, '06_worker_chain.txt'), 'w', encoding='utf-8', newline='\n').write('\n'.join(chain) + '\n')
+
+# All model calls (1 memo call in the worker + 7 /ask/ query-extraction calls in the server).
+calls = [json.loads(l) for l in read('model_calls.jsonl').splitlines() if l.strip()]
+json.dump({'note': 'Every anthropic Messages.create call in the run processes, recorded in-process by the run wrapper.',
+           'calls': calls}, open(os.path.join(OUT, '09c_all_model_calls.json'), 'w', encoding='utf-8', newline='\n'), indent=1, ensure_ascii=False)
+
+shutil.copy(os.path.join(HERE, 'server.log'), os.path.join(OUT, 'process', 'server.log.txt'))
+shutil.copy(os.path.join(HERE, 'worker.log'), os.path.join(OUT, 'process', 'worker.log.txt'))
+for name in ('run_pf.py', 'setup_fixtures.py', 'upload.py', 'dump_pf.py', 'probe.py', 'probe_cfg.json', 'assemble.py'):
+    shutil.copy(os.path.join(HERE, name), os.path.join(OUT, 'scripts', name + '.txt'))
+for src, dst in (('screenshot-1791775649769-24.jpg', 'lite_company_overview.jpg'),
+                 ('screenshot-1791775777861-25.jpg', 'owner_ic_memo_lite.jpg'),
+                 ('screenshot-1791775865437-26.jpg', 'staff_ic_memo_questions_list.jpg')):
+    shutil.copy(os.path.join(SHOTS, src), os.path.join(OUT, 'browser', dst))
+md = os.path.expanduser(r'~\Downloads\manychat-ic-memo.md')
+shutil.copy(md, os.path.join(OUT, 'browser', 'staff_markdown_download.md'))
+print('assembled; markdown sha256', hashlib.sha256(open(md, 'rb').read()).hexdigest())
