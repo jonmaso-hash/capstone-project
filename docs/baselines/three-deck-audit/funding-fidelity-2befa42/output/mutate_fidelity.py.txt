@@ -1,0 +1,62 @@
+"""Apply one mutation, run tests_funding_fidelity, restore. Usage: python mutate_fidelity.py <worktree> [ids...]"""
+import os, re, subprocess, sys
+WT = sys.argv[1]
+FF = 'zelda_api/funding_fidelity.py'
+PL = 'zelda_api/intelligence_pipeline.py'
+MUTATIONS = [
+    ('F1 attribution off', FF,
+     "        for rule in (_no_event, _no_premise, _attribute, _profile_undated):\n",
+     "        for rule in (_no_event, _no_premise, _profile_undated):\n"),
+    ('F2 "self-reported" left in place (always insert)', FF,
+     "        if not others and _SELF_REPORTED.search(sentence):\n", "        if False:\n"),
+    ('F3 "self-reported" reassigned even when it covers other figures', FF,
+     "        if not others and _SELF_REPORTED.search(sentence):\n", "        if _SELF_REPORTED.search(sentence):\n"),
+    ('F4 reported funding kept as "the $X raise"', FF,
+     "        for rule in (_no_event, _no_premise, _attribute, _profile_undated):\n",
+     "        for rule in (_no_premise, _attribute, _profile_undated):\n"),
+    ('F5 raise premises kept', FF,
+     "        for rule in (_no_event, _no_premise, _attribute, _profile_undated):\n",
+     "        for rule in (_no_event, _attribute, _profile_undated):\n"),
+    ('F6 premises rewritten even when a raise is in the evidence', FF,
+     "    if facts.raise_supported:\n        return sentence\n", ""),
+    ('F7 profile values dated by the slide (label off)', FF,
+     "        for rule in (_no_event, _no_premise, _attribute, _profile_undated):\n",
+     "        for rule in (_no_event, _no_premise, _attribute):\n"),
+    ('F8 profile label added without a date', FF,
+     "    if not _ANY_DATE.search(_REF.sub('', sentence)):\n        return sentence\n", ""),
+    ('F9 pipeline does not apply the guard', PL,
+     "                guarded, changes = guard_funding_fidelity(value, facts)\n                if changes:\n",
+     "                guarded, changes = guard_funding_fidelity(value, facts)\n                if False:\n"),
+    ('F10 figure phrase not extended ("$23.1M (per ...) raised")', FF,
+     "            end = _FIGURE_TAIL.match(sentence, found.end()).end()\n", "            end = found.end()\n"),
+    ('F11 a zero "Raising (profile)" counts as a raise', FF,
+     "float(amount.group(1).replace(',', '') or 0) > 0)", "float(amount.group(1).replace(',', '') or 0) >= 0)"),
+    ('F12 narrator inserted even when the sentence already names it', FF,
+     "        if not found or entry.narrator.lower() in sentence.lower():\n", "        if not found:\n"),
+    ('F13 mixed-source sentence keeps "the company states"', FF,
+     "            if states and states.start() < found.start():\n", "            if False:\n"),
+    ('F14 "$23.1M listed" split by the attribution', FF,
+     "(?:funding|raised|figure|total|listed|reported))*')", "(?:funding|raised|figure|total))*')"),
+]
+env = dict(os.environ, SECRET_KEY='ci-only-placeholder-key-not-for-production-use', DEBUG='True',
+           ALLOWED_HOSTS='localhost,127.0.0.1', EMAIL_HOST_USER='ci@example.invalid', PYTHONIOENCODING='utf-8',
+           CELERY_TASK_ALWAYS_EAGER='True', CELERY_BROKER_URL='memory://', CELERY_RESULT_BACKEND='cache+memory://')
+only = sys.argv[2:] or None
+for name, rel, old, new in MUTATIONS:
+    if only and name.split()[0] not in only:
+        continue
+    path = os.path.join(WT, rel)
+    original = open(path, encoding='utf-8', newline='').read()
+    nl = '\r\n' if '\r\n' in original else '\n'
+    o, n = old.replace('\n', nl), new.replace('\n', nl)
+    assert original.count(o) == 1, (name, original.count(o))
+    try:
+        open(path, 'w', encoding='utf-8', newline='').write(original.replace(o, n))
+        out = subprocess.run([sys.executable, 'manage.py', 'test', '--noinput', '--parallel', '1', 'zelda_api.tests_funding_fidelity'],
+                             cwd=WT, env=env, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=900)
+        lines = [re.sub(r' \(zelda_api\.tests_funding_fidelity\.\w+\.\w+\)', '', l)
+                 for l in (out.stdout + out.stderr).splitlines() if re.match(r'^(FAIL|ERROR):|^Ran |^OK$|^FAILED', l)]
+        print('==', name)
+        print('\n'.join(lines), flush=True)
+    finally:
+        open(path, 'w', encoding='utf-8', newline='').write(original)

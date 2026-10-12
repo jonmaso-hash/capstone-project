@@ -1,0 +1,24 @@
+"""Run the funding-fidelity guard over memo 94's stored sections (read from the committed evidence JSON)
+with memo 94's actual GroundedContext items (from the committed memo-input record). No DB access."""
+import json, sys
+from types import SimpleNamespace as NS
+WT = r'C:\Users\jonathan\Desktop\KCV-funding-fidelity'
+EV = r'C:\Users\jonathan\Desktop\KCV-mc-postfix\docs\baselines\manychat\postfix-a975af3\pass-a'
+sys.path.insert(0, WT)
+from zelda_api.funding_fidelity import funding_facts, guard_funding_fidelity
+payload = json.load(open(EV + r'\09a_grounded_context_rebuilt.json', encoding='utf-8'))['payload']
+items = [NS(ref=i['ref'], kind=i['kind'], category=i['category'], statement=i['statement'], narrator=i.get('narrator', ''),
+            sources=tuple(NS(profile_field=s.get('profile_field', '')) for s in i['sources'])) for i in payload['items']]
+facts = funding_facts(items)
+print('FACTS', facts.narrated, [p.pattern for p in facts.funding_figures], sorted(facts.profile_refs), 'raise_supported', facts.raise_supported)
+memo = json.load(open(EV + r'\09_memo.json', encoding='utf-8'))['memo']
+for key, value in memo.items():
+    if not isinstance(value, str):
+        continue
+    new, changes = guard_funding_fidelity(value, facts)
+    if changes:
+        print('\n==', key, changes)
+        for a, b in zip(value.splitlines(), new.splitlines()):
+            if a != b:
+                print('  -', a)
+                print('  +', b)
