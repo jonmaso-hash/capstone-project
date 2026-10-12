@@ -369,7 +369,8 @@ class MemoWriterTests(TestCase):
         with mock.patch.object(truth_delta_tasks.verify_document_truth_delta, 'delay'):
             truth_delta_tasks.extract_claims_from_insights(self.doc.id)
 
-    def generate(self):
+    def generate(self, build=None):
+        """`build(s1=, s2=, s3=, c1=, profile=)` replaces the default (memo 94) reply with another memo's sentences."""
         from .intelligence_pipeline import ZeldaIntelligencePipelineV2
         from .tests import grounded_context_for
         context = grounded_context_for(self.doc)
@@ -397,6 +398,8 @@ class MemoWriterTests(TestCase):
                 'What is the intended use of proceeds from this raise, broken down by category?'],
             'evidence_level': 'LITTLE_EVIDENCE',
         }
+        if build is not None:
+            sections = {**build(s1=s1, s2=s2, s3=s3, c1=c1, profile=profile), 'evidence_level': 'LITTLE_EVIDENCE'}
         response = mock.Mock()
         response.content = [mock.Mock(text=json.dumps(sections))]
         response.usage = mock.Mock(input_tokens=1, output_tokens=1)
@@ -473,3 +476,184 @@ class MemoWriterTests(TestCase):
         self.assertIn(f'{NO_PREMISE}, broken down by category?', markdown)
         self.assertIn(PROFILE_UNDATED, markdown)
         self.assertIn('Pitch Deck Hunt lists $23.1M raised', surfaces['investor company overview (Lite)'].content.decode())
+
+    def test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers(self):
+        # Memo 95 (document 3137; owner grade: partial pass), verbatim, refs mapped to this context.
+        def memo95(s1, s2, s3, c1, profile):
+            return {
+                'information_readiness': f'Score: 10/100\nPresent:\n• Self-reported funding raised: $23.1M [{s3}]',
+                'what_would_change_the_picture': (
+                    'The single most important missing piece is a revenue and cost schedule — ideally '
+                    'accountant-reviewed — covering at minimum the twelve months to the deck date, showing monthly '
+                    'recurring revenue, gross margin, and burn rate. This alone would allow the traction figures '
+                    f'[{s1}, {s2}] to be interpreted in the context of actual monetisation and would anchor assessment '
+                    f'of the $23.1M funding figure [{s3}] against remaining runway.'),
+                'base_scenario': (
+                    f'Taking the self-reported figures at face value [{s1}, {s2}, {s3}], ManyChat had meaningful '
+                    'bot-platform traction by April 2016 and had raised a material amount of capital.'),
+                'questions_for_management': [
+                    f'Who are the investors behind the $23.1M raised, when were the rounds closed, and how much capital '
+                    f'remains available [{s3}, {c1}]?',
+                    'What is the current monthly cash burn, and what is the implied runway from existing funds?'],
+            }
+        memo, call, _ = self.generate(memo95)
+        self.assertIn('• Funding raised (reported by Pitch Deck Hunt): $23.1M [S', memo.information_readiness)
+        self.assertNotIn('reported by Pitch Deck Hunt funding raised', memo.information_readiness)
+        self.assertIn('This would allow the traction figures', memo.what_would_change_the_picture)
+        self.assertIn('against runway (which needs a dated cash balance and burn rate; neither is in the evidence).',
+                      memo.what_would_change_the_picture)
+        self.assertNotIn('remaining runway', memo.what_would_change_the_picture)
+        self.assertRegex(memo.base_scenario, r'^Taking the self-reported figures at face value \[S\d, S\d\], ManyChat '
+                                             r'had meaningful bot-platform traction by April 2016 and had raised a '
+                                             r'material amount of capital \(per Pitch Deck Hunt, undated\) \[S\d\]\.$')
+        questions = memo.questions_for_management.splitlines()
+        self.assertIn('how much capital remains available [S', questions[0])          # a question: kept
+        self.assertEqual(questions[1], '- What is the current monthly cash burn, and what is the implied runway '
+                                       'from existing funds?')
+        self.assertIn('Runway or\n       remaining cash needs a dated cash balance', call['system'])
+        self.assertNotIn('Series A deck with', call['messages'][0]['content'])     # raw-source boundary
+        staff = User.objects.create_user('ff95_staff', password='x', is_staff=True)
+        investor = User.objects.create_user('ff95_investor', password='x')
+        from matchmaking.models import InvestorApplication
+        InvestorApplication.objects.create(user=investor, full_name='I', company_name='Fund', email='i95@t.test',
+                                           investment_focus='SaaS', investment_stage='Seed')
+        self.client.force_login(staff)
+        full = self.client.get(reverse('zelda_api:ic_memo', args=[self.doc.id])).content.decode()
+        markdown = self.client.get(reverse('zelda_api:ic_memo_download', args=[self.doc.id])).content.decode()
+        self.client.force_login(investor)
+        lite = self.client.get(f'/api/v1/zelda/documents/{self.doc.id}/memo/').json()
+        self.assertEqual((lite['tier'], lite['locked']), ('lite', True))
+        for name, text in (('staff IC memo', full), ('staff Markdown', markdown),
+                           ('Lite API information_readiness', lite['lite_sections']['information_readiness']),
+                           ('Lite API what_would_change', lite['lite_sections']['what_would_change_the_picture'])):
+            with self.subTest(surface=name):
+                self.assertNotIn('reported by Pitch Deck Hunt funding raised', text)
+                self.assertNotIn('remaining runway', text)
+        self.assertIn('Funding raised (reported by Pitch Deck Hunt): $23.1M', lite['lite_sections']['information_readiness'])
+
+
+def memo95_items(**extra):
+    """Memo 95's memo-input items (09b of the 2948998 run): same refs and narrator as memo 94's."""
+    return memo94_items(**extra)
+
+
+class SelfReportedWordingTests(SimpleTestCase):
+    """FF-302 and FF-305 (P2): natural wording, and a narrated listing never counted as the company's own."""
+
+    def test_memo_95_label_reads_naturally(self):
+        self.assertEqual(guard('• Self-reported funding raised: $23.1M [S3]'),
+                         '• Funding raised (reported by Pitch Deck Hunt): $23.1M [S3]')
+
+    def test_other_self_reported_forms(self):
+        cases = {
+            'parenthetical (memo 94)': ('• Funding raised figure (self-reported, unverified): $23.1M [S3]',
+                                        '• Funding raised figure (reported by Pitch Deck Hunt, unverified): $23.1M [S3]'),
+            'predicate': ('The $23.1M raised [S3] is self-reported.',
+                          'The $23.1M raised [S3] is reported by Pitch Deck Hunt.'),
+            'adjective': ('The self-reported $23.1M [S3] is unverified.',
+                          'The $23.1M (per Pitch Deck Hunt) [S3] is unverified.'),
+            'adjective opening the sentence': ('Self-reported $23.1M raised [S3] is unverified.',
+                                               '$23.1M raised (per Pitch Deck Hunt) [S3] is unverified.'),
+        }
+        for name, (before, after) in cases.items():
+            with self.subTest(case=name):
+                self.assertEqual(guard(before), after)
+
+    def test_memo_95_mixed_references_split_traction_from_funding(self):
+        before = ('Taking the self-reported figures at face value [S1, S2, S3], ManyChat had meaningful bot-platform '
+                  'traction by April 2016 and had raised a material amount of capital.')
+        self.assertEqual(guard(before, memo95_items()), (
+            'Taking the self-reported figures at face value [S1, S2], ManyChat had meaningful bot-platform traction by '
+            'April 2016 and had raised a material amount of capital (per Pitch Deck Hunt, undated) [S3].'))
+
+    def test_cited_paraphrases_need_no_amount(self):
+        cases = {
+            'sole paraphrase': ('Self-reported funding [S3] remains unverified.',
+                                'Funding (per Pitch Deck Hunt) [S3] remains unverified.'),
+            'claim ref in the group': ('The self-reported figures [S1, C1] support the funding history.',
+                                       'The self-reported figures [S1] support the funding history (per Pitch Deck '
+                                       'Hunt, undated) [C1].'),
+            'no separate funding clause': ('The self-reported figures [S1, S3] are unverified.',
+                                           'The self-reported figures [S1] (funding: per Pitch Deck Hunt, undated '
+                                           '[S3]) are unverified.'),
+        }
+        for name, (before, after) in cases.items():
+            with self.subTest(case=name):
+                self.assertEqual(guard(before), after)
+
+    def test_a_dated_narrated_item_is_not_called_undated(self):
+        dated = [i if i.ref not in ('C1', 'S3') else GroundedItem(
+            ref=i.ref, kind=i.kind, category=i.category, statement=i.statement, status=i.status, sources=i.sources,
+            dated=True, narrator=PDH, as_of='2016-04-30') for i in memo94_items()]
+        self.assertEqual(
+            guard('Taking the self-reported figures at face value [S1, S2, S3], ManyChat had raised capital.', dated),
+            'Taking the self-reported figures at face value [S1, S2], ManyChat had raised capital (per Pitch Deck '
+            'Hunt) [S3].')
+
+    def test_company_traction_stays_self_reported(self):
+        for text in (   # memo 95, verbatim
+                '• Self-reported traction metrics as of an Apr-16 slide context: 140,000+ bots, 500M messages [S1, S2]',
+                'Unverified traction figures: The two headline traction metrics — 140,000+ bots and 500M messages '
+                '[S1, S2] — are self-reported on a slide dated by context to April 2016 and could not be externally '
+                'checked [C2, C3].',
+                '• The two core traction claims — 140,000+ bots and 500M messages [S1, S2] — are self-reported and '
+                'unverified [C2, C3]; without independent confirmation it is unknown whether these figures reflect '
+                'unique active bots, cumulative totals, or another definition, which is material to understanding '
+                'platform health.'):
+            with self.subTest(text=text[:50]):
+                self.assertEqual(guard(text, memo95_items()), text)
+
+
+class ReportedFundingIsNotCashTests(SimpleTestCase):
+    """FF-303: runway needs a dated cash balance and a burn basis; reported funding and a revenue/cost schedule are not."""
+
+    def test_memo_95_runway_premise(self):
+        before = ('This alone would allow the traction figures [S1, S2] to be interpreted in the context of actual '
+                  'monetisation and would anchor assessment of the $23.1M funding figure (per Pitch Deck Hunt) [S3] '
+                  'against remaining runway.')
+        self.assertEqual(guard(before, memo95_items()), (
+            'This would allow the traction figures [S1, S2] to be interpreted in the context of actual monetisation '
+            'and would anchor assessment of the $23.1M funding figure (per Pitch Deck Hunt) [S3] against runway '
+            '(which needs a dated cash balance and burn rate; neither is in the evidence).'))
+
+    def test_cash_premise_found_by_citation_alone(self):
+        self.assertEqual(guard('The funding [C1] leaves available cash for 2026.', memo95_items()),
+                         'The funding [C1] leaves cash on hand (which needs a dated cash balance; none is in the '
+                         'evidence) for 2026.')
+
+    def test_questions_scenarios_unknowns_and_unrelated_runway_are_kept(self):
+        for text in (   # memo 95, verbatim, except the last two controls
+                'If the self-reported traction figures [S1, S2] — 140,000+ bots and 500M messages as of the Apr-16 '
+                'slide context — reflect genuinely active, monetisable usage, and if the $23.1M raised (per Pitch Deck '
+                'Hunt) [S3] was deployed efficiently with meaningful runway remaining, then ManyChat may have achieved '
+                'substantial platform scale before seeking any current or planned raise.',
+                'Undated and unverified funding: The $23.1M raised figure (per Pitch Deck Hunt) [S3] carries no stated '
+                'date and no external corroboration [C1], making it impossible to determine when funds were raised, '
+                'from whom, or how much remains available.',
+                '- Who are the investors behind the $23.1M raised (per Pitch Deck Hunt), when were the rounds closed, '
+                'and how much capital remains available [S3, C1]?',
+                '- What is the current monthly cash burn, and what is the implied runway from existing funds?',
+                # A research question may ask about remaining runway for the cited funding.
+                '- How much remaining runway does the $23.1M raised (per Pitch Deck Hunt) [S3] represent today?',
+                '• Runway: not calculated',
+                'The company\'s remaining runway is unknown.'):                  # no funding figure or citation
+            with self.subTest(text=text[:50]):
+                self.assertEqual(guard(text, memo95_items()), text)
+
+    def test_a_real_cash_balance_in_the_evidence_keeps_the_wording(self):
+        cash = GroundedItem(ref='S4', kind='statement', category='Funding', statement='$2.1M cash in the bank',
+                            status=SELF_REPORTED, sources=(SourceRef(document_id=1, page_number=11),))
+        text = 'It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway.'
+        self.assertEqual(guard(text, memo95_items(more=[cash])), text)
+        third_party = GroundedItem(ref='S4', kind='statement', category='Funding', statement='$2.1M cash in the bank',
+                                   status=SELF_REPORTED, sources=(SourceRef(document_id=1, page_number=11),),
+                                   narrator='Crunchbase')
+        self.assertIn('which needs a dated cash balance', guard(text, memo95_items(more=[third_party])))
+
+    def test_memo_95_guard_is_idempotent(self):
+        text = ('• Self-reported funding raised: $23.1M [S3]\nTaking the self-reported figures at face value '
+                '[S1, S2, S3], ManyChat had raised a material amount of capital.\nThis alone would anchor the $23.1M '
+                'funding figure [S3] against remaining runway.')
+        once = guard(text, memo95_items())
+        self.assertEqual(guard(once, memo95_items()), once)
+        self.assertEqual(once.count('\n'), text.count('\n'))
