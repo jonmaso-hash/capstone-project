@@ -1,0 +1,12 @@
+Code d192779 (fix/funding-asof-attribution; base origin/main 485306c). CI env as in ci.yml, --parallel 1. Runner output grep'd to result lines.
+
+== check
+System check identified no issues (0 silenced).
+== makemigrations --check
+No changes detected
+== zelda_api.tests_claim_context_dates pages.tests_ci_manifest
+Ran 43 tests in 4.149s
+OK
+== affected: tests_grounded_context tests_claim_attribution tests_claim_periods tests_claim_currency tests_claim_extraction_recall tests_memo_persistence tests_memo_list_rendering zelda_api.tests
+Ran 572 tests in 123.195s
+OK

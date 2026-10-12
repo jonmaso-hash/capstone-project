@@ -35,14 +35,14 @@ boundary (the source sentence still never reaches the memo), frozen rows.
 
 ## Results
 
-[logs/validation_output.txt](logs/validation_output.txt):
+[output/validation_output.txt](output/validation_output.txt):
 - `check` clean; `makemigrations --check` reports no changes.
 - `tests_claim_context_dates` + `pages.tests_ci_manifest`: 43 OK.
 - Affected modules (`tests_grounded_context`, `tests_claim_attribution`, `tests_claim_periods`,
   `tests_claim_currency`, `tests_claim_extraction_recall`, `tests_memo_persistence`,
   `tests_memo_list_rendering`, `zelda_api.tests`): 572 OK.
 
-[logs/mutations_output.txt](logs/mutations_output.txt): 16 mutations, all red.
+[output/mutations_output.txt](output/mutations_output.txt): 16 mutations, all red.
 - D1–D8 are the first validation's mutations, re-run.
 - R1–R8 cover the corrections:
   - R1: the old splitter;
@@ -53,13 +53,13 @@ boundary (the source sentence still never reaches the memo), frozen rows.
   - R6: the old sibling walk;
   - R7: a prose figure line accepted;
   - R8: the citation glued to the text.
-- Harness: [logs/mutate_review.py.txt](logs/mutate_review.py.txt).
+- Harness: [output/mutate_review.py.txt](output/mutate_review.py.txt).
 
-[logs/readonly_doc3133_check.txt](logs/readonly_doc3133_check.txt): doc 3133 read-only, same as the
+[output/readonly_doc3133_check.txt](output/readonly_doc3133_check.txt): doc 3133 read-only, same as the
 first check. Both slide-10 figures keep `Traction by Apr-16`; `$23.1M raised` keeps narrator
 `Pitch Deck Hunt` and `dates_not_as_of ['2015']`; all periods are empty.
 
-[logs/frozen_rows_before_after.txt](logs/frozen_rows_before_after.txt): memos 90/91 sha256
+[output/frozen_rows_before_after.txt](output/frozen_rows_before_after.txt): memos 90/91 sha256
 unchanged (same hashes as every earlier walk); document 3132/3133 rows and Redis lists identical.
 The dev DB is still not migrated (0044 exists only in test databases).
 
@@ -67,3 +67,9 @@ The dev DB is still not migrated (0044 exists only in test databases).
 
 - **RA-106:** pending a separate live post-fix rerun, graded by the owner. Memo 91 is unchanged.
 - RA-109 / I1, RA-103, and displaying the context in the Truth Delta rows, as before.
+
+## Note on the earlier folder
+
+`.gitignore` ignores every `logs/` directory. The earlier `ra106-postfix-d93f2e3` commit therefore
+published only its README; the log files it links exist only in the local worktree. That folder is
+left as committed. This folder keeps its logs under `output/`, which is published.
