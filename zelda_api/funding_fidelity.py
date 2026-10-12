@@ -40,12 +40,15 @@ its own attribution. After generation, sentence by sentence:
     profile date  a sentence that cites a profile item (P...) and also names a
                   date marks the profile value "(current profile, undated)"
     cited mix     (memo 95) "the self-reported figures [S1, S2, S3]" where S3 is
-                  narrated: the company's refs stay self-reported, and the
-                  narrated ref moves to the clause about funding, "(per <narrator>,
-                  undated) [S3]" -- found by citation, no amount needed
+                  narrated: the company's refs stay self-reported, and every
+                  narrated ref moves, in one pass, to the clause about funding,
+                  "(per <narrator>, undated) [S3]" -- found by citation, no amount
+                  needed
     not cash      (memo 95) reported funding "against remaining runway": runway
-                  needs a dated cash balance and burn rate, so the premise is
-                  qualified; questions and "if" scenarios are kept
+                  needs the company's own affirmative cash balance and burn rate,
+                  both with a structured as-of date and within six months of each
+                  other, so otherwise the premise is qualified, worded from what
+                  the evidence does hold; questions and "if" scenarios are kept
 Self-reported labels read naturally: "• Self-reported funding raised: $23.1M"
 -> "• Funding raised (reported by Pitch Deck Hunt): $23.1M".
 
@@ -94,11 +97,21 @@ _SELF_REPORTED = re.compile(r'\bself[-\s]reported\b', re.I)
 # against remaining runway"). Runway needs a dated cash balance and a burn basis.
 _CASH_PREMISE = re.compile(r'\b(?:remaining|existing|available)\s+(?P<a>runway|cash)\b|'
                            r'\b(?P<b>runway|cash)\s+(?:remaining|left)\b', re.I)
-CASH_BASIS = {'runway': 'runway (which needs a dated cash balance and burn rate; neither is in the evidence)',
-              'cash': 'cash on hand (which needs a dated cash balance; none is in the evidence)'}
 _SUFFICIENT_ALONE = re.compile(r'\b(\w+)\s+alone\s+(would|will|could|can)\b')
-# The company's own cash or runway figure: "$2.1M cash in the bank", "18 months of runway".
-_CASH_EVIDENCE = re.compile(r'(?=.*\d)(?=.*\b(?:cash|runway|bank\s+balance|in\s+the\s+bank)\b)', re.I | re.S)
+# The company's own cash and burn evidence. A balance is a cash figure that is not a flow or a burn;
+# a burn basis is a burn figure with a rate ("$150K per month"). Each is only a basis when it is
+# affirmative and has a structured as-of date (GroundedItem.as_of, never a date in its wording).
+_CASH_WORD = re.compile(r'\bcash\b(?!\s+(?:flow|burn|outflow))|\bbank\s+balance\b|\bin\s+the\s+bank\b', re.I)
+_BURN_WORD = re.compile(r'\bburn(?:s|ing|ed)?\b', re.I)
+_RATE = re.compile(r'\b(?:per|a|each|every)\s+(?:month|quarter|year)\b|/\s?(?:mo|month|qtr|quarter|yr|year)\b|'
+                   r'\b(?:monthly|quarterly|annual|annually|yearly)\b', re.I)
+_UNKNOWN = re.compile(r'\b(?:unknown|undisclosed|not\s+(?:disclosed|stated|provided|available)|n/a)\b', re.I)
+_HISTORICAL = re.compile(r'\b(?:previously|formerly|historically|once|used\s+to|in\s+the\s+past|had\s+been|'
+                         r'prior\s+to|at\s+(?:its|the|one)\s+(?:peak|time))\b', re.I)
+_AS_OF = re.compile(r'^(?:(?P<y>\d{4})-(?P<m>\d{2})-\d{2}|FY(?P<fy>\d{4}))$')
+COMPATIBLE_MONTHS = 6          # a burn rate dated within this many months of the cash balance
+# Evidence states for a cash balance or a burn basis.
+NONE, PRESENT, DATED = '', 'present', 'dated'
 # A qualified scenario ("If ... with meaningful runway remaining, then ...") states nothing as fact.
 _HYPOTHESIS = re.compile(r'\b(?:if|unless|assuming|suppose|supposing|provided|whether)\b', re.I)
 _COORDINATED_VERB = re.compile(r'(\s*,?\s+and\s+)(?=(?:reports|states|says|claims|lists|has|had|is|was|'
@@ -124,10 +137,14 @@ class FundingFacts:
     # Every funding item's amount with its narrator ('' when the company's own), in no
     # particular order: an uncited amount two of them could be is attributed to neither.
     funding_items: FrozenSet[Tuple[str, str]] = frozenset()
-    # Refs of every funding item (a citation alone can name the funding figure), and whether
-    # the evidence holds an actual cash balance or runway figure of the company's own.
+    # Refs of every funding item (a citation alone can name the funding figure).
     funding_refs: FrozenSet[str] = frozenset()
-    cash_supported: bool = False
+    # The company's own cash balance and burn basis: NONE, PRESENT (a figure that is not a
+    # dated, affirmative basis: undated, historical, tentative, or a burn without a rate) or
+    # DATED. Runway is supported only by a DATED balance and a DATED burn rate near it.
+    cash: str = NONE
+    burn: str = NONE
+    runway_supported: bool = False
 
 
 def figure_pattern(statement):
@@ -170,11 +187,45 @@ def current_raise(statement, company=''):
     return True
 
 
+def _month(as_of):
+    match = _AS_OF.match(as_of or '')
+    if not match:
+        return None                                   # 'not stated', '' or unparseable: undated
+    if match.group('fy'):
+        return int(match.group('fy')) * 12 + 12
+    return int(match.group('y')) * 12 + int(match.group('m'))
+
+
+def cash_basis(item):
+    """
+    (kind, state, month) for one item as runway evidence: kind 'cash' or 'burn', state NONE /
+    PRESENT / DATED. Only the company's own affirmative figure counts at all: a narrator's,
+    a profile field, a negation ("no cash in the bank"), an unknown ("Burn rate: not
+    disclosed") or a question is NONE. An undated, historical ("previously had $2M in
+    cash"), tentative or conditional figure, or a burn without a rate, is PRESENT.
+    """
+    text = ' '.join((getattr(item, 'statement', '') or '').split())
+    burn, cash = bool(_BURN_WORD.search(text)), bool(_CASH_WORD.search(text))
+    kind = 'burn' if burn else 'cash' if cash else ''
+    if (not kind or getattr(item, 'narrator', '') or item.kind == 'profile' or not _MONEY.search(text)
+            or _NEGATED.search(text) or _UNKNOWN.search(text) or _asks(text)):
+        return kind, NONE, None
+    month = _month(getattr(item, 'as_of', ''))
+    qualified = (month is not None and not _HISTORICAL.search(text) and not _TENTATIVE.search(text)
+                 and not _CONDITIONAL.search(text) and (kind == 'cash' or _RATE.search(text)))
+    return kind, (DATED if qualified else PRESENT), (month if qualified else None)
+
+
 def funding_facts(items, company=''):
     """What the guard needs from GroundedContext items: narrators, funding figures, profile refs, a live raise."""
     groups, funding, profile, supported, funding_items = {}, [], set(), False, set()
-    funding_refs, cash = set(), False
+    funding_refs, states, months = set(), {'cash': NONE, 'burn': NONE}, {'cash': [], 'burn': []}
     for item in items:
+        kind, state, month = cash_basis(item)
+        if kind and state:
+            states[kind] = max(states[kind], state, key=(NONE, PRESENT, DATED).index)
+            if month is not None:
+                months[kind].append(month)
         if item.kind == 'profile':
             profile.add(item.ref)
             fields = {s.profile_field for s in item.sources}
@@ -184,8 +235,6 @@ def funding_facts(items, company=''):
             continue
         if not getattr(item, 'narrator', '') and current_raise(item.statement, company):
             supported = True
-        if not getattr(item, 'narrator', '') and _CASH_EVIDENCE.search(item.statement or ''):
-            cash = True
         pattern = figure_pattern(item.statement)
         is_funding = item.category in ('funding_raised', 'Funding')
         if is_funding:
@@ -201,8 +250,9 @@ def funding_facts(items, company=''):
             groups[key] = (narrator, refs, pattern, was_funding or is_funding, was_undated and undated)
     narrated = tuple(Narrated(n, frozenset(r), p, f, u) for n, r, p, f, u in groups.values())
     unique = {p.pattern: p for p in funding}
+    runway = any(abs(c - b) <= COMPATIBLE_MONTHS for c in months['cash'] for b in months['burn'])
     return FundingFacts(narrated, tuple(unique.values()), frozenset(profile), supported, company,
-                        frozenset(funding_items), frozenset(funding_refs), cash)
+                        frozenset(funding_items), frozenset(funding_refs), states['cash'], states['burn'], runway)
 
 
 def _refs_in(group):
@@ -379,34 +429,55 @@ def _cited_self_reported(sentence, facts, changes):
               (per Pitch Deck Hunt, undated) [S3]."
       sole   "Self-reported funding [S3] remains unverified."
           -> "Funding (per Pitch Deck Hunt) [S3] remains unverified."
-    A clause that states the narrated amount itself is left to _attribute.
+    Every narrated ref in the group is handled in one pass, in citation order, so the result
+    does not depend on item order: "[S1, S3, S4]" with S3 from Pitch Deck Hunt and S4 from
+    Crunchbase keeps "[S1]" and adds "(per Pitch Deck Hunt, undated) [S3] and (per
+    Crunchbase, undated) [S4]". A clause that states a narrated amount itself is left to
+    _attribute.
     """
-    for entry in facts.narrated:
-        if entry.narrator.lower() in sentence.lower():
-            continue
-        for span in _SELF_REPORTED.finditer(sentence):
-            start, stop = _clause_start(sentence, span.start()), _clause_end(sentence, span.end())
-            group = next((m for m in _REF.finditer(sentence, start, stop) if _refs_in(m.group(1)) & entry.refs), None)
-            if not group or (entry.figure and entry.figure.search(sentence, start, stop)):
-                continue
+    by_ref = {ref: entry for entry in facts.narrated for ref in entry.refs}
+    for span in _SELF_REPORTED.finditer(sentence):
+        start, stop = _clause_start(sentence, span.start()), _clause_end(sentence, span.end())
+        clause = sentence[start:stop].lower()
+        # Left alone: a narrated amount stated in this clause (_attribute's), or a narrator already named here.
+        stated = {r for entry in facts.narrated
+                  if (entry.figure and entry.figure.search(sentence, start, stop)) or entry.narrator.lower() in clause
+                  for r in entry.refs}
+        for group in _REF.finditer(sentence, start, stop):
             refs = [r.strip() for r in re.split(r'[,;]', group.group(1))]
-            own = [r for r in refs if r in entry.refs]
-            cited = {r for m in _REF.finditer(sentence, start, stop) for r in _refs_in(m.group(1))}
-            note = f'(per {entry.narrator}{", undated" if entry.undated else ""}) [{", ".join(own)}]'
-            if not (cited - entry.refs - facts.profile_refs):
-                reworded = _reword_self_reported(sentence, span, entry.narrator)
-                if reworded is None:
-                    shorter = _drop_word(sentence, span)
-                    cite = _REF.search(shorter, max(0, group.start() - (len(sentence) - len(shorter))))
-                    reworded = f'{shorter[:cite.start()].rstrip()} (per {entry.narrator}) {shorter[cite.start():]}'
-                changes.append(f'attribution:{entry.narrator}')
-                return reworded
-            kept = ', '.join(r for r in refs if r not in entry.refs)
-            sentence = f'{sentence[:group.start()]}[{kept}]{sentence[group.end():]}'
-            changes.append(f'mixed_self_reported:{entry.narrator}')
-            fallback = f'(funding: per {entry.narrator}{", undated" if entry.undated else ""} [{", ".join(own)}])'
-            after_group = group.start() + len(kept) + 2
-            return _attach_to_funding_clause(sentence, after_group, note, fallback, after_group)
+            moved = [r for r in refs if r in by_ref and r not in stated]
+            if moved:
+                break
+        else:
+            continue
+        narrators = {}                                   # narrator -> (its refs, all undated), first-cited first
+        for ref in moved:
+            entry = by_ref[ref]
+            own, undated = narrators.get(entry.narrator, ([], True))
+            narrators[entry.narrator] = (own + [ref], undated and entry.undated)
+        names = ' and '.join(narrators)
+        cited = {r for m in _REF.finditer(sentence, start, stop) for r in _refs_in(m.group(1))}
+        if not (cited - set(by_ref) - facts.profile_refs):
+            # Sole: everything the clause cites is narrated, so "self-reported" is the narrators' word.
+            reworded = _reword_self_reported(sentence, span, names)
+            if reworded is None:
+                shorter = _drop_word(sentence, span)
+                cite = _REF.search(shorter, max(0, group.start() - (len(sentence) - len(shorter))))
+                reworded = f'{shorter[:cite.start()].rstrip()} (per {names}) {shorter[cite.start():]}'
+            changes.extend(f'attribution:{n}' for n in narrators)
+            return reworded
+        changes.extend(f'mixed_self_reported:{n}' for n in narrators)
+        undated = lambda u: ', undated' if u else ''
+        note = ' and '.join(f'(per {n}{undated(u)}) [{", ".join(own)}]' for n, (own, u) in narrators.items())
+        kept = [r for r in refs if r not in moved]
+        if not kept:            # "traction [S1] with funding [S3, S4]": the group was all narrated, the note replaces it
+            return f'{sentence[:group.start()].rstrip()} {note}{sentence[group.end():]}'
+        replacement = f'[{", ".join(kept)}]'
+        sentence = f'{sentence[:group.start()]}{replacement}{sentence[group.end():]}'
+        fallback = '(funding: ' + '; '.join(f'per {n}{undated(u)} [{", ".join(own)}]'
+                                            for n, (own, u) in narrators.items()) + ')'
+        after_group = group.start() + len(replacement)
+        return _attach_to_funding_clause(sentence, after_group, note, fallback, after_group)
     return sentence
 
 
@@ -425,18 +496,51 @@ def _attach_to_funding_clause(sentence, after, note, fallback, fallback_at):
     return f'{sentence[:fallback_at]} {fallback}{sentence[fallback_at:]}'
 
 
+_MISSING = {
+    'cash': {NONE: 'no cash balance is in the evidence', PRESENT: "the evidence's cash figure is not a dated balance"},
+    'burn': {NONE: 'no burn rate is in the evidence', PRESENT: "the evidence's burn figure is not a dated rate"},
+}
+
+
+def cash_basis_note(word, facts):
+    """
+    The missing basis, worded from what the evidence actually holds, or None when the premise
+    is supported: runway by a DATED cash balance with a DATED burn rate within
+    COMPATIBLE_MONTHS of it; cash by a DATED balance.
+    """
+    if word == 'cash':
+        if facts.cash == DATED:
+            return None
+        why = 'none is in the evidence' if facts.cash == NONE else _MISSING['cash'][PRESENT]
+        return f'cash on hand (which needs a dated cash balance; {why})'
+    if facts.runway_supported:
+        return None
+    if facts.cash == NONE and facts.burn == NONE:
+        why = 'neither is in the evidence'
+    elif facts.cash == DATED and facts.burn == DATED:
+        why = "the evidence's cash balance and burn rate are not from the same period"
+    else:
+        why = ' and '.join(_MISSING[k][getattr(facts, k)] for k in ('cash', 'burn') if getattr(facts, k) != DATED)
+    return f'runway (which needs a dated cash balance and burn rate; {why})'
+
+
 def _no_cash_premise(sentence, facts, changes):
     """
     Reported funding is not money in hand (FF-303): in a statement about the funding figure,
-    "remaining runway" / "available cash" gains its missing basis. Questions, qualified
-    scenarios ("if ... with meaningful runway remaining") and evidence that does hold a
-    cash or runway figure are left alone.
+    "remaining runway" / "available cash" gains its missing basis. Questions and qualified
+    scenarios ("if ... with meaningful runway remaining") are left alone, and so is a premise
+    the evidence supports (cash_basis_note).
     """
-    if facts.cash_supported or _asks(sentence) or _HYPOTHESIS.search(sentence):
+    if _asks(sentence) or _HYPOTHESIS.search(sentence):
         return sentence
     if not (_cited(sentence) & facts.funding_refs or any(p.search(sentence) for p in facts.funding_figures)):
         return sentence
-    rewritten = _CASH_PREMISE.sub(lambda m: CASH_BASIS[(m.group('a') or m.group('b')).lower()], sentence)
+
+    def basis(match):
+        note = cash_basis_note((match.group('a') or match.group('b')).lower(), facts)
+        return match.group(0) if note is None else note
+
+    rewritten = _CASH_PREMISE.sub(basis, sentence)
     if rewritten != sentence:
         # "This alone would allow ... against remaining runway": a revenue/cost schedule alone is not enough.
         rewritten = _SUFFICIENT_ALONE.sub(r'\1 \2', rewritten)

@@ -1774,7 +1774,9 @@ class ZeldaIntelligencePipelineV2:
        (profile)"), do not write "this raise", "the stated raise" or its proceeds or
        runway as fact; a question may ask whether a raise is planned. Runway or
        remaining cash needs a dated cash balance and a burn rate; reported funding
-       and a revenue/cost schedule are not enough. Profile items
+       and a revenue/cost schedule are not enough, and neither is an undated,
+       past or estimated cash or burn figure, or a burn rate from another period.
+       Profile items
        (P...) are the current profile and undated: never date them with a slide's
        date (not "was Series A as of April 2016")."""
 

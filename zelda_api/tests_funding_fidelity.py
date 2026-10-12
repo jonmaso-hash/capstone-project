@@ -581,6 +581,65 @@ class SelfReportedWordingTests(SimpleTestCase):
             with self.subTest(case=name):
                 self.assertEqual(guard(before), after)
 
+    def crunchbase(self, as_of='not stated'):
+        return GroundedItem(ref='S4', kind='statement', category='Funding', statement='$22M raised',
+                            status=SELF_REPORTED, sources=(SourceRef(document_id=3137, page_number=3),), dated=True,
+                            narrator='Crunchbase', as_of=as_of)
+
+    def test_every_narrated_reference_in_a_mixed_group_leaves_in_one_pass(self):
+        before = ('Taking the self-reported figures at face value [S1, S3, S4], ManyChat had meaningful bot-platform '
+                  'traction by April 2016 and had raised a material amount of capital.')
+        after = ('Taking the self-reported figures at face value [S1], ManyChat had meaningful bot-platform traction by '
+                 'April 2016 and had raised a material amount of capital (per Pitch Deck Hunt, undated) [S3] and '
+                 '(per Crunchbase, undated) [S4].')
+        items = memo95_items(more=[self.crunchbase()])
+        once = guard(before, items)
+        self.assertEqual(once, after)
+        self.assertEqual(guard(before, list(reversed(items))), after)     # item order does not matter
+        self.assertEqual(guard(once, items), once)                        # idempotent
+        self.assertEqual(guard(once, list(reversed(items))), once)
+
+    def test_mixed_group_variants_with_two_narrators(self):
+        items = memo95_items(more=[self.crunchbase()])
+        cases = {
+            'citation order decides the note order': (
+                'Taking the self-reported figures at face value [S4, S1, S3], ManyChat had raised capital.',
+                'Taking the self-reported figures at face value [S1], ManyChat had raised capital (per Crunchbase, '
+                'undated) [S4] and (per Pitch Deck Hunt, undated) [S3].'),
+            'no funding clause': (
+                'The self-reported figures [S1, S3, S4] are unverified.',
+                'The self-reported figures [S1] (funding: per Pitch Deck Hunt, undated [S3]; per Crunchbase, undated '
+                '[S4]) are unverified.'),
+            'both narrators in a sole group': (
+                'Self-reported funding [S3, S4] remains unverified.',
+                'Funding (per Pitch Deck Hunt and Crunchbase) [S3, S4] remains unverified.'),
+            'the same narrator twice': (
+                'Taking the self-reported figures at face value [S1, C1, S3], ManyChat had raised capital.',
+                'Taking the self-reported figures at face value [S1], ManyChat had raised capital (per Pitch Deck Hunt, '
+                'undated) [C1, S3].'),
+            'an all-narrated group beside company refs': (
+                'The self-reported traction [S1] with funding [S3, S4] is unverified.',
+                'The self-reported traction [S1] with funding (per Pitch Deck Hunt, undated) [S3] and (per Crunchbase, '
+                'undated) [S4] is unverified.'),
+            'a narrator named in another clause': (
+                'Pitch Deck Hunt lists $23.1M raised [S3]; taking the self-reported figures at face value [S1, S4], '
+                'ManyChat had raised capital.',
+                'Pitch Deck Hunt lists $23.1M raised [S3]; taking the self-reported figures at face value [S1], '
+                'ManyChat had raised capital (per Crunchbase, undated) [S4].'),
+        }
+        for name, (before, after) in cases.items():
+            with self.subTest(case=name):
+                self.assertEqual(guard(before, items), after)
+                self.assertEqual(guard(before, list(reversed(items))), after)
+                self.assertEqual(guard(after, items), after)
+
+    def test_a_dated_second_narrator_is_not_called_undated(self):
+        items = memo95_items(more=[self.crunchbase(as_of='2024-05-01')])
+        self.assertEqual(
+            guard('Taking the self-reported figures at face value [S1, S3, S4], ManyChat had raised capital.', items),
+            'Taking the self-reported figures at face value [S1], ManyChat had raised capital (per Pitch Deck Hunt, '
+            'undated) [S3] and (per Crunchbase) [S4].')
+
     def test_a_dated_narrated_item_is_not_called_undated(self):
         dated = [i if i.ref not in ('C1', 'S3') else GroundedItem(
             ref=i.ref, kind=i.kind, category=i.category, statement=i.statement, status=i.status, sources=i.sources,
@@ -640,15 +699,90 @@ class ReportedFundingIsNotCashTests(SimpleTestCase):
             with self.subTest(text=text[:50]):
                 self.assertEqual(guard(text, memo95_items()), text)
 
-    def test_a_real_cash_balance_in_the_evidence_keeps_the_wording(self):
-        cash = GroundedItem(ref='S4', kind='statement', category='Funding', statement='$2.1M cash in the bank',
-                            status=SELF_REPORTED, sources=(SourceRef(document_id=1, page_number=11),))
-        text = 'It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway.'
-        self.assertEqual(guard(text, memo95_items(more=[cash])), text)
-        third_party = GroundedItem(ref='S4', kind='statement', category='Funding', statement='$2.1M cash in the bank',
-                                   status=SELF_REPORTED, sources=(SourceRef(document_id=1, page_number=11),),
-                                   narrator='Crunchbase')
-        self.assertIn('which needs a dated cash balance', guard(text, memo95_items(more=[third_party])))
+    RUNWAY = 'It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway.'
+    CASH = 'The $23.1M funding figure (per Pitch Deck Hunt) [S3] is not the available cash.'
+
+    def evidence(self, ref, statement, as_of='', **extra):
+        return GroundedItem(ref=ref, kind='statement', category=extra.pop('category', 'Financials'),
+                            statement=statement, status=SELF_REPORTED,
+                            sources=(SourceRef(document_id=1, page_number=11),), as_of=as_of, **extra)
+
+    def runway(self, *more):
+        return guard(self.RUNWAY, memo95_items(more=list(more)))
+
+    def test_undated_cash_alone_does_not_support_runway(self):
+        # Revised from 49663be, where any company figure near the word "cash" left the premise alone.
+        undated = self.evidence('S4', '$2.1M cash in the bank')
+        self.assertEqual(self.runway(undated), (
+            'It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against runway (which needs a dated '
+            "cash balance and burn rate; the evidence's cash figure is not a dated balance and no burn rate is in the "
+            'evidence).'))
+        third_party = self.evidence('S4', '$2.1M cash in the bank', as_of='2026-06-30', narrator='Crunchbase')
+        self.assertIn('neither is in the evidence', self.runway(third_party))
+
+    def test_dated_cash_and_a_compatible_burn_rate_support_runway(self):
+        cash = self.evidence('S4', '$2.1M cash in the bank', as_of='2026-06-30')
+        for burn in (self.evidence('S5', 'Net burn of $150K per month', as_of='2026-06-30'),
+                     self.evidence('S5', 'Monthly cash burn: $150K', as_of='2026-03-31'),
+                     self.evidence('S5', '$1.8M annual burn', as_of='FY2026')):
+            with self.subTest(burn=burn.statement):
+                self.assertEqual(self.runway(cash, burn), self.RUNWAY)
+                self.assertEqual(self.runway(burn, cash), self.RUNWAY)        # item order does not matter
+        self.assertEqual(guard(self.CASH, memo95_items(more=[cash])), self.CASH)   # a dated balance is cash
+
+    def test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing(self):
+        cash = self.evidence('S4', '$2.1M cash in the bank', as_of='2026-06-30')
+        burn = self.evidence('S5', 'Net burn of $150K per month', as_of='2026-06-30')
+        no_cash, no_burn = 'no cash balance is in the evidence', 'no burn rate is in the evidence'
+        bad_cash = "the evidence's cash figure is not a dated balance"
+        bad_burn = "the evidence's burn figure is not a dated rate"
+        cases = {
+            'cash only': ([cash], no_burn),
+            'burn only': ([burn], no_cash),
+            'undated burn': ([cash, self.evidence('S5', 'Net burn of $150K per month', as_of='not stated')], bad_burn),
+            'burn without a rate': ([cash, self.evidence('S5', 'Total burn of $1.8M', as_of='2026-06-30')], bad_burn),
+            'historical cash': ([burn, self.evidence('S4', 'Previously had $2.1M cash in the bank', as_of='2026-06-30')],
+                                bad_cash),
+            'estimated cash': ([burn, self.evidence('S4', 'Expects $2.1M cash in the bank', as_of='2026-06-30')],
+                               bad_cash),
+            'conditional burn': ([cash, self.evidence('S5', 'If hiring closes, burn of $150K per month',
+                                                      as_of='2026-06-30')], bad_burn),
+            'negated cash': ([burn, self.evidence('S4', 'The company does not hold $2.1M in cash', as_of='2026-06-30')],
+                             no_cash),
+            'cash asked, not stated': ([burn, self.evidence('S4', 'Is the $2.1M cash in the bank?', as_of='2026-06-30')],
+                                       no_cash),
+            'unknown burn': ([cash, self.evidence('S5', 'Monthly burn: undisclosed (budget $150K per month)',
+                                                  as_of='2026-06-30')], no_burn),
+            'cash flow is not cash': ([burn, self.evidence('S4', '$2.1M operating cash flow', as_of='2026-06-30')],
+                                      no_cash),
+            'third-party burn': ([cash, self.evidence('S5', 'Net burn of $150K per month', as_of='2026-06-30',
+                                                      narrator='Crunchbase')], no_burn),
+            'profile runway': ([GroundedItem(ref='P3', kind='profile', category='Runway (profile)',
+                                             statement='Runway (profile): 18 months, $2.1M cash', status=SELF_REPORTED,
+                                             sources=(SourceRef(document_id=None, profile_field='runway_months'),))],
+                               'neither is in the evidence'),
+            'periods apart': ([cash, self.evidence('S5', 'Net burn of $150K per month', as_of='2024-12-31')],
+                              "the evidence's cash balance and burn rate are not from the same period"),
+        }
+        for name, (more, why) in cases.items():
+            with self.subTest(case=name):
+                out = self.runway(*more)
+                self.assertIn(f'against runway (which needs a dated cash balance and burn rate; {why}', out)
+                if any('burn' in i.statement and not i.narrator for i in more):
+                    self.assertNotIn('neither', out)           # a burn figure is present: never "neither"
+                self.assertEqual(self.runway(*reversed(more)), out)
+
+    def test_cash_premise_needs_a_dated_balance(self):
+        undated = self.evidence('S4', '$2.1M cash in the bank')
+        self.assertEqual(guard(self.CASH, memo95_items(more=[undated])), (
+            'The $23.1M funding figure (per Pitch Deck Hunt) [S3] is not the cash on hand (which needs a dated cash '
+            "balance; the evidence's cash figure is not a dated balance)."))
+
+    def test_supported_runway_keeps_the_sentence_unchanged_and_the_alone_wording(self):
+        cash = self.evidence('S4', '$2.1M cash in the bank', as_of='2026-06-30')
+        burn = self.evidence('S5', 'Net burn of $150K per month', as_of='2026-06-30')
+        text = 'This alone would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway.'
+        self.assertEqual(guard(text, memo95_items(more=[cash, burn])), text)
 
     def test_memo_95_guard_is_idempotent(self):
         text = ('• Self-reported funding raised: $23.1M [S3]\nTaking the self-reported figures at face value '
