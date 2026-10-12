@@ -37,41 +37,53 @@ _DATE = rf"(?:{_MONTH}[\s\-'.]*(?:\d{{4}}|\d{{2}})\b|(?:Q[1-4]\s*)?(?:19|20)\d{{
 # "by Apr-16", "as of Dec 2024", "through Q3 2023": a heading that dates a block.
 _DATED_HEADING = re.compile(rf'\b(?:by|as\s+of|through|thru|until|ending|ended)\s+{_DATE}', re.I)
 _HEADING_MAX = 80
-_FIGURE_LINE_MAX = 40
+# A line that is only a figure and a few words naming it: "140 000+ bots",
+# "500M messages", "$5M raised", or a bare chart value "20,000". A line with a
+# second number, a sentence stop or more words is prose ("Up 3x in 6 months",
+# "12 employees hired."), and prose ends the block even when it holds numbers.
+_FIGURE_LINE = re.compile(
+    r"^(?:~|≈|>\s*|<\s*)?[$€£]?\d{1,3}(?:[ ,.]?\d{3})*(?:\.\d+)?\s?"
+    r"(?:%|x|bn|mm|[kmb]|million|billion|thousand)?\+?"
+    r"(?:\s+[A-Za-z][A-Za-z/&’'-]*){0,3}$", re.I)
 
 
 def _norm(text):
     return ' '.join((text or '').split())
 
 
+def _figure_line(line):
+    return bool(_FIGURE_LINE.match(line))
+
+
 def dated_heading(span, chunk_text):
     """
     The dated heading over the block that holds `span`, or ''.
 
-    Walk up from the figure's line across sibling figure lines (short lines
-    with a number, e.g. the other metrics in the same list). The first line
-    that is not a figure line ends the block: it is returned only if it is a
-    short heading that dates the block with a preposition ("Traction by
-    Apr-16") and carries words of its own. A bare axis label ("Apr-16"), an
-    undated heading ("Total Bots Created") or a prose line stops the walk
-    with nothing.
+    The figure's own line must be a figure line (a number and up to three
+    words naming it). Walk up across sibling figure lines, e.g. the other
+    metrics in the same list. The first line that is not a figure line ends
+    the block: it is returned only if it is a short heading that dates the
+    block with a preposition ("Traction by Apr-16") and carries words of its
+    own. A bare axis label ("Apr-16"), an undated heading ("Total Bots
+    Created") or a prose line -- with or without numbers in it -- stops the
+    walk with nothing. When in doubt, nothing is associated.
     """
     span = _norm(span)
     if not span:
         return ''
     lines = (chunk_text or '').splitlines()
     index = next((i for i, line in enumerate(lines) if span in _norm(line)), None)
-    if index is None:
+    if index is None or not _figure_line(_norm(lines[index])):
         return ''
     for line in reversed(lines[:index]):
         line = _norm(line)
         if not line:
             continue
+        if _figure_line(line):
+            continue                     # a sibling figure in the same list
         match = _DATED_HEADING.search(line)
         if match and len(line) <= _HEADING_MAX and re.search(r'[A-Za-z]{3,}', line[:match.start()]):
             return line
-        if len(line) <= _FIGURE_LINE_MAX and re.search(r'\d', line) and not match:
-            continue                     # a sibling figure in the same list
         return ''
     return ''
 
@@ -125,9 +137,20 @@ def unbound_dates(sentence, period_phrase=''):
 TIME_WORDING = ('to date', 'so far', 'currently', 'at present', 'as of today', 'as of now',
                 'as it stands', 'up to now', 'until now')
 _TIME_WORDING = re.compile(r'\s*,?\s*\b(' + '|'.join(re.escape(p) for p in TIME_WORDING) + r')\b,?', re.I)
-_REF = re.compile(r'\[([A-Z]\d+(?:\s*,\s*[A-Z]\d+)*)\]')
-# Captured, so splitting keeps each separator (spaces, newlines, bullets) as written.
-_SENTENCE = re.compile(r'((?<=[.!?])\s+|\n+)')
+_REF_GROUP = r'\[[A-Z]\d+(?:\s*[,;]\s*[A-Z]\d+)*\]'
+_REF = re.compile(r'\[([A-Z]\d+(?:\s*[,;]\s*[A-Z]\d+)*)\]')
+# A sentence ends at . ! or ? together with any closing quote and any citations
+# written straight after it ("...raised $23.1M to date. [S3]"), then whitespace;
+# or at a line break. The citations belong to the sentence they follow, never
+# to the next one.
+_BOUNDARY = re.compile(rf'[.!?]["”’)]*(?:[ \t]*{_REF_GROUP})*(?P<sep>\s+|\Z)|(?P<nl>\n+)')
+# A sentence that asks for a figure rather than stating one: a research
+# question ("What has ManyChat raised to date [S3]?") or a request to
+# management ("Confirm the total raised to date [S3].").
+_LIST_MARKER = re.compile(r'^(?:[-•*·–]|\d+[.)]|Q\d+[:.)])\s*')
+_REQUEST_LEAD = re.compile(
+    r'^(?:ask|confirm|verify|clarify|request|obtain|provide|explain|disclose|validate|'
+    r'check|determine|quantify|reconcile|break\s+down)\b', re.I)
 
 
 def time_wording_in(sentence):
@@ -136,37 +159,54 @@ def time_wording_in(sentence):
     return tuple(p for p in TIME_WORDING if re.search(rf'\b{re.escape(p)}\b', text))
 
 
+def _sentences(text):
+    """(sentence, separator) pairs that join back into `text` exactly."""
+    pos = 0
+    for match in _BOUNDARY.finditer(text):
+        group = 'sep' if match.group('sep') is not None else 'nl'
+        yield text[pos:match.start(group)], match.group(group)
+        pos = match.end()
+    if pos < len(text):
+        yield text[pos:], ''
+
+
+def _asks(sentence):
+    """True for a question or a request for a figure, which asserts nothing."""
+    body = _LIST_MARKER.sub('', _REF.sub('', sentence).strip())
+    return body.rstrip('"”’) ').endswith('?') or bool(_REQUEST_LEAD.match(body))
+
+
 def guard_time_wording(text, allowed_by_ref):
     """
-    Remove current/running-total wording from memo sentences that cite a
-    claim-backed item whose source does not use that wording.
+    Remove current/running-total wording from memo sentences that STATE a
+    figure while citing a claim-backed item whose source does not use that
+    wording.
 
     `allowed_by_ref` maps a cited ref ("C1", "S3") to the phrases its source
     sentence uses. Only refs present in the map are guarded; a sentence that
-    cites none of them is left as written.
+    cites none of them is left as written, and so is a question or request
+    asking management for a current figure.
     """
     if not isinstance(text, str) or not text:
         return text, []
     removed = []
     out = []
-    for sentence in _SENTENCE.split(text):
-        if _SENTENCE.fullmatch(sentence):
-            out.append(sentence)         # a separator, kept exactly
-            continue
-        refs = [r.strip() for group in _REF.findall(sentence) for r in group.split(',')]
+    for sentence, separator in _sentences(text):
+        refs = [r.strip() for group in _REF.findall(sentence) for r in re.split(r'[,;]', group)]
         guarded = [r for r in refs if r in allowed_by_ref]
-        if guarded:
+        if guarded and not _asks(sentence):
             def drop(match):
                 phrase = match.group(1).lower()
                 if all(phrase in allowed_by_ref[r] for r in guarded):
                     return match.group(0)
                 removed.append(phrase)
-                return ''
+                # "$23.1M to date[S3]" keeps one space before its citation.
+                follows = match.string[match.end():match.end() + 1]
+                return ' ' if follows == '[' and match.group(0)[:1].isspace() else ''
             rewritten = _TIME_WORDING.sub(drop, sentence)
             if rewritten != sentence:
                 rewritten = re.sub(r' {2,}', ' ', rewritten)
                 rewritten = re.sub(r' +([,.;:])', r'\1', rewritten)
-                rewritten = re.sub(r'(\S)\[', r'\1 [', rewritten)
                 sentence = rewritten
-        out.append(sentence)
+        out.append(sentence + separator)
     return (''.join(out) if removed else text), removed

@@ -78,6 +78,27 @@ class SlideHeadingContextTests(SimpleTestCase):
             with self.subTest(case=name):
                 self.assertEqual(dated_heading(figure, chunk), '')
 
+    def test_prose_with_numbers_between_heading_and_figure_ends_the_block(self):
+        # Short lines that hold numbers but are not a figure and its name are
+        # prose: the heading may describe something else, so nothing attaches.
+        for between in ('Up 3x in 6 months', 'Grew 40% since 2015', '3 markets launched in 2016',
+                        '12 employees hired.', 'Over 2 years of growth', 'Raised in 2015'):
+            with self.subTest(between=between):
+                chunk = f'Traction by Apr-16\n140 000+ bots\n{between}\n500M messages'
+                self.assertEqual(dated_heading('500M messages', chunk), '')
+                self.assertEqual(dated_heading('140 000+ bots', chunk), 'Traction by Apr-16')
+
+    def test_a_figure_inside_prose_gets_no_heading(self):
+        for line in ('We passed 500M messages in March', '500M messages were sent by 40,000 bots'):
+            with self.subTest(line=line):
+                self.assertEqual(dated_heading('500M messages', f'Traction by Apr-16\n{line}'), '')
+
+    def test_the_real_block_keeps_its_heading_with_more_siblings(self):
+        chunk = SLIDE10.replace('500M messages\n', '500M messages\n$1.2M ARR\n35% MoM\n')
+        for figure in ('140 000+ bots', '500M messages', '$1.2M ARR', '35% MoM'):
+            with self.subTest(figure=figure):
+                self.assertEqual(dated_heading(figure, chunk), 'Traction by Apr-16')
+
 
 class FundingSentenceContextTests(SimpleTestCase):
 
@@ -132,6 +153,64 @@ class TimeWordingGuardTests(SimpleTestCase):
     def test_refs_that_are_not_claim_backed_are_left_alone(self):
         text = 'The team is currently hiring [S9].'
         self.assertEqual(guard_time_wording(text, {'S3': ()}), (text, []))
+
+    def test_citation_before_or_after_the_sentence_stop(self):
+        cases = {
+            'before': ('ManyChat has raised $23.1M to date [S3].', 'ManyChat has raised $23.1M [S3].'),
+            'after': ('ManyChat has raised $23.1M to date. [S3]', 'ManyChat has raised $23.1M. [S3]'),
+            'after, no space': ('ManyChat has raised $23.1M to date.[S3]', 'ManyChat has raised $23.1M.[S3]'),
+            'after, end of line': ('Raised $23.1M to date. [S3]\nNext line.', 'Raised $23.1M. [S3]\nNext line.'),
+            'touching the phrase': ('Raised $23.1M to date[S3].', 'Raised $23.1M [S3].'),
+        }
+        for name, (text, expected) in cases.items():
+            with self.subTest(case=name):
+                self.assertEqual(guard_time_wording(text, {'S3': ()}), (expected, ['to date']))
+
+    def test_grouped_references(self):
+        allowed = {'S1': (), 'S3': (), 'C2': ('so far',)}
+        cases = {
+            'comma group': ('Bots: 140,000+ so far [S1, S3].', 'Bots: 140,000+ [S1, S3].'),
+            'semicolon group, after the stop': ('Bots: 140,000+ so far. [S1; S3]', 'Bots: 140,000+. [S1; S3]'),
+            'adjacent groups': ('Bots: 140,000+ so far.[S1][S3]', 'Bots: 140,000+.[S1][S3]'),
+            # One cited source does not say "so far": the shared sentence may not either.
+            'one source allows, one does not': ('140,000+ bots so far [C2, S1].', '140,000+ bots [C2, S1].'),
+        }
+        for name, (text, expected) in cases.items():
+            with self.subTest(case=name):
+                self.assertEqual(guard_time_wording(text, allowed), (expected, ['so far']))
+        kept = '140,000+ bots so far [C2].'
+        self.assertEqual(guard_time_wording(kept, allowed), (kept, []))
+
+    def test_a_citation_after_the_stop_never_moves_to_the_next_sentence(self):
+        text = 'ManyChat lists $23.1M raised. [S3] No revenue has been disclosed to date.'
+        self.assertEqual(guard_time_wording(text, {'S3': ()}), (text, []))
+        text = ('The company has raised $23.1M to date. [S3] Revenue has not been disclosed so far. '
+                'Bots total 140,000+ currently [S1].')
+        self.assertEqual(guard_time_wording(text, {'S3': (), 'S1': ()}), (
+            'The company has raised $23.1M. [S3] Revenue has not been disclosed so far. Bots total 140,000+ [S1].',
+            ['to date', 'currently']))
+
+    def test_questions_and_requests_for_current_figures_are_kept(self):
+        allowed = {'S1': (), 'S3': ()}
+        for text in ('What has ManyChat raised to date [S3]?',
+                     'How many bots are live currently? [S1]',
+                     '- Is the $23.1M [S3] the total raised to date?',
+                     '3. How many messages has the platform sent so far [S1]?',
+                     'Confirm the total raised to date [S3].',
+                     '• Ask management how many bots are active currently [S1].',
+                     'Q2: Verify whether 500M messages is the count to date [S1].'):
+            with self.subTest(text=text):
+                self.assertEqual(guard_time_wording(text, allowed), (text, []))
+
+    def test_a_statement_next_to_a_question_is_still_guarded(self):
+        text = ('How much has ManyChat raised to date [S3]?\n'
+                'ManyChat has raised $23.1M to date [S3].\n'
+                'What has the company raised so far? The deck lists $23.1M so far. [S3]')
+        self.assertEqual(guard_time_wording(text, {'S3': ()}), (
+            'How much has ManyChat raised to date [S3]?\n'
+            'ManyChat has raised $23.1M [S3].\n'
+            'What has the company raised so far? The deck lists $23.1M. [S3]',
+            ['to date', 'so far']))
 
 
 class ManyChatExtractionTests(TestCase):
@@ -208,23 +287,29 @@ class ManyChatExtractionTests(TestCase):
         self.assertNotIn('Series A deck with', text)          # the sentence itself stays out
         self.assertNotIn('SlideShare deck has 10 slides', text)
 
-    def memo_reply(self, context):
-        refs = {i.statement: i.ref for i in context.items if i.kind == 'statement'}
-        claim_refs = {i.statement: i.ref for i in context.items if i.kind == 'claim'}
+    @staticmethod
+    def refs(context):
+        return ({i.statement: i.ref for i in context.items if i.kind == 'statement'},
+                {i.statement: i.ref for i in context.items if i.kind == 'claim'})
+
+    def memo_reply(self, context, sections=None):
+        refs, claim_refs = self.refs(context)
         summary = (f"The company states it has raised $23.1M to date [{refs['$23.1M raised']}] and reports "
                    f"140,000+ bots so far [{refs['140 000+ bots']}].")
         concerns = (f"- Funding of $23.1M is currently unconfirmed [{claim_refs['$23.1M raised']}]\n"
                     f"- No revenue has been disclosed to date.")
+        sections = sections or {'executive_summary': summary, 'open_concerns': concerns}
         response = mock.Mock()
-        response.content = [mock.Mock(text=json.dumps({'executive_summary': summary, 'open_concerns': concerns,
-                                                        'evidence_level': 'LITTLE_EVIDENCE'}))]
+        response.content = [mock.Mock(text=json.dumps({**sections, 'evidence_level': 'LITTLE_EVIDENCE'}))]
         response.usage = mock.Mock(input_tokens=1, output_tokens=1)
         return response
 
-    def generate(self):
+    def generate(self, sections=None):
         context = self.context()
+        if callable(sections):
+            sections = sections(*self.refs(context))
         with mock.patch('anthropic.Anthropic') as client_cls:
-            client_cls.return_value.messages.create.return_value = self.memo_reply(context)
+            client_cls.return_value.messages.create.return_value = self.memo_reply(context, sections)
             result = ZeldaIntelligencePipelineV2()._generate_memo(context)
             call = client_cls.return_value.messages.create.call_args.kwargs
         self.assertNotIn('error', result, result.get('error'))
@@ -241,6 +326,51 @@ class ManyChatExtractionTests(TestCase):
         self.assertIn('9. Dates and who is speaking', call['system'])
         self.assertIn('Pitch Deck Hunt', call['messages'][0]['content'])
         self.assertIn('"as_of": "not stated"', call['messages'][0]['content'])
+
+    def test_writer_guards_citations_placed_after_the_stop_and_grouped(self):
+        def sections(refs, claim_refs):
+            funding, bots, messages = refs['$23.1M raised'], refs['140 000+ bots'], refs['500M messages']
+            return {
+                'executive_summary': (f"The company has raised $23.1M to date. [{funding}] No revenue has been "
+                                      f"disclosed to date. The platform reports 140,000+ bots and 500M messages "
+                                      f"so far [{bots}, {messages}]."),
+                'supported_points': (f"- Scale: 500M messages currently.[{messages}][{bots}]\n"
+                                     f"- Pitch Deck Hunt lists $23.1M raised [{claim_refs['$23.1M raised']}]."),
+            }
+        memo, _ = self.generate(sections)
+        self.assertEqual(memo.executive_summary, (
+            'The company has raised $23.1M. [{0}] No revenue has been disclosed to date. The platform reports '
+            '140,000+ bots and 500M messages [{1}, {2}].').format(*self.cited(memo.executive_summary)))
+        self.assertTrue(memo.supported_points.startswith('- Scale: 500M messages.[S'), memo.supported_points)
+        self.assertNotIn('currently', memo.supported_points)
+        self.assertIn('Pitch Deck Hunt lists $23.1M raised [C', memo.supported_points)
+
+    @staticmethod
+    def cited(text):
+        import re
+        return [r for group in re.findall(r'\[([^\]]+)\]', text) for r in group.split(', ')]
+
+    def test_writer_keeps_research_questions_for_current_figures(self):
+        def sections(refs, claim_refs):
+            funding, bots = refs['$23.1M raised'], refs['140 000+ bots']
+            return {
+                'executive_summary': f"Pitch Deck Hunt lists $23.1M raised [{funding}].",
+                'questions_for_management': [
+                    f"What is the total ManyChat has raised to date, beyond the $23.1M listed [{funding}]?",
+                    f"How many bots are active currently, against 140,000+ created by Apr-16 [{bots}]?",
+                    f"Confirm the number of messages sent so far [{refs['500M messages']}].",
+                    f"The deck's 140,000+ bots are the count so far [{bots}].",
+                ],
+            }
+        memo, _ = self.generate(sections)
+        questions = memo.questions_for_management.splitlines()
+        self.assertEqual(len(questions), 4, questions)
+        self.assertIn('raised to date, beyond the $23.1M listed', questions[0])
+        self.assertIn('active currently, against 140,000+', questions[1])
+        self.assertIn('messages sent so far [S', questions[2])
+        # A statement in the same section is still guarded.
+        self.assertNotIn('so far', questions[3])
+        self.assertIn("140,000+ bots are the count [S", questions[3])
 
     def test_ic_memo_and_company_overview_show_the_guarded_text(self):
         from matchmaking.models import InvestorApplication

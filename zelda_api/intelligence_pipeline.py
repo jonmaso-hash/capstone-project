@@ -1151,7 +1151,8 @@ class ZeldaIntelligencePipelineV2:
                              for key, value in memo_sections.items()}
             # A figure whose own source does not say "to date" or "currently"
             # may not acquire it here: a 2016 listing is not a current total
-            # (ManyChat RA-106). Only sentences citing a claim-backed item.
+            # (ManyChat RA-106). Only sentences that state something while
+            # citing a claim-backed item; questions to management are kept.
             from .claim_context import guard_time_wording
             allowed = {item.ref: item.time_wording_allowed for item in context.items if item.dated}
             for key, value in list(memo_sections.items()):
@@ -1750,7 +1751,8 @@ class ZeldaIntelligencePipelineV2:
        are dates in the same sentence that describe something else, such as the deck's
        year: never use them as the figure's date. If an item has a "narrator", the
        figure is that party's statement: write "<narrator> lists/reports ...", not
-       "the company states"."""
+       "the company states". A question asking management for a current figure is
+       fine; this rule is about what the memo states."""
 
         user_prompt = f"""Prepare an investment memo for {context.company}.
 
