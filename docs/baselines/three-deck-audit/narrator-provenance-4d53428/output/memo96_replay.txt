@@ -1,0 +1,4 @@
+== zelda_advantage | idempotent: True
+STORED: The verification pass distinguished between the company's own deck statements [S1, S2] and the same figures as reported by the third-party aggregator Pitch Deck Hunt [C1, C2, C3], correctly flagging that Pitch Deck Hunt is the narrator of the funding and traction claims rather than an independent validator — a distinction a plain AI summary of the same deck would likely collapse into a single 'the company states' attribution.
+REPLAY: The verification pass distinguished between the company's own deck statements [S1, S2] and the same figures as reported by the third-party aggregator Pitch Deck Hunt [C1] ([C2, C3] are the company's own traction statements), correctly flagging that Pitch Deck Hunt is the narrator of the funding claims rather than an independent validator — a distinction a plain AI summary of the same deck would likely collapse into a single 'the company states' attribution.
+unchanged sections: 16 of 17

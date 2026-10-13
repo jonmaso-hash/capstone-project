@@ -1,0 +1,32 @@
+Mutations on fix/narrator-provenance (working copy = afe0cab + 4d53428 content), harness mutate_np.py.txt.
+One mutation at a time, restored in finally, no timeout wrapper; sha256 fingerprints checked after every group:
+  funding_fidelity.py 31b22783b38e010a..., views.py 1061e439239f3b98... (unchanged after every group)
+N8 first SURVIVED (no test held a kind the context has no evidence for); the control 'Pitch Deck Hunt is the narrator of the funding and revenue claims.' was added to test_correct_attribution_self_reports_and_questions_are_unchanged, then N8 was re-run RED.
+
+== group 1
+N1   RED (killed)  rule not applied | Ran 57 tests in 5.208s FAILED (failures=11)
+N2   RED (killed)  no ref is ever wrong | Ran 57 tests in 4.764s FAILED (failures=9)
+N3   RED (killed)  own notes / possessive not skipped | Ran 57 tests in 4.982s FAILED (failures=4)
+N4   RED (killed)  co-narrators not shared | Ran 57 tests in 4.983s FAILED (failures=3)
+N5   RED (killed)  other subject in the gap ignored | Ran 57 tests in 4.845s FAILED (failures=3)
+N6   RED (killed)  citation before the narrator ignored | Ran 57 tests in 5.030s FAILED (failures=1)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': '31b22783b38e010a', 'zelda_api/views.py': '1061e439239f3b98'}
+== group 2
+N7   RED (killed)  kinds phrase not checked | Ran 57 tests in 5.282s FAILED (failures=6)
+N8   SURVIVED      kinds dropped without company evidence | Ran 57 tests in 4.832s OK
+N9   RED (killed)  questions rewritten | Ran 57 tests in 4.849s FAILED (failures=1)
+N10  RED (killed)  "and" ends the credited clause | Ran 57 tests in 4.877s FAILED (failures=1)
+N11  RED (killed)  no kind mapping | Ran 57 tests in 4.681s FAILED (failures=6)
+N12  RED (killed)  "not X's" prefix always | Ran 57 tests in 4.763s FAILED (failures=4)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': '31b22783b38e010a', 'zelda_api/views.py': '1061e439239f3b98'}
+== group 3
+N8   RED (killed)  kinds dropped without company evidence | Ran 57 tests in 4.901s FAILED (failures=1)
+N13  RED (killed)  profile refs counted as the company's | Ran 57 tests in 5.164s FAILED (failures=2)
+N14  RED (killed)  idempotence check removed | Ran 57 tests in 5.111s FAILED (failures=2)
+N15  RED (killed)  no credit gap | Ran 57 tests in 4.465s FAILED (failures=8)
+N16  RED (killed)  kinds note idempotence removed | Ran 57 tests in 4.952s FAILED (failures=1)
+M1   RED (killed)  Markdown without charset | Ran 41 tests in 3.694s FAILED (failures=3)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': '31b22783b38e010a', 'zelda_api/views.py': '1061e439239f3b98'}
+== group 4
+M2   RED (killed)  Markdown as Latin-1 | Ran 41 tests in 3.719s FAILED (errors=3)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': '31b22783b38e010a', 'zelda_api/views.py': '1061e439239f3b98'}

@@ -1,0 +1,24 @@
+"""Replay memo 96's recorded model reply through the pipeline's steps (no DB); print sections that differ from stored."""
+import json, os, re, sys
+WT = sys.argv[1]
+sys.path.insert(0, WT)
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+import django
+django.setup()
+from zelda_api.memo_lists import memo_text
+from zelda_api.tests_funding_fidelity import both_guards, memo94_items
+data = json.load(open(os.path.join(WT, 'zelda_api', 'data', 'funding_fidelity', 'memo96.json'), encoding='utf-8'))
+raw = json.loads(re.search(r'\{.*\}', data['model_reply_text'], re.S).group(0))
+same = 0
+for key, stored in data['stored_sections'].items():
+    value = raw[key]
+    normalized = memo_text(value) if isinstance(value, (str, list, tuple, dict)) else value
+    replay = both_guards(normalized, memo94_items()) if isinstance(normalized, str) else normalized
+    again = both_guards(replay, memo94_items()) if isinstance(replay, str) else replay
+    if replay == stored:
+        same += 1
+        continue
+    print('==', key, '| idempotent:', again == replay)
+    print('STORED:', stored)
+    print('REPLAY:', replay)
+print('unchanged sections:', same, 'of', len(data['stored_sections']))
