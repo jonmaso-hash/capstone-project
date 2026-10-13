@@ -1,0 +1,17 @@
+Memo 95's raw model reply (committed run evidence, docs/manychat-funding-fidelity-2948998 09b) through the time guard and then the funding guard at 5c5502f, in memory. Every section rendered differently from stored memo 95. Memo 95 is not changed. Sections and text identical to the 49663be, 1d63239 and 304dede probes.
+
+FACTS cash='' burn='' runway_as_of='' cash_as_of='' raise_supported=False funding_refs=['C1', 'S3'] undated=[True]
+
+== information_readiness  ['attribution:Pitch Deck Hunt']
+  -• reported by Pitch Deck Hunt funding raised: $23.1M [S3]
+  +• Funding raised (reported by Pitch Deck Hunt): $23.1M [S3]
+
+== what_would_change_the_picture  ['attribution:Pitch Deck Hunt', 'cash_premise']
+  -The single most important missing piece is a revenue and cost schedule — ideally accountant-reviewed — covering at minimum the twelve months to the deck date, showing monthly recurring revenue, gross margin, and burn rate. This alone would allow the traction figures [S1, S2] to be interpreted in the context of actual monetisation and would anchor assessment of the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway.
+  +The single most important missing piece is a revenue and cost schedule — ideally accountant-reviewed — covering at minimum the twelve months to the deck date, showing monthly recurring revenue, gross margin, and burn rate. This would allow the traction figures [S1, S2] to be interpreted in the context of actual monetisation and would anchor assessment of the $23.1M funding figure (per Pitch Deck Hunt) [S3] against runway (which needs a dated cash balance and burn rate; neither is in the evidence).
+
+== base_scenario  ['mixed_self_reported:Pitch Deck Hunt']
+  -Taking the self-reported figures at face value [S1, S2, S3], ManyChat had meaningful bot-platform traction by April 2016 and had raised a material amount of capital. However, without revenue data, burn rate, or business model disclosure, the trajectory from usage scale to sustainable economics cannot be assessed, and the base case remains indeterminate from the available evidence.
+  +Taking the self-reported figures at face value [S1, S2], ManyChat had meaningful bot-platform traction by April 2016 and had raised a material amount of capital (per Pitch Deck Hunt, undated) [S3]. However, without revenue data, burn rate, or business model disclosure, the trajectory from usage scale to sustainable economics cannot be assessed, and the base case remains indeterminate from the available evidence.
+
+3 sections differ from stored memo 95
