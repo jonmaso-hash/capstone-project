@@ -1,0 +1,8 @@
+== git apply --check -v (before applying, on 5c5502f/2e64686)
+Checking patch zelda_api/funding_fidelity.py...
+rc=0
+== git apply -v
+Checking patch zelda_api/funding_fidelity.py...
+Applied patch zelda_api/funding_fidelity.py cleanly.
+== committed diff vs patch hunks: no +/- line differs
+e6ee191305882791cca8c9e3c40322a4d16012a89773f012a145e3141c57209e *funding-fidelity-possessive-opening-fix.patch

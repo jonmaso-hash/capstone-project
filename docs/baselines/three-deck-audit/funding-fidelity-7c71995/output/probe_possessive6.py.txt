@@ -1,0 +1,66 @@
+"""Possessive "Today's" openings, before (5c5502f's funding_fidelity.py and claim_context.py) and after (worktree), in
+memory, no DB, in the pipeline's order: time guard, then funding guard. Each output is guarded again (idempotence)
+and run in reversed item order. Usage: python probe_possessive6.py <worktree-after> <dir with *_5c5502f.py>"""
+import importlib.util, os, sys
+from types import SimpleNamespace as NS
+
+AFTER, BEFORE = sys.argv[1], sys.argv[2]
+sys.path.insert(0, AFTER)
+import zelda_api.claim_context as cc_after
+import zelda_api.funding_fidelity as ff_after
+
+
+def load(name, filename):
+    spec = importlib.util.spec_from_file_location(f'zelda_api.{name}', os.path.join(BEFORE, filename))
+    module = importlib.util.module_from_spec(spec)
+    module.__package__ = 'zelda_api'
+    spec.loader.exec_module(module)
+    return module
+
+
+cc_before, ff_before = load('cc_before', 'claim_context_5c5502f.py'), load('ff_before', 'funding_fidelity_5c5502f.py')
+
+
+def item(ref, statement, category='Financials', narrator='', as_of='', kind='statement'):
+    return NS(ref=ref, kind=kind, category=category, statement=statement, narrator=narrator, as_of=as_of,
+              sources=(NS(profile_field=''),), dated=True, time_wording_allowed=())
+
+
+BASE = [item('C1', '$23.1M raised', 'funding_raised', 'Pitch Deck Hunt', 'not stated', 'claim'),
+        item('S1', '140 000+ bots', 'Traction', as_of='not stated'),
+        item('S3', '$23.1M raised', 'Funding', 'Pitch Deck Hunt', 'not stated')]
+PAIR = [item('S6', '$2.1M cash in the bank', as_of='2016-04-30'),
+        item('S7', 'Net burn of $150K per month', as_of='2016-04-30')]
+FUNDING = 'the $23.1M funding figure (per Pitch Deck Hunt) [S3]'
+CASES = []
+for apostrophe, label in (("'", 'straight'), ('’', 'typographic')):
+    for marker in ('', '- ', '• ', '1. '):
+        today = f'{marker}Today{apostrophe}s'
+        CASES += [
+            (f'{label}, marker {marker!r}: "Today\'s $23.1M ..."',
+             f'{today} $23.1M funding figure (per Pitch Deck Hunt) [S3] supports remaining runway.', BASE + PAIR),
+            (f'{label}, marker {marker!r}: "Today\'s remaining runway ..."',
+             f'{today} remaining runway is anchored by {FUNDING}.', BASE + PAIR),
+        ]
+CASES += [("control: no dated pair (straight)", f"Today's remaining runway is anchored by {FUNDING}.", BASE),
+          ("control: no dated pair (typographic)", f"Today’s remaining runway is anchored by {FUNDING}.", BASE)]
+
+
+def run(cc, ff, text, items):
+    allowed = {i.ref: i.time_wording_allowed for i in items if i.dated}
+    facts = ff.funding_facts(items, 'ManyChat')
+    once = ff.guard_funding_fidelity(cc.guard_time_wording(text, allowed)[0], facts)[0]
+    again = ff.guard_funding_fidelity(cc.guard_time_wording(once, allowed)[0], facts)[0]
+    return once, once == again
+
+
+for name, text, items in CASES:
+    print('==', name)
+    print('   in        :', text)
+    for label, cc, ff in (('5c5502f', cc_before, ff_before), ('after', cc_after, ff_after)):
+        outs = {run(cc, ff, text, its) for its in (items, list(reversed(items)))}
+        for once, idem in sorted(outs):
+            print(f'   {label:12}:', once, '' if idem else '   [NOT IDEMPOTENT]')
+        if len(outs) > 1:
+            print(f'   {label:12}: [DIFFERS WITH ITEM ORDER]')
+    print()

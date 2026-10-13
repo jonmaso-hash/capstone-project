@@ -1,0 +1,64 @@
+"""Mutations for the possessive-opening patch. Usage: python mutate_fidelity8.py <worktree> [ids...|--check|--ids]
+Inherits the 97 mutations of mutate_fidelity7.py; O3 is retargeted to the patched recapitalisation line (same intent).
+P: the patch (funding-fidelity-possessive-opening-fix.patch). Tests: tests_funding_fidelity + tests_claim_context_dates.
+One mutation at a time, file restored in `finally`; never wrap this in `timeout`."""
+import os, re, subprocess, sys
+HERE = os.path.dirname(os.path.abspath(__file__))
+WT = sys.argv[1]
+p7 = os.path.join(HERE, 'mutate_fidelity7.py')
+ns = {'__file__': p7}
+exec(open(p7, encoding='utf-8').read().split(chr(10) + 'env = dict(')[0], ns)
+FF = ns['FF']
+RETARGET = {
+    'O3': ("        rewritten = prefix + rest[:1].upper() + rest[1:]\n", "        rewritten = prefix + rest\n"),
+}
+MUTATIONS = [(n, r, *RETARGET.get(n.split()[0], (o, w))) for n, r, o, w in ns['MUTATIONS']] + [
+    ('P1 possessive "Today\'s" not a qualifier', FF,
+     "(?:today(?:['’]s)?|currently", "(?:today|currently"),
+    ('P2 typographic apostrophe not accepted', FF,
+     "(?:today(?:['’]s)?|currently", "(?:today(?:[']s)?|currently"),
+    ('P3 lead cut at its original length (the pre-patch slice)', FF,
+     "        rest = rewritten[remaining_lead.end():] if remaining_lead else rewritten[len(prefix):]\n",
+     "        rest = rewritten[lead.end():]\n"),
+    ('P4 lead not re-found after the premise rewrite', FF,
+     "        remaining_lead = _LEAD_NOW.match(rewritten)\n", "        remaining_lead = None\n"),
+    ('P5 consumed lead: marker dropped (no prefix skip)', FF,
+     "if remaining_lead else rewritten[len(prefix):]\n", "if remaining_lead else rewritten\n"),
+    ('P6 list marker not kept', FF,
+     "        prefix = lead.group('lead')\n", "        prefix = ''\n"),
+]
+env = dict(os.environ, SECRET_KEY='ci-only-placeholder-key-not-for-production-use', DEBUG='True',
+           ALLOWED_HOSTS='localhost,127.0.0.1', EMAIL_HOST_USER='ci@example.invalid', PYTHONIOENCODING='utf-8',
+           CELERY_TASK_ALWAYS_EAGER='True', CELERY_BROKER_URL='memory://', CELERY_RESULT_BACKEND='cache+memory://')
+only = sys.argv[2:] or None
+if only == ['--check']:
+    for name, rel, old, new in MUTATIONS:
+        c = open(os.path.join(WT, rel), encoding='utf-8').read().count(old)
+        if c != 1:
+            print('TARGET', c, name)
+    print(len(MUTATIONS), 'mutations checked')
+    sys.exit(0)
+if only == ['--ids']:
+    print(' '.join(m[0].split()[0] for m in MUTATIONS))
+    sys.exit(0)
+for name, rel, old, new in MUTATIONS:
+    if only and name.split()[0] not in only:
+        continue
+    path = os.path.join(WT, rel)
+    original = open(path, encoding='utf-8', newline='').read()
+    nl = '\r\n' if '\r\n' in original else '\n'
+    o, n = old.replace('\n', nl), new.replace('\n', nl)
+    if original.count(o) != 1:
+        print('== ' + name + '\nHARNESS: target found %d times' % original.count(o), flush=True)
+        continue
+    try:
+        open(path, 'w', encoding='utf-8', newline='').write(original.replace(o, n))
+        out = subprocess.run([sys.executable, 'manage.py', 'test', '--noinput', '--parallel', '1',
+                              'zelda_api.tests_funding_fidelity', 'zelda_api.tests_claim_context_dates'],
+                             cwd=WT, env=env, capture_output=True, text=True, encoding='utf-8', errors='replace')
+        lines = [re.sub(r' \(zelda_api\.tests_\w+\.\w+\.\w+\)', '', l)
+                 for l in (out.stdout + out.stderr).splitlines() if re.match(r'^(FAIL|ERROR):|^Ran |^OK$|^FAILED', l)]
+        print('==', name)
+        print('\n'.join(lines), flush=True)
+    finally:
+        open(path, 'w', encoding='utf-8', newline='').write(original)

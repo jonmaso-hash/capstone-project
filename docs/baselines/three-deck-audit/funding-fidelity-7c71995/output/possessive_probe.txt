@@ -1,0 +1,92 @@
+Possessive "Today's" openings, before (5c5502f's funding_fidelity.py and claim_context.py) and after (7c71995), in memory, in the pipeline's order (time guard, then funding guard), both item orders, each output guarded again. Script: probe_possessive6.py.txt
+
+== straight, marker '': "Today's $23.1M ..."
+   in        : Today's $23.1M funding figure (per Pitch Deck Hunt) [S3] supports remaining runway.
+   5c5502f     : 's $23.1M funding figure (per Pitch Deck Hunt) [S3] supports runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure). 
+   after       : $23.1M funding figure (per Pitch Deck Hunt) [S3] supports runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure). 
+
+== straight, marker '': "Today's remaining runway ..."
+   in        : Today's remaining runway is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3].
+   5c5502f     : Y as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure) is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3]. 
+   after       : Runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure) is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3]. 
+
+== straight, marker '- ': "Today's $23.1M ..."
+   in        : - Today's $23.1M funding figure (per Pitch Deck Hunt) [S3] supports remaining runway.
+   5c5502f     : - 's $23.1M funding figure (per Pitch Deck Hunt) [S3] supports runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure). 
+   after       : - $23.1M funding figure (per Pitch Deck Hunt) [S3] supports runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure). 
+
+== straight, marker '- ': "Today's remaining runway ..."
+   in        : - Today's remaining runway is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3].
+   5c5502f     : - Y as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure) is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3]. 
+   after       : - Runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure) is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3]. 
+
+== straight, marker '• ': "Today's $23.1M ..."
+   in        : • Today's $23.1M funding figure (per Pitch Deck Hunt) [S3] supports remaining runway.
+   5c5502f     : • 's $23.1M funding figure (per Pitch Deck Hunt) [S3] supports runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure). 
+   after       : • $23.1M funding figure (per Pitch Deck Hunt) [S3] supports runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure). 
+
+== straight, marker '• ': "Today's remaining runway ..."
+   in        : • Today's remaining runway is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3].
+   5c5502f     : • Y as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure) is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3]. 
+   after       : • Runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure) is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3]. 
+
+== straight, marker '1. ': "Today's $23.1M ..."
+   in        : 1. Today's $23.1M funding figure (per Pitch Deck Hunt) [S3] supports remaining runway.
+   5c5502f     : 1. 's $23.1M funding figure (per Pitch Deck Hunt) [S3] supports runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure). 
+   after       : 1. $23.1M funding figure (per Pitch Deck Hunt) [S3] supports runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure). 
+
+== straight, marker '1. ': "Today's remaining runway ..."
+   in        : 1. Today's remaining runway is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3].
+   5c5502f     : 1. Y as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure) is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3]. 
+   after       : 1. Runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure) is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3]. 
+
+== typographic, marker '': "Today's $23.1M ..."
+   in        : Today’s $23.1M funding figure (per Pitch Deck Hunt) [S3] supports remaining runway.
+   5c5502f     : ’s $23.1M funding figure (per Pitch Deck Hunt) [S3] supports runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure). 
+   after       : $23.1M funding figure (per Pitch Deck Hunt) [S3] supports runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure). 
+
+== typographic, marker '': "Today's remaining runway ..."
+   in        : Today’s remaining runway is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3].
+   5c5502f     : ’s runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure) is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3]. 
+   after       : Runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure) is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3]. 
+
+== typographic, marker '- ': "Today's $23.1M ..."
+   in        : - Today’s $23.1M funding figure (per Pitch Deck Hunt) [S3] supports remaining runway.
+   5c5502f     : - ’s $23.1M funding figure (per Pitch Deck Hunt) [S3] supports runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure). 
+   after       : - $23.1M funding figure (per Pitch Deck Hunt) [S3] supports runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure). 
+
+== typographic, marker '- ': "Today's remaining runway ..."
+   in        : - Today’s remaining runway is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3].
+   5c5502f     : - ’s runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure) is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3]. 
+   after       : - Runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure) is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3]. 
+
+== typographic, marker '• ': "Today's $23.1M ..."
+   in        : • Today’s $23.1M funding figure (per Pitch Deck Hunt) [S3] supports remaining runway.
+   5c5502f     : • ’s $23.1M funding figure (per Pitch Deck Hunt) [S3] supports runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure). 
+   after       : • $23.1M funding figure (per Pitch Deck Hunt) [S3] supports runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure). 
+
+== typographic, marker '• ': "Today's remaining runway ..."
+   in        : • Today’s remaining runway is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3].
+   5c5502f     : • ’s runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure) is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3]. 
+   after       : • Runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure) is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3]. 
+
+== typographic, marker '1. ': "Today's $23.1M ..."
+   in        : 1. Today’s $23.1M funding figure (per Pitch Deck Hunt) [S3] supports remaining runway.
+   5c5502f     : 1. ’s $23.1M funding figure (per Pitch Deck Hunt) [S3] supports runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure). 
+   after       : 1. $23.1M funding figure (per Pitch Deck Hunt) [S3] supports runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure). 
+
+== typographic, marker '1. ': "Today's remaining runway ..."
+   in        : 1. Today’s remaining runway is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3].
+   5c5502f     : 1. ’s runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure) is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3]. 
+   after       : 1. Runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure) is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3]. 
+
+== control: no dated pair (straight)
+   in        : Today's remaining runway is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3].
+   5c5502f     : Today's runway (which needs a dated cash balance and burn rate; neither is in the evidence) is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3]. 
+   after       : Today's runway (which needs a dated cash balance and burn rate; neither is in the evidence) is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3]. 
+
+== control: no dated pair (typographic)
+   in        : Today’s remaining runway is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3].
+   5c5502f     : Today’s runway (which needs a dated cash balance and burn rate; neither is in the evidence) is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3]. 
+   after       : Today’s runway (which needs a dated cash balance and burn rate; neither is in the evidence) is anchored by the $23.1M funding figure (per Pitch Deck Hunt) [S3]. 
+
