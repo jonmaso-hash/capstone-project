@@ -1,0 +1,114 @@
+"""Mutations for the two review gaps at 1d63239. Usage: python mutate_fidelity6.py <worktree> [ids...|--check]
+F/G/H/J/K/L: the 70 earlier mutations (from mutate_fidelity5.py). Those whose code moved are retargeted with the same
+intent: the per-span helper is one indent shallower (dedented automatically), and the runway/FY code is rewritten
+(explicit retargets below). M: current wording and fiscal years (gap 1). N: every clause in one call (gap 2).
+One mutation at a time, file restored in `finally`; never wrap this in `timeout`."""
+import os, re, subprocess, sys
+HERE = os.path.dirname(os.path.abspath(__file__))
+WT = sys.argv[1]
+p5 = os.path.join(HERE, 'mutate_fidelity5.py')
+ns = {'__file__': p5}
+exec(open(p5, encoding='utf-8').read().split(chr(10) + 'env = dict(')[0], ns)
+FF, PL = ns['FF'], 'zelda_api/intelligence_pipeline.py'
+TESTS = 'zelda_api/tests_funding_fidelity.py'
+
+RETARGET = {
+    'J12': ("    if facts.runway_supported:\n        if current:\n", "    if False:\n        if current:\n"),
+    'K1': ("    qualified = (period is not None and not _HISTORICAL", "    qualified = (True and not _HISTORICAL"),
+    'K2': ("period is not None and not _HISTORICAL.search(text) and not _TENTATIVE",
+           "period is not None and not _TENTATIVE"),
+    'K8': ("abs(cash[1] - burn[1]) <= COMPATIBLE_MONTHS", "True"),
+    'K9': ("    if facts.runway_supported:\n        if current:\n",
+           "    if facts.runway_supported or facts.cash == DATED:\n        if current:\n"),
+    'K12': ("        if facts.cash == DATED:\n            return f'cash as of",
+            "        if False:\n            return f'cash as of"),
+    'K14': ("        return ('fy', int(match.group('fy')))\n", "        return None\n"),
+}
+
+
+def dedent(text):
+    """The same lines, one indent (4 spaces) shallower: _one_self_reported's body moved out of a loop."""
+    lines = text.split('\n')
+    return '\n'.join(l[4:] if l.startswith('    ') else l for l in lines)
+
+
+source = open(os.path.join(WT, FF), encoding='utf-8').read()
+MUTATIONS = []
+for name, rel, old, new in ns['MUTATIONS']:
+    key = name.split()[0]
+    if key in RETARGET:
+        old, new = RETARGET[key]
+    elif rel == FF and source.count(old) != 1 and source.count(dedent(old)) == 1:
+        old, new = dedent(old), dedent(new)
+    MUTATIONS.append((name, rel, old, new))
+MUTATIONS += [
+    # Gap 1: a dated pair is runway AS OF its date, never current runway; FY2026 is not December
+    ('M1 current wording ignored', FF,
+     "current=bool(match.group('now') or _NOW.search(clause)))", "current=False)"),
+    ('M2 only a "current" adjective counts ("today" in the clause ignored)', FF,
+     "current=bool(match.group('now') or _NOW.search(clause)))", "current=bool(match.group('now')))"),
+    ('M3 a supported runway accepts current wording', FF,
+     "        if current:\n            return f'runway as of", "        if False:\n            return f'runway as of"),
+    ('M4 a dated cash balance accepts current wording', FF,
+     "            return f'cash as of {facts.cash_as_of} (the latest dated cash balance; {NO_CURRENT})' if current else None\n",
+     "            return None\n"),
+    ('M5 leftover "today" kept beside the dated note', FF,
+     "        for now in reversed(list(_NOW.finditer(rewritten, start, stop))):\n", "        for now in []:\n"),
+    ('M6 a bare fiscal year read as December', FF,
+     "        return ('fy', int(match.group('fy')))\n", "        return ('month', int(match.group('fy')) * 12 + 12)\n"),
+    ('M7 a period end compared with a bare fiscal year', FF,
+     "    if cash[0] != burn[0]:\n        return False\n", ""),
+    ('M8 unsupported current wording loses its adjective', FF,
+     "        if match.group('now') and not supported:", "        if False:"),
+    ('M9 the qualified "current runway (which needs ...)" matched again (not idempotent)', FF,
+     r"(?P<c>runway|cash)\b(?!(?:\s+on\s+hand)?\s*\(which\s+needs)|", r"(?P<c>runway|cash)\b|"),
+    ('M10 "current runway" not a premise', FF,
+     "_CASH_PREMISE = re.compile(r\"\\b(?P<now>current|present|today's)\\s+",
+     "_CASH_PREMISE = re.compile(r\"\\b(?P<now>(?!))\\s+"),
+    ('M11 prompt rule: current runway sentence removed', PL,
+     "       Dated cash and burn give runway as of their date, never current runway.\n", ""),
+    # Gap 2: every relevant group in one call, with source-to-clause locality
+    ('N1 one "self-reported" span per call', FF,
+     "    for _ in range(len(_SELF_REPORTED.findall(sentence)) + 1):\n", "    for _ in range(1):\n"),
+    ('N2 a note crosses into a later clause citing other sources', FF,
+     "        if begin != after and (_REF.search(clause) or _SELF_REPORTED.search(clause)):\n            break\n", ""),
+    ('N3 a later uncited "self-reported" clause takes the note', FF,
+     "(_REF.search(clause) or _SELF_REPORTED.search(clause))", "_REF.search(clause)"),
+    ('N4 the span loop restarts without the handled-span no-op (always first span)', FF,
+     "            if rewritten is not None:\n                sentence = rewritten\n                break\n",
+     "            if rewritten is not None:\n                sentence = rewritten\n            break\n"),
+]
+env = dict(os.environ, SECRET_KEY='ci-only-placeholder-key-not-for-production-use', DEBUG='True',
+           ALLOWED_HOSTS='localhost,127.0.0.1', EMAIL_HOST_USER='ci@example.invalid', PYTHONIOENCODING='utf-8',
+           CELERY_TASK_ALWAYS_EAGER='True', CELERY_BROKER_URL='memory://', CELERY_RESULT_BACKEND='cache+memory://')
+only = sys.argv[2:] or None
+if only == ['--check']:
+    for name, rel, old, new in MUTATIONS:
+        c = open(os.path.join(WT, rel), encoding='utf-8').read().count(old)
+        if c != 1:
+            print('TARGET', c, name)
+    print(len(MUTATIONS), 'mutations checked')
+    sys.exit(0)
+if only == ['--ids']:
+    print(' '.join(m[0].split()[0] for m in MUTATIONS))
+    sys.exit(0)
+for name, rel, old, new in MUTATIONS:
+    if only and name.split()[0] not in only:
+        continue
+    path = os.path.join(WT, rel)
+    original = open(path, encoding='utf-8', newline='').read()
+    nl = '\r\n' if '\r\n' in original else '\n'
+    o, n = old.replace('\n', nl), new.replace('\n', nl)
+    if original.count(o) != 1:
+        print('== ' + name + '\nHARNESS: target found %d times' % original.count(o), flush=True)
+        continue
+    try:
+        open(path, 'w', encoding='utf-8', newline='').write(original.replace(o, n))
+        out = subprocess.run([sys.executable, 'manage.py', 'test', '--noinput', '--parallel', '1', 'zelda_api.tests_funding_fidelity'],
+                             cwd=WT, env=env, capture_output=True, text=True, encoding='utf-8', errors='replace')
+        lines = [re.sub(r' \(zelda_api\.tests_funding_fidelity\.\w+\.\w+\)', '', l)
+                 for l in (out.stdout + out.stderr).splitlines() if re.match(r'^(FAIL|ERROR):|^Ran |^OK$|^FAILED', l)]
+        print('==', name)
+        print('\n'.join(lines), flush=True)
+    finally:
+        open(path, 'w', encoding='utf-8', newline='').write(original)

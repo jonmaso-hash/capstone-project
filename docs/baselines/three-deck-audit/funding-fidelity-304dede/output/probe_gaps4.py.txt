@@ -1,0 +1,55 @@
+"""The two review gaps at 1d63239, before (1d63239's funding_fidelity.py) and after (worktree), in memory, no DB.
+Each output is guarded again to check idempotence; reversed item order is run too.
+Usage: python probe_gaps4.py <worktree-after> <path-to-1d63239-funding_fidelity.py>"""
+import importlib.util, os, sys
+from types import SimpleNamespace as NS
+
+AFTER, BEFORE = sys.argv[1], sys.argv[2]
+sys.path.insert(0, AFTER)
+import zelda_api.funding_fidelity as after_mod
+spec = importlib.util.spec_from_file_location('zelda_api.ff_before', BEFORE)
+before_mod = importlib.util.module_from_spec(spec)
+before_mod.__package__ = 'zelda_api'
+spec.loader.exec_module(before_mod)
+
+
+def item(ref, statement, category='Financials', narrator='', as_of='', kind='statement'):
+    return NS(ref=ref, kind=kind, category=category, statement=statement, narrator=narrator, as_of=as_of,
+              sources=(NS(profile_field=''),))
+
+
+BASE = [item('C1', '$23.1M raised', 'funding_raised', 'Pitch Deck Hunt', 'not stated', 'claim'),
+        item('S1', '140 000+ bots', 'Traction', as_of='not stated'),
+        item('S2', '500M messages', 'Traction', as_of='not stated'),
+        item('S3', '$23.1M raised', 'Funding', 'Pitch Deck Hunt', 'not stated')]
+CB = item('S4', '$22M raised', 'Funding', 'Crunchbase', 'not stated')
+
+
+def pair(as_of):
+    return [item('S5', '$2.1M cash in the bank', as_of=as_of), item('S6', 'Net burn of $150K per month', as_of=as_of)]
+
+
+CURRENT = 'It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against current remaining runway.'
+PLAIN = 'It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway.'
+TODAY = 'The $23.1M raised (per Pitch Deck Hunt) [S3] leaves remaining runway today.'
+REPRO = 'The self-reported figures [S1, S3] are noted, and self-reported funding [S4] is unverified.'
+CASES = [
+    ('1. 2016-04-30 pair, explicit current premise', CURRENT, BASE + pair('2016-04-30')),
+    ('1. 2030-06-30 pair, explicit current premise', CURRENT, BASE + pair('2030-06-30')),
+    ('1. 2016-04-30 pair, "today" in the clause', TODAY, BASE + pair('2016-04-30')),
+    ('1. 2016-04-30 pair, no current wording (dated positive control)', PLAIN, BASE + pair('2016-04-30')),
+    ('1. cash 2026-06-30 + annual burn FY2026 (no fiscal period end)', PLAIN,
+     BASE + [item('S5', '$2.1M cash in the bank', as_of='2026-06-30'),
+             item('S6', '$1.8M annual burn', as_of='FY2026')]),
+    ('2. review repro: S1 traction, S3 Pitch Deck Hunt, S4 Crunchbase', REPRO, BASE + [CB]),
+    ('2. same, items reversed', REPRO, list(reversed(BASE + [CB]))),
+]
+for name, text, items in CASES:
+    print('==', name)
+    print('   in      :', text)
+    for label, mod in (('1d63239', before_mod), ('after', after_mod)):
+        facts = mod.funding_facts(items, 'ManyChat')
+        once = mod.guard_funding_fidelity(text, facts)[0]
+        twice = mod.guard_funding_fidelity(once, facts)[0]
+        print(f'   {label:8}:', once, '' if once == twice else '   [NOT IDEMPOTENT]')
+    print()
