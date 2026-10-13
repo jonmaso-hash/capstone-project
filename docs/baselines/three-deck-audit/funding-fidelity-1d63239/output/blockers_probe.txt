@@ -1,0 +1,47 @@
+The two review blockers on 49663be, before (49663be's funding_fidelity.py) and after (1d63239), in memory, each output also re-guarded to check idempotence. Script: probe_blockers3.py.txt
+
+== 1. undated company cash (49663be: bypassed the guard)
+   in      : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway.
+   49663be : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway. 
+   after   : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against runway (which needs a dated cash balance and burn rate; the evidence's cash figure is not a dated balance and no burn rate is in the evidence). 
+
+== 1. dated cash only
+   in      : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway.
+   49663be : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway. 
+   after   : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against runway (which needs a dated cash balance and burn rate; no burn rate is in the evidence). 
+
+== 1. dated burn only ("neither" was wrong)
+   in      : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway.
+   49663be : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against runway (which needs a dated cash balance and burn rate; neither is in the evidence). 
+   after   : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against runway (which needs a dated cash balance and burn rate; no cash balance is in the evidence). 
+
+== 1. historical cash + dated burn
+   in      : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway.
+   49663be : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway. 
+   after   : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against runway (which needs a dated cash balance and burn rate; the evidence's cash figure is not a dated balance). 
+
+== 1. negated cash + dated burn
+   in      : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway.
+   49663be : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway. 
+   after   : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against runway (which needs a dated cash balance and burn rate; no cash balance is in the evidence). 
+
+== 1. dated cash + burn from another period
+   in      : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway.
+   49663be : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway. 
+   after   : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against runway (which needs a dated cash balance and burn rate; the evidence's cash balance and burn rate are not from the same period). 
+
+== 1. dated cash + compatible dated burn (supported: unchanged)
+   in      : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway.
+   49663be : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway. 
+   after   : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway. 
+
+== 2. traction [S1] + Pitch Deck Hunt [S3] + Crunchbase [S4]
+   in      : Taking the self-reported figures at face value [S1, S3, S4], ManyChat had meaningful bot-platform traction by April 2016 and had raised a material amount of capital.
+   49663be : Taking the self-reported figures at face value [S1, S4], ManyChat had meaningful bot-platform traction by April 2016 and had raised a material amount of capital (per Pitch Deck Hunt, undated) [S3].    [NOT IDEMPOTENT]
+   after   : Taking the self-reported figures at face value [S1], ManyChat had meaningful bot-platform traction by April 2016 and had raised a material amount of capital (per Pitch Deck Hunt, undated) [S3] and (per Crunchbase, undated) [S4]. 
+
+== 2. same, items reversed
+   in      : Taking the self-reported figures at face value [S1, S3, S4], ManyChat had meaningful bot-platform traction by April 2016 and had raised a material amount of capital.
+   49663be : Taking the self-reported figures at face value [S1, S3], ManyChat had meaningful bot-platform traction by April 2016 and had raised a material amount of capital (per Crunchbase, undated) [S4].    [NOT IDEMPOTENT]
+   after   : Taking the self-reported figures at face value [S1], ManyChat had meaningful bot-platform traction by April 2016 and had raised a material amount of capital (per Pitch Deck Hunt, undated) [S3] and (per Crunchbase, undated) [S4]. 
+

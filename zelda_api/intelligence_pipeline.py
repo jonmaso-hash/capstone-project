@@ -1766,11 +1766,18 @@ class ZeldaIntelligencePipelineV2:
        fine; this rule is about what the memo states.
     10. Funding and the profile. Each section, bullet and question is read on its
        own: name a narrated figure's narrator every time the figure appears, and
-       never call it "self-reported". A funding_raised figure is money reported as
+       never call it "self-reported" -- not even inside a group such as "the
+       self-reported figures [S1, S2, S3]": cite the company's own figures and the
+       narrated figure separately. A funding_raised figure is money reported as
        raised at some point; it is not a raise in progress, a round, proceeds or
        cash on hand. Unless an item states a current raise (such as "Raising
        (profile)"), do not write "this raise", "the stated raise" or its proceeds or
-       runway as fact; a question may ask whether a raise is planned. Profile items
+       runway as fact; a question may ask whether a raise is planned. Runway or
+       remaining cash needs a dated cash balance and a burn rate; reported funding
+       and a revenue/cost schedule are not enough, and neither is an undated,
+       past or estimated cash or burn figure, or a burn rate from another period.
+       Dated cash and burn give runway as of their date, never current runway.
+       Profile items
        (P...) are the current profile and undated: never date them with a slide's
        date (not "was Series A as of April 2016")."""
 

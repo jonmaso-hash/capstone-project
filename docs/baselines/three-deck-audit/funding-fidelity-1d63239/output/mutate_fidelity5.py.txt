@@ -1,0 +1,122 @@
+"""Mutations for the two review blockers on 49663be. Usage: python mutate_fidelity5.py <worktree> [ids...|--check]
+F/G/H/J: the earlier mutations (from mutate_fidelity4.py); J mutations whose code this change rewrote are retargeted
+to the new code with the same intent. K: evidence-qualified cash/burn (blocker 1). L: one-pass mixed groups (blocker 2).
+One mutation at a time, file restored in `finally`; never wrap this in `timeout`."""
+import os, re, subprocess, sys
+HERE = os.path.dirname(os.path.abspath(__file__))
+WT = sys.argv[1]
+p4 = os.path.join(HERE, 'mutate_fidelity4.py')
+ns = {'__file__': p4}
+exec(open(p4, encoding='utf-8').read().split(chr(10) + 'env = dict(')[0], ns)
+FF = ns['FF']
+
+RETARGET = {
+    'J6': ("        replacement = f'[{\", \".join(kept)}]'\n        sentence = f'{sentence[:group.start()]}",
+           "        replacement = group.group(0)\n        sentence = f'{sentence[:group.start()]}"),
+    'J7': ("        note = ' and '.join(f'(per {n}{undated(u)}) [",
+           "        note = ' and '.join(f'(per {n}) ["),
+    'J10': ("    if _asks(sentence) or _HYPOTHESIS.search(sentence):\n",
+            "    if _HYPOTHESIS.search(sentence):\n"),
+    'J11': ("    if _asks(sentence) or _HYPOTHESIS.search(sentence):\n",
+            "    if _asks(sentence):\n"),
+    'J12': ("    if facts.runway_supported:\n        return None\n", ""),
+    'J13': ("    if not (_cited(sentence) & facts.funding_refs or any(p.search(sentence) for p in facts.funding_figures)):\n"
+            "        return sentence\n\n    def basis", "\n    def basis"),
+    'J15': ("    if (not kind or getattr(item, 'narrator', '') or item.kind",
+            "    if (not kind or item.kind"),
+    'J16': ("        if not (cited - set(by_ref) - facts.profile_refs):\n",
+            "        if True:\n"),
+}
+MUTATIONS = []
+for name, rel, old, new in ns['MUTATIONS']:
+    key = name.split()[0]
+    if key in RETARGET:
+        old, new = RETARGET[key]
+        name = name.replace('a real cash balance', 'a supported runway') if key == 'J12' else name
+    MUTATIONS.append((name, rel, old, new))
+MUTATIONS += [
+    # Blocker 1: runway needs an affirmative dated cash balance and a compatible burn basis
+    ('K1 an undated figure counts as a dated basis', FF,
+     "    qualified = (month is not None and not _HISTORICAL", "    qualified = (True and not _HISTORICAL"),
+    ('K2 a historical figure counts', FF,
+     "month is not None and not _HISTORICAL.search(text) and not _TENTATIVE",
+     "month is not None and not _TENTATIVE"),
+    ('K3 a tentative figure counts', FF,
+     "not _TENTATIVE.search(text)\n                 and not _CONDITIONAL",
+     "True\n                 and not _CONDITIONAL"),
+    ('K4 a conditional figure counts', FF,
+     "and not _CONDITIONAL.search(text) and (kind", "and (kind"),
+    ('K5 a burn without a rate counts', FF,
+     "(kind == 'cash' or _RATE.search(text))", "True"),
+    ('K6 a negated figure counts', FF,
+     "            or _NEGATED.search(text) or _UNKNOWN", "            or _UNKNOWN"),
+    ('K7 an unknown figure counts', FF,
+     "or _UNKNOWN.search(text) or _asks(text)", "or _asks(text)"),
+    ('K8 periods need not be compatible', FF,
+     "abs(c - b) <= COMPATIBLE_MONTHS", "True"),
+    ('K9 a dated cash balance alone supports runway (the 49663be keyword behaviour)', FF,
+     "    if facts.runway_supported:\n        return None\n",
+     "    if facts.runway_supported or facts.cash == DATED:\n        return None\n"),
+    ('K10 "neither is in the evidence" whatever the evidence holds', FF,
+     "    if facts.cash == NONE and facts.burn == NONE:\n", "    if True:\n"),
+    ('K11 a cash flow counts as a cash balance', FF,
+     r"_CASH_WORD = re.compile(r'\bcash\b(?!\s+(?:flow|burn|outflow))|", r"_CASH_WORD = re.compile(r'\bcash\b|"),
+    ('K12 a dated cash balance does not support "available cash"', FF,
+     "        if facts.cash == DATED:\n            return None\n", ""),
+    ('K13 a profile field counts', FF,
+     "or item.kind == 'profile' or not _MONEY", "or not _MONEY"),
+    ('K14 fiscal-year as-of dates unread', FF,
+     "        return int(match.group('fy')) * 12 + 12\n", "        return None\n"),
+    ('K15 a question counts as evidence', FF,
+     " or _UNKNOWN.search(text) or _asks(text)):\n", " or _UNKNOWN.search(text)):\n"),
+    ('K16 undated wording for a present figure says "none"', FF,
+     "        why = 'none is in the evidence' if facts.cash == NONE else _MISSING['cash'][PRESENT]\n",
+     "        why = 'none is in the evidence'\n"),
+    # Blocker 2: every narrated ref in a mixed group, in one pass, independent of item order
+    ('L1 only the first narrated ref leaves the group', FF,
+     "            moved = [r for r in refs if r in by_ref and r not in stated]\n",
+     "            moved = [r for r in refs if r in by_ref and r not in stated][:1]\n"),
+    ('L2 notes follow item order, not citation order', FF,
+     "        for ref in moved:\n            entry = by_ref[ref]\n",
+     "        for ref in sorted(moved, key=lambda r: [e.narrator for e in facts.narrated].index(by_ref[r].narrator)):\n"
+     "            entry = by_ref[ref]\n"),
+    ('L3 a narrator already named in the clause is attributed again (not idempotent)', FF,
+     " or entry.narrator.lower() in clause\n", "\n"),
+    ('L4 only the first narrator gets a note', FF,
+     "for n, (own, u) in narrators.items())\n        kept", "for n, (own, u) in list(narrators.items())[:1])\n        kept"),
+    ('L5 an all-narrated group leaves empty brackets', FF,
+     "        if not kept:            #", "        if False:            #"),
+    ('L6 a group of two narrators keeps one narrator in a sole rewording', FF,
+     "        names = ' and '.join(narrators)\n", "        names = next(iter(narrators))\n"),
+]
+env = dict(os.environ, SECRET_KEY='ci-only-placeholder-key-not-for-production-use', DEBUG='True',
+           ALLOWED_HOSTS='localhost,127.0.0.1', EMAIL_HOST_USER='ci@example.invalid', PYTHONIOENCODING='utf-8',
+           CELERY_TASK_ALWAYS_EAGER='True', CELERY_BROKER_URL='memory://', CELERY_RESULT_BACKEND='cache+memory://')
+only = sys.argv[2:] or None
+if only == ['--check']:
+    for name, rel, old, new in MUTATIONS:
+        c = open(os.path.join(WT, rel), encoding='utf-8').read().count(old)
+        if c != 1:
+            print('TARGET', c, name)
+    print(len(MUTATIONS), 'mutations checked')
+    sys.exit(0)
+for name, rel, old, new in MUTATIONS:
+    if only and name.split()[0] not in only:
+        continue
+    path = os.path.join(WT, rel)
+    original = open(path, encoding='utf-8', newline='').read()
+    nl = '\r\n' if '\r\n' in original else '\n'
+    o, n = old.replace('\n', nl), new.replace('\n', nl)
+    if original.count(o) != 1:
+        print('== ' + name + '\nHARNESS: target found %d times' % original.count(o), flush=True)
+        continue
+    try:
+        open(path, 'w', encoding='utf-8', newline='').write(original.replace(o, n))
+        out = subprocess.run([sys.executable, 'manage.py', 'test', '--noinput', '--parallel', '1', 'zelda_api.tests_funding_fidelity'],
+                             cwd=WT, env=env, capture_output=True, text=True, encoding='utf-8', errors='replace')
+        lines = [re.sub(r' \(zelda_api\.tests_funding_fidelity\.\w+\.\w+\)', '', l)
+                 for l in (out.stdout + out.stderr).splitlines() if re.match(r'^(FAIL|ERROR):|^Ran |^OK$|^FAILED', l)]
+        print('==', name)
+        print('\n'.join(lines), flush=True)
+    finally:
+        open(path, 'w', encoding='utf-8', newline='').write(original)

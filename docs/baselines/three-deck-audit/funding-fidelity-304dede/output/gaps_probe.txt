@@ -1,0 +1,37 @@
+The two review gaps at 1d63239, before (1d63239's funding_fidelity.py) and after (304dede), in memory; each output guarded a second time to check idempotence. Script: probe_gaps4.py.txt
+
+== 1. 2016-04-30 pair, explicit current premise
+   in      : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against current remaining runway.
+   1d63239 : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against current remaining runway. 
+   after   : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure). 
+
+== 1. 2030-06-30 pair, explicit current premise
+   in      : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against current remaining runway.
+   1d63239 : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against current remaining runway. 
+   after   : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against runway as of 2030-06-30 (from the dated cash balance and burn rate; the evidence gives no current figure). 
+
+== 1. 2016-04-30 pair, "today" in the clause
+   in      : The $23.1M raised (per Pitch Deck Hunt) [S3] leaves remaining runway today.
+   1d63239 : The $23.1M raised (per Pitch Deck Hunt) [S3] leaves remaining runway today. 
+   after   : The $23.1M raised (per Pitch Deck Hunt) [S3] leaves runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current figure). 
+
+== 1. 2016-04-30 pair, no current wording (dated positive control)
+   in      : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway.
+   1d63239 : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway. 
+   after   : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway. 
+
+== 1. cash 2026-06-30 + annual burn FY2026 (no fiscal period end)
+   in      : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway.
+   1d63239 : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against remaining runway. 
+   after   : It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against runway (which needs a dated cash balance and burn rate; the evidence's cash balance and burn rate are not shown to be from the same period). 
+
+== 2. review repro: S1 traction, S3 Pitch Deck Hunt, S4 Crunchbase
+   in      : The self-reported figures [S1, S3] are noted, and self-reported funding [S4] is unverified.
+   1d63239 : The self-reported figures [S1] are noted, and self-reported funding [S4] is unverified (per Pitch Deck Hunt, undated) [S3].    [NOT IDEMPOTENT]
+   after   : The self-reported figures [S1] (funding: per Pitch Deck Hunt, undated [S3]) are noted, and funding (per Crunchbase) [S4] is unverified. 
+
+== 2. same, items reversed
+   in      : The self-reported figures [S1, S3] are noted, and self-reported funding [S4] is unverified.
+   1d63239 : The self-reported figures [S1] are noted, and self-reported funding [S4] is unverified (per Pitch Deck Hunt, undated) [S3].    [NOT IDEMPOTENT]
+   after   : The self-reported figures [S1] (funding: per Pitch Deck Hunt, undated [S3]) are noted, and funding (per Crunchbase) [S4] is unverified. 
+

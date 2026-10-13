@@ -1,0 +1,446 @@
+Mutations at 5c5502f (fix/funding-cash-and-mixed-refs), harness output/mutate_fidelity7.py.txt.
+One mutation at a time against zelda_api.tests_funding_fidelity + zelda_api.tests_claim_context_dates (CI env,
+--parallel 1), file restored in `finally`, no `timeout` wrapper; groups of at most six; file sha256 fingerprints
+verified after every group:
+  30f3b3626894e83e52dc26f27662e047efab4b52c65250600334dbfb45aedbdc  zelda_api/funding_fidelity.py
+  79d73cf090172628518669e0fd7eecb26718d021ea48d2929980aab71dbbf2d7  zelda_api/tests_funding_fidelity.py
+  ba91d1c3141cd82cd178cbecdb0635b30bebf39b92930644012f8a747c367ee5  zelda_api/intelligence_pipeline.py
+  ac38d76fbb27d538f2b13b1655aa81a30b857565d223c70b04f0a60ef6446cab  zelda_api/claim_context.py (CRLF working copy)
+The first three equal the committed blobs. claim_context.py is checked out with CRLF (core.autocrlf=true); its
+committed blob is LF (sha256 299f6661c4e9b70043798ccf1830e92ec1bd52cb513c31058adfd6fd7fd1ade6) and the content
+is identical ignoring CR.
+
+Scope: the 12 new O mutations, plus the 30 inherited mutations that target code this change touched or depends on:
+J5-J8, J13, J16 (self-reported/cash rules), K8, K9, K14 (periods), L1-L6, M1-M11, N1-N4. J13, M1 and M2 are
+retargeted (the introductory-qualifier line sits between their old targets); same intent.
+
+O12 (company-only runs merged too) SURVIVED its first run: the merge was discarded whenever no narrated ref moved,
+and no test had a company-only run before a narrated run in the same clause. That case was added
+("[S1] with [S2] exceed funding [S3] plus [S4]"); O12 is red. O1-O11 ran before that test edit and were re-run on
+the final test file; only the final run of each is listed.
+
+M7 (drop the month-vs-fiscal-year kind check in same_period) is RED here. 304dede's evidence called it an
+equivalent mutant unconditionally; that was wrong -- see ../funding-fidelity-304dede/CORRECTION.md. A direct
+same_period contract test now kills it.
+
+== J5 cited self-reported rule off
+FAIL: test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers
+FAIL: test_a_dated_narrated_item_is_not_called_undated
+FAIL: test_a_dated_second_narrator_is_not_called_undated
+FAIL: test_cited_paraphrases_need_no_amount (case='sole paraphrase')
+FAIL: test_cited_paraphrases_need_no_amount (case='claim ref in the group')
+FAIL: test_cited_paraphrases_need_no_amount (case='no separate funding clause')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported figures [S1, S3] with [S4] plus ')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported funding [S3] plus [S4] is unveri')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported figures [S1, S3] are noted, and ')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='[S3] plus [S4] are self-reported.')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='[S1, S3] plus [S4] are self-reported.')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported figures [S1] with [S2] exceed fu')
+FAIL: test_every_narrated_reference_in_a_mixed_group_leaves_in_one_pass
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='The self-reported figures [S1, S3] are noted, and ')
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='Taking the self-reported figures at face value [S1')
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='The self-reported figures [S1, S3] are noted, and ')
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='Self-reported funding [S4] is unverified; the self')
+FAIL: test_memo_95_mixed_references_split_traction_from_funding
+FAIL: test_mixed_group_variants_with_two_narrators (case='citation order decides the note order')
+FAIL: test_mixed_group_variants_with_two_narrators (case='no funding clause')
+FAIL: test_mixed_group_variants_with_two_narrators (case='both narrators in a sole group')
+FAIL: test_mixed_group_variants_with_two_narrators (case='the same narrator twice')
+FAIL: test_mixed_group_variants_with_two_narrators (case='an all-narrated group beside company refs')
+FAIL: test_mixed_group_variants_with_two_narrators (case='a narrator named in another clause')
+Ran 73 tests in 4.609s
+FAILED (failures=24)
+
+== J6 narrated ref left in the self-reported group
+FAIL: test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers
+FAIL: test_a_dated_narrated_item_is_not_called_undated
+FAIL: test_a_dated_second_narrator_is_not_called_undated
+FAIL: test_cited_paraphrases_need_no_amount (case='claim ref in the group')
+FAIL: test_cited_paraphrases_need_no_amount (case='no separate funding clause')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported figures [S1, S3] with [S4] plus ')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported figures [S1, S3] are noted, and ')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='[S1, S3] plus [S4] are self-reported.')
+FAIL: test_every_narrated_reference_in_a_mixed_group_leaves_in_one_pass
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='The self-reported figures [S1, S3] are noted, and ')
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='Taking the self-reported figures at face value [S1')
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='The self-reported figures [S1, S3] are noted, and ')
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='Self-reported funding [S4] is unverified; the self')
+FAIL: test_memo_95_mixed_references_split_traction_from_funding
+FAIL: test_mixed_group_variants_with_two_narrators (case='citation order decides the note order')
+FAIL: test_mixed_group_variants_with_two_narrators (case='no funding clause')
+FAIL: test_mixed_group_variants_with_two_narrators (case='the same narrator twice')
+FAIL: test_mixed_group_variants_with_two_narrators (case='a narrator named in another clause')
+Ran 73 tests in 4.714s
+FAILED (failures=18)
+
+== J7 funding not marked undated
+FAIL: test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers
+FAIL: test_a_dated_second_narrator_is_not_called_undated
+FAIL: test_cited_paraphrases_need_no_amount (case='claim ref in the group')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported figures [S1] with [S2] exceed fu')
+FAIL: test_every_narrated_reference_in_a_mixed_group_leaves_in_one_pass
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='Taking the self-reported figures at face value [S1')
+FAIL: test_memo_95_mixed_references_split_traction_from_funding
+FAIL: test_mixed_group_variants_with_two_narrators (case='citation order decides the note order')
+FAIL: test_mixed_group_variants_with_two_narrators (case='the same narrator twice')
+FAIL: test_mixed_group_variants_with_two_narrators (case='an all-narrated group beside company refs')
+FAIL: test_mixed_group_variants_with_two_narrators (case='a narrator named in another clause')
+Ran 73 tests in 4.613s
+FAILED (failures=11)
+
+== J8 funding note never attached to its clause
+FAIL: test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers
+FAIL: test_a_dated_narrated_item_is_not_called_undated
+FAIL: test_a_dated_second_narrator_is_not_called_undated
+FAIL: test_cited_paraphrases_need_no_amount (case='claim ref in the group')
+FAIL: test_every_narrated_reference_in_a_mixed_group_leaves_in_one_pass
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='Taking the self-reported figures at face value [S1')
+FAIL: test_memo_95_mixed_references_split_traction_from_funding
+FAIL: test_mixed_group_variants_with_two_narrators (case='citation order decides the note order')
+FAIL: test_mixed_group_variants_with_two_narrators (case='the same narrator twice')
+FAIL: test_mixed_group_variants_with_two_narrators (case='a narrator named in another clause')
+Ran 73 tests in 4.909s
+FAILED (failures=10)
+
+== J16 mixed group treated as all narrated (company traction relabelled)
+FAIL: test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers
+FAIL: test_a_dated_narrated_item_is_not_called_undated
+FAIL: test_a_dated_second_narrator_is_not_called_undated
+FAIL: test_cited_paraphrases_need_no_amount (case='claim ref in the group')
+FAIL: test_cited_paraphrases_need_no_amount (case='no separate funding clause')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported figures [S1, S3] with [S4] plus ')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported figures [S1, S3] are noted, and ')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='[S1, S3] plus [S4] are self-reported.')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported figures [S1] with [S2] exceed fu')
+FAIL: test_every_narrated_reference_in_a_mixed_group_leaves_in_one_pass
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='The self-reported figures [S1, S3] are noted, and ')
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='Taking the self-reported figures at face value [S1')
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='The self-reported figures [S1, S3] are noted, and ')
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='Self-reported funding [S4] is unverified; the self')
+FAIL: test_memo_95_mixed_references_split_traction_from_funding
+FAIL: test_mixed_group_variants_with_two_narrators (case='citation order decides the note order')
+FAIL: test_mixed_group_variants_with_two_narrators (case='no funding clause')
+FAIL: test_mixed_group_variants_with_two_narrators (case='the same narrator twice')
+FAIL: test_mixed_group_variants_with_two_narrators (case='an all-narrated group beside company refs')
+FAIL: test_mixed_group_variants_with_two_narrators (case='a narrator named in another clause')
+Ran 73 tests in 4.826s
+FAILED (failures=20)
+
+== J13 cash rule not limited to funding sentences
+FAIL: test_questions_scenarios_unknowns_and_unrelated_runway_are_kept (text="The company's remaining runway is unknown.")
+Ran 73 tests in 5.633s
+FAILED (failures=1)
+
+== K8 periods need not be compatible
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='periods apart')
+Ran 73 tests in 4.908s
+FAILED (failures=1)
+
+== K9 a dated cash balance alone supports runway (the 49663be keyword behaviour)
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='cash only')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='undated burn')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='burn without a rate')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='conditional burn')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='unknown burn')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='third-party burn')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='periods apart')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='fiscal year against a period end')
+Ran 73 tests in 4.803s
+FAILED (failures=8)
+
+== K14 fiscal-year as-of dates unread
+FAIL: test_dated_cash_and_a_compatible_burn_rate_support_runway
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='fiscal year against a period end')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='FY2026', text=') [S3] against current remaining runway.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='FY2026', text='unt) [S3] leaves remaining runway today.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='FY2026', text=' [S3] is not the current available cash.')
+Ran 73 tests in 4.896s
+FAILED (failures=5)
+
+== L1 only the first narrated ref leaves the group
+FAIL: test_a_dated_second_narrator_is_not_called_undated
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported figures [S1, S3] with [S4] plus ')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported funding [S3] plus [S4] is unveri')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='[S3] plus [S4] are self-reported.')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='[S1, S3] plus [S4] are self-reported.')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported figures [S1] with [S2] exceed fu')
+FAIL: test_every_narrated_reference_in_a_mixed_group_leaves_in_one_pass
+FAIL: test_mixed_group_variants_with_two_narrators (case='citation order decides the note order')
+FAIL: test_mixed_group_variants_with_two_narrators (case='no funding clause')
+FAIL: test_mixed_group_variants_with_two_narrators (case='both narrators in a sole group')
+FAIL: test_mixed_group_variants_with_two_narrators (case='the same narrator twice')
+FAIL: test_mixed_group_variants_with_two_narrators (case='an all-narrated group beside company refs')
+Ran 73 tests in 4.983s
+FAILED (failures=12)
+
+== L2 notes follow item order, not citation order
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported figures [S1, S3] with [S4] plus ')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported funding [S3] plus [S4] is unveri')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='[S3] plus [S4] are self-reported.')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='[S1, S3] plus [S4] are self-reported.')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported figures [S1] with [S2] exceed fu')
+FAIL: test_every_narrated_reference_in_a_mixed_group_leaves_in_one_pass
+FAIL: test_mixed_group_variants_with_two_narrators (case='citation order decides the note order')
+FAIL: test_mixed_group_variants_with_two_narrators (case='no funding clause')
+FAIL: test_mixed_group_variants_with_two_narrators (case='both narrators in a sole group')
+FAIL: test_mixed_group_variants_with_two_narrators (case='an all-narrated group beside company refs')
+Ran 73 tests in 5.023s
+FAILED (failures=10)
+
+== L3 a narrator already named in the clause is attributed again (not idempotent)
+FAIL: test_cited_paraphrases_need_no_amount (case='claim ref in the group')
+FAIL: test_cited_paraphrases_need_no_amount (case='no separate funding clause')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported figures [S1, S3] with [S4] plus ')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported figures [S1, S3] are noted, and ')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='[S1, S3] plus [S4] are self-reported.')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported figures [S1] with [S2] exceed fu')
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='The self-reported figures [S1, S3] are noted, and ')
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='The self-reported figures [S1, S3] are noted, and ')
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='Self-reported funding [S4] is unverified; the self')
+FAIL: test_mixed_group_variants_with_two_narrators (case='no funding clause')
+FAIL: test_mixed_group_variants_with_two_narrators (case='an all-narrated group beside company refs')
+Ran 73 tests in 4.924s
+FAILED (failures=11)
+
+== L4 only the first narrator gets a note
+FAIL: test_a_dated_second_narrator_is_not_called_undated
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported figures [S1] with [S2] exceed fu')
+FAIL: test_every_narrated_reference_in_a_mixed_group_leaves_in_one_pass
+FAIL: test_mixed_group_variants_with_two_narrators (case='citation order decides the note order')
+FAIL: test_mixed_group_variants_with_two_narrators (case='an all-narrated group beside company refs')
+Ran 73 tests in 4.917s
+FAILED (failures=5)
+
+== L5 an all-narrated group leaves empty brackets
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported figures [S1] with [S2] exceed fu')
+FAIL: test_mixed_group_variants_with_two_narrators (case='an all-narrated group beside company refs')
+Ran 73 tests in 4.793s
+FAILED (failures=2)
+
+== L6 a group of two narrators keeps one narrator in a sole rewording
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported funding [S3] plus [S4] is unveri')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='[S3] plus [S4] are self-reported.')
+FAIL: test_mixed_group_variants_with_two_narrators (case='both narrators in a sole group')
+Ran 73 tests in 4.975s
+FAILED (failures=3)
+
+== M1 current wording ignored
+FAIL: test_introductory_time_qualifier_through_both_guards (text='Today, the $23.1M funding figure (per Pi')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='As of today, ')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='At present, ')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='Currently ')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2016-04-30', text=') [S3] against current remaining runway.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2016-04-30', text='unt) [S3] leaves remaining runway today.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2016-04-30', text=' [S3] is not the current available cash.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2030-06-30', text=') [S3] against current remaining runway.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2030-06-30', text='unt) [S3] leaves remaining runway today.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2030-06-30', text=' [S3] is not the current available cash.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='FY2026', text=') [S3] against current remaining runway.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='FY2026', text='unt) [S3] leaves remaining runway today.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='FY2026', text=' [S3] is not the current available cash.')
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-01', '2016-04-30', '2016-04-30'])
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-30', '2016-04-01', '2016-04-30'])
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-30', '2016-04-30', '2016-04-01'])
+Ran 73 tests in 4.853s
+FAILED (failures=16)
+
+== M2 only a "current" adjective counts ("today" in the clause ignored)
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2016-04-30', text='unt) [S3] leaves remaining runway today.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2030-06-30', text='unt) [S3] leaves remaining runway today.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='FY2026', text='unt) [S3] leaves remaining runway today.')
+Ran 73 tests in 4.843s
+FAILED (failures=3)
+
+== M3 a supported runway accepts current wording
+FAIL: test_introductory_time_qualifier_through_both_guards (text='Today, the $23.1M funding figure (per Pi')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='As of today, ')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='At present, ')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='Currently ')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2016-04-30', text=') [S3] against current remaining runway.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2016-04-30', text='unt) [S3] leaves remaining runway today.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2030-06-30', text=') [S3] against current remaining runway.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2030-06-30', text='unt) [S3] leaves remaining runway today.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='FY2026', text=') [S3] against current remaining runway.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='FY2026', text='unt) [S3] leaves remaining runway today.')
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-01', '2016-04-30', '2016-04-30'])
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-30', '2016-04-01', '2016-04-30'])
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-30', '2016-04-30', '2016-04-01'])
+Ran 73 tests in 5.063s
+FAILED (failures=13)
+
+== M4 a dated cash balance accepts current wording
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2016-04-30', text=' [S3] is not the current available cash.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2030-06-30', text=' [S3] is not the current available cash.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='FY2026', text=' [S3] is not the current available cash.')
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-01', '2016-04-30', '2016-04-30'])
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-30', '2016-04-01', '2016-04-30'])
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-30', '2016-04-30', '2016-04-01'])
+Ran 73 tests in 5.268s
+FAILED (failures=6)
+
+== M5 leftover "today" kept beside the dated note
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2016-04-30', text='unt) [S3] leaves remaining runway today.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2030-06-30', text='unt) [S3] leaves remaining runway today.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='FY2026', text='unt) [S3] leaves remaining runway today.')
+Ran 73 tests in 5.008s
+FAILED (failures=3)
+
+== M6 a bare fiscal year read as December
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='fiscal year against a period end')
+Ran 73 tests in 4.951s
+FAILED (failures=1)
+
+== M7 a period end compared with a bare fiscal year
+FAIL: test_a_month_end_never_matches_a_bare_fiscal_year
+Ran 73 tests in 5.132s
+FAILED (failures=1)
+
+== M8 unsupported current wording loses its adjective
+FAIL: test_unsupported_current_wording_is_qualified (text=') [S3] against current runway.')
+FAIL: test_unsupported_current_wording_is_qualified (text='unt) [S3] is not current cash.')
+Ran 73 tests in 5.111s
+FAILED (failures=2)
+
+== M9 the qualified "current runway (which needs ...)" matched again (not idempotent)
+FAIL: test_unsupported_current_wording_is_qualified (text=') [S3] against current runway.')
+FAIL: test_unsupported_current_wording_is_qualified (text='unt) [S3] is not current cash.')
+Ran 73 tests in 5.086s
+FAILED (failures=2)
+
+== M10 "current runway" not a premise
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2016-04-30', text=') [S3] against current remaining runway.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2016-04-30', text=' [S3] is not the current available cash.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2030-06-30', text=') [S3] against current remaining runway.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2030-06-30', text=' [S3] is not the current available cash.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='FY2026', text=') [S3] against current remaining runway.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='FY2026', text=' [S3] is not the current available cash.')
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-01', '2016-04-30', '2016-04-30'])
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-30', '2016-04-01', '2016-04-30'])
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-30', '2016-04-30', '2016-04-01'])
+FAIL: test_unsupported_current_wording_is_qualified (text=') [S3] against current runway.')
+FAIL: test_unsupported_current_wording_is_qualified (text='unt) [S3] is not current cash.')
+Ran 73 tests in 5.276s
+FAILED (failures=11)
+
+== M11 prompt rule: current runway sentence removed
+FAIL: test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers
+Ran 73 tests in 4.677s
+FAILED (failures=1)
+
+== N1 one "self-reported" span per call
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='The self-reported figures [S1, S3] are noted, and ')
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='Taking the self-reported figures at face value [S1')
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='Self-reported funding [S4] is unverified; the self')
+Ran 73 tests in 4.937s
+FAILED (failures=3)
+
+== N2 a note crosses into a later clause citing other sources
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='The self-reported figures [S1, S3] are noted, and ')
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='The self-reported figures [S1, S3] are noted, and ')
+Ran 73 tests in 4.764s
+FAILED (failures=2)
+
+== N3 a later uncited "self-reported" clause takes the note
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='The self-reported figures [S1, S3] are noted, and ')
+Ran 73 tests in 5.062s
+FAILED (failures=1)
+
+== N4 the span loop restarts without the handled-span no-op (always first span)
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='The self-reported figures [S1, S3] are noted, and ')
+FAIL: test_every_self_reported_clause_is_corrected_in_one_invocation (text='Taking the self-reported figures at face value [S1')
+Ran 73 tests in 4.794s
+FAILED (failures=2)
+
+== O1 introductory qualifier ignored
+FAIL: test_introductory_time_qualifier_through_both_guards (text='Today, the $23.1M funding figure (per Pi')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='As of today, ')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='At present, ')
+Ran 73 tests in 4.880s
+FAILED (failures=3)
+   (final of 2 runs; see header)
+
+== O2 introductory qualifier kept beside the dated note
+FAIL: test_introductory_time_qualifier_through_both_guards (text='Today, the $23.1M funding figure (per Pi')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='As of today, ')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='At present, ')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='Currently ')
+Ran 73 tests in 4.820s
+FAILED (failures=4)
+   (final of 2 runs; see header)
+
+== O3 qualifier removed without recapitalising
+FAIL: test_introductory_time_qualifier_through_both_guards (text='Today, the $23.1M funding figure (per Pi')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='As of today, ')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='At present, ')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='Currently ')
+Ran 73 tests in 5.162s
+FAILED (failures=4)
+   (final of 2 runs; see header)
+
+== O4 "Now that ..." read as a time qualifier
+FAIL: test_introductory_time_qualifier_through_both_guards (text='Now that funds are raised, the $23.1M fu')
+Ran 73 tests in 5.054s
+FAILED (failures=1)
+   (final of 2 runs; see header)
+
+== O9 time guard: opening not restored
+FAIL: test_introductory_time_qualifier_through_both_guards (text='- As of today, the $23.1M funding figure')
+FAIL: test_introductory_time_qualifier_through_both_guards (text='At present, the $23.1M funding figure (p')
+FAIL: test_introductory_time_qualifier_through_both_guards (text='Currently the $23.1M funding figure (per')
+Ran 73 tests in 5.213s
+FAILED (failures=3)
+   (final of 2 runs; see header)
+
+== O10 time guard: leading space kept
+FAIL: test_introductory_time_qualifier_through_both_guards (text='At present, the $23.1M funding figure (p')
+FAIL: test_introductory_time_qualifier_through_both_guards (text='Currently the $23.1M funding figure (per')
+Ran 73 tests in 4.922s
+FAILED (failures=2)
+   (final of 2 runs; see header)
+
+== O11 time guard: list marker not kept as the lead
+FAIL: test_introductory_time_qualifier_through_both_guards (text='- As of today, the $23.1M funding figure')
+Ran 73 tests in 5.042s
+FAILED (failures=1)
+   (final of 2 runs; see header)
+
+== O5 joined groups not merged
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported figures [S1, S3] with [S4] plus ')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported funding [S3] plus [S4] is unveri')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='[S3] plus [S4] are self-reported.')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='[S1, S3] plus [S4] are self-reported.')
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported figures [S1] with [S2] exceed fu')
+Ran 73 tests in 4.731s
+FAILED (failures=5)
+   (final of 2 runs; see header)
+
+== O6 any text joins two groups
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported figures [S1] with [S2] exceed fu')
+FAIL: test_mixed_group_variants_with_two_narrators (case='an all-narrated group beside company refs')
+Ran 73 tests in 5.263s
+FAILED (failures=2)
+   (final of 2 runs; see header)
+
+== O7 span not relocated after the merge
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='[S3] plus [S4] are self-reported.')
+Ran 73 tests in 4.734s
+FAILED (failures=1)
+   (final of 2 runs; see header)
+
+== O12 company-only runs merged too
+FAIL: test_every_group_governed_by_one_span_in_one_call (text='The self-reported figures [S1] with [S2] exceed fu')
+Ran 73 tests in 5.071s
+FAILED (failures=1)
+   (final of 2 runs; see header)
+
+== O8 latest date ignores the day
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-01', '2016-04-30', '2016-04-30'])
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-30', '2016-04-01', '2016-04-30'])
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-30', '2016-04-30', '2016-04-01'])
+Ran 73 tests in 4.949s
+FAILED (failures=3)
+   (final of 2 runs; see header)
+
+
+RESULT: 42 mutations run (of 97 in the harness): 42 red, 0 survived.
+Not re-run here: 55 inherited mutations whose code this change does not touch (targets verified with --check; their last runs are in ../funding-fidelity-304dede/output/).

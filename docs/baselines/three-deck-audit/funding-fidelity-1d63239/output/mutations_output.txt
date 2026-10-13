@@ -1,0 +1,649 @@
+Mutations at 1d63239 (fix/funding-cash-and-mixed-refs), harness output/mutate_fidelity5.py.txt.
+One mutation at a time against zelda_api.tests_funding_fidelity (CI env, --parallel 1), file restored in `finally`,
+no `timeout` wrapper; groups of at most six; file sha256 fingerprints verified after every group:
+  70e0b2cec62b1907a9a5253da1441689018a8cce1df5110754196b950aff607a  zelda_api/funding_fidelity.py
+  a27736d4c07d02db58fdf8a52d03bd9bdc9f5242bba8683bd3aefa04ea76bce3  zelda_api/intelligence_pipeline.py
+  341b6da6f07fd48cabea8ae69251d9508c7aacde231a5cfe3220a42d237922ba  zelda_api/tests_funding_fidelity.py
+
+70 mutations: 32 F/G/H and 16 J inherited (J6, J7, J10-J13, J15, J16 retargeted to the rewritten code with the same
+intent; J12 is now "a supported runway ignored"), 16 K (blocker 1: evidence-qualified cash/burn) and 6 L (blocker 2:
+one-pass mixed groups).
+
+K7 (an unknown figure counts) SURVIVED its first run: the "unknown burn" control, "Burn rate ($ per month): not
+disclosed", has no dollar amount, so it was NONE without the unknown check. The control now carries a figure
+("Monthly burn: undisclosed (budget $150K per month)"); K7 is red. K1-K6 ran before that test edit and were re-run on
+the final test file; only the final run of each is listed.
+
+== F1 attribution off
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API information_readiness')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API open_concerns')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API what_would_change')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff IC memo (full)')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff Markdown')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='owner IC memo (Lite)')
+FAIL: test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='bots uncited (the review case)')
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='bots cited')
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='company named, comma before "and"')
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='"self-reported" in another clause stays the company\'s')
+FAIL: test_memo_94_sentences_name_the_narrator (case='information_readiness (Lite)')
+FAIL: test_memo_94_sentences_name_the_narrator (case='base_scenario')
+FAIL: test_memo_94_sentences_name_the_narrator (case='risk_assessment')
+FAIL: test_memo_94_sentences_name_the_narrator (case='open_concerns (Lite)')
+FAIL: test_memo_94_sentences_name_the_narrator (case='what_would_change_the_picture (Lite), uncited')
+FAIL: test_memo_94_sentences_name_the_narrator (case='zelda_advantage')
+FAIL: test_memo_94_sentences_name_the_narrator (case='question, uncited')
+FAIL: test_memo_94_sentences_name_the_narrator (case='memo 91 wording')
+FAIL: test_memo_94_sentences_name_the_narrator (case='other spelling of the figure')
+FAIL: test_self_reported_covering_other_figures_is_not_reassigned
+FAIL: test_the_figure_phrase_is_not_split
+FAIL: test_a_metric_named_before_the_amount_keeps_its_own_identity
+FAIL: test_an_uncited_amount_two_sources_could_be_is_attributed_to_neither_in_any_order (rival='another narrator', order='forward')
+FAIL: test_an_uncited_amount_two_sources_could_be_is_attributed_to_neither_in_any_order (rival='another narrator', order='reversed')
+FAIL: test_an_uncited_amount_two_sources_could_be_is_attributed_to_neither_in_any_order (rival="the company's own figure", order='forward')
+FAIL: test_an_uncited_amount_two_sources_could_be_is_attributed_to_neither_in_any_order (rival="the company's own figure", order='reversed')
+FAIL: test_the_narrated_item_is_still_attributed_beside_them
+FAIL: test_reported_funding_is_not_a_financing_event
+FAIL: test_profile_stage_is_kept_apart_from_the_slide_date
+FAIL: test_memo_95_label_reads_naturally
+FAIL: test_other_self_reported_forms (case='parenthetical (memo 94)')
+FAIL: test_other_self_reported_forms (case='predicate')
+FAIL: test_other_self_reported_forms (case='adjective')
+FAIL: test_other_self_reported_forms (case='adjective opening the sentence')
+Ran 40 tests in 3.766s
+FAILED (failures=36)
+
+== F2 "self-reported" never reassigned (always insert)
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API information_readiness')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff IC memo (full)')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff Markdown')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='owner IC memo (Lite)')
+FAIL: test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_memo_94_sentences_name_the_narrator (case='information_readiness (Lite)')
+FAIL: test_memo_95_label_reads_naturally
+FAIL: test_other_self_reported_forms (case='parenthetical (memo 94)')
+FAIL: test_other_self_reported_forms (case='predicate')
+FAIL: test_other_self_reported_forms (case='adjective')
+FAIL: test_other_self_reported_forms (case='adjective opening the sentence')
+Ran 40 tests in 3.744s
+FAILED (failures=12)
+
+== F4 reported funding kept as "the $X raise"
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_reported_funding_is_not_a_financing_event
+Ran 40 tests in 4.038s
+FAILED (failures=2)
+
+== F5 raise premises kept
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API open_concerns')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff IC memo (full)')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff Markdown')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='owner IC memo (Lite)')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_a_raise_in_the_evidence_keeps_its_wording (case='profile raising 0')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='negated (the review case)')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='missing section (the review case)')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='dated and past (the review case)')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='negated with an amount')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='past without a year')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='another company')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='third party reporting it')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='tentative (the review case)')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='question (the review case)')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='condition (the review case)')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='tentative, "may be"')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='tentative, "plans"')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='question, trailing')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='condition, "whether"')
+FAIL: test_unsupported_raise_premises_are_removed_and_the_questions_kept (text='- What is the current monthly burn rate, and what ')
+FAIL: test_unsupported_raise_premises_are_removed_and_the_questions_kept (text='- What is the intended use of proceeds from this r')
+FAIL: test_unsupported_raise_premises_are_removed_and_the_questions_kept (text='• No revenue, burn, or financial operating data wa')
+Ran 40 tests in 3.892s
+FAILED (failures=24)
+
+== F6 premises rewritten even when a raise is in the evidence
+FAIL: test_a_raise_in_the_evidence_keeps_its_wording (case='profile raising 5M')
+FAIL: test_a_raise_in_the_evidence_keeps_its_wording (case='deck says seeking')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='affirmative, opening verb')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='affirmative, "we"')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='affirmative, company named')
+Ran 40 tests in 4.029s
+FAILED (failures=5)
+
+== F7 profile values dated by the slide (label off)
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_profile_stage_is_kept_apart_from_the_slide_date
+Ran 40 tests in 4.089s
+FAILED (failures=3)
+
+== F8 profile label added without a date
+FAIL: test_undated_profile_sentences_and_dated_slide_sentences_are_unchanged (text='ManyChat is a software company (the company states')
+FAIL: test_undated_profile_sentences_and_dated_slide_sentences_are_unchanged (text='• Stage classification: Series A [P1]')
+Ran 40 tests in 3.791s
+FAILED (failures=2)
+
+== F9 pipeline does not apply the guard
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API information_readiness')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API open_concerns')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='Lite API what_would_change')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff IC memo (full)')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='staff Markdown')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier (surface='owner IC memo (Lite)')
+FAIL: test_every_consumer_shows_the_faithful_text_within_its_tier
+FAIL: test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+Ran 40 tests in 3.846s
+FAILED (failures=9)
+
+== F10 figure phrase not extended
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_memo_94_sentences_name_the_narrator (case='risk_assessment')
+FAIL: test_memo_94_sentences_name_the_narrator (case='open_concerns (Lite)')
+FAIL: test_memo_94_sentences_name_the_narrator (case='what_would_change_the_picture (Lite), uncited')
+FAIL: test_memo_94_sentences_name_the_narrator (case='zelda_advantage')
+FAIL: test_memo_94_sentences_name_the_narrator (case='question, uncited')
+FAIL: test_the_figure_phrase_is_not_split
+FAIL: test_a_metric_named_before_the_amount_keeps_its_own_identity
+FAIL: test_an_uncited_amount_two_sources_could_be_is_attributed_to_neither_in_any_order (rival='another narrator', order='forward')
+FAIL: test_an_uncited_amount_two_sources_could_be_is_attributed_to_neither_in_any_order (rival='another narrator', order='reversed')
+FAIL: test_an_uncited_amount_two_sources_could_be_is_attributed_to_neither_in_any_order (rival="the company's own figure", order='forward')
+FAIL: test_an_uncited_amount_two_sources_could_be_is_attributed_to_neither_in_any_order (rival="the company's own figure", order='reversed')
+FAIL: test_the_narrated_item_is_still_attributed_beside_them
+Ran 40 tests in 3.879s
+FAILED (failures=13)
+
+== F11 a zero "Raising (profile)" counts as a raise
+FAIL: test_a_raise_in_the_evidence_keeps_its_wording (case='profile raising 0')
+Ran 40 tests in 4.125s
+FAILED (failures=1)
+
+== F12 narrator inserted even when the sentence already names it
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_sentences_that_already_name_it_or_do_not_state_it_are_unchanged (text='Pitch Deck Hunt lists $23.1M raised [S3], though this figure')
+FAIL: test_sentences_that_already_name_it_or_do_not_state_it_are_unchanged (text='• Funding raised: Pitch Deck Hunt lists $23.1M raised [S3]; ')
+FAIL: test_another_item_with_the_same_amount_keeps_its_own_source (text='Crunchbase reports $23.1M raised [S5].')
+FAIL: test_guard_is_idempotent_and_keeps_layout
+FAIL: test_cash_premise_needs_a_dated_balance
+FAIL: test_dated_cash_and_a_compatible_burn_rate_support_runway (burn='Net burn of $150K per month')
+FAIL: test_dated_cash_and_a_compatible_burn_rate_support_runway (burn='Monthly cash burn: $150K')
+FAIL: test_dated_cash_and_a_compatible_burn_rate_support_runway (burn='$1.8M annual burn')
+FAIL: test_dated_cash_and_a_compatible_burn_rate_support_runway
+FAIL: test_memo_95_guard_is_idempotent
+FAIL: test_memo_95_runway_premise
+FAIL: test_questions_scenarios_unknowns_and_unrelated_runway_are_kept (text='If the self-reported traction figures [S1, S2] — 1')
+FAIL: test_questions_scenarios_unknowns_and_unrelated_runway_are_kept (text='Undated and unverified funding: The $23.1M raised ')
+FAIL: test_questions_scenarios_unknowns_and_unrelated_runway_are_kept (text='- Who are the investors behind the $23.1M raised (')
+FAIL: test_questions_scenarios_unknowns_and_unrelated_runway_are_kept (text='- How much remaining runway does the $23.1M raised')
+FAIL: test_supported_runway_keeps_the_sentence_unchanged_and_the_alone_wording
+FAIL: test_undated_cash_alone_does_not_support_runway
+FAIL: test_mixed_group_variants_with_two_narrators (case='a narrator named in another clause')
+Ran 40 tests in 3.918s
+FAILED (failures=19)
+
+== F14 "$23.1M listed" split by the attribution
+FAIL: test_the_figure_phrase_is_not_split
+Ran 40 tests in 3.936s
+FAILED (failures=1)
+
+== G1 "the company states it has raised" left as the company's statement
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='bots uncited (the review case)')
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='bots cited')
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='company named, comma before "and"')
+FAIL: test_memo_94_sentences_name_the_narrator (case='memo 91 wording')
+Ran 40 tests in 3.782s
+FAILED (failures=4)
+
+== G2 following predicate not given back to the company
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='bots uncited (the review case)')
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='bots cited')
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='company named, comma before "and"')
+Ran 40 tests in 3.889s
+FAILED (failures=3)
+
+== G3 narrator becomes the recipient ("Pitch Deck Hunt ... has raised")
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='bots uncited (the review case)')
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='bots cited')
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='company named, comma before "and"')
+FAIL: test_memo_94_sentences_name_the_narrator (case='memo 91 wording')
+Ran 40 tests in 3.749s
+FAILED (failures=4)
+
+== G4 "self-reported" in another clause reassigned
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='"self-reported" in another clause stays the company\'s')
+FAIL: test_reported_funding_is_not_a_financing_event
+Ran 40 tests in 3.956s
+FAILED (failures=2)
+
+== G5 "self-reported" covering the company's figures reassigned
+FAIL: test_self_reported_covering_other_figures_is_not_reassigned
+Ran 40 tests in 3.741s
+FAILED (failures=1)
+
+== G6 citations split at their commas
+FAIL: test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers
+FAIL: test_self_reported_covering_other_figures_is_not_reassigned
+FAIL: test_a_dated_narrated_item_is_not_called_undated
+FAIL: test_a_dated_second_narrator_is_not_called_undated
+FAIL: test_cited_paraphrases_need_no_amount (case='claim ref in the group')
+FAIL: test_cited_paraphrases_need_no_amount (case='no separate funding clause')
+FAIL: test_every_narrated_reference_in_a_mixed_group_leaves_in_one_pass
+FAIL: test_memo_95_mixed_references_split_traction_from_funding
+FAIL: test_mixed_group_variants_with_two_narrators (case='citation order decides the note order')
+FAIL: test_mixed_group_variants_with_two_narrators (case='no funding clause')
+FAIL: test_mixed_group_variants_with_two_narrators (case='both narrators in a sole group')
+FAIL: test_mixed_group_variants_with_two_narrators (case='the same narrator twice')
+FAIL: test_mixed_group_variants_with_two_narrators (case='an all-narrated group beside company refs')
+FAIL: test_mixed_group_variants_with_two_narrators (case='a narrator named in another clause')
+Ran 40 tests in 3.713s
+FAILED (failures=14)
+
+== G7 negated raise counts
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='negated with an amount')
+Ran 40 tests in 3.985s
+FAILED (failures=1)
+
+== G8 past or dated raise counts
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='dated and past (the review case)')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='past without a year')
+Ran 40 tests in 4.204s
+FAILED (failures=2)
+
+== G9 any subject counts (another company)
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='another company')
+Ran 40 tests in 3.845s
+FAILED (failures=1)
+
+== G10 a third party's report counts as the company raising
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='third party reporting it')
+Ran 40 tests in 4.032s
+FAILED (failures=1)
+
+== G11 "use of proceeds" / any raise word counts
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='negated (the review case)')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='missing section (the review case)')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='another company')
+Ran 40 tests in 3.878s
+FAILED (failures=3)
+
+== G12 citation ignored (amount alone decides)
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='company named, comma before "and"')
+FAIL: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money (case='"self-reported" in another clause stays the company\'s')
+FAIL: test_self_reported_covering_other_figures_is_not_reassigned
+FAIL: test_an_uncited_amount_two_sources_could_be_is_attributed_to_neither_in_any_order (rival='another narrator', order='forward')
+FAIL: test_an_uncited_amount_two_sources_could_be_is_attributed_to_neither_in_any_order (rival='another narrator', order='reversed')
+FAIL: test_an_uncited_amount_two_sources_could_be_is_attributed_to_neither_in_any_order (rival="the company's own figure", order='forward')
+FAIL: test_an_uncited_amount_two_sources_could_be_is_attributed_to_neither_in_any_order (rival="the company's own figure", order='reversed')
+FAIL: test_the_narrated_item_is_still_attributed_beside_them
+FAIL: test_reported_funding_is_not_a_financing_event
+FAIL: test_other_self_reported_forms (case='adjective')
+Ran 40 tests in 3.834s
+FAILED (failures=11)
+
+== G13 "$23.1M revenue" read as the funding figure
+FAIL: test_each_identity_check_holds_on_its_own (case='metric after the amount')
+Ran 40 tests in 4.148s
+FAILED (failures=1)
+
+== G14 another named source ignored
+FAIL: test_each_identity_check_holds_on_its_own (case='another named source, not an item')
+Ran 40 tests in 3.862s
+FAILED (failures=1)
+
+== G15 uncited figure needs no funding wording
+FAIL: test_each_identity_check_holds_on_its_own (case='no funding wording')
+Ran 40 tests in 3.956s
+FAILED (failures=1)
+
+== H1 tentative raise counts ("considering raising")
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='tentative (the review case)')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='tentative, "may be"')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='tentative, "plans"')
+Ran 40 tests in 3.819s
+FAILED (failures=3)
+
+== H2 question counts as a raise
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='question (the review case)')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='question, trailing')
+Ran 40 tests in 3.936s
+FAILED (failures=2)
+
+== H3 condition counts as a raise
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='condition (the review case)')
+FAIL: test_only_affirmative_company_specific_current_raises_count (case='condition, "whether"')
+Ran 40 tests in 3.849s
+FAILED (failures=2)
+
+== H4 metric named before the amount ignored
+FAIL: test_a_metric_named_before_the_amount_keeps_its_own_identity (text='Investors cite annual revenue of $23.1M.')
+FAIL: test_a_metric_named_before_the_amount_keeps_its_own_identity (text='Investors note revenue reached $23.1M.')
+FAIL: test_a_metric_named_before_the_amount_keeps_its_own_identity (text='Investors expect ARR of $23.1M.')
+Ran 40 tests in 4.068s
+FAILED (failures=3)
+
+== H5 ambiguous uncited amount resolved by item order
+FAIL: test_an_uncited_amount_two_sources_could_be_is_attributed_to_neither_in_any_order (rival='another narrator', order='forward')
+FAIL: test_an_uncited_amount_two_sources_could_be_is_attributed_to_neither_in_any_order (rival='another narrator', order='reversed')
+FAIL: test_an_uncited_amount_two_sources_could_be_is_attributed_to_neither_in_any_order (rival="the company's own figure", order='forward')
+FAIL: test_an_uncited_amount_two_sources_could_be_is_attributed_to_neither_in_any_order (rival="the company's own figure", order='reversed')
+Ran 40 tests in 3.808s
+FAILED (failures=4)
+
+== J1 label left as "reported by X funding raised"
+FAIL: test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers
+FAIL: test_memo_95_label_reads_naturally
+Ran 40 tests in 4.085s
+FAILED (failures=2)
+
+== J2 parenthetical "(self-reported, ...)" not reworded
+FAIL: test_stored_memo_is_faithful_and_structure_is_unchanged
+FAIL: test_memo_94_sentences_name_the_narrator (case='information_readiness (Lite)')
+FAIL: test_other_self_reported_forms (case='parenthetical (memo 94)')
+Ran 40 tests in 3.909s
+FAILED (failures=3)
+
+== J3 predicate "is self-reported" not reworded
+FAIL: test_other_self_reported_forms (case='predicate')
+Ran 40 tests in 3.825s
+FAILED (failures=1)
+
+== J4 old blind substitution ("reported by X" in place of the word)
+FAIL: test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers
+FAIL: test_memo_95_label_reads_naturally
+FAIL: test_other_self_reported_forms (case='adjective')
+FAIL: test_other_self_reported_forms (case='adjective opening the sentence')
+Ran 40 tests in 3.808s
+FAILED (failures=4)
+
+== J5 cited self-reported rule off
+FAIL: test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers
+FAIL: test_a_dated_narrated_item_is_not_called_undated
+FAIL: test_a_dated_second_narrator_is_not_called_undated
+FAIL: test_cited_paraphrases_need_no_amount (case='sole paraphrase')
+FAIL: test_cited_paraphrases_need_no_amount (case='claim ref in the group')
+FAIL: test_cited_paraphrases_need_no_amount (case='no separate funding clause')
+FAIL: test_every_narrated_reference_in_a_mixed_group_leaves_in_one_pass
+FAIL: test_memo_95_mixed_references_split_traction_from_funding
+FAIL: test_mixed_group_variants_with_two_narrators (case='citation order decides the note order')
+FAIL: test_mixed_group_variants_with_two_narrators (case='no funding clause')
+FAIL: test_mixed_group_variants_with_two_narrators (case='both narrators in a sole group')
+FAIL: test_mixed_group_variants_with_two_narrators (case='the same narrator twice')
+FAIL: test_mixed_group_variants_with_two_narrators (case='an all-narrated group beside company refs')
+FAIL: test_mixed_group_variants_with_two_narrators (case='a narrator named in another clause')
+Ran 40 tests in 3.739s
+FAILED (failures=14)
+
+== J6 narrated ref left in the self-reported group
+FAIL: test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers
+FAIL: test_memo_95_guard_is_idempotent
+FAIL: test_a_dated_narrated_item_is_not_called_undated
+FAIL: test_a_dated_second_narrator_is_not_called_undated
+FAIL: test_cited_paraphrases_need_no_amount (case='claim ref in the group')
+FAIL: test_cited_paraphrases_need_no_amount (case='no separate funding clause')
+FAIL: test_every_narrated_reference_in_a_mixed_group_leaves_in_one_pass
+FAIL: test_memo_95_mixed_references_split_traction_from_funding
+FAIL: test_mixed_group_variants_with_two_narrators (case='citation order decides the note order')
+FAIL: test_mixed_group_variants_with_two_narrators (case='no funding clause')
+FAIL: test_mixed_group_variants_with_two_narrators (case='the same narrator twice')
+FAIL: test_mixed_group_variants_with_two_narrators (case='a narrator named in another clause')
+Ran 40 tests in 3.737s
+FAILED (failures=12)
+
+== J7 funding not marked undated
+FAIL: test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers
+FAIL: test_a_dated_second_narrator_is_not_called_undated
+FAIL: test_cited_paraphrases_need_no_amount (case='claim ref in the group')
+FAIL: test_every_narrated_reference_in_a_mixed_group_leaves_in_one_pass
+FAIL: test_memo_95_mixed_references_split_traction_from_funding
+FAIL: test_mixed_group_variants_with_two_narrators (case='citation order decides the note order')
+FAIL: test_mixed_group_variants_with_two_narrators (case='the same narrator twice')
+FAIL: test_mixed_group_variants_with_two_narrators (case='an all-narrated group beside company refs')
+FAIL: test_mixed_group_variants_with_two_narrators (case='a narrator named in another clause')
+Ran 40 tests in 4.088s
+FAILED (failures=9)
+
+== J8 funding note never attached to its clause
+FAIL: test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers
+FAIL: test_a_dated_narrated_item_is_not_called_undated
+FAIL: test_a_dated_second_narrator_is_not_called_undated
+FAIL: test_cited_paraphrases_need_no_amount (case='claim ref in the group')
+FAIL: test_every_narrated_reference_in_a_mixed_group_leaves_in_one_pass
+FAIL: test_memo_95_mixed_references_split_traction_from_funding
+FAIL: test_mixed_group_variants_with_two_narrators (case='citation order decides the note order')
+FAIL: test_mixed_group_variants_with_two_narrators (case='the same narrator twice')
+FAIL: test_mixed_group_variants_with_two_narrators (case='a narrator named in another clause')
+Ran 40 tests in 3.687s
+FAILED (failures=9)
+
+== J9 cash rule off
+FAIL: test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers
+FAIL: test_cash_premise_found_by_citation_alone
+FAIL: test_cash_premise_needs_a_dated_balance
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='cash only')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='burn only')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='undated burn')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='burn without a rate')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='historical cash')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='estimated cash')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='conditional burn')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='negated cash')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='cash asked, not stated')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='unknown burn')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='cash flow is not cash')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='third-party burn')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='profile runway')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='periods apart')
+FAIL: test_memo_95_runway_premise
+FAIL: test_undated_cash_alone_does_not_support_runway
+Ran 40 tests in 3.818s
+FAILED (failures=19)
+
+== J10 cash rule rewrites questions
+FAIL: test_questions_scenarios_unknowns_and_unrelated_runway_are_kept (text='- How much remaining runway does the $23.1M raised')
+Ran 40 tests in 3.794s
+FAILED (failures=1)
+
+== J11 cash rule rewrites qualified scenarios
+FAIL: test_questions_scenarios_unknowns_and_unrelated_runway_are_kept (text='If the self-reported traction figures [S1, S2] — 1')
+Ran 40 tests in 4.054s
+FAILED (failures=1)
+
+== J12 cash rule ignores a supported runway in the evidence
+FAIL: test_dated_cash_and_a_compatible_burn_rate_support_runway (burn='Net burn of $150K per month')
+FAIL: test_dated_cash_and_a_compatible_burn_rate_support_runway (burn='Monthly cash burn: $150K')
+FAIL: test_dated_cash_and_a_compatible_burn_rate_support_runway (burn='$1.8M annual burn')
+FAIL: test_supported_runway_keeps_the_sentence_unchanged_and_the_alone_wording
+Ran 40 tests in 4.057s
+FAILED (failures=4)
+
+== J13 cash rule not limited to funding sentences
+FAIL: test_questions_scenarios_unknowns_and_unrelated_runway_are_kept (text="The company's remaining runway is unknown.")
+Ran 40 tests in 3.958s
+FAILED (failures=1)
+
+== J14 "This alone would" sufficiency kept
+FAIL: test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers
+FAIL: test_memo_95_runway_premise
+Ran 40 tests in 4.098s
+FAILED (failures=2)
+
+== J15 a third party's cash figure counts as evidence
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='third-party burn')
+FAIL: test_undated_cash_alone_does_not_support_runway
+Ran 40 tests in 4.107s
+FAILED (failures=2)
+
+== J16 mixed group treated as all narrated (company traction relabelled)
+FAIL: test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers
+FAIL: test_a_dated_narrated_item_is_not_called_undated
+FAIL: test_a_dated_second_narrator_is_not_called_undated
+FAIL: test_cited_paraphrases_need_no_amount (case='claim ref in the group')
+FAIL: test_cited_paraphrases_need_no_amount (case='no separate funding clause')
+FAIL: test_every_narrated_reference_in_a_mixed_group_leaves_in_one_pass
+FAIL: test_memo_95_mixed_references_split_traction_from_funding
+FAIL: test_mixed_group_variants_with_two_narrators (case='citation order decides the note order')
+FAIL: test_mixed_group_variants_with_two_narrators (case='no funding clause')
+FAIL: test_mixed_group_variants_with_two_narrators (case='the same narrator twice')
+FAIL: test_mixed_group_variants_with_two_narrators (case='an all-narrated group beside company refs')
+FAIL: test_mixed_group_variants_with_two_narrators (case='a narrator named in another clause')
+Ran 40 tests in 4.204s
+FAILED (failures=12)
+
+== K1 an undated figure counts as a dated basis
+FAIL: test_cash_premise_needs_a_dated_balance
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='undated burn')
+FAIL: test_undated_cash_alone_does_not_support_runway
+Ran 40 tests in 3.835s
+FAILED (failures=3)
+   (final of 2 runs; see header)
+
+== K2 a historical figure counts
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='historical cash')
+Ran 40 tests in 3.730s
+FAILED (failures=1)
+   (final of 2 runs; see header)
+
+== K3 a tentative figure counts
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='estimated cash')
+Ran 40 tests in 3.819s
+FAILED (failures=1)
+   (final of 2 runs; see header)
+
+== K4 a conditional figure counts
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='conditional burn')
+Ran 40 tests in 3.868s
+FAILED (failures=1)
+   (final of 2 runs; see header)
+
+== K5 a burn without a rate counts
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='burn without a rate')
+Ran 40 tests in 3.847s
+FAILED (failures=1)
+   (final of 2 runs; see header)
+
+== K6 a negated figure counts
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='negated cash')
+Ran 40 tests in 3.997s
+FAILED (failures=1)
+   (final of 2 runs; see header)
+
+== K7 an unknown figure counts
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='unknown burn')
+Ran 40 tests in 3.858s
+FAILED (failures=1)
+   (final of 2 runs; see header)
+
+== K8 periods need not be compatible
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='periods apart')
+Ran 40 tests in 3.954s
+FAILED (failures=1)
+
+== K9 a dated cash balance alone supports runway (the 49663be keyword behaviour)
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='cash only')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='undated burn')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='burn without a rate')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='conditional burn')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='unknown burn')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='third-party burn')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='periods apart')
+Ran 40 tests in 3.989s
+FAILED (failures=7)
+
+== K10 "neither is in the evidence" whatever the evidence holds
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='cash only')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='burn only')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='undated burn')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='burn without a rate')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='historical cash')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='estimated cash')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='conditional burn')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='negated cash')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='cash asked, not stated')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='unknown burn')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='cash flow is not cash')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='third-party burn')
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='periods apart')
+FAIL: test_undated_cash_alone_does_not_support_runway
+Ran 40 tests in 4.402s
+FAILED (failures=14)
+
+== K11 a cash flow counts as a cash balance
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='cash flow is not cash')
+Ran 40 tests in 3.868s
+FAILED (failures=1)
+
+== K12 a dated cash balance does not support "available cash"
+FAIL: test_dated_cash_and_a_compatible_burn_rate_support_runway
+Ran 40 tests in 4.079s
+FAILED (failures=1)
+
+== K13 a profile field counts
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='profile runway')
+Ran 40 tests in 4.305s
+FAILED (failures=1)
+
+== K14 fiscal-year as-of dates unread
+FAIL: test_dated_cash_and_a_compatible_burn_rate_support_runway (burn='$1.8M annual burn')
+Ran 40 tests in 3.898s
+FAILED (failures=1)
+
+== K15 a question counts as evidence
+FAIL: test_each_insufficient_basis_keeps_the_guard_and_says_what_is_missing (case='cash asked, not stated')
+Ran 40 tests in 3.889s
+FAILED (failures=1)
+
+== K16 undated wording for a present figure says "none"
+FAIL: test_cash_premise_needs_a_dated_balance
+Ran 40 tests in 4.188s
+FAILED (failures=1)
+
+== L1 only the first narrated ref leaves the group
+FAIL: test_a_dated_second_narrator_is_not_called_undated
+FAIL: test_every_narrated_reference_in_a_mixed_group_leaves_in_one_pass
+FAIL: test_mixed_group_variants_with_two_narrators (case='citation order decides the note order')
+FAIL: test_mixed_group_variants_with_two_narrators (case='no funding clause')
+FAIL: test_mixed_group_variants_with_two_narrators (case='both narrators in a sole group')
+FAIL: test_mixed_group_variants_with_two_narrators (case='the same narrator twice')
+FAIL: test_mixed_group_variants_with_two_narrators (case='an all-narrated group beside company refs')
+Ran 40 tests in 4.021s
+FAILED (failures=7)
+
+== L2 notes follow item order, not citation order
+FAIL: test_every_narrated_reference_in_a_mixed_group_leaves_in_one_pass
+FAIL: test_mixed_group_variants_with_two_narrators (case='citation order decides the note order')
+FAIL: test_mixed_group_variants_with_two_narrators (case='no funding clause')
+FAIL: test_mixed_group_variants_with_two_narrators (case='both narrators in a sole group')
+FAIL: test_mixed_group_variants_with_two_narrators (case='an all-narrated group beside company refs')
+Ran 40 tests in 4.076s
+FAILED (failures=5)
+
+== L3 a narrator already named in the clause is attributed again (not idempotent)
+FAIL: test_mixed_group_variants_with_two_narrators (case='no funding clause')
+FAIL: test_mixed_group_variants_with_two_narrators (case='an all-narrated group beside company refs')
+Ran 40 tests in 4.373s
+FAILED (failures=2)
+
+== L4 only the first narrator gets a note
+FAIL: test_a_dated_second_narrator_is_not_called_undated
+FAIL: test_every_narrated_reference_in_a_mixed_group_leaves_in_one_pass
+FAIL: test_mixed_group_variants_with_two_narrators (case='citation order decides the note order')
+FAIL: test_mixed_group_variants_with_two_narrators (case='an all-narrated group beside company refs')
+Ran 40 tests in 4.313s
+FAILED (failures=4)
+
+== L5 an all-narrated group leaves empty brackets
+FAIL: test_mixed_group_variants_with_two_narrators (case='an all-narrated group beside company refs')
+Ran 40 tests in 4.272s
+FAILED (failures=1)
+
+== L6 a group of two narrators keeps one narrator in a sole rewording
+FAIL: test_mixed_group_variants_with_two_narrators (case='both narrators in a sole group')
+Ran 40 tests in 4.375s
+FAILED (failures=1)
+
+
+RESULT: 70 of 70 red, 0 survived (final runs, final file fingerprints).

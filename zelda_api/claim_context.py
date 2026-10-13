@@ -176,6 +176,22 @@ def _asks(sentence):
     return body.rstrip('"”’) ').endswith('?') or bool(_REQUEST_LEAD.match(body))
 
 
+def _restore_opening(original, rewritten):
+    """
+    "As of today, the $23.1M ..." loses its opening phrase: the rest starts the sentence (or the
+    bullet) again, without a leading space and with the capital the original opening had.
+    """
+    marker = _LIST_MARKER.match(original.lstrip())
+    lead = original[:len(original) - len(original.lstrip())] + (marker.group(0) if marker else '')
+    if not rewritten.startswith(lead):
+        return rewritten
+    body = rewritten[len(lead):].lstrip()
+    opening = original[len(lead):].lstrip()[:1]
+    if body and opening.isupper() and body[:1].islower():
+        body = body[:1].upper() + body[1:]
+    return lead + body
+
+
 def guard_time_wording(text, allowed_by_ref):
     """
     Remove current/running-total wording from memo sentences that STATE a
@@ -207,6 +223,7 @@ def guard_time_wording(text, allowed_by_ref):
             if rewritten != sentence:
                 rewritten = re.sub(r' {2,}', ' ', rewritten)
                 rewritten = re.sub(r' +([,.;:])', r'\1', rewritten)
+                rewritten = _restore_opening(sentence, rewritten)
                 sentence = rewritten
         out.append(sentence + separator)
     return (''.join(out) if removed else text), removed

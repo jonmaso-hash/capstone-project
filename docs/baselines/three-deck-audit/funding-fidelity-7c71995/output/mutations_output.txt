@@ -1,0 +1,392 @@
+Mutations at 7c71995 (fix/funding-cash-and-mixed-refs), harness output/mutate_fidelity8.py.txt (chains to
+mutate_fidelity7.py in ../funding-fidelity-5c5502f/output/, then 6, 5, 4, 3 in the earlier folders).
+One mutation at a time against zelda_api.tests_funding_fidelity + zelda_api.tests_claim_context_dates (CI env,
+--parallel 1), file restored in `finally`, no `timeout` wrapper; groups of at most six; file sha256 fingerprints
+verified after every group (working copies):
+  0cab81812faa9a42a979e878304c38f41a5649cdb9474d90501e6ccbb5f85483  zelda_api/funding_fidelity.py (CRLF)
+  4063f14ba9bea3eaf0606919804f43598b69b5409faf9d5ccdfd5b0bf38c7305  zelda_api/tests_funding_fidelity.py
+  ba91d1c3141cd82cd178cbecdb0635b30bebf39b92930644012f8a747c367ee5  zelda_api/intelligence_pipeline.py
+  ac38d76fbb27d538f2b13b1655aa81a30b857565d223c70b04f0a60ef6446cab  zelda_api/claim_context.py (CRLF)
+Line endings: `git apply` rewrote funding_fidelity.py with CRLF (core.autocrlf=true). Its committed LF blob at
+7c71995 is sha256 6653e34e640a5dc6e55bcee36f3e6a3a76ee53b9b5b9028077722118be074c06, content identical ignoring CR.
+claim_context.py is the same CRLF working copy as at 5c5502f (LF blob 299f6661...). tests_funding_fidelity.py and
+intelligence_pipeline.py equal their committed blobs.
+
+Scope: P1-P6 (the patch) plus the 15 inherited mutations on the opening / current-wording code the patch touches or
+that the new regressions exercise: O1-O4 (O3 retargeted to the patched recapitalisation line, same intent), O9-O11
+(time guard opening), M1-M5, M8-M10.
+
+== M1 current wording ignored
+FAIL: test_introductory_time_qualifier_through_both_guards (text='Today, the $23.1M funding figure (per Pi')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='As of today, ')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='At present, ')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='Currently ')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2016-04-30', text=') [S3] against current remaining runway.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2016-04-30', text='unt) [S3] leaves remaining runway today.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2016-04-30', text=' [S3] is not the current available cash.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2030-06-30', text=') [S3] against current remaining runway.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2030-06-30', text='unt) [S3] leaves remaining runway today.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2030-06-30', text=' [S3] is not the current available cash.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='FY2026', text=') [S3] against current remaining runway.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='FY2026', text='unt) [S3] leaves remaining runway today.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='FY2026', text=' [S3] is not the current available cash.')
+FAIL: test_possessive_opening_through_both_guards (text="Today's $23.1M funding figure ")
+FAIL: test_possessive_opening_through_both_guards (text="Today's remaining runway is an")
+FAIL: test_possessive_opening_through_both_guards (text="Today's available cash is not ")
+FAIL: test_possessive_opening_through_both_guards (text="- Today's $23.1M funding figur")
+FAIL: test_possessive_opening_through_both_guards (text="- Today's remaining runway is ")
+FAIL: test_possessive_opening_through_both_guards (text="- Today's available cash is no")
+FAIL: test_possessive_opening_through_both_guards (text="• Today's $23.1M funding figur")
+FAIL: test_possessive_opening_through_both_guards (text="• Today's remaining runway is ")
+FAIL: test_possessive_opening_through_both_guards (text="• Today's available cash is no")
+FAIL: test_possessive_opening_through_both_guards (text="1. Today's $23.1M funding figu")
+FAIL: test_possessive_opening_through_both_guards (text="1. Today's remaining runway is")
+FAIL: test_possessive_opening_through_both_guards (text="1. Today's available cash is n")
+FAIL: test_possessive_opening_through_both_guards (text="2) Today's $23.1M funding figu")
+FAIL: test_possessive_opening_through_both_guards (text="2) Today's remaining runway is")
+FAIL: test_possessive_opening_through_both_guards (text="2) Today's available cash is n")
+FAIL: test_possessive_opening_through_both_guards (text='Today’s $23.1M funding figure ')
+FAIL: test_possessive_opening_through_both_guards (text='Today’s remaining runway is an')
+FAIL: test_possessive_opening_through_both_guards (text='Today’s available cash is not ')
+FAIL: test_possessive_opening_through_both_guards (text='- Today’s $23.1M funding figur')
+FAIL: test_possessive_opening_through_both_guards (text='- Today’s remaining runway is ')
+FAIL: test_possessive_opening_through_both_guards (text='- Today’s available cash is no')
+FAIL: test_possessive_opening_through_both_guards (text='• Today’s $23.1M funding figur')
+FAIL: test_possessive_opening_through_both_guards (text='• Today’s remaining runway is ')
+FAIL: test_possessive_opening_through_both_guards (text='• Today’s available cash is no')
+FAIL: test_possessive_opening_through_both_guards (text='1. Today’s $23.1M funding figu')
+FAIL: test_possessive_opening_through_both_guards (text='1. Today’s remaining runway is')
+FAIL: test_possessive_opening_through_both_guards (text='1. Today’s available cash is n')
+FAIL: test_possessive_opening_through_both_guards (text='2) Today’s $23.1M funding figu')
+FAIL: test_possessive_opening_through_both_guards (text='2) Today’s remaining runway is')
+FAIL: test_possessive_opening_through_both_guards (text='2) Today’s available cash is n')
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-01', '2016-04-30', '2016-04-30'])
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-30', '2016-04-01', '2016-04-30'])
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-30', '2016-04-30', '2016-04-01'])
+Ran 74 tests in 4.949s
+FAILED (failures=46)
+
+== M2 only a "current" adjective counts ("today" in the clause ignored)
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2016-04-30', text='unt) [S3] leaves remaining runway today.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2030-06-30', text='unt) [S3] leaves remaining runway today.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='FY2026', text='unt) [S3] leaves remaining runway today.')
+Ran 74 tests in 5.069s
+FAILED (failures=3)
+
+== M3 a supported runway accepts current wording
+FAIL: test_introductory_time_qualifier_through_both_guards (text='Today, the $23.1M funding figure (per Pi')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='As of today, ')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='At present, ')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='Currently ')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2016-04-30', text=') [S3] against current remaining runway.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2016-04-30', text='unt) [S3] leaves remaining runway today.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2030-06-30', text=') [S3] against current remaining runway.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2030-06-30', text='unt) [S3] leaves remaining runway today.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='FY2026', text=') [S3] against current remaining runway.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='FY2026', text='unt) [S3] leaves remaining runway today.')
+FAIL: test_possessive_opening_through_both_guards (text="Today's $23.1M funding figure ")
+FAIL: test_possessive_opening_through_both_guards (text="Today's remaining runway is an")
+FAIL: test_possessive_opening_through_both_guards (text="- Today's $23.1M funding figur")
+FAIL: test_possessive_opening_through_both_guards (text="- Today's remaining runway is ")
+FAIL: test_possessive_opening_through_both_guards (text="• Today's $23.1M funding figur")
+FAIL: test_possessive_opening_through_both_guards (text="• Today's remaining runway is ")
+FAIL: test_possessive_opening_through_both_guards (text="1. Today's $23.1M funding figu")
+FAIL: test_possessive_opening_through_both_guards (text="1. Today's remaining runway is")
+FAIL: test_possessive_opening_through_both_guards (text="2) Today's $23.1M funding figu")
+FAIL: test_possessive_opening_through_both_guards (text="2) Today's remaining runway is")
+FAIL: test_possessive_opening_through_both_guards (text='Today’s $23.1M funding figure ')
+FAIL: test_possessive_opening_through_both_guards (text='Today’s remaining runway is an')
+FAIL: test_possessive_opening_through_both_guards (text='- Today’s $23.1M funding figur')
+FAIL: test_possessive_opening_through_both_guards (text='- Today’s remaining runway is ')
+FAIL: test_possessive_opening_through_both_guards (text='• Today’s $23.1M funding figur')
+FAIL: test_possessive_opening_through_both_guards (text='• Today’s remaining runway is ')
+FAIL: test_possessive_opening_through_both_guards (text='1. Today’s $23.1M funding figu')
+FAIL: test_possessive_opening_through_both_guards (text='1. Today’s remaining runway is')
+FAIL: test_possessive_opening_through_both_guards (text='2) Today’s $23.1M funding figu')
+FAIL: test_possessive_opening_through_both_guards (text='2) Today’s remaining runway is')
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-01', '2016-04-30', '2016-04-30'])
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-30', '2016-04-01', '2016-04-30'])
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-30', '2016-04-30', '2016-04-01'])
+Ran 74 tests in 5.105s
+FAILED (failures=33)
+
+== M4 a dated cash balance accepts current wording
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2016-04-30', text=' [S3] is not the current available cash.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2030-06-30', text=' [S3] is not the current available cash.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='FY2026', text=' [S3] is not the current available cash.')
+FAIL: test_possessive_opening_through_both_guards (text="Today's available cash is not ")
+FAIL: test_possessive_opening_through_both_guards (text="- Today's available cash is no")
+FAIL: test_possessive_opening_through_both_guards (text="• Today's available cash is no")
+FAIL: test_possessive_opening_through_both_guards (text="1. Today's available cash is n")
+FAIL: test_possessive_opening_through_both_guards (text="2) Today's available cash is n")
+FAIL: test_possessive_opening_through_both_guards (text='Today’s available cash is not ')
+FAIL: test_possessive_opening_through_both_guards (text='- Today’s available cash is no')
+FAIL: test_possessive_opening_through_both_guards (text='• Today’s available cash is no')
+FAIL: test_possessive_opening_through_both_guards (text='1. Today’s available cash is n')
+FAIL: test_possessive_opening_through_both_guards (text='2) Today’s available cash is n')
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-01', '2016-04-30', '2016-04-30'])
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-30', '2016-04-01', '2016-04-30'])
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-30', '2016-04-30', '2016-04-01'])
+Ran 74 tests in 4.905s
+FAILED (failures=16)
+
+== M5 leftover "today" kept beside the dated note
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2016-04-30', text='unt) [S3] leaves remaining runway today.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2030-06-30', text='unt) [S3] leaves remaining runway today.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='FY2026', text='unt) [S3] leaves remaining runway today.')
+Ran 74 tests in 5.236s
+FAILED (failures=3)
+
+== M8 unsupported current wording loses its adjective
+FAIL: test_possessive_opening_through_both_guards (unsupported="Today's remaining runway is an")
+FAIL: test_possessive_opening_through_both_guards (unsupported="- Today's remaining runway is ")
+FAIL: test_possessive_opening_through_both_guards (unsupported="• Today's remaining runway is ")
+FAIL: test_possessive_opening_through_both_guards (unsupported="1. Today's remaining runway is")
+FAIL: test_possessive_opening_through_both_guards (unsupported="2) Today's remaining runway is")
+FAIL: test_unsupported_current_wording_is_qualified (text=') [S3] against current runway.')
+FAIL: test_unsupported_current_wording_is_qualified (text='unt) [S3] is not current cash.')
+Ran 74 tests in 5.072s
+FAILED (failures=7)
+
+== M9 the qualified "current runway (which needs ...)" matched again (not idempotent)
+FAIL: test_possessive_opening_through_both_guards (unsupported="Today's remaining runway is an")
+FAIL: test_possessive_opening_through_both_guards (unsupported="- Today's remaining runway is ")
+FAIL: test_possessive_opening_through_both_guards (unsupported="• Today's remaining runway is ")
+FAIL: test_possessive_opening_through_both_guards (unsupported="1. Today's remaining runway is")
+FAIL: test_possessive_opening_through_both_guards (unsupported="2) Today's remaining runway is")
+FAIL: test_unsupported_current_wording_is_qualified (text=') [S3] against current runway.')
+FAIL: test_unsupported_current_wording_is_qualified (text='unt) [S3] is not current cash.')
+Ran 74 tests in 5.509s
+FAILED (failures=7)
+
+== M10 "current runway" not a premise
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2016-04-30', text=') [S3] against current remaining runway.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2016-04-30', text=' [S3] is not the current available cash.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2030-06-30', text=') [S3] against current remaining runway.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='2030-06-30', text=' [S3] is not the current available cash.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='FY2026', text=') [S3] against current remaining runway.')
+FAIL: test_matching_dates_do_not_establish_current_runway_or_cash (as_of='FY2026', text=' [S3] is not the current available cash.')
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-01', '2016-04-30', '2016-04-30'])
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-30', '2016-04-01', '2016-04-30'])
+FAIL: test_the_latest_date_uses_its_day_in_any_item_order (order=['2016-04-30', '2016-04-30', '2016-04-01'])
+FAIL: test_unsupported_current_wording_is_qualified (text=') [S3] against current runway.')
+FAIL: test_unsupported_current_wording_is_qualified (text='unt) [S3] is not current cash.')
+Ran 74 tests in 5.011s
+FAILED (failures=11)
+
+== O1 introductory qualifier ignored
+FAIL: test_introductory_time_qualifier_through_both_guards (text='Today, the $23.1M funding figure (per Pi')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='As of today, ')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='At present, ')
+Ran 74 tests in 4.888s
+FAILED (failures=3)
+
+== O2 introductory qualifier kept beside the dated note
+FAIL: test_introductory_time_qualifier_through_both_guards (text='Today, the $23.1M funding figure (per Pi')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='As of today, ')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='At present, ')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='Currently ')
+FAIL: test_possessive_opening_through_both_guards (text="Today's $23.1M funding figure ")
+FAIL: test_possessive_opening_through_both_guards (text="Today's remaining runway is an")
+FAIL: test_possessive_opening_through_both_guards (text="Today's available cash is not ")
+FAIL: test_possessive_opening_through_both_guards (text="- Today's $23.1M funding figur")
+FAIL: test_possessive_opening_through_both_guards (text="- Today's remaining runway is ")
+FAIL: test_possessive_opening_through_both_guards (text="- Today's available cash is no")
+FAIL: test_possessive_opening_through_both_guards (text="• Today's $23.1M funding figur")
+FAIL: test_possessive_opening_through_both_guards (text="• Today's remaining runway is ")
+FAIL: test_possessive_opening_through_both_guards (text="• Today's available cash is no")
+FAIL: test_possessive_opening_through_both_guards (text="1. Today's $23.1M funding figu")
+FAIL: test_possessive_opening_through_both_guards (text="1. Today's remaining runway is")
+FAIL: test_possessive_opening_through_both_guards (text="1. Today's available cash is n")
+FAIL: test_possessive_opening_through_both_guards (text="2) Today's $23.1M funding figu")
+FAIL: test_possessive_opening_through_both_guards (text="2) Today's remaining runway is")
+FAIL: test_possessive_opening_through_both_guards (text="2) Today's available cash is n")
+FAIL: test_possessive_opening_through_both_guards (text='Today’s $23.1M funding figure ')
+FAIL: test_possessive_opening_through_both_guards (text='Today’s remaining runway is an')
+FAIL: test_possessive_opening_through_both_guards (text='Today’s available cash is not ')
+FAIL: test_possessive_opening_through_both_guards (text='- Today’s $23.1M funding figur')
+FAIL: test_possessive_opening_through_both_guards (text='- Today’s remaining runway is ')
+FAIL: test_possessive_opening_through_both_guards (text='- Today’s available cash is no')
+FAIL: test_possessive_opening_through_both_guards (text='• Today’s $23.1M funding figur')
+FAIL: test_possessive_opening_through_both_guards (text='• Today’s remaining runway is ')
+FAIL: test_possessive_opening_through_both_guards (text='• Today’s available cash is no')
+FAIL: test_possessive_opening_through_both_guards (text='1. Today’s $23.1M funding figu')
+FAIL: test_possessive_opening_through_both_guards (text='1. Today’s remaining runway is')
+FAIL: test_possessive_opening_through_both_guards (text='1. Today’s available cash is n')
+FAIL: test_possessive_opening_through_both_guards (text='2) Today’s $23.1M funding figu')
+FAIL: test_possessive_opening_through_both_guards (text='2) Today’s remaining runway is')
+FAIL: test_possessive_opening_through_both_guards (text='2) Today’s available cash is n')
+Ran 74 tests in 5.084s
+FAILED (failures=34)
+
+== O3 qualifier removed without recapitalising
+FAIL: test_introductory_time_qualifier_through_both_guards (text='Today, the $23.1M funding figure (per Pi')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='As of today, ')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='At present, ')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='Currently ')
+FAIL: test_possessive_opening_through_both_guards (text="Today's remaining runway is an")
+FAIL: test_possessive_opening_through_both_guards (text="Today's available cash is not ")
+FAIL: test_possessive_opening_through_both_guards (text="- Today's remaining runway is ")
+FAIL: test_possessive_opening_through_both_guards (text="- Today's available cash is no")
+FAIL: test_possessive_opening_through_both_guards (text="• Today's remaining runway is ")
+FAIL: test_possessive_opening_through_both_guards (text="• Today's available cash is no")
+FAIL: test_possessive_opening_through_both_guards (text="1. Today's remaining runway is")
+FAIL: test_possessive_opening_through_both_guards (text="1. Today's available cash is n")
+FAIL: test_possessive_opening_through_both_guards (text="2) Today's remaining runway is")
+FAIL: test_possessive_opening_through_both_guards (text="2) Today's available cash is n")
+FAIL: test_possessive_opening_through_both_guards (text='Today’s remaining runway is an')
+FAIL: test_possessive_opening_through_both_guards (text='Today’s available cash is not ')
+FAIL: test_possessive_opening_through_both_guards (text='- Today’s remaining runway is ')
+FAIL: test_possessive_opening_through_both_guards (text='- Today’s available cash is no')
+FAIL: test_possessive_opening_through_both_guards (text='• Today’s remaining runway is ')
+FAIL: test_possessive_opening_through_both_guards (text='• Today’s available cash is no')
+FAIL: test_possessive_opening_through_both_guards (text='1. Today’s remaining runway is')
+FAIL: test_possessive_opening_through_both_guards (text='1. Today’s available cash is n')
+FAIL: test_possessive_opening_through_both_guards (text='2) Today’s remaining runway is')
+FAIL: test_possessive_opening_through_both_guards (text='2) Today’s available cash is n')
+Ran 74 tests in 4.928s
+FAILED (failures=24)
+
+== O4 "Now that ..." read as a time qualifier
+FAIL: test_introductory_time_qualifier_through_both_guards (text='Now that funds are raised, the $23.1M fu')
+Ran 74 tests in 5.275s
+FAILED (failures=1)
+
+== O9 time guard: opening not restored
+FAIL: test_introductory_time_qualifier_through_both_guards (text='- As of today, the $23.1M funding figure')
+FAIL: test_introductory_time_qualifier_through_both_guards (text='At present, the $23.1M funding figure (p')
+FAIL: test_introductory_time_qualifier_through_both_guards (text='Currently the $23.1M funding figure (per')
+Ran 74 tests in 4.937s
+FAILED (failures=3)
+
+== O10 time guard: leading space kept
+FAIL: test_introductory_time_qualifier_through_both_guards (text='At present, the $23.1M funding figure (p')
+FAIL: test_introductory_time_qualifier_through_both_guards (text='Currently the $23.1M funding figure (per')
+Ran 74 tests in 7.205s
+FAILED (failures=2)
+
+== O11 time guard: list marker not kept as the lead
+FAIL: test_introductory_time_qualifier_through_both_guards (text='- As of today, the $23.1M funding figure')
+Ran 74 tests in 5.352s
+FAILED (failures=1)
+
+== P1 possessive "Today's" not a qualifier
+FAIL: test_possessive_opening_through_both_guards (text="Today's $23.1M funding figure ")
+FAIL: test_possessive_opening_through_both_guards (text="- Today's $23.1M funding figur")
+FAIL: test_possessive_opening_through_both_guards (text="• Today's $23.1M funding figur")
+FAIL: test_possessive_opening_through_both_guards (text="1. Today's $23.1M funding figu")
+FAIL: test_possessive_opening_through_both_guards (text="2) Today's $23.1M funding figu")
+FAIL: test_possessive_opening_through_both_guards (text='Today’s $23.1M funding figure ')
+FAIL: test_possessive_opening_through_both_guards (text='Today’s remaining runway is an')
+FAIL: test_possessive_opening_through_both_guards (text='Today’s available cash is not ')
+FAIL: test_possessive_opening_through_both_guards (text='- Today’s $23.1M funding figur')
+FAIL: test_possessive_opening_through_both_guards (text='- Today’s remaining runway is ')
+FAIL: test_possessive_opening_through_both_guards (text='- Today’s available cash is no')
+FAIL: test_possessive_opening_through_both_guards (text='• Today’s $23.1M funding figur')
+FAIL: test_possessive_opening_through_both_guards (text='• Today’s remaining runway is ')
+FAIL: test_possessive_opening_through_both_guards (text='• Today’s available cash is no')
+FAIL: test_possessive_opening_through_both_guards (text='1. Today’s $23.1M funding figu')
+FAIL: test_possessive_opening_through_both_guards (text='1. Today’s remaining runway is')
+FAIL: test_possessive_opening_through_both_guards (text='1. Today’s available cash is n')
+FAIL: test_possessive_opening_through_both_guards (text='2) Today’s $23.1M funding figu')
+FAIL: test_possessive_opening_through_both_guards (text='2) Today’s remaining runway is')
+FAIL: test_possessive_opening_through_both_guards (text='2) Today’s available cash is n')
+Ran 74 tests in 5.216s
+FAILED (failures=20)
+
+== P2 typographic apostrophe not accepted
+FAIL: test_possessive_opening_through_both_guards (text='Today’s $23.1M funding figure ')
+FAIL: test_possessive_opening_through_both_guards (text='Today’s remaining runway is an')
+FAIL: test_possessive_opening_through_both_guards (text='Today’s available cash is not ')
+FAIL: test_possessive_opening_through_both_guards (text='- Today’s $23.1M funding figur')
+FAIL: test_possessive_opening_through_both_guards (text='- Today’s remaining runway is ')
+FAIL: test_possessive_opening_through_both_guards (text='- Today’s available cash is no')
+FAIL: test_possessive_opening_through_both_guards (text='• Today’s $23.1M funding figur')
+FAIL: test_possessive_opening_through_both_guards (text='• Today’s remaining runway is ')
+FAIL: test_possessive_opening_through_both_guards (text='• Today’s available cash is no')
+FAIL: test_possessive_opening_through_both_guards (text='1. Today’s $23.1M funding figu')
+FAIL: test_possessive_opening_through_both_guards (text='1. Today’s remaining runway is')
+FAIL: test_possessive_opening_through_both_guards (text='1. Today’s available cash is n')
+FAIL: test_possessive_opening_through_both_guards (text='2) Today’s $23.1M funding figu')
+FAIL: test_possessive_opening_through_both_guards (text='2) Today’s remaining runway is')
+FAIL: test_possessive_opening_through_both_guards (text='2) Today’s available cash is n')
+Ran 74 tests in 5.225s
+FAILED (failures=15)
+
+== P3 lead cut at its original length (the pre-patch slice)
+FAIL: test_possessive_opening_through_both_guards (text="Today's remaining runway is an")
+FAIL: test_possessive_opening_through_both_guards (text="Today's available cash is not ")
+FAIL: test_possessive_opening_through_both_guards (text="- Today's remaining runway is ")
+FAIL: test_possessive_opening_through_both_guards (text="- Today's available cash is no")
+FAIL: test_possessive_opening_through_both_guards (text="• Today's remaining runway is ")
+FAIL: test_possessive_opening_through_both_guards (text="• Today's available cash is no")
+FAIL: test_possessive_opening_through_both_guards (text="1. Today's remaining runway is")
+FAIL: test_possessive_opening_through_both_guards (text="1. Today's available cash is n")
+FAIL: test_possessive_opening_through_both_guards (text="2) Today's remaining runway is")
+FAIL: test_possessive_opening_through_both_guards (text="2) Today's available cash is n")
+Ran 74 tests in 5.026s
+FAILED (failures=10)
+
+== P4 lead not re-found after the premise rewrite
+FAIL: test_introductory_time_qualifier_through_both_guards (text='Today, the $23.1M funding figure (per Pi')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='As of today, ')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='At present, ')
+FAIL: test_introductory_time_qualifier_through_both_guards (lead='Currently ')
+FAIL: test_possessive_opening_through_both_guards (text="Today's $23.1M funding figure ")
+FAIL: test_possessive_opening_through_both_guards (text="- Today's $23.1M funding figur")
+FAIL: test_possessive_opening_through_both_guards (text="• Today's $23.1M funding figur")
+FAIL: test_possessive_opening_through_both_guards (text="1. Today's $23.1M funding figu")
+FAIL: test_possessive_opening_through_both_guards (text="2) Today's $23.1M funding figu")
+FAIL: test_possessive_opening_through_both_guards (text='Today’s $23.1M funding figure ')
+FAIL: test_possessive_opening_through_both_guards (text='Today’s remaining runway is an')
+FAIL: test_possessive_opening_through_both_guards (text='Today’s available cash is not ')
+FAIL: test_possessive_opening_through_both_guards (text='- Today’s $23.1M funding figur')
+FAIL: test_possessive_opening_through_both_guards (text='- Today’s remaining runway is ')
+FAIL: test_possessive_opening_through_both_guards (text='- Today’s available cash is no')
+FAIL: test_possessive_opening_through_both_guards (text='• Today’s $23.1M funding figur')
+FAIL: test_possessive_opening_through_both_guards (text='• Today’s remaining runway is ')
+FAIL: test_possessive_opening_through_both_guards (text='• Today’s available cash is no')
+FAIL: test_possessive_opening_through_both_guards (text='1. Today’s $23.1M funding figu')
+FAIL: test_possessive_opening_through_both_guards (text='1. Today’s remaining runway is')
+FAIL: test_possessive_opening_through_both_guards (text='1. Today’s available cash is n')
+FAIL: test_possessive_opening_through_both_guards (text='2) Today’s $23.1M funding figu')
+FAIL: test_possessive_opening_through_both_guards (text='2) Today’s remaining runway is')
+FAIL: test_possessive_opening_through_both_guards (text='2) Today’s available cash is n')
+Ran 74 tests in 4.922s
+FAILED (failures=24)
+
+== P5 consumed lead: marker dropped (no prefix skip)
+FAIL: test_possessive_opening_through_both_guards (text="- Today's remaining runway is ")
+FAIL: test_possessive_opening_through_both_guards (text="- Today's available cash is no")
+FAIL: test_possessive_opening_through_both_guards (text="• Today's remaining runway is ")
+FAIL: test_possessive_opening_through_both_guards (text="• Today's available cash is no")
+FAIL: test_possessive_opening_through_both_guards (text="2) Today's remaining runway is")
+FAIL: test_possessive_opening_through_both_guards (text="2) Today's available cash is n")
+Ran 74 tests in 4.869s
+FAILED (failures=6)
+
+== P6 list marker not kept
+FAIL: test_possessive_opening_through_both_guards (text="- Today's $23.1M funding figur")
+FAIL: test_possessive_opening_through_both_guards (text="- Today's remaining runway is ")
+FAIL: test_possessive_opening_through_both_guards (text="- Today's available cash is no")
+FAIL: test_possessive_opening_through_both_guards (text="• Today's $23.1M funding figur")
+FAIL: test_possessive_opening_through_both_guards (text="• Today's remaining runway is ")
+FAIL: test_possessive_opening_through_both_guards (text="• Today's available cash is no")
+FAIL: test_possessive_opening_through_both_guards (text="2) Today's $23.1M funding figu")
+FAIL: test_possessive_opening_through_both_guards (text="2) Today's remaining runway is")
+FAIL: test_possessive_opening_through_both_guards (text="2) Today's available cash is n")
+FAIL: test_possessive_opening_through_both_guards (text='- Today’s $23.1M funding figur')
+FAIL: test_possessive_opening_through_both_guards (text='- Today’s remaining runway is ')
+FAIL: test_possessive_opening_through_both_guards (text='- Today’s available cash is no')
+FAIL: test_possessive_opening_through_both_guards (text='• Today’s $23.1M funding figur')
+FAIL: test_possessive_opening_through_both_guards (text='• Today’s remaining runway is ')
+FAIL: test_possessive_opening_through_both_guards (text='• Today’s available cash is no')
+FAIL: test_possessive_opening_through_both_guards (text='2) Today’s $23.1M funding figu')
+FAIL: test_possessive_opening_through_both_guards (text='2) Today’s remaining runway is')
+FAIL: test_possessive_opening_through_both_guards (text='2) Today’s available cash is n')
+Ran 74 tests in 4.948s
+FAILED (failures=18)
+
+
+RESULT: 21 mutations run (of 103 in the harness): 21 red, 0 survived.
+Not re-run here: 82 inherited mutations whose code the patch does not touch (targets verified with --check).
