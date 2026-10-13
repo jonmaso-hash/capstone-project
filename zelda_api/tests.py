@@ -1047,9 +1047,40 @@ class ICMemoTests(TestCase):
         self.client.force_login(self.founder_user)
         response = self.client.get(reverse('zelda_api:ic_memo_download', args=[doc.id]))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response['Content-Type'], 'text/markdown')
+        self.assertEqual(response['Content-Type'], 'text/markdown; charset=utf-8')
         self.assertIn('memoco-ic-memo.md', response['Content-Disposition'])
         self.assertIn(b'MemoCo', response.content)
+
+    def test_markdown_download_declares_and_sends_utf8(self):
+        # FF-411 (memo 96): "•" and "—" arrive as UTF-8 bytes under a header that says so.
+        doc = self._make_pitch_deck_doc(with_memo=True)
+        IntelligenceMemo.objects.filter(document=doc).update(
+            executive_summary='• Funding raised — per Pitch Deck Hunt: $23.1M; café',
+            supported_points='- Bots: 140,000+ — self-reported')
+        self.application.is_premium = True
+        self.application.save(update_fields=['is_premium'])
+        self.client.force_login(self.founder_user)
+        response = self.client.get(reverse('zelda_api:ic_memo_download', args=[doc.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/markdown; charset=utf-8')
+        self.assertEqual(response.charset, 'utf-8')
+        for text in ('• Funding raised — per Pitch Deck Hunt: $23.1M; café', 'Bots: 140,000+ — self-reported'):
+            with self.subTest(text=text):
+                self.assertIn(text.encode('utf-8'), response.content)
+        self.assertNotIn('â€'.encode('utf-8'), response.content)      # no double-encoding
+        self.assertIn('memoco-ic-memo.md', response['Content-Disposition'])
+
+    def test_markdown_download_authorization_is_unchanged(self):
+        doc = self._make_pitch_deck_doc(with_memo=True)
+        url = reverse('zelda_api:ic_memo_download', args=[doc.id])
+        self.assertEqual(self.client.get(url).status_code, 302)                  # anonymous -> login
+        self.client.force_login(self.stranger_user)
+        self.assertEqual(self.client.get(url).status_code, 404)
+        self.client.force_login(self.founder_user)                               # not premium -> Lite page
+        self.assertRedirects(self.client.get(url), reverse('zelda_api:ic_memo', args=[doc.id]))
+        self.client.force_login(self.staff_user)
+        response = self.client.get(url)
+        self.assertEqual((response.status_code, response['Content-Type']), (200, 'text/markdown; charset=utf-8'))
 
     def test_markdown_download_404s_for_unauthorized_viewer(self):
         doc = self._make_pitch_deck_doc(with_memo=True)

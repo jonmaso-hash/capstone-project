@@ -1743,7 +1743,8 @@ def ic_memo_download_view(request, document_id):
     context = build_ic_memo_context(application, viewer=request.user)
     markdown_text = render_ic_memo_markdown(context)
 
-    response = HttpResponse(markdown_text, content_type='text/markdown')
+    # The body is UTF-8 ("•", "—"); without the charset a client may read it as Latin-1 (FF-411).
+    response = HttpResponse(markdown_text, content_type='text/markdown; charset=utf-8')
     safe_name = (application.company_name or 'company').replace(' ', '-').lower()
     response['Content-Disposition'] = f'attachment; filename="{safe_name}-ic-memo.md"'
     return response
