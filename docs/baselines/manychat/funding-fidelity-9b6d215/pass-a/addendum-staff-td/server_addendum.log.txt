@@ -1,0 +1,35 @@
+BASELINE-ENV-CHECK [server pid=24796] {'FILED_API_KEY': False, 'COMPANYENRICH_API_KEY': False, 'NEWS_API_KEY': False, 'DATA4B2B_API_KEY': False, 'USPTO_ODP_API_KEY': False, 'CRUNCHBASE_API_KEY': False, 'ANTHROPIC_API_KEY': True}
+BROKER-CHECK [server pid=24796] broker (write) redis://localhost local=True redis_db=3
+BROKER-CHECK [server pid=24796] broker (read) redis://localhost local=True redis_db=3
+BROKER-CHECK [server pid=24796] result backend redis://localhost local=True redis_db=4
+BROKER-CHECK [server pid=24796] cache redis://localhost local=True redis_db=5
+DB-CHECK [server pid=24796] name=C:/Users/jonathan/AppData/Local/Temp/claude/C--Users-jonathan-Desktop-KCV/8edb8be9-5c85-488f-a1b8-020dd6a9a3c0/scratchpad/mcff3/db_ff3_copy.sqlite3 is_copy=True is_original=False
+SCHEMA-CHECK [server pid=24796] pending=0 [] zelda_api.0035=True zelda_api.0044=True matchmaking.0083=True matchmaking.0095=True
+EAGER-CHECK [server pid=24796] CELERY_TASK_ALWAYS_EAGER=False
+MODEL-CALL-LOG installed [server pid=24796] C:\Users\jonathan\AppData\Local\Temp\claude\C--Users-jonathan-Desktop-KCV\8edb8be9-5c85-488f-a1b8-020dd6a9a3c0\scratchpad\mcff3\model_calls.jsonl
+2026-10-13 01:34:33,479 INFO django.server - "GET / HTTP/1.1" 200 36156
+2026-10-13 01:34:33,906 INFO django.server - "GET / HTTP/1.1" 200 36156
+2026-10-13 01:35:00,573 INFO django.server - "GET /api/v1/zelda/documents/3138/verification/ HTTP/1.1" 302 0
+2026-10-13 01:35:00,681 INFO django.server - "GET /accounts/login/?next=/api/v1/zelda/documents/3138/verification/ HTTP/1.1" 200 13669
+2026-10-13 01:35:00,947 INFO django.server - "GET /static/css/base.css HTTP/1.1" 304 0
+2026-10-13 01:35:00,951 INFO django.server - "GET /static/img/brand/interlink-logo.svg HTTP/1.1" 304 0
+2026-10-13 01:35:00,966 INFO django.server - "GET /static/js/matchmaking.js HTTP/1.1" 304 0
+2026-10-13 01:35:00,992 INFO django.server - "GET /static/img/brand/interlink-mark.svg HTTP/1.1" 304 0
+2026-10-13 01:35:03,950 INFO django.server - "POST /accounts/login/?next=/api/v1/zelda/documents/3138/verification/ HTTP/1.1" 302 0
+2026-10-13 01:35:03,982 INFO django.server - "GET /api/v1/zelda/documents/3138/verification/ HTTP/1.1" 302 0
+2026-10-13 01:35:04,258 INFO django.server - "GET /accounts/staff-mfa/verify/?next=%2Fapi%2Fv1%2Fzelda%2Fdocuments%2F3138%2Fverification%2F HTTP/1.1" 200 1450
+2026-10-13 01:35:12,650 INFO django.server - "POST /accounts/staff-mfa/verify/?next=%2Fapi%2Fv1%2Fzelda%2Fdocuments%2F3138%2Fverification%2F HTTP/1.1" 302 0
+2026-10-13 01:35:12,992 INFO django.server - "GET /api/v1/zelda/documents/3138/verification/ HTTP/1.1" 200 59260
+2026-10-13 01:35:13,340 INFO django.server - "GET /static/js/entity_identity_check.js HTTP/1.1" 304 0
+2026-10-13 01:35:22,271 INFO django.server - "GET /api/v1/zelda/documents/3138/verification/ HTTP/1.1" 200 59260
+2026-10-13 01:35:43,535 INFO django.server - "GET / HTTP/1.1" 200 165722
+2026-10-13 01:36:06,911 INFO django.server - "GET / HTTP/1.1" 200 165722
+2026-10-13 01:36:07,095 INFO django.server - "GET /static/js/home-role-journeys.js HTTP/1.1" 304 0
+2026-10-13 01:36:07,242 INFO django.server - "GET /static/css/home.css HTTP/1.1" 304 0
+2026-10-13 01:36:07,245 INFO django.server - "GET /static/js/zelda_products.js HTTP/1.1" 304 0
+2026-10-13 01:36:07,379 INFO django.server - "GET /api/v1/zelda/journey-status/ HTTP/1.1" 200 604
+2026-10-13 01:36:07,430 INFO django.server - "GET /api/v1/zelda/journey-status/ HTTP/1.1" 200 604
+2026-10-13 01:36:07,640 INFO django.server - "POST /accounts/logout/ HTTP/1.1" 302 0
+2026-10-13 01:36:07,714 INFO django.server - "GET /home/ HTTP/1.1" 200 36183
+2026-10-13 01:36:12,761 INFO django.server - "GET /api/v1/zelda/documents/3138/verification/ HTTP/1.1" 302 0
+2026-10-13 01:36:12,801 INFO django.server - "GET /accounts/login/?next=/api/v1/zelda/documents/3138/verification/ HTTP/1.1" 200 13669
