@@ -105,6 +105,10 @@ _CASH_PREMISE = re.compile(r"\b(?P<now>current|present|today's)\s+(?:(?:remainin
                            r'\b(?P<b>runway|cash)\s+(?:remaining|left)\b', re.I)
 # Current wording elsewhere in the premise's clause: "... against remaining runway today".
 _NOW = re.compile(r'\b(?:today|now|currently|presently|at\s+present)\b', re.I)
+# An introductory time qualifier governs the whole sentence, across its comma: "Today, the $23.1M ... supports
+# remaining runway." ("Now" only with its comma: "Now that ..." is not a time qualifier.)
+_LEAD_NOW = re.compile(r'^(?P<lead>\s*(?:[-•*·–]|\d+[.)])?\s*)(?P<now>(?:as\s+of\s+)?(?:today|currently|presently|'
+                       r'at\s+present|at\s+this\s+point)\b\s*,?\s*|now\s*,\s*)', re.I)
 _SUFFICIENT_ALONE = re.compile(r'\b(\w+)\s+alone\s+(would|will|could|can)\b')
 # The company's own cash and burn evidence. A balance is a cash figure that is not a flow or a burn;
 # a burn basis is a burn figure with a rate ("$150K per month"). Each is only a basis when it is
@@ -224,10 +228,14 @@ def same_period(cash, burn):
 
 
 def _latest(dated):
-    """The as-of string of the latest (as_of, period) by year, then month; which one is shown, nothing is inferred."""
+    """
+    The as-of string of the latest (as_of, period): by year, then the full ISO date (its day too, so
+    2016-04-30 beats 2016-04-01 in any item order). A bare fiscal year sorts before its year's
+    period ends; that only chooses which date is shown, nothing is inferred.
+    """
     def key(entry):
-        kind, n = entry[1]
-        return ((n - 1) // 12, 1, n) if kind == 'month' else (n, 0, 0)
+        as_of, (kind, n) = entry
+        return ((n - 1) // 12, 1, as_of) if kind == 'month' else (n, 0, as_of)
     return max(dated, key=key)[0]
 
 
@@ -485,6 +493,33 @@ def _cited_self_reported(sentence, facts, changes):
     return sentence
 
 
+# What may sit between two citation groups of one run: nothing, "with", "plus", "&", "as well as".
+_JOINER = re.compile(r'\s*(?:with|plus|&|as\s+well\s+as)?\s*', re.I)
+
+
+def _merge_joined_groups(sentence, start, stop, movable):
+    """
+    The first run of citation groups joined only by _JOINER, within [start, stop), that holds a
+    movable ref, merged into one group: (sentence, new stop, run start, characters removed). None
+    when there is no such run.
+    """
+    groups = list(_REF.finditer(sentence, start, stop))
+    i = 0
+    while i < len(groups):
+        j = i
+        while j + 1 < len(groups) and _JOINER.fullmatch(sentence, groups[j].end(), groups[j + 1].start()):
+            j += 1
+        run = groups[i:j + 1]
+        refs = [r.strip() for g in run for r in re.split(r'[,;]', g.group(1))]
+        if len(run) > 1 and any(movable(r) for r in refs):
+            joined = f'[{", ".join(refs)}]'
+            new = sentence[:run[0].start()] + joined + sentence[run[-1].end():]
+            removed = len(sentence) - len(new)
+            return new, stop - removed, run[0].start(), removed
+        i = j + 1
+    return None
+
+
 def _one_self_reported(sentence, span, facts, changes, by_ref):
     """One "self-reported" span, handled within its clause; None when it has no narrated ref to move."""
     start, stop = _clause_start(sentence, span.start()), _clause_end(sentence, span.end())
@@ -493,6 +528,12 @@ def _one_self_reported(sentence, span, facts, changes, by_ref):
     stated = {r for entry in facts.narrated
               if (entry.figure and entry.figure.search(sentence, start, stop)) or entry.narrator.lower() in clause
               for r in entry.refs}
+    merged = _merge_joined_groups(sentence, start, stop, lambda r: r in by_ref and r not in stated)
+    if merged:
+        # "[S1, S3] with [S4] plus [S5]" is one citation run governed by the same "self-reported":
+        # it becomes "[S1, S3, S4, S5]" so every narrated ref in it is handled in this one step.
+        sentence, stop, run_start, removed = merged
+        span = _SELF_REPORTED.match(sentence, span.start() if span.start() < run_start else span.start() - removed)
     for group in _REF.finditer(sentence, start, stop):
         refs = [r.strip() for r in re.split(r'[,;]', group.group(1))]
         moved = [r for r in refs if r in by_ref and r not in stated]
@@ -593,10 +634,12 @@ def _no_cash_premise(sentence, facts, changes):
     if not (_cited(sentence) & facts.funding_refs or any(p.search(sentence) for p in facts.funding_figures)):
         return sentence
 
+    lead = _LEAD_NOW.match(sentence)
+
     def basis(match):
         clause = sentence[_clause_start(sentence, match.start()):_clause_end(sentence, match.end())]
         word = (match.group('a') or match.group('b') or match.group('c')).lower()
-        note = cash_basis_note(word, facts, current=bool(match.group('now') or _NOW.search(clause)))
+        note = cash_basis_note(word, facts, current=bool(match.group('now') or _NOW.search(clause) or lead))
         if note is None:
             return match.group(0)
         supported = facts.cash == DATED if word == 'cash' else facts.runway_supported
@@ -605,7 +648,11 @@ def _no_cash_premise(sentence, facts, changes):
         return note                                        # supported: the evidence's date replaces "current"
 
     rewritten = _CASH_PREMISE.sub(basis, sentence)
-    # "... leaves runway as of 2016-04-30 (...) today": the evidence's date replaces the clause's current wording.
+    # The evidence's date replaces current wording: an introductory "Today, ..." first (the rest is
+    # recapitalised), then "today" / "now" in the dated note's own clause.
+    if lead and NO_CURRENT in rewritten and NO_CURRENT not in sentence:
+        rest = rewritten[lead.end():]
+        rewritten = lead.group('lead') + rest[:1].upper() + rest[1:]
     for dated in reversed(list(re.finditer(re.escape(f'; {NO_CURRENT})'), rewritten))):
         start, stop = _clause_start(rewritten, dated.start()), _clause_end(rewritten, dated.end())
         for now in reversed(list(_NOW.finditer(rewritten, start, stop))):

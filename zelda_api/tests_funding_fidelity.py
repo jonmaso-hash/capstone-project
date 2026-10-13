@@ -12,7 +12,8 @@ from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 
-from .funding_fidelity import NO_PREMISE, PROFILE_UNDATED, funding_facts, guard_funding_fidelity
+from .claim_context import guard_time_wording
+from .funding_fidelity import NO_PREMISE, PROFILE_UNDATED, funding_facts, guard_funding_fidelity, same_period
 from .grounded_context import INSUFFICIENT, SELF_REPORTED, GroundedItem, SourceRef
 
 User = get_user_model()
@@ -533,6 +534,13 @@ class MemoWriterTests(TestCase):
         self.assertIn('Funding raised (reported by Pitch Deck Hunt): $23.1M', lite['lite_sections']['information_readiness'])
 
 
+def both_guards(text, items, company='ManyChat'):
+    """The pipeline's order (_generate_memo): the time guard, then the funding guard, on one section."""
+    allowed = {item.ref: item.time_wording_allowed for item in items if item.dated}
+    timed, _ = guard_time_wording(text, allowed)
+    return guard_funding_fidelity(timed, funding_facts(items, company))[0]
+
+
 def memo95_items(**extra):
     """Memo 95's memo-input items (09b of the 2948998 run): same refs and narrator as memo 94's."""
     return memo94_items(**extra)
@@ -659,6 +667,42 @@ class SelfReportedWordingTests(SimpleTestCase):
                 self.assertEqual(guard(before, list(reversed(items))), after)
                 self.assertEqual(guard(after, items), after)
                 self.assertEqual(guard(after, list(reversed(items))), after)
+
+    def dealroom(self):
+        return GroundedItem(ref='S5', kind='statement', category='Funding', statement='$20M raised',
+                            status=SELF_REPORTED, sources=(SourceRef(document_id=3137, page_number=4),), dated=True,
+                            narrator='Dealroom', as_of='not stated')
+
+    def test_every_group_governed_by_one_span_in_one_call(self):
+        items = memo95_items(more=[self.crunchbase(), self.dealroom()])
+        cases = {
+            'The self-reported figures [S1, S3] with [S4] plus [S5] are unverified.':
+                'The self-reported figures [S1] (funding: per Pitch Deck Hunt, undated [S3]; per Crunchbase, undated '
+                '[S4]; per Dealroom, undated [S5]) are unverified.',
+            'The self-reported funding [S3] plus [S4] is unverified.':          # Crunchbase was never named
+                'The funding (per Pitch Deck Hunt and Crunchbase) [S3, S4] is unverified.',
+            # Locality: a joined run in another clause, with no "self-reported" of its own, is not this span's.
+            'The self-reported figures [S1, S3] are noted, and [S4] plus [S5] is listed.':
+                'The self-reported figures [S1] (funding: per Pitch Deck Hunt, undated [S3]) are noted, and [S4] plus '
+                '[S5] is listed.',
+            # "self-reported" after the run it governs.
+            '[S3] plus [S4] are self-reported.':
+                '[S3, S4] are reported by Pitch Deck Hunt and Crunchbase.',
+            '[S1, S3] plus [S4] are self-reported.':
+                '[S1] (funding: per Pitch Deck Hunt, undated [S3]; per Crunchbase, undated [S4]) are self-reported.',
+            # A company-only run before the narrated run in the same clause stays as written.
+            'The self-reported figures [S1] with [S2] exceed funding [S3] plus [S4].':
+                'The self-reported figures [S1] with [S2] exceed funding (per Pitch Deck Hunt, undated) [S3] and (per '
+                'Crunchbase, undated) [S4].',
+            # Company-only runs are left as written.
+            'The self-reported figures [S1] with [S2] are unverified.':
+                'The self-reported figures [S1] with [S2] are unverified.',
+        }
+        for before, after in cases.items():
+            with self.subTest(text=before[:50]):
+                for order in (items, list(reversed(items))):
+                    self.assertEqual(guard(before, order), after)
+                    self.assertEqual(guard(after, order), after)          # idempotent
 
     def test_a_dated_second_narrator_is_not_called_undated(self):
         items = memo95_items(more=[self.crunchbase(as_of='2024-05-01')])
@@ -854,6 +898,66 @@ class ReportedFundingIsNotCashTests(SimpleTestCase):
             with self.subTest(text=before[-30:]):
                 self.assertEqual(guard(before, memo95_items()), after)
                 self.assertEqual(guard(after, memo95_items()), after)
+
+    def test_introductory_time_qualifier_through_both_guards(self):
+        dated = ('supports runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no '
+                 'current figure).')
+        cases = {
+            'Today, the $23.1M funding figure (per Pitch Deck Hunt) [S3] supports remaining runway.':
+                f'The $23.1M funding figure (per Pitch Deck Hunt) [S3] {dated}',
+            # The time guard removes these phrases first (no source says them), restoring the capital; with no
+            # current wording left, the dated pair supports the plain premise (the dated positive control).
+            '- As of today, the $23.1M funding figure (per Pitch Deck Hunt) [S3] supports remaining runway.':
+                '- The $23.1M funding figure (per Pitch Deck Hunt) [S3] supports remaining runway.',
+            'At present, the $23.1M funding figure (per Pitch Deck Hunt) [S3] supports remaining runway.':
+                'The $23.1M funding figure (per Pitch Deck Hunt) [S3] supports remaining runway.',
+            'Currently the $23.1M funding figure (per Pitch Deck Hunt) [S3] supports remaining runway.':
+                'The $23.1M funding figure (per Pitch Deck Hunt) [S3] supports remaining runway.',
+            # Kept: not a time qualifier, a question, a qualified scenario.
+            'Now that funds are raised, the $23.1M funding figure (per Pitch Deck Hunt) [S3] supports remaining runway.':
+                'Now that funds are raised, the $23.1M funding figure (per Pitch Deck Hunt) [S3] supports remaining '
+                'runway.',
+            'Today, how much remaining runway does the $23.1M raised (per Pitch Deck Hunt) [S3] represent?':
+                'Today, how much remaining runway does the $23.1M raised (per Pitch Deck Hunt) [S3] represent?',
+            'Today, if the $23.1M raised (per Pitch Deck Hunt) [S3] were unspent, remaining runway would be longer.':
+                'Today, if the $23.1M raised (per Pitch Deck Hunt) [S3] were unspent, remaining runway would be '
+                'longer.',
+        }
+        items = memo95_items(more=self.pair('2016-04-30'))
+        for before, after in cases.items():
+            with self.subTest(text=before[:40]):
+                for order in (items, list(reversed(items))):
+                    self.assertEqual(both_guards(before, order), after)
+                    self.assertEqual(both_guards(after, order), after)    # idempotent
+        # Where the time guard keeps the phrase (its source says it, or it cites no claim-backed item), the
+        # funding guard alone still dates an introductory qualifier.
+        for lead in ('As of today, ', 'At present, ', 'Currently '):
+            with self.subTest(lead=lead):
+                self.assertEqual(guard(f'{lead}the $23.1M funding figure (per Pitch Deck Hunt) [S3] supports remaining '
+                                       'runway.', items), f'The $23.1M funding figure (per Pitch Deck Hunt) [S3] {dated}')
+        # Without support the premise is qualified as before and "Today," stays.
+        self.assertEqual(both_guards('Today, the $23.1M funding figure (per Pitch Deck Hunt) [S3] supports remaining '
+                                     'runway.', memo95_items()),
+                         'Today, the $23.1M funding figure (per Pitch Deck Hunt) [S3] supports runway (which needs a '
+                         'dated cash balance and burn rate; neither is in the evidence).')
+
+    def test_the_latest_date_uses_its_day_in_any_item_order(self):
+        early = self.evidence('S4', '$2.1M cash in the bank', as_of='2016-04-01')
+        late = self.evidence('S6', '$1.9M cash in the bank', as_of='2016-04-30')
+        burn = self.evidence('S5', 'Net burn of $150K per month', as_of='2016-04-30')
+        runway = 'It would anchor the $23.1M funding figure (per Pitch Deck Hunt) [S3] against current remaining runway.'
+        cash = 'The $23.1M funding figure (per Pitch Deck Hunt) [S3] is not the current available cash.'
+        for more in ([early, late, burn], [late, early, burn], [burn, late, early]):
+            with self.subTest(order=[i.as_of for i in more]):
+                for items in (memo95_items(more=more), list(reversed(memo95_items(more=more)))):
+                    self.assertIn('runway as of 2016-04-30 (', guard(runway, items))
+                    self.assertIn('cash as of 2016-04-30 (', guard(cash, items))
+
+    def test_a_month_end_never_matches_a_bare_fiscal_year(self):
+        # same_period's own contract, independent of the size of either number (month index 2024 vs FY2024).
+        self.assertFalse(same_period(('month', 2024), ('fy', 2024)))
+        self.assertFalse(same_period(('fy', 2024), ('month', 2024)))
+        self.assertTrue(same_period(('fy', 2024), ('fy', 2024)))
 
     def test_cash_premise_needs_a_dated_balance(self):
         undated = self.evidence('S4', '$2.1M cash in the bank')
