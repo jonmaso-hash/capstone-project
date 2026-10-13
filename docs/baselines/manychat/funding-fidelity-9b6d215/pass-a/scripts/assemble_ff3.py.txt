@@ -1,0 +1,79 @@
+"""Assemble this run's record into the evidence directory (no DB access)."""
+import os, re, json, shutil
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT = r'C:\Users\jonathan\Desktop\KCV-mc-ff3\docs\baselines\manychat\funding-fidelity-9b6d215\pass-a'
+SHOTS = r'C:\Users\jonathan\AppData\Local\Temp\claude-chrome-screenshots-dqHUQg'
+for sub in ('browser', 'process', 'scripts', 'snapshots'):
+    os.makedirs(os.path.join(OUT, sub), exist_ok=True)
+
+
+def read(name, enc='utf-8'):
+    raw = open(os.path.join(HERE, name), 'rb').read()
+    if raw[:2] in (b'\xff\xfe', b'\xfe\xff'):
+        return raw.decode('utf-16')
+    return raw.decode(enc, errors='replace')
+
+
+CHECK = r'^(BASELINE-ENV-CHECK|BROKER-CHECK|DB-CHECK|SCHEMA-CHECK|EAGER-CHECK|MODEL-CALL-LOG|REFUSING|CHECK OK|preflight ok|broker|result backend|cache|migrations)'
+lines = lambda name: [l for l in read(name).splitlines() if re.match(CHECK, l)]
+snap = lambda name: [l for l in read(name).splitlines() if not l.startswith('Invalid line')]
+setup = {
+    'code': {'worktree': r'C:\Users\jonathan\Desktop\KCV-mc-ff3 (detached at origin/main)',
+             'origin_main_head': '9b6d215a55027e39482006d8b6d17cfef8de091b',
+             'origin_main_subject': 'Merge pull request #280 from jonmaso-hash/fix/funding-cash-and-mixed-refs',
+             'parents': ['2948998c0af4b27a7b773abd3441f15187cb8e2d', '313a4e4487b6bb5e44ba3ac9a141caeaaf8331ad'],
+             'contains_7c71995': True, 'tree_equals_313a4e4': True, 'new_migrations_since_2948998': 0,
+             'application_code_changes_during_run': 0},
+    'database': {'original': r'C:\Users\jonathan\Desktop\KCV\db.sqlite3',
+                 'run_db': 'sqlite backup copy (scratchpad mcff3/db_ff3_copy.sqlite3)',
+                 'original_sha256_before': read('orig_db_sha_before.txt').split()[0],
+                 'original_sha256_after': read('orig_db_sha_after.txt').split()[0],
+                 'gate_refusal_before_migrate': lines('gate_refusal_before_migrate.txt'),
+                 'migrate_on_copy': [l for l in read('migrate_copy.txt').splitlines() if 'Applying' in l],
+                 'id_sequences_advanced_in_copy_only': read('sequences.txt').splitlines(),
+                 'why': 'every run copy derives from the same original; counters advanced to the memo-95 run copy maxima '
+                        '(read read-only) so ids never repeat documents 3136/3137 or memos 94/95'},
+    'broker': {'isolation': 'local Memurai broker db 3, results 4, cache 5 (all empty before); worker mcff3@, queue "celery" on db 3',
+               'redis_before': read('redis_before.txt').splitlines(), 'redis_after': read('redis_after.txt').splitlines(),
+               'other_dbs_unchanged': [l for l in read('redis_before.txt').splitlines() if not re.match(r'db [345] ', l)] ==
+                                      [l for l in read('redis_after.txt').splitlines() if not re.match(r'db [345] ', l)]},
+    'preflight_local': lines('preflight_local.txt'),
+    'server_checks': lines('server.log'), 'worker_checks': lines('worker.log'),
+    'memwatch': [l for l in read('memwatch.log').replace('\x00', '').splitlines() if l.strip()],
+    'fixtures': json.loads(read('fixtures.txt').split('FIXTURES ', 1)[1]),
+    'deck': {'sha256_on_disk': read('deck_sha_disk.txt').split()[0],
+             'protocol_sha256': 'be7a7171bbc84b9895a45adfbc41f2533f3d23b3a4a561c82a8d9de6b94f3ef1'},
+    'upload': read('upload.txt').splitlines(),
+    'preserved': {
+        'memos_90_91_docs_3132_3133_before': [l for l in snap('orig_snapshot_before.txt') if l.startswith('MEMO')],
+        'identical_after': snap('orig_snapshot_before.txt') == snap('orig_snapshot_after.txt'),
+        'memo_94_doc_3136_before': [l for l in snap('memo94_snapshot_before.txt') if l.startswith('MEMO')],
+        'memo_94_identical_after': snap('memo94_snapshot_before.txt') == snap('memo94_snapshot_after.txt'),
+        'memo_95_doc_3137_before': [l for l in snap('memo95_snapshot_before.txt') if l.startswith('MEMO')],
+        'memo_95_identical_after': snap('memo95_snapshot_before.txt') == snap('memo95_snapshot_after.txt'),
+        'db_sha256': {n: [read(n + '_sha_before.txt').split()[0], read(n + '_sha_after.txt').split()[0]]
+                      for n in ('orig_db', 'memo94_db', 'memo95_db')}},
+}
+with open(os.path.join(OUT, '00_setup.json'), 'w', encoding='utf-8', newline='\n') as f:
+    json.dump(setup, f, indent=1, ensure_ascii=False)
+chain = [l for l in read('worker.log').splitlines()
+         if re.search(r'Task .* (received|succeeded|failed|raised)|funding-source fidelity|time wording|Anthropic usage', l)]
+open(os.path.join(OUT, '06_worker_chain.txt'), 'w', encoding='utf-8', newline='\n').write('\n'.join(chain) + '\n')
+calls = [json.loads(l) for l in read('model_calls.jsonl').splitlines() if l.strip()]
+with open(os.path.join(OUT, '09c_all_model_calls.json'), 'w', encoding='utf-8', newline='\n') as f:
+    json.dump({'note': 'Every anthropic Messages.create call in the run processes (%d: 1 memo call in the worker, '
+                       '%d /ask/ query-extraction calls from the HTTP probe in the server).' % (len(calls), len(calls) - 1),
+               'calls': calls}, f, indent=1, ensure_ascii=False)
+for src, dst in (('server.log', 'server.log.txt'), ('worker.log', 'worker.log.txt')):
+    shutil.copy(os.path.join(HERE, src), os.path.join(OUT, 'process', dst))
+for name in ('orig_snapshot_before.txt', 'orig_snapshot_after.txt', 'memo94_snapshot_before.txt', 'memo94_snapshot_after.txt',
+             'memo95_snapshot_before.txt', 'memo95_snapshot_after.txt', 'redis_before.txt', 'redis_after.txt'):
+    shutil.copy(os.path.join(HERE, name), os.path.join(OUT, 'snapshots', name))
+for name in ('make_scripts.py', 'run_ff3.py', 'run_ro.py', 'snapshot_ro.py', 'bump_sequences.py', 'setup_fixtures.py', 'upload.py',
+             'dump_pf.py', 'probe.py', 'probe_cfg.json', 'analyze_memo3.py', 'scan_sections.py', 'assemble_ff3.py'):
+    shutil.copy(os.path.join(HERE, name), os.path.join(OUT, 'scripts', name + '.txt'))
+for src, dst in (('screenshot-1791878615617-30.jpg', 'lite_company_overview.jpg'),
+                 ('screenshot-1791878689229-31.jpg', 'owner_ic_memo_lite.jpg'),
+                 ('screenshot-1791878757793-32.jpg', 'staff_ic_memo_zelda_advantage.jpg')):
+    shutil.copy(os.path.join(SHOTS, src), os.path.join(OUT, 'browser', dst))
+print('assembled', len(calls), 'model calls')

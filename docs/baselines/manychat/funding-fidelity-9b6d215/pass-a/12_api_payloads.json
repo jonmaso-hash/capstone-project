@@ -1,0 +1,884 @@
+{
+ "OWNER:G_memo_api": {
+  "status": 200,
+  "body": {
+   "memo_id": 96,
+   "document_id": 3138,
+   "document_name": "ManyChat",
+   "locked": true,
+   "is_owner": true,
+   "generated_at": "2026-10-13T07:58:46.071487+00:00"
+  }
+ },
+ "OWNER:H_td_api": {
+  "status": 200,
+  "body": {
+   "tier": "lite",
+   "overall_truth_score": null,
+   "credibility_risk": "unknown",
+   "summary": "No public data could be found to independently verify these claims (checked SEC EDGAR). This is not a confirmation the claims are accurate — only that no corroborating or contradicting external data was found for \"ManyChat\".",
+   "details": {
+    "claims": [
+     {
+      "category": "funding_raised",
+      "claimed_value": "$23.1M raised",
+      "claimed_value_numeric": 23100000.0,
+      "unit": "",
+      "currency": ""
+     },
+     {
+      "category": "usage",
+      "claimed_value": "140 000+ bots",
+      "claimed_value_numeric": 140000.0,
+      "unit": "bots",
+      "currency": ""
+     },
+     {
+      "category": "usage",
+      "claimed_value": "500M messages",
+      "claimed_value_numeric": 500000000.0,
+      "unit": "messages",
+      "currency": ""
+     }
+    ],
+    "per_claim": [
+     {
+      "category": "funding_raised",
+      "claim_id": 2363,
+      "claimed": "$23.1M raised",
+      "observed": "No external data found",
+      "assessment": "No external data was found for this claim.",
+      "explanation_source": "zelda",
+      "grounded": false,
+      "state": "no_data",
+      "reason": "no_external_evidence"
+     },
+     {
+      "category": "usage",
+      "claim_id": 2365,
+      "claimed": "140 000+ bots",
+      "observed": "No external data found",
+      "assessment": "No external data was found for this claim.",
+      "explanation_source": "zelda",
+      "grounded": false,
+      "state": "no_data",
+      "reason": "no_external_evidence"
+     },
+     {
+      "category": "usage",
+      "claim_id": 2364,
+      "claimed": "500M messages",
+      "observed": "No external data found",
+      "assessment": "No external data was found for this claim.",
+      "explanation_source": "zelda",
+      "grounded": false,
+      "state": "no_data",
+      "reason": "no_external_evidence"
+     }
+    ]
+   },
+   "category_states": {
+    "funding_raised": "no_data",
+    "usage": "no_data"
+   },
+   "claims_analyzed": 3,
+   "verified_count": 0,
+   "contradicted_count": 0,
+   "unverified_count": 3,
+   "coverage_sentence": "Limited public evidence: none of the 3 claims could be verified or contradicted against a public source.",
+   "grounding_reasons": {
+    "funding_raised": "no_external_evidence",
+    "usage": "no_external_evidence"
+   }
+  }
+ },
+ "OWNER:I_status": {
+  "status": 200,
+  "body": {
+   "document_id": 3138,
+   "filename": "manychat_series_a_audit_deck.pptx",
+   "status": "analyzed",
+   "verification_state": "complete",
+   "confidence_score": 0.2375,
+   "created_at": "2026-10-13T07:57:47.710787+00:00",
+   "memo_available": true,
+   "memo_id": 96,
+   "memo_evidence_level": "LITTLE_EVIDENCE"
+  }
+ },
+ "OWNER:J_valuation_api": {
+  "status": 202,
+  "body": {
+   "error": "Valuation report not yet generated. Check status endpoint."
+  }
+ },
+ "OWNER:L_identity_status": {
+  "status": 200,
+  "body": {
+   "status": "complete",
+   "checked_at": "2026-10-13T07:57:58.568412+00:00",
+   "message": ""
+  }
+ },
+ "OWNER:O_library": {
+  "status": 200,
+  "body": {
+   "warnings": [],
+   "purchases": [],
+   "sections": [
+    {
+     "key": "your_company",
+     "title": "Your company",
+     "company": "ManyChat",
+     "reports": [
+      {
+       "key": "overview",
+       "label": "Company overview",
+       "url": null,
+       "note": "Investor accounts only",
+       "is_current": false
+      },
+      {
+       "key": "evidence",
+       "label": "Check the evidence",
+       "url": "/api/v1/zelda/documents/3138/verification/",
+       "note": "",
+       "is_current": false
+      },
+      {
+       "key": "analysis",
+       "label": "Investment analysis",
+       "url": "/api/v1/zelda/documents/3138/ic-memo/",
+       "note": "",
+       "is_current": false
+      }
+     ],
+     "documents": [
+      {
+       "document_id": 3138,
+       "name": "ManyChat",
+       "kind": "Pitch Deck",
+       "status": "Ready",
+       "can_open_brief": true,
+       "created_at": "2026-10-13T07:57:47.710787+00:00"
+      }
+     ]
+    }
+   ],
+   "pagination": {
+    "page": 1,
+    "pages": 1,
+    "total": 1,
+    "has_previous": false,
+    "has_next": false
+   },
+   "archive_url": "/matchmaking/data-room/ff3mc_owner/#zelda-reports"
+  }
+ },
+ "OWNER:P_analyze_founder": {
+  "status": 403,
+  "body": {
+   "status": "error",
+   "message": "Investor access required"
+  }
+ },
+ "LITE:G_memo_api": {
+  "status": 200,
+  "body": {
+   "memo_id": 96,
+   "document_id": 3138,
+   "document_name": "ManyChat",
+   "locked": true,
+   "is_owner": false,
+   "generated_at": "2026-10-13T07:58:46.071487+00:00",
+   "tier": "lite",
+   "lite_sections": {
+    "business_model_analysis": "Insufficient disclosed data to describe the business model. No revenue statement, no product statement, and no description of how ManyChat charges customers were found in the extracted evidence. The only operational data points are the company's self-reported traction figures — 140,000+ bots and 500M messages, contextualised on a 'Traction by Apr-16' slide [S1, S2] — which indicate usage activity but do not establish whether the model is subscription, usage-based, freemium, or otherwise. Who pays, at what price, and what drives expansion are not addressed in the extracted evidence.",
+    "information_readiness": "Score: 10/100\nPresent:\n• Stage indicator: Series A [P1]\n• Sector: Software [P2]\n• Traction metrics (self-reported, unverified, undated as-of): 140,000+ bots, 500M messages, contextualised as 'Traction by Apr-16' [S1, S2]\n• Funding raised figure (narrated by Pitch Deck Hunt, unverified): $23.1M [C1, S3]\n\nNeeds Validation:\n• All traction figures (no independent confirmation found) [C2, C3]\n• Funding raised figure (no external evidence found) [C1]\n• Revenue, burn rate, and unit economics (not found in extracted evidence)\n• Team composition and credentials (not found in extracted evidence)\n• Product description and value proposition (not found in extracted evidence)\n• Problem statement and target customer (not found in extracted evidence)\n• Market size and competitive landscape (not found in extracted evidence)\n• Business model and pricing (not found in extracted evidence)\n• Use of proceeds (not found in extracted evidence)\n\nNext evidence to supply: Audited or reviewed financial statements showing revenue, gross margin, and cash burn, accompanied by independent confirmation of the traction metrics.",
+    "open_concerns": "- The two primary traction figures — 140,000+ bots and 500M messages [S1, S2] — are self-reported, carry no precise as-of date (only the slide context 'Traction by Apr-16'), and were not independently verified [C2, C3]; it is unknown whether they reflect cumulative totals, active usage, or another measure.\n- Pitch Deck Hunt lists $23.1M raised [C1, S3], but no external evidence confirmed this figure; the capital structure and investor roster are therefore unknown.\n- No team information was found in the extracted evidence, making it impossible to assess whether the organisation has the capability to execute on its apparent growth trajectory.\n- No revenue, pricing, or business model data was found in the extracted evidence, leaving open the question of whether the reported usage activity has translated into any commercial traction.",
+    "supported_points": "- Traction slide contextualised as 'Traction by Apr-16' reports 140,000+ bots created on the platform [S1] — a concrete scale indicator, though self-reported and unverified.\n- The same traction slide reports 500M messages sent [S2], suggesting meaningful platform usage volume at the time of the slide, subject to the same self-reported caveat.",
+    "what_would_change_the_picture": "The single most important missing piece is audited or independently reviewed financial statements — specifically revenue figures and gross margin — which would establish whether ManyChat's self-reported usage metrics [S1, S2] correspond to any monetisation and would allow the $23.1M funding figure (per Pitch Deck Hunt) [C1] to be contextualised against actual business performance."
+   },
+   "disclaimer": "This report is provided for informational and due-diligence purposes only. It is not financial, investment, legal, tax, or accounting advice. Do not rely solely on this report when making an investment or transaction decision. You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers. It is not a binding representation by Interlink Foundry."
+  }
+ },
+ "LITE:H_td_api": {
+  "status": 200,
+  "body": {
+   "tier": "lite",
+   "overall_truth_score": null,
+   "credibility_risk": "unknown",
+   "summary": "No public data could be found to independently verify these claims (checked SEC EDGAR). This is not a confirmation the claims are accurate — only that no corroborating or contradicting external data was found for \"ManyChat\".",
+   "details": {
+    "claims": [
+     {
+      "category": "funding_raised",
+      "claimed_value": "$23.1M raised",
+      "claimed_value_numeric": 23100000.0,
+      "unit": "",
+      "currency": ""
+     },
+     {
+      "category": "usage",
+      "claimed_value": "140 000+ bots",
+      "claimed_value_numeric": 140000.0,
+      "unit": "bots",
+      "currency": ""
+     },
+     {
+      "category": "usage",
+      "claimed_value": "500M messages",
+      "claimed_value_numeric": 500000000.0,
+      "unit": "messages",
+      "currency": ""
+     }
+    ],
+    "per_claim": [
+     {
+      "category": "funding_raised",
+      "claim_id": 2363,
+      "claimed": "$23.1M raised",
+      "observed": "No external data found",
+      "assessment": "No external data was found for this claim.",
+      "explanation_source": "zelda",
+      "grounded": false,
+      "state": "no_data",
+      "reason": "no_external_evidence"
+     },
+     {
+      "category": "usage",
+      "claim_id": 2365,
+      "claimed": "140 000+ bots",
+      "observed": "No external data found",
+      "assessment": "No external data was found for this claim.",
+      "explanation_source": "zelda",
+      "grounded": false,
+      "state": "no_data",
+      "reason": "no_external_evidence"
+     },
+     {
+      "category": "usage",
+      "claim_id": 2364,
+      "claimed": "500M messages",
+      "observed": "No external data found",
+      "assessment": "No external data was found for this claim.",
+      "explanation_source": "zelda",
+      "grounded": false,
+      "state": "no_data",
+      "reason": "no_external_evidence"
+     }
+    ]
+   },
+   "category_states": {
+    "funding_raised": "no_data",
+    "usage": "no_data"
+   },
+   "claims_analyzed": 3,
+   "verified_count": 0,
+   "contradicted_count": 0,
+   "unverified_count": 3,
+   "coverage_sentence": "Limited public evidence: none of the 3 claims could be verified or contradicted against a public source.",
+   "grounding_reasons": {
+    "funding_raised": "no_external_evidence",
+    "usage": "no_external_evidence"
+   }
+  }
+ },
+ "LITE:I_status": {
+  "status": 403,
+  "body": {
+   "error": "Not authorized"
+  }
+ },
+ "LITE:J_valuation_api": {
+  "status": 403,
+  "body": {
+   "error": "Not authorized"
+  }
+ },
+ "LITE:L_identity_status": {
+  "status": 404,
+  "body": {
+   "error": "Not found."
+  }
+ },
+ "LITE:O_library": {
+  "status": 200,
+  "body": {
+   "warnings": [],
+   "purchases": [],
+   "sections": [
+    {
+     "key": "recent_companies",
+     "title": "Companies you've looked into",
+     "items": [
+      {
+       "company_id": 50,
+       "company": "ManyChat",
+       "activity": "You opened its Zelda brief",
+       "last_activity": "2026-10-13T08:00:55.794457+00:00",
+       "profile_url": "/accounts/profile/ff3mc_owner/",
+       "brief_document_id": 3138,
+       "reports": [
+        {
+         "key": "overview",
+         "label": "Company overview",
+         "url": "/matchmaking/memo/profile/50/",
+         "note": "",
+         "is_current": false
+        },
+        {
+         "key": "evidence",
+         "label": "Check the evidence",
+         "url": "/api/v1/zelda/documents/3138/verification/",
+         "note": "",
+         "is_current": false
+        },
+        {
+         "key": "analysis",
+         "label": "Investment analysis",
+         "url": null,
+         "note": "Available once you and this company are connected",
+         "is_current": false
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "pagination": {
+    "page": 1,
+    "pages": 1,
+    "total": 1,
+    "has_previous": false,
+    "has_next": false
+   },
+   "archive_url": null
+  }
+ },
+ "LITE:P_analyze_founder": {
+  "status": 200,
+  "body": {
+   "status": "ready",
+   "document_id": 3138,
+   "filename": "manychat_series_a_audit_deck.pptx",
+   "company": "ManyChat",
+   "has_memo": true
+  }
+ },
+ "PAID:G_memo_api": {
+  "status": 200,
+  "body": {
+   "memo_id": 96,
+   "document_id": 3138,
+   "document_name": "ManyChat",
+   "locked": true,
+   "is_owner": false,
+   "generated_at": "2026-10-13T07:58:46.071487+00:00",
+   "tier": "lite",
+   "lite_sections": {
+    "business_model_analysis": "Insufficient disclosed data to describe the business model. No revenue statement, no product statement, and no description of how ManyChat charges customers were found in the extracted evidence. The only operational data points are the company's self-reported traction figures — 140,000+ bots and 500M messages, contextualised on a 'Traction by Apr-16' slide [S1, S2] — which indicate usage activity but do not establish whether the model is subscription, usage-based, freemium, or otherwise. Who pays, at what price, and what drives expansion are not addressed in the extracted evidence.",
+    "information_readiness": "Score: 10/100\nPresent:\n• Stage indicator: Series A [P1]\n• Sector: Software [P2]\n• Traction metrics (self-reported, unverified, undated as-of): 140,000+ bots, 500M messages, contextualised as 'Traction by Apr-16' [S1, S2]\n• Funding raised figure (narrated by Pitch Deck Hunt, unverified): $23.1M [C1, S3]\n\nNeeds Validation:\n• All traction figures (no independent confirmation found) [C2, C3]\n• Funding raised figure (no external evidence found) [C1]\n• Revenue, burn rate, and unit economics (not found in extracted evidence)\n• Team composition and credentials (not found in extracted evidence)\n• Product description and value proposition (not found in extracted evidence)\n• Problem statement and target customer (not found in extracted evidence)\n• Market size and competitive landscape (not found in extracted evidence)\n• Business model and pricing (not found in extracted evidence)\n• Use of proceeds (not found in extracted evidence)\n\nNext evidence to supply: Audited or reviewed financial statements showing revenue, gross margin, and cash burn, accompanied by independent confirmation of the traction metrics.",
+    "open_concerns": "- The two primary traction figures — 140,000+ bots and 500M messages [S1, S2] — are self-reported, carry no precise as-of date (only the slide context 'Traction by Apr-16'), and were not independently verified [C2, C3]; it is unknown whether they reflect cumulative totals, active usage, or another measure.\n- Pitch Deck Hunt lists $23.1M raised [C1, S3], but no external evidence confirmed this figure; the capital structure and investor roster are therefore unknown.\n- No team information was found in the extracted evidence, making it impossible to assess whether the organisation has the capability to execute on its apparent growth trajectory.\n- No revenue, pricing, or business model data was found in the extracted evidence, leaving open the question of whether the reported usage activity has translated into any commercial traction.",
+    "supported_points": "- Traction slide contextualised as 'Traction by Apr-16' reports 140,000+ bots created on the platform [S1] — a concrete scale indicator, though self-reported and unverified.\n- The same traction slide reports 500M messages sent [S2], suggesting meaningful platform usage volume at the time of the slide, subject to the same self-reported caveat.",
+    "what_would_change_the_picture": "The single most important missing piece is audited or independently reviewed financial statements — specifically revenue figures and gross margin — which would establish whether ManyChat's self-reported usage metrics [S1, S2] correspond to any monetisation and would allow the $23.1M funding figure (per Pitch Deck Hunt) [C1] to be contextualised against actual business performance."
+   },
+   "disclaimer": "This report is provided for informational and due-diligence purposes only. It is not financial, investment, legal, tax, or accounting advice. Do not rely solely on this report when making an investment or transaction decision. You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers. It is not a binding representation by Interlink Foundry."
+  }
+ },
+ "PAID:H_td_api": {
+  "status": 200,
+  "body": {
+   "tier": "lite",
+   "overall_truth_score": null,
+   "credibility_risk": "unknown",
+   "summary": "No public data could be found to independently verify these claims (checked SEC EDGAR). This is not a confirmation the claims are accurate — only that no corroborating or contradicting external data was found for \"ManyChat\".",
+   "details": {
+    "claims": [
+     {
+      "category": "funding_raised",
+      "claimed_value": "$23.1M raised",
+      "claimed_value_numeric": 23100000.0,
+      "unit": "",
+      "currency": ""
+     },
+     {
+      "category": "usage",
+      "claimed_value": "140 000+ bots",
+      "claimed_value_numeric": 140000.0,
+      "unit": "bots",
+      "currency": ""
+     },
+     {
+      "category": "usage",
+      "claimed_value": "500M messages",
+      "claimed_value_numeric": 500000000.0,
+      "unit": "messages",
+      "currency": ""
+     }
+    ],
+    "per_claim": [
+     {
+      "category": "funding_raised",
+      "claim_id": 2363,
+      "claimed": "$23.1M raised",
+      "observed": "No external data found",
+      "assessment": "No external data was found for this claim.",
+      "explanation_source": "zelda",
+      "grounded": false,
+      "state": "no_data",
+      "reason": "no_external_evidence"
+     },
+     {
+      "category": "usage",
+      "claim_id": 2365,
+      "claimed": "140 000+ bots",
+      "observed": "No external data found",
+      "assessment": "No external data was found for this claim.",
+      "explanation_source": "zelda",
+      "grounded": false,
+      "state": "no_data",
+      "reason": "no_external_evidence"
+     },
+     {
+      "category": "usage",
+      "claim_id": 2364,
+      "claimed": "500M messages",
+      "observed": "No external data found",
+      "assessment": "No external data was found for this claim.",
+      "explanation_source": "zelda",
+      "grounded": false,
+      "state": "no_data",
+      "reason": "no_external_evidence"
+     }
+    ]
+   },
+   "category_states": {
+    "funding_raised": "no_data",
+    "usage": "no_data"
+   },
+   "claims_analyzed": 3,
+   "verified_count": 0,
+   "contradicted_count": 0,
+   "unverified_count": 3,
+   "coverage_sentence": "Limited public evidence: none of the 3 claims could be verified or contradicted against a public source.",
+   "grounding_reasons": {
+    "funding_raised": "no_external_evidence",
+    "usage": "no_external_evidence"
+   }
+  }
+ },
+ "PAID:I_status": {
+  "status": 403,
+  "body": {
+   "error": "Not authorized"
+  }
+ },
+ "PAID:J_valuation_api": {
+  "status": 403,
+  "body": {
+   "error": "Not authorized"
+  }
+ },
+ "PAID:L_identity_status": {
+  "status": 404,
+  "body": {
+   "error": "Not found."
+  }
+ },
+ "PAID:O_library": {
+  "status": 200,
+  "body": {
+   "warnings": [],
+   "purchases": [],
+   "sections": [
+    {
+     "key": "recent_companies",
+     "title": "Companies you've looked into",
+     "items": [
+      {
+       "company_id": 50,
+       "company": "ManyChat",
+       "activity": "You opened its Zelda brief",
+       "last_activity": "2026-10-13T08:01:00.458134+00:00",
+       "profile_url": "/accounts/profile/ff3mc_owner/",
+       "brief_document_id": 3138,
+       "reports": [
+        {
+         "key": "overview",
+         "label": "Company overview",
+         "url": "/matchmaking/memo/profile/50/",
+         "note": "",
+         "is_current": false
+        },
+        {
+         "key": "evidence",
+         "label": "Check the evidence",
+         "url": "/api/v1/zelda/documents/3138/verification/",
+         "note": "",
+         "is_current": false
+        },
+        {
+         "key": "analysis",
+         "label": "Investment analysis",
+         "url": null,
+         "note": "Available once you and this company are connected",
+         "is_current": false
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "pagination": {
+    "page": 1,
+    "pages": 1,
+    "total": 1,
+    "has_previous": false,
+    "has_next": false
+   },
+   "archive_url": null
+  }
+ },
+ "PAID:P_analyze_founder": {
+  "status": 200,
+  "body": {
+   "status": "ready",
+   "document_id": 3138,
+   "filename": "manychat_series_a_audit_deck.pptx",
+   "company": "ManyChat",
+   "has_memo": true
+  }
+ },
+ "STAFF:G_memo_api": {
+  "status": 200,
+  "body": {
+   "memo_id": 96,
+   "document_id": 3138,
+   "document_name": "ManyChat",
+   "locked": false,
+   "evidence_level": "LITTLE_EVIDENCE",
+   "completeness_score": 0.2375,
+   "citations_count": 3,
+   "sections": {
+    "executive_summary": "ManyChat is a software company, listed as Series A stage [P1, P2], operating in the chatbot/messaging automation space. Pitch Deck Hunt lists $23.1M raised [C1, S3], though this figure could not be independently verified. A traction slide contextualised as 'Traction by Apr-16' references 140,000+ bots and 500M messages [S1, S2], neither of which has been independently confirmed.",
+    "problem_solution": "Not found in the extracted evidence. The pitch deck did not yield a problem statement or an explicit description of the solution in the items provided. The product appears to involve bot creation and message distribution on a messaging platform, inferred from traction metrics [S1, S2], but the customer definition, use case, and value proposition are not captured in the extracted evidence.",
+    "market_analysis": "Market size not found in the extracted evidence. No market size, total addressable market, or competitive landscape statement was extracted from the document.",
+    "team_assessment": "Not found in the extracted evidence. No founder names, credentials, or team composition were extracted from the document. This is a material gap in the available information.",
+    "financial_analysis": "• Funding raised: Pitch Deck Hunt lists $23.1M raised [C1, S3]; this figure was checked but could not be independently verified (no external evidence was found) [C1].\n• Revenue: Not found in the extracted evidence.\n• Burn rate: Not found in the extracted evidence.\n• Use of proceeds: Not found in the extracted evidence.\n• Runway: Not found in the extracted evidence. Insufficient data (no dated cash balance or burn rate) to derive a runway figure.",
+    "risk_assessment": "1. Unverified funding history: Pitch Deck Hunt lists $23.1M raised [C1, S3], but no external source confirmed this figure, leaving capital history unvalidated.\n2. Unverified traction metrics: The company states 140,000+ bots and 500M messages on a slide contextualised as 'Traction by Apr-16' [S1, S2], but neither metric was independently confirmed, and neither carries a precise as-of date.\n3. No revenue data disclosed: The absence of any revenue statement in the extracted evidence [gap] means the company's monetisation progress cannot be assessed.\n4. No team information: The complete absence of team data [gap] makes it impossible to evaluate execution capability or relevant expertise.\n5. No product or business model description: With no product statement and no business model statement extracted [gaps], the basis for the traction metrics and the path to revenue are unknown.",
+    "business_model_analysis": "Insufficient disclosed data to describe the business model. No revenue statement, no product statement, and no description of how ManyChat charges customers were found in the extracted evidence. The only operational data points are the company's self-reported traction figures — 140,000+ bots and 500M messages, contextualised on a 'Traction by Apr-16' slide [S1, S2] — which indicate usage activity but do not establish whether the model is subscription, usage-based, freemium, or otherwise. Who pays, at what price, and what drives expansion are not addressed in the extracted evidence.",
+    "information_readiness": "Score: 10/100\nPresent:\n• Stage indicator: Series A [P1]\n• Sector: Software [P2]\n• Traction metrics (self-reported, unverified, undated as-of): 140,000+ bots, 500M messages, contextualised as 'Traction by Apr-16' [S1, S2]\n• Funding raised figure (narrated by Pitch Deck Hunt, unverified): $23.1M [C1, S3]\n\nNeeds Validation:\n• All traction figures (no independent confirmation found) [C2, C3]\n• Funding raised figure (no external evidence found) [C1]\n• Revenue, burn rate, and unit economics (not found in extracted evidence)\n• Team composition and credentials (not found in extracted evidence)\n• Product description and value proposition (not found in extracted evidence)\n• Problem statement and target customer (not found in extracted evidence)\n• Market size and competitive landscape (not found in extracted evidence)\n• Business model and pricing (not found in extracted evidence)\n• Use of proceeds (not found in extracted evidence)\n\nNext evidence to supply: Audited or reviewed financial statements showing revenue, gross margin, and cash burn, accompanied by independent confirmation of the traction metrics.",
+    "supported_points": "- Traction slide contextualised as 'Traction by Apr-16' reports 140,000+ bots created on the platform [S1] — a concrete scale indicator, though self-reported and unverified.\n- The same traction slide reports 500M messages sent [S2], suggesting meaningful platform usage volume at the time of the slide, subject to the same self-reported caveat.",
+    "open_concerns": "- The two primary traction figures — 140,000+ bots and 500M messages [S1, S2] — are self-reported, carry no precise as-of date (only the slide context 'Traction by Apr-16'), and were not independently verified [C2, C3]; it is unknown whether they reflect cumulative totals, active usage, or another measure.\n- Pitch Deck Hunt lists $23.1M raised [C1, S3], but no external evidence confirmed this figure; the capital structure and investor roster are therefore unknown.\n- No team information was found in the extracted evidence, making it impossible to assess whether the organisation has the capability to execute on its apparent growth trajectory.\n- No revenue, pricing, or business model data was found in the extracted evidence, leaving open the question of whether the reported usage activity has translated into any commercial traction.",
+    "what_would_change_the_picture": "The single most important missing piece is audited or independently reviewed financial statements — specifically revenue figures and gross margin — which would establish whether ManyChat's self-reported usage metrics [S1, S2] correspond to any monetisation and would allow the $23.1M funding figure (per Pitch Deck Hunt) [C1] to be contextualised against actual business performance.",
+    "upside_scenario": "If the self-reported traction figures [S1, S2] — 140,000+ bots and 500M messages, contextualised as of April 2016 — are accurate and reflect active, growing usage, and if the $23.1M in funding reported by Pitch Deck Hunt [C1] was deployed against a clear monetisation path, the platform would have demonstrated meaningful scale at an early stage. The upside reading requires confirmation of both the traction metrics and the existence of a revenue model, neither of which is present in the extracted evidence.",
+    "base_scenario": "Taking the self-reported traction figures at face value [S1, S2], ManyChat had achieved meaningful bot deployment and message volume by April 2016. Without revenue data, burn rate, or team information, the base case cannot be further defined from the extracted evidence; the company's progression from usage scale to commercial scale remains uncharacterised.",
+    "downside_scenario": "If the traction metrics [S1, S2] represent cumulative or largely inactive accounts rather than engaged users, and if no revenue model had been established by the time of the deck, the usage figures would overstate commercial progress. The complete absence of financial, team, product, and business model data in the extracted evidence [gaps] means there is no disclosed counterweight to this reading.",
+    "zelda_advantage": "The verification pass distinguished between the company's own deck statements [S1, S2] and the same figures as reported by the third-party aggregator Pitch Deck Hunt [C1, C2, C3], correctly flagging that Pitch Deck Hunt is the narrator of the funding and traction claims rather than an independent validator — a distinction a plain AI summary of the same deck would likely collapse into a single 'the company states' attribution.",
+    "questions_for_management": "- What is the precise as-of date for the 140,000+ bots and 500M messages figures, and do they represent cumulative totals or an active/recent count?\n- What is ManyChat's current revenue run rate, and what is the primary pricing and monetisation mechanism?\n- Can the $23.1M in reported funding (per Pitch Deck Hunt) [C1] be confirmed with a cap table or closing documents, including investor identities and round structure?\n- Who are the founders and key executives, and what relevant prior experience do they bring to this market?\n- What is the current monthly burn rate and cash balance, and how much runway does the company have?\n- On which messaging platform(s) does ManyChat operate, and what is the nature of the dependency on those platforms?\n- What is the company's definition of an active bot, and what share of the 140,000+ reported bots are actively in use?\n- What is the target customer segment — individual developers, SMBs, enterprises — and what does the sales or self-serve motion look like?\n- Is a new funding round currently being planned or raised, and if so, what are the intended use of proceeds and key milestones?\n- What competitive alternatives exist, and how does ManyChat differentiate from them?"
+   },
+   "insights_cited": [
+    {
+     "category": "Funding",
+     "text": "$23.1M raised",
+     "confidence": 95.0,
+     "sources": [
+      2
+     ]
+    },
+    {
+     "category": "Traction",
+     "text": "500M messages",
+     "confidence": 95.0,
+     "sources": [
+      10
+     ]
+    },
+    {
+     "category": "Traction",
+     "text": "140 000+ bots",
+     "confidence": 95.0,
+     "sources": [
+      10
+     ]
+    }
+   ],
+   "generated_at": "2026-10-13T07:58:46.071487+00:00",
+   "disclaimer": "This report is provided for informational and due-diligence purposes only. It is not financial, investment, legal, tax, or accounting advice. Do not rely solely on this report when making an investment or transaction decision. You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers. It is not a binding representation by Interlink Foundry."
+  }
+ },
+ "STAFF:H_td_api": {
+  "status": 200,
+  "body": {
+   "tier": "full",
+   "overall_truth_score": null,
+   "credibility_risk": "unknown",
+   "summary": "No public data could be found to independently verify these claims (checked SEC EDGAR). This is not a confirmation the claims are accurate — only that no corroborating or contradicting external data was found for \"ManyChat\".",
+   "details": {
+    "claims": [
+     {
+      "category": "funding_raised",
+      "claimed_value": "$23.1M raised",
+      "claimed_value_numeric": 23100000.0,
+      "unit": "",
+      "currency": ""
+     },
+     {
+      "category": "usage",
+      "claimed_value": "140 000+ bots",
+      "claimed_value_numeric": 140000.0,
+      "unit": "bots",
+      "currency": ""
+     },
+     {
+      "category": "usage",
+      "claimed_value": "500M messages",
+      "claimed_value_numeric": 500000000.0,
+      "unit": "messages",
+      "currency": ""
+     }
+    ],
+    "observed": [],
+    "source_diagnostics": {
+     "sec": "not_found"
+    },
+    "provider_outcomes": {
+     "dataforb2b": "unconfigured"
+    },
+    "comparison": [
+     {
+      "category": "funding_raised",
+      "claim_id": 2363,
+      "claimed_value": "$23.1M raised",
+      "claimed_value_numeric": 23100000.0,
+      "claim_currency": "",
+      "observed_value": null,
+      "observed_value_numeric": null,
+      "observed_currency": null,
+      "observed_source": null,
+      "observed_registrant": null,
+      "observed_time_period": null,
+      "discrepancy_pct": null,
+      "claim_raw_text": "$23.1M raised",
+      "observed_raw_value": null,
+      "source_credibility": null,
+      "claim_period": null,
+      "claim_period_kind": "",
+      "claim_fiscal_year": null,
+      "claim_period_end": null,
+      "observed_period_kind": "",
+      "observed_fiscal_year": null,
+      "observed_period_end": null,
+      "observed_role": null,
+      "observed_origin": null,
+      "corroboration": [],
+      "context": [],
+      "zelda_state": "no_data",
+      "zelda_reason": "no_external_evidence"
+     },
+     {
+      "category": "usage",
+      "claim_id": 2365,
+      "claimed_value": "140 000+ bots",
+      "claimed_value_numeric": 140000.0,
+      "claim_currency": "",
+      "observed_value": null,
+      "observed_value_numeric": null,
+      "observed_currency": null,
+      "observed_source": null,
+      "observed_registrant": null,
+      "observed_time_period": null,
+      "discrepancy_pct": null,
+      "claim_raw_text": "140 000+ bots",
+      "observed_raw_value": null,
+      "source_credibility": null,
+      "claim_period": null,
+      "claim_period_kind": "",
+      "claim_fiscal_year": null,
+      "claim_period_end": null,
+      "observed_period_kind": "",
+      "observed_fiscal_year": null,
+      "observed_period_end": null,
+      "observed_role": null,
+      "observed_origin": null,
+      "corroboration": [],
+      "context": [],
+      "zelda_state": "no_data",
+      "zelda_reason": "no_external_evidence"
+     },
+     {
+      "category": "usage",
+      "claim_id": 2364,
+      "claimed_value": "500M messages",
+      "claimed_value_numeric": 500000000.0,
+      "claim_currency": "",
+      "observed_value": null,
+      "observed_value_numeric": null,
+      "observed_currency": null,
+      "observed_source": null,
+      "observed_registrant": null,
+      "observed_time_period": null,
+      "discrepancy_pct": null,
+      "claim_raw_text": "500M messages",
+      "observed_raw_value": null,
+      "source_credibility": null,
+      "claim_period": null,
+      "claim_period_kind": "",
+      "claim_fiscal_year": null,
+      "claim_period_end": null,
+      "observed_period_kind": "",
+      "observed_fiscal_year": null,
+      "observed_period_end": null,
+      "observed_role": null,
+      "observed_origin": null,
+      "corroboration": [],
+      "context": [],
+      "zelda_state": "no_data",
+      "zelda_reason": "no_external_evidence"
+     }
+    ],
+    "per_claim": [
+     {
+      "category": "funding_raised",
+      "claim_id": 2363,
+      "claimed": "$23.1M raised",
+      "observed": "No external data found",
+      "assessment": "No external data was found for this claim.",
+      "explanation_source": "zelda",
+      "grounded": false,
+      "state": "no_data",
+      "reason": "no_external_evidence"
+     },
+     {
+      "category": "usage",
+      "claim_id": 2365,
+      "claimed": "140 000+ bots",
+      "observed": "No external data found",
+      "assessment": "No external data was found for this claim.",
+      "explanation_source": "zelda",
+      "grounded": false,
+      "state": "no_data",
+      "reason": "no_external_evidence"
+     },
+     {
+      "category": "usage",
+      "claim_id": 2364,
+      "claimed": "500M messages",
+      "observed": "No external data found",
+      "assessment": "No external data was found for this claim.",
+      "explanation_source": "zelda",
+      "grounded": false,
+      "state": "no_data",
+      "reason": "no_external_evidence"
+     }
+    ]
+   },
+   "category_states": {
+    "funding_raised": "no_data",
+    "usage": "no_data"
+   },
+   "claims_analyzed": 3,
+   "verified_count": 0,
+   "contradicted_count": 0,
+   "unverified_count": 3,
+   "coverage_sentence": "Limited public evidence: none of the 3 claims could be verified or contradicted against a public source.",
+   "grounding_reasons": {
+    "funding_raised": "no_external_evidence",
+    "usage": "no_external_evidence"
+   }
+  }
+ },
+ "STAFF:I_status": {
+  "status": 200,
+  "body": {
+   "document_id": 3138,
+   "filename": "manychat_series_a_audit_deck.pptx",
+   "status": "analyzed",
+   "verification_state": "complete",
+   "confidence_score": 0.2375,
+   "created_at": "2026-10-13T07:57:47.710787+00:00",
+   "memo_available": true,
+   "memo_id": 96,
+   "memo_evidence_level": "LITTLE_EVIDENCE"
+  }
+ },
+ "STAFF:J_valuation_api": {
+  "status": 202,
+  "body": {
+   "error": "Valuation report not yet generated. Check status endpoint."
+  }
+ },
+ "STAFF:L_identity_status": {
+  "status": 200,
+  "body": {
+   "status": "complete",
+   "checked_at": "2026-10-13T07:57:58.568412+00:00",
+   "message": ""
+  }
+ },
+ "STAFF:O_library": {
+  "status": 200,
+  "body": {
+   "warnings": [],
+   "purchases": [],
+   "sections": [],
+   "pagination": {
+    "page": 1,
+    "pages": 1,
+    "total": 0,
+    "has_previous": false,
+    "has_next": false
+   },
+   "archive_url": null
+  }
+ },
+ "STAFF:P_analyze_founder": {
+  "status": 403,
+  "body": {
+   "status": "error",
+   "message": "Investor access required"
+  }
+ },
+ "ANON:G_memo_api": {
+  "status": 403,
+  "body": {
+   "detail": "Authentication credentials were not provided."
+  }
+ },
+ "ANON:H_td_api": {
+  "status": 403,
+  "body": {
+   "detail": "Authentication credentials were not provided."
+  }
+ },
+ "ANON:I_status": {
+  "status": 403,
+  "body": {
+   "detail": "Authentication credentials were not provided."
+  }
+ },
+ "ANON:J_valuation_api": {
+  "status": 403,
+  "body": {
+   "detail": "Authentication credentials were not provided."
+  }
+ },
+ "ANON:L_identity_status": {
+  "status": 302,
+  "body": ""
+ },
+ "ANON:O_library": {
+  "status": 403,
+  "body": {
+   "detail": "Authentication credentials were not provided."
+  }
+ },
+ "ANON:P_analyze_founder": {
+  "status": 403,
+  "body": {
+   "status": "error",
+   "message": "Investor access required"
+  }
+ }
+}

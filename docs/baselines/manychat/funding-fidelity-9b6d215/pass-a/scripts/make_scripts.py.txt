@@ -1,0 +1,56 @@
+"""Derive this run's scripts from the previous run's (mcff, memo 95), changing only names, paths and Redis dbs."""
+import os, json, secrets
+HERE = os.path.dirname(os.path.abspath(__file__))
+PREV = os.path.join(HERE, '..', 'mcff')
+OUT = r'C:\Users\jonathan\Desktop\KCV-mc-ff3\docs\baselines\manychat\funding-fidelity-9b6d215\pass-a'
+
+
+def derive(name, reps, target=None):
+    s = open(os.path.join(PREV, name), encoding='utf-8').read()
+    for a, b in reps:
+        assert s.count(a) >= 1, (name, a)
+        s = s.replace(a, b)
+    open(os.path.join(HERE, target or name), 'w', encoding='utf-8').write(s)
+
+
+derive('run_ff.py', [
+    ('ManyChat post-merge funding-fidelity Pass A run wrapper', 'ManyChat post-merge funding-fidelity Pass A run wrapper at 9b6d215'),
+    ('the detached worktree KCV-mc-postfix at origin/main', 'the detached worktree KCV-mc-ff3 at origin/main 9b6d215'),
+    ("WT = r'C:\\Users\\jonathan\\Desktop\\KCV-mc-ff'", "WT = r'C:\\Users\\jonathan\\Desktop\\KCV-mc-ff3'"),
+    ("COPY_DB = os.path.join(HERE, 'db_ff_copy.sqlite3')", "COPY_DB = os.path.join(HERE, 'db_ff3_copy.sqlite3')"),
+    ("'redis://localhost:6379/11'", "'redis://localhost:6379/3'"),
+    ("'redis://localhost:6379/12'", "'redis://localhost:6379/4'"),
+    ("'redis://localhost:6379/13'", "'redis://localhost:6379/5'"),
+    ("in ('11', '12', '13')", "in ('3', '4', '5')"),
+    ('Memurai DBs 11/12/13', 'Memurai DBs 3/4/5'),
+    ("'-n', 'mcff@%h'", "'-n', 'mcff3@%h'"),
+], 'run_ff3.py')
+derive('run_ro.py', [
+    ("WT = r'C:\\Users\\jonathan\\Desktop\\KCV-mc-ff'", "WT = r'C:\\Users\\jonathan\\Desktop\\KCV-mc-ff3'"),
+    ("redis://localhost:6379/11", "redis://localhost:6379/3"),
+    ("redis://localhost:6379/12", "redis://localhost:6379/4"),
+    ("redis://localhost:6379/13", "redis://localhost:6379/5"),
+])
+derive('bump_sequences.py', [
+    ("(document 3136, memo 94, ...)", "(document 3137, memo 95, ...)"),
+    ("scratchpad\\mcpost\\db_postfix_copy.sqlite3", "scratchpad\\mcff\\db_ff_copy.sqlite3"),
+    ("'db_ff_copy' in str", "'db_ff3_copy' in str"),
+])
+open(os.path.join(HERE, 'pw.txt'), 'w').write(secrets.token_urlsafe(18))
+derive('setup_fixtures.py', [
+    ("P = 'ffmc'           # funding-fidelity ManyChat Pass A: ffmc_*", "P = 'ff3mc'          # post-merge 9b6d215 ManyChat Pass A: ff3mc_*"),
+    ("'cus_ff_local_mc'", "'cus_ff3_local_mc'"), ("'sub_ff_local_mc'", "'sub_ff3_local_mc'"),
+    ('@ff.test', '@ff3.test'), ('ManyChat funding-fidelity Pass A run.', 'ManyChat post-merge 9b6d215 Pass A run.'),
+    ("scratchpad\\mcff'", "scratchpad\\mcff3'"),
+])
+for name in ('upload.py', 'dump_pf.py', 'probe.py', 'snapshot_ro.py'):
+    derive(name, [('', '')] if False else [])
+cfg = json.load(open(os.path.join(PREV, 'probe_cfg.json'), encoding='utf-8'))
+cfg['outdir'] = OUT
+cfg['owner'] = 'ff3mc_owner'
+cfg['principals'] = {'OWNER': 'ff3mc_owner', 'LITE': 'ff3mc_lite', 'PAID': 'ff3mc_paid', 'STAFF': 'ff3mc_staff', 'ANON': None}
+cfg['markers'] += ['Funding raised (reported by Pitch Deck Hunt)', 'remaining runway', 'which needs a dated cash balance',
+                   'per Pitch Deck Hunt, undated', 'self-reported figures', 'runway', 'cash']
+cfg['doc'] = cfg['report'] = cfg['application_id'] = None
+json.dump(cfg, open(os.path.join(HERE, 'probe_cfg.json'), 'w', encoding='utf-8'), indent=1)
+print('written')

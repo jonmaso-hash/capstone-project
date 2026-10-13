@@ -1,0 +1,278 @@
+{
+ "model": "claude-sonnet-4-6",
+ "response_model": "claude-sonnet-4-6",
+ "stop_reason": "end_turn",
+ "usage": {
+  "input_tokens": 3317,
+  "output_tokens": 2190
+ },
+ "params": {
+  "model": "claude-sonnet-4-6",
+  "max_tokens": 4000
+ },
+ "prompt_rule_10_present": true,
+ "prompt_dated_runway_rule_present": true,
+ "sent_payload_equals_rebuilt": true,
+ "rebuilt_context_payload_equals_sent": true,
+ "sent_items": [
+  {
+   "ref": "C1",
+   "kind": "claim",
+   "category": "funding_raised",
+   "statement": "$23.1M raised",
+   "status": "INSUFFICIENT",
+   "as_of": "not stated",
+   "narrator": "Pitch Deck Hunt",
+   "source_context": null,
+   "dates_not_as_of": [
+    "2015"
+   ]
+  },
+  {
+   "ref": "C2",
+   "kind": "claim",
+   "category": "usage",
+   "statement": "500M messages",
+   "status": "INSUFFICIENT",
+   "as_of": "not stated",
+   "narrator": null,
+   "source_context": "Traction by Apr-16",
+   "dates_not_as_of": null
+  },
+  {
+   "ref": "C3",
+   "kind": "claim",
+   "category": "usage",
+   "statement": "140 000+ bots",
+   "status": "INSUFFICIENT",
+   "as_of": "not stated",
+   "narrator": null,
+   "source_context": "Traction by Apr-16",
+   "dates_not_as_of": null
+  },
+  {
+   "ref": "S1",
+   "kind": "statement",
+   "category": "Traction",
+   "statement": "140 000+ bots",
+   "status": "SELF_REPORTED",
+   "as_of": "not stated",
+   "narrator": null,
+   "source_context": "Traction by Apr-16",
+   "dates_not_as_of": null
+  },
+  {
+   "ref": "S2",
+   "kind": "statement",
+   "category": "Traction",
+   "statement": "500M messages",
+   "status": "SELF_REPORTED",
+   "as_of": "not stated",
+   "narrator": null,
+   "source_context": "Traction by Apr-16",
+   "dates_not_as_of": null
+  },
+  {
+   "ref": "S3",
+   "kind": "statement",
+   "category": "Funding",
+   "statement": "$23.1M raised",
+   "status": "SELF_REPORTED",
+   "as_of": "not stated",
+   "narrator": "Pitch Deck Hunt",
+   "source_context": null,
+   "dates_not_as_of": [
+    "2015"
+   ]
+  },
+  {
+   "ref": "P1",
+   "kind": "profile",
+   "category": "Stage (profile)",
+   "statement": "Stage (profile): Series A",
+   "status": "SELF_REPORTED",
+   "as_of": null,
+   "narrator": null,
+   "source_context": null,
+   "dates_not_as_of": null
+  },
+  {
+   "ref": "P2",
+   "kind": "profile",
+   "category": "Sector (profile)",
+   "statement": "Sector (profile): Software",
+   "status": "SELF_REPORTED",
+   "as_of": null,
+   "narrator": null,
+   "source_context": null,
+   "dates_not_as_of": null
+  }
+ ],
+ "time_wording_allowed_for_dated_items": {
+  "C1": [],
+  "C2": [],
+  "C3": [],
+  "S1": [],
+  "S2": [],
+  "S3": []
+ },
+ "funding_facts": {
+  "narrated": [
+   "Narrated(narrator='Pitch Deck Hunt', refs=frozenset({'C1', 'S3'}), figure=re.compile('\\\\$\\\\s?23\\\\.1\\\\s?(?:m|mn|million)(?!\\\\w|\\\\.\\\\d)', re.IGNORECASE), funding=True, undated=True)"
+  ],
+  "funding_figures": [
+   "re.compile('\\\\$\\\\s?23\\\\.1\\\\s?(?:m|mn|million)(?!\\\\w|\\\\.\\\\d)', re.IGNORECASE)"
+  ],
+  "profile_refs": [
+   "P1",
+   "P2"
+  ],
+  "raise_supported": false,
+  "company": "ManyChat",
+  "funding_items": [
+   [
+    "\\$\\s?23\\.1\\s?(?:m|mn|million)(?!\\w|\\.\\d)",
+    "pitch deck hunt"
+   ]
+  ],
+  "funding_refs": [
+   "C1",
+   "S3"
+  ],
+  "cash": "",
+  "burn": "",
+  "runway_as_of": "",
+  "cash_as_of": ""
+ },
+ "absent_from_model_input": {
+  "Series A deck with": true,
+  "SlideShare deck has": true,
+  "CANARY": true,
+  "163000000": true,
+  "163,000,000": true,
+  "Bessemer": true,
+  "TechCrunch": true,
+  "Summit Partners": true,
+  "2019": true,
+  "$18M": true,
+  "$140M": true,
+  "STALENESS": true,
+  "ATTRIBUTION ERROR": true,
+  "INVENTED IDENTITY": true,
+  "ANSWER_KEY": true,
+  "Mike Yan": true,
+  "Anton Gorin": true,
+  "ff3mc": true,
+  "Rerun Owner": true,
+  "Disposable profile": true
+ },
+ "sections": {
+  "executive_summary": {
+   "stored_equals_guard_replay_of_raw": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "raw_equals_stored": true
+  },
+  "problem_solution": {
+   "stored_equals_guard_replay_of_raw": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "raw_equals_stored": true
+  },
+  "market_analysis": {
+   "stored_equals_guard_replay_of_raw": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "raw_equals_stored": true
+  },
+  "team_assessment": {
+   "stored_equals_guard_replay_of_raw": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "raw_equals_stored": true
+  },
+  "financial_analysis": {
+   "stored_equals_guard_replay_of_raw": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "raw_equals_stored": true
+  },
+  "risk_assessment": {
+   "stored_equals_guard_replay_of_raw": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "raw_equals_stored": true
+  },
+  "business_model_analysis": {
+   "stored_equals_guard_replay_of_raw": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "raw_equals_stored": true
+  },
+  "information_readiness": {
+   "stored_equals_guard_replay_of_raw": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "raw_equals_stored": true
+  },
+  "supported_points": {
+   "stored_equals_guard_replay_of_raw": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "raw_equals_stored": true
+  },
+  "open_concerns": {
+   "stored_equals_guard_replay_of_raw": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "raw_equals_stored": true
+  },
+  "what_would_change_the_picture": {
+   "stored_equals_guard_replay_of_raw": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "raw_equals_stored": false
+  },
+  "upside_scenario": {
+   "stored_equals_guard_replay_of_raw": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "raw_equals_stored": true
+  },
+  "base_scenario": {
+   "stored_equals_guard_replay_of_raw": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "raw_equals_stored": true
+  },
+  "downside_scenario": {
+   "stored_equals_guard_replay_of_raw": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "raw_equals_stored": true
+  },
+  "zelda_advantage": {
+   "stored_equals_guard_replay_of_raw": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "raw_equals_stored": true
+  },
+  "questions_for_management": {
+   "stored_equals_guard_replay_of_raw": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "raw_equals_stored": false
+  },
+  "evidence_level": {
+   "stored_equals_guard_replay_of_raw": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "raw_equals_stored": true
+  }
+ },
+ "memo_id": 96
+}

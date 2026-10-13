@@ -1,0 +1,109 @@
+Sentence-level scan of memo 96: stored sections, memo API per principal (Lite and full), rendered
+pages (owner Lite IC memo, staff full IC memo and Markdown, overview). Sentences containing $23.1: 44.
+
+== funding_sentence_missing_narrator: 0
+
+== runway_or_cash_premise: 0
+
+== runway_or_cash_any: 35
+  stored:financial_analysis: • Burn rate: Not found in the extracted evidence.
+  stored:financial_analysis: • Runway: Not found in the extracted evidence.
+  stored:financial_analysis: Insufficient data (no dated cash balance or burn rate) to derive a runway figure.
+  stored:information_readiness: • Revenue, burn rate, and unit economics (not found in extracted evidence)
+  stored:information_readiness: Next evidence to supply: Audited or reviewed financial statements showing revenue, gross margin, and cash burn, accompanied by independent confirmation of the traction metrics.
+  stored:base_scenario: Without revenue data, burn rate, or team information, the base case cannot be further defined from the extracted evidence; the company's progression from usage scale to commercial scale remains uncharacterised.
+  stored:questions_for_management: - What is the current monthly burn rate and cash balance, and how much runway does the company have?
+  LITE:memo_api:information_readiness: • Revenue, burn rate, and unit economics (not found in extracted evidence)
+  LITE:memo_api:information_readiness: Next evidence to supply: Audited or reviewed financial statements showing revenue, gross margin, and cash burn, accompanied by independent confirmation of the traction metrics.
+  PAID:memo_api:information_readiness: • Revenue, burn rate, and unit economics (not found in extracted evidence)
+  PAID:memo_api:information_readiness: Next evidence to supply: Audited or reviewed financial statements showing revenue, gross margin, and cash burn, accompanied by independent confirmation of the traction metrics.
+  STAFF:memo_api:financial_analysis: • Burn rate: Not found in the extracted evidence.
+  STAFF:memo_api:financial_analysis: • Runway: Not found in the extracted evidence.
+  STAFF:memo_api:financial_analysis: Insufficient data (no dated cash balance or burn rate) to derive a runway figure.
+  STAFF:memo_api:information_readiness: • Revenue, burn rate, and unit economics (not found in extracted evidence)
+  STAFF:memo_api:information_readiness: Next evidence to supply: Audited or reviewed financial statements showing revenue, gross margin, and cash burn, accompanied by independent confirmation of the traction metrics.
+  STAFF:memo_api:base_scenario: Without revenue data, burn rate, or team information, the base case cannot be further defined from the extracted evidence; the company's progression from usage scale to commercial scale remains uncharacterised.
+  STAFF:memo_api:questions_for_management: - What is the current monthly burn rate and cash balance, and how much runway does the company have?
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 10/100 Present: • Stage indicator: Series A [P1] • Sector: Software [P2] • Traction metrics (self-reported, unverified, undated as-of): 140,000+ bots, 500M messages, contextualised as 'Traction by Apr-16' [S1, S2] • Funding raised figure (narrated by Pitch Deck Hunt, unverified): $23.1M [C1, S3] Needs Validation: • All traction figures (no independent confirmation foun
+  rendered:STAFF:D_ic_memo: • Burn rate: Not found in the extracted evidence.
+  rendered:STAFF:D_ic_memo: • Runway: Not found in the extracted evidence.
+  rendered:STAFF:D_ic_memo: Insufficient data (no dated cash balance or burn rate) to derive a runway figure.
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 10/100 Present: • Stage indicator: Series A [P1] • Sector: Software [P2] • Traction metrics (self-reported, unverified, undated as-of): 140,000+ bots, 500M messages, contextualised as 'Traction by Apr-16' [S1, S2] • Funding raised figure (narrated by Pitch Deck Hunt, unverified): $23.1M [C1, S3] Needs Validation: • All traction figures (no independent confirmation foun
+  rendered:STAFF:D_ic_memo: Without revenue data, burn rate, or team information, the base case cannot be further defined from the extracted evidence; the company's progression from usage scale to commercial scale remains uncharacterised.
+  rendered:STAFF:D_ic_memo: What is the current monthly burn rate and cash balance, and how much runway does the company have?
+  rendered:STAFF:D_ic_memo: Claims checked: 3 ■ Verified against public sources — 0 · ■ Contradicted — 0 · ■ Not established — 3 (of 3) View the full Truth Delta report → Financial Snapshot Raising: not disclosed Current revenue: not disclosed Monthly burn: not disclosed Runway: not calculated Team size: not disclosed ℹ This report is provided for informational and due-diligence purposes only.
+  rendered:STAFF:E_ic_memo_dl: â¢ Burn rate: Not found in the extracted evidence.
+  rendered:STAFF:E_ic_memo_dl: â¢ Runway: Not found in the extracted evidence.
+  rendered:STAFF:E_ic_memo_dl: Insufficient data (no dated cash balance or burn rate) to derive a runway figure.
+  rendered:STAFF:E_ic_memo_dl: â¢ Revenue, burn rate, and unit economics (not found in extracted evidence)
+  rendered:STAFF:E_ic_memo_dl: Next evidence to supply: Audited or reviewed financial statements showing revenue, gross margin, and cash burn, accompanied by independent confirmation of the traction metrics.
+  rendered:STAFF:E_ic_memo_dl: Without revenue data, burn rate, or team information, the base case cannot be further defined from the extracted evidence; the company's progression from usage scale to commercial scale remains uncharacterised.
+  rendered:STAFF:E_ic_memo_dl: - What is the current monthly burn rate and cash balance, and how much runway does the company have?
+  rendered:STAFF:E_ic_memo_dl: - Monthly burn: not disclosed
+  rendered:STAFF:E_ic_memo_dl: - Runway: not calculated
+
+== raise_premise: 15
+  stored:financial_analysis: • Use of proceeds: Not found in the extracted evidence.
+  stored:information_readiness: • Use of proceeds (not found in extracted evidence)
+  stored:questions_for_management: - Is a new funding round currently being planned or raised, and if so, what are the intended use of proceeds and key milestones?
+  LITE:memo_api:information_readiness: • Use of proceeds (not found in extracted evidence)
+  PAID:memo_api:information_readiness: • Use of proceeds (not found in extracted evidence)
+  STAFF:memo_api:financial_analysis: • Use of proceeds: Not found in the extracted evidence.
+  STAFF:memo_api:information_readiness: • Use of proceeds (not found in extracted evidence)
+  STAFF:memo_api:questions_for_management: - Is a new funding round currently being planned or raised, and if so, what are the intended use of proceeds and key milestones?
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 10/100 Present: • Stage indicator: Series A [P1] • Sector: Software [P2] • Traction metrics (self-reported, unverified, undated as-of): 140,000+ bots, 500M messages, contextualised as 'Traction by Apr-16' [S1, S2] • Funding raised figure (narrated by Pitch Deck Hunt, unverified): $23.1M [C1, S3] Needs Validation: • All traction figures (no independent confirmation foun
+  rendered:STAFF:D_ic_memo: • Use of proceeds: Not found in the extracted evidence.
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 10/100 Present: • Stage indicator: Series A [P1] • Sector: Software [P2] • Traction metrics (self-reported, unverified, undated as-of): 140,000+ bots, 500M messages, contextualised as 'Traction by Apr-16' [S1, S2] • Funding raised figure (narrated by Pitch Deck Hunt, unverified): $23.1M [C1, S3] Needs Validation: • All traction figures (no independent confirmation foun
+  rendered:STAFF:D_ic_memo: Is a new funding round currently being planned or raised, and if so, what are the intended use of proceeds and key milestones?
+  rendered:STAFF:E_ic_memo_dl: â¢ Use of proceeds: Not found in the extracted evidence.
+  rendered:STAFF:E_ic_memo_dl: â¢ Use of proceeds (not found in extracted evidence)
+  rendered:STAFF:E_ic_memo_dl: - Is a new funding round currently being planned or raised, and if so, what are the intended use of proceeds and key milestones?
+
+== current_total_wording_on_funding: 0
+
+== self_reported_with_funding_ref: 13
+  stored:what_would_change_the_picture: The single most important missing piece is audited or independently reviewed financial statements — specifically revenue figures and gross margin — which would establish whether ManyChat's self-reported usage metrics [S1, S2] correspond to any monetisation and would allow the $23.1M funding figure (per Pitch Deck Hunt) [C1] to be contextualised against actual business performance.
+  stored:upside_scenario: If the self-reported traction figures [S1, S2] — 140,000+ bots and 500M messages, contextualised as of April 2016 — are accurate and reflect active, growing usage, and if the $23.1M in funding reported by Pitch Deck Hunt [C1] was deployed against a clear monetisation path, the platform would have demonstrated meaningful scale at an early stage.
+  LITE:memo_api:what_would_change_the_picture: The single most important missing piece is audited or independently reviewed financial statements — specifically revenue figures and gross margin — which would establish whether ManyChat's self-reported usage metrics [S1, S2] correspond to any monetisation and would allow the $23.1M funding figure (per Pitch Deck Hunt) [C1] to be contextualised against actual business performance.
+  PAID:memo_api:what_would_change_the_picture: The single most important missing piece is audited or independently reviewed financial statements — specifically revenue figures and gross margin — which would establish whether ManyChat's self-reported usage metrics [S1, S2] correspond to any monetisation and would allow the $23.1M funding figure (per Pitch Deck Hunt) [C1] to be contextualised against actual business performance.
+  STAFF:memo_api:what_would_change_the_picture: The single most important missing piece is audited or independently reviewed financial statements — specifically revenue figures and gross margin — which would establish whether ManyChat's self-reported usage metrics [S1, S2] correspond to any monetisation and would allow the $23.1M funding figure (per Pitch Deck Hunt) [C1] to be contextualised against actual business performance.
+  STAFF:memo_api:upside_scenario: If the self-reported traction figures [S1, S2] — 140,000+ bots and 500M messages, contextualised as of April 2016 — are accurate and reflect active, growing usage, and if the $23.1M in funding reported by Pitch Deck Hunt [C1] was deployed against a clear monetisation path, the platform would have demonstrated meaningful scale at an early stage.
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 10/100 Present: • Stage indicator: Series A [P1] • Sector: Software [P2] • Traction metrics (self-reported, unverified, undated as-of): 140,000+ bots, 500M messages, contextualised as 'Traction by Apr-16' [S1, S2] • Funding raised figure (narrated by Pitch Deck Hunt, unverified): $23.1M [C1, S3] Needs Validation: • All traction figures (no independent confirmation foun
+  rendered:OWNER:D_ic_memo: What Would Change the Picture The single most important missing piece is audited or independently reviewed financial statements — specifically revenue figures and gross margin — which would establish whether ManyChat's self-reported usage metrics [S1, S2] correspond to any monetisation and would allow the $23.1M funding figure (per Pitch Deck Hunt) [C1] to be contextualised against actual business
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 10/100 Present: • Stage indicator: Series A [P1] • Sector: Software [P2] • Traction metrics (self-reported, unverified, undated as-of): 140,000+ bots, 500M messages, contextualised as 'Traction by Apr-16' [S1, S2] • Funding raised figure (narrated by Pitch Deck Hunt, unverified): $23.1M [C1, S3] Needs Validation: • All traction figures (no independent confirmation foun
+  rendered:STAFF:D_ic_memo: What Would Change the Picture The single most important missing piece is audited or independently reviewed financial statements — specifically revenue figures and gross margin — which would establish whether ManyChat's self-reported usage metrics [S1, S2] correspond to any monetisation and would allow the $23.1M funding figure (per Pitch Deck Hunt) [C1] to be contextualised against actual business
+  rendered:STAFF:D_ic_memo: Upside Scenario If the self-reported traction figures [S1, S2] — 140,000+ bots and 500M messages, contextualised as of April 2016 — are accurate and reflect active, growing usage, and if the $23.1M in funding reported by Pitch Deck Hunt [C1] was deployed against a clear monetisation path, the platform would have demonstrated meaningful scale at an early stage.
+  rendered:STAFF:E_ic_memo_dl: The single most important missing piece is audited or independently reviewed financial statements â specifically revenue figures and gross margin â which would establish whether ManyChat's self-reported usage metrics [S1, S2] correspond to any monetisation and would allow the $23.1M funding figure (per Pitch Deck Hunt) [C1] to be contextualised against actual business performance.
+  rendered:STAFF:E_ic_memo_dl: If the self-reported traction figures [S1, S2] â 140,000+ bots and 500M messages, contextualised as of April 2016 â are accurate and reflect active, growing usage, and if the $23.1M in funding reported by Pitch Deck Hunt [C1] was deployed against a clear monetisation path, the platform would have demonstrated meaningful scale at an early stage.
+
+== possessive_or_intro_today: 4
+  stored:questions_for_management: - Is a new funding round currently being planned or raised, and if so, what are the intended use of proceeds and key milestones?
+  STAFF:memo_api:questions_for_management: - Is a new funding round currently being planned or raised, and if so, what are the intended use of proceeds and key milestones?
+  rendered:STAFF:D_ic_memo: Is a new funding round currently being planned or raised, and if so, what are the intended use of proceeds and key milestones?
+  rendered:STAFF:E_ic_memo_dl: - Is a new funding round currently being planned or raised, and if so, what are the intended use of proceeds and key milestones?
+
+== stage_near_slide_date: 2
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 10/100 Present: • Stage indicator: Series A [P1] • Sector: Software [P2] • Traction metrics (self-reported, unverified, undated as-of): 140,000+ bots, 500M messages, contextualised as 'Traction by Apr-16' [S1, S2] • Funding raised figure (narrated by Pitch Deck Hunt, unverified): $23.1M [C1, S3] Needs Validation: • All traction figures (no independent confirmation foun
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 10/100 Present: • Stage indicator: Series A [P1] • Sector: Software [P2] • Traction metrics (self-reported, unverified, undated as-of): 140,000+ bots, 500M messages, contextualised as 'Traction by Apr-16' [S1, S2] • Funding raised figure (narrated by Pitch Deck Hunt, unverified): $23.1M [C1, S3] Needs Validation: • All traction figures (no independent confirmation foun
+
+== list_repr: 0
+
+== as_of_slide_context: 4
+  stored:upside_scenario: If the self-reported traction figures [S1, S2] — 140,000+ bots and 500M messages, contextualised as of April 2016 — are accurate and reflect active, growing usage, and if the $23.1M in funding reported by Pitch Deck Hunt [C1] was deployed against a clear monetisation path, the platform would have demonstrated meaningful scale at an early stage.
+  STAFF:memo_api:upside_scenario: If the self-reported traction figures [S1, S2] — 140,000+ bots and 500M messages, contextualised as of April 2016 — are accurate and reflect active, growing usage, and if the $23.1M in funding reported by Pitch Deck Hunt [C1] was deployed against a clear monetisation path, the platform would have demonstrated meaningful scale at an early stage.
+  rendered:STAFF:D_ic_memo: Upside Scenario If the self-reported traction figures [S1, S2] — 140,000+ bots and 500M messages, contextualised as of April 2016 — are accurate and reflect active, growing usage, and if the $23.1M in funding reported by Pitch Deck Hunt [C1] was deployed against a clear monetisation path, the platform would have demonstrated meaningful scale at an early stage.
+  rendered:STAFF:E_ic_memo_dl: If the self-reported traction figures [S1, S2] â 140,000+ bots and 500M messages, contextualised as of April 2016 â are accurate and reflect active, growing usage, and if the $23.1M in funding reported by Pitch Deck Hunt [C1] was deployed against a clear monetisation path, the platform would have demonstrated meaningful scale at an early stage.
+
+== narrator_on_traction: 11
+  stored:upside_scenario: If the self-reported traction figures [S1, S2] — 140,000+ bots and 500M messages, contextualised as of April 2016 — are accurate and reflect active, growing usage, and if the $23.1M in funding reported by Pitch Deck Hunt [C1] was deployed against a clear monetisation path, the platform would have demonstrated meaningful scale at an early stage.
+  stored:zelda_advantage: The verification pass distinguished between the company's own deck statements [S1, S2] and the same figures as reported by the third-party aggregator Pitch Deck Hunt [C1, C2, C3], correctly flagging that Pitch Deck Hunt is the narrator of the funding and traction claims rather than an independent validator — a distinction a plain AI summary of the same deck would likely collapse into a single 'the
+  STAFF:memo_api:upside_scenario: If the self-reported traction figures [S1, S2] — 140,000+ bots and 500M messages, contextualised as of April 2016 — are accurate and reflect active, growing usage, and if the $23.1M in funding reported by Pitch Deck Hunt [C1] was deployed against a clear monetisation path, the platform would have demonstrated meaningful scale at an early stage.
+  STAFF:memo_api:zelda_advantage: The verification pass distinguished between the company's own deck statements [S1, S2] and the same figures as reported by the third-party aggregator Pitch Deck Hunt [C1, C2, C3], correctly flagging that Pitch Deck Hunt is the narrator of the funding and traction claims rather than an independent validator — a distinction a plain AI summary of the same deck would likely collapse into a single 'the
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 10/100 Present: • Stage indicator: Series A [P1] • Sector: Software [P2] • Traction metrics (self-reported, unverified, undated as-of): 140,000+ bots, 500M messages, contextualised as 'Traction by Apr-16' [S1, S2] • Funding raised figure (narrated by Pitch Deck Hunt, unverified): $23.1M [C1, S3] Needs Validation: • All traction figures (no independent confirmation foun
+  rendered:STAFF:C2_company_overview: Worth investigating Funding raised — not established check in Truth Delta → Usage — not established check in Truth Delta → The two primary traction figures — 140,000+ bots and 500M messages [S1, S2] — are self-… see the IC Memo → Pitch Deck Hunt lists $23.1M raised [C1, S3], but no external evidence confirmed this f… see the IC Memo → Claims & verification Evidence Credibility: not scored Limited 
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 10/100 Present: • Stage indicator: Series A [P1] • Sector: Software [P2] • Traction metrics (self-reported, unverified, undated as-of): 140,000+ bots, 500M messages, contextualised as 'Traction by Apr-16' [S1, S2] • Funding raised figure (narrated by Pitch Deck Hunt, unverified): $23.1M [C1, S3] Needs Validation: • All traction figures (no independent confirmation foun
+  rendered:STAFF:D_ic_memo: Upside Scenario If the self-reported traction figures [S1, S2] — 140,000+ bots and 500M messages, contextualised as of April 2016 — are accurate and reflect active, growing usage, and if the $23.1M in funding reported by Pitch Deck Hunt [C1] was deployed against a clear monetisation path, the platform would have demonstrated meaningful scale at an early stage.
+  rendered:STAFF:D_ic_memo: Zelda Advantage The verification pass distinguished between the company's own deck statements [S1, S2] and the same figures as reported by the third-party aggregator Pitch Deck Hunt [C1, C2, C3], correctly flagging that Pitch Deck Hunt is the narrator of the funding and traction claims rather than an independent validator — a distinction a plain AI summary of the same deck would likely collapse in
+  rendered:STAFF:E_ic_memo_dl: If the self-reported traction figures [S1, S2] â 140,000+ bots and 500M messages, contextualised as of April 2016 â are accurate and reflect active, growing usage, and if the $23.1M in funding reported by Pitch Deck Hunt [C1] was deployed against a clear monetisation path, the platform would have demonstrated meaningful scale at an early stage.
+  rendered:STAFF:E_ic_memo_dl: The verification pass distinguished between the company's own deck statements [S1, S2] and the same figures as reported by the third-party aggregator Pitch Deck Hunt [C1, C2, C3], correctly flagging that Pitch Deck Hunt is the narrator of the funding and traction claims rather than an independent validator â a distinction a plain AI summary of the same deck would likely collapse into a single 't
+

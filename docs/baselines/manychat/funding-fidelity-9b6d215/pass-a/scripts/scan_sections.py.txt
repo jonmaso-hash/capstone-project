@@ -1,0 +1,58 @@
+"""Sentence-level scan of memo 96 on every captured surface (no DB access; reads the run's files)."""
+import json, os, re
+EV = r'C:\Users\jonathan\Desktop\KCV-mc-ff3\docs\baselines\manychat\funding-fidelity-9b6d215\pass-a'
+r = lambda n: json.load(open(os.path.join(EV, n), encoding='utf-8'))
+memo = r('09_memo.json')['memo']
+api = r('12_api_payloads.json')
+rendered = r('13_rendered_reports_text.json')
+surfaces = {}
+for k, v in memo.items():
+    if isinstance(v, str) and len(v) > 40 and k not in ('created_at', 'updated_at'):
+        surfaces['stored:' + k] = v
+for label in ('LITE', 'PAID', 'STAFF', 'OWNER'):
+    body = api.get(label + ':G_memo_api', {}).get('body')
+    if isinstance(body, dict):
+        for sk, sv in (body.get('lite_sections') or body.get('sections') or body).items():
+            if isinstance(sv, str) and len(sv) > 40:
+                surfaces[f'{label}:memo_api:{sk}'] = sv
+for k, v in rendered.items():
+    surfaces['rendered:' + k] = v
+
+SENT = re.compile(r'(?<=[.!?])\s+(?=[A-Z\u2022\-\d])|\n+')
+CHECKS = {
+    'funding_sentence_missing_narrator': lambda s: '23.1' in s and 'Pitch Deck Hunt' not in s,
+    'runway_or_cash_premise': lambda s: re.search(r'\b(remaining|available)\s+(runway|cash)|\bagainst\s+(?:the\s+)?runway|runway\s+remaining|'
+                                                  r'(?:current|present|today\'?s)\s+(?:runway|cash)', s, re.I) and '?' not in s,
+    'runway_or_cash_any': lambda s: re.search(r'\brunway\b|\bcash\b|\bburn\b', s, re.I),
+    'raise_premise': lambda s: re.search(r'this raise|stated raise|this round|the raise|proceeds', s, re.I),
+    'current_total_wording_on_funding': lambda s: ('23.1' in s or 'funding' in s.lower()) and re.search(r'to date|so far|in total|cumulative', s, re.I),
+    'self_reported_with_funding_ref': lambda s: re.search(r'self-reported', s, re.I) and re.search(r'\[[^\]]*\b(?:C1|S3)\b', s),
+    'possessive_or_intro_today': lambda s: re.search(r"\btoday\b|\bcurrently\b|\bat present\b", s, re.I),
+    'stage_near_slide_date': lambda s: re.search(r'Series A', s) and re.search(r'Apr(?:il)?[- ]?(?:20)?16|2016|2015', s),
+    'list_repr': lambda s: re.search(r"^\s*\[\s*'|\['\w|\"\]\s*$", s),
+    'as_of_slide_context': lambda s: re.search(r'as of April 2016|as of Apr', s, re.I),
+    'narrator_on_traction': lambda s: 'Pitch Deck Hunt' in s and re.search(r'traction|bots|messages|C2|C3', s, re.I),
+}
+out = {name: [] for name in CHECKS}
+n23 = 0
+for where, text in surfaces.items():
+    for sent in SENT.split(text):
+        sent = sent.strip()
+        if not sent:
+            continue
+        if '23.1' in sent:
+            n23 += 1
+        for name, test in CHECKS.items():
+            if test(sent):
+                out[name].append(f'{where}: {sent[:400]}')
+with open(os.path.join(EV, '09f_section_scan.txt'), 'w', encoding='utf-8', newline='\n') as f:
+    f.write('Sentence-level scan of memo 96: stored sections, memo API per principal (Lite and full), rendered\n'
+            'pages (owner Lite IC memo, staff full IC memo and Markdown, overview). Sentences containing $23.1: %d.\n\n' % n23)
+    for name, hits in out.items():
+        f.write(f'== {name}: {len(hits)}\n')
+        for h in hits:
+            f.write('  ' + h + '\n')
+        f.write('\n')
+print('sentences with 23.1:', n23)
+for name, hits in out.items():
+    print(name, len(hits))

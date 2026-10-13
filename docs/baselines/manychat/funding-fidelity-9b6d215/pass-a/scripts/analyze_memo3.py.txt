@@ -1,0 +1,83 @@
+"""Model input/output vs stored memo 96, section by section (run via run_ff3.py script; reads only).
+
+Rebuilds the GroundedContext from the stored rows exactly as the memo task does, then replays the
+pipeline's own post-generation steps (memo_text, guard_time_wording with time_wording_allowed for
+dated items, then guard_funding_fidelity with funding_facts(context.items, context.company)) on the
+model's recorded reply, and compares each section with what was stored."""
+import json, os, re, sys, difflib
+HERE = r'C:\Users\jonathan\AppData\Local\Temp\claude\C--Users-jonathan-Desktop-KCV\8edb8be9-5c85-488f-a1b8-020dd6a9a3c0\scratchpad\mcff3'
+EV = r'C:\Users\jonathan\Desktop\KCV-mc-ff3\docs\baselines\manychat\funding-fidelity-9b6d215\pass-a'
+DOC = 3138
+from zelda_api.memo_lists import memo_text
+from zelda_api.claim_context import guard_time_wording
+from zelda_api.funding_fidelity import funding_facts, guard_funding_fidelity
+from zelda_api.grounded_context import GroundedContext
+from zelda_api.principal import ORIGIN_TASK, Principal
+from zelda_api.vector_models import DocumentSource, IntelligenceMemo
+
+calls = [json.loads(l) for l in open(os.path.join(HERE, 'model_calls.jsonl'), encoding='utf-8') if l.strip()]
+memo_calls = [c for c in calls if 'investment memo' in json.dumps(c['request'].get('messages', ''))]
+assert len(memo_calls) == 1, len(memo_calls)
+call = memo_calls[0]
+call['note'] = ('Recorded in-process by the run wrapper (anthropic Messages.create wrapped; no repo change). Request kwargs '
+                'exactly as sent; the API key is on the client, not in kwargs.')
+with open(os.path.join(EV, '09b_model_call.json'), 'w', encoding='utf-8', newline='\n') as f:
+    json.dump(call, f, indent=1, ensure_ascii=False)
+user = call['request']['messages'][0]['content']
+start = user.find('{', user.find('## EVIDENCE'))
+sent, _ = json.JSONDecoder().raw_decode(user[start:])
+rebuilt = json.load(open(os.path.join(EV, '09a_grounded_context_rebuilt.json'), encoding='utf-8'))['payload']
+blob = json.dumps(call['request'], ensure_ascii=False)
+
+doc = DocumentSource.objects.get(id=DOC)
+ctx = GroundedContext.build(Principal.for_user(doc.uploaded_by, ORIGIN_TASK, label='mcff3.analyze (read-only rebuild)'), doc)
+allowed = {item.ref: item.time_wording_allowed for item in ctx.items if item.dated}
+facts = funding_facts(ctx.items, ctx.company)
+
+report = {
+    'model': call['request'].get('model'), 'response_model': call['response']['model'],
+    'stop_reason': call['response']['stop_reason'], 'usage': call['response']['usage'],
+    'params': {k: v for k, v in call['request'].items() if k not in ('system', 'messages')},
+    'prompt_rule_10_present': '10. Funding and the profile.' in call['request']['system'],
+    'prompt_dated_runway_rule_present': 'never current runway' in call['request']['system'],
+    'sent_payload_equals_rebuilt': sent == rebuilt,
+    'rebuilt_context_payload_equals_sent': ctx.to_prompt_payload() == sent,
+    'sent_items': [{k: i.get(k) for k in ('ref', 'kind', 'category', 'statement', 'status', 'as_of', 'narrator',
+                                          'source_context', 'dates_not_as_of')} for i in sent['items']],
+    'time_wording_allowed_for_dated_items': {k: list(v) for k, v in allowed.items()},
+    'funding_facts': {k: (sorted(v) if isinstance(v, (set, frozenset)) else v) for k, v in vars(facts).items()}
+                     if hasattr(facts, '__dict__') else repr(facts),
+    'absent_from_model_input': {s: (s not in blob) for s in [
+        'Series A deck with', 'SlideShare deck has', 'CANARY', '163000000', '163,000,000', 'Bessemer', 'TechCrunch',
+        'Summit Partners', '2019', '$18M', '$140M', 'STALENESS', 'ATTRIBUTION ERROR', 'INVENTED IDENTITY', 'ANSWER_KEY',
+        'Mike Yan', 'Anton Gorin', 'ff3mc', 'Rerun Owner', 'Disposable profile']},
+}
+raw_text = call['response']['text'][0]
+raw = json.loads(re.search(r'\{.*\}', raw_text, re.S).group(0))
+stored = IntelligenceMemo.objects.values().get(document_id=DOC)
+sections, changes = {}, {}
+for key, value in raw.items():
+    if key not in stored:
+        sections[key] = {'not_a_stored_field': True}
+        continue
+    normalized = memo_text(value) if isinstance(value, (str, list, tuple, dict)) else value
+    after_time, removed = guard_time_wording(normalized, allowed)
+    replay, fid = guard_funding_fidelity(after_time, facts)
+    sections[key] = {'stored_equals_guard_replay_of_raw': stored[key] == replay, 'time_wording_removed': removed,
+                     'funding_fidelity_changes': fid, 'raw_equals_stored': normalized == stored[key]}
+    if isinstance(normalized, str) and normalized != stored[key]:
+        changes[key] = [l for l in difflib.unified_diff(normalized.splitlines(), str(stored[key]).splitlines(), 'model', 'stored',
+                                                       lineterm='', n=0) if l[:1] in '+-' and l[:3] not in ('+++', '---')]
+report['sections'] = sections
+report['memo_id'] = stored['id']
+with open(os.path.join(EV, '09d_memo_input_output_check.json'), 'w', encoding='utf-8', newline='\n') as f:
+    json.dump(report, f, indent=1, ensure_ascii=False, default=str)
+with open(os.path.join(EV, '09e_guard_changes.txt'), 'w', encoding='utf-8', newline='\n') as f:
+    f.write('Model reply (after list-to-text) vs stored memo %s, per section, replayed through the pipeline order\n'
+            '(time guard, then funding guard). Only changed sections are listed.\n\n' % stored['id'])
+    for key, lines in changes.items():
+        f.write(f'== {key}  {sections[key]["funding_fidelity_changes"] or ""} {sections[key]["time_wording_removed"] or ""}\n')
+        f.write('\n'.join(lines) + '\n\n')
+print(json.dumps({k: v for k, v in report.items() if k not in ('sent_items', 'sections')}, indent=1, default=str))
+print('sections replay ok:', all(s.get('stored_equals_guard_replay_of_raw', True) for s in sections.values()),
+      '| changed:', list(changes), '| not stored:', [k for k, s in sections.items() if s.get('not_a_stored_field')])
