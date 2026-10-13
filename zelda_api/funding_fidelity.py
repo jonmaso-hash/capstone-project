@@ -107,7 +107,7 @@ _CASH_PREMISE = re.compile(r"\b(?P<now>current|present|today's)\s+(?:(?:remainin
 _NOW = re.compile(r'\b(?:today|now|currently|presently|at\s+present)\b', re.I)
 # An introductory time qualifier governs the whole sentence, across its comma: "Today, the $23.1M ... supports
 # remaining runway." ("Now" only with its comma: "Now that ..." is not a time qualifier.)
-_LEAD_NOW = re.compile(r'^(?P<lead>\s*(?:[-•*·–]|\d+[.)])?\s*)(?P<now>(?:as\s+of\s+)?(?:today|currently|presently|'
+_LEAD_NOW = re.compile(r"^(?P<lead>\s*(?:[-•*·–]|\d+[.)])?\s*)(?P<now>(?:as\s+of\s+)?(?:today(?:['’]s)?|currently|presently|"
                        r'at\s+present|at\s+this\s+point)\b\s*,?\s*|now\s*,\s*)', re.I)
 _SUFFICIENT_ALONE = re.compile(r'\b(\w+)\s+alone\s+(would|will|could|can)\b')
 # The company's own cash and burn evidence. A balance is a cash figure that is not a flow or a burn;
@@ -651,8 +651,10 @@ def _no_cash_premise(sentence, facts, changes):
     # The evidence's date replaces current wording: an introductory "Today, ..." first (the rest is
     # recapitalised), then "today" / "now" in the dated note's own clause.
     if lead and NO_CURRENT in rewritten and NO_CURRENT not in sentence:
-        rest = rewritten[lead.end():]
-        rewritten = lead.group('lead') + rest[:1].upper() + rest[1:]
+        remaining_lead = _LEAD_NOW.match(rewritten)
+        prefix = lead.group('lead')
+        rest = rewritten[remaining_lead.end():] if remaining_lead else rewritten[len(prefix):]
+        rewritten = prefix + rest[:1].upper() + rest[1:]
     for dated in reversed(list(re.finditer(re.escape(f'; {NO_CURRENT})'), rewritten))):
         start, stop = _clause_start(rewritten, dated.start()), _clause_end(rewritten, dated.end())
         for now in reversed(list(_NOW.finditer(rewritten, start, stop))):

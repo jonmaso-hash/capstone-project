@@ -941,6 +941,38 @@ class ReportedFundingIsNotCashTests(SimpleTestCase):
                          'Today, the $23.1M funding figure (per Pitch Deck Hunt) [S3] supports runway (which needs a '
                          'dated cash balance and burn rate; neither is in the evidence).')
 
+    def test_possessive_opening_through_both_guards(self):
+        # "Today's" / "Today’s" opening a sentence, a bullet or a numbered item (patch
+        # funding-fidelity-possessive-opening-fix): the dated note keeps its noun and capital, and the marker stays.
+        runway = ('runway as of 2016-04-30 (from the dated cash balance and burn rate; the evidence gives no current '
+                  'figure)')
+        cash = 'cash as of 2016-04-30 (the latest dated cash balance; the evidence gives no current figure)'
+        funding = 'the $23.1M funding figure (per Pitch Deck Hunt) [S3]'
+        dated = memo95_items(more=self.pair('2016-04-30'))
+        for apostrophe in ("'", '\u2019'):
+            for marker in ('', '- ', '\u2022 ', '1. ', '2) '):
+                today = f'{marker}Today{apostrophe}s'
+                cases = {
+                    f'{today} $23.1M funding figure (per Pitch Deck Hunt) [S3] supports remaining runway.':
+                        f'{marker}$23.1M funding figure (per Pitch Deck Hunt) [S3] supports {runway}.',
+                    f'{today} remaining runway is anchored by {funding}.':
+                        f'{marker}{runway[:1].upper()}{runway[1:]} is anchored by {funding}.',
+                    f'{today} available cash is not {funding}.':
+                        f'{marker}{cash[:1].upper()}{cash[1:]} is not {funding}.',
+                }
+                for before, after in cases.items():
+                    with self.subTest(text=before[:30]):
+                        for items in (dated, list(reversed(dated))):
+                            self.assertEqual(both_guards(before, items), after)
+                            self.assertEqual(both_guards(after, items), after)       # idempotent
+                # Without a dated pair the premise is qualified and the possessive opening stays.
+                unsupported = f'{today} remaining runway is anchored by {funding}.'
+                expected = (f'{today} runway (which needs a dated cash balance and burn rate; neither is in the '
+                            f'evidence) is anchored by {funding}.')
+                with self.subTest(unsupported=unsupported[:30]):
+                    self.assertEqual(both_guards(unsupported, memo95_items()), expected)
+                    self.assertEqual(both_guards(expected, memo95_items()), expected)
+
     def test_the_latest_date_uses_its_day_in_any_item_order(self):
         early = self.evidence('S4', '$2.1M cash in the bank', as_of='2016-04-01')
         late = self.evidence('S6', '$1.9M cash in the bank', as_of='2016-04-30')
