@@ -1776,6 +1776,7 @@ class ZeldaIntelligencePipelineV2:
        remaining cash needs a dated cash balance and a burn rate; reported funding
        and a revenue/cost schedule are not enough, and neither is an undated,
        past or estimated cash or burn figure, or a burn rate from another period.
+       Dated cash and burn give runway as of their date, never current runway.
        Profile items
        (P...) are the current profile and undated: never date them with a slide's
        date (not "was Series A as of April 2016")."""
