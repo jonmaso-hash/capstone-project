@@ -1,0 +1,28 @@
+# Validation at d246e36 (the committed corrections; identical to the tested working tree)
+# Sequential, one batch at a time, CI env (scratchpad t.sh), free RAM checked before each (2.1-2.3 GB),
+# memory watchdog (tools/memwatch.ps1, 1500 MB threshold) running; it logged no process over the threshold.
+
+## Batch 1
+Ran 259 tests in 20.538s
+OK
+Found 259 test(s).
+System check identified no issues (0 silenced).
+
+## Batch 2
+Found 430 test(s).
+System check identified no issues (0 silenced).
+Ran 430 tests in 62.547s
+OK
+
+## Batch 3
+Found 87 test(s).
+System check identified no issues (0 silenced).
+Ran 87 tests in 32.240s
+OK
+
+## manage.py check; makemigrations --check --dry-run
+System check identified no issues (0 silenced).
+No changes detected
+
+Batches as at 589917a (see ../narrator-provenance-review-589917a/output/validation_output.txt for the labels).
+Total: 259 + 430 + 87 = 776 tests OK.

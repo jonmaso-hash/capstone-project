@@ -1,0 +1,35 @@
+# Mutations for the second FF-405 review corrections (harness: mutate_np3.py.txt, built by make_mut3.py.txt)
+# Foreground, one mutation per run, free RAM checked before each (2.3-2.4 GB free), memory watchdog running.
+# Each run restores the file in 'finally'; both file hashes were checked after every run.
+# Code under test: working tree committed as d246e36. Fingerprints: funding_fidelity.py 1b404f48e1ae2336, views.py 1061e439239f3b98.
+# Relevant set: N1 (rule off) and E1-E11 (the equality rule). E4 re-pointed at the revised 'owners' line; E9-E11 new.
+# All 12 runs completed (each has a 'Ran 67 tests' result); none interrupted.
+
+N1   RED (killed)  rule not applied | Ran 67 tests in 5.200s FAILED (failures=30)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': '1b404f48e1ae2336', 'zelda_api/views.py': '1061e439239f3b98'}
+E1   RED (killed)  equation never checked (the reviewed behaviour) | Ran 67 tests in 5.108s FAILED (failures=13)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': '1b404f48e1ae2336', 'zelda_api/views.py': '1061e439239f3b98'}
+E2   RED (killed)  equation always kept | Ran 67 tests in 5.116s FAILED (failures=13)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': '1b404f48e1ae2336', 'zelda_api/views.py': '1061e439239f3b98'}
+E3   RED (killed)  equation always dropped | Ran 67 tests in 5.267s FAILED (failures=10)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': '1b404f48e1ae2336', 'zelda_api/views.py': '1061e439239f3b98'}
+E4   RED (killed)  equated against all cited figures, not the narrators' own | Ran 67 tests in 5.456s FAILED (failures=1)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': '1b404f48e1ae2336', 'zelda_api/views.py': '1061e439239f3b98'}
+E5   RED (killed)  noun always plural | Ran 67 tests in 5.206s FAILED (failures=9)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': '1b404f48e1ae2336', 'zelda_api/views.py': '1061e439239f3b98'}
+E6   RED (killed)  no "from" without a verb | Ran 67 tests in 5.276s FAILED (failures=1)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': '1b404f48e1ae2336', 'zelda_api/views.py': '1061e439239f3b98'}
+E7   RED (killed)  no figures recorded | Ran 67 tests in 5.176s FAILED (failures=3, errors=17)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': '1b404f48e1ae2336', 'zelda_api/views.py': '1061e439239f3b98'}
+E8   RED (killed)  a ref outside the context treated as known | Ran 67 tests in 5.147s FAILED (failures=1)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': '1b404f48e1ae2336', 'zelda_api/views.py': '1061e439239f3b98'}
+E9   RED (killed)  only the first equation in a sentence is checked | Ran 67 tests in 5.351s FAILED (failures=1)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': '1b404f48e1ae2336', 'zelda_api/views.py': '1061e439239f3b98'}
+E10  RED (killed)  shared company/narrator credit narrowed to the narrator (the reviewed behaviour) | Ran 67 tests in 5.355s FAILED (failures=7)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': '1b404f48e1ae2336', 'zelda_api/views.py': '1061e439239f3b98'}
+E11  RED (killed)  the guard's own note taken as the compared group | Ran 67 tests in 5.356s FAILED (failures=1)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': '1b404f48e1ae2336', 'zelda_api/views.py': '1061e439239f3b98'}
+
+## 12 completed runs, 12 RED. E7 also produced errors (no figures recorded -> KeyError), besides assertion failures.
+## N2-N16 (no N4), J1-J6, M1-M2 target code this commit does not change; their completed results at 589917a are in
+## ../narrator-provenance-review-589917a/output/mutations_output.txt.
