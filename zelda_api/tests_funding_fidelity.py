@@ -499,6 +499,7 @@ class MemoWriterTests(TestCase):
         self.assertIn(f"Pitch Deck Hunt [{c1}] ([{c2}, {c3}] are the company's own traction statements)",
                       memo.zelda_advantage)
         self.assertIn('narrator of the funding claims rather than', memo.zelda_advantage)
+        self.assertIn('and the funding figure reported by the third-party aggregator', memo.zelda_advantage)
         self.assertEqual(memo.executive_summary,
                          f'Pitch Deck Hunt lists $23.1M raised [{c1}, {ref[("statement", "$23.1M raised")]}].')
         self.client.force_login(User.objects.create_user('ff_staff96', password='x', is_staff=True))
@@ -509,6 +510,8 @@ class MemoWriterTests(TestCase):
                 body = response.content.decode()
                 self.assertIn('narrator of the funding claims rather than', body)
                 self.assertNotIn('narrator of the funding and traction claims', body)
+                self.assertIn('and the funding figure reported by the third-party aggregator', body)
+                self.assertNotIn('the same figures as reported by', body)
 
     def test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers(self):
         # Memo 95 (document 3137; owner grade: partial pass), verbatim, refs mapped to this context.
@@ -1049,8 +1052,9 @@ MEMO96_ADVANTAGE = (
     "reported by the third-party aggregator Pitch Deck Hunt [C1, C2, C3], correctly flagging that Pitch Deck Hunt is the "
     "narrator of the funding and traction claims rather than an independent validator — a distinction a plain AI "
     "summary of the same deck would likely collapse into a single 'the company states' attribution.")
+# The company's traction [S1, S2] is not "the same figures" as Pitch Deck Hunt's $23.1M raised [C1] (review of afe0cab).
 MEMO96_ADVANTAGE_FIXED = (
-    "The verification pass distinguished between the company's own deck statements [S1, S2] and the same figures as "
+    "The verification pass distinguished between the company's own deck statements [S1, S2] and the funding figure "
     "reported by the third-party aggregator Pitch Deck Hunt [C1] ([C2, C3] are the company's own traction statements), "
     "correctly flagging that Pitch Deck Hunt is the narrator of the funding claims rather than an independent validator "
     "— a distinction a plain AI summary of the same deck would likely collapse into a single 'the company states' "
@@ -1063,6 +1067,24 @@ def memo96():
     with open(path, encoding='utf-8') as f:
         data = json.load(f)
     return json.loads(re.search(r'\{.*\}', data['model_reply_text'], re.S).group(0)), data['stored_sections']
+
+
+def memo96_items():
+    """Memo 96's grounded payload as sent to the model (09a of the 9b6d215 run), back as GroundedItems."""
+    path = os.path.join(os.path.dirname(__file__), 'data', 'funding_fidelity', 'memo96_payload.json')
+    with open(path, encoding='utf-8') as f:
+        payload = json.load(f)['payload']
+
+    def source(s):
+        return SourceRef(document_id=s.get('document_id'), page_number=s.get('page'), chunk_index=s.get('chunk'),
+                         profile_field=s.get('profile_field', ''))
+
+    return [GroundedItem(ref=i['ref'], kind=i['kind'], category=i['category'], statement=i['statement'],
+                         status=i['status'], sources=tuple(source(s) for s in i['sources']),
+                         confidence=i.get('confidence'), reason=i.get('reason', ''), dated='as_of' in i,
+                         narrator=i.get('narrator', ''), source_context=i.get('source_context', ''),
+                         as_of=i.get('as_of', ''), dates_not_as_of=tuple(i.get('dates_not_as_of', ())))
+            for i in payload['items']]
 
 
 class NarratorProvenanceTests(SimpleTestCase):
@@ -1087,12 +1109,22 @@ class NarratorProvenanceTests(SimpleTestCase):
         from .memo_lists import memo_text
         raw, stored = memo96()
         self.assertEqual(stored['zelda_advantage'], MEMO96_ADVANTAGE)    # the stored memo is the evidence, unchanged
-        for key, expected in stored.items():
-            value = raw[key]
-            value = memo_text(value) if isinstance(value, (str, list, tuple, dict)) else value
-            replay = both_guards(value, memo95_items()) if isinstance(value, str) else value
-            with self.subTest(section=key):
-                self.assertEqual(replay, MEMO96_ADVANTAGE_FIXED if key == 'zelda_advantage' else expected)
+        items = memo96_items()                                            # memo 96's own grounded payload
+        self.assertEqual([i.ref for i in items], ['C1', 'C2', 'C3', 'S1', 'S2', 'S3', 'P1', 'P2'])
+        for ordered in (items, list(reversed(items))):
+            for key, expected in stored.items():
+                value = raw[key]
+                value = memo_text(value) if isinstance(value, (str, list, tuple, dict)) else value
+                replay = both_guards(value, ordered) if isinstance(value, str) else value
+                with self.subTest(section=key, reversed=ordered is not items):
+                    self.assertEqual(replay, MEMO96_ADVANTAGE_FIXED if key == 'zelda_advantage' else expected)
+                    if isinstance(replay, str):
+                        self.assertEqual(both_guards(replay, ordered), replay)       # idempotent
+
+    def test_memo_96_payload_matches_the_test_context(self):
+        # The fixture context used by the other tests carries memo 96's refs, narrators and kinds.
+        self.assertEqual(funding_facts(memo96_items(), 'ManyChat').ref_sources,
+                         funding_facts(memo95_items(), 'ManyChat').ref_sources)
 
     def test_paraphrases_without_an_amount(self):
         cases = {
@@ -1150,6 +1182,21 @@ class NarratorProvenanceTests(SimpleTestCase):
             with self.subTest(text=text):
                 self.assertEqual(both_guards(text, items), text)
 
+    def test_a_citation_after_another_subject_is_that_subjects(self):
+        # N5: the narrator is named first, but the company is the subject the citation belongs to.
+        for text in (
+                'Pitch Deck Hunt lists $23.1M raised and ManyChat reports 500M messages [S2].',
+                "Pitch Deck Hunt lists the funding while noting the company's 140,000+ bots [S1].",
+                'Pitch Deck Hunt notes that the company reports 140,000+ bots and 500M messages [S1, S2].'):
+            with self.subTest(text=text):
+                self.assertEqual(both_guards(text, memo95_items()), text)
+        # Control: with no other subject in between, the same shape is checked against the narrator's refs.
+        self.check('Pitch Deck Hunt lists $23.1M raised and reports 500M messages [S3, S2].',
+                   "Pitch Deck Hunt lists $23.1M raised and reports 500M messages [S3] ([S2] is the company's own "
+                   'traction statement).')
+        self.assertEqual(both_guards('Pitch Deck Hunt lists $23.1M raised and notes [C1, S3].', memo95_items()),
+                         'Pitch Deck Hunt lists $23.1M raised and notes [C1, S3].')
+
     def test_no_narrator_in_the_context_changes_nothing(self):
         items = [i for i in memo95_items() if i.ref not in ('C1', 'S3')]
         self.assertEqual(both_guards(MEMO96_ADVANTAGE, items), MEMO96_ADVANTAGE)
@@ -1159,6 +1206,125 @@ class NarratorProvenanceTests(SimpleTestCase):
         self.assertIn(('C2', '', 'traction'), facts.ref_sources)
         self.assertIn(('C1', PDH, 'funding'), facts.ref_sources)
         self.assertIn(('P1', '', 'profile'), facts.ref_sources)
+        self.assertIn(('C1', '$23.1m raised'), facts.ref_figures)
+        self.assertIn(('S1', '140 000+ bots'), facts.ref_figures)
         fixed, changes = guard_funding_fidelity(MEMO96_ADVANTAGE, facts)
-        self.assertEqual(changes, [f'provenance:{PDH}', f'provenance:{PDH}'])
+        self.assertEqual(changes, [f'provenance:{PDH}'] * 3)
         self.assertEqual(sorted(re.findall(r'[CSP]\d', fixed)), sorted(re.findall(r'[CSP]\d', MEMO96_ADVANTAGE)))
+
+
+class JointNarratorAndEquatedFigureTests(SimpleTestCase):
+    """
+    Review of afe0cab: narrators named together are checked against their combined refs, and
+    "the same figures as reported by <narrator>" holds only when its own refs state them.
+    """
+
+    def items(self):
+        crunchbase = GroundedItem(ref='S4', kind='statement', category='Revenue', statement='$4M revenue',
+                                  status=SELF_REPORTED, sources=(SourceRef(document_id=3138, page_number=3),),
+                                  dated=True, narrator='Crunchbase', as_of='not stated')
+        return memo96_items() + [crunchbase]
+
+    def check(self, before, after):
+        items = self.items()
+        for ordered in (items, list(reversed(items))):
+            once = both_guards(before, ordered)
+            self.assertEqual(once, after)
+            self.assertEqual(both_guards(once, ordered), once)          # idempotent
+
+    def test_joint_names_keep_their_combined_refs_and_separate_the_company(self):
+        cases = {
+            'company ref in a joint group': (
+                'Pitch Deck Hunt and Crunchbase list $23.1M raised and $4M revenue [S3, S4, S1].',
+                "Pitch Deck Hunt and Crunchbase list $23.1M raised and $4M revenue [S3, S4] ([S1] is the company's "
+                'own traction statement).'),
+            'names in the other order': (
+                'Crunchbase and Pitch Deck Hunt report the totals [C1, S4, C2].',
+                "Crunchbase and Pitch Deck Hunt report the totals [C1, S4] ([C2] is the company's own traction "
+                'statement).'),
+            'only company refs': (
+                'Pitch Deck Hunt and Crunchbase list the bot and message counts [S1, S2].',
+                "Pitch Deck Hunt and Crunchbase list the bot and message counts [S1, S2] (not Pitch Deck Hunt's or "
+                "Crunchbase's: [S1, S2] are the company's own traction statements)."),
+            'citation before the names': (
+                'The figures [S3, S4, P1] reported by Pitch Deck Hunt and Crunchbase are undated.',
+                'The figures [S3, S4] ([P1] is the profile) reported by Pitch Deck Hunt and Crunchbase are undated.'),
+            'joint kinds': (
+                'Pitch Deck Hunt and Crunchbase are the sources of the funding, revenue and traction figures.',
+                'Pitch Deck Hunt and Crunchbase are the sources of the funding and revenue figures.'),
+        }
+        for name, (before, after) in cases.items():
+            with self.subTest(case=name):
+                self.check(before, after)
+
+    def test_legitimate_joint_attribution_is_unchanged(self):
+        items = self.items()
+        for text in (
+                'Pitch Deck Hunt and Crunchbase list $23.1M raised and $4M revenue [S3, S4].',
+                'Pitch Deck Hunt & Crunchbase report [C1, S4].',
+                'Crunchbase and Pitch Deck Hunt are the sources of the funding and revenue figures.',
+                'The figures [C1, S4] reported by Pitch Deck Hunt and Crunchbase are undated.',
+                # the company named with a narrator shares the credit for its own refs
+                'The company and Pitch Deck Hunt list the totals [S3, S1].',
+                'ManyChat and Pitch Deck Hunt are the sources of the funding and traction figures.',
+                'Do Pitch Deck Hunt and Crunchbase list the bot counts [S1, S2]?'):
+            with self.subTest(text=text):
+                self.assertEqual(both_guards(text, items), text)
+
+    def test_an_equated_figure_is_checked_against_the_narrators_own_refs(self):
+        cases = {
+            'paraphrase, per': (
+                "The deck's bot counts [S1] and the same numbers per Pitch Deck Hunt [C1] differ in kind.",
+                "The deck's bot counts [S1] and the funding number per Pitch Deck Hunt [C1] differ in kind."),
+            'as <narrator>, no verb': (
+                'The traction statements [C2, C3] and the same figures as Pitch Deck Hunt [S3] are unverified.',
+                'The traction statements [C2, C3] and the funding figure from Pitch Deck Hunt [S3] are unverified.'),
+            'partly the same': (
+                "The company's figures [S1, S3] and the same figures as reported by Pitch Deck Hunt [C1] are unverified.",
+                "The company's figures [S1, S3] and the funding figure reported by Pitch Deck Hunt [C1] are unverified."),
+            "none of the narrator's own refs cited": (
+                "The funding statement [S3] and the same figures as reported by Pitch Deck Hunt [C2] are unverified.",
+                "The funding statement [S3] and the figures reported by Pitch Deck Hunt [C2] (not Pitch Deck Hunt's: "
+                "[C2] is the company's own traction statement) are unverified."),
+            'joint narrators': (
+                "The deck's statements [S1, S2] and the identical figures listed by Pitch Deck Hunt and Crunchbase "
+                '[C1, S4] are unverified.',
+                "The deck's statements [S1, S2] and the funding and revenue figures listed by Pitch Deck Hunt and "
+                'Crunchbase [C1, S4] are unverified.'),
+        }
+        for name, (before, after) in cases.items():
+            with self.subTest(case=name):
+                self.check(before, after)
+
+    def test_an_equation_the_refs_support_is_unchanged(self):
+        items = self.items()
+        for text in (
+                "The deck's own statement [S3] and the same figure as reported by Pitch Deck Hunt [C1] agree.",
+                'The listing [C1] and the same figures per Pitch Deck Hunt [S3] agree.',
+                # nothing cited before it: nothing to compare, so the wording stands
+                'Pitch Deck Hunt notes the same figures as reported by Pitch Deck Hunt [C1].',
+                # a ref outside the context: nothing shows whose it is
+                'The deck [S1] and the same figures as reported by Pitch Deck Hunt [X9] are unverified.',
+                'Are [S1, S2] the same figures as reported by Pitch Deck Hunt [C1]?'):
+            with self.subTest(text=text):
+                self.assertEqual(both_guards(text, items), text)
+
+    def test_joint_kinds_are_combined_where_the_company_has_its_own(self):
+        # The company states its own revenue too: a kind stays only if one of the named narrators narrates it.
+        own = GroundedItem(ref='S5', kind='statement', category='Revenue', statement='$3M revenue', status=SELF_REPORTED,
+                           sources=(SourceRef(document_id=3138, page_number=4),), dated=True, as_of='not stated')
+        items = self.items() + [own]
+        cases = {
+            'Pitch Deck Hunt and Crunchbase are the sources of the funding and revenue figures.':
+                'Pitch Deck Hunt and Crunchbase are the sources of the funding and revenue figures.',
+            'Crunchbase and Pitch Deck Hunt list the funding and revenue figures.':
+                'Crunchbase and Pitch Deck Hunt list the funding and revenue figures.',
+            'Pitch Deck Hunt is the source of the funding and revenue figures.':
+                'Pitch Deck Hunt is the source of the funding figures.',
+            'Pitch Deck Hunt and Crunchbase are the sources of the funding, revenue and traction figures.':
+                'Pitch Deck Hunt and Crunchbase are the sources of the funding and revenue figures.',
+        }
+        for before, after in cases.items():
+            for ordered in (items, list(reversed(items))):
+                with self.subTest(text=before):
+                    self.assertEqual(both_guards(before, ordered), after)

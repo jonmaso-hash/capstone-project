@@ -57,8 +57,11 @@ its own attribution. After generation, sentence by sentence:
                   against each cited ref's metadata, no amount needed: "as reported
                   by Pitch Deck Hunt [C1, C2, C3]" -> "Pitch Deck Hunt [C1] ([C2, C3]
                   are the company's own traction statements)", and "the narrator of
-                  the funding and traction claims" -> "the funding claims"; a name
-                  shared with another narrator, and questions, are kept
+                  the funding and traction claims" -> "the funding claims"; "[S1, S2]
+                  and the same figures as reported by Pitch Deck Hunt [C1]" -> "the
+                  funding figure reported by" unless its own refs state those figures;
+                  narrators named together are checked against their combined refs;
+                  questions are kept
 Self-reported labels read naturally: "• Self-reported funding raised: $23.1M"
 -> "• Funding raised (reported by Pitch Deck Hunt): $23.1M".
 
@@ -171,6 +174,9 @@ class FundingFacts:
     # the profile's; kind 'funding', 'traction', 'revenue', 'profile' or the category. A
     # citation may be credited to a narrator only for that narrator's own refs (memo 96).
     ref_sources: FrozenSet[Tuple[str, str, str]] = frozenset()
+    # Every item's (ref, statement): "the same figures as reported by <narrator>" holds only
+    # when the narrator's own refs state the figures it is equated with (memo 96).
+    ref_figures: FrozenSet[Tuple[str, str]] = frozenset()
 
     @property
     def runway_supported(self):
@@ -292,8 +298,9 @@ def funding_facts(items, company=''):
     """What the guard needs from GroundedContext items: narrators, funding figures, profile refs, a live raise."""
     groups, funding, profile, supported, funding_items = {}, [], set(), False, set()
     funding_refs, states, dated = set(), {'cash': NONE, 'burn': NONE}, {'cash': [], 'burn': []}
-    sources = set()
+    sources, figures = set(), set()
     for item in items:
+        figures.add((item.ref, ' '.join((item.statement or '').lower().split())))
         sources.add((item.ref, '' if item.kind == 'profile' else (getattr(item, 'narrator', '') or ''),
                      'profile' if item.kind == 'profile' else figure_kind(item.category)))
         kind, state, period = cash_basis(item)
@@ -329,7 +336,7 @@ def funding_facts(items, company=''):
     return FundingFacts(narrated, tuple(unique.values()), frozenset(profile), supported, company,
                         frozenset(funding_items), frozenset(funding_refs), states['cash'], states['burn'],
                         _latest(pairs) if pairs else '', _latest(dated['cash']) if dated['cash'] else '',
-                        frozenset(sources))
+                        frozenset(sources), frozenset(figures))
 
 
 def _refs_in(group):
@@ -753,11 +760,11 @@ def _owner_of(ref, sources):
     return 'the profile' if kind == 'profile' else 'the company'
 
 
-def _provenance_note(wrong, sources, name, keep):
+def _provenance_note(wrong, sources, label, keep):
     """
     "[C2, C3] are the company's own traction statements"; "[S4] is per Crunchbase": every
     mis-credited ref, in citation order, under its own source. With nothing left for the
-    narrator, the note says so first: "not Pitch Deck Hunt's: ...".
+    narrators, the note says so first: "not Pitch Deck Hunt's: ...".
     """
     owners = {}
     for ref in wrong:
@@ -772,38 +779,74 @@ def _provenance_note(wrong, sources, name, keep):
         else:
             what = owner
         parts.append(f'[{", ".join(refs)}] {verb} {what}')
-    return ('' if keep else f"not {name}'s: ") + '; '.join(parts)
+    return ('' if keep else f'not {label}: ') + '; '.join(parts)
 
 
-def _credited_group(sentence, mention, others, co_narrators):
+_NAME_JOIN = r'\s*(?:,\s*(?:and\s+)?|and\s+|&\s*|or\s+)'
+
+
+def _names_pattern(names):
+    return '|'.join(re.escape(n) for n in sorted(names, key=lambda n: (-len(n), n)))
+
+
+def _name_run(sentence, mention, names):
     """
-    The citation group a mention of the narrator credits to it, or None: the next group in the same
-    clause ("and" joins nouns here: "the bot and message counts [S1, S2]") with no other subject in
-    between, or the group just before "reported by <narrator>". A narrator named together with another
-    ("Pitch Deck Hunt and Crunchbase list ...") shares the credit, so neither is checked.
+    The narrators named together from `mention` on ("Pitch Deck Hunt and Crunchbase", "A, B and
+    C"), in the order named, and where the run ends. A joint credit is checked against their
+    combined refs.
     """
-    clause_start = _clause_start(sentence, mention.start())
-    if co_narrators and co_narrators.search(sentence, max(0, mention.start() - 80), mention.start()):
+    canonical = {n.lower(): n for n in names}
+    run, end = [canonical[mention.group(0).lower()]], mention.end()
+    following = re.compile(_NAME_JOIN + r'(' + _names_pattern(names) + r')\b', re.I)
+    while True:
+        more = following.match(sentence, end)
+        if not more or canonical[more.group(1).lower()] in run:
+            return run, end
+        run.append(canonical[more.group(1).lower()])
+        end = more.end()
+
+
+def _joined_before(names, company):
+    """Another subject joined just before a name ("Crunchbase and Pitch Deck Hunt", "the company and
+    Pitch Deck Hunt"): the credit is shared, and is checked from the first name of the run, or not at all."""
+    subjects = [_OTHER_SUBJECT] + ([_names_pattern(names)] if names else []) + ([re.escape(company)] if company else [])
+    return re.compile(r'\b(?:' + '|'.join(subjects) + r')\s*(?:,|\band\b|&|\bor\b)\s*$', re.I)
+
+
+def _credited_group(sentence, start, end, others, joined):
+    """
+    The citation group the narrators named at sentence[start:end] are credited with, or None: the next
+    group in the same clause ("and" joins nouns here: "the bot and message counts [S1, S2]") with no
+    other subject in between, or the group just before "reported by <narrator>".
+    """
+    clause_start = _clause_start(sentence, start)
+    if joined.search(sentence, max(0, start - 80), start):
         return None
-    ends = [s for s, _ in _boundaries(sentence, _CREDIT_END) if s >= mention.end()]
+    ends = [s for s, _ in _boundaries(sentence, _CREDIT_END) if s >= end]
     clause_end = ends[0] if ends else len(sentence)
-    after = _REF.search(sentence, mention.end())
-    if after and after.start() <= clause_end and after.start() - mention.end() <= _CREDIT_GAP:
-        if not others.search(sentence, mention.end(), after.start()):
+    after = _REF.search(sentence, end)
+    if after and after.start() <= clause_end and after.start() - end <= _CREDIT_GAP:
+        if not others.search(sentence, end, after.start()):
             return after
-    for before in reversed(list(_REF.finditer(sentence, clause_start, mention.start()))):
-        if re.fullmatch(_CREDITED_BEFORE, sentence[before.end():mention.start()], re.I):
+    for before in reversed(list(_REF.finditer(sentence, clause_start, start))):
+        if re.fullmatch(_CREDITED_BEFORE, sentence[before.end():start], re.I):
             return before
         break
     return None
 
 
+def _label(run):
+    """ "Pitch Deck Hunt's"; "Pitch Deck Hunt's or Crunchbase's" for names credited together."""
+    return ' or '.join(f"{n}'s" for n in run)
+
+
 def _credit_citations(sentence, name, sources, company, changes):
-    """Each citation group credited to `name` keeps only its refs; the rest are named under their own source."""
-    names = [re.escape(n) for n in sorted({s[0] for s in sources.values()}) if n and n != name]
-    others = re.compile(r'\b(?:' + '|'.join([_OTHER_SUBJECT] + names + ([re.escape(company)] if company else [])) + r')\b',
-                        re.I)
-    co_narrators = re.compile(r'\b(?:' + '|'.join(names) + r')\s*(?:,|\band\b|&|\bor\b)\s*$', re.I) if names else None
+    """
+    Each citation group credited to `name`, alone or named together with other narrators, keeps
+    only refs that one of them narrates; the rest are named under their own source.
+    """
+    narrators = {s[0] for s in sources.values() if s[0]}
+    joined = _joined_before(narrators - {name}, company)
     pos = 0
     while True:
         mention = re.compile(re.escape(name), re.I).search(sentence, pos)
@@ -812,75 +855,140 @@ def _credit_citations(sentence, name, sources, company, changes):
         pos = mention.end()
         if re.match(r"['’]s\b", sentence[mention.end():]) or re.search(r'\b(?:is|are)\s+per\s+$', sentence[:mention.start()]):
             continue                     # "Pitch Deck Hunt's ..." and "[S4] is per Crunchbase": this rule's own notes
-        group = _credited_group(sentence, mention, others, co_narrators)
+        run, run_end = _name_run(sentence, mention, narrators)
+        others = re.compile(r'\b(?:' + '|'.join([_OTHER_SUBJECT] + [re.escape(n) for n in sorted(narrators - set(run))] +
+                                                ([re.escape(company)] if company else [])) + r')\b', re.I)
+        group = _credited_group(sentence, mention.start(), run_end, others, joined)
         if not group:
             continue
+        label = _label(run)
         refs = [r for r in re.split(r'\s*[,;]\s*', group.group(1))]
-        wrong = [r for r in refs if r in sources and sources[r][0] != name]
-        if not wrong or sentence[group.end():].startswith(f" (not {name}'s:"):
+        wrong = [r for r in refs if r in sources and sources[r][0] not in run]
+        if not wrong or sentence[group.end():].startswith(f' (not {label}:'):
             continue
         keep = [r for r in refs if r not in wrong]
-        note = _provenance_note(wrong, sources, name, keep)
+        note = _provenance_note(wrong, sources, label, keep)
         cited = f'[{", ".join(keep)}]' if keep else group.group(0)
         sentence = f'{sentence[:group.start()]}{cited} ({note}){sentence[group.end():]}'
         pos = group.start() + len(cited) + len(note) + 3
-        changes.append(f'provenance:{name}')
+        changes.append(f'provenance:{" and ".join(run)}')
 
 
-def _role_phrase(name):
-    """ "<name> is the narrator of the funding and traction claims" / "<name> lists the funding figures"."""
+def _role_phrase(names):
+    """ "<name> is the narrator of the funding and traction claims" / "<name> and <name> list the funding
+    figures"; `who` holds the names."""
+    alternatives = _names_pattern(names)
     return re.compile(
-        rf'{re.escape(name)}\s+(?:(?:is|was|as|acts\s+as|being)\s+(?:the\s+|a\s+)?(?:narrator|source|reporter)\s+of|'
-        rf'(?:narrates|narrated|reports|reported|lists|listed))\s+(?:the\s+)?'
+        rf'\b(?P<who>(?:{alternatives})(?:{_NAME_JOIN}(?:{alternatives}))*)\s+'
+        rf'(?:(?:is|are|was|were|as|acts?\s+as|being)\s+(?:the\s+|a\s+)?(?:narrators?|sources?|reporters?)\s+of|'
+        rf'(?:narrates?|narrated|reports?|reported|lists?|listed))\s+(?:the\s+)?'
         rf'(?P<list>[a-z][a-z\s,-]*?)\s+(?P<noun>claims?|figures?|statements?|metrics?|data|numbers)\b', re.I)
 
 
-def _credit_kinds(sentence, name, sources, changes):
-    """The kinds of figure credited to `name` keep only the kinds it narrates; the company's own are removed."""
-    narrated = {kind for narrator, kind in sources.values() if narrator == name}
-    own = {kind for narrator, kind in sources.values() if not narrator and kind != 'profile'}
-    role = _role_phrase(name).search(sentence)
-    if not role:
+def _kind_of(word):
+    return next((k for k, p in _KIND_WORDS.items() if re.search(rf'\b(?:{p})\b', word, re.I)), None)
+
+
+def _credit_kinds(sentence, sources, company, changes):
+    """
+    The kinds of figure credited to narrators, alone or together, keep only the kinds one of them
+    narrates; the company's own are removed.
+    """
+    narrators = {s[0] for s in sources.values() if s[0]}
+    role = _role_phrase(narrators).search(sentence)
+    if not role or _joined_before(set(), company).search(sentence, max(0, role.start() - 80), role.start()):
         return sentence
+    canonical = {n.lower(): n for n in narrators}
+    run = [canonical[m.lower()] for m in re.findall(_names_pattern(narrators), role.group('who'), re.I)]
+    label = _label(run)
+    narrated = {kind for narrator, kind in sources.values() if narrator in run}
+    own = {kind for narrator, kind in sources.values() if not narrator and kind != 'profile'}
     words = [w for w in re.split(r'\s*(?:,\s*(?:and\s+)?|\s+and\s+|\s+or\s+)\s*', role.group('list')) if w]
-
-    def kind_of(word):
-        return next((k for k, p in _KIND_WORDS.items() if re.search(rf'\b(?:{p})\b', word, re.I)), None)
-
-    wrong = [w for w in words if kind_of(w) not in narrated and kind_of(w) in own]
+    wrong = [w for w in words if _kind_of(w) not in narrated and _kind_of(w) in own]
     if not wrong:
         return sentence
     kept = [w for w in words if w not in wrong]
     if kept:
         joined = kept[0] if len(kept) == 1 else ', '.join(kept[:-1]) + ' and ' + kept[-1]
         sentence = sentence[:role.start('list')] + joined + sentence[role.end('list'):]
-    elif not sentence[role.end():].startswith(f" (not {name}'s:"):
-        kinds = sorted({kind_of(w) for w in wrong})
-        sentence = (f"{sentence[:role.end()]} (not {name}'s: the company's own {' and '.join(kinds)} "
+    elif not sentence[role.end():].startswith(f' (not {label}:'):
+        kinds = sorted({_kind_of(w) for w in wrong})
+        sentence = (f"{sentence[:role.end()]} (not {label}: the company's own {' and '.join(kinds)} "
                     f"{role.group('noun')}){sentence[role.end():]}")
     else:
         return sentence
-    changes.append(f'provenance:{name}')
+    changes.append(f'provenance:{" and ".join(run)}')
+    return sentence
+
+
+def _same_phrase(names):
+    """ "the same figures as reported by <name> [refs]", "the same numbers as <name> [refs]"."""
+    alternatives = _names_pattern(names)
+    return re.compile(
+        rf'\b(?:the|those)\s+(?P<same>(?:same|identical)\s+(?P<noun>figures?|numbers?|amounts?|metrics?|claims?|'
+        rf'statements?|data)\s+(?P<as>as\s+)?)(?P<verb>(?:(?:reported|narrated|listed|cited|stated|published)\s+by|per)\s+)?'
+        rf'(?:the\s+)?(?:[\w-]+\s+){{0,3}}?(?P<who>(?:{alternatives})(?:{_NAME_JOIN}(?:{alternatives}))*)\b', re.I)
+
+
+def _same_figures(sentence, sources, figures, company, changes):
+    """
+    "[S1, S2] and the same figures as reported by Pitch Deck Hunt [C1]" holds only when the
+    narrators' own cited refs state every figure of the group it is equated with. Otherwise
+    the equation is dropped and the narrators' figures are named by their kind: "the funding
+    figure reported by Pitch Deck Hunt [C1]" (memo 96: the company's traction [S1, S2] is
+    not Pitch Deck Hunt's $23.1M raised [C1]). With none of the narrators' own refs cited,
+    nothing is the same: "the figures reported by". A ref outside the context is left as is.
+    """
+    narrators = {s[0] for s in sources.values() if s[0]}
+    same = _same_phrase(narrators).search(sentence)
+    if not same or (not same.group('as') and not same.group('verb')):
+        return sentence
+    canonical = {n.lower(): n for n in narrators}
+    run = [canonical[m.lower()] for m in re.findall(_names_pattern(narrators), same.group('who'), re.I)]
+    compared = list(_REF.finditer(sentence, 0, same.start()))
+    others = re.compile(r'\b(?:' + '|'.join([_OTHER_SUBJECT] + ([re.escape(company)] if company else [])) + r')\b', re.I)
+    credited = _REF.search(sentence, same.end())
+    if (not compared or not credited or credited.start() - same.end() > _CREDIT_GAP
+            or others.search(sentence, same.end(), credited.start())):
+        return sentence
+    cited = re.split(r'\s*[,;]\s*', credited.group(1))
+    own = [r for r in cited if r in sources and sources[r][0] in run]
+    equated = {figures[r] for r in re.split(r'\s*[,;]\s*', compared[-1].group(1)) if r in figures}
+    stated = {figures[r] for r in own}
+    if not equated or any(r not in sources for r in cited) or equated <= stated:
+        return sentence
+    kinds = list(dict.fromkeys(sources[r][1] for r in own))
+    noun = same.group('noun')
+    if noun.lower() != 'data':
+        noun = noun.rstrip('sS') + ('' if len(stated) == 1 else 's')
+    kind = ' and '.join(kinds) + ' ' if kinds and all(k in _KIND_WORDS for k in kinds) else ''
+    sentence = (f'{sentence[:same.start("same")]}{kind}{noun} {"" if same.group("verb") else "from "}'
+                f'{sentence[same.end("same"):]}')
+    changes.append(f'provenance:{" and ".join(run)}')
     return sentence
 
 
 def _narrator_provenance(sentence, facts, changes):
     """
-    A narrator is credited only with its own refs and kinds of figure (memo 96): "the same
-    figures as reported by Pitch Deck Hunt [C1, C2, C3], ... Pitch Deck Hunt is the narrator
-    of the funding and traction claims" credits the company's traction [C2, C3] to Pitch Deck
-    Hunt. Checked against each cited ref's own narrator, so no amount is needed. Questions
-    and requests are kept as asked.
+    A narrator is credited only with its own refs, kinds and figures (memo 96): "the
+    company's own deck statements [S1, S2] and the same figures as reported by Pitch Deck
+    Hunt [C1, C2, C3], ... Pitch Deck Hunt is the narrator of the funding and traction
+    claims" credits the company's traction [C2, C3] to Pitch Deck Hunt and equates it with
+    Pitch Deck Hunt's funding [C1]. Narrators named together are checked against their
+    combined refs. Checked against each cited ref's own metadata, so no amount is needed.
+    Questions and requests are kept as asked.
     """
     if not facts.ref_sources or _asks(sentence):
         return sentence
     sources = {ref: (narrator, kind) for ref, narrator, kind in facts.ref_sources}
-    for name in sorted({narrator for narrator, _ in sources.values() if narrator}):
-        if name.lower() not in sentence.lower():
-            continue
+    present = [n for n in sorted({narrator for narrator, _ in sources.values() if narrator})
+               if n.lower() in sentence.lower()]
+    if not present:
+        return sentence
+    for name in present:
         sentence = _credit_citations(sentence, name, sources, facts.company, changes)
-        sentence = _credit_kinds(sentence, name, sources, changes)
-    return sentence
+    sentence = _credit_kinds(sentence, sources, facts.company, changes)
+    return _same_figures(sentence, sources, dict(facts.ref_figures), facts.company, changes)
 
 
 def guard_funding_fidelity(text, facts):
