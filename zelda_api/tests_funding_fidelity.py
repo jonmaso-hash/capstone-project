@@ -1328,3 +1328,52 @@ class JointNarratorAndEquatedFigureTests(SimpleTestCase):
             for ordered in (items, list(reversed(items))):
                 with self.subTest(text=before):
                     self.assertEqual(both_guards(before, ordered), after)
+
+    def check_refs_kept(self, before, after):
+        self.check(before, after)
+        self.assertEqual(re.findall(r'[CSP]\d', after), re.findall(r'[CSP]\d', before))   # no ref added, lost or moved
+
+    def test_every_equation_in_a_sentence_is_checked(self):
+        # Review of 589917a: a supported first equation must not shield a false second one, and two false ones are
+        # both corrected in one pass (idempotent).
+        self.check_refs_kept(
+            'The funding [S3] and the same figures per Pitch Deck Hunt [C1], alongside the bots [S1] and the same '
+            'figures per Pitch Deck Hunt [S3], are unverified.',
+            'The funding [S3] and the same figures per Pitch Deck Hunt [C1], alongside the bots [S1] and the funding '
+            'figure per Pitch Deck Hunt [S3], are unverified.')
+        self.check_refs_kept(
+            'The bots [S1] and the same figures per Pitch Deck Hunt [C1], plus the messages [S2] and the same figures '
+            'per Pitch Deck Hunt [S3], are unverified.',
+            'The bots [S1] and the funding figure per Pitch Deck Hunt [C1], plus the messages [S2] and the funding '
+            'figure per Pitch Deck Hunt [S3], are unverified.')
+
+    def test_an_equation_after_a_note_is_not_compared_with_the_note(self):
+        # The guard's own note "([C2, C3] are ...)" is not the group a later equation is compared with.
+        self.check(
+            "The deck [S1, S2] and the same figures as reported by Pitch Deck Hunt [C1, C2, C3], and the same figures "
+            'per Pitch Deck Hunt [S3], are unverified.',
+            "The deck [S1, S2] and the funding figure reported by Pitch Deck Hunt [C1] ([C2, C3] are the company's own "
+            'traction statements), and the same figures per Pitch Deck Hunt [S3], are unverified.')
+
+    def test_shared_company_and_narrator_credit(self):
+        # Review of 589917a: the company named with the narrator shares the credit; its own refs count as stated.
+        items = self.items()
+        for text in (
+                'The combined bot and funding statements [S1, S3] are the same figures as reported by the company and '
+                'Pitch Deck Hunt [S1, S3].',
+                'The combined statements [S1, S3] are the same figures as reported by Pitch Deck Hunt and the company '
+                '[S1, S3].',
+                'The bots [S1] are the same figures as reported by ManyChat and Pitch Deck Hunt [S1, S3].',
+                'The company and Pitch Deck Hunt list the totals [S1, S3].'):
+            for ordered in (items, list(reversed(items))):
+                with self.subTest(text=text):
+                    self.assertEqual(both_guards(text, ordered), text)
+        # Unsupported shared credit: the messages are in neither's group; the group keeps both its kinds.
+        self.check_refs_kept(
+            'The messages [S2] are the same figures as reported by the company and Pitch Deck Hunt [S1, S3].',
+            'The messages [S2] are the traction and funding figures reported by the company and Pitch Deck Hunt '
+            '[S1, S3].')
+        self.check_refs_kept(
+            'The messages [S2] are the same figures as reported by Pitch Deck Hunt and the company [S1, S3].',
+            'The messages [S2] are the traction and funding figures reported by Pitch Deck Hunt and the company '
+            '[S1, S3].')

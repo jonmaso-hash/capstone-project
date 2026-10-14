@@ -930,6 +930,12 @@ def _same_phrase(names):
         rf'(?:the\s+)?(?:[\w-]+\s+){{0,3}}?(?P<who>(?:{alternatives})(?:{_NAME_JOIN}(?:{alternatives}))*)\b', re.I)
 
 
+def _is_note(sentence, group):
+    """A ref group inside a note this guard wrote: "([C2, C3] are the company's ...", "...: [S4] is per Crunchbase"."""
+    return (re.search(r'(?:\(|;\s|:\s)$', sentence[:group.start()]) is not None
+            and re.match(r'\s+(?:is|are)\b', sentence[group.end():]) is not None)
+
+
 def _same_figures(sentence, sources, figures, company, changes):
     """
     "[S1, S2] and the same figures as reported by Pitch Deck Hunt [C1]" holds only when the
@@ -938,34 +944,56 @@ def _same_figures(sentence, sources, figures, company, changes):
     figure reported by Pitch Deck Hunt [C1]" (memo 96: the company's traction [S1, S2] is
     not Pitch Deck Hunt's $23.1M raised [C1]). With none of the narrators' own refs cited,
     nothing is the same: "the figures reported by". A ref outside the context is left as is.
+
+    Every equation in the sentence is checked, each against the nearest group cited before
+    it and after the previous equation; this guard's own notes are never that group. The
+    company named together with the narrators ("reported by the company and Pitch Deck
+    Hunt") shares the credit: its own refs count as stated too.
     """
     narrators = {s[0] for s in sources.values() if s[0]}
-    same = _same_phrase(narrators).search(sentence)
-    if not same or (not same.group('as') and not same.group('verb')):
-        return sentence
+    phrase = _same_phrase(narrators)
     canonical = {n.lower(): n for n in narrators}
-    run = [canonical[m.lower()] for m in re.findall(_names_pattern(narrators), same.group('who'), re.I)]
-    compared = list(_REF.finditer(sentence, 0, same.start()))
+    subject = r'(?:the\s+company|the\s+deck' + (f'|{re.escape(company)}' if company else '') + r')'
+    shared_before = re.compile(subject + r'\s*(?:,|\band\b|&|\bor\b)\s*$', re.I)
+    shared_after = re.compile(_NAME_JOIN + subject + r'\b', re.I)
     others = re.compile(r'\b(?:' + '|'.join([_OTHER_SUBJECT] + ([re.escape(company)] if company else [])) + r')\b', re.I)
-    credited = _REF.search(sentence, same.end())
-    if (not compared or not credited or credited.start() - same.end() > _CREDIT_GAP
-            or others.search(sentence, same.end(), credited.start())):
-        return sentence
-    cited = re.split(r'\s*[,;]\s*', credited.group(1))
-    own = [r for r in cited if r in sources and sources[r][0] in run]
-    equated = {figures[r] for r in re.split(r'\s*[,;]\s*', compared[-1].group(1)) if r in figures}
-    stated = {figures[r] for r in own}
-    if not equated or any(r not in sources for r in cited) or equated <= stated:
-        return sentence
-    kinds = list(dict.fromkeys(sources[r][1] for r in own))
-    noun = same.group('noun')
-    if noun.lower() != 'data':
-        noun = noun.rstrip('sS') + ('' if len(stated) == 1 else 's')
-    kind = ' and '.join(kinds) + ' ' if kinds and all(k in _KIND_WORDS for k in kinds) else ''
-    sentence = (f'{sentence[:same.start("same")]}{kind}{noun} {"" if same.group("verb") else "from "}'
-                f'{sentence[same.end("same"):]}')
-    changes.append(f'provenance:{" and ".join(run)}')
-    return sentence
+    pos = floor = 0
+    while True:
+        same = phrase.search(sentence, pos)
+        if not same:
+            return sentence
+        pos = same.end()
+        if not same.group('as') and not same.group('verb'):
+            continue
+        run = [canonical[m.lower()] for m in re.findall(_names_pattern(narrators), same.group('who'), re.I)]
+        after = shared_after.match(sentence, same.end())
+        shared = bool(after or shared_before.search(sentence, same.end('same'), same.start('who')))
+        start = after.end() if after else same.end()
+        compared = [g for g in _REF.finditer(sentence, floor, same.start()) if not _is_note(sentence, g)]
+        credited = _REF.search(sentence, start)
+        if (not credited or credited.start() - start > _CREDIT_GAP
+                or others.search(sentence, start, credited.start())):
+            continue
+        floor = credited.end()
+        if not compared:
+            continue
+        owners = set(run) | ({''} if shared else set())
+        cited = re.split(r'\s*[,;]\s*', credited.group(1))
+        own = [r for r in cited if r in sources and sources[r][0] in owners]
+        equated = {figures[r] for r in re.split(r'\s*[,;]\s*', compared[-1].group(1)) if r in figures}
+        stated = {figures[r] for r in own}
+        if not equated or any(r not in sources for r in cited) or equated <= stated:
+            continue
+        kinds = list(dict.fromkeys(sources[r][1] for r in own))
+        noun = same.group('noun')
+        if noun.lower() != 'data':
+            noun = noun.rstrip('sS') + ('' if len(stated) == 1 else 's')
+        kind = ' and '.join(kinds) + ' ' if kinds and all(k in _KIND_WORDS for k in kinds) else ''
+        words = f'{kind}{noun} {"" if same.group("verb") else "from "}'
+        delta = len(words) - (same.end('same') - same.start('same'))
+        sentence = f'{sentence[:same.start("same")]}{words}{sentence[same.end("same"):]}'
+        pos, floor = pos + delta, floor + delta
+        changes.append(f'provenance:{" and ".join(run)}')
 
 
 def _narrator_provenance(sentence, facts, changes):
