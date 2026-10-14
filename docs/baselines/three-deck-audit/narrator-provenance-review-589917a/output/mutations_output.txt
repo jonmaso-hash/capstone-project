@@ -1,0 +1,70 @@
+# Mutations for the FF-405 review corrections (harness: mutate_np2.py.txt)
+# One mutation per run, in a fresh process; the file is restored in 'finally'; fingerprints checked after every group/run.
+# Code under test: working tree later committed as 589917a. Fingerprints: funding_fidelity.py d291828a17633fa3, views.py 1061e439239f3b98.
+
+## Run 1: background, four sequential groups (13:08-13:2x). Groups 1-3 completed. Group 4 was stopped by Claude Code
+## under system low memory after E3; E4's line below has no test result and is NOT counted. The watchdog logged no
+## python process over 1500 MB. Both files matched their fingerprints afterwards and no python process remained.
+## Run 1 test set: 63 tests (before the N5 regression was added).
+### group 1
+N1   RED (killed)  rule not applied | Ran 63 tests in 4.717s FAILED (failures=26)
+N2   RED (killed)  no ref is ever wrong | Ran 63 tests in 4.568s FAILED (failures=15)
+N3   RED (killed)  own notes / possessive not skipped | Ran 63 tests in 4.748s FAILED (failures=6)
+N5   SURVIVED      other subject in the gap ignored | Ran 63 tests in 4.657s OK
+N6   RED (killed)  citation before the narrator ignored | Ran 63 tests in 4.736s FAILED (failures=2)
+N7   RED (killed)  kinds phrase not checked | Ran 63 tests in 4.932s FAILED (failures=12)
+N8   RED (killed)  kinds dropped without company evidence | Ran 63 tests in 4.955s FAILED (failures=1)
+N9   RED (killed)  questions rewritten | Ran 63 tests in 5.072s FAILED (failures=4)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': 'd291828a17633fa3', 'zelda_api/views.py': '1061e439239f3b98'}
+### group 2
+N10  RED (killed)  "and" ends the credited clause | Ran 63 tests in 4.727s FAILED (failures=3)
+N11  RED (killed)  no kind mapping | Ran 63 tests in 4.760s FAILED (failures=12)
+N12  RED (killed)  "not X's" prefix always | Ran 63 tests in 4.670s FAILED (failures=8)
+N13  RED (killed)  profile refs counted as the company's | Ran 63 tests in 5.008s FAILED (failures=3)
+N14  RED (killed)  citation note idempotence removed | Ran 63 tests in 4.548s FAILED (failures=4)
+N15  RED (killed)  no credit gap | Ran 63 tests in 4.693s FAILED (failures=17)
+N16  RED (killed)  kinds note idempotence removed | Ran 63 tests in 4.857s FAILED (failures=1)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': 'd291828a17633fa3', 'zelda_api/views.py': '1061e439239f3b98'}
+### group 3
+J1   RED (killed)  joint names bypass the check (the reviewed behaviour) | Ran 63 tests in 4.804s FAILED (failures=4)
+J2   RED (killed)  joint group checked against the first name only | Ran 63 tests in 4.834s FAILED (failures=10)
+J3   RED (killed)  no name run: only the first name is read | Ran 63 tests in 5.253s FAILED (failures=5)
+J4   RED (killed)  a later name in a run is checked on its own | Ran 63 tests in 4.841s FAILED (failures=10)
+J5   RED (killed)  company named with a narrator not shared | Ran 63 tests in 4.752s FAILED (failures=2)
+J6   RED (killed)  joint kinds read from the first name only | Ran 63 tests in 4.885s FAILED (failures=4)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': 'd291828a17633fa3', 'zelda_api/views.py': '1061e439239f3b98'}
+### group 4
+E1   RED (killed)  equation never checked (the reviewed behaviour) | Ran 63 tests in 4.772s FAILED (failures=10)
+E2   RED (killed)  equation always kept | Ran 63 tests in 4.640s FAILED (failures=10)
+E3   RED (killed)  equation always dropped | Ran 63 tests in 4.892s FAILED (failures=2)
+E4   RED (killed)  equated against all cited figures, not the narrators' own | 
+     ^ INTERRUPTED: the test subprocess was stopped under low memory (non-zero exit, no 'Ran' line). Not counted; see run 2.
+
+## Run 2: foreground, one mutation at a time, free RAM checked before each (1.6-1.9 GB free).
+## N5 survived run 1; a regression for a citation after another subject was added, and N5 rerun. 64 tests.
+### N5 (free RAM and file hashes after the run are in the session log)
+N5   RED (killed)  other subject in the gap ignored | Ran 64 tests in 21.070s FAILED (failures=1)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': 'd291828a17633fa3', 'zelda_api/views.py': '1061e439239f3b98'}
+### E4 (free RAM and file hashes after the run are in the session log)
+E4   RED (killed)  equated against all cited figures, not the narrators' own | Ran 64 tests in 5.213s FAILED (failures=1)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': 'd291828a17633fa3', 'zelda_api/views.py': '1061e439239f3b98'}
+### E5 (free RAM and file hashes after the run are in the session log)
+E5   RED (killed)  noun always plural | Ran 64 tests in 5.178s FAILED (failures=7)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': 'd291828a17633fa3', 'zelda_api/views.py': '1061e439239f3b98'}
+### E6 (free RAM and file hashes after the run are in the session log)
+E6   RED (killed)  no "from" without a verb | Ran 64 tests in 5.410s FAILED (failures=1)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': 'd291828a17633fa3', 'zelda_api/views.py': '1061e439239f3b98'}
+### E7 (free RAM and file hashes after the run are in the session log)
+E7   RED (killed)  no figures recorded | Ran 64 tests in 5.011s FAILED (failures=3, errors=8)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': 'd291828a17633fa3', 'zelda_api/views.py': '1061e439239f3b98'}
+### E8 (free RAM and file hashes after the run are in the session log)
+E8   RED (killed)  a ref outside the context treated as known | Ran 64 tests in 5.323s FAILED (failures=1)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': 'd291828a17633fa3', 'zelda_api/views.py': '1061e439239f3b98'}
+### M1 (free RAM and file hashes after the run are in the session log)
+M1   RED (killed)  Markdown without charset | Ran 41 tests in 3.735s FAILED (failures=3)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': 'd291828a17633fa3', 'zelda_api/views.py': '1061e439239f3b98'}
+### M2 (free RAM and file hashes after the run are in the session log)
+M2   RED (killed)  Markdown as Latin-1 | Ran 41 tests in 3.870s FAILED (errors=3)
+fingerprints unchanged: True {'zelda_api/funding_fidelity.py': 'd291828a17633fa3', 'zelda_api/views.py': '1061e439239f3b98'}
+
+## Completed runs: 31 mutations, all RED in their counted run (N5 RED after the new regression; E4 from run 2).

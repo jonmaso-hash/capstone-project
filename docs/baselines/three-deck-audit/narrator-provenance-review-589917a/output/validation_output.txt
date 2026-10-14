@@ -1,0 +1,30 @@
+# Validation at 589917a (the committed corrections; identical to the tested working tree)
+# Sequential, one batch at a time, CI env (scratchpad t.sh: DEBUG=True, memory broker, --parallel 1, no bytecode).
+# Memory watchdog (tools/memwatch.ps1, 1500 MB threshold) running; it logged no process over the threshold.
+
+## Batch 1
+Ran 256 tests in 26.381s
+OK
+Found 256 test(s).
+System check identified no issues (0 silenced).
+
+## Batch 2
+Found 430 test(s).
+System check identified no issues (0 silenced).
+Ran 430 tests in 113.792s
+OK
+
+## Batch 3
+Found 87 test(s).
+System check identified no issues (0 silenced).
+Ran 87 tests in 32.826s
+OK
+
+## manage.py check; makemigrations --check --dry-run
+System check identified no issues (0 silenced).
+No changes detected
+
+Batch 1: zelda_api.tests_funding_fidelity tests_claim_context_dates tests_grounded_context tests_memo_persistence tests_memo_list_rendering tests_claim_counts_per_claim tests_canonical_presentation tests_no_investment_advice tests_private_company_presentation tests_source_naming tests_verification_grounding, pages.tests_ci_manifest
+Batch 2: zelda_api.tests
+Batch 3: zelda_api.tests_authorization tests_assistant_panel_escaping tests_library tests_terminal_notifications tests_valuation_paywall, matchmaking.tests_company_overview_identity
+Total: 256 + 430 + 87 = 773 tests OK.

@@ -1,0 +1,18 @@
+sent payload == 09a rebuilt: True | == test fixture memo96_payload.json: True
+company: ManyChat | items: ['C1', 'C2', 'C3', 'S1', 'S2', 'S3', 'P1', 'P2']
+  C1: claim 'funding_raised' '$23.1M raised' narrator='Pitch Deck Hunt'
+  C2: claim 'usage' '500M messages' narrator=''
+  C3: claim 'usage' '140 000+ bots' narrator=''
+  S1: statement 'Traction' '140 000+ bots' narrator=''
+  S2: statement 'Traction' '500M messages' narrator=''
+  S3: statement 'Funding' '$23.1M raised' narrator='Pitch Deck Hunt'
+  P1: profile 'Stage (profile)' 'Stage (profile): Series A' narrator=''
+  P2: profile 'Sector (profile)' 'Sector (profile): Software' narrator=''
+item order reversed gives the same memo: True
+idempotent in every section: True
+
+== zelda_advantage  ['provenance:Pitch Deck Hunt', 'provenance:Pitch Deck Hunt', 'provenance:Pitch Deck Hunt']
+STORED: The verification pass distinguished between the company's own deck statements [S1, S2] and the same figures as reported by the third-party aggregator Pitch Deck Hunt [C1, C2, C3], correctly flagging that Pitch Deck Hunt is the narrator of the funding and traction claims rather than an independent validator — a distinction a plain AI summary of the same deck would likely collapse into a single 'the company states' attribution.
+REPLAY: The verification pass distinguished between the company's own deck statements [S1, S2] and the funding figure reported by the third-party aggregator Pitch Deck Hunt [C1] ([C2, C3] are the company's own traction statements), correctly flagging that Pitch Deck Hunt is the narrator of the funding claims rather than an independent validator — a distinction a plain AI summary of the same deck would likely collapse into a single 'the company states' attribution.
+
+15 of 16 sections equal stored memo 96; 1 differ (evidence_level is not a text section)
