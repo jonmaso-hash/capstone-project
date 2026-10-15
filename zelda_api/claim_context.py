@@ -71,7 +71,10 @@ def dated_heading(span, chunk_text):
     span = _norm(span)
     if not span:
         return ''
-    lines = (chunk_text or '').splitlines()
+    # Read the chunk as the analyzer did: a usage figure split across two lines
+    # under the narrow join rule is one figure line here too (RA-109).
+    from .usage_basis import join_split_usage_lines
+    lines = join_split_usage_lines((chunk_text or '').replace('\r\n', '\n')).splitlines()
     index = next((i for i, line in enumerate(lines) if span in _norm(line)), None)
     if index is None or not _figure_line(_norm(lines[index])):
         return ''

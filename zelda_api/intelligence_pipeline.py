@@ -18,7 +18,8 @@ from .utils import strip_page_markers
 from .embeddings import embedding_engine
 import json
 from django.conf import settings
-from .financial_metrics import MONEY_FIGURE, currency_amount
+from .financial_metrics import MONEY_FIGURE, currency_amount, usage_basis
+from .usage_basis import join_split_usage_lines
 
 logger = logging.getLogger(__name__)
 
@@ -603,6 +604,16 @@ class ZeldaIntelligencePipelineV2:
             if category in ('Revenue', 'Funding', 'Market'):
                 value, currency = currency_amount(text)
                 return (value, currency) if value is not None else None
+            if category == 'Traction':
+                # A usage figure is the same figure only when it counts the same
+                # noun on the same basis: "500M messages" and "500M
+                # messages/month" are two facts, and so are "500M bots" and
+                # "500M messages" (RA-109 / I1). Customer counts keep the
+                # number-only key below.
+                basis = usage_basis(text)
+                if basis is not None:
+                    value = _extract_numeric_value(text)
+                    return ('usage', value, basis.noun, basis.rate) if value is not None else None
             return _extract_numeric_value(text)
 
         selected = [best_insight]
@@ -650,6 +661,15 @@ class ZeldaIntelligencePipelineV2:
         does not depend on it.
         """
         keyword_list = keywords.split()
+        joined = ()
+        if category == 'Traction':
+            # A usage figure and its noun/rate on adjacent lines of this chunk
+            # ("500M" / "messages/month") become one line, under the narrow
+            # rules in zelda_api/usage_basis.py; any block that could belong to
+            # another party is left as it was (RA-109 / I1).
+            original = set(text.split('\n'))
+            text = join_split_usage_lines(text)
+            joined = {line for line in text.split('\n') if line not in original}
         sentences = re.split(r'(?<!\d)[.!?](?!\d)|\n', text)
 
         best_match = None
@@ -711,6 +731,7 @@ class ZeldaIntelligencePipelineV2:
                     collect.append((value[:500], confidence, {
                         'rule': 'primary_match', 'matched_keywords': matched_keywords,
                         'matched_sentence': clean_sentence,
+                        **({'joined_lines': True} if clean_sentence in joined else {}),
                     }))
 
             if confidence > best_confidence or (
@@ -730,6 +751,7 @@ class ZeldaIntelligencePipelineV2:
                 best_match = cleaned_value[:500]
                 best_provenance = {
                     'rule': 'primary_match', 'matched_keywords': matched_keywords, 'matched_sentence': clean_sentence,
+                    **({'joined_lines': True} if clean_sentence in joined else {}),
                 }
 
         if not best_match:
@@ -1722,6 +1744,7 @@ class ZeldaIntelligencePipelineV2:
         client = background_anthropic_client()
 
         evidence_json = json.dumps(context.to_prompt_payload(), indent=2, default=str)
+        notes_line = ' "consistency_notes" follow rule 11.' if context.consistency_notes else ''
 
         system_prompt = """You are a senior analyst at a top-tier venture capital firm preparing
     an institutional-quality investment memo for a partner meeting.
@@ -1779,13 +1802,20 @@ class ZeldaIntelligencePipelineV2:
        Dated cash and burn give runway as of their date, never current runway.
        Profile items
        (P...) are the current profile and undated: never date them with a slide's
-       date (not "was Series A as of April 2016")."""
+       date (not "was Series A as of April 2016").
+    11. Consistency notes. "consistency_notes", when present, are internal
+       clarification findings between the document's own items, e.g. the same
+       figure stated with no interval in one place and per month in another.
+       State each as a question needing clarification and cite its refs. A note is
+       not a contradiction, not a verification result and not an error: never
+       write that one figure is wrong or that both cannot be true, and never
+       convert a total into a rate or a rate into a total."""
 
         user_prompt = f"""Prepare an investment memo for {context.company}.
 
     ## EVIDENCE (the only material you may use)
     Each item: ref, kind (claim | statement | profile), status, sources, and for checked
-    claims the external evidence Zelda stored. Verification of this document: {context.verification}.
+    claims the external evidence Zelda stored.{notes_line} Verification of this document: {context.verification}.
     {evidence_json}
 
     ---

@@ -10,8 +10,9 @@ from django.utils import timezone
 from .vector_models import DocumentSource
 from .truth_delta_engine import TruthDeltaEngine
 from .financial_metrics import (
-    MONEY_CATEGORIES, claim_is_admissible, currency_amount, usage_unit,
+    MONEY_CATEGORIES, claim_is_admissible, currency_amount, usage_basis, usage_unit,
 )
+from .usage_basis import refused_split
 from .truth_delta_models import ClaimedDatapoint
 from .claim_attribution import claim_ownership, company_names, source_sentence
 from .claim_periods import claim_period
@@ -111,12 +112,16 @@ def extract_claims_from_insights(document_id: int):
             text = insight.insight_text or ''
             # A Traction figure that counts bots or messages is a usage figure,
             # not a customer count. Its own noun decides, and is kept as the
-            # unit so two usage claims never read as the same quantity.
+            # unit so two usage claims never read as the same quantity -- with
+            # its basis, so a monthly rate stays a rate ("messages/month") and
+            # never reads as slide 10's bare count (RA-109 / I1). A denominator
+            # the basis cannot represent leaves the unit empty and the
+            # admissibility check below refuses the claim.
             unit = insight.metric_unit or ''
             if matched_category == 'customers':
-                counted = usage_unit(text)
-                if counted:
-                    matched_category, unit = 'usage', counted
+                if usage_unit(text):
+                    basis = usage_basis(text)
+                    matched_category, unit = 'usage', (basis.label if basis else '')
             if not claim_is_admissible(matched_category, text):
                 logger.debug(
                     "[Truth Delta] %s insight is not admissible evidence for %s: %r",
@@ -128,7 +133,18 @@ def extract_claims_from_insights(document_id: int):
             # Ownership is read from the whole source sentence, because the
             # extracted span can drop the possessive that names the owner.
             source_chunk_obj = insight.source_chunks.first()
-            sentence = source_sentence(text, source_chunk_obj.raw_text if source_chunk_obj else '')
+            chunk_text = source_chunk_obj.raw_text if source_chunk_obj else ''
+            sentence = source_sentence(text, chunk_text)
+            # A usage span that exists only by joining lines the join rule
+            # refused -- under another organisation's label, or with prose or a
+            # blank line between them -- has no bounded source sentence whose
+            # owner could be read. Refused, never stored as implied.
+            if matched_category == 'usage':
+                refused = refused_split(text, chunk_text)
+                if refused is not None:
+                    logger.debug("[Truth Delta] usage span %r joins lines that were refused (%s)",
+                                 text[:80], refused.reason)
+                    continue
             ownership, owner = claim_ownership(sentence, names)
             if ownership is None:
                 logger.debug("[Truth Delta] %s figure belongs to %r, not the company: %r",

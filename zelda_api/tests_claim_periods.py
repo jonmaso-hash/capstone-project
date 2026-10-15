@@ -148,15 +148,20 @@ class FrozenDeckPeriodTests(TestCase):
     """Real extraction over the frozen decks: no period attaches, by design (B2)."""
 
     def test_frozen_decks_attach_no_periods(self):
-        from .tests_claim_extraction_recall import FrozenDeckExtractionTests
+        from .tests_claim_extraction_recall import FrozenDeckExtractionTests, added_claims
         harness = FrozenDeckExtractionTests()
         harness.setUp()
         for name, key in (('manychat', 'manychat'), ('ben_jerrys', 'ben_jerrys')):
             spec = EXPECTED['frozen_decks'][key]
+            # RA-109 adds slide 12's '500M messages/month', whose own text states a
+            # monthly basis (period_kind 'monthly', no period end): frozen + added.
+            added = added_claims(name)
             with self.subTest(deck=name):
                 _, claims = harness.extract(name)
-                self.assertEqual(len(claims), spec['claims'])
-                self.assertEqual(sum(bool(c.period_kind) for c in claims), spec['with_period'], spec['why'])
+                self.assertEqual(len(claims), spec['claims'] + len(added))
+                self.assertEqual(sum(bool(c.period_kind) for c in claims),
+                                 spec['with_period'] + sum(bool(a.get('period_kind')) for a in added), spec['why'])
+                self.assertFalse([c for c in claims if c.period_end], 'no claim acquires an as-of date')
 
     def test_a_same_sentence_period_reaches_the_stored_claim(self):
         from unittest import mock

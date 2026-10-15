@@ -36,6 +36,21 @@ def load_fixture(name):
         return json.load(handle)
 
 
+def added_claims(name):
+    """Claims a later, separately recorded decision added to a frozen deck's expectation
+    (RA-109: manychat_ra109.json). The frozen fixture itself is never edited."""
+    path = FIXTURES / f'{name}_ra109.json'
+    if not path.exists():
+        return []
+    with open(path, encoding='utf-8') as handle:
+        return json.load(handle)['added_claims']
+
+
+def current_expected_claims(name):
+    """What extraction yields today: the frozen expectation plus any additive decision."""
+    return load_fixture(name)['expected_claims'] + added_claims(name)
+
+
 def sentences(text):
     """The sentence units the analyzer reads: the same split as _smart_extract."""
     return [s.strip() for s in re.split(r'(?<!\d)[.!?](?!\d)|\n', text) if s.strip()]
@@ -70,6 +85,7 @@ class FrozenDeckExtractionTests(TestCase):
         from zelda_api.vector_models import DocumentChunk
 
         fixture = load_fixture(name)
+        fixture['name'] = name          # in memory only; the file is never written
         doc = self.DocumentSource.objects.create(
             filename=f'{name}.pptx', source_entity=name, uploaded_by=self.user,
             document_type='pitch_deck', status='analyzing')
@@ -90,19 +106,30 @@ class FrozenDeckExtractionTests(TestCase):
         return (claim.category, claim.claimed_value_numeric, claim.unit, claim.page_number, claim.claimed_value)
 
     def assert_exactly_the_frozen_claims(self, name):
+        """The frozen expectation plus any additive decision recorded beside it (RA-109)."""
         fixture, claims = self.extract(name)
         expected = sorted(
             (e['category'], e['value'], e['unit'], e['page'], e['claimed_value'])
-            for e in fixture['expected_claims'])
+            for e in current_expected_claims(name))
         self.assertEqual(sorted(self.row(c) for c in claims), expected)
         return fixture, claims
 
     def assert_sources(self, fixture, claims):
         """Each claim's text is a span of its declared source sentence, on its own slide."""
+        from .usage_basis import join_split_usage_lines
         by_page = {c['page_number']: c['raw_text'] for c in fixture['chunks']}
-        for spec in fixture['expected_claims']:
+        added = added_claims(fixture['name'])
+        for spec in fixture['expected_claims'] + added:
             claim = next(c for c in claims if c.claimed_value == spec['claimed_value'])
-            self.assertIn(spec['source_sentence'], sentences(by_page[spec['page']]), spec)
+            if spec in added:
+                # A joined figure: its two source lines are adjacent on its slide,
+                # and the sentence exists only in the analyzer's joined view.
+                lines = by_page[spec['page']].split('\n')
+                first = lines.index(spec['source_lines'][0])
+                self.assertEqual(lines[first + 1], spec['source_lines'][1], spec)
+                self.assertIn(spec['source_sentence'], sentences(join_split_usage_lines(by_page[spec['page']])), spec)
+            else:
+                self.assertIn(spec['source_sentence'], sentences(by_page[spec['page']]), spec)
             self.assertIn(claim.claimed_value, spec['source_sentence'], spec)
             self.assertIn(claim.text_excerpt, spec['source_sentence'], spec)
             self.assertEqual(claim.category, spec['category'], spec)
@@ -132,7 +159,8 @@ class FrozenDeckExtractionTests(TestCase):
     def test_bots_and_messages_are_never_customers(self):
         _, claims = self.extract('manychat')
         usage = [c for c in claims if c.category == 'usage']
-        self.assertEqual(sorted(c.unit for c in usage), ['bots', 'messages'])
+        # 'messages/month' is slide 12's rate, added by RA-109 (data/claim_recall/manychat_ra109.json).
+        self.assertEqual(sorted(c.unit for c in usage), ['bots', 'messages', 'messages/month'])
         self.assertFalse([c for c in claims if c.category == 'customers'])
 
     # --- Ben & Jerry's ---------------------------------------------------

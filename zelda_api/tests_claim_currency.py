@@ -86,21 +86,28 @@ class CurrencyExtractionTests(TestCase):
         self.assertEqual(money, {'revenue': (2e6, 'GBP'), 'market_size': (9e6, 'EUR')})
 
     def test_frozen_decks_keep_their_claims_categories_source_spans_and_negatives(self):
-        from .tests_claim_extraction_recall import load_fixture, FrozenDeckExtractionTests
+        from .tests_claim_extraction_recall import added_claims, current_expected_claims, FrozenDeckExtractionTests
         harness = FrozenDeckExtractionTests()
         harness.user, harness.DocumentSource = self.owner, DocumentSource
         for name, spec in EXPECTED['decks'].items():
             with self.subTest(deck=name):
                 fixture, claims = harness.extract(name)
-                self.assertEqual(len(claims), spec['claim_count'])
+                # The frozen count plus RA-109's additive claims (slide 12's message rate).
+                added = added_claims(name)
+                self.assertEqual(len(claims), spec['claim_count'] + len(added))
                 actual = sorted((c.category, c.claimed_value_numeric, c.unit, c.page_number, c.claimed_value)
                                 for c in claims)
                 expected = sorted((c['category'], c['value'], c['unit'], c['page'], c['claimed_value'])
-                                  for c in load_fixture(name)['expected_claims'])
+                                  for c in current_expected_claims(name))
                 self.assertEqual(actual, expected)
+                added_values = {a['claimed_value'] for a in added}
                 for c in claims:
                     self.assertEqual(getattr(c, 'currency', None), '')
-                    self.assertEqual(c.time_period, '')
+                    if c.claimed_value not in added_values:
+                        self.assertEqual(c.time_period, '')
+                for a in added:
+                    rate = next(c for c in claims if c.claimed_value == a['claimed_value'])
+                    self.assertEqual((rate.period_kind, rate.period_end), (a['period_kind'], None))
                 harness.assert_sources(fixture, claims)
                 harness.assert_negatives(fixture, claims)
 

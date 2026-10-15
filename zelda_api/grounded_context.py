@@ -143,6 +143,11 @@ class GroundedContext:
     verification: str              # 'complete' | 'failed' | 'no_claims' | 'not_run'
     analysis_confidence: float
     insight_ids: Tuple[int, ...] = field(default=())
+    # Internal clarification findings between the document's own admitted
+    # claims (RA-109: "500M messages" vs "500M messages/month"). Each is
+    # (kind, refs, note) built from claim values, units and pages -- never
+    # source text -- and is not a verification state.
+    consistency_notes: Tuple[Tuple[str, Tuple[str, ...], str], ...] = field(default=())
 
     @property
     def citations_count(self):
@@ -198,6 +203,7 @@ class GroundedContext:
             verification=verification,
             analysis_confidence=compute_overall_confidence(insights),
             insight_ids=tuple(i.id for i in insights[:MAX_STATEMENTS]),
+            consistency_notes=_consistency_notes(claims, items),
         )
 
     # -- what the model receives ------------------------------------------------
@@ -237,7 +243,20 @@ class GroundedContext:
                 for item in self.items
             ],
             'gaps': list(self.gaps),
+            # Only when there is one, so a document without a basis question
+            # sends exactly the payload it sent before RA-109.
+            **({'consistency_notes': [{'kind': kind, 'refs': list(refs), 'note': note}
+                                      for kind, refs, note in self.consistency_notes]}
+               if self.consistency_notes else {}),
         }
+
+
+def _consistency_notes(claims, items):
+    """Basis notes between admitted usage claims, cited by the refs the memo already uses."""
+    from .usage_basis import basis_notes
+    refs = {item.claim_id: item.ref for item in items if item.kind == 'claim'}
+    return tuple((note.kind, tuple(refs[i] for i in note.claim_ids), note.text)
+                 for note in basis_notes(claims) if all(i in refs for i in note.claim_ids))
 
 
 def _excerpt(text):
