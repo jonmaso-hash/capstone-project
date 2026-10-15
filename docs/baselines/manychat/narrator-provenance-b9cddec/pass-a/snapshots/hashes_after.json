@@ -1,0 +1,39 @@
+{
+ "phase": "after",
+ "at": "2026-10-15T03:52:15+00:00",
+ "dbs": {
+  "original_dev_db": {
+   "path": "C:\\Users\\jonathan\\Desktop\\KCV\\db.sqlite3",
+   "exists": true,
+   "bytes": 9121792,
+   "sha256": "5a0b8c1c2fb180ddcd5a75c34e2bb25ead369935ef6a4db1b0c7a0dbdfd7e9a2",
+   "sidecars": []
+  },
+  "memo94_copy_mcpost": {
+   "path": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV\\8edb8be9-5c85-488f-a1b8-020dd6a9a3c0\\scratchpad\\mcpost\\db_postfix_copy.sqlite3",
+   "exists": true,
+   "bytes": 9121792,
+   "sha256": "445a2f19cdc6f82ebd1529c10d67bc87c40c656f4d276f37a4aa25153b566415",
+   "sidecars": []
+  },
+  "memo95_copy_mcff": {
+   "path": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV\\8edb8be9-5c85-488f-a1b8-020dd6a9a3c0\\scratchpad\\mcff\\db_ff_copy.sqlite3",
+   "exists": true,
+   "bytes": 9121792,
+   "sha256": "2c5f58649126f96964d072affa1e1e6d00fae3bec201fdc4cb5959f6aae1702e",
+   "sidecars": []
+  },
+  "memo96_copy_mcff3": {
+   "path": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV\\8edb8be9-5c85-488f-a1b8-020dd6a9a3c0\\scratchpad\\mcff3\\db_ff3_copy.sqlite3",
+   "exists": true,
+   "bytes": 9121792,
+   "sha256": "3ce44d778f7b230221d99b5fe23305a9dacb17d8cb15de014b10f58734982fd4",
+   "sidecars": []
+  }
+ },
+ "deck": {
+  "path": "C:\\Users\\jonathan\\Downloads\\manychat_series_a_audit_deck.pptx",
+  "bytes": 175622,
+  "sha256": "be7a7171bbc84b9895a45adfbc41f2533f3d23b3a4a561c82a8d9de6b94f3ef1"
+ }
+}

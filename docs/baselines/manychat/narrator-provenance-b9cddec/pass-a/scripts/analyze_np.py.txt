@@ -1,0 +1,135 @@
+"""Model input/output vs the stored memo, section by section (run via run_np.py script; reads only).
+Adapted from the 9b6d215 run's analyze_memo3.py. Added for this run: item-order stability (facts built from
+the reversed item list), idempotence (a second pass of both guards over the stored text), citation
+preservation (refs in order, model reply vs stored), and the rule family behind each guard change.
+
+Replay = the pipeline's own post-generation steps in order (intelligence_pipeline._generate_memo):
+memo_text, guard_time_wording with time_wording_allowed for dated items, then guard_funding_fidelity with
+funding_facts(context.items, context.company). Usage: analyze_np.py <doc_id> <evidence dir>"""
+import json, os, re, sys, difflib
+HERE = r'C:\Users\jonathan\AppData\Local\Temp\claude\C--Users-jonathan-Desktop-KCV-np\c8a313d5-81e1-402a-b7da-9205b6f20fab\scratchpad\np'
+DOC, EV = int(sys.argv[1]), sys.argv[2]
+from zelda_api.memo_lists import memo_text
+from zelda_api.claim_context import guard_time_wording
+from zelda_api.funding_fidelity import funding_facts, guard_funding_fidelity
+from zelda_api.grounded_context import GroundedContext
+from zelda_api.principal import ORIGIN_TASK, Principal
+from zelda_api.vector_models import DocumentSource, IntelligenceMemo
+
+calls = [json.loads(l) for l in open(os.path.join(HERE, 'model_calls.jsonl'), encoding='utf-8') if l.strip()]
+memo_calls = [c for c in calls if 'investment memo' in json.dumps(c['request'].get('messages', ''))]
+assert len(memo_calls) == 1, len(memo_calls)
+call = memo_calls[0]
+call['note'] = ('Recorded in-process by the run wrapper (anthropic Messages.create wrapped; no repo change). Request kwargs '
+                'exactly as sent; the API key is on the client, not in kwargs.')
+with open(os.path.join(EV, '09b_model_call.json'), 'w', encoding='utf-8', newline='\n') as f:
+    json.dump(call, f, indent=1, ensure_ascii=False)
+user = call['request']['messages'][0]['content']
+start = user.find('{', user.find('## EVIDENCE'))
+sent, _ = json.JSONDecoder().raw_decode(user[start:])
+rebuilt = json.load(open(os.path.join(EV, '09a_grounded_context_rebuilt.json'), encoding='utf-8'))['payload']
+blob = json.dumps(call['request'], ensure_ascii=False)
+
+doc = DocumentSource.objects.get(id=DOC)
+principal = Principal.for_user(doc.uploaded_by, ORIGIN_TASK, label='mcnp.analyze (read-only rebuild)')
+ctx = GroundedContext.build(principal, doc)
+allowed = {item.ref: item.time_wording_allowed for item in ctx.items if item.dated}
+facts = funding_facts(ctx.items, ctx.company)
+facts_rev = funding_facts(list(reversed(list(ctx.items))), ctx.company)
+
+
+def plain(v):
+    if isinstance(v, (set, frozenset)):
+        return sorted(plain(x) for x in v)
+    if isinstance(v, (list, tuple)):
+        return [plain(x) for x in v]
+    return v
+
+
+def replay(text, f):
+    after_time, removed = guard_time_wording(text, allowed)
+    out, fid = guard_funding_fidelity(after_time, f)
+    return out, removed, fid
+
+
+REF = re.compile(r'\[([A-Z]\d+(?:\s*,\s*[A-Z]\d+)*)\]')
+refs = lambda t: [r.strip() for g in REF.findall(t or '') for r in g.split(',')]
+groups = lambda t: ['[' + g + ']' for g in REF.findall(t or '')]
+family = lambda c: c.split(':', 1)[0]
+
+report = {
+    'memo_generation_principal': {'user_id': doc.uploaded_by_id, 'origin': 'ORIGIN_TASK',
+                                  'as_in': 'zelda_api/tasks.py:244 Principal.for_user(document.uploaded_by, ORIGIN_TASK)'},
+    'model': call['request'].get('model'), 'response_model': call['response']['model'],
+    'stop_reason': call['response']['stop_reason'], 'usage': call['response']['usage'],
+    'params': {k: v for k, v in call['request'].items() if k not in ('system', 'messages')},
+    'prompt_rule_10_present': '10. Funding and the profile.' in call['request']['system'],
+    'prompt_dated_runway_rule_present': 'never current runway' in call['request']['system'],
+    'sent_payload_equals_dump_rebuilt': sent == rebuilt,
+    'sent_payload_equals_fresh_build_for_generation_principal': ctx.to_prompt_payload() == sent,
+    'sent_items': [{k: i.get(k) for k in ('ref', 'kind', 'category', 'statement', 'status', 'as_of', 'narrator',
+                                          'source_context', 'dates_not_as_of')} for i in sent['items']],
+    'time_wording_allowed_for_dated_items': {k: sorted(v) for k, v in allowed.items()},
+    'funding_facts': {k: plain(v) for k, v in vars(facts).items()} if hasattr(facts, '__dict__') else repr(facts),
+    'funding_facts_equal_with_reversed_items': facts == facts_rev,
+    'absent_from_model_input': {s: (s not in blob) for s in [
+        'Series A deck with', 'SlideShare deck has', 'CANARY', '163000000', '163,000,000', 'Bessemer', 'TechCrunch',
+        'Summit Partners', '2019', '$18M', '$140M', 'STALENESS', 'ATTRIBUTION ERROR', 'INVENTED IDENTITY', 'ANSWER_KEY',
+        'Mike Yan', 'Anton Gorin', 'npmc', 'Rerun Owner', 'Disposable profile']},
+}
+raw_text = call['response']['text'][0]
+raw = json.loads(re.search(r'\{.*\}', raw_text, re.S).group(0))
+stored = IntelligenceMemo.objects.values().get(document_id=DOC)
+sections, changes = {}, {}
+for key, value in raw.items():
+    if key not in stored:
+        sections[key] = {'not_a_stored_field': True}
+        continue
+    normalized = memo_text(value) if isinstance(value, (str, list, tuple, dict)) else value
+    rep, removed, fid = replay(normalized, facts)
+    rep_rev, _, fid_rev = replay(normalized, facts_rev)
+    again, removed2, fid2 = replay(stored[key], facts)
+    s = {'stored_equals_guard_replay_of_raw': stored[key] == rep, 'raw_equals_stored': normalized == stored[key],
+         'time_wording_removed': removed, 'funding_fidelity_changes': fid,
+         'rule_families': sorted({family(c) for c in fid}),
+         'reversed_item_order_same_output': rep_rev == rep and fid_rev == fid,
+         'idempotent_second_pass_unchanged': again == stored[key] and not removed2 and not fid2}
+    if isinstance(normalized, str):
+        s['refs_model'] = refs(normalized)
+        s['refs_stored'] = refs(stored[key])
+        s['refs_identical_in_order'] = s['refs_model'] == s['refs_stored']
+        s['ref_multiset_identical'] = sorted(s['refs_model']) == sorted(s['refs_stored'])
+        if s['refs_model'] != s['refs_stored']:
+            s['citation_groups_model'] = groups(normalized)
+            s['citation_groups_stored'] = groups(stored[key])
+    sections[key] = s
+    if isinstance(normalized, str) and normalized != stored[key]:
+        changes[key] = [l for l in difflib.unified_diff(normalized.splitlines(), str(stored[key]).splitlines(), 'model', 'stored',
+                                                       lineterm='', n=0) if l[:1] in '+-' and l[:3] not in ('+++', '---')]
+report['sections'] = sections
+report['memo_id'] = stored['id']
+real = {k: v for k, v in sections.items() if not v.get('not_a_stored_field')}
+report['summary'] = {
+    'sections_compared': len(real),
+    'all_stored_equal_replay': all(v['stored_equals_guard_replay_of_raw'] for v in real.values()),
+    'all_reversed_order_stable': all(v['reversed_item_order_same_output'] for v in real.values()),
+    'all_idempotent': all(v['idempotent_second_pass_unchanged'] for v in real.values()),
+    'all_refs_identical_in_order': all(v.get('refs_identical_in_order', True) for v in real.values()),
+    'sections_changed_by_guards': sorted(changes),
+    'time_guard_removed_anything': any(v['time_wording_removed'] for v in real.values()),
+    'rule_families_fired': sorted({f for v in real.values() for f in v['rule_families']}),
+    'narrator_provenance_rule_fired': any('provenance' in v['rule_families'] for v in real.values()),
+    'not_stored_keys': [k for k, v in sections.items() if v.get('not_a_stored_field')],
+}
+with open(os.path.join(EV, '09d_memo_input_output_check.json'), 'w', encoding='utf-8', newline='\n') as f:
+    json.dump(report, f, indent=1, ensure_ascii=False, default=str)
+with open(os.path.join(EV, '09e_guard_changes.txt'), 'w', encoding='utf-8', newline='\n') as f:
+    f.write('Model reply (after list-to-text) vs stored memo %s, per section, replayed through the pipeline order\n'
+            '(time guard, then funding guard). Only changed sections are listed. Rule family "provenance" is the\n'
+            'narrator-provenance rule merged in #281; "attribution" adds a narrator to a funding sentence.\n\n' % stored['id'])
+    if not changes:
+        f.write('No section was changed by either guard.\n')
+    for key, lines in changes.items():
+        f.write(f'== {key}  {sections[key]["funding_fidelity_changes"] or ""} {sections[key]["time_wording_removed"] or ""}\n')
+        f.write('\n'.join(lines) + '\n\n')
+print(json.dumps({k: v for k, v in report.items() if k not in ('sent_items', 'sections', 'funding_facts')}, indent=1, default=str))

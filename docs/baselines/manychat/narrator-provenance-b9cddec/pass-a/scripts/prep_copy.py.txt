@@ -1,0 +1,47 @@
+"""Narrator-provenance ManyChat Pass A at b9cddec: hash the source DBs and the deck, then create this run's
+sqlite backup COPY of the original dev DB (opened read-only). No Django. Usage: python prep_copy.py <phase>
+phase 'before' also creates the copy (refuses if it already exists); phase 'after' only hashes."""
+import hashlib, os, sqlite3, sys, json, datetime
+HERE = os.path.dirname(os.path.abspath(__file__))
+OLD = r'C:\Users\jonathan\AppData\Local\Temp\claude\C--Users-jonathan-Desktop-KCV\8edb8be9-5c85-488f-a1b8-020dd6a9a3c0\scratchpad'
+DBS = {
+    'original_dev_db': r'C:\Users\jonathan\Desktop\KCV\db.sqlite3',
+    'memo94_copy_mcpost': OLD + r'\mcpost\db_postfix_copy.sqlite3',
+    'memo95_copy_mcff': OLD + r'\mcff\db_ff_copy.sqlite3',
+    'memo96_copy_mcff3': OLD + r'\mcff3\db_ff3_copy.sqlite3',
+}
+DECK = r'C:\Users\jonathan\Downloads\manychat_series_a_audit_deck.pptx'
+COPY = os.path.join(HERE, 'db_np_copy.sqlite3')
+phase = sys.argv[1]
+
+
+def sha(p):
+    h = hashlib.sha256()
+    with open(p, 'rb') as f:
+        for b in iter(lambda: f.read(1 << 20), b''):
+            h.update(b)
+    return h.hexdigest()
+
+
+out = {'phase': phase, 'at': datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds'), 'dbs': {}}
+for name, p in DBS.items():
+    out['dbs'][name] = {'path': p, 'exists': os.path.exists(p),
+                        'bytes': os.path.getsize(p) if os.path.exists(p) else None,
+                        'sha256': sha(p) if os.path.exists(p) else None,
+                        'sidecars': [s for s in ('-wal', '-journal', '-shm') if os.path.exists(p + s)]}
+out['deck'] = {'path': DECK, 'bytes': os.path.getsize(DECK), 'sha256': sha(DECK)}
+if phase == 'before':
+    if os.path.exists(COPY):
+        sys.exit('run copy already exists; refusing to overwrite')
+    src = sqlite3.connect('file:' + DBS['original_dev_db'].replace('\\', '/') + '?mode=ro', uri=True)
+    dst = sqlite3.connect(COPY)
+    src.backup(dst)
+    dst.close(); src.close()
+    out['copy'] = {'path': COPY, 'method': 'sqlite3 backup API from the original opened mode=ro',
+                   'sha256_at_creation': sha(COPY), 'integrity_check': None}
+    c = sqlite3.connect('file:' + COPY.replace('\\', '/') + '?mode=ro', uri=True)
+    out['copy']['integrity_check'] = c.execute('pragma integrity_check').fetchone()[0]
+    c.close()
+print(json.dumps(out, indent=1))
+with open(os.path.join(HERE, 'hashes_%s.json' % phase), 'w', encoding='utf-8', newline='\n') as f:
+    json.dump(out, f, indent=1)
