@@ -1,0 +1,12 @@
+Model reply (after list-to-text) vs stored memo 98, per section, replayed through the pipeline order
+(time guard, then funding guard). Only changed sections are listed. Rule family "provenance" is the
+narrator-provenance rule merged in #281; "attribution" adds a narrator to a funding sentence.
+
+== open_concerns  ['attribution:Pitch Deck Hunt'] 
+-- No revenue, burn, or financial data of any kind was extracted from the document. For a company described as Series A [P1], the absence of any financial disclosure makes it impossible to evaluate commercial progress, capital efficiency, or how the $23.1M narrated as raised [S4] has been deployed.
++- No revenue, burn, or financial data of any kind was extracted from the document. For a company described as Series A [P1], the absence of any financial disclosure makes it impossible to evaluate commercial progress, capital efficiency, or how the $23.1M (per Pitch Deck Hunt) narrated as raised [S4] has been deployed.
+
+== questions_for_management  ['attribution:Pitch Deck Hunt'] 
+-- What is the current monthly cash burn and dated cash balance, and how does that translate to runway against the $23.1M narrated as raised [S4]?
++- What is the current monthly cash burn and dated cash balance, and how does that translate to runway against the $23.1M (per Pitch Deck Hunt) narrated as raised [S4]?
+

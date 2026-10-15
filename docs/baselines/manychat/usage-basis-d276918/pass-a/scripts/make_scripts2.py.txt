@@ -1,0 +1,30 @@
+"""Stage 2 (after the run): derive the analysis scripts from the memo-97 run's, with listed changes only.
+Adds the RA-109 checks (consistency_notes sent vs rebuilt, rule 11, no key/fixture wording in the input)."""
+import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+PREV = os.path.join(os.path.dirname(HERE), 'np')
+NP_SP = r'C--Users-jonathan-Desktop-KCV-np\c8a313d5-81e1-402a-b7da-9205b6f20fab\scratchpad\np'
+UB_SP = r'C--Users-jonathan-Desktop-KCV-np\c8a313d5-81e1-402a-b7da-9205b6f20fab\scratchpad\ub'
+
+
+def derive(name, reps, target):
+    s = open(os.path.join(PREV, name), encoding='utf-8').read()
+    for a, b in reps:
+        assert s.count(a) >= 1, (name, a)
+        s = s.replace(a, b)
+    open(os.path.join(HERE, target), 'w', encoding='utf-8', newline='\n').write(s)
+    print('derived', target)
+
+
+derive('analyze_np.py', [
+    (NP_SP, UB_SP),
+    ("'Mike Yan', 'Anton Gorin', 'npmc', 'Rerun Owner', 'Disposable profile']},",
+     "'Mike Yan', 'Anton Gorin', 'ubmc', 'Rerun Owner', 'Disposable profile', 'cumulative by context', "
+     "'manychat_ra109', 'ANSWER', 'conflict']},\n"
+     "    'sent_consistency_notes': sent.get('consistency_notes'),\n"
+     "    'rebuilt_consistency_notes': ctx.to_prompt_payload().get('consistency_notes'),\n"
+     "    'prompt_rule_11_present': '11. Consistency notes.' in call['request']['system'],\n"
+     "    'user_prompt_points_to_rule_11': 'follow rule 11' in user,"),
+    ("label='mcnp.analyze (read-only rebuild)'", "label='mcub.analyze (read-only rebuild)'"),
+], 'analyze_ub.py')

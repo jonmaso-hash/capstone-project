@@ -1,0 +1,121 @@
+"""Assemble this run's record into the evidence directory (no DB access). Adapted from the memo-97 run's
+assemble_np.py: new paths and IDs, memo-97 copy added to preservation, frozen-artifact checks extended."""
+import os, re, json, shutil, subprocess
+HERE = os.path.dirname(os.path.abspath(__file__))
+WT = r'C:\Users\jonathan\Desktop\KCV-mc-ub'
+OUT = WT + r'\docs\baselines\manychat\usage-basis-d276918\pass-a'
+SHOTS = r'C:\Users\jonathan\AppData\Local\Temp\claude-chrome-screenshots-FgT3LA'
+for sub in ('browser', 'process', 'scripts', 'snapshots'):
+    os.makedirs(os.path.join(OUT, sub), exist_ok=True)
+
+
+def read(name):
+    raw = open(os.path.join(HERE, name), 'rb').read()
+    if raw[:2] in (b'\xff\xfe', b'\xfe\xff'):
+        return raw.decode('utf-16')
+    return raw.decode('utf-8', errors='replace')
+
+
+def git(*a):
+    return subprocess.run(['git', *a], capture_output=True, text=True, cwd=WT).stdout.strip()
+
+
+CHECK = r'^(CODE-CHECK|CODE-DIFF|BASELINE-ENV-CHECK|BROKER-CHECK|DB-CHECK|SCHEMA-CHECK|EAGER-CHECK|MODEL-CALL-LOG|WORKER-IDENTITY|REFUSING|CHECK OK|preflight ok|broker|result backend|cache|migrations)'
+lines = lambda name: [re.sub(r"tracked_changes=\d+ \[.*\]$", 'tracked_changes=<__pycache__ only; see CODE-DIFF>', l)
+                      for l in read(name).splitlines() if re.match(CHECK, l)]
+snap = lambda name: [l for l in read(name).replace('\r', '').splitlines() if not l.startswith('Invalid line')]
+hb, ha = json.loads(read('hashes_before.json')), json.loads(read('hashes_after.json'))
+
+frozen = {}
+for path in ('docs/baselines/manychat/ANSWER_KEY.md', 'docs/baselines/three-deck-audit/PROTOCOL.md',
+             'docs/baselines/nike-fy2026/PROTOCOL.md'):
+    frozen[path] = {'blob_at_d276918': git('rev-parse', 'd276918:' + path), 'blob_in_worktree': git('hash-object', path),
+                    'last_commit_touching': git('log', '-1', '--format=%h %ad %s', '--date=short', 'd276918', '--', path)}
+prior = {
+    'docs/baselines/manychat/narrator-provenance-b9cddec/pass-a': ('434a701', 'd276918'),
+    'docs/baselines/manychat/funding-fidelity-9b6d215/pass-a': ('5f08c05', 'origin/docs/manychat-funding-fidelity-9b6d215'),
+    'docs/baselines/three-deck-audit/usage-basis-a5494ae': ('17c541c', 'd276918'),
+    'docs/baselines/three-deck-audit/usage-basis-review-200afbc': ('50aada8', 'd276918'),
+    'docs/baselines/three-deck-audit/usage-basis-followup-9ec3efa': ('9b3d264', 'd276918'),
+    'zelda_api/data/claim_recall': ('9b3d264', 'd276918'),
+}
+for path, (commit, ref) in prior.items():
+    a, b = git('rev-parse', f'{commit}:{path}'), git('rev-parse', f'{ref}:{path}')
+    frozen[path] = {'known_commit': commit, 'tree_at_known_commit': a, 'compared_ref': ref, 'tree_at_ref': b,
+                    'identical': bool(a) and a == b}
+
+calls = [json.loads(l) for l in read('model_calls.jsonl').splitlines() if l.strip()]
+kinds = {}
+for c in calls:
+    k = 'memo' if 'investment memo' in json.dumps(c['request'].get('messages', '')) else 'ask_query_extraction'
+    kinds[k] = kinds.get(k, 0) + 1
+setup = {
+    'code': {'worktree': WT + ' (branch docs/manychat-usage-basis-d276918, created at d276918)',
+             'origin_main_head_at_fetch': git('rev-parse', 'origin/main'),
+             'run_commit': 'd276918cb0e1a4e7fa109a86c5e9336ef180f9a3',
+             'run_commit_subject': git('log', '-1', '--format=%s', 'd276918'),
+             'parents': git('log', '-1', '--format=%P', 'd276918').split(),
+             'non_docs_files_differing_from_reviewed_9b3d264': [f for f in git('diff', '--name-only', '9b3d264', 'd276918').split()
+                                                               if not f.startswith('docs/')],
+             'migrations_since_b9cddec': git('diff', '--name-only', 'b9cddec', 'd276918', '--', '*/migrations/*.py').split(),
+             'application_code_changes_during_run': 0, 'mismatch': 'none: origin/main == d276918 when fetched'},
+    'database': {'original': hb['dbs']['original_dev_db']['path'], 'run_db': hb['copy']['path'],
+                 'run_db_method': hb['copy']['method'], 'run_db_sha256_at_creation': hb['copy']['sha256_at_creation'],
+                 'run_db_integrity_check': hb['copy']['integrity_check'],
+                 'source_dbs_sha256_before_after_same': {k: [hb['dbs'][k]['sha256'], ha['dbs'][k]['sha256'],
+                                                             hb['dbs'][k]['sha256'] == ha['dbs'][k]['sha256']] for k in hb['dbs']},
+                 'gate_refusal_before_migrate': lines('gate_refusal_before_migrate.txt'),
+                 'migrate_on_copy': [l for l in read('migrate_copy.txt').splitlines() if 'Applying' in l],
+                 'id_sequences_advanced_in_copy_only': read('sequences.txt').splitlines(),
+                 'why': 'every run copy derives from the same original; counters advanced to the memo-97 run copy maxima '
+                        '(read mode=ro) so ids never repeat documents 3136-3139 or memos 94-97'},
+    'broker': {'isolation': 'local Memurai: broker db 9, results 12, cache 15 (empty, no clients, before the fixtures); worker mcub@, queue "celery" on db 9',
+               'redis_before_processes': read('redis_before.txt').splitlines(), 'redis_after': read('redis_after.txt').splitlines(),
+               'other_dbs_unchanged': [l for l in read('redis_before.txt').splitlines() if not re.match(r'db (9|12|15) ', l)] ==
+                                      [l for l in read('redis_after.txt').splitlines() if not re.match(r'db (9|12|15) ', l)],
+               'note': 'db 9 held the 3 fixture match-refresh tasks queued by the fixture saves; db 15 held 4 embedding cache keys from those saves'},
+    'preflight_local': lines('preflight_local.txt'),
+    'server_checks': lines('server.log'), 'worker_checks': lines('worker.log'),
+    'paid_keys_note': 'USPTO_ODP_API_KEY exists in .env but no code at d276918 reads it; it was blanked in the environment and checked from os.environ',
+    'memwatch': [l for l in read('memwatch.log').replace('\x00', '').replace('\ufeff', '').splitlines() if l.strip()],
+    'fixtures': json.loads(read('fixtures.txt').split('FIXTURES ', 1)[1]),
+    'deck': {'path': ha['deck']['path'], 'bytes': ha['deck']['bytes'], 'sha256_on_disk': hb['deck']['sha256'],
+             'key_sha256': 'be7a7171bbc84b9895a45adfbc41f2533f3d23b3a4a561c82a8d9de6b94f3ef1'},
+    'upload': read('upload.txt').splitlines(),
+    'model_calls': {'total': len(calls), 'by_kind': kinds, 'memo_model': 'claude-sonnet-4-6 (code literal)'},
+    'preserved': {
+        **{f'{n}_before': [l for l in snap(f'{n}_snapshot_before.txt') if l.startswith('MEMO')] for n in ('orig', 'memo94', 'memo95', 'memo96', 'memo97')},
+        **{f'{n}_before_after_byte_identical': read(f'{n}_snapshot_before.txt') == read(f'{n}_snapshot_after.txt')
+           for n in ('orig', 'memo94', 'memo95', 'memo96', 'memo97')},
+        'vs_committed_ea3ab13_snapshots': 'orig/memo94/memo95/memo96 before-snapshots equal ea3ab13 snapshots/*_after.txt after removing carriage returns and lines starting "Invalid line" (a startup .env warning present in this run\'s files, absent from ea3ab13\'s)',
+        'memo97_vs_committed_09_memo': {'before': read('memo97_vs_committed_before.txt').strip(), 'after': read('memo97_vs_committed_after.txt').strip()}},
+    'frozen_artifacts': frozen,
+}
+with open(os.path.join(OUT, '00_setup.json'), 'w', encoding='utf-8', newline='\n') as f:
+    json.dump(setup, f, indent=1, ensure_ascii=False)
+chain = [l for l in read('worker.log').splitlines()
+         if re.search(r'Task .* (received|succeeded|failed|raised)|funding-source fidelity|time wording', l)]
+open(os.path.join(OUT, '06_worker_chain.txt'), 'w', encoding='utf-8', newline='\n').write('\n'.join(chain) + '\n')
+with open(os.path.join(OUT, '09c_all_model_calls.json'), 'w', encoding='utf-8', newline='\n') as f:
+    json.dump({'note': 'Every anthropic Messages.create call in the run processes: %d in all (%s).' % (len(calls), kinds),
+               'calls': calls}, f, indent=1, ensure_ascii=False)
+for src, dst in (('server.log', 'server.log.txt'), ('worker.log', 'worker.log.txt'), ('memwatch.log', 'memwatch.log.txt'),
+                 ('probe_stdout.txt', 'probe_stdout.txt')):
+    shutil.copy(os.path.join(HERE, src), os.path.join(OUT, 'process', dst))
+for n in ('orig', 'memo94', 'memo95', 'memo96', 'memo97'):
+    for p in ('before', 'after'):
+        shutil.copy(os.path.join(HERE, f'{n}_snapshot_{p}.txt'), os.path.join(OUT, 'snapshots', f'{n}_snapshot_{p}.txt'))
+for name in ('redis_before.txt', 'redis_after.txt', 'hashes_before.json', 'hashes_after.json',
+             'memo97_vs_committed_before.txt', 'memo97_vs_committed_after.txt'):
+    shutil.copy(os.path.join(HERE, name), os.path.join(OUT, 'snapshots', name))
+for name in ('make_scripts.py', 'make_scripts2.py', 'make_scan.py', 'prep_copy.py', 'run_ub.py', 'run_ro.py', 'snapshot_ro.py',
+             'memo97_vs_committed.py', 'bump_sequences.py', 'setup_fixtures.py', 'upload.py', 'dump_ub.py', 'analyze_ub.py',
+             'probe.py', 'probe_cfg.json', 'md_check.py', 'scan_ub.py', 'assemble_ub.py'):
+    shutil.copy(os.path.join(HERE, name), os.path.join(OUT, 'scripts', name + '.txt'))
+for src, dst in (('screenshot-1792052852667-4.jpg', 'owner_ic_memo_lite.jpg'),
+                 ('screenshot-1792052899658-5.jpg', 'lite_company_overview.jpg'),
+                 ('screenshot-1792052963686-6.jpg', 'staff_truth_delta_direct.jpg'),
+                 ('screenshot-1792052986539-7.jpg', 'staff_ic_memo_risk_assessment.jpg')):
+    shutil.copy(os.path.join(SHOTS, src), os.path.join(OUT, 'browser', dst))
+print('assembled', len(calls), kinds)
+print(json.dumps({k: v.get('identical', v.get('blob_at_d276918') == v.get('blob_in_worktree')) for k, v in frozen.items()}, indent=1))

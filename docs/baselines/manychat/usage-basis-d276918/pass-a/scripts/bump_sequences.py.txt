@@ -1,0 +1,23 @@
+"""Run in the ub COPY (via run_ub.py script). Sets each zelda_api table's SQLite AUTOINCREMENT
+counter to at least the previous run's highest id (read read-only from that run's copy), so this
+run's document/chunk/insight/claim/report/memo ids are new and never repeat the previous run's
+(document 3139, memo 97, ...). Touches only sqlite_sequence in this run's copy."""
+import sqlite3
+from django.apps import apps
+from django.conf import settings
+from django.db import connection
+PREV = r'C:\Users\jonathan\AppData\Local\Temp\claude\C--Users-jonathan-Desktop-KCV-np\c8a313d5-81e1-402a-b7da-9205b6f20fab\scratchpad\np\db_np_copy.sqlite3'
+assert 'db_ub_copy' in str(settings.DATABASES['default']['NAME'])
+prev = sqlite3.connect('file:' + PREV.replace('\\', '/') + '?mode=ro', uri=True)
+tables = sorted({m._meta.db_table for m in apps.get_app_config('zelda_api').get_models()})
+with connection.cursor() as cur:
+    for table in tables:
+        row = prev.execute('select seq from sqlite_sequence where name=?', (table,)).fetchone()
+        if not row:
+            continue
+        cur.execute('select seq from sqlite_sequence where name=%s', [table])
+        mine = cur.fetchone()
+        if mine and mine[0] < row[0]:
+            cur.execute('update sqlite_sequence set seq=%s where name=%s', [row[0], table])
+            print('SEQ', table, mine[0], '->', row[0])
+prev.close()

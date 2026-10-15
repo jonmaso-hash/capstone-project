@@ -1,0 +1,76 @@
+{
+ "note": "Real Chrome walks (Claude in Chrome, one new tab in a new tab group, closed afterwards) against the run server on 127.0.0.1:8000, 2026-10-15 local, document 3140 / memo 98. Sign-in set the login form fields and called form.requestSubmit(); staff then submitted a TOTP code on the real /accounts/staff-mfa/verify/ page (computed for the next 30-second window and submitted after it began). Every signed-in walk ended with the nav 'Sign Out' button (POST /accounts/logout/), confirmed by a protected URL redirecting to login. Values were read from the live DOM by in-page script after navigation; 'fetch' marks values read by an in-page same-origin fetch. The extension truncates long page text, so the full rendered text is not stored here; the HTTP probe's copies are in 13_rendered_reports_text.json. Credentials are not recorded.",
+ "order": ["ANON", "OWNER", "LITE", "PAID", "STAFF"],
+ "ANON": {
+  "truth_delta_navigation": {"url_after": "/accounts/login/?next=/api/v1/zelda/documents/3140/verification/", "title": "Log in"},
+  "owner_profile_navigation": {"url_after": "/accounts/login/?next=/accounts/profile/ubmc_owner/", "canary": false},
+  "positive_control_home_fetch": {"status": 200, "shows_sign_in": true}
+ },
+ "OWNER": {
+  "login": {"landed": "/accounts/profile/ubmc_owner/", "account_menu": "Account menu for ubmc_owner", "canary_in_rendered_text": true, "expected": "owner may see own private field"},
+  "ic_memo_navigation": {"tier": "Zelda Lite Memo", "section_coverage": "31.2%", "information_readiness": "10/100", "citations": 4,
+   "sentences_with_23_1": 3, "with_pitch_deck_hunt": 3, "list_item_counts": [2, 4], "canary": false,
+   "basis_sentences": [
+    "• A second messages figure (500M messages/month) on a separate page [S3]",
+    "Next evidence to supply: Audited or reviewed financial statements showing revenue, gross margin, and cash position, alongside a reconciled explanation of whether the 500M messages figure is cumulative or monthly.",
+    "The core usage metric — 500M messages — is stated with two different measurement bases in the same deck: without an interval on page 10 ('Traction by Apr-16') [C3, S2] and as a monthly figure on page 12 [C2, S3]."],
+   "screenshot": "browser/owner_ic_memo_lite.jpg"},
+  "truth_delta_navigation": {"counts": "4 CLAIMS ANALYZED | 0 VERIFIED | 4 NOT ESTABLISHED", "score": "EVIDENCE CREDIBILITY N/A",
+   "claims_shown": {"$23.1M": true, "500M messages/month": true, "500M messages": true, "140 000": true},
+   "basis_notes_block": "Measurement basis to clarify\n\nFigures in this deck that need clarification before they are compared. This is not a verification result and doesn't affect the score.\n\nPage 10 states 500M messages without an explicit interval; page 12 states 500M messages/month. These use different measurement bases and need clarification before comparison.",
+   "basis_block_contains_contradict": false,
+   "owner_panel_profile_and_deck_figures": true,
+   "owner_panel_row": "Previously raised: Choose a reporting currency on your profile before comparing these figures.",
+   "canary": false},
+  "sign_out": {"button": "Sign Out", "after": "/accounts/profile/ubmc_owner/ -> /accounts/login/?next=/accounts/profile/ubmc_owner/"}
+ },
+ "LITE": {
+  "login": {"landed": "/accounts/profile/ubmc_owner/", "account_menu": "Account menu for ubmc_lite", "canary": false},
+  "company_overview_navigation": {"url": "/matchmaking/memo/profile/50/", "tier": "Zelda Lite Report",
+   "counts_sentence": "Limited public evidence: none of the 4 claims could be verified or contradicted against a public source.",
+   "funding_sentences": ["Pitch Deck Hunt lists $23.1M raised [S4], though no date is stated for that figure and no external evidence could be located to confirm it [C1]."],
+   "sentences_with_500M": ["The company states 140,000+ bots deployed and 500M messages processed, with those traction figures appearing on a slide headed 'Traction by Apr-16' [S1, S2]."],
+   "basis_distinction_on_this_surface": false, "owner_panel": false, "canary": false,
+   "screenshot": "browser/lite_company_overview.jpg"},
+  "truth_delta_navigation": {"counts": "4 CLAIMS ANALYZED | 0 VERIFIED | 4 NOT ESTABLISHED", "basis_note_visible": true, "owner_panel": false, "canary": false},
+  "ic_memo_fetch_status": 404,
+  "sign_out": {"button": "Sign Out", "after": "/accounts/profile/ubmc_owner/ -> /accounts/login/?next=/accounts/profile/ubmc_owner/"}
+ },
+ "PAID": {
+  "login": {"landed": "/accounts/profile/ubmc_owner/", "account_menu": "Account menu for ubmc_paid", "canary": false},
+  "company_overview_navigation": {"tier": "Zelda Lite Report (no relationship; unchanged from earlier runs)",
+   "counts_sentence": "Limited public evidence: none of the 4 claims could be verified or contradicted against a public source.",
+   "sentences_with_23_1": 1, "with_pitch_deck_hunt": 1, "sentences_with_500M": 1, "owner_panel": false, "canary": false},
+  "truth_delta_navigation": {"counts": "4 CLAIMS ANALYZED | 0 VERIFIED | 4 NOT ESTABLISHED", "basis_note_visible": true, "owner_panel": false, "canary": false},
+  "ic_memo_fetch_status": 404,
+  "sign_out": {"button": "Sign Out", "after": "/api/v1/zelda/documents/3140/verification/ -> /accounts/login/?next=/api/v1/zelda/documents/3140/verification/"}
+ },
+ "STAFF": {
+  "login": {"from": "/accounts/login/?next=/api/v1/zelda/documents/3140/verification/", "mfa_page": "/accounts/staff-mfa/verify/?next=%2Fapi%2Fv1%2Fzelda%2Fdocuments%2F3140%2Fverification%2F", "mfa": "TOTP code submitted on the real verify page"},
+  "truth_delta_direct_navigation": {"url": "/api/v1/zelda/documents/3140/verification/", "ready_state": "complete", "waited_s": 3,
+   "two_snapshots_2_5s_apart_identical": true, "badge": "Zelda AI — Full Verification",
+   "counts": "4 CLAIMS ANALYZED | 0 VERIFIED | 4 NOT ESTABLISHED",
+   "basis_note": "Page 10 states 500M messages without an explicit interval; page 12 states 500M messages/month. These use different measurement bases and need clarification before comparison.",
+   "owner_panel_profile_and_deck_figures": false, "only_you_can_see_this": false, "canary_in_html": false,
+   "claims_shown": {"$23.1M": true, "500M messages/month": true, "140 000": true}, "doctype": false,
+   "identity_positive_control_fetch_home": "Account menu for ubmc_staff", "rendering_note": "unstyled doctype-less fragment, as FF-413",
+   "screenshot": "browser/staff_truth_delta_direct.jpg"},
+  "ic_memo_navigation": {"tier": "full", "section_coverage": "100.0%", "counts": "(of 4)", "sentences_with_23_1": 7, "with_pitch_deck_hunt": 7,
+   "list_item_counts": [2, 4, 9, 5], "canary": false,
+   "basis_sentences": [
+    "Measurement ambiguity on the core traction metric: the deck's page 10 ('Traction by Apr-16') states 500M messages without an explicit interval [C3, S2], while page 12 states 500M messages/month [C2, S3].",
+    "• A second messages figure (500M messages/month) on a separate page [S3]",
+    "Next evidence to supply: Audited or reviewed financial statements showing revenue, gross margin, and cash position, alongside a reconciled explanation of whether the 500M messages figure is cumulative or monthly.",
+    "The core usage metric — 500M messages — is stated with two different measurement bases in the same deck: without an interval on page 10 ('Traction by Apr-16') [C3, S2] and as a monthly figure on page 12 [C2, S3].",
+    "If the 500M messages figure represents a monthly run rate [S3] rather than a cumulative total, and if the 140,000+ bots [S1] correspond to a large number of paying customers with meaningful revenue per account, the engagement scale would indicate a platform with substantial adoption at the time of the 'Traction by Apr-16' slide.",
+    "If the 500M messages figure is a cumulative total rather than monthly [C3 vs.",
+    "The verification process specifically identified that the 500M messages figure appears twice in the same deck with different measurement bases — once without an interval and once as a monthly figure [C2, C3] — a consistency issue that a plain AI summary would likely report as a single confirmed data point rather than as an unresolved ambiguity requiring management clarification before the figure can be used analytically.",
+    "Is the 500M messages figure a cumulative total or a monthly run rate, and which page of the deck reflects the correct measurement basis [C2, C3, S2, S3]?"],
+   "screenshot": "browser/staff_ic_memo_risk_assessment.jpg"},
+  "markdown_fetch": {"status": 200, "is_text_markdown": true, "declares_charset_utf8": true, "bullets_u2022": 18, "em_dashes_u2014": 20,
+   "mojibake": false, "lines_with_500M_and_basis_words": 8, "note": "in-page fetch, so no file was saved"},
+  "profile": {"canary_in_rendered_text": true, "expected": "staff may see the private field"},
+  "company_overview_fetch": {"status": 200, "full_report": true, "basis_wording_present": true},
+  "sign_out": {"button": "Sign Out", "after": "/api/v1/zelda/documents/3140/verification/ -> /accounts/login/?next=/api/v1/zelda/documents/3140/verification/", "signed_in": false}
+ }
+}

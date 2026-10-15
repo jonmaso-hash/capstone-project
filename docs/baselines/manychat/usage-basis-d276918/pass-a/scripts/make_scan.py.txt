@@ -1,0 +1,25 @@
+"""Derive scan_ub.py from the memo-97 run's scan_np.py: same checks, plus RA-109 checks. Hits are candidates."""
+import os
+HERE = os.path.dirname(os.path.abspath(__file__))
+s = open(os.path.join(os.path.dirname(HERE), 'np', 'scan_np.py'), encoding='utf-8').read()
+anchor = "CHECKS = {\n"
+assert s.count(anchor) == 1
+extra = r'''CHECKS = {
+    # RA-109: the two 500M message figures and how each sentence frames their bases.
+    'ra109_basis_mention': lambda s: '500M' in s and re.search(r'month|interval|cumulative|run rate|basis', s, re.I),
+    'ra109_cumulative_asserted': lambda s: re.search(r'\bthe cumulative (?:figure|total|count)\b|\bis (?:a )?cumulative\b', s, re.I)
+                                           and not re.search(r'\bif\b|\bwhether\b|\bor\b|\?', s, re.I),
+    'ra109_contradiction_or_error_words': lambda s: re.search(r'contradict|inconsisten|overstat|mislead|wrong|error', s, re.I),
+    'ra109_merged_or_verified_500M': lambda s: '500M' in s and re.search(r'verified|confirmed|same figure|identical', s, re.I)
+                                               and not re.search(r'not (?:been )?(?:independently )?(?:verified|confirmed)|could not|unverified|no external', s, re.I),
+    'ra109_annualised_or_converted': lambda s: re.search(r'6(?:\.0)?\s?B|billion messages|per year|annuali[sz]', s, re.I),
+    'funding_total_wording': lambda s: ('23.1' in s or 'raised' in s.lower()) and re.search(r'\btotal\b', s, re.I),
+    'funding_credited_to_company': lambda s: ('23.1' in s or re.search(r'fundrais|raised', s, re.I))
+                                             and re.search(r'company (?:has )?(?:put forward|states|reports|claims)', s, re.I),
+    'funds_presupposed_used': lambda s: re.search(r'deployed|consumed|spent|been used', s, re.I) and re.search(r'23\.1|raised|capital', s, re.I),
+    'outside_knowledge_platform': lambda s: re.search(r'Facebook|Messenger|Instagram|WhatsApp|Telegram|Kik', s),
+'''
+s = s.replace(anchor, extra)
+s = s.replace('Sentence-level scan of the new memo', 'Sentence-level scan of memo 98')
+open(os.path.join(HERE, 'scan_ub.py'), 'w', encoding='utf-8', newline='\n').write(s)
+print('derived scan_ub.py')

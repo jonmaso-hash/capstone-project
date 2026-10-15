@@ -1,0 +1,316 @@
+Sentence-level scan of memo 98: stored sections, memo API per principal (Lite and full), rendered
+pages (HTTP probe). Hits are candidates for reading, not grades. Sentences containing $23.1: 39.
+Surfaces: 51.
+
+== ra109_basis_mention: 42
+  stored:risk_assessment: Measurement ambiguity on the core traction metric: the deck's page 10 ('Traction by Apr-16') states 500M messages without an explicit interval [C3, S2], while page 12 states 500M messages/month [C2, S3].
+  stored:information_readiness: • A second messages figure (500M messages/month) on a separate page [S3]
+  stored:information_readiness: Next evidence to supply: Audited or reviewed financial statements showing revenue, gross margin, and cash position, alongside a reconciled explanation of whether the 500M messages figure is cumulative or monthly.
+  stored:open_concerns: - The core usage metric — 500M messages — is stated with two different measurement bases in the same deck: without an interval on page 10 ('Traction by Apr-16') [C3, S2] and as a monthly figure on page 12 [C2, S3].
+  stored:upside_scenario: If the 500M messages figure represents a monthly run rate [S3] rather than a cumulative total, and if the 140,000+ bots [S1] correspond to a large number of paying customers with meaningful revenue per account, the engagement scale would indicate a platform with substantial adoption at the time of the 'Traction by Apr-16' slide.
+  stored:downside_scenario: If the 500M messages figure is a cumulative total rather than monthly [C3 vs.
+  stored:zelda_advantage: The verification process specifically identified that the 500M messages figure appears twice in the same deck with different measurement bases — once without an interval and once as a monthly figure [C2, C3] — a consistency issue that a plain AI summary would likely report as a single confirmed data point rather than as an unresolved ambiguity requiring management clarification before the figure can be used analytically.
+  stored:questions_for_management: - Is the 500M messages figure a cumulative total or a monthly run rate, and which page of the deck reflects the correct measurement basis [C2, C3, S2, S3]?
+  LITE:memo_api:information_readiness: • A second messages figure (500M messages/month) on a separate page [S3]
+  LITE:memo_api:information_readiness: Next evidence to supply: Audited or reviewed financial statements showing revenue, gross margin, and cash position, alongside a reconciled explanation of whether the 500M messages figure is cumulative or monthly.
+  LITE:memo_api:open_concerns: - The core usage metric — 500M messages — is stated with two different measurement bases in the same deck: without an interval on page 10 ('Traction by Apr-16') [C3, S2] and as a monthly figure on page 12 [C2, S3].
+  PAID:memo_api:information_readiness: • A second messages figure (500M messages/month) on a separate page [S3]
+  PAID:memo_api:information_readiness: Next evidence to supply: Audited or reviewed financial statements showing revenue, gross margin, and cash position, alongside a reconciled explanation of whether the 500M messages figure is cumulative or monthly.
+  PAID:memo_api:open_concerns: - The core usage metric — 500M messages — is stated with two different measurement bases in the same deck: without an interval on page 10 ('Traction by Apr-16') [C3, S2] and as a monthly figure on page 12 [C2, S3].
+  STAFF:memo_api:risk_assessment: Measurement ambiguity on the core traction metric: the deck's page 10 ('Traction by Apr-16') states 500M messages without an explicit interval [C3, S2], while page 12 states 500M messages/month [C2, S3].
+  STAFF:memo_api:information_readiness: • A second messages figure (500M messages/month) on a separate page [S3]
+  STAFF:memo_api:information_readiness: Next evidence to supply: Audited or reviewed financial statements showing revenue, gross margin, and cash position, alongside a reconciled explanation of whether the 500M messages figure is cumulative or monthly.
+  STAFF:memo_api:open_concerns: - The core usage metric — 500M messages — is stated with two different measurement bases in the same deck: without an interval on page 10 ('Traction by Apr-16') [C3, S2] and as a monthly figure on page 12 [C2, S3].
+  STAFF:memo_api:upside_scenario: If the 500M messages figure represents a monthly run rate [S3] rather than a cumulative total, and if the 140,000+ bots [S1] correspond to a large number of paying customers with meaningful revenue per account, the engagement scale would indicate a platform with substantial adoption at the time of the 'Traction by Apr-16' slide.
+  STAFF:memo_api:downside_scenario: If the 500M messages figure is a cumulative total rather than monthly [C3 vs.
+  STAFF:memo_api:zelda_advantage: The verification process specifically identified that the 500M messages figure appears twice in the same deck with different measurement bases — once without an interval and once as a monthly figure [C2, C3] — a consistency issue that a plain AI summary would likely report as a single confirmed data point rather than as an unresolved ambiguity requiring management clarification before the figure can be used analytically.
+  STAFF:memo_api:questions_for_management: - Is the 500M messages figure a cumulative total or a monthly run rate, and which page of the deck reflects the correct measurement basis [C2, C3, S2, S3]?
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: 140,000+ bots and 500M messages, on a slide headed 'Traction by Apr-16' [S1, S2] • A second messages figure (500M messages/month) on a separate page [S3] • Funding raised figure as narrated by Pitch Deck Hunt: $23.1M [S4] • Stage (Series A) and sector (Software) from profile [P1, P2] Needs Validation: • Measurement basis of messages metric: cumulative vs. monthly [C2, C3] • External confirmation of funding raised [C1] • Revenue, bu
+  rendered:OWNER:D_ic_memo: Open Concerns The core usage metric — 500M messages — is stated with two different measurement bases in the same deck: without an interval on page 10 ('Traction by Apr-16') [C3, S2] and as a monthly figure on page 12 [C2, S3].
+  rendered:OWNER:F_truthdelta_ui: Page 10 states 500M messages without an explicit interval; page 12 states 500M messages/month.
+  rendered:PAID:F_truthdelta_ui: Page 10 states 500M messages without an explicit interval; page 12 states 500M messages/month.
+  rendered:STAFF:D_ic_memo: Measurement ambiguity on the core traction metric: the deck's page 10 ('Traction by Apr-16') states 500M messages without an explicit interval [C3, S2], while page 12 states 500M messages/month [C2, S3].
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: 140,000+ bots and 500M messages, on a slide headed 'Traction by Apr-16' [S1, S2] • A second messages figure (500M messages/month) on a separate page [S3] • Funding raised figure as narrated by Pitch Deck Hunt: $23.1M [S4] • Stage (Series A) and sector (Software) from profile [P1, P2] Needs Validation: • Measurement basis of messages metric: cumulative vs. monthly [C2, C3] • External confirmation of funding raised [C1] • Revenue, bu
+  rendered:STAFF:D_ic_memo: Open Concerns The core usage metric — 500M messages — is stated with two different measurement bases in the same deck: without an interval on page 10 ('Traction by Apr-16') [C3, S2] and as a monthly figure on page 12 [C2, S3].
+  rendered:STAFF:D_ic_memo: Upside Scenario If the 500M messages figure represents a monthly run rate [S3] rather than a cumulative total, and if the 140,000+ bots [S1] correspond to a large number of paying customers with meaningful revenue per account, the engagement scale would indicate a platform with substantial adoption at the time of the 'Traction by Apr-16' slide.
+  rendered:STAFF:D_ic_memo: Downside Scenario If the 500M messages figure is a cumulative total rather than monthly [C3 vs.
+  rendered:STAFF:D_ic_memo: Zelda Advantage The verification process specifically identified that the 500M messages figure appears twice in the same deck with different measurement bases — once without an interval and once as a monthly figure [C2, C3] — a consistency issue that a plain AI summary would likely report as a single confirmed data point rather than as an unresolved ambiguity requiring management clarification before the figure can be used analytically.
+  rendered:STAFF:D_ic_memo: Questions for Management Is the 500M messages figure a cumulative total or a monthly run rate, and which page of the deck reflects the correct measurement basis [C2, C3, S2, S3]?
+  rendered:STAFF:E_ic_memo_dl: Measurement ambiguity on the core traction metric: the deck's page 10 ('Traction by Apr-16') states 500M messages without an explicit interval [C3, S2], while page 12 states 500M messages/month [C2, S3].
+  rendered:STAFF:E_ic_memo_dl: • A second messages figure (500M messages/month) on a separate page [S3]
+  rendered:STAFF:E_ic_memo_dl: Next evidence to supply: Audited or reviewed financial statements showing revenue, gross margin, and cash position, alongside a reconciled explanation of whether the 500M messages figure is cumulative or monthly.
+  rendered:STAFF:E_ic_memo_dl: - The core usage metric — 500M messages — is stated with two different measurement bases in the same deck: without an interval on page 10 ('Traction by Apr-16') [C3, S2] and as a monthly figure on page 12 [C2, S3].
+  rendered:STAFF:E_ic_memo_dl: If the 500M messages figure represents a monthly run rate [S3] rather than a cumulative total, and if the 140,000+ bots [S1] correspond to a large number of paying customers with meaningful revenue per account, the engagement scale would indicate a platform with substantial adoption at the time of the 'Traction by Apr-16' slide.
+  rendered:STAFF:E_ic_memo_dl: If the 500M messages figure is a cumulative total rather than monthly [C3 vs.
+  rendered:STAFF:E_ic_memo_dl: The verification process specifically identified that the 500M messages figure appears twice in the same deck with different measurement bases — once without an interval and once as a monthly figure [C2, C3] — a consistency issue that a plain AI summary would likely report as a single confirmed data point rather than as an unresolved ambiguity requiring management clarification before the figure can be used analytically.
+  rendered:STAFF:E_ic_memo_dl: - Is the 500M messages figure a cumulative total or a monthly run rate, and which page of the deck reflects the correct measurement basis [C2, C3, S2, S3]?
+  rendered:STAFF:F_truthdelta_ui: Page 10 states 500M messages without an explicit interval; page 12 states 500M messages/month.
+
+== ra109_cumulative_asserted: 0
+
+== ra109_contradiction_or_error_words: 26
+  stored:risk_assessment: If the cumulative figure is being presented as a monthly figure, the key traction claim is materially overstated.
+  stored:open_concerns: This inconsistency has not been reconciled and must be clarified before the figure can be interpreted, because the difference between a cumulative total and a monthly rate is material to assessing the company's scale.
+  LITE:memo_api:open_concerns: This inconsistency has not been reconciled and must be clarified before the figure can be interpreted, because the difference between a cumulative total and a monthly rate is material to assessing the company's scale.
+  PAID:memo_api:open_concerns: This inconsistency has not been reconciled and must be clarified before the figure can be interpreted, because the difference between a cumulative total and a monthly rate is material to assessing the company's scale.
+  STAFF:memo_api:risk_assessment: If the cumulative figure is being presented as a monthly figure, the key traction claim is materially overstated.
+  STAFF:memo_api:open_concerns: This inconsistency has not been reconciled and must be clarified before the figure can be interpreted, because the difference between a cumulative total and a monthly rate is material to assessing the company's scale.
+  rendered:OWNER:B_profile_analysis: One-time purchase Truth Delta Report Checks document claims against available external evidence, keeping contradictions, missing evidence and unavailable sources distinct. $19.99 USD Review your company and evidence Use your own company materials to see what Zelda may surface to an investor.
+  rendered:OWNER:D_ic_memo: This inconsistency has not been reconciled and must be clarified before the figure can be interpreted, because the difference between a cumulative total and a monthly rate is material to assessing the company's scale.
+  rendered:OWNER:D_ic_memo: One-time purchase Truth Delta Report Checks document claims against available external evidence, keeping contradictions, missing evidence and unavailable sources distinct. $19.99 USD Review your company and evidence Use your own company materials to see what Zelda may surface to an investor.
+  rendered:OWNER:F_truthdelta_ui: Zelda Lite Verification 🔍 Truth Delta Verification Evidence Credibility — /100 — 4 Claims Analyzed 0 Verified 4 Not established Evidence Coverage Of the claims Zelda cross-checked, how many public sources (SEC EDGAR) verified, contradicted, or could not establish.
+  rendered:PAID:C2_company_overview: Partial Claims & verification Evidence Credibility: not scored Limited public evidence: none of the 4 claims could be verified or contradicted against a public source.
+  rendered:PAID:F_truthdelta_ui: Zelda Lite Verification 🔍 Truth Delta Verification Evidence Credibility — /100 — 4 Claims Analyzed 0 Verified 4 Not established Evidence Coverage Of the claims Zelda cross-checked, how many public sources (SEC EDGAR) verified, contradicted, or could not establish.
+  rendered:STAFF:C2_company_overview: Worth investigating Funding raised — not established check in Truth Delta → Usage — not established check in Truth Delta → The core usage metric — 500M messages — is stated with two different measurement bases… see the IC Memo → This inconsistency has not been reconciled and must be clarified before the figure can… see the IC Memo → Claims & verification Evidence Credibility: not scored Limited public evidence: none of the 4 claims could be verified or contradicted against a public source. ■ Ver
+  rendered:STAFF:C2_company_overview: One-time purchase Truth Delta Report Checks document claims against available external evidence, keeping contradictions, missing evidence and unavailable sources distinct. $19.99 USD Select the company and evidence Upload a document or select a company below.
+  rendered:STAFF:D_ic_memo: If the cumulative figure is being presented as a monthly figure, the key traction claim is materially overstated.
+  rendered:STAFF:D_ic_memo: This inconsistency has not been reconciled and must be clarified before the figure can be interpreted, because the difference between a cumulative total and a monthly rate is material to assessing the company's scale.
+  rendered:STAFF:D_ic_memo: Evidence Credibility: not scored — no claim could be verified or contradicted against a public source No public data could be found to independently verify these claims (checked SEC EDGAR).
+  rendered:STAFF:D_ic_memo: This is not a confirmation the claims are accurate — only that no corroborating or contradicting external data was found for "ManyChat".
+  rendered:STAFF:D_ic_memo: Claims checked: 4 ■ Verified against public sources — 0 · ■ Contradicted — 0 · ■ Not established — 4 (of 4) View the full Truth Delta report → Financial Snapshot Raising: not disclosed Current revenue: not disclosed Monthly burn: not disclosed Runway: not calculated Team size: not disclosed ℹ This report is provided for informational and due-diligence purposes only.
+  rendered:STAFF:D_ic_memo: One-time purchase Truth Delta Report Checks document claims against available external evidence, keeping contradictions, missing evidence and unavailable sources distinct. $19.99 USD Select the company and evidence Upload a document or select a company below.
+  rendered:STAFF:E_ic_memo_dl: If the cumulative figure is being presented as a monthly figure, the key traction claim is materially overstated.
+  rendered:STAFF:E_ic_memo_dl: This inconsistency has not been reconciled and must be clarified before the figure can be interpreted, because the difference between a cumulative total and a monthly rate is material to assessing the company's scale.
+  rendered:STAFF:E_ic_memo_dl: **Evidence Credibility:** not scored — no claim could be verified or contradicted against a public source
+  rendered:STAFF:E_ic_memo_dl: This is not a confirmation the claims are accurate — only that no corroborating or contradicting external data was found for "ManyChat".
+  rendered:STAFF:E_ic_memo_dl: **Evidence coverage:** 0 verified · 0 contradicted · 4 not established (of 4)
+  rendered:STAFF:F_truthdelta_ui: Zelda AI — Full Verification 🔍 Truth Delta Verification Evidence Credibility — /100 — 4 Claims Analyzed 0 Verified 4 Not established Evidence Coverage Of the claims Zelda cross-checked, how many public sources (SEC EDGAR) verified, contradicted, or could not establish.
+
+== ra109_merged_or_verified_500M: 5
+  stored:zelda_advantage: The verification process specifically identified that the 500M messages figure appears twice in the same deck with different measurement bases — once without an interval and once as a monthly figure [C2, C3] — a consistency issue that a plain AI summary would likely report as a single confirmed data point rather than as an unresolved ambiguity requiring management clarification before the figure can be used analytically.
+  STAFF:memo_api:zelda_advantage: The verification process specifically identified that the 500M messages figure appears twice in the same deck with different measurement bases — once without an interval and once as a monthly figure [C2, C3] — a consistency issue that a plain AI summary would likely report as a single confirmed data point rather than as an unresolved ambiguity requiring management clarification before the figure can be used analytically.
+  rendered:STAFF:C2_company_overview: Worth investigating Funding raised — not established check in Truth Delta → Usage — not established check in Truth Delta → The core usage metric — 500M messages — is stated with two different measurement bases… see the IC Memo → This inconsistency has not been reconciled and must be clarified before the figure can… see the IC Memo → Claims & verification Evidence Credibility: not scored Limited public evidence: none of the 4 claims could be verified or contradicted against a public source. ■ Ver
+  rendered:STAFF:D_ic_memo: Zelda Advantage The verification process specifically identified that the 500M messages figure appears twice in the same deck with different measurement bases — once without an interval and once as a monthly figure [C2, C3] — a consistency issue that a plain AI summary would likely report as a single confirmed data point rather than as an unresolved ambiguity requiring management clarification before the figure can be used analytically.
+  rendered:STAFF:E_ic_memo_dl: The verification process specifically identified that the 500M messages figure appears twice in the same deck with different measurement bases — once without an interval and once as a monthly figure [C2, C3] — a consistency issue that a plain AI summary would likely report as a single confirmed data point rather than as an unresolved ambiguity requiring management clarification before the figure can be used analytically.
+
+== ra109_annualised_or_converted: 0
+
+== funding_total_wording: 7
+  stored:supported_points: - Pitch Deck Hunt lists $23.1M as the total amount raised [S4].
+  LITE:memo_api:supported_points: - Pitch Deck Hunt lists $23.1M as the total amount raised [S4].
+  PAID:memo_api:supported_points: - Pitch Deck Hunt lists $23.1M as the total amount raised [S4].
+  STAFF:memo_api:supported_points: - Pitch Deck Hunt lists $23.1M as the total amount raised [S4].
+  rendered:OWNER:D_ic_memo: Pitch Deck Hunt lists $23.1M as the total amount raised [S4].
+  rendered:STAFF:D_ic_memo: Pitch Deck Hunt lists $23.1M as the total amount raised [S4].
+  rendered:STAFF:E_ic_memo_dl: - Pitch Deck Hunt lists $23.1M as the total amount raised [S4].
+
+== funding_credited_to_company: 7
+  stored:supported_points: While this could not be confirmed by external evidence [C1], it establishes the fundraising narrative the company has put forward and sets a baseline for diligence on capital history.
+  LITE:memo_api:supported_points: While this could not be confirmed by external evidence [C1], it establishes the fundraising narrative the company has put forward and sets a baseline for diligence on capital history.
+  PAID:memo_api:supported_points: While this could not be confirmed by external evidence [C1], it establishes the fundraising narrative the company has put forward and sets a baseline for diligence on capital history.
+  STAFF:memo_api:supported_points: While this could not be confirmed by external evidence [C1], it establishes the fundraising narrative the company has put forward and sets a baseline for diligence on capital history.
+  rendered:OWNER:D_ic_memo: While this could not be confirmed by external evidence [C1], it establishes the fundraising narrative the company has put forward and sets a baseline for diligence on capital history.
+  rendered:STAFF:D_ic_memo: While this could not be confirmed by external evidence [C1], it establishes the fundraising narrative the company has put forward and sets a baseline for diligence on capital history.
+  rendered:STAFF:E_ic_memo_dl: While this could not be confirmed by external evidence [C1], it establishes the fundraising narrative the company has put forward and sets a baseline for diligence on capital history.
+
+== funds_presupposed_used: 7
+  stored:open_concerns: For a company described as Series A [P1], the absence of any financial disclosure makes it impossible to evaluate commercial progress, capital efficiency, or how the $23.1M (per Pitch Deck Hunt) narrated as raised [S4] has been deployed.
+  LITE:memo_api:open_concerns: For a company described as Series A [P1], the absence of any financial disclosure makes it impossible to evaluate commercial progress, capital efficiency, or how the $23.1M (per Pitch Deck Hunt) narrated as raised [S4] has been deployed.
+  PAID:memo_api:open_concerns: For a company described as Series A [P1], the absence of any financial disclosure makes it impossible to evaluate commercial progress, capital efficiency, or how the $23.1M (per Pitch Deck Hunt) narrated as raised [S4] has been deployed.
+  STAFF:memo_api:open_concerns: For a company described as Series A [P1], the absence of any financial disclosure makes it impossible to evaluate commercial progress, capital efficiency, or how the $23.1M (per Pitch Deck Hunt) narrated as raised [S4] has been deployed.
+  rendered:OWNER:D_ic_memo: For a company described as Series A [P1], the absence of any financial disclosure makes it impossible to evaluate commercial progress, capital efficiency, or how the $23.1M (per Pitch Deck Hunt) narrated as raised [S4] has been deployed.
+  rendered:STAFF:D_ic_memo: For a company described as Series A [P1], the absence of any financial disclosure makes it impossible to evaluate commercial progress, capital efficiency, or how the $23.1M (per Pitch Deck Hunt) narrated as raised [S4] has been deployed.
+  rendered:STAFF:E_ic_memo_dl: For a company described as Series A [P1], the absence of any financial disclosure makes it impossible to evaluate commercial progress, capital efficiency, or how the $23.1M (per Pitch Deck Hunt) narrated as raised [S4] has been deployed.
+
+== outside_knowledge_platform: 4
+  stored:questions_for_management: - What platform does ManyChat primarily operate on (e.g., Facebook Messenger, other channels), and what are the key dependency or policy risks associated with that platform?
+  STAFF:memo_api:questions_for_management: - What platform does ManyChat primarily operate on (e.g., Facebook Messenger, other channels), and what are the key dependency or policy risks associated with that platform?
+  rendered:STAFF:D_ic_memo: What platform does ManyChat primarily operate on (e.g., Facebook Messenger, other channels), and what are the key dependency or policy risks associated with that platform?
+  rendered:STAFF:E_ic_memo_dl: - What platform does ManyChat primarily operate on (e.g., Facebook Messenger, other channels), and what are the key dependency or policy risks associated with that platform?
+
+== funding_sentence_missing_narrator: 0
+
+== narrator_with_traction_refs_or_words: 2
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: 140,000+ bots and 500M messages, on a slide headed 'Traction by Apr-16' [S1, S2] • A second messages figure (500M messages/month) on a separate page [S3] • Funding raised figure as narrated by Pitch Deck Hunt: $23.1M [S4] • Stage (Series A) and sector (Software) from profile [P1, P2] Needs Validation: • Measurement basis of messages metric: cumulative vs. monthly [C2, C3] • External confirmation of funding raised [C1] • Revenue, bu
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: 140,000+ bots and 500M messages, on a slide headed 'Traction by Apr-16' [S1, S2] • A second messages figure (500M messages/month) on a separate page [S3] • Funding raised figure as narrated by Pitch Deck Hunt: $23.1M [S4] • Stage (Series A) and sector (Software) from profile [P1, P2] Needs Validation: • Measurement basis of messages metric: cumulative vs. monthly [C2, C3] • External confirmation of funding raised [C1] • Revenue, bu
+
+== equality_wording: 0
+
+== independent_validation_wording: 80
+  stored:risk_assessment: Unverified funding: The $23.1M raised figure is narrated by Pitch Deck Hunt [S4] and could not be confirmed by any external evidence [C1].
+  stored:information_readiness: Needs Validation:
+  stored:information_readiness: • External confirmation of funding raised [C1]
+  stored:supported_points: This is a self-reported figure that was not independently verified [C4], but it provides a concrete scale reference for bot adoption at that point in time.
+  stored:supported_points: While this could not be confirmed by external evidence [C1], it establishes the fundraising narrative the company has put forward and sets a baseline for diligence on capital history.
+  stored:upside_scenario: These conditions are not confirmed by any evidence in the extracted material and would require revenue and payment data to substantiate.
+  stored:zelda_advantage: The verification process specifically identified that the 500M messages figure appears twice in the same deck with different measurement bases — once without an interval and once as a monthly figure [C2, C3] — a consistency issue that a plain AI summary would likely report as a single confirmed data point rather than as an unresolved ambiguity requiring management clarification before the figure can be used analytically.
+  LITE:memo_api:information_readiness: Needs Validation:
+  LITE:memo_api:information_readiness: • External confirmation of funding raised [C1]
+  LITE:memo_api:supported_points: This is a self-reported figure that was not independently verified [C4], but it provides a concrete scale reference for bot adoption at that point in time.
+  LITE:memo_api:supported_points: While this could not be confirmed by external evidence [C1], it establishes the fundraising narrative the company has put forward and sets a baseline for diligence on capital history.
+  PAID:memo_api:information_readiness: Needs Validation:
+  PAID:memo_api:information_readiness: • External confirmation of funding raised [C1]
+  PAID:memo_api:supported_points: This is a self-reported figure that was not independently verified [C4], but it provides a concrete scale reference for bot adoption at that point in time.
+  PAID:memo_api:supported_points: While this could not be confirmed by external evidence [C1], it establishes the fundraising narrative the company has put forward and sets a baseline for diligence on capital history.
+  STAFF:memo_api:risk_assessment: Unverified funding: The $23.1M raised figure is narrated by Pitch Deck Hunt [S4] and could not be confirmed by any external evidence [C1].
+  STAFF:memo_api:information_readiness: Needs Validation:
+  STAFF:memo_api:information_readiness: • External confirmation of funding raised [C1]
+  STAFF:memo_api:supported_points: This is a self-reported figure that was not independently verified [C4], but it provides a concrete scale reference for bot adoption at that point in time.
+  STAFF:memo_api:supported_points: While this could not be confirmed by external evidence [C1], it establishes the fundraising narrative the company has put forward and sets a baseline for diligence on capital history.
+  STAFF:memo_api:upside_scenario: These conditions are not confirmed by any evidence in the extracted material and would require revenue and payment data to substantiate.
+  STAFF:memo_api:zelda_advantage: The verification process specifically identified that the 500M messages figure appears twice in the same deck with different measurement bases — once without an interval and once as a monthly figure [C2, C3] — a consistency issue that a plain AI summary would likely report as a single confirmed data point rather than as an unresolved ambiguity requiring management clarification before the figure can be used analytically.
+  rendered:OWNER:B_profile_analysis: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:B_profile_analysis: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:B_profile_analysis: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:B_profile_analysis: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:B_profile_analysis: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:B_profile_analysis: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:B_profile_analysis: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: 140,000+ bots and 500M messages, on a slide headed 'Traction by Apr-16' [S1, S2] • A second messages figure (500M messages/month) on a separate page [S3] • Funding raised figure as narrated by Pitch Deck Hunt: $23.1M [S4] • Stage (Series A) and sector (Software) from profile [P1, P2] Needs Validation: • Measurement basis of messages metric: cumulative vs. monthly [C2, C3] • External confirmation of funding raised [C1] • Revenue, bu
+  rendered:OWNER:D_ic_memo: This is a self-reported figure that was not independently verified [C4], but it provides a concrete scale reference for bot adoption at that point in time.
+  rendered:OWNER:D_ic_memo: While this could not be confirmed by external evidence [C1], it establishes the fundraising narrative the company has put forward and sets a baseline for diligence on capital history.
+  rendered:OWNER:D_ic_memo: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+  rendered:OWNER:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:F_truthdelta_ui: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+  rendered:PAID:C2_company_overview: Outside Overall fit Only part of the picture is corroborated, so this is a softer match.
+  rendered:PAID:C2_company_overview: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+  rendered:PAID:F_truthdelta_ui: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+  rendered:STAFF:C2_company_overview: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+  rendered:STAFF:C2_company_overview: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:C2_company_overview: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:C2_company_overview: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:C2_company_overview: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:C2_company_overview: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:C2_company_overview: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:C2_company_overview: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:D_ic_memo: Unverified funding: The $23.1M raised figure is narrated by Pitch Deck Hunt [S4] and could not be confirmed by any external evidence [C1].
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: 140,000+ bots and 500M messages, on a slide headed 'Traction by Apr-16' [S1, S2] • A second messages figure (500M messages/month) on a separate page [S3] • Funding raised figure as narrated by Pitch Deck Hunt: $23.1M [S4] • Stage (Series A) and sector (Software) from profile [P1, P2] Needs Validation: • Measurement basis of messages metric: cumulative vs. monthly [C2, C3] • External confirmation of funding raised [C1] • Revenue, bu
+  rendered:STAFF:D_ic_memo: This is a self-reported figure that was not independently verified [C4], but it provides a concrete scale reference for bot adoption at that point in time.
+  rendered:STAFF:D_ic_memo: While this could not be confirmed by external evidence [C1], it establishes the fundraising narrative the company has put forward and sets a baseline for diligence on capital history.
+  rendered:STAFF:D_ic_memo: These conditions are not confirmed by any evidence in the extracted material and would require revenue and payment data to substantiate.
+  rendered:STAFF:D_ic_memo: Zelda Advantage The verification process specifically identified that the 500M messages figure appears twice in the same deck with different measurement bases — once without an interval and once as a monthly figure [C2, C3] — a consistency issue that a plain AI summary would likely report as a single confirmed data point rather than as an unresolved ambiguity requiring management clarification before the figure can be used analytically.
+  rendered:STAFF:D_ic_memo: Truth Delta An automated cross-check of the deck's claims against independent public records.
+  rendered:STAFF:D_ic_memo: Evidence Credibility: not scored — no claim could be verified or contradicted against a public source No public data could be found to independently verify these claims (checked SEC EDGAR).
+  rendered:STAFF:D_ic_memo: This is not a confirmation the claims are accurate — only that no corroborating or contradicting external data was found for "ManyChat".
+  rendered:STAFF:D_ic_memo: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+  rendered:STAFF:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:E_ic_memo_dl: Unverified funding: The $23.1M raised figure is narrated by Pitch Deck Hunt [S4] and could not be confirmed by any external evidence [C1].
+  rendered:STAFF:E_ic_memo_dl: Needs Validation:
+  rendered:STAFF:E_ic_memo_dl: • External confirmation of funding raised [C1]
+  rendered:STAFF:E_ic_memo_dl: This is a self-reported figure that was not independently verified [C4], but it provides a concrete scale reference for bot adoption at that point in time.
+  rendered:STAFF:E_ic_memo_dl: While this could not be confirmed by external evidence [C1], it establishes the fundraising narrative the company has put forward and sets a baseline for diligence on capital history.
+  rendered:STAFF:E_ic_memo_dl: These conditions are not confirmed by any evidence in the extracted material and would require revenue and payment data to substantiate.
+  rendered:STAFF:E_ic_memo_dl: The verification process specifically identified that the 500M messages figure appears twice in the same deck with different measurement bases — once without an interval and once as a monthly figure [C2, C3] — a consistency issue that a plain AI summary would likely report as a single confirmed data point rather than as an unresolved ambiguity requiring management clarification before the figure can be used analytically.
+  rendered:STAFF:E_ic_memo_dl: No public data could be found to independently verify these claims (checked SEC EDGAR).
+  rendered:STAFF:E_ic_memo_dl: This is not a confirmation the claims are accurate — only that no corroborating or contradicting external data was found for "ManyChat".
+  rendered:STAFF:E_ic_memo_dl: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+  rendered:STAFF:F_truthdelta_ui: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+
+== narrator_of_wording: 0
+
+== current_total_wording_on_funding: 2
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: 140,000+ bots and 500M messages, on a slide headed 'Traction by Apr-16' [S1, S2] • A second messages figure (500M messages/month) on a separate page [S3] • Funding raised figure as narrated by Pitch Deck Hunt: $23.1M [S4] • Stage (Series A) and sector (Software) from profile [P1, P2] Needs Validation: • Measurement basis of messages metric: cumulative vs. monthly [C2, C3] • External confirmation of funding raised [C1] • Revenue, bu
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: 140,000+ bots and 500M messages, on a slide headed 'Traction by Apr-16' [S1, S2] • A second messages figure (500M messages/month) on a separate page [S3] • Funding raised figure as narrated by Pitch Deck Hunt: $23.1M [S4] • Stage (Series A) and sector (Software) from profile [P1, P2] Needs Validation: • Measurement basis of messages metric: cumulative vs. monthly [C2, C3] • External confirmation of funding raised [C1] • Revenue, bu
+
+== funding_with_2015: 0
+
+== historical_as_current: 0
+
+== as_of_slide_context: 0
+
+== runway_or_cash_premise: 0
+
+== runway_or_cash_any: 45
+  stored:financial_analysis: This is a historical fundraising figure as narrated by Pitch Deck Hunt; it is not a current raise amount, proceeds, or cash-on-hand figure.
+  stored:financial_analysis: • Burn rate: Not found in the extracted evidence.
+  stored:financial_analysis: • Runway: Cannot be calculated — no dated cash balance or burn rate is present in the evidence.
+  stored:information_readiness: • Revenue, burn rate, and financial statements
+  stored:information_readiness: Next evidence to supply: Audited or reviewed financial statements showing revenue, gross margin, and cash position, alongside a reconciled explanation of whether the 500M messages figure is cumulative or monthly.
+  stored:open_concerns: - No revenue, burn, or financial data of any kind was extracted from the document.
+  stored:what_would_change_the_picture: The single most important missing piece of evidence is a dated financial statement — at minimum a P&L showing revenue and gross margin alongside a cash balance and monthly burn rate — which would allow assessment of whether the self-reported traction [S1, S2, S3] is translating into commercial scale and how long the company can operate on the capital narrated as raised [S4].
+  stored:questions_for_management: - What is the current monthly cash burn and dated cash balance, and how does that translate to runway against the $23.1M (per Pitch Deck Hunt) narrated as raised [S4]?
+  LITE:memo_api:information_readiness: • Revenue, burn rate, and financial statements
+  LITE:memo_api:information_readiness: Next evidence to supply: Audited or reviewed financial statements showing revenue, gross margin, and cash position, alongside a reconciled explanation of whether the 500M messages figure is cumulative or monthly.
+  LITE:memo_api:open_concerns: - No revenue, burn, or financial data of any kind was extracted from the document.
+  LITE:memo_api:what_would_change_the_picture: The single most important missing piece of evidence is a dated financial statement — at minimum a P&L showing revenue and gross margin alongside a cash balance and monthly burn rate — which would allow assessment of whether the self-reported traction [S1, S2, S3] is translating into commercial scale and how long the company can operate on the capital narrated as raised [S4].
+  PAID:memo_api:information_readiness: • Revenue, burn rate, and financial statements
+  PAID:memo_api:information_readiness: Next evidence to supply: Audited or reviewed financial statements showing revenue, gross margin, and cash position, alongside a reconciled explanation of whether the 500M messages figure is cumulative or monthly.
+  PAID:memo_api:open_concerns: - No revenue, burn, or financial data of any kind was extracted from the document.
+  PAID:memo_api:what_would_change_the_picture: The single most important missing piece of evidence is a dated financial statement — at minimum a P&L showing revenue and gross margin alongside a cash balance and monthly burn rate — which would allow assessment of whether the self-reported traction [S1, S2, S3] is translating into commercial scale and how long the company can operate on the capital narrated as raised [S4].
+  STAFF:memo_api:financial_analysis: This is a historical fundraising figure as narrated by Pitch Deck Hunt; it is not a current raise amount, proceeds, or cash-on-hand figure.
+  STAFF:memo_api:financial_analysis: • Burn rate: Not found in the extracted evidence.
+  STAFF:memo_api:financial_analysis: • Runway: Cannot be calculated — no dated cash balance or burn rate is present in the evidence.
+  STAFF:memo_api:information_readiness: • Revenue, burn rate, and financial statements
+  STAFF:memo_api:information_readiness: Next evidence to supply: Audited or reviewed financial statements showing revenue, gross margin, and cash position, alongside a reconciled explanation of whether the 500M messages figure is cumulative or monthly.
+  STAFF:memo_api:open_concerns: - No revenue, burn, or financial data of any kind was extracted from the document.
+  STAFF:memo_api:what_would_change_the_picture: The single most important missing piece of evidence is a dated financial statement — at minimum a P&L showing revenue and gross margin alongside a cash balance and monthly burn rate — which would allow assessment of whether the self-reported traction [S1, S2, S3] is translating into commercial scale and how long the company can operate on the capital narrated as raised [S4].
+  STAFF:memo_api:questions_for_management: - What is the current monthly cash burn and dated cash balance, and how does that translate to runway against the $23.1M (per Pitch Deck Hunt) narrated as raised [S4]?
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: 140,000+ bots and 500M messages, on a slide headed 'Traction by Apr-16' [S1, S2] • A second messages figure (500M messages/month) on a separate page [S3] • Funding raised figure as narrated by Pitch Deck Hunt: $23.1M [S4] • Stage (Series A) and sector (Software) from profile [P1, P2] Needs Validation: • Measurement basis of messages metric: cumulative vs. monthly [C2, C3] • External confirmation of funding raised [C1] • Revenue, bu
+  rendered:OWNER:D_ic_memo: No revenue, burn, or financial data of any kind was extracted from the document.
+  rendered:OWNER:D_ic_memo: What Would Change the Picture The single most important missing piece of evidence is a dated financial statement — at minimum a P&L showing revenue and gross margin alongside a cash balance and monthly burn rate — which would allow assessment of whether the self-reported traction [S1, S2, S3] is translating into commercial scale and how long the company can operate on the capital narrated as raised [S4].
+  rendered:STAFF:D_ic_memo: This is a historical fundraising figure as narrated by Pitch Deck Hunt; it is not a current raise amount, proceeds, or cash-on-hand figure.
+  rendered:STAFF:D_ic_memo: • Burn rate: Not found in the extracted evidence.
+  rendered:STAFF:D_ic_memo: • Runway: Cannot be calculated — no dated cash balance or burn rate is present in the evidence.
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: 140,000+ bots and 500M messages, on a slide headed 'Traction by Apr-16' [S1, S2] • A second messages figure (500M messages/month) on a separate page [S3] • Funding raised figure as narrated by Pitch Deck Hunt: $23.1M [S4] • Stage (Series A) and sector (Software) from profile [P1, P2] Needs Validation: • Measurement basis of messages metric: cumulative vs. monthly [C2, C3] • External confirmation of funding raised [C1] • Revenue, bu
+  rendered:STAFF:D_ic_memo: No revenue, burn, or financial data of any kind was extracted from the document.
+  rendered:STAFF:D_ic_memo: What Would Change the Picture The single most important missing piece of evidence is a dated financial statement — at minimum a P&L showing revenue and gross margin alongside a cash balance and monthly burn rate — which would allow assessment of whether the self-reported traction [S1, S2, S3] is translating into commercial scale and how long the company can operate on the capital narrated as raised [S4].
+  rendered:STAFF:D_ic_memo: What is the current monthly cash burn and dated cash balance, and how does that translate to runway against the $23.1M (per Pitch Deck Hunt) narrated as raised [S4]?
+  rendered:STAFF:D_ic_memo: Claims checked: 4 ■ Verified against public sources — 0 · ■ Contradicted — 0 · ■ Not established — 4 (of 4) View the full Truth Delta report → Financial Snapshot Raising: not disclosed Current revenue: not disclosed Monthly burn: not disclosed Runway: not calculated Team size: not disclosed ℹ This report is provided for informational and due-diligence purposes only.
+  rendered:STAFF:E_ic_memo_dl: This is a historical fundraising figure as narrated by Pitch Deck Hunt; it is not a current raise amount, proceeds, or cash-on-hand figure.
+  rendered:STAFF:E_ic_memo_dl: • Burn rate: Not found in the extracted evidence.
+  rendered:STAFF:E_ic_memo_dl: • Runway: Cannot be calculated — no dated cash balance or burn rate is present in the evidence.
+  rendered:STAFF:E_ic_memo_dl: • Revenue, burn rate, and financial statements
+  rendered:STAFF:E_ic_memo_dl: Next evidence to supply: Audited or reviewed financial statements showing revenue, gross margin, and cash position, alongside a reconciled explanation of whether the 500M messages figure is cumulative or monthly.
+  rendered:STAFF:E_ic_memo_dl: - No revenue, burn, or financial data of any kind was extracted from the document.
+  rendered:STAFF:E_ic_memo_dl: The single most important missing piece of evidence is a dated financial statement — at minimum a P&L showing revenue and gross margin alongside a cash balance and monthly burn rate — which would allow assessment of whether the self-reported traction [S1, S2, S3] is translating into commercial scale and how long the company can operate on the capital narrated as raised [S4].
+  rendered:STAFF:E_ic_memo_dl: - What is the current monthly cash burn and dated cash balance, and how does that translate to runway against the $23.1M (per Pitch Deck Hunt) narrated as raised [S4]?
+  rendered:STAFF:E_ic_memo_dl: - Monthly burn: not disclosed
+  rendered:STAFF:E_ic_memo_dl: - Runway: not calculated
+
+== raise_premise: 19
+  stored:financial_analysis: This is a historical fundraising figure as narrated by Pitch Deck Hunt; it is not a current raise amount, proceeds, or cash-on-hand figure.
+  stored:financial_analysis: • Use of proceeds: Not found in the extracted evidence.
+  stored:information_readiness: • Use of proceeds
+  stored:questions_for_management: - Is a new fundraising round currently planned or in progress, and if so, what are the target amount and use of proceeds?
+  LITE:memo_api:information_readiness: • Use of proceeds
+  PAID:memo_api:information_readiness: • Use of proceeds
+  STAFF:memo_api:financial_analysis: This is a historical fundraising figure as narrated by Pitch Deck Hunt; it is not a current raise amount, proceeds, or cash-on-hand figure.
+  STAFF:memo_api:financial_analysis: • Use of proceeds: Not found in the extracted evidence.
+  STAFF:memo_api:information_readiness: • Use of proceeds
+  STAFF:memo_api:questions_for_management: - Is a new fundraising round currently planned or in progress, and if so, what are the target amount and use of proceeds?
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: 140,000+ bots and 500M messages, on a slide headed 'Traction by Apr-16' [S1, S2] • A second messages figure (500M messages/month) on a separate page [S3] • Funding raised figure as narrated by Pitch Deck Hunt: $23.1M [S4] • Stage (Series A) and sector (Software) from profile [P1, P2] Needs Validation: • Measurement basis of messages metric: cumulative vs. monthly [C2, C3] • External confirmation of funding raised [C1] • Revenue, bu
+  rendered:STAFF:D_ic_memo: This is a historical fundraising figure as narrated by Pitch Deck Hunt; it is not a current raise amount, proceeds, or cash-on-hand figure.
+  rendered:STAFF:D_ic_memo: • Use of proceeds: Not found in the extracted evidence.
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: 140,000+ bots and 500M messages, on a slide headed 'Traction by Apr-16' [S1, S2] • A second messages figure (500M messages/month) on a separate page [S3] • Funding raised figure as narrated by Pitch Deck Hunt: $23.1M [S4] • Stage (Series A) and sector (Software) from profile [P1, P2] Needs Validation: • Measurement basis of messages metric: cumulative vs. monthly [C2, C3] • External confirmation of funding raised [C1] • Revenue, bu
+  rendered:STAFF:D_ic_memo: Is a new fundraising round currently planned or in progress, and if so, what are the target amount and use of proceeds?
+  rendered:STAFF:E_ic_memo_dl: This is a historical fundraising figure as narrated by Pitch Deck Hunt; it is not a current raise amount, proceeds, or cash-on-hand figure.
+  rendered:STAFF:E_ic_memo_dl: • Use of proceeds: Not found in the extracted evidence.
+  rendered:STAFF:E_ic_memo_dl: • Use of proceeds
+  rendered:STAFF:E_ic_memo_dl: - Is a new fundraising round currently planned or in progress, and if so, what are the target amount and use of proceeds?
+
+== self_reported_with_funding_ref: 7
+  stored:what_would_change_the_picture: The single most important missing piece of evidence is a dated financial statement — at minimum a P&L showing revenue and gross margin alongside a cash balance and monthly burn rate — which would allow assessment of whether the self-reported traction [S1, S2, S3] is translating into commercial scale and how long the company can operate on the capital narrated as raised [S4].
+  LITE:memo_api:what_would_change_the_picture: The single most important missing piece of evidence is a dated financial statement — at minimum a P&L showing revenue and gross margin alongside a cash balance and monthly burn rate — which would allow assessment of whether the self-reported traction [S1, S2, S3] is translating into commercial scale and how long the company can operate on the capital narrated as raised [S4].
+  PAID:memo_api:what_would_change_the_picture: The single most important missing piece of evidence is a dated financial statement — at minimum a P&L showing revenue and gross margin alongside a cash balance and monthly burn rate — which would allow assessment of whether the self-reported traction [S1, S2, S3] is translating into commercial scale and how long the company can operate on the capital narrated as raised [S4].
+  STAFF:memo_api:what_would_change_the_picture: The single most important missing piece of evidence is a dated financial statement — at minimum a P&L showing revenue and gross margin alongside a cash balance and monthly burn rate — which would allow assessment of whether the self-reported traction [S1, S2, S3] is translating into commercial scale and how long the company can operate on the capital narrated as raised [S4].
+  rendered:OWNER:D_ic_memo: What Would Change the Picture The single most important missing piece of evidence is a dated financial statement — at minimum a P&L showing revenue and gross margin alongside a cash balance and monthly burn rate — which would allow assessment of whether the self-reported traction [S1, S2, S3] is translating into commercial scale and how long the company can operate on the capital narrated as raised [S4].
+  rendered:STAFF:D_ic_memo: What Would Change the Picture The single most important missing piece of evidence is a dated financial statement — at minimum a P&L showing revenue and gross margin alongside a cash balance and monthly burn rate — which would allow assessment of whether the self-reported traction [S1, S2, S3] is translating into commercial scale and how long the company can operate on the capital narrated as raised [S4].
+  rendered:STAFF:E_ic_memo_dl: The single most important missing piece of evidence is a dated financial statement — at minimum a P&L showing revenue and gross margin alongside a cash balance and monthly burn rate — which would allow assessment of whether the self-reported traction [S1, S2, S3] is translating into commercial scale and how long the company can operate on the capital narrated as raised [S4].
+
+== stage_near_slide_date: 2
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: 140,000+ bots and 500M messages, on a slide headed 'Traction by Apr-16' [S1, S2] • A second messages figure (500M messages/month) on a separate page [S3] • Funding raised figure as narrated by Pitch Deck Hunt: $23.1M [S4] • Stage (Series A) and sector (Software) from profile [P1, P2] Needs Validation: • Measurement basis of messages metric: cumulative vs. monthly [C2, C3] • External confirmation of funding raised [C1] • Revenue, bu
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: 140,000+ bots and 500M messages, on a slide headed 'Traction by Apr-16' [S1, S2] • A second messages figure (500M messages/month) on a separate page [S3] • Funding raised figure as narrated by Pitch Deck Hunt: $23.1M [S4] • Stage (Series A) and sector (Software) from profile [P1, P2] Needs Validation: • Measurement basis of messages metric: cumulative vs. monthly [C2, C3] • External confirmation of funding raised [C1] • Revenue, bu
+
+== platform_user_counts: 0
+
+== advice_words: 3
+  rendered:PAID:C2_company_overview: Buy 3 Truth Delta credits for $25.
+  rendered:PAID:C2_company_overview: Redeem one credit for one new Truth Delta report on any company you evaluate. $25.00 USD 0 Truth Delta credits available 3 reports, 3 companies, use them when you need them Buy three Truth Delta credits now and redeem them later, one at a time, against any company you evaluate.
+  rendered:PAID:C2_company_overview: Buy 3 Truth Delta credits · $25.00 That is $8.33 per report versus $10 each individually.
+
+== list_repr: 0
+
+== mojibake: 0
+

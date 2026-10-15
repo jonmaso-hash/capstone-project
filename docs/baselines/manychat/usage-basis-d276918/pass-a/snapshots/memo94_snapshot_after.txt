@@ -1,0 +1,37 @@
+Invalid line: Truth_Delta_3-Report_Credit_Pack =price_1UNjeJDsh22gDRCcr3XE4qHO
+READ-ONLY (1,)
+MEMO 94 sha256 cdc861d5dd7e03b11a4bf69a86a0827aad88baf00e3b244f40901cc5f63a1c76 updated 2026-10-12 03:22:21.340729+00:00
+ROWS {
+ "3136": {
+  "ClaimedDatapoint": {
+   "count": 3,
+   "latest_ts": "2026-10-12 03:21:26.988955+00:00",
+   "max_pk": 2359
+  },
+  "DocumentChunk": {
+   "count": 12,
+   "latest_ts": "2026-10-12 03:21:26.425896+00:00",
+   "max_pk": 4300
+  },
+  "EntityVerificationReport": {
+   "count": 1,
+   "latest_ts": "2026-10-12 03:21:27.448673+00:00",
+   "max_pk": 35
+  },
+  "IntelligenceInsight": {
+   "count": 3,
+   "latest_ts": "2026-10-12 03:21:26.799916+00:00",
+   "max_pk": 5171
+  },
+  "IntelligenceMemo": {
+   "count": 1,
+   "latest_ts": "2026-10-12 03:22:21.340729+00:00",
+   "max_pk": 94
+  },
+  "TruthDeltaReport": {
+   "count": 1,
+   "latest_ts": "2026-10-12 03:21:31.351866+00:00",
+   "max_pk": 88
+  }
+ }
+}

@@ -1,0 +1,79 @@
+"""Derive this run's scripts from the memo-97 run's (scratchpad np/), changing only the listed names, paths, IDs,
+Redis databases and the subject-name call. Each replacement must match at least once, so a stale value cannot
+survive silently. Usage: python make_scripts.py"""
+import os, secrets
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+PREV = os.path.join(os.path.dirname(HERE), 'np')
+NP_SP = r'C--Users-jonathan-Desktop-KCV-np\c8a313d5-81e1-402a-b7da-9205b6f20fab\scratchpad\np'
+UB_SP = r'C--Users-jonathan-Desktop-KCV-np\c8a313d5-81e1-402a-b7da-9205b6f20fab\scratchpad\ub'
+EV_NP = r'C:\Users\jonathan\Desktop\KCV-mc-np\docs\baselines\manychat\narrator-provenance-b9cddec\pass-a'
+EV_UB = r'C:\Users\jonathan\Desktop\KCV-mc-ub\docs\baselines\manychat\usage-basis-d276918\pass-a'
+
+
+def derive(name, reps, target=None):
+    s = open(os.path.join(PREV, name), encoding='utf-8').read()
+    for a, b in reps:
+        assert s.count(a) >= 1, (name, a)
+        s = s.replace(a, b)
+    open(os.path.join(HERE, target or name), 'w', encoding='utf-8', newline='\n').write(s)
+    print('derived', target or name)
+
+
+derive('prep_copy.py', [
+    ('Narrator-provenance ManyChat Pass A at b9cddec', 'ManyChat usage-basis (RA-109) Pass A at d276918'),
+    ("    'memo96_copy_mcff3': OLD + r'\\mcff3\\db_ff3_copy.sqlite3',\n}",
+     "    'memo96_copy_mcff3': OLD + r'\\mcff3\\db_ff3_copy.sqlite3',\n"
+     "    'memo97_copy_np': NP + r'\\db_np_copy.sqlite3',\n}"),
+    ("OLD = r'C:", "NP = r'C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\" + NP_SP + "'\nOLD = r'C:"),
+    ("'db_np_copy.sqlite3')\nphase", "'db_ub_copy.sqlite3')\nphase"),
+], 'prep_copy.py')
+derive('run_np.py', [
+    ('ManyChat narrator-provenance Pass A run wrapper at b9cddec', 'ManyChat usage-basis (RA-109) Pass A run wrapper at d276918'),
+    ("Adapted from the 9b6d215 run's run_ff3.py: worktree, copy, Redis dbs and worker name changed;\na refusal list for every known historical DB was added.",
+     "Adapted from the memo-97 run's run_np.py: worktree, copy, expected head, Redis dbs, worker name and the\nrefusal list (memo-97 copy added) changed."),
+    ('  * code: worktree KCV-mc-np, branch docs/manychat-narrator-b9cddec at b9cddec;',
+     '  * code: worktree KCV-mc-ub, branch docs/manychat-usage-basis-d276918 at d276918;'),
+    ('local Memurai DBs 6/7/14', 'local Memurai DBs 9/12/15'),
+    ("WT = r'C:\\Users\\jonathan\\Desktop\\KCV-mc-np'", "WT = r'C:\\Users\\jonathan\\Desktop\\KCV-mc-ub'"),
+    ("FORBIDDEN_DBS = [ORIGINAL_DB, OLD + r'\\mcpost\\db_postfix_copy.sqlite3', OLD + r'\\mcff\\db_ff_copy.sqlite3',\n                 OLD + r'\\mcff3\\db_ff3_copy.sqlite3']",
+     "NP = r'C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\" + NP_SP + "'\n"
+     "FORBIDDEN_DBS = [ORIGINAL_DB, OLD + r'\\mcpost\\db_postfix_copy.sqlite3', OLD + r'\\mcff\\db_ff_copy.sqlite3',\n"
+     "                 OLD + r'\\mcff3\\db_ff3_copy.sqlite3', NP + r'\\db_np_copy.sqlite3']"),
+    ("COPY_DB = os.path.join(HERE, 'db_np_copy.sqlite3')", "COPY_DB = os.path.join(HERE, 'db_ub_copy.sqlite3')"),
+    ("EXPECTED_HEAD = 'b9cddecd9e6cc003f377aefbf6ed5fbff94ffd32'", "EXPECTED_HEAD = 'd276918cb0e1a4e7fa109a86c5e9336ef180f9a3'"),
+    ("RUN_DBS = ('6', '7', '14')", "RUN_DBS = ('9', '12', '15')"),
+    ("'redis://localhost:6379/6'", "'redis://localhost:6379/9'"),
+    ("'redis://localhost:6379/7'", "'redis://localhost:6379/12'"),
+    ("'redis://localhost:6379/14'", "'redis://localhost:6379/15'"),
+    ("name=mcnp@%h queue=celery pool=solo concurrency=1 broker_db=6", "name=mcub@%h queue=celery pool=solo concurrency=1 broker_db=9"),
+    ("'-n', 'mcnp@%h'", "'-n', 'mcub@%h'"),
+], 'run_ub.py')
+derive('run_ro.py', [
+    ("WT = r'C:\\Users\\jonathan\\Desktop\\KCV-mc-np'", "WT = r'C:\\Users\\jonathan\\Desktop\\KCV-mc-ub'"),
+    ("6379/6'", "6379/9'"), ("6379/7'", "6379/12'"), ("6379/14'", "6379/15'"),
+])
+derive('snapshot_ro.py', [('memo hashes', 'memo hashes')])
+derive('bump_sequences.py', [
+    ("Run in the np COPY (via run_np.py script)", "Run in the ub COPY (via run_ub.py script)"),
+    ("(document 3138, memo 96, ...)", "(document 3139, memo 97, ...)"),
+    ("C--Users-jonathan-Desktop-KCV\\8edb8be9-5c85-488f-a1b8-020dd6a9a3c0\\scratchpad\\mcff3\\db_ff3_copy.sqlite3",
+     NP_SP.replace('\\scratchpad\\np', '\\scratchpad\\np') + "\\db_np_copy.sqlite3"),
+    ("'db_np_copy' in str", "'db_ub_copy' in str"),
+])
+derive('setup_fixtures.py', [
+    (NP_SP, UB_SP),
+    ("P = 'npmc'           # narrator-provenance b9cddec ManyChat Pass A: npmc_*", "P = 'ubmc'           # usage-basis d276918 ManyChat Pass A: ubmc_*"),
+    ("'cus_np_local_mc'", "'cus_ub_local_mc'"), ("'sub_np_local_mc'", "'sub_ub_local_mc'"),
+    ('@np.test', '@ub.test'),
+    ('ManyChat narrator-provenance b9cddec Pass A run.', 'ManyChat usage-basis d276918 Pass A run.'),
+])
+derive('upload.py', [('Upload the deck ONCE', 'Upload the deck ONCE')])
+derive('dump_np.py', [
+    ("(narrator-provenance ManyChat Pass A at b9cddec; reused unchanged from the 9b6d215 run's dump_pf.py apart from this line).",
+     "(usage-basis ManyChat Pass A at d276918; reused from the memo-97 run's dump_np.py apart from this line and the label)."),
+    ("label='mcnp.dump (read-only rebuild)'", "label='mcub.dump (read-only rebuild)'"),
+], 'dump_ub.py')
+open(os.path.join(HERE, 'pw.txt'), 'w').write(secrets.token_urlsafe(18))
+print('pw written (not printed)')
+
