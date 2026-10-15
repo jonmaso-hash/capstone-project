@@ -1,0 +1,54 @@
+before 200afbc | after 9ec3efa
+== heading_blocks
+  'Telegram\nTraction\n500M\nmessages/month'
+     before join='Telegram\nTraction\n500M messages/month' claims=['500M messages/month [messages/month, implied, p5]'] offered=['500M messages/month [messages/month, implied, p6]']
+     after  join='Telegram\nTraction\n500M\nmessages/month' claims=['(none)'] offered=['(none)']
+  'Telegram\n\nTraction by Apr-16\n500M\nmessages/month'
+     before join='Telegram\n\nTraction by Apr-16\n500M messages/month' claims=['500M messages/month [messages/month, implied, p5]'] offered=['500M messages/month [messages/month, implied, p6]']
+     after  join='Telegram\n\nTraction by Apr-16\n500M\nmessages/month' claims=['(none)'] offered=['(none)']
+  '500M\nmessages/month\nTraction\nTelegram'
+     before join='500M messages/month\nTraction\nTelegram' claims=['500M messages/month [messages/month, implied, p5]'] offered=['500M messages/month [messages/month, implied, p6]']
+     after  join='500M\nmessages/month\nTraction\nTelegram' claims=['(none)'] offered=['(none)']
+== heading_controls
+  'Traction by Apr-16\n500M\nmessages/month'
+     before join='Traction by Apr-16\n500M messages/month' claims=['500M messages/month [messages/month, implied, p5]']
+     after  join='Traction by Apr-16\n500M messages/month' claims=['500M messages/month [messages/month, implied, p5]']
+  'ManyChat\nTraction\n500M\nmessages/month'
+     before join='ManyChat\nTraction\n500M messages/month' claims=['500M messages/month [messages/month, implied, p5]']
+     after  join='ManyChat\nTraction\n500M messages/month' claims=['500M messages/month [messages/month, implied, p5]']
+== selection
+  review: unsupported chunk first
+     before traction=['500M messages per 2 months (p1)', '140 000+ bots (p2)', '500M messages (p3)']
+            claims=['500M messages [messages, implied, p3]', '140 000+ bots [bots, implied, p2]']
+            notes=0
+     after  traction=['140 000+ bots (p2)', '500M messages (p3)', '500M messages/month (p4)']
+            claims=['500M messages/month [messages/month, implied, p4]', '500M messages [messages, implied, p3]', '140 000+ bots [bots, implied, p2]']
+            notes=1
+  control: without the unsupported chunk
+     before traction=['140 000+ bots (p2)', '500M messages (p3)', '500M messages/month (p4)']
+            claims=['500M messages/month [messages/month, implied, p4]', '500M messages [messages, implied, p3]', '140 000+ bots [bots, implied, p2]']
+            notes=1
+     after  traction=['140 000+ bots (p2)', '500M messages (p3)', '500M messages/month (p4)']
+            claims=['500M messages/month [messages/month, implied, p4]', '500M messages [messages, implied, p3]', '140 000+ bots [bots, implied, p2]']
+            notes=1
+  single unsupported chunk
+     before traction=['500M messages per 2 months (p1)']
+            claims=['(none)']
+            notes=0
+     after  traction=[]
+            claims=['(none)']
+            notes=0
+  frozen ManyChat with the unsupported chunk first
+     before traction=['500M messages per 2 months (p1)', '140 000+ bots (p10)', '500M messages (p10)']
+            claims=['500M messages [messages, implied, p10]', '140 000+ bots [bots, implied, p10]']
+            notes=0
+     after  traction=['140 000+ bots (p10)', '500M messages (p10)', '500M messages/month (p12)']
+            claims=['500M messages/month [messages/month, implied, p12]', '500M messages [messages, implied, p10]', '140 000+ bots [bots, implied, p10]']
+            notes=1
+  frozen ManyChat
+     before traction=['140 000+ bots (p10)', '500M messages (p10)', '500M messages/month (p12)']
+            claims=['500M messages/month [messages/month, implied, p12]', '500M messages [messages, implied, p10]', '140 000+ bots [bots, implied, p10]']
+            notes=1
+     after  traction=['140 000+ bots (p10)', '500M messages (p10)', '500M messages/month (p12)']
+            claims=['500M messages/month [messages/month, implied, p12]', '500M messages [messages, implied, p10]', '140 000+ bots [bots, implied, p10]']
+            notes=1

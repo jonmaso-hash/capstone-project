@@ -1,0 +1,18 @@
+"""Compact before/after table from repro2_*.json (no Django)."""
+import json, sys
+b, a = (json.load(open(p, encoding='utf-8')) for p in sys.argv[1:3])
+print('before', b['head'][:7], '| after', a['head'][:7])
+for section in ('heading_blocks', 'heading_controls'):
+    print('==', section)
+    for text in b[section]:
+        print(' ', repr(text))
+        for label, d in (('before', b[section][text]), ('after ', a[section][text])):
+            print(f"     {label} join={d['join']!r} claims={d['analyzer']['claims'] or ['(none)']}"
+                  + (f" offered={d['offered_span'] or ['(none)']}" if 'offered_span' in d else ''))
+print('== selection')
+for name in b['selection']:
+    print(' ', name)
+    for label, d in (('before', b['selection'][name]), ('after ', a['selection'][name])):
+        print(f"     {label} traction={d['traction_insights']}")
+        print(f"            claims={[c for c in d['claims'] if 'usage' in c or 'messages' in c or 'bots' in c] or ['(none)']}")
+        print(f"            notes={len(d['notes'])}")

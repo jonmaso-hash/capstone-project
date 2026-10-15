@@ -1,0 +1,95 @@
+M1 CAUGHT Ran 114 tests in 4.885s FAILED (failures=37, errors=3) restored
+M2 CAUGHT Ran 114 tests in 4.470s FAILED (failures=17, errors=3) restored
+M3 CAUGHT Ran 114 tests in 4.466s FAILED (failures=20, errors=3) restored
+M4 CAUGHT Ran 114 tests in 4.665s FAILED (failures=31) restored
+M5 CAUGHT Ran 114 tests in 4.650s FAILED (failures=13) restored
+M6 CAUGHT Ran 114 tests in 4.641s FAILED (failures=2) restored
+M7 CAUGHT Ran 114 tests in 4.718s FAILED (failures=4) restored
+M8 CAUGHT Ran 114 tests in 4.608s FAILED (failures=1) restored
+M9 CAUGHT Ran 114 tests in 4.640s FAILED (failures=14) restored
+M10 CAUGHT Ran 114 tests in 4.481s FAILED (failures=15, errors=3) restored
+M11 CAUGHT Ran 114 tests in 4.560s FAILED (failures=2) restored
+M12 CAUGHT Ran 114 tests in 4.668s FAILED (failures=1) restored
+M13 CAUGHT Ran 114 tests in 4.663s FAILED (failures=1) restored
+M14 CAUGHT Ran 114 tests in 5.002s FAILED (failures=1) restored
+M15 CAUGHT Ran 114 tests in 5.020s FAILED (failures=5) restored
+M16 CAUGHT Ran 114 tests in 5.024s FAILED (failures=1) restored
+M17 CAUGHT Ran 114 tests in 4.801s FAILED (failures=13) restored
+M18 CAUGHT Ran 114 tests in 4.757s FAILED (failures=13) restored
+M19 CAUGHT Ran 114 tests in 4.747s FAILED (failures=8) restored
+M20 CAUGHT Ran 114 tests in 4.585s FAILED (failures=8) restored
+M21 CAUGHT Ran 114 tests in 4.650s FAILED (failures=10) restored
+M22 CAUGHT Ran 114 tests in 4.656s FAILED (failures=6) restored
+M23 CAUGHT Ran 114 tests in 4.655s FAILED (failures=4) restored
+M24 CAUGHT Ran 114 tests in 4.684s FAILED (failures=6) restored
+M25 CAUGHT Ran 114 tests in 4.922s FAILED (failures=53) restored
+M26 CAUGHT Ran 114 tests in 4.549s FAILED (failures=1) restored
+M27 CAUGHT Ran 114 tests in 4.647s FAILED (failures=12) restored
+M28 CAUGHT Ran 114 tests in 4.621s FAILED (failures=8) restored
+M29 CAUGHT Ran 114 tests in 4.739s FAILED (failures=7) restored
+M30 CAUGHT Ran 114 tests in 4.587s FAILED (failures=5) restored
+M31 CAUGHT Ran 114 tests in 4.643s FAILED (failures=1) restored
+
+M1 | lose the rate suffix in the claim unit | CAUGHT Ran 114 tests in 4.885s FAILED (failures=37, errors=3)
+    failing: test_a_monthly_rate_invents_no_as_of_date, test_bots_and_messages_are_never_customers, test_company_owned_blocks_are_kept, test_frozen_manychat_keeps_its_facts_and_note_with_an_invalid_chunk_first, test_heading_only_and_company_owned_blocks_are_kept, test_manychat_claims_carry_their_source_sentence_and_category, test_manychat_yields_exactly_the_frozen_claims, test_matches_the_frozen_claims_plus_the_additive_ra109_expectation ...
+M2 | restore numeric-only dedup for usage | CAUGHT Ran 114 tests in 4.470s FAILED (failures=17, errors=3)
+    failing: test_a_different_basis_survives, test_a_different_noun_survives, test_a_monthly_rate_invents_no_as_of_date, test_a_supported_winner_is_unchanged, test_an_unsupported_winner_takes_no_slot, test_both_facts_and_their_sources_survive, test_bots_and_messages_are_never_customers, test_frozen_decks_attach_no_periods ...
+M3 | drop the rate candidate (no line join in the analyzer) | CAUGHT Ran 114 tests in 4.466s FAILED (failures=20, errors=3)
+    failing: test_a_monthly_rate_invents_no_as_of_date, test_both_facts_and_their_sources_survive, test_bots_and_messages_are_never_customers, test_company_owned_blocks_are_kept, test_frozen_decks_attach_no_periods, test_frozen_manychat_keeps_its_facts_and_note_with_an_invalid_chunk_first, test_heading_only_and_company_owned_blocks_are_kept, test_manychat_claims_carry_their_source_sentence_and_category ...
+M4 | an owner label above no longer refuses | CAUGHT Ran 114 tests in 4.665s FAILED (failures=31)
+    failing: test_a_platform_label_above_refuses, test_a_platform_rate_split_across_lines_is_refused_even_if_offered_as_an_insight, test_an_unknown_label_is_refused_and_the_subject_label_admitted, test_claim_admission_refuses_a_joined_span_from_a_platform_block, test_claim_admission_refuses_the_offered_span, test_no_claim_end_to_end, test_same_slide_figure_and_rate_lines_are_admitted, test_the_analyzer_offers_no_platform_figure ...
+M5 | bypass the claim-admission gate | CAUGHT Ran 114 tests in 4.650s FAILED (failures=13)
+    failing: test_a_platform_rate_split_across_lines_is_refused_even_if_offered_as_an_insight, test_an_unbounded_split_is_refused_at_the_claim_layer, test_claim_admission_refuses_a_joined_span_from_a_platform_block, test_claim_admission_refuses_the_offered_span
+M6 | a continuation below no longer refuses | CAUGHT Ran 114 tests in 4.641s FAILED (failures=2)
+    failing: test_a_continuation_or_owner_label_below_refuses
+M7 | turn the internal basis note into a contradiction | CAUGHT Ran 114 tests in 4.718s FAILED (failures=4)
+    failing: test_frozen_manychat_keeps_its_facts_and_note_with_an_invalid_chunk_first, test_the_i1_pair_gets_one_neutral_note, test_the_note_names_both_refs_and_both_bounded_facts, test_the_owner_sees_the_note
+M8 | drop the not-a-contradiction memo rule | CAUGHT Ran 114 tests in 4.608s FAILED (failures=1)
+    failing: test_the_memo_prompt_says_a_note_is_not_a_contradiction
+M9 | unsupported denominator word dropped to a bare count | CAUGHT Ran 114 tests in 4.640s FAILED (failures=14)
+    failing: test_a_single_unsupported_candidate_yields_nothing, test_a_supported_winner_is_unchanged, test_an_unsupported_winner_takes_no_slot, test_frozen_manychat_keeps_its_facts_and_note_with_an_invalid_chunk_first, test_the_claim_task_stores_neither, test_the_helper_refuses_them, test_the_rejected_winner_seeds_no_dedup_key, test_the_review_reproduction_keeps_all_three_valid_facts ...
+M10 | the analyzer does not pass the subject names | CAUGHT Ran 114 tests in 4.481s FAILED (failures=15, errors=3)
+    failing: test_a_monthly_rate_invents_no_as_of_date, test_both_facts_and_their_sources_survive, test_bots_and_messages_are_never_customers, test_company_owned_blocks_are_kept, test_frozen_decks_attach_no_periods, test_frozen_manychat_keeps_its_facts_and_note_with_an_invalid_chunk_first, test_heading_only_and_company_owned_blocks_are_kept, test_manychat_claims_carry_their_source_sentence_and_category ...
+M11 | note order follows claim ids, not pages | CAUGHT Ran 114 tests in 4.560s FAILED (failures=2)
+    failing: test_frozen_manychat_keeps_its_facts_and_note_with_an_invalid_chunk_first, test_the_note_names_both_refs_and_both_bounded_facts
+M12 | payload carries consistency_notes even when empty | CAUGHT Ran 114 tests in 4.668s FAILED (failures=1)
+    failing: test_a_document_without_a_basis_pair_has_no_notes_key
+M13 | note for different numbers on different bases | CAUGHT Ran 114 tests in 4.663s FAILED (failures=1)
+    failing: test_no_note_for_different_metrics_or_different_numbers
+M14 | dated_heading ignores the joined view | CAUGHT Ran 114 tests in 5.002s FAILED (failures=1)
+    failing: test_a_dated_heading_over_a_joined_figure_stays_context
+M15 | the figure's own cumulative wording ignored | CAUGHT Ran 114 tests in 5.020s FAILED (failures=5)
+    failing: test_an_explicit_cumulative_total, test_the_figures_own_cumulative_wording_still_counts
+M16 | a bare figure line above no longer refuses | CAUGHT Ran 114 tests in 5.024s FAILED (failures=1)
+    failing: test_competing_figures_refuse
+M17 | F1: a blank line above erases the owner context | CAUGHT Ran 114 tests in 4.801s FAILED (failures=13)
+    failing: test_claim_admission_refuses_a_joined_span_from_a_platform_block, test_claim_admission_refuses_the_offered_span, test_no_claim_end_to_end, test_the_analyzer_offers_no_platform_figure, test_the_helper_keeps_the_owner_across_a_heading, test_the_helper_refuses_every_platform_block
+M18 | F1: a sibling metric above erases the owner context | CAUGHT Ran 114 tests in 4.757s FAILED (failures=13)
+    failing: test_claim_admission_refuses_a_joined_span_from_a_platform_block, test_claim_admission_refuses_the_offered_span, test_no_claim_end_to_end, test_same_slide_figure_and_rate_lines_are_admitted, test_the_analyzer_offers_no_platform_figure, test_the_helper_keeps_the_owner_across_a_heading, test_the_helper_refuses_every_platform_block
+M19 | F1: only labels of up to two words count below | CAUGHT Ran 114 tests in 4.747s FAILED (failures=8)
+    failing: test_claim_admission_refuses_a_joined_span_from_a_platform_block, test_claim_admission_refuses_the_offered_span, test_no_claim_end_to_end, test_the_analyzer_offers_no_platform_figure, test_the_helper_keeps_the_owner_across_a_heading, test_the_helper_refuses_every_platform_block
+M20 | F1: a blank line below ends the block | CAUGHT Ran 114 tests in 4.585s FAILED (failures=8)
+    failing: test_claim_admission_refuses_a_joined_span_from_a_platform_block, test_claim_admission_refuses_the_offered_span, test_no_claim_end_to_end, test_the_analyzer_offers_no_platform_figure, test_the_helper_keeps_the_owner_across_a_heading, test_the_helper_refuses_every_platform_block
+M21 | F2: a numeric denominator falls back to a bare count | CAUGHT Ran 114 tests in 4.650s FAILED (failures=10)
+    failing: test_a_single_unsupported_candidate_yields_nothing, test_a_supported_winner_is_unchanged, test_an_unsupported_winner_takes_no_slot, test_frozen_manychat_keeps_its_facts_and_note_with_an_invalid_chunk_first, test_the_claim_task_stores_neither, test_the_helper_refuses_them, test_the_rejected_winner_seeds_no_dedup_key, test_the_review_reproduction_keeps_all_three_valid_facts
+M22 | F2: a compound denominator keeps the first rate | CAUGHT Ran 114 tests in 4.656s FAILED (failures=6)
+    failing: test_selection_does_not_keep_an_unrepresentable_rate, test_the_claim_task_stores_neither, test_the_helper_refuses_them
+M23 | F3: cumulative wording borrowed from anywhere after the noun | CAUGHT Ran 114 tests in 4.655s FAILED (failures=4)
+    failing: test_the_claim_task_and_the_note_do_not_borrow_it, test_wording_that_belongs_elsewhere_leaves_the_basis_unspecified
+M24 | F2: an unrepresentable rate keeps a selection slot (later candidates) | CAUGHT Ran 114 tests in 4.684s FAILED (failures=6)
+    failing: test_a_supported_winner_is_unchanged, test_an_unsupported_winner_takes_no_slot, test_frozen_manychat_keeps_its_facts_and_note_with_an_invalid_chunk_first, test_selection_does_not_keep_an_unrepresentable_rate, test_the_rejected_winner_seeds_no_dedup_key, test_the_review_reproduction_keeps_all_three_valid_facts
+M25 | F1: any label passes as the subject | CAUGHT Ran 114 tests in 4.922s FAILED (failures=53)
+    failing: test_a_continuation_or_owner_label_below_refuses, test_a_platform_label_above_refuses, test_a_platform_rate_split_across_lines_is_refused_even_if_offered_as_an_insight, test_an_unknown_label_is_refused_and_the_subject_label_admitted, test_claim_admission_refuses_a_joined_span_from_a_platform_block, test_claim_admission_refuses_the_offered_span, test_end_to_end_the_analyzer_offers_no_figure_or_claim_from_a_platform_block, test_no_claim_end_to_end ...
+M26 | F2: unsupported rate adjectives (bi-monthly) accepted | CAUGHT Ran 114 tests in 4.549s FAILED (failures=1)
+    failing: test_the_helper_refuses_them
+M27 | R2-1: a generic heading above resolves the block again (short circuit) | CAUGHT Ran 114 tests in 4.647s FAILED (failures=12)
+    failing: test_claim_admission_refuses_the_offered_span, test_no_claim_end_to_end, test_the_analyzer_offers_no_platform_figure, test_the_helper_keeps_the_owner_across_a_heading
+M28 | R2-1: a generic heading below resolves the block again (short circuit) | CAUGHT Ran 114 tests in 4.621s FAILED (failures=8)
+    failing: test_claim_admission_refuses_the_offered_span, test_no_claim_end_to_end, test_the_analyzer_offers_no_platform_figure, test_the_helper_keeps_the_owner_across_a_heading
+M29 | R2-1: a generic heading above is treated as an owner (over-refusal) | CAUGHT Ran 114 tests in 4.739s FAILED (failures=7)
+    failing: test_a_dated_heading_over_a_joined_figure_stays_context, test_a_figure_at_the_start_of_a_block_is_admitted, test_company_owned_blocks_are_kept, test_heading_only_and_company_owned_blocks_are_kept, test_only_the_two_lines_are_joined
+M30 | R2-2: the initial winner is not checked for eligibility | CAUGHT Ran 114 tests in 4.587s FAILED (failures=5)
+    failing: test_a_single_unsupported_candidate_yields_nothing, test_an_unsupported_winner_takes_no_slot, test_frozen_manychat_keeps_its_facts_and_note_with_an_invalid_chunk_first, test_the_rejected_winner_seeds_no_dedup_key, test_the_review_reproduction_keeps_all_three_valid_facts
+M31 | R2-2: a single unsupported candidate is still emitted | CAUGHT Ran 114 tests in 4.643s FAILED (failures=1)
+    failing: test_a_single_unsupported_candidate_yields_nothing
+exit=0
