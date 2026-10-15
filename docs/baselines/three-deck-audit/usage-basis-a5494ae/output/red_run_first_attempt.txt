@@ -1,0 +1,724 @@
+2026-10-14 21:21:21,361 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-14 21:22:18,013 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:22:18,128 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-14 21:22:18,202 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:22:18,235 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+.2026-10-14 21:22:18,302 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:22:18,390 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-14 21:22:18,393 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:22:18,411 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+F2026-10-14 21:22:18,434 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:22:18,511 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-14 21:22:18,512 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:22:18,535 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+.2026-10-14 21:22:18,561 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:22:18,636 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-14 21:22:18,637 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:22:18,654 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+2026-10-14 21:22:18,709 ERROR zelda_api.intelligence_pipeline - Claude API error in memo generation: stop after capture
+F2026-10-14 21:22:18,715 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:22:18,785 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-14 21:22:18,787 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:22:18,807 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+E2026-10-14 21:22:18,846 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-14 21:22:19,009 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-14 21:22:19,200 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-14 21:22:20,055 INFO zelda_api.signals - DocumentSource created: mc.pptx
+F2026-10-14 21:22:20,139 INFO zelda_api.signals - DocumentSource created: mc.pptx
+E2026-10-14 21:22:20,148 INFO zelda_api.signals - DocumentSource created: mc.pptx
+E2026-10-14 21:22:20,156 INFO zelda_api.signals - DocumentSource created: mc.pptx
+E2026-10-14 21:22:20,164 INFO zelda_api.signals - DocumentSource created: mc.pptx
+E2026-10-14 21:22:20,173 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:22:20,248 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-14 21:22:20,250 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:22:20,271 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+F2026-10-14 21:22:20,288 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:22:20,366 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-14 21:22:20,367 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:22:20,386 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+.2026-10-14 21:22:20,394 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:22:20,471 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-14 21:22:20,472 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:22:20,494 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+E2026-10-14 21:22:20,504 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:22:20,584 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-14 21:22:20,586 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:22:20,607 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+F2026-10-14 21:22:20,618 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:22:20,692 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-14 21:22:20,693 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:22:20,714 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+F2026-10-14 21:22:20,733 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 21:22:20,738 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:22:20,751 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+F2026-10-14 21:22:20,760 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 21:22:20,765 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:22:20,778 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+F2026-10-14 21:22:20,785 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 21:22:20,797 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+F2026-10-14 21:22:20,804 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 21:22:20,810 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:22:20,821 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+F2026-10-14 21:22:20,830 INFO zelda_api.signals - DocumentSource created: u.pptx
+2026-10-14 21:22:20,840 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:22:20,857 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+F2026-10-14 21:22:20,864 INFO zelda_api.signals - DocumentSource created: u.pptx
+2026-10-14 21:22:20,869 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:22:20,878 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+F2026-10-14 21:22:20,886 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:22:20,958 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-14 21:22:20,959 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:22:20,975 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+E2026-10-14 21:22:20,982 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:22:21,051 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-14 21:22:21,053 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:22:21,069 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+..EEEEEEEEEEEEEEEEEEEEEEEEEEEEEE.FF....
+======================================================================
+ERROR: test_the_note_names_both_refs_and_both_bounded_facts (zelda_api.tests_usage_basis.BasisNoteInGroundedContextTests.test_the_note_names_both_refs_and_both_bounded_facts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 428, in test_the_note_names_both_refs_and_both_bounded_facts
+    self.assertEqual(payload['consistency_notes'], [{
+                     ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'consistency_notes'
+
+======================================================================
+ERROR: test_an_explicit_cumulative_total_is_described_as_one (zelda_api.tests_usage_basis.BasisNoteTests.test_an_explicit_cumulative_total_is_described_as_one)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 400, in test_an_explicit_cumulative_total_is_described_as_one
+    self.assertIn('Page 10 states 500M messages as a cumulative total;', self.notes()[0].text)
+                                                                         ~~~~~~~~~~^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 369, in notes
+    from .usage_basis import basis_notes
+ModuleNotFoundError: No module named 'zelda_api.usage_basis'
+
+======================================================================
+ERROR: test_no_note_for_different_metrics_or_different_numbers (zelda_api.tests_usage_basis.BasisNoteTests.test_no_note_for_different_metrics_or_different_numbers)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 395, in test_no_note_for_different_metrics_or_different_numbers
+    self.assertEqual(self.notes(), [])
+                     ~~~~~~~~~~^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 369, in notes
+    from .usage_basis import basis_notes
+ModuleNotFoundError: No module named 'zelda_api.usage_basis'
+
+======================================================================
+ERROR: test_no_note_for_same_basis_duplicates (zelda_api.tests_usage_basis.BasisNoteTests.test_no_note_for_same_basis_duplicates)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 389, in test_no_note_for_same_basis_duplicates
+    self.assertEqual(self.notes(), [])
+                     ~~~~~~~~~~^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 369, in notes
+    from .usage_basis import basis_notes
+ModuleNotFoundError: No module named 'zelda_api.usage_basis'
+
+======================================================================
+ERROR: test_the_i1_pair_gets_one_neutral_note (zelda_api.tests_usage_basis.BasisNoteTests.test_the_i1_pair_gets_one_neutral_note)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 375, in test_the_i1_pair_gets_one_neutral_note
+    notes = self.notes()
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 369, in notes
+    from .usage_basis import basis_notes
+ModuleNotFoundError: No module named 'zelda_api.usage_basis'
+
+======================================================================
+ERROR: test_the_rate_claim_is_sourced_to_its_own_bounded_lines (zelda_api.tests_usage_basis.FrozenManyChatUsageTests.test_the_rate_claim_is_sourced_to_its_own_bounded_lines)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 70, in test_the_rate_claim_is_sourced_to_its_own_bounded_lines
+    rate = next(c for c in claims if c.unit == 'messages/month')
+StopIteration
+
+======================================================================
+ERROR: test_a_monthly_rate_invents_no_as_of_date (zelda_api.tests_usage_basis.UsageBasisPeriodTests.test_a_monthly_rate_invents_no_as_of_date)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 335, in test_a_monthly_rate_invents_no_as_of_date
+    rate = next(c for c in claims if c.unit == 'messages/month')
+StopIteration
+
+======================================================================
+ERROR: test_a_continuation_or_owner_label_below_refuses (zelda_api.tests_usage_basis.SplitLineJoinTests.test_a_continuation_or_owner_label_below_refuses) (text='500M\nmessages/month\nvia Telegram')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 148, in test_a_continuation_or_owner_label_below_refuses
+    self.assertEqual(self.join(text), text)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 104, in join
+    from .usage_basis import join_split_usage_lines
+ModuleNotFoundError: No module named 'zelda_api.usage_basis'
+
+======================================================================
+ERROR: test_a_continuation_or_owner_label_below_refuses (zelda_api.tests_usage_basis.SplitLineJoinTests.test_a_continuation_or_owner_label_below_refuses) (text='500M\nmessages/month\non partner platforms')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 148, in test_a_continuation_or_owner_label_below_refuses
+    self.assertEqual(self.join(text), text)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 104, in join
+    from .usage_basis import join_split_usage_lines
+ModuleNotFoundError: No module named 'zelda_api.usage_basis'
+
+======================================================================
+ERROR: test_a_continuation_or_owner_label_below_refuses (zelda_api.tests_usage_basis.SplitLineJoinTests.test_a_continuation_or_owner_label_below_refuses) (text='500M\nmessages/month\nTelegram')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 148, in test_a_continuation_or_owner_label_below_refuses
+    self.assertEqual(self.join(text), text)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 104, in join
+    from .usage_basis import join_split_usage_lines
+ModuleNotFoundError: No module named 'zelda_api.usage_basis'
+
+======================================================================
+ERROR: test_a_figure_at_the_start_of_a_block_is_admitted (zelda_api.tests_usage_basis.SplitLineJoinTests.test_a_figure_at_the_start_of_a_block_is_admitted)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 113, in test_a_figure_at_the_start_of_a_block_is_admitted
+    self.assertEqual(self.join('500M\nmessages'), '500M messages')
+                     ~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 104, in join
+    from .usage_basis import join_split_usage_lines
+ModuleNotFoundError: No module named 'zelda_api.usage_basis'
+
+======================================================================
+ERROR: test_a_platform_label_above_refuses (zelda_api.tests_usage_basis.SplitLineJoinTests.test_a_platform_label_above_refuses) (text='Telegram\n100M\nmessages/month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 141, in test_a_platform_label_above_refuses
+    self.assertEqual(self.join(text), text)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 104, in join
+    from .usage_basis import join_split_usage_lines
+ModuleNotFoundError: No module named 'zelda_api.usage_basis'
+
+======================================================================
+ERROR: test_a_platform_label_above_refuses (zelda_api.tests_usage_basis.SplitLineJoinTests.test_a_platform_label_above_refuses) (text='FB Messenger\n900M\nbots')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 141, in test_a_platform_label_above_refuses
+    self.assertEqual(self.join(text), text)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 104, in join
+    from .usage_basis import join_split_usage_lines
+ModuleNotFoundError: No module named 'zelda_api.usage_basis'
+
+======================================================================
+ERROR: test_a_platform_label_above_refuses (zelda_api.tests_usage_basis.SplitLineJoinTests.test_a_platform_label_above_refuses) (text='Kik\n275M\nmessages')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 141, in test_a_platform_label_above_refuses
+    self.assertEqual(self.join(text), text)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 104, in join
+    from .usage_basis import join_split_usage_lines
+ModuleNotFoundError: No module named 'zelda_api.usage_basis'
+
+======================================================================
+ERROR: test_competing_figures_refuse (zelda_api.tests_usage_basis.SplitLineJoinTests.test_competing_figures_refuse) (text='500M 20K\nmessages/month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 136, in test_competing_figures_refuse
+    self.assertEqual(self.join(text), text)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 104, in join
+    from .usage_basis import join_split_usage_lines
+ModuleNotFoundError: No module named 'zelda_api.usage_basis'
+
+======================================================================
+ERROR: test_competing_figures_refuse (zelda_api.tests_usage_basis.SplitLineJoinTests.test_competing_figures_refuse) (text='120,000\n500M\nmessages/month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 136, in test_competing_figures_refuse
+    self.assertEqual(self.join(text), text)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 104, in join
+    from .usage_basis import join_split_usage_lines
+ModuleNotFoundError: No module named 'zelda_api.usage_basis'
+
+======================================================================
+ERROR: test_competing_figures_refuse (zelda_api.tests_usage_basis.SplitLineJoinTests.test_competing_figures_refuse) (text='500M\nmessages/month 20K')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 136, in test_competing_figures_refuse
+    self.assertEqual(self.join(text), text)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 104, in join
+    from .usage_basis import join_split_usage_lines
+ModuleNotFoundError: No module named 'zelda_api.usage_basis'
+
+======================================================================
+ERROR: test_intervening_prose_or_a_blank_line_refuses (zelda_api.tests_usage_basis.SplitLineJoinTests.test_intervening_prose_or_a_blank_line_refuses) (text='500M\nWe grew quickly across many new markets\nmessages/month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 129, in test_intervening_prose_or_a_blank_line_refuses
+    self.assertEqual(self.join(text), text)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 104, in join
+    from .usage_basis import join_split_usage_lines
+ModuleNotFoundError: No module named 'zelda_api.usage_basis'
+
+======================================================================
+ERROR: test_intervening_prose_or_a_blank_line_refuses (zelda_api.tests_usage_basis.SplitLineJoinTests.test_intervening_prose_or_a_blank_line_refuses) (text='500M\n\nmessages/month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 129, in test_intervening_prose_or_a_blank_line_refuses
+    self.assertEqual(self.join(text), text)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 104, in join
+    from .usage_basis import join_split_usage_lines
+ModuleNotFoundError: No module named 'zelda_api.usage_basis'
+
+======================================================================
+ERROR: test_only_the_two_lines_are_joined (zelda_api.tests_usage_basis.SplitLineJoinTests.test_only_the_two_lines_are_joined)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 118, in test_only_the_two_lines_are_joined
+    self.assertEqual(self.join(text).count('\n'), text.count('\n') - 1)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 104, in join
+    from .usage_basis import join_split_usage_lines
+ModuleNotFoundError: No module named 'zelda_api.usage_basis'
+
+======================================================================
+ERROR: test_same_slide_figure_and_rate_lines_are_admitted (zelda_api.tests_usage_basis.SplitLineJoinTests.test_same_slide_figure_and_rate_lines_are_admitted)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 109, in test_same_slide_figure_and_rate_lines_are_admitted
+    self.assertIn('500M messages/month', self.join(text).split('\n'))
+                                         ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 104, in join
+    from .usage_basis import join_split_usage_lines
+ModuleNotFoundError: No module named 'zelda_api.usage_basis'
+
+======================================================================
+ERROR: test_the_old_people_control_still_matches_nothing (zelda_api.tests_usage_basis.SplitLineJoinTests.test_the_old_people_control_still_matches_nothing)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 152, in test_the_old_people_control_still_matches_nothing
+    self.assertEqual(self.join('FB Messenger\n900M\npeople'), 'FB Messenger\n900M\npeople')
+                     ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 104, in join
+    from .usage_basis import join_split_usage_lines
+ModuleNotFoundError: No module named 'zelda_api.usage_basis'
+
+======================================================================
+ERROR: test_the_slide_4_chunk_is_unchanged (zelda_api.tests_usage_basis.SplitLineJoinTests.test_the_slide_4_chunk_is_unchanged)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 157, in test_the_slide_4_chunk_is_unchanged
+    self.assertEqual(self.join(slide4), slide4)
+                     ~~~~~~~~~^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 104, in join
+    from .usage_basis import join_split_usage_lines
+ModuleNotFoundError: No module named 'zelda_api.usage_basis'
+
+======================================================================
+ERROR: test_an_explicit_cumulative_total (zelda_api.tests_usage_basis.UsageBasisFormTests.test_an_explicit_cumulative_total)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 271, in test_an_explicit_cumulative_total
+    self.assertEqual(self.basis('500M messages to date'), ('messages', 'cumulative', 'messages (cumulative)'))
+                     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 248, in basis
+    from .financial_metrics import usage_basis
+ImportError: cannot import name 'usage_basis' from 'zelda_api.financial_metrics' (C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\financial_metrics.py)
+
+======================================================================
+ERROR: test_monthly_forms (zelda_api.tests_usage_basis.UsageBasisFormTests.test_monthly_forms) (text='500M messages/month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 257, in test_monthly_forms
+    self.assertEqual(self.basis(text), ('messages', 'month', 'messages/month'))
+                     ~~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 248, in basis
+    from .financial_metrics import usage_basis
+ImportError: cannot import name 'usage_basis' from 'zelda_api.financial_metrics' (C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\financial_metrics.py)
+
+======================================================================
+ERROR: test_monthly_forms (zelda_api.tests_usage_basis.UsageBasisFormTests.test_monthly_forms) (text='500M messages / month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 257, in test_monthly_forms
+    self.assertEqual(self.basis(text), ('messages', 'month', 'messages/month'))
+                     ~~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 248, in basis
+    from .financial_metrics import usage_basis
+ImportError: cannot import name 'usage_basis' from 'zelda_api.financial_metrics' (C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\financial_metrics.py)
+
+======================================================================
+ERROR: test_monthly_forms (zelda_api.tests_usage_basis.UsageBasisFormTests.test_monthly_forms) (text='500M messages per month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 257, in test_monthly_forms
+    self.assertEqual(self.basis(text), ('messages', 'month', 'messages/month'))
+                     ~~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 248, in basis
+    from .financial_metrics import usage_basis
+ImportError: cannot import name 'usage_basis' from 'zelda_api.financial_metrics' (C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\financial_metrics.py)
+
+======================================================================
+ERROR: test_monthly_forms (zelda_api.tests_usage_basis.UsageBasisFormTests.test_monthly_forms) (text='500M monthly messages')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 257, in test_monthly_forms
+    self.assertEqual(self.basis(text), ('messages', 'month', 'messages/month'))
+                     ~~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 248, in basis
+    from .financial_metrics import usage_basis
+ImportError: cannot import name 'usage_basis' from 'zelda_api.financial_metrics' (C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\financial_metrics.py)
+
+======================================================================
+ERROR: test_monthly_forms (zelda_api.tests_usage_basis.UsageBasisFormTests.test_monthly_forms) (text='500M messages/mo')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 257, in test_monthly_forms
+    self.assertEqual(self.basis(text), ('messages', 'month', 'messages/month'))
+                     ~~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 248, in basis
+    from .financial_metrics import usage_basis
+ImportError: cannot import name 'usage_basis' from 'zelda_api.financial_metrics' (C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\financial_metrics.py)
+
+======================================================================
+ERROR: test_monthly_forms (zelda_api.tests_usage_basis.UsageBasisFormTests.test_monthly_forms) (text='500M messages a month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 257, in test_monthly_forms
+    self.assertEqual(self.basis(text), ('messages', 'month', 'messages/month'))
+                     ~~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 248, in basis
+    from .financial_metrics import usage_basis
+ImportError: cannot import name 'usage_basis' from 'zelda_api.financial_metrics' (C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\financial_metrics.py)
+
+======================================================================
+ERROR: test_monthly_forms (zelda_api.tests_usage_basis.UsageBasisFormTests.test_monthly_forms) (text='500M messages sent per month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 257, in test_monthly_forms
+    self.assertEqual(self.basis(text), ('messages', 'month', 'messages/month'))
+                     ~~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 248, in basis
+    from .financial_metrics import usage_basis
+ImportError: cannot import name 'usage_basis' from 'zelda_api.financial_metrics' (C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\financial_metrics.py)
+
+======================================================================
+ERROR: test_no_stated_interval (zelda_api.tests_usage_basis.UsageBasisFormTests.test_no_stated_interval)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 266, in test_no_stated_interval
+    self.assertEqual(self.basis('500M messages'), ('messages', '', 'messages'))
+                     ~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 248, in basis
+    from .financial_metrics import usage_basis
+ImportError: cannot import name 'usage_basis' from 'zelda_api.financial_metrics' (C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\financial_metrics.py)
+
+======================================================================
+ERROR: test_not_a_usage_figure (zelda_api.tests_usage_basis.UsageBasisFormTests.test_not_a_usage_figure)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 285, in test_not_a_usage_figure
+    self.assertIsNone(self.basis('2,000 customers'))
+                      ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 248, in basis
+    from .financial_metrics import usage_basis
+ImportError: cannot import name 'usage_basis' from 'zelda_api.financial_metrics' (C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\financial_metrics.py)
+
+======================================================================
+ERROR: test_other_supported_rates (zelda_api.tests_usage_basis.UsageBasisFormTests.test_other_supported_rates)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 260, in test_other_supported_rates
+    self.assertEqual(self.basis('2M messages per day'), ('messages', 'day', 'messages/day'))
+                     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 248, in basis
+    from .financial_metrics import usage_basis
+ImportError: cannot import name 'usage_basis' from 'zelda_api.financial_metrics' (C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\financial_metrics.py)
+
+======================================================================
+ERROR: test_unsupported_denominators_are_refused_not_dropped (zelda_api.tests_usage_basis.UsageBasisFormTests.test_unsupported_denominators_are_refused_not_dropped) (text='500M messages per user')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 277, in test_unsupported_denominators_are_refused_not_dropped
+    self.assertIsNone(self.basis(text))
+                      ~~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 248, in basis
+    from .financial_metrics import usage_basis
+ImportError: cannot import name 'usage_basis' from 'zelda_api.financial_metrics' (C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\financial_metrics.py)
+
+======================================================================
+ERROR: test_unsupported_denominators_are_refused_not_dropped (zelda_api.tests_usage_basis.UsageBasisFormTests.test_unsupported_denominators_are_refused_not_dropped) (text='500M messages/quarter')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 277, in test_unsupported_denominators_are_refused_not_dropped
+    self.assertIsNone(self.basis(text))
+                      ~~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 248, in basis
+    from .financial_metrics import usage_basis
+ImportError: cannot import name 'usage_basis' from 'zelda_api.financial_metrics' (C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\financial_metrics.py)
+
+======================================================================
+ERROR: test_unsupported_denominators_are_refused_not_dropped (zelda_api.tests_usage_basis.UsageBasisFormTests.test_unsupported_denominators_are_refused_not_dropped) (text='500M messages per bot')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 277, in test_unsupported_denominators_are_refused_not_dropped
+    self.assertIsNone(self.basis(text))
+                      ~~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 248, in basis
+    from .financial_metrics import usage_basis
+ImportError: cannot import name 'usage_basis' from 'zelda_api.financial_metrics' (C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\financial_metrics.py)
+
+======================================================================
+FAIL: test_both_facts_and_their_sources_survive (zelda_api.tests_usage_basis.BasisNoteInGroundedContextTests.test_both_facts_and_their_sources_survive)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 423, in test_both_facts_and_their_sources_survive
+    self.assertIn(('500M messages/month', 12), rows)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('500M messages/month', 12) not found in {('$23.1M raised', 2), ('140 000+ bots', 10), ('500M messages', 10)}
+
+======================================================================
+FAIL: test_the_memo_prompt_says_a_note_is_not_a_contradiction (zelda_api.tests_usage_basis.BasisNoteInGroundedContextTests.test_the_memo_prompt_says_a_note_is_not_a_contradiction)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 464, in test_the_memo_prompt_says_a_note_is_not_a_contradiction
+    self.assertIn('11. Consistency notes.', captured['system'])
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '11. Consistency notes.' not found in 'You are a senior analyst at a top-tier venture capital firm preparing\n    an institutional-quality investment memo for a partner meeting.\n\n    ABSOLUTE RULES:\n    1. Every factual statement MUST come from an evidence item below, and should cite\n       its ref in brackets, e.g. [C1], [S3], [P2].\n    2. Never invent numbers, projections, or metrics not present in the evidence.\n    3. Each item has a status, and the memo must carry it:\n       - SELF_REPORTED: the company says so; nothing checked it. Write "the company\n         states", never "the company has" or "supported".\n       - VERIFIED: independent evidence reconciles with the claim. Name the source.\n       - CONTRADICTED: independent evidence diverges. Present the company\'s figure AND\n         the external figure and source together, as a contradiction. Never describe\n         a contradicted claim as supported, confirmed or disclosed fact.\n       - INSUFFICIENT: it was checked but nothing could be concluded; give the reason.\n         If an external value is attached, report it alongside the claim and say the\n         two could not be confirmed as comparable. Never treat it as verified.\n    4. Each external value has a role. Only role "establishes" stands behind a status.\n       - "corroborates": a lower-authority source. Say it is "consistent with" or\n         "differs from" the claim, name the source and origin, and never present it as\n         verification. If "independent" is false it shares an origin with another\n         source and is not a second confirmation.\n       - "context": background only, labelled with its source and origin (e.g. a\n         LinkedIn-derived profile count is not headcount). Never treat it as a fact\n         about the company.\n    5. A gap means the extraction found no statement, not that the document lacks it.\n       Write "Not found in the extracted evidence", never "not disclosed".\n    6. Never use vague phrases like "strong opportunity", "experienced team", or\n       "significant market" without immediately citing an item.\n    7. Never write placeholder text.\n    8. Write as a skeptical but fair analyst — evidence-driven, not promotional.\n    9. Dates and who is speaking. Each claim-backed item has "as_of": the date its\n       figure was counted, or "not stated". Never call a figure current, a running\n       total, or "to date" / "so far" / "currently" unless its as_of is a stated date,\n       and then give that date. "source_context" (e.g. a slide heading "Traction by\n       Apr-16") dates the slide: give it with the figure as context. "dates_not_as_of"\n       are dates in the same sentence that describe something else, such as the deck\'s\n       year: never use them as the figure\'s date. If an item has a "narrator", the\n       figure is that party\'s statement: write "<narrator> lists/reports ...", not\n       "the company states". A question asking management for a current figure is\n       fine; this rule is about what the memo states.\n    10. Funding and the profile. Each section, bullet and question is read on its\n       own: name a narrated figure\'s narrator every time the figure appears, and\n       never call it "self-reported" -- not even inside a group such as "the\n       self-reported figures [S1, S2, S3]": cite the company\'s own figures and the\n       narrated figure separately. A funding_raised figure is money reported as\n       raised at some point; it is not a raise in progress, a round, proceeds or\n       cash on hand. Unless an item states a current raise (such as "Raising\n       (profile)"), do not write "this raise", "the stated raise" or its proceeds or\n       runway as fact; a question may ask whether a raise is planned. Runway or\n       remaining cash needs a dated cash balance and a burn rate; reported funding\n       and a revenue/cost schedule are not enough, and neither is an undated,\n       past or estimated cash or burn figure, or a burn rate from another period.\n       Dated cash and burn give runway as of their date, never current runway.\n       Profile items\n       (P...) are the current profile and undated: never date them with a slide\'s\n       date (not "was Series A as of April 2016").'
+
+======================================================================
+FAIL: test_the_owner_sees_the_note (zelda_api.tests_usage_basis.BasisNoteOnTruthDeltaPageTests.test_the_owner_sees_the_note)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 487, in test_the_owner_sees_the_note
+    self.assertIn('Measurement basis to clarify', html)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Measurement basis to clarify' not found in '<!-- Zelda Truth Delta Verification UI - Complete Dashboard -->\n\n\n\n<style>\n    /* ──────────────────────────────────────────────────────────────────────── */\n    /* TRUTH DELTA COLOR SCHEME */\n    /* ──────────────────────────────────────────────────────────────────────── */\n    :root {\n        --td-green: #10b981;      /* Verified ✅ */\n        --td-yellow: #f59e0b;     /* Caution ⚠️ */\n        --td-orange: #f97316;     /* Warning 🟠 */\n        --td-red: #ef4444;        /* Critical 🚨 */\n        --td-bg: #f8fafc;\n        --td-text: #1e293b;\n    }\n\n    /* Main Truth Delta Container */\n    .truth-delta-container {\n        background: linear-gradient(135deg, #f0f9ff 0%, #f8fafc 100%);\n        border-radius: 1.5rem;\n        padding: 2rem;\n        margin-top: 1.5rem;\n        border: 2px solid #e0e7ff;\n    }\n\n    /* Header Section */\n    .truth-delta-header {\n        display: flex;\n        align-items: center;\n        justify-content: space-between;\n        margin-bottom: 2rem;\n        padding-bottom: 1.5rem;\n        border-bottom: 2px solid #e0e7ff;\n    }\n\n    .truth-delta-title {\n        display: flex;\n        align-items: center;\n        gap: 1rem;\n    }\n\n    .truth-delta-title h2 {\n        margin: 0;\n        font-size: 1.75rem;\n        font-weight: 700;\n        color: var(--td-text);\n    }\n\n    .truth-delta-icon {\n        font-size: 2rem;\n        animation: pulse 2s infinite;\n    }\n\n    @keyframes pulse {\n        0%, 100% { opacity: 1; }\n        50% { opacity: 0.7; }\n    }\n\n    /* Score Display */\n    .truth-delta-score-box {\n        background: white;\n        border-radius: 1rem;\n        padding: 1.5rem;\n        border: 2px solid #e0e7ff;\n        min-width: 250px;\n    }\n\n    .score-value {\n        font-size: 3rem;\n        font-weight: 800;\n        line-height: 1;\n        margin-bottom: 0.5rem;\n    }\n\n    .score-value.low-risk {\n        color: var(--td-green);\n    }\n\n    .score-value.medium-risk {\n        color: var(--td-yellow);\n    }\n\n    .score-value.high-risk {\n        color: var(--td-orange);\n    }\n\n    .score-value.critical-risk {\n        color: var(--td-red);\n    }\n\n    .score-label {\n        font-size: 0.875rem;\n        color: #64748b;\n        text-transform: uppercase;\n        letter-spacing: 0.1em;\n        font-weight: 600;\n    }\n\n    .score-risk {\n        font-size: 1.25rem;\n        font-weight: 700;\n        margin-top: 0.75rem;\n        padding-top: 0.75rem;\n        border-top: 1px solid #e0e7ff;\n    }\n\n    .risk-low {\n        color: var(--td-green);\n    }\n\n    .risk-medium {\n        color: var(--td-yellow);\n    }\n\n    .risk-high {\n        color: var(--td-orange);\n    }\n\n    .risk-critical {\n        color: var(--td-red);\n    }\n\n    /* Stats Grid */\n    .truth-delta-stats {\n        display: grid;\n        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));\n        gap: 1rem;\n        margin: 1.5rem 0;\n    }\n\n    .stat-card {\n        background: white;\n        border-radius: 0.75rem;\n        padding: 1rem;\n        border: 1px solid #e0e7ff;\n        text-align: center;\n    }\n\n    .stat-value {\n        font-size: 2rem;\n        font-weight: 700;\n        color: var(--td-text);\n        margin-bottom: 0.25rem;\n    }\n\n    .stat-label {\n        font-size: 0.85rem;\n        color: #64748b;\n        text-transform: uppercase;\n        letter-spacing: 0.05em;\n    }\n\n    /* Flag Breakdown */\n    .flag-breakdown {\n        display: grid;\n        grid-template-columns: repeat(4, 1fr);\n        gap: 1rem;\n        margin-bottom: 2rem;\n    }\n\n    .flag-item {\n        background: white;\n        border-radius: 0.75rem;\n        padding: 1rem;\n        border-left: 4px solid #e0e7ff;\n    }\n\n    .flag-item.verified {\n        border-left-color: var(--td-green);\n        background: rgba(16, 185, 129, 0.05);\n    }\n\n    .flag-item.caution {\n        border-left-color: var(--td-yellow);\n        background: rgba(245, 158, 11, 0.05);\n    }\n\n    .flag-item.warning {\n        border-left-color: var(--td-orange);\n        background: rgba(249, 115, 22, 0.05);\n    }\n\n    .flag-item.critical {\n        border-left-color: var(--td-red);\n        background: rgba(239, 68, 68, 0.05);\n    }\n\n    .flag-icon {\n        font-size: 1.5rem;\n        display: block;\n        margin-bottom: 0.5rem;\n    }\n\n    .flag-count {\n        font-size: 1.75rem;\n        font-weight: 700;\n        color: var(--td-text);\n        margin-bottom: 0.25rem;\n    }\n\n    .flag-label {\n        font-size: 0.85rem;\n        color: #64748b;\n        text-transform: uppercase;\n        letter-spacing: 0.05em;\n    }\n\n    /* Flagged Claims Section */\n    .flagged-claims {\n        background: white;\n        border-radius: 1rem;\n        overflow: hidden;\n        border: 2px solid #e0e7ff;\n    }\n\n    .claims-header {\n        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);\n        color: white;\n        padding: 1.5rem;\n        font-weight: 700;\n        font-size: 1.1rem;\n    }\n\n    .claims-list {\n        max-height: 500px;\n        overflow-y: auto;\n    }\n\n    .claim-item {\n        padding: 1.5rem;\n        border-bottom: 1px solid #e0e7ff;\n        display: flex;\n        gap: 1rem;\n        align-items: flex-start;\n    }\n\n    .claim-item:hover {\n        background: #f8fafc;\n    }\n\n    .claim-item:last-child {\n        border-bottom: none;\n    }\n\n    .claim-flag-icon {\n        font-size: 1.75rem;\n        flex-shrink: 0;\n        margin-top: 0.25rem;\n    }\n\n    .claim-content {\n        flex-grow: 1;\n    }\n\n    .claim-category {\n        font-weight: 700;\n        font-size: 0.95rem;\n        color: var(--td-text);\n        margin-bottom: 0.5rem;\n        text-transform: uppercase;\n        letter-spacing: 0.05em;\n    }\n\n    .claim-comparison {\n        display: grid;\n        grid-template-columns: 1fr 1fr;\n        gap: 1rem;\n        margin: 0.75rem 0;\n        font-size: 0.9rem;\n    }\n\n    .comparison-value {\n        background: #f1f5f9;\n        padding: 0.75rem;\n        border-radius: 0.5rem;\n    }\n\n    .comparison-label {\n        font-size: 0.75rem;\n        color: #64748b;\n        text-transform: uppercase;\n        margin-bottom: 0.25rem;\n        font-weight: 600;\n    }\n\n    .comparison-text {\n        font-weight: 600;\n        color: var(--td-text);\n    }\n\n    .discrepancy-badge {\n        display: inline-block;\n        padding: 0.25rem 0.75rem;\n        border-radius: 0.25rem;\n        font-size: 0.85rem;\n        font-weight: 600;\n        margin: 0.75rem 0;\n    }\n\n    .discrepancy-badge.low {\n        background: rgba(245, 158, 11, 0.1);\n        color: var(--td-yellow);\n    }\n\n    .discrepancy-badge.medium {\n        background: rgba(249, 115, 22, 0.1);\n        color: var(--td-orange);\n    }\n\n    .discrepancy-badge.high {\n        background: rgba(239, 68, 68, 0.1);\n        color: var(--td-red);\n    }\n\n    .claim-explanation {\n        color: #475569;\n        font-size: 0.9rem;\n        line-height: 1.5;\n        margin-top: 0.75rem;\n    }\n\n    /* Clarification Requests */\n    .claim-clarification-ask-btn {\n        background: none;\n        border: 1px solid #cbd5e1;\n        color: #475569;\n        font-size: 0.8rem;\n        font-weight: 600;\n        padding: 0.35rem 0.85rem;\n        border-radius: 2rem;\n        margin-top: 0.75rem;\n        cursor: pointer;\n    }\n    .claim-clarification-ask-btn:hover {\n        background: #f1f5f9;\n    }\n    .claim-clarification-form {\n        margin-top: 0.75rem;\n        display: flex;\n        flex-direction: column;\n        gap: 0.5rem;\n    }\n    .claim-clarification-form textarea {\n        width: 100%;\n        border: 1px solid #cbd5e1;\n        border-radius: 0.5rem;\n        padding: 0.5rem;\n        font-size: 0.85rem;\n        resize: vertical;\n    }\n    .claim-clarification-list {\n        margin-top: 0.75rem;\n        display: flex;\n        flex-direction: column;\n        gap: 0.5rem;\n    }\n    .claim-clarification-item {\n        background: #f8fafc;\n        border: 1px solid #e0e7ff;\n        border-radius: 0.5rem;\n        padding: 0.75rem;\n        font-size: 0.85rem;\n    }\n    .claim-clarification-status {\n        display: inline-block;\n        font-size: 0.7rem;\n        font-weight: 700;\n        text-transform: uppercase;\n        letter-spacing: 0.03em;\n        padding: 0.15rem 0.5rem;\n        border-radius: 1rem;\n        margin-left: 0.5rem;\n    }\n    .claim-clarification-status.pending {\n        background: rgba(245, 158, 11, 0.12);\n        color: var(--td-yellow);\n    }\n    .claim-clarification-status.responded {\n        background: rgba(16, 185, 129, 0.12);\n        color: var(--td-green);\n    }\n\n    /* Summary Box */\n    .truth-delta-summary {\n        background: #f8fafc;\n        border-left: 4px solid #1e293b;\n        padding: 1.5rem;\n        border-radius: 0.75rem;\n        margin-bottom: 1.5rem;\n    }\n\n    .summary-title {\n        font-weight: 700;\n        font-size: 0.95rem;\n        color: var(--td-text);\n        margin-bottom: 0.75rem;\n        text-transform: uppercase;\n        letter-spacing: 0.05em;\n    }\n\n    .summary-text {\n        color: #475569;\n        line-height: 1.6;\n        font-size: 0.95rem;\n    }\n\n    /* Action Buttons */\n    .truth-delta-actions {\n        display: flex;\n        gap: 1rem;\n        flex-wrap: wrap;\n        margin-top: 1.5rem;\n    }\n\n    .truth-delta-btn {\n        padding: 0.75rem 1.5rem;\n        border-radius: 0.75rem;\n        border: none;\n        font-weight: 600;\n        cursor: pointer;\n        transition: all 0.3s ease;\n        font-size: 0.9rem;\n    }\n\n    .truth-delta-btn.primary {\n        background: #1e293b;\n        color: white;\n    }\n\n    .truth-delta-btn.primary:hover {\n        background: #0f172a;\n        transform: translateY(-2px);\n    }\n\n    .truth-delta-btn.secondary {\n        background: white;\n        color: #1e293b;\n        border: 2px solid #e0e7ff;\n    }\n\n    .truth-delta-btn.secondary:hover {\n        border-color: #1e293b;\n        background: #f8fafc;\n    }\n\n    /* Loading State */\n    .truth-delta-loading {\n        text-align: center;\n        padding: 2rem;\n    }\n\n    .spinner {\n        display: inline-block;\n        width: 40px;\n        height: 40px;\n        border: 4px solid #e0e7ff;\n        border-top-color: #1e293b;\n        border-radius: 50%;\n        animation: spin 1s linear infinite;\n    }\n\n    @keyframes spin {\n        to { transform: rotate(360deg); }\n    }\n\n    .loading-text {\n        margin-top: 1rem;\n        color: #64748b;\n        font-weight: 500;\n    }\n\n    /* Empty State */\n    .truth-delta-empty {\n        text-align: center;\n        padding: 2rem;\n        color: #64748b;\n    }\n\n    .empty-icon {\n        font-size: 2.5rem;\n        margin-bottom: 1rem;\n    }\n\n    /* Recommendation Adjustment */\n    .recommendation-adjustment {\n        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);\n        border-left: 4px solid #f59e0b;\n        padding: 1rem;\n        border-radius: 0.75rem;\n        margin: 1rem 0;\n    }\n\n    .recommendation-adjustment.warning {\n        background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);\n        border-left-color: var(--td-orange);\n    }\n\n    .recommendation-adjustment.critical {\n        background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);\n        border-left-color: var(--td-red);\n    }\n\n    .adjustment-title {\n        font-weight: 700;\n        color: #92400e;\n        margin-bottom: 0.5rem;\n    }\n\n    .adjustment-text {\n        color: #78350f;\n        font-size: 0.9rem;\n    }\n\n    /* Responsive */\n    @media (max-width: 768px) {\n        .truth-delta-header {\n            flex-direction: column;\n            gap: 1rem;\n        }\n\n        .flag-breakdown {\n            grid-template-columns: repeat(2, 1fr);\n        }\n\n        .claim-comparison {\n            grid-template-columns: 1fr;\n        }\n\n        .truth-delta-actions {\n            flex-direction: column;\n        }\n\n        .truth-delta-btn {\n            width: 100%;\n        }\n    }\n</style>\n\n<!-- TRUTH DELTA VERIFICATION DASHBOARD -->\n<div id="truthDeltaContainer" data-document-id="1" style="display: none;">\n\n    \n    \n\n    \n\n<nav aria-label="Explore the analysis"\n     style="border:1px solid #e3e6f0;border-radius:12px;background:#fff;padding:14px 18px;margin:0 0 24px;">\n    <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6c757d;margin-bottom:10px;">Explore the analysis</div>\n    <div style="display:flex;flex-wrap:wrap;gap:8px 10px;">\n        \n            \n            <span aria-current="page"\n                  style="display:inline-block;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600;background:#1e293b;color:#fff;">Check the evidence</span>\n            \n        \n    </div>\n    \n</nav>\n\n\n\n    <!-- Header with Score -->\n    <div class="truth-delta-container">\n        \n\n<p style="display:flex;align-items:center;gap:7px;font-family:ui-monospace,SFMono-Regular,Menlo,\'Liberation Mono\',monospace;font-size:11px;font-weight:500;letter-spacing:.13em;text-transform:uppercase;color:#64748b;margin:0 0 10px;line-height:1.4;"><img src="/static/img/brand/interlink-mark.svg" alt="" aria-hidden="true" width="15" height="15" style="display:block;flex:none;">Interlink&nbsp;Intelligence <span style="opacity:.5">&middot;</span> Powered&nbsp;by&nbsp;Zelda</p>\n\n        <div class="alert alert-light border d-flex align-items-start gap-2 small text-muted mb-4" role="note">\n    <i class="bi bi-info-circle mt-1 flex-shrink-0"></i>\n    <div>\n        <strong>Evidence note:</strong> Some claims may read &ldquo;not established.&rdquo;\n        That describes the available evidence for that claim, not the company.\n    </div>\n</div>\n\n        \n        <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-2 mb-3 fw-semibold">\n            <i class="bi bi-lightning-charge-fill me-1"></i>Zelda Lite Verification\n        </span>\n        \n        <div class="truth-delta-header">\n            <div class="truth-delta-title">\n                <div class="truth-delta-icon">🔍</div>\n                <h2>Truth Delta Verification\n                    <i class="bi bi-info-circle field-info-icon" role="button" tabindex="0"\n                       data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom"\n                       data-bs-content="See which of a company\'s claims hold up against outside records. Claims are compared against SEC EDGAR, where those sources report the metric. Each claim is reported as verified, unsupported, unavailable, or not comparable — the same four outcomes shown on the homepage, with the reason given rather than a bare verdict. It only covers claims with a public source to check — a diligence accelerator, not a background check or a guarantee."></i>\n                </h2>\n                \n            </div>\n            <div class="truth-delta-score-box">\n                <div class="score-label">Evidence Credibility</div>\n                <div class="score-value" id="truthScoreValue">—</div>\n                <div class="score-label">/100</div>\n                <div class="score-risk" id="truthScoreRisk">—</div>\n            </div>\n        </div>\n\n        \n\n        \n\n        \n        \n\n        \n        \n\n        \n        \n\n        \n\n        \n\n\n\n        <!-- Summary -->\n        <div class="truth-delta-summary">\n            <div class="summary-title">Overall Assessment</div>\n            <div class="summary-text" id="truthSummaryText">Loading verification data...</div>\n            <div class="summary-text" id="truthVerifiabilityRollup" style="display: none; font-size: 0.9rem; opacity: 0.85; margin-top: 0.5rem;"></div>\n        </div>\n\n        <!-- Loading State -->\n        <div id="truthDeltaLoading" class="truth-delta-loading" style="display: none;">\n            <div class="spinner"></div>\n            <div class="loading-text">Verifying claims against external data...</div>\n        </div>\n\n        <!-- Empty State -->\n        <div id="truthDeltaEmpty" class="truth-delta-empty" style="display: none;">\n            <div class="empty-icon">🔍</div>\n            <h3>Verification Not Available</h3>\n            <p>Truth Delta verification hasn\'t been run yet for this document.</p>\n        </div>\n\n        <!-- Per-Claim Detail — the "why": which claims were checked, what\n             was found (or why nothing was found), and Zelda\'s reasoning\n             for each. Hidden until there\'s at least one claim to show. -->\n        <div id="truthDeltaClaimsSection" class="flagged-claims mt-4" style="display: none;">\n            <div class="claims-header">Claim-by-Claim Detail</div>\n            <div class="claims-list" id="truthDeltaClaimsList"></div>\n        </div>\n\n        \n\n        <!-- Actions — running verification spends the owner\'s credits, and\n             TruthDeltaVerifyView accepts only the uploader or staff, so\n             nobody else is offered a button that can only answer 403. -->\n        \n        <div class="truth-delta-actions">\n            <button class="truth-delta-btn primary" onclick="runTruthDeltaVerification()">\n                <span id="verifyButtonText">▶ Run Verification</span>\n            </button>\n        </div>\n        \n\n        \n        <div style="font-size: 0.72rem; line-height: 1.5; color: #64748b; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e0e7ff;">\n            <strong>ℹ</strong> This report is provided for informational and due-diligence purposes only. It is not financial, investment, legal, tax, or accounting advice. Do not rely solely on this report when making an investment or transaction decision. You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers. It is not a binding representation by Interlink Foundry.\n        </div>\n        \n    </div>\n</div>\n\n<script id="truth-delta-details-json" type="application/json">{}</script>\n<script id="truth-delta-summary-json" type="application/json">"Verification pending."</script>\n<script id="truth-delta-risk-json" type="application/json">"pending"</script>\n<script id="truth-delta-coverage-json" type="application/json">""</script>\n<script id="truth-delta-clarifications-json" type="application/json">[]</script>\n\n<!-- JAVASCRIPT ENGINE FOR TRUTH DELTA UI -->\n<script nonce="JBKYJvnUJ0f-GH92jnK-DA">\nconst TRUTH_DELTA_API = \'/api/v1/zelda\';\nconst DOCUMENT_ID = 1;\nconst CAN_REQUEST_CLARIFICATION = false;\nconst IS_DOCUMENT_OWNER = true;\n\nfunction _readJsonScript(id, fallback) {\n    const el = document.getElementById(id);\n    if (!el) return fallback;\n    try {\n        return JSON.parse(el.textContent);\n    } catch (e) {\n        return fallback;\n    }\n}\n\nlet CLARIFICATION_REQUESTS = _readJsonScript(\'truth-delta-clarifications-json\', []);\n\n// ── Server-side data injected from Django view — no API call needed ──\n// summary/credibility_risk go through json_script (not raw template-string\n// interpolation) so arbitrary text — including apostrophes — round-trips\n// correctly: Django\'s default auto-escaping is for HTML context, but a\n// value embedded directly inside a "..." JS string literal needs JS-string\n// escaping instead, and mixing the two turned a literal apostrophe into\n// the literal 6 characters "&#x27;" showing up on the page.\nconst SERVER_TRUTH_DATA = {\n    document_id: 1,\n    overall_truth_score: null,\n    credibility_risk: _readJsonScript(\'truth-delta-risk-json\', \'pending\'),\n    summary: _readJsonScript(\'truth-delta-summary-json\', \'Verification pending.\'),\n    claims_analyzed: 0,\n    // ic_memo.coverage_sentence over ic_memo.coverage_counts -- the rollup\n    // shows this text and computes nothing (no percentage, no arithmetic).\n    coverage_sentence: _readJsonScript(\'truth-delta-coverage-json\', \'\'),\n    claims_flagged: 0,\n    verification_rate: 0,\n    discrepancy_rate: 0,\n    flag_breakdown: { caution: 0, warning: 0, critical: 0 },\n    details: _readJsonScript(\'truth-delta-details-json\', {})\n};\nSERVER_TRUTH_DATA.key_findings = [SERVER_TRUTH_DATA.summary];\n\n\n    /**\n     * Load and display Truth Delta verification data\n     */\n    async function loadTruthDeltaData(documentId) {\n        const container = document.getElementById(\'truthDeltaContainer\');\n        const loading = document.getElementById(\'truthDeltaLoading\');\n        const empty = document.getElementById(\'truthDeltaEmpty\');\n\n        if (!container) return;\n\n        // Show loading state\n        loading.style.display = \'block\';\n        container.style.display = \'block\';\n\n        try {\n            // Fetch Truth Delta score\n            const response = await fetch(\n                `${TRUTH_DELTA_API}/documents/${documentId}/truth-delta/`,\n                {\n                    credentials: \'include\', // <-- ADDED FOR AUTHENTICATION\n                    headers: {\n                        \'X-CSRFToken\': getCookie(\'csrftoken\')\n                    }\n                }\n            );\n\n            if (response.status === 202) {\n                // Not ready yet\n                loading.innerHTML = `\n                    <div class="spinner"></div>\n                    <div class="loading-text">Verification in progress...</div>\n                    <p style="margin-top: 1rem; color: #64748b; font-size: 0.9rem;">\n                        The system is analyzing claimed data against external sources.\n                        Check back in a moment.\n                    </p>\n                `;\n                return;\n            }\n\n            if (!response.ok) throw new Error(`HTTP ${response.status}`);\n\n            const data = await response.json();\n            loading.style.display = \'none\';\n\n            // Render Truth Delta UI\n            renderTruthDeltaUI(data);\n\n        } catch (error) {\n            console.error(\'Truth Delta load error:\', error);\n            loading.style.display = \'none\';\n            empty.style.display = \'block\';\n            empty.innerHTML = `\n                <div class="empty-icon">⚠️</div>\n                <h3>Verification Unavailable</h3>\n                <p>${error.message}</p>\n            `;\n        }\n    }\n\n    /**\n     * Render Truth Delta verification UI with data\n     */\n    function renderTruthDeltaUI(data) {\n        // Score and risk\n        const scoreElement = document.getElementById(\'truthScoreValue\');\n        const riskElement = document.getElementById(\'truthScoreRisk\');\n\n        const risk = data.credibility_risk || \'pending\';\n        const score = data.overall_truth_score;\n        const hasScore = score !== null && score !== undefined;\n\n        if (risk === \'pending\') {\n            scoreElement.textContent = \'—\';\n            scoreElement.className = \'score-value medium-risk\';\n            riskElement.textContent = \'PENDING VERIFICATION\';\n            riskElement.className = \'score-risk risk-medium\';\n        } else if (risk === \'no_claims\') {\n            // Finished, with nothing to check -- not pending, and not "no\n            // public data": no claim reached a public source.\n            scoreElement.textContent = \'—\';\n            scoreElement.className = \'score-value medium-risk\';\n            riskElement.textContent = \'NOT SCORED · NO VERIFIABLE CLAIMS\';\n            riskElement.className = \'score-risk risk-medium\';\n        } else if (!hasScore) {\n            // Verification ran, but no claim was verified or contradicted, so\n            // nothing is scoreable -- distinct from "pending" and from a low\n            // score. Not "no external data": Nike had an SEC figure it could\n            // not compare (R-003b).\n            scoreElement.textContent = \'N/A\';\n            scoreElement.className = \'score-value medium-risk\';\n            // Not "insufficient evidence", which can read as a judgement of the\n            // company: Zelda has too little comparable public evidence to score.\n            riskElement.textContent = \'NOT SCORED · LIMITED PUBLIC EVIDENCE\';\n            riskElement.className = \'score-risk risk-medium\';\n        } else {\n            scoreElement.textContent = Math.round(score);\n            scoreElement.className = `score-value ${getRiskClass(risk)}`;\n            riskElement.textContent = risk.toUpperCase();\n            riskElement.className = `score-risk risk-${risk}`;\n        }\n\n        // Summary\n        document.getElementById(\'truthSummaryText\').textContent = data.summary ||\n            \'Verification pending.\';\n\n        if (data.coverage_sentence && typeof SERVER_TRUTH_DATA !== \'undefined\') {\n            SERVER_TRUTH_DATA.coverage_sentence = data.coverage_sentence;   // the API\'s copy, same helper\n        }\n        renderClaimsSection(data.details || {});\n    }\n\n    /**\n     * Escapes text for safe insertion via innerHTML — claim/summary text\n     * ultimately comes from an uploaded document or a Claude response, so\n     * it\'s never trusted as raw HTML.\n     */\n    function escapeHtml(str) {\n        const div = document.createElement(\'div\');\n        div.textContent = str == null ? \'\' : String(str);\n        return div.innerHTML;\n    }\n\n    /**\n     * Renders the claim-by-claim "why" behind the score — reuses the\n     * per_claim reasoning Zelda already computes (see\n     * TruthDeltaEngine._call_claude_for_verification /\n     * _numeric_fallback) instead of leaving it buried in a JSON field\n     * only visible via Django admin. Falls back to listing the raw\n     * claims plainly when no qualitative per_claim breakdown exists yet\n     * (the "no external data found at all" case).\n     */\n    function renderClaimsSection(details) {\n        const section = document.getElementById(\'truthDeltaClaimsSection\');\n        const list = document.getElementById(\'truthDeltaClaimsList\');\n        const rollup = document.getElementById(\'truthVerifiabilityRollup\');\n        if (!section || !list) return;\n\n        const perClaim = details.per_claim || [];\n        const claims = details.claims || [];\n\n        if (perClaim.length === 0 && claims.length === 0) {\n            section.style.display = \'none\';\n            if (rollup) rollup.style.display = \'none\';\n            return;\n        }\n\n        list.innerHTML = \'\';\n        const rows = perClaim.length > 0\n            ? perClaim.map(row => ({\n                category: row.category, claimed: row.claimed, observed: row.observed,\n                assessment: row.assessment, grounded: row.grounded === true,\n                state: row.state || \'no_data\', reason: row.reason || \'\',\n            }))\n            : claims.map(c => ({\n                category: c.category, claimed: c.claimed_value, observed: null,\n                assessment: \'Not checked against external data.\', grounded: false,\n                state: \'no_data\', reason: \'\',\n            }));\n\n        rows.forEach(row => list.appendChild(buildClaimItem(row)));\n        section.style.display = \'block\';\n\n        // Rollup — the same server answer each claim-item\'s ✅/❔ icon uses,\n        // just aggregated, so it cannot disagree with the table below it or\n        // with the stat cards above. Never re-derived from the observed text:\n        // that text is written by a model, and reading verification out of it\n        // let a sentence stand in for evidence.\n        if (rollup) {\n            // The server\'s coverage sentence (ic_memo.coverage_sentence over\n            // coverage_counts): counts, never a percentage. It used to read\n            // a share of claims verified with a percentage -- a grade a\n            // private company with little public evidence always failed.\n            let text = (typeof SERVER_TRUTH_DATA !== \'undefined\' && SERVER_TRUTH_DATA.coverage_sentence) || \'\';\n            // SERVER_TRUTH_DATA.claims_analyzed is the TRUE total; rows.length\n            // is capped to 3 for Lite (see truth_delta_ui_view/TruthDeltaScoreView),\n            // so a gap between them means there\'s more behind Zelda AI.\n            if (typeof SERVER_TRUTH_DATA !== \'undefined\' && SERVER_TRUTH_DATA.claims_analyzed > rows.length) {\n                text += ` — showing ${rows.length} of ${SERVER_TRUTH_DATA.claims_analyzed}, upgrade to Zelda AI to see the rest`;\n            }\n            rollup.textContent = text;\n            rollup.style.display = text ? \'block\' : \'none\';\n        }\n    }\n\n    const CLAIM_STATE_ICONS = {verified: \'✅\', contradicted: \'⚠️\', no_data: \'❔\'};\n    // Why a claim is no_data, in a reader\'s words (grounding_reasons()).\n    const NO_DATA_REASONS = {\n        period_unknown: \'An external figure was found, but its period could not be confirmed as comparable, so this claim is not verified.\',\n        period_mismatch: \'Insufficient evidence: period mismatch. The claim and the external figure describe different periods, so they were not compared.\',\n        period_unresolved: \'An external figure was found for the same kind of period, but the exact period could not be confirmed on both sides, so a difference is not treated as a contradiction.\',\n        currency_unknown: \'The monetary currency is not explicitly known on both sides, so this claim was not compared.\',\n        currency_mismatch: \'The claim and external figure use different currencies, so this claim was not compared. No currency conversion was applied.\',\n        corroboration_only: \'Only lower-authority (LinkedIn-derived) data was found. It is shown as corroboration and does not verify the claim.\',\n        source_unavailable: \'The external source could not be reached, so this claim was not checked.\',\n        extraction_insufficient: \'The claim could not be read precisely enough to compare.\',\n        ambiguous_pairing: \'Several external figures were found and none could be paired with this claim.\',\n        no_comparable_claim: \'This kind of claim is not one an external figure can confirm or contradict.\',\n        no_external_evidence: \'No external data was found for this claim.\',\n    };\n\n    function buildClaimItem(row) {\n        // Only evidence the pipeline actually fetched goes in the Observed\n        // column. An ungrounded row\'s text is the model\'s description, not a\n        // source, and showing it there would read as corroboration.\n        const observedText = row.grounded ? row.observed : null;\n        // The icon is the canonical state (TruthDeltaReport.category_states),\n        // never `grounded`: an external figure can exist without establishing\n        // anything, and a check mark there reads as "verified" (baseline L-005).\n        const icon = CLAIM_STATE_ICONS[row.state] || CLAIM_STATE_ICONS.no_data;\n        const stateNote = row.state === \'no_data\' ? (NO_DATA_REASONS[row.reason] || \'\') : \'\';\n        // \'funding_raised\' -> \'Funding raised\' — the CSS already\n        // uppercases this label, but the underscore reads oddly\n        // ("FUNDING_RAISED") if not split into words first.\n        const categoryLabel = (row.category || \'\').replace(/_/g, \' \');\n\n        const div = document.createElement(\'div\');\n        div.className = \'claim-item\';\n        div.innerHTML = `\n            <div class="claim-flag-icon">${icon}</div>\n            <div class="claim-content">\n                <div class="claim-category">${escapeHtml(categoryLabel)}</div>\n                <div class="claim-comparison">\n                    <div class="comparison-value">\n                        <div class="comparison-label">Claimed</div>\n                        <div class="comparison-text">${escapeHtml(row.claimed || \'—\')}</div>\n                    </div>\n                    <div class="comparison-value">\n                        <div class="comparison-label">Observed</div>\n                        <div class="comparison-text">${escapeHtml(observedText || \'No external data found\')}</div>\n                    </div>\n                </div>\n                ${stateNote ? `<div class="claim-explanation claim-state-note">${escapeHtml(stateNote)}</div>` : \'\'}\n                <div class="claim-explanation">${escapeHtml(row.assessment || \'\')}</div>\n                <div class="claim-clarification-area" data-category="${escapeHtml(row.category || \'\')}" data-unverified="${!observedText}"></div>\n            </div>\n        `;\n\n        renderClarificationArea(div.querySelector(\'.claim-clarification-area\'));\n        return div;\n    }\n\n    /**\n     * Renders, for one claim category: any existing clarification\n     * requests + responses, an "Ask for Evidence" button for an\n     * investor/buyer viewer (only offered on claims that aren\'t already\n     * verified — asking for evidence on something already confirmed\n     * isn\'t the point), and a response form for the document owner on\n     * any still-PENDING request. Always rebuilds from CLARIFICATION_REQUESTS\n     * from scratch (rather than patching the DOM in place), so every\n     * submit handler can just call this again instead of hand-rolling\n     * DOM inserts — the single, harder-to-get-wrong path.\n     */\n    function renderClarificationArea(container) {\n        if (!container) return;\n        const category = container.dataset.category;\n        const isUnverified = container.dataset.unverified === \'true\';\n        container.innerHTML = \'\';\n\n        const existing = CLARIFICATION_REQUESTS.filter(cr => cr.category === category);\n        if (existing.length > 0) {\n            const list = document.createElement(\'div\');\n            list.className = \'claim-clarification-list\';\n            existing.forEach(cr => list.appendChild(buildClarificationItem(cr, container)));\n            container.appendChild(list);\n        }\n\n        if (CAN_REQUEST_CLARIFICATION && isUnverified) {\n            const askBtn = document.createElement(\'button\');\n            askBtn.type = \'button\';\n            askBtn.className = \'claim-clarification-ask-btn\';\n            askBtn.textContent = \'🤝 Ask for Evidence\';\n            askBtn.onclick = () => showClarificationForm(container);\n            container.appendChild(askBtn);\n        }\n    }\n\n    function buildClarificationItem(cr, container) {\n        const item = document.createElement(\'div\');\n        item.className = \'claim-clarification-item\';\n        const statusClass = cr.status === \'RESPONDED\' ? \'responded\' : \'pending\';\n        const statusLabel = cr.status === \'RESPONDED\' ? \'Responded\' : \'Pending\';\n\n        let responseHtml = \'\';\n        if (cr.status === \'RESPONDED\' && cr.response_text) {\n            responseHtml = `<div class="mt-2"><strong>Response:</strong> ${escapeHtml(cr.response_text)}</div>`;\n        } else if (IS_DOCUMENT_OWNER) {\n            responseHtml = `\n                <div class="claim-clarification-form">\n                    <textarea rows="2" placeholder="Respond with clarification or a link to supporting documentation..."></textarea>\n                    <div>\n                        <button type="button" class="truth-delta-btn primary">Send Response</button>\n                    </div>\n                </div>\n            `;\n        }\n\n        item.innerHTML = `\n            <div><strong>${escapeHtml(cr.requested_by)}</strong> asked<span class="claim-clarification-status ${statusClass}">${statusLabel}</span></div>\n            ${cr.message ? `<div class="mt-1">${escapeHtml(cr.message)}</div>` : \'\'}\n            ${responseHtml}\n        `;\n\n        const responseButton = item.querySelector(\'.claim-clarification-form button\');\n        if (responseButton) {\n            responseButton.onclick = () => submitClarificationResponse(responseButton, cr.id, container);\n        }\n        return item;\n    }\n\n    function showClarificationForm(container) {\n        if (!CAN_REQUEST_CLARIFICATION) return;\n        const askBtn = container.querySelector(\'.claim-clarification-ask-btn\');\n        if (askBtn) askBtn.style.display = \'none\';\n\n        const form = document.createElement(\'div\');\n        form.className = \'claim-clarification-form\';\n        form.innerHTML = `\n            <textarea rows="2" placeholder="What would you like clarified or documented?"></textarea>\n            <div>\n                <button type="button" class="truth-delta-btn primary">Send Request</button>\n            </div>\n        `;\n        form.querySelector(\'button\').onclick = () => submitClarificationRequest(form, container);\n        container.appendChild(form);\n    }\n\n    async function submitClarificationRequest(form, container) {\n        const category = container.dataset.category;\n        const message = form.querySelector(\'textarea\').value.trim();\n        const button = form.querySelector(\'button\');\n        button.disabled = true;\n        try {\n            const body = new URLSearchParams();\n            body.append(\'message\', message);\n            const response = await fetch(\n                `${TRUTH_DELTA_API}/documents/${DOCUMENT_ID}/truth-delta/claims/${encodeURIComponent(category)}/flag/`,\n                { method: \'POST\', credentials: \'include\', headers: { \'X-CSRFToken\': getCookie(\'csrftoken\') }, body }\n            );\n            if (!response.ok) throw new Error(`HTTP ${response.status}`);\n            const data = await response.json();\n            CLARIFICATION_REQUESTS.push(data.clarification);\n            renderClarificationArea(container);\n        } catch (error) {\n            console.error(\'Clarification request error:\', error);\n            button.disabled = false;\n            alert(\'Failed to send request. Please try again.\');\n        }\n    }\n\n    async function submitClarificationResponse(button, clarificationId, container) {\n        const form = button.closest(\'.claim-clarification-form\');\n        const responseText = form.querySelector(\'textarea\').value.trim();\n        if (!responseText) {\n            alert(\'Please enter a response.\');\n            return;\n        }\n        button.disabled = true;\n        try {\n            const body = new URLSearchParams();\n            body.append(\'response_text\', responseText);\n            const response = await fetch(\n                `${TRUTH_DELTA_API}/truth-delta/claims/${clarificationId}/respond/`,\n                { method: \'POST\', credentials: \'include\', headers: { \'X-CSRFToken\': getCookie(\'csrftoken\') }, body }\n            );\n            if (!response.ok) throw new Error(`HTTP ${response.status}`);\n            const data = await response.json();\n            const record = CLARIFICATION_REQUESTS.find(cr => cr.id === clarificationId);\n            if (record) {\n                record.status = \'RESPONDED\';\n                record.response_text = data.response_text;\n            }\n            renderClarificationArea(container);\n        } catch (error) {\n            console.error(\'Clarification response error:\', error);\n            button.disabled = false;\n            alert(\'Failed to send response. Please try again.\');\n        }\n    }\n\n    /**\n     * Trigger Truth Delta verification\n     */\n    async function runTruthDeltaVerification() {\n        const docId = document.querySelector(\'[data-document-id]\')?.dataset.documentId;\n        if (!docId) {\n            alert(\'Document ID not found\');\n            return;\n        }\n\n        const button = event.target.closest(\'button\');\n        button.disabled = true;\n        button.textContent = \'⏳ Verifying...\';\n\n        try {\n            const response = await fetch(\n                `${TRUTH_DELTA_API}/documents/${docId}/truth-delta/verify/`,\n                {\n                    method: \'POST\',\n                    credentials: \'include\', // <-- ADDED FOR AUTHENTICATION\n                    headers: {\n                        \'X-CSRFToken\': getCookie(\'csrftoken\'),\n                        \'Content-Type\': \'application/json\'\n                    }\n                }\n            );\n\n            if (!response.ok) {\n                // The endpoint says why: out of credits (402) carries the\n                // upgrade message, a refusal (403) its own reason. Showing\n                // one generic line for all of them told the owner nothing.\n                const body = await response.json().catch(() => ({}));\n                throw new Error(body.error || `Verification couldn\'t be started (HTTP ${response.status}).`);\n            }\n\n            document.getElementById(\'truthDeltaLoading\').style.display = \'block\';\n            \n            // Poll for completion\n            pollTruthDeltaStatus(docId, button);\n\n        } catch (error) {\n            console.error(\'Verification error:\', error);\n            button.disabled = false;\n            button.textContent = \'▶ Run Verification\';\n            alert(error.message || "Verification couldn\'t be started.");\n        }\n    }\n\n    /**\n     * Poll for verification completion\n     */\n    function pollTruthDeltaStatus(documentId, button, maxAttempts = 30) {\n        let attempts = 0;\n\n        const pollInterval = setInterval(async () => {\n            attempts++;\n\n            try {\n                const response = await fetch(\n                    `${TRUTH_DELTA_API}/documents/${documentId}/truth-delta/`,\n                    {\n                        credentials: \'include\', // <-- ADDED FOR AUTHENTICATION\n                        headers: {\n                            \'X-CSRFToken\': getCookie(\'csrftoken\')\n                        }\n                    }\n                );\n\n                if (response.ok) {\n                    const data = await response.json();\n                    clearInterval(pollInterval);\n                    \n                    // Data ready\n                    document.getElementById(\'truthDeltaLoading\').style.display = \'none\';\n                    renderTruthDeltaUI(data);\n                    \n                    button.disabled = false;\n                    button.textContent = \'✅ Verification Complete\';\n                }\n            } catch (error) {\n                console.error(\'Poll error:\', error);\n            }\n\n            // Timeout after 30 attempts (5 minutes)\n            if (attempts >= maxAttempts) {\n                clearInterval(pollInterval);\n                button.disabled = false;\n                button.textContent = \'▶ Run Verification\';\n                alert(\'Verification is taking longer than expected. Please check back in a moment.\');\n            }\n        }, 10000); // Poll every 10 seconds\n    }\n\n    /**\n     * Helper: Get risk class\n     */\n    function getRiskClass(risk) {\n        const classes = {\n            \'low\': \'low-risk\',\n            \'medium\': \'medium-risk\',\n            \'high\': \'high-risk\',\n            \'critical\': \'critical-risk\'\n        };\n        return classes[risk] || \'medium-risk\';\n    }\n\n    /**\n     * Helper: Get CSRF token\n     */\n    function getCookie(name) {\n        const cookies = document.cookie.split(\';\');\n        for (let c of cookies) {\n            c = c.trim();\n            if (c.startsWith(name + \'=\')) {\n                return decodeURIComponent(c.slice(name.length + 1));\n            }\n        }\n        return null;\n    }\n\n    // Auto-load on page ready\n    document.addEventListener(\'DOMContentLoaded\', () => {\n        const container = document.getElementById(\'truthDeltaContainer\');\n        const loading = document.getElementById(\'truthDeltaLoading\');\n\n        if (!container) return;\n\n        // Always show the container\n        container.style.display = \'block\';\n\n        if (SERVER_TRUTH_DATA.document_id) {\n            // Use server-injected data — bypasses API auth\n            if (loading) loading.style.display = \'none\';\n            renderTruthDeltaUI(SERVER_TRUTH_DATA);\n        } else {\n            // Fallback: try API\n            const docId = container.dataset.documentId;\n            if (docId) loadTruthDeltaData(docId);\n        }\n    });\n</script>\n\n<script nonce="JBKYJvnUJ0f-GH92jnK-DA" src="https://cdn.jsdelivr.net/npm/chart.js"></script>\n<script nonce="JBKYJvnUJ0f-GH92jnK-DA">\n// Evidence Coverage chart — reads the three counts the view took from\n// ic_memo.coverage_counts() (the same numbers as the stat cards); nothing is\n// recalculated here. Contradicted is its own red series: it was missing, and\n// a real contradiction must stay visible.\n(function () {\n    const el = document.getElementById(\'evidenceCoverageChart\');\n    if (!el || typeof Chart === \'undefined\') return;\n\n    const verified = 0;\n    const contradicted = 0;\n    const notEstablished = 0;\n    const total = 0;\n\n    const wrap = el.closest(\'.td-evidence-coverage\');\n    if (total === 0) {                 // belt-and-suspenders: the template already\n        if (wrap) wrap.style.display = \'none\';   // gates on category_states\n        return;\n    }\n\n    const GREEN = \'#10b981\', RED = \'#ef4444\', AMBER = \'#f59e0b\', INK = \'#1e293b\';\n\n    new Chart(el.getContext(\'2d\'), {\n        type: \'bar\',\n        data: {\n            labels: [\'Claims\'],\n            datasets: [\n                { label: \'Verified\', data: [verified],\n                  backgroundColor: GREEN, borderColor: \'#ffffff\', borderWidth: 2, borderRadius: 4, borderSkipped: false },\n                { label: \'Contradicted\', data: [contradicted],\n                  backgroundColor: RED, borderColor: \'#ffffff\', borderWidth: 2, borderRadius: 4, borderSkipped: false },\n                { label: \'Not established\', data: [notEstablished],\n                  backgroundColor: AMBER, borderColor: \'#ffffff\', borderWidth: 2, borderRadius: 4, borderSkipped: false },\n            ],\n        },\n        options: {\n            indexAxis: \'y\',\n            responsive: false,   // fixed canvas size; this page also renders as a bare quirks-mode fragment\n            maintainAspectRatio: false,\n            layout: { padding: { top: 2, bottom: 2 } },\n            scales: {\n                // Proportion bar — the legend carries the counts and the tooltip\n                // the exact split, so the numeric axis would only add clutter.\n                x: { stacked: true, min: 0, max: total, display: false },\n                y: { stacked: true, display: false },\n            },\n            plugins: {\n                legend: {\n                    position: \'bottom\',\n                    labels: {\n                        boxWidth: 12, boxHeight: 12, padding: 12, color: INK, font: { size: 12 },\n                        generateLabels: function (chart) {\n                            return chart.data.datasets.map(function (ds, i) {\n                                return {\n                                    text: ds.label + \' — \' + ds.data[0],\n                                    fillStyle: ds.backgroundColor,\n                                    strokeStyle: \'#ffffff\', lineWidth: 1,\n                                    hidden: false, datasetIndex: i,\n                                };\n                            });\n                        },\n                    },\n                },\n                tooltip: {\n                    callbacks: {\n                        title: function () { return \'\'; },\n                        label: function (ctx) {\n                            const n = ctx.parsed.x;\n                            // Counts only: coverage is not a grade.\n                            return \' \' + ctx.dataset.label + \': \' + n + \' of \' + total;\n                        },\n                    },\n                },\n            },\n        },\n    });\n})();\n</script>\n'
+
+======================================================================
+FAIL: test_matches_the_frozen_claims_plus_the_additive_ra109_expectation (zelda_api.tests_usage_basis.FrozenManyChatUsageTests.test_matches_the_frozen_claims_plus_the_additive_ra109_expectation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 89, in test_matches_the_frozen_claims_plus_the_additive_ra109_expectation
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        sorted((c.category, c.claimed_value_numeric, c.unit, c.page_number, c.claimed_value) for c in claims),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        sorted((e['category'], e['value'], e['unit'], e['page'], e['claimed_value']) for e in expected))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [('fu[152 chars]ges')] != [('fu[152 chars]ges'), ('usage', 500000000.0, 'messages/month'[24 chars]th')]
+
+Second list contains 1 additional elements.
+First extra element 3:
+('usage', 500000000.0, 'messages/month', 12, '500M messages/month')
+
+  [('funding_raised', 23100000.0, '', 2, '$23.1M raised'),
+   ('usage', 140000.0, 'bots', 10, '140 000+ bots'),
+-  ('usage', 500000000.0, 'messages', 10, '500M messages')]
+?                                                         ^
+
++  ('usage', 500000000.0, 'messages', 10, '500M messages'),
+?                                                         ^
+
++  ('usage', 500000000.0, 'messages/month', 12, '500M messages/month')]
+
+======================================================================
+FAIL: test_the_slide_12_rate_is_a_third_usage_claim (zelda_api.tests_usage_basis.FrozenManyChatUsageTests.test_the_slide_12_rate_is_a_third_usage_claim)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 62, in test_the_slide_12_rate_is_a_third_usage_claim
+    self.assertEqual(usage, [
+    ~~~~~~~~~~~~~~~~^^^^^^^^^
+        (10, 'bots', 140_000.0, '140 000+ bots'),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        (10, 'messages', 500_000_000.0, '500M messages'),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        (12, 'messages/month', 500_000_000.0, '500M messages/month'),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ])
+    ^^
+AssertionError: Lists differ: [(10,[78 chars]ges')] != [(10,[78 chars]ges'), (12, 'messages/month', 500000000.0, '50[15 chars]th')]
+
+Second list contains 1 additional elements.
+First extra element 2:
+(12, 'messages/month', 500000000.0, '500M messages/month')
+
+  [(10, 'bots', 140000.0, '140 000+ bots'),
+-  (10, 'messages', 500000000.0, '500M messages')]
+?                                                ^
+
++  (10, 'messages', 500000000.0, '500M messages'),
+?                                                ^
+
++  (12, 'messages/month', 500000000.0, '500M messages/month')]
+
+======================================================================
+FAIL: test_the_traction_insights_keep_all_three_figures (zelda_api.tests_usage_basis.FrozenManyChatUsageTests.test_the_traction_insights_keep_all_three_figures)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 83, in test_the_traction_insights_keep_all_three_figures
+    self.assertEqual(found, [('140 000+ bots', 10), ('500M messages', 10), ('500M messages/month', 12)])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [('140 000+ bots', 10), ('500M messages', 10)] != [('140 000+ bots', 10), ('500M messages', 10), ('500M messages/month', 12)]
+
+Second list contains 1 additional elements.
+First extra element 2:
+('500M messages/month', 12)
+
+- [('140 000+ bots', 10), ('500M messages', 10)]
++ [('140 000+ bots', 10), ('500M messages', 10), ('500M messages/month', 12)]
+?                                              +++++++++++++++++++++++++++++
+
+
+======================================================================
+FAIL: test_a_platform_rate_split_across_lines_is_refused_even_if_offered_as_an_insight (zelda_api.tests_usage_basis.SplitLineOwnershipTests.test_a_platform_rate_split_across_lines_is_refused_even_if_offered_as_an_insight)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 186, in test_a_platform_rate_split_across_lines_is_refused_even_if_offered_as_an_insight
+    self.assertEqual(self.claims_for('Telegram\n100M\nmessages/month', '100M messages/month'), [])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [<ClaimedDatapoint: usage: 100M messages/month>] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+<ClaimedDatapoint: usage: 100M messages/month>
+
+- [<ClaimedDatapoint: usage: 100M messages/month>]
++ []
+
+======================================================================
+FAIL: test_an_unbounded_split_is_refused_at_the_claim_layer (zelda_api.tests_usage_basis.SplitLineOwnershipTests.test_an_unbounded_split_is_refused_at_the_claim_layer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 189, in test_an_unbounded_split_is_refused_at_the_claim_layer
+    self.assertEqual(self.claims_for('500M\nWe grew across markets\nmessages/month', '500M messages/month'), [])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [<ClaimedDatapoint: usage: 500M messages/month>] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+<ClaimedDatapoint: usage: 500M messages/month>
+
+- [<ClaimedDatapoint: usage: 500M messages/month>]
++ []
+
+======================================================================
+FAIL: test_end_to_end_the_analyzer_offers_nothing_from_a_platform_block (zelda_api.tests_usage_basis.SplitLineOwnershipTests.test_end_to_end_the_analyzer_offers_nothing_from_a_platform_block)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 204, in test_end_to_end_the_analyzer_offers_nothing_from_a_platform_block
+    self.assertFalse(IntelligenceInsight.objects.filter(document=self.doc, category='Traction').exists())
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_the_company_rate_on_its_own_lines_is_kept_and_implied (zelda_api.tests_usage_basis.SplitLineOwnershipTests.test_the_company_rate_on_its_own_lines_is_kept_and_implied)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 193, in test_the_company_rate_on_its_own_lines_is_kept_and_implied
+    self.assertEqual([(c.unit, c.ownership, c.source_sentence) for c in claims],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     [('messages/month', 'implied', '500M messages/month')])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [('messages', 'implied', '500M messages/month')] != [('messages/month', 'implied', '500M messages/month')]
+
+First differing element 0:
+('messages', 'implied', '500M messages/month')
+('messages/month', 'implied', '500M messages/month')
+
+- [('messages', 'implied', '500M messages/month')]
++ [('messages/month', 'implied', '500M messages/month')]
+?            ++++++
+
+
+======================================================================
+FAIL: test_rate_units (zelda_api.tests_usage_basis.UsageBasisClaimTests.test_rate_units)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 316, in test_rate_units
+    self.assertEqual(self.claims_for('500M messages/month', '500M messages', '2M daily messages'), [
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ('usage', 5e8, 'messages/month'), ('usage', 5e8, 'messages'), ('usage', 2e6, 'messages/day')])
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [('usage', 2000000.0, 'messages'), ('usage', 5000000[49 chars]es')] != [('usage', 500000000.0, 'messages/month'), ('usage',[59 chars]ay')]
+
+First differing element 0:
+('usage', 2000000.0, 'messages')
+('usage', 500000000.0, 'messages/month')
+
+- [('usage', 2000000.0, 'messages'),
+?            ^
+
++ [('usage', 500000000.0, 'messages/month'),
+?            ^^^                   ++++++
+
+   ('usage', 500000000.0, 'messages'),
+-  ('usage', 500000000.0, 'messages')]
+?            ^^^
+
++  ('usage', 2000000.0, 'messages/day')]
+?            ^                   ++++
+
+
+======================================================================
+FAIL: test_unsupported_denominator_is_not_stored (zelda_api.tests_usage_basis.UsageBasisClaimTests.test_unsupported_denominator_is_not_stored)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 320, in test_unsupported_denominator_is_not_stored
+    self.assertEqual(self.claims_for('500M messages per user'), [])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [('usage', 500000000.0, 'messages')] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+('usage', 500000000.0, 'messages')
+
+- [('usage', 500000000.0, 'messages')]
++ []
+
+======================================================================
+FAIL: test_a_different_basis_survives (zelda_api.tests_usage_basis.UsageDedupTests.test_a_different_basis_survives)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 222, in test_a_different_basis_survives
+    self.assertEqual(self.select('Traction', '500M messages', '500M messages/month'),
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     ['500M messages', '500M messages/month'])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: ['500M messages'] != ['500M messages', '500M messages/month']
+
+Second list contains 1 additional elements.
+First extra element 1:
+'500M messages/month'
+
+- ['500M messages']
++ ['500M messages', '500M messages/month']
+
+======================================================================
+FAIL: test_a_different_noun_survives (zelda_api.tests_usage_basis.UsageDedupTests.test_a_different_noun_survives)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 226, in test_a_different_noun_survives
+    self.assertEqual(self.select('Traction', '500M bots', '500M messages'), ['500M bots', '500M messages'])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: ['500M bots'] != ['500M bots', '500M messages']
+
+Second list contains 1 additional elements.
+First extra element 1:
+'500M messages'
+
+- ['500M bots']
++ ['500M bots', '500M messages']
+
+----------------------------------------------------------------------
+Ran 49 tests in 3.118s
+
+FAILED (failures=14, errors=37)
+Destroying test database for alias 'default'...
+Found 49 test(s).
+System check identified no issues (0 silenced).

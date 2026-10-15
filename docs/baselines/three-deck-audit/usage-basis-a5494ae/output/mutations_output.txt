@@ -1,0 +1,49 @@
+M1 CAUGHT Ran 88 tests in 3.460s FAILED (failures=17, errors=3) restored
+M2 CAUGHT Ran 88 tests in 3.712s FAILED (failures=11, errors=3) restored
+M3 CAUGHT Ran 88 tests in 3.722s FAILED (failures=10, errors=3) restored
+M4 CAUGHT Ran 88 tests in 3.562s FAILED (failures=4) restored
+M5 CAUGHT Ran 88 tests in 3.380s FAILED (failures=2) restored
+M6 CAUGHT Ran 88 tests in 3.506s FAILED (failures=1) restored
+M7 CAUGHT Ran 88 tests in 3.426s FAILED (failures=3) restored
+M8 CAUGHT Ran 88 tests in 3.567s FAILED (failures=1) restored
+M9 CAUGHT Ran 88 tests in 3.372s FAILED (failures=4) restored
+M10 CAUGHT Ran 88 tests in 3.363s FAILED (failures=1) restored
+M11 CAUGHT Ran 88 tests in 3.400s FAILED (failures=1) restored
+M12 CAUGHT Ran 88 tests in 3.794s FAILED (failures=1) restored
+M13 CAUGHT Ran 88 tests in 3.362s FAILED (failures=1) restored
+M14 CAUGHT Ran 88 tests in 3.351s FAILED (failures=1) restored
+M15 CAUGHT Ran 88 tests in 3.350s FAILED (failures=1) restored
+M16 CAUGHT Ran 88 tests in 3.409s FAILED (failures=1) restored
+
+M1 | lose the rate suffix in the claim unit | CAUGHT Ran 88 tests in 3.460s FAILED (failures=17, errors=3)
+    failing: test_a_monthly_rate_invents_no_as_of_date, test_bots_and_messages_are_never_customers, test_manychat_claims_carry_their_source_sentence_and_category, test_manychat_yields_exactly_the_frozen_claims, test_matches_the_frozen_claims_plus_the_additive_ra109_expectation, test_monthly_forms, test_other_supported_rates, test_rate_units ...
+M2 | restore numeric-only dedup for usage | CAUGHT Ran 88 tests in 3.712s FAILED (failures=11, errors=3)
+    failing: test_a_different_basis_survives, test_a_different_noun_survives, test_a_monthly_rate_invents_no_as_of_date, test_both_facts_and_their_sources_survive, test_bots_and_messages_are_never_customers, test_frozen_decks_attach_no_periods, test_manychat_claims_carry_their_source_sentence_and_category, test_manychat_yields_exactly_the_frozen_claims ...
+M3 | drop the rate candidate (no line join in the analyzer) | CAUGHT Ran 88 tests in 3.722s FAILED (failures=10, errors=3)
+    failing: test_a_monthly_rate_invents_no_as_of_date, test_both_facts_and_their_sources_survive, test_bots_and_messages_are_never_customers, test_frozen_decks_attach_no_periods, test_manychat_claims_carry_their_source_sentence_and_category, test_manychat_yields_exactly_the_frozen_claims, test_matches_the_frozen_claims_plus_the_additive_ra109_expectation, test_same_slide_figure_and_rate_lines_are_admitted ...
+M4 | bypass the owner-label check above a split figure | CAUGHT Ran 88 tests in 3.562s FAILED (failures=4)
+    failing: test_a_platform_label_above_refuses, test_a_platform_rate_split_across_lines_is_refused_even_if_offered_as_an_insight
+M5 | bypass the claim-layer refusal of refused splits | CAUGHT Ran 88 tests in 3.380s FAILED (failures=2)
+    failing: test_a_platform_rate_split_across_lines_is_refused_even_if_offered_as_an_insight, test_an_unbounded_split_is_refused_at_the_claim_layer
+M6 | bypass the continuation/owner check below | CAUGHT Ran 88 tests in 3.506s FAILED (failures=1)
+    failing: test_a_continuation_or_owner_label_below_refuses
+M7 | turn the internal basis note into a contradiction | CAUGHT Ran 88 tests in 3.426s FAILED (failures=3)
+    failing: test_the_i1_pair_gets_one_neutral_note, test_the_note_names_both_refs_and_both_bounded_facts, test_the_owner_sees_the_note
+M8 | drop the not-a-contradiction memo rule | CAUGHT Ran 88 tests in 3.567s FAILED (failures=1)
+    failing: test_the_memo_prompt_says_a_note_is_not_a_contradiction
+M9 | unsupported denominator dropped to a bare count | CAUGHT Ran 88 tests in 3.372s FAILED (failures=4)
+    failing: test_unsupported_denominator_is_not_stored, test_unsupported_denominators_are_refused_not_dropped
+M10 | no unbounded-pair record (prose between number and noun) | CAUGHT Ran 88 tests in 3.363s FAILED (failures=1)
+    failing: test_an_unbounded_split_is_refused_at_the_claim_layer
+M11 | note order follows claim ids, not pages | CAUGHT Ran 88 tests in 3.400s FAILED (failures=1)
+    failing: test_the_note_names_both_refs_and_both_bounded_facts
+M12 | payload carries consistency_notes even when empty | CAUGHT Ran 88 tests in 3.794s FAILED (failures=1)
+    failing: test_a_document_without_a_basis_pair_has_no_notes_key
+M13 | note for different numbers on different bases | CAUGHT Ran 88 tests in 3.362s FAILED (failures=1)
+    failing: test_no_note_for_different_metrics_or_different_numbers
+M14 | dated_heading ignores the joined view (heading lost over a joined figure) | CAUGHT Ran 88 tests in 3.351s FAILED (failures=1)
+    failing: test_a_dated_heading_over_a_joined_figure_stays_context
+M15 | cumulative wording ignored (every count reads as no interval) | CAUGHT Ran 88 tests in 3.350s FAILED (failures=1)
+    failing: test_an_explicit_cumulative_total
+M16 | a bare figure line above counts as a heading (axis values join) | CAUGHT Ran 88 tests in 3.409s FAILED (failures=1)
+    failing: test_competing_figures_refuse

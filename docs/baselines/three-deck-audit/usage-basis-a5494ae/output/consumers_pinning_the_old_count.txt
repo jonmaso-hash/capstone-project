@@ -1,0 +1,217 @@
+2026-10-14 21:33:04,455 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-14 21:33:57,334 INFO zelda_api.signals - DocumentSource created: ben_jerrys.pptx
+2026-10-14 21:33:57,486 INFO zelda_api.intelligence_pipeline - Extracted 7 insights with dynamic confidence
+2026-10-14 21:33:57,516 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:33:57,531 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-14 21:33:57,538 INFO zelda_api.signals - DocumentSource created: ben_jerrys.pptx
+2026-10-14 21:33:57,689 INFO zelda_api.intelligence_pipeline - Extracted 7 insights with dynamic confidence
+2026-10-14 21:33:57,689 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:33:57,702 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-14 21:33:57,709 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:33:57,788 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:33:57,789 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:33:57,812 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+F2026-10-14 21:33:57,821 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:33:57,895 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:33:57,896 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:33:57,921 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+F2026-10-14 21:33:57,931 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:33:58,006 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:33:58,007 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:33:58,030 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 21:33:58,038 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:33:58,108 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:33:58,109 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:33:58,131 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+F2026-10-14 21:33:58,140 INFO zelda_api.signals - DocumentSource created: u.pptx
+2026-10-14 21:33:58,145 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:33:58,152 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-14 21:33:58,158 INFO zelda_api.signals - DocumentSource created: u.pptx
+2026-10-14 21:33:58,163 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:33:58,176 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-14 21:33:58,183 INFO zelda_api.signals - DocumentSource created: u.pptx
+2026-10-14 21:33:58,188 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:33:58,199 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-14 21:33:58,204 INFO zelda_api.signals - DocumentSource created: u.pptx
+2026-10-14 21:33:58,209 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:33:58,219 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-14 21:33:58,227 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:33:58,237 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:33:58,249 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:33:58,265 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:33:58,272 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:33:58,280 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:33:58,288 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:33:58,335 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:33:58,341 INFO zelda_api.signals - DocumentSource created: c.txt
+2026-10-14 21:33:58,444 INFO zelda_api.truth_delta_narrative - Truth Delta explanation for revenue refused: it does not agree with state no_data/currency_mismatch
+.2026-10-14 21:33:58,463 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:33:58,474 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:33:58,500 INFO zelda_api.signals - DocumentSource created: c.txt
+2026-10-14 21:33:58,520 INFO zelda_api.truth_delta_narrative - Truth Delta explanation for revenue refused: it does not agree with state no_data/currency_mismatch
+.2026-10-14 21:33:58,536 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:33:58,540 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:33:58,844 INFO zelda_api.signals - DocumentSource created: c.txt
+2026-10-14 21:33:58,853 INFO zelda_api.truth_delta_sources - Created 3 observed datapoints for Currency Co
+.2026-10-14 21:33:58,860 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:33:58,868 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:33:58,875 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:33:58,883 INFO zelda_api.signals - DocumentSource created: currency.txt
+2026-10-14 21:33:58,893 INFO zelda_api.intelligence_pipeline - Extracted 2 insights with dynamic confidence
+2026-10-14 21:33:58,894 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:33:58,908 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 2 claims from insights
+.2026-10-14 21:33:58,915 INFO zelda_api.signals - DocumentSource created: currency.txt
+2026-10-14 21:33:58,926 INFO zelda_api.intelligence_pipeline - Extracted 2 insights with dynamic confidence
+2026-10-14 21:33:58,927 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:33:58,940 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 2 claims from insights
+.2026-10-14 21:33:58,947 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:33:59,034 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:33:59,035 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:33:59,059 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+F2026-10-14 21:33:59,067 INFO zelda_api.signals - DocumentSource created: ben_jerrys.pptx
+2026-10-14 21:33:59,297 INFO zelda_api.intelligence_pipeline - Extracted 7 insights with dynamic confidence
+2026-10-14 21:33:59,299 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 2
+2026-10-14 21:33:59,319 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-14 21:33:59,329 INFO zelda_api.signals - DocumentSource created: currency.txt
+2026-10-14 21:33:59,339 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-14 21:33:59,341 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:33:59,355 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-14 21:33:59,362 INFO zelda_api.signals - DocumentSource created: currency.txt
+2026-10-14 21:33:59,377 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-14 21:33:59,378 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 2
+2026-10-14 21:33:59,395 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-14 21:33:59,400 INFO zelda_api.signals - DocumentSource created: currency.txt
+2026-10-14 21:33:59,409 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-14 21:33:59,410 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 3
+2026-10-14 21:33:59,420 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-14 21:33:59,424 INFO zelda_api.signals - DocumentSource created: currency.txt
+2026-10-14 21:33:59,432 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-14 21:33:59,433 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 4
+2026-10-14 21:33:59,444 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-14 21:33:59,449 INFO zelda_api.signals - DocumentSource created: currency.txt
+2026-10-14 21:33:59,460 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-14 21:33:59,461 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 5
+2026-10-14 21:33:59,472 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-14 21:33:59,479 INFO zelda_api.signals - DocumentSource created: currency.txt
+2026-10-14 21:33:59,488 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-14 21:33:59,490 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:33:59,503 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-14 21:33:59,508 INFO zelda_api.signals - DocumentSource created: currency.txt
+2026-10-14 21:33:59,516 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-14 21:33:59,517 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 2
+2026-10-14 21:33:59,528 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-14 21:33:59,535 INFO zelda_api.signals - DocumentSource created: n.pptx
+2026-10-14 21:33:59,540 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:33:59,553 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-14 21:33:59,560 INFO zelda_api.signals - DocumentSource created: n.pptx
+2026-10-14 21:33:59,566 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:33:59,579 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-14 21:33:59,586 INFO zelda_api.signals - DocumentSource created: n.pptx
+2026-10-14 21:33:59,591 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 2
+2026-10-14 21:33:59,602 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-14 21:33:59,611 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:33:59,682 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:33:59,683 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:33:59,708 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+F2026-10-14 21:33:59,714 INFO zelda_api.signals - DocumentSource created: ben_jerrys.pptx
+2026-10-14 21:33:59,851 INFO zelda_api.intelligence_pipeline - Extracted 7 insights with dynamic confidence
+2026-10-14 21:33:59,852 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 2
+2026-10-14 21:33:59,863 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-14 21:33:59,869 INFO zelda_api.signals - DocumentSource created: p.txt
+.2026-10-14 21:33:59,875 INFO zelda_api.signals - DocumentSource created: p.txt
+.2026-10-14 21:33:59,911 INFO zelda_api.signals - DocumentSource created: p.txt
+..........................
+======================================================================
+FAIL: test_bots_and_messages_are_never_customers (zelda_api.tests_claim_extraction_recall.FrozenDeckExtractionTests.test_bots_and_messages_are_never_customers)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_claim_extraction_recall.py", line 135, in test_bots_and_messages_are_never_customers
+    self.assertEqual(sorted(c.unit for c in usage), ['bots', 'messages'])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: ['bots', 'messages', 'messages/month'] != ['bots', 'messages']
+
+First list contains 1 additional elements.
+First extra element 2:
+'messages/month'
+
+- ['bots', 'messages', 'messages/month']
++ ['bots', 'messages']
+
+======================================================================
+FAIL: test_manychat_claims_carry_their_source_sentence_and_category (zelda_api.tests_claim_extraction_recall.FrozenDeckExtractionTests.test_manychat_claims_carry_their_source_sentence_and_category)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_claim_extraction_recall.py", line 125, in test_manychat_claims_carry_their_source_sentence_and_category
+    fixture, claims = self.assert_exactly_the_frozen_claims('manychat')
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_claim_extraction_recall.py", line 97, in assert_exactly_the_frozen_claims
+    self.assertEqual(sorted(self.row(c) for c in claims), expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [('fu[152 chars]ges'), ('usage', 500000000.0, 'messages/month'[24 chars]th')] != [('fu[152 chars]ges')]
+
+First list contains 1 additional elements.
+First extra element 3:
+('usage', 500000000.0, 'messages/month', 12, '500M messages/month')
+
+  [('funding_raised', 23100000.0, '', 2, '$23.1M raised'),
+   ('usage', 140000.0, 'bots', 10, '140 000+ bots'),
+-  ('usage', 500000000.0, 'messages', 10, '500M messages'),
+?                                                         ^
+
++  ('usage', 500000000.0, 'messages', 10, '500M messages')]
+?                                                         ^
+
+-  ('usage', 500000000.0, 'messages/month', 12, '500M messages/month')]
+
+======================================================================
+FAIL: test_manychat_yields_exactly_the_frozen_claims (zelda_api.tests_claim_extraction_recall.FrozenDeckExtractionTests.test_manychat_yields_exactly_the_frozen_claims)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_claim_extraction_recall.py", line 122, in test_manychat_yields_exactly_the_frozen_claims
+    self.assert_exactly_the_frozen_claims('manychat')
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_claim_extraction_recall.py", line 97, in assert_exactly_the_frozen_claims
+    self.assertEqual(sorted(self.row(c) for c in claims), expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [('fu[152 chars]ges'), ('usage', 500000000.0, 'messages/month'[24 chars]th')] != [('fu[152 chars]ges')]
+
+First list contains 1 additional elements.
+First extra element 3:
+('usage', 500000000.0, 'messages/month', 12, '500M messages/month')
+
+  [('funding_raised', 23100000.0, '', 2, '$23.1M raised'),
+   ('usage', 140000.0, 'bots', 10, '140 000+ bots'),
+-  ('usage', 500000000.0, 'messages', 10, '500M messages'),
+?                                                         ^
+
++  ('usage', 500000000.0, 'messages', 10, '500M messages')]
+?                                                         ^
+
+-  ('usage', 500000000.0, 'messages/month', 12, '500M messages/month')]
+
+======================================================================
+FAIL: test_frozen_decks_keep_their_claims_categories_source_spans_and_negatives (zelda_api.tests_claim_currency.CurrencyExtractionTests.test_frozen_decks_keep_their_claims_categories_source_spans_and_negatives) (deck='manychat')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_claim_currency.py", line 95, in test_frozen_decks_keep_their_claims_categories_source_spans_and_negatives
+    self.assertEqual(len(claims), spec['claim_count'])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 4 != 3
+
+======================================================================
+FAIL: test_frozen_decks_attach_no_periods (zelda_api.tests_claim_periods.FrozenDeckPeriodTests.test_frozen_decks_attach_no_periods) (deck='manychat')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_claim_periods.py", line 158, in test_frozen_decks_attach_no_periods
+    self.assertEqual(len(claims), spec['claims'])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 4 != 3
+
+----------------------------------------------------------------------
+Ran 64 tests in 2.700s
+
+FAILED (failures=5)
+Destroying test database for alias 'default'...
+Found 64 test(s).
+System check identified no issues (0 silenced).
