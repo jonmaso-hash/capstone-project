@@ -22,8 +22,12 @@ this rule and its ownership is unknown -- it is never backfilled.
 
 Known limitation: a figure next to another organisation's name with no
 possessive and no verb ("FB Messenger 900M people", when a deck sets the
-three on separate lines) is not recognised here. Those lines do not reach
-the claim layer today; any change that joins lines must add that case.
+three on separate lines) is not recognised here. Those lines still do not
+reach the claim layer: the one line join that exists (RA-109,
+zelda_api/usage_basis.py) refuses a figure/noun pair under any label that
+could name an owner, and the claim task refuses a span that only exists by
+joining a refused pair. An admitted joined figure carries no owner words of
+its own, so source_sentence() falls back to the span itself (IMPLIED).
 """
 import re
 

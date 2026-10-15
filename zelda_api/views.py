@@ -948,6 +948,7 @@ def truth_delta_ui_view(request, document_id):
     # were extracted" would contradict it.
     from .disclaimers import NO_CLAIMS_SUMMARY
     from .profile_reconciliation import reconcile_profile_with_deck
+    from .usage_basis import basis_notes
     verification_state = document.verification_state
     no_claims = verification_state == DocumentSource.NO_CLAIMS
     if no_claims:
@@ -1058,6 +1059,10 @@ def truth_delta_ui_view(request, document_id):
         # and owner-only: the function returns [] for anyone else, because the
         # comparison discloses the profile figure.
         'profile_reconciliation': reconcile_profile_with_deck(document, request.user),
+        # The deck's own usage figures on different measurement bases (RA-109),
+        # from the same claims this page lists to every viewer. A clarification
+        # note, not a verdict: states and score are untouched.
+        'basis_notes': basis_notes(claims),
         # Staff and logs only: an end user is told that it failed and what to
         # do, never a database error.
         'verification_error': document.verification_error if request.user.is_staff else '',

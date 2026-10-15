@@ -1,0 +1,48 @@
+"""RA-109 reproduction: the pure Traction selection path over memo 97's 12 recorded chunks, plus the reviewer's
+controls. No database, no provider. Run under `manage.py shell -c exec(...)` in either worktree (before = b9cddec,
+after = the fix); prints JSON. Chunks: git show ea3ab13:docs/baselines/manychat/narrator-provenance-b9cddec/pass-a/02_chunks.json"""
+import json, subprocess, sys
+from zelda_api.intelligence_pipeline import ZeldaIntelligencePipelineV2 as P
+from zelda_api import financial_metrics
+
+CHUNKS = r'C:\Users\jonathan\AppData\Local\Temp\claude\C--Users-jonathan-Desktop-KCV-np\c8a313d5-81e1-402a-b7da-9205b6f20fab\scratchpad\chunks97.json'
+chunks = sorted(json.load(open(CHUNKS, encoding='utf-8')), key=lambda c: c['chunk_index'])
+p = P()
+kw = p.ANALYSIS_CATEGORIES['Traction']
+out = {'head': subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip(),
+       'per_chunk': [], 'selected': None, 'controls': {}, 'usage_unit': {}, 'usage_basis': {}}
+
+# As _analyze_document: every chunk's winner and other qualifying sentences are candidates.
+candidates, best, best_conf = [], None, 0
+for c in chunks:
+    collected = []
+    result, conf, prov = p._smart_extract('Traction', c['raw_text'], kw, collect=collected)
+    out['per_chunk'].append({'page': c['page_number'], 'winner': result, 'confidence': conf,
+                             'collected': [v for v, _, _ in collected]})
+    if not result:
+        continue
+    if conf > best_conf:
+        best_conf, best = conf, (result, conf, c['page_number'], prov)
+    candidates.append((result, conf, c['page_number'], prov))
+    for value, sc, sp in collected:
+        if value != result:
+            candidates.append((value, sc, c['page_number'], sp))
+out['selected'] = [(t, page) for t, _, page, _ in p._select_insights('Traction', candidates, best)]
+
+
+def select(*texts):
+    cand = [(t, 95.0, None, None) for t in texts]
+    return [x[0] for x in p._select_insights('Traction', cand, cand[0])]
+
+
+out['controls'] = {
+    'repaired text fed directly: 500M messages + 500M messages/month': select('500M messages', '500M messages/month'),
+    'same number, different metric: 500M bots + 500M messages': select('500M bots', '500M messages'),
+    'genuine duplicate: 500M messages + 500 million messages': select('500M messages', '500 million messages'),
+    'different number: 500M messages + 600M messages/month': select('500M messages', '600M messages/month'),
+}
+for t in ('500M messages', '500M messages/month', '500M messages per month', '500M monthly messages'):
+    out['usage_unit'][t] = financial_metrics.usage_unit(t)
+    basis = getattr(financial_metrics, 'usage_basis', None)
+    out['usage_basis'][t] = (basis(t).label if basis and basis(t) else None) if basis else 'not in this code'
+print('REPRO ' + json.dumps(out, ensure_ascii=False))

@@ -1,0 +1,968 @@
+2026-10-14 21:36:24,278 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-14 21:37:17,381 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:37:17,473 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:37:17,507 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:17,535 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 21:37:17,569 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:37:17,653 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:37:17,672 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:17,698 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 21:37:17,729 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:37:17,815 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:37:17,816 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:17,843 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 21:37:17,870 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:37:17,952 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:37:17,953 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:17,982 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+2026-10-14 21:37:18,016 ERROR zelda_api.intelligence_pipeline - Claude API error in memo generation: stop after capture
+.2026-10-14 21:37:18,021 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:37:18,104 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:37:18,105 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:18,129 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 21:37:18,158 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-14 21:37:18,251 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-14 21:37:18,432 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-14 21:37:18,603 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-14 21:37:18,695 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-14 21:37:18,704 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-14 21:37:18,714 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-14 21:37:18,723 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-14 21:37:18,734 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:37:18,813 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:37:18,814 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:18,840 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 21:37:18,850 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:37:18,928 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:37:18,929 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:18,988 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 21:37:18,998 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:37:19,088 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:37:19,089 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:19,120 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 21:37:19,137 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:37:19,228 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:37:19,229 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:19,253 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 21:37:19,261 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:37:19,346 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:37:19,348 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:19,373 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 21:37:19,392 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 21:37:19,399 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:19,412 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-14 21:37:19,419 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 21:37:19,424 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:19,433 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-14 21:37:19,439 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 21:37:19,448 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-14 21:37:19,450 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:19,459 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-14 21:37:19,465 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 21:37:19,470 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:19,483 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-14 21:37:19,490 INFO zelda_api.signals - DocumentSource created: u.pptx
+2026-10-14 21:37:19,503 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:19,523 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+.2026-10-14 21:37:19,530 INFO zelda_api.signals - DocumentSource created: u.pptx
+2026-10-14 21:37:19,535 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:19,544 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-14 21:37:19,552 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:37:19,634 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:37:19,635 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:19,659 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 21:37:19,667 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:37:19,751 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:37:19,752 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:19,778 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 21:37:19,788 INFO zelda_api.signals - DocumentSource created: ben_jerrys.pptx
+2026-10-14 21:37:19,941 INFO zelda_api.intelligence_pipeline - Extracted 7 insights with dynamic confidence
+2026-10-14 21:37:19,942 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:19,958 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-14 21:37:19,968 INFO zelda_api.signals - DocumentSource created: ben_jerrys.pptx
+2026-10-14 21:37:20,108 INFO zelda_api.intelligence_pipeline - Extracted 7 insights with dynamic confidence
+2026-10-14 21:37:20,109 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:20,121 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-14 21:37:20,130 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:37:20,202 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:37:20,203 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:20,223 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 21:37:20,230 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:37:20,305 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:37:20,306 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:20,331 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 21:37:20,341 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:37:20,419 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:37:20,420 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:20,442 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 21:37:20,450 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:37:20,528 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:37:20,529 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:20,550 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 21:37:20,558 INFO zelda_api.signals - DocumentSource created: u.pptx
+2026-10-14 21:37:20,562 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:20,569 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-14 21:37:20,574 INFO zelda_api.signals - DocumentSource created: u.pptx
+2026-10-14 21:37:20,579 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:20,590 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-14 21:37:20,596 INFO zelda_api.signals - DocumentSource created: u.pptx
+2026-10-14 21:37:20,601 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:20,612 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-14 21:37:20,618 INFO zelda_api.signals - DocumentSource created: u.pptx
+2026-10-14 21:37:20,623 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:20,636 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-14 21:37:20,643 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:37:20,652 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:37:20,662 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:37:20,672 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:37:20,680 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:37:20,687 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:37:20,695 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:37:20,745 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:37:20,749 INFO zelda_api.signals - DocumentSource created: c.txt
+2026-10-14 21:37:20,771 INFO zelda_api.truth_delta_narrative - Truth Delta explanation for revenue refused: it does not agree with state no_data/currency_mismatch
+.2026-10-14 21:37:20,783 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:37:20,790 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:37:20,809 INFO zelda_api.signals - DocumentSource created: c.txt
+2026-10-14 21:37:20,828 INFO zelda_api.truth_delta_narrative - Truth Delta explanation for revenue refused: it does not agree with state no_data/currency_mismatch
+.2026-10-14 21:37:20,842 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:37:20,848 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:37:20,862 INFO zelda_api.signals - DocumentSource created: c.txt
+2026-10-14 21:37:20,871 INFO zelda_api.truth_delta_sources - Created 3 observed datapoints for Currency Co
+.2026-10-14 21:37:20,879 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:37:20,887 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:37:20,895 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:37:20,903 INFO zelda_api.signals - DocumentSource created: currency.txt
+2026-10-14 21:37:20,913 INFO zelda_api.intelligence_pipeline - Extracted 2 insights with dynamic confidence
+2026-10-14 21:37:20,914 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:20,929 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 2 claims from insights
+.2026-10-14 21:37:20,935 INFO zelda_api.signals - DocumentSource created: currency.txt
+2026-10-14 21:37:20,947 INFO zelda_api.intelligence_pipeline - Extracted 2 insights with dynamic confidence
+2026-10-14 21:37:20,948 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:20,962 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 2 claims from insights
+.2026-10-14 21:37:20,969 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:37:21,049 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:37:21,050 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:21,081 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+2026-10-14 21:37:21,092 INFO zelda_api.signals - DocumentSource created: ben_jerrys.pptx
+2026-10-14 21:37:21,238 INFO zelda_api.intelligence_pipeline - Extracted 7 insights with dynamic confidence
+2026-10-14 21:37:21,239 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 2
+2026-10-14 21:37:21,252 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-14 21:37:21,260 INFO zelda_api.signals - DocumentSource created: currency.txt
+2026-10-14 21:37:21,269 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-14 21:37:21,270 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:21,283 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-14 21:37:21,287 INFO zelda_api.signals - DocumentSource created: currency.txt
+2026-10-14 21:37:21,295 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-14 21:37:21,296 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 2
+2026-10-14 21:37:21,307 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-14 21:37:21,310 INFO zelda_api.signals - DocumentSource created: currency.txt
+2026-10-14 21:37:21,318 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-14 21:37:21,319 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 3
+2026-10-14 21:37:21,330 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-14 21:37:21,333 INFO zelda_api.signals - DocumentSource created: currency.txt
+2026-10-14 21:37:21,341 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-14 21:37:21,342 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 4
+2026-10-14 21:37:21,353 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-14 21:37:21,357 INFO zelda_api.signals - DocumentSource created: currency.txt
+2026-10-14 21:37:21,369 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-14 21:37:21,370 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 5
+2026-10-14 21:37:21,382 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-14 21:37:21,387 INFO zelda_api.signals - DocumentSource created: currency.txt
+2026-10-14 21:37:21,395 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-14 21:37:21,396 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:21,410 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-14 21:37:21,417 INFO zelda_api.signals - DocumentSource created: currency.txt
+2026-10-14 21:37:21,426 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-14 21:37:21,427 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 2
+2026-10-14 21:37:21,439 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-14 21:37:21,447 INFO zelda_api.signals - DocumentSource created: n.pptx
+2026-10-14 21:37:21,451 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:21,461 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-14 21:37:21,467 INFO zelda_api.signals - DocumentSource created: n.pptx
+2026-10-14 21:37:21,471 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:21,482 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-14 21:37:21,488 INFO zelda_api.signals - DocumentSource created: n.pptx
+2026-10-14 21:37:21,493 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 2
+2026-10-14 21:37:21,504 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-14 21:37:21,515 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 21:37:21,597 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 21:37:21,598 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:21,621 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+2026-10-14 21:37:21,629 INFO zelda_api.signals - DocumentSource created: ben_jerrys.pptx
+2026-10-14 21:37:21,783 INFO zelda_api.intelligence_pipeline - Extracted 7 insights with dynamic confidence
+2026-10-14 21:37:21,784 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 2
+2026-10-14 21:37:21,795 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-14 21:37:21,801 INFO zelda_api.signals - DocumentSource created: p.txt
+.2026-10-14 21:37:21,807 INFO zelda_api.signals - DocumentSource created: p.txt
+.2026-10-14 21:37:21,849 INFO zelda_api.signals - DocumentSource created: p.txt
+.2026-10-14 21:37:21,856 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 21:37:21,861 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:21,871 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-14 21:37:21,876 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 21:37:21,881 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:21,890 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-14 21:37:21,893 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 21:37:21,898 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 2
+2026-10-14 21:37:21,908 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-14 21:37:21,914 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 21:37:21,919 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:21,928 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-14 21:37:21,931 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 21:37:21,936 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 2
+2026-10-14 21:37:21,949 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-14 21:37:21,956 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 21:37:21,961 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:21,971 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-14 21:37:21,975 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 21:37:21,981 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 2
+2026-10-14 21:37:21,994 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-14 21:37:22,002 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 21:37:22,008 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:22,019 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-14 21:37:22,023 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 21:37:22,027 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 2
+2026-10-14 21:37:22,038 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-14 21:37:49,680 INFO sentence_transformers.base.model - No device provided, using cpu
+2026-10-14 21:37:49,682 INFO sentence_transformers.base.model - Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+Found 616 test(s).
+System check identified no issues (0 silenced).
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 1456.64it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  4.21it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  4.21it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 58.85it/s]
+2026-10-14 21:37:51,143 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 21:37:51,146 INFO zelda_api.signals - DocumentSource created: e.txt
+.2026-10-14 21:37:51,152 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-14 21:37:51,194 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-14 21:37:51,195 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:51,213 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+.2026-10-14 21:37:51,221 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-14 21:37:51,246 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-14 21:37:51,246 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:51,262 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+2026-10-14 21:37:51,503 INFO zelda_api.intelligence_pipeline - [Anthropic usage] memo for document 1: input_tokens=1, output_tokens=1
+2026-10-14 21:37:51,504 INFO zelda_api.intelligence_pipeline - Memo executive_summary: removed unsupported time wording ['to date', 'so far'] for document 1
+2026-10-14 21:37:51,504 INFO zelda_api.intelligence_pipeline - Memo open_concerns: removed unsupported time wording ['currently'] for document 1
+2026-10-14 21:37:51,536 INFO zelda_api.intelligence_pipeline - Memo executive_summary: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-14 21:37:51,537 INFO zelda_api.intelligence_pipeline - Memo open_concerns: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-14 21:37:51,573 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-14 21:37:51,580 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-14 21:37:51,606 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-14 21:37:51,607 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:51,623 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+2026-10-14 21:37:51,643 INFO zelda_api.intelligence_pipeline - [Anthropic usage] memo for document 1: input_tokens=1, output_tokens=1
+2026-10-14 21:37:51,644 INFO zelda_api.intelligence_pipeline - Memo executive_summary: removed unsupported time wording ['to date', 'so far'] for document 1
+2026-10-14 21:37:51,644 INFO zelda_api.intelligence_pipeline - Memo open_concerns: removed unsupported time wording ['currently'] for document 1
+2026-10-14 21:37:51,646 INFO zelda_api.intelligence_pipeline - Memo executive_summary: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-14 21:37:51,646 INFO zelda_api.intelligence_pipeline - Memo open_concerns: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-14 21:37:51,678 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-14 21:37:52,566 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-14 21:37:52,591 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-14 21:37:52,591 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:52,607 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+.2026-10-14 21:37:52,627 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-14 21:37:52,655 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-14 21:37:52,656 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:52,672 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+.2026-10-14 21:37:52,708 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-14 21:37:52,732 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-14 21:37:52,733 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:52,751 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+2026-10-14 21:37:52,770 INFO zelda_api.intelligence_pipeline - [Anthropic usage] memo for document 1: input_tokens=1, output_tokens=1
+2026-10-14 21:37:52,770 INFO zelda_api.intelligence_pipeline - Memo executive_summary: removed unsupported time wording ['to date', 'so far'] for document 1
+2026-10-14 21:37:52,771 INFO zelda_api.intelligence_pipeline - Memo supported_points: removed unsupported time wording ['currently'] for document 1
+2026-10-14 21:37:52,772 INFO zelda_api.intelligence_pipeline - Memo executive_summary: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-14 21:37:52,800 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-14 21:37:52,807 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-14 21:37:52,831 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-14 21:37:52,832 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:52,848 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+2026-10-14 21:37:52,865 INFO zelda_api.intelligence_pipeline - [Anthropic usage] memo for document 1: input_tokens=1, output_tokens=1
+2026-10-14 21:37:52,866 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: removed unsupported time wording ['so far'] for document 1
+2026-10-14 21:37:52,867 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-14 21:37:52,902 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-14 21:37:52,908 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-14 21:37:52,920 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-14 21:37:52,928 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-14 21:37:52,937 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-14 21:37:52,945 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-14 21:37:52,953 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-14 21:37:52,955 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:52,963 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-14 21:37:52,987 WARNING zelda_api.truth_delta_engine - No claims found for document 1
+2026-10-14 21:37:53,677 ERROR zelda_api.intelligence_pipeline - Claude API error in memo generation: "Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"
+2026-10-14 21:37:53,678 ERROR zelda_api.intelligence_pipeline - Memo generation error: Memo generation failed: "Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"
+2026-10-14 21:37:53,678 ERROR zelda_api.tasks - Memo generation error for document 1: Memo error: Memo generation failed: "Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"
+2026-10-14 21:37:53,681 INFO celery.app.trace - Task zelda_api.tasks.generate_intelligence_memo[10dcb3f1-57a4-444d-be68-79f557a6989e] succeeded in 0.6912742999993498s: {'status': 'error', 'error': 'Memo error: Memo generation failed: "Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"'}
+2026-10-14 21:37:53,682 INFO celery.app.trace - Task zelda_api.truth_delta_tasks.verify_document_truth_delta[ad031fcd-d648-49f6-8e4d-a6e6588931c4] succeeded in 0.6956926999991992s: {'status': 'no_claims', 'document_id': 1}
+.2026-10-14 21:37:53,688 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-14 21:37:53,690 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:53,701 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-14 21:37:53,713 INFO zelda_api.truth_delta_sources - No Crunchbase API key configured — skipping this source.
+2026-10-14 21:37:53,713 INFO zelda_api.truth_delta_sources - Skipping crunchbase — not configured or unreachable.
+2026-10-14 21:37:53,714 INFO zelda_api.truth_delta_sources - No News API key configured — skipping this source.
+2026-10-14 21:37:53,714 INFO zelda_api.truth_delta_sources - Skipping news — not configured or unreachable.
+2026-10-14 21:37:53,714 INFO zelda_api.truth_delta_sources - Fetching JoyToys from SEC EDGAR
+2026-10-14 21:37:53,754 INFO zelda_api.truth_delta_sources - No external data found for JoyToys
+2026-10-14 21:37:53,757 INFO zelda_api.truth_delta_sources - No News API key configured — skipping this source.
+2026-10-14 21:37:54,428 ERROR zelda_api.intelligence_pipeline - Claude API error in memo generation: "Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"
+2026-10-14 21:37:54,429 ERROR zelda_api.intelligence_pipeline - Memo generation error: Memo generation failed: "Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"
+2026-10-14 21:37:54,429 ERROR zelda_api.tasks - Memo generation error for document 1: Memo error: Memo generation failed: "Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"
+2026-10-14 21:37:54,431 INFO celery.app.trace - Task zelda_api.tasks.generate_intelligence_memo[06644414-0497-4a86-8489-7b0bc2cc81c5] succeeded in 0.6611078999994788s: {'status': 'error', 'error': 'Memo error: Memo generation failed: "Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"'}
+2026-10-14 21:37:54,432 INFO celery.app.trace - Task zelda_api.truth_delta_tasks.verify_document_truth_delta[853bd765-a60e-4de9-9312-aa40411507bd] succeeded in 0.7291397000008146s: {'status': 'success', 'document_id': 1, 'report_id': 1}
+.2026-10-14 21:37:54,439 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-14 21:37:54,443 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:54,455 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-14 21:37:54,466 INFO zelda_api.truth_delta_sources - No Crunchbase API key configured — skipping this source.
+2026-10-14 21:37:54,466 INFO zelda_api.truth_delta_sources - Skipping crunchbase — not configured or unreachable.
+2026-10-14 21:37:54,466 INFO zelda_api.truth_delta_sources - No News API key configured — skipping this source.
+2026-10-14 21:37:54,467 INFO zelda_api.truth_delta_sources - Skipping news — not configured or unreachable.
+2026-10-14 21:37:54,467 INFO zelda_api.truth_delta_sources - Fetching JoyToys from SEC EDGAR
+2026-10-14 21:37:54,467 INFO zelda_api.truth_delta_sources - No external data found for JoyToys
+2026-10-14 21:37:54,469 INFO zelda_api.truth_delta_sources - No News API key configured — skipping this source.
+2026-10-14 21:37:55,059 ERROR zelda_api.intelligence_pipeline - Claude API error in memo generation: "Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"
+2026-10-14 21:37:55,060 ERROR zelda_api.intelligence_pipeline - Memo generation error: Memo generation failed: "Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"
+2026-10-14 21:37:55,060 ERROR zelda_api.tasks - Memo generation error for document 1: Memo error: Memo generation failed: "Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"
+2026-10-14 21:37:55,062 INFO celery.app.trace - Task zelda_api.tasks.generate_intelligence_memo[0df214b0-434e-4b3a-a6e5-8e35bfb8ba56] succeeded in 0.5806630000006407s: {'status': 'error', 'error': 'Memo error: Memo generation failed: "Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"'}
+2026-10-14 21:37:55,062 INFO celery.app.trace - Task zelda_api.truth_delta_tasks.verify_document_truth_delta[e7359020-9b24-45d5-9eac-f3e73d702701] succeeded in 0.6057801000060863s: {'status': 'success', 'document_id': 1, 'report_id': 1}
+.2026-10-14 21:37:55,068 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-14 21:37:55,070 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:55,079 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-14 21:37:55,081 WARNING zelda_api.truth_delta_engine - No claims found for document 1
+2026-10-14 21:37:55,665 ERROR zelda_api.intelligence_pipeline - Claude API error in memo generation: "Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"
+2026-10-14 21:37:55,665 ERROR zelda_api.intelligence_pipeline - Memo generation error: Memo generation failed: "Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"
+2026-10-14 21:37:55,666 ERROR zelda_api.tasks - Memo generation error for document 1: Memo error: Memo generation failed: "Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"
+2026-10-14 21:37:55,667 INFO celery.app.trace - Task zelda_api.tasks.generate_intelligence_memo[d6ed7344-3e06-4d64-afdb-cb143143ba8c] succeeded in 0.5836512000023504s: {'status': 'error', 'error': 'Memo error: Memo generation failed: "Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"'}
+2026-10-14 21:37:55,668 INFO celery.app.trace - Task zelda_api.truth_delta_tasks.verify_document_truth_delta[a6bcf21e-1fbc-4f01-951e-85124d567d6a] succeeded in 0.5876395000013872s: {'status': 'no_claims', 'document_id': 1}
+.2026-10-14 21:37:55,673 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-14 21:37:55,675 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:55,686 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-14 21:37:55,695 INFO zelda_api.truth_delta_sources - No Crunchbase API key configured — skipping this source.
+2026-10-14 21:37:55,696 INFO zelda_api.truth_delta_sources - Skipping crunchbase — not configured or unreachable.
+2026-10-14 21:37:55,696 INFO zelda_api.truth_delta_sources - No News API key configured — skipping this source.
+2026-10-14 21:37:55,696 INFO zelda_api.truth_delta_sources - Skipping news — not configured or unreachable.
+2026-10-14 21:37:55,696 INFO zelda_api.truth_delta_sources - Fetching JoyToys from SEC EDGAR
+2026-10-14 21:37:55,697 INFO zelda_api.truth_delta_sources - No external data found for JoyToys
+2026-10-14 21:37:55,699 INFO zelda_api.truth_delta_sources - No News API key configured — skipping this source.
+2026-10-14 21:37:56,284 ERROR zelda_api.intelligence_pipeline - Claude API error in memo generation: "Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"
+2026-10-14 21:37:56,285 ERROR zelda_api.intelligence_pipeline - Memo generation error: Memo generation failed: "Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"
+2026-10-14 21:37:56,285 ERROR zelda_api.tasks - Memo generation error for document 1: Memo error: Memo generation failed: "Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"
+2026-10-14 21:37:56,287 INFO celery.app.trace - Task zelda_api.tasks.generate_intelligence_memo[e560757c-aca1-4102-907a-8eb3354baf61] succeeded in 0.5774507000023732s: {'status': 'error', 'error': 'Memo error: Memo generation failed: "Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"'}
+2026-10-14 21:37:56,288 INFO celery.app.trace - Task zelda_api.truth_delta_tasks.verify_document_truth_delta[0b08db90-44a8-4003-9b50-8f8c79e51b33] succeeded in 0.6002678999939235s: {'status': 'success', 'document_id': 1, 'report_id': 1}
+.2026-10-14 21:37:56,295 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-14 21:37:56,296 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:56,303 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-14 21:37:56,305 WARNING zelda_api.truth_delta_engine - No claims found for document 1
+2026-10-14 21:37:56,890 ERROR zelda_api.intelligence_pipeline - Claude API error in memo generation: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+2026-10-14 21:37:56,890 ERROR zelda_api.intelligence_pipeline - Memo generation error: Memo generation failed: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+2026-10-14 21:37:56,890 ERROR zelda_api.tasks - Memo generation error for document 1: Memo error: Memo generation failed: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+2026-10-14 21:37:56,893 INFO celery.app.trace - Task zelda_api.tasks.generate_intelligence_memo[26828052-69c0-4fac-8de9-746f7afe5e01] succeeded in 0.5856761000031838s: {'status': 'error', 'error': 'Memo error: Memo generation failed: Circuit \'claude_api\' is open — upstream is degraded, short-circuiting.'}
+2026-10-14 21:37:56,893 INFO celery.app.trace - Task zelda_api.truth_delta_tasks.verify_document_truth_delta[fd2c7b55-15ac-4de6-a91a-205d417d335b] succeeded in 0.5890522999980021s: {'status': 'no_claims', 'document_id': 1}
+.2026-10-14 21:37:56,899 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-14 21:37:56,901 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:56,913 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-14 21:37:56,924 INFO zelda_api.truth_delta_sources - No Crunchbase API key configured — skipping this source.
+2026-10-14 21:37:56,924 INFO zelda_api.truth_delta_sources - Skipping crunchbase — not configured or unreachable.
+2026-10-14 21:37:56,924 INFO zelda_api.truth_delta_sources - No News API key configured — skipping this source.
+2026-10-14 21:37:56,925 INFO zelda_api.truth_delta_sources - Skipping news — not configured or unreachable.
+2026-10-14 21:37:56,925 INFO zelda_api.truth_delta_sources - Fetching JoyToys from SEC EDGAR
+2026-10-14 21:37:56,925 INFO zelda_api.truth_delta_sources - No external data found for JoyToys
+2026-10-14 21:37:56,928 INFO zelda_api.truth_delta_sources - No News API key configured — skipping this source.
+2026-10-14 21:37:57,533 ERROR zelda_api.intelligence_pipeline - Claude API error in memo generation: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+2026-10-14 21:37:57,533 ERROR zelda_api.intelligence_pipeline - Memo generation error: Memo generation failed: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+2026-10-14 21:37:57,534 ERROR zelda_api.tasks - Memo generation error for document 1: Memo error: Memo generation failed: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+2026-10-14 21:37:57,536 INFO celery.app.trace - Task zelda_api.tasks.generate_intelligence_memo[51b2e58a-7e15-4954-b2e8-49de1cbdd158] succeeded in 0.5968901000014739s: {'status': 'error', 'error': 'Memo error: Memo generation failed: Circuit \'claude_api\' is open — upstream is degraded, short-circuiting.'}
+2026-10-14 21:37:57,536 INFO celery.app.trace - Task zelda_api.truth_delta_tasks.verify_document_truth_delta[2a1ca54a-9138-4159-9583-cb7d9d65cc8e] succeeded in 0.6220652000047266s: {'status': 'success', 'document_id': 1, 'report_id': 1}
+.2026-10-14 21:37:57,542 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-14 21:37:57,544 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:57,553 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-14 21:37:57,564 INFO zelda_api.truth_delta_sources - No Crunchbase API key configured — skipping this source.
+2026-10-14 21:37:57,565 INFO zelda_api.truth_delta_sources - Skipping crunchbase — not configured or unreachable.
+2026-10-14 21:37:57,566 INFO zelda_api.truth_delta_sources - No News API key configured — skipping this source.
+2026-10-14 21:37:57,566 INFO zelda_api.truth_delta_sources - Skipping news — not configured or unreachable.
+2026-10-14 21:37:57,567 INFO zelda_api.truth_delta_sources - Fetching JoyToys from SEC EDGAR
+2026-10-14 21:37:57,567 INFO zelda_api.truth_delta_sources - No external data found for JoyToys
+2026-10-14 21:37:57,570 INFO zelda_api.truth_delta_sources - No News API key configured — skipping this source.
+2026-10-14 21:37:58,166 ERROR zelda_api.intelligence_pipeline - Claude API error in memo generation: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+2026-10-14 21:37:58,166 ERROR zelda_api.intelligence_pipeline - Memo generation error: Memo generation failed: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+2026-10-14 21:37:58,166 ERROR zelda_api.tasks - Memo generation error for document 1: Memo error: Memo generation failed: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+2026-10-14 21:37:58,168 INFO celery.app.trace - Task zelda_api.tasks.generate_intelligence_memo[c811f509-c832-4893-ba82-0a246acd0245] succeeded in 0.5849183999962406s: {'status': 'error', 'error': 'Memo error: Memo generation failed: Circuit \'claude_api\' is open — upstream is degraded, short-circuiting.'}
+2026-10-14 21:37:58,169 INFO celery.app.trace - Task zelda_api.truth_delta_tasks.verify_document_truth_delta[947b2470-fdd3-45a5-b0fe-c352bd5f8d9c] succeeded in 0.6148266999953194s: {'status': 'success', 'document_id': 1, 'report_id': 1}
+.2026-10-14 21:37:58,174 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-14 21:37:58,181 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-14 21:37:58,188 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-14 21:37:58,194 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-14 21:37:58,200 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-14 21:37:58,209 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-14 21:37:58,234 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-14 21:37:58,235 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:58,253 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+2026-10-14 21:37:58,271 ERROR zelda_api.intelligence_pipeline - Claude API error in memo generation: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+2026-10-14 21:37:58,271 ERROR zelda_api.intelligence_pipeline - Memo generation error: Memo generation failed: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+E2026-10-14 21:37:58,298 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-14 21:37:58,326 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-14 21:37:58,327 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:58,347 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+2026-10-14 21:37:58,366 ERROR zelda_api.intelligence_pipeline - Claude API error in memo generation: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+2026-10-14 21:37:58,366 ERROR zelda_api.intelligence_pipeline - Memo generation error: Memo generation failed: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+E2026-10-14 21:37:58,374 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-14 21:37:58,401 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-14 21:37:58,401 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:58,417 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+2026-10-14 21:37:58,445 ERROR zelda_api.intelligence_pipeline - Claude API error in memo generation: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+2026-10-14 21:37:58,446 ERROR zelda_api.intelligence_pipeline - Memo generation error: Memo generation failed: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+E2026-10-14 21:37:58,453 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-14 21:37:58,484 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-14 21:37:58,485 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:58,503 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+2026-10-14 21:37:58,520 ERROR zelda_api.intelligence_pipeline - Claude API error in memo generation: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+2026-10-14 21:37:58,520 ERROR zelda_api.intelligence_pipeline - Memo generation error: Memo generation failed: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+E2026-10-14 21:37:58,529 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:37:58,548 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:37:58,565 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:37:58,587 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:37:58,639 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:37:58,659 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:37:58,677 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:37:58,696 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:37:58,771 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:37:58,788 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:37:58,805 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:37:58,826 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:37:58,875 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:37:58,892 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:37:58,911 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:37:58,933 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:37:58,988 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:37:59,006 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:37:59,023 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:37:59,041 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-14 21:37:59,086 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:37:59,100 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 2 claims from insights
+.2026-10-14 21:37:59,107 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:37:59,124 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:37:59,144 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:37:59,162 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:38:01,546 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:01,562 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:01,578 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:01,594 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-14 21:38:01,656 ERROR zelda_api.intelligence_pipeline - Claude API error in memo generation: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+2026-10-14 21:38:01,657 ERROR zelda_api.intelligence_pipeline - Memo generation error: Memo generation failed: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+E2026-10-14 21:38:01,665 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:01,683 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:01,701 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:01,720 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:38:01,779 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:01,797 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:01,815 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:01,836 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-14 21:38:01,913 ERROR zelda_api.intelligence_pipeline - Claude API error in memo generation: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+2026-10-14 21:38:01,913 ERROR zelda_api.intelligence_pipeline - Memo generation error: Memo generation failed: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+E2026-10-14 21:38:01,922 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:01,944 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:01,965 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:01,985 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-14 21:38:02,031 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:38:02,032 ERROR zelda_api.truth_delta_tasks - Error extracting claims for document 1
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\truth_delta_tasks.py", line 82, in extract_claims_from_insights
+    insights = IntelligenceInsight.objects.filter(document=document)
+  File "C:\Users\jonathan\AppData\Local\Python\pythoncore-3.14-64\Lib\unittest\mock.py", line 1175, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\AppData\Local\Python\pythoncore-3.14-64\Lib\unittest\mock.py", line 1179, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\AppData\Local\Python\pythoncore-3.14-64\Lib\unittest\mock.py", line 1234, in _execute_mock_call
+    raise effect
+RuntimeError: boom
+.2026-10-14 21:38:02,099 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:02,116 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:02,132 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:02,149 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-14 21:38:02,202 ERROR zelda_api.tasks - Memo generation error for document 1: Principal: user is deactivated.
+.2026-10-14 21:38:02,210 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:02,226 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:02,242 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:02,259 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-14 21:38:02,314 ERROR zelda_api.truth_delta_tasks - [Truth Delta] Verification failed for document 1
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\truth_delta_tasks.py", line 337, in verify_document_truth_delta
+    result = engine.verify_document(document_id)
+  File "C:\Users\jonathan\AppData\Local\Python\pythoncore-3.14-64\Lib\unittest\mock.py", line 1175, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\AppData\Local\Python\pythoncore-3.14-64\Lib\unittest\mock.py", line 1179, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\AppData\Local\Python\pythoncore-3.14-64\Lib\unittest\mock.py", line 1234, in _execute_mock_call
+    raise effect
+RuntimeError: EDGAR down
+.2026-10-14 21:38:02,323 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:02,341 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:02,362 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:02,381 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-14 21:38:02,456 ERROR zelda_api.intelligence_pipeline - Claude API error in memo generation: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+2026-10-14 21:38:02,456 ERROR zelda_api.intelligence_pipeline - Memo generation error: Memo generation failed: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+2026-10-14 21:38:02,456 ERROR zelda_api.tasks - Memo generation error for document 1: Memo error: Memo generation failed: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+.2026-10-14 21:38:02,465 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:02,483 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:02,502 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:02,521 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-14 21:38:02,731 ERROR zelda_api.intelligence_pipeline - Claude API error in memo generation: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+2026-10-14 21:38:02,742 ERROR zelda_api.intelligence_pipeline - Memo generation error: Memo generation failed: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+2026-10-14 21:38:02,742 ERROR zelda_api.tasks - Memo generation error for document 1: Memo error: Memo generation failed: Circuit 'claude_api' is open — upstream is degraded, short-circuiting.
+E2026-10-14 21:38:02,751 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:02,768 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:02,785 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:02,801 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-14 21:38:02,850 INFO zelda_api.intelligence_pipeline - Starting pipeline v2 for a.pdf
+2026-10-14 21:38:02,851 INFO zelda_api.intelligence_pipeline - Chunking: a.pdf
+2026-10-14 21:38:02,855 INFO zelda_api.intelligence_pipeline - Cleared existing chunks for 1
+2026-10-14 21:38:02,857 INFO zelda_api.intelligence_pipeline - Created 1 chunks
+2026-10-14 21:38:02,859 INFO zelda_api.intelligence_pipeline - Embedding: a.pdf
+2026-10-14 21:38:02,864 INFO zelda_api.intelligence_pipeline - Embedded 1 chunks
+2026-10-14 21:38:02,865 INFO zelda_api.intelligence_pipeline - Analyzing: a.pdf
+2026-10-14 21:38:02,896 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-14 21:38:02,898 INFO zelda_api.intelligence_pipeline - Triggering Truth Delta: a.pdf
+2026-10-14 21:38:02,899 INFO zelda_api.intelligence_pipeline - Pipeline complete for a.pdf; memo follows verification
+.2026-10-14 21:38:02,907 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:02,923 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:02,941 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:02,958 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-14 21:38:03,017 WARNING zelda_api.intelligence_pipeline - Truth Delta trigger failed for document 1: no broker
+2026-10-14 21:38:03,020 INFO zelda_api.intelligence_pipeline - Entity Integrity queued for document 1
+.2026-10-14 21:38:03,027 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:03,044 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:03,063 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:03,080 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:38:03,130 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:03,147 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:03,164 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:03,182 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:38:03,244 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:03,261 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:03,278 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:03,298 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:38:03,364 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:03,381 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:03,399 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:03,419 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:38:03,468 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:03,484 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:03,502 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:03,523 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:38:03,588 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:03,605 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:03,624 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:03,644 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:38:03,703 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:03,720 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:03,738 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:03,758 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:38:03,816 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:03,833 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:03,852 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:03,872 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:38:03,919 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:03,937 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:03,953 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:03,971 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:38:04,066 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:04,087 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:04,107 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:04,129 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:38:04,176 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:04,194 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:04,212 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:04,230 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:38:04,298 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:04,316 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:04,332 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:04,347 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:38:04,403 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:04,419 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:04,437 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:04,453 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:38:04,515 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:04,537 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:04,553 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:04,570 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:38:04,641 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:04,658 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:04,675 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:04,691 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:38:04,768 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:04,786 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:04,804 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:04,822 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:38:04,888 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:04,905 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:04,921 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:04,942 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:38:05,009 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-14 21:38:05,025 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-14 21:38:05,043 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-14 21:38:05,063 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-14 21:38:05,128 INFO zelda_api.signals - DocumentSource created: deck.txt
+2026-10-14 21:38:05,136 ERROR zelda_api.intelligence_pipeline - Memo generation error: Claude unavailable
+.2026-10-14 21:38:05,141 INFO zelda_api.signals - DocumentSource created: deck.txt
+2026-10-14 21:38:05,168 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-14 21:38:05,173 INFO zelda_api.signals - DocumentSource created: deck.txt
+2026-10-14 21:38:05,203 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-14 21:38:05,208 INFO zelda_api.signals - DocumentSource created: deck.txt
+2026-10-14 21:38:05,260 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-14 21:38:05,266 INFO zelda_api.signals - DocumentSource created: deck.txt
+2026-10-14 21:38:05,267 ERROR zelda_api.signals - Document deck.txt status is ERROR
+2026-10-14 21:38:05,267 ERROR zelda_api.signals - Error message: Memo error: 'list' object has no attribute 'encode'
+.2026-10-14 21:38:05,331 INFO zelda_api.signals - DocumentSource created: deck.txt
+2026-10-14 21:38:05,357 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+2026-10-14 21:38:05,358 INFO zelda_api.tasks - Memo generated for document 1
+.2026-10-14 21:38:05,364 INFO zelda_api.signals - DocumentSource created: deck.txt
+2026-10-14 21:38:05,406 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+2026-10-14 21:38:05,440 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+....2026-10-14 21:38:05,607 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:05,748 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:05,833 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:05,919 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:06,108 INFO zelda_api.signals - DocumentSource created: deck.txt
+2026-10-14 21:38:06,132 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-14 21:38:06,139 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:06,224 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:06,361 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:06,449 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:06,479 INFO zelda_api.signals - DocumentSource created: deck.txt
+2026-10-14 21:38:06,503 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 2
+....2026-10-14 21:38:06,513 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:38:06,547 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:38:06,578 INFO zelda_api.signals - DocumentSource created: c.txt
+.2026-10-14 21:38:06,614 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:06,701 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:06,732 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:06,766 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:07,361 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:07,395 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:07,566 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:07,725 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:07,860 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:08,023 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:08,094 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:08,121 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:08,148 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:08,302 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:08,425 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:08,578 INFO zelda_api.signals - DocumentSource created: n.txt
+.2026-10-14 21:38:08,613 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:08,634 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:08,727 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-14 21:38:08,761 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-14 21:38:08,796 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-14 21:38:08,929 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-14 21:38:09,040 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-14 21:38:09,071 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.....2026-10-14 21:38:09,166 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:09,300 INFO zelda_api.signals - DocumentSource created: deck.pdf
+......2026-10-14 21:38:09,455 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-14 21:38:09,592 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-14 21:38:09,729 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-14 21:38:09,760 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-14 21:38:09,955 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-14 21:38:10,096 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-14 21:38:10,226 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-14 21:38:10,361 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-14 21:38:10,473 INFO zelda_api.signals - DocumentSource created: d.pdf
+.2026-10-14 21:38:10,550 INFO zelda_api.signals - DocumentSource created: d.pdf
+.2026-10-14 21:38:10,632 INFO zelda_api.signals - DocumentSource created: d.pdf
+.2026-10-14 21:38:10,704 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:10,712 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:10,720 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:10,729 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:10,736 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:10,744 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:10,751 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.....2026-10-14 21:38:10,789 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:10,808 INFO zelda_api.truth_delta_narrative - Truth Delta explanation for arr refused: it does not agree with state no_data/no_external_evidence
+2026-10-14 21:38:10,809 INFO zelda_api.truth_delta_narrative - Truth Delta explanation for funding_raised refused: it does not agree with state no_data/no_external_evidence
+.2026-10-14 21:38:10,819 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:10,834 INFO zelda_api.truth_delta_narrative - Truth Delta explanation for arr refused: it does not agree with state no_data/no_external_evidence
+2026-10-14 21:38:10,834 INFO zelda_api.truth_delta_narrative - Truth Delta explanation for funding_raised refused: it does not agree with state no_data/no_external_evidence
+.2026-10-14 21:38:10,844 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:10,864 INFO zelda_api.truth_delta_narrative - Truth Delta explanation for funding_raised refused: it does not agree with state no_data/no_external_evidence
+.2026-10-14 21:38:10,875 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:10,887 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:10,898 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:10,966 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,028 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,087 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,162 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,170 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,177 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,185 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,193 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,201 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,209 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,218 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,227 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,239 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,250 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,258 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,266 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,274 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,281 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,289 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,297 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,304 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,311 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,319 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,328 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,343 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,372 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,383 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,395 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,403 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,411 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,419 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,427 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,435 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,446 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,460 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,480 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,498 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,512 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,525 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,538 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,629 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,712 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,726 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,738 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,833 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,845 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,932 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,967 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,983 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:11,990 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:12,004 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:12,019 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:12,036 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:12,054 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:12,068 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:12,084 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:12,098 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:12,115 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:12,129 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:12,144 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:12,157 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:12,171 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:12,180 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:12,242 WARNING django.request - Forbidden: /api/v1/zelda/documents/1/status/
+.2026-10-14 21:38:12,274 WARNING django.request - Forbidden: /api/v1/zelda/documents/1/status/
+...2026-10-14 21:38:12,385 INFO zelda_api.signals - DocumentSource created: Confidential_CapTable_2026.pdf
+.....2026-10-14 21:38:12,705 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:12,748 WARNING django.request - Forbidden: /api/v1/zelda/analyze/founder/closeout_owner/
+.2026-10-14 21:38:12,754 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:12,784 WARNING django.request - Forbidden: /api/v1/zelda/analyze/founder/closeout_owner/
+.2026-10-14 21:38:12,790 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:12,826 WARNING django.request - Forbidden: /api/v1/zelda/analyze/founder/closeout_owner/confirm/
+.2026-10-14 21:38:12,833 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:12,840 INFO zelda_api.intelligence_pipeline - Embedded 2 chunks
+.2026-10-14 21:38:12,847 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:12,848 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+.2026-10-14 21:38:12,854 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:12,862 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:12,871 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:12,885 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:12,899 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:13,020 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:13,028 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:13,031 WARNING zelda_api.retrieval - Failed to embed query: on the a
+2026-10-14 21:38:13,032 WARNING zelda_api.retrieval - Failed to embed query: revenue
+.2026-10-14 21:38:13,042 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:13,057 INFO zelda_api.signals - DocumentSource created: nike.pptx
+2026-10-14 21:38:13,563 INFO zelda_api.intelligence_pipeline - Cleared existing chunks for 1
+2026-10-14 21:38:13,570 INFO zelda_api.intelligence_pipeline - Created 10 chunks
+2026-10-14 21:38:13,667 INFO zelda_api.intelligence_pipeline - Extracted 6 insights with dynamic confidence
+2026-10-14 21:38:13,673 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:38:13,689 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 2 claims from insights
+.2026-10-14 21:38:13,696 INFO zelda_api.signals - DocumentSource created: nike.pptx
+2026-10-14 21:38:13,739 INFO zelda_api.intelligence_pipeline - Cleared existing chunks for 1
+2026-10-14 21:38:13,747 INFO zelda_api.intelligence_pipeline - Created 10 chunks
+.2026-10-14 21:38:13,799 INFO zelda_api.signals - DocumentSource created: nike.pptx
+2026-10-14 21:38:14,091 INFO zelda_api.signals - DocumentSource created: nike_zelda_adversarial_test_deck.pptx
+.2026-10-14 21:38:14,099 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:14,111 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:14,185 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:14,231 WARNING django.request - Not Found: /api/v1/zelda/documents/1/truth-delta/
+.2026-10-14 21:38:14,235 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:14,289 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:14,291 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:38:14,298 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-14 21:38:14,299 WARNING zelda_api.truth_delta_engine - No claims found for document 1
+.2026-10-14 21:38:14,313 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:14,314 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:38:14,320 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-14 21:38:14,321 WARNING zelda_api.truth_delta_engine - No claims found for document 1
+.2026-10-14 21:38:14,400 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:14,402 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:38:14,408 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-14 21:38:14,409 WARNING zelda_api.truth_delta_engine - No claims found for document 1
+.2026-10-14 21:38:14,481 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:14,483 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:38:14,492 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-14 21:38:14,494 WARNING zelda_api.truth_delta_engine - No claims found for document 1
+.2026-10-14 21:38:14,551 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:14,552 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:38:14,559 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-14 21:38:14,560 WARNING zelda_api.truth_delta_engine - No claims found for document 1
+.2026-10-14 21:38:14,612 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:14,619 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-14 21:38:14,635 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:14,636 ERROR zelda_api.truth_delta_tasks - [Truth Delta] Verification failed for document 1
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\truth_delta_tasks.py", line 337, in verify_document_truth_delta
+    result = engine.verify_document(document_id)
+  File "C:\Users\jonathan\AppData\Local\Python\pythoncore-3.14-64\Lib\unittest\mock.py", line 1175, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\AppData\Local\Python\pythoncore-3.14-64\Lib\unittest\mock.py", line 1179, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\AppData\Local\Python\pythoncore-3.14-64\Lib\unittest\mock.py", line 1234, in _execute_mock_call
+    raise effect
+RuntimeError: EDGAR down
+2026-10-14 21:38:14,645 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:38:14,651 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-14 21:38:14,653 WARNING zelda_api.truth_delta_engine - No claims found for document 1
+.2026-10-14 21:38:14,729 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:14,730 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:38:14,737 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-14 21:38:14,738 WARNING zelda_api.truth_delta_engine - No claims found for document 1
+.2026-10-14 21:38:14,805 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:14,807 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:38:14,814 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-14 21:38:14,816 WARNING zelda_api.truth_delta_engine - No claims found for document 1
+2026-10-14 21:38:14,820 ERROR zelda_api.truth_delta_tasks - [Truth Delta] Verification failed for document 1
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\truth_delta_tasks.py", line 337, in verify_document_truth_delta
+    result = engine.verify_document(document_id)
+  File "C:\Users\jonathan\AppData\Local\Python\pythoncore-3.14-64\Lib\unittest\mock.py", line 1175, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\AppData\Local\Python\pythoncore-3.14-64\Lib\unittest\mock.py", line 1179, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\AppData\Local\Python\pythoncore-3.14-64\Lib\unittest\mock.py", line 1234, in _execute_mock_call
+    raise effect
+RuntimeError: EDGAR down
+.2026-10-14 21:38:14,882 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:14,889 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:38:14,895 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-14 21:38:14,897 WARNING zelda_api.truth_delta_engine - No claims found for document 1
+.2026-10-14 21:38:15,008 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:15,009 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:38:15,016 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-14 21:38:15,017 WARNING zelda_api.truth_delta_engine - No claims found for document 1
+.2026-10-14 21:38:15,024 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:15,026 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:38:15,033 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-14 21:38:15,034 WARNING zelda_api.truth_delta_engine - No claims found for document 1
+.2026-10-14 21:38:15,041 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:15,043 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:38:15,050 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-14 21:38:15,051 WARNING zelda_api.truth_delta_engine - No claims found for document 1
+.2026-10-14 21:38:15,060 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:15,062 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:38:15,068 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-14 21:38:15,069 WARNING zelda_api.truth_delta_engine - No claims found for document 1
+.2026-10-14 21:38:15,078 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-14 21:38:15,079 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 21:38:15,085 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-14 21:38:15,086 WARNING zelda_api.truth_delta_engine - No claims found for document 1
+................................................................................................................................................................................................................................................................................................
+======================================================================
+ERROR: test_every_consumer_shows_the_faithful_text_within_its_tier (zelda_api.tests_funding_fidelity.MemoWriterTests.test_every_consumer_shows_the_faithful_text_within_its_tier)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_funding_fidelity.py", line 456, in test_every_consumer_shows_the_faithful_text_within_its_tier
+    memo, _, _ = self.generate()
+                 ~~~~~~~~~~~~~^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_funding_fidelity.py", line 416, in generate
+    call = client_cls.return_value.messages.create.call_args.kwargs
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'kwargs'
+
+======================================================================
+ERROR: test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers (zelda_api.tests_funding_fidelity.MemoWriterTests.test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_funding_fidelity.py", line 535, in test_memo_95_sentences_through_the_writer_and_its_lite_and_full_readers
+    memo, call, _ = self.generate(memo95)
+                    ~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_funding_fidelity.py", line 416, in generate
+    call = client_cls.return_value.messages.create.call_args.kwargs
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'kwargs'
+
+======================================================================
+ERROR: test_memo_96_zelda_advantage_through_the_writer_and_its_full_readers (zelda_api.tests_funding_fidelity.MemoWriterTests.test_memo_96_zelda_advantage_through_the_writer_and_its_full_readers)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_funding_fidelity.py", line 498, in test_memo_96_zelda_advantage_through_the_writer_and_its_full_readers
+    memo, _, _ = self.generate(memo96_reply)
+                 ~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_funding_fidelity.py", line 416, in generate
+    call = client_cls.return_value.messages.create.call_args.kwargs
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'kwargs'
+
+======================================================================
+ERROR: test_stored_memo_is_faithful_and_structure_is_unchanged (zelda_api.tests_funding_fidelity.MemoWriterTests.test_stored_memo_is_faithful_and_structure_is_unchanged)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_funding_fidelity.py", line 430, in test_stored_memo_is_faithful_and_structure_is_unchanged
+    memo, call, profile = self.generate()
+                          ~~~~~~~~~~~~~^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_funding_fidelity.py", line 416, in generate
+    call = client_cls.return_value.messages.create.call_args.kwargs
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'kwargs'
+
+======================================================================
+ERROR: test_chunk_text_outside_extracted_statements_never_reaches_the_prompt (zelda_api.tests_grounded_context.NoRawInputTests.test_chunk_text_outside_extracted_statements_never_reaches_the_prompt)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_grounded_context.py", line 250, in test_chunk_text_outside_extracted_statements_never_reaches_the_prompt
+    result, prompt = self.generate()
+                     ~~~~~~~~~~~~~^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_grounded_context.py", line 240, in generate
+    prompt = client_cls.return_value.messages.create.call_args.kwargs['messages'][0]['content']
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'kwargs'
+
+======================================================================
+ERROR: test_memo_records_context_citations (zelda_api.tests_grounded_context.NoRawInputTests.test_memo_records_context_citations)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_grounded_context.py", line 257, in test_memo_records_context_citations
+    result, _ = self.generate()
+                ~~~~~~~~~~~~~^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_grounded_context.py", line 240, in generate
+    prompt = client_cls.return_value.messages.create.call_args.kwargs['messages'][0]['content']
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'kwargs'
+
+======================================================================
+ERROR: test_memo_stage_writes_from_the_context_and_notifies (zelda_api.tests_grounded_context.OrchestrationTests.test_memo_stage_writes_from_the_context_and_notifies)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_grounded_context.py", line 406, in test_memo_stage_writes_from_the_context_and_notifies
+    prompt = client_cls.return_value.messages.create.call_args.kwargs['messages'][0]['content']
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'kwargs'
+
+----------------------------------------------------------------------
+Ran 616 tests in 65.849s
+
+FAILED (errors=7)
+Destroying test database for alias 'default'...

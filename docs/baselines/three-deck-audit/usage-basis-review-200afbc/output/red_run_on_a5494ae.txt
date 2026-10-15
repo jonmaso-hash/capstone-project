@@ -1,0 +1,864 @@
+2026-10-14 22:53:07,451 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-14 22:54:01,067 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 22:54:01,161 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 22:54:01,192 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:01,222 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 22:54:01,275 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 22:54:01,351 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 22:54:01,352 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:01,381 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 22:54:01,408 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 22:54:01,487 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 22:54:01,488 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:01,515 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 22:54:01,539 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 22:54:01,616 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 22:54:01,617 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:01,638 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+2026-10-14 22:54:01,671 ERROR zelda_api.intelligence_pipeline - Claude API error in memo generation: stop after capture
+.2026-10-14 22:54:01,677 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 22:54:01,755 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 22:54:01,756 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:01,780 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 22:54:01,807 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-14 22:54:01,898 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-14 22:54:02,152 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-14 22:54:02,441 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-14 22:54:02,524 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-14 22:54:02,531 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-14 22:54:02,538 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-14 22:54:02,544 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-14 22:54:02,552 INFO zelda_api.signals - DocumentSource created: d.pptx
+E2026-10-14 22:54:02,557 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 22:54:02,566 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:02,579 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+F2026-10-14 22:54:02,595 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:02,605 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+F2026-10-14 22:54:02,617 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:02,627 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+F2026-10-14 22:54:02,639 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:02,649 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+F2026-10-14 22:54:02,662 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:02,672 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+F2026-10-14 22:54:02,687 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:02,699 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+F2026-10-14 22:54:02,707 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 22:54:02,721 INFO zelda_api.intelligence_pipeline - Extracted 2 insights with dynamic confidence
+2026-10-14 22:54:02,722 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:02,736 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 2 claims from insights
+2026-10-14 22:54:02,754 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-14 22:54:02,755 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:02,765 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-14 22:54:02,784 INFO zelda_api.intelligence_pipeline - Extracted 2 insights with dynamic confidence
+2026-10-14 22:54:02,784 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:02,799 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 2 claims from insights
+2026-10-14 22:54:02,821 INFO zelda_api.intelligence_pipeline - Extracted 2 insights with dynamic confidence
+2026-10-14 22:54:02,822 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:02,836 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 2 claims from insights
+.2026-10-14 22:54:02,841 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 22:54:02,852 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-14 22:54:02,853 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:02,864 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+F2026-10-14 22:54:02,880 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-14 22:54:02,881 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:02,891 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+F2026-10-14 22:54:02,910 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-14 22:54:02,911 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:02,923 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+F2026-10-14 22:54:02,944 INFO zelda_api.intelligence_pipeline - Extracted 2 insights with dynamic confidence
+2026-10-14 22:54:02,946 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:02,957 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+F2026-10-14 22:54:02,976 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-14 22:54:02,978 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:02,994 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+F2026-10-14 22:54:03,013 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-14 22:54:03,014 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:03,023 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+F2026-10-14 22:54:03,038 INFO zelda_api.intelligence_pipeline - Extracted 0 insights with dynamic confidence
+2026-10-14 22:54:03,039 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:03,048 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-14 22:54:03,054 INFO zelda_api.signals - DocumentSource created: d.pptx
+EEEEEEE2026-10-14 22:54:03,066 INFO zelda_api.signals - DocumentSource created: d.pptx
+EEEEEEE2026-10-14 22:54:03,073 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 22:54:03,082 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:03,096 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 2 claims from insights
+F2026-10-14 22:54:03,103 INFO zelda_api.signals - DocumentSource created: d.pptx
+F2026-10-14 22:54:03,108 INFO zelda_api.signals - DocumentSource created: d.pptx
+FFF2026-10-14 22:54:03,115 INFO zelda_api.signals - DocumentSource created: d.pptx
+F2026-10-14 22:54:03,120 INFO zelda_api.signals - DocumentSource created: d.pptx
+F2026-10-14 22:54:03,125 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 22:54:03,136 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:03,150 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 2 claims from insights
+F2026-10-14 22:54:03,159 INFO zelda_api.signals - DocumentSource created: d.pptx
+FFFFFFFF2026-10-14 22:54:03,170 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 22:54:03,241 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 22:54:03,242 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:03,270 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 22:54:03,282 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 22:54:03,358 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 22:54:03,359 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:03,390 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 22:54:03,399 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 22:54:03,480 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 22:54:03,481 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:03,505 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 22:54:03,512 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 22:54:03,584 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 22:54:03,585 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:03,605 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 22:54:03,612 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 22:54:03,680 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 22:54:03,681 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:03,702 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 22:54:03,724 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 22:54:03,729 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:03,740 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-14 22:54:03,746 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 22:54:03,752 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:03,761 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-14 22:54:03,767 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 22:54:03,771 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:03,780 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-14 22:54:03,786 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 22:54:03,794 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-14 22:54:03,797 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:03,805 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-14 22:54:03,811 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-14 22:54:03,816 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:03,829 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-14 22:54:03,837 INFO zelda_api.signals - DocumentSource created: u.pptx
+2026-10-14 22:54:03,847 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:03,865 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+.2026-10-14 22:54:03,871 INFO zelda_api.signals - DocumentSource created: u.pptx
+2026-10-14 22:54:03,875 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:03,882 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-14 22:54:03,889 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 22:54:03,963 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 22:54:03,964 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:03,986 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-14 22:54:03,993 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-14 22:54:04,067 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-14 22:54:04,068 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-14 22:54:04,089 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.EEEEEEEEEEEEEEE.EE.............
+======================================================================
+ERROR: test_an_unknown_label_is_refused_and_the_subject_label_admitted (zelda_api.tests_usage_basis.BlockOwnershipTests.test_an_unknown_label_is_refused_and_the_subject_label_admitted)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 658, in test_an_unknown_label_is_refused_and_the_subject_label_admitted
+    self.assertEqual(join_split_usage_lines('Acme\n500M\nmessages', ['Acme']), 'Acme\n500M messages')
+                     ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: join_split_usage_lines() takes 1 positional argument but 2 were given
+
+======================================================================
+ERROR: test_the_analyzer_offers_no_platform_figure (zelda_api.tests_usage_basis.BlockOwnershipTests.test_the_analyzer_offers_no_platform_figure) (text='Telegram\n\n500M\nmessages/month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 631, in test_the_analyzer_offers_no_platform_figure
+    figures = [c for c in traction_candidates(text, ['ManyChat']) if '500M' in c or '900M' in c]
+                          ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 45, in traction_candidates
+    pipeline._smart_extract('Traction', text, pipeline.ANALYSIS_CATEGORIES['Traction'], collect=collected,
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                            subject_names=names)
+                            ^^^^^^^^^^^^^^^^^^^^
+TypeError: ZeldaIntelligencePipelineV2._smart_extract() got an unexpected keyword argument 'subject_names'
+
+======================================================================
+ERROR: test_the_analyzer_offers_no_platform_figure (zelda_api.tests_usage_basis.BlockOwnershipTests.test_the_analyzer_offers_no_platform_figure) (text='Telegram\n100M bots\n500M\nmessages/month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 631, in test_the_analyzer_offers_no_platform_figure
+    figures = [c for c in traction_candidates(text, ['ManyChat']) if '500M' in c or '900M' in c]
+                          ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 45, in traction_candidates
+    pipeline._smart_extract('Traction', text, pipeline.ANALYSIS_CATEGORIES['Traction'], collect=collected,
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                            subject_names=names)
+                            ^^^^^^^^^^^^^^^^^^^^
+TypeError: ZeldaIntelligencePipelineV2._smart_extract() got an unexpected keyword argument 'subject_names'
+
+======================================================================
+ERROR: test_the_analyzer_offers_no_platform_figure (zelda_api.tests_usage_basis.BlockOwnershipTests.test_the_analyzer_offers_no_platform_figure) (text='Telegram\n\n100M bots\n\n500M\nmessages/month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 631, in test_the_analyzer_offers_no_platform_figure
+    figures = [c for c in traction_candidates(text, ['ManyChat']) if '500M' in c or '900M' in c]
+                          ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 45, in traction_candidates
+    pipeline._smart_extract('Traction', text, pipeline.ANALYSIS_CATEGORIES['Traction'], collect=collected,
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                            subject_names=names)
+                            ^^^^^^^^^^^^^^^^^^^^
+TypeError: ZeldaIntelligencePipelineV2._smart_extract() got an unexpected keyword argument 'subject_names'
+
+======================================================================
+ERROR: test_the_analyzer_offers_no_platform_figure (zelda_api.tests_usage_basis.BlockOwnershipTests.test_the_analyzer_offers_no_platform_figure) (text='500M\nmessages/month\nTelegram Messaging Service')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 631, in test_the_analyzer_offers_no_platform_figure
+    figures = [c for c in traction_candidates(text, ['ManyChat']) if '500M' in c or '900M' in c]
+                          ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 45, in traction_candidates
+    pipeline._smart_extract('Traction', text, pipeline.ANALYSIS_CATEGORIES['Traction'], collect=collected,
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                            subject_names=names)
+                            ^^^^^^^^^^^^^^^^^^^^
+TypeError: ZeldaIntelligencePipelineV2._smart_extract() got an unexpected keyword argument 'subject_names'
+
+======================================================================
+ERROR: test_the_analyzer_offers_no_platform_figure (zelda_api.tests_usage_basis.BlockOwnershipTests.test_the_analyzer_offers_no_platform_figure) (text='500M\nmessages/month\n\nTelegram')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 631, in test_the_analyzer_offers_no_platform_figure
+    figures = [c for c in traction_candidates(text, ['ManyChat']) if '500M' in c or '900M' in c]
+                          ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 45, in traction_candidates
+    pipeline._smart_extract('Traction', text, pipeline.ANALYSIS_CATEGORIES['Traction'], collect=collected,
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                            subject_names=names)
+                            ^^^^^^^^^^^^^^^^^^^^
+TypeError: ZeldaIntelligencePipelineV2._smart_extract() got an unexpected keyword argument 'subject_names'
+
+======================================================================
+ERROR: test_the_analyzer_offers_no_platform_figure (zelda_api.tests_usage_basis.BlockOwnershipTests.test_the_analyzer_offers_no_platform_figure) (text='500M\nmessages/month\n100M bots\nTelegram')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 631, in test_the_analyzer_offers_no_platform_figure
+    figures = [c for c in traction_candidates(text, ['ManyChat']) if '500M' in c or '900M' in c]
+                          ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 45, in traction_candidates
+    pipeline._smart_extract('Traction', text, pipeline.ANALYSIS_CATEGORIES['Traction'], collect=collected,
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                            subject_names=names)
+                            ^^^^^^^^^^^^^^^^^^^^
+TypeError: ZeldaIntelligencePipelineV2._smart_extract() got an unexpected keyword argument 'subject_names'
+
+======================================================================
+ERROR: test_the_analyzer_offers_no_platform_figure (zelda_api.tests_usage_basis.BlockOwnershipTests.test_the_analyzer_offers_no_platform_figure) (text='FB Messenger\n\n\n900M\nbots')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 631, in test_the_analyzer_offers_no_platform_figure
+    figures = [c for c in traction_candidates(text, ['ManyChat']) if '500M' in c or '900M' in c]
+                          ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 45, in traction_candidates
+    pipeline._smart_extract('Traction', text, pipeline.ANALYSIS_CATEGORIES['Traction'], collect=collected,
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                            subject_names=names)
+                            ^^^^^^^^^^^^^^^^^^^^
+TypeError: ZeldaIntelligencePipelineV2._smart_extract() got an unexpected keyword argument 'subject_names'
+
+======================================================================
+ERROR: test_the_helper_refuses_every_platform_block (zelda_api.tests_usage_basis.BlockOwnershipTests.test_the_helper_refuses_every_platform_block) (text='Telegram\n\n500M\nmessages/month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 626, in test_the_helper_refuses_every_platform_block
+    self.assertEqual(join_split_usage_lines(text, ['ManyChat']), text)
+                     ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+TypeError: join_split_usage_lines() takes 1 positional argument but 2 were given
+
+======================================================================
+ERROR: test_the_helper_refuses_every_platform_block (zelda_api.tests_usage_basis.BlockOwnershipTests.test_the_helper_refuses_every_platform_block) (text='Telegram\n100M bots\n500M\nmessages/month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 626, in test_the_helper_refuses_every_platform_block
+    self.assertEqual(join_split_usage_lines(text, ['ManyChat']), text)
+                     ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+TypeError: join_split_usage_lines() takes 1 positional argument but 2 were given
+
+======================================================================
+ERROR: test_the_helper_refuses_every_platform_block (zelda_api.tests_usage_basis.BlockOwnershipTests.test_the_helper_refuses_every_platform_block) (text='Telegram\n\n100M bots\n\n500M\nmessages/month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 626, in test_the_helper_refuses_every_platform_block
+    self.assertEqual(join_split_usage_lines(text, ['ManyChat']), text)
+                     ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+TypeError: join_split_usage_lines() takes 1 positional argument but 2 were given
+
+======================================================================
+ERROR: test_the_helper_refuses_every_platform_block (zelda_api.tests_usage_basis.BlockOwnershipTests.test_the_helper_refuses_every_platform_block) (text='500M\nmessages/month\nTelegram Messaging Service')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 626, in test_the_helper_refuses_every_platform_block
+    self.assertEqual(join_split_usage_lines(text, ['ManyChat']), text)
+                     ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+TypeError: join_split_usage_lines() takes 1 positional argument but 2 were given
+
+======================================================================
+ERROR: test_the_helper_refuses_every_platform_block (zelda_api.tests_usage_basis.BlockOwnershipTests.test_the_helper_refuses_every_platform_block) (text='500M\nmessages/month\n\nTelegram')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 626, in test_the_helper_refuses_every_platform_block
+    self.assertEqual(join_split_usage_lines(text, ['ManyChat']), text)
+                     ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+TypeError: join_split_usage_lines() takes 1 positional argument but 2 were given
+
+======================================================================
+ERROR: test_the_helper_refuses_every_platform_block (zelda_api.tests_usage_basis.BlockOwnershipTests.test_the_helper_refuses_every_platform_block) (text='500M\nmessages/month\n100M bots\nTelegram')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 626, in test_the_helper_refuses_every_platform_block
+    self.assertEqual(join_split_usage_lines(text, ['ManyChat']), text)
+                     ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+TypeError: join_split_usage_lines() takes 1 positional argument but 2 were given
+
+======================================================================
+ERROR: test_the_helper_refuses_every_platform_block (zelda_api.tests_usage_basis.BlockOwnershipTests.test_the_helper_refuses_every_platform_block) (text='FB Messenger\n\n\n900M\nbots')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 626, in test_the_helper_refuses_every_platform_block
+    self.assertEqual(join_split_usage_lines(text, ['ManyChat']), text)
+                     ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+TypeError: join_split_usage_lines() takes 1 positional argument but 2 were given
+
+======================================================================
+ERROR: test_a_chunk_boundary_is_never_crossed (zelda_api.tests_usage_basis.SplitLineJoinTests.test_a_chunk_boundary_is_never_crossed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 127, in test_a_chunk_boundary_is_never_crossed
+    self.assertNotIn('500M messages/month', traction_candidates('ManyChat\n140 000+ bots\n500M'))
+                                            ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 45, in traction_candidates
+    pipeline._smart_extract('Traction', text, pipeline.ANALYSIS_CATEGORIES['Traction'], collect=collected,
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                            subject_names=names)
+                            ^^^^^^^^^^^^^^^^^^^^
+TypeError: ZeldaIntelligencePipelineV2._smart_extract() got an unexpected keyword argument 'subject_names'
+
+======================================================================
+ERROR: test_a_continuation_or_owner_label_below_refuses (zelda_api.tests_usage_basis.SplitLineJoinTests.test_a_continuation_or_owner_label_below_refuses) (text='500M\nmessages/month\nvia Telegram')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 155, in test_a_continuation_or_owner_label_below_refuses
+    self.assertEqual(self.join(text), text)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 107, in join
+    return join_split_usage_lines(text, names)
+TypeError: join_split_usage_lines() takes 1 positional argument but 2 were given
+
+======================================================================
+ERROR: test_a_continuation_or_owner_label_below_refuses (zelda_api.tests_usage_basis.SplitLineJoinTests.test_a_continuation_or_owner_label_below_refuses) (text='500M\nmessages/month\non partner platforms')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 155, in test_a_continuation_or_owner_label_below_refuses
+    self.assertEqual(self.join(text), text)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 107, in join
+    return join_split_usage_lines(text, names)
+TypeError: join_split_usage_lines() takes 1 positional argument but 2 were given
+
+======================================================================
+ERROR: test_a_continuation_or_owner_label_below_refuses (zelda_api.tests_usage_basis.SplitLineJoinTests.test_a_continuation_or_owner_label_below_refuses) (text='500M\nmessages/month\nTelegram')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 155, in test_a_continuation_or_owner_label_below_refuses
+    self.assertEqual(self.join(text), text)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 107, in join
+    return join_split_usage_lines(text, names)
+TypeError: join_split_usage_lines() takes 1 positional argument but 2 were given
+
+======================================================================
+ERROR: test_a_figure_at_the_start_of_a_block_is_admitted (zelda_api.tests_usage_basis.SplitLineJoinTests.test_a_figure_at_the_start_of_a_block_is_admitted)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 118, in test_a_figure_at_the_start_of_a_block_is_admitted
+    self.assertEqual(self.join('500M\nmessages'), '500M messages')
+                     ~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 107, in join
+    return join_split_usage_lines(text, names)
+TypeError: join_split_usage_lines() takes 1 positional argument but 2 were given
+
+======================================================================
+ERROR: test_a_platform_label_above_refuses (zelda_api.tests_usage_basis.SplitLineJoinTests.test_a_platform_label_above_refuses) (text='Telegram\n100M\nmessages/month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 146, in test_a_platform_label_above_refuses
+    self.assertEqual(self.join(text), text)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 107, in join
+    return join_split_usage_lines(text, names)
+TypeError: join_split_usage_lines() takes 1 positional argument but 2 were given
+
+======================================================================
+ERROR: test_a_platform_label_above_refuses (zelda_api.tests_usage_basis.SplitLineJoinTests.test_a_platform_label_above_refuses) (text='FB Messenger\n900M\nbots')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 146, in test_a_platform_label_above_refuses
+    self.assertEqual(self.join(text), text)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 107, in join
+    return join_split_usage_lines(text, names)
+TypeError: join_split_usage_lines() takes 1 positional argument but 2 were given
+
+======================================================================
+ERROR: test_a_platform_label_above_refuses (zelda_api.tests_usage_basis.SplitLineJoinTests.test_a_platform_label_above_refuses) (text='Kik\n275M\nmessages')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 146, in test_a_platform_label_above_refuses
+    self.assertEqual(self.join(text), text)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 107, in join
+    return join_split_usage_lines(text, names)
+TypeError: join_split_usage_lines() takes 1 positional argument but 2 were given
+
+======================================================================
+ERROR: test_competing_figures_refuse (zelda_api.tests_usage_basis.SplitLineJoinTests.test_competing_figures_refuse) (text='500M 20K\nmessages/month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 141, in test_competing_figures_refuse
+    self.assertEqual(self.join(text), text)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 107, in join
+    return join_split_usage_lines(text, names)
+TypeError: join_split_usage_lines() takes 1 positional argument but 2 were given
+
+======================================================================
+ERROR: test_competing_figures_refuse (zelda_api.tests_usage_basis.SplitLineJoinTests.test_competing_figures_refuse) (text='120,000\n500M\nmessages/month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 141, in test_competing_figures_refuse
+    self.assertEqual(self.join(text), text)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 107, in join
+    return join_split_usage_lines(text, names)
+TypeError: join_split_usage_lines() takes 1 positional argument but 2 were given
+
+======================================================================
+ERROR: test_competing_figures_refuse (zelda_api.tests_usage_basis.SplitLineJoinTests.test_competing_figures_refuse) (text='500M\nmessages/month 20K')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 141, in test_competing_figures_refuse
+    self.assertEqual(self.join(text), text)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 107, in join
+    return join_split_usage_lines(text, names)
+TypeError: join_split_usage_lines() takes 1 positional argument but 2 were given
+
+======================================================================
+ERROR: test_intervening_prose_or_a_blank_line_refuses (zelda_api.tests_usage_basis.SplitLineJoinTests.test_intervening_prose_or_a_blank_line_refuses) (text='500M\nWe grew quickly across many new markets\nmessages/month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 134, in test_intervening_prose_or_a_blank_line_refuses
+    self.assertEqual(self.join(text), text)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 107, in join
+    return join_split_usage_lines(text, names)
+TypeError: join_split_usage_lines() takes 1 positional argument but 2 were given
+
+======================================================================
+ERROR: test_intervening_prose_or_a_blank_line_refuses (zelda_api.tests_usage_basis.SplitLineJoinTests.test_intervening_prose_or_a_blank_line_refuses) (text='500M\n\nmessages/month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 134, in test_intervening_prose_or_a_blank_line_refuses
+    self.assertEqual(self.join(text), text)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 107, in join
+    return join_split_usage_lines(text, names)
+TypeError: join_split_usage_lines() takes 1 positional argument but 2 were given
+
+======================================================================
+ERROR: test_only_the_two_lines_are_joined (zelda_api.tests_usage_basis.SplitLineJoinTests.test_only_the_two_lines_are_joined)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 123, in test_only_the_two_lines_are_joined
+    self.assertEqual(self.join(text).count('\n'), text.count('\n') - 1)
+                     ~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 107, in join
+    return join_split_usage_lines(text, names)
+TypeError: join_split_usage_lines() takes 1 positional argument but 2 were given
+
+======================================================================
+ERROR: test_same_slide_figure_and_rate_lines_are_admitted (zelda_api.tests_usage_basis.SplitLineJoinTests.test_same_slide_figure_and_rate_lines_are_admitted)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 113, in test_same_slide_figure_and_rate_lines_are_admitted
+    self.assertIn('500M messages/month', self.join(text, ['ManyChat']).split('\n'))
+                                         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 107, in join
+    return join_split_usage_lines(text, names)
+TypeError: join_split_usage_lines() takes 1 positional argument but 2 were given
+
+======================================================================
+ERROR: test_the_old_people_control_still_matches_nothing (zelda_api.tests_usage_basis.SplitLineJoinTests.test_the_old_people_control_still_matches_nothing)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 158, in test_the_old_people_control_still_matches_nothing
+    self.assertEqual(traction_candidates('FB Messenger\n900M\npeople'), [])
+                     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 45, in traction_candidates
+    pipeline._smart_extract('Traction', text, pipeline.ANALYSIS_CATEGORIES['Traction'], collect=collected,
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                            subject_names=names)
+                            ^^^^^^^^^^^^^^^^^^^^
+TypeError: ZeldaIntelligencePipelineV2._smart_extract() got an unexpected keyword argument 'subject_names'
+
+======================================================================
+ERROR: test_the_slide_4_chunk_is_unchanged (zelda_api.tests_usage_basis.SplitLineJoinTests.test_the_slide_4_chunk_is_unchanged)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 168, in test_the_slide_4_chunk_is_unchanged
+    self.assertEqual(self.join(slide4), slide4)
+                     ~~~~~~~~~^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 107, in join
+    return join_split_usage_lines(text, names)
+TypeError: join_split_usage_lines() takes 1 positional argument but 2 were given
+
+======================================================================
+FAIL: test_claim_admission_refuses_a_joined_span_from_a_platform_block (zelda_api.tests_usage_basis.BlockOwnershipTests.test_claim_admission_refuses_a_joined_span_from_a_platform_block) (text='Telegram\n\n500M\nmessages/month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 644, in test_claim_admission_refuses_a_joined_span_from_a_platform_block
+    self.assertEqual([(c.claimed_value, c.ownership) for c in self.offer(text, '500M messages/month')], [])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [('500M messages/month', 'implied')] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+('500M messages/month', 'implied')
+
+- [('500M messages/month', 'implied')]
++ []
+
+======================================================================
+FAIL: test_claim_admission_refuses_a_joined_span_from_a_platform_block (zelda_api.tests_usage_basis.BlockOwnershipTests.test_claim_admission_refuses_a_joined_span_from_a_platform_block) (text='Telegram\n100M bots\n500M\nmessages/month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 644, in test_claim_admission_refuses_a_joined_span_from_a_platform_block
+    self.assertEqual([(c.claimed_value, c.ownership) for c in self.offer(text, '500M messages/month')], [])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [('500M messages/month', 'implied')] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+('500M messages/month', 'implied')
+
+- [('500M messages/month', 'implied')]
++ []
+
+======================================================================
+FAIL: test_claim_admission_refuses_a_joined_span_from_a_platform_block (zelda_api.tests_usage_basis.BlockOwnershipTests.test_claim_admission_refuses_a_joined_span_from_a_platform_block) (text='Telegram\n\n100M bots\n\n500M\nmessages/month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 644, in test_claim_admission_refuses_a_joined_span_from_a_platform_block
+    self.assertEqual([(c.claimed_value, c.ownership) for c in self.offer(text, '500M messages/month')], [])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [('500M messages/month', 'implied')] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+('500M messages/month', 'implied')
+
+- [('500M messages/month', 'implied')]
++ []
+
+======================================================================
+FAIL: test_claim_admission_refuses_a_joined_span_from_a_platform_block (zelda_api.tests_usage_basis.BlockOwnershipTests.test_claim_admission_refuses_a_joined_span_from_a_platform_block) (text='500M\nmessages/month\nTelegram Messaging Service')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 644, in test_claim_admission_refuses_a_joined_span_from_a_platform_block
+    self.assertEqual([(c.claimed_value, c.ownership) for c in self.offer(text, '500M messages/month')], [])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [('500M messages/month', 'implied')] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+('500M messages/month', 'implied')
+
+- [('500M messages/month', 'implied')]
++ []
+
+======================================================================
+FAIL: test_claim_admission_refuses_a_joined_span_from_a_platform_block (zelda_api.tests_usage_basis.BlockOwnershipTests.test_claim_admission_refuses_a_joined_span_from_a_platform_block) (text='500M\nmessages/month\n\nTelegram')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 644, in test_claim_admission_refuses_a_joined_span_from_a_platform_block
+    self.assertEqual([(c.claimed_value, c.ownership) for c in self.offer(text, '500M messages/month')], [])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [('500M messages/month', 'implied')] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+('500M messages/month', 'implied')
+
+- [('500M messages/month', 'implied')]
++ []
+
+======================================================================
+FAIL: test_claim_admission_refuses_a_joined_span_from_a_platform_block (zelda_api.tests_usage_basis.BlockOwnershipTests.test_claim_admission_refuses_a_joined_span_from_a_platform_block) (text='500M\nmessages/month\n100M bots\nTelegram')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 644, in test_claim_admission_refuses_a_joined_span_from_a_platform_block
+    self.assertEqual([(c.claimed_value, c.ownership) for c in self.offer(text, '500M messages/month')], [])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [('500M messages/month', 'implied')] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+('500M messages/month', 'implied')
+
+- [('500M messages/month', 'implied')]
++ []
+
+======================================================================
+FAIL: test_no_claim_end_to_end (zelda_api.tests_usage_basis.BlockOwnershipTests.test_no_claim_end_to_end) (text='Telegram\n\n500M\nmessages/month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 638, in test_no_claim_end_to_end
+    self.assertFalse([c for c in claims if c.claimed_value_numeric in (5e8, 9e8)],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     [(c.claimed_value, c.unit, c.ownership) for c in claims])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: [<ClaimedDatapoint: usage: 500M messages/month>] is not false : [('500M messages/month', 'messages/month', 'implied')]
+
+======================================================================
+FAIL: test_no_claim_end_to_end (zelda_api.tests_usage_basis.BlockOwnershipTests.test_no_claim_end_to_end) (text='Telegram\n100M bots\n500M\nmessages/month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 638, in test_no_claim_end_to_end
+    self.assertFalse([c for c in claims if c.claimed_value_numeric in (5e8, 9e8)],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     [(c.claimed_value, c.unit, c.ownership) for c in claims])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: [<ClaimedDatapoint: usage: 500M messages/month>] is not false : [('500M messages/month', 'messages/month', 'implied')]
+
+======================================================================
+FAIL: test_no_claim_end_to_end (zelda_api.tests_usage_basis.BlockOwnershipTests.test_no_claim_end_to_end) (text='Telegram\n\n100M bots\n\n500M\nmessages/month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 638, in test_no_claim_end_to_end
+    self.assertFalse([c for c in claims if c.claimed_value_numeric in (5e8, 9e8)],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     [(c.claimed_value, c.unit, c.ownership) for c in claims])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: [<ClaimedDatapoint: usage: 500M messages/month>] is not false : [('500M messages/month', 'messages/month', 'implied')]
+
+======================================================================
+FAIL: test_no_claim_end_to_end (zelda_api.tests_usage_basis.BlockOwnershipTests.test_no_claim_end_to_end) (text='500M\nmessages/month\nTelegram Messaging Service')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 638, in test_no_claim_end_to_end
+    self.assertFalse([c for c in claims if c.claimed_value_numeric in (5e8, 9e8)],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     [(c.claimed_value, c.unit, c.ownership) for c in claims])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: [<ClaimedDatapoint: usage: 500M messages/month>] is not false : [('500M messages/month', 'messages/month', 'implied')]
+
+======================================================================
+FAIL: test_no_claim_end_to_end (zelda_api.tests_usage_basis.BlockOwnershipTests.test_no_claim_end_to_end) (text='500M\nmessages/month\n\nTelegram')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 638, in test_no_claim_end_to_end
+    self.assertFalse([c for c in claims if c.claimed_value_numeric in (5e8, 9e8)],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     [(c.claimed_value, c.unit, c.ownership) for c in claims])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: [<ClaimedDatapoint: usage: 500M messages/month>] is not false : [('500M messages/month', 'messages/month', 'implied')]
+
+======================================================================
+FAIL: test_no_claim_end_to_end (zelda_api.tests_usage_basis.BlockOwnershipTests.test_no_claim_end_to_end) (text='500M\nmessages/month\n100M bots\nTelegram')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 638, in test_no_claim_end_to_end
+    self.assertFalse([c for c in claims if c.claimed_value_numeric in (5e8, 9e8)],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     [(c.claimed_value, c.unit, c.ownership) for c in claims])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: [<ClaimedDatapoint: usage: 500M messages/month>] is not false : [('500M messages/month', 'messages/month', 'implied')]
+
+======================================================================
+FAIL: test_the_claim_task_and_the_note_do_not_borrow_it (zelda_api.tests_usage_basis.CumulativeBindingTests.test_the_claim_task_and_the_note_do_not_borrow_it)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 720, in test_the_claim_task_and_the_note_do_not_borrow_it
+    self.assertEqual(sorted(c.unit for c in claims), ['messages', 'messages'])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: ['messages', 'messages (cumulative)'] != ['messages', 'messages']
+
+First differing element 1:
+'messages (cumulative)'
+'messages'
+
+- ['messages', 'messages (cumulative)']
+?                       -------------
+
++ ['messages', 'messages']
+
+======================================================================
+FAIL: test_the_figures_own_cumulative_wording_still_counts (zelda_api.tests_usage_basis.CumulativeBindingTests.test_the_figures_own_cumulative_wording_still_counts) (text='500M lifetime messages')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 715, in test_the_figures_own_cumulative_wording_still_counts
+    self.assertEqual(usage_basis(text).label, 'messages (cumulative)')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'messages' != 'messages (cumulative)'
+- messages
++ messages (cumulative)
+
+
+======================================================================
+FAIL: test_wording_that_belongs_elsewhere_leaves_the_basis_unspecified (zelda_api.tests_usage_basis.CumulativeBindingTests.test_wording_that_belongs_elsewhere_leaves_the_basis_unspecified) (text='500M messages with lifetime customer support')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 707, in test_wording_that_belongs_elsewhere_leaves_the_basis_unspecified
+    self.assertEqual(usage_basis(text).label, 'messages')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'messages (cumulative)' != 'messages'
+- messages (cumulative)
++ messages
+
+
+======================================================================
+FAIL: test_wording_that_belongs_elsewhere_leaves_the_basis_unspecified (zelda_api.tests_usage_basis.CumulativeBindingTests.test_wording_that_belongs_elsewhere_leaves_the_basis_unspecified) (text='500M messages; bots tracked since launch')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 707, in test_wording_that_belongs_elsewhere_leaves_the_basis_unspecified
+    self.assertEqual(usage_basis(text).label, 'messages')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'messages (cumulative)' != 'messages'
+- messages (cumulative)
++ messages
+
+
+======================================================================
+FAIL: test_wording_that_belongs_elsewhere_leaves_the_basis_unspecified (zelda_api.tests_usage_basis.CumulativeBindingTests.test_wording_that_belongs_elsewhere_leaves_the_basis_unspecified) (text='500M messages and a cumulative rise in signups')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 707, in test_wording_that_belongs_elsewhere_leaves_the_basis_unspecified
+    self.assertEqual(usage_basis(text).label, 'messages')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'messages (cumulative)' != 'messages'
+- messages (cumulative)
++ messages
+
+
+======================================================================
+FAIL: test_selection_does_not_keep_an_unrepresentable_rate (zelda_api.tests_usage_basis.DenominatorTests.test_selection_does_not_keep_an_unrepresentable_rate)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 691, in test_selection_does_not_keep_an_unrepresentable_rate
+    self.assertEqual([c[0] for c in pipeline._select_insights('Traction', candidates, candidates[0])],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     ['500M messages', '500M messages/month'])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: ['500M messages', '500M messages/month per user'] != ['500M messages', '500M messages/month']
+
+First differing element 1:
+'500M messages/month per user'
+'500M messages/month'
+
+- ['500M messages', '500M messages/month per user']
+?                                       ---------
+
++ ['500M messages', '500M messages/month']
+
+======================================================================
+FAIL: test_supported_controls_still_hold (zelda_api.tests_usage_basis.DenominatorTests.test_supported_controls_still_hold) (text='500M messages every month')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 685, in test_supported_controls_still_hold
+    self.assertEqual(usage_basis(text).label, label)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'messages' != 'messages/month'
+- messages
++ messages/month
+?         ++++++
+
+
+======================================================================
+FAIL: test_the_claim_task_stores_neither (zelda_api.tests_usage_basis.DenominatorTests.test_the_claim_task_stores_neither)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 696, in test_the_claim_task_stores_neither
+    self.assertEqual([(c.claimed_value, c.unit) for c in claims], [])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [('500M messages/month per user', 'message[49 chars]es')] != []
+
+First list contains 2 additional elements.
+First extra element 0:
+('500M messages/month per user', 'messages/month')
+
++ []
+- [('500M messages/month per user', 'messages/month'),
+-  ('500M messages per 2 months', 'messages')]
+
+======================================================================
+FAIL: test_the_helper_refuses_them (zelda_api.tests_usage_basis.DenominatorTests.test_the_helper_refuses_them) (text='500M messages per 2 months')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 674, in test_the_helper_refuses_them
+    self.assertIsNone(usage_basis(text))
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: UsageBasis('messages') is not None
+
+======================================================================
+FAIL: test_the_helper_refuses_them (zelda_api.tests_usage_basis.DenominatorTests.test_the_helper_refuses_them) (text='500M messages/2 months')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 674, in test_the_helper_refuses_them
+    self.assertIsNone(usage_basis(text))
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: UsageBasis('messages') is not None
+
+======================================================================
+FAIL: test_the_helper_refuses_them (zelda_api.tests_usage_basis.DenominatorTests.test_the_helper_refuses_them) (text='500M messages every 2 months')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 674, in test_the_helper_refuses_them
+    self.assertIsNone(usage_basis(text))
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: UsageBasis('messages') is not None
+
+======================================================================
+FAIL: test_the_helper_refuses_them (zelda_api.tests_usage_basis.DenominatorTests.test_the_helper_refuses_them) (text='500M messages/month per user')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 674, in test_the_helper_refuses_them
+    self.assertIsNone(usage_basis(text))
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: UsageBasis('messages/month') is not None
+
+======================================================================
+FAIL: test_the_helper_refuses_them (zelda_api.tests_usage_basis.DenominatorTests.test_the_helper_refuses_them) (text='500M messages per month per user')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 674, in test_the_helper_refuses_them
+    self.assertIsNone(usage_basis(text))
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: UsageBasis('messages/month') is not None
+
+======================================================================
+FAIL: test_the_helper_refuses_them (zelda_api.tests_usage_basis.DenominatorTests.test_the_helper_refuses_them) (text='500M messages per month, per user')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 674, in test_the_helper_refuses_them
+    self.assertIsNone(usage_basis(text))
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: UsageBasis('messages/month') is not None
+
+======================================================================
+FAIL: test_the_helper_refuses_them (zelda_api.tests_usage_basis.DenominatorTests.test_the_helper_refuses_them) (text='500M messages/day/user')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 674, in test_the_helper_refuses_them
+    self.assertIsNone(usage_basis(text))
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: UsageBasis('messages/day') is not None
+
+======================================================================
+FAIL: test_the_helper_refuses_them (zelda_api.tests_usage_basis.DenominatorTests.test_the_helper_refuses_them) (text='500M bi-monthly messages')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109\zelda_api\tests_usage_basis.py", line 674, in test_the_helper_refuses_them
+    self.assertIsNone(usage_basis(text))
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: UsageBasis('messages/month') is not None
+
+----------------------------------------------------------------------
+Ran 64 tests in 3.063s
+
+FAILED (failures=28, errors=32)
+Destroying test database for alias 'default'...
+Found 64 test(s).
+System check identified no issues (0 silenced).

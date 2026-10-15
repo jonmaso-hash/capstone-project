@@ -796,6 +796,30 @@
         {% endif %}
 
         {% comment %}
+        RA-109 / I1: the deck's own usage figures stated on different measurement
+        bases (no interval vs per month). Built from the stored claims every
+        viewer of this page already sees. NOT Truth Delta: it verifies nothing,
+        contradicts nothing and does not touch the score.
+        {% endcomment %}
+        {% if basis_notes %}
+        <div class="mt-3 mb-2 p-3 rounded-3" data-section="basis-notes"
+             style="background: rgba(100, 116, 139, 0.06); border-left: 4px solid #94a3b8;">
+            <div class="fw-bold" style="font-size: 0.95rem; color: var(--td-text);">
+                <i class="bi bi-rulers me-1"></i>Measurement basis to clarify
+            </div>
+            <p class="mb-2 mt-1" style="font-size: 0.8rem; color: #64748b;">
+                Figures in this deck that need clarification before they are compared. This is not a
+                verification result and doesn't affect the score.
+            </p>
+            <ul class="mb-0 ps-3" style="font-size: 0.85rem; color: #475569;">
+                {% for note in basis_notes %}
+                <li class="mb-1" data-basis-note="{{ note.kind }}">{{ note.text }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% comment %}
         Which entity the external figures were observed about. Naming only the
         source says where a figure came from and not who it is about, which
         leaves a reader unable to tell this business from another registrant

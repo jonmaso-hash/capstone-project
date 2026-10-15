@@ -1,0 +1,39 @@
+"""RA-109 follow-up mutation run (after 200afbc). Reuses the 26 mutations of mutate_ra109_review.py (loaded from
+that file, unchanged except M24, re-anchored to the new eligible() check) and adds M27-M31 for the two gates of
+the follow-up review. Same runner: apply one, run the focused tests, restore, verify the hash.
+Usage: python mutate_ra109_review2.py <worktree> [ID ...]."""
+import os, sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+BASE = os.path.join(HERE, 'mutate_ra109_review.py')
+head, runner = open(BASE, encoding='utf-8').read().split('def sha(path):', 1)
+ns = {'__file__': BASE, '__name__': 'mutation_list'}
+exec(compile(head, BASE, 'exec'), ns)          # defines WT, ONLY, T, LABELS, UB/FM/IP/TD and M
+UB, IP = ns['UB'], ns['IP']
+
+M = []
+for entry in ns['M']:
+    if entry[0] == 'M24':
+        entry = ('M24', 'F2: an unrepresentable rate keeps a selection slot (later candidates)', IP,
+                 "            if not eligible(candidate):\n                continue",
+                 "            pass")
+    M.append(entry)
+M += [
+    ('M27', 'R2-1: a generic heading above resolves the block again (short circuit)', UB,
+     "            continue                                  # a metric/time heading is context, not an owner",
+     "            return None, ''"),
+    ('M28', 'R2-1: a generic heading below resolves the block again (short circuit)', UB,
+     "            continue                                  # context, not an owner: keep looking",
+     "            return None, ''"),
+    ('M29', 'R2-1: a generic heading above is treated as an owner (over-refusal)', UB,
+     "            continue                                  # a metric/time heading is context, not an owner",
+     "            return OWNER_LABEL, line"),
+    ('M30', 'R2-2: the initial winner is not checked for eligibility', IP,
+     "        if not eligible(best_insight):",
+     "        if False:"),
+    ('M31', 'R2-2: a single unsupported candidate is still emitted', IP,
+     "            if best_insight is None:\n                return []",
+     "            if best_insight is None:\n                return [ranked[0]]"),
+]
+ns['M'] = M
+exec(compile('def sha(path):' + runner, BASE + ' (runner)', 'exec'), ns)

@@ -199,7 +199,9 @@ def claim_is_admissible(category, text):
     if category == "employees":
         return bool(_PEOPLE_NOUN.search(text))
     if category == "usage":
-        return usage_unit(text) is not None
+        # The basis too: a figure whose denominator cannot be represented is
+        # refused, not stored as a bare count (RA-109).
+        return usage_basis(text) is not None
     return True
 
 
@@ -219,6 +221,118 @@ def usage_unit(text):
     if noun is None or noun.group(1) is None:
         return None
     return noun.group(1).lower()
+
+
+# --- what a usage figure is measured over (RA-109 / I1) ------------------------
+#
+# "500M messages" and "500M messages/month" count the same noun on different
+# bases: one states no interval, the other is a monthly rate. Recording only the
+# noun made them the same quantity. The basis is read from the words beside the
+# noun and nothing else; a rate is a denominator, never an as-of date.
+
+CUMULATIVE_BASIS = 'cumulative'
+_RATE_WORDS = {'month': 'month', 'mo': 'month', 'week': 'week', 'wk': 'week',
+               'day': 'day', 'year': 'year', 'yr': 'year'}
+_RATE_ADJECTIVES = {'monthly': 'month', 'weekly': 'week', 'daily': 'day', 'yearly': 'year', 'annual': 'year'}
+# One verb a deck puts between the noun and its qualifier ("500M messages sent per month").
+_USAGE_VERB = r"(?:(?:sent|delivered|processed|handled|exchanged|created)\s+)?"
+# An explicit denominator directly after the noun is recognised by its
+# introducer alone ("/", "per", "each", "every", or "a" before a period word),
+# whatever follows. What follows must then be exactly one supported period
+# word: "per 2 months" (numeric), "/month per user" (compound) or "per user"
+# (unsupported) is refused -- never simplified to a bare count or a plainer
+# rate (RA-109 review).
+_DENOMINATOR = re.compile(
+    r"\s*" + _USAGE_VERB + r"(?:(?P<intro>/|\bper\b|\beach\b|\bevery\b)|\ba\s+(?=(?:month|week|day|year)\b))",
+    re.IGNORECASE)
+_DENOMINATOR_WORD = re.compile(r"\s*(?P<word>[A-Za-z]+)\b")
+_ANOTHER_DENOMINATOR = re.compile(r"\s*[,;]?\s*(?:/|\bper\b|\beach\b|\bevery\b)", re.IGNORECASE)
+# Qualifiers inside the figure's own phrase, between the figure and the noun.
+_BEFORE_NOUN = re.compile(
+    r"(?<![\w-])(?P<adj>monthly|weekly|daily|yearly|annual|cumulative|total|lifetime|all-time)\s+$", re.IGNORECASE)
+_UNSUPPORTED_RATE_ADJECTIVE = re.compile(
+    r"(?:\b\w+-(?:monthly|weekly|daily|yearly|annual)|\b(?:bimonthly|biweekly|biannual|semiannual|fortnightly|"
+    r"quarterly|hourly))\s+$", re.IGNORECASE)
+# Cumulative wording counts only when it qualifies the figure's own phrase: right
+# after the noun (optionally after its verb). "500M messages with lifetime
+# customer support" or "500M messages; bots tracked since launch" stay unspecified.
+_CUMULATIVE_AFTER = re.compile(
+    r"\s*" + _USAGE_VERB + r"(?:to\s+date|cumulatively|in\s+total|all[- ]time|since\s+(?:inception|launch|founding))\b",
+    re.IGNORECASE)
+
+
+class UsageBasis:
+    """A usage figure's counted noun and basis: '' (no interval stated), 'cumulative', or a rate."""
+    __slots__ = ('noun', 'rate')
+
+    def __init__(self, noun, rate=''):
+        self.noun, self.rate = noun, rate
+
+    @property
+    def label(self):
+        """The canonical claim unit: 'messages', 'messages/month', 'messages (cumulative)'."""
+        if self.rate == CUMULATIVE_BASIS:
+            return f'{self.noun} (cumulative)'
+        return f'{self.noun}/{self.rate}' if self.rate else self.noun
+
+    def __eq__(self, other):
+        return isinstance(other, UsageBasis) and (self.noun, self.rate) == (other.noun, other.rate)
+
+    def __hash__(self):
+        return hash((self.noun, self.rate))
+
+    def __repr__(self):
+        return f'UsageBasis({self.label!r})'
+
+
+def _plural(noun):
+    noun = noun.lower()
+    return noun if noun.endswith('s') else noun + 's'
+
+
+def usage_basis(text):
+    """
+    The usage figure's noun and basis, or None when it is not a usage figure or
+    states a denominator this module does not support. usage_unit() keeps its
+    noun-only contract for its existing callers.
+    """
+    text = text or ""
+    if usage_unit(text) is None:
+        return None
+    figure = re.search(r"\d", text)
+    noun = _ANY_COUNTED_NOUN.search(text, figure.start())
+    rate = ''
+    denominator = _DENOMINATOR.match(text, noun.end())
+    if denominator:
+        word = _DENOMINATOR_WORD.match(text, denominator.end())
+        if word is None or word['word'].lower() not in _RATE_WORDS:
+            return None                       # "per user", "/quarter", "per 2 months": not representable
+        if _ANOTHER_DENOMINATOR.match(text, word.end()):
+            return None                       # "/month per user", "/day/user": a compound basis
+        rate = _RATE_WORDS[word['word'].lower()]
+    phrase = text[figure.start():noun.start()]
+    if _UNSUPPORTED_RATE_ADJECTIVE.search(phrase):
+        return None                           # "bi-monthly", "quarterly" messages
+    before = _BEFORE_NOUN.search(phrase)
+    if before:
+        adjective = before['adj'].lower()
+        if adjective in _RATE_ADJECTIVES:
+            if rate and rate != _RATE_ADJECTIVES[adjective]:
+                return None                   # "monthly messages per day": contradictory wording
+            rate = _RATE_ADJECTIVES[adjective]
+        elif not rate:
+            rate = CUMULATIVE_BASIS           # "cumulative messages", "total messages", "lifetime messages"
+    if not rate and _CUMULATIVE_AFTER.match(text, noun.end()):
+        rate = CUMULATIVE_BASIS               # "500M messages to date", "... sent since launch"
+    return UsageBasis(_plural(noun.group(1)), rate)
+
+
+def basis_from_unit(unit):
+    """A stored usage claim's unit read back into its basis, or None."""
+    match = re.fullmatch(r"(bots|messages)(?:/(month|week|day|year)| \((cumulative)\))?", (unit or '').strip())
+    if not match:
+        return None
+    return UsageBasis(match.group(1), match.group(2) or match.group(3) or '')
 
 
 def currency_value(text):

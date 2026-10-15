@@ -1,0 +1,28 @@
+"""Print a compact before/after table from repro_review_*.json (no Django)."""
+import json, sys
+before, after = (json.load(open(p, encoding='utf-8')) for p in sys.argv[1:3])
+print('before', before['head'][:7], '| after', after['head'][:7])
+
+
+def claims(cs):
+    return [f"{c['claimed_value']} [{c['unit']}, {c['ownership']}]" for c in cs] or ['(none)']
+
+
+for section in ('finding_1_platform_blocks', 'finding_1_company_controls'):
+    print('==', section)
+    for text, b in before[section].items():
+        a = after[section][text]
+        print(' ', repr(text))
+        print('     before analyzer claims:', claims(b['claims']), ' offered span:', claims(b.get('claim_task_offered_joined_span', [])) if 'claim_task_offered_joined_span' in b else '')
+        print('     after  analyzer claims:', claims(a['claims']), ' offered span:', claims(a.get('claim_task_offered_joined_span', [])) if 'claim_task_offered_joined_span' in a else '')
+for section in ('finding_2_denominators', 'finding_3_cumulative'):
+    print('==', section)
+    for text, b in before[section].items():
+        a = after[section][text]
+        print(f"  {text!r}: basis {b['usage_basis']!r} -> {a['usage_basis']!r}; claim task {claims(b['claim_task'])} -> {claims(a['claim_task'])}")
+print('== frozen ManyChat')
+for k in ('before', 'after'):
+    d = before if k == 'before' else after
+    print(' ', k, 'traction', d['frozen_manychat']['traction_insights'])
+    print('   ', 'claims', claims(d['frozen_manychat']['claims']))
+    print('   ', 'note', [n['note'] for n in d['frozen_manychat']['consistency_notes'] or []])

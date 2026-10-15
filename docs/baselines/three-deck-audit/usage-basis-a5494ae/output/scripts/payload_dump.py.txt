@@ -1,0 +1,52 @@
+"""RA-109 evidence: the frozen ManyChat chunks through the real analyzer and claim task, then the GroundedContext
+payload and the Truth Delta page's basis notes. Runs in a throwaway in-memory TEST database created here and
+destroyed at the end (never the dev DB or any run copy). No provider or model call: verification is not queued.
+Run with the t.sh environment via `manage.py shell -c "exec(open(...).read())"`. Prints one JSON line."""
+import json, subprocess
+from unittest import mock
+from django.db import connection
+
+old_name = connection.creation.create_test_db(verbosity=0, autoclobber=True, keepdb=False)
+try:
+    test_db = connection.settings_dict['NAME']
+    from django.contrib.auth import get_user_model
+    from zelda_api import truth_delta_tasks
+    from zelda_api.grounded_context import GroundedContext
+    from zelda_api.intelligence_pipeline import ZeldaIntelligencePipelineV2
+    from zelda_api.principal import ORIGIN_TASK, Principal
+    from zelda_api.tests_claim_extraction_recall import load_fixture
+    from zelda_api.truth_delta_models import ClaimedDatapoint
+    from zelda_api.usage_basis import basis_notes
+    from zelda_api.vector_models import DocumentChunk, DocumentSource, IntelligenceInsight
+
+    user = get_user_model().objects.create_user('ra109_evidence_owner', password='x')
+    fixture = load_fixture('manychat')
+    doc = DocumentSource.objects.create(filename='manychat.pptx', source_entity='ManyChat', uploaded_by=user,
+                                        document_type='pitch_deck', status='analyzing')
+    for c in fixture['chunks']:
+        DocumentChunk.objects.create(document=doc, chunk_index=c['chunk_index'], page_number=c['page_number'],
+                                     section_title=c['section_title'], raw_text=c['raw_text'], token_count=c['token_count'])
+    pipeline = ZeldaIntelligencePipelineV2()
+    pipeline.used_chunks = set()
+    pipeline._analyze_document(doc, '')
+    with mock.patch.object(truth_delta_tasks.verify_document_truth_delta, 'delay'):
+        truth_delta_tasks.extract_claims_from_insights(doc.id)
+    claims = list(ClaimedDatapoint.objects.filter(document=doc).order_by('id'))
+    payload = GroundedContext.build(Principal.for_user(user, ORIGIN_TASK, label='ra109 evidence'), doc).to_prompt_payload()
+    out = {
+        'head': subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip(),
+        'test_database': str(test_db),
+        'traction_insights': sorted((i.insight_text, i.source_chunks.first().page_number)
+                                    for i in IntelligenceInsight.objects.filter(document=doc, category='Traction')),
+        'claims': [{k: getattr(c, k) for k in ('category', 'claimed_value', 'claimed_value_numeric', 'unit', 'page_number',
+                                                'ownership', 'narrator', 'source_sentence', 'source_context', 'time_period',
+                                                'period_kind', 'period_end', 'period_fiscal_year', 'currency')}
+                   for c in claims],
+        'payload_claim_items': [i for i in payload['items'] if i['kind'] == 'claim'],
+        'payload_consistency_notes': payload.get('consistency_notes'),
+        'truth_delta_page_basis_notes': [n.text for n in basis_notes(claims)],
+        'payload_keys': sorted(payload),
+    }
+    print('PAYLOAD ' + json.dumps(out, ensure_ascii=False, default=str))
+finally:
+    connection.creation.destroy_test_db(old_name, verbosity=0)

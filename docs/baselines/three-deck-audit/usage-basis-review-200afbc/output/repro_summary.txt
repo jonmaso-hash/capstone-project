@@ -1,0 +1,38 @@
+before a5494ae | after 200afbc
+== finding_1_platform_blocks
+  'Telegram\n\n500M\nmessages/month'
+     before analyzer claims: ['500M messages/month [messages/month, implied]']  offered span: ['500M messages/month [messages/month, implied]']
+     after  analyzer claims: ['(none)']  offered span: ['(none)']
+  'Telegram\n100M bots\n500M\nmessages/month'
+     before analyzer claims: ['500M messages/month [messages/month, implied]']  offered span: ['500M messages/month [messages/month, implied]']
+     after  analyzer claims: ['(none)']  offered span: ['(none)']
+  '500M\nmessages/month\nTelegram Messaging Service'
+     before analyzer claims: ['500M messages/month [messages/month, implied]']  offered span: ['500M messages/month [messages/month, implied]']
+     after  analyzer claims: ['(none)']  offered span: ['(none)']
+  'Telegram\n500M\nmessages/month'
+     before analyzer claims: ['(none)']  offered span: ['(none)']
+     after  analyzer claims: ['(none)']  offered span: ['(none)']
+== finding_1_company_controls
+  'ManyChat\n140 000+ bots\n500M\nmessages/month\nLaunching on Facebook'
+     before analyzer claims: ['500M messages/month [messages/month, implied]', '140 000+ bots [bots, implied]']  offered span: 
+     after  analyzer claims: ['500M messages/month [messages/month, implied]', '140 000+ bots [bots, implied]']  offered span: 
+  'ManyChat\n\n500M\nmessages/month'
+     before analyzer claims: ['500M messages/month [messages/month, implied]']  offered span: 
+     after  analyzer claims: ['500M messages/month [messages/month, implied]']  offered span: 
+== finding_2_denominators
+  '500M messages per 2 months': basis 'messages' -> None; claim task ['500M messages per 2 months [messages, implied]'] -> ['(none)']
+  '500M messages/month per user': basis 'messages/month' -> None; claim task ['500M messages/month per user [messages/month, implied]'] -> ['(none)']
+  '500M messages per month': basis 'messages/month' -> 'messages/month'; claim task ['500M messages per month [messages/month, implied]'] -> ['500M messages per month [messages/month, implied]']
+  '500M messages/month': basis 'messages/month' -> 'messages/month'; claim task ['500M messages/month [messages/month, implied]'] -> ['500M messages/month [messages/month, implied]']
+  '2M messages per day': basis 'messages/day' -> 'messages/day'; claim task ['2M messages per day [messages/day, implied]'] -> ['2M messages per day [messages/day, implied]']
+== finding_3_cumulative
+  '500M messages with lifetime customer support': basis 'messages (cumulative)' -> 'messages'; claim task ['500M messages with lifetime customer support [messages (cumulative), implied]'] -> ['500M messages with lifetime customer support [messages, implied]']
+  '500M messages; bots tracked since launch': basis 'messages (cumulative)' -> 'messages'; claim task ['500M messages; bots tracked since launch [messages (cumulative), implied]'] -> ['500M messages; bots tracked since launch [messages, implied]']
+  '500M messages to date': basis 'messages (cumulative)' -> 'messages (cumulative)'; claim task ['500M messages to date [messages (cumulative), implied]'] -> ['500M messages to date [messages (cumulative), implied]']
+== frozen ManyChat
+  before traction ['140 000+ bots', '500M messages', '500M messages/month']
+    claims ['$23.1M raised [, named]', '500M messages/month [messages/month, implied]', '500M messages [messages, implied]', '140 000+ bots [bots, implied]']
+    note ['Page 10 states 500M messages without an explicit interval; page 12 states 500M messages/month. These use different measurement bases and need clarification before comparison.']
+  after traction ['140 000+ bots', '500M messages', '500M messages/month']
+    claims ['$23.1M raised [, named]', '500M messages/month [messages/month, implied]', '500M messages [messages, implied]', '140 000+ bots [bots, implied]']
+    note ['Page 10 states 500M messages without an explicit interval; page 12 states 500M messages/month. These use different measurement bases and need clarification before comparison.']

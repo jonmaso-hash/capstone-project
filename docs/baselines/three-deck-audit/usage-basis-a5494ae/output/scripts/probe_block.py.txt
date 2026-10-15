@@ -1,0 +1,6 @@
+from zelda_api.intelligence_pipeline import ZeldaIntelligencePipelineV2 as P
+p = P()
+for text in ['Telegram\n100M\nmessages/month\nKik\n275M\nbots', 'Telegram\n100M\nmessages/month', 'Kik\n275M\nbots']:
+    col = []
+    print(repr(text), '->', p._smart_extract('Traction', text, p.ANALYSIS_CATEGORIES['Traction'], collect=col), [c[0] for c in col])
+print(p.ANALYSIS_CATEGORIES['Traction'])

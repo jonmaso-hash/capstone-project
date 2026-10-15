@@ -1,0 +1,26 @@
+{
+ "deck": "ManyChat (three-deck audit, deck 3); stored chunks of document 3129, as in manychat.json",
+ "decided": "2026-10-14, RA-109 / I1 (usage measurement basis)",
+ "note": "ADDITIVE to manychat.json, which stays frozen as PR 1 decided it. manychat.json recorded slide 12's '500M / messages/month' under not_recovered_by_design because recovering it needed line joining and a rate interpretation; RA-109 makes that decision. The extracted claims for this deck are now manychat.json's expected_claims plus added_claims below. Tests that pinned the old count read it as frozen + added, never by editing the frozen file.",
+ "added_claims": [
+  {
+   "category": "usage",
+   "value": 500000000.0,
+   "unit": "messages/month",
+   "page": 12,
+   "claimed_value": "500M messages/month",
+   "source_lines": ["500M", "messages/month"],
+   "source_sentence": "500M messages/month",
+   "ownership": "implied",
+   "period_kind": "monthly",
+   "as_of": "not stated",
+   "why": "Slide 12 sets the figure and its rate on adjacent lines of one slide, below a sibling figure line ('140 000+ bots') and above an unrelated statement ('Launching on Facebook'). It is a message RATE, distinct from slide 10's '500M messages' (no stated interval); the two must not be merged (key M6 / I1). '/month' is a rate denominator, not an as-of date."
+  }
+ ],
+ "unchanged": [
+  "slide 10 '140 000+ bots' and '500M messages' keep their units 'bots' and 'messages' (no interval is stated; not labelled cumulative)",
+  "slide 12 '140 000+ bots' repeats slide 10's figure and basis and stays one claim",
+  "slide 4 platform counts (Telegram 100M, Kik 275M, FB Messenger 900M people) stay out"
+ ],
+ "period_effect": "The added claim's own text carries '/month', so the existing period layer records period_kind 'monthly' with no period end and no fiscal year: one more claim with a period kind than manychat's frozen 'with_period: 0'. Its as_of remains 'not stated'."
+}

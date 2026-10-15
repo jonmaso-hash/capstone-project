@@ -1,0 +1,76 @@
+"""RA-109 follow-up reproduction: the reviewer's exact inputs through the REAL analyzer and claim task, in a throwaway
+in-memory test DB created and destroyed here. Run in either worktree with the t.sh env via
+`manage.py shell -c "exec(open(...).read())"`; prints one JSON line."""
+import json, subprocess
+from unittest import mock
+from django.db import connection
+
+old_name = connection.creation.create_test_db(verbosity=0, autoclobber=True, keepdb=False)
+try:
+    from django.contrib.auth import get_user_model
+    from zelda_api import truth_delta_tasks
+    from zelda_api.grounded_context import GroundedContext
+    from zelda_api.intelligence_pipeline import ZeldaIntelligencePipelineV2
+    from zelda_api.principal import ORIGIN_TASK, Principal
+    from zelda_api.tests_claim_extraction_recall import load_fixture
+    from zelda_api.truth_delta_models import ClaimedDatapoint
+    from zelda_api.usage_basis import join_split_usage_lines
+    from zelda_api.vector_models import DocumentChunk, DocumentSource, IntelligenceInsight
+
+    user = get_user_model().objects.create_user('ra109_review2_repro', password='x')
+
+    def new_doc(entity='ManyChat'):
+        return DocumentSource.objects.create(filename='r.pptx', source_entity=entity, uploaded_by=user,
+                                             document_type='pitch_deck', status='analyzing')
+
+    def claims_of(doc):
+        return [f'{c.claimed_value} [{c.unit}, {c.ownership}, p{c.page_number}]'
+                for c in ClaimedDatapoint.objects.filter(document=doc).order_by('id')]
+
+    def run_chunks(chunks, entity='ManyChat'):
+        doc = new_doc(entity)
+        for n, (page, text) in enumerate(chunks):
+            DocumentChunk.objects.create(document=doc, chunk_index=n, page_number=page, section_title='',
+                                         raw_text=text, token_count=5)
+        pipeline = ZeldaIntelligencePipelineV2()
+        pipeline.used_chunks = set()
+        pipeline._analyze_document(doc, '')
+        with mock.patch.object(truth_delta_tasks.verify_document_truth_delta, 'delay'):
+            truth_delta_tasks.extract_claims_from_insights(doc.id)
+        traction = [f'{i.insight_text} (p{i.source_chunks.first().page_number})'
+                    for i in IntelligenceInsight.objects.filter(document=doc, category='Traction').order_by('id')]
+        payload = GroundedContext.build(Principal.for_user(user, ORIGIN_TASK, label='repro'), doc).to_prompt_payload()
+        return {'traction_insights': traction, 'claims': claims_of(doc),
+                'notes': [n['note'] for n in payload.get('consistency_notes') or []]}
+
+    def offer(chunk_text, insight_text):
+        doc = new_doc()
+        chunk = DocumentChunk.objects.create(document=doc, chunk_index=0, page_number=6, section_title='',
+                                             raw_text=chunk_text, token_count=5)
+        insight = IntelligenceInsight.objects.create(document=doc, insight_type='statement', category='Traction',
+                                                     insight_text=insight_text, confidence_score=95.0)
+        insight.source_chunks.set([chunk])
+        with mock.patch.object(truth_delta_tasks.verify_document_truth_delta, 'delay'):
+            truth_delta_tasks.extract_claims_from_insights(doc.id)
+        return claims_of(doc)
+
+    out = {'head': subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip(),
+           'heading_blocks': {}, 'heading_controls': {}, 'selection': {}}
+    for text in ('Telegram\nTraction\n500M\nmessages/month', 'Telegram\n\nTraction by Apr-16\n500M\nmessages/month',
+                 '500M\nmessages/month\nTraction\nTelegram'):
+        out['heading_blocks'][text] = {'join': join_split_usage_lines(text, ['ManyChat']),
+                                       'analyzer': run_chunks([(5, text)]),
+                                       'offered_span': offer(text, '500M messages/month')}
+    for text in ('Traction by Apr-16\n500M\nmessages/month', 'ManyChat\nTraction\n500M\nmessages/month'):
+        out['heading_controls'][text] = {'join': join_split_usage_lines(text, ['ManyChat']),
+                                         'analyzer': run_chunks([(5, text)])}
+    four = [(1, '500M messages per 2 months'), (2, '140 000+ bots'), (3, '500M messages'), (4, '500M messages/month')]
+    out['selection']['review: unsupported chunk first'] = run_chunks(four)
+    out['selection']['control: without the unsupported chunk'] = run_chunks(four[1:])
+    out['selection']['single unsupported chunk'] = run_chunks(four[:1])
+    frozen = [(c['page_number'], c['raw_text']) for c in load_fixture('manychat')['chunks']]
+    out['selection']['frozen ManyChat with the unsupported chunk first'] = run_chunks([(1, four[0][1])] + frozen, 'manychat')
+    out['selection']['frozen ManyChat'] = run_chunks(frozen, 'manychat')
+    print('REVIEW2REPRO ' + json.dumps(out, ensure_ascii=False, default=str))
+finally:
+    connection.creation.destroy_test_db(old_name, verbosity=0)
