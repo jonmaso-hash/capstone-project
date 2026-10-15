@@ -19,15 +19,15 @@ belong to someone else:
   * the very next line is a usage noun with an optional supported rate, and
     nothing else -- no blank line, prose or second figure between them;
   * the BLOCK's owner is resolved, not just the neighbouring line's. Walking
-    up across layout blank lines and sibling metric lines ("140 000+ bots"),
-    the first other line must be a generic heading made of metric/time words
-    ("Traction by Apr-16") or the document's own subject ("ManyChat", from
-    the names the caller knows), or the chunk must start. Any other line --
+    up across layout blank lines, sibling metric lines ("140 000+ bots") and
+    generic metric/time headings ("Traction by Apr-16" -- context, never an
+    owner), the walk must reach the document's own subject ("ManyChat", from
+    the names the caller knows) or the start of the chunk. Any other line --
     "Telegram", "FB Messenger", a prose sentence, a bare figure -- leaves the
-    pair unjoined. Walking down the same way, a line that continues the
-    figure ("via Telegram") or an organisation label ("Telegram Messaging
-    Service") refuses; an ordinary statement ("Launching on Facebook") ends
-    the block.
+    pair unjoined, including when a heading sits between it and the figure.
+    Walking down the same way, a line that continues the figure ("via
+    Telegram") or an organisation label ("Telegram Messaging Service")
+    refuses; an ordinary statement ("Launching on Facebook") ends the block.
 
 The claim task admits a usage span that only exists by joining lines when,
 and only when, this same rule (with the document's subject names) joined it.
@@ -121,10 +121,12 @@ def _block_label_above(lines, i, names):
             return UNBOUNDED, line                    # a bare figure: an axis or a list
         if _sibling(line):
             continue                                  # another metric in the same block
-        if _generic_heading(line) or _subject_label(line, names):
-            return None, ''
+        if _generic_heading(line):
+            continue                                  # a metric/time heading is context, not an owner
+        if _subject_label(line, names):
+            return None, ''                           # the document's own subject owns the block
         return OWNER_LABEL, line                      # a name or prose: the owner is not ours
-    return None, ''
+    return None, ''                                   # chunk start: nothing names another owner
 
 
 def _block_label_below(lines, j, names):
@@ -139,7 +141,9 @@ def _block_label_below(lines, j, names):
             return None, ''                           # the next figure starts another pair
         if _sibling(line):
             continue
-        if _generic_heading(line) or _subject_label(line, names):
+        if _generic_heading(line):
+            continue                                  # context, not an owner: keep looking
+        if _subject_label(line, names):
             return None, ''
         if _name_label(line):
             return OWNER_LABEL, line                  # a caption naming an organisation

@@ -719,3 +719,128 @@ class CumulativeBindingTests(_ClaimTaskHarness):
         claims = self.offer('x', '500M messages with lifetime customer support', '500M messages')
         self.assertEqual(sorted(c.unit for c in claims), ['messages', 'messages'])
         self.assertEqual(basis_notes(claims), [])
+
+
+# --- follow-up review of 200afbc: a generic heading and the initial winner -----------------
+
+HEADING_BLOCKS = (
+    'Telegram\nTraction\n500M\nmessages/month',                    # a heading between owner and figure
+    'Telegram\n\nTraction by Apr-16\n500M\nmessages/month',         # dated heading and a blank line
+    'Telegram\nTraction\n140 000+ bots\n500M\nmessages/month',      # heading, then a sibling metric
+    '500M\nmessages/month\nTraction\nTelegram',                    # the same, below the figure
+    '500M\nmessages/month\n\nTraction by Apr-16\nTelegram Messaging Service',
+)
+
+
+class HeadingOwnershipTests(_ClaimTaskHarness):
+    """A metric/time heading is context; it does not resolve whose block it is."""
+
+    def test_the_helper_keeps_the_owner_across_a_heading(self):
+        from .usage_basis import join_split_usage_lines
+        for text in HEADING_BLOCKS:
+            with self.subTest(text=text):
+                self.assertEqual(join_split_usage_lines(text, ['ManyChat']), text)
+
+    def test_the_analyzer_offers_no_platform_figure(self):
+        for text in HEADING_BLOCKS:
+            with self.subTest(text=text):
+                self.assertEqual([c for c in traction_candidates(text, ['ManyChat']) if '500M' in c], [])
+
+    def test_no_claim_end_to_end(self):
+        for text in HEADING_BLOCKS:
+            with self.subTest(text=text):
+                claims = self.analyze(text)
+                self.assertFalse([c for c in claims if c.claimed_value_numeric == 5e8],
+                                 [(c.claimed_value, c.unit, c.ownership) for c in claims])
+
+    def test_claim_admission_refuses_the_offered_span(self):
+        for text in HEADING_BLOCKS:
+            with self.subTest(text=text):
+                self.assertEqual([(c.claimed_value, c.ownership) for c in self.offer(text, '500M messages/month')], [])
+
+    def test_heading_only_and_company_owned_blocks_are_kept(self):
+        from .usage_basis import join_split_usage_lines
+        for text, joined in (
+                ('Traction by Apr-16\n500M\nmessages/month', 'Traction by Apr-16\n500M messages/month'),
+                ('Traction\n\nTraction by Apr-16\n500M\nmessages/month', 'Traction\n\nTraction by Apr-16\n500M messages/month'),
+                ('ManyChat\nTraction\n500M\nmessages/month', 'ManyChat\nTraction\n500M messages/month'),
+                ('Traction\nManyChat\n140 000+ bots\n500M\nmessages/month',
+                 'Traction\nManyChat\n140 000+ bots\n500M messages/month'),
+                ('500M\nmessages/month\nTraction\nManyChat', '500M messages/month\nTraction\nManyChat')):
+            with self.subTest(text=text):
+                self.assertEqual(join_split_usage_lines(text, ['ManyChat']), joined)
+                rate = [(c.unit, c.ownership) for c in self.analyze(text) if c.unit == 'messages/month']
+                self.assertEqual(rate, [('messages/month', 'implied')])
+
+
+class InitialWinnerEligibilityTests(_ClaimTaskHarness):
+    """An unrepresentable usage basis may not be the seeded winner either."""
+
+    UNSUPPORTED = '500M messages per 2 months'
+
+    def select(self, *texts, best=0):
+        pipeline = ZeldaIntelligencePipelineV2()
+        candidates = [(t, 95.0, None, None) for t in texts]
+        return [c[0] for c in pipeline._select_insights('Traction', candidates, candidates[best])]
+
+    def test_an_unsupported_winner_takes_no_slot(self):
+        self.assertEqual(self.select(self.UNSUPPORTED, '140 000+ bots', '500M messages', '500M messages/month'),
+                         ['140 000+ bots', '500M messages', '500M messages/month'])
+
+    def test_a_supported_winner_is_unchanged(self):
+        self.assertEqual(self.select('140 000+ bots', self.UNSUPPORTED, '500M messages', '500M messages/month'),
+                         ['140 000+ bots', '500M messages', '500M messages/month'])
+
+    def test_a_single_unsupported_candidate_yields_nothing(self):
+        self.assertEqual(self.select(self.UNSUPPORTED), [])
+
+    def test_the_rejected_winner_seeds_no_dedup_key(self):
+        # "500M messages per 2 months" parses to 5e8; it must not block a valid 500M figure.
+        self.assertEqual(self.select(self.UNSUPPORTED, '500M messages'), ['500M messages'])
+
+    def test_other_categories_are_unchanged(self):
+        pipeline = ZeldaIntelligencePipelineV2()
+        candidates = [(t, 95.0, None, None) for t in ('$5M raised', 'USD 5M raised', '$5 million raised')]
+        self.assertEqual([c[0] for c in pipeline._select_insights('Funding', candidates, candidates[0])],
+                         ['$5M raised', 'USD 5M raised'])
+
+    def analyze_chunks(self, texts):
+        from . import truth_delta_tasks
+        from .truth_delta_models import ClaimedDatapoint
+        from .vector_models import DocumentChunk, IntelligenceInsight
+        self.reset()
+        for n, (page, text) in enumerate(texts):
+            DocumentChunk.objects.create(document=self.doc, chunk_index=n, page_number=page, section_title='',
+                                         raw_text=text, token_count=5)
+        pipeline = ZeldaIntelligencePipelineV2()
+        pipeline.used_chunks = set()
+        pipeline._analyze_document(self.doc, '')
+        with mock.patch.object(truth_delta_tasks.verify_document_truth_delta, 'delay'):
+            truth_delta_tasks.extract_claims_from_insights(self.doc.id)
+        insights = sorted(i.insight_text for i in IntelligenceInsight.objects.filter(document=self.doc,
+                                                                                    category='Traction'))
+        return insights, list(ClaimedDatapoint.objects.filter(document=self.doc).order_by('id'))
+
+    def test_the_review_reproduction_keeps_all_three_valid_facts(self):
+        insights, claims = self.analyze_chunks([(1, self.UNSUPPORTED), (2, '140 000+ bots'), (3, '500M messages'),
+                                                (4, '500M messages/month')])
+        self.assertEqual(insights, ['140 000+ bots', '500M messages', '500M messages/month'])
+        self.assertEqual(sorted(c.unit for c in claims), ['bots', 'messages', 'messages/month'])
+
+    def test_the_control_without_the_unsupported_chunk(self):
+        insights, claims = self.analyze_chunks([(2, '140 000+ bots'), (3, '500M messages'), (4, '500M messages/month')])
+        self.assertEqual(insights, ['140 000+ bots', '500M messages', '500M messages/month'])
+
+    def test_frozen_manychat_keeps_its_facts_and_note_with_an_invalid_chunk_first(self):
+        from .grounded_context import GroundedContext
+        from .principal import ORIGIN_TASK, Principal
+        from .tests_claim_extraction_recall import load_fixture
+        chunks = [(1, self.UNSUPPORTED)] + [(c['page_number'], c['raw_text']) for c in load_fixture('manychat')['chunks']]
+        insights, claims = self.analyze_chunks(chunks)
+        self.assertEqual(insights, ['140 000+ bots', '500M messages', '500M messages/month'])
+        self.assertEqual(sorted((c.unit, c.page_number) for c in claims if c.category == 'usage'),
+                         [('bots', 10), ('messages', 10), ('messages/month', 12)])
+        payload = GroundedContext.build(Principal.for_user(self.owner, ORIGIN_TASK, label='t'), self.doc).to_prompt_payload()
+        self.assertEqual([n['note'] for n in payload['consistency_notes']], [
+            'Page 10 states 500M messages without an explicit interval; page 12 states 500M messages/month. '
+            'These use different measurement bases and need clarification before comparison.'])

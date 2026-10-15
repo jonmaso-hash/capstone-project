@@ -620,9 +620,22 @@ class ZeldaIntelligencePipelineV2:
                     return ('usage', value, basis.noun, basis.rate) if value is not None else None
             return _extract_numeric_value(text)
 
+        def eligible(candidate):
+            # A usage figure whose basis cannot be represented ("per 2 months",
+            # "/month per user") never becomes a claim, so it takes no slot and
+            # seeds no dedup key -- the initial winner included (RA-109 review).
+            return not (category == 'Traction' and usage_unit(candidate[0]) and usage_basis(candidate[0]) is None)
+
+        ranked = sorted(candidates, key=lambda c: -c[1])
+        if not eligible(best_insight):
+            # The next candidate in the same order (highest confidence, then
+            # document order) takes its place; nothing of the rejected one is kept.
+            best_insight = next((c for c in ranked if eligible(c)), None)
+            if best_insight is None:
+                return []
         selected = [best_insight]
         seen = {figure_key(best_insight[0])}
-        for candidate in sorted(candidates, key=lambda c: -c[1]):
+        for candidate in ranked:
             if len(selected) >= self.MAX_INSIGHTS_PER_NUMERIC_CATEGORY:
                 break
             # An additional claim has to carry a figure of this category's own
@@ -632,10 +645,7 @@ class ZeldaIntelligencePipelineV2:
             # percentage parses as a number, but it is neither.
             if not self._has_figure(category, candidate[0]):
                 continue
-            # A usage figure whose basis cannot be represented ("per 2 months",
-            # "/month per user") never becomes a claim, so it takes no slot and
-            # is never keyed as a bare count (RA-109 review).
-            if category == 'Traction' and usage_unit(candidate[0]) and usage_basis(candidate[0]) is None:
+            if not eligible(candidate):
                 continue
             value = figure_key(candidate[0])
             if value is None or value in seen:
