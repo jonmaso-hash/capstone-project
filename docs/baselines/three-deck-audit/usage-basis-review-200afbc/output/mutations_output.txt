@@ -1,0 +1,79 @@
+M1 CAUGHT Ran 101 tests in 4.024s FAILED (failures=30, errors=3) restored
+M2 CAUGHT Ran 101 tests in 3.847s FAILED (failures=12, errors=3) restored
+M3 CAUGHT Ran 101 tests in 3.984s FAILED (failures=14, errors=3) restored
+M4 CAUGHT Ran 101 tests in 4.011s FAILED (failures=19) restored
+M5 CAUGHT Ran 101 tests in 3.944s FAILED (failures=8) restored
+M6 CAUGHT Ran 101 tests in 3.921s FAILED (failures=2) restored
+M7 CAUGHT Ran 101 tests in 3.961s FAILED (failures=3) restored
+M8 CAUGHT Ran 101 tests in 4.018s FAILED (failures=1) restored
+M9 CAUGHT Ran 101 tests in 3.956s FAILED (failures=8) restored
+M10 CAUGHT Ran 101 tests in 3.968s FAILED (failures=11, errors=3) restored
+M11 CAUGHT Ran 101 tests in 4.055s FAILED (failures=1) restored
+M12 CAUGHT Ran 101 tests in 3.985s FAILED (failures=1) restored
+M13 CAUGHT Ran 101 tests in 4.073s FAILED (failures=1) restored
+M14 CAUGHT Ran 101 tests in 3.967s FAILED (failures=1) restored
+M15 CAUGHT Ran 101 tests in 3.982s FAILED (failures=5) restored
+M16 CAUGHT Ran 101 tests in 4.093s FAILED (failures=1) restored
+M17 CAUGHT Ran 101 tests in 4.134s FAILED (failures=9) restored
+M18 CAUGHT Ran 101 tests in 4.000s FAILED (failures=9) restored
+M19 CAUGHT Ran 101 tests in 3.938s FAILED (failures=4) restored
+M20 CAUGHT Ran 101 tests in 4.225s FAILED (failures=4) restored
+M21 CAUGHT Ran 101 tests in 3.981s FAILED (failures=4) restored
+M22 CAUGHT Ran 101 tests in 4.295s FAILED (failures=6) restored
+M23 CAUGHT Ran 101 tests in 4.251s FAILED (failures=4) restored
+M24 CAUGHT Ran 101 tests in 4.216s FAILED (failures=1) restored
+M25 CAUGHT Ran 101 tests in 4.241s FAILED (failures=33) restored
+M26 CAUGHT Ran 101 tests in 4.088s FAILED (failures=1) restored
+
+M1 | lose the rate suffix in the claim unit | CAUGHT Ran 101 tests in 4.024s FAILED (failures=30, errors=3)
+    failing: test_a_monthly_rate_invents_no_as_of_date, test_bots_and_messages_are_never_customers, test_company_owned_blocks_are_kept, test_manychat_claims_carry_their_source_sentence_and_category, test_manychat_yields_exactly_the_frozen_claims, test_matches_the_frozen_claims_plus_the_additive_ra109_expectation, test_monthly_forms, test_other_supported_rates ...
+M2 | restore numeric-only dedup for usage | CAUGHT Ran 101 tests in 3.847s FAILED (failures=12, errors=3)
+    failing: test_a_different_basis_survives, test_a_different_noun_survives, test_a_monthly_rate_invents_no_as_of_date, test_both_facts_and_their_sources_survive, test_bots_and_messages_are_never_customers, test_frozen_decks_attach_no_periods, test_manychat_claims_carry_their_source_sentence_and_category, test_manychat_yields_exactly_the_frozen_claims ...
+M3 | drop the rate candidate (no line join in the analyzer) | CAUGHT Ran 101 tests in 3.984s FAILED (failures=14, errors=3)
+    failing: test_a_monthly_rate_invents_no_as_of_date, test_both_facts_and_their_sources_survive, test_bots_and_messages_are_never_customers, test_company_owned_blocks_are_kept, test_frozen_decks_attach_no_periods, test_manychat_claims_carry_their_source_sentence_and_category, test_manychat_yields_exactly_the_frozen_claims, test_matches_the_frozen_claims_plus_the_additive_ra109_expectation ...
+M4 | an owner label above no longer refuses | CAUGHT Ran 101 tests in 4.011s FAILED (failures=19)
+    failing: test_a_platform_label_above_refuses, test_a_platform_rate_split_across_lines_is_refused_even_if_offered_as_an_insight, test_an_unknown_label_is_refused_and_the_subject_label_admitted, test_claim_admission_refuses_a_joined_span_from_a_platform_block, test_no_claim_end_to_end, test_same_slide_figure_and_rate_lines_are_admitted, test_the_analyzer_offers_no_platform_figure, test_the_helper_refuses_every_platform_block
+M5 | bypass the claim-admission gate | CAUGHT Ran 101 tests in 3.944s FAILED (failures=8)
+    failing: test_a_platform_rate_split_across_lines_is_refused_even_if_offered_as_an_insight, test_an_unbounded_split_is_refused_at_the_claim_layer, test_claim_admission_refuses_a_joined_span_from_a_platform_block
+M6 | a continuation below no longer refuses | CAUGHT Ran 101 tests in 3.921s FAILED (failures=2)
+    failing: test_a_continuation_or_owner_label_below_refuses
+M7 | turn the internal basis note into a contradiction | CAUGHT Ran 101 tests in 3.961s FAILED (failures=3)
+    failing: test_the_i1_pair_gets_one_neutral_note, test_the_note_names_both_refs_and_both_bounded_facts, test_the_owner_sees_the_note
+M8 | drop the not-a-contradiction memo rule | CAUGHT Ran 101 tests in 4.018s FAILED (failures=1)
+    failing: test_the_memo_prompt_says_a_note_is_not_a_contradiction
+M9 | unsupported denominator word dropped to a bare count | CAUGHT Ran 101 tests in 3.956s FAILED (failures=8)
+    failing: test_the_claim_task_stores_neither, test_the_helper_refuses_them, test_unsupported_denominator_is_not_stored, test_unsupported_denominators_are_refused_not_dropped
+M10 | the analyzer does not pass the subject names | CAUGHT Ran 101 tests in 3.968s FAILED (failures=11, errors=3)
+    failing: test_a_monthly_rate_invents_no_as_of_date, test_both_facts_and_their_sources_survive, test_bots_and_messages_are_never_customers, test_company_owned_blocks_are_kept, test_frozen_decks_attach_no_periods, test_manychat_claims_carry_their_source_sentence_and_category, test_manychat_yields_exactly_the_frozen_claims, test_matches_the_frozen_claims_plus_the_additive_ra109_expectation ...
+M11 | note order follows claim ids, not pages | CAUGHT Ran 101 tests in 4.055s FAILED (failures=1)
+    failing: test_the_note_names_both_refs_and_both_bounded_facts
+M12 | payload carries consistency_notes even when empty | CAUGHT Ran 101 tests in 3.985s FAILED (failures=1)
+    failing: test_a_document_without_a_basis_pair_has_no_notes_key
+M13 | note for different numbers on different bases | CAUGHT Ran 101 tests in 4.073s FAILED (failures=1)
+    failing: test_no_note_for_different_metrics_or_different_numbers
+M14 | dated_heading ignores the joined view | CAUGHT Ran 101 tests in 3.967s FAILED (failures=1)
+    failing: test_a_dated_heading_over_a_joined_figure_stays_context
+M15 | the figure's own cumulative wording ignored | CAUGHT Ran 101 tests in 3.982s FAILED (failures=5)
+    failing: test_an_explicit_cumulative_total, test_the_figures_own_cumulative_wording_still_counts
+M16 | a bare figure line above no longer refuses | CAUGHT Ran 101 tests in 4.093s FAILED (failures=1)
+    failing: test_competing_figures_refuse
+M17 | F1: a blank line above erases the owner context | CAUGHT Ran 101 tests in 4.134s FAILED (failures=9)
+    failing: test_claim_admission_refuses_a_joined_span_from_a_platform_block, test_no_claim_end_to_end, test_the_analyzer_offers_no_platform_figure, test_the_helper_refuses_every_platform_block
+M18 | F1: a sibling metric above erases the owner context | CAUGHT Ran 101 tests in 4.000s FAILED (failures=9)
+    failing: test_claim_admission_refuses_a_joined_span_from_a_platform_block, test_no_claim_end_to_end, test_same_slide_figure_and_rate_lines_are_admitted, test_the_analyzer_offers_no_platform_figure, test_the_helper_refuses_every_platform_block
+M19 | F1: only labels of up to two words count below | CAUGHT Ran 101 tests in 3.938s FAILED (failures=4)
+    failing: test_claim_admission_refuses_a_joined_span_from_a_platform_block, test_no_claim_end_to_end, test_the_analyzer_offers_no_platform_figure, test_the_helper_refuses_every_platform_block
+M20 | F1: a blank line below ends the block | CAUGHT Ran 101 tests in 4.225s FAILED (failures=4)
+    failing: test_claim_admission_refuses_a_joined_span_from_a_platform_block, test_no_claim_end_to_end, test_the_analyzer_offers_no_platform_figure, test_the_helper_refuses_every_platform_block
+M21 | F2: a numeric denominator falls back to a bare count | CAUGHT Ran 101 tests in 3.981s FAILED (failures=4)
+    failing: test_the_claim_task_stores_neither, test_the_helper_refuses_them
+M22 | F2: a compound denominator keeps the first rate | CAUGHT Ran 101 tests in 4.295s FAILED (failures=6)
+    failing: test_selection_does_not_keep_an_unrepresentable_rate, test_the_claim_task_stores_neither, test_the_helper_refuses_them
+M23 | F3: cumulative wording borrowed from anywhere after the noun | CAUGHT Ran 101 tests in 4.251s FAILED (failures=4)
+    failing: test_the_claim_task_and_the_note_do_not_borrow_it, test_wording_that_belongs_elsewhere_leaves_the_basis_unspecified
+M24 | F2: an unrepresentable rate keeps a selection slot | CAUGHT Ran 101 tests in 4.216s FAILED (failures=1)
+    failing: test_selection_does_not_keep_an_unrepresentable_rate
+M25 | F1: any label passes as the subject | CAUGHT Ran 101 tests in 4.241s FAILED (failures=33)
+    failing: test_a_continuation_or_owner_label_below_refuses, test_a_platform_label_above_refuses, test_a_platform_rate_split_across_lines_is_refused_even_if_offered_as_an_insight, test_an_unknown_label_is_refused_and_the_subject_label_admitted, test_claim_admission_refuses_a_joined_span_from_a_platform_block, test_end_to_end_the_analyzer_offers_no_figure_or_claim_from_a_platform_block, test_no_claim_end_to_end, test_same_slide_figure_and_rate_lines_are_admitted ...
+M26 | F2: unsupported rate adjectives (bi-monthly) accepted | CAUGHT Ran 101 tests in 4.088s FAILED (failures=1)
+    failing: test_the_helper_refuses_them
