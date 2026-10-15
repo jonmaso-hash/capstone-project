@@ -1,0 +1,30 @@
+"""Build mutate_np3.py from mutate_np2.py: re-point E4 at the revised line, add E9-E11 (review of 589917a)."""
+import ast, os
+NP = os.path.dirname(os.path.abspath(__file__))
+s = open(os.path.join(NP, 'mutate_np2.py'), encoding='utf-8').read()
+old_e4 = '"own = [r for r in cited if r in sources and sources[r][0] in run]",'
+assert s.count(old_e4) == 1
+s = s.replace(old_e4, '"own = [r for r in cited if r in sources and sources[r][0] in owners]",')
+anchor = "    # FF-411, unchanged.\n"
+assert s.count(anchor) == 1
+added = r'''    # Review of 589917a: every equation, shared company credit, notes.
+    'E9': ('only the first equation in a sentence is checked', FF,
+           "        same = phrase.search(sentence, pos)\n", "        same = phrase.search(sentence, pos) if not pos else None\n",
+           FIDELITY),
+    'E10': ('shared company/narrator credit narrowed to the narrator (the reviewed behaviour)', FF,
+            "shared = bool(after or shared_before.search(sentence, same.end('same'), same.start('who')))", "shared = False",
+            FIDELITY),
+    'E11': ("the guard's own note taken as the compared group", FF,
+            "if not _is_note(sentence, g)]", "]", FIDELITY),
+'''
+s = s.replace(anchor, added + anchor)
+s = s.replace('"""Mutation harness for FF-405 (narrator provenance, as revised after review: joint narrators and equated figures)',
+              '"""Mutation harness for FF-405 (narrator provenance, as revised after two reviews: joint narrators, equated\n'
+              'figures, every equation in a sentence, shared company credit)')
+ast.parse(s)
+open(os.path.join(NP, 'mutate_np3.py'), 'w', encoding='utf-8').write(s)
+ns = {}
+exec(s[:s.index('ENV = dict(')].replace('WT = sys.argv[1]', 'WT = None'), ns)
+wt = 'C:/Users/jonathan/Desktop/KCV-np/'
+bad = [k for k, (w, p, old, new, l) in ns['MUTATIONS'].items() if open(wt + p, encoding='utf-8').read().count(old) != 1]
+print(len(ns['MUTATIONS']), 'mutations; bad anchors:', bad)

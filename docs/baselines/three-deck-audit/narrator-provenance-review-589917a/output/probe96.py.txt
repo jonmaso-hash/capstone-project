@@ -1,0 +1,57 @@
+"""Memo 96's raw model reply, through the pipeline's guard steps in the fix worktree, with memo 96's own grounded
+payload: the one actually sent to the model, read from the run's recorded call (09b). No DB access; memo 96 is not
+changed. Checks idempotence and item-order stability, and prints every section that differs from stored memo 96.
+Usage: python probe96_r2.py <worktree>"""
+import difflib, json, os, re, sys
+WT = sys.argv[1]
+# Extracted with `git show 5f08c05:docs/baselines/manychat/funding-fidelity-9b6d215/pass-a/<file>` (the pushed evidence; the run worktree is gone).
+EV = r'C:\Users\jonathan\AppData\Local\Temp\claude\C--Users-jonathan-Desktop-KCV\8edb8be9-5c85-488f-a1b8-020dd6a9a3c0\scratchpad\mc96_evidence'
+sys.path.insert(0, WT)
+from types import SimpleNamespace as NS
+from zelda_api.memo_lists import memo_text
+from zelda_api.claim_context import guard_time_wording
+from zelda_api.funding_fidelity import funding_facts, guard_funding_fidelity
+
+call = json.load(open(os.path.join(EV, '09b_model_call.json'), encoding='utf-8'))
+user = call['request']['messages'][0]['content']
+sent, _ = json.JSONDecoder().raw_decode(user[user.find('{', user.find('## EVIDENCE')):])
+rebuilt = json.load(open(os.path.join(EV, '09a_grounded_context_rebuilt.json'), encoding='utf-8'))['payload']
+fixture = json.load(open(os.path.join(WT, 'zelda_api', 'data', 'funding_fidelity', 'memo96_payload.json'),
+                         encoding='utf-8'))['payload']
+print('sent payload == 09a rebuilt:', sent == rebuilt, '| == test fixture memo96_payload.json:', sent == fixture)
+items = [NS(ref=i['ref'], kind=i['kind'], category=i['category'], statement=i['statement'], narrator=i.get('narrator', ''),
+            as_of=i.get('as_of', ''), sources=tuple(NS(profile_field=s.get('profile_field', '')) for s in i['sources']))
+         for i in sent['items']]
+dated = {i['ref']: () for i in sent['items'] if 'as_of' in i}
+raw = json.loads(re.search(r'\{.*\}', call['response']['text'][0], re.S).group(0))
+stored = json.load(open(os.path.join(EV, '09_memo.json'), encoding='utf-8'))['memo']
+print('company:', sent['company'], '| items:', [i.ref for i in items])
+for i in items:
+    print(f'  {i.ref}: {i.kind} {i.category!r} {i.statement!r} narrator={i.narrator!r}')
+
+
+def replay(ordered):
+    facts = funding_facts(ordered, sent['company'])
+    out = {}
+    for key, value in raw.items():
+        if key == 'evidence_level' or key not in stored:
+            continue
+        text = memo_text(value) if isinstance(value, (str, list, tuple, dict)) else value
+        text, _ = guard_time_wording(text, dated)
+        new, changes = guard_funding_fidelity(text, facts)
+        again, _ = guard_funding_fidelity(new, facts)
+        out[key] = (new, changes, again == new)
+    return out
+
+
+forward, backward = replay(items), replay(list(reversed(items)))
+print('item order reversed gives the same memo:', {k: v[0] for k, v in forward.items()} == {k: v[0] for k, v in backward.items()})
+print('idempotent in every section:', all(v[2] for v in forward.values()) and all(v[2] for v in backward.values()))
+changed = 0
+for key, (new, changes, _) in forward.items():
+    if new != stored[key]:
+        changed += 1
+        print(f'\n== {key}  {changes}')
+        print('STORED:', stored[key])
+        print('REPLAY:', new)
+print(f'\n{len(forward) - changed} of {len(forward)} sections equal stored memo 96; {changed} differ (evidence_level is not a text section)')

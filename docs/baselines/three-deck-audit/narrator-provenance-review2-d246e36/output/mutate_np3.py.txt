@@ -1,0 +1,134 @@
+"""Mutation harness for FF-405 (narrator provenance, as revised after two reviews: joint narrators, equated
+figures, every equation in a sentence, shared company credit)
+and FF-411 (Markdown charset) on fix/narrator-provenance.
+
+One mutation at a time: the target file is rewritten with one exact substring replaced (asserted to occur
+exactly once), the named test labels run in a fresh process (CI env, --parallel 1, no bytecode written), and
+the original bytes are restored in `finally`. RED = the tests failed (mutation killed). Never wrap this in
+`timeout`: a kill would skip the restore. Usage: python mutate_np.py <worktree> <ids...> (or "all")."""
+import hashlib, os, subprocess, sys
+
+WT = sys.argv[1]
+FF = 'zelda_api/funding_fidelity.py'
+VIEWS = 'zelda_api/views.py'
+FIDELITY = ['zelda_api.tests_funding_fidelity']
+ICMEMO = ['zelda_api.tests.ICMemoTests']
+MUTATIONS = {
+    # The FF-405 rule as revised (N-series re-pointed at the revised code).
+    'N1': ('rule not applied', FF,
+           "_attribute, _narrator_provenance,", "_attribute,", FIDELITY),
+    'N2': ('no ref is ever wrong', FF,
+           "wrong = [r for r in refs if r in sources and sources[r][0] not in run]",
+           "wrong = [r for r in refs if r in sources and False]", FIDELITY),
+    'N3': ("own notes / possessive not skipped", FF,
+           "if re.match(r\"['’]s\\b\", sentence[mention.end():]) or re.search(r'\\b(?:is|are)\\s+per\\s+$', sentence[:mention.start()]):",
+           "if False:", FIDELITY),
+    'N5': ('other subject in the gap ignored', FF,
+           "if not others.search(sentence, end, after.start()):", "if True:", FIDELITY),
+    'N6': ('citation before the narrator ignored', FF,
+           "if re.fullmatch(_CREDITED_BEFORE, sentence[before.end():start], re.I):", "if False:", FIDELITY),
+    'N7': ('kinds phrase not checked', FF,
+           "role = _role_phrase(narrators).search(sentence)", "role = None", FIDELITY),
+    'N8': ('kinds dropped without company evidence', FF,
+           "wrong = [w for w in words if _kind_of(w) not in narrated and _kind_of(w) in own]",
+           "wrong = [w for w in words if _kind_of(w) not in narrated]", FIDELITY),
+    'N9': ('questions rewritten', FF,
+           "if not facts.ref_sources or _asks(sentence):", "if not facts.ref_sources:", FIDELITY),
+    'N10': ('"and" ends the credited clause', FF,
+            "_boundaries(sentence, _CREDIT_END)", "_boundaries(sentence)", FIDELITY),
+    'N11': ('no kind mapping', FF,
+            "return next((kind for kind, names in _KIND_CATEGORIES.items() if category in names), category)",
+            "return category", FIDELITY),
+    'N12': ('"not X\'s" prefix always', FF,
+            "return ('' if keep else f'not {label}: ') + '; '.join(parts)",
+            "return f'not {label}: ' + '; '.join(parts)", FIDELITY),
+    'N13': ('profile refs counted as the company\'s', FF,
+            "'profile' if item.kind == 'profile' else figure_kind(item.category)))",
+            "figure_kind(item.category)))", FIDELITY),
+    'N14': ('citation note idempotence removed', FF,
+            "if not wrong or sentence[group.end():].startswith(f' (not {label}:'):", "if not wrong:", FIDELITY),
+    'N15': ('no credit gap', FF, "_CREDIT_GAP = 120 ", "_CREDIT_GAP = 0 ", FIDELITY),
+    'N16': ('kinds note idempotence removed', FF,
+            "elif not sentence[role.end():].startswith(f' (not {label}:'):", "elif True:", FIDELITY),
+    # Review finding 2: joint narrators.
+    'J1': ('joint names bypass the check (the reviewed behaviour)', FF,
+           "        if not group:\n            continue\n        label = _label(run)",
+           "        if not group or len(run) > 1:\n            continue\n        label = _label(run)", FIDELITY),
+    'J2': ('joint group checked against the first name only', FF,
+           "wrong = [r for r in refs if r in sources and sources[r][0] not in run]",
+           "wrong = [r for r in refs if r in sources and sources[r][0] != name]", FIDELITY),
+    'J3': ('no name run: only the first name is read', FF,
+           "        more = following.match(sentence, end)\n", "        more = None\n", FIDELITY),
+    'J4': ('a later name in a run is checked on its own', FF,
+           "    if joined.search(sentence, max(0, start - 80), start):\n        return None\n", "", FIDELITY),
+    'J5': ('company named with a narrator not shared', FF,
+           "subjects = [_OTHER_SUBJECT] + ([_names_pattern(names)] if names else []) + ([re.escape(company)] if company else [])",
+           "subjects = ([_names_pattern(names)] if names else ['(?!)'])", FIDELITY),
+    'J6': ('joint kinds read from the first name only', FF,
+           "narrated = {kind for narrator, kind in sources.values() if narrator in run}",
+           "narrated = {kind for narrator, kind in sources.values() if narrator == run[0]}", FIDELITY),
+    # Review finding 1: an equated figure.
+    'E1': ('equation never checked (the reviewed behaviour)', FF,
+           "return _same_figures(sentence, sources, dict(facts.ref_figures), facts.company, changes)",
+           "return sentence", FIDELITY),
+    'E2': ('equation always kept', FF,
+           "if not equated or any(r not in sources for r in cited) or equated <= stated:", "if True:", FIDELITY),
+    'E3': ('equation always dropped', FF,
+           "if not equated or any(r not in sources for r in cited) or equated <= stated:",
+           "if not equated or any(r not in sources for r in cited):", FIDELITY),
+    'E4': ("equated against all cited figures, not the narrators' own", FF,
+           "own = [r for r in cited if r in sources and sources[r][0] in owners]",
+           "own = [r for r in cited if r in sources]", FIDELITY),
+    'E8': ('a ref outside the context treated as known', FF,
+           "any(r not in sources for r in cited) or ", "", FIDELITY),
+    'E5': ('noun always plural', FF,
+           "noun = noun.rstrip('sS') + ('' if len(stated) == 1 else 's')", "noun = noun.rstrip('sS') + 's'", FIDELITY),
+    'E6': ('no "from" without a verb', FF,
+           "{\"\" if same.group(\"verb\") else \"from \"}", "", FIDELITY),
+    'E7': ('no figures recorded', FF,
+           "figures.add((item.ref, ' '.join((item.statement or '').lower().split())))", "pass", FIDELITY),
+    # Review of 589917a: every equation, shared company credit, notes.
+    'E9': ('only the first equation in a sentence is checked', FF,
+           "        same = phrase.search(sentence, pos)\n", "        same = phrase.search(sentence, pos) if not pos else None\n",
+           FIDELITY),
+    'E10': ('shared company/narrator credit narrowed to the narrator (the reviewed behaviour)', FF,
+            "shared = bool(after or shared_before.search(sentence, same.end('same'), same.start('who')))", "shared = False",
+            FIDELITY),
+    'E11': ("the guard's own note taken as the compared group", FF,
+            "if not _is_note(sentence, g)]", "]", FIDELITY),
+    # FF-411, unchanged.
+    'M1': ('Markdown without charset', VIEWS,
+           "content_type='text/markdown; charset=utf-8'", "content_type='text/markdown'", ICMEMO),
+    'M2': ('Markdown as Latin-1', VIEWS,
+           "content_type='text/markdown; charset=utf-8'", "content_type='text/markdown; charset=iso-8859-1'", ICMEMO),
+}
+
+ENV = dict(os.environ, SECRET_KEY='ci-only-placeholder-key-not-for-production-use', DEBUG='True',
+           ALLOWED_HOSTS='localhost,127.0.0.1', EMAIL_HOST_USER='ci@example.invalid', CELERY_TASK_ALWAYS_EAGER='True',
+           CELERY_BROKER_URL='memory://', CELERY_RESULT_BACKEND='cache+memory://', PYTHONIOENCODING='utf-8',
+           PYTHONDONTWRITEBYTECODE='1')
+
+
+def sha(path):
+    return hashlib.sha256(open(os.path.join(WT, path), 'rb').read()).hexdigest()
+
+
+ids = list(MUTATIONS) if sys.argv[2:] == ['all'] else sys.argv[2:]
+before = {p: sha(p) for p in (FF, VIEWS)}
+for mid in ids:
+    what, path, old, new, labels = MUTATIONS[mid]
+    full = os.path.join(WT, path)
+    original = open(full, 'rb').read()
+    text = original.decode('utf-8')
+    assert text.count(old) == 1, (mid, text.count(old))
+    try:
+        open(full, 'wb').write(text.replace(old, new).encode('utf-8'))
+        run = subprocess.run([sys.executable, 'manage.py', 'test', *labels, '--parallel', '1'], cwd=WT, env=ENV,
+                             capture_output=True, text=True, encoding='utf-8', errors='replace')
+    finally:
+        open(full, 'wb').write(original)
+    tail = [l for l in run.stderr.splitlines() if l.startswith(('Ran ', 'OK', 'FAILED'))]
+    verdict = 'RED (killed)' if run.returncode != 0 else 'SURVIVED'
+    print(f'{mid:4} {verdict:13} {what} | {" ".join(tail)}', flush=True)
+after = {p: sha(p) for p in (FF, VIEWS)}
+print('fingerprints unchanged:', before == after, {p: h[:16] for p, h in after.items()})

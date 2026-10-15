@@ -1,0 +1,17 @@
+import os, sys
+sys.path.insert(0, sys.argv[1])
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+import django; django.setup()
+from zelda_api.tests_funding_fidelity import both_guards, memo96_items
+items = memo96_items()
+for t in [
+ 'The funding [S3] and the same figures per Pitch Deck Hunt [C1], alongside the bots [S1] and the same figures per Pitch Deck Hunt [S3], are unverified.',
+ 'The bots [S1] and the same figures per Pitch Deck Hunt [C1], plus the messages [S2] and the same figures per Pitch Deck Hunt [S3], are unverified.',
+ 'The combined bot and funding statements [S1, S3] are the same figures as reported by the company and Pitch Deck Hunt [S1, S3].',
+ 'The messages [S2] are the same figures as reported by the company and Pitch Deck Hunt [S1, S3].',
+ 'The messages [S2] are the same figures as reported by Pitch Deck Hunt and the company [S1, S3].',
+ 'The combined statements [S1, S3] are the same figures as reported by Pitch Deck Hunt and the company [S1, S3].',
+ 'The company and Pitch Deck Hunt list the totals [S1, S3].',
+]:
+    once = both_guards(t, items); rev = both_guards(t, items[::-1])
+    print('IN :', t); print('OUT:', once); print('   idem', both_guards(once, items) == once, 'rev', rev == once); print()

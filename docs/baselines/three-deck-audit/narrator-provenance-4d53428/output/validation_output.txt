@@ -1,0 +1,16 @@
+Validation on the fix worktree (CI env, --parallel 1, PYTHONDONTWRITEBYTECODE=1), one batch at a time under tools/memwatch.ps1 (no process over 1,500 MB).
+== batch 1
+Ran 249 tests in 22.432s
+OK
+Found 249 test(s).
+== batch 2
+Found 430 test(s).
+Ran 430 tests in 59.540s
+OK
+== batch 3
+Found 87 test(s).
+Ran 87 tests in 30.492s
+OK
+== check / makemigrations --check --dry-run
+System check identified no issues (0 silenced).
+No changes detected

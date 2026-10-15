@@ -1,0 +1,16 @@
+"""Copy the memo-95/96 probes, pointing EV at evidence extracted from the pushed commits (the run worktrees are gone)."""
+import os, re
+NP = os.path.dirname(os.path.abspath(__file__))
+SCRATCH = os.path.dirname(NP)
+for src, dst, ev, note in [
+        ('probe96_r2.py', 'probe96_r3.py', 'mc96_evidence',
+         '5f08c05:docs/baselines/manychat/funding-fidelity-9b6d215/pass-a'),
+        ('probe95_r2.py', 'probe95_r3.py', 'mc95_evidence',
+         '9688474:docs/baselines/manychat/funding-fidelity-2948998/pass-a')]:
+    s = open(os.path.join(NP, src), encoding='utf-8').read()
+    m = re.search(r"^EV = r'[^']*'$", s, re.M)
+    assert m, src
+    line = (f"# Extracted with `git show {note}/<file>` (the pushed evidence; the run worktree is gone).\n"
+            f"EV = r'{os.path.join(SCRATCH, ev)}'")
+    open(os.path.join(NP, dst), 'w', encoding='utf-8').write(s.replace(m.group(0), line))
+    print(dst, 'ok')
