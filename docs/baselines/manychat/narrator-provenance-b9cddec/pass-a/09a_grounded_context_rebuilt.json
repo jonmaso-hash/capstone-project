@@ -1,0 +1,149 @@
+{
+ "principal": "uploaded_by, ORIGIN_TASK (as the memo task)",
+ "payload": {
+  "company": "ManyChat",
+  "verification": "complete",
+  "items": [
+   {
+    "ref": "C1",
+    "kind": "claim",
+    "category": "funding_raised",
+    "statement": "$23.1M raised",
+    "status": "INSUFFICIENT",
+    "reason": "no_external_evidence",
+    "confidence": 95,
+    "as_of": "not stated",
+    "narrator": "Pitch Deck Hunt",
+    "dates_not_as_of": [
+     "2015"
+    ],
+    "sources": [
+     {
+      "document_id": 3139,
+      "page": 2
+     }
+    ]
+   },
+   {
+    "ref": "C2",
+    "kind": "claim",
+    "category": "usage",
+    "statement": "500M messages",
+    "status": "INSUFFICIENT",
+    "reason": "no_external_evidence",
+    "confidence": 95,
+    "as_of": "not stated",
+    "source_context": "Traction by Apr-16",
+    "sources": [
+     {
+      "document_id": 3139,
+      "page": 10
+     }
+    ]
+   },
+   {
+    "ref": "C3",
+    "kind": "claim",
+    "category": "usage",
+    "statement": "140 000+ bots",
+    "status": "INSUFFICIENT",
+    "reason": "no_external_evidence",
+    "confidence": 95,
+    "as_of": "not stated",
+    "source_context": "Traction by Apr-16",
+    "sources": [
+     {
+      "document_id": 3139,
+      "page": 10
+     }
+    ]
+   },
+   {
+    "ref": "S1",
+    "kind": "statement",
+    "category": "Traction",
+    "statement": "140 000+ bots",
+    "status": "SELF_REPORTED",
+    "confidence": 95,
+    "as_of": "not stated",
+    "source_context": "Traction by Apr-16",
+    "sources": [
+     {
+      "document_id": 3139,
+      "page": 10,
+      "chunk": 9
+     }
+    ]
+   },
+   {
+    "ref": "S2",
+    "kind": "statement",
+    "category": "Traction",
+    "statement": "500M messages",
+    "status": "SELF_REPORTED",
+    "confidence": 95,
+    "as_of": "not stated",
+    "source_context": "Traction by Apr-16",
+    "sources": [
+     {
+      "document_id": 3139,
+      "page": 10,
+      "chunk": 9
+     }
+    ]
+   },
+   {
+    "ref": "S3",
+    "kind": "statement",
+    "category": "Funding",
+    "statement": "$23.1M raised",
+    "status": "SELF_REPORTED",
+    "confidence": 95,
+    "as_of": "not stated",
+    "narrator": "Pitch Deck Hunt",
+    "dates_not_as_of": [
+     "2015"
+    ],
+    "sources": [
+     {
+      "document_id": 3139,
+      "page": 2,
+      "chunk": 1
+     }
+    ]
+   },
+   {
+    "ref": "P1",
+    "kind": "profile",
+    "category": "Stage (profile)",
+    "statement": "Stage (profile): Series A",
+    "status": "SELF_REPORTED",
+    "sources": [
+     {
+      "profile_field": "stage"
+     }
+    ]
+   },
+   {
+    "ref": "P2",
+    "kind": "profile",
+    "category": "Sector (profile)",
+    "statement": "Sector (profile): Software",
+    "status": "SELF_REPORTED",
+    "sources": [
+     {
+      "profile_field": "sector"
+     }
+    ]
+   }
+  ],
+  "gaps": [
+   "No problem statement was extracted from the document.",
+   "No market statement was extracted from the document.",
+   "No revenue statement was extracted from the document.",
+   "No team statement was extracted from the document.",
+   "No product statement was extracted from the document.",
+   "No risk statement was extracted from the document."
+  ]
+ }
+}

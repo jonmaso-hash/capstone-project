@@ -1,0 +1,39 @@
+"""Upload the deck ONCE as the owner through the session-authenticated ingest API.
+Refuses if the SHA-256 differs from the frozen key, or if upload.txt already exists
+(a second upload is a new run, not a retry)."""
+import sys, os, json, hashlib, datetime, ntpath, requests
+deck_path, username, entity, expected, out_path = sys.argv[1:6]
+SP = os.path.dirname(os.path.abspath(__file__))
+if os.path.exists(os.path.join(SP, out_path)):
+    sys.exit('upload record already exists; refusing a second upload')
+pw = open(os.path.join(SP, 'pw.txt')).read().strip()
+B = 'http://127.0.0.1:8000'
+log = []
+s = requests.Session()
+s.get(B + '/accounts/login/')
+r = s.post(B + '/accounts/login/', data={'username': username, 'password': pw, 'csrfmiddlewaretoken': s.cookies.get('csrftoken')},
+           headers={'Referer': B + '/accounts/login/'}, allow_redirects=False)
+log.append(('UPLOAD login', {'status': r.status_code, 'redirect': r.headers.get('Location'), 'session': 'sessionid' in s.cookies}))
+if 'sessionid' not in s.cookies:
+    print(log); sys.exit('login failed')
+data = open(deck_path, 'rb').read()
+h = hashlib.sha256(data).hexdigest()
+log.append(('UPLOAD deck', {'bytes': len(data), 'sha256': h, 'matches_key': h == expected}))
+if h != expected:
+    print(log); sys.exit('hash mismatch; not uploading')
+with open(os.path.join(SP, out_path), 'w', encoding='utf-8') as f:
+    f.write('UPLOAD started ' + datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds') + '\n')
+r = s.post(B + '/api/v1/zelda/documents/ingest/',
+           files={'file': (ntpath.basename(deck_path), data, 'application/vnd.openxmlformats-officedocument.presentationml.presentation')},
+           data={'source_entity': entity, 'document_type': 'pitch_deck'},
+           headers={'X-CSRFToken': s.cookies.get('csrftoken'), 'Referer': B + '/'})
+try:
+    body = r.json()
+except Exception:
+    body = r.text[:500]
+log.append(('UPLOAD response', {'status': r.status_code, 'at': datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds'), 'body': body}))
+with open(os.path.join(SP, out_path), 'a', encoding='utf-8', newline='\n') as f:
+    for k, v in log:
+        f.write(k + ' ' + json.dumps(v) + '\n')
+for k, v in log:
+    print(k, json.dumps(v))

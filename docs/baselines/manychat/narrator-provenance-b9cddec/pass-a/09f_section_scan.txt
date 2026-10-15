@@ -1,0 +1,201 @@
+Sentence-level scan of the new memo: stored sections, memo API per principal (Lite and full), rendered
+pages (HTTP probe). Hits are candidates for reading, not grades. Sentences containing $23.1: 48.
+Surfaces: 51.
+
+== funding_sentence_missing_narrator: 0
+
+== narrator_with_traction_refs_or_words: 9
+  stored:what_would_change_the_picture: The single most important missing piece of evidence is a verified revenue and unit economics schedule — specifically, monthly recurring revenue, gross margin, and active (paying or engaged) bot counts broken out from total bots created — which would allow the traction figures [S1, S2] to be assessed for monetization potential and would anchor the $23.1M raised figure (per Pitch Deck Hunt) [C1, S3] to an actual financial trajectory.
+  LITE:memo_api:what_would_change_the_picture: The single most important missing piece of evidence is a verified revenue and unit economics schedule — specifically, monthly recurring revenue, gross margin, and active (paying or engaged) bot counts broken out from total bots created — which would allow the traction figures [S1, S2] to be assessed for monetization potential and would anchor the $23.1M raised figure (per Pitch Deck Hunt) [C1, S3] to an actual financial trajectory.
+  PAID:memo_api:what_would_change_the_picture: The single most important missing piece of evidence is a verified revenue and unit economics schedule — specifically, monthly recurring revenue, gross margin, and active (paying or engaged) bot counts broken out from total bots created — which would allow the traction figures [S1, S2] to be assessed for monetization potential and would anchor the $23.1M raised figure (per Pitch Deck Hunt) [C1, S3] to an actual financial trajectory.
+  STAFF:memo_api:what_would_change_the_picture: The single most important missing piece of evidence is a verified revenue and unit economics schedule — specifically, monthly recurring revenue, gross margin, and active (paying or engaged) bot counts broken out from total bots created — which would allow the traction figures [S1, S2] to be assessed for monetization potential and would anchor the $23.1M raised figure (per Pitch Deck Hunt) [C1, S3] to an actual financial trajectory.
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 12/100 Present: • Stage (Series A) [P1] • Sector (Software) [P2] • Traction metrics on a contextually dated slide: 140,000+ bots and 500M messages [S1, S2] • A funding raised figure listed by Pitch Deck Hunt: $23.1M [S3], unverified Needs Validation: • Funding raised figure [C1] — no external confirmation found • Bot and message counts [C2, C3] — self-reported, unverified • All financial metrics (revenue, burn, margin, use of proceeds) • Team composition and credenti
+  rendered:OWNER:D_ic_memo: What Would Change the Picture The single most important missing piece of evidence is a verified revenue and unit economics schedule — specifically, monthly recurring revenue, gross margin, and active (paying or engaged) bot counts broken out from total bots created — which would allow the traction figures [S1, S2] to be assessed for monetization potential and would anchor the $23.1M raised figure (per Pitch Deck Hunt) [C1, S3] to an actual financial trajectory.
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 12/100 Present: • Stage (Series A) [P1] • Sector (Software) [P2] • Traction metrics on a contextually dated slide: 140,000+ bots and 500M messages [S1, S2] • A funding raised figure listed by Pitch Deck Hunt: $23.1M [S3], unverified Needs Validation: • Funding raised figure [C1] — no external confirmation found • Bot and message counts [C2, C3] — self-reported, unverified • All financial metrics (revenue, burn, margin, use of proceeds) • Team composition and credenti
+  rendered:STAFF:D_ic_memo: What Would Change the Picture The single most important missing piece of evidence is a verified revenue and unit economics schedule — specifically, monthly recurring revenue, gross margin, and active (paying or engaged) bot counts broken out from total bots created — which would allow the traction figures [S1, S2] to be assessed for monetization potential and would anchor the $23.1M raised figure (per Pitch Deck Hunt) [C1, S3] to an actual financial trajectory.
+  rendered:STAFF:E_ic_memo_dl: The single most important missing piece of evidence is a verified revenue and unit economics schedule — specifically, monthly recurring revenue, gross margin, and active (paying or engaged) bot counts broken out from total bots created — which would allow the traction figures [S1, S2] to be assessed for monetization potential and would anchor the $23.1M raised figure (per Pitch Deck Hunt) [C1, S3] to an actual financial trajectory.
+
+== equality_wording: 0
+
+== independent_validation_wording: 90
+  stored:executive_summary: On a slide headed 'Traction by Apr-16' as contextual dating, the company states 140,000+ bots created and 500M messages sent [S1, S2], neither of which has been independently verified.
+  stored:risk_assessment: Unverified funding history: The $23.1M raised figure listed by Pitch Deck Hunt [C1, S3] could not be confirmed by any external source.
+  stored:risk_assessment: Traction metrics lack independent validation: Both the 140,000+ bots and 500M messages figures [S1, S2] are self-reported on a slide contextually dated 'Traction by Apr-16'; neither was independently verifiable.
+  stored:information_readiness: Needs Validation:
+  stored:information_readiness: • Funding raised figure [C1] — no external confirmation found
+  stored:open_concerns: - The $23.1M raised figure listed by Pitch Deck Hunt [C1, S3] was checked and could not be confirmed or refuted by any external source (INSUFFICIENT).
+  stored:open_concerns: - Both traction figures — 140,000+ bots and 500M messages [S1, S2] — are self-reported on a slide contextually dated 'Traction by Apr-16' and were not independently verified.
+  stored:upside_scenario: This reading would require verified revenue growth, platform stickiness data, and confirmation that the $23.1M raised (per Pitch Deck Hunt) [S3] was deployed against a clear product roadmap, none of which is present in the extracted evidence.
+  stored:zelda_advantage: Additionally, the traction figures [C2, C3] were status-tagged INSUFFICIENT rather than accepted as self-reported fact, surfacing that neither metric has any corroborating source, which is material given how easily bot-count and message-volume metrics can be defined to overstate engagement.
+  LITE:memo_api:information_readiness: Needs Validation:
+  LITE:memo_api:information_readiness: • Funding raised figure [C1] — no external confirmation found
+  LITE:memo_api:open_concerns: - The $23.1M raised figure listed by Pitch Deck Hunt [C1, S3] was checked and could not be confirmed or refuted by any external source (INSUFFICIENT).
+  LITE:memo_api:open_concerns: - Both traction figures — 140,000+ bots and 500M messages [S1, S2] — are self-reported on a slide contextually dated 'Traction by Apr-16' and were not independently verified.
+  PAID:memo_api:information_readiness: Needs Validation:
+  PAID:memo_api:information_readiness: • Funding raised figure [C1] — no external confirmation found
+  PAID:memo_api:open_concerns: - The $23.1M raised figure listed by Pitch Deck Hunt [C1, S3] was checked and could not be confirmed or refuted by any external source (INSUFFICIENT).
+  PAID:memo_api:open_concerns: - Both traction figures — 140,000+ bots and 500M messages [S1, S2] — are self-reported on a slide contextually dated 'Traction by Apr-16' and were not independently verified.
+  STAFF:memo_api:executive_summary: On a slide headed 'Traction by Apr-16' as contextual dating, the company states 140,000+ bots created and 500M messages sent [S1, S2], neither of which has been independently verified.
+  STAFF:memo_api:risk_assessment: Unverified funding history: The $23.1M raised figure listed by Pitch Deck Hunt [C1, S3] could not be confirmed by any external source.
+  STAFF:memo_api:risk_assessment: Traction metrics lack independent validation: Both the 140,000+ bots and 500M messages figures [S1, S2] are self-reported on a slide contextually dated 'Traction by Apr-16'; neither was independently verifiable.
+  STAFF:memo_api:information_readiness: Needs Validation:
+  STAFF:memo_api:information_readiness: • Funding raised figure [C1] — no external confirmation found
+  STAFF:memo_api:open_concerns: - The $23.1M raised figure listed by Pitch Deck Hunt [C1, S3] was checked and could not be confirmed or refuted by any external source (INSUFFICIENT).
+  STAFF:memo_api:open_concerns: - Both traction figures — 140,000+ bots and 500M messages [S1, S2] — are self-reported on a slide contextually dated 'Traction by Apr-16' and were not independently verified.
+  STAFF:memo_api:upside_scenario: This reading would require verified revenue growth, platform stickiness data, and confirmation that the $23.1M raised (per Pitch Deck Hunt) [S3] was deployed against a clear product roadmap, none of which is present in the extracted evidence.
+  STAFF:memo_api:zelda_advantage: Additionally, the traction figures [C2, C3] were status-tagged INSUFFICIENT rather than accepted as self-reported fact, surfacing that neither metric has any corroborating source, which is material given how easily bot-count and message-volume metrics can be defined to overstate engagement.
+  rendered:OWNER:B_profile_analysis: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:B_profile_analysis: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:B_profile_analysis: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:B_profile_analysis: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:B_profile_analysis: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:B_profile_analysis: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:B_profile_analysis: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 12/100 Present: • Stage (Series A) [P1] • Sector (Software) [P2] • Traction metrics on a contextually dated slide: 140,000+ bots and 500M messages [S1, S2] • A funding raised figure listed by Pitch Deck Hunt: $23.1M [S3], unverified Needs Validation: • Funding raised figure [C1] — no external confirmation found • Bot and message counts [C2, C3] — self-reported, unverified • All financial metrics (revenue, burn, margin, use of proceeds) • Team composition and credenti
+  rendered:OWNER:D_ic_memo: Open Concerns The $23.1M raised figure listed by Pitch Deck Hunt [C1, S3] was checked and could not be confirmed or refuted by any external source (INSUFFICIENT).
+  rendered:OWNER:D_ic_memo: Both traction figures — 140,000+ bots and 500M messages [S1, S2] — are self-reported on a slide contextually dated 'Traction by Apr-16' and were not independently verified.
+  rendered:OWNER:D_ic_memo: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+  rendered:OWNER:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:F_truthdelta_ui: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+  rendered:PAID:C2_company_overview: On a slide headed 'Traction by Apr-16' as contextual dating, the company states 140,000+ bots created and 500M messages sent [S1, S2], neither of which has been independently verified.
+  rendered:PAID:C2_company_overview: Outside Overall fit Only part of the picture is corroborated, so this is a softer match.
+  rendered:PAID:C2_company_overview: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+  rendered:PAID:F_truthdelta_ui: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+  rendered:STAFF:C2_company_overview: On a slide headed 'Traction by Apr-16' as contextual dating, the company states 140,000+ bots created and 500M messages sent [S1, S2], neither of which has been independently verified.
+  rendered:STAFF:C2_company_overview: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+  rendered:STAFF:C2_company_overview: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:C2_company_overview: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:C2_company_overview: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:C2_company_overview: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:C2_company_overview: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:C2_company_overview: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:C2_company_overview: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:D_ic_memo: On a slide headed 'Traction by Apr-16' as contextual dating, the company states 140,000+ bots created and 500M messages sent [S1, S2], neither of which has been independently verified.
+  rendered:STAFF:D_ic_memo: Unverified funding history: The $23.1M raised figure listed by Pitch Deck Hunt [C1, S3] could not be confirmed by any external source.
+  rendered:STAFF:D_ic_memo: Traction metrics lack independent validation: Both the 140,000+ bots and 500M messages figures [S1, S2] are self-reported on a slide contextually dated 'Traction by Apr-16'; neither was independently verifiable.
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 12/100 Present: • Stage (Series A) [P1] • Sector (Software) [P2] • Traction metrics on a contextually dated slide: 140,000+ bots and 500M messages [S1, S2] • A funding raised figure listed by Pitch Deck Hunt: $23.1M [S3], unverified Needs Validation: • Funding raised figure [C1] — no external confirmation found • Bot and message counts [C2, C3] — self-reported, unverified • All financial metrics (revenue, burn, margin, use of proceeds) • Team composition and credenti
+  rendered:STAFF:D_ic_memo: Open Concerns The $23.1M raised figure listed by Pitch Deck Hunt [C1, S3] was checked and could not be confirmed or refuted by any external source (INSUFFICIENT).
+  rendered:STAFF:D_ic_memo: Both traction figures — 140,000+ bots and 500M messages [S1, S2] — are self-reported on a slide contextually dated 'Traction by Apr-16' and were not independently verified.
+  rendered:STAFF:D_ic_memo: This reading would require verified revenue growth, platform stickiness data, and confirmation that the $23.1M raised (per Pitch Deck Hunt) [S3] was deployed against a clear product roadmap, none of which is present in the extracted evidence.
+  rendered:STAFF:D_ic_memo: Additionally, the traction figures [C2, C3] were status-tagged INSUFFICIENT rather than accepted as self-reported fact, surfacing that neither metric has any corroborating source, which is material given how easily bot-count and message-volume metrics can be defined to overstate engagement.
+  rendered:STAFF:D_ic_memo: Truth Delta An automated cross-check of the deck's claims against independent public records.
+  rendered:STAFF:D_ic_memo: Evidence Credibility: not scored — no claim could be verified or contradicted against a public source No public data could be found to independently verify these claims (checked SEC EDGAR).
+  rendered:STAFF:D_ic_memo: This is not a confirmation the claims are accurate — only that no corroborating or contradicting external data was found for "ManyChat".
+  rendered:STAFF:D_ic_memo: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+  rendered:STAFF:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:E_ic_memo_dl: On a slide headed 'Traction by Apr-16' as contextual dating, the company states 140,000+ bots created and 500M messages sent [S1, S2], neither of which has been independently verified.
+  rendered:STAFF:E_ic_memo_dl: Unverified funding history: The $23.1M raised figure listed by Pitch Deck Hunt [C1, S3] could not be confirmed by any external source.
+  rendered:STAFF:E_ic_memo_dl: Traction metrics lack independent validation: Both the 140,000+ bots and 500M messages figures [S1, S2] are self-reported on a slide contextually dated 'Traction by Apr-16'; neither was independently verifiable.
+  rendered:STAFF:E_ic_memo_dl: Needs Validation:
+  rendered:STAFF:E_ic_memo_dl: • Funding raised figure [C1] — no external confirmation found
+  rendered:STAFF:E_ic_memo_dl: - The $23.1M raised figure listed by Pitch Deck Hunt [C1, S3] was checked and could not be confirmed or refuted by any external source (INSUFFICIENT).
+  rendered:STAFF:E_ic_memo_dl: - Both traction figures — 140,000+ bots and 500M messages [S1, S2] — are self-reported on a slide contextually dated 'Traction by Apr-16' and were not independently verified.
+  rendered:STAFF:E_ic_memo_dl: This reading would require verified revenue growth, platform stickiness data, and confirmation that the $23.1M raised (per Pitch Deck Hunt) [S3] was deployed against a clear product roadmap, none of which is present in the extracted evidence.
+  rendered:STAFF:E_ic_memo_dl: Additionally, the traction figures [C2, C3] were status-tagged INSUFFICIENT rather than accepted as self-reported fact, surfacing that neither metric has any corroborating source, which is material given how easily bot-count and message-volume metrics can be defined to overstate engagement.
+  rendered:STAFF:E_ic_memo_dl: No public data could be found to independently verify these claims (checked SEC EDGAR).
+  rendered:STAFF:E_ic_memo_dl: This is not a confirmation the claims are accurate — only that no corroborating or contradicting external data was found for "ManyChat".
+  rendered:STAFF:E_ic_memo_dl: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+  rendered:STAFF:F_truthdelta_ui: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+
+== narrator_of_wording: 0
+
+== current_total_wording_on_funding: 0
+
+== funding_with_2015: 0
+
+== historical_as_current: 0
+
+== as_of_slide_context: 0
+
+== runway_or_cash_premise: 7
+  stored:information_readiness: Next evidence to supply: Audited or reviewed financials including revenue, gross margin, and a current cash balance with burn rate, to allow assessment of the business model's viability and calculation of runway.
+  LITE:memo_api:information_readiness: Next evidence to supply: Audited or reviewed financials including revenue, gross margin, and a current cash balance with burn rate, to allow assessment of the business model's viability and calculation of runway.
+  PAID:memo_api:information_readiness: Next evidence to supply: Audited or reviewed financials including revenue, gross margin, and a current cash balance with burn rate, to allow assessment of the business model's viability and calculation of runway.
+  STAFF:memo_api:information_readiness: Next evidence to supply: Audited or reviewed financials including revenue, gross margin, and a current cash balance with burn rate, to allow assessment of the business model's viability and calculation of runway.
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 12/100 Present: • Stage (Series A) [P1] • Sector (Software) [P2] • Traction metrics on a contextually dated slide: 140,000+ bots and 500M messages [S1, S2] • A funding raised figure listed by Pitch Deck Hunt: $23.1M [S3], unverified Needs Validation: • Funding raised figure [C1] — no external confirmation found • Bot and message counts [C2, C3] — self-reported, unverified • All financial metrics (revenue, burn, margin, use of proceeds) • Team composition and credenti
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 12/100 Present: • Stage (Series A) [P1] • Sector (Software) [P2] • Traction metrics on a contextually dated slide: 140,000+ bots and 500M messages [S1, S2] • A funding raised figure listed by Pitch Deck Hunt: $23.1M [S3], unverified Needs Validation: • Funding raised figure [C1] — no external confirmation found • Bot and message counts [C2, C3] — self-reported, unverified • All financial metrics (revenue, burn, margin, use of proceeds) • Team composition and credenti
+  rendered:STAFF:E_ic_memo_dl: Next evidence to supply: Audited or reviewed financials including revenue, gross margin, and a current cash balance with burn rate, to allow assessment of the business model's viability and calculation of runway.
+
+== runway_or_cash_any: 35
+  stored:financial_analysis: • Burn rate: Not found in the extracted evidence.
+  stored:financial_analysis: • Runway: Not found in the extracted evidence.
+  stored:financial_analysis: Runway cannot be calculated — no dated cash balance or burn rate is available.
+  stored:information_readiness: • All financial metrics (revenue, burn, margin, use of proceeds)
+  stored:information_readiness: Next evidence to supply: Audited or reviewed financials including revenue, gross margin, and a current cash balance with burn rate, to allow assessment of the business model's viability and calculation of runway.
+  stored:downside_scenario: Combined with the unverified funding figure [C1], the absence of any revenue, margin, or burn data, and an undisclosed team, there is no evidence in this package to bound the downside.
+  stored:questions_for_management: - What is the current monthly burn rate and cash balance, and how long does the capital runway extend from today?
+  LITE:memo_api:information_readiness: • All financial metrics (revenue, burn, margin, use of proceeds)
+  LITE:memo_api:information_readiness: Next evidence to supply: Audited or reviewed financials including revenue, gross margin, and a current cash balance with burn rate, to allow assessment of the business model's viability and calculation of runway.
+  PAID:memo_api:information_readiness: • All financial metrics (revenue, burn, margin, use of proceeds)
+  PAID:memo_api:information_readiness: Next evidence to supply: Audited or reviewed financials including revenue, gross margin, and a current cash balance with burn rate, to allow assessment of the business model's viability and calculation of runway.
+  STAFF:memo_api:financial_analysis: • Burn rate: Not found in the extracted evidence.
+  STAFF:memo_api:financial_analysis: • Runway: Not found in the extracted evidence.
+  STAFF:memo_api:financial_analysis: Runway cannot be calculated — no dated cash balance or burn rate is available.
+  STAFF:memo_api:information_readiness: • All financial metrics (revenue, burn, margin, use of proceeds)
+  STAFF:memo_api:information_readiness: Next evidence to supply: Audited or reviewed financials including revenue, gross margin, and a current cash balance with burn rate, to allow assessment of the business model's viability and calculation of runway.
+  STAFF:memo_api:downside_scenario: Combined with the unverified funding figure [C1], the absence of any revenue, margin, or burn data, and an undisclosed team, there is no evidence in this package to bound the downside.
+  STAFF:memo_api:questions_for_management: - What is the current monthly burn rate and cash balance, and how long does the capital runway extend from today?
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 12/100 Present: • Stage (Series A) [P1] • Sector (Software) [P2] • Traction metrics on a contextually dated slide: 140,000+ bots and 500M messages [S1, S2] • A funding raised figure listed by Pitch Deck Hunt: $23.1M [S3], unverified Needs Validation: • Funding raised figure [C1] — no external confirmation found • Bot and message counts [C2, C3] — self-reported, unverified • All financial metrics (revenue, burn, margin, use of proceeds) • Team composition and credenti
+  rendered:STAFF:D_ic_memo: • Burn rate: Not found in the extracted evidence.
+  rendered:STAFF:D_ic_memo: • Runway: Not found in the extracted evidence.
+  rendered:STAFF:D_ic_memo: Runway cannot be calculated — no dated cash balance or burn rate is available.
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 12/100 Present: • Stage (Series A) [P1] • Sector (Software) [P2] • Traction metrics on a contextually dated slide: 140,000+ bots and 500M messages [S1, S2] • A funding raised figure listed by Pitch Deck Hunt: $23.1M [S3], unverified Needs Validation: • Funding raised figure [C1] — no external confirmation found • Bot and message counts [C2, C3] — self-reported, unverified • All financial metrics (revenue, burn, margin, use of proceeds) • Team composition and credenti
+  rendered:STAFF:D_ic_memo: Combined with the unverified funding figure [C1], the absence of any revenue, margin, or burn data, and an undisclosed team, there is no evidence in this package to bound the downside.
+  rendered:STAFF:D_ic_memo: What is the current monthly burn rate and cash balance, and how long does the capital runway extend from today?
+  rendered:STAFF:D_ic_memo: Claims checked: 3 ■ Verified against public sources — 0 · ■ Contradicted — 0 · ■ Not established — 3 (of 3) View the full Truth Delta report → Financial Snapshot Raising: not disclosed Current revenue: not disclosed Monthly burn: not disclosed Runway: not calculated Team size: not disclosed ℹ This report is provided for informational and due-diligence purposes only.
+  rendered:STAFF:E_ic_memo_dl: • Burn rate: Not found in the extracted evidence.
+  rendered:STAFF:E_ic_memo_dl: • Runway: Not found in the extracted evidence.
+  rendered:STAFF:E_ic_memo_dl: Runway cannot be calculated — no dated cash balance or burn rate is available.
+  rendered:STAFF:E_ic_memo_dl: • All financial metrics (revenue, burn, margin, use of proceeds)
+  rendered:STAFF:E_ic_memo_dl: Next evidence to supply: Audited or reviewed financials including revenue, gross margin, and a current cash balance with burn rate, to allow assessment of the business model's viability and calculation of runway.
+  rendered:STAFF:E_ic_memo_dl: Combined with the unverified funding figure [C1], the absence of any revenue, margin, or burn data, and an undisclosed team, there is no evidence in this package to bound the downside.
+  rendered:STAFF:E_ic_memo_dl: - What is the current monthly burn rate and cash balance, and how long does the capital runway extend from today?
+  rendered:STAFF:E_ic_memo_dl: - Monthly burn: not disclosed
+  rendered:STAFF:E_ic_memo_dl: - Runway: not calculated
+
+== raise_premise: 15
+  stored:financial_analysis: • Use of proceeds: Not found in the extracted evidence.
+  stored:information_readiness: • All financial metrics (revenue, burn, margin, use of proceeds)
+  stored:questions_for_management: - Is a new funding round currently planned or in progress, and if so, what are the target size, use of proceeds, and timeline?
+  LITE:memo_api:information_readiness: • All financial metrics (revenue, burn, margin, use of proceeds)
+  PAID:memo_api:information_readiness: • All financial metrics (revenue, burn, margin, use of proceeds)
+  STAFF:memo_api:financial_analysis: • Use of proceeds: Not found in the extracted evidence.
+  STAFF:memo_api:information_readiness: • All financial metrics (revenue, burn, margin, use of proceeds)
+  STAFF:memo_api:questions_for_management: - Is a new funding round currently planned or in progress, and if so, what are the target size, use of proceeds, and timeline?
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 12/100 Present: • Stage (Series A) [P1] • Sector (Software) [P2] • Traction metrics on a contextually dated slide: 140,000+ bots and 500M messages [S1, S2] • A funding raised figure listed by Pitch Deck Hunt: $23.1M [S3], unverified Needs Validation: • Funding raised figure [C1] — no external confirmation found • Bot and message counts [C2, C3] — self-reported, unverified • All financial metrics (revenue, burn, margin, use of proceeds) • Team composition and credenti
+  rendered:STAFF:D_ic_memo: • Use of proceeds: Not found in the extracted evidence.
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 12/100 Present: • Stage (Series A) [P1] • Sector (Software) [P2] • Traction metrics on a contextually dated slide: 140,000+ bots and 500M messages [S1, S2] • A funding raised figure listed by Pitch Deck Hunt: $23.1M [S3], unverified Needs Validation: • Funding raised figure [C1] — no external confirmation found • Bot and message counts [C2, C3] — self-reported, unverified • All financial metrics (revenue, burn, margin, use of proceeds) • Team composition and credenti
+  rendered:STAFF:D_ic_memo: Is a new funding round currently planned or in progress, and if so, what are the target size, use of proceeds, and timeline?
+  rendered:STAFF:E_ic_memo_dl: • Use of proceeds: Not found in the extracted evidence.
+  rendered:STAFF:E_ic_memo_dl: • All financial metrics (revenue, burn, margin, use of proceeds)
+  rendered:STAFF:E_ic_memo_dl: - Is a new funding round currently planned or in progress, and if so, what are the target size, use of proceeds, and timeline?
+
+== self_reported_with_funding_ref: 2
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 12/100 Present: • Stage (Series A) [P1] • Sector (Software) [P2] • Traction metrics on a contextually dated slide: 140,000+ bots and 500M messages [S1, S2] • A funding raised figure listed by Pitch Deck Hunt: $23.1M [S3], unverified Needs Validation: • Funding raised figure [C1] — no external confirmation found • Bot and message counts [C2, C3] — self-reported, unverified • All financial metrics (revenue, burn, margin, use of proceeds) • Team composition and credenti
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 12/100 Present: • Stage (Series A) [P1] • Sector (Software) [P2] • Traction metrics on a contextually dated slide: 140,000+ bots and 500M messages [S1, S2] • A funding raised figure listed by Pitch Deck Hunt: $23.1M [S3], unverified Needs Validation: • Funding raised figure [C1] — no external confirmation found • Bot and message counts [C2, C3] — self-reported, unverified • All financial metrics (revenue, burn, margin, use of proceeds) • Team composition and credenti
+
+== stage_near_slide_date: 0
+
+== platform_user_counts: 0
+
+== advice_words: 3
+  rendered:PAID:C2_company_overview: Buy 3 Truth Delta credits for $25.
+  rendered:PAID:C2_company_overview: Redeem one credit for one new Truth Delta report on any company you evaluate. $25.00 USD 0 Truth Delta credits available 3 reports, 3 companies, use them when you need them Buy three Truth Delta credits now and redeem them later, one at a time, against any company you evaluate.
+  rendered:PAID:C2_company_overview: Buy 3 Truth Delta credits · $25.00 That is $8.33 per report versus $10 each individually.
+
+== list_repr: 0
+
+== mojibake: 0
+

@@ -1,0 +1,62 @@
+{
+ "note": "Real Chrome walks (Claude in Chrome, one new tab in a new tab group, closed afterwards) against the run server on 127.0.0.1:8000, 2026-10-14 local (2026-10-15 UTC), document 3139 / memo 97. Sign-in set the login form fields and called form.requestSubmit(); staff then submitted a current TOTP code on the real /accounts/staff-mfa/verify/ page. Every signed-in walk ended with the nav 'Sign Out' button (POST /accounts/logout/), confirmed by a protected URL redirecting to login. Values below were read from the live DOM by in-page script after navigation; 'fetch' marks the few values read by an in-page same-origin fetch instead of navigation. The extension's tool output truncates long page text, so the full rendered text is not stored here; the HTTP probe's copies are in 13_rendered_reports_text.json. Credentials are not recorded.",
+ "order": ["ANON", "OWNER", "LITE", "PAID", "STAFF"],
+ "ANON": {
+  "truth_delta_navigation": {"url_after": "/accounts/login/?next=/api/v1/zelda/documents/3139/verification/", "title": "Log in"},
+  "owner_profile_navigation": {"url_after": "/accounts/login/?next=/accounts/profile/npmc_owner/", "canary": false},
+  "positive_control_home_fetch": {"status": 200, "title": "Interlink Foundry", "shows_sign_in": true}
+ },
+ "OWNER": {
+  "login": {"landed": "/accounts/profile/npmc_owner/", "account_menu": "Account menu for npmc_owner"},
+  "profile": {"canary_in_rendered_text": true, "canary_in_html": true, "prior_amount_163000000_shown": true, "expected": "owner may see own private field"},
+  "ic_memo_navigation": {"tier": "Zelda Lite Memo", "section_coverage": "31.2%", "information_readiness": "12/100", "citations": 3,
+   "sentences_with_23_1": 3, "with_pitch_deck_hunt": 3, "list_item_counts": [2, 4], "same_figures_wording": false, "narrator_of_wording": false, "canary": false,
+   "funding_sentences": [
+    "• A funding raised figure listed by Pitch Deck Hunt: $23.1M [S3], unverified",
+    "The $23.1M raised figure listed by Pitch Deck Hunt [C1, S3] was checked and could not be confirmed or refuted by any external source (INSUFFICIENT).",
+    "… would anchor the $23.1M raised figure (per Pitch Deck Hunt) [C1, S3] to an actual financial trajectory."],
+   "screenshot": "browser/owner_ic_memo_lite.jpg"},
+  "truth_delta_navigation": {"counts": "3 CLAIMS ANALYZED | 0 VERIFIED | 3 NOT ESTABLISHED", "score": "N/A — NOT SCORED · LIMITED PUBLIC EVIDENCE",
+   "owner_panel_profile_and_deck_figures": true, "only_you_can_see_this": true,
+   "panel_row": "Previously raised: Choose a reporting currency on your profile before comparing these figures.",
+   "claims_shown": {"$23.1M": true, "500M": true, "140 000": true}, "canary": false, "doctype": false},
+  "sign_out": {"button": "Sign Out", "after": "/accounts/profile/npmc_owner/ -> /accounts/login/?next=/accounts/profile/npmc_owner/"}
+ },
+ "LITE": {
+  "login": {"landed": "/accounts/profile/npmc_owner/", "account_menu": "Account menu for npmc_lite", "canary": false},
+  "company_overview_navigation": {"url": "/matchmaking/memo/profile/50/", "tier": "Zelda Lite Report", "counts_sentence": "Limited public evidence: none of the 3 claims could be verified or contradicted against a public source.",
+   "funding_sentences": ["Pitch Deck Hunt lists $23.1M raised [C1, S3], though this figure was checked and no external evidence could confirm or refute it, leaving it unresolved."],
+   "same_figures_or_narrator_of": [], "owner_panel": false, "canary": false, "screenshot": "browser/lite_company_overview.jpg"},
+  "truth_delta_navigation": {"counts": "3 CLAIMS ANALYZED | 0 VERIFIED | 3 NOT ESTABLISHED", "owner_panel": false, "canary": false, "claims_shown": {"$23.1M": true, "500M": true, "140 000": true}},
+  "ic_memo_fetch_status": 404,
+  "sign_out": {"button": "Sign Out", "after": "/accounts/profile/npmc_owner/ -> /accounts/login/?next=/accounts/profile/npmc_owner/"}
+ },
+ "PAID": {
+  "login": {"landed": "/accounts/profile/npmc_owner/", "account_menu": "Account menu for npmc_paid", "canary": false},
+  "company_overview_navigation": {"tier": "Zelda Lite Report (no relationship; unchanged from the 9b6d215 run)", "counts_sentence": "Limited public evidence: none of the 3 claims could be verified or contradicted against a public source.",
+   "funding_sentences": ["Pitch Deck Hunt lists $23.1M raised [C1, S3], though this figure was checked and no external evidence could confirm or refute it, leaving it unresolved."],
+   "same_figures_or_narrator_of": [], "owner_panel": false, "canary": false},
+  "truth_delta_navigation": {"counts": "3 CLAIMS ANALYZED | 0 VERIFIED | 3 NOT ESTABLISHED", "owner_panel": false, "canary": false},
+  "ic_memo_fetch_status": 404,
+  "sign_out": {"button": "Sign Out", "after": "/api/v1/zelda/documents/3139/verification/ -> /accounts/login/?next=/api/v1/zelda/documents/3139/verification/"}
+ },
+ "STAFF": {
+  "login": {"from": "/accounts/login/?next=/api/v1/zelda/documents/3139/verification/", "mfa_page": "/accounts/staff-mfa/verify/?next=%2Fapi%2Fv1%2Fzelda%2Fdocuments%2F3139%2Fverification%2F", "mfa": "current TOTP code submitted on the real verify page"},
+  "truth_delta_direct_navigation": {"url": "/api/v1/zelda/documents/3139/verification/", "ready_state": "complete", "waited_s": 3, "two_snapshots_2_5s_apart_identical": true,
+   "badge": "Zelda AI — Full Verification", "counts": "3 CLAIMS ANALYZED | 0 VERIFIED | 3 NOT ESTABLISHED", "pages_analyzed": 12,
+   "owner_panel_profile_and_deck_figures": false, "only_you_can_see_this": false, "canary_in_text": false, "canary_in_html": false,
+   "claims_shown": {"$23.1M": true, "500M": true, "140 000": true}, "loading_text": false, "doctype": false,
+   "identity_positive_control_fetch_home": "Account menu for npmc_staff", "screenshot": "browser/staff_truth_delta_direct.jpg",
+   "rendering_note": "unstyled doctype-less fragment, as FF-413"},
+  "ic_memo_navigation": {"tier": "full", "section_coverage": "100.0%", "counts": "(of 3)", "sentences_with_23_1": 9, "with_pitch_deck_hunt": 9,
+   "list_item_counts": [2, 4, 8, 5], "same_figures_or_narrator_of_or_identical": [], "canary": false,
+   "zelda_advantage": "The verification pass specifically flagged that the $23.1M raised figure [C1] is narrated by Pitch Deck Hunt rather than stated directly by the company, and that no external source could confirm or refute it — a distinction a plain AI summary would likely present as a straightforward company disclosure. Additionally, the traction figures [C2, C3] were status-tagged INSUFFICIENT rather than accepted as self-reported fact, surfacing that neither metric has any corroborating source, which is material given how easily bot-count and message-volume metrics can be defined to overstate engagement.",
+   "screenshot": "browser/staff_ic_memo_zelda_advantage.jpg"},
+  "markdown_fetch": {"status": 200, "is_text_markdown": true, "declares_charset_utf8": true, "bullets_u2022": 18, "em_dashes_u2014": 26, "mojibake": false,
+   "sentences_with_23_1": 9, "with_pitch_deck_hunt": 9, "dash_list_items": 19, "note": "read by in-page fetch so no file was saved; the extension redacted the raw header string, so the header was re-read as booleans"},
+  "profile": {"canary_in_rendered_text": true, "expected": "staff may see the private field"},
+  "company_overview_fetch": {"status": 200, "full_report": true, "pitch_deck_hunt_mentions": 2},
+  "truth_delta_owner_panel_for_staff_fetch": false,
+  "sign_out": {"button": "Sign Out", "after": "/api/v1/zelda/documents/3139/verification/ -> /accounts/login/?next=/api/v1/zelda/documents/3139/verification/", "signed_in": false}
+ }
+}
