@@ -1019,6 +1019,107 @@ def _narrator_provenance(sentence, facts, changes):
     return _same_figures(sentence, sources, dict(facts.ref_figures), facts.company, changes)
 
 
+# --- memo 98 (NP-603 / NP-604) ---------------------------------------------------------------------
+# A narrated funding fact's narrative belongs to its narrator: "it establishes the fundraising narrative the
+# company has put forward [C1]" credits the company with what only Pitch Deck Hunt narrates.
+_COMPANY_NARRATES = re.compile(
+    r'\b(?P<subject>[Tt]he company)(?=(?:\s+(?:has|had))?\s+(?:put\s+forward|present(?:s|ed)?|state(?:s|d)?|'
+    r'report(?:s|ed)?|claim(?:s|ed)?|assert(?:s|ed)?|advance(?:s|d)?|offer(?:s|ed)?)\b)')
+_NARRATIVE_WORDS = re.compile(r'\b(?:fundrais\w*|funding|raised|capital|financing)\b', re.I)
+_TRACTION_WORDS = re.compile(r'\b(?:bots?|messages?|users?|customers?|traction|usage|engagement)\b', re.I)
+# "the total amount raised": an aggregation the admitted funding item does not state.
+_TOTAL = re.compile(r'\btotal\s+(?=(?:amount\s+)?(?:raised|funding|capital)\b)', re.I)
+_STATED_TOTAL = re.compile(r'\b(?:total|to\s+date|cumulative\w*|in\s+aggregate|so\s+far)\b', re.I)
+# Historical funding as the runway / operating-cash denominator, in a statement or a question:
+# "how long the company can operate on the capital narrated as raised [S4]",
+# "runway against the $23.1M (per Pitch Deck Hunt) narrated as raised [S4]?".
+_SPAN = r'(?:[^.;?\[\]]|\.(?=\d))'
+_FUNDING_DENOMINATOR = re.compile(
+    rf'\b(?P<verb>runway|operate|operating|survive|sustain)\b(?P<mid>{_SPAN}{{0,40}}?)\s+'
+    rf'(?P<link>against|on|from|with|out\s+of)\s+(?P<phrase>{_SPAN}+?)(?=\s*\[|\s*[.;?](?!\d)|\s*$)', re.I)
+_DENOMINATOR_WORDS = re.compile(r'\b(?:capital|funding|raised|raise|proceeds)\b', re.I)
+NOT_CASH = 'is historical funding, not cash on hand'
+
+
+def _narrated_funding_refs(facts):
+    return {ref for ref, narrator, kind in facts.ref_sources if narrator and kind == 'funding'}
+
+
+def _narrative_owner(sentence, facts, changes):
+    """A narrative citing only one narrator's funding refs is that narrator's, not the company's."""
+    cited = _cited(sentence)
+    if not cited or not _NARRATIVE_WORDS.search(sentence):
+        return sentence
+    sources = {ref: (narrator, kind) for ref, narrator, kind in facts.ref_sources}
+    if not all(sources.get(ref, ('', ''))[0] and sources[ref][1] == 'funding' for ref in cited):
+        return sentence
+    narrators = {sources[ref][0] for ref in cited}
+    if len(narrators) != 1:
+        return sentence
+    narrator = next(iter(narrators))
+
+    def owner(match):
+        # Only in the clause that names the funding narrative: "... and the company reports 140,000+
+        # bots" is the company's own statement and stays the company's.
+        clause = sentence[_clause_start(sentence, match.start()):_clause_end(sentence, match.end())]
+        if not _NARRATIVE_WORDS.search(clause) or _TRACTION_WORDS.search(clause):
+            return match.group(0)
+        changes.append('narrator_narrative')
+        return narrator
+
+    return _COMPANY_NARRATES.sub(owner, sentence)
+
+
+def _unsupported_total(sentence, facts, changes):
+    """ "the total amount raised" for a narrated funding fact whose own statement states no total."""
+    narrated = _narrated_funding_refs(facts)
+    if _asks(sentence) or not _TOTAL.search(sentence):
+        return sentence                   # "What is the total raised beyond the $23.1M ...?" asks; it is kept
+    statements = dict(facts.ref_figures)
+    if any(_STATED_TOTAL.search(statements.get(ref, '')) for ref in narrated):
+        return sentence
+
+    def drop(match):
+        # Only where the clause states the narrated figure itself (its amount or its citation).
+        start, stop = _clause_start(sentence, match.start()), _clause_end(sentence, match.end())
+        clause = sentence[start:stop] + _trailing_refs(sentence, stop)
+        if not (_cited(clause) & narrated or any(p.search(clause) for p in facts.funding_figures)):
+            return match.group(0)
+        changes.append('unsupported_total')
+        return ''
+
+    return _TOTAL.sub(drop, sentence)
+
+
+def _trailing_refs(sentence, stop):
+    """Citations straight after a clause belong to it ("... the total amount raised [S4].")."""
+    match = re.match(r'\s*(?:\[[^\]]*\]\s*)+', sentence[stop:])
+    return match.group(0) if match else ''
+
+
+def _funding_not_runway(sentence, facts, changes):
+    """
+    Historical funding is never the cash or runway denominator, also in a question: the denominator
+    is kept and named for what it is. Dated cash and burn questions, and questions about whether the
+    funding occurred, are untouched: the denominator must itself name funding (its amount, capital,
+    funding, raised, proceeds), so "on its $2M cash balance" is never rewritten.
+    """
+    if NOT_CASH in sentence:
+        return sentence
+    if not (_cited(sentence) & facts.funding_refs or any(p.search(sentence) for p in facts.funding_figures)):
+        return sentence
+
+    def rewrite(match):
+        phrase = match.group('phrase').strip()
+        if not (any(p.search(phrase) for p in facts.funding_figures) or _DENOMINATOR_WORDS.search(phrase)):
+            return match.group(0)
+        changes.append('funding_not_runway')
+        return (f"{match.group('verb')}{match.group('mid')} — from the dated cash and burn alone, since "
+                f"{phrase} {NOT_CASH}")
+
+    return _FUNDING_DENOMINATOR.sub(rewrite, sentence)
+
+
 def guard_funding_fidelity(text, facts):
     """Apply the rules to one memo section. Returns (text, changes)."""
     if not isinstance(text, str) or not text:
@@ -1026,7 +1127,7 @@ def guard_funding_fidelity(text, facts):
     changes, out = [], []
     for sentence, separator in _sentences(text):
         for rule in (_no_event, _no_premise, _cited_self_reported, _attribute, _narrator_provenance,
-                     _no_cash_premise, _profile_undated):
+                     _no_cash_premise, _profile_undated, _narrative_owner, _unsupported_total, _funding_not_runway):
             sentence = rule(sentence, facts, changes)
         out.append(sentence + separator)
     return (''.join(out) if changes else text), changes

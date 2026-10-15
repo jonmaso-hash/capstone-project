@@ -1218,6 +1218,17 @@ class ZeldaIntelligencePipelineV2:
                     logger.info('Memo %s: funding-source fidelity %s for document %s',
                                 key, changes, context.document_id)
                     memo_sections[key] = guarded
+            # Two admitted usage figures on different bases are a clarification question (rule 11): an
+            # unspecified interval is not "the cumulative figure", and matching numbers do not show an
+            # overstatement (memo 98, UB-604). Active only when the context carries a basis note.
+            from .basis_fidelity import basis_facts, guard_basis_wording
+            basis = basis_facts(context.items, context.consistency_notes)
+            for key, value in list(memo_sections.items()):
+                guarded, changes = guard_basis_wording(value, basis)
+                if changes:
+                    logger.info('Memo %s: measurement-basis wording %s for document %s',
+                                key, changes, context.document_id)
+                    memo_sections[key] = guarded
 
             memo, created = IntelligenceMemo.objects.update_or_create(
                 document_id=context.document_id,
