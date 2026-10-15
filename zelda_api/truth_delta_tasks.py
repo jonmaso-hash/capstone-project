@@ -12,7 +12,7 @@ from .truth_delta_engine import TruthDeltaEngine
 from .financial_metrics import (
     MONEY_CATEGORIES, claim_is_admissible, currency_amount, usage_basis, usage_unit,
 )
-from .usage_basis import refused_split
+from .usage_basis import unresolved_split
 from .truth_delta_models import ClaimedDatapoint
 from .claim_attribution import claim_ownership, company_names, source_sentence
 from .claim_periods import claim_period
@@ -135,16 +135,16 @@ def extract_claims_from_insights(document_id: int):
             source_chunk_obj = insight.source_chunks.first()
             chunk_text = source_chunk_obj.raw_text if source_chunk_obj else ''
             sentence = source_sentence(text, chunk_text)
-            # A usage span that exists only by joining lines the join rule
-            # refused -- under another organisation's label, or with prose or a
-            # blank line between them -- has no bounded source sentence whose
-            # owner could be read. Refused, never stored as implied.
-            if matched_category == 'usage':
-                refused = refused_split(text, chunk_text)
-                if refused is not None:
-                    logger.debug("[Truth Delta] usage span %r joins lines that were refused (%s)",
-                                 text[:80], refused.reason)
-                    continue
+            # A usage span whose figure stands alone on a line of this chunk exists
+            # only by joining lines. It is admitted only when the join rule, with
+            # this document's subject names, joined exactly that pair -- the
+            # block's owner resolved as no one else. Otherwise (another
+            # organisation's label across a blank line or a sibling metric,
+            # prose between number and noun) it is refused: ownership is never
+            # read from the bare joined span alone (RA-109 review).
+            if matched_category == 'usage' and unresolved_split(text, chunk_text, names):
+                logger.debug("[Truth Delta] usage span %r joins lines whose owner is unresolved", text[:80])
+                continue
             ownership, owner = claim_ownership(sentence, names)
             if ownership is None:
                 logger.debug("[Truth Delta] %s figure belongs to %r, not the company: %r",
@@ -154,7 +154,7 @@ def extract_claims_from_insights(document_id: int):
             # Context, never the period above: who reports the figure, and a
             # dated slide heading over it ("Traction by Apr-16") -- RA-102/106.
             narrator = claim_narrator(sentence, names)
-            heading = dated_heading(text, source_chunk_obj.raw_text if source_chunk_obj else '')
+            heading = dated_heading(text, source_chunk_obj.raw_text if source_chunk_obj else '', names)
 
             # Money categories read MONEY. The general extractor matches
             # percentages first, which is how "Bank line: 75% utilized" became

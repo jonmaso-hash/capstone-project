@@ -127,7 +127,10 @@ class FrozenDeckExtractionTests(TestCase):
                 lines = by_page[spec['page']].split('\n')
                 first = lines.index(spec['source_lines'][0])
                 self.assertEqual(lines[first + 1], spec['source_lines'][1], spec)
-                self.assertIn(spec['source_sentence'], sentences(join_split_usage_lines(by_page[spec['page']])), spec)
+                # With the document's subject name, as the analyzer reads it
+                # (extract() sets source_entity to the fixture name).
+                joined = join_split_usage_lines(by_page[spec['page']], [fixture['name']])
+                self.assertIn(spec['source_sentence'], sentences(joined), spec)
             else:
                 self.assertIn(spec['source_sentence'], sentences(by_page[spec['page']]), spec)
             self.assertIn(claim.claimed_value, spec['source_sentence'], spec)

@@ -234,17 +234,31 @@ CUMULATIVE_BASIS = 'cumulative'
 _RATE_WORDS = {'month': 'month', 'mo': 'month', 'week': 'week', 'wk': 'week',
                'day': 'day', 'year': 'year', 'yr': 'year'}
 _RATE_ADJECTIVES = {'monthly': 'month', 'weekly': 'week', 'daily': 'day', 'yearly': 'year', 'annual': 'year'}
-# A denominator directly after the noun, optionally after one verb a deck uses
-# for messages ("500M messages sent per month"). "/" and "per" always introduce
-# one, so an unsupported word there ("per user", "/quarter") is refused rather
-# than dropped; "a" only counts before a supported word ("messages a month").
-_AFTER_NOUN = re.compile(
-    r"\s*(?:(?:sent|delivered|processed|handled|exchanged|created)\s+)?"
-    r"(?:(?P<intro>/|\bper\b|\beach\b)\s*(?P<word>[A-Za-z]+)|\ba\s+(?P<a_word>month|week|day|year)\b)",
+# One verb a deck puts between the noun and its qualifier ("500M messages sent per month").
+_USAGE_VERB = r"(?:(?:sent|delivered|processed|handled|exchanged|created)\s+)?"
+# An explicit denominator directly after the noun is recognised by its
+# introducer alone ("/", "per", "each", "every", or "a" before a period word),
+# whatever follows. What follows must then be exactly one supported period
+# word: "per 2 months" (numeric), "/month per user" (compound) or "per user"
+# (unsupported) is refused -- never simplified to a bare count or a plainer
+# rate (RA-109 review).
+_DENOMINATOR = re.compile(
+    r"\s*" + _USAGE_VERB + r"(?:(?P<intro>/|\bper\b|\beach\b|\bevery\b)|\ba\s+(?=(?:month|week|day|year)\b))",
     re.IGNORECASE)
-_BEFORE_NOUN = re.compile(r"\b(?P<adj>monthly|weekly|daily|yearly|annual|cumulative|total)\s+$", re.IGNORECASE)
-_CUMULATIVE_NEAR = re.compile(r"\bto\s+date\b|\bcumulative(?:ly)?\b|\bsince\s+(?:inception|launch|founding)\b|"
-                              r"\ball[- ]time\b|\blifetime\b", re.IGNORECASE)
+_DENOMINATOR_WORD = re.compile(r"\s*(?P<word>[A-Za-z]+)\b")
+_ANOTHER_DENOMINATOR = re.compile(r"\s*[,;]?\s*(?:/|\bper\b|\beach\b|\bevery\b)", re.IGNORECASE)
+# Qualifiers inside the figure's own phrase, between the figure and the noun.
+_BEFORE_NOUN = re.compile(
+    r"(?<![\w-])(?P<adj>monthly|weekly|daily|yearly|annual|cumulative|total|lifetime|all-time)\s+$", re.IGNORECASE)
+_UNSUPPORTED_RATE_ADJECTIVE = re.compile(
+    r"(?:\b\w+-(?:monthly|weekly|daily|yearly|annual)|\b(?:bimonthly|biweekly|biannual|semiannual|fortnightly|"
+    r"quarterly|hourly))\s+$", re.IGNORECASE)
+# Cumulative wording counts only when it qualifies the figure's own phrase: right
+# after the noun (optionally after its verb). "500M messages with lifetime
+# customer support" or "500M messages; bots tracked since launch" stay unspecified.
+_CUMULATIVE_AFTER = re.compile(
+    r"\s*" + _USAGE_VERB + r"(?:to\s+date|cumulatively|in\s+total|all[- ]time|since\s+(?:inception|launch|founding))\b",
+    re.IGNORECASE)
 
 
 class UsageBasis:
@@ -288,13 +302,18 @@ def usage_basis(text):
     figure = re.search(r"\d", text)
     noun = _ANY_COUNTED_NOUN.search(text, figure.start())
     rate = ''
-    after = _AFTER_NOUN.match(text, noun.end())
-    if after:
-        word = (after['word'] or after['a_word'] or '').lower()
-        if word not in _RATE_WORDS:
-            return None                       # "per user", "/quarter": a basis we cannot represent
-        rate = _RATE_WORDS[word]
-    before = _BEFORE_NOUN.search(text, figure.start(), noun.start())
+    denominator = _DENOMINATOR.match(text, noun.end())
+    if denominator:
+        word = _DENOMINATOR_WORD.match(text, denominator.end())
+        if word is None or word['word'].lower() not in _RATE_WORDS:
+            return None                       # "per user", "/quarter", "per 2 months": not representable
+        if _ANOTHER_DENOMINATOR.match(text, word.end()):
+            return None                       # "/month per user", "/day/user": a compound basis
+        rate = _RATE_WORDS[word['word'].lower()]
+    phrase = text[figure.start():noun.start()]
+    if _UNSUPPORTED_RATE_ADJECTIVE.search(phrase):
+        return None                           # "bi-monthly", "quarterly" messages
+    before = _BEFORE_NOUN.search(phrase)
     if before:
         adjective = before['adj'].lower()
         if adjective in _RATE_ADJECTIVES:
@@ -302,9 +321,9 @@ def usage_basis(text):
                 return None                   # "monthly messages per day": contradictory wording
             rate = _RATE_ADJECTIVES[adjective]
         elif not rate:
-            rate = CUMULATIVE_BASIS           # "cumulative messages", "total messages"
-    if not rate and _CUMULATIVE_NEAR.search(text, noun.end()):
-        rate = CUMULATIVE_BASIS
+            rate = CUMULATIVE_BASIS           # "cumulative messages", "total messages", "lifetime messages"
+    if not rate and _CUMULATIVE_AFTER.match(text, noun.end()):
+        rate = CUMULATIVE_BASIS               # "500M messages to date", "... sent since launch"
     return UsageBasis(_plural(noun.group(1)), rate)
 
 

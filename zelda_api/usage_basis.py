@@ -18,12 +18,20 @@ belong to someone else:
   * the figure line holds exactly one figure and nothing else;
   * the very next line is a usage noun with an optional supported rate, and
     nothing else -- no blank line, prose or second figure between them;
-  * the line above is empty, a sibling figure line ("140 000+ bots"), or a
-    generic heading made of metric/time words ("Traction by Apr-16"). Any
-    other label above ("Telegram", "FB Messenger", even the company's own
-    name) may name the owner, so the pair is left unjoined;
-  * the line below does not continue the figure ("via Telegram", "on
-    partner platforms") and is not a bare organisation label.
+  * the BLOCK's owner is resolved, not just the neighbouring line's. Walking
+    up across layout blank lines and sibling metric lines ("140 000+ bots"),
+    the first other line must be a generic heading made of metric/time words
+    ("Traction by Apr-16") or the document's own subject ("ManyChat", from
+    the names the caller knows), or the chunk must start. Any other line --
+    "Telegram", "FB Messenger", a prose sentence, a bare figure -- leaves the
+    pair unjoined. Walking down the same way, a line that continues the
+    figure ("via Telegram") or an organisation label ("Telegram Messaging
+    Service") refuses; an ordinary statement ("Launching on Facebook") ends
+    the block.
+
+The claim task admits a usage span that only exists by joining lines when,
+and only when, this same rule (with the document's subject names) joined it.
+The owner is never inferred from the joined span alone.
 
 The second half: once both figures survive, "500M messages" (no stated
 interval) and "500M messages/month" are an internal measurement-basis
@@ -34,7 +42,7 @@ import re
 from dataclasses import dataclass
 from typing import Tuple
 
-from .claim_attribution import _NOT_AN_OWNER
+from .claim_attribution import _COMPANY, _LEGAL_SUFFIXES, _NOT_AN_OWNER, _SENTENCE, _mask_company
 from .financial_metrics import CUMULATIVE_BASIS, basis_from_unit
 
 # The same figure shape the analyzer uses for Traction counts
@@ -46,7 +54,9 @@ _FIGURE_LINE = re.compile(r'\s*' + TRACTION_NUMBER + r'\s*')
 _UNIT_LINE = re.compile(
     r'\s*(?:(?:monthly|weekly|daily|yearly|annual)\s+)?(?:bots?|messages?)'
     r'(?:\s*(?:/|\bper\b)\s*(?:month|mo|week|wk|day|year|yr)\b)?\s*', re.IGNORECASE)
-_SIBLING_FIGURE_LINE = re.compile(TRACTION_NUMBER + r'\s*\S', re.IGNORECASE)
+# A sibling metric in the same block: a figure, then up to four words naming it,
+# none of them a capitalised name ("140 000+ bots", "2M messages/month").
+_SIBLING_FIGURE_LINE = re.compile(r'\s*' + TRACTION_NUMBER + r'\s*(?P<words>[^\d]+?)\s*', re.IGNORECASE)
 # A line that carries the figure on: a lower-case start, or a connective in any case.
 _CONTINUATION = re.compile(r'^\s*(?:[a-z]|(?i:on|via|across|from|in|at|through|by|for|of|with|to)\b)')
 _HEADING_WORDS = _NOT_AN_OWNER | {'by', 'in', 'as', 'of', 'at', 'since', 'through', 'until', 'and'}
@@ -73,17 +83,77 @@ def _generic_heading(line):
     return bool(words) and all(w in _HEADING_WORDS or re.fullmatch(r'\d{1,4}', w) for w in words)
 
 
-def _owner_label_below(line):
-    """A short line with no figure that is not a generic word: another party's name, possibly."""
+def _subject_label(line, names):
+    """The line is the document's own subject name (legal suffixes allowed), and nothing else."""
+    if not names:
+        return False
+    masked = _mask_company(line, names)
+    if _COMPANY not in masked:
+        return False
+    rest = [w for w in re.split(r'[^A-Za-z0-9]+', masked.replace(_COMPANY, ' ').lower()) if w]
+    return all(w in _LEGAL_SUFFIXES for w in rest)
+
+
+def _sibling(line):
+    """A sibling metric line: a figure and a few lower-case/generic words, no name in it."""
+    match = _SIBLING_FIGURE_LINE.fullmatch(line)
+    if not match or not re.search(r'[A-Za-z]', match['words']):
+        return False
+    words = re.findall(r"[A-Za-z][A-Za-z'\-]*", match['words'])
+    return len(words) <= 4 and all(w[0].islower() or w.lower() in _HEADING_WORDS for w in words)
+
+
+def _name_label(line):
+    """A short title-case line with no figure and no lower-case word: an organisation's name."""
     words = line.split()
-    return 0 < len(words) <= 2 and not re.search(r'\d', line) and not _generic_heading(line)
+    if not 0 < len(words) <= 6 or re.search(r'\d', line) or _generic_heading(line):
+        return False
+    return all(not re.match(r'[A-Za-z]', w) or w[0].isupper() for w in words)
 
 
-def scan_split_usage_lines(text):
+def _block_label_above(lines, i, names):
+    """(reason, label) for the block over the figure line at i: None when it is resolved."""
+    for j in range(i - 1, -1, -1):
+        line = lines[j].strip()
+        if not line:
+            continue                                  # layout whitespace: the same block
+        if _FIGURE_LINE.fullmatch(line):
+            return UNBOUNDED, line                    # a bare figure: an axis or a list
+        if _sibling(line):
+            continue                                  # another metric in the same block
+        if _generic_heading(line) or _subject_label(line, names):
+            return None, ''
+        return OWNER_LABEL, line                      # a name or prose: the owner is not ours
+    return None, ''
+
+
+def _block_label_below(lines, j, names):
+    """(reason, label) for the block under the unit line at j - 1: None when nothing claims it."""
+    for k in range(j, len(lines)):
+        line = lines[k].strip()
+        if not line:
+            continue
+        if _CONTINUATION.match(line):
+            return OWNER_LABEL, line                  # carries the figure on ("via Telegram")
+        if _FIGURE_LINE.fullmatch(line):
+            return None, ''                           # the next figure starts another pair
+        if _sibling(line):
+            continue
+        if _generic_heading(line) or _subject_label(line, names):
+            return None, ''
+        if _name_label(line):
+            return OWNER_LABEL, line                  # a caption naming an organisation
+        return None, ''                               # an ordinary statement ends the block
+    return None, ''
+
+
+def scan_split_usage_lines(text, names=()):
     """
     (joined_text, refusals). joined_text is `text` with each admitted figure
     line and unit line joined by one space; every other line is unchanged.
     refusals lists the figure/unit pairs that were NOT joined, with the reason.
+    `names` are the document's own subject names; without them a label naming
+    the subject is an unknown owner and refuses.
     """
     lines = (text or '').split('\n')
     out, refusals, i = [], [], 0
@@ -93,18 +163,9 @@ def scan_split_usage_lines(text):
                 and not re.search(r'\d', lines[i + 1])):
             figure, unit = line.strip(), lines[i + 1].strip()
             if _UNIT_LINE.fullmatch(unit):
-                above = lines[i - 1].strip() if i > 0 else ''
-                below = lines[i + 2].strip() if i + 2 < len(lines) else ''
-                reason, label = None, ''
-                if above and _FIGURE_LINE.fullmatch(above):
-                    reason, label = UNBOUNDED, above          # a bare figure above: an axis or a list
-                elif above and not ((_SIBLING_FIGURE_LINE.match(above) and re.search(r'[A-Za-z]', above))
-                                    or _generic_heading(above)):
-                    reason, label = OWNER_LABEL, above
-                elif below and _CONTINUATION.match(below):
-                    reason, label = OWNER_LABEL, below
-                elif below and _owner_label_below(below):
-                    reason, label = OWNER_LABEL, below
+                reason, label = _block_label_above(lines, i, names)
+                if reason is None:
+                    reason, label = _block_label_below(lines, i + 2, names)
                 if reason is None:
                     out.append(f'{figure} {unit}')
                     i += 2
@@ -112,35 +173,50 @@ def scan_split_usage_lines(text):
                 refusals.append(Refusal(figure, unit, reason, label))
         out.append(line)
         i += 1
-    _unbounded_pairs(lines, refusals)
     return '\n'.join(out), refusals
 
 
-def _unbounded_pairs(lines, refusals):
-    """A figure line and a unit line in the same chunk that are NOT adjacent (prose or a
-    blank line between them): recorded so a claim spanning them can be refused."""
-    for i, line in enumerate(lines):
-        if not _FIGURE_LINE.fullmatch(line):
-            continue
-        for j in range(i + 2, len(lines)):
-            if _UNIT_LINE.fullmatch(lines[j].strip()) and lines[j].strip():
-                refusals.append(Refusal(line.strip(), lines[j].strip(), UNBOUNDED))
-                break
-
-
-def join_split_usage_lines(text):
+def join_split_usage_lines(text, names=()):
     """`text` with every admissible figure/unit line pair joined (see the module docstring)."""
-    return scan_split_usage_lines(text)[0]
+    return scan_split_usage_lines(text, names)[0]
 
 
-def refused_split(span, chunk_text):
-    """The Refusal whose joined form is `span`, or None. For the claim layer: a usage span
-    that only exists by joining lines this module refused must not become a claim."""
-    span = ' '.join((span or '').split())
-    for refusal in scan_split_usage_lines(chunk_text)[1]:
-        if span.startswith(refusal.span):
-            return refusal
-    return None
+def _norm(text):
+    return ' '.join((text or '').split())
+
+
+def in_raw_sentence(span, chunk_text):
+    """The span is part of one of the chunk's own sentences, with no line joined."""
+    span = _norm(span)
+    return bool(span) and any(span in _norm(s) for s in _SENTENCE.split((chunk_text or '').replace('\r\n', '\n')))
+
+
+def admitted_join(span, chunk_text, names=()):
+    """True when the join rule, with the document's subject names, produced the line `span` starts with."""
+    span = _norm(span)
+    original = {_norm(line) for line in (chunk_text or '').replace('\r\n', '\n').split('\n')}
+    joined = scan_split_usage_lines((chunk_text or '').replace('\r\n', '\n'), names)[0].split('\n')
+    return any(line and line not in original and span.startswith(line) for line in (_norm(x) for x in joined))
+
+
+def unresolved_split(span, chunk_text, names=()):
+    """
+    For the claim task. The span is in none of its chunk's sentences, its figure
+    stands alone on a line of that chunk -- so the span exists only by joining
+    lines -- and the join rule, with the document's subject names, did not join
+    that pair: the block's owner is unresolved (another organisation's label
+    across a blank line or a sibling metric, prose between number and noun).
+    Such a span is refused; its owner is never read from the bare joined span.
+    """
+    if in_raw_sentence(span, chunk_text):
+        return False
+    figure = re.match(r'\s*' + TRACTION_NUMBER, span or '')
+    if figure is None:
+        return False
+    lines = {_norm(line) for line in (chunk_text or '').replace('\r\n', '\n').split('\n')}
+    if _norm(figure.group(0)) not in lines:
+        return False
+    return not admitted_join(span, chunk_text, names)
 
 
 # --- the measurement-basis note -------------------------------------------------

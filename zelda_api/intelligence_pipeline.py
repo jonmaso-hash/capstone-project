@@ -18,7 +18,7 @@ from .utils import strip_page_markers
 from .embeddings import embedding_engine
 import json
 from django.conf import settings
-from .financial_metrics import MONEY_FIGURE, currency_amount, usage_basis
+from .financial_metrics import MONEY_FIGURE, currency_amount, usage_basis, usage_unit
 from .usage_basis import join_split_usage_lines
 
 logger = logging.getLogger(__name__)
@@ -452,6 +452,10 @@ class ZeldaIntelligencePipelineV2:
             
             insights = []
             chunks = list(DocumentChunk.objects.filter(document=document_source).order_by('chunk_index'))
+            # The document's own subject names: a split usage figure under the
+            # subject's own label may be joined; under any other label it may not.
+            from .claim_attribution import company_names
+            subject_names = company_names(document_source)
 
             for category, keywords in self.ANALYSIS_CATEGORIES.items():
                 # Every chunk's candidate, not just the winner. A deck states
@@ -477,7 +481,7 @@ class ZeldaIntelligencePipelineV2:
                 for chunk in chunks:
                     sentences = [] if category in self.NUMERIC_CATEGORIES else None
                     result, confidence, provenance = self._smart_extract(
-                        category, chunk.raw_text, keywords, collect=sentences)
+                        category, chunk.raw_text, keywords, collect=sentences, subject_names=subject_names)
                     if not result:
                         continue
                     is_better = confidence > best_confidence or (
@@ -628,6 +632,11 @@ class ZeldaIntelligencePipelineV2:
             # percentage parses as a number, but it is neither.
             if not self._has_figure(category, candidate[0]):
                 continue
+            # A usage figure whose basis cannot be represented ("per 2 months",
+            # "/month per user") never becomes a claim, so it takes no slot and
+            # is never keyed as a bare count (RA-109 review).
+            if category == 'Traction' and usage_unit(candidate[0]) and usage_basis(candidate[0]) is None:
+                continue
             value = figure_key(candidate[0])
             if value is None or value in seen:
                 continue
@@ -636,7 +645,8 @@ class ZeldaIntelligencePipelineV2:
         return selected
 
     def _smart_extract(self, category: str, text: str, keywords: str,
-                       collect: Optional[List] = None) -> Tuple[Optional[str], float, Optional[Dict]]:
+                       collect: Optional[List] = None,
+                       subject_names=()) -> Tuple[Optional[str], float, Optional[Dict]]:
         """
         Smart extraction with DYNAMIC confidence scoring.
         Confidence logic:
@@ -659,6 +669,10 @@ class ZeldaIntelligencePipelineV2:
         `collect`, when given a list, receives (value, confidence, provenance)
         for every sentence that qualifies, winner included. The return value
         does not depend on it.
+
+        `subject_names` are the document's own names (claim_attribution.
+        company_names); the Traction line join admits a block labelled with them
+        and refuses any other label.
         """
         keyword_list = keywords.split()
         joined = ()
@@ -668,7 +682,7 @@ class ZeldaIntelligencePipelineV2:
             # rules in zelda_api/usage_basis.py; any block that could belong to
             # another party is left as it was (RA-109 / I1).
             original = set(text.split('\n'))
-            text = join_split_usage_lines(text)
+            text = join_split_usage_lines(text, subject_names)
             joined = {line for line in text.split('\n') if line not in original}
         sentences = re.split(r'(?<!\d)[.!?](?!\d)|\n', text)
 

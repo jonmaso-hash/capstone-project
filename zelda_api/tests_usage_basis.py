@@ -37,11 +37,13 @@ def ra109_expectation():
         return json.load(handle)
 
 
-def traction_candidates(text):
-    """Every qualifying Traction value the analyzer collects from one chunk."""
+def traction_candidates(text, names=()):
+    """Every qualifying Traction value the analyzer collects from one chunk. `names` are the
+    document's known subject names, as _analyze_document passes them."""
     pipeline = ZeldaIntelligencePipelineV2()
     collected = []
-    pipeline._smart_extract('Traction', text, pipeline.ANALYSIS_CATEGORIES['Traction'], collect=collected)
+    pipeline._smart_extract('Traction', text, pipeline.ANALYSIS_CATEGORIES['Traction'], collect=collected,
+                            subject_names=names)
     return [value for value, _, _ in collected]
 
 
@@ -100,21 +102,24 @@ class FrozenManyChatUsageTests(TestCase):
 
 class SplitLineJoinTests(SimpleTestCase):
 
-    def join(self, text):
+    def join(self, text, names=()):
         from .usage_basis import join_split_usage_lines
-        return join_split_usage_lines(text)
+        return join_split_usage_lines(text, names)
 
     def test_same_slide_figure_and_rate_lines_are_admitted(self):
+        # The block's label is the document's own subject ("ManyChat"), so the subject's
+        # names are required; without them the label is an unknown owner (review of a5494ae).
         text = 'ManyChat\n140 000+ bots\n500M\nmessages/month\nLaunching on Facebook'
-        self.assertIn('500M messages/month', self.join(text).split('\n'))
-        self.assertIn('500M messages/month', traction_candidates(text))
+        self.assertIn('500M messages/month', self.join(text, ['ManyChat']).split('\n'))
+        self.assertIn('500M messages/month', traction_candidates(text, ['ManyChat']))
+        self.assertEqual(self.join(text), text)
 
     def test_a_figure_at_the_start_of_a_block_is_admitted(self):
         self.assertEqual(self.join('500M\nmessages'), '500M messages')
         self.assertEqual(self.join('Traction by Apr-16\n2M\nbots'), 'Traction by Apr-16\n2M bots')
 
     def test_only_the_two_lines_are_joined(self):
-        text = 'Intro line here\n\n140 000+ bots\n500M\nmessages/month\nLaunching on Facebook\nMessenger this month'
+        text = 'Traction\n\n140 000+ bots\n500M\nmessages/month\nLaunching on Facebook\nMessenger this month'
         self.assertEqual(self.join(text).count('\n'), text.count('\n') - 1)
 
     def test_a_chunk_boundary_is_never_crossed(self):
@@ -547,3 +552,170 @@ class BasisNoteIsNotVerificationTests(TestCase):
         self.assertEqual((stats.get('verified', 0), stats.get('contradicted', 0)), (0, 0))
         self.assertEqual(after.overall_truth_score, before.overall_truth_score)
         self.assertNotIn('measurement', json.dumps(after.details, default=str).lower())
+
+
+# --- review of a5494ae: three source-fidelity failures ---------------------------------
+
+class _ClaimTaskHarness(TestCase):
+    """The real analyzer and the real claim task on one chunk of a ManyChat document."""
+
+    def setUp(self):
+        from .vector_models import DocumentSource
+        self.owner = get_user_model().objects.create_user('ra109_review_owner', password='x')
+        self.doc = DocumentSource.objects.create(filename='d.pptx', source_entity='ManyChat',
+                                                 uploaded_by=self.owner, document_type='pitch_deck')
+
+    def reset(self):
+        from .truth_delta_models import ClaimedDatapoint
+        from .vector_models import DocumentChunk, IntelligenceInsight
+        ClaimedDatapoint.objects.filter(document=self.doc).delete()
+        IntelligenceInsight.objects.filter(document=self.doc).delete()
+        DocumentChunk.objects.filter(document=self.doc).delete()
+
+    def analyze(self, chunk_text):
+        """Chunk -> _analyze_document -> extract_claims_from_insights; returns the claims."""
+        from . import truth_delta_tasks
+        from .truth_delta_models import ClaimedDatapoint
+        from .vector_models import DocumentChunk
+        self.reset()
+        DocumentChunk.objects.create(document=self.doc, chunk_index=0, page_number=5, section_title='',
+                                     raw_text=chunk_text, token_count=5)
+        pipeline = ZeldaIntelligencePipelineV2()
+        pipeline.used_chunks = set()
+        pipeline._analyze_document(self.doc, '')
+        with mock.patch.object(truth_delta_tasks.verify_document_truth_delta, 'delay'):
+            truth_delta_tasks.extract_claims_from_insights(self.doc.id)
+        return list(ClaimedDatapoint.objects.filter(document=self.doc).order_by('id'))
+
+    def offer(self, chunk_text, *insight_texts):
+        """Insights handed straight to the claim task (the claim-admission gate on its own)."""
+        from . import truth_delta_tasks
+        from .truth_delta_models import ClaimedDatapoint
+        from .vector_models import DocumentChunk, IntelligenceInsight
+        self.reset()
+        chunk = DocumentChunk.objects.create(document=self.doc, chunk_index=1, page_number=6, section_title='',
+                                             raw_text=chunk_text, token_count=5)
+        for text in insight_texts:
+            insight = IntelligenceInsight.objects.create(document=self.doc, insight_type='statement',
+                                                         category='Traction', insight_text=text,
+                                                         confidence_score=95.0)
+            insight.source_chunks.set([chunk])
+        with mock.patch.object(truth_delta_tasks.verify_document_truth_delta, 'delay'):
+            truth_delta_tasks.extract_claims_from_insights(self.doc.id)
+        return list(ClaimedDatapoint.objects.filter(document=self.doc).order_by('id'))
+
+
+PLATFORM_BLOCKS = (
+    'Telegram\n\n500M\nmessages/month',                       # owner label above a layout blank
+    'Telegram\n100M bots\n500M\nmessages/month',              # owner label above a sibling metric
+    'Telegram\n\n100M bots\n\n500M\nmessages/month',          # both
+    '500M\nmessages/month\nTelegram Messaging Service',       # a longer owner label below
+    '500M\nmessages/month\n\nTelegram',                       # owner label below a layout blank
+    '500M\nmessages/month\n100M bots\nTelegram',              # below a sibling metric
+    'FB Messenger\n\n\n900M\nbots',
+)
+
+
+class BlockOwnershipTests(_ClaimTaskHarness):
+    """Finding 1: a blank line or a sibling metric must not hide the block's owner."""
+
+    def test_the_helper_refuses_every_platform_block(self):
+        from .usage_basis import join_split_usage_lines
+        for text in PLATFORM_BLOCKS:
+            with self.subTest(text=text):
+                self.assertEqual(join_split_usage_lines(text, ['ManyChat']), text)
+
+    def test_the_analyzer_offers_no_platform_figure(self):
+        for text in PLATFORM_BLOCKS:
+            with self.subTest(text=text):
+                figures = [c for c in traction_candidates(text, ['ManyChat']) if '500M' in c or '900M' in c]
+                self.assertEqual(figures, [])
+
+    def test_no_claim_end_to_end(self):
+        for text in PLATFORM_BLOCKS:
+            with self.subTest(text=text):
+                claims = self.analyze(text)
+                self.assertFalse([c for c in claims if c.claimed_value_numeric in (5e8, 9e8)],
+                                 [(c.claimed_value, c.unit, c.ownership) for c in claims])
+
+    def test_claim_admission_refuses_a_joined_span_from_a_platform_block(self):
+        for text in PLATFORM_BLOCKS[:6]:
+            with self.subTest(text=text):
+                self.assertEqual([(c.claimed_value, c.ownership) for c in self.offer(text, '500M messages/month')], [])
+
+    def test_company_owned_blocks_are_kept(self):
+        for text in ('ManyChat\n140 000+ bots\n500M\nmessages/month\nLaunching on Facebook',
+                     'ManyChat\n\n500M\nmessages/month',
+                     'Traction by Apr-16\n\n140 000+ bots\n500M\nmessages/month',
+                     '140 000+ bots\n\n500M\nmessages/month\n\nLaunching on Facebook'):
+            with self.subTest(text=text):
+                rate = [(c.unit, c.ownership, c.source_sentence) for c in self.analyze(text)
+                        if c.unit == 'messages/month']
+                self.assertEqual(rate, [('messages/month', 'implied', '500M messages/month')])
+
+    def test_an_unknown_label_is_refused_and_the_subject_label_admitted(self):
+        from .usage_basis import join_split_usage_lines
+        self.assertEqual(join_split_usage_lines('Acme\n500M\nmessages', ['Acme']), 'Acme\n500M messages')
+        self.assertEqual(join_split_usage_lines('Acme\n500M\nmessages', []), 'Acme\n500M\nmessages')
+        self.assertEqual(join_split_usage_lines('Acme\n500M\nmessages', ['ManyChat']), 'Acme\n500M\nmessages')
+
+
+class DenominatorTests(_ClaimTaskHarness):
+    """Finding 2: a numeric or compound denominator is refused, never simplified."""
+
+    UNREPRESENTABLE = ('500M messages per 2 months', '500M messages/2 months', '500M messages every 2 months',
+                       '500M messages/month per user', '500M messages per month per user',
+                       '500M messages per month, per user', '500M messages/day/user', '500M bi-monthly messages')
+
+    def test_the_helper_refuses_them(self):
+        from .financial_metrics import usage_basis
+        for text in self.UNREPRESENTABLE:
+            with self.subTest(text=text):
+                self.assertIsNone(usage_basis(text))
+
+    def test_supported_controls_still_hold(self):
+        from .financial_metrics import usage_basis
+        for text, label in (('500M messages/month', 'messages/month'), ('500M messages per month', 'messages/month'),
+                            ('500M messages every month', 'messages/month'), ('2M messages per day', 'messages/day'),
+                            ('5,000 bots/week', 'bots/week'), ('10M messages per year', 'messages/year'),
+                            ('500M messages a month', 'messages/month'), ('500M messages', 'messages'),
+                            ('500M messages/month.', 'messages/month'),
+                            ('500M messages per month across 40 countries', 'messages/month')):
+            with self.subTest(text=text):
+                self.assertEqual(usage_basis(text).label, label)
+
+    def test_selection_does_not_keep_an_unrepresentable_rate(self):
+        pipeline = ZeldaIntelligencePipelineV2()
+        texts = ('500M messages', '500M messages per 2 months', '500M messages/month per user', '500M messages/month')
+        candidates = [(t, 95.0, None, None) for t in texts]
+        self.assertEqual([c[0] for c in pipeline._select_insights('Traction', candidates, candidates[0])],
+                         ['500M messages', '500M messages/month'])
+
+    def test_the_claim_task_stores_neither(self):
+        claims = self.offer('x', '500M messages per 2 months', '500M messages/month per user')
+        self.assertEqual([(c.claimed_value, c.unit) for c in claims], [])
+
+
+class CumulativeBindingTests(_ClaimTaskHarness):
+    """Finding 3: cumulative wording counts only inside the usage figure's own phrase."""
+
+    def test_wording_that_belongs_elsewhere_leaves_the_basis_unspecified(self):
+        from .financial_metrics import usage_basis
+        for text in ('500M messages with lifetime customer support', '500M messages; bots tracked since launch',
+                     '500M messages and a cumulative rise in signups', '500M messages, total revenue undisclosed'):
+            with self.subTest(text=text):
+                self.assertEqual(usage_basis(text).label, 'messages')
+
+    def test_the_figures_own_cumulative_wording_still_counts(self):
+        from .financial_metrics import usage_basis
+        for text in ('500M messages to date', '500M messages sent to date', '500M cumulative messages',
+                     '500M total messages', '500M messages since launch', '500M lifetime messages',
+                     '500M messages cumulatively'):
+            with self.subTest(text=text):
+                self.assertEqual(usage_basis(text).label, 'messages (cumulative)')
+
+    def test_the_claim_task_and_the_note_do_not_borrow_it(self):
+        from .usage_basis import basis_notes
+        claims = self.offer('x', '500M messages with lifetime customer support', '500M messages')
+        self.assertEqual(sorted(c.unit for c in claims), ['messages', 'messages'])
+        self.assertEqual(basis_notes(claims), [])
