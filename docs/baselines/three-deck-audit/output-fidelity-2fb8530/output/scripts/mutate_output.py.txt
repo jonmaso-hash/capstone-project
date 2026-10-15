@@ -1,0 +1,65 @@
+"""Memo-98 output-fidelity mutation run. Reuses the runner of mutate_ra109_review.py (apply one mutation, run the
+labels, restore, verify the SHA-256); only the labels and the mutation list differ.
+Usage: python mutate_output.py <worktree> [ID ...]. Anchors are LF; a CRLF file is matched with CRLF."""
+import os, sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+BASE = os.path.join(HERE, 'mutate_ra109_review.py')
+head, runner = open(BASE, encoding='utf-8').read().split('def sha(path):', 1)
+ns = {'__file__': BASE, '__name__': 'mutation_list'}
+exec(compile(head, BASE, 'exec'), ns)            # WT, ONLY, T, file constants
+ns['LABELS'] = ['zelda_api.tests_output_fidelity', 'zelda_api.tests_funding_fidelity', 'zelda_api.tests_usage_basis']
+BF, FF, IP = 'zelda_api/basis_fidelity.py', 'zelda_api/funding_fidelity.py', 'zelda_api/intelligence_pipeline.py'
+ns['M'] = [
+    ('O1', 'UB-604: the judgment rule is off', BF,
+     "    if _asks(sentence) or not _JUDGMENT.search(sentence):\n        return sentence",
+     "    if True:\n        return sentence"),
+    ('O2', 'UB-604: the judgment rule also rewrites questions', BF,
+     "    if _asks(sentence) or not _JUDGMENT.search(sentence):",
+     "    if not _JUDGMENT.search(sentence):"),
+    ('O3', 'UB-604: any error judgment is rewritten, related to the bases or not', BF,
+     "    if not (_BASIS_WORDS.search(sentence) or _cites_pair(sentence, facts)):\n        return sentence",
+     "    pass"),
+    ('O4', 'UB-604: the rewritten judgment drops its citations', BF,
+     "{' ' + groups if groups else ''}",
+     "{''}"),
+    ('O5', 'UB-604: an admitted cumulative fact no longer keeps its referent', BF,
+     "    if facts.cumulative_admitted or not _CUMULATIVE_REFERENT.search(sentence):",
+     "    if not _CUMULATIVE_REFERENT.search(sentence):"),
+    ('O6', 'UB-604: the cumulative-referent rule is off', BF,
+     "    changes.append('basis_cumulative_referent')\n    return _CUMULATIVE_REFERENT.sub(",
+     "    return sentence\n    return _CUMULATIVE_REFERENT.sub("),
+    ('O7', 'UB-604: the guard acts without a basis note', BF,
+     "    if not isinstance(text, str) or not text or not facts.active:",
+     "    if not isinstance(text, str) or not text:"),
+    ('O8', 'UB-604: the memo writer does not apply the basis guard', IP,
+     "                guarded, changes = guard_basis_wording(value, basis)",
+     "                guarded, changes = value, []"),
+    ('F1', 'NP-603: the narrative rule is off', FF,
+     "        changes.append('narrator_narrative')\n        return narrator",
+     "        return match.group(0)"),
+    ('F2', 'NP-603: the narrative rule ignores its clause (the company loses its own bot statement)', FF,
+     "        if not _NARRATIVE_WORDS.search(clause) or _TRACTION_WORDS.search(clause):\n            return match.group(0)",
+     "        pass"),
+    ('F3', "NP-603: the narrative rule accepts refs that are not a narrator's funding", FF,
+     "    if not all(sources.get(ref, ('', ''))[0] and sources[ref][1] == 'funding' for ref in cited):\n        return sentence",
+     "    pass"),
+    ('F4', 'NP-603: the unsupported-total rule is off', FF,
+     "        changes.append('unsupported_total')\n        return ''",
+     "        return match.group(0)"),
+    ('F5', 'NP-603: "total" is also stripped from questions', FF,
+     "    if _asks(sentence) or not _TOTAL.search(sentence):",
+     "    if not _TOTAL.search(sentence):"),
+    ('F6', 'NP-603: a stated total is stripped too', FF,
+     "    if any(_STATED_TOTAL.search(statements.get(ref, '')) for ref in narrated):\n        return sentence",
+     "    pass"),
+    ('F7', 'NP-604: the funding-not-runway rule is off', FF,
+     "        changes.append('funding_not_runway')\n        return (",
+     "        return match.group(0)\n        return ("),
+    # F8 (a cash balance treated as funding) survived the first run: the cash exclusion was unobservable,
+    # because the denominator must already name funding. The check was removed from the code, not kept.
+    ('F9', 'NP-604: the rule is not in the rule list', FF,
+     "_profile_undated, _narrative_owner, _unsupported_total, _funding_not_runway):",
+     "_profile_undated, _narrative_owner, _unsupported_total):"),
+]
+exec(compile('def sha(path):' + runner, BASE + ' (runner)', 'exec'), ns)

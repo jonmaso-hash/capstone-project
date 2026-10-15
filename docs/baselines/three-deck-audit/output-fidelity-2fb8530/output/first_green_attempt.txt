@@ -1,0 +1,23 @@
+2026-10-15 01:55:13,780 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+..........F.............
+======================================================================
+FAIL: test_funding_is_not_a_runway_denominator_even_with_dated_cash (zelda_api.tests_output_fidelity.FundingSourceAndRunwayTests.test_funding_is_not_a_runway_denominator_even_with_dated_cash)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 283, in test_funding_is_not_a_runway_denominator_even_with_dated_cash
+    self.assertEqual(text, 'How long can the company operate — from the dated cash and burn alone, since the '
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                           '$23.1M raised is historical funding, not cash on hand [S4]?')
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'How [86 chars]ised (per Pitch Deck Hunt) is historical fundi[22 chars]S4]?' != 'How [86 chars]ised is historical funding, not cash on hand [S4]?'
+- How long can the company operate — from the dated cash and burn alone, since the $23.1M raised (per Pitch Deck Hunt) is historical funding, not cash on hand [S4]?
+?                                                                                                ----------------------
++ How long can the company operate — from the dated cash and burn alone, since the $23.1M raised is historical funding, not cash on hand [S4]?
+
+
+----------------------------------------------------------------------
+Ran 24 tests in 0.291s
+
+FAILED (failures=1)
+Found 24 test(s).
+System check identified no issues (0 silenced).
