@@ -37,21 +37,32 @@ reported as $10M.") leaves the next referent unresolved. A sentence naming a lis
     referent    in a resolved sentence, "the cumulative figure/total/count/..." becomes "the figure stated
                 without an explicit interval", unless that pair itself admits a cumulative fact
 
-    label       in a resolved sentence, "contradiction(s)" / "contradictory" becomes "ambiguity" /
-                "ambiguous" (memo 99, OF-704: "Measurement-basis contradiction ... [C2, C3]"): two bounded
-                figures on different bases are a question to clarify. Kept when negated ("no contradiction"),
+    label       in a resolved sentence, an affirmative "contradiction(s)" / "contradictory" becomes
+                "ambiguity" / "ambiguous" (memo 99, OF-704: "Measurement-basis contradiction ... [C2, C3]"):
+                two bounded figures on different bases are a question to clarify. Kept when the word is denied
+                or qualified in the words before it ("no", "cannot establish", "insufficient evidence to
+                establish", "unable to show", ...), inside a condition ("If the figures are contradictory, ..."),
                 asked, or when Truth Delta found a pair item CONTRADICTED. "Inconsistency" is not changed
     total       in a resolved sentence, the pair's unspecified-interval figure followed by "total" ("500M
                 total") becomes "500M with no stated interval" (memo 99, OF-705), unless that pair admits a
-                cumulative fact
+                cumulative fact, the sentence asks, or the words sit inside a condition ("If 500M total is ...")
 
-and, in any sentence, one rule about where a figure is stated (memo 99, OF-705):
+and, first, in any sentence, one rule about where figures are stated (memo 99, OF-705; review of d30a022):
 
-    location    "on the same (traction) slide [S2, S3]" or "on a slide headed 'X' [S1, S2, S3]", when the
-                citation group mixes pages or contexts and cites a basis pair's member, becomes "on page 10
-                (slide headed 'X') [S1, S2] and page 12 [S3]": every ref keeps its own page and context, from
-                the admitted items' sources, in citation order. No ref is dropped and nothing is invented; a
-                ref without a page leaves the sentence as written
+    location    a clause placing a citation group "on the same (traction) slide" or "on a slide headed 'X'",
+                when the group mixes pages or contexts and cites a basis pair's member, is restated fact by
+                fact from the admitted items: "<subject> states 140 000+ bots [S1] and 500M messages with no
+                explicit interval [S2] on page 10, under 'X', and separately 500M messages/month [S3] on page
+                12 (how ... needs clarification before either is relied on)". Each fact is its item's own
+                statement (a pair's no-interval side says so), under its own page and context; adjacent refs
+                on one page share a run, so the citation order is kept; the pair's clarification follows when
+                both sides are cited. The clause keeps its subject and reporting verb ("the company states");
+                without one it becomes "The deck states". Kept when the phrase sits in a condition or a question,
+                or a ref has no page; nothing is invented and no ref is dropped
+
+A condition covers the words after "if" / "whether" / "unless" / "assuming" in the same sentence, for the
+label, total and location rules only; the judgment rule above is unchanged (memo 98's conditional
+overstatement is still corrected).
 
 Questions, indefinite conditional scenarios and other metrics are left as written. The word "cumulative"
 is never replaced on its own, no citation is moved onto another pair's wording, and nothing here reads
@@ -90,8 +101,15 @@ _BRIDGE = re.compile(
     r'(?:\s+and\s+(?:cannot\s+be\s+compared\s+or\s+reconciled\s+without\s+clarification\s+from\s+management|'
     r'need\s+clarification\s+before\s+comparison))?[.!]?\s*', re.I)
 _CONTRADICTION = re.compile(r'\b(?:(?P<art>[Aa])\s+)?(?P<word>contradictions?|contradictory)\b', re.I)
-_NEGATED = re.compile(r'\b(?:no|not|never|neither|nor|without|rather\s+than|instead\s+of)\b(?:\W+\w+){0,3}?\W+contradict',
-                      re.I)
+# Words in the six before "contradiction" that deny or qualify it: "no contradiction", "cannot establish a
+# contradiction", "insufficient evidence to establish a contradiction", "unable to show a contradiction".
+_DENIAL = frozenset({'no', 'not', 'never', 'neither', 'nor', 'without', 'cannot', "can't", "couldn't", 'unable',
+                     'insufficient', 'inadequate', 'lack', 'lacks', 'lacking', 'rather', 'instead', 'fail', 'fails',
+                     'failed', 'nothing', 'none'})
+_TO_ESTABLISH = re.compile(r'\bto\s+(?:establish|show|prove|demonstrate|confirm|determine)\b', re.I)
+_CONDITION = re.compile(r'\b(?:if|whether|unless|assuming|supposing|suppose)\b', re.I)
+_REPORTING = re.compile(r'\b(?:states?|stated|reports?|reported|presents?|presented|lists?|listed|shows?|shown|'
+                        r'gives?|cites?)\b', re.I)
 _LABEL = {'contradiction': 'ambiguity', 'contradictions': 'ambiguities', 'contradictory': 'ambiguous'}
 _FIGURE = re.compile(r'\d[\d.,]*\s?[KMBkmb]?\b')
 # "on the same (traction) slide [refs]" / "on a slide headed 'X' [refs]": one place claimed for a citation group.
@@ -109,12 +127,14 @@ class Pair:
     clarification: str                 # the neutral sentence, worded from this pair's bases
     contradicted: bool = False         # Truth Delta found a member CONTRADICTED: "contradiction" may be real
     unspecified: Tuple[str, ...] = ()  # the figure on a side with no stated interval ("500M")
+    sides: Tuple[frozenset, ...] = ()  # each side's members (its claim and the statements repeating it)
+    unspecified_members: frozenset = frozenset()   # members of a side with no stated interval
 
 
 @dataclass(frozen=True)
 class BasisFacts:
     pairs: Tuple[Pair, ...] = ()      # empty: no note, so no sentence can resolve and nothing changes
-    places: Tuple[Tuple[str, int, str], ...] = ()   # (ref, page, source context) for every admitted item with a page
+    places: Tuple[Tuple[str, int, str, str], ...] = ()   # (ref, page, source context, fact) for items with a page
 
 
 def _side(item):
@@ -139,13 +159,16 @@ def basis_facts(items, notes):
             continue
         sides = [_side(by_ref.get(ref)) for ref in refs]
         members = set(refs)
+        side_members = []
         for ref in refs:
             claim = by_ref.get(ref)
-            if claim is None:
-                continue
-            members |= {item.ref for item in items if item.kind == 'statement'
-                        and ' '.join(item.statement.split()) == ' '.join(claim.statement.split())
-                        and _page(item) == _page(claim)}
+            mine = {ref}
+            if claim is not None:
+                mine |= {item.ref for item in items if item.kind == 'statement'
+                         and ' '.join(item.statement.split()) == ' '.join(claim.statement.split())
+                         and _page(item) == _page(claim)}
+            side_members.append(frozenset(mine))
+            members |= mine
         clarification = f'How {sides[0][0]} relates to {sides[1][0]} needs clarification before either is relied on'
         unspecified = []
         for ref, side in zip(refs, sides):
@@ -156,8 +179,13 @@ def basis_facts(items, notes):
                           cumulative_admitted=any(side[1] for side in sides),
                           clarification=clarification[0].upper() + clarification[1:],
                           contradicted=any(item.status == CONTRADICTED for item in items if item.ref in members),
-                          unspecified=tuple(unspecified)))
-    places = tuple((item.ref, _page(item), item.source_context or '') for item in items if _page(item) is not None)
+                          unspecified=tuple(unspecified), sides=tuple(side_members),
+                          unspecified_members=frozenset().union(*(mine for mine, side in zip(side_members, sides)
+                                                                  if side[0] == UNSPECIFIED))))
+    bare = frozenset().union(*(pair.unspecified_members for pair in pairs))
+    places = tuple((item.ref, _page(item), item.source_context or '',
+                    item.statement + (' with no explicit interval' if item.ref in bare else ''))
+                   for item in items if _page(item) is not None)
     return BasisFacts(pairs=tuple(pairs), places=places)
 
 
@@ -206,19 +234,37 @@ def _referent(sentence, pair, changes):
     return _CUMULATIVE_REFERENT.sub(lambda m: ('T' if m.group('the') == 'T' else 't') + UNSPECIFIED[1:], sentence)
 
 
+def _conditional(sentence, position):
+    """The words at `position` sit inside a condition ("If the figures are contradictory ...")."""
+    return bool(_CONDITION.search(sentence[:position]))
+
+
+def _denied(sentence, position):
+    """The six words before `position` deny or qualify what follows ("cannot establish a ...")."""
+    before = sentence[:position]
+    words = {w.lower() for w in re.findall(r"[\w']+", before)[-6:]}
+    return bool(words & _DENIAL) or bool(_TO_ESTABLISH.search(' '.join(re.findall(r"[\w']+", before)[-6:])))
+
+
 def _label(sentence, pair, changes):
-    """"contradiction" for this pair's two bases: an ambiguity to clarify, unless negated, asked or external."""
-    if pair.contradicted or _asks(sentence) or _NEGATED.search(sentence) or not _CONTRADICTION.search(sentence):
+    """An affirmative "contradiction" for this pair's two bases: an ambiguity to clarify (see the docstring)."""
+    if pair.contradicted or _asks(sentence) or not _CONTRADICTION.search(sentence):
         return sentence
+    hits = []
 
     def neutral(match):
+        if _denied(sentence, match.start('word')) or _conditional(sentence, match.start()):
+            return match.group(0)
+        hits.append(match.group('word'))
         word = _LABEL[match.group('word').lower()]
         word = word[0].upper() + word[1:] if match.group('word')[0].isupper() else word
         art = match.group('art')
         return (art + 'n ' if art else '') + word
 
-    changes.append('basis_contradiction_label')
-    return _CONTRADICTION.sub(neutral, sentence)
+    out = _CONTRADICTION.sub(neutral, sentence)
+    if hits:
+        changes.append('basis_contradiction_label')
+    return out
 
 
 def _total(sentence, pair, changes):
@@ -227,36 +273,75 @@ def _total(sentence, pair, changes):
         return sentence
     for figure in pair.unspecified:
         pattern = re.compile(rf'(?<![\w.$]){re.escape(figure)}\s+total\b')
-        if pattern.search(sentence):
+        hits = [m for m in pattern.finditer(sentence) if not _conditional(sentence, m.start())]
+        if hits:
             changes.append('basis_unspecified_total')
-            sentence = pattern.sub(f'{figure} with no stated interval', sentence)
+            sentence = pattern.sub(lambda m: m.group(0) if _conditional(sentence, m.start())
+                                   else f'{figure} with no stated interval', sentence)
     return sentence
 
 
+def _place_clause_start(sentence, end):
+    """Where the clause holding `end` starts: after the last ";", ":" or dash outside parentheses."""
+    depth = 0
+    for i in range(end - 1, -1, -1):
+        ch = sentence[i]
+        if ch == ')':
+            depth += 1
+        elif ch == '(':
+            depth = max(0, depth - 1)
+        elif depth == 0 and ch in ';:—':
+            return i + 1
+    return 0
+
+
+def _reporting_verb(clause):
+    """The clause's first reporting verb outside parentheses ("the company states ...")."""
+    for match in _REPORTING.finditer(clause):
+        if clause[:match.start()].count('(') == clause[:match.start()].count(')'):
+            return match
+    return None
+
+
 def _location(sentence, facts, changes):
-    """One place claimed for refs from different pages or contexts: each ref under its own page and context."""
+    """One place claimed for refs from different pages or contexts: restated fact by fact (see the docstring)."""
     if _asks(sentence):
         return sentence
-    places = {ref: (page, context) for ref, page, context in facts.places}
+    places = {ref: (page, context, fact) for ref, page, context, fact in facts.places}
     members = set().union(*(pair.members for pair in facts.pairs)) if facts.pairs else set()
-
-    def place(match):
+    for match in _SHARED_PLACE.finditer(sentence):
         cited = [ref.strip() for ref in match.group('group').split(',')]
-        if not set(cited) & members or any(ref not in places for ref in cited):
-            return match.group(0)
+        if not set(cited) & members or any(ref not in places for ref in cited) or _conditional(sentence, match.start()):
+            continue
         claimed = match.group('ctx')
-        where = {places[ref] for ref in cited}
+        where = {places[ref][:2] for ref in cited}
         if len(where) == 1 and (claimed is None or next(iter(where))[1] == claimed):
-            return match.group(0)              # one page and context, and the phrase names it
-        groups = {}
+            continue                           # one page and context, and the phrase names it
+        runs = []                              # adjacent refs on one page and context share a run
         for ref in cited:
-            groups.setdefault(places[ref], []).append(ref)
+            if runs and runs[-1][0] == places[ref][:2]:
+                runs[-1][1].append(ref)
+            else:
+                runs.append((places[ref][:2], [ref]))
+        body = ', and separately '.join(
+            ' and '.join(f'{places[ref][2]} [{ref}]' for ref in refs) + f' on page {page}'
+            + (f", under '{context}'" if context else '') for (page, context), refs in runs)
+        both = next((pair for pair in facts.pairs if len(pair.sides) == 2
+                     and all(set(cited) & side for side in pair.sides)), None)
+        if both is not None:
+            body += f' ({both.clarification[0].lower()}{both.clarification[1:]})'
+        start = _place_clause_start(sentence, match.start())
+        clause = sentence[start:match.start()]
+        verb = _reporting_verb(clause)
+        if verb is not None:
+            head = sentence[:start] + clause[:verb.end()] + ' '
+        elif start == 0:
+            head = _LEAD.match(sentence).group('lead') + 'The deck states '
+        else:
+            head = sentence[:start] + clause[:len(clause) - len(clause.lstrip())] + 'the deck states '
         changes.append('basis_source_location')
-        return 'on ' + ' and '.join(
-            f"page {page}{f' (slide headed {chr(39)}{context}{chr(39)})' if context else ''} [{', '.join(refs)}]"
-            for (page, context), refs in groups.items())
-
-    return _SHARED_PLACE.sub(place, sentence)
+        return _location(head + body + sentence[match.end():], facts, [])
+    return sentence
 
 
 def guard_basis_wording(text, facts):
@@ -266,6 +351,7 @@ def guard_basis_wording(text, facts):
     changes, out = [], []
     previous: Optional[Pair] = None          # the pair this paragraph / list item is still discussing
     for sentence, separator in _sentences(text):
+        sentence = _location(sentence, facts, changes)
         pair = _resolve(sentence, facts, previous)
         if pair is not None:
             sentence = _judgment(sentence, pair, changes)
@@ -275,7 +361,6 @@ def guard_basis_wording(text, facts):
             previous = pair
         elif not _bridges(sentence):
             previous = None                  # another metric, another citation or an unresolved figure
-        sentence = _location(sentence, facts, changes)
         out.append(sentence + separator)
         if '\n' in separator:
             previous = None                  # a new paragraph or list item

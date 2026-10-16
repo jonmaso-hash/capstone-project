@@ -781,18 +781,52 @@ OPEN_AFTER = OPEN_BEFORE.replace('Measurement-basis contradiction', 'Measurement
 POINT_BEFORE = ("- The company states a messages figure of either 500M total or 500M/month (measurement basis unresolved; "
                 "see open concerns) on the same traction slide [S2, S3], suggesting material message volume on the "
                 "platform at that time.")
-POINT_AFTER = ("- The company states a messages figure of either 500M with no stated interval or 500M/month (measurement "
-               "basis unresolved; see open concerns) on page 10 (slide headed 'Traction by Apr-16') [S2] and page 12 [S3], "
-               "suggesting material message volume on the platform at that time.")
+# Review of d30a022: each fact under its own metric, basis, page and context; the relation stays a clarification.
+CLARIFICATION_99 = ("(how the figure stated without an explicit interval relates to the monthly figure needs clarification "
+                    "before either is relied on)")
+POINT_AFTER = ("- The company states 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', "
+               "and separately 500M messages/month [S3] on page 12 " + CLARIFICATION_99 + ", suggesting material message "
+               "volume on the platform at that time.")
 MODEL_BEFORE = ("the company states 140,000+ bots and 500M messages (measurement basis questioned; see open concerns) on a "
                 "slide headed 'Traction by Apr-16' [S1, S2, S3] — which confirm")
-MODEL_AFTER = ("the company states 140,000+ bots and 500M messages (measurement basis questioned; see open concerns) on "
-               "page 10 (slide headed 'Traction by Apr-16') [S1, S2] and page 12 [S3] — which confirm")
+MODEL_AFTER = ("the company states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under "
+               "'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 " + CLARIFICATION_99 +
+               " — which confirm")
 CHANGED_99 = {'open_concerns', 'supported_points', 'business_model_analysis'}
 # The merged funding guard's accepted live edits on memo 99 (evidence 09e), unchanged by this correction.
 FUNDING_99 = {'risk_assessment', 'information_readiness', 'what_would_change_the_picture', 'downside_scenario',
               'questions_for_management'}
-PLACED = re.compile(r"page (\d+)(?: \(slide headed '([^']+)'\))? \[([A-Z]\d+(?:, [A-Z]\d+)*)\]")
+RUN = re.compile(r"^(?P<facts>.+) on page (?P<page>\d+)(?:, under '(?P<ctx>[^']+)')?$")
+FACT = re.compile(r"^(?P<fact>.+) \[(?P<ref>[A-Z]\d+)\]$")
+
+
+def placed_facts(text):
+    """(fact, ref, page, context) for every fact the location repair emitted, in order."""
+    out = []
+    for body in re.findall(r"states (.+?) \(how the figure stated", text):
+        for run in body.split(', and separately '):
+            m = RUN.match(run)
+            assert m, run
+            for fact in m.group('facts').split(' and '):
+                f = FACT.match(fact)
+                assert f, fact
+                out.append((f.group('fact'), f.group('ref'), int(m.group('page')), m.group('ctx')))
+    return out
+
+
+def expected_facts(payload):
+    """Each ref's own statement, page and context; the note's no-interval side (and statements repeating it on its
+    page) carry "with no explicit interval"."""
+    items = {i['ref']: i for i in payload['items']}
+    note = payload['consistency_notes'][0]['refs']
+    bare = next(items[r] for r in note if '/' not in items[r]['statement'])
+    out = {}
+    for ref, i in items.items():
+        fact = i['statement']
+        if fact == bare['statement'] and i['sources'][0].get('page') == bare['sources'][0].get('page'):
+            fact += ' with no explicit interval'
+        out[ref] = (fact, i['sources'][0].get('page'), i.get('source_context'))
+    return out
 
 
 class Memo99ReplayTests(SimpleTestCase):
@@ -831,14 +865,22 @@ class Memo99ReplayTests(SimpleTestCase):
             self.assertNotIn('500M total', self.out[key])
 
     def test_every_placed_citation_supports_its_page_and_context(self):
-        sources = {i['ref']: (i['sources'][0].get('page'), i.get('source_context') or None) for i in self.payload['items']}
-        placed = 0
+        # Review of d30a022: metric, basis, page, context and ref together, for every emitted fact.
+        expected = expected_facts(self.payload)
+        seen = {}
         for key in ('supported_points', 'business_model_analysis'):
-            for page, context, group in PLACED.findall(self.out[key]):
-                for ref in group.split(', '):
-                    self.assertEqual(sources[ref], (int(page), context or None), (key, ref))
-                    placed += 1
-        self.assertEqual(placed, 5)
+            seen[key] = placed_facts(self.out[key])
+            for fact, ref, page, context in seen[key]:
+                self.assertEqual((fact, page, context), expected[ref], (key, ref))
+        self.assertEqual([r for _, r, _, _ in seen['supported_points']], ['S2', 'S3'])
+        self.assertEqual([r for _, r, _, _ in seen['business_model_analysis']], ['S1', 'S2', 'S3'])
+        # No bots fact and no dated heading under page 12; no cumulative reading invented.
+        for key, facts in seen.items():
+            for fact, ref, page, context in facts:
+                if page == 12:
+                    self.assertIsNone(context, key)
+                    self.assertNotIn('bots', fact, key)
+            self.assertNotIn('cumulative', self.out[key].split(' (how the figure')[0].split('states ', 1)[1], key)
 
     def test_every_other_field_is_exactly_as_stored(self):
         for key, value in self.out.items():
@@ -873,7 +915,7 @@ class Memo99ReplayTests(SimpleTestCase):
     def test_only_the_expected_rules_fired(self):
         self.assertEqual(set(self.changes), CHANGED_99 | FUNDING_99)
         self.assertEqual(self.changes['open_concerns'], ['basis_contradiction_label'])
-        self.assertEqual(self.changes['supported_points'], ['basis_unspecified_total', 'basis_source_location'])
+        self.assertEqual(self.changes['supported_points'], ['basis_source_location'])
         self.assertEqual(self.changes['business_model_analysis'], ['basis_source_location'])
         for key in FUNDING_99:
             self.assertFalse([c for c in self.changes[key] if c.startswith('basis_')], key)
@@ -961,11 +1003,17 @@ class BasisSourceLocationTests(SimpleTestCase):
     def test_a_cross_page_group_is_placed_by_its_own_sources(self):
         cases = {
             'The figures appear on the same slide [S2, S3].':
-                "The figures appear on page 10 (slide headed 'Traction by Apr-16') [S2] and page 12 [S3].",
+                "The deck states 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and "
+                "separately 500M messages/month [S3] on page 12 " + CLARIFICATION_99 + ".",
             "Bots and messages are on a slide headed 'Traction by Apr-16' [S1, S2, S3].":
-                "Bots and messages are on page 10 (slide headed 'Traction by Apr-16') [S1, S2] and page 12 [S3].",
+                "The deck states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under "
+                "'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 " + CLARIFICATION_99 + ".",
             "Both message figures appear in the slide headed 'Traction by Apr-16' [S3, S2].":
-                "Both message figures appear on page 12 [S3] and page 10 (slide headed 'Traction by Apr-16') [S2].",
+                "The deck states 500M messages/month [S3] on page 12, and separately 500M messages with no explicit "
+                "interval [S2] on page 10, under 'Traction by Apr-16' " + CLARIFICATION_99 + ".",
+            "The company states 140,000+ bots and 500M messages on the same slide [S1, S3].":
+                "The company states 140 000+ bots [S1] on page 10, under 'Traction by Apr-16', and separately 500M "
+                "messages/month [S3] on page 12.",
         }
         for text, expected in cases.items():
             with self.subTest(text=text):
@@ -1054,3 +1102,49 @@ class Of705MutationControlTests(SimpleTestCase):
     def test_a_shared_place_question_is_kept(self):
         text = 'Are both message figures shown on the same slide [S2, S3]?'
         self.assertEqual(self.guard(text, _context_items()), (text, []))
+
+
+# --- review of d30a022: the reviewer's probes ------------------------------------------------------------
+
+class ReviewD30a022ProbeTests(SimpleTestCase):
+    """Observed outputs at 979bf49 that the review required to stay as written, or to keep citation order."""
+
+    def guard(self, text):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        return guard_basis_wording(text, basis_facts(_context_items(), (NOTE,)))
+
+    def test_denials_and_insufficient_evidence_are_kept(self):
+        for text in ('The messages cannot establish a contradiction [C3, C2].',
+                     'The message figures provide insufficient evidence to establish a contradiction [C3, C2].',
+                     'Nothing here shows a contradiction between the message figures [C3, C2].',
+                     'The deck is unable to show a contradiction [S2, S3].'):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+
+    def test_conditional_scenarios_are_kept_by_the_new_rules(self):
+        for text in ('If the message figures are contradictory [C3, C2], management should explain the difference.',
+                     'If 500M total is the correct interpretation [S2, S3], management should explain the reporting window.',
+                     'If the figures appear on the same slide [S2, S3], management should say which is current.'):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+
+    def test_an_affirmative_label_after_a_condition_clause_ends_is_still_repaired(self):
+        # The condition covers its own clause; memo 99's affirmative heading form is still repaired elsewhere.
+        self.assertEqual(self.guard('There is a contradiction between page 10 and page 12 [C3, C2].')[1],
+                         ['basis_contradiction_label'])
+
+    def test_the_accepted_memo_98_conditional_overstatement_is_still_corrected(self):
+        out, changes = self.guard('If the cumulative figure [C3] is presented as monthly [C2], the claim is materially '
+                                  'overstated.')
+        self.assertEqual(out, RISK_AFTER[:-1] + ' [C3] [C2].')
+        self.assertEqual(changes, ['basis_overstatement'])
+
+    def test_interleaved_locations_keep_the_flattened_citation_order(self):
+        text = 'The figures appear on the same slide [S1, S3, S2].'
+        out, changes = self.guard(text)
+        self.assertEqual(refs(out), ['S1', 'S3', 'S2'])
+        self.assertEqual(out, "The deck states 140 000+ bots [S1] on page 10, under 'Traction by Apr-16', and separately "
+                              "500M messages/month [S3] on page 12, and separately 500M messages with no explicit interval "
+                              "[S2] on page 10, under 'Traction by Apr-16' " + CLARIFICATION_99 + ".")
+        self.assertEqual(changes, ['basis_source_location'])
+        self.assertEqual(self.guard(out), (out, []))
