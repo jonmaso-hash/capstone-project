@@ -1,0 +1,25 @@
+Model reply (after list-to-text) vs stored memo 99, per section, replayed through the pipeline order
+(time guard, then funding guard, then measurement-basis guard). Only changed sections are listed. Changes
+prefixed "basis:" are the measurement-basis guard (#284); the others are the funding guard
+("attribution" adds a narrator; "funding_not_runway" and "cash_premise" separate funding from cash).
+
+== risk_assessment  ['cash_premise'] 
+-5. Funding figure unverified and undated: Pitch Deck Hunt's listing of $23.1M raised [C1, S4] carries no date and no independent evidence could be found to corroborate or contradict it, leaving capital structure and remaining runway unknown.
++5. Funding figure unverified and undated: Pitch Deck Hunt's listing of $23.1M raised [C1, S4] carries no date and no independent evidence could be found to corroborate or contradict it, leaving capital structure and runway (which needs a dated cash balance and burn rate; neither is in the evidence) unknown.
+
+== information_readiness  ['attribution:Pitch Deck Hunt'] 
+-• Independent corroboration of the $23.1M raised figure and its date [C1]
++• Independent corroboration of the $23.1M raised figure (per Pitch Deck Hunt) and its date [C1]
+
+== what_would_change_the_picture  ['funding_not_runway'] 
+-The single most important missing piece of evidence is a set of financial statements — or at minimum a dated revenue and cash-burn schedule — that would establish whether ManyChat's stated usage scale (140,000+ bots, 500M messages [S1, S2, S3]) has translated into any monetisation, and how long the company can operate on its reported funding [S4].
++The single most important missing piece of evidence is a set of financial statements — or at minimum a dated revenue and cash-burn schedule — that would establish whether ManyChat's stated usage scale (140,000+ bots, 500M messages [S1, S2, S3]) has translated into any monetisation, and how long the company can operate — from the dated cash and burn alone, since its reported funding is historical funding, not cash on hand [S4].
+
+== downside_scenario  ['attribution:Pitch Deck Hunt'] 
+-If the 500M messages figure is a cumulative total rather than a monthly rate [C2, C3], and if the absence of any revenue disclosure reflects a pre-monetisation stage, then the $23.1M raised (undated, unverified [C1]) may have been deployed largely to acquire a large free-user base without a demonstrated path to revenue — a risk compounded by the complete absence of team, competitive, and market data in the extracted evidence.
++If the 500M messages figure is a cumulative total rather than a monthly rate [C2, C3], and if the absence of any revenue disclosure reflects a pre-monetisation stage, then the $23.1M raised (per Pitch Deck Hunt) (undated, unverified [C1]) may have been deployed largely to acquire a large free-user base without a demonstrated path to revenue — a risk compounded by the complete absence of team, competitive, and market data in the extracted evidence.
+
+== questions_for_management  ['attribution:Pitch Deck Hunt'] 
+-- The deck is listed with $23.1M raised [S4]: what rounds make up this total, at what valuations, and when did each close?
++- The deck is listed with $23.1M raised (per Pitch Deck Hunt) [S4]: what rounds make up this total, at what valuations, and when did each close?
+

@@ -1,0 +1,163 @@
+"""HTTP probes against the live local server, one session per principal."""
+import sys, os, re, json, html, requests
+cfg = json.load(open(sys.argv[1], encoding='utf-8-sig'))
+out = cfg['outdir']
+SP = os.path.dirname(os.path.abspath(__file__))
+pw = open(os.path.join(SP, 'pw.txt')).read().strip()
+B = 'http://127.0.0.1:8000'
+doc, owner, rep, slug, canary = cfg['doc'], cfg['owner'], cfg['report'], cfg['slug'], cfg['canary']
+markers = cfg['markers']
+B2 = 'Profile and deck figures to review'
+GET = [('Z_control_home', '/'), ('A_profile', f'/accounts/profile/{owner}/'), ('B_profile_analysis', f'/accounts/profile/{owner}/analysis/'),
+       ('C_intel_report', f'/matchmaking/memo/{slug}/'), ('C2_company_overview', f'/matchmaking/memo/profile/{cfg["application_id"]}/'), ('D_ic_memo', f'/api/v1/zelda/documents/{doc}/ic-memo/'),
+       ('E_ic_memo_dl', f'/api/v1/zelda/documents/{doc}/ic-memo/download/'), ('F_truthdelta_ui', f'/api/v1/zelda/documents/{doc}/verification/'),
+       ('G_memo_api', f'/api/v1/zelda/documents/{doc}/memo/'), ('H_td_api', f'/api/v1/zelda/documents/{doc}/truth-delta/'),
+       ('I_status', f'/api/v1/zelda/documents/{doc}/status/'), ('J_valuation_api', f'/api/v1/zelda/documents/{doc}/valuation/'),
+       ('K_valuation_ui', f'/api/v1/zelda/valuation/{doc}/'), ('L_identity_status', f'/api/v1/zelda/identity-check/{rep}/status/'),
+       ('O_library', '/api/v1/zelda/library/'), ('P_analyze_founder', f'/api/v1/zelda/analyze/founder/{owner}/')]
+API = {'G_memo_api', 'H_td_api', 'I_status', 'J_valuation_api', 'L_identity_status', 'O_library', 'P_analyze_founder'}
+RENDER = {'B_profile_analysis', 'C_intel_report', 'C2_company_overview', 'D_ic_memo', 'E_ic_memo_dl', 'F_truthdelta_ui'}
+
+
+def readable(t):
+    t = re.sub(r'(?is)<(script|style)\b.*?</\1>', ' ', t)
+    t = re.sub(r'(?s)<[^>]+>', ' ', t)
+    return re.sub(r'\s+', ' ', html.unescape(t)).strip()
+
+
+def login(name):
+    s = requests.Session()
+    if name is None:
+        return s
+    s.get(B + '/accounts/login/')
+    s.post(B + '/accounts/login/', data={'username': name, 'password': pw, 'csrfmiddlewaretoken': s.cookies.get('csrftoken')},
+           headers={'Referer': B + '/accounts/login/'}, allow_redirects=False)
+    assert 'sessionid' in s.cookies, 'login failed ' + name
+    if name.endswith('_staff'):
+        staff_mfa(s, name)
+    return s
+
+
+MFA_LOG = {}
+
+
+def staff_mfa(s, name):
+    """Complete staff MFA through the real setup/verify pages. The secret is a
+    disposable fixture's; it is kept in the scratchpad and never printed."""
+    import pyotp, time
+    sec_path = os.path.join(SP, name + '.totp')
+    r = s.get(B + '/accounts/staff-mfa/setup/', allow_redirects=False)
+    if r.status_code == 200 and 'Setup key' in r.text:
+        secret = re.search(r'<dt>Setup key</dt><dd><code>([A-Z2-7]+)</code>', r.text).group(1)
+        open(sec_path, 'w').write(secret)
+        code = pyotp.TOTP(secret).now()
+        r = s.post(B + '/accounts/staff-mfa/setup/', data={'password': pw, 'code': code, 'csrfmiddlewaretoken': s.cookies.get('csrftoken')},
+                   headers={'Referer': B + '/accounts/staff-mfa/setup/'}, allow_redirects=False)
+        MFA_LOG[name] = {'step': 'setup', 'status': r.status_code, 'recovery_codes_shown': 'recovery' in r.text.lower()}
+    else:
+        secret = open(sec_path).read().strip()
+        last = None
+        for _ in range(3):
+            code = pyotp.TOTP(secret).now()
+            if code != last:
+                r = s.post(B + '/accounts/staff-mfa/verify/', data={'code': code, 'csrfmiddlewaretoken': s.cookies.get('csrftoken')},
+                           headers={'Referer': B + '/accounts/staff-mfa/verify/'}, allow_redirects=False)
+                if r.status_code == 302:
+                    break
+            last = code
+            time.sleep(31)
+        MFA_LOG[name] = {'step': 'verify', 'status': r.status_code, 'location': r.headers.get('Location')}
+    chk = s.get(B + '/', allow_redirects=False)
+    MFA_LOG[name]['control_home_after_mfa'] = chk.status_code
+    assert chk.status_code == 200, 'staff MFA did not complete'
+
+
+def body_of(r):
+    try:
+        return r.json()
+    except Exception:
+        return r.text[:500]
+
+
+matrix, payloads, rendered, walks, content_types = [], {}, {}, {}, {}
+P = cfg['principals']
+ONLY = os.environ.get('PROBE_ONLY')
+for label, uname in P.items():
+    if ONLY and label != ONLY:
+        continue
+    s = login(uname)
+    for surf, url in GET:
+        r = s.get(B + url, allow_redirects=False)
+        body = r.text
+        rd = readable(body) if 'html' in r.headers.get('Content-Type', '') else body
+        content_types[f'{label}:{surf}'] = r.headers.get('Content-Type', '')
+        matrix.append({'principal': label, 'surface': surf, 'url': url, 'status': r.status_code, 'location': r.headers.get('Location', ''),
+                       'bytes': len(r.content), 'visible_markers': [m for m in markers if m.lower() in rd.lower()],
+                       'b2_panel': B2 in rd, 'canary_in_readable': canary in rd, 'canary_in_raw_body': canary in body})
+        if surf in API:
+            payloads[f'{label}:{surf}'] = {'status': r.status_code, 'body': body_of(r)}
+        if surf in RENDER and r.status_code == 200 and label in ('OWNER', 'STAFF', 'PAID'):
+            rendered[f'{label}:{surf}'] = rd[:20000]
+    hdr = {'X-CSRFToken': s.cookies.get('csrftoken', ''), 'Referer': B + '/'}
+    for surf, path in [('M_search', 'search'), ('N_rag', 'rag')]:
+        r = s.post(B + f'/api/v1/zelda/documents/{doc}/{path}/', json={'query': cfg['questions']['Q1'], 'top_k': 5}, headers=hdr)
+        matrix.append({'principal': label, 'surface': surf, 'url': f'/api/v1/zelda/documents/{doc}/{path}/', 'method': 'POST',
+                       'status': r.status_code, 'location': '', 'bytes': len(r.content), 'canary_in_raw_body': canary in r.text})
+    if uname:
+        r = s.post(B + '/accounts/logout/', data={'csrfmiddlewaretoken': s.cookies.get('csrftoken', '')}, headers={'Referer': B + '/'}, allow_redirects=False)
+        after = s.get(B + f'/accounts/profile/{owner}/', allow_redirects=False)
+        walks[label] = {'logout_status': r.status_code, 'logout_location': r.headers.get('Location'),
+                        'after_logout_profile_status': after.status_code, 'after_logout_location': after.headers.get('Location')}
+
+qa = {}
+if not ONLY:
+    s = login(P['OWNER'])
+    hdr = {'X-CSRFToken': s.cookies.get('csrftoken', ''), 'Referer': B + '/'}
+    qa = {}
+    for q, text in cfg['questions'].items():
+        e = {'question': text}
+        for k, path in [('search', f'/api/v1/zelda/documents/{doc}/search/'), ('rag', f'/api/v1/zelda/documents/{doc}/rag/')]:
+            r = s.post(B + path, json={'query': text, 'top_k': 5}, headers=hdr)
+            e[k] = {'status': r.status_code, 'body': body_of(r)}
+        r = s.post(B + '/api/v1/zelda/ask/', json={'q': text}, headers=hdr)
+        e['ask'] = {'status': r.status_code, 'body': body_of(r)}
+        qa[q] = e
+    s.post(B + '/accounts/logout/', data={'csrfmiddlewaretoken': s.cookies.get('csrftoken', '')}, headers={'Referer': B + '/'}, allow_redirects=False)
+
+
+def w(name, data):
+    with open(os.path.join(out, name), 'w', encoding='utf-8', newline='\n') as f:
+        json.dump(data, f, indent=1, ensure_ascii=False)
+        f.write('\n')
+
+
+def r_(name):
+    return json.load(open(os.path.join(out, name), encoding='utf-8'))
+
+
+if ONLY:
+    prev = r_('11_authorization_matrix.json')
+    matrix = [x for x in prev['matrix'] if x['principal'] != ONLY] + matrix
+    walks = {**{k: v for k, v in prev['session_walks_logout'].items() if k != ONLY}, **walks}
+    payloads = {**{k: v for k, v in r_('12_api_payloads.json').items() if not k.startswith(ONLY + ':')}, **payloads}
+    rendered = {**{k: v for k, v in r_('13_rendered_reports_text.json').items() if not k.startswith(ONLY + ':')}, **rendered}
+    mfa = {**prev.get('staff_mfa', {}), **MFA_LOG}
+    matrix_print = [x for x in matrix if x['principal'] == ONLY]
+else:
+    w('10_retrieval_ask_q1_q7.json', qa)
+    mfa = MFA_LOG
+    matrix_print = matrix
+w('11_authorization_matrix.json', {'matrix': matrix, 'session_walks_logout': walks, 'staff_mfa': mfa, 'content_types': content_types})
+w('12_api_payloads.json', payloads)
+w('13_rendered_reports_text.json', rendered)
+print('MFA', json.dumps(mfa))
+for r in matrix_print:
+    print(r['principal'], r['surface'], r['status'], r.get('location', '')[:45], r.get('visible_markers', ''),
+          'B2' if r.get('b2_panel') else '', 'CANARY' if r.get('canary_in_raw_body') else '')
+print('WALKS', json.dumps(walks))
+for q, e in qa.items():
+    sb = e['search']['body'] if isinstance(e['search']['body'], dict) else {}
+    top = [(x.get('page'), x.get('relevance')) for x in sb.get('results', [])]
+    ab = e['ask']['body']
+    ab = ab.get('response', '')[:100] if isinstance(ab, dict) else str(ab)[:100]
+    print(q, e['search']['status'], e['rag']['status'], top, '| no_rel', sb.get('no_relevant_evidence'), '| ask', e['ask']['status'], ab)

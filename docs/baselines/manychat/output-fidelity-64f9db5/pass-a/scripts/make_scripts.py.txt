@@ -1,0 +1,86 @@
+"""Derive this run's (output-fidelity ManyChat Pass A at 64f9db5) stage-1 scripts from the memo-98 run's (scratchpad
+ub/), changing only the listed names, paths, IDs, Redis databases and refusal lists. Each replacement must match at
+least once, so a stale value cannot survive silently. Usage: python make_scripts.py"""
+import os, secrets
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+PREV = os.path.join(os.path.dirname(HERE), 'ub')
+UB_SP = r'C--Users-jonathan-Desktop-KCV-np\c8a313d5-81e1-402a-b7da-9205b6f20fab\scratchpad\ub'
+OF_SP = r'C--Users-jonathan-Desktop-KCV-np\c8a313d5-81e1-402a-b7da-9205b6f20fab\scratchpad\of'
+UB_LINE = "UB = r'C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\" + UB_SP + "'\n"
+
+
+def derive(name, reps, target=None):
+    s = open(os.path.join(PREV, name), encoding='utf-8').read()
+    for a, b in reps:
+        assert s.count(a) >= 1, (name, a)
+        s = s.replace(a, b)
+    open(os.path.join(HERE, target or name), 'w', encoding='utf-8', newline='\n').write(s)
+    print('derived', target or name)
+
+
+derive('prep_copy.py', [
+    ('ManyChat usage-basis (RA-109) Pass A at d276918', 'ManyChat output-fidelity Pass A at 64f9db5'),
+    ("    'memo97_copy_np': NP + r'\\db_np_copy.sqlite3',\n}",
+     "    'memo97_copy_np': NP + r'\\db_np_copy.sqlite3',\n"
+     "    'memo98_copy_ub': UB + r'\\db_ub_copy.sqlite3',\n}"),
+    ("OLD = r'C:", UB_LINE + "OLD = r'C:"),
+    ("'db_ub_copy.sqlite3')\nphase", "'db_of_copy.sqlite3')\nphase"),
+])
+derive('run_ub.py', [
+    ('ManyChat usage-basis (RA-109) Pass A run wrapper at d276918', 'ManyChat output-fidelity Pass A run wrapper at 64f9db5'),
+    ("Adapted from the memo-97 run's run_np.py: worktree, copy, expected head, Redis dbs, worker name and the\nrefusal list (memo-97 copy added) changed.",
+     "Adapted from the memo-98 run's run_ub.py: worktree, copy, expected head, Redis dbs, worker name and the\nrefusal list (memo-98 copy added) changed."),
+    ('  * code: worktree KCV-mc-ub, branch docs/manychat-usage-basis-d276918 at d276918;',
+     '  * code: worktree KCV-mc-of, branch docs/manychat-output-fidelity-64f9db5 at 64f9db5;'),
+    ("never an earlier run's copy", "never an earlier run's copy"),
+    ('local Memurai DBs 9/12/15', 'local Memurai DBs 1/4/7'),
+    ("WT = r'C:\\Users\\jonathan\\Desktop\\KCV-mc-ub'", "WT = r'C:\\Users\\jonathan\\Desktop\\KCV-mc-of'"),
+    ("FORBIDDEN_DBS = [", UB_LINE + "FORBIDDEN_DBS = ["),
+    ("OLD + r'\\mcff3\\db_ff3_copy.sqlite3', NP + r'\\db_np_copy.sqlite3']",
+     "OLD + r'\\mcff3\\db_ff3_copy.sqlite3', NP + r'\\db_np_copy.sqlite3',\n                 UB + r'\\db_ub_copy.sqlite3']"),
+    ("COPY_DB = os.path.join(HERE, 'db_ub_copy.sqlite3')", "COPY_DB = os.path.join(HERE, 'db_of_copy.sqlite3')"),
+    ("EXPECTED_HEAD = 'd276918cb0e1a4e7fa109a86c5e9336ef180f9a3'", "EXPECTED_HEAD = '64f9db5286213e9d7f38dce6aab170bd26a15cc2'"),
+    ("RUN_DBS = ('9', '12', '15')", "RUN_DBS = ('1', '4', '7')"),
+    ("'redis://localhost:6379/9'", "'redis://localhost:6379/1'"),
+    ("'redis://localhost:6379/12'", "'redis://localhost:6379/4'"),
+    ("'redis://localhost:6379/15'", "'redis://localhost:6379/7'"),
+    ("name=mcub@%h queue=celery pool=solo concurrency=1 broker_db=9", "name=mcof@%h queue=celery pool=solo concurrency=1 broker_db=1"),
+    ("'-n', 'mcub@%h'", "'-n', 'mcof@%h'"),
+], 'run_of.py')
+derive('run_ro.py', [
+    ("WT = r'C:\\Users\\jonathan\\Desktop\\KCV-mc-ub'", "WT = r'C:\\Users\\jonathan\\Desktop\\KCV-mc-of'"),
+    ("6379/9'", "6379/1'"), ("6379/12'", "6379/4'"), ("6379/15'", "6379/7'"),
+])
+derive('snapshot_ro.py', [('memo hashes', 'memo hashes')])
+derive('bump_sequences.py', [
+    ("Run in the ub COPY (via run_ub.py script)", "Run in the of COPY (via run_of.py script)"),
+    ("(document 3139, memo 97, ...)", "(document 3140, memo 98, ...)"),
+    ("\\scratchpad\\np\\db_np_copy.sqlite3", "\\scratchpad\\ub\\db_ub_copy.sqlite3"),
+    ("'db_ub_copy' in str", "'db_of_copy' in str"),
+])
+derive('setup_fixtures.py', [
+    (UB_SP, OF_SP),
+    ("P = 'ubmc'           # usage-basis d276918 ManyChat Pass A: ubmc_*", "P = 'ofmc'           # output-fidelity 64f9db5 ManyChat Pass A: ofmc_*"),
+    ("'cus_ub_local_mc'", "'cus_of_local_mc'"), ("'sub_ub_local_mc'", "'sub_of_local_mc'"),
+    ('@ub.test', '@of.test'),
+    ('ManyChat usage-basis d276918 Pass A run.', 'ManyChat output-fidelity 64f9db5 Pass A run.'),
+])
+derive('upload.py', [('Upload the deck ONCE', 'Upload the deck ONCE')])
+derive('dump_ub.py', [
+    ("(usage-basis ManyChat Pass A at d276918; reused from the memo-97 run's dump_np.py apart from this line and the label).",
+     "(output-fidelity ManyChat Pass A at 64f9db5; reused from the memo-98 run's dump_ub.py apart from this line and the label)."),
+    ("label='mcub.dump (read-only rebuild)'", "label='mcof.dump (read-only rebuild)'"),
+], 'dump_of.py')
+derive('memo97_vs_committed.py', [('ea3ab13', 'ea3ab13')])
+derive('memo97_vs_committed.py', [
+    ("memo 97's stored fields vs the committed\n09_memo.json of that run (ea3ab13)",
+     "memo 98's stored fields vs the committed\n09_memo.json of that run (0dd8e91)"),
+    ("RO_DB = the memo-97 run copy", "RO_DB = the memo-98 run copy"),
+    ("'ea3ab13:docs/baselines/manychat/narrator-provenance-b9cddec/pass-a/09_memo.json'",
+     "'0dd8e91:docs/baselines/manychat/usage-basis-d276918/pass-a/09_memo.json'"),
+    ("get(pk=97)", "get(pk=98)"),
+    ("'MEMO97-vs-ea3ab13 fields compared'", "'MEMO98-vs-0dd8e91 fields compared'"),
+], 'memo98_vs_committed.py')
+open(os.path.join(HERE, 'pw.txt'), 'w').write(secrets.token_urlsafe(18))
+print('pw written (not printed)')

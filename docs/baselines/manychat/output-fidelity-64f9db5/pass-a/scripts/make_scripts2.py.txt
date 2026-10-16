@@ -1,0 +1,62 @@
+"""Stage 2b (after the memo): derive analyze_of.py from the memo-98 run's analyze_ub.py with listed changes only.
+Adds the merged pipeline's fourth step, the measurement-basis guard (intelligence_pipeline._generate_memo, after the
+funding guard), built from the actual context's items and consistency_notes; its edits are recorded per section and
+included in the reversed-order and second-pass checks. No ref id is hard-coded."""
+import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+PREV = os.path.join(os.path.dirname(HERE), 'ub')
+UB_SP = r'C--Users-jonathan-Desktop-KCV-np\c8a313d5-81e1-402a-b7da-9205b6f20fab\scratchpad\ub'
+OF_SP = r'C--Users-jonathan-Desktop-KCV-np\c8a313d5-81e1-402a-b7da-9205b6f20fab\scratchpad\of'
+
+
+def derive(name, reps, target):
+    s = open(os.path.join(PREV, name), encoding='utf-8').read()
+    for a, b in reps:
+        assert s.count(a) >= 1, (name, a)
+        s = s.replace(a, b)
+    open(os.path.join(HERE, target), 'w', encoding='utf-8', newline='\n').write(s)
+    print('derived', target)
+
+
+derive('analyze_ub.py', [
+    (UB_SP, OF_SP),
+    ("memo_text, guard_time_wording with time_wording_allowed for dated items, then guard_funding_fidelity with\n"
+     "funding_facts(context.items, context.company).",
+     "memo_text, guard_time_wording with time_wording_allowed for dated items, then guard_funding_fidelity with\n"
+     "funding_facts(context.items, context.company), then guard_basis_wording with\n"
+     "basis_facts(context.items, context.consistency_notes) (added at 64f9db5; derived by make_scripts2.py)."),
+    ("from zelda_api.funding_fidelity import funding_facts, guard_funding_fidelity\n",
+     "from zelda_api.funding_fidelity import funding_facts, guard_funding_fidelity\n"
+     "from zelda_api.basis_fidelity import basis_facts, guard_basis_wording\n"),
+    ("label='mcub.analyze (read-only rebuild)'", "label='mcof.analyze (read-only rebuild)'"),
+    ("facts_rev = funding_facts(list(reversed(list(ctx.items))), ctx.company)\n",
+     "facts_rev = funding_facts(list(reversed(list(ctx.items))), ctx.company)\n"
+     "basis = basis_facts(ctx.items, ctx.consistency_notes)\n"
+     "basis_rev = basis_facts(list(reversed(list(ctx.items))), ctx.consistency_notes)\n"),
+    ("def replay(text, f):\n    after_time, removed = guard_time_wording(text, allowed)\n"
+     "    out, fid = guard_funding_fidelity(after_time, f)\n    return out, removed, fid\n",
+     "def replay(text, f, b=None):\n    after_time, removed = guard_time_wording(text, allowed)\n"
+     "    out, fid = guard_funding_fidelity(after_time, f)\n"
+     "    out, bas = guard_basis_wording(out, b if b is not None else basis)\n"
+     "    return out, removed, fid + ['basis:' + c for c in bas]\n"),
+    ("    rep_rev, _, fid_rev = replay(normalized, facts_rev)\n",
+     "    rep_rev, _, fid_rev = replay(normalized, facts_rev, basis_rev)\n"),
+    ("'Mike Yan', 'Anton Gorin', 'ubmc', 'Rerun Owner', 'Disposable profile', 'cumulative by context', "
+     "'manychat_ra109', 'ANSWER', 'conflict']},",
+     "'Mike Yan', 'Anton Gorin', 'ofmc', 'Rerun Owner', 'Disposable profile', 'cumulative by context', "
+     "'manychat_ra109', 'ANSWER', 'conflict', 'UB-604', 'NP-603', 'NP-604', 'memo 98', "
+     "'figure stated without an explicit interval', 'before either is relied on', 'not cash on hand']},\n"
+     "    'basis_facts': [{'refs': list(p.refs), 'members': sorted(p.members), 'noun': p.noun,\n"
+     "                     'cumulative_admitted': p.cumulative_admitted, 'clarification': p.clarification} for p in basis.pairs],\n"
+     "    'basis_facts_equal_with_reversed_items': basis == basis_rev,"),
+    ("    'narrator_provenance_rule_fired': any('provenance' in v['rule_families'] for v in real.values()),\n",
+     "    'narrator_provenance_rule_fired': any('provenance' in v['rule_families'] for v in real.values()),\n"
+     "    'basis_rule_fired': any('basis' in v['rule_families'] for v in real.values()),\n"
+     "    'all_changes_by_section': {k: v['funding_fidelity_changes'] for k, v in real.items() if v['funding_fidelity_changes']},\n"),
+    ("'(time guard, then funding guard). Only changed sections are listed. Rule family \"provenance\" is the\\n'\n"
+     "            'narrator-provenance rule merged in #281; \"attribution\" adds a narrator to a funding sentence.\\n\\n'",
+     "'(time guard, then funding guard, then measurement-basis guard). Only changed sections are listed. Changes\\n'\n"
+     "            'prefixed \"basis:\" are the measurement-basis guard (#284); the others are the funding guard\\n'\n"
+     "            '(\"attribution\" adds a narrator; \"funding_not_runway\" and \"cash_premise\" separate funding from cash).\\n\\n'"),
+], 'analyze_of.py')

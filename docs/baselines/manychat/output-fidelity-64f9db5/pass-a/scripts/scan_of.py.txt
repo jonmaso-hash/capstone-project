@@ -1,0 +1,104 @@
+"""Sentence-level scan of memo 99 on every captured surface (no DB access; reads the run's files).
+Adapted from the 9b6d215 run's scan_sections.py; checks added for the narrator-provenance fix (#281):
+narrator credited with traction refs, equality wording, independent-validation wording, 2015 as the
+funding date, and historical deck context stated as current. Hits are candidates for reading, not grades.
+Usage: scan_np.py <evidence dir> [extra surfaces json]"""
+import json, os, re, sys
+EV = sys.argv[1]
+r = lambda n: json.load(open(os.path.join(EV, n), encoding='utf-8'))
+memo = r('09_memo.json')['memo']
+api = r('12_api_payloads.json')
+rendered = r('13_rendered_reports_text.json')
+surfaces = {}
+for k, v in memo.items():
+    if isinstance(v, str) and len(v) > 40 and k not in ('created_at', 'updated_at'):
+        surfaces['stored:' + k] = v
+for label in ('LITE', 'PAID', 'STAFF', 'OWNER'):
+    body = api.get(label + ':G_memo_api', {}).get('body')
+    if isinstance(body, dict):
+        for sk, sv in (body.get('lite_sections') or body.get('sections') or body).items():
+            if isinstance(sv, str) and len(sv) > 40:
+                surfaces[f'{label}:memo_api:{sk}'] = sv
+for k, v in rendered.items():
+    surfaces['rendered:' + k] = v
+if len(sys.argv) > 2:
+    for k, v in json.load(open(sys.argv[2], encoding='utf-8')).items():
+        surfaces['browser:' + k] = v
+
+_items = r('09a_grounded_context_rebuilt.json')['payload']['items']
+_usage = sorted(i['ref'] for i in _items if re.search(r'bots?|messages', i.get('statement') or '', re.I))
+_funding = sorted(i['ref'] for i in _items if re.search(r'raised|\$', i.get('statement') or '') and i['ref'][0] in 'CS')
+TRACTION_REF = r'\[[^\]]*\b(?:' + '|'.join(_usage) + r')\b[^\]]*\]'
+FUNDING_REF = r'\[[^\]]*\b(?:' + '|'.join(_funding) + r')\b'
+print('refs from payload: usage', _usage, 'funding', _funding)
+SENT = re.compile(r'(?<=[.!?])\s+(?=[A-Z•\-\d(])|\n+')
+CHECKS = {
+    # Added at 64f9db5 for this run's shapes.
+    'basis_contradiction_label': lambda s: re.search(r'contradict', s, re.I) and re.search(r'500M|messages|basis|interval', s, re.I),
+    'same_slide_or_page_claim': lambda s: re.search(r'same (?:traction )?(?:slide|page)', s, re.I),
+    'monthly_ref_with_traction_slide': lambda s: re.search(r'Traction by Apr-16', s) and re.search(r'500M/month|messages/month|per month|monthly', s, re.I),
+    'this_or_the_total_funding': lambda s: re.search(r'\b(?:this|the|that) total\b', s, re.I) and re.search(r'23\.1|raised|round', s, re.I),
+    'company_possessive_funding': lambda s: re.search(r'\b(?:its|the company\'s|ManyChat\'s) (?:reported )?funding\b', s, re.I),
+    'basis_guard_wording': lambda s: re.search(r'figure stated without an explicit interval|before either is relied on|not cash on hand|dated cash and burn alone', s, re.I),
+    # RA-109: the two 500M message figures and how each sentence frames their bases.
+    'ra109_basis_mention': lambda s: '500M' in s and re.search(r'month|interval|cumulative|run rate|basis', s, re.I),
+    'ra109_cumulative_asserted': lambda s: re.search(r'\bthe cumulative (?:figure|total|count)\b|\bis (?:a )?cumulative\b', s, re.I)
+                                           and not re.search(r'\bif\b|\bwhether\b|\bor\b|\?', s, re.I),
+    'ra109_contradiction_or_error_words': lambda s: re.search(r'contradict|inconsisten|overstat|mislead|wrong|error', s, re.I),
+    'ra109_merged_or_verified_500M': lambda s: '500M' in s and re.search(r'verified|confirmed|same figure|identical', s, re.I)
+                                               and not re.search(r'not (?:been )?(?:independently )?(?:verified|confirmed)|could not|unverified|no external', s, re.I),
+    'ra109_annualised_or_converted': lambda s: re.search(r'6(?:\.0)?\s?B|billion messages|per year|annuali[sz]', s, re.I),
+    'funding_total_wording': lambda s: ('23.1' in s or 'raised' in s.lower()) and re.search(r'\btotal\b', s, re.I),
+    'funding_credited_to_company': lambda s: ('23.1' in s or re.search(r'fundrais|raised', s, re.I))
+                                             and re.search(r'company (?:has )?(?:put forward|states|reports|claims)', s, re.I),
+    'funds_presupposed_used': lambda s: re.search(r'deployed|consumed|spent|been used', s, re.I) and re.search(r'23\.1|raised|capital', s, re.I),
+    'outside_knowledge_platform': lambda s: re.search(r'Facebook|Messenger|Instagram|WhatsApp|Telegram|Kik', s),
+    'funding_sentence_missing_narrator': lambda s: '23.1' in s and 'Pitch Deck Hunt' not in s,
+    'narrator_with_traction_refs_or_words': lambda s: 'Pitch Deck Hunt' in s and (re.search(TRACTION_REF, s) or
+                                                      re.search(r'traction|bots?\b|messages', s, re.I)),
+    'equality_wording': lambda s: re.search(r'\bsame (?:figures?|numbers?|data|claims?|statements?)\b|\bidentical\b|'
+                                            r'\bmatch(?:es|ing)? (?:the )?(?:figures?|deck)\b|\bconsistent with\b', s, re.I),
+    'independent_validation_wording': lambda s: re.search(r'independent(?:ly)?|third[- ]party (?:confirm|validat|verif)|'
+                                                          r'corroborat|validat|confirm(?:s|ed|ation)', s, re.I),
+    'narrator_of_wording': lambda s: re.search(r'narrator of', s, re.I),
+    'current_total_wording_on_funding': lambda s: ('23.1' in s or 'funding' in s.lower()) and
+                                                  re.search(r'to date|so far|in total|cumulative|total (?:funding|raised)', s, re.I),
+    'funding_with_2015': lambda s: ('23.1' in s or re.search(r'rais|fund', s, re.I)) and '2015' in s,
+    'historical_as_current': lambda s: re.search(r'\b(?:currently|today|now|at present|as of now)\b', s, re.I) and
+                                       re.search(r'bots?|messages|23\.1|users|traction', s, re.I) and '?' not in s,
+    'as_of_slide_context': lambda s: re.search(r'as of April 2016|as of Apr', s, re.I),
+    'runway_or_cash_premise': lambda s: re.search(r'\b(remaining|available)\s+(runway|cash)|\bagainst\s+(?:the\s+)?runway|runway\s+remaining|'
+                                                  r'(?:current|present|today\'?s)\s+(?:runway|cash)', s, re.I) and '?' not in s,
+    'runway_or_cash_any': lambda s: re.search(r'\brunway\b|\bcash\b|\bburn\b', s, re.I),
+    'raise_premise': lambda s: re.search(r'this raise|stated raise|this round|the raise|proceeds|currently raising', s, re.I),
+    'self_reported_with_funding_ref': lambda s: re.search(r'self-reported', s, re.I) and re.search(FUNDING_REF, s),
+    'stage_near_slide_date': lambda s: re.search(r'Series A', s) and re.search(r'Apr(?:il)?[- ]?(?:20)?16|2016|2015', s),
+    'platform_user_counts': lambda s: re.search(r'900M|275M|100M|900 million|275 million|100 million', s),
+    'advice_words': lambda s: re.search(r'\b(?:buy|sell|hold|pass on|should invest|recommend(?:ed|s)? (?:investing|an investment))\b', s, re.I),
+    'list_repr': lambda s: re.search(r"^\s*\[\s*'|\['\w|\"\]\s*$", s),
+    'mojibake': lambda s: re.search('â\u0080|â€|Ã', s),
+}
+out = {name: [] for name in CHECKS}
+n23 = 0
+for where, text in surfaces.items():
+    for sent in SENT.split(text):
+        sent = sent.strip()
+        if not sent:
+            continue
+        if '23.1' in sent:
+            n23 += 1
+        for name, test in CHECKS.items():
+            if test(sent):
+                out[name].append(f'{where}: {sent[:500]}')
+with open(os.path.join(EV, '09f_section_scan.txt'), 'w', encoding='utf-8', newline='\n') as f:
+    f.write('Sentence-level scan of memo 99: stored sections, memo API per principal (Lite and full), rendered\n'
+            'pages (HTTP probe)%s. Hits are candidates for reading, not grades. Sentences containing $23.1: %d.\n'
+            'Surfaces: %d.\n\n' % (' and Chrome page text' if len(sys.argv) > 2 else '', n23, len(surfaces)))
+    for name, hits in out.items():
+        f.write(f'== {name}: {len(hits)}\n')
+        for h in hits:
+            f.write('  ' + h + '\n')
+        f.write('\n')
+print('surfaces', len(surfaces), 'sentences with 23.1:', n23)
+for name, hits in out.items():
+    print(name, len(hits))

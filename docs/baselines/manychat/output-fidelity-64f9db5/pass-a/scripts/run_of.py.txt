@@ -1,0 +1,148 @@
+"""ManyChat output-fidelity Pass A run wrapper at 64f9db5 (scratchpad, not repo code).
+Adapted from the memo-98 run's run_ub.py: worktree, copy, expected head, Redis dbs, worker name and the
+refusal list (memo-98 copy added) changed.
+
+Isolation, enforced before Django serves or consumes anything:
+  * code: worktree KCV-mc-of, branch docs/manychat-output-fidelity-64f9db5 at 64f9db5;
+  * DB: this run's sqlite backup COPY of the dev DB (never the original, never an earlier run's copy);
+  * broker/result/cache: local Memurai DBs 1/4/7, empty and without clients before the run;
+  * the six paid keys blanked in os.environ (present-but-empty beats read_env);
+  * any pending migration refuses start (except mode migrate).
+Instrumentation (no repo change): every anthropic Messages.create call made in this process is
+appended to model_calls.jsonl (model, params, system, messages, reply text, usage). The API key
+lives on the client, never in these kwargs.
+"""
+import os, sys, json, datetime, subprocess
+HERE = os.path.dirname(os.path.abspath(__file__))
+WT = r'C:\Users\jonathan\Desktop\KCV-mc-of'
+MAIN_ENV = r'C:\Users\jonathan\Desktop\KCV\.env'
+ORIGINAL_DB = r'C:\Users\jonathan\Desktop\KCV\db.sqlite3'
+OLD = r'C:\Users\jonathan\AppData\Local\Temp\claude\C--Users-jonathan-Desktop-KCV\8edb8be9-5c85-488f-a1b8-020dd6a9a3c0\scratchpad'
+NP = r'C:\Users\jonathan\AppData\Local\Temp\claude\C--Users-jonathan-Desktop-KCV-np\c8a313d5-81e1-402a-b7da-9205b6f20fab\scratchpad\np'
+UB = r'C:\Users\jonathan\AppData\Local\Temp\claude\C--Users-jonathan-Desktop-KCV-np\c8a313d5-81e1-402a-b7da-9205b6f20fab\scratchpad\ub'
+FORBIDDEN_DBS = [ORIGINAL_DB, OLD + r'\mcpost\db_postfix_copy.sqlite3', OLD + r'\mcff\db_ff_copy.sqlite3',
+                 OLD + r'\mcff3\db_ff3_copy.sqlite3', NP + r'\db_np_copy.sqlite3',
+                 UB + r'\db_ub_copy.sqlite3']
+COPY_DB = os.path.join(HERE, 'db_of_copy.sqlite3')
+EXPECTED_HEAD = '64f9db5286213e9d7f38dce6aab170bd26a15cc2'
+PAID = ['FILED_API_KEY', 'COMPANYENRICH_API_KEY', 'NEWS_API_KEY', 'DATA4B2B_API_KEY', 'USPTO_ODP_API_KEY', 'CRUNCHBASE_API_KEY']
+RUN_DBS = ('1', '4', '7')
+REDIS = {'CELERY_BROKER_URL': 'redis://localhost:6379/1', 'CELERY_RESULT_BACKEND': 'redis://localhost:6379/4',
+         'CACHE_URL': 'redis://localhost:6379/7'}
+mode, rest = sys.argv[1], sys.argv[2:]
+for k in PAID:
+    os.environ[k] = ''
+os.environ.update(REDIS)
+os.environ['DATABASE_URL'] = 'sqlite:///' + COPY_DB.replace('\\', '/')
+os.environ['DJANGO_SETTINGS_MODULE'] = 'config.settings'
+os.chdir(WT)
+sys.path.insert(0, WT)
+import environ
+environ.Env.read_env(MAIN_ENV)
+import django
+django.setup()
+from django.conf import settings
+from django.db import connection
+label = '[%s pid=%d]' % (mode, os.getpid())
+problems = []
+head = subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True, cwd=WT).stdout.strip()
+dirty = [l for l in subprocess.run(['git', 'status', '--porcelain', '--untracked-files=no'], capture_output=True, text=True,
+                                   cwd=WT).stdout.splitlines() if l.strip()]
+print('CODE-CHECK', label, 'head=%s' % head, 'tracked_changes=%d' % len(dirty), dirty[:5], flush=True)
+# Evidence files under docs/ may be added by the run; application code must stay at the merge commit.
+# Tracked __pycache__ noise is allowed by the Nike protocol (rule 2); .py and templates are not.
+code_changes = subprocess.run(['git', 'diff', '--name-only', EXPECTED_HEAD, '--', '.', ':(exclude)docs', ':(exclude)*.pyc'],
+                              capture_output=True, text=True, cwd=WT).stdout.split()
+print('CODE-DIFF', label, 'non_pyc_files_differing_from_%s=%d' % (EXPECTED_HEAD[:7], len(code_changes)), flush=True)
+if code_changes:
+    problems.append('application files differ from %s: %s' % (EXPECTED_HEAD[:7], code_changes[:5]))
+keys = {k: bool(getattr(settings, k, None) or os.environ.get(k)) for k in PAID + ['ANTHROPIC_API_KEY']}
+print('BASELINE-ENV-CHECK', label, keys, 'USPTO_ODP_API_KEY_read_by_code=False (no reference in this commit; blanked in env)', flush=True)
+from ops.management.commands.preflight import effective_targets, is_local, redacted, pending_migrations
+for name, uri in effective_targets():
+    loc = is_local(uri)
+    dbn = uri.rstrip('/').split('/')[-1] if uri and uri.startswith('redis://') else '-'
+    print('BROKER-CHECK', label, name, redacted(uri), 'local=%s' % loc, 'redis_db=%s' % dbn, flush=True)
+    if not loc:
+        problems.append('remote ' + name)
+    if not (uri and 'localhost:6379/' in uri and dbn in RUN_DBS):
+        problems.append('not the isolated redis db: ' + name)
+db_name = str(settings.DATABASES['default']['NAME'])
+norm = lambda p: os.path.normcase(os.path.abspath(p))
+is_copy = norm(db_name) == norm(COPY_DB)
+hits = [p for p in FORBIDDEN_DBS if norm(p) == norm(db_name)]
+print('DB-CHECK', label, 'name=%s' % db_name, 'is_copy=%s' % is_copy, 'is_original=%s' % (norm(db_name) == norm(ORIGINAL_DB)),
+      'is_historical_copy=%s' % bool(hits and norm(db_name) != norm(ORIGINAL_DB)), flush=True)
+if hits or not is_copy:
+    problems.append('database is not this run\'s isolated copy')
+pend = pending_migrations()
+from django.db.migrations.recorder import MigrationRecorder
+applied = MigrationRecorder(connection).applied_migrations()
+heads = {}
+for (a, n) in applied:
+    if a in ('zelda_api', 'matchmaking', 'accounts', 'billing') and n > heads.get(a, ''):
+        heads[a] = n
+def has(app, num):
+    return any(a == app and n.startswith(num) for (a, n) in applied)
+print('SCHEMA-CHECK', label, 'pending=%d' % len(pend), pend,
+      'zelda_api.0035=%s' % has('zelda_api', '0035'), 'zelda_api.0044=%s' % has('zelda_api', '0044'),
+      'matchmaking.0083=%s' % has('matchmaking', '0083'), 'matchmaking.0095=%s' % has('matchmaking', '0095'),
+      'applied_heads=%s' % json.dumps(heads, sort_keys=True), flush=True)
+print('EAGER-CHECK', label, 'CELERY_TASK_ALWAYS_EAGER=%s' % settings.CELERY_TASK_ALWAYS_EAGER, flush=True)
+for k in PAID:
+    if keys[k]:
+        problems.append('paid key set ' + k)
+if not keys['ANTHROPIC_API_KEY']:
+    problems.append('anthropic key missing')
+if pend and mode != 'migrate':
+    problems.append('%d pending migrations' % len(pend))
+if problems:
+    print('REFUSING TO START', label, problems, flush=True)
+    sys.exit(1)
+
+
+def instrument():
+    from anthropic.resources.messages.messages import Messages
+    original = Messages.create
+    log = os.path.join(HERE, 'model_calls.jsonl')
+
+    def create(self, *args, **kwargs):
+        started = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        response = original(self, *args, **kwargs)
+        try:
+            record = {'process': label, 'started': started, 'request': {k: v for k, v in kwargs.items()},
+                      'response': {'id': getattr(response, 'id', None), 'model': getattr(response, 'model', None),
+                                   'stop_reason': getattr(response, 'stop_reason', None),
+                                   'text': [getattr(b, 'text', None) for b in (getattr(response, 'content', None) or [])],
+                                   'usage': {k: getattr(response.usage, k, None) for k in ('input_tokens', 'output_tokens')}}}
+            with open(log, 'a', encoding='utf-8') as f:
+                f.write(json.dumps(record, default=str, ensure_ascii=False) + '\n')
+        except Exception as e:                       # logging must never change the run
+            print('INSTRUMENT-ERROR', label, type(e).__name__, flush=True)
+        return response
+    Messages.create = create
+    print('MODEL-CALL-LOG installed', label, log, flush=True)
+
+
+from django.core.management import call_command
+if mode == 'check':
+    print('CHECK OK', label)
+elif mode == 'migrate':
+    call_command('migrate', *rest)
+elif mode == 'preflight':
+    call_command('preflight', local=True)
+elif mode == 'server':
+    instrument()
+    call_command('runserver', '127.0.0.1:8000', use_reloader=False)
+elif mode == 'worker':
+    instrument()
+    from config.celery import app
+    print('WORKER-IDENTITY', label, 'name=mcof@%h queue=celery pool=solo concurrency=1 broker_db=1', flush=True)
+    app.worker_main(['worker', '-l', 'info', '--pool=solo', '--concurrency=1', '-n', 'mcof@%h', '-Q', 'celery'])
+elif mode == 'script':
+    path = rest[0]
+    sys.argv = [path] + rest[1:]
+    code = open(path, encoding='utf-8').read()
+    exec(compile(code, path, 'exec'), {'__name__': '__main__'})
+else:
+    raise SystemExit('unknown mode ' + mode)

@@ -1,0 +1,27 @@
+"""Stage 2a (after the memo): derive the HTTP probe, its config and the Markdown check from the memo-98 run's (ub/).
+probe.py is copied unchanged. probe_cfg.json: this run's outdir, document 3141, Entity Integrity report 40,
+principals ofmc_*; the marker list is kept and markers for the funding-not-cash correction are appended.
+md_check.py: principal and document id only."""
+import json, os, shutil
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+PREV = os.path.join(os.path.dirname(HERE), 'ub')
+shutil.copy(os.path.join(PREV, 'probe.py'), os.path.join(HERE, 'probe.py'))
+cfg = json.load(open(os.path.join(PREV, 'probe_cfg.json'), encoding='utf-8-sig'))
+assert cfg['doc'] == 3140 and cfg['report'] == 39
+cfg['outdir'] = r'C:\Users\jonathan\Desktop\KCV-mc-of\docs\baselines\manychat\output-fidelity-64f9db5\pass-a'
+cfg['doc'], cfg['report'] = 3141, 40
+cfg['owner'] = 'ofmc_owner'
+cfg['principals'] = {'OWNER': 'ofmc_owner', 'LITE': 'ofmc_lite', 'PAID': 'ofmc_paid', 'STAFF': 'ofmc_staff', 'ANON': None}
+for m in ('historical funding', 'not cash on hand', 'dated cash', 'needs clarification before either is relied on',
+          'figure stated without an explicit interval'):
+    if m not in cfg['markers']:
+        cfg['markers'].append(m)
+json.dump(cfg, open(os.path.join(HERE, 'probe_cfg.json'), 'w', encoding='utf-8', newline='\n'), indent=1, ensure_ascii=False)
+s = open(os.path.join(PREV, 'md_check.py'), encoding='utf-8').read()
+for a, b in (("ns['login']('ubmc_staff')", "ns['login']('ofmc_staff')"),
+             ("'/api/v1/zelda/documents/3140/ic-memo/download/'", "'/api/v1/zelda/documents/3141/ic-memo/download/'")):
+    assert s.count(a) == 1, a
+    s = s.replace(a, b)
+open(os.path.join(HERE, 'md_check.py'), 'w', encoding='utf-8', newline='\n').write(s)
+print('derived probe.py (copy), probe_cfg.json, md_check.py')

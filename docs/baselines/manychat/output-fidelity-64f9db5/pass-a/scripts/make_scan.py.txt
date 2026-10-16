@@ -1,0 +1,31 @@
+"""Derive scan_of.py from the memo-98 run's scan_ub.py. The inherited ref patterns hard-coded the memo-97 mapping
+(traction C2|C3|S1|S2, funding C1|S3); this run reads the actual mapping from the sent payload (09a), so no ref id is
+hard-coded. Checks added for this run's output shapes. Hits are candidates for reading, not grades."""
+import os
+HERE = os.path.dirname(os.path.abspath(__file__))
+s = open(os.path.join(os.path.dirname(HERE), 'ub', 'scan_ub.py'), encoding='utf-8').read()
+reps = [
+    ("TRACTION_REF = r'\\[[^\\]]*\\b(?:C2|C3|S1|S2)\\b[^\\]]*\\]'\n",
+     "_items = r('09a_grounded_context_rebuilt.json')['payload']['items']\n"
+     "_usage = sorted(i['ref'] for i in _items if re.search(r'bots?|messages', i.get('statement') or '', re.I))\n"
+     "_funding = sorted(i['ref'] for i in _items if re.search(r'raised|\\$', i.get('statement') or '') and i['ref'][0] in 'CS')\n"
+     "TRACTION_REF = r'\\[[^\\]]*\\b(?:' + '|'.join(_usage) + r')\\b[^\\]]*\\]'\n"
+     "FUNDING_REF = r'\\[[^\\]]*\\b(?:' + '|'.join(_funding) + r')\\b'\n"
+     "print('refs from payload: usage', _usage, 'funding', _funding)\n"),
+    ("re.search(r'\\[[^\\]]*\\b(?:C1|S3)\\b', s)", "re.search(FUNDING_REF, s)"),
+    ("CHECKS = {\n",
+     "CHECKS = {\n"
+     "    # Added at 64f9db5 for this run's shapes.\n"
+     "    'basis_contradiction_label': lambda s: re.search(r'contradict', s, re.I) and re.search(r'500M|messages|basis|interval', s, re.I),\n"
+     "    'same_slide_or_page_claim': lambda s: re.search(r'same (?:traction )?(?:slide|page)', s, re.I),\n"
+     "    'monthly_ref_with_traction_slide': lambda s: re.search(r'Traction by Apr-16', s) and re.search(r'500M/month|messages/month|per month|monthly', s, re.I),\n"
+     "    'this_or_the_total_funding': lambda s: re.search(r'\\b(?:this|the|that) total\\b', s, re.I) and re.search(r'23\\.1|raised|round', s, re.I),\n"
+     "    'company_possessive_funding': lambda s: re.search(r'\\b(?:its|the company\\'s|ManyChat\\'s) (?:reported )?funding\\b', s, re.I),\n"
+     "    'basis_guard_wording': lambda s: re.search(r'figure stated without an explicit interval|before either is relied on|not cash on hand|dated cash and burn alone', s, re.I),\n"),
+    ('Sentence-level scan of memo 98', 'Sentence-level scan of memo 99'),
+]
+for a, b in reps:
+    assert s.count(a) >= 1, a
+    s = s.replace(a, b)
+open(os.path.join(HERE, 'scan_of.py'), 'w', encoding='utf-8', newline='\n').write(s)
+print('derived scan_of.py')

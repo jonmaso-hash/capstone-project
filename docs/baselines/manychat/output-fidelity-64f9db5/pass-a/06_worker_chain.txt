@@ -1,0 +1,23 @@
+[2026-10-16 02:25:36,014: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_founder_task[9c74b088-eacd-4781-854e-d5c14e09a40e] received
+[2026-10-16 02:25:38,472: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_founder_task[9c74b088-eacd-4781-854e-d5c14e09a40e] succeeded in 2.456900700024562s: None
+[2026-10-16 02:25:38,477: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_investor_task[344f7e1e-330d-471a-b257-45b64bc7d00c] received
+[2026-10-16 02:25:38,926: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_investor_task[344f7e1e-330d-471a-b257-45b64bc7d00c] succeeded in 0.4486225000000559s: None
+[2026-10-16 02:25:38,931: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_investor_task[03fa5cd2-c57e-42f6-b539-146d81283a0d] received
+[2026-10-16 02:25:39,362: INFO/MainProcess] Task matchmaking.tasks.refresh_matches_for_investor_task[03fa5cd2-c57e-42f6-b539-146d81283a0d] succeeded in 0.4302027999947313s: None
+[2026-10-16 02:26:55,558: INFO/MainProcess] Task zelda_api.tasks.process_document_pipeline[9d33a06a-94db-4d75-9c6e-4cd892b9026f] received
+[2026-10-16 02:26:56,258: INFO/MainProcess] Task zelda_api.tasks.process_document_pipeline[9d33a06a-94db-4d75-9c6e-4cd892b9026f] succeeded in 0.6990280000027269s: {'status': 'success', 'document_id': 3141, 'chunks': 12, 'insights': 4}
+[2026-10-16 02:26:56,264: INFO/MainProcess] Task zelda_api.truth_delta_tasks.extract_claims_from_insights[ee2b38b4-a670-44a9-b0cf-53cd56a48a65] received
+[2026-10-16 02:26:56,372: INFO/MainProcess] Task zelda_api.truth_delta_tasks.extract_claims_from_insights[ee2b38b4-a670-44a9-b0cf-53cd56a48a65] succeeded in 0.10677040001610294s: {'status': 'success', 'claims_created': 4}
+[2026-10-16 02:26:56,378: INFO/MainProcess] Task zelda_api.entity_verification_tasks.verify_entity_integrity[735b1166-88cb-4c62-83d8-72c222258aac] received
+[2026-10-16 02:26:59,940: INFO/MainProcess] Task zelda_api.entity_verification_tasks.verify_entity_integrity[735b1166-88cb-4c62-83d8-72c222258aac] succeeded in 3.5620540999807417s: {'status': 'success', 'document_id': 3141, 'report_id': 40}
+[2026-10-16 02:26:59,945: INFO/MainProcess] Task zelda_api.truth_delta_tasks.verify_document_truth_delta[668cfc06-7cce-41b2-9dbb-2e7a98630ed8] received
+[2026-10-16 02:27:00,084: INFO/MainProcess] Task zelda_api.truth_delta_tasks.verify_document_truth_delta[668cfc06-7cce-41b2-9dbb-2e7a98630ed8] succeeded in 0.1385254999913741s: {'status': 'success', 'document_id': 3141, 'report_id': 93}
+[2026-10-16 02:27:00,090: INFO/MainProcess] Task zelda_api.tasks.generate_intelligence_memo[cff2b34e-3796-437e-8282-ef8ea6833061] received
+[2026-10-16 02:27:52,886: INFO/MainProcess] Memo risk_assessment: funding-source fidelity ['cash_premise'] for document 3141
+[2026-10-16 02:27:52,889: INFO/MainProcess] Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 3141
+[2026-10-16 02:27:52,892: INFO/MainProcess] Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 3141
+[2026-10-16 02:27:52,895: INFO/MainProcess] Memo downside_scenario: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 3141
+[2026-10-16 02:27:52,897: INFO/MainProcess] Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 3141
+[2026-10-16 02:27:53,028: INFO/MainProcess] Task zelda_api.tasks.generate_intelligence_memo[cff2b34e-3796-437e-8282-ef8ea6833061] succeeded in 52.9377489000035s: {'status': 'success', 'memo_id': 99}
+[2026-10-16 02:27:53,035: INFO/MainProcess] Task zelda_api.tasks.notify_document_processed[094f683f-f73e-4b1c-8354-eb7f65bd801f] received
+[2026-10-16 02:27:53,223: INFO/MainProcess] Task zelda_api.tasks.notify_document_processed[094f683f-f73e-4b1c-8354-eb7f65bd801f] succeeded in 0.187064099998679s: {'status': 'notified', 'user_id': 321}

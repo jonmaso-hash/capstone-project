@@ -1,0 +1,32 @@
+{
+ "status": 200,
+ "content_type": "text/markdown; charset=utf-8",
+ "content_disposition": "attachment; filename=\"manychat-ic-memo.md\"",
+ "charset_utf8_declared": true,
+ "bytes": 11755,
+ "sha256": "58e596bf121955c9a14179970213485cbd50dd19c5c3ec0c6143dd95a99194b5",
+ "decodes_as_utf8": true,
+ "requests_encoding": "utf-8",
+ "char_counts_in_utf8_decode": {
+  "\u2022 (bullet)": 20,
+  "\u2014 (em dash)": 22,
+  "\u2013 (en dash)": 0
+ },
+ "utf8_byte_sequences_present": {
+  "\u2022 (bullet)": 20,
+  "\u2014 (em dash)": 22,
+  "\u2013 (en dash)": 0
+ },
+ "reader_text_equals_utf8_decode": true,
+ "mojibake_in_reader_text": false,
+ "latin1_decode_would_show_mojibake": true,
+ "replacement_chars": 0,
+ "staff_mfa": {
+  "ofmc_staff": {
+   "step": "verify",
+   "status": 302,
+   "location": "/admin/",
+   "control_home_after_mfa": 200
+  }
+ }
+}

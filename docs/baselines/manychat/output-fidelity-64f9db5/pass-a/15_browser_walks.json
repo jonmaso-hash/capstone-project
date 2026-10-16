@@ -1,0 +1,74 @@
+{
+ "note": "Real Chrome (Claude in Chrome, the INVENTOROFTUES machine) against this run's server on 127.0.0.1:8000, 2026-10-16 02:32-02:36 local. Positive control: every navigation below appears in this run's server log (process/server.log.txt; extracted in browser/server_log_browser_walks.txt). Mechanics as before (D-4): login fields set by script on form.elements, then requestSubmit(); logout by the nav form's button (POST /accounts/logout/); page text read with get_page_text or document.body.innerText. Long page text can be truncated by the extension; the HTTP probe (13_rendered_reports_text.json) holds full readable text.",
+ "walks": {
+  "OWNER (ofmc_owner)": {
+   "steps": [
+    "GET /accounts/login/ 200; POST /accounts/login/ 302",
+    "navigate /api/v1/zelda/documents/3141/ic-memo/ 200 (Zelda Lite Memo)",
+    "navigate /api/v1/zelda/documents/3141/verification/ 200",
+    "navigate / then nav logout POST 302 -> /home/",
+    "navigate /accounts/profile/ofmc_owner/ -> 302 /accounts/login/?next=... (protected route refused)"
+   ],
+   "ic_memo_lite_sections_seen": ["Business Model & Growth Analysis", "Information Readiness", "Supported Points", "Open Concerns", "What Would Change the Picture"],
+   "observed": {
+    "open_concerns_1": "Measurement-basis contradiction in the headline usage metric: the deck states '500M messages' without an interval on page 10 and '500M messages/month' on page 12 [C2, C3]. These are not necessarily the same figure; until management clarifies whether 500M is a cumulative total or a monthly rate, the scale of platform activity cannot be reliably interpreted.",
+    "supported_points_2": "The company states a messages figure of either 500M total or 500M/month (measurement basis unresolved; see open concerns) on the same traction slide [S2, S3], suggesting material message volume on the platform at that time.",
+    "what_would_change_the_picture": "... and how long the company can operate — from the dated cash and burn alone, since its reported funding is historical funding, not cash on hand [S4].",
+    "truth_delta": "Measurement basis to clarify block with the exact note and 'This is not a verification result and doesn't affect the score.'; owner-only 'Profile and deck figures to review' panel: 'Previously raised: Choose a reporting currency on your profile before comparing these figures.'; N/A /100, NOT SCORED · LIMITED PUBLIC EVIDENCE; 4 analysed / 0 verified / 4 not established; 'showing 3 of 4' claim cards (Lite)",
+    "truth_delta_page_has_no_site_nav": true
+   },
+   "screenshot": "browser/owner_ic_memo_open_concerns.jpg"
+  },
+  "LITE (ofmc_lite)": {
+   "steps": [
+    "POST /accounts/login/?next=/accounts/profile/ofmc_owner/ 302 -> owner profile 200 (login redirect overtook the scripted navigation; profile shows PRIOR RAISED / RAISING / REVENUE / BURN RATE as 'Private', no canary)",
+    "navigate /matchmaking/memo/profile/50/ 200 (Zelda Lite Report)",
+    "navigate /api/v1/zelda/documents/3141/verification/ 200",
+    "navigate /api/v1/zelda/documents/3141/ic-memo/ 404",
+    "nav logout POST 302; /matchmaking/memo/profile/50/ -> 302 login"
+   ],
+   "observed": {
+    "company_overview": "ManyChat is a software company (profile: Series A [P1, P2]) operating in the chatbot/messaging automation space. Pitch Deck Hunt lists $23.1M raised [C1, S4], though no date is attached to this figure and it could not be independently verified. The company states 140,000+ bots and 500M messages as traction metrics appearing in a slide headed 'Traction by Apr-16' [S1, S2], though the measurement basis for the messages figure requires clarification (see open concerns).",
+    "company_overview_carries_basis_flag": true,
+    "company_overview_carries_monthly_figure": false,
+    "company_overview_open_concerns_available": false,
+    "truth_delta": {"basis_block": true, "not_verification_disclaimer": true, "owner_panel": false, "canary": false, "score_na": true, "counts": [4, 0, 4]}
+   },
+   "screenshot": "browser/lite_company_overview.jpg"
+  },
+  "PAID (ofmc_paid)": {
+   "steps": [
+    "POST /accounts/login/?next=/matchmaking/memo/profile/50/ 302 -> overview 200",
+    "navigate /api/v1/zelda/documents/3141/verification/ 200",
+    "nav logout POST 302; verification URL -> 302 login"
+   ],
+   "observed": {
+    "company_overview_same_text_as_lite": true,
+    "basis_flag": true, "monthly_figure_on_page": false, "contradiction_word_on_page": false, "canary": false,
+    "truth_delta": {"basis_block": true, "not_verification_disclaimer": true, "owner_panel": false, "canary": false, "score_na": true, "claim_cards_shown": 3}
+   }
+  },
+  "STAFF (ofmc_staff)": {
+   "steps": [
+    "POST /accounts/login/?next=/api/v1/zelda/documents/3141/verification/ 302 -> verification 302 -> /accounts/staff-mfa/verify/?next=... 200",
+    "real TOTP (disposable fixture secret from the probe's real setup; code for the next 30-second window, submitted after it began, not the code the Markdown check used) POST /accounts/staff-mfa/verify/ -> direct landing on the fresh Truth Delta URL 200",
+    "navigate /api/v1/zelda/documents/3141/ic-memo/ 200 (full memo)",
+    "nav logout POST 302; verification URL -> 302 login"
+   ],
+   "observed": {
+    "truth_delta": {"basis_block": true, "not_verification_disclaimer": true, "owner_panel": false, "canary": false, "score_na": true, "claim_cards_shown": 4},
+    "ic_memo_full": {"sentences_with_23.1": 10, "with_Pitch_Deck_Hunt": 10, "500M_basis_sentences": 14, "contradiction_sentences": 1, "the_cumulative_figure_sentences": 0, "overstated_sentences": 0, "canary": false}
+   },
+   "screenshots": ["browser/staff_truth_delta_direct.jpg", "browser/staff_ic_memo_open_concerns.jpg"]
+  },
+  "ANON (after staff logout, same tab)": {
+   "method": "in-page fetch with redirect:'manual' and no session cookie (opaqueredirect = 3xx); plus the direct navigation to the verification URL above (302 to login)",
+   "results": {"/api/v1/zelda/documents/3141/ic-memo/": "3xx", "/matchmaking/memo/profile/50/": "3xx", "/api/v1/zelda/documents/3141/memo/": 403, "/accounts/profile/ofmc_owner/": "3xx"}
+  }
+ },
+ "limits": [
+  "DOM/text reads, not visual judgments, except the four screenshots.",
+  "The anonymous checks were in-page fetches, not navigations, apart from the verification URL.",
+  "The Lite login landed on the owner profile first because the login next= redirect overtook the scripted navigation; the overview was then navigated to directly."
+ ]
+}
