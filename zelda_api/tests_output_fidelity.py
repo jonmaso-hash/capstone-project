@@ -210,7 +210,8 @@ class BasisGuardTests(SimpleTestCase):
 
     def test_an_explicit_cumulative_fact_does_not_license_an_overstatement(self):
         # Worded from the admitted bases: here page 10's figure really is cumulative ("to date").
-        text, changes = self.guard('If the cumulative total is shown as monthly, the claim is inflated.', cumulative=True)
+        text, changes = self.guard('If the cumulative messages total is shown as monthly, the claim is inflated.',
+                                   cumulative=True)
         self.assertEqual(text, 'How the cumulative figure relates to the monthly figure needs clarification before '
                                'either is relied on.')
         self.assertEqual(changes, ['basis_overstatement'])
@@ -226,15 +227,17 @@ class BasisGuardTests(SimpleTestCase):
                 self.assertEqual(self.guard(text), (text, []))
 
     def test_no_note_no_rule(self):
-        text = 'If the cumulative figure is presented as monthly, the claim is materially overstated.'
+        text = 'If the cumulative messages figure is presented as monthly, the claim is materially overstated.'
         self.assertEqual(self.guard(text, notes=()), (text, []))
 
     def test_idempotent(self):
-        once, _ = self.guard('If the cumulative figure is presented as monthly, the claim is materially overstated.')
+        once, changes = self.guard('If the cumulative messages figure is presented as monthly, the claim is materially '
+                                   'overstated.')
+        self.assertEqual(changes, ['basis_overstatement'])
         self.assertEqual(self.guard(once), (once, []))
 
     def test_a_list_marker_and_numbering_are_kept(self):
-        text, _ = self.guard('1. If the cumulative figure is presented as monthly, the claim is overstated.')
+        text, _ = self.guard('1. If the cumulative messages figure is presented as monthly, the claim is overstated.')
         self.assertEqual(text, '1. ' + RISK_AFTER)
 
 
@@ -531,3 +534,149 @@ class BasisResolutionTests(SimpleTestCase):
         facts = basis_facts([_usage('C2', '500M messages/month', 12), _usage('C3', '500M messages', 10)], (NOTE,))
         text = 'The key traction claim may be overstated.'
         self.assertEqual(guard_basis_wording(text, facts), (text, []))
+
+
+# --- review of 3e0fa33: a positive association, never a fallback ------------------------------------
+
+STALE_ANTECEDENT = ('The message figures use different bases [C3, C2]. Revenue is reported as $10M. '
+                    'The cumulative figure is overstated.')
+MEMO_98_CONTIGUOUS = ("1. Measurement ambiguity on the core traction metric: the deck's page 10 ('Traction by Apr-16') "
+                      "states 500M messages without an explicit interval [C3, S2], while page 12 states 500M "
+                      "messages/month [C2, S3]. These use different measurement bases and cannot be compared or "
+                      "reconciled without clarification from management. If the cumulative figure is being presented "
+                      "as a monthly figure, the key traction claim is materially overstated.")
+
+
+def _statement_aliases():
+    return [GroundedItem(ref='S2', kind='statement', category='Traction', statement='500M messages',
+                         status=SELF_REPORTED, sources=(SourceRef(document_id=1, page_number=10),)),
+            GroundedItem(ref='S3', kind='statement', category='Traction', statement='500M messages/month',
+                         status=SELF_REPORTED, sources=(SourceRef(document_id=1, page_number=12),))]
+
+
+class BasisAssociationTests(SimpleTestCase):
+    """A sentence is acted on only with a defensible tie to the pair: its citations, its noun, or a contiguous
+    discussion of that pair. No sole-pair fallback, and no antecedent across a different metric."""
+
+    def guard(self, text, notes=(NOTE,)):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        return guard_basis_wording(text, basis_facts(_pairs_items() + _statement_aliases(), notes))
+
+    # 1. Metrics no list names: the sole note is not every sentence's subject
+    def test_a_metric_outside_any_list_is_kept_with_a_sole_note(self):
+        for text in ('Monthly operating expenses are overstated.', 'Monthly churn is overstated.',
+                     'The monthly retention figure looks inflated.', 'Weekly support tickets are overstated.',
+                     'The cumulative figure is overstated.',
+                     'If the cumulative figure is presented as monthly, the claim is materially overstated.'):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+
+    # 2. A different metric between the pair and a definite referent ends the association
+    def test_a_stale_antecedent_is_not_inherited_across_another_metric(self):
+        self.assertEqual(self.guard(STALE_ANTECEDENT, notes=(NOTE, NOTE_BOTS)), (STALE_ANTECEDENT, []))
+
+    def test_the_stale_antecedent_control(self):
+        text = 'The cumulative figure is overstated.'
+        self.assertEqual(self.guard(text, notes=(NOTE, NOTE_BOTS)), (text, []))
+
+    def test_any_intervening_non_bridge_sentence_ends_the_association(self):
+        for middle in ('Monthly operating expenses are overstated.', 'Churn is 3% [C8].',
+                       'Customers renew annually.', 'Users grew 40% last year.'):
+            text = f'The message figures use different bases [C3, C2]. {middle} The cumulative figure is overstated.'
+            with self.subTest(middle=middle):
+                out, _ = self.guard(text, notes=(NOTE, NOTE_BOTS))
+                self.assertTrue(out.endswith(' The cumulative figure is overstated.'), out)
+
+    def test_an_inherited_sentence_needs_a_figure_referent(self):
+        text = 'The message figures use different bases [C3, C2]. Monthly operating expenses are overstated.'
+        self.assertEqual(self.guard(text, notes=(NOTE, NOTE_BOTS)), (text, []))
+
+    # Positive controls: contiguous discussion, citations, noun, statement aliases, explicit cumulative evidence
+    def test_the_memo_98_contiguous_passage_is_still_corrected(self):
+        for notes in ((NOTE,), (NOTE, NOTE_BOTS), (NOTE_BOTS, NOTE_CUMULATIVE, NOTE)):
+            with self.subTest(notes=len(notes)):
+                out, changes = self.guard(MEMO_98_CONTIGUOUS, notes=notes)
+                self.assertTrue(out.endswith(' ' + RISK_AFTER), out)
+                self.assertIn('[C3, S2]', out)
+                self.assertEqual(changes, ['basis_overstatement'])
+
+    def test_a_directly_following_referent_is_still_corrected(self):
+        out, changes = self.guard('The message figures use different bases [C3, C2]. The cumulative figure is '
+                                  'overstated.', notes=(NOTE, NOTE_BOTS))
+        self.assertEqual(out, 'The message figures use different bases [C3, C2]. ' + RISK_AFTER)
+        self.assertEqual(changes, ['basis_overstatement'])
+
+    def test_cited_and_named_sentences_still_resolve(self):
+        cited = 'If the cumulative figure [C3] is presented as monthly [C2], the claim is materially overstated.'
+        self.assertEqual(self.guard(cited)[0], RISK_AFTER[:-1] + ' [C3] [C2].')
+        named = 'If the cumulative messages figure is presented as monthly, the claim is materially overstated.'
+        self.assertEqual(self.guard(named), (RISK_AFTER, ['basis_overstatement']))
+        alias = 'The cumulative figure [S2] sits beside a monthly rate [S3].'
+        self.assertEqual(self.guard(alias)[0], 'The figure stated without an explicit interval [S2] sits beside a '
+                                               'monthly rate [S3].')
+
+    def test_explicit_cumulative_evidence_and_questions_are_kept(self):
+        own = 'The message figures use different bases [C7, C9]. The cumulative figure is overstated.'
+        self.assertEqual(self.guard(own, notes=(NOTE_CUMULATIVE,))[0],
+                         'The message figures use different bases [C7, C9]. How the cumulative figure relates to the '
+                         'weekly figure needs clarification before either is relied on.')
+        # A question is never turned into the judgment clarification (its referent may still be corrected).
+        out, changes = self.guard('The message figures use different bases [C3, C2]. Is the cumulative figure '
+                                  'overstated?')
+        self.assertNotIn('basis_overstatement', changes)
+        self.assertTrue(out.endswith(' overstated?'), out)
+
+
+class PipelineAssociationTests(TestCase):
+    """The memo writer: the two review counterexamples stay as written; memo 98's passage is still corrected."""
+
+    def test_the_writer_keeps_unrelated_prose_and_corrects_the_contiguous_passage(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('association_writer', password='x')
+        doc = DocumentSource.objects.create(filename='a.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test',
+                                  items=tuple(_pairs_items() + _statement_aliases()), gaps=(), verification='complete',
+                                  analysis_confidence=0.5, consistency_notes=(NOTE, NOTE_BOTS))
+        raw = {'executive_summary': 'Monthly operating expenses are overstated.',
+               'open_concerns': STALE_ANTECEDENT,
+               'risk_assessment': MEMO_98_CONTIGUOUS}
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertEqual(memo.executive_summary, raw['executive_summary'])
+        self.assertEqual(memo.open_concerns, STALE_ANTECEDENT)
+        self.assertTrue(memo.risk_assessment.endswith(' ' + RISK_AFTER), memo.risk_assessment)
+
+
+class BasisAssociationEdgeTests(SimpleTestCase):
+    """Edges of the association found by the review-of-3e0fa33 mutation run (O3, C1, C6, A5 survived)."""
+
+    def guard(self, text, notes=(NOTE,)):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        return guard_basis_wording(text, basis_facts(_pairs_items() + _statement_aliases(), notes))
+
+    def test_a_named_sentence_not_about_the_bases_keeps_its_judgment(self):
+        text = 'The messages count in the press release may be overstated.'
+        self.assertEqual(self.guard(text), (text, []))
+
+    def test_a_tied_sentence_that_also_names_another_metric_is_kept(self):
+        for text in ('Monthly messages and monthly revenue are both overstated.',
+                     'The monthly figure [C2] overstates revenue.'):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+
+    def test_a_new_paragraph_or_bullet_does_not_inherit(self):
+        for sep in ('\n\n', '\n', '\n- '):
+            text = (f'The message figures use different bases [C3, C2].{sep}The cumulative figure is overstated.')
+            with self.subTest(sep=sep):
+                self.assertEqual(self.guard(text, notes=(NOTE, NOTE_BOTS)), (text, []))
+
+    def test_an_anaphoric_sentence_stating_a_new_figure_ends_the_association(self):
+        text = 'The message figures use different bases [C3, C2]. They also report 40% growth. The cumulative figure is overstated.'
+        self.assertEqual(self.guard(text, notes=(NOTE, NOTE_BOTS)), (text, []))

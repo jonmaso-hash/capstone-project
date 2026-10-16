@@ -17,11 +17,16 @@ is acted on only when it resolves to exactly one pair:
     citations   every ref it cites belongs to that pair (a statement that repeats a pair claim's figure on
                 the same page counts as the pair's); a sentence citing anything else is left alone
     noun        no citations, and the pair's counted noun ("messages") names exactly one pair
-    paragraph   no citations and no noun: the nearest earlier sentence in the same paragraph or list item
-                that resolved to a pair (memo 98's uncited sentence follows "[C3, S2] ... [C2, S3]")
-    sole pair   no citations, and the context has exactly one pair
+    antecedent  no citations and no noun, but a definite figure referent ("the cumulative figure"), and the
+                discussion before it in the same paragraph or list item is still about one pair: the last
+                sentence resolved to it, with only bridge sentences between ("These use different
+                measurement bases ...": opens with these/this/they/both/each, cites nothing, states no
+                figure). Memo 98's uncited sentence follows "[C3, S2] ... [C2, S3]. These use ...".
 
-A sentence that names another metric (revenue, customers, users, ...) is never resolved. Then:
+There is no sole-pair fallback (review of 3e0fa33): one note does not make every monthly or cumulative
+sentence about it. Any other sentence ends the antecedent, so a different metric in between ("Revenue is
+reported as $10M.") leaves the next referent unresolved. A sentence naming a listed other metric
+(revenue, customers, users, ...) is never resolved either; that list is a backstop, not the gate. Then:
 
     judgment    a resolved sentence about the pair's bases (it names cumulative/monthly/interval/run rate
                 or cites the pair) that calls a figure overstated, inflated, misleading or wrong becomes
@@ -54,6 +59,12 @@ _JUDGMENT = re.compile(r'\b(?:overstat\w*|inflat\w*|exaggerat\w*|mislead\w*|misr
 _OTHER_METRIC = re.compile(r'\b(?:revenues?|sales|arr|mrr|gmv|bookings|profit|margin|ebitda|income|burn|cash|'
                            r'runway|funding|raised|valuation|customers?|users?|subscribers?|clients?|accounts?|'
                            r'downloads?|employees?|headcount|market|tam)\b', re.I)
+# A definite referent an antecedent can supply ("the cumulative figure", "the monthly total", "the figures").
+_FIGURE_REFERENT = re.compile(r'\bthe\s+(?:(?:cumulative|monthly|weekly|daily|yearly|annual|headline|larger|smaller|'
+                              r'former|latter|first|second|same|other)\s+)?(?:figure|total|count|number|metric|value)s?\b',
+                              re.I)
+# A bridge sentence continues the discussion it follows: an anaphoric opener, no citation, no figure.
+_BRIDGE = re.compile(r'^\s*(?:these|this|they|both|each|the\s+two)\b', re.I)
 _LEAD = re.compile(r'^(?P<lead>\s*(?:[-•*·–]\s*)?)')
 
 
@@ -122,9 +133,14 @@ def _resolve(sentence, facts, previous):
     named = [pair for pair in facts.pairs if pair.noun and re.search(rf'\b{re.escape(pair.noun[:-1])}s?\b', sentence, re.I)]
     if named:
         return named[0] if len(named) == 1 else None
-    if previous is not None:
+    if previous is not None and _FIGURE_REFERENT.search(sentence):
         return previous
-    return facts.pairs[0] if len(facts.pairs) == 1 else None
+    return None
+
+
+def _bridges(sentence):
+    """"These use different measurement bases ...": it keeps the discussion on the pair before it."""
+    return bool(_BRIDGE.match(sentence)) and not _cited(sentence) and not re.search(r'\d', sentence)
 
 
 def _judgment(sentence, pair, changes):
@@ -152,14 +168,15 @@ def guard_basis_wording(text, facts):
     if not isinstance(text, str) or not text:
         return text, []
     changes, out = [], []
-    previous: Optional[Pair] = None          # the pair resolved earlier in this paragraph / list item
+    previous: Optional[Pair] = None          # the pair this paragraph / list item is still discussing
     for sentence, separator in _sentences(text):
         pair = _resolve(sentence, facts, previous)
         if pair is not None:
             sentence = _judgment(sentence, pair, changes)
             sentence = _referent(sentence, pair, changes)
-            if _cited(sentence) or re.search(rf'\b{re.escape(pair.noun[:-1])}s?\b', sentence, re.I):
-                previous = pair
+            previous = pair
+        elif not _bridges(sentence):
+            previous = None                  # another metric, another citation or an unresolved figure
         out.append(sentence + separator)
         if '\n' in separator:
             previous = None                  # a new paragraph or list item
