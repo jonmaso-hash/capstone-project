@@ -329,3 +329,205 @@ class PipelineAppliesTheRulesTests(TestCase):
         self.assertIn(RUNWAY_AFTER, memo.questions_for_management)
         self.assertEqual(memo.upside_scenario, stored['upside_scenario'])
         self.assertEqual(memo.zelda_advantage, stored['zelda_advantage'])
+
+
+# --- review of 2fb8530: containment ------------------------------------------------------------
+
+def _revenue(ref='C8'):
+    return GroundedItem(ref=ref, kind='claim', category='revenue', statement='$10M revenue', status=INSUFFICIENT,
+                        sources=(SourceRef(document_id=1, page_number=7),), dated=True, as_of='not stated')
+
+
+NOTE_BOTS = ('measurement_basis', ('C5', 'C6'),
+             'Page 5 states 2M bots without an explicit interval; page 6 states 2M bots/day. '
+             'These use different measurement bases and need clarification before comparison.')
+NOTE_CUMULATIVE = ('measurement_basis', ('C7', 'C9'),
+                   'Page 7 states 3M messages as a cumulative total; page 9 states 3M messages/week. '
+                   'These use different measurement bases and need clarification before comparison.')
+DAILY_CLARIFICATION = ('How the figure stated without an explicit interval relates to the daily figure needs '
+                       'clarification before either is relied on')
+
+
+def _pairs_items():
+    return [_usage('C2', '500M messages/month', 12), _usage('C3', '500M messages', 10),
+            _usage('C5', '2M bots', 5), _usage('C6', '2M bots/day', 6),
+            _usage('C7', '3M messages to date', 7), _usage('C9', '3M messages/week', 9), _revenue()]
+
+
+class BasisContainmentTests(SimpleTestCase):
+    """P2-1 / P2-2: a basis note acts only on its own pair, with that pair's wording and permission."""
+
+    def guard(self, text, items=None, notes=(NOTE,)):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        items = items if items is not None else [_usage('C2', '500M messages/month', 12),
+                                                 _usage('C3', '500M messages', 10), _revenue()]
+        return guard_basis_wording(text, basis_facts(items, notes))
+
+    # P2-1: an unrelated metric is never rewritten, and its citation never moves onto a usage clarification
+    def test_unrelated_monthly_revenue_judgment_is_kept(self):
+        for text in ('Monthly revenue is overstated [C8].', 'Monthly revenue may be overstated.',
+                     'The monthly revenue figure [C8] looks inflated.'):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+
+    def test_unrelated_cumulative_referent_is_kept(self):
+        for text in ('The cumulative figure for revenue is $10M [C8].', 'The cumulative total of revenue is unknown.'):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+
+    def test_a_mixed_sentence_keeps_its_unrelated_clause(self):
+        text = 'The monthly message figure [C2] is overstated, and revenue is overstated too [C8].'
+        out, _ = self.guard(text)
+        self.assertIn('revenue is overstated too [C8]', out)
+        self.assertFalse(re.search(r'relied on[^.]*\[C8\]', out))
+
+    def test_the_memo_98_passage_still_resolves_by_its_paragraph(self):
+        text = ("1. Measurement ambiguity: page 10 states 500M messages without an explicit interval [C3, S2], while "
+                "page 12 states 500M messages/month [C2, S3]. These use different measurement bases. If the "
+                "cumulative figure is being presented as a monthly figure, the key traction claim is materially "
+                "overstated.\n2. Monthly revenue is overstated [C8].")
+        items = [_usage('C2', '500M messages/month', 12), _usage('C3', '500M messages', 10), _revenue(),
+                 GroundedItem(ref='S2', kind='statement', category='Traction', statement='500M messages',
+                              status=SELF_REPORTED, sources=(SourceRef(document_id=1, page_number=10),)),
+                 GroundedItem(ref='S3', kind='statement', category='Traction', statement='500M messages/month',
+                              status=SELF_REPORTED, sources=(SourceRef(document_id=1, page_number=12),))]
+        out, changes = self.guard(text, items=items)
+        self.assertIn(RISK_AFTER, out)
+        self.assertTrue(out.endswith('\n2. Monthly revenue is overstated [C8].'), out)
+        self.assertEqual(changes, ['basis_overstatement'])
+
+    # P2-2: per-pair wording, citations and cumulative permission
+    def test_a_second_pair_gets_its_own_basis_wording(self):
+        text = 'The daily bot figure [C6] is overstated compared with the bare bot count [C5].'
+        out, changes = self.guard(text, items=_pairs_items(), notes=(NOTE, NOTE_BOTS, NOTE_CUMULATIVE))
+        self.assertEqual(out, DAILY_CLARIFICATION + ' [C6] [C5].')
+        self.assertEqual(changes, ['basis_overstatement'])
+
+    def test_a_cumulative_fact_licenses_only_its_own_pair(self):
+        notes = (NOTE, NOTE_BOTS, NOTE_CUMULATIVE)
+        text = 'The cumulative figure [C3] sits beside a monthly rate [C2].'
+        self.assertEqual(self.guard(text, items=_pairs_items(), notes=notes)[0],
+                         'The figure stated without an explicit interval [C3] sits beside a monthly rate [C2].')
+        own = 'The cumulative figure [C7] sits beside a weekly rate [C9].'
+        self.assertEqual(self.guard(own, items=_pairs_items(), notes=notes), (own, []))
+
+    def test_refs_from_two_pairs_or_an_ambiguous_uncited_sentence_are_left_alone(self):
+        notes = (NOTE, NOTE_BOTS)
+        for text in ('The monthly messages [C2] and daily bots [C6] look overstated.',
+                     'If the cumulative figure is presented as monthly, the claim is materially overstated.'):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text, items=_pairs_items(), notes=notes), (text, []))
+
+    def test_note_and_item_order_do_not_change_a_cited_sentence(self):
+        text = 'The daily bot figure [C6] is overstated compared with the bare bot count [C5].'
+        forward = self.guard(text, items=_pairs_items(), notes=(NOTE, NOTE_BOTS, NOTE_CUMULATIVE))
+        backward = self.guard(text, items=list(reversed(_pairs_items())), notes=(NOTE_CUMULATIVE, NOTE_BOTS, NOTE))
+        self.assertEqual(forward, backward)
+
+
+class FundingTotalPerItemTests(SimpleTestCase):
+    """P2-3: one source's stated total does not license another's."""
+
+    def items(self, reverse=False):
+        items = [_funding('C1', '$23.1M raised'), _funding('C5', '$10M raised in total', narrator='Other Source'),
+                 _usage('C3', '500M messages', 10)]
+        return list(reversed(items)) if reverse else items
+
+    def guard(self, text, reverse=False):
+        return guard_funding_fidelity(text, funding_facts(self.items(reverse), 'ManyChat'))
+
+    def test_the_unsupported_total_is_dropped_beside_another_sources_total(self):
+        for reverse in (False, True):
+            with self.subTest(reverse=reverse):
+                text, changes = self.guard('Pitch Deck Hunt lists $23.1M as the total amount raised [C1].', reverse)
+                self.assertEqual(text, 'Pitch Deck Hunt lists $23.1M as the amount raised [C1].')
+                self.assertIn('unsupported_total', changes)
+
+    def test_the_stated_total_is_kept(self):
+        for reverse in (False, True):
+            with self.subTest(reverse=reverse):
+                text = 'Other Source lists $10M as the total amount raised [C5].'
+                self.assertNotIn('unsupported_total', self.guard(text, reverse)[1])
+                self.assertIn('as the total amount raised [C5]', self.guard(text, reverse)[0])
+
+    def test_separate_clauses_each_keep_their_own_support(self):
+        text = ('Pitch Deck Hunt lists $23.1M as the total amount raised [C1], while Other Source lists $10M as the '
+                'total amount raised [C5].')
+        for reverse in (False, True):
+            with self.subTest(reverse=reverse):
+                out, _ = self.guard(text, reverse)
+                self.assertIn('$23.1M as the amount raised [C1]', out)
+                self.assertIn('$10M as the total amount raised [C5]', out)
+
+    def test_an_uncited_figure_resolves_by_its_amount(self):
+        out, _ = self.guard('Pitch Deck Hunt lists $23.1M as the total amount raised.')
+        self.assertIn('$23.1M as the amount raised', out)
+
+
+class PipelineContainmentTests(TestCase):
+    """The memo writer with an active usage note: unrelated metrics and another pair keep their meaning."""
+
+    def test_unrelated_and_second_pair_sentences_through_the_writer(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('containment_writer', password='x')
+        doc = DocumentSource.objects.create(filename='c.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(_pairs_items()),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=(NOTE, NOTE_BOTS, NOTE_CUMULATIVE))
+        raw = {'executive_summary': 'Monthly revenue is overstated [C8]. The cumulative figure for revenue is $10M [C8].',
+               'risk_assessment': 'The daily bot figure [C6] is overstated compared with the bare bot count [C5].',
+               'open_concerns': 'The cumulative figure [C3] sits beside a monthly rate [C2]. The cumulative figure [C7] '
+                                'sits beside a weekly rate [C9].'}
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertEqual(memo.executive_summary, raw['executive_summary'])
+        self.assertEqual(memo.risk_assessment, DAILY_CLARIFICATION + ' [C6] [C5].')
+        self.assertEqual(memo.open_concerns, 'The figure stated without an explicit interval [C3] sits beside a monthly '
+                                             'rate [C2]. The cumulative figure [C7] sits beside a weekly rate [C9].')
+
+
+class BasisResolutionTests(SimpleTestCase):
+    """How a sentence is tied to one pair: all its citations, its paragraph, never across list items."""
+
+    def items(self):
+        return _pairs_items() + [
+            GroundedItem(ref='S2', kind='statement', category='Traction', statement='500M messages',
+                         status=SELF_REPORTED, sources=(SourceRef(document_id=1, page_number=10),)),
+            GroundedItem(ref='S3', kind='statement', category='Traction', statement='500M messages/month',
+                         status=SELF_REPORTED, sources=(SourceRef(document_id=1, page_number=12),))]
+
+    def guard(self, text):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        return guard_basis_wording(text, basis_facts(self.items(), (NOTE, NOTE_BOTS)))
+
+    def test_a_pair_ref_beside_an_unrelated_ref_is_left_alone(self):
+        text = 'The monthly figure [C2] and the other figure [C8] look overstated.'
+        self.assertEqual(self.guard(text), (text, []))
+
+    def test_with_two_pairs_the_paragraph_names_the_pair(self):
+        text = ('1. Page 10 states 500M messages without an explicit interval [C3, S2], while page 12 states 500M '
+                'messages/month [C2, S3]. If the cumulative figure is being presented as a monthly figure, the key '
+                'traction claim is materially overstated.')
+        out, changes = self.guard(text)
+        self.assertTrue(out.endswith(RISK_AFTER), out)
+        self.assertEqual(changes, ['basis_overstatement'])
+
+    def test_a_new_list_item_does_not_inherit_the_pair(self):
+        text = ('1. Page 10 states 500M messages without an explicit interval [C3, S2], while page 12 states 500M '
+                'messages/month [C2, S3].\n2. If the cumulative figure is presented as monthly, the claim is '
+                'materially overstated.')
+        self.assertEqual(self.guard(text), (text, []))
+
+    def test_a_resolved_sentence_not_about_the_bases_keeps_its_judgment(self):
+        # One pair: an uncited sentence resolves to it, but says nothing about its bases.
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        facts = basis_facts([_usage('C2', '500M messages/month', 12), _usage('C3', '500M messages', 10)], (NOTE,))
+        text = 'The key traction claim may be overstated.'
+        self.assertEqual(guard_basis_wording(text, facts), (text, []))

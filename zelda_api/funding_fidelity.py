@@ -1071,20 +1071,28 @@ def _narrative_owner(sentence, facts, changes):
 
 
 def _unsupported_total(sentence, facts, changes):
-    """ "the total amount raised" for a narrated funding fact whose own statement states no total."""
+    """
+    "the total amount raised" for a narrated funding fact whose own statement states no total. Support
+    is judged only for the item(s) the clause itself states -- by its citations, else by its amount --
+    so one source's stated total never licenses another's (review of 2fb8530).
+    """
     narrated = _narrated_funding_refs(facts)
     if _asks(sentence) or not _TOTAL.search(sentence):
         return sentence                   # "What is the total raised beyond the $23.1M ...?" asks; it is kept
     statements = dict(facts.ref_figures)
-    if any(_STATED_TOTAL.search(statements.get(ref, '')) for ref in narrated):
-        return sentence
+
+    def owned(clause):
+        cited = _cited(clause) & narrated
+        if cited:
+            return cited
+        return {ref for entry in facts.narrated if entry.funding and entry.figure is not None
+                and entry.figure.search(clause) for ref in entry.refs}
 
     def drop(match):
-        # Only where the clause states the narrated figure itself (its amount or its citation).
         start, stop = _clause_start(sentence, match.start()), _clause_end(sentence, match.end())
-        clause = sentence[start:stop] + _trailing_refs(sentence, stop)
-        if not (_cited(clause) & narrated or any(p.search(clause) for p in facts.funding_figures)):
-            return match.group(0)
+        items = owned(sentence[start:stop] + _trailing_refs(sentence, stop))
+        if not items or any(_STATED_TOTAL.search(statements.get(ref, '')) for ref in items):
+            return match.group(0)         # not this narrated figure, or its own statement states a total
         changes.append('unsupported_total')
         return ''
 
