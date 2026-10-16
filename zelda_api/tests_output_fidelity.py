@@ -680,3 +680,74 @@ class BasisAssociationEdgeTests(SimpleTestCase):
     def test_an_anaphoric_sentence_stating_a_new_figure_ends_the_association(self):
         text = 'The message figures use different bases [C3, C2]. They also report 40% growth. The cumulative figure is overstated.'
         self.assertEqual(self.guard(text, notes=(NOTE, NOTE_BOTS)), (text, []))
+
+
+# --- review of c297ec3: a bridge is a complete, known measurement-basis sentence --------------------
+
+NON_BRIDGES = ('This revenue figure is unaudited.', 'These operating expenses are unaudited.',
+               'These use different measurement bases for expenses.')
+
+
+def _with_middle(middle):
+    return f'The message figures use different bases [C3, C2]. {middle} The cumulative figure is overstated.'
+
+
+class BasisBridgeTests(SimpleTestCase):
+    """An anaphoric opener is not a bridge: only the whole known basis sentence continues the pair."""
+
+    def guard(self, text, notes=(NOTE, NOTE_BOTS)):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        return guard_basis_wording(text, basis_facts(_pairs_items() + _statement_aliases(), notes))
+
+    def test_an_anaphoric_sentence_naming_another_metric_ends_the_association(self):
+        for middle in NON_BRIDGES:
+            text = _with_middle(middle)
+            with self.subTest(middle=middle):
+                self.assertEqual(self.guard(text), (text, []))
+
+    def test_the_known_bridges_continue_the_pair(self):
+        for middle in ('These use different measurement bases.',
+                       'These use different measurement bases and need clarification before comparison.',
+                       'These use different measurement bases and cannot be compared or reconciled without '
+                       'clarification from management.'):
+            with self.subTest(middle=middle):
+                out, changes = self.guard(_with_middle(middle))
+                self.assertEqual(out, f'The message figures use different bases [C3, C2]. {middle} {RISK_AFTER}')
+                self.assertEqual(changes, ['basis_overstatement'])
+
+    def test_direct_cited_and_named_paths_are_unaffected(self):
+        direct = 'The message figures use different bases [C3, C2]. The cumulative figure is overstated.'
+        self.assertEqual(self.guard(direct)[0], 'The message figures use different bases [C3, C2]. ' + RISK_AFTER)
+        cited = 'If the cumulative figure [C3] is presented as monthly [C2], the claim is materially overstated.'
+        self.assertEqual(self.guard(cited)[0], RISK_AFTER[:-1] + ' [C3] [C2].')
+        named = 'If the cumulative messages figure is presented as monthly, the claim is materially overstated.'
+        self.assertEqual(self.guard(named), (RISK_AFTER, ['basis_overstatement']))
+
+
+class PipelineBridgeTests(TestCase):
+    """The memo writer: a non-bridge between the pair and the referent leaves the referent as written."""
+
+    def test_the_writer_keeps_the_referent_after_a_non_bridge(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('bridge_writer', password='x')
+        doc = DocumentSource.objects.create(filename='b.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test',
+                                  items=tuple(_pairs_items() + _statement_aliases()), gaps=(), verification='complete',
+                                  analysis_confidence=0.5, consistency_notes=(NOTE, NOTE_BOTS))
+        raw = {'executive_summary': _with_middle(NON_BRIDGES[0]),
+               'open_concerns': _with_middle(NON_BRIDGES[1]),
+               'upside_scenario': _with_middle(NON_BRIDGES[2]),
+               'risk_assessment': MEMO_98_CONTIGUOUS}
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertEqual(memo.executive_summary, raw['executive_summary'])
+        self.assertEqual(memo.open_concerns, raw['open_concerns'])
+        self.assertEqual(memo.upside_scenario, raw['upside_scenario'])
+        self.assertTrue(memo.risk_assessment.endswith(' ' + RISK_AFTER), memo.risk_assessment)

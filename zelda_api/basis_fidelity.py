@@ -19,9 +19,12 @@ is acted on only when it resolves to exactly one pair:
     noun        no citations, and the pair's counted noun ("messages") names exactly one pair
     antecedent  no citations and no noun, but a definite figure referent ("the cumulative figure"), and the
                 discussion before it in the same paragraph or list item is still about one pair: the last
-                sentence resolved to it, with only bridge sentences between ("These use different
-                measurement bases ...": opens with these/this/they/both/each, cites nothing, states no
-                figure). Memo 98's uncited sentence follows "[C3, S2] ... [C2, S3]. These use ...".
+                sentence resolved to it, with only bridge sentences between. A bridge is a complete, known
+                measurement-basis sentence, matched whole: "These use different measurement bases.", with
+                memo 98's "... and cannot be compared or reconciled without clarification from management."
+                or the note's "... and need clarification before comparison." (review of c297ec3: an
+                anaphoric opener alone let "This revenue figure is unaudited." carry the pair). Memo 98's
+                uncited sentence follows "[C3, S2] ... [C2, S3]. These use ...".
 
 There is no sole-pair fallback (review of 3e0fa33): one note does not make every monthly or cumulative
 sentence about it. Any other sentence ends the antecedent, so a different metric in between ("Revenue is
@@ -63,8 +66,12 @@ _OTHER_METRIC = re.compile(r'\b(?:revenues?|sales|arr|mrr|gmv|bookings|profit|ma
 _FIGURE_REFERENT = re.compile(r'\bthe\s+(?:(?:cumulative|monthly|weekly|daily|yearly|annual|headline|larger|smaller|'
                               r'former|latter|first|second|same|other)\s+)?(?:figure|total|count|number|metric|value)s?\b',
                               re.I)
-# A bridge sentence continues the discussion it follows: an anaphoric opener, no citation, no figure.
-_BRIDGE = re.compile(r'^\s*(?:these|this|they|both|each|the\s+two)\b', re.I)
+# A bridge continues the discussion it follows. Deliberately an allowlist of whole known basis sentences: any
+# other wording (another metric, a citation, a figure, a paraphrase or an added tail) ends the antecedent.
+_BRIDGE = re.compile(
+    r'\s*(?:these|this|they|both|each|the\s+two)\s+uses?\s+different\s+measurement\s+bases'
+    r'(?:\s+and\s+(?:cannot\s+be\s+compared\s+or\s+reconciled\s+without\s+clarification\s+from\s+management|'
+    r'need\s+clarification\s+before\s+comparison))?[.!]?\s*', re.I)
 _LEAD = re.compile(r'^(?P<lead>\s*(?:[-•*·–]\s*)?)')
 
 
@@ -139,8 +146,8 @@ def _resolve(sentence, facts, previous):
 
 
 def _bridges(sentence):
-    """"These use different measurement bases ...": it keeps the discussion on the pair before it."""
-    return bool(_BRIDGE.match(sentence)) and not _cited(sentence) and not re.search(r'\d', sentence)
+    """A whole known basis sentence ("These use different measurement bases.") keeps the pair before it."""
+    return bool(_BRIDGE.fullmatch(sentence))
 
 
 def _judgment(sentence, pair, changes):
