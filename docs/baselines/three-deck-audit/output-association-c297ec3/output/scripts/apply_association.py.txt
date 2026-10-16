@@ -1,0 +1,73 @@
+import sys
+p = sys.argv[1]
+t = open(p, encoding='utf-8', newline='').read()
+nl = '\r\n' if '\r\n' in t else '\n'
+t = t.replace('\r\n', '\n')
+R = [
+(r'''    noun        no citations, and the pair's counted noun ("messages") names exactly one pair
+    paragraph   no citations and no noun: the nearest earlier sentence in the same paragraph or list item
+                that resolved to a pair (memo 98's uncited sentence follows "[C3, S2] ... [C2, S3]")
+    sole pair   no citations, and the context has exactly one pair
+
+A sentence that names another metric (revenue, customers, users, ...) is never resolved. Then:
+''',
+r'''    noun        no citations, and the pair's counted noun ("messages") names exactly one pair
+    antecedent  no citations and no noun, but a definite figure referent ("the cumulative figure"), and the
+                discussion before it in the same paragraph or list item is still about one pair: the last
+                sentence resolved to it, with only bridge sentences between ("These use different
+                measurement bases ...": opens with these/this/they/both/each, cites nothing, states no
+                figure). Memo 98's uncited sentence follows "[C3, S2] ... [C2, S3]. These use ...".
+
+There is no sole-pair fallback (review of 3e0fa33): one note does not make every monthly or cumulative
+sentence about it. Any other sentence ends the antecedent, so a different metric in between ("Revenue is
+reported as $10M.") leaves the next referent unresolved. A sentence naming a listed other metric
+(revenue, customers, users, ...) is never resolved either; that list is a backstop, not the gate. Then:
+'''),
+(r'''_LEAD = re.compile(''',
+r'''# A definite referent an antecedent can supply ("the cumulative figure", "the monthly total", "the figures").
+_FIGURE_REFERENT = re.compile(r'\bthe\s+(?:(?:cumulative|monthly|weekly|daily|yearly|annual|headline|larger|smaller|'
+                              r'former|latter|first|second|same|other)\s+)?(?:figure|total|count|number|metric|value)s?\b',
+                              re.I)
+# A bridge sentence continues the discussion it follows: an anaphoric opener, no citation, no figure.
+_BRIDGE = re.compile(r'^\s*(?:these|this|they|both|each|the\s+two)\b', re.I)
+_LEAD = re.compile('''),
+(r'''    if previous is not None:
+        return previous
+    return facts.pairs[0] if len(facts.pairs) == 1 else None
+''',
+r'''    if previous is not None and _FIGURE_REFERENT.search(sentence):
+        return previous
+    return None
+
+
+def _bridges(sentence):
+    """"These use different measurement bases ...": it keeps the discussion on the pair before it."""
+    return bool(_BRIDGE.match(sentence)) and not _cited(sentence) and not re.search(r'\d', sentence)
+'''),
+(r'''    previous: Optional[Pair] = None          # the pair resolved earlier in this paragraph / list item
+    for sentence, separator in _sentences(text):
+        pair = _resolve(sentence, facts, previous)
+        if pair is not None:
+            sentence = _judgment(sentence, pair, changes)
+            sentence = _referent(sentence, pair, changes)
+            if _cited(sentence) or re.search(rf'\b{re.escape(pair.noun[:-1])}s?\b', sentence, re.I):
+                previous = pair
+        out.append(sentence + separator)
+''',
+r'''    previous: Optional[Pair] = None          # the pair this paragraph / list item is still discussing
+    for sentence, separator in _sentences(text):
+        pair = _resolve(sentence, facts, previous)
+        if pair is not None:
+            sentence = _judgment(sentence, pair, changes)
+            sentence = _referent(sentence, pair, changes)
+            previous = pair
+        elif not _bridges(sentence):
+            previous = None                  # another metric, another citation or an unresolved figure
+        out.append(sentence + separator)
+'''),
+]
+for a, b in R:
+    assert t.count(a) == 1, a[:70]
+    t = t.replace(a, b)
+open(p, 'w', encoding='utf-8', newline='').write(t.replace('\n', nl))
+print('ok')

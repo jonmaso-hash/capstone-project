@@ -1,0 +1,252 @@
+2026-10-15 17:40:14,348 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-15 17:41:07,240 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-15 17:41:07,264 INFO zelda_api.intelligence_pipeline - Memo supported_points: funding-source fidelity ['unsupported_total', 'narrator_narrative'] for document 1
+2026-10-15 17:41:07,268 INFO zelda_api.intelligence_pipeline - Memo open_concerns: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-15 17:41:07,269 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-15 17:41:07,276 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt', 'funding_not_runway'] for document 1
+2026-10-15 17:41:07,292 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-15 17:41:07,326 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-15 17:41:07,332 INFO zelda_api.signals - DocumentSource created: a.pptx
+2026-10-15 17:41:07,335 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-15 17:41:07,335 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-15 17:41:07,351 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+F2026-10-15 17:41:07,360 INFO zelda_api.signals - DocumentSource created: c.pptx
+2026-10-15 17:41:07,363 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-15 17:41:07,364 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_cumulative_referent'] for document 1
+2026-10-15 17:41:07,380 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+..FFFFFFFFFFFF.F..........................................
+======================================================================
+FAIL: test_the_writer_keeps_unrelated_prose_and_corrects_the_contiguous_passage (zelda_api.tests_output_fidelity.PipelineAssociationTests.test_the_writer_keeps_unrelated_prose_and_corrects_the_contiguous_passage)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 647, in test_the_writer_keeps_unrelated_prose_and_corrects_the_contiguous_passage
+    self.assertEqual(memo.open_concerns, STALE_ANTECEDENT)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'The [70 chars]10M. How the figure stated without an explicit[83 chars] on.' != 'The [70 chars]10M. The cumulative figure is overstated.'
+- The message figures use different bases [C3, C2]. Revenue is reported as $10M. How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on.
++ The message figures use different bases [C3, C2]. Revenue is reported as $10M. The cumulative figure is overstated.
+
+
+======================================================================
+FAIL: test_a_metric_outside_any_list_is_kept_with_a_sole_note (zelda_api.tests_output_fidelity.BasisAssociationTests.test_a_metric_outside_any_list_is_kept_with_a_sole_note) (text='Monthly operating expenses are overstated.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 569, in test_a_metric_outside_any_list_is_kept_with_a_sole_note
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('How the figure stated without an explicit[109 chars]nt']) != ('Monthly operating expenses are overstated.', [])
+
+First differing element 0:
+'How the figure stated without an explicit[83 chars] on.'
+'Monthly operating expenses are overstated.'
+
++ ('Monthly operating expenses are overstated.', [])
+- ('How the figure stated without an explicit interval relates to the monthly '
+-  'figure needs clarification before either is relied on.',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_a_metric_outside_any_list_is_kept_with_a_sole_note (zelda_api.tests_output_fidelity.BasisAssociationTests.test_a_metric_outside_any_list_is_kept_with_a_sole_note) (text='Monthly churn is overstated.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 569, in test_a_metric_outside_any_list_is_kept_with_a_sole_note
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('How the figure stated without an explicit[109 chars]nt']) != ('Monthly churn is overstated.', [])
+
+First differing element 0:
+'How the figure stated without an explicit[83 chars] on.'
+'Monthly churn is overstated.'
+
++ ('Monthly churn is overstated.', [])
+- ('How the figure stated without an explicit interval relates to the monthly '
+-  'figure needs clarification before either is relied on.',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_a_metric_outside_any_list_is_kept_with_a_sole_note (zelda_api.tests_output_fidelity.BasisAssociationTests.test_a_metric_outside_any_list_is_kept_with_a_sole_note) (text='The monthly retention figure looks inflated.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 569, in test_a_metric_outside_any_list_is_kept_with_a_sole_note
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('How the figure stated without an explicit[109 chars]nt']) != ('The monthly retention figure looks inflated.', [])
+
+First differing element 0:
+'How the figure stated without an explicit[83 chars] on.'
+'The monthly retention figure looks inflated.'
+
++ ('The monthly retention figure looks inflated.', [])
+- ('How the figure stated without an explicit interval relates to the monthly '
+-  'figure needs clarification before either is relied on.',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_a_metric_outside_any_list_is_kept_with_a_sole_note (zelda_api.tests_output_fidelity.BasisAssociationTests.test_a_metric_outside_any_list_is_kept_with_a_sole_note) (text='Weekly support tickets are overstated.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 569, in test_a_metric_outside_any_list_is_kept_with_a_sole_note
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('How the figure stated without an explicit[109 chars]nt']) != ('Weekly support tickets are overstated.', [])
+
+First differing element 0:
+'How the figure stated without an explicit[83 chars] on.'
+'Weekly support tickets are overstated.'
+
++ ('Weekly support tickets are overstated.', [])
+- ('How the figure stated without an explicit interval relates to the monthly '
+-  'figure needs clarification before either is relied on.',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_a_metric_outside_any_list_is_kept_with_a_sole_note (zelda_api.tests_output_fidelity.BasisAssociationTests.test_a_metric_outside_any_list_is_kept_with_a_sole_note) (text='The cumulative figure is overstated.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 569, in test_a_metric_outside_any_list_is_kept_with_a_sole_note
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('How the figure stated without an explicit[109 chars]nt']) != ('The cumulative figure is overstated.', [])
+
+First differing element 0:
+'How the figure stated without an explicit[83 chars] on.'
+'The cumulative figure is overstated.'
+
++ ('The cumulative figure is overstated.', [])
+- ('How the figure stated without an explicit interval relates to the monthly '
+-  'figure needs clarification before either is relied on.',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_a_metric_outside_any_list_is_kept_with_a_sole_note (zelda_api.tests_output_fidelity.BasisAssociationTests.test_a_metric_outside_any_list_is_kept_with_a_sole_note) (text='If the cumulative figure is presented as monthly, the claim is materially overstated.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 569, in test_a_metric_outside_any_list_is_kept_with_a_sole_note
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('How the figure stated without an explicit[109 chars]nt']) != ('If the cumulative figure is presented as [45 chars], [])
+
+First differing element 0:
+'How the figure stated without an explicit[83 chars] on.'
+'If the cumulative figure is presented as [40 chars]ted.'
+
+- ('How the figure stated without an explicit interval relates to the monthly '
+-  'figure needs clarification before either is relied on.',
+-  ['basis_overstatement'])
++ ('If the cumulative figure is presented as monthly, the claim is materially '
++  'overstated.',
++  [])
+
+======================================================================
+FAIL: test_a_stale_antecedent_is_not_inherited_across_another_metric (zelda_api.tests_output_fidelity.BasisAssociationTests.test_a_stale_antecedent_is_not_inherited_across_another_metric)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 573, in test_a_stale_antecedent_is_not_inherited_across_another_metric
+    self.assertEqual(self.guard(STALE_ANTECEDENT, notes=(NOTE, NOTE_BOTS)), (STALE_ANTECEDENT, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('The[71 chars]10M. How the figure stated without an explicit[109 chars]nt']) != ('The[71 chars]10M. The cumulative figure is overstated.', [])
+
+First differing element 0:
+'The [70 chars]10M. How the figure stated without an explicit[83 chars] on.'
+'The [70 chars]10M. The cumulative figure is overstated.'
+
+  ('The message figures use different bases [C3, C2]. Revenue is reported as '
++  '$10M. The cumulative figure is overstated.',
++  [])
+-  '$10M. How the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on.',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_an_inherited_sentence_needs_a_figure_referent (zelda_api.tests_output_fidelity.BasisAssociationTests.test_an_inherited_sentence_needs_a_figure_referent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 589, in test_an_inherited_sentence_needs_a_figure_referent
+    self.assertEqual(self.guard(text, notes=(NOTE, NOTE_BOTS)), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('The[42 chars]C2]. How the figure stated without an explicit[109 chars]nt']) != ('The[42 chars]C2]. Monthly operating expenses are overstated.', [])
+
+First differing element 0:
+'The [41 chars]C2]. How the figure stated without an explicit[83 chars] on.'
+'The [41 chars]C2]. Monthly operating expenses are overstated.'
+
+- ('The message figures use different bases [C3, C2]. How the figure stated '
+?                                                     ^ ^^   ----- ----   ^
+
++ ('The message figures use different bases [C3, C2]. Monthly operating expenses '
+?                                                     ^ ^  +++++    ++++ ^^^^^^^
+
++  'are overstated.',
++  [])
+-  'without an explicit interval relates to the monthly figure needs '
+-  'clarification before either is relied on.',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_any_intervening_non_bridge_sentence_ends_the_association (zelda_api.tests_output_fidelity.BasisAssociationTests.test_any_intervening_non_bridge_sentence_ends_the_association) (middle='Monthly operating expenses are overstated.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 585, in test_any_intervening_non_bridge_sentence_ends_the_association
+    self.assertTrue(out.endswith(' The cumulative figure is overstated.'), out)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : The message figures use different bases [C3, C2]. How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on. How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on.
+
+======================================================================
+FAIL: test_any_intervening_non_bridge_sentence_ends_the_association (zelda_api.tests_output_fidelity.BasisAssociationTests.test_any_intervening_non_bridge_sentence_ends_the_association) (middle='Churn is 3% [C8].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 585, in test_any_intervening_non_bridge_sentence_ends_the_association
+    self.assertTrue(out.endswith(' The cumulative figure is overstated.'), out)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : The message figures use different bases [C3, C2]. Churn is 3% [C8]. How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on.
+
+======================================================================
+FAIL: test_any_intervening_non_bridge_sentence_ends_the_association (zelda_api.tests_output_fidelity.BasisAssociationTests.test_any_intervening_non_bridge_sentence_ends_the_association) (middle='Customers renew annually.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 585, in test_any_intervening_non_bridge_sentence_ends_the_association
+    self.assertTrue(out.endswith(' The cumulative figure is overstated.'), out)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : The message figures use different bases [C3, C2]. Customers renew annually. How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on.
+
+======================================================================
+FAIL: test_any_intervening_non_bridge_sentence_ends_the_association (zelda_api.tests_output_fidelity.BasisAssociationTests.test_any_intervening_non_bridge_sentence_ends_the_association) (middle='Users grew 40% last year.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 585, in test_any_intervening_non_bridge_sentence_ends_the_association
+    self.assertTrue(out.endswith(' The cumulative figure is overstated.'), out)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : The message figures use different bases [C3, C2]. Users grew 40% last year. How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on.
+
+======================================================================
+FAIL: test_explicit_cumulative_evidence_and_questions_are_kept (zelda_api.tests_output_fidelity.BasisAssociationTests.test_explicit_cumulative_evidence_and_questions_are_kept)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 621, in test_explicit_cumulative_evidence_and_questions_are_kept
+    self.assertEqual(self.guard(question), (question, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('The[49 chars] the figure stated without an explicit interva[41 chars]nt']) != ('The[49 chars] the cumulative figure overstated?', [])
+
+First differing element 0:
+'The [45 chars] Is the figure stated without an explicit interval overstated?'
+'The [45 chars] Is the cumulative figure overstated?'
+
+- ('The message figures use different bases [C3, C2]. Is the figure stated '
+?                                                                   -------
+
++ ('The message figures use different bases [C3, C2]. Is the cumulative figure '
+?                                                           +++++++++++
+
+-  'without an explicit interval overstated?',
+-  ['basis_cumulative_referent'])
++  'overstated?',
++  [])
+
+----------------------------------------------------------------------
+Ran 52 tests in 0.506s
+
+FAILED (failures=14)
+Destroying test database for alias 'default'...
+Found 52 test(s).
+System check identified no issues (0 silenced).

@@ -1,0 +1,36 @@
+# Emitted text for the review-of-3e0fa33 cases, from the committed helper (run via manage.py shell).
+import json
+import subprocess
+from zelda_api.basis_fidelity import basis_facts, guard_basis_wording
+from zelda_api.tests_output_fidelity import (NOTE, NOTE_BOTS, NOTE_CUMULATIVE, MEMO_98_CONTIGUOUS, STALE_ANTECEDENT,
+                                             _pairs_items, _statement_aliases)
+
+items = _pairs_items() + _statement_aliases()
+CASES = [
+    ('review 1: metric outside the list, sole note', (NOTE,), 'Monthly operating expenses are overstated.'),
+    ('review 2: stale antecedent, two notes', (NOTE, NOTE_BOTS), STALE_ANTECEDENT),
+    ('review 2 control: no preceding usage sentence', (NOTE, NOTE_BOTS), 'The cumulative figure is overstated.'),
+    ('intervening expense sentence', (NOTE, NOTE_BOTS),
+     'The message figures use different bases [C3, C2]. Monthly operating expenses are overstated. '
+     'The cumulative figure is overstated.'),
+    ('uncited sole-note scenario', (NOTE,),
+     'If the cumulative figure is presented as monthly, the claim is materially overstated.'),
+    ('memo-98 contiguous passage, sole note', (NOTE,), MEMO_98_CONTIGUOUS),
+    ('memo-98 contiguous passage, three notes', (NOTE_BOTS, NOTE_CUMULATIVE, NOTE), MEMO_98_CONTIGUOUS),
+    ('directly following referent', (NOTE, NOTE_BOTS),
+     'The message figures use different bases [C3, C2]. The cumulative figure is overstated.'),
+    ('cited pair', (NOTE,), 'If the cumulative figure [C3] is presented as monthly [C2], the claim is materially overstated.'),
+    ('noun', (NOTE,), 'If the cumulative messages figure is presented as monthly, the claim is materially overstated.'),
+    ('statement aliases', (NOTE,), 'The cumulative figure [S2] sits beside a monthly rate [S3].'),
+    ('daily pair', (NOTE, NOTE_BOTS, NOTE_CUMULATIVE),
+     'The daily bot figure [C6] is overstated compared with the bare bot count [C5].'),
+    ('explicit cumulative pair', (NOTE_CUMULATIVE,),
+     'The message figures use different bases [C7, C9]. The cumulative figure is overstated.'),
+    ('question', (NOTE,), 'The message figures use different bases [C3, C2]. Is the cumulative figure overstated?'),
+]
+head = subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
+rows = []
+for name, notes, text in CASES:
+    out, changes = guard_basis_wording(text, basis_facts(items, notes))
+    rows.append({'case': name, 'in': text, 'out': out, 'changes': changes, 'unchanged': out == text})
+print('PROBE ' + json.dumps({'head': head, 'cases': rows}, ensure_ascii=False))
