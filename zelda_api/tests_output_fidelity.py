@@ -1035,3 +1035,22 @@ class PipelineMemo99Tests(TestCase):
         for key in ('executive_summary', 'risk_assessment', 'what_would_change_the_picture', 'zelda_advantage',
                     'questions_for_management', 'downside_scenario'):
             self.assertEqual(getattr(memo, key), stored[key], key)
+
+
+class Of705MutationControlTests(SimpleTestCase):
+    """Controls added after the first mutation run (T2 and P5 survived: the earlier controls never reached the rule)."""
+
+    def guard(self, text, items, notes=(NOTE,)):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        return guard_basis_wording(text, basis_facts(items, notes))
+
+    def test_a_pair_with_a_stated_cumulative_side_keeps_its_total(self):
+        # One side states a cumulative fact ("to date"), the other the same figure with no interval: "3M total"
+        # may be the stated cumulative figure, so it is kept.
+        items = [_usage('C7', '3M messages to date', 7), _usage('C10', '3M messages', 8)]
+        text = 'The deck gives 3M total [C7, C10].'
+        self.assertEqual(self.guard(text, items, notes=(('measurement_basis', ('C10', 'C7'), 'note'),)), (text, []))
+
+    def test_a_shared_place_question_is_kept(self):
+        text = 'Are both message figures shown on the same slide [S2, S3]?'
+        self.assertEqual(self.guard(text, _context_items()), (text, []))
