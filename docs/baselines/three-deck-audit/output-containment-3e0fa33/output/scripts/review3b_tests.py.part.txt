@@ -1,0 +1,33 @@
+
+
+class BasisResolutionTests(SimpleTestCase):
+    """How a sentence is tied to one pair: all its citations, its paragraph, never across list items."""
+
+    def items(self):
+        return _pairs_items() + [
+            GroundedItem(ref='S2', kind='statement', category='Traction', statement='500M messages',
+                         status=SELF_REPORTED, sources=(SourceRef(document_id=1, page_number=10),)),
+            GroundedItem(ref='S3', kind='statement', category='Traction', statement='500M messages/month',
+                         status=SELF_REPORTED, sources=(SourceRef(document_id=1, page_number=12),))]
+
+    def guard(self, text):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        return guard_basis_wording(text, basis_facts(self.items(), (NOTE, NOTE_BOTS)))
+
+    def test_a_pair_ref_beside_an_unrelated_ref_is_left_alone(self):
+        text = 'The monthly figure [C2] and the other figure [C8] look overstated.'
+        self.assertEqual(self.guard(text), (text, []))
+
+    def test_with_two_pairs_the_paragraph_names_the_pair(self):
+        text = ('1. Page 10 states 500M messages without an explicit interval [C3, S2], while page 12 states 500M '
+                'messages/month [C2, S3]. If the cumulative figure is being presented as a monthly figure, the key '
+                'traction claim is materially overstated.')
+        out, changes = self.guard(text)
+        self.assertTrue(out.endswith(RISK_AFTER), out)
+        self.assertEqual(changes, ['basis_overstatement'])
+
+    def test_a_new_list_item_does_not_inherit_the_pair(self):
+        text = ('1. Page 10 states 500M messages without an explicit interval [C3, S2], while page 12 states 500M '
+                'messages/month [C2, S3].\n2. If the cumulative figure is presented as monthly, the claim is '
+                'materially overstated.')
+        self.assertEqual(self.guard(text), (text, []))
