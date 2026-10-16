@@ -1,0 +1,28 @@
+
+
+class BasisAssociationEdgeTests(SimpleTestCase):
+    """Edges of the association found by the review-of-3e0fa33 mutation run (O3, C1, C6, A5 survived)."""
+
+    def guard(self, text, notes=(NOTE,)):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        return guard_basis_wording(text, basis_facts(_pairs_items() + _statement_aliases(), notes))
+
+    def test_a_named_sentence_not_about_the_bases_keeps_its_judgment(self):
+        text = 'The messages count in the press release may be overstated.'
+        self.assertEqual(self.guard(text), (text, []))
+
+    def test_a_tied_sentence_that_also_names_another_metric_is_kept(self):
+        for text in ('Monthly messages and monthly revenue are both overstated.',
+                     'The monthly figure [C2] overstates revenue.'):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+
+    def test_a_new_paragraph_or_bullet_does_not_inherit(self):
+        for sep in ('\n\n', '\n', '\n- '):
+            text = (f'The message figures use different bases [C3, C2].{sep}The cumulative figure is overstated.')
+            with self.subTest(sep=sep):
+                self.assertEqual(self.guard(text, notes=(NOTE, NOTE_BOTS)), (text, []))
+
+    def test_an_anaphoric_sentence_stating_a_new_figure_ends_the_association(self):
+        text = 'The message figures use different bases [C3, C2]. They also report 40% growth. The cumulative figure is overstated.'
+        self.assertEqual(self.guard(text, notes=(NOTE, NOTE_BOTS)), (text, []))

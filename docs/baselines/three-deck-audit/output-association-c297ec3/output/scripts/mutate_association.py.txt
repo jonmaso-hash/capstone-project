@@ -1,0 +1,44 @@
+"""Association mutation run (review of 3e0fa33). Carries the containment run's 24 mutations from
+mutate_containment.py (C5 re-anchored to the antecedent gate) and adds A1-A5.
+Usage: python mutate_association.py <worktree> [ID ...]."""
+import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+BASE = os.path.join(HERE, 'mutate_ra109_review.py')
+head, runner = open(BASE, encoding='utf-8').read().split('def sha(path):', 1)
+ns = {'__file__': BASE, '__name__': 'mutation_list'}
+exec(compile(head, BASE, 'exec'), ns)
+
+# The containment list, without running it.
+src = open(os.path.join(HERE, 'mutate_containment.py'), encoding='utf-8').read()
+src = src.split("exec(compile('def sha(path):'")[0]
+cont = {'__file__': os.path.join(HERE, 'mutate_containment.py'), '__name__': 'containment_list'}
+exec(compile(src, 'mutate_containment.py', 'exec'), cont)
+carried = list(cont['ns']['M'])
+
+BF = 'zelda_api/basis_fidelity.py'
+for i, entry in enumerate(carried):
+    if entry[0] == 'C5':
+        carried[i] = ('C5', "P2-2: no antecedent association (memo 98's uncited sentence is not tied)", BF,
+                      "    if previous is not None and _FIGURE_REFERENT.search(sentence):\n        return previous",
+                      "    pass")
+
+ns['LABELS'] = cont['ns']['LABELS']
+ns['M'] = carried + [
+    # --- association (review of 3e0fa33) ---------------------------------------------------------
+    ('A1', 'P2: the sole-pair fallback is restored', BF,
+     "        return previous\n    return None\n",
+     "        return previous\n    return facts.pairs[0] if len(facts.pairs) == 1 else None\n"),
+    ('A2', 'P2: stale inheritance (an intervening sentence never ends the antecedent)', BF,
+     "        elif not _bridges(sentence):\n            previous = None",
+     "        elif False:\n            previous = None"),
+    ('A3', 'P2: an inherited sentence needs no figure referent', BF,
+     "    if previous is not None and _FIGURE_REFERENT.search(sentence):",
+     "    if previous is not None:"),
+    ('A4', 'P2: any uncited sentence bridges (no anaphoric opener needed)', BF,
+     "    return bool(_BRIDGE.match(sentence)) and not _cited(sentence)",
+     "    return True and not _cited(sentence)"),
+    ('A5', 'P2: a sentence stating a figure bridges', BF,
+     " and not re.search(r'\\d', sentence)", ""),
+]
+exec(compile('def sha(path):' + runner, BASE + ' (runner)', 'exec'), ns)

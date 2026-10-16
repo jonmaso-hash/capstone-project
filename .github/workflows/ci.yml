@@ -133,6 +133,7 @@ jobs:
           zelda_api.tests_claim_attribution
           zelda_api.tests_claim_periods
           zelda_api.tests_usage_basis
+          zelda_api.tests_output_fidelity
           zelda_api.tests_claim_context_dates
           zelda_api.tests_funding_fidelity
           zelda_api.tests_claim_currency

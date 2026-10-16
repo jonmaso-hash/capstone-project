@@ -1,0 +1,74 @@
+O1 CAUGHT Ran 186 tests in 9.327s FAILED (failures=10) restored
+O2 CAUGHT Ran 186 tests in 10.166s FAILED (failures=1) restored
+O3 CAUGHT Ran 186 tests in 9.398s FAILED (failures=1) restored
+O4 CAUGHT Ran 186 tests in 9.808s FAILED (failures=3) restored
+O5 CAUGHT Ran 186 tests in 9.422s FAILED (failures=4) restored
+O6 CAUGHT Ran 186 tests in 9.274s FAILED (failures=3) restored
+O8 CAUGHT Ran 186 tests in 9.292s FAILED (failures=2) restored
+F1 CAUGHT Ran 186 tests in 9.178s FAILED (failures=4) restored
+F2 CAUGHT Ran 186 tests in 9.359s FAILED (failures=1) restored
+F3 CAUGHT Ran 186 tests in 9.272s FAILED (failures=1, errors=2) restored
+F4 CAUGHT Ran 186 tests in 9.295s FAILED (failures=9) restored
+F5 CAUGHT Ran 186 tests in 9.888s FAILED (failures=1) restored
+F6 CAUGHT Ran 186 tests in 9.292s FAILED (failures=5) restored
+F7 CAUGHT Ran 186 tests in 9.767s FAILED (failures=4) restored
+F9 CAUGHT Ran 186 tests in 9.284s FAILED (failures=4) restored
+C1 CAUGHT Ran 186 tests in 9.482s FAILED (failures=2) restored
+C2 CAUGHT Ran 186 tests in 9.409s FAILED (failures=1) restored
+C3 CAUGHT Ran 186 tests in 9.268s FAILED (failures=3) restored
+C4 CAUGHT Ran 186 tests in 9.438s FAILED (failures=2) restored
+C5 CAUGHT Ran 186 tests in 9.225s FAILED (failures=1) restored
+C6 CAUGHT Ran 186 tests in 9.267s FAILED (failures=1) restored
+C7 CAUGHT Ran 186 tests in 9.187s FAILED (failures=5) restored
+C8 CAUGHT Ran 186 tests in 9.175s FAILED (failures=1) restored
+C9 CAUGHT Ran 186 tests in 9.331s FAILED (failures=1) restored
+
+O1 | UB-604: the judgment rule is off | CAUGHT Ran 186 tests in 9.327s FAILED (failures=10)
+    failing: test_a_list_marker_and_numbering_are_kept, test_a_second_pair_gets_its_own_basis_wording, test_an_explicit_cumulative_fact_does_not_license_an_overstatement, test_an_overstatement_judgment_is_replaced_and_its_refs_kept, test_only_the_expected_rules_fired, test_the_memo_98_passage_still_resolves_by_its_paragraph, test_the_stored_memo_carries_the_corrections, test_ub604_the_unsupported_cumulative_overstatement_is_replaced ...
+O2 | UB-604: the judgment rule also rewrites questions | CAUGHT Ran 186 tests in 10.166s FAILED (failures=1)
+    failing: test_questions_scenarios_and_unrelated_metrics_are_kept
+O3 | UB-604: a judgment need not be about the bases | CAUGHT Ran 186 tests in 9.398s FAILED (failures=1)
+    failing: test_a_resolved_sentence_not_about_the_bases_keeps_its_judgment
+O4 | UB-604: the rewritten judgment drops its citations | CAUGHT Ran 186 tests in 9.808s FAILED (failures=3)
+    failing: test_a_second_pair_gets_its_own_basis_wording, test_an_overstatement_judgment_is_replaced_and_its_refs_kept, test_unrelated_and_second_pair_sentences_through_the_writer
+O5 | UB-604: the pair's own cumulative fact no longer keeps its referent | CAUGHT Ran 186 tests in 9.422s FAILED (failures=4)
+    failing: test_a_cumulative_fact_licenses_only_its_own_pair, test_an_admitted_cumulative_fact_keeps_its_referent, test_an_explicit_cumulative_fact_does_not_license_an_overstatement, test_unrelated_and_second_pair_sentences_through_the_writer
+O6 | UB-604: the cumulative-referent rule is off | CAUGHT Ran 186 tests in 9.274s FAILED (failures=3)
+    failing: test_a_cumulative_fact_licenses_only_its_own_pair, test_the_definite_cumulative_referent_is_replaced_when_nothing_is_cumulative, test_unrelated_and_second_pair_sentences_through_the_writer
+O8 | UB-604: the memo writer does not apply the basis guard | CAUGHT Ran 186 tests in 9.292s FAILED (failures=2)
+    failing: test_the_stored_memo_carries_the_corrections, test_unrelated_and_second_pair_sentences_through_the_writer
+F1 | NP-603: the narrative rule is off | CAUGHT Ran 186 tests in 9.178s FAILED (failures=4)
+    failing: test_np603_narrative_and_total_stay_with_the_narrator, test_only_the_expected_rules_fired, test_the_narrative_stays_with_the_narrator, test_the_stored_memo_carries_the_corrections
+F2 | NP-603: the narrative rule ignores its clause | CAUGHT Ran 186 tests in 9.359s FAILED (failures=1)
+    failing: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money
+F3 | NP-603: the narrative rule accepts refs that are not a narrator's funding | CAUGHT Ran 186 tests in 9.272s FAILED (failures=1, errors=2)
+    failing: test_company_owned_funding_and_mixed_refs_are_kept, test_no_narrator_in_the_context_changes_nothing, test_valid_cash_and_funding_questions_are_kept
+F4 | NP-603: the unsupported-total rule is off | CAUGHT Ran 186 tests in 9.295s FAILED (failures=9)
+    failing: test_an_uncited_figure_resolves_by_its_amount, test_an_unsupported_total_is_dropped_and_a_stated_one_kept, test_np603_narrative_and_total_stay_with_the_narrator, test_only_the_expected_rules_fired, test_separate_clauses_each_keep_their_own_support, test_the_stored_memo_carries_the_corrections, test_the_unsupported_total_is_dropped_beside_another_sources_total
+F5 | NP-603: "total" is also stripped from questions | CAUGHT Ran 186 tests in 9.888s FAILED (failures=1)
+    failing: test_the_figure_phrase_is_not_split
+F6 | NP-603: an item's own stated total is stripped too | CAUGHT Ran 186 tests in 9.292s FAILED (failures=5)
+    failing: test_an_unsupported_total_is_dropped_and_a_stated_one_kept, test_separate_clauses_each_keep_their_own_support, test_the_stated_total_is_kept
+F7 | NP-604: the funding-not-runway rule is off | CAUGHT Ran 186 tests in 9.767s FAILED (failures=4)
+    failing: test_funding_is_not_a_runway_denominator_even_with_dated_cash, test_np604_funding_is_not_the_runway_denominator, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_corrections
+F9 | NP-604: the rule is not in the rule list | CAUGHT Ran 186 tests in 9.284s FAILED (failures=4)
+    failing: test_funding_is_not_a_runway_denominator_even_with_dated_cash, test_np604_funding_is_not_the_runway_denominator, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_corrections
+C1 | P2-1: another metric no longer blocks resolution (unrelated-metric gating removed) | CAUGHT Ran 186 tests in 9.482s FAILED (failures=2)
+    failing: test_unrelated_cumulative_referent_is_kept, test_unrelated_monthly_revenue_judgment_is_kept
+C2 | P2-1: a sentence citing a pair ref and an unrelated ref resolves to the pair | CAUGHT Ran 186 tests in 9.409s FAILED (failures=1)
+    failing: test_a_pair_ref_beside_an_unrelated_ref_is_left_alone
+C3 | P2-2: every pair is worded with the first pair's (monthly) clarification | CAUGHT Ran 186 tests in 9.268s FAILED (failures=3)
+    failing: test_a_second_pair_gets_its_own_basis_wording, test_an_explicit_cumulative_fact_does_not_license_an_overstatement, test_unrelated_and_second_pair_sentences_through_the_writer
+C4 | P2-2: one cumulative fact anywhere licenses every pair | CAUGHT Ran 186 tests in 9.438s FAILED (failures=2)
+    failing: test_a_cumulative_fact_licenses_only_its_own_pair, test_unrelated_and_second_pair_sentences_through_the_writer
+C5 | P2-2: no paragraph association (an uncited sentence needs a sole pair) | CAUGHT Ran 186 tests in 9.225s FAILED (failures=1)
+    failing: test_with_two_pairs_the_paragraph_names_the_pair
+C6 | P2-2: the paragraph association crosses list items | CAUGHT Ran 186 tests in 9.267s FAILED (failures=1)
+    failing: test_a_new_list_item_does_not_inherit_the_pair
+C7 | P2-3: any narrated item's stated total licenses every item | CAUGHT Ran 186 tests in 9.187s FAILED (failures=5)
+    failing: test_an_uncited_figure_resolves_by_its_amount, test_separate_clauses_each_keep_their_own_support, test_the_unsupported_total_is_dropped_beside_another_sources_total
+C8 | P2-3: an uncited clause no longer resolves its item by amount | CAUGHT Ran 186 tests in 9.175s FAILED (failures=1)
+    failing: test_an_uncited_figure_resolves_by_its_amount
+C9 | P2-2: a statement repeating a pair claim is not counted as the pair's | CAUGHT Ran 186 tests in 9.331s FAILED (failures=1)
+    failing: test_with_two_pairs_the_paragraph_names_the_pair
+exit=0

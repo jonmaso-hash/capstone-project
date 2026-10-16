@@ -1,0 +1,53 @@
+O1 CAUGHT Ran 169 tests in 9.457s FAILED (failures=6) restored
+O2 CAUGHT Ran 169 tests in 9.257s FAILED (failures=1) restored
+O3 CAUGHT Ran 169 tests in 9.388s FAILED (failures=1) restored
+O4 CAUGHT Ran 169 tests in 9.108s FAILED (failures=1) restored
+O5 CAUGHT Ran 169 tests in 9.117s FAILED (failures=2) restored
+O6 CAUGHT Ran 169 tests in 9.987s FAILED (failures=1) restored
+O7 CAUGHT Ran 169 tests in 9.063s FAILED (failures=1) restored
+O8 CAUGHT Ran 169 tests in 9.236s FAILED (failures=1) restored
+F1 CAUGHT Ran 169 tests in 9.076s FAILED (failures=4) restored
+F2 CAUGHT Ran 169 tests in 9.029s FAILED (failures=1) restored
+F3 CAUGHT Ran 169 tests in 9.303s FAILED (failures=1, errors=2) restored
+F4 CAUGHT Ran 169 tests in 9.139s FAILED (failures=4) restored
+F5 CAUGHT Ran 169 tests in 9.053s FAILED (failures=1) restored
+F6 CAUGHT Ran 169 tests in 9.050s FAILED (failures=1) restored
+F7 CAUGHT Ran 169 tests in 9.218s FAILED (failures=4) restored
+F8 SURVIVED Ran 169 tests in 9.230s OK restored
+F9 CAUGHT Ran 169 tests in 9.317s FAILED (failures=4) restored
+
+O1 | UB-604: the judgment rule is off | CAUGHT Ran 169 tests in 9.457s FAILED (failures=6)
+    failing: test_a_list_marker_and_numbering_are_kept, test_an_explicit_cumulative_fact_does_not_license_an_overstatement, test_an_overstatement_judgment_is_replaced_and_its_refs_kept, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_corrections, test_ub604_the_unsupported_cumulative_overstatement_is_replaced
+O2 | UB-604: the judgment rule also rewrites questions | CAUGHT Ran 169 tests in 9.257s FAILED (failures=1)
+    failing: test_questions_scenarios_and_unrelated_metrics_are_kept
+O3 | UB-604: any error judgment is rewritten, related to the bases or not | CAUGHT Ran 169 tests in 9.388s FAILED (failures=1)
+    failing: test_questions_scenarios_and_unrelated_metrics_are_kept
+O4 | UB-604: the rewritten judgment drops its citations | CAUGHT Ran 169 tests in 9.108s FAILED (failures=1)
+    failing: test_an_overstatement_judgment_is_replaced_and_its_refs_kept
+O5 | UB-604: an admitted cumulative fact no longer keeps its referent | CAUGHT Ran 169 tests in 9.117s FAILED (failures=2)
+    failing: test_an_admitted_cumulative_fact_keeps_its_referent, test_an_explicit_cumulative_fact_does_not_license_an_overstatement
+O6 | UB-604: the cumulative-referent rule is off | CAUGHT Ran 169 tests in 9.987s FAILED (failures=1)
+    failing: test_the_definite_cumulative_referent_is_replaced_when_nothing_is_cumulative
+O7 | UB-604: the guard acts without a basis note | CAUGHT Ran 169 tests in 9.063s FAILED (failures=1)
+    failing: test_no_note_no_rule
+O8 | UB-604: the memo writer does not apply the basis guard | CAUGHT Ran 169 tests in 9.236s FAILED (failures=1)
+    failing: test_the_stored_memo_carries_the_corrections
+F1 | NP-603: the narrative rule is off | CAUGHT Ran 169 tests in 9.076s FAILED (failures=4)
+    failing: test_np603_narrative_and_total_stay_with_the_narrator, test_only_the_expected_rules_fired, test_the_narrative_stays_with_the_narrator, test_the_stored_memo_carries_the_corrections
+F2 | NP-603: the narrative rule ignores its clause (the company loses its own bot statement) | CAUGHT Ran 169 tests in 9.029s FAILED (failures=1)
+    failing: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money
+F3 | NP-603: the narrative rule accepts refs that are not a narrator's funding | CAUGHT Ran 169 tests in 9.303s FAILED (failures=1, errors=2)
+    failing: test_company_owned_funding_and_mixed_refs_are_kept, test_no_narrator_in_the_context_changes_nothing, test_valid_cash_and_funding_questions_are_kept
+F4 | NP-603: the unsupported-total rule is off | CAUGHT Ran 169 tests in 9.139s FAILED (failures=4)
+    failing: test_an_unsupported_total_is_dropped_and_a_stated_one_kept, test_np603_narrative_and_total_stay_with_the_narrator, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_corrections
+F5 | NP-603: "total" is also stripped from questions | CAUGHT Ran 169 tests in 9.053s FAILED (failures=1)
+    failing: test_the_figure_phrase_is_not_split
+F6 | NP-603: a stated total is stripped too | CAUGHT Ran 169 tests in 9.050s FAILED (failures=1)
+    failing: test_an_unsupported_total_is_dropped_and_a_stated_one_kept
+F7 | NP-604: the funding-not-runway rule is off | CAUGHT Ran 169 tests in 9.218s FAILED (failures=4)
+    failing: test_funding_is_not_a_runway_denominator_even_with_dated_cash, test_np604_funding_is_not_the_runway_denominator, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_corrections
+F8 | NP-604: a cash balance is treated as funding | SURVIVED Ran 169 tests in 9.230s OK
+    failing: 
+F9 | NP-604: the rule is not in the rule list | CAUGHT Ran 169 tests in 9.317s FAILED (failures=4)
+    failing: test_funding_is_not_a_runway_denominator_even_with_dated_cash, test_np604_funding_is_not_the_runway_denominator, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_corrections
+exit=0

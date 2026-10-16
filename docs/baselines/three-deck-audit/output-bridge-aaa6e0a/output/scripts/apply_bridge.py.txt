@@ -1,0 +1,39 @@
+import sys
+p = sys.argv[1]
+t = open(p, encoding='utf-8', newline='').read()
+nl = '\r\n' if '\r\n' in t else '\n'
+t = t.replace('\r\n', '\n')
+R = [
+(r'''                sentence resolved to it, with only bridge sentences between ("These use different
+                measurement bases ...": opens with these/this/they/both/each, cites nothing, states no
+                figure). Memo 98's uncited sentence follows "[C3, S2] ... [C2, S3]. These use ...".
+''',
+r'''                sentence resolved to it, with only bridge sentences between. A bridge is a complete, known
+                measurement-basis sentence, matched whole: "These use different measurement bases.", with
+                memo 98's "... and cannot be compared or reconciled without clarification from management."
+                or the note's "... and need clarification before comparison." (review of c297ec3: an
+                anaphoric opener alone let "This revenue figure is unaudited." carry the pair). Memo 98's
+                uncited sentence follows "[C3, S2] ... [C2, S3]. These use ...".
+'''),
+(r'''# A bridge sentence continues the discussion it follows: an anaphoric opener, no citation, no figure.
+_BRIDGE = re.compile(r'^\s*(?:these|this|they|both|each|the\s+two)\b', re.I)
+''',
+r'''# A bridge continues the discussion it follows. Deliberately an allowlist of whole known basis sentences: any
+# other wording (another metric, a citation, a figure, a paraphrase or an added tail) ends the antecedent.
+_BRIDGE = re.compile(
+    r'\s*(?:these|this|they|both|each|the\s+two)\s+uses?\s+different\s+measurement\s+bases'
+    r'(?:\s+and\s+(?:cannot\s+be\s+compared\s+or\s+reconciled\s+without\s+clarification\s+from\s+management|'
+    r'need\s+clarification\s+before\s+comparison))?[.!]?\s*', re.I)
+'''),
+(r'''    """"These use different measurement bases ...": it keeps the discussion on the pair before it."""
+    return bool(_BRIDGE.match(sentence)) and not _cited(sentence) and not re.search(r'\d', sentence)
+''',
+r'''    """A whole known basis sentence ("These use different measurement bases.") keeps the pair before it."""
+    return bool(_BRIDGE.fullmatch(sentence))
+'''),
+]
+for a, b in R:
+    assert t.count(a) == 1, a[:70]
+    t = t.replace(a, b)
+open(p, 'w', encoding='utf-8', newline='').write(t.replace('\n', nl))
+print('ok')

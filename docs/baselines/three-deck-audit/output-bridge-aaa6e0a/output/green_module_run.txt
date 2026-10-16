@@ -1,0 +1,27 @@
+2026-10-16 01:02:22,271 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-16 01:03:14,529 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-16 01:03:14,553 INFO zelda_api.intelligence_pipeline - Memo supported_points: funding-source fidelity ['unsupported_total', 'narrator_narrative'] for document 1
+2026-10-16 01:03:14,558 INFO zelda_api.intelligence_pipeline - Memo open_concerns: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-16 01:03:14,559 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-16 01:03:14,579 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt', 'funding_not_runway'] for document 1
+2026-10-16 01:03:14,651 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-16 01:03:14,679 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-16 01:03:14,684 INFO zelda_api.signals - DocumentSource created: a.pptx
+2026-10-16 01:03:14,688 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-16 01:03:14,704 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-16 01:03:14,709 INFO zelda_api.signals - DocumentSource created: b.pptx
+2026-10-16 01:03:14,712 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-16 01:03:14,730 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-16 01:03:14,737 INFO zelda_api.signals - DocumentSource created: c.pptx
+2026-10-16 01:03:14,741 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-16 01:03:14,742 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_cumulative_referent'] for document 1
+2026-10-16 01:03:14,758 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.........................................................
+----------------------------------------------------------------------
+Ran 60 tests in 0.571s
+
+OK
+Destroying test database for alias 'default'...
+Found 60 test(s).
+System check identified no issues (0 silenced).

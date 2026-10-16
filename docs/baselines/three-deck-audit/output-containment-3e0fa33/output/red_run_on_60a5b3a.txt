@@ -1,0 +1,280 @@
+2026-10-15 15:56:17,502 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-15 15:57:24,927 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-15 15:57:25,028 INFO zelda_api.intelligence_pipeline - Memo supported_points: funding-source fidelity ['unsupported_total', 'narrator_narrative'] for document 1
+2026-10-15 15:57:25,032 INFO zelda_api.intelligence_pipeline - Memo open_concerns: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-15 15:57:25,037 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-15 15:57:25,042 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt', 'funding_not_runway'] for document 1
+2026-10-15 15:57:25,060 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-15 15:57:25,139 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-15 15:57:25,153 INFO zelda_api.signals - DocumentSource created: c.pptx
+2026-10-15 15:57:25,157 INFO zelda_api.intelligence_pipeline - Memo executive_summary: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-15 15:57:25,158 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-15 15:57:25,190 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+FFFFFFFFFFFFF..............FFF.FF..........
+======================================================================
+FAIL: test_unrelated_and_second_pair_sentences_through_the_writer (zelda_api.tests_output_fidelity.PipelineContainmentTests.test_unrelated_and_second_pair_sentences_through_the_writer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 490, in test_unrelated_and_second_pair_sentences_through_the_writer
+    self.assertEqual(memo.executive_summary, raw['executive_summary'])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'How the figure stated without an explicit[136 chars]C8].' != 'Monthly revenue is overstated [C8]. The c[38 chars]C8].'
+- How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [C8]. The cumulative figure for revenue is $10M [C8].
++ Monthly revenue is overstated [C8]. The cumulative figure for revenue is $10M [C8].
+
+
+======================================================================
+FAIL: test_a_cumulative_fact_licenses_only_its_own_pair (zelda_api.tests_output_fidelity.BasisContainmentTests.test_a_cumulative_fact_licenses_only_its_own_pair)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 409, in test_a_cumulative_fact_licenses_only_its_own_pair
+    self.assertEqual(self.guard(text, items=_pairs_items(), notes=notes)[0],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     'The figure stated without an explicit interval [C3] sits beside a monthly rate [C2].')
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'The cumulative figure [C3] sits beside a monthly rate [C2].' != 'The figure stated without an explicit interva[35 chars]C2].'
+- The cumulative figure [C3] sits beside a monthly rate [C2].
++ The figure stated without an explicit interval [C3] sits beside a monthly rate [C2].
+
+
+======================================================================
+FAIL: test_a_mixed_sentence_keeps_its_unrelated_clause (zelda_api.tests_output_fidelity.BasisContainmentTests.test_a_mixed_sentence_keeps_its_unrelated_clause)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 381, in test_a_mixed_sentence_keeps_its_unrelated_clause
+    self.assertIn('revenue is overstated too [C8]', out)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'revenue is overstated too [C8]' not found in 'How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [C2] [C8].'
+
+======================================================================
+FAIL: test_a_second_pair_gets_its_own_basis_wording (zelda_api.tests_output_fidelity.BasisContainmentTests.test_a_second_pair_gets_its_own_basis_wording)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 403, in test_a_second_pair_gets_its_own_basis_wording
+    self.assertEqual(out, DAILY_CLARIFICATION + ' [C6] [C5].')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'How [57 chars] the monthly figure needs clarification before[27 chars]C5].' != 'How [57 chars] the daily figure needs clarification before e[25 chars]C5].'
+- How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [C6] [C5].
+?                                                                   ^^^^^
++ How the figure stated without an explicit interval relates to the daily figure needs clarification before either is relied on [C6] [C5].
+?                                                                   ^^^
+
+
+======================================================================
+FAIL: test_note_and_item_order_do_not_change_a_cited_sentence (zelda_api.tests_output_fidelity.BasisContainmentTests.test_note_and_item_order_do_not_change_a_cited_sentence)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 425, in test_note_and_item_order_do_not_change_a_cited_sentence
+    self.assertEqual(forward, backward)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('How the figure stated without an explicit interva[111 chars]nt']) != ('How the cumulative figure relates to the weekly f[85 chars]nt'])
+
+First differing element 0:
+'How the figure stated without an explicit interva[85 chars]C5].'
+'How the cumulative figure relates to the weekly f[59 chars]C5].'
+
+- ('How the figure stated without an explicit interval relates to the monthly '
++ ('How the cumulative figure relates to the weekly figure needs clarification '
+-  'figure needs clarification before either is relied on [C6] [C5].',
+?   ---------------------------
+
++  'before either is relied on [C6] [C5].',
+   ['basis_overstatement'])
+
+======================================================================
+FAIL: test_refs_from_two_pairs_or_an_ambiguous_uncited_sentence_are_left_alone (zelda_api.tests_output_fidelity.BasisContainmentTests.test_refs_from_two_pairs_or_an_ambiguous_uncited_sentence_are_left_alone) (text='The monthly messages [C2] and daily bots [C6] look overstated.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 419, in test_refs_from_two_pairs_or_an_ambiguous_uncited_sentence_are_left_alone
+    self.assertEqual(self.guard(text, items=_pairs_items(), notes=notes), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('How the figure stated without an explicit[119 chars]nt']) != ('The monthly messages [C2] and daily bots [22 chars], [])
+
+First differing element 0:
+'How the figure stated without an explicit[93 chars]C6].'
+'The monthly messages [C2] and daily bots [17 chars]ted.'
+
++ ('The monthly messages [C2] and daily bots [C6] look overstated.', [])
+- ('How the figure stated without an explicit interval relates to the monthly '
+-  'figure needs clarification before either is relied on [C2] [C6].',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_refs_from_two_pairs_or_an_ambiguous_uncited_sentence_are_left_alone (zelda_api.tests_output_fidelity.BasisContainmentTests.test_refs_from_two_pairs_or_an_ambiguous_uncited_sentence_are_left_alone) (text='If the cumulative figure is presented as monthly, the claim is materially overstated.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 419, in test_refs_from_two_pairs_or_an_ambiguous_uncited_sentence_are_left_alone
+    self.assertEqual(self.guard(text, items=_pairs_items(), notes=notes), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('How the figure stated without an explicit[109 chars]nt']) != ('If the cumulative figure is presented as [45 chars], [])
+
+First differing element 0:
+'How the figure stated without an explicit[83 chars] on.'
+'If the cumulative figure is presented as [40 chars]ted.'
+
+- ('How the figure stated without an explicit interval relates to the monthly '
+-  'figure needs clarification before either is relied on.',
+-  ['basis_overstatement'])
++ ('If the cumulative figure is presented as monthly, the claim is materially '
++  'overstated.',
++  [])
+
+======================================================================
+FAIL: test_the_memo_98_passage_still_resolves_by_its_paragraph (zelda_api.tests_output_fidelity.BasisContainmentTests.test_the_memo_98_passage_still_resolves_by_its_paragraph)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 396, in test_the_memo_98_passage_still_resolves_by_its_paragraph
+    self.assertTrue(out.endswith('\n2. Monthly revenue is overstated [C8].'), out)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : 1. Measurement ambiguity: page 10 states 500M messages without an explicit interval [C3, S2], while page 12 states 500M messages/month [C2, S3]. These use different measurement bases. How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on.
+2. How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [C8].
+
+======================================================================
+FAIL: test_unrelated_cumulative_referent_is_kept (zelda_api.tests_output_fidelity.BasisContainmentTests.test_unrelated_cumulative_referent_is_kept) (text='The cumulative figure for revenue is $10M [C8].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 376, in test_unrelated_cumulative_referent_is_kept
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('The figure stated without an explicit interva[55 chars]nt']) != ('The cumulative figure for revenue is $10M [C8].', [])
+
+First differing element 0:
+'The figure stated without an explicit interval for revenue is $10M [C8].'
+'The cumulative figure for revenue is $10M [C8].'
+
++ ('The cumulative figure for revenue is $10M [C8].', [])
+- ('The figure stated without an explicit interval for revenue is $10M [C8].',
+-  ['basis_cumulative_referent'])
+
+======================================================================
+FAIL: test_unrelated_cumulative_referent_is_kept (zelda_api.tests_output_fidelity.BasisContainmentTests.test_unrelated_cumulative_referent_is_kept) (text='The cumulative total of revenue is unknown.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 376, in test_unrelated_cumulative_referent_is_kept
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('The figure stated without an explicit interva[52 chars]nt']) != ('The cumulative total of revenue is unknown.', [])
+
+First differing element 0:
+'The figure stated without an explicit interval of revenue is unknown.'
+'The cumulative total of revenue is unknown.'
+
++ ('The cumulative total of revenue is unknown.', [])
+- ('The figure stated without an explicit interval of revenue is unknown.',
+-  ['basis_cumulative_referent'])
+
+======================================================================
+FAIL: test_unrelated_monthly_revenue_judgment_is_kept (zelda_api.tests_output_fidelity.BasisContainmentTests.test_unrelated_monthly_revenue_judgment_is_kept) (text='Monthly revenue is overstated [C8].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 371, in test_unrelated_monthly_revenue_judgment_is_kept
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('How the figure stated without an explicit[114 chars]nt']) != ('Monthly revenue is overstated [C8].', [])
+
+First differing element 0:
+'How the figure stated without an explicit[88 chars]C8].'
+'Monthly revenue is overstated [C8].'
+
++ ('Monthly revenue is overstated [C8].', [])
+- ('How the figure stated without an explicit interval relates to the monthly '
+-  'figure needs clarification before either is relied on [C8].',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_unrelated_monthly_revenue_judgment_is_kept (zelda_api.tests_output_fidelity.BasisContainmentTests.test_unrelated_monthly_revenue_judgment_is_kept) (text='Monthly revenue may be overstated.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 371, in test_unrelated_monthly_revenue_judgment_is_kept
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('How the figure stated without an explicit[109 chars]nt']) != ('Monthly revenue may be overstated.', [])
+
+First differing element 0:
+'How the figure stated without an explicit[83 chars] on.'
+'Monthly revenue may be overstated.'
+
++ ('Monthly revenue may be overstated.', [])
+- ('How the figure stated without an explicit interval relates to the monthly '
+-  'figure needs clarification before either is relied on.',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_unrelated_monthly_revenue_judgment_is_kept (zelda_api.tests_output_fidelity.BasisContainmentTests.test_unrelated_monthly_revenue_judgment_is_kept) (text='The monthly revenue figure [C8] looks inflated.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 371, in test_unrelated_monthly_revenue_judgment_is_kept
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('How the figure stated without an explicit[114 chars]nt']) != ('The monthly revenue figure [C8] looks inflated.', [])
+
+First differing element 0:
+'How the figure stated without an explicit[88 chars]C8].'
+'The monthly revenue figure [C8] looks inflated.'
+
++ ('The monthly revenue figure [C8] looks inflated.', [])
+- ('How the figure stated without an explicit interval relates to the monthly '
+-  'figure needs clarification before either is relied on [C8].',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_an_uncited_figure_resolves_by_its_amount (zelda_api.tests_output_fidelity.FundingTotalPerItemTests.test_an_uncited_figure_resolves_by_its_amount)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 464, in test_an_uncited_figure_resolves_by_its_amount
+    self.assertIn('$23.1M as the amount raised', out)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '$23.1M as the amount raised' not found in 'Pitch Deck Hunt lists $23.1M as the total amount raised.'
+
+======================================================================
+FAIL: test_separate_clauses_each_keep_their_own_support (zelda_api.tests_output_fidelity.FundingTotalPerItemTests.test_separate_clauses_each_keep_their_own_support) (reverse=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 459, in test_separate_clauses_each_keep_their_own_support
+    self.assertIn('$23.1M as the amount raised [C1]', out)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '$23.1M as the amount raised [C1]' not found in 'Pitch Deck Hunt lists $23.1M as the total amount raised [C1], while Other Source lists $10M as the total amount raised [C5].'
+
+======================================================================
+FAIL: test_separate_clauses_each_keep_their_own_support (zelda_api.tests_output_fidelity.FundingTotalPerItemTests.test_separate_clauses_each_keep_their_own_support) (reverse=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 459, in test_separate_clauses_each_keep_their_own_support
+    self.assertIn('$23.1M as the amount raised [C1]', out)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '$23.1M as the amount raised [C1]' not found in 'Pitch Deck Hunt lists $23.1M as the total amount raised [C1], while Other Source lists $10M as the total amount raised [C5].'
+
+======================================================================
+FAIL: test_the_unsupported_total_is_dropped_beside_another_sources_total (zelda_api.tests_output_fidelity.FundingTotalPerItemTests.test_the_unsupported_total_is_dropped_beside_another_sources_total) (reverse=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 443, in test_the_unsupported_total_is_dropped_beside_another_sources_total
+    self.assertEqual(text, 'Pitch Deck Hunt lists $23.1M as the amount raised [C1].')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Pitch Deck Hunt lists $23.1M as the total amount raised [C1].' != 'Pitch Deck Hunt lists $23.1M as the amount raised [C1].'
+- Pitch Deck Hunt lists $23.1M as the total amount raised [C1].
+?                                    ------
++ Pitch Deck Hunt lists $23.1M as the amount raised [C1].
+
+
+======================================================================
+FAIL: test_the_unsupported_total_is_dropped_beside_another_sources_total (zelda_api.tests_output_fidelity.FundingTotalPerItemTests.test_the_unsupported_total_is_dropped_beside_another_sources_total) (reverse=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 443, in test_the_unsupported_total_is_dropped_beside_another_sources_total
+    self.assertEqual(text, 'Pitch Deck Hunt lists $23.1M as the amount raised [C1].')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Pitch Deck Hunt lists $23.1M as the total amount raised [C1].' != 'Pitch Deck Hunt lists $23.1M as the amount raised [C1].'
+- Pitch Deck Hunt lists $23.1M as the total amount raised [C1].
+?                                    ------
++ Pitch Deck Hunt lists $23.1M as the amount raised [C1].
+
+
+----------------------------------------------------------------------
+Ran 38 tests in 0.860s
+
+FAILED (failures=18)
+Destroying test database for alias 'default'...
+Found 38 test(s).
+System check identified no issues (0 silenced).

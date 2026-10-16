@@ -1,0 +1,50 @@
+2026-10-15 17:42:18,195 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-15 17:43:12,798 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-15 17:43:12,824 INFO zelda_api.intelligence_pipeline - Memo supported_points: funding-source fidelity ['unsupported_total', 'narrator_narrative'] for document 1
+2026-10-15 17:43:12,828 INFO zelda_api.intelligence_pipeline - Memo open_concerns: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-15 17:43:12,829 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-15 17:43:12,834 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt', 'funding_not_runway'] for document 1
+2026-10-15 17:43:12,879 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-15 17:43:12,908 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-15 17:43:12,914 INFO zelda_api.signals - DocumentSource created: a.pptx
+2026-10-15 17:43:12,917 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-15 17:43:12,935 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-15 17:43:12,942 INFO zelda_api.signals - DocumentSource created: c.pptx
+2026-10-15 17:43:12,945 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-15 17:43:12,945 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_cumulative_referent'] for document 1
+2026-10-15 17:43:12,965 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+..................F.F.............................
+======================================================================
+FAIL: test_a_list_marker_and_numbering_are_kept (zelda_api.tests_output_fidelity.BasisGuardTests.test_a_list_marker_and_numbering_are_kept)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 238, in test_a_list_marker_and_numbering_are_kept
+    self.assertEqual(text, '1. ' + RISK_AFTER)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '1. If the cumulative figure is presented as [29 chars]ted.' != '1. How the figure stated without an explicit[83 chars] on.'
+- 1. If the cumulative figure is presented as monthly, the claim is overstated.
++ 1. How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on.
+
+
+======================================================================
+FAIL: test_an_explicit_cumulative_fact_does_not_license_an_overstatement (zelda_api.tests_output_fidelity.BasisGuardTests.test_an_explicit_cumulative_fact_does_not_license_an_overstatement)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra109b\zelda_api\tests_output_fidelity.py", line 214, in test_an_explicit_cumulative_fact_does_not_license_an_overstatement
+    self.assertEqual(text, 'How the cumulative figure relates to the monthly figure needs clarification before '
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                           'either is relied on.')
+                           ^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'If the cumulative total is shown as month[22 chars]ted.' != 'How the cumulative figure relates to the [58 chars] on.'
+- If the cumulative total is shown as monthly, the claim is inflated.
++ How the cumulative figure relates to the monthly figure needs clarification before either is relied on.
+
+
+----------------------------------------------------------------------
+Ran 52 tests in 0.543s
+
+FAILED (failures=2)
+Destroying test database for alias 'default'...
+Found 52 test(s).
+System check identified no issues (0 silenced).
