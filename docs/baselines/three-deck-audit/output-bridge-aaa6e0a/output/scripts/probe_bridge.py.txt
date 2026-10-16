@@ -1,0 +1,28 @@
+# Emitted text for the review-of-c297ec3 bridge cases, from the committed helper (run via manage.py shell).
+import json
+import subprocess
+from zelda_api.basis_fidelity import basis_facts, guard_basis_wording
+from zelda_api.tests_output_fidelity import (NOTE, NOTE_BOTS, MEMO_98_CONTIGUOUS, STALE_ANTECEDENT, NON_BRIDGES,
+                                             _pairs_items, _statement_aliases, _with_middle)
+
+items = _pairs_items() + _statement_aliases()
+TWO = (NOTE, NOTE_BOTS)
+CASES = [(f'non-bridge: {m}', TWO, _with_middle(m)) for m in NON_BRIDGES] + [
+    ('bridge: short form', TWO, _with_middle('These use different measurement bases.')),
+    ('bridge: note form', TWO, _with_middle('These use different measurement bases and need clarification before '
+                                            'comparison.')),
+    ('bridge: memo-98 form', TWO, _with_middle('These use different measurement bases and cannot be compared or '
+                                               'reconciled without clarification from management.')),
+    ('memo-98 contiguous passage', TWO, MEMO_98_CONTIGUOUS),
+    ('direct referent', TWO, 'The message figures use different bases [C3, C2]. The cumulative figure is overstated.'),
+    ('cited pair', (NOTE,), 'If the cumulative figure [C3] is presented as monthly [C2], the claim is materially overstated.'),
+    ('noun', (NOTE,), 'If the cumulative messages figure is presented as monthly, the claim is materially overstated.'),
+    ('earlier review: stale revenue antecedent', TWO, STALE_ANTECEDENT),
+    ('earlier review: operating expenses, sole note', (NOTE,), 'Monthly operating expenses are overstated.'),
+]
+head = subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
+rows = []
+for name, notes, text in CASES:
+    out, changes = guard_basis_wording(text, basis_facts(items, notes))
+    rows.append({'case': name, 'in': text, 'out': out, 'changes': changes, 'unchanged': out == text})
+print('PROBE ' + json.dumps({'head': head, 'cases': rows}, ensure_ascii=False))
