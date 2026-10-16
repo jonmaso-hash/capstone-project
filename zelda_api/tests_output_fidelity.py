@@ -1148,3 +1148,8 @@ class ReviewD30a022ProbeTests(SimpleTestCase):
                               "[S2] on page 10, under 'Traction by Apr-16' " + CLARIFICATION_99 + ".")
         self.assertEqual(changes, ['basis_source_location'])
         self.assertEqual(self.guard(out), (out, []))
+
+    def test_an_unasserted_infinitive_is_kept(self):
+        # No denial word in the window: only "to establish" marks the contradiction as not asserted.
+        text = 'Further evidence would be needed to establish a contradiction [C3, C2].'
+        self.assertEqual(self.guard(text), (text, []))
