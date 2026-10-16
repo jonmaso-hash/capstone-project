@@ -1,0 +1,284 @@
+
+
+# --- memo 99 (document 3141; graded PARTIAL PASS): OF-704 label, OF-705 source location --------------------
+#
+#     OF-704  open_concerns: "Measurement-basis contradiction in the headline usage metric: ... [C2, C3]". The pair
+#             supports an ambiguity to clarify, not a contradiction.
+#     OF-705  supported_points: "either 500M total or 500M/month ... on the same traction slide [S2, S3]" and
+#             business_model_analysis: "... on a slide headed 'Traction by Apr-16' [S1, S2, S3]". S3 is page 12,
+#             with no slide context; page 10's interval is unspecified, not a total.
+#
+# The fixtures are memo 99's payload as sent and its raw reply (data/funding_fidelity/memo99*.json, from the
+# committed evidence d821cca). Memo 99 itself is not edited; these tests replay its reply.
+
+def memo99():
+    with open(os.path.join(DATA, 'memo99.json'), encoding='utf-8') as f:
+        data = json.load(f)
+    return json.loads(re.search(r'\{.*\}', data['model_reply_text'], re.S).group(0)), data['stored']
+
+
+def memo99_payload():
+    with open(os.path.join(DATA, 'memo99_payload.json'), encoding='utf-8') as f:
+        return json.load(f)['payload']
+
+
+OPEN_BEFORE = ("- Measurement-basis contradiction in the headline usage metric: the deck states '500M messages' without "
+               "an interval on page 10 and '500M messages/month' on page 12 [C2, C3].")
+OPEN_AFTER = OPEN_BEFORE.replace('Measurement-basis contradiction', 'Measurement-basis ambiguity')
+POINT_BEFORE = ("- The company states a messages figure of either 500M total or 500M/month (measurement basis unresolved; "
+                "see open concerns) on the same traction slide [S2, S3], suggesting material message volume on the "
+                "platform at that time.")
+POINT_AFTER = ("- The company states a messages figure of either 500M with no stated interval or 500M/month (measurement "
+               "basis unresolved; see open concerns) on page 10 (slide headed 'Traction by Apr-16') [S2] and page 12 [S3], "
+               "suggesting material message volume on the platform at that time.")
+MODEL_BEFORE = ("the company states 140,000+ bots and 500M messages (measurement basis questioned; see open concerns) on a "
+                "slide headed 'Traction by Apr-16' [S1, S2, S3] — which confirm")
+MODEL_AFTER = ("the company states 140,000+ bots and 500M messages (measurement basis questioned; see open concerns) on "
+               "page 10 (slide headed 'Traction by Apr-16') [S1, S2] and page 12 [S3] — which confirm")
+CHANGED_99 = {'open_concerns', 'supported_points', 'business_model_analysis'}
+# The merged funding guard's accepted live edits on memo 99 (evidence 09e), unchanged by this correction.
+FUNDING_99 = {'risk_assessment', 'information_readiness', 'what_would_change_the_picture', 'downside_scenario',
+              'questions_for_management'}
+PLACED = re.compile(r"page (\d+)(?: \(slide headed '([^']+)'\))? \[([A-Z]\d+(?:, [A-Z]\d+)*)\]")
+
+
+class Memo99ReplayTests(SimpleTestCase):
+    """The actual memo-99 reply through the pipeline's guards: only the two graded shapes change."""
+
+    def setUp(self):
+        self.raw, self.stored = memo99()
+        self.payload = memo99_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+        self.out, self.changes = replay(self.raw, self.items, self.notes)
+
+    def test_the_fixture_is_memo_99_as_stored(self):
+        self.assertIn(OPEN_BEFORE, self.stored['open_concerns'])
+        self.assertIn(POINT_BEFORE, self.stored['supported_points'])
+        self.assertIn(MODEL_BEFORE, self.stored['business_model_analysis'])
+        self.assertEqual(self.notes[0][1], ('C3', 'C2'))
+        sources = {i['ref']: (i['sources'][0].get('page'), i.get('source_context')) for i in self.payload['items']}
+        self.assertEqual(sources['S2'], (10, 'Traction by Apr-16'))
+        self.assertEqual(sources['S3'], (12, None))
+
+    def test_of704_the_basis_pair_is_an_ambiguity_not_a_contradiction(self):
+        concerns = self.out['open_concerns']
+        self.assertTrue(concerns.startswith(OPEN_AFTER), concerns)
+        self.assertNotIn('contradiction', concerns.split('\n')[0])
+        # The model's own qualification and the clarification request stay.
+        self.assertIn('These are not necessarily the same figure; until management clarifies whether 500M is a '
+                      'cumulative total or a monthly rate', concerns)
+        # Its other bullets are as stored, including the funding one ("establish or contradict it").
+        self.assertEqual(concerns.split('\n')[1:], self.stored['open_concerns'].split('\n')[1:])
+
+    def test_of705_each_fact_keeps_its_own_page_and_context(self):
+        self.assertIn(POINT_AFTER, self.out['supported_points'])
+        self.assertIn(MODEL_AFTER, self.out['business_model_analysis'])
+        for key in ('supported_points', 'business_model_analysis'):
+            self.assertNotIn('same traction slide', self.out[key])
+            self.assertNotIn('500M total', self.out[key])
+
+    def test_every_placed_citation_supports_its_page_and_context(self):
+        sources = {i['ref']: (i['sources'][0].get('page'), i.get('source_context') or None) for i in self.payload['items']}
+        placed = 0
+        for key in ('supported_points', 'business_model_analysis'):
+            for page, context, group in PLACED.findall(self.out[key]):
+                for ref in group.split(', '):
+                    self.assertEqual(sources[ref], (int(page), context or None), (key, ref))
+                    placed += 1
+        self.assertEqual(placed, 5)
+
+    def test_every_other_field_is_exactly_as_stored(self):
+        for key, value in self.out.items():
+            if key in self.stored and key not in CHANGED_99:
+                self.assertEqual(value, self.stored[key], key)
+
+    def test_citations_are_preserved_in_order(self):
+        for key, value in self.out.items():
+            if isinstance(value, str) and key in self.stored:
+                self.assertEqual(refs(value), refs(self.stored[key]), key)
+
+    def test_correct_shared_context_and_questions_are_kept(self):
+        self.assertIn("appearing in a slide headed 'Traction by Apr-16' [S1, S2]", self.out['executive_summary'])
+        self.assertIn("on a slide headed 'Traction by Apr-16' [S1, S2]", self.out['base_scenario'])
+        self.assertIn("(slide headed 'Traction by Apr-16') [S1, S2]", self.out['information_readiness'])
+        self.assertIn("Is the '500M messages' figure on the traction slide a cumulative total or a monthly rate?",
+                      self.out['questions_for_management'])
+        self.assertIn('(total vs. per month) [C2, C3]', self.out['information_readiness'])
+        self.assertIn('internal inconsistency', self.out['zelda_advantage'])           # P3, outside this scope
+        self.assertIn("page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 "
+                      "[C2, S3]", self.out['risk_assessment'])
+
+    def test_a_second_pass_changes_nothing(self):
+        again, changes = replay(self.out, self.items, self.notes)
+        self.assertEqual(again, self.out)
+        self.assertEqual(changes, {})
+
+    def test_reversed_item_order_gives_the_same_output(self):
+        reversed_out, _ = replay(self.raw, list(reversed(self.items)), self.notes)
+        self.assertEqual(reversed_out, self.out)
+
+    def test_only_the_expected_rules_fired(self):
+        self.assertEqual(set(self.changes), CHANGED_99 | FUNDING_99)
+        self.assertEqual(self.changes['open_concerns'], ['basis_contradiction_label'])
+        self.assertEqual(self.changes['supported_points'], ['basis_unspecified_total', 'basis_source_location'])
+        self.assertEqual(self.changes['business_model_analysis'], ['basis_source_location'])
+        for key in FUNDING_99:
+            self.assertFalse([c for c in self.changes[key] if c.startswith('basis_')], key)
+
+
+class Memo99StoredSectionsTests(SimpleTestCase):
+    """The stored memo-99 text (after the merged guards) through the basis guard: the same three repairs."""
+
+    def test_the_stored_sections_get_the_same_repairs(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        payload = memo99_payload()
+        facts = basis_facts(items_from(payload), notes_from(payload))
+        _, stored = memo99()
+        out = {key: guard_basis_wording(value, facts)[0] for key, value in stored.items()}
+        self.assertTrue(out['open_concerns'].startswith(OPEN_AFTER))
+        self.assertIn(POINT_AFTER, out['supported_points'])
+        self.assertIn(MODEL_AFTER, out['business_model_analysis'])
+        self.assertEqual({k for k in stored if out[k] != stored[k]}, CHANGED_99)
+
+
+def _statement(ref, statement, page, context=''):
+    return GroundedItem(ref=ref, kind='statement', category='Traction', statement=statement, status=SELF_REPORTED,
+                        sources=(SourceRef(document_id=1, page_number=page),), source_context=context)
+
+
+def _context_items(status=INSUFFICIENT):
+    return [GroundedItem(ref='C2', kind='claim', category='usage', statement='500M messages/month', status=status,
+                         sources=(SourceRef(document_id=1, page_number=12),), dated=True, as_of='not stated'),
+            GroundedItem(ref='C3', kind='claim', category='usage', statement='500M messages', status=INSUFFICIENT,
+                         sources=(SourceRef(document_id=1, page_number=10),), dated=True, as_of='not stated',
+                         source_context='Traction by Apr-16'),
+            _statement('S1', '140 000+ bots', 10, 'Traction by Apr-16'),
+            _statement('S2', '500M messages', 10, 'Traction by Apr-16'),
+            _statement('S3', '500M messages/month', 12),
+            _statement('S5', '2M downloads', 4), _statement('S6', '1M downloads', 5),
+            _revenue()]
+
+
+class BasisLabelTests(SimpleTestCase):
+    """OF-704: a basis pair supports an ambiguity to clarify; other contradictions and negations are kept."""
+
+    def guard(self, text, status=INSUFFICIENT):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        return guard_basis_wording(text, basis_facts(_context_items(status), (NOTE,)))
+
+    def test_the_pair_label_becomes_an_ambiguity(self):
+        cases = {
+            'There is a contradiction between page 10 and page 12 [C3, C2].':
+                'There is an ambiguity between page 10 and page 12 [C3, C2].',
+            'The two message figures are contradictory [C3, C2].': 'The two message figures are ambiguous [C3, C2].',
+            'Contradictions in the messages metric need management review [S2, S3].':
+                'Ambiguities in the messages metric need management review [S2, S3].',
+        }
+        for text, expected in cases.items():
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (expected, ['basis_contradiction_label']))
+
+    def test_negations_questions_and_other_words_are_kept(self):
+        for text in ('There is no contradiction between page 10 and page 12 [C3, C2].',
+                     'The message figures are not contradictory [C3, C2].',
+                     'Rather than a contradiction, the messages metric needs clarification [C3, C2].',
+                     'Is this a contradiction between the message figures [C3, C2]?',
+                     'This inconsistency between the message figures needs clarification [C3, C2].'):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+
+    def test_unrelated_and_external_contradictions_are_kept(self):
+        for text in ('Revenue shows a contradiction [C8].', 'The download counts are a contradiction [S5, S6].',
+                     'A contradiction between revenue and messages [C8, C2] needs review.'):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+        # A pair item Truth Delta actually found contradicted keeps the word.
+        external = 'There is a contradiction between page 10 and page 12 [C3, C2].'
+        from .grounded_context import CONTRADICTED
+        self.assertEqual(self.guard(external, status=CONTRADICTED), (external, []))
+
+
+class BasisSourceLocationTests(SimpleTestCase):
+    """OF-705: a shared-slide phrase over refs from different pages or contexts places each under its own source."""
+
+    def guard(self, text, notes=(NOTE,)):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        return guard_basis_wording(text, basis_facts(_context_items(), notes))
+
+    def test_a_cross_page_group_is_placed_by_its_own_sources(self):
+        cases = {
+            'The figures appear on the same slide [S2, S3].':
+                "The figures appear on page 10 (slide headed 'Traction by Apr-16') [S2] and page 12 [S3].",
+            "Bots and messages are on a slide headed 'Traction by Apr-16' [S1, S2, S3].":
+                "Bots and messages are on page 10 (slide headed 'Traction by Apr-16') [S1, S2] and page 12 [S3].",
+            "Both message figures appear in the slide headed 'Traction by Apr-16' [S3, S2].":
+                "Both message figures appear on page 12 [S3] and page 10 (slide headed 'Traction by Apr-16') [S2].",
+        }
+        for text, expected in cases.items():
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (expected, ['basis_source_location']))
+
+    def test_correctly_shared_or_separately_placed_figures_are_kept(self):
+        for text in ("The company states 140,000+ bots and 500M messages on a slide headed 'Traction by Apr-16' [S1, S2].",
+                     'Page 10 states 500M messages [C3, S2], while page 12 states 500M messages/month [C2, S3].',
+                     'The figures appear on the same slide [S2].',
+                     'Is the 500M messages figure on the same slide as the monthly figure [S2, S3]?',
+                     'The download counts appear on the same slide [S5, S6].'):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+
+    def test_without_a_basis_note_nothing_is_placed(self):
+        text = 'The figures appear on the same slide [S2, S3].'
+        self.assertEqual(self.guard(text, notes=()), (text, []))
+
+
+class BasisUnspecifiedTotalTests(SimpleTestCase):
+    """OF-705: the pair's unspecified-interval figure is not a stated total; a stated cumulative fact keeps it."""
+
+    def guard(self, text, items=None, notes=(NOTE,)):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        return guard_basis_wording(text, basis_facts(items or _context_items(), notes))
+
+    def test_the_unspecified_figure_is_not_called_a_total(self):
+        self.assertEqual(self.guard('The deck gives either 500M total or 500M/month [S2, S3].'),
+                         ('The deck gives either 500M with no stated interval or 500M/month [S2, S3].',
+                          ['basis_unspecified_total']))
+
+    def test_conditional_totals_and_a_stated_cumulative_fact_are_kept(self):
+        for text in ('If 500M is a cumulative total rather than a monthly rate [C3, C2], usage is lower.',
+                     'Measurement basis of the 500M messages figure (total vs. per month) [C2, C3].',
+                     'Revenue was 500M total [C8].'):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+        items = [_usage('C9', '3M messages/week', 9), _usage('C7', '3M messages to date', 7)]
+        own = 'The deck gives 3M total or 3M/week [C7, C9].'
+        self.assertEqual(self.guard(own, items=items, notes=(NOTE_CUMULATIVE,)), (own, []))
+
+
+class PipelineMemo99Tests(TestCase):
+    """The memo writer itself (intelligence_pipeline._generate_memo) stores the repaired memo-99 reply."""
+
+    def test_the_stored_memo_carries_the_repairs(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('memo99_writer', password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo99_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items_from(payload)),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, stored = memo99()
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertTrue(memo.open_concerns.startswith(OPEN_AFTER), memo.open_concerns)
+        self.assertIn(POINT_AFTER, memo.supported_points)
+        self.assertIn(MODEL_AFTER, memo.business_model_analysis)
+        for key in ('executive_summary', 'risk_assessment', 'what_would_change_the_picture', 'zelda_advantage',
+                    'questions_for_management', 'downside_scenario'):
+            self.assertEqual(getattr(memo, key), stored[key], key)

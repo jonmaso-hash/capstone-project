@@ -1,0 +1,67 @@
+"""OF-704/OF-705 mutation run (correction of memo 99's two P2s, on 64f9db5). Carries mutate_bridge.py's 29 mutations
+unchanged and adds L1-L5 (label), T1-T2 (unspecified total) and P1-P5 (source location).
+Usage: python mutate_of705.py <worktree> [ID ...]."""
+import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+RA = os.path.join(os.path.dirname(HERE), 'ra109')
+BASE = os.path.join(RA, 'mutate_ra109_review.py')
+head, runner = open(BASE, encoding='utf-8').read().split('def sha(path):', 1)
+ns = {'__file__': BASE, '__name__': 'mutation_list'}
+exec(compile(head, BASE, 'exec'), ns)
+
+src = open(os.path.join(RA, 'mutate_bridge.py'), encoding='utf-8').read()
+src = src.rsplit("exec(compile('def sha(path):'", 1)[0]
+prev = {'__file__': os.path.join(RA, 'mutate_bridge.py'), '__name__': 'bridge_list'}
+exec(compile(src, 'mutate_bridge.py', 'exec'), prev)
+carried = list(prev['ns']['M'])
+
+BF = 'zelda_api/basis_fidelity.py'
+ns['LABELS'] = prev['ns']['LABELS']
+ns['M'] = carried + [
+    # --- OF-704: the contradiction label ----------------------------------------------------------
+    ('L1', 'OF-704: the label rule is off (the unsupported contradiction label is restored)', BF,
+     "    changes.append('basis_contradiction_label')\n    return _CONTRADICTION.sub(neutral, sentence)",
+     "    return sentence"),
+    ('L2', 'OF-704: a negated contradiction is rewritten too', BF,
+     "if pair.contradicted or _asks(sentence) or _NEGATED.search(sentence) or not _CONTRADICTION.search(sentence):",
+     "if pair.contradicted or _asks(sentence) or not _CONTRADICTION.search(sentence):"),
+    ('L3', 'OF-704: an external CONTRADICTED state no longer keeps the word', BF,
+     "if pair.contradicted or _asks(sentence) or _NEGATED.search(sentence) or not _CONTRADICTION.search(sentence):",
+     "if _asks(sentence) or _NEGATED.search(sentence) or not _CONTRADICTION.search(sentence):"),
+    ('L4', 'OF-704: a question is relabelled too', BF,
+     "if pair.contradicted or _asks(sentence) or _NEGATED.search(sentence) or not _CONTRADICTION.search(sentence):",
+     "if pair.contradicted or _NEGATED.search(sentence) or not _CONTRADICTION.search(sentence):"),
+    # L5 as first written replaced the word without recording a change; the guard returns the original text when
+    # nothing is recorded, so that mutant could not alter output (it survived the first run). It now records it.
+    ('L5', 'OF-704: global word replacement in every sentence (not tied to a pair)', BF,
+     "        sentence = _location(sentence, facts, changes)\n",
+     "        if _CONTRADICTION.search(sentence):\n"
+     "            changes.append('global_label')\n"
+     "            sentence = _CONTRADICTION.sub(lambda m: 'ambiguity', sentence)\n"
+     "        sentence = _location(sentence, facts, changes)\n"),
+    # --- OF-705: the unspecified figure called a total ----------------------------------------------
+    ('T1', 'OF-705: the unspecified-total rule is off', BF,
+     "            changes.append('basis_unspecified_total')\n            sentence = pattern.sub(",
+     "            continue\n            sentence = pattern.sub("),
+    ('T2', "OF-705: a pair's admitted cumulative fact no longer keeps its total", BF,
+     "    if pair.cumulative_admitted or _asks(sentence):\n        return sentence\n    for figure in pair.unspecified:",
+     "    if _asks(sentence):\n        return sentence\n    for figure in pair.unspecified:"),
+    # --- OF-705: the shared-place conflation ---------------------------------------------------------
+    ('P1', 'OF-705: the location rule is off (cross-page/context conflation restored)', BF,
+     "        changes.append('basis_source_location')\n        return 'on ' + ' and '.join(",
+     "        return match.group(0)\n        return 'on ' + ' and '.join("),
+    ('P2', 'OF-705: only the first page group is kept (the other refs are dropped)', BF,
+     "            for (page, context), refs in groups.items())",
+     "            for (page, context), refs in list(groups.items())[:1])"),
+    ('P3', 'OF-705: the location rule is not bounded to a basis pair', BF,
+     "        if not set(cited) & members or any(ref not in places for ref in cited):",
+     "        if any(ref not in places for ref in cited):"),
+    ('P4', "OF-705: every page gets the claimed heading (the conflation moves into the repair)", BF,
+     "f\"page {page}{f' (slide headed {chr(39)}{context}{chr(39)})' if context else ''} [{', '.join(refs)}]\"",
+     "f\"page {page}{f' (slide headed {chr(39)}{claimed}{chr(39)})' if claimed else ''} [{', '.join(refs)}]\""),
+    ('P5', 'OF-705: a question is rewritten too', BF,
+     "    if _asks(sentence):\n        return sentence\n    places = {",
+     "    places = {"),
+]
+exec(compile('def sha(path):' + runner, BASE + ' (runner)', 'exec'), ns)
