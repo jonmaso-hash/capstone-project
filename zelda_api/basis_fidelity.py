@@ -323,8 +323,10 @@ def _place_clause_start(sentence, end):
 
 
 def _plain_words(text, vocabulary):
-    """Every word of `text` is a figure or one of `vocabulary`."""
-    return all(word[0] in '$0123456789' or word in vocabulary for word in _TOKEN.findall(text.lower()))
+    """Every word of `text` is a figure or one of `vocabulary`. Citations are not words: the citation check
+    in _placing_head judges them."""
+    return all(word[0] in '$0123456789' or word in vocabulary
+               for word in _TOKEN.findall(_REF.sub(' ', text).lower()))
 
 
 def _placing_words(text, vocabulary, clarified):

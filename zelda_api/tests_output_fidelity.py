@@ -1290,6 +1290,14 @@ class ReviewB54d82bProbeTests(SimpleTestCase):
             with self.subTest(text=text):
                 self.assertEqual(self.guard(text), (text, []))
 
+    def test_a_citation_inside_the_clause_keeps_the_sentence(self):
+        # Mutation control (P12 survived at 1bb993b): every word here is a placing word, so only the citation
+        # check keeps [C3], which the restatement would otherwise drop.
+        for text in ('The company states the message figures (500M [C3]) on the same slide [S2, S3].',
+                     'The company states the message figures [S2] on the same slide [S2, S3].'):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+
     def test_a_basis_aside_is_superseded_by_the_restated_clarification(self):
         # Memo 99's own asides ("measurement basis unresolved; see open concerns") are replaced by the pair's
         # clarification, which says the same thing; the memo-99 replay tests hold the exact text.
