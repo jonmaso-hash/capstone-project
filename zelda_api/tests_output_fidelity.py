@@ -1275,6 +1275,28 @@ class ReviewB54d82bProbeTests(SimpleTestCase):
         text = 'The company states the message figures (500M, 500M/month) on the same slide [S2, S3].'
         self.assertEqual(self.guard(text), ('The company states ' + PLACED_23 + '.', ['basis_source_location']))
 
+    def test_a_parenthetical_fact_or_qualification_keeps_the_sentence(self):
+        # Review of 191e627: an aside the restatement would discard is another fact or a qualification.
+        text = 'The company states the message figures (revenue is $10M) on the same slide [S2, S3].'
+        with self.subTest(sequence='full', text=text):
+            self.assertEqual(self.full(text), (text, []))
+        for text in ('The company states the message figures (revenue is $10M) on the same slide [S2, S3].',
+                     'The company states the message figures (unaudited) on the same slide [S2, S3].',
+                     'The figures (not independently verified) appear on the same slide [S2, S3].',
+                     # The basis aside is superseded only when the pair's clarification is restated (both sides).
+                     'The company states 140,000+ bots and 500M messages (measurement basis questioned) on the same '
+                     'slide [S1, S3].',
+                     'The company states the message figures ((nested) 500M) on the same slide [S2, S3].'):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+
+    def test_a_basis_aside_is_superseded_by_the_restated_clarification(self):
+        # Memo 99's own asides ("measurement basis unresolved; see open concerns") are replaced by the pair's
+        # clarification, which says the same thing; the memo-99 replay tests hold the exact text.
+        text = ('The company states a messages figure of either 500M total or 500M/month (measurement basis '
+                'unresolved; see open concerns) on the same traction slide [S2, S3].')
+        self.assertEqual(self.full(text), ('The company states ' + PLACED_23 + '.', ['basis_source_location']))
+
     def test_the_repairs_are_stable_and_idempotent(self):
         for text in (FUNDING_PROBE,
                      'Pitch Deck Hunt reports $23.1M raised [S4], while the company states the message figures on '

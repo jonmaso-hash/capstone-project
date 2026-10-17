@@ -62,7 +62,9 @@ and, first, in any sentence, one rule about where figures are stated (memo 99, O
                 no other citation in it, no narrated cited figure, a company subject with a reporting verb
                 ("the company states" is kept) or no subject with a linking verb ("the figures appear"
                 becomes "The deck states"), and no word but the cited figures' own words, figures and a few
-                placing words. A denial ("does not state", "do not appear", "never"), another fact
+                placing words, inside parentheses too (an aside such as "revenue is $10M" or "unaudited"
+                keeps the sentence; a measurement-basis remark is dropped only when the pair's clarification
+                is restated; review of 191e627). A denial ("does not state", "do not appear", "never"), another fact
                 ("revenue"), a narrator's subject or an unknown predicate keeps the sentence as written, as do
                 a condition, a question or a ref with no page; nothing is invented and no ref is dropped
 
@@ -133,6 +135,9 @@ _PLACING_WORDS = frozenset({'a', 'an', 'the', 'both', 'these', 'those', 'two', '
                             'that', 'figure', 'figures', 'metric', 'metrics', 'number', 'numbers', 'count', 'counts',
                             'total', 'totals', 'rate', 'rates', 'usage', 'traction', 'message', 'headline'}) | _LINKING
 _TOKEN = re.compile(r"[$\d][\w.,+$/]*|[a-z']+")
+# The model's own remark that the basis is open (memo 99): what the pair's restated clarification says.
+_BASIS_ASIDE = re.compile(r'measurement\s+basis\s+(?:unresolved|questioned|unclear|ambiguous)'
+                          r'(?:\s*;\s*see\s+open\s+concerns)?', re.I)
 
 
 @dataclass(frozen=True)
@@ -317,16 +322,28 @@ def _place_clause_start(sentence, end):
     return 0
 
 
-def _placing_words(text, vocabulary):
-    """Every word of `text` outside parentheses is a figure or one of `vocabulary`."""
-    words = _TOKEN.findall(re.sub(r'\([^()]*\)', ' ', text).lower())
-    return all(word[0] in '$0123456789' or word in vocabulary for word in words)
+def _plain_words(text, vocabulary):
+    """Every word of `text` is a figure or one of `vocabulary`."""
+    return all(word[0] in '$0123456789' or word in vocabulary for word in _TOKEN.findall(text.lower()))
 
 
-def _placing_head(sentence, start, clause, cited, facts):
+def _placing_words(text, vocabulary, clarified):
+    """Every word of `text` is a figure or one of `vocabulary`, inside parentheses too: the restatement discards
+    the clause's wording, so an aside holding another fact or a qualification ("revenue is $10M", "unaudited")
+    keeps the sentence. The one other aside it may drop is a measurement-basis remark ("measurement basis
+    unresolved; see open concerns"), and only when `clarified`: the pair's clarification, restated, says it."""
+    asides = re.findall(r'\(([^()]*)\)', text)
+    outside = re.sub(r'\([^()]*\)', ' ', text)     # an outer or unclosed aside's words stay here and are checked
+    return _plain_words(outside, vocabulary) and all(
+        _plain_words(aside, vocabulary) or (clarified and _BASIS_ASIDE.fullmatch(aside.strip()))
+        for aside in asides)
+
+
+def _placing_head(sentence, start, clause, cited, facts, clarified):
     """The clause's own subject and reporting verb, when the clause is known to place exactly the cited figures:
     no other citation, the company's own figures, a company subject (or none, with a linking verb) and nothing
-    but those figures' words. None when any of that is unknown: the sentence is then kept as written."""
+    but those figures' words, asides included. None when any of that is unknown: the sentence is then kept as
+    written."""
     if _REF.search(clause) or set(cited) & facts.narrated:
         return None
     vocabulary = _PLACING_WORDS | {word for ref, *_, fact in facts.places if ref in cited
@@ -336,11 +353,11 @@ def _placing_head(sentence, start, clause, cited, facts):
     if verb is not None:
         if not _OWN_SUBJECT.fullmatch(clause[lead:verb.start()].strip()):
             return None
-        if not _placing_words(clause[verb.end():], vocabulary):
+        if not _placing_words(clause[verb.end():], vocabulary, clarified):
             return None
         return sentence[:start] + clause[:verb.end()] + ' '
     words = _TOKEN.findall(re.sub(r'\([^()]*\)', ' ', clause).lower())
-    if not set(words) & _LINKING or not _placing_words(clause, vocabulary):
+    if not set(words) & _LINKING or not _placing_words(clause, vocabulary, clarified):
         return None
     if start == 0:
         return _LEAD.match(sentence).group('lead') + 'The deck states '
@@ -383,7 +400,7 @@ def _location(sentence, facts, changes):
         if both is not None:
             body += f' ({both.clarification[0].lower()}{both.clarification[1:]})'
         start = _place_clause_start(sentence, match.start())
-        head = _placing_head(sentence, start, sentence[start:match.start()], cited, facts)
+        head = _placing_head(sentence, start, sentence[start:match.start()], cited, facts, both is not None)
         if head is None:
             continue                           # the clause, its subject or its predicate is not known
         changes.append('basis_source_location')
