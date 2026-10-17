@@ -1,0 +1,15 @@
+#!/bin/sh
+# Sequential validation at the worktree HEAD. Refuses to start a batch under 1.2 GB free RAM.
+S=/c/Users/jonathan/AppData/Local/Temp/claude/C--Users-jonathan-Desktop-KCV-np/c8a313d5-81e1-402a-b7da-9205b6f20fab/scratchpad; O=$S/of705
+cd /c/Users/jonathan/Desktop/KCV-of705 || exit 1
+Z=zelda_api; PY=/c/Users/jonathan/Desktop/KCV/venv/Scripts/python.exe
+free(){ powershell -NoProfile -Command "[math]::Round((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory/1MB,2)"; }
+gate(){ f=$(free); echo "$1 free=$f" >> $O/b54_batches_ram.txt; awk -v f="$f" 'BEGIN{exit !(f>=1.2)}' || { echo "STOP before $1: free=$f < 1.2" >> $O/b54_batches_ram.txt; exit 3; }; }
+E="SECRET_KEY=ci-only-placeholder-key-not-for-production-use DEBUG=True ALLOWED_HOSTS=localhost,127.0.0.1 EMAIL_HOST_USER=ci@example.invalid CELERY_TASK_ALWAYS_EAGER=True CELERY_BROKER_URL=memory:// CELERY_RESULT_BACKEND=cache+memory:// PYTHONDONTWRITEBYTECODE=1"
+: > $O/b54_batches_ram.txt
+{ echo "## head $(git rev-parse HEAD)"; echo "## manage.py check"; env $E $PY manage.py check 2>&1 | grep -v "^Invalid line\|WARNING"; echo "## makemigrations --check --dry-run"; env $E $PY manage.py makemigrations --check --dry-run 2>&1 | grep -v "^Invalid line\|WARNING"; } > $O/b54_checks.txt; rm -f db.sqlite3
+gate A; $S/ra109/t.sh . $Z.tests_output_fidelity $Z.tests_funding_fidelity $Z.tests_claim_context_dates $Z.tests_grounded_context $Z.tests_memo_persistence $Z.tests_memo_list_rendering $Z.tests_claim_counts_per_claim $Z.tests_canonical_presentation $Z.tests_no_investment_advice $Z.tests_private_company_presentation $Z.tests_source_naming $Z.tests_verification_grounding pages.tests_ci_manifest > $O/b54_batchA.txt
+gate B; $S/ra109/t.sh . $Z.tests_usage_basis $Z.tests_claim_extraction_recall $Z.tests_claim_currency $Z.tests_claim_periods $Z.tests_claim_attribution $Z.tests_claim_field_binding $Z.tests_claim_extraction_scoring $Z.tests_financial_fact_semantics $Z.tests_three_state_grounding $Z.tests_profile_reconciliation $Z.tests_dashboard_authorization $Z.tests_chunk_boundary $Z.tests_boundary_closeout $Z.tests_page_provenance $Z.tests_verification_no_claims $Z.tests_score_follows_verdict $Z.tests_summary_follows_verdict $Z.tests_report_semantics pages.tests_no_network_in_tests > $O/b54_batchB.txt
+gate C; $S/ra109/t.sh . $Z.tests > $O/b54_batchC.txt
+gate D; $S/ra109/t.sh . $Z.tests_authorization $Z.tests_assistant_panel_escaping $Z.tests_library $Z.tests_terminal_notifications $Z.tests_valuation_paywall $Z.tests_retrieval $Z.tests_principal $Z.tests_corroboration $Z.tests_source_capabilities $Z.tests_verification_starts_together $Z.tests_extraction_failures matchmaking.tests_company_overview_identity > $O/b54_batchD.txt
+echo done >> $O/b54_batches_ram.txt
