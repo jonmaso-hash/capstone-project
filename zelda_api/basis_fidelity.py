@@ -56,9 +56,15 @@ and, first, in any sentence, one rule about where figures are stated (memo 99, O
                 12 (how ... needs clarification before either is relied on)". Each fact is its item's own
                 statement (a pair's no-interval side says so), under its own page and context; adjacent refs
                 on one page share a run, so the citation order is kept; the pair's clarification follows when
-                both sides are cited. The clause keeps its subject and reporting verb ("the company states");
-                without one it becomes "The deck states". Kept when the phrase sits in a condition or a question,
-                or a ref has no page; nothing is invented and no ref is dropped
+                both sides are cited. Only the phrase's own clause is restated: it starts after ";", ":", a
+                dash or a clause-linking comma (", while" / ", and" / ", but" / ", whereas"), so an earlier
+                clause, its narrator and its citations are kept (review of b54d82b). The clause must be known:
+                no other citation in it, no narrated cited figure, a company subject with a reporting verb
+                ("the company states" is kept) or no subject with a linking verb ("the figures appear"
+                becomes "The deck states"), and no word but the cited figures' own words, figures and a few
+                placing words. A denial ("does not state", "do not appear", "never"), another fact
+                ("revenue"), a narrator's subject or an unknown predicate keeps the sentence as written, as do
+                a condition, a question or a ref with no page; nothing is invented and no ref is dropped
 
 A condition covers the words after "if" / "whether" / "unless" / "assuming" in the same sentence, for the
 label, total and location rules only; the judgment rule above is unchanged (memo 98's conditional
@@ -116,6 +122,17 @@ _FIGURE = re.compile(r'\d[\d.,]*\s?[KMBkmb]?\b')
 _SHARED_PLACE = re.compile(r"\b(?:on|in)\s+(?:a|the)\s+(?:same(?:\s+\w+)?\s+(?:slide|page)|slide\s+headed\s+'(?P<ctx>[^']+)')"
                            r"\s*\[(?P<group>[A-Z]\d+(?:\s*,\s*[A-Z]\d+)*)\]")
 _LEAD = re.compile(r'^(?P<lead>\s*(?:[-•*·–]\s*)?)')
+# The only comma that ends a placing clause: one that links a new clause (", while the figures appear ...").
+_CLAUSE_LINK = re.compile(r',\s*(?:while|whereas|and|but)\s+', re.I)
+# Subjects that report the company's own figures; any other subject (a narrator, "it") is not borrowed.
+_OWN_SUBJECT = re.compile(r'(?:the\s+)?(?:company|deck|pitch\s+deck|presentation|founders?|management)', re.I)
+_LINKING = frozenset({'appear', 'appears', 'are', 'is', 'were', 'was', 'sit', 'sits'})
+# The words a clause placing the cited figures may use besides their own statements' words and figures:
+# anything else ("revenue", "not", "never", "places") is another fact, a denial or an unknown predicate.
+_PLACING_WORDS = frozenset({'a', 'an', 'the', 'both', 'these', 'those', 'two', 'all', 'either', 'or', 'and', 'of',
+                            'that', 'figure', 'figures', 'metric', 'metrics', 'number', 'numbers', 'count', 'counts',
+                            'total', 'totals', 'rate', 'rates', 'usage', 'traction', 'message', 'headline'}) | _LINKING
+_TOKEN = re.compile(r"[$\d][\w.,+$/]*|[a-z']+")
 
 
 @dataclass(frozen=True)
@@ -135,6 +152,7 @@ class Pair:
 class BasisFacts:
     pairs: Tuple[Pair, ...] = ()      # empty: no note, so no sentence can resolve and nothing changes
     places: Tuple[Tuple[str, int, str, str], ...] = ()   # (ref, page, source context, fact) for items with a page
+    narrated: frozenset = frozenset()  # refs a narrator (not the company) reports
 
 
 def _side(item):
@@ -186,7 +204,8 @@ def basis_facts(items, notes):
     places = tuple((item.ref, _page(item), item.source_context or '',
                     item.statement + (' with no explicit interval' if item.ref in bare else ''))
                    for item in items if _page(item) is not None)
-    return BasisFacts(pairs=tuple(pairs), places=places)
+    return BasisFacts(pairs=tuple(pairs), places=places,
+                      narrated=frozenset(item.ref for item in items if getattr(item, 'narrator', '')))
 
 
 def _cited(sentence):
@@ -282,7 +301,8 @@ def _total(sentence, pair, changes):
 
 
 def _place_clause_start(sentence, end):
-    """Where the clause holding `end` starts: after the last ";", ":" or dash outside parentheses."""
+    """Where the clause holding `end` starts: after the last ";", ":", dash or clause-linking comma (", while")
+    outside parentheses. Other commas (numbers, lists) do not end it."""
     depth = 0
     for i in range(end - 1, -1, -1):
         ch = sentence[i]
@@ -292,7 +312,39 @@ def _place_clause_start(sentence, end):
             depth = max(0, depth - 1)
         elif depth == 0 and ch in ';:—':
             return i + 1
+        elif depth == 0 and ch == ',' and _CLAUSE_LINK.match(sentence, i):
+            return _CLAUSE_LINK.match(sentence, i).end()
     return 0
+
+
+def _placing_words(text, vocabulary):
+    """Every word of `text` outside parentheses is a figure or one of `vocabulary`."""
+    words = _TOKEN.findall(re.sub(r'\([^()]*\)', ' ', text).lower())
+    return all(word[0] in '$0123456789' or word in vocabulary for word in words)
+
+
+def _placing_head(sentence, start, clause, cited, facts):
+    """The clause's own subject and reporting verb, when the clause is known to place exactly the cited figures:
+    no other citation, the company's own figures, a company subject (or none, with a linking verb) and nothing
+    but those figures' words. None when any of that is unknown: the sentence is then kept as written."""
+    if _REF.search(clause) or set(cited) & facts.narrated:
+        return None
+    vocabulary = _PLACING_WORDS | {word for ref, *_, fact in facts.places if ref in cited
+                                   for word in re.findall(r'[a-z]+', fact.lower())}
+    lead = _LEAD.match(clause).end()
+    verb = _reporting_verb(clause)
+    if verb is not None:
+        if not _OWN_SUBJECT.fullmatch(clause[lead:verb.start()].strip()):
+            return None
+        if not _placing_words(clause[verb.end():], vocabulary):
+            return None
+        return sentence[:start] + clause[:verb.end()] + ' '
+    words = _TOKEN.findall(re.sub(r'\([^()]*\)', ' ', clause).lower())
+    if not set(words) & _LINKING or not _placing_words(clause, vocabulary):
+        return None
+    if start == 0:
+        return _LEAD.match(sentence).group('lead') + 'The deck states '
+    return sentence[:start] + clause[:len(clause) - len(clause.lstrip())] + 'the deck states '
 
 
 def _reporting_verb(clause):
@@ -331,14 +383,9 @@ def _location(sentence, facts, changes):
         if both is not None:
             body += f' ({both.clarification[0].lower()}{both.clarification[1:]})'
         start = _place_clause_start(sentence, match.start())
-        clause = sentence[start:match.start()]
-        verb = _reporting_verb(clause)
-        if verb is not None:
-            head = sentence[:start] + clause[:verb.end()] + ' '
-        elif start == 0:
-            head = _LEAD.match(sentence).group('lead') + 'The deck states '
-        else:
-            head = sentence[:start] + clause[:len(clause) - len(clause.lstrip())] + 'the deck states '
+        head = _placing_head(sentence, start, sentence[start:match.start()], cited, facts)
+        if head is None:
+            continue                           # the clause, its subject or its predicate is not known
         changes.append('basis_source_location')
         return _location(head + body + sentence[match.end():], facts, [])
     return sentence

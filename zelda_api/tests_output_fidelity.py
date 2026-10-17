@@ -1153,3 +1153,151 @@ class ReviewD30a022ProbeTests(SimpleTestCase):
         # No denial word in the window: only "to establish" marks the contradiction as not asserted.
         text = 'Further evidence would be needed to establish a contradiction [C3, C2].'
         self.assertEqual(self.guard(text), (text, []))
+
+
+# --- review of b54d82b: the location repair stays inside its own clause and narrator -----------------------
+
+PLACED_23 = ("500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M "
+             "messages/month [S3] on page 12 " + CLARIFICATION_99)
+FUNDING_PROBE = 'Pitch Deck Hunt reports $23.1M raised [S4], while the usage figures appear on the same slide [S2, S3].'
+FUNDING_PROBE_AFTER = 'Pitch Deck Hunt reports $23.1M raised [S4], while the deck states ' + PLACED_23 + '.'
+
+
+class ReviewB54d82bProbeTests(SimpleTestCase):
+    """Observed at 91a9071: the location rewrite swallowed a comma-linked clause (and its narrator and citation)
+    and rewrote the object of a negation. It now acts only on a clause it can bound, with a known subject."""
+
+    def setUp(self):
+        self.payload = memo99_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text, items=None):
+        """The complete normalisation -> time -> funding -> basis sequence, on the memo-99 normalised payload."""
+        out, changes = replay({'section': text}, items or self.items, self.notes)
+        return out['section'], changes.get('section', [])
+
+    def guard(self, text):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        return guard_basis_wording(text, basis_facts(_context_items(), (NOTE,)))
+
+    def assert_facts_placed(self, out):
+        expected = expected_facts(self.payload)
+        facts = placed_facts(out)
+        self.assertTrue(facts, out)
+        for fact, ref, page, context in facts:
+            self.assertEqual((fact, page, context), expected[ref], ref)
+
+    def test_the_funding_clause_and_its_narrator_are_kept(self):
+        out, changes = self.full(FUNDING_PROBE)
+        self.assertEqual(out, FUNDING_PROBE_AFTER)
+        self.assertEqual(changes, ['basis_source_location'])
+        self.assertTrue(out.startswith('Pitch Deck Hunt reports $23.1M raised [S4], while '), out)
+        self.assertEqual(refs(out), ['S4', 'S2', 'S3'])
+        self.assertNotIn('Pitch Deck Hunt reports 500M', out)
+        self.assert_facts_placed(out)
+
+    def test_the_revenue_clause_and_its_citation_are_kept(self):
+        cases = {
+            'The company reports revenue of $10M [C8], while the message figures appear on the same slide [S2, S3].':
+                'The company reports revenue of $10M [C8], while the deck states ' + PLACED_23 + '.',
+            'Revenue is $10M [C8], and the message figures appear on the same slide [S2, S3].':
+                'Revenue is $10M [C8], and the deck states ' + PLACED_23 + '.',
+        }
+        for text, expected in cases.items():
+            with self.subTest(text=text):
+                out, changes = self.guard(text)
+                self.assertEqual((out, changes), (expected, ['basis_source_location']))
+                self.assertEqual(refs(out), ['C8', 'S2', 'S3'])
+
+    def test_a_negated_common_slide_statement_is_kept(self):
+        for text in ('The company does not state that the figures appear on the same slide [S2, S3].',
+                     'The company states that the figures do not appear on the same slide [S2, S3].',
+                     'The figures do not appear on the same slide [S2, S3].',
+                     'The deck never places the figures on the same slide [S2, S3].'):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_different_narrators_on_either_side_of_a_comma(self):
+        before = 'Pitch Deck Hunt reports $23.1M raised [S4], while the company states the message figures on the same slide [S2, S3].'
+        after = 'The company states the message figures on the same slide [S2, S3], while Pitch Deck Hunt reports $23.1M raised [S4].'
+        cases = {
+            before: 'Pitch Deck Hunt reports $23.1M raised [S4], while the company states ' + PLACED_23 + '.',
+            after: 'The company states ' + PLACED_23 + ', while Pitch Deck Hunt reports $23.1M raised [S4].',
+        }
+        for text, expected in cases.items():
+            with self.subTest(text=text):
+                out, changes = self.full(text)
+                self.assertEqual((out, changes), (expected, ['basis_source_location']))
+                self.assertEqual(sorted(refs(out)), sorted(refs(text)))
+                self.assert_facts_placed(out)
+        # A narrator that does not report these figures is never made their narrator: the location rule keeps
+        # the clause (only the merged narrator-provenance guard's own correction applies in the full sequence).
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        other = 'Pitch Deck Hunt states the message figures on the same slide [S2, S3].'
+        self.assertEqual(guard_basis_wording(other, basis_facts(self.items, self.notes)), (other, []))
+        out, changes = self.full(other)
+        self.assertFalse([c for c in changes if c.startswith('basis_')], changes)
+        self.assertTrue(out.startswith('Pitch Deck Hunt states the message figures on the same slide [S2, S3]'), out)
+
+    def test_an_unresolved_boundary_or_subject_keeps_the_sentence(self):
+        for text in ('Revenue is $10M, the message figures appear on the same slide [S2, S3].',
+                     'Revenue is $10M while the message figures appear on the same slide [S2, S3].',
+                     'Revenue and the message figures appear on the same slide [S2, S3].',
+                     'The company states revenue and the message figures on the same slide [S2, S3].',
+                     'The company states the message figures (see revenue [C8]) on the same slide [S2, S3].'):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+
+    def test_a_narrated_figure_is_never_restated_under_another_subject(self):
+        from dataclasses import replace
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        items = [replace(i, narrator='Pitch Deck Hunt') if i.ref == 'S3' else i for i in _context_items()]
+        for text in ('The company states the message figures on the same slide [S2, S3].',
+                     'The figures appear on the same slide [S2, S3].'):
+            with self.subTest(text=text):
+                self.assertEqual(guard_basis_wording(text, basis_facts(items, (NOTE,))), (text, []))
+
+    def test_a_clause_without_a_known_predicate_is_kept(self):
+        text = 'Message figures on the same slide [S2, S3] need clarification.'
+        self.assertEqual(self.guard(text), (text, []))
+
+    def test_numbers_and_parentheticals_do_not_end_the_clause(self):
+        text = 'The company states the message figures (500M, 500M/month) on the same slide [S2, S3].'
+        self.assertEqual(self.guard(text), ('The company states ' + PLACED_23 + '.', ['basis_source_location']))
+
+    def test_the_repairs_are_stable_and_idempotent(self):
+        for text in (FUNDING_PROBE,
+                     'Pitch Deck Hunt reports $23.1M raised [S4], while the company states the message figures on '
+                     'the same slide [S2, S3].'):
+            with self.subTest(text=text):
+                out, _ = self.full(text)
+                self.assertEqual(self.full(out), (out, []))
+                self.assertEqual(self.full(text, items=list(reversed(self.items)))[0], out)
+
+
+class PipelineReviewB54d82bTests(TestCase):
+    """The memo writer stores the bounded repair: the funding clause, its narrator and S4 survive."""
+
+    def test_the_writer_keeps_the_funding_clause(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('memo99_clause', password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo99_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items_from(payload)),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, stored = memo99()
+        raw = dict(raw, executive_summary=FUNDING_PROBE)
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=raw):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertEqual(memo.executive_summary, FUNDING_PROBE_AFTER)
+        self.assertIn(POINT_AFTER, memo.supported_points)
+        self.assertIn(MODEL_AFTER, memo.business_model_analysis)
