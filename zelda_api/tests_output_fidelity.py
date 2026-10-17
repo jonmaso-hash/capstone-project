@@ -1262,6 +1262,15 @@ class ReviewB54d82bProbeTests(SimpleTestCase):
         text = 'Message figures on the same slide [S2, S3] need clarification.'
         self.assertEqual(self.guard(text), (text, []))
 
+    def test_a_question_or_condition_with_a_placeable_clause_is_kept(self):
+        # Mutation controls (P5/P6 survived the first run at e9d6763): each clause below passes the clause,
+        # subject and word checks, so only the question and condition guards keep the sentence.
+        for text in ('Are the figures on the same slide [S2, S3]?',
+                     'If management confirms the interval, and the figures appear on the same slide [S2, S3], the '
+                     'deck should say so.'):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+
     def test_numbers_and_parentheticals_do_not_end_the_clause(self):
         text = 'The company states the message figures (500M, 500M/month) on the same slide [S2, S3].'
         self.assertEqual(self.guard(text), ('The company states ' + PLACED_23 + '.', ['basis_source_location']))
