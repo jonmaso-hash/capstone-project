@@ -1290,6 +1290,26 @@ class ReviewB54d82bProbeTests(SimpleTestCase):
             with self.subTest(text=text):
                 self.assertEqual(self.guard(text), (text, []))
 
+    def test_an_additional_figure_keeps_the_sentence(self):
+        # Review of ed29f3b: a figure the cited statements do not hold is another fact the restatement would
+        # discard, in parentheses (nested too) or not, and so is a cited figure given another interval or currency.
+        text = 'The company states the message figures (250M messages/month) on the same slide [S2, S3].'
+        with self.subTest(sequence='full', text=text):
+            self.assertEqual(self.full(text), (text, []))
+        nested = 'The company states the message figures ((250M messages/month)) on the same slide [S2, S3].'
+        with self.subTest(sequence='full', text=nested):
+            self.assertEqual(self.full(nested), (nested, []))
+        for text in ('The company states the message figures (250M messages/month) on the same slide [S2, S3].',
+                     'The company states the message figures ((250M messages/month)) on the same slide [S2, S3].',
+                     'The company states the message figures (500M (250M messages/month)) on the same slide [S2, S3].',
+                     'The company states 250M messages/month on the same slide [S2, S3].',
+                     'The figures (250M and 500M) appear on the same slide [S2, S3].',
+                     'The company states 500M/day on the same slide [S2, S3].',
+                     'The company states the message figures ($500M) on the same slide [S2, S3].',
+                     'The company states the message figures ($ 500M) on the same slide [S2, S3].'):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+
     def test_a_citation_inside_the_clause_keeps_the_sentence(self):
         # Mutation control (P12 survived at 1bb993b): every word here is a placing word, so only the citation
         # check keeps [C3], which the restatement would otherwise drop.

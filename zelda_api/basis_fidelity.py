@@ -61,10 +61,12 @@ and, first, in any sentence, one rule about where figures are stated (memo 99, O
                 clause, its narrator and its citations are kept (review of b54d82b). The clause must be known:
                 no other citation in it, no narrated cited figure, a company subject with a reporting verb
                 ("the company states" is kept) or no subject with a linking verb ("the figures appear"
-                becomes "The deck states"), and no word but the cited figures' own words, figures and a few
-                placing words, inside parentheses too (an aside such as "revenue is $10M" or "unaudited"
-                keeps the sentence; a measurement-basis remark is dropped only when the pair's clarification
-                is restated; review of 191e627). A denial ("does not state", "do not appear", "never"), another fact
+                becomes "The deck states"), and no word but the cited figures' own words, their own figures
+                and a few placing words, inside parentheses too (an aside such as "revenue is $10M" or
+                "unaudited" keeps the sentence; a measurement-basis remark is dropped only when the pair's
+                clarification is restated; review of 191e627). A figure the cited statements do not hold
+                ("250M messages/month"), or one of theirs with another interval or currency ("500M/day",
+                "$500M"), keeps the sentence too (review of ed29f3b). A denial ("does not state", "do not appear", "never"), another fact
                 ("revenue"), a narrator's subject or an unknown predicate keeps the sentence as written, as do
                 a condition, a question or a ref with no page; nothing is invented and no ref is dropped
 
@@ -135,6 +137,8 @@ _PLACING_WORDS = frozenset({'a', 'an', 'the', 'both', 'these', 'those', 'two', '
                             'that', 'figure', 'figures', 'metric', 'metrics', 'number', 'numbers', 'count', 'counts',
                             'total', 'totals', 'rate', 'rates', 'usage', 'traction', 'message', 'headline'}) | _LINKING
 _TOKEN = re.compile(r"[$\d][\w.,+$/]*|[a-z']+")
+# A space grouping a statement's digits ("140 000+"): the memo writes the same figure as "140,000+".
+_DIGIT_GROUP = re.compile(r'(?<=\d)[ \u00a0\u202f](?=\d{3}\b)')
 # The model's own remark that the basis is open (memo 99): what the pair's restated clarification says.
 _BASIS_ASIDE = re.compile(r'measurement\s+basis\s+(?:unresolved|questioned|unclear|ambiguous)'
                           r'(?:\s*;\s*see\s+open\s+concerns)?', re.I)
@@ -322,17 +326,34 @@ def _place_clause_start(sentence, end):
     return 0
 
 
+def _figure_key(token):
+    """A figure token's value and the words after it: "500m/month" -> ("500m", ["month"]); "$23.1m" keeps its
+    "$"; "140,000+" -> ("140000", []). A lone "$" is no value the statements hold."""
+    match = re.match(r'(\$?)(\d[\d,]*(?:\.\d+)?)([kmb]?)', token)
+    if match is None:
+        return token, []
+    return (match.group(1) + match.group(2).replace(',', '') + match.group(3),
+            re.findall(r'[a-z]+', token[match.end():]))
+
+
 def _plain_words(text, vocabulary):
-    """Every word of `text` is a figure or one of `vocabulary`. Citations are not words: the citation check
-    in _placing_head judges them."""
-    return all(word[0] in '$0123456789' or word in vocabulary
-               for word in _TOKEN.findall(_REF.sub(' ', text).lower()))
+    """Every word of `text` is one of `vocabulary`, and every figure is one the cited statements hold (its value
+    is in `vocabulary`) with nothing after it but their words ("500M/month", not "250M" or "500M/day").
+    Citations are not words: the citation check in _placing_head judges them."""
+    for word in _TOKEN.findall(_REF.sub(' ', text).lower()):
+        if word[0] in '$0123456789':
+            value, tail = _figure_key(word)
+            if value not in vocabulary or not set(tail) <= vocabulary:
+                return False
+        elif word not in vocabulary:
+            return False
+    return True
 
 
 def _placing_words(text, vocabulary, clarified):
-    """Every word of `text` is a figure or one of `vocabulary`, inside parentheses too: the restatement discards
-    the clause's wording, so an aside holding another fact or a qualification ("revenue is $10M", "unaudited")
-    keeps the sentence. The one other aside it may drop is a measurement-basis remark ("measurement basis
+    """Every word and figure of `text` is one of `vocabulary`'s, inside parentheses too: the restatement discards
+    the clause's wording, so an aside holding another fact, figure or qualification ("revenue is $10M",
+    "250M messages/month", "unaudited") keeps the sentence. The one other aside it may drop is a measurement-basis remark ("measurement basis
     unresolved; see open concerns"), and only when `clarified`: the pair's clarification, restated, says it."""
     asides = re.findall(r'\(([^()]*)\)', text)
     outside = re.sub(r'\([^()]*\)', ' ', text)     # an outer or unclosed aside's words stay here and are checked
@@ -348,8 +369,10 @@ def _placing_head(sentence, start, clause, cited, facts, clarified):
     written."""
     if _REF.search(clause) or set(cited) & facts.narrated:
         return None
-    vocabulary = _PLACING_WORDS | {word for ref, *_, fact in facts.places if ref in cited
-                                   for word in re.findall(r'[a-z]+', fact.lower())}
+    statements = [_DIGIT_GROUP.sub('', fact.lower()) for ref, *_, fact in facts.places if ref in cited]
+    vocabulary = (_PLACING_WORDS | {word for fact in statements for word in re.findall(r'[a-z]+', fact)}
+                  | {_figure_key(token)[0] for fact in statements for token in _TOKEN.findall(fact)
+                     if token[0] in '$0123456789'})   # the cited figures' values: no other figure is placed
     lead = _LEAD.match(clause).end()
     verb = _reporting_verb(clause)
     if verb is not None:
