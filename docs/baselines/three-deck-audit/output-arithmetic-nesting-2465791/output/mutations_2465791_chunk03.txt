@@ -1,0 +1,22 @@
+F9 CAUGHT Ran 249 tests in 9.950s FAILED (failures=7) restored
+C1 CAUGHT Ran 249 tests in 9.974s FAILED (failures=2) restored
+C2 CAUGHT Ran 249 tests in 9.876s FAILED (failures=1) restored
+C3 CAUGHT Ran 249 tests in 9.786s FAILED (failures=4) restored
+C4 CAUGHT Ran 249 tests in 9.866s FAILED (failures=2) restored
+C5 CAUGHT Ran 249 tests in 10.005s FAILED (failures=16) restored
+C6 CAUGHT Ran 249 tests in 9.837s FAILED (failures=3) restored
+
+F9 | NP-604: the rule is not in the rule list | CAUGHT Ran 249 tests in 9.950s FAILED (failures=7)
+    failing: test_every_other_field_is_exactly_as_stored, test_funding_is_not_a_runway_denominator_even_with_dated_cash, test_np604_funding_is_not_the_runway_denominator, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_corrections, test_the_stored_memo_carries_the_repairs
+C1 | P2-1: another metric no longer blocks resolution (unrelated-metric gating removed) | CAUGHT Ran 249 tests in 9.974s FAILED (failures=2)
+    failing: test_a_tied_sentence_that_also_names_another_metric_is_kept
+C2 | P2-1: a sentence citing a pair ref and an unrelated ref resolves to the pair | CAUGHT Ran 249 tests in 9.876s FAILED (failures=1)
+    failing: test_a_pair_ref_beside_an_unrelated_ref_is_left_alone
+C3 | P2-2: every pair is worded with the first pair's (monthly) clarification | CAUGHT Ran 249 tests in 9.786s FAILED (failures=4)
+    failing: test_a_second_pair_gets_its_own_basis_wording, test_an_explicit_cumulative_fact_does_not_license_an_overstatement, test_explicit_cumulative_evidence_and_questions_are_kept, test_unrelated_and_second_pair_sentences_through_the_writer
+C4 | P2-2: one cumulative fact anywhere licenses every pair | CAUGHT Ran 249 tests in 9.866s FAILED (failures=2)
+    failing: test_a_cumulative_fact_licenses_only_its_own_pair, test_unrelated_and_second_pair_sentences_through_the_writer
+C5 | P2-2: no antecedent association (memo 98's uncited sentence is not tied) | CAUGHT Ran 249 tests in 10.005s FAILED (failures=16)
+    failing: test_a_directly_following_referent_is_still_corrected, test_direct_cited_and_named_paths_are_unaffected, test_explicit_cumulative_evidence_and_questions_are_kept, test_only_the_expected_rules_fired, test_the_known_bridges_continue_the_pair, test_the_memo_98_contiguous_passage_is_still_corrected, test_the_memo_98_passage_still_resolves_by_its_paragraph, test_the_stored_memo_carries_the_corrections ...
+C6 | P2-2: the paragraph association crosses list items | CAUGHT Ran 249 tests in 9.837s FAILED (failures=3)
+    failing: test_a_new_paragraph_or_bullet_does_not_inherit

@@ -1,0 +1,8 @@
+## head 2465791ce838fcc4198591fff666fc956851f4a3
+## manage.py check
+2026-10-18 04:01:28,911 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+System check identified no issues (0 silenced).
+## makemigrations --check --dry-run
+2026-10-18 04:01:39,853 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+No changes detected
+exit=0
