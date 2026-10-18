@@ -1,0 +1,4 @@
+P34 CAUGHT Ran 251 tests in 11.555s FAILED (failures=11) restored
+
+P34 | review 2465791 (corrected at the review of 424dd36): a statement's interval on its noun is not read ("500M messages/month" states no 500M/month) | CAUGHT Ran 251 tests in 11.555s FAILED (failures=11)
+    failing: test_a_basis_aside_is_superseded_by_the_restated_clarification, test_a_figure_qualification_or_denominator_no_statement_gives_keeps_the_sentence, test_a_further_unknown_figure_keeps_the_sentence, test_every_placed_citation_supports_its_page_and_context, test_numbers_and_parentheticals_do_not_end_the_clause, test_of705_each_fact_keeps_its_own_page_and_context, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_repairs ...
