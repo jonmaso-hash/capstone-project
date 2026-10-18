@@ -67,7 +67,10 @@ and, first, in any sentence, one rule about where figures are stated (memo 99, O
                 clarification is restated; review of 191e627). A figure the cited statements do not hold
                 ("250M messages/month"), or one of theirs with another interval or currency ("500M/day",
                 "$500M"), keeps the sentence too, as do a sum, comparison or sign ("500M + 500M", "~500M")
-                and a nested or unbalanced parenthesis (reviews of ed29f3b). A denial ("does not state", "do not appear", "never"), another fact
+                and a nested or unbalanced parenthesis (reviews of ed29f3b). A figure is matched whole: its
+                value, any "+" and any "/interval" must be one form a cited statement states ("500M messages/
+                month" states "500M" and "500M/month"), so a qualification or denominator no statement gives
+                ("500M+", "500M+/month", "500M/messages") keeps the sentence (review of 2465791). A denial ("does not state", "do not appear", "never"), another fact
                 ("revenue"), a narrator's subject or an unknown predicate keeps the sentence as written, as do
                 a condition, a question or a ref with no page; nothing is invented and no ref is dropped
 
@@ -333,16 +336,36 @@ def _place_clause_start(sentence, end):
 
 
 def _figure_key(token):
-    """A whole figure token's value and the words after it: "500m/month" -> ("500m", ["month"]); "$23.1m" keeps
-    its "$"; "140,000+" -> ("140000", [])."""
-    match = re.match(r'(\$?)(\d[\d,]*(?:\.\d+)?)([kmb]?)', token)
-    return (match.group(1) + match.group(2).replace(',', '') + match.group(3),
-            re.findall(r'[a-z]+', token[match.end():]))
+    """A whole figure token's complete form: its value, any "+" and any "/interval", grouping commas and closing
+    punctuation dropped: "500m+/month," -> "500m+/month"; "$23.1m" keeps its "$"; "140,000+" -> "140000+"."""
+    match = re.match(r'(\$?)(\d[\d,]*(?:\.\d+)?)([kmb]?)(\+?)(/[a-z]+)?', token)
+    return (match.group(1) + match.group(2).replace(',', '') + match.group(3) + match.group(4)
+            + (match.group(5) or ''))
+
+
+# A statement's figure with the interval it states: on the figure ("500m/month") or on its noun ("500m messages/
+# month"). Statements are lowercased and their digit groups joined first.
+_STATED_FIGURE = re.compile(r'(?<![\w.$])(\$?\d[\d,]*(?:\.\d+)?[kmb]?)(\+?)(?:/([a-z]+)|\s+[a-z]+/([a-z]+))?')
+
+
+def _stated_forms(statement):
+    """The complete figure forms a cited statement supports: each of its figures with or without the "+" and the
+    interval it states, never one it does not ("500m messages/month" -> "500m", "500m/month"; "140000+ bots" ->
+    "140000", "140000+"). A placed figure may leave out what its statement says, which the restatement gives back,
+    but not add to it."""
+    forms = set()
+    for match in _STATED_FIGURE.finditer(statement):
+        value, interval = match.group(1).replace(',', ''), match.group(3) or match.group(4)
+        for qualifier in {'', match.group(2)}:
+            forms.add(value + qualifier)
+            if interval:
+                forms.add(value + qualifier + '/' + interval)
+    return forms
 
 
 def _plain_words(text, vocabulary):
-    """Every word of `text` is one of `vocabulary`, and every figure is one the cited statements hold (its value
-    is in `vocabulary`) with nothing after it but their words ("500M/month", not "250M" or "500M/day").
+    """Every word of `text` is one of `vocabulary`, and every figure's complete form is one the cited statements
+    state (in `vocabulary`): "500M/month", not "250M", "500M/day", "500M+" or "500M/messages".
     Nothing but spaces and commas or full stops may stand between them, so a sum, a comparison or a sign of held
     figures ("500M + 500M", "500M = 500M/month", "~500M") is not placing wording. Citations are not words: the
     citation check in _placing_head judges them."""
@@ -353,8 +376,7 @@ def _plain_words(text, vocabulary):
         if word[0] in '$0123456789':
             if not _FIGURE_TOKEN.fullmatch(word):
                 return False
-            value, tail = _figure_key(word)
-            if value not in vocabulary or not set(tail) <= vocabulary:
+            if _figure_key(word) not in vocabulary:
                 return False
         elif word not in vocabulary:
             return False
@@ -383,8 +405,7 @@ def _placing_head(sentence, start, clause, cited, facts, clarified):
         return None
     statements = [_DIGIT_GROUP.sub('', fact.lower()) for ref, *_, fact in facts.places if ref in cited]
     vocabulary = (_PLACING_WORDS | {word for fact in statements for word in re.findall(r'[a-z]+', fact)}
-                  | {_figure_key(token)[0] for fact in statements for token in _TOKEN.findall(fact)
-                     if _FIGURE_TOKEN.fullmatch(token)})   # the cited figures' values: no other figure is placed
+                  | {form for fact in statements for form in _stated_forms(fact)})   # no other figure is placed
     lead = _LEAD.match(clause).end()
     verb = _reporting_verb(clause)
     if verb is not None:

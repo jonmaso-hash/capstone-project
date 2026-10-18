@@ -1347,6 +1347,27 @@ class ReviewB54d82bProbeTests(SimpleTestCase):
         text = 'The company states the message figures (500M, 500M/month) on the same slide [S2, S3].'
         self.assertEqual(self.guard(text), ('The company states ' + PLACED_23 + '.', ['basis_source_location']))
 
+    def test_a_figure_qualification_or_denominator_no_statement_gives_keeps_the_sentence(self):
+        # Review of 2465791: a figure is matched whole. Its "+" and its "/interval" must be ones a cited statement
+        # states, or the restatement would discard the qualification or the denominator.
+        for text in ('The company states the message figures (500M+) on the same slide [S2, S3].',
+                     'The company states the message figures (500M+/month) on the same slide [S2, S3].',
+                     'The company states the message figures (500M/messages) on the same slide [S2, S3].'):
+            with self.subTest(sequence='full', text=text):
+                self.assertEqual(self.full(text), (text, []))
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+        # Controls: a figure may state what its statement states ("140,000+", "500M/month", from "500M messages/
+        # month") or leave it out ("140,000"); the restatement gives the statement's own wording back.
+        restated = ("The company states 140 000+ bots [S1] on page 10, under 'Traction by Apr-16', and separately 500M "
+                    "messages/month [S3] on page 12.")
+        for text in ('The company states 140,000+ bots and 500M messages on the same slide [S1, S3].',
+                     'The company states 140,000 bots and 500M/month on the same slide [S1, S3].'):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (restated, ['basis_source_location']))
+        text = 'The company states the message figures (500M, 500M/month) on the same slide [S2, S3].'
+        self.assertEqual(self.guard(text), ('The company states ' + PLACED_23 + '.', ['basis_source_location']))
+
     def test_a_list_marker_is_not_arithmetic(self):
         # Control: a bullet's marker is the line's lead, not a sign inside the clause.
         for lead in ('- ', '• '):
