@@ -1,0 +1,22 @@
+P7 CAUGHT Ran 247 tests in 10.060s FAILED (failures=1) restored
+P8 CAUGHT Ran 247 tests in 10.014s FAILED (failures=11) restored
+P9 CAUGHT Ran 247 tests in 9.924s FAILED (failures=16) restored
+P10 CAUGHT Ran 247 tests in 10.003s FAILED (failures=16) restored
+P11 CAUGHT Ran 247 tests in 9.952s FAILED (failures=5) restored
+P12 CAUGHT Ran 247 tests in 9.917s FAILED (failures=2) restored
+P13 CAUGHT Ran 247 tests in 9.773s FAILED (failures=2) restored
+
+P7 | review 4: non-adjacent refs on one page are grouped (citation order changes) | CAUGHT Ran 247 tests in 10.060s FAILED (failures=1)
+    failing: test_interleaved_locations_keep_the_flattened_citation_order
+P8 | review 1: refs placed without their facts (the shared metric predicate is kept; re-anchored at e9d6763) | CAUGHT Ran 247 tests in 10.014s FAILED (failures=11)
+    failing: test_a_basis_aside_is_superseded_by_the_restated_clarification, test_a_cross_page_group_is_placed_by_its_own_sources, test_different_narrators_on_either_side_of_a_comma, test_every_placed_citation_supports_its_page_and_context, test_numbers_and_parentheticals_do_not_end_the_clause, test_of705_each_fact_keeps_its_own_page_and_context, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_repairs ...
+P9 | review 1: the no-interval side's basis is dropped from its fact | CAUGHT Ran 247 tests in 9.924s FAILED (failures=16)
+    failing: test_a_basis_aside_is_superseded_by_the_restated_clarification, test_a_cross_page_group_is_placed_by_its_own_sources, test_different_narrators_on_either_side_of_a_comma, test_every_placed_citation_supports_its_page_and_context, test_interleaved_locations_keep_the_flattened_citation_order, test_numbers_and_parentheticals_do_not_end_the_clause, test_of705_each_fact_keeps_its_own_page_and_context, test_the_funding_clause_and_its_narrator_are_kept ...
+P10 | review 1: the clarification is not kept when both sides are cited | CAUGHT Ran 247 tests in 10.003s FAILED (failures=16)
+    failing: test_a_basis_aside_is_superseded_by_the_restated_clarification, test_a_cross_page_group_is_placed_by_its_own_sources, test_different_narrators_on_either_side_of_a_comma, test_every_placed_citation_supports_its_page_and_context, test_interleaved_locations_keep_the_flattened_citation_order, test_numbers_and_parentheticals_do_not_end_the_clause, test_of705_each_fact_keeps_its_own_page_and_context, test_the_funding_clause_and_its_narrator_are_kept ...
+P11 | review b54 1: a clause-linking comma no longer ends the clause (the funding clause is swallowed) | CAUGHT Ran 247 tests in 9.952s FAILED (failures=5)
+    failing: test_different_narrators_on_either_side_of_a_comma, test_the_funding_clause_and_its_narrator_are_kept, test_the_revenue_clause_and_its_citation_are_kept, test_the_writer_keeps_the_funding_clause
+P12 | review b54 1: another citation inside the clause no longer keeps the sentence | CAUGHT Ran 247 tests in 9.917s FAILED (failures=2)
+    failing: test_a_citation_inside_the_clause_keeps_the_sentence
+P13 | review b54 1: a narrated cited figure is restated under the clause subject | CAUGHT Ran 247 tests in 9.773s FAILED (failures=2)
+    failing: test_a_narrated_figure_is_never_restated_under_another_subject

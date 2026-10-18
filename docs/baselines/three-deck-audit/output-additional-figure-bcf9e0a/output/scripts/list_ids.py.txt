@@ -1,0 +1,8 @@
+import os, sys
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.argv = ['x', '/nonexistent', '__none__']
+src = open(os.path.join(HERE, 'mutate_e29.py'), encoding='utf-8').read().rsplit("exec(compile('def sha(path):'", 1)[0]
+g = {'__file__': os.path.join(HERE, 'mutate_e29.py'), '__name__': 'l'}
+exec(src, g)
+ids = [m[0] for m in g['ns']['M']]
+print(len(ids)); print(' '.join(ids))

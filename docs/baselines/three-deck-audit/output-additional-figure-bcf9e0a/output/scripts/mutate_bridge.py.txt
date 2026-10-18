@@ -1,0 +1,31 @@
+"""Bridge mutation run (review of c297ec3). Carries mutate_association.py's list with two retirements and adds B1-B2.
+Retired: A4 ("any uncited sentence bridges": its anchor, the opener-plus-subchecks rule, no longer exists; replaced
+by B1) and A5 ("a sentence stating a figure bridges": the digit subcheck was removed as redundant, since the whole-
+sentence allowlist admits no figure; no gate remains to mutate).
+Usage: python mutate_bridge.py <worktree> [ID ...]."""
+import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+BASE = os.path.join(HERE, 'mutate_ra109_review.py')
+head, runner = open(BASE, encoding='utf-8').read().split('def sha(path):', 1)
+ns = {'__file__': BASE, '__name__': 'mutation_list'}
+exec(compile(head, BASE, 'exec'), ns)
+
+src = open(os.path.join(HERE, 'mutate_association.py'), encoding='utf-8').read()
+src = src.rsplit("exec(compile('def sha(path):'", 1)[0]
+prev = {'__file__': os.path.join(HERE, 'mutate_association.py'), '__name__': 'association_list'}
+exec(compile(src, 'mutate_association.py', 'exec'), prev)
+carried = [m for m in prev['ns']['M'] if m[0] not in ('A4', 'A5')]
+
+BF = 'zelda_api/basis_fidelity.py'
+ns['LABELS'] = prev['ns']['LABELS']
+ns['M'] = carried + [
+    # --- bridge (review of c297ec3) ----------------------------------------------------------------
+    ('B1', 'P2: opener-only bridge recognition is restored', BF,
+     "    return bool(_BRIDGE.fullmatch(sentence))",
+     "    return bool(re.match(r'\\s*(?:these|this|they|both|each|the\\s+two)\\b', sentence, re.I))"),
+    ('B2', 'P2: a valid bridge prefix permits an unrelated suffix', BF,
+     "    return bool(_BRIDGE.fullmatch(sentence))",
+     "    return bool(_BRIDGE.match(sentence))"),
+]
+exec(compile('def sha(path):' + runner, BASE + ' (runner)', 'exec'), ns)

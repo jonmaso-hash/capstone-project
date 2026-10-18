@@ -1,0 +1,220 @@
+2026-10-17 14:44:57,428 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+FFFFFFFFFF
+======================================================================
+FAIL: test_an_additional_figure_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_additional_figure_keeps_the_sentence) (sequence='full', text='The company states the message figures (250M messages/month) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1298, in test_an_additional_figure_keeps_the_sentence
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([49 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([44 chars]S3].'
+
++ ('The company states the message figures (250M messages/month) on the same '
++  'slide [S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_additional_figure_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_additional_figure_keeps_the_sentence) (sequence='full', text='The company states the message figures ((250M messages/month)) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1301, in test_an_additional_figure_keeps_the_sentence
+    self.assertEqual(self.full(nested), (nested, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([51 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([46 chars]S3].'
+
++ ('The company states the message figures ((250M messages/month)) on the same '
++  'slide [S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_additional_figure_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_additional_figure_keeps_the_sentence) (text='The company states the message figures (250M messages/month) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1311, in test_an_additional_figure_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([49 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([44 chars]S3].'
+
++ ('The company states the message figures (250M messages/month) on the same '
++  'slide [S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_additional_figure_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_additional_figure_keeps_the_sentence) (text='The company states the message figures ((250M messages/month)) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1311, in test_an_additional_figure_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([51 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([46 chars]S3].'
+
++ ('The company states the message figures ((250M messages/month)) on the same '
++  'slide [S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_additional_figure_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_additional_figure_keeps_the_sentence) (text='The company states the message figures (500M (250M messages/month)) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1311, in test_an_additional_figure_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([56 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([51 chars]S3].'
+
++ ('The company states the message figures (500M (250M messages/month)) on the '
++  'same slide [S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_additional_figure_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_additional_figure_keeps_the_sentence) (text='The company states 250M messages/month on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1311, in test_an_additional_figure_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states 250M messages/month o[27 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states 250M messages/month o[22 chars]S3].'
+
++ ('The company states 250M messages/month on the same slide [S2, S3].', [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_additional_figure_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_additional_figure_keeps_the_sentence) (text='The figures (250M and 500M) appear on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1311, in test_an_additional_figure_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The deck states 500M messages with no ex[266 chars]on']) != ('The figures (250M and 500M) appear on th[23 chars], [])
+
+First differing element 0:
+"The deck states 500M messages with no ex[238 chars]on)."
+'The figures (250M and 500M) appear on th[18 chars]S3].'
+
++ ('The figures (250M and 500M) appear on the same slide [S2, S3].', [])
+- ('The deck states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_additional_figure_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_additional_figure_keeps_the_sentence) (text='The company states 500M/day on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1311, in test_an_additional_figure_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states 500M/day on the same [16 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states 500M/day on the same slide [S2, S3].'
+
++ ('The company states 500M/day on the same slide [S2, S3].', [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_additional_figure_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_additional_figure_keeps_the_sentence) (text='The company states the message figures ($500M) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1311, in test_an_additional_figure_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([35 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([30 chars]S3].'
+
++ ('The company states the message figures ($500M) on the same slide [S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_additional_figure_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_additional_figure_keeps_the_sentence) (text='The company states the message figures ($ 500M) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1311, in test_an_additional_figure_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([36 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([31 chars]S3].'
+
++ ('The company states the message figures ($ 500M) on the same slide [S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+----------------------------------------------------------------------
+Ran 1 test in 0.082s
+
+FAILED (failures=10)
+Found 1 test(s).
+System check identified no issues (0 silenced).
