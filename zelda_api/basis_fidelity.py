@@ -66,7 +66,8 @@ and, first, in any sentence, one rule about where figures are stated (memo 99, O
                 "unaudited" keeps the sentence; a measurement-basis remark is dropped only when the pair's
                 clarification is restated; review of 191e627). A figure the cited statements do not hold
                 ("250M messages/month"), or one of theirs with another interval or currency ("500M/day",
-                "$500M"), keeps the sentence too (review of ed29f3b). A denial ("does not state", "do not appear", "never"), another fact
+                "$500M"), keeps the sentence too, as do a sum, comparison or sign ("500M + 500M", "~500M")
+                and a nested or unbalanced parenthesis (reviews of ed29f3b). A denial ("does not state", "do not appear", "never"), another fact
                 ("revenue"), a narrator's subject or an unknown predicate keeps the sentence as written, as do
                 a condition, a question or a ref with no page; nothing is invented and no ref is dropped
 
@@ -139,6 +140,11 @@ _PLACING_WORDS = frozenset({'a', 'an', 'the', 'both', 'these', 'those', 'two', '
 _TOKEN = re.compile(r"[$\d][\w.,+$/]*|[a-z']+")
 # A space grouping a statement's digits ("140 000+"): the memo writes the same figure as "140,000+".
 _DIGIT_GROUP = re.compile(r'(?<=\d)[ \u00a0\u202f](?=\d{3}\b)')
+# A whole figure token: a value, an optional "+", one "/interval" and closing punctuation ("140,000+", "500m/month,").
+# Anything else ("500m+500m", "1.5x", a lone "$") is not classified.
+_FIGURE_TOKEN = re.compile(r'\$?\d[\d,]*(?:\.\d+)?[kmb]?\+?(?:/[a-z]+)?[.,]?')
+# What may separate the words of a placing clause: no sign or operator ("+", "-", "=", "~", "%").
+_PLAIN_GAP = re.compile(r'[\s,.]*')
 # The model's own remark that the basis is open (memo 99): what the pair's restated clarification says.
 _BASIS_ASIDE = re.compile(r'measurement\s+basis\s+(?:unresolved|questioned|unclear|ambiguous)'
                           r'(?:\s*;\s*see\s+open\s+concerns)?', re.I)
@@ -327,11 +333,9 @@ def _place_clause_start(sentence, end):
 
 
 def _figure_key(token):
-    """A figure token's value and the words after it: "500m/month" -> ("500m", ["month"]); "$23.1m" keeps its
-    "$"; "140,000+" -> ("140000", []). A lone "$" is no value the statements hold."""
+    """A whole figure token's value and the words after it: "500m/month" -> ("500m", ["month"]); "$23.1m" keeps
+    its "$"; "140,000+" -> ("140000", [])."""
     match = re.match(r'(\$?)(\d[\d,]*(?:\.\d+)?)([kmb]?)', token)
-    if match is None:
-        return token, []
     return (match.group(1) + match.group(2).replace(',', '') + match.group(3),
             re.findall(r'[a-z]+', token[match.end():]))
 
@@ -339,9 +343,16 @@ def _figure_key(token):
 def _plain_words(text, vocabulary):
     """Every word of `text` is one of `vocabulary`, and every figure is one the cited statements hold (its value
     is in `vocabulary`) with nothing after it but their words ("500M/month", not "250M" or "500M/day").
-    Citations are not words: the citation check in _placing_head judges them."""
-    for word in _TOKEN.findall(_REF.sub(' ', text).lower()):
+    Nothing but spaces and commas or full stops may stand between them, so a sum, a comparison or a sign of held
+    figures ("500M + 500M", "500M = 500M/month", "~500M") is not placing wording. Citations are not words: the
+    citation check in _placing_head judges them."""
+    text = _REF.sub(' ', text).lower()
+    if not _PLAIN_GAP.fullmatch(_TOKEN.sub(' ', text)):
+        return False
+    for word in _TOKEN.findall(text):
         if word[0] in '$0123456789':
+            if not _FIGURE_TOKEN.fullmatch(word):
+                return False
             value, tail = _figure_key(word)
             if value not in vocabulary or not set(tail) <= vocabulary:
                 return False
@@ -353,10 +364,11 @@ def _plain_words(text, vocabulary):
 def _placing_words(text, vocabulary, clarified):
     """Every word and figure of `text` is one of `vocabulary`'s, inside parentheses too: the restatement discards
     the clause's wording, so an aside holding another fact, figure or qualification ("revenue is $10M",
-    "250M messages/month", "unaudited") keeps the sentence. The one other aside it may drop is a measurement-basis remark ("measurement basis
+    "250M messages/month", "unaudited") keeps the sentence, and so does a nested or unbalanced parenthesis, which
+    is not classified. The one other aside it may drop is a measurement-basis remark ("measurement basis
     unresolved; see open concerns"), and only when `clarified`: the pair's clarification, restated, says it."""
     asides = re.findall(r'\(([^()]*)\)', text)
-    outside = re.sub(r'\([^()]*\)', ' ', text)     # an outer or unclosed aside's words stay here and are checked
+    outside = re.sub(r'\([^()]*\)', ' ', text)     # a nested or unclosed aside leaves a parenthesis: not plain
     return _plain_words(outside, vocabulary) and all(
         _plain_words(aside, vocabulary) or (clarified and _BASIS_ASIDE.fullmatch(aside.strip()))
         for aside in asides)
@@ -372,7 +384,7 @@ def _placing_head(sentence, start, clause, cited, facts, clarified):
     statements = [_DIGIT_GROUP.sub('', fact.lower()) for ref, *_, fact in facts.places if ref in cited]
     vocabulary = (_PLACING_WORDS | {word for fact in statements for word in re.findall(r'[a-z]+', fact)}
                   | {_figure_key(token)[0] for fact in statements for token in _TOKEN.findall(fact)
-                     if token[0] in '$0123456789'})   # the cited figures' values: no other figure is placed
+                     if _FIGURE_TOKEN.fullmatch(token)})   # the cited figures' values: no other figure is placed
     lead = _LEAD.match(clause).end()
     verb = _reporting_verb(clause)
     if verb is not None:
@@ -382,7 +394,7 @@ def _placing_head(sentence, start, clause, cited, facts, clarified):
             return None
         return sentence[:start] + clause[:verb.end()] + ' '
     words = _TOKEN.findall(re.sub(r'\([^()]*\)', ' ', clause).lower())
-    if not set(words) & _LINKING or not _placing_words(clause, vocabulary, clarified):
+    if not set(words) & _LINKING or not _placing_words(clause[lead:], vocabulary, clarified):
         return None
     if start == 0:
         return _LEAD.match(sentence).group('lead') + 'The deck states '

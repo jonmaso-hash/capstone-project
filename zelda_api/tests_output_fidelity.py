@@ -1310,6 +1310,37 @@ class ReviewB54d82bProbeTests(SimpleTestCase):
             with self.subTest(text=text):
                 self.assertEqual(self.guard(text), (text, []))
 
+    def test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence(self):
+        # Second review of ed29f3b: an unknown number, a sum or comparison of held figures, a sign and any nested
+        # or unclosed parenthesis are not classified, so the restatement would discard them.
+        for text in ('The company states the message figures (600M messages) on the same slide [S2, S3].',
+                     'The company states the message figures (500M, 600M/month) on the same slide [S2, S3].',
+                     'The company states the message figures (500M (600M)) on the same slide [S2, S3].',
+                     'The company states the message figures (500M + 500M) on the same slide [S2, S3].'):
+            with self.subTest(sequence='full', text=text):
+                self.assertEqual(self.full(text), (text, []))
+        for text in ('The company states the message figures (600M messages) on the same slide [S2, S3].',
+                     'The company states the message figures (500M, 600M/month) on the same slide [S2, S3].',
+                     'The company states the message figures (500M (600M)) on the same slide [S2, S3].',
+                     'The company states the message figures (500M + 500M) on the same slide [S2, S3].',
+                     'The company states the message figures (500M+500M) on the same slide [S2, S3].',
+                     'The company states the message figures (500M = 500M/month) on the same slide [S2, S3].',
+                     'The company states the message figures (500M-500M/month) on the same slide [S2, S3].',
+                     'The company states the message figures (~500M) on the same slide [S2, S3].',
+                     'The company states the message figures (500M, 5%) on the same slide [S2, S3].',
+                     'The company states the message figures (500M (500M/month)) on the same slide [S2, S3].',
+                     'The company states (the message figures on the same slide [S2, S3]).',
+                     'The company states the message figures (500M)) on the same slide [S2, S3].'):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+
+    def test_a_list_marker_is_not_arithmetic(self):
+        # Control: a bullet's marker is the line's lead, not a sign inside the clause.
+        for lead in ('- ', '• '):
+            with self.subTest(lead=lead):
+                self.assertEqual(self.guard(lead + 'The figures appear on the same slide [S2, S3].'),
+                                 (lead + 'The deck states ' + PLACED_23 + '.', ['basis_source_location']))
+
     def test_a_citation_inside_the_clause_keeps_the_sentence(self):
         # Mutation control (P12 survived at 1bb993b): every word here is a placing word, so only the citation
         # check keeps [C3], which the restatement would otherwise drop.
