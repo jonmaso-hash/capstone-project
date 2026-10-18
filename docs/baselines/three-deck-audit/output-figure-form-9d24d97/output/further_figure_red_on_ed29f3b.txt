@@ -1,0 +1,97 @@
+== basis_fidelity.py from ed29f3b, test file at working tree
+2026-10-18 13:18:28,757 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+FFFF
+======================================================================
+FAIL: test_a_further_unknown_figure_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_a_further_unknown_figure_keeps_the_sentence) (sequence='full', text='The company states the message figures (700M messages) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1343, in test_a_further_unknown_figure_keeps_the_sentence
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([43 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([38 chars]S3].'
+
++ ('The company states the message figures (700M messages) on the same slide '
++  '[S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_a_further_unknown_figure_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_a_further_unknown_figure_keeps_the_sentence) (text='The company states the message figures (700M messages) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1345, in test_a_further_unknown_figure_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([43 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([38 chars]S3].'
+
++ ('The company states the message figures (700M messages) on the same slide '
++  '[S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_a_further_unknown_figure_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_a_further_unknown_figure_keeps_the_sentence) (sequence='full', text='The company states the message figures (500M, 500M/month, 700M) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1343, in test_a_further_unknown_figure_keeps_the_sentence
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([52 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([47 chars]S3].'
+
++ ('The company states the message figures (500M, 500M/month, 700M) on the same '
++  'slide [S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_a_further_unknown_figure_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_a_further_unknown_figure_keeps_the_sentence) (text='The company states the message figures (500M, 500M/month, 700M) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1345, in test_a_further_unknown_figure_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([52 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([47 chars]S3].'
+
++ ('The company states the message figures (500M, 500M/month, 700M) on the same '
++  'slide [S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+----------------------------------------------------------------------
+Ran 1 test in 0.072s
+
+FAILED (failures=4)
+Found 1 test(s).
+System check identified no issues (0 silenced).

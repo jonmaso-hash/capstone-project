@@ -1,0 +1,16 @@
+A2 CAUGHT Ran 251 tests in 10.069s FAILED (failures=11) restored
+A3 CAUGHT Ran 251 tests in 9.991s FAILED (failures=6) restored
+B1 CAUGHT Ran 251 tests in 9.877s FAILED (failures=5) restored
+B2 CAUGHT Ran 251 tests in 9.726s FAILED (failures=2) restored
+L1 CAUGHT Ran 251 tests in 9.823s FAILED (failures=8) restored
+
+A2 | P2: stale inheritance (an intervening sentence never ends the antecedent) | CAUGHT Ran 251 tests in 10.069s FAILED (failures=11)
+    failing: test_a_stale_antecedent_is_not_inherited_across_another_metric, test_an_anaphoric_sentence_naming_another_metric_ends_the_association, test_an_anaphoric_sentence_stating_a_new_figure_ends_the_association, test_any_intervening_non_bridge_sentence_ends_the_association, test_the_writer_keeps_the_referent_after_a_non_bridge, test_the_writer_keeps_unrelated_prose_and_corrects_the_contiguous_passage
+A3 | P2: an inherited sentence needs no figure referent | CAUGHT Ran 251 tests in 9.991s FAILED (failures=6)
+    failing: test_an_anaphoric_sentence_naming_another_metric_ends_the_association, test_an_anaphoric_sentence_stating_a_new_figure_ends_the_association, test_an_inherited_sentence_needs_a_figure_referent, test_any_intervening_non_bridge_sentence_ends_the_association, test_the_writer_keeps_the_referent_after_a_non_bridge
+B1 | P2: opener-only bridge recognition is restored | CAUGHT Ran 251 tests in 9.877s FAILED (failures=5)
+    failing: test_an_anaphoric_sentence_naming_another_metric_ends_the_association, test_an_anaphoric_sentence_stating_a_new_figure_ends_the_association, test_the_writer_keeps_the_referent_after_a_non_bridge
+B2 | P2: a valid bridge prefix permits an unrelated suffix | CAUGHT Ran 251 tests in 9.726s FAILED (failures=2)
+    failing: test_an_anaphoric_sentence_naming_another_metric_ends_the_association, test_the_writer_keeps_the_referent_after_a_non_bridge
+L1 | OF-704: the label rule is off (the unsupported contradiction label is restored) | CAUGHT Ran 251 tests in 9.823s FAILED (failures=8)
+    failing: test_an_affirmative_label_after_a_condition_clause_ends_is_still_repaired, test_of704_the_basis_pair_is_an_ambiguity_not_a_contradiction, test_only_the_expected_rules_fired, test_the_pair_label_becomes_an_ambiguity, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs

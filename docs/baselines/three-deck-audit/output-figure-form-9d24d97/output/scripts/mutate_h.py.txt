@@ -1,0 +1,18 @@
+"""Mutation run for the third review of ed29f3b (a further unknown figure after held ones). Carries mutate_g.py's
+69 mutations unchanged and adds P32. Usage: python mutate_h.py <worktree> [ID ...]."""
+import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+src = open(os.path.join(HERE, 'mutate_g.py'), encoding='utf-8').read()
+src = src.rsplit("exec(compile('def sha(path):'", 1)[0]
+prev = {'__file__': os.path.join(HERE, 'mutate_g.py'), '__name__': 'g_list'}
+exec(compile(src, 'mutate_g.py', 'exec'), prev)
+ns, runner, BASE = prev['ns'], prev['runner'], prev['BASE']
+BF = 'zelda_api/basis_fidelity.py'
+FIGURE_GATE = ("            if value not in vocabulary or not set(tail) <= vocabulary:\n"
+               "                return False\n")
+ns['M'] = ns['M'] + [
+    ('P32', 'review ed29f3b 3: once a held figure is read, the rest of the text is not checked ("500M, 500M/month, '
+            '700M" passes)', BF, FIGURE_GATE, FIGURE_GATE + "            return True\n"),
+]
+exec(compile('def sha(path):' + runner, BASE + ' (runner)', 'exec'), ns)

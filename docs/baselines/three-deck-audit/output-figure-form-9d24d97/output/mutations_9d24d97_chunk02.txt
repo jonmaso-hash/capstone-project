@@ -1,0 +1,16 @@
+O6 CAUGHT Ran 251 tests in 9.765s FAILED (failures=4) restored
+O8 CAUGHT Ran 251 tests in 9.938s FAILED (failures=6) restored
+F1 CAUGHT Ran 251 tests in 9.843s FAILED (failures=4) restored
+F2 CAUGHT Ran 251 tests in 9.843s FAILED (failures=1) restored
+F3 CAUGHT Ran 251 tests in 9.813s FAILED (failures=1, errors=2) restored
+
+O6 | UB-604: the cumulative-referent rule is off | CAUGHT Ran 251 tests in 9.765s FAILED (failures=4)
+    failing: test_a_cumulative_fact_licenses_only_its_own_pair, test_cited_and_named_sentences_still_resolve, test_the_definite_cumulative_referent_is_replaced_when_nothing_is_cumulative, test_unrelated_and_second_pair_sentences_through_the_writer
+O8 | UB-604: the memo writer does not apply the basis guard | CAUGHT Ran 251 tests in 9.938s FAILED (failures=6)
+    failing: test_the_stored_memo_carries_the_corrections, test_the_stored_memo_carries_the_repairs, test_the_writer_keeps_the_funding_clause, test_the_writer_keeps_the_referent_after_a_non_bridge, test_the_writer_keeps_unrelated_prose_and_corrects_the_contiguous_passage, test_unrelated_and_second_pair_sentences_through_the_writer
+F1 | NP-603: the narrative rule is off | CAUGHT Ran 251 tests in 9.843s FAILED (failures=4)
+    failing: test_np603_narrative_and_total_stay_with_the_narrator, test_only_the_expected_rules_fired, test_the_narrative_stays_with_the_narrator, test_the_stored_memo_carries_the_corrections
+F2 | NP-603: the narrative rule ignores its clause | CAUGHT Ran 251 tests in 9.843s FAILED (failures=1)
+    failing: test_attribution_stays_within_its_clause_and_the_company_keeps_the_money
+F3 | NP-603: the narrative rule accepts refs that are not a narrator's funding | CAUGHT Ran 251 tests in 9.813s FAILED (failures=1, errors=2)
+    failing: test_company_owned_funding_and_mixed_refs_are_kept, test_no_narrator_in_the_context_changes_nothing, test_valid_cash_and_funding_questions_are_kept

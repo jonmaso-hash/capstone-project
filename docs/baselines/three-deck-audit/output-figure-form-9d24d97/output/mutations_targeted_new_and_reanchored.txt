@@ -1,0 +1,26 @@
+P22 CAUGHT Ran 251 tests in 11.450s FAILED (failures=17) restored
+P23 CAUGHT Ran 251 tests in 9.883s FAILED (failures=3) restored
+P24 CAUGHT Ran 251 tests in 9.912s FAILED (failures=13) restored
+P25 CAUGHT Ran 251 tests in 9.732s FAILED (failures=1) restored
+
+P22 | review ed29f3b: any figure is accepted (re-anchored at the review of 2465791) | CAUGHT Ran 251 tests in 11.450s FAILED (failures=17)
+    failing: test_a_figure_qualification_or_denominator_no_statement_gives_keeps_the_sentence, test_a_further_unknown_figure_keeps_the_sentence, test_an_additional_figure_keeps_the_sentence, test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence
+P23 | review ed29f3b / 2465791: a figure's interval is not part of its form (500M/day, 500M/messages pass as 500M) | CAUGHT Ran 251 tests in 9.883s FAILED (failures=3)
+    failing: test_a_figure_qualification_or_denominator_no_statement_gives_keeps_the_sentence, test_an_additional_figure_keeps_the_sentence
+P24 | review ed29f3b: the cited figures' forms are not known (no figure is ever placed; re-anchored) | CAUGHT Ran 251 tests in 9.912s FAILED (failures=13)
+    failing: test_a_basis_aside_is_superseded_by_the_restated_clarification, test_a_cross_page_group_is_placed_by_its_own_sources, test_a_figure_qualification_or_denominator_no_statement_gives_keeps_the_sentence, test_a_further_unknown_figure_keeps_the_sentence, test_every_placed_citation_supports_its_page_and_context, test_numbers_and_parentheticals_do_not_end_the_clause, test_of705_each_fact_keeps_its_own_page_and_context, test_only_the_expected_rules_fired ...
+P25 | review ed29f3b: a currency sign is dropped from the form ($500M passes as 500M; re-anchored) | CAUGHT Ran 251 tests in 9.732s FAILED (failures=1)
+    failing: test_an_additional_figure_keeps_the_sentence
+P32 CAUGHT Ran 251 tests in 9.754s FAILED (failures=4) restored
+P33 CAUGHT Ran 251 tests in 9.846s FAILED (failures=4) restored
+P34 CAUGHT Ran 251 tests in 9.632s FAILED (errors=85) restored
+P35 CAUGHT Ran 251 tests in 9.937s FAILED (failures=4) restored
+
+P32 | review ed29f3b 3: once a held figure is read, the rest of the text is not checked (re-anchored) | CAUGHT Ran 251 tests in 9.754s FAILED (failures=4)
+    failing: test_a_further_unknown_figure_keeps_the_sentence, test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence
+P33 | review 2465791: a figure's "+" is not part of its form ("500M+" passes as 500M) | CAUGHT Ran 251 tests in 9.846s FAILED (failures=4)
+    failing: test_a_figure_qualification_or_denominator_no_statement_gives_keeps_the_sentence
+P34 | review 2465791: a statement's interval on its noun is not read ("500M messages/month" states no 500M/month) | CAUGHT Ran 251 tests in 9.632s FAILED (errors=85)
+    failing: test_a_basis_aside_is_superseded_by_the_restated_clarification, test_a_clause_without_a_known_predicate_is_kept, test_a_cross_page_group_is_placed_by_its_own_sources, test_a_figure_qualification_or_denominator_no_statement_gives_keeps_the_sentence, test_a_further_unknown_figure_keeps_the_sentence, test_a_list_marker_is_not_arithmetic, test_a_negated_common_slide_statement_is_kept, test_a_parenthetical_fact_or_qualification_keeps_the_sentence ...
+P35 | review 2465791: every stated figure admits a "+" ("500M+" passes when the statement says "500M") | CAUGHT Ran 251 tests in 9.937s FAILED (failures=4)
+    failing: test_a_figure_qualification_or_denominator_no_statement_gives_keeps_the_sentence

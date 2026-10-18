@@ -1,0 +1,11 @@
+#!/bin/sh
+# Usage: mut_chunk.sh <name> <IDs...> -- one foreground mutation chunk at the worktree HEAD, hash-checked.
+O=/c/Users/jonathan/AppData/Local/Temp/claude/C--Users-jonathan-Desktop-KCV-np/c8a313d5-81e1-402a-b7da-9205b6f20fab/scratchpad/of705
+n=$1; shift
+cd /c/Users/jonathan/Desktop/KCV-of705 || exit 1
+f=$(powershell -NoProfile -Command "[math]::Round((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory/1MB,2)")
+echo "$n free=$f head=$(git rev-parse --short HEAD)" | tee -a $O/i_mutation_ram.txt
+sha256sum -c --quiet $O/i_pre_hashes.txt || { echo "STOP: hashes differ before $n"; exit 4; }
+/c/Users/jonathan/Desktop/KCV/venv/Scripts/python.exe $O/mutate_i.py /c/Users/jonathan/Desktop/KCV-of705 "$@" > $O/i_mut_$n.txt 2>&1
+grep -E "^\w+ (CAUGHT|SURVIVED|NOT)" $O/i_mut_$n.txt | awk '{print $1,$2,$NF}' | tr '\n' ';'; echo
+sha256sum -c $O/i_pre_hashes.txt

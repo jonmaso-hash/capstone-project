@@ -1,0 +1,1203 @@
+2026-10-18 15:50:41,638 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-18 15:51:43,336 INFO zelda_api.signals - DocumentSource created: other0.pdf
+2026-10-18 15:51:43,337 INFO zelda_api.signals - DocumentSource created: other1.pdf
+2026-10-18 15:51:43,339 INFO zelda_api.signals - DocumentSource created: other2.pdf
+2026-10-18 15:51:43,340 INFO zelda_api.signals - DocumentSource created: other3.pdf
+2026-10-18 15:51:43,341 INFO zelda_api.signals - DocumentSource created: other4.pdf
+.2026-10-18 15:51:43,658 INFO zelda_api.signals - DocumentSource created: other0.pdf
+2026-10-18 15:51:43,660 INFO zelda_api.signals - DocumentSource created: other1.pdf
+2026-10-18 15:51:43,707 INFO zelda_api.signals - DocumentSource created: other2.pdf
+2026-10-18 15:51:43,782 WARNING django.request - Payment Required: /api/v1/zelda/analyze/founder/confirm_founder2/confirm/
+.2026-10-18 15:51:43,905 INFO zelda_api.signals - DocumentSource created: decks/deck_gBEwxmz.pdf
+.2026-10-18 15:51:44,469 WARNING django.request - Method Not Allowed (GET): /api/v1/zelda/analyze/founder/confirm_founder3/confirm/
+..2026-10-18 15:51:44,651 INFO zelda_api.signals - DocumentSource created: deck.txt
+.2026-10-18 15:51:44,667 INFO zelda_api.signals - DocumentSource created: existing0.pdf
+2026-10-18 15:51:44,668 INFO zelda_api.signals - DocumentSource created: existing1.pdf
+2026-10-18 15:51:44,722 INFO zelda_api.signals - DocumentSource created: deck3.txt
+2026-10-18 15:51:44,751 WARNING django.request - Payment Required: /api/v1/zelda/documents/ingest/
+.2026-10-18 15:51:44,764 INFO zelda_api.signals - DocumentSource created: existing0.pdf
+2026-10-18 15:51:44,766 INFO zelda_api.signals - DocumentSource created: existing1.pdf
+2026-10-18 15:51:44,767 INFO zelda_api.signals - DocumentSource created: existing2.pdf
+2026-10-18 15:51:44,768 INFO zelda_api.signals - DocumentSource created: existing3.pdf
+2026-10-18 15:51:44,769 INFO zelda_api.signals - DocumentSource created: existing4.pdf
+2026-10-18 15:51:44,770 INFO zelda_api.signals - DocumentSource created: existing5.pdf
+2026-10-18 15:51:44,771 INFO zelda_api.signals - DocumentSource created: existing6.pdf
+2026-10-18 15:51:44,772 INFO zelda_api.signals - DocumentSource created: existing7.pdf
+2026-10-18 15:51:44,774 INFO zelda_api.signals - DocumentSource created: existing8.pdf
+2026-10-18 15:51:44,775 INFO zelda_api.signals - DocumentSource created: existing9.pdf
+2026-10-18 15:51:44,828 INFO zelda_api.signals - DocumentSource created: deck.txt
+.2026-10-18 15:51:44,853 INFO zelda_api.signals - DocumentSource created: existing0.pdf
+2026-10-18 15:51:44,854 INFO zelda_api.signals - DocumentSource created: existing1.pdf
+2026-10-18 15:51:44,856 INFO zelda_api.signals - DocumentSource created: existing2.pdf
+2026-10-18 15:51:44,857 INFO zelda_api.signals - DocumentSource created: existing3.pdf
+2026-10-18 15:51:44,858 INFO zelda_api.signals - DocumentSource created: existing4.pdf
+2026-10-18 15:51:44,907 INFO zelda_api.signals - DocumentSource created: deck.txt
+.2026-10-18 15:51:44,913 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:51:44,980 INFO zelda_api.truth_delta_views - Starting Truth Delta verification for document 1
+2026-10-18 15:51:44,995 INFO celery.app.trace - Task zelda_api.entity_verification_tasks.verify_entity_integrity[1328bb3e-6740-4b5d-adff-7ced175e5c4c] succeeded in 0.00894890003837645s: {'status': 'success', 'document_id': 1, 'report_id': 1}
+.2026-10-18 15:51:45,001 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:51:45,113 WARNING django.request - Payment Required: /api/v1/zelda/documents/1/truth-delta/verify/
+.2026-10-18 15:51:45,168 INFO zelda_api.signals - DocumentSource created: cim.txt
+.2026-10-18 15:51:45,179 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-18 15:51:45,220 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+.2026-10-18 15:51:45,254 INFO zelda_api.signals - DocumentSource created: deck2.pptx
+2026-10-18 15:51:45,267 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+.2026-10-18 15:51:45,275 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:51:45,311 INFO zelda_api.intelligence_pipeline - [Anthropic usage] memo for document 1: input_tokens=<Mock name='Anthropic().messages.create().usage.input_tokens' id='2352624779680'>, output_tokens=<Mock name='Anthropic().messages.create().usage.output_tokens' id='2352651415440'>
+2026-10-18 15:51:45,483 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-18 15:51:45,490 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:51:45,499 ERROR zelda_api.intelligence_pipeline - Claude API error in memo generation: simulated API failure
+2026-10-18 15:51:45,499 ERROR zelda_api.intelligence_pipeline - Memo generation error: Memo generation failed: simulated API failure
+.2026-10-18 15:51:45,507 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:51:45,516 ERROR zelda_api.intelligence_pipeline - Claude API error in memo generation: simulated API failure
+2026-10-18 15:51:45,516 ERROR zelda_api.intelligence_pipeline - Memo generation error: Memo generation failed: simulated API failure
+.2026-10-18 15:51:45,521 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:51:45,530 INFO zelda_api.intelligence_pipeline - [Anthropic usage] memo for document 1: input_tokens=<Mock name='Anthropic().messages.create().usage.input_tokens' id='2352702762896'>, output_tokens=<Mock name='Anthropic().messages.create().usage.output_tokens' id='2352702763904'>
+2026-10-18 15:51:45,546 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-18 15:51:45,552 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:51:45,560 INFO zelda_api.intelligence_pipeline - [Anthropic usage] memo for document 1: input_tokens=<Mock name='Anthropic().messages.create().usage.input_tokens' id='2352614130416'>, output_tokens=<Mock name='Anthropic().messages.create().usage.output_tokens' id='2352614129744'>
+2026-10-18 15:51:45,575 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-18 15:51:45,582 INFO zelda_api.signals - DocumentSource created: test.pdf
+.2026-10-18 15:51:45,625 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:51:45,633 ERROR zelda_api.intelligence_pipeline - Claude API error in valuation report generation: simulated API failure
+2026-10-18 15:51:45,633 ERROR zelda_api.intelligence_pipeline - Valuation report generation error: Valuation report generation failed: simulated API failure
+.2026-10-18 15:51:45,639 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:51:45,643 ERROR zelda_api.intelligence_pipeline - Claude API error in valuation report generation: simulated API failure
+2026-10-18 15:51:45,643 ERROR zelda_api.intelligence_pipeline - Valuation report generation error: Valuation report generation failed: simulated API failure
+.2026-10-18 15:53:05,290 INFO sentence_transformers.base.model - No device provided, using cpu
+2026-10-18 15:53:05,311 INFO sentence_transformers.base.model - Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+Found 430 test(s).
+System check identified no issues (0 silenced).
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 2272.49it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 14.27it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 55.24it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 70.37it/s]
+...........2026-10-18 15:53:06,862 ERROR django.request - Service Unavailable: /api/v1/zelda/ask/
+.2026-10-18 15:53:06,924 WARNING django.request - Too Many Requests: /api/v1/zelda/ask/
+.Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 71.37it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 29.75it/s]
+...Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 73.45it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 71.55it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 69.31it/s]
+.Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 70.36it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 74.16it/s]
+...Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 68.36it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 70.79it/s]
+..2026-10-18 15:53:07,693 WARNING django.request - Forbidden: /api/v1/zelda/ask/
+.....Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 44.86it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 38.02it/s]
+.....2026-10-18 15:53:08,311 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:08,322 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:08,335 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:08,346 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:08,356 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:08,365 INFO zelda_api.signals - DocumentSource created: deck.pdf
+......2026-10-18 15:53:08,391 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:08,394 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-18 15:53:08,409 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-18 15:53:08,415 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:08,418 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-18 15:53:08,427 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-18 15:53:08,432 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:08,434 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-18 15:53:08,447 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+..............2026-10-18 15:53:08,477 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:08,512 INFO zelda_api.signals - DocumentSource created: val.pdf
+.2026-10-18 15:53:09,221 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:09,255 INFO zelda_api.signals - DocumentSource created: val.pdf
+.2026-10-18 15:53:09,983 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:10,011 INFO zelda_api.signals - DocumentSource created: val.pdf
+2026-10-18 15:53:11,789 WARNING django.request - Not Found: /api/v1/zelda/valuation/2/
+2026-10-18 15:53:12,007 WARNING django.request - Not Found: /api/v1/zelda/documents/1/ic-memo/
+2026-10-18 15:53:12,013 WARNING django.request - Not Found: /api/v1/zelda/valuation/2/
+2026-10-18 15:53:12,028 WARNING django.request - Forbidden (Permission denied): /matchmaking/memo/profile/1/
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\jonathan\Desktop\KCV-of705\matchmaking\views.py", line 2552, in company_overview_view
+    return _company_overview(request, get_object_or_404(Application, pk=application_id))
+  File "C:\Users\jonathan\Desktop\KCV-of705\matchmaking\views.py", line 2591, in _company_overview
+    raise PermissionDenied("Access to proprietary asset intelligence reports is restricted.")
+django.core.exceptions.PermissionDenied: Access to proprietary asset intelligence reports is restricted.
+.2026-10-18 15:53:12,638 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:12,669 INFO zelda_api.signals - DocumentSource created: val.pdf
+.2026-10-18 15:53:12,790 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:12,815 INFO zelda_api.signals - DocumentSource created: val.pdf
+.2026-10-18 15:53:12,854 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:12,881 INFO zelda_api.signals - DocumentSource created: val.pdf
+.2026-10-18 15:53:13,021 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:13,048 INFO zelda_api.signals - DocumentSource created: val.pdf
+.2026-10-18 15:53:13,189 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:13,218 INFO zelda_api.signals - DocumentSource created: val.pdf
+.2026-10-18 15:53:13,557 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:13,583 INFO zelda_api.signals - DocumentSource created: val.pdf
+.2026-10-18 15:53:13,913 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:13,939 INFO zelda_api.signals - DocumentSource created: val.pdf
+.2026-10-18 15:53:14,107 INFO zelda_api.signals - DocumentSource created: cim.txt
+.2026-10-18 15:53:14,178 INFO zelda_api.signals - DocumentSource created: deck.txt
+2026-10-18 15:53:14,203 INFO zelda_api.signals - DocumentSource created: deck.txt
+.2026-10-18 15:53:14,280 WARNING django.request - Bad Request: /api/v1/zelda/documents/ingest/
+.2026-10-18 15:53:14,328 WARNING django.request - Bad Request: /api/v1/zelda/documents/ingest/
+.2026-10-18 15:53:14,412 WARNING django.request - Content Too Large: /api/v1/zelda/documents/ingest/
+.2026-10-18 15:53:14,481 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:14,544 INFO zelda_api.signals - DocumentSource created: deck.txt
+.2026-10-18 15:53:14,596 WARNING django.request - Forbidden: /api/v1/zelda/documents/ingest/
+.2026-10-18 15:53:14,658 INFO zelda_api.signals - DocumentSource created: deck.txt
+.Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 65.26it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 66.79it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 62.03it/s]
+2026-10-18 15:53:14,837 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[bbacd24a-0e0e-416a-bf77-8ddc64c38a93] succeeded in 0.03049119998468086s: None
+2026-10-18 15:53:14,839 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:14,929 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[0075dd97-c575-4d94-94f5-47cdcce88662] succeeded in 0.004988299973774701s: None
+2026-10-18 15:53:14,931 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:15,011 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:15,021 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[1009b280-a31d-465d-85e7-58b22e46844e] succeeded in 0.005461100023239851s: None
+2026-10-18 15:53:15,066 WARNING django.request - Forbidden: /api/v1/zelda/documents/1/memo/
+2026-10-18 15:53:15,068 ERROR zelda_api.signals - Document deck.pdf status is ERROR
+2026-10-18 15:53:15,068 ERROR zelda_api.signals - Error message: Pipeline failed after 3 retries: INTERNAL-TRACEBACK-DETAIL
+2026-10-18 15:53:15,110 WARNING django.request - Forbidden: /api/v1/zelda/documents/1/memo/
+.2026-10-18 15:53:15,118 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:15,132 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[2a578e3a-54d6-4eed-b225-c56b0cf983d7] succeeded in 0.008439500001259148s: None
+2026-10-18 15:53:15,134 ERROR zelda_api.signals - Document deck.pdf status is ERROR
+2026-10-18 15:53:15,135 ERROR zelda_api.signals - Error message: Pipeline failed after 3 retries: INTERNAL-TRACEBACK-DETAIL
+.2026-10-18 15:53:15,218 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:15,229 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[7043fb93-122f-4185-ab15-ee7406810ece] succeeded in 0.00521830003708601s: None
+2026-10-18 15:53:15,231 ERROR zelda_api.signals - Document deck.pdf status is ERROR
+2026-10-18 15:53:15,231 ERROR zelda_api.signals - Error message: Pipeline failed after 3 retries: INTERNAL-TRACEBACK-DETAIL
+.2026-10-18 15:53:15,297 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:15,309 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[8244bbb0-6fa5-4f61-af4b-491fe80f894c] succeeded in 0.006557299988344312s: None
+.2026-10-18 15:53:15,389 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:15,413 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[c0b6bb67-202d-4f08-b762-71baba991969] succeeded in 0.005058599985204637s: None
+.2026-10-18 15:53:15,490 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:15,513 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[e1f96a7c-3f02-4785-beb5-998e562dd6ce] succeeded in 0.004904699977487326s: None
+.2026-10-18 15:53:15,579 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:15,603 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[367d41cb-4a7e-4cf2-ab39-1a7e2333fefb] succeeded in 0.005169100011698902s: None
+.2026-10-18 15:53:15,670 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:15,695 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[10bb07c5-2bb9-4d84-a366-a0d11596ca2c] succeeded in 0.0051309000118635595s: None
+.2026-10-18 15:53:15,757 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:15,785 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[44762a0f-f73e-4bec-affb-390481d30112] succeeded in 0.0051531000062823296s: None
+.2026-10-18 15:53:15,843 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:15,867 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[53ab6198-90c1-49c5-a9e3-3be3f8e97fd1] succeeded in 0.00507889996515587s: None
+.2026-10-18 15:53:15,938 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:16,058 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:16,133 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:16,212 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:16,287 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:16,356 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:16,429 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:16,505 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:16,603 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:16,679 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:16,751 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:16,829 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:16,902 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-18 15:53:16,918 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:16,987 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-18 15:53:17,003 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:17,086 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:17,093 INFO zelda_api.signals - DocumentSource created: cim.pdf
+.2026-10-18 15:53:17,101 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:17,112 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:17,193 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.......2026-10-18 15:53:17,276 WARNING zelda_api.entity_verification - WHOIS lookup failed for domain example.com: socket timeout at 10.0.0.1:43
+........2026-10-18 15:53:17,290 ERROR zelda_api.entity_verification_tasks - [Entity Integrity] Document 999999 not found
+.2026-10-18 15:53:17,295 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:17,560 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:17,623 INFO zelda_api.truth_delta_views - Starting Truth Delta verification for document 1
+...............2026-10-18 15:53:17,690 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:53:17,692 INFO zelda_api.intelligence_pipeline - Cleared existing chunks for 1
+2026-10-18 15:53:17,693 INFO zelda_api.intelligence_pipeline - Created 1 chunks
+2026-10-18 15:53:17,715 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+....2026-10-18 15:53:17,728 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:17,814 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:17,892 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:17,919 INFO zelda_api.signals - DocumentSource created: pending.pdf
+2026-10-18 15:53:17,964 WARNING django.request - Not Found: /api/v1/zelda/documents/2/truth-delta/claims/funding_raised/flag/
+.2026-10-18 15:53:17,970 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:18,041 WARNING django.request - Forbidden: /api/v1/zelda/documents/1/truth-delta/claims/funding_raised/flag/
+.2026-10-18 15:53:18,047 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:18,122 WARNING django.request - Forbidden: /api/v1/zelda/documents/1/truth-delta/claims/funding_raised/flag/
+.2026-10-18 15:53:18,128 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:18,205 WARNING django.request - Bad Request: /api/v1/zelda/documents/1/truth-delta/claims/not_a_real_category/flag/
+.2026-10-18 15:53:18,218 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:18,236 INFO zelda_api.signals - DocumentSource created: val.pptx
+.2026-10-18 15:53:18,357 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:18,487 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:18,618 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:18,632 INFO zelda_api.signals - DocumentSource created: val.pptx
+.2026-10-18 15:53:18,665 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:18,716 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:19,130 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:19,404 INFO zelda_api.signals - DocumentSource created: d.pdf
+.2026-10-18 15:53:19,498 INFO zelda_api.signals - DocumentSource created: v.pptx
+.2026-10-18 15:53:19,589 INFO zelda_api.signals - DocumentSource created: v.pptx
+.2026-10-18 15:53:19,668 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:53:19,670 INFO zelda_api.intelligence_pipeline - Cleared existing chunks for 1
+2026-10-18 15:53:19,671 INFO zelda_api.intelligence_pipeline - Created 1 chunks
+2026-10-18 15:53:19,685 INFO zelda_api.intelligence_pipeline - Extracted 2 insights with dynamic confidence
+.2026-10-18 15:53:19,690 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:53:19,692 INFO zelda_api.intelligence_pipeline - Cleared existing chunks for 1
+2026-10-18 15:53:19,693 INFO zelda_api.intelligence_pipeline - Created 1 chunks
+2026-10-18 15:53:19,707 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+.2026-10-18 15:53:19,711 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:53:19,712 INFO zelda_api.intelligence_pipeline - Cleared existing chunks for 1
+2026-10-18 15:53:19,713 INFO zelda_api.intelligence_pipeline - Created 1 chunks
+2026-10-18 15:53:19,724 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+..2026-10-18 15:53:19,743 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:19,772 INFO zelda_api.signals - DocumentSource created: deck.pdf
+..2026-10-18 15:53:19,816 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:19,858 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:20,015 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:20,177 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:20,335 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:20,384 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:20,528 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:20,592 WARNING django.request - Not Found: /api/v1/zelda/documents/1/ic-memo/
+.2026-10-18 15:53:20,602 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:20,725 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:20,846 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:20,989 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:21,107 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:21,227 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:21,291 WARNING django.request - Not Found: /api/v1/zelda/documents/1/ic-memo/download/
+.2026-10-18 15:53:21,300 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:21,364 WARNING django.request - Not Found: /api/v1/zelda/documents/1/ic-memo/download/
+.2026-10-18 15:53:21,481 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:21,561 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:21,688 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:21,767 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:21,797 INFO zelda_api.signals - DocumentSource created: deck.pdf
+......2026-10-18 15:53:21,891 INFO zelda_api.signals - DocumentSource created: deck.pdf
+........2026-10-18 15:53:22,155 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:22,189 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:22,351 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:22,409 INFO zelda_api.signals - DocumentSource created: deck.pdf
+..2026-10-18 15:53:22,567 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:22,684 INFO zelda_api.signals - DocumentSource created: d.pdf
+.2026-10-18 15:53:22,778 INFO zelda_api.signals - DocumentSource created: v.pptx
+..2026-10-18 15:53:23,000 INFO zelda_api.signals - DocumentSource created: plan.pdf
+........2026-10-18 15:53:23,590 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:53:23,592 INFO zelda_api.intelligence_pipeline - Cleared existing chunks for 1
+2026-10-18 15:53:23,593 INFO zelda_api.intelligence_pipeline - Created 1 chunks
+2026-10-18 15:53:23,601 INFO zelda_api.intelligence_pipeline - Extracted 0 insights with dynamic confidence
+.2026-10-18 15:53:23,605 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:53:23,607 INFO zelda_api.intelligence_pipeline - Cleared existing chunks for 1
+2026-10-18 15:53:23,608 INFO zelda_api.intelligence_pipeline - Created 1 chunks
+2026-10-18 15:53:23,620 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+.2026-10-18 15:53:23,624 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:53:23,625 INFO zelda_api.intelligence_pipeline - Cleared existing chunks for 1
+2026-10-18 15:53:23,626 INFO zelda_api.intelligence_pipeline - Created 1 chunks
+2026-10-18 15:53:23,637 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+.2026-10-18 15:53:23,643 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:53:23,651 INFO zelda_api.intelligence_pipeline - [Anthropic usage] memo for document 1: input_tokens=<Mock name='Anthropic().messages.create().usage.input_tokens' id='2353321380896'>, output_tokens=<Mock name='Anthropic().messages.create().usage.output_tokens' id='2352805858336'>
+2026-10-18 15:53:23,652 ERROR zelda_api.intelligence_pipeline - Claude memo JSON parse error: Unterminated string starting at: line 1 column 23 (char 22)
+2026-10-18 15:53:23,652 ERROR zelda_api.intelligence_pipeline - Memo generation error: Memo generation encountered a parsing error: Unterminated string starting at: line 1 column 23 (char 22)
+.2026-10-18 15:53:23,657 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:53:23,662 INFO zelda_api.intelligence_pipeline - [Anthropic usage] valuation report for document 1: input_tokens=<Mock name='Anthropic().messages.create().usage.input_tokens' id='2353301955184'>, output_tokens=<Mock name='Anthropic().messages.create().usage.output_tokens' id='2353301956864'>
+2026-10-18 15:53:23,662 ERROR zelda_api.intelligence_pipeline - Claude valuation JSON parse error: Unterminated string starting at: line 1 column 23 (char 22)
+2026-10-18 15:53:23,662 ERROR zelda_api.intelligence_pipeline - Valuation report generation error: Valuation report encountered a parsing error: Unterminated string starting at: line 1 column 23 (char 22)
+.2026-10-18 15:53:23,667 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:53:23,671 INFO zelda_api.intelligence_pipeline - [Anthropic usage] valuation report for document 1: input_tokens=<Mock name='Anthropic().messages.create().usage.input_tokens' id='2352591003936'>, output_tokens=<Mock name='Anthropic().messages.create().usage.output_tokens' id='2352591003600'>
+2026-10-18 15:53:23,678 INFO zelda_api.intelligence_pipeline - Claude valuation report generated for document 1
+.2026-10-18 15:53:23,684 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:23,695 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:23,708 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:23,722 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:23,730 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-18 15:53:23,737 INFO zelda_api.intelligence_pipeline - [Anthropic usage] valuation report for document 1: input_tokens=<Mock name='Anthropic().messages.create().usage.input_tokens' id='2352590998560'>, output_tokens=<Mock name='Anthropic().messages.create().usage.output_tokens' id='2352590999904'>
+.2026-10-18 15:53:23,743 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:23,751 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:23,760 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:23,769 INFO zelda_api.signals - DocumentSource created: other.pdf
+2026-10-18 15:53:23,785 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.....2026-10-18 15:53:23,807 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:23,873 WARNING django.request - Bad Request: /api/v1/zelda/truth-delta/claims/1/respond/
+.2026-10-18 15:53:23,880 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:23,953 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:24,017 WARNING django.request - Forbidden: /api/v1/zelda/truth-delta/claims/1/respond/
+.2026-10-18 15:53:24,023 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:24,101 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:24,166 WARNING django.request - Forbidden: /api/v1/zelda/truth-delta/claims/1/respond/
+..C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\core\cache\backends\base.py:119: CacheKeyWarning: Cache key contains characters that will cause errors if used with memcached: ':1:sec_identity_v3:totally fictional startup co'
+  warnings.warn(warning, CacheKeyWarning)
+.C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\core\cache\backends\base.py:119: CacheKeyWarning: Cache key contains characters that will cause errors if used with memcached: ':1:sec_identity_v3:apple inc.'
+  warnings.warn(warning, CacheKeyWarning)
+.C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\core\cache\backends\base.py:119: CacheKeyWarning: Cache key contains characters that will cause errors if used with memcached: ':1:sec_identity_v3:microsoft corporation'
+  warnings.warn(warning, CacheKeyWarning)
+.............2026-10-18 15:53:25,537 WARNING zelda_api.sec_identity - SEC request timed out for https://www.sec.gov/cgi-bin/browse-edgar: simulated timeout
+.2026-10-18 15:53:25,658 WARNING zelda_api.sec_identity - SEC request timed out for https://www.sec.gov/cgi-bin/browse-edgar: simulated timeout
+.Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 65.40it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 64.15it/s]
+......2026-10-18 15:53:25,790 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:53:25,792 INFO zelda_api.intelligence_pipeline - Cleared existing chunks for 1
+2026-10-18 15:53:25,793 INFO zelda_api.intelligence_pipeline - Created 1 chunks
+2026-10-18 15:53:25,800 INFO zelda_api.intelligence_pipeline - Extracted 0 insights with dynamic confidence
+.2026-10-18 15:53:25,804 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:53:25,805 INFO zelda_api.intelligence_pipeline - Cleared existing chunks for 1
+2026-10-18 15:53:25,806 INFO zelda_api.intelligence_pipeline - Created 1 chunks
+2026-10-18 15:53:25,823 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+.2026-10-18 15:53:25,827 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:53:25,828 INFO zelda_api.intelligence_pipeline - Cleared existing chunks for 1
+2026-10-18 15:53:25,829 INFO zelda_api.intelligence_pipeline - Created 1 chunks
+2026-10-18 15:53:25,844 INFO zelda_api.intelligence_pipeline - Extracted 2 insights with dynamic confidence
+..2026-10-18 15:53:25,850 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:53:25,851 INFO zelda_api.intelligence_pipeline - Cleared existing chunks for 1
+2026-10-18 15:53:25,852 INFO zelda_api.intelligence_pipeline - Created 1 chunks
+2026-10-18 15:53:25,863 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+..2026-10-18 15:53:25,869 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:53:25,870 INFO zelda_api.intelligence_pipeline - Cleared existing chunks for 1
+2026-10-18 15:53:25,872 INFO zelda_api.intelligence_pipeline - Created 1 chunks
+2026-10-18 15:53:25,882 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+..2026-10-18 15:53:25,888 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:25,897 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:25,906 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:25,916 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:25,925 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:25,933 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:53:25,935 INFO zelda_api.intelligence_pipeline - Cleared existing chunks for 1
+2026-10-18 15:53:25,936 INFO zelda_api.intelligence_pipeline - Created 1 chunks
+2026-10-18 15:53:25,943 INFO zelda_api.intelligence_pipeline - Extracted 0 insights with dynamic confidence
+..2026-10-18 15:53:25,948 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:53:25,949 INFO zelda_api.intelligence_pipeline - Cleared existing chunks for 1
+2026-10-18 15:53:25,950 INFO zelda_api.intelligence_pipeline - Created 1 chunks
+2026-10-18 15:53:25,960 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+.2026-10-18 15:53:25,963 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:53:25,965 INFO zelda_api.intelligence_pipeline - Cleared existing chunks for 1
+2026-10-18 15:53:25,966 INFO zelda_api.intelligence_pipeline - Created 1 chunks
+2026-10-18 15:53:25,976 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+.2026-10-18 15:53:25,979 INFO zelda_api.signals - DocumentSource created: test.pdf
+2026-10-18 15:53:25,981 INFO zelda_api.intelligence_pipeline - Cleared existing chunks for 1
+2026-10-18 15:53:25,982 INFO zelda_api.intelligence_pipeline - Created 1 chunks
+2026-10-18 15:53:25,988 INFO zelda_api.intelligence_pipeline - Extracted 0 insights with dynamic confidence
+.2026-10-18 15:53:25,992 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:26,091 ERROR zelda_api.truth_delta_engine - Truth Delta Claude call failed: simulated API failure
+.2026-10-18 15:53:26,209 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:26,228 INFO zelda_api.intelligence_pipeline - [Anthropic usage] truth delta verification for document 1: input_tokens=<Mock name='Anthropic().messages.create().usage.input_tokens' id='2352590999568'>, output_tokens=<Mock name='Anthropic().messages.create().usage.output_tokens' id='2352591000576'>
+.2026-10-18 15:53:26,239 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:26,258 INFO zelda_api.intelligence_pipeline - [Anthropic usage] truth delta verification for document 1: input_tokens=<Mock name='Anthropic().messages.create().usage.input_tokens' id='2352591003264'>, output_tokens=<Mock name='Anthropic().messages.create().usage.output_tokens' id='2352591004272'>
+2026-10-18 15:53:26,258 ERROR zelda_api.truth_delta_engine - Truth Delta Claude JSON parse error: Expecting ',' delimiter: line 1 column 26 (char 25)
+.2026-10-18 15:53:26,269 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:26,270 WARNING zelda_api.truth_delta_engine - No claims found for document 1
+.2026-10-18 15:53:26,274 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:26,301 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:26,319 ERROR zelda_api.truth_delta_engine - Truth Delta Claude call failed: simulated API failure
+.2026-10-18 15:53:26,333 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:26,427 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:26,516 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:26,595 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:26,767 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:26,862 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:26,952 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:27,056 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:27,173 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:27,306 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:27,437 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:27,445 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:27,458 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:27,473 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:27,489 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:27,497 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 66.16it/s]
+2026-10-18 15:53:27,531 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:27,623 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:27,701 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:27,780 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:27,881 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:27,977 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:28,081 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:28,182 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:28,289 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:28,386 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:28,409 INFO zelda_api.signals - DocumentSource created: pending.pdf
+.2026-10-18 15:53:28,491 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-18 15:53:28,637 INFO zelda_api.signals - DocumentSource created: deck.pdf
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 52.42it/s]
+2026-10-18 15:53:28,675 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[a0883dd3-7162-4d3b-b3e4-565a1c1e97db] succeeded in 0.006417200027499348s: None
+.2026-10-18 15:53:28,683 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:28,695 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[e103eef8-5430-43c8-b891-04e37ff211ac] succeeded in 0.005350499995984137s: None
+.2026-10-18 15:53:28,703 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:28,715 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[06b12a6e-77f7-4ac9-9050-48d834d0a0a9] succeeded in 0.005633699998725206s: None
+.2026-10-18 15:53:28,727 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:28,738 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[80f6b964-bde6-48ae-b652-b3b9cb83449e] succeeded in 0.005563699989579618s: None
+.2026-10-18 15:53:28,750 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-18 15:53:28,763 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[4b9227c6-5122-47cb-9dfe-57c5a266c29d] succeeded in 0.006505099998321384s: None
+.2026-10-18 15:53:28,815 INFO zelda_api.signals - DocumentSource created: bright_health_deck.txt
+2026-10-18 15:53:28,820 INFO zelda_api.intelligence_pipeline - Starting valuation pipeline for bright_health_deck.txt
+2026-10-18 15:53:28,821 INFO zelda_api.intelligence_pipeline - Chunking: bright_health_deck.txt
+2026-10-18 15:53:28,823 INFO zelda_api.intelligence_pipeline - Cleared existing chunks for 1
+2026-10-18 15:53:28,826 INFO zelda_api.intelligence_pipeline - Created 3 chunks
+2026-10-18 15:53:28,827 INFO zelda_api.intelligence_pipeline - Embedding: bright_health_deck.txt
+2026-10-18 15:53:28,835 INFO zelda_api.intelligence_pipeline - Embedded 3 chunks
+2026-10-18 15:53:28,836 INFO zelda_api.intelligence_pipeline - Analyzing: bright_health_deck.txt
+2026-10-18 15:53:28,852 INFO zelda_api.intelligence_pipeline - Extracted 2 insights with dynamic confidence
+2026-10-18 15:53:28,852 INFO zelda_api.intelligence_pipeline - Generating valuation report: bright_health_deck.txt
+2026-10-18 15:53:28,857 INFO zelda_api.intelligence_pipeline - [Anthropic usage] valuation report for document 1: input_tokens=<Mock name='Anthropic().messages.create().usage.input_tokens' id='2352706485760'>, output_tokens=<Mock name='Anthropic().messages.create().usage.output_tokens' id='2352706484416'>
+2026-10-18 15:53:28,874 INFO zelda_api.intelligence_pipeline - Claude valuation report generated for document 1
+2026-10-18 15:53:28,875 INFO zelda_api.intelligence_pipeline - Valuation pipeline complete for bright_health_deck.txt
+.2026-10-18 15:53:28,881 INFO zelda_api.signals - DocumentSource created: bad.txt
+.2026-10-18 15:53:28,993 INFO zelda_api.signals - DocumentSource created: deck.txt
+2026-10-18 15:53:28,994 INFO zelda_api.signals - DocumentSource created: deck.txt
+.2026-10-18 15:53:29,076 INFO zelda_api.signals - DocumentSource created: deck.txt
+.2026-10-18 15:53:29,179 INFO zelda_api.signals - DocumentSource created: deck.txt
+2026-10-18 15:53:29,180 INFO zelda_api.signals - DocumentSource created: deck.txt
+.2026-10-18 15:53:29,268 INFO zelda_api.signals - DocumentSource created: deck.txt
+2026-10-18 15:53:29,283 INFO zelda_api.signals - DocumentSource created: deck.txt
+.2026-10-18 15:53:29,386 INFO zelda_api.signals - DocumentSource created: deck.txt
+.2026-10-18 15:53:29,476 INFO zelda_api.signals - DocumentSource created: deck.txt
+.2026-10-18 15:53:29,557 INFO zelda_api.signals - DocumentSource created: deck.txt
+.2026-10-18 15:53:29,647 INFO zelda_api.signals - DocumentSource created: deck.txt
+2026-10-18 15:53:29,664 INFO zelda_api.signals - DocumentSource created: preview.txt
+2026-10-18 15:53:29,666 INFO zelda_api.signals - DocumentSource created: deck.txt
+.2026-10-18 15:53:29,822 INFO zelda_api.signals - DocumentSource created: cim.txt
+.2026-10-18 15:53:29,875 INFO zelda_api.signals - DocumentSource created: cim.txt
+.2026-10-18 15:53:29,939 INFO zelda_api.signals - DocumentSource created: cim.txt
+.2026-10-18 15:53:30,071 INFO zelda_api.signals - DocumentSource created: deck.txt
+.2026-10-18 15:53:30,076 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-18 15:53:30,093 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-18 15:53:30,160 INFO zelda_api.signals - DocumentSource created: d.pptx
+.2026-10-18 15:53:30,197 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:30,303 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:30,410 INFO zelda_api.signals - DocumentSource created: deck.pptx
+.2026-10-18 15:53:30,519 INFO zelda_api.signals - DocumentSource created: deck.pptx
+...2026-10-18 15:53:30,844 INFO zelda_api.signals - DocumentSource created: v0.pdf
+2026-10-18 15:53:30,845 INFO zelda_api.signals - DocumentSource created: v1.pdf
+2026-10-18 15:53:30,846 INFO zelda_api.signals - DocumentSource created: v2.pdf
+2026-10-18 15:53:30,847 INFO zelda_api.signals - DocumentSource created: v3.pdf
+2026-10-18 15:53:30,848 INFO zelda_api.signals - DocumentSource created: v4.pdf
+2026-10-18 15:53:30,849 INFO zelda_api.signals - DocumentSource created: v5.pdf
+2026-10-18 15:53:30,851 INFO zelda_api.signals - DocumentSource created: v6.pdf
+2026-10-18 15:53:30,852 INFO zelda_api.signals - DocumentSource created: v7.pdf
+2026-10-18 15:53:30,853 INFO zelda_api.signals - DocumentSource created: v8.pdf
+2026-10-18 15:53:30,854 INFO zelda_api.signals - DocumentSource created: v9.pdf
+2026-10-18 15:53:30,855 INFO zelda_api.signals - DocumentSource created: v10.pdf
+2026-10-18 15:53:30,856 INFO zelda_api.signals - DocumentSource created: v11.pdf
+2026-10-18 15:53:30,857 INFO zelda_api.signals - DocumentSource created: v12.pdf
+2026-10-18 15:53:30,858 INFO zelda_api.signals - DocumentSource created: v13.pdf
+2026-10-18 15:53:30,859 INFO zelda_api.signals - DocumentSource created: v14.pdf
+2026-10-18 15:53:30,860 INFO zelda_api.signals - DocumentSource created: v15.pdf
+2026-10-18 15:53:30,861 INFO zelda_api.signals - DocumentSource created: v16.pdf
+2026-10-18 15:53:30,862 INFO zelda_api.signals - DocumentSource created: v17.pdf
+2026-10-18 15:53:30,863 INFO zelda_api.signals - DocumentSource created: v18.pdf
+2026-10-18 15:53:30,864 INFO zelda_api.signals - DocumentSource created: v19.pdf
+2026-10-18 15:53:30,865 INFO zelda_api.signals - DocumentSource created: v20.pdf
+2026-10-18 15:53:30,867 INFO zelda_api.signals - DocumentSource created: v21.pdf
+2026-10-18 15:53:30,868 INFO zelda_api.signals - DocumentSource created: v22.pdf
+2026-10-18 15:53:30,869 INFO zelda_api.signals - DocumentSource created: v23.pdf
+2026-10-18 15:53:30,870 INFO zelda_api.signals - DocumentSource created: v24.pdf
+2026-10-18 15:53:30,872 INFO zelda_api.signals - DocumentSource created: v25.pdf
+2026-10-18 15:53:30,873 INFO zelda_api.signals - DocumentSource created: v26.pdf
+2026-10-18 15:53:30,874 INFO zelda_api.signals - DocumentSource created: v27.pdf
+2026-10-18 15:53:30,875 INFO zelda_api.signals - DocumentSource created: v28.pdf
+2026-10-18 15:53:30,876 INFO zelda_api.signals - DocumentSource created: v29.pdf
+..2026-10-18 15:53:31,073 INFO zelda_api.signals - DocumentSource created: d.pptx
+.2026-10-18 15:53:31,140 INFO zelda_api.signals - DocumentSource created: d.pptx
+.2026-10-18 15:53:31,201 INFO zelda_api.signals - DocumentSource created: d.pptx
+.2026-10-18 15:53:31,329 INFO zelda_api.signals - DocumentSource created: val0.pdf
+2026-10-18 15:53:31,330 INFO zelda_api.signals - DocumentSource created: val1.pdf
+2026-10-18 15:53:31,332 INFO zelda_api.signals - DocumentSource created: val2.pdf
+2026-10-18 15:53:31,334 INFO zelda_api.signals - DocumentSource created: val3.pdf
+2026-10-18 15:53:31,335 INFO zelda_api.signals - DocumentSource created: val4.pdf
+2026-10-18 15:53:31,337 INFO zelda_api.signals - DocumentSource created: val5.pdf
+2026-10-18 15:53:31,339 INFO zelda_api.signals - DocumentSource created: val6.pdf
+2026-10-18 15:53:31,340 INFO zelda_api.signals - DocumentSource created: val7.pdf
+2026-10-18 15:53:31,341 INFO zelda_api.signals - DocumentSource created: val8.pdf
+2026-10-18 15:53:31,342 INFO zelda_api.signals - DocumentSource created: val9.pdf
+.2026-10-18 15:53:31,351 INFO zelda_api.signals - DocumentSource created: val0.pdf
+2026-10-18 15:53:31,353 INFO zelda_api.signals - DocumentSource created: val1.pdf
+2026-10-18 15:53:31,354 INFO zelda_api.signals - DocumentSource created: val2.pdf
+2026-10-18 15:53:31,356 INFO zelda_api.signals - DocumentSource created: val3.pdf
+2026-10-18 15:53:31,357 INFO zelda_api.signals - DocumentSource created: val4.pdf
+2026-10-18 15:53:31,358 INFO zelda_api.signals - DocumentSource created: val5.pdf
+2026-10-18 15:53:31,360 INFO zelda_api.signals - DocumentSource created: val6.pdf
+2026-10-18 15:53:31,361 INFO zelda_api.signals - DocumentSource created: val7.pdf
+2026-10-18 15:53:31,362 INFO zelda_api.signals - DocumentSource created: val8.pdf
+2026-10-18 15:53:31,363 INFO zelda_api.signals - DocumentSource created: val9.pdf
+2026-10-18 15:53:31,364 INFO zelda_api.signals - DocumentSource created: val10.pdf
+2026-10-18 15:53:31,365 INFO zelda_api.signals - DocumentSource created: val11.pdf
+2026-10-18 15:53:31,367 INFO zelda_api.signals - DocumentSource created: val12.pdf
+2026-10-18 15:53:31,368 INFO zelda_api.signals - DocumentSource created: val13.pdf
+2026-10-18 15:53:31,369 INFO zelda_api.signals - DocumentSource created: val14.pdf
+2026-10-18 15:53:31,370 INFO zelda_api.signals - DocumentSource created: val15.pdf
+2026-10-18 15:53:31,372 INFO zelda_api.signals - DocumentSource created: val16.pdf
+2026-10-18 15:53:31,373 INFO zelda_api.signals - DocumentSource created: val17.pdf
+2026-10-18 15:53:31,374 INFO zelda_api.signals - DocumentSource created: val18.pdf
+2026-10-18 15:53:31,375 INFO zelda_api.signals - DocumentSource created: val19.pdf
+2026-10-18 15:53:31,376 INFO zelda_api.signals - DocumentSource created: val20.pdf
+2026-10-18 15:53:31,377 INFO zelda_api.signals - DocumentSource created: val21.pdf
+2026-10-18 15:53:31,378 INFO zelda_api.signals - DocumentSource created: val22.pdf
+2026-10-18 15:53:31,379 INFO zelda_api.signals - DocumentSource created: val23.pdf
+2026-10-18 15:53:31,380 INFO zelda_api.signals - DocumentSource created: val24.pdf
+2026-10-18 15:53:31,381 INFO zelda_api.signals - DocumentSource created: val25.pdf
+2026-10-18 15:53:31,382 INFO zelda_api.signals - DocumentSource created: val26.pdf
+2026-10-18 15:53:31,383 INFO zelda_api.signals - DocumentSource created: val27.pdf
+2026-10-18 15:53:31,384 INFO zelda_api.signals - DocumentSource created: val28.pdf
+2026-10-18 15:53:31,385 INFO zelda_api.signals - DocumentSource created: val29.pdf
+.2026-10-18 15:53:31,394 INFO zelda_api.signals - DocumentSource created: val0.pdf
+2026-10-18 15:53:31,395 INFO zelda_api.signals - DocumentSource created: val1.pdf
+2026-10-18 15:53:31,396 INFO zelda_api.signals - DocumentSource created: val2.pdf
+2026-10-18 15:53:31,397 INFO zelda_api.signals - DocumentSource created: val3.pdf
+2026-10-18 15:53:31,398 INFO zelda_api.signals - DocumentSource created: val4.pdf
+2026-10-18 15:53:31,399 INFO zelda_api.signals - DocumentSource created: val5.pdf
+2026-10-18 15:53:31,400 INFO zelda_api.signals - DocumentSource created: val6.pdf
+2026-10-18 15:53:31,401 INFO zelda_api.signals - DocumentSource created: val7.pdf
+2026-10-18 15:53:31,403 INFO zelda_api.signals - DocumentSource created: val8.pdf
+2026-10-18 15:53:31,404 INFO zelda_api.signals - DocumentSource created: val9.pdf
+2026-10-18 15:53:31,405 INFO zelda_api.signals - DocumentSource created: val10.pdf
+2026-10-18 15:53:31,406 INFO zelda_api.signals - DocumentSource created: val11.pdf
+2026-10-18 15:53:31,407 INFO zelda_api.signals - DocumentSource created: val12.pdf
+2026-10-18 15:53:31,408 INFO zelda_api.signals - DocumentSource created: val13.pdf
+2026-10-18 15:53:31,409 INFO zelda_api.signals - DocumentSource created: val14.pdf
+2026-10-18 15:53:31,410 INFO zelda_api.signals - DocumentSource created: val15.pdf
+2026-10-18 15:53:31,411 INFO zelda_api.signals - DocumentSource created: val16.pdf
+2026-10-18 15:53:31,412 INFO zelda_api.signals - DocumentSource created: val17.pdf
+2026-10-18 15:53:31,413 INFO zelda_api.signals - DocumentSource created: val18.pdf
+2026-10-18 15:53:31,414 INFO zelda_api.signals - DocumentSource created: val19.pdf
+2026-10-18 15:53:31,415 INFO zelda_api.signals - DocumentSource created: val20.pdf
+2026-10-18 15:53:31,416 INFO zelda_api.signals - DocumentSource created: val21.pdf
+2026-10-18 15:53:31,417 INFO zelda_api.signals - DocumentSource created: val22.pdf
+2026-10-18 15:53:31,418 INFO zelda_api.signals - DocumentSource created: val23.pdf
+2026-10-18 15:53:31,419 INFO zelda_api.signals - DocumentSource created: val24.pdf
+2026-10-18 15:53:31,420 INFO zelda_api.signals - DocumentSource created: val25.pdf
+2026-10-18 15:53:31,421 INFO zelda_api.signals - DocumentSource created: val26.pdf
+2026-10-18 15:53:31,422 INFO zelda_api.signals - DocumentSource created: val27.pdf
+2026-10-18 15:53:31,424 INFO zelda_api.signals - DocumentSource created: val28.pdf
+2026-10-18 15:53:31,425 INFO zelda_api.signals - DocumentSource created: val29.pdf
+2026-10-18 15:53:31,426 INFO zelda_api.signals - DocumentSource created: val30.pdf
+2026-10-18 15:53:31,427 INFO zelda_api.signals - DocumentSource created: val31.pdf
+2026-10-18 15:53:31,428 INFO zelda_api.signals - DocumentSource created: val32.pdf
+2026-10-18 15:53:31,429 INFO zelda_api.signals - DocumentSource created: val33.pdf
+2026-10-18 15:53:31,430 INFO zelda_api.signals - DocumentSource created: val34.pdf
+2026-10-18 15:53:31,431 INFO zelda_api.signals - DocumentSource created: val35.pdf
+2026-10-18 15:53:31,432 INFO zelda_api.signals - DocumentSource created: val36.pdf
+2026-10-18 15:53:31,433 INFO zelda_api.signals - DocumentSource created: val37.pdf
+2026-10-18 15:53:31,434 INFO zelda_api.signals - DocumentSource created: val38.pdf
+2026-10-18 15:53:31,436 INFO zelda_api.signals - DocumentSource created: val39.pdf
+2026-10-18 15:53:31,438 INFO zelda_api.signals - DocumentSource created: val40.pdf
+2026-10-18 15:53:31,439 INFO zelda_api.signals - DocumentSource created: val41.pdf
+2026-10-18 15:53:31,440 INFO zelda_api.signals - DocumentSource created: val42.pdf
+2026-10-18 15:53:31,441 INFO zelda_api.signals - DocumentSource created: val43.pdf
+2026-10-18 15:53:31,442 INFO zelda_api.signals - DocumentSource created: val44.pdf
+2026-10-18 15:53:31,443 INFO zelda_api.signals - DocumentSource created: val45.pdf
+2026-10-18 15:53:31,445 INFO zelda_api.signals - DocumentSource created: val46.pdf
+2026-10-18 15:53:31,446 INFO zelda_api.signals - DocumentSource created: val47.pdf
+2026-10-18 15:53:31,448 INFO zelda_api.signals - DocumentSource created: val48.pdf
+2026-10-18 15:53:31,449 INFO zelda_api.signals - DocumentSource created: val49.pdf
+2026-10-18 15:53:31,450 INFO zelda_api.signals - DocumentSource created: val50.pdf
+2026-10-18 15:53:31,452 INFO zelda_api.signals - DocumentSource created: val51.pdf
+2026-10-18 15:53:31,453 INFO zelda_api.signals - DocumentSource created: val52.pdf
+2026-10-18 15:53:31,454 INFO zelda_api.signals - DocumentSource created: val53.pdf
+2026-10-18 15:53:31,456 INFO zelda_api.signals - DocumentSource created: val54.pdf
+2026-10-18 15:53:31,458 INFO zelda_api.signals - DocumentSource created: val55.pdf
+2026-10-18 15:53:31,459 INFO zelda_api.signals - DocumentSource created: val56.pdf
+2026-10-18 15:53:31,460 INFO zelda_api.signals - DocumentSource created: val57.pdf
+2026-10-18 15:53:31,461 INFO zelda_api.signals - DocumentSource created: val58.pdf
+2026-10-18 15:53:31,462 INFO zelda_api.signals - DocumentSource created: val59.pdf
+2026-10-18 15:53:31,464 INFO zelda_api.signals - DocumentSource created: val60.pdf
+2026-10-18 15:53:31,465 INFO zelda_api.signals - DocumentSource created: val61.pdf
+2026-10-18 15:53:31,466 INFO zelda_api.signals - DocumentSource created: val62.pdf
+2026-10-18 15:53:31,467 INFO zelda_api.signals - DocumentSource created: val63.pdf
+2026-10-18 15:53:31,468 INFO zelda_api.signals - DocumentSource created: val64.pdf
+2026-10-18 15:53:31,469 INFO zelda_api.signals - DocumentSource created: val65.pdf
+2026-10-18 15:53:31,471 INFO zelda_api.signals - DocumentSource created: val66.pdf
+2026-10-18 15:53:31,473 INFO zelda_api.signals - DocumentSource created: val67.pdf
+2026-10-18 15:53:31,475 INFO zelda_api.signals - DocumentSource created: val68.pdf
+2026-10-18 15:53:31,477 INFO zelda_api.signals - DocumentSource created: val69.pdf
+2026-10-18 15:53:31,478 INFO zelda_api.signals - DocumentSource created: val70.pdf
+2026-10-18 15:53:31,481 INFO zelda_api.signals - DocumentSource created: val71.pdf
+2026-10-18 15:53:31,482 INFO zelda_api.signals - DocumentSource created: val72.pdf
+2026-10-18 15:53:31,484 INFO zelda_api.signals - DocumentSource created: val73.pdf
+2026-10-18 15:53:31,485 INFO zelda_api.signals - DocumentSource created: val74.pdf
+2026-10-18 15:53:31,486 INFO zelda_api.signals - DocumentSource created: val75.pdf
+2026-10-18 15:53:31,488 INFO zelda_api.signals - DocumentSource created: val76.pdf
+2026-10-18 15:53:31,489 INFO zelda_api.signals - DocumentSource created: val77.pdf
+2026-10-18 15:53:31,490 INFO zelda_api.signals - DocumentSource created: val78.pdf
+2026-10-18 15:53:31,491 INFO zelda_api.signals - DocumentSource created: val79.pdf
+2026-10-18 15:53:31,492 INFO zelda_api.signals - DocumentSource created: val80.pdf
+2026-10-18 15:53:31,493 INFO zelda_api.signals - DocumentSource created: val81.pdf
+2026-10-18 15:53:31,494 INFO zelda_api.signals - DocumentSource created: val82.pdf
+2026-10-18 15:53:31,495 INFO zelda_api.signals - DocumentSource created: val83.pdf
+2026-10-18 15:53:31,496 INFO zelda_api.signals - DocumentSource created: val84.pdf
+2026-10-18 15:53:31,497 INFO zelda_api.signals - DocumentSource created: val85.pdf
+2026-10-18 15:53:31,498 INFO zelda_api.signals - DocumentSource created: val86.pdf
+2026-10-18 15:53:31,500 INFO zelda_api.signals - DocumentSource created: val87.pdf
+2026-10-18 15:53:31,501 INFO zelda_api.signals - DocumentSource created: val88.pdf
+2026-10-18 15:53:31,502 INFO zelda_api.signals - DocumentSource created: val89.pdf
+2026-10-18 15:53:31,503 INFO zelda_api.signals - DocumentSource created: val90.pdf
+2026-10-18 15:53:31,504 INFO zelda_api.signals - DocumentSource created: val91.pdf
+2026-10-18 15:53:31,505 INFO zelda_api.signals - DocumentSource created: val92.pdf
+2026-10-18 15:53:31,506 INFO zelda_api.signals - DocumentSource created: val93.pdf
+2026-10-18 15:53:31,508 INFO zelda_api.signals - DocumentSource created: val94.pdf
+2026-10-18 15:53:31,509 INFO zelda_api.signals - DocumentSource created: val95.pdf
+2026-10-18 15:53:31,510 INFO zelda_api.signals - DocumentSource created: val96.pdf
+2026-10-18 15:53:31,511 INFO zelda_api.signals - DocumentSource created: val97.pdf
+2026-10-18 15:53:31,512 INFO zelda_api.signals - DocumentSource created: val98.pdf
+2026-10-18 15:53:31,513 INFO zelda_api.signals - DocumentSource created: val99.pdf
+2026-10-18 15:53:31,514 INFO zelda_api.signals - DocumentSource created: val100.pdf
+2026-10-18 15:53:31,515 INFO zelda_api.signals - DocumentSource created: val101.pdf
+2026-10-18 15:53:31,516 INFO zelda_api.signals - DocumentSource created: val102.pdf
+2026-10-18 15:53:31,517 INFO zelda_api.signals - DocumentSource created: val103.pdf
+2026-10-18 15:53:31,518 INFO zelda_api.signals - DocumentSource created: val104.pdf
+2026-10-18 15:53:31,519 INFO zelda_api.signals - DocumentSource created: val105.pdf
+2026-10-18 15:53:31,520 INFO zelda_api.signals - DocumentSource created: val106.pdf
+2026-10-18 15:53:31,521 INFO zelda_api.signals - DocumentSource created: val107.pdf
+2026-10-18 15:53:31,522 INFO zelda_api.signals - DocumentSource created: val108.pdf
+2026-10-18 15:53:31,523 INFO zelda_api.signals - DocumentSource created: val109.pdf
+2026-10-18 15:53:31,524 INFO zelda_api.signals - DocumentSource created: val110.pdf
+2026-10-18 15:53:31,525 INFO zelda_api.signals - DocumentSource created: val111.pdf
+2026-10-18 15:53:31,526 INFO zelda_api.signals - DocumentSource created: val112.pdf
+2026-10-18 15:53:31,528 INFO zelda_api.signals - DocumentSource created: val113.pdf
+2026-10-18 15:53:31,529 INFO zelda_api.signals - DocumentSource created: val114.pdf
+2026-10-18 15:53:31,530 INFO zelda_api.signals - DocumentSource created: val115.pdf
+2026-10-18 15:53:31,531 INFO zelda_api.signals - DocumentSource created: val116.pdf
+2026-10-18 15:53:31,532 INFO zelda_api.signals - DocumentSource created: val117.pdf
+2026-10-18 15:53:31,533 INFO zelda_api.signals - DocumentSource created: val118.pdf
+2026-10-18 15:53:31,534 INFO zelda_api.signals - DocumentSource created: val119.pdf
+2026-10-18 15:53:31,535 INFO zelda_api.signals - DocumentSource created: val120.pdf
+2026-10-18 15:53:31,536 INFO zelda_api.signals - DocumentSource created: val121.pdf
+2026-10-18 15:53:31,538 INFO zelda_api.signals - DocumentSource created: val122.pdf
+2026-10-18 15:53:31,539 INFO zelda_api.signals - DocumentSource created: val123.pdf
+2026-10-18 15:53:31,540 INFO zelda_api.signals - DocumentSource created: val124.pdf
+2026-10-18 15:53:31,542 INFO zelda_api.signals - DocumentSource created: val125.pdf
+2026-10-18 15:53:31,543 INFO zelda_api.signals - DocumentSource created: val126.pdf
+2026-10-18 15:53:31,544 INFO zelda_api.signals - DocumentSource created: val127.pdf
+2026-10-18 15:53:31,545 INFO zelda_api.signals - DocumentSource created: val128.pdf
+2026-10-18 15:53:31,546 INFO zelda_api.signals - DocumentSource created: val129.pdf
+2026-10-18 15:53:31,547 INFO zelda_api.signals - DocumentSource created: val130.pdf
+2026-10-18 15:53:31,548 INFO zelda_api.signals - DocumentSource created: val131.pdf
+2026-10-18 15:53:31,550 INFO zelda_api.signals - DocumentSource created: val132.pdf
+2026-10-18 15:53:31,551 INFO zelda_api.signals - DocumentSource created: val133.pdf
+2026-10-18 15:53:31,553 INFO zelda_api.signals - DocumentSource created: val134.pdf
+2026-10-18 15:53:31,555 INFO zelda_api.signals - DocumentSource created: val135.pdf
+2026-10-18 15:53:31,556 INFO zelda_api.signals - DocumentSource created: val136.pdf
+2026-10-18 15:53:31,558 INFO zelda_api.signals - DocumentSource created: val137.pdf
+2026-10-18 15:53:31,559 INFO zelda_api.signals - DocumentSource created: val138.pdf
+2026-10-18 15:53:31,560 INFO zelda_api.signals - DocumentSource created: val139.pdf
+2026-10-18 15:53:31,561 INFO zelda_api.signals - DocumentSource created: val140.pdf
+2026-10-18 15:53:31,562 INFO zelda_api.signals - DocumentSource created: val141.pdf
+2026-10-18 15:53:31,563 INFO zelda_api.signals - DocumentSource created: val142.pdf
+2026-10-18 15:53:31,564 INFO zelda_api.signals - DocumentSource created: val143.pdf
+2026-10-18 15:53:31,565 INFO zelda_api.signals - DocumentSource created: val144.pdf
+2026-10-18 15:53:31,567 INFO zelda_api.signals - DocumentSource created: val145.pdf
+2026-10-18 15:53:31,568 INFO zelda_api.signals - DocumentSource created: val146.pdf
+2026-10-18 15:53:31,569 INFO zelda_api.signals - DocumentSource created: val147.pdf
+2026-10-18 15:53:31,570 INFO zelda_api.signals - DocumentSource created: val148.pdf
+2026-10-18 15:53:31,571 INFO zelda_api.signals - DocumentSource created: val149.pdf
+2026-10-18 15:53:31,572 INFO zelda_api.signals - DocumentSource created: val150.pdf
+2026-10-18 15:53:31,574 INFO zelda_api.signals - DocumentSource created: val151.pdf
+2026-10-18 15:53:31,575 INFO zelda_api.signals - DocumentSource created: val152.pdf
+2026-10-18 15:53:31,576 INFO zelda_api.signals - DocumentSource created: val153.pdf
+2026-10-18 15:53:31,577 INFO zelda_api.signals - DocumentSource created: val154.pdf
+2026-10-18 15:53:31,578 INFO zelda_api.signals - DocumentSource created: val155.pdf
+2026-10-18 15:53:31,579 INFO zelda_api.signals - DocumentSource created: val156.pdf
+2026-10-18 15:53:31,580 INFO zelda_api.signals - DocumentSource created: val157.pdf
+2026-10-18 15:53:31,582 INFO zelda_api.signals - DocumentSource created: val158.pdf
+2026-10-18 15:53:31,583 INFO zelda_api.signals - DocumentSource created: val159.pdf
+2026-10-18 15:53:31,584 INFO zelda_api.signals - DocumentSource created: val160.pdf
+2026-10-18 15:53:31,585 INFO zelda_api.signals - DocumentSource created: val161.pdf
+2026-10-18 15:53:31,586 INFO zelda_api.signals - DocumentSource created: val162.pdf
+2026-10-18 15:53:31,587 INFO zelda_api.signals - DocumentSource created: val163.pdf
+2026-10-18 15:53:31,589 INFO zelda_api.signals - DocumentSource created: val164.pdf
+2026-10-18 15:53:31,590 INFO zelda_api.signals - DocumentSource created: val165.pdf
+2026-10-18 15:53:31,591 INFO zelda_api.signals - DocumentSource created: val166.pdf
+2026-10-18 15:53:31,592 INFO zelda_api.signals - DocumentSource created: val167.pdf
+2026-10-18 15:53:31,593 INFO zelda_api.signals - DocumentSource created: val168.pdf
+2026-10-18 15:53:31,594 INFO zelda_api.signals - DocumentSource created: val169.pdf
+2026-10-18 15:53:31,595 INFO zelda_api.signals - DocumentSource created: val170.pdf
+2026-10-18 15:53:31,596 INFO zelda_api.signals - DocumentSource created: val171.pdf
+2026-10-18 15:53:31,597 INFO zelda_api.signals - DocumentSource created: val172.pdf
+2026-10-18 15:53:31,598 INFO zelda_api.signals - DocumentSource created: val173.pdf
+2026-10-18 15:53:31,599 INFO zelda_api.signals - DocumentSource created: val174.pdf
+2026-10-18 15:53:31,600 INFO zelda_api.signals - DocumentSource created: val175.pdf
+2026-10-18 15:53:31,601 INFO zelda_api.signals - DocumentSource created: val176.pdf
+2026-10-18 15:53:31,602 INFO zelda_api.signals - DocumentSource created: val177.pdf
+2026-10-18 15:53:31,603 INFO zelda_api.signals - DocumentSource created: val178.pdf
+2026-10-18 15:53:31,604 INFO zelda_api.signals - DocumentSource created: val179.pdf
+2026-10-18 15:53:31,605 INFO zelda_api.signals - DocumentSource created: val180.pdf
+2026-10-18 15:53:31,606 INFO zelda_api.signals - DocumentSource created: val181.pdf
+2026-10-18 15:53:31,607 INFO zelda_api.signals - DocumentSource created: val182.pdf
+2026-10-18 15:53:31,608 INFO zelda_api.signals - DocumentSource created: val183.pdf
+2026-10-18 15:53:31,610 INFO zelda_api.signals - DocumentSource created: val184.pdf
+2026-10-18 15:53:31,611 INFO zelda_api.signals - DocumentSource created: val185.pdf
+2026-10-18 15:53:31,612 INFO zelda_api.signals - DocumentSource created: val186.pdf
+2026-10-18 15:53:31,613 INFO zelda_api.signals - DocumentSource created: val187.pdf
+2026-10-18 15:53:31,614 INFO zelda_api.signals - DocumentSource created: val188.pdf
+2026-10-18 15:53:31,615 INFO zelda_api.signals - DocumentSource created: val189.pdf
+2026-10-18 15:53:31,616 INFO zelda_api.signals - DocumentSource created: val190.pdf
+2026-10-18 15:53:31,617 INFO zelda_api.signals - DocumentSource created: val191.pdf
+2026-10-18 15:53:31,618 INFO zelda_api.signals - DocumentSource created: val192.pdf
+2026-10-18 15:53:31,620 INFO zelda_api.signals - DocumentSource created: val193.pdf
+2026-10-18 15:53:31,621 INFO zelda_api.signals - DocumentSource created: val194.pdf
+2026-10-18 15:53:31,622 INFO zelda_api.signals - DocumentSource created: val195.pdf
+2026-10-18 15:53:31,623 INFO zelda_api.signals - DocumentSource created: val196.pdf
+2026-10-18 15:53:31,624 INFO zelda_api.signals - DocumentSource created: val197.pdf
+2026-10-18 15:53:31,625 INFO zelda_api.signals - DocumentSource created: val198.pdf
+2026-10-18 15:53:31,626 INFO zelda_api.signals - DocumentSource created: val199.pdf
+2026-10-18 15:53:31,627 INFO zelda_api.signals - DocumentSource created: val200.pdf
+2026-10-18 15:53:31,628 INFO zelda_api.signals - DocumentSource created: val201.pdf
+2026-10-18 15:53:31,629 INFO zelda_api.signals - DocumentSource created: val202.pdf
+2026-10-18 15:53:31,630 INFO zelda_api.signals - DocumentSource created: val203.pdf
+2026-10-18 15:53:31,631 INFO zelda_api.signals - DocumentSource created: val204.pdf
+2026-10-18 15:53:31,632 INFO zelda_api.signals - DocumentSource created: val205.pdf
+2026-10-18 15:53:31,633 INFO zelda_api.signals - DocumentSource created: val206.pdf
+2026-10-18 15:53:31,634 INFO zelda_api.signals - DocumentSource created: val207.pdf
+2026-10-18 15:53:31,635 INFO zelda_api.signals - DocumentSource created: val208.pdf
+2026-10-18 15:53:31,636 INFO zelda_api.signals - DocumentSource created: val209.pdf
+2026-10-18 15:53:31,637 INFO zelda_api.signals - DocumentSource created: val210.pdf
+2026-10-18 15:53:31,638 INFO zelda_api.signals - DocumentSource created: val211.pdf
+2026-10-18 15:53:31,639 INFO zelda_api.signals - DocumentSource created: val212.pdf
+2026-10-18 15:53:31,640 INFO zelda_api.signals - DocumentSource created: val213.pdf
+2026-10-18 15:53:31,641 INFO zelda_api.signals - DocumentSource created: val214.pdf
+2026-10-18 15:53:31,642 INFO zelda_api.signals - DocumentSource created: val215.pdf
+2026-10-18 15:53:31,643 INFO zelda_api.signals - DocumentSource created: val216.pdf
+2026-10-18 15:53:31,644 INFO zelda_api.signals - DocumentSource created: val217.pdf
+2026-10-18 15:53:31,646 INFO zelda_api.signals - DocumentSource created: val218.pdf
+2026-10-18 15:53:31,647 INFO zelda_api.signals - DocumentSource created: val219.pdf
+2026-10-18 15:53:31,648 INFO zelda_api.signals - DocumentSource created: val220.pdf
+2026-10-18 15:53:31,649 INFO zelda_api.signals - DocumentSource created: val221.pdf
+2026-10-18 15:53:31,650 INFO zelda_api.signals - DocumentSource created: val222.pdf
+2026-10-18 15:53:31,651 INFO zelda_api.signals - DocumentSource created: val223.pdf
+2026-10-18 15:53:31,652 INFO zelda_api.signals - DocumentSource created: val224.pdf
+2026-10-18 15:53:31,654 INFO zelda_api.signals - DocumentSource created: val225.pdf
+2026-10-18 15:53:31,655 INFO zelda_api.signals - DocumentSource created: val226.pdf
+2026-10-18 15:53:31,656 INFO zelda_api.signals - DocumentSource created: val227.pdf
+2026-10-18 15:53:31,657 INFO zelda_api.signals - DocumentSource created: val228.pdf
+2026-10-18 15:53:31,658 INFO zelda_api.signals - DocumentSource created: val229.pdf
+2026-10-18 15:53:31,659 INFO zelda_api.signals - DocumentSource created: val230.pdf
+2026-10-18 15:53:31,660 INFO zelda_api.signals - DocumentSource created: val231.pdf
+2026-10-18 15:53:31,661 INFO zelda_api.signals - DocumentSource created: val232.pdf
+2026-10-18 15:53:31,662 INFO zelda_api.signals - DocumentSource created: val233.pdf
+2026-10-18 15:53:31,663 INFO zelda_api.signals - DocumentSource created: val234.pdf
+2026-10-18 15:53:31,664 INFO zelda_api.signals - DocumentSource created: val235.pdf
+2026-10-18 15:53:31,666 INFO zelda_api.signals - DocumentSource created: val236.pdf
+2026-10-18 15:53:31,667 INFO zelda_api.signals - DocumentSource created: val237.pdf
+2026-10-18 15:53:31,671 INFO zelda_api.signals - DocumentSource created: val238.pdf
+2026-10-18 15:53:31,672 INFO zelda_api.signals - DocumentSource created: val239.pdf
+2026-10-18 15:53:31,673 INFO zelda_api.signals - DocumentSource created: val240.pdf
+2026-10-18 15:53:31,675 INFO zelda_api.signals - DocumentSource created: val241.pdf
+2026-10-18 15:53:31,676 INFO zelda_api.signals - DocumentSource created: val242.pdf
+2026-10-18 15:53:31,677 INFO zelda_api.signals - DocumentSource created: val243.pdf
+2026-10-18 15:53:31,678 INFO zelda_api.signals - DocumentSource created: val244.pdf
+2026-10-18 15:53:31,680 INFO zelda_api.signals - DocumentSource created: val245.pdf
+2026-10-18 15:53:31,682 INFO zelda_api.signals - DocumentSource created: val246.pdf
+2026-10-18 15:53:31,683 INFO zelda_api.signals - DocumentSource created: val247.pdf
+2026-10-18 15:53:31,684 INFO zelda_api.signals - DocumentSource created: val248.pdf
+2026-10-18 15:53:31,685 INFO zelda_api.signals - DocumentSource created: val249.pdf
+.2026-10-18 15:53:31,696 INFO zelda_api.signals - DocumentSource created: val0.pdf
+2026-10-18 15:53:31,698 INFO zelda_api.signals - DocumentSource created: val1.pdf
+2026-10-18 15:53:31,699 INFO zelda_api.signals - DocumentSource created: val2.pdf
+2026-10-18 15:53:31,700 INFO zelda_api.signals - DocumentSource created: val3.pdf
+2026-10-18 15:53:31,701 INFO zelda_api.signals - DocumentSource created: val4.pdf
+2026-10-18 15:53:31,702 INFO zelda_api.signals - DocumentSource created: val5.pdf
+2026-10-18 15:53:31,704 INFO zelda_api.signals - DocumentSource created: val6.pdf
+2026-10-18 15:53:31,705 INFO zelda_api.signals - DocumentSource created: val7.pdf
+2026-10-18 15:53:31,706 INFO zelda_api.signals - DocumentSource created: val8.pdf
+2026-10-18 15:53:31,707 INFO zelda_api.signals - DocumentSource created: val9.pdf
+2026-10-18 15:53:31,708 INFO zelda_api.signals - DocumentSource created: val10.pdf
+2026-10-18 15:53:31,709 INFO zelda_api.signals - DocumentSource created: val11.pdf
+2026-10-18 15:53:31,711 INFO zelda_api.signals - DocumentSource created: val12.pdf
+2026-10-18 15:53:31,712 INFO zelda_api.signals - DocumentSource created: val13.pdf
+2026-10-18 15:53:31,713 INFO zelda_api.signals - DocumentSource created: val14.pdf
+2026-10-18 15:53:31,714 INFO zelda_api.signals - DocumentSource created: val15.pdf
+2026-10-18 15:53:31,715 INFO zelda_api.signals - DocumentSource created: val16.pdf
+2026-10-18 15:53:31,716 INFO zelda_api.signals - DocumentSource created: val17.pdf
+2026-10-18 15:53:31,717 INFO zelda_api.signals - DocumentSource created: val18.pdf
+2026-10-18 15:53:31,718 INFO zelda_api.signals - DocumentSource created: val19.pdf
+2026-10-18 15:53:31,721 INFO zelda_api.signals - DocumentSource created: val20.pdf
+2026-10-18 15:53:31,722 INFO zelda_api.signals - DocumentSource created: val21.pdf
+2026-10-18 15:53:31,724 INFO zelda_api.signals - DocumentSource created: val22.pdf
+2026-10-18 15:53:31,725 INFO zelda_api.signals - DocumentSource created: val23.pdf
+2026-10-18 15:53:31,726 INFO zelda_api.signals - DocumentSource created: val24.pdf
+2026-10-18 15:53:31,727 INFO zelda_api.signals - DocumentSource created: val25.pdf
+2026-10-18 15:53:31,728 INFO zelda_api.signals - DocumentSource created: val26.pdf
+2026-10-18 15:53:31,729 INFO zelda_api.signals - DocumentSource created: val27.pdf
+2026-10-18 15:53:31,730 INFO zelda_api.signals - DocumentSource created: val28.pdf
+2026-10-18 15:53:31,732 INFO zelda_api.signals - DocumentSource created: val29.pdf
+2026-10-18 15:53:31,734 INFO zelda_api.signals - DocumentSource created: val30.pdf
+2026-10-18 15:53:31,735 INFO zelda_api.signals - DocumentSource created: val31.pdf
+2026-10-18 15:53:31,737 INFO zelda_api.signals - DocumentSource created: val32.pdf
+2026-10-18 15:53:31,738 INFO zelda_api.signals - DocumentSource created: val33.pdf
+2026-10-18 15:53:31,739 INFO zelda_api.signals - DocumentSource created: val34.pdf
+2026-10-18 15:53:31,740 INFO zelda_api.signals - DocumentSource created: val35.pdf
+2026-10-18 15:53:31,741 INFO zelda_api.signals - DocumentSource created: val36.pdf
+2026-10-18 15:53:31,742 INFO zelda_api.signals - DocumentSource created: val37.pdf
+2026-10-18 15:53:31,744 INFO zelda_api.signals - DocumentSource created: val38.pdf
+2026-10-18 15:53:31,745 INFO zelda_api.signals - DocumentSource created: val39.pdf
+2026-10-18 15:53:31,746 INFO zelda_api.signals - DocumentSource created: val40.pdf
+2026-10-18 15:53:31,747 INFO zelda_api.signals - DocumentSource created: val41.pdf
+2026-10-18 15:53:31,748 INFO zelda_api.signals - DocumentSource created: val42.pdf
+2026-10-18 15:53:31,749 INFO zelda_api.signals - DocumentSource created: val43.pdf
+2026-10-18 15:53:31,750 INFO zelda_api.signals - DocumentSource created: val44.pdf
+2026-10-18 15:53:31,751 INFO zelda_api.signals - DocumentSource created: val45.pdf
+2026-10-18 15:53:31,752 INFO zelda_api.signals - DocumentSource created: val46.pdf
+2026-10-18 15:53:31,753 INFO zelda_api.signals - DocumentSource created: val47.pdf
+2026-10-18 15:53:31,755 INFO zelda_api.signals - DocumentSource created: val48.pdf
+2026-10-18 15:53:31,756 INFO zelda_api.signals - DocumentSource created: val49.pdf
+2026-10-18 15:53:31,757 INFO zelda_api.signals - DocumentSource created: val50.pdf
+2026-10-18 15:53:31,758 INFO zelda_api.signals - DocumentSource created: val51.pdf
+2026-10-18 15:53:31,759 INFO zelda_api.signals - DocumentSource created: val52.pdf
+2026-10-18 15:53:31,760 INFO zelda_api.signals - DocumentSource created: val53.pdf
+2026-10-18 15:53:31,761 INFO zelda_api.signals - DocumentSource created: val54.pdf
+2026-10-18 15:53:31,763 INFO zelda_api.signals - DocumentSource created: val55.pdf
+2026-10-18 15:53:31,764 INFO zelda_api.signals - DocumentSource created: val56.pdf
+2026-10-18 15:53:31,765 INFO zelda_api.signals - DocumentSource created: val57.pdf
+2026-10-18 15:53:31,766 INFO zelda_api.signals - DocumentSource created: val58.pdf
+2026-10-18 15:53:31,767 INFO zelda_api.signals - DocumentSource created: val59.pdf
+2026-10-18 15:53:31,769 INFO zelda_api.signals - DocumentSource created: val60.pdf
+2026-10-18 15:53:31,770 INFO zelda_api.signals - DocumentSource created: val61.pdf
+2026-10-18 15:53:31,771 INFO zelda_api.signals - DocumentSource created: val62.pdf
+2026-10-18 15:53:31,772 INFO zelda_api.signals - DocumentSource created: val63.pdf
+2026-10-18 15:53:31,773 INFO zelda_api.signals - DocumentSource created: val64.pdf
+2026-10-18 15:53:31,774 INFO zelda_api.signals - DocumentSource created: val65.pdf
+2026-10-18 15:53:31,775 INFO zelda_api.signals - DocumentSource created: val66.pdf
+2026-10-18 15:53:31,776 INFO zelda_api.signals - DocumentSource created: val67.pdf
+2026-10-18 15:53:31,777 INFO zelda_api.signals - DocumentSource created: val68.pdf
+2026-10-18 15:53:31,778 INFO zelda_api.signals - DocumentSource created: val69.pdf
+2026-10-18 15:53:31,779 INFO zelda_api.signals - DocumentSource created: val70.pdf
+2026-10-18 15:53:31,780 INFO zelda_api.signals - DocumentSource created: val71.pdf
+2026-10-18 15:53:31,781 INFO zelda_api.signals - DocumentSource created: val72.pdf
+2026-10-18 15:53:31,782 INFO zelda_api.signals - DocumentSource created: val73.pdf
+2026-10-18 15:53:31,783 INFO zelda_api.signals - DocumentSource created: val74.pdf
+2026-10-18 15:53:31,784 INFO zelda_api.signals - DocumentSource created: val75.pdf
+2026-10-18 15:53:31,785 INFO zelda_api.signals - DocumentSource created: val76.pdf
+2026-10-18 15:53:31,787 INFO zelda_api.signals - DocumentSource created: val77.pdf
+2026-10-18 15:53:31,788 INFO zelda_api.signals - DocumentSource created: val78.pdf
+2026-10-18 15:53:31,790 INFO zelda_api.signals - DocumentSource created: val79.pdf
+2026-10-18 15:53:31,791 INFO zelda_api.signals - DocumentSource created: val80.pdf
+2026-10-18 15:53:31,792 INFO zelda_api.signals - DocumentSource created: val81.pdf
+2026-10-18 15:53:31,793 INFO zelda_api.signals - DocumentSource created: val82.pdf
+2026-10-18 15:53:31,794 INFO zelda_api.signals - DocumentSource created: val83.pdf
+2026-10-18 15:53:31,796 INFO zelda_api.signals - DocumentSource created: val84.pdf
+2026-10-18 15:53:31,797 INFO zelda_api.signals - DocumentSource created: val85.pdf
+2026-10-18 15:53:31,798 INFO zelda_api.signals - DocumentSource created: val86.pdf
+2026-10-18 15:53:31,799 INFO zelda_api.signals - DocumentSource created: val87.pdf
+2026-10-18 15:53:31,801 INFO zelda_api.signals - DocumentSource created: val88.pdf
+2026-10-18 15:53:31,804 INFO zelda_api.signals - DocumentSource created: val89.pdf
+2026-10-18 15:53:31,806 INFO zelda_api.signals - DocumentSource created: val90.pdf
+2026-10-18 15:53:31,807 INFO zelda_api.signals - DocumentSource created: val91.pdf
+2026-10-18 15:53:31,808 INFO zelda_api.signals - DocumentSource created: val92.pdf
+2026-10-18 15:53:31,809 INFO zelda_api.signals - DocumentSource created: val93.pdf
+2026-10-18 15:53:31,810 INFO zelda_api.signals - DocumentSource created: val94.pdf
+2026-10-18 15:53:31,812 INFO zelda_api.signals - DocumentSource created: val95.pdf
+2026-10-18 15:53:31,813 INFO zelda_api.signals - DocumentSource created: val96.pdf
+2026-10-18 15:53:31,814 INFO zelda_api.signals - DocumentSource created: val97.pdf
+2026-10-18 15:53:31,815 INFO zelda_api.signals - DocumentSource created: val98.pdf
+2026-10-18 15:53:31,816 INFO zelda_api.signals - DocumentSource created: val99.pdf
+...2026-10-18 15:53:31,835 INFO zelda_api.signals - DocumentSource created: val0.pdf
+2026-10-18 15:53:31,836 INFO zelda_api.signals - DocumentSource created: val1.pdf
+2026-10-18 15:53:31,838 INFO zelda_api.signals - DocumentSource created: val2.pdf
+2026-10-18 15:53:31,839 INFO zelda_api.signals - DocumentSource created: val3.pdf
+2026-10-18 15:53:31,840 INFO zelda_api.signals - DocumentSource created: val4.pdf
+2026-10-18 15:53:31,841 INFO zelda_api.signals - DocumentSource created: val5.pdf
+2026-10-18 15:53:31,842 INFO zelda_api.signals - DocumentSource created: val6.pdf
+2026-10-18 15:53:31,843 INFO zelda_api.signals - DocumentSource created: val7.pdf
+2026-10-18 15:53:31,844 INFO zelda_api.signals - DocumentSource created: val8.pdf
+2026-10-18 15:53:31,845 INFO zelda_api.signals - DocumentSource created: val9.pdf
+2026-10-18 15:53:31,846 INFO zelda_api.signals - DocumentSource created: val10.pdf
+2026-10-18 15:53:31,848 INFO zelda_api.signals - DocumentSource created: val11.pdf
+2026-10-18 15:53:31,849 INFO zelda_api.signals - DocumentSource created: val12.pdf
+2026-10-18 15:53:31,850 INFO zelda_api.signals - DocumentSource created: val13.pdf
+2026-10-18 15:53:31,851 INFO zelda_api.signals - DocumentSource created: val14.pdf
+2026-10-18 15:53:31,852 INFO zelda_api.signals - DocumentSource created: val15.pdf
+2026-10-18 15:53:31,853 INFO zelda_api.signals - DocumentSource created: val16.pdf
+2026-10-18 15:53:31,854 INFO zelda_api.signals - DocumentSource created: val17.pdf
+2026-10-18 15:53:31,855 INFO zelda_api.signals - DocumentSource created: val18.pdf
+2026-10-18 15:53:31,856 INFO zelda_api.signals - DocumentSource created: val19.pdf
+2026-10-18 15:53:31,857 INFO zelda_api.signals - DocumentSource created: val20.pdf
+2026-10-18 15:53:31,858 INFO zelda_api.signals - DocumentSource created: val21.pdf
+2026-10-18 15:53:31,859 INFO zelda_api.signals - DocumentSource created: val22.pdf
+2026-10-18 15:53:31,860 INFO zelda_api.signals - DocumentSource created: val23.pdf
+2026-10-18 15:53:31,861 INFO zelda_api.signals - DocumentSource created: val24.pdf
+2026-10-18 15:53:31,862 INFO zelda_api.signals - DocumentSource created: val25.pdf
+2026-10-18 15:53:31,863 INFO zelda_api.signals - DocumentSource created: val26.pdf
+2026-10-18 15:53:31,864 INFO zelda_api.signals - DocumentSource created: val27.pdf
+2026-10-18 15:53:31,865 INFO zelda_api.signals - DocumentSource created: val28.pdf
+2026-10-18 15:53:31,867 INFO zelda_api.signals - DocumentSource created: val29.pdf
+.2026-10-18 15:53:31,874 INFO zelda_api.signals - DocumentSource created: val0.pdf
+2026-10-18 15:53:31,875 INFO zelda_api.signals - DocumentSource created: val1.pdf
+2026-10-18 15:53:31,876 INFO zelda_api.signals - DocumentSource created: val2.pdf
+2026-10-18 15:53:31,877 INFO zelda_api.signals - DocumentSource created: val3.pdf
+2026-10-18 15:53:31,878 INFO zelda_api.signals - DocumentSource created: val4.pdf
+.2026-10-18 15:53:31,885 INFO zelda_api.signals - DocumentSource created: val0.pdf
+2026-10-18 15:53:31,887 INFO zelda_api.signals - DocumentSource created: val1.pdf
+2026-10-18 15:53:31,888 INFO zelda_api.signals - DocumentSource created: val2.pdf
+2026-10-18 15:53:31,889 INFO zelda_api.signals - DocumentSource created: val3.pdf
+2026-10-18 15:53:31,891 INFO zelda_api.signals - DocumentSource created: val4.pdf
+2026-10-18 15:53:31,892 INFO zelda_api.signals - DocumentSource created: val5.pdf
+2026-10-18 15:53:31,893 INFO zelda_api.signals - DocumentSource created: val6.pdf
+2026-10-18 15:53:31,894 INFO zelda_api.signals - DocumentSource created: val7.pdf
+2026-10-18 15:53:31,895 INFO zelda_api.signals - DocumentSource created: val8.pdf
+2026-10-18 15:53:31,896 INFO zelda_api.signals - DocumentSource created: val9.pdf
+2026-10-18 15:53:31,897 INFO zelda_api.signals - DocumentSource created: val10.pdf
+2026-10-18 15:53:31,899 INFO zelda_api.signals - DocumentSource created: val11.pdf
+2026-10-18 15:53:31,900 INFO zelda_api.signals - DocumentSource created: val12.pdf
+2026-10-18 15:53:31,901 INFO zelda_api.signals - DocumentSource created: val13.pdf
+2026-10-18 15:53:31,903 INFO zelda_api.signals - DocumentSource created: val14.pdf
+2026-10-18 15:53:31,905 INFO zelda_api.signals - DocumentSource created: val15.pdf
+2026-10-18 15:53:31,906 INFO zelda_api.signals - DocumentSource created: val16.pdf
+2026-10-18 15:53:31,907 INFO zelda_api.signals - DocumentSource created: val17.pdf
+2026-10-18 15:53:31,908 INFO zelda_api.signals - DocumentSource created: val18.pdf
+2026-10-18 15:53:31,909 INFO zelda_api.signals - DocumentSource created: val19.pdf
+2026-10-18 15:53:31,910 INFO zelda_api.signals - DocumentSource created: val20.pdf
+2026-10-18 15:53:31,912 INFO zelda_api.signals - DocumentSource created: val21.pdf
+2026-10-18 15:53:31,913 INFO zelda_api.signals - DocumentSource created: val22.pdf
+2026-10-18 15:53:31,914 INFO zelda_api.signals - DocumentSource created: val23.pdf
+2026-10-18 15:53:31,915 INFO zelda_api.signals - DocumentSource created: val24.pdf
+2026-10-18 15:53:31,916 INFO zelda_api.signals - DocumentSource created: val25.pdf
+2026-10-18 15:53:31,917 INFO zelda_api.signals - DocumentSource created: val26.pdf
+2026-10-18 15:53:31,918 INFO zelda_api.signals - DocumentSource created: val27.pdf
+2026-10-18 15:53:31,919 INFO zelda_api.signals - DocumentSource created: val28.pdf
+2026-10-18 15:53:31,921 INFO zelda_api.signals - DocumentSource created: val29.pdf
+.....2026-10-18 15:53:31,950 INFO zelda_api.signals - DocumentSource created: val0.pdf
+2026-10-18 15:53:31,951 INFO zelda_api.signals - DocumentSource created: val1.pdf
+2026-10-18 15:53:31,952 INFO zelda_api.signals - DocumentSource created: val2.pdf
+2026-10-18 15:53:31,953 INFO zelda_api.signals - DocumentSource created: val3.pdf
+2026-10-18 15:53:31,954 INFO zelda_api.signals - DocumentSource created: val4.pdf
+.2026-10-18 15:53:31,963 INFO zelda_api.signals - DocumentSource created: val.pdf
+....2026-10-18 15:53:31,990 INFO zelda_api.signals - DocumentSource created: deck.txt
+2026-10-18 15:53:31,996 INFO zelda_api.signals - DocumentSource created: x.txt
+.2026-10-18 15:53:32,005 INFO zelda_api.signals - DocumentSource created: deck.txt
+2026-10-18 15:53:32,011 INFO zelda_api.signals - DocumentSource created: deck.txt
+2026-10-18 15:53:32,017 INFO zelda_api.signals - DocumentSource created: deck.txt
+2026-10-18 15:53:32,025 INFO zelda_api.signals - DocumentSource created: deck.txt
+2026-10-18 15:53:32,033 INFO zelda_api.signals - DocumentSource created: deck.txt
+2026-10-18 15:53:32,040 INFO zelda_api.signals - DocumentSource created: deck.txt
+.2026-10-18 15:53:32,051 INFO zelda_api.signals - DocumentSource created: deck.txt
+2026-10-18 15:53:32,068 INFO zelda_api.signals - DocumentSource created: deck.txt
+.2026-10-18 15:53:32,089 INFO zelda_api.signals - DocumentSource created: deck.txt
+2026-10-18 15:53:32,107 INFO zelda_api.signals - DocumentSource created: deck.txt
+.2026-10-18 15:53:32,136 INFO zelda_api.signals - DocumentSource created: deck.txt
+2026-10-18 15:53:32,154 INFO zelda_api.signals - DocumentSource created: deck.txt
+.2026-10-18 15:53:32,178 INFO zelda_api.signals - DocumentSource created: preview.txt
+2026-10-18 15:53:32,179 INFO zelda_api.signals - DocumentSource created: deck.txt
+.2026-10-18 15:53:32,201 INFO zelda_api.signals - DocumentSource created: wk0.pdf
+2026-10-18 15:53:32,203 INFO zelda_api.signals - DocumentSource created: wk1.pdf
+2026-10-18 15:53:32,205 INFO zelda_api.signals - DocumentSource created: wk2.pdf
+2026-10-18 15:53:32,207 INFO zelda_api.signals - DocumentSource created: wk3.pdf
+2026-10-18 15:53:32,208 INFO zelda_api.signals - DocumentSource created: wk4.pdf
+2026-10-18 15:53:32,210 INFO zelda_api.signals - DocumentSource created: wk5.pdf
+2026-10-18 15:53:32,212 INFO zelda_api.signals - DocumentSource created: wk6.pdf
+2026-10-18 15:53:32,214 INFO zelda_api.signals - DocumentSource created: wk7.pdf
+2026-10-18 15:53:32,215 INFO zelda_api.signals - DocumentSource created: wk8.pdf
+2026-10-18 15:53:32,217 INFO zelda_api.signals - DocumentSource created: wk9.pdf
+2026-10-18 15:53:32,219 INFO zelda_api.signals - DocumentSource created: wk10.pdf
+2026-10-18 15:53:32,221 INFO zelda_api.signals - DocumentSource created: wk11.pdf
+2026-10-18 15:53:32,223 INFO zelda_api.signals - DocumentSource created: wk12.pdf
+2026-10-18 15:53:32,225 INFO zelda_api.signals - DocumentSource created: wk13.pdf
+2026-10-18 15:53:32,227 INFO zelda_api.signals - DocumentSource created: wk14.pdf
+2026-10-18 15:53:32,229 INFO zelda_api.signals - DocumentSource created: wk15.pdf
+2026-10-18 15:53:32,230 INFO zelda_api.signals - DocumentSource created: wk16.pdf
+2026-10-18 15:53:32,232 INFO zelda_api.signals - DocumentSource created: wk17.pdf
+2026-10-18 15:53:32,234 INFO zelda_api.signals - DocumentSource created: wk18.pdf
+2026-10-18 15:53:32,237 INFO zelda_api.signals - DocumentSource created: wk19.pdf
+2026-10-18 15:53:32,239 INFO zelda_api.signals - DocumentSource created: wk20.pdf
+2026-10-18 15:53:32,241 INFO zelda_api.signals - DocumentSource created: wk21.pdf
+2026-10-18 15:53:32,243 INFO zelda_api.signals - DocumentSource created: wk22.pdf
+2026-10-18 15:53:32,244 INFO zelda_api.signals - DocumentSource created: wk23.pdf
+2026-10-18 15:53:32,246 INFO zelda_api.signals - DocumentSource created: wk24.pdf
+2026-10-18 15:53:32,248 INFO zelda_api.signals - DocumentSource created: wk25.pdf
+2026-10-18 15:53:32,249 INFO zelda_api.signals - DocumentSource created: wk26.pdf
+2026-10-18 15:53:32,251 INFO zelda_api.signals - DocumentSource created: wk27.pdf
+2026-10-18 15:53:32,253 INFO zelda_api.signals - DocumentSource created: wk28.pdf
+2026-10-18 15:53:32,255 INFO zelda_api.signals - DocumentSource created: wk29.pdf
+2026-10-18 15:53:32,257 INFO zelda_api.signals - DocumentSource created: wk30.pdf
+2026-10-18 15:53:32,259 INFO zelda_api.signals - DocumentSource created: wk31.pdf
+2026-10-18 15:53:32,261 INFO zelda_api.signals - DocumentSource created: wk32.pdf
+2026-10-18 15:53:32,262 INFO zelda_api.signals - DocumentSource created: wk33.pdf
+2026-10-18 15:53:32,264 INFO zelda_api.signals - DocumentSource created: wk34.pdf
+2026-10-18 15:53:32,266 INFO zelda_api.signals - DocumentSource created: wk35.pdf
+2026-10-18 15:53:32,268 INFO zelda_api.signals - DocumentSource created: wk36.pdf
+2026-10-18 15:53:32,269 INFO zelda_api.signals - DocumentSource created: wk37.pdf
+2026-10-18 15:53:32,272 INFO zelda_api.signals - DocumentSource created: wk38.pdf
+2026-10-18 15:53:32,273 INFO zelda_api.signals - DocumentSource created: wk39.pdf
+.2026-10-18 15:53:32,289 INFO zelda_api.signals - DocumentSource created: wk0.pdf
+2026-10-18 15:53:32,290 INFO zelda_api.signals - DocumentSource created: wk1.pdf
+2026-10-18 15:53:32,292 INFO zelda_api.signals - DocumentSource created: wk2.pdf
+2026-10-18 15:53:32,293 INFO zelda_api.signals - DocumentSource created: wk3.pdf
+2026-10-18 15:53:32,294 INFO zelda_api.signals - DocumentSource created: wk4.pdf
+2026-10-18 15:53:32,295 INFO zelda_api.signals - DocumentSource created: wk5.pdf
+2026-10-18 15:53:32,296 INFO zelda_api.signals - DocumentSource created: wk6.pdf
+2026-10-18 15:53:32,297 INFO zelda_api.signals - DocumentSource created: wk7.pdf
+2026-10-18 15:53:32,298 INFO zelda_api.signals - DocumentSource created: wk8.pdf
+2026-10-18 15:53:32,299 INFO zelda_api.signals - DocumentSource created: wk9.pdf
+2026-10-18 15:53:32,300 INFO zelda_api.signals - DocumentSource created: wk10.pdf
+2026-10-18 15:53:32,301 INFO zelda_api.signals - DocumentSource created: wk11.pdf
+2026-10-18 15:53:32,302 INFO zelda_api.signals - DocumentSource created: wk12.pdf
+2026-10-18 15:53:32,304 INFO zelda_api.signals - DocumentSource created: wk13.pdf
+2026-10-18 15:53:32,305 INFO zelda_api.signals - DocumentSource created: wk14.pdf
+2026-10-18 15:53:32,306 INFO zelda_api.signals - DocumentSource created: wk15.pdf
+2026-10-18 15:53:32,307 INFO zelda_api.signals - DocumentSource created: wk16.pdf
+2026-10-18 15:53:32,308 INFO zelda_api.signals - DocumentSource created: wk17.pdf
+2026-10-18 15:53:32,309 INFO zelda_api.signals - DocumentSource created: wk18.pdf
+2026-10-18 15:53:32,310 INFO zelda_api.signals - DocumentSource created: wk19.pdf
+2026-10-18 15:53:32,311 INFO zelda_api.signals - DocumentSource created: wk20.pdf
+2026-10-18 15:53:32,312 INFO zelda_api.signals - DocumentSource created: wk21.pdf
+2026-10-18 15:53:32,313 INFO zelda_api.signals - DocumentSource created: wk22.pdf
+2026-10-18 15:53:32,314 INFO zelda_api.signals - DocumentSource created: wk23.pdf
+2026-10-18 15:53:32,315 INFO zelda_api.signals - DocumentSource created: wk24.pdf
+2026-10-18 15:53:32,316 INFO zelda_api.signals - DocumentSource created: wk25.pdf
+2026-10-18 15:53:32,317 INFO zelda_api.signals - DocumentSource created: wk26.pdf
+2026-10-18 15:53:32,318 INFO zelda_api.signals - DocumentSource created: wk27.pdf
+2026-10-18 15:53:32,320 INFO zelda_api.signals - DocumentSource created: wk28.pdf
+2026-10-18 15:53:32,322 INFO zelda_api.signals - DocumentSource created: wk29.pdf
+2026-10-18 15:53:32,323 INFO zelda_api.signals - DocumentSource created: wk30.pdf
+2026-10-18 15:53:32,324 INFO zelda_api.signals - DocumentSource created: wk31.pdf
+2026-10-18 15:53:32,325 INFO zelda_api.signals - DocumentSource created: wk32.pdf
+2026-10-18 15:53:32,326 INFO zelda_api.signals - DocumentSource created: wk33.pdf
+2026-10-18 15:53:32,327 INFO zelda_api.signals - DocumentSource created: wk34.pdf
+2026-10-18 15:53:32,328 INFO zelda_api.signals - DocumentSource created: wk35.pdf
+2026-10-18 15:53:32,329 INFO zelda_api.signals - DocumentSource created: wk36.pdf
+2026-10-18 15:53:32,331 INFO zelda_api.signals - DocumentSource created: wk37.pdf
+2026-10-18 15:53:32,333 INFO zelda_api.signals - DocumentSource created: wk38.pdf
+2026-10-18 15:53:32,334 INFO zelda_api.signals - DocumentSource created: wk39.pdf
+2026-10-18 15:53:32,444 WARNING django.request - Payment Required: /api/v1/zelda/documents/ingest/
+..2026-10-18 15:53:32,461 INFO zelda_api.signals - DocumentSource created: wk0.pdf
+2026-10-18 15:53:32,462 INFO zelda_api.signals - DocumentSource created: wk1.pdf
+2026-10-18 15:53:32,463 INFO zelda_api.signals - DocumentSource created: wk2.pdf
+2026-10-18 15:53:32,464 INFO zelda_api.signals - DocumentSource created: wk3.pdf
+2026-10-18 15:53:32,465 INFO zelda_api.signals - DocumentSource created: wk4.pdf
+2026-10-18 15:53:32,467 INFO zelda_api.signals - DocumentSource created: wk5.pdf
+2026-10-18 15:53:32,468 INFO zelda_api.signals - DocumentSource created: wk6.pdf
+2026-10-18 15:53:32,469 INFO zelda_api.signals - DocumentSource created: wk7.pdf
+2026-10-18 15:53:32,470 INFO zelda_api.signals - DocumentSource created: wk8.pdf
+2026-10-18 15:53:32,471 INFO zelda_api.signals - DocumentSource created: wk9.pdf
+2026-10-18 15:53:32,472 INFO zelda_api.signals - DocumentSource created: wk10.pdf
+2026-10-18 15:53:32,474 INFO zelda_api.signals - DocumentSource created: wk11.pdf
+2026-10-18 15:53:32,475 INFO zelda_api.signals - DocumentSource created: wk12.pdf
+2026-10-18 15:53:32,476 INFO zelda_api.signals - DocumentSource created: wk13.pdf
+2026-10-18 15:53:32,477 INFO zelda_api.signals - DocumentSource created: wk14.pdf
+2026-10-18 15:53:32,478 INFO zelda_api.signals - DocumentSource created: wk15.pdf
+2026-10-18 15:53:32,479 INFO zelda_api.signals - DocumentSource created: wk16.pdf
+2026-10-18 15:53:32,480 INFO zelda_api.signals - DocumentSource created: wk17.pdf
+2026-10-18 15:53:32,481 INFO zelda_api.signals - DocumentSource created: wk18.pdf
+2026-10-18 15:53:32,482 INFO zelda_api.signals - DocumentSource created: wk19.pdf
+2026-10-18 15:53:32,483 INFO zelda_api.signals - DocumentSource created: wk20.pdf
+2026-10-18 15:53:32,484 INFO zelda_api.signals - DocumentSource created: wk21.pdf
+2026-10-18 15:53:32,485 INFO zelda_api.signals - DocumentSource created: wk22.pdf
+2026-10-18 15:53:32,486 INFO zelda_api.signals - DocumentSource created: wk23.pdf
+2026-10-18 15:53:32,488 INFO zelda_api.signals - DocumentSource created: wk24.pdf
+2026-10-18 15:53:32,489 INFO zelda_api.signals - DocumentSource created: wk25.pdf
+2026-10-18 15:53:32,490 INFO zelda_api.signals - DocumentSource created: wk26.pdf
+2026-10-18 15:53:32,491 INFO zelda_api.signals - DocumentSource created: wk27.pdf
+2026-10-18 15:53:32,492 INFO zelda_api.signals - DocumentSource created: wk28.pdf
+2026-10-18 15:53:32,493 INFO zelda_api.signals - DocumentSource created: wk29.pdf
+2026-10-18 15:53:32,494 INFO zelda_api.signals - DocumentSource created: wk30.pdf
+2026-10-18 15:53:32,495 INFO zelda_api.signals - DocumentSource created: wk31.pdf
+2026-10-18 15:53:32,496 INFO zelda_api.signals - DocumentSource created: wk32.pdf
+2026-10-18 15:53:32,497 INFO zelda_api.signals - DocumentSource created: wk33.pdf
+2026-10-18 15:53:32,498 INFO zelda_api.signals - DocumentSource created: wk34.pdf
+2026-10-18 15:53:32,499 INFO zelda_api.signals - DocumentSource created: wk35.pdf
+2026-10-18 15:53:32,500 INFO zelda_api.signals - DocumentSource created: wk36.pdf
+2026-10-18 15:53:32,501 INFO zelda_api.signals - DocumentSource created: wk37.pdf
+2026-10-18 15:53:32,502 INFO zelda_api.signals - DocumentSource created: wk38.pdf
+2026-10-18 15:53:32,503 INFO zelda_api.signals - DocumentSource created: wk39.pdf
+.2026-10-18 15:53:32,517 INFO zelda_api.signals - DocumentSource created: wk0.pdf
+2026-10-18 15:53:32,518 INFO zelda_api.signals - DocumentSource created: wk1.pdf
+2026-10-18 15:53:32,520 INFO zelda_api.signals - DocumentSource created: wk2.pdf
+2026-10-18 15:53:32,521 INFO zelda_api.signals - DocumentSource created: wk3.pdf
+2026-10-18 15:53:32,522 INFO zelda_api.signals - DocumentSource created: wk4.pdf
+2026-10-18 15:53:32,523 INFO zelda_api.signals - DocumentSource created: wk5.pdf
+2026-10-18 15:53:32,524 INFO zelda_api.signals - DocumentSource created: wk6.pdf
+2026-10-18 15:53:32,525 INFO zelda_api.signals - DocumentSource created: wk7.pdf
+2026-10-18 15:53:32,526 INFO zelda_api.signals - DocumentSource created: wk8.pdf
+2026-10-18 15:53:32,527 INFO zelda_api.signals - DocumentSource created: wk9.pdf
+2026-10-18 15:53:32,528 INFO zelda_api.signals - DocumentSource created: wk10.pdf
+2026-10-18 15:53:32,529 INFO zelda_api.signals - DocumentSource created: wk11.pdf
+2026-10-18 15:53:32,530 INFO zelda_api.signals - DocumentSource created: wk12.pdf
+2026-10-18 15:53:32,531 INFO zelda_api.signals - DocumentSource created: wk13.pdf
+2026-10-18 15:53:32,532 INFO zelda_api.signals - DocumentSource created: wk14.pdf
+2026-10-18 15:53:32,533 INFO zelda_api.signals - DocumentSource created: wk15.pdf
+2026-10-18 15:53:32,534 INFO zelda_api.signals - DocumentSource created: wk16.pdf
+2026-10-18 15:53:32,535 INFO zelda_api.signals - DocumentSource created: wk17.pdf
+2026-10-18 15:53:32,537 INFO zelda_api.signals - DocumentSource created: wk18.pdf
+2026-10-18 15:53:32,538 INFO zelda_api.signals - DocumentSource created: wk19.pdf
+2026-10-18 15:53:32,539 INFO zelda_api.signals - DocumentSource created: wk20.pdf
+2026-10-18 15:53:32,540 INFO zelda_api.signals - DocumentSource created: wk21.pdf
+2026-10-18 15:53:32,541 INFO zelda_api.signals - DocumentSource created: wk22.pdf
+2026-10-18 15:53:32,542 INFO zelda_api.signals - DocumentSource created: wk23.pdf
+2026-10-18 15:53:32,543 INFO zelda_api.signals - DocumentSource created: wk24.pdf
+2026-10-18 15:53:32,544 INFO zelda_api.signals - DocumentSource created: wk25.pdf
+2026-10-18 15:53:32,546 INFO zelda_api.signals - DocumentSource created: wk26.pdf
+2026-10-18 15:53:32,547 INFO zelda_api.signals - DocumentSource created: wk27.pdf
+2026-10-18 15:53:32,548 INFO zelda_api.signals - DocumentSource created: wk28.pdf
+2026-10-18 15:53:32,550 INFO zelda_api.signals - DocumentSource created: wk29.pdf
+2026-10-18 15:53:32,551 INFO zelda_api.signals - DocumentSource created: wk30.pdf
+2026-10-18 15:53:32,552 INFO zelda_api.signals - DocumentSource created: wk31.pdf
+2026-10-18 15:53:32,571 INFO zelda_api.signals - DocumentSource created: wk32.pdf
+2026-10-18 15:53:32,572 INFO zelda_api.signals - DocumentSource created: wk33.pdf
+2026-10-18 15:53:32,573 INFO zelda_api.signals - DocumentSource created: wk34.pdf
+2026-10-18 15:53:32,575 INFO zelda_api.signals - DocumentSource created: wk35.pdf
+2026-10-18 15:53:32,576 INFO zelda_api.signals - DocumentSource created: wk36.pdf
+2026-10-18 15:53:32,577 INFO zelda_api.signals - DocumentSource created: wk37.pdf
+2026-10-18 15:53:32,578 INFO zelda_api.signals - DocumentSource created: wk38.pdf
+2026-10-18 15:53:32,579 INFO zelda_api.signals - DocumentSource created: wk39.pdf
+.2026-10-18 15:53:32,598 INFO zelda_api.signals - DocumentSource created: wk0.pdf
+2026-10-18 15:53:32,599 INFO zelda_api.signals - DocumentSource created: wk1.pdf
+2026-10-18 15:53:32,601 INFO zelda_api.signals - DocumentSource created: wk2.pdf
+2026-10-18 15:53:32,602 INFO zelda_api.signals - DocumentSource created: wk3.pdf
+2026-10-18 15:53:32,603 INFO zelda_api.signals - DocumentSource created: wk4.pdf
+.2026-10-18 15:53:32,618 INFO zelda_api.signals - DocumentSource created: wk0.pdf
+2026-10-18 15:53:32,620 INFO zelda_api.signals - DocumentSource created: wk1.pdf
+2026-10-18 15:53:32,621 INFO zelda_api.signals - DocumentSource created: wk2.pdf
+2026-10-18 15:53:32,623 INFO zelda_api.signals - DocumentSource created: wk3.pdf
+2026-10-18 15:53:32,624 INFO zelda_api.signals - DocumentSource created: wk4.pdf
+2026-10-18 15:53:32,625 INFO zelda_api.signals - DocumentSource created: wk5.pdf
+2026-10-18 15:53:32,626 INFO zelda_api.signals - DocumentSource created: wk6.pdf
+2026-10-18 15:53:32,627 INFO zelda_api.signals - DocumentSource created: wk7.pdf
+2026-10-18 15:53:32,628 INFO zelda_api.signals - DocumentSource created: wk8.pdf
+2026-10-18 15:53:32,629 INFO zelda_api.signals - DocumentSource created: wk9.pdf
+2026-10-18 15:53:32,630 INFO zelda_api.signals - DocumentSource created: wk10.pdf
+2026-10-18 15:53:32,631 INFO zelda_api.signals - DocumentSource created: wk11.pdf
+2026-10-18 15:53:32,633 INFO zelda_api.signals - DocumentSource created: wk12.pdf
+2026-10-18 15:53:32,634 INFO zelda_api.signals - DocumentSource created: wk13.pdf
+2026-10-18 15:53:32,635 INFO zelda_api.signals - DocumentSource created: wk14.pdf
+2026-10-18 15:53:32,636 INFO zelda_api.signals - DocumentSource created: wk15.pdf
+2026-10-18 15:53:32,637 INFO zelda_api.signals - DocumentSource created: wk16.pdf
+2026-10-18 15:53:32,638 INFO zelda_api.signals - DocumentSource created: wk17.pdf
+2026-10-18 15:53:32,639 INFO zelda_api.signals - DocumentSource created: wk18.pdf
+2026-10-18 15:53:32,640 INFO zelda_api.signals - DocumentSource created: wk19.pdf
+2026-10-18 15:53:32,641 INFO zelda_api.signals - DocumentSource created: wk20.pdf
+2026-10-18 15:53:32,642 INFO zelda_api.signals - DocumentSource created: wk21.pdf
+2026-10-18 15:53:32,643 INFO zelda_api.signals - DocumentSource created: wk22.pdf
+2026-10-18 15:53:32,644 INFO zelda_api.signals - DocumentSource created: wk23.pdf
+2026-10-18 15:53:32,645 INFO zelda_api.signals - DocumentSource created: wk24.pdf
+2026-10-18 15:53:32,646 INFO zelda_api.signals - DocumentSource created: wk25.pdf
+2026-10-18 15:53:32,647 INFO zelda_api.signals - DocumentSource created: wk26.pdf
+2026-10-18 15:53:32,648 INFO zelda_api.signals - DocumentSource created: wk27.pdf
+2026-10-18 15:53:32,649 INFO zelda_api.signals - DocumentSource created: wk28.pdf
+2026-10-18 15:53:32,650 INFO zelda_api.signals - DocumentSource created: wk29.pdf
+2026-10-18 15:53:32,651 INFO zelda_api.signals - DocumentSource created: wk30.pdf
+2026-10-18 15:53:32,653 INFO zelda_api.signals - DocumentSource created: wk31.pdf
+2026-10-18 15:53:32,654 INFO zelda_api.signals - DocumentSource created: wk32.pdf
+...........2026-10-18 15:53:32,707 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[625daeae-592c-4c11-8651-9b2cdd954044] succeeded in 0.005697000015061349s: None
+2026-10-18 15:53:32,717 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[d0e06eb8-b34f-46d3-926b-406818a67f02] succeeded in 0.004288700001779944s: None
+2026-10-18 15:53:32,728 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[ba977934-5347-4a4c-892d-43467c153dd2] succeeded in 0.004209599981550127s: None
+2026-10-18 15:53:32,736 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[95ba32e9-2c35-49bb-881a-7ea877a84936] succeeded in 0.003954000014346093s: None
+.2026-10-18 15:53:33,333 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[1b619537-4f9f-4a74-8c01-88aa48af16ca] succeeded in 0.004433599999174476s: None
+2026-10-18 15:53:33,343 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[20d2444f-b96e-4d58-b832-0486ba51fd36] succeeded in 0.0042770999716594815s: None
+2026-10-18 15:53:33,354 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[a1a354b9-27aa-4f3d-8346-d674ad30cf7a] succeeded in 0.004960899997968227s: None
+2026-10-18 15:53:33,364 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[d7ab03ae-9946-4939-ac17-b4242a755400] succeeded in 0.00500350003130734s: None
+.2026-10-18 15:53:33,459 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[3090432d-da69-4e6a-9c61-bfe8c230257d] succeeded in 0.004744599980767816s: None
+2026-10-18 15:53:33,471 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[a1295fb7-3be8-4f00-9c36-a680ac2f93cf] succeeded in 0.006082899984903634s: None
+2026-10-18 15:53:33,481 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[1b6b85d6-eee7-442c-8149-59449cc94033] succeeded in 0.004068200010806322s: None
+2026-10-18 15:53:33,490 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[c753f4b9-c615-4983-8516-787c1bdd7a38] succeeded in 0.005378799978643656s: None
+......2026-10-18 15:53:33,584 INFO zelda_api.signals - DocumentSource created: d.pdf
+.2026-10-18 15:53:33,607 INFO zelda_api.signals - DocumentSource created: d.pdf
+.2026-10-18 15:53:33,625 INFO zelda_api.signals - DocumentSource created: d.pdf
+.2026-10-18 15:53:33,636 INFO zelda_api.signals - DocumentSource created: d.pdf
+.2026-10-18 15:53:33,651 INFO zelda_api.signals - DocumentSource created: d.pdf
+.2026-10-18 15:53:33,663 INFO zelda_api.signals - DocumentSource created: d.pdf
+..2026-10-18 15:53:35,288 WARNING django.request - Forbidden: /api/v1/zelda/analyze/founder/zelda_action_target/
+2026-10-18 15:53:35,446 WARNING django.request - Forbidden: /api/v1/zelda/analyze/founder/zelda_action_target/
+2026-10-18 15:53:35,507 WARNING django.request - Forbidden: /api/v1/zelda/analyze/founder/zelda_action_target/
+...2026-10-18 15:53:35,864 WARNING django.request - Not Found: /api/v1/zelda/analyze/founder/zelda_action_private/
+...
+----------------------------------------------------------------------
+Ran 430 tests in 113.197s
+
+OK
+Destroying test database for alias 'default'...
