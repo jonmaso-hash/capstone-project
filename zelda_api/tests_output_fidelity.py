@@ -1334,6 +1334,19 @@ class ReviewB54d82bProbeTests(SimpleTestCase):
             with self.subTest(text=text):
                 self.assertEqual(self.guard(text), (text, []))
 
+    def test_a_further_unknown_figure_keeps_the_sentence(self):
+        # Third review of ed29f3b: an aside's every figure must be one the cited statements hold, the last too, so
+        # one more figure after held ones ("500M, 500M/month, 700M") is another fact the restatement would discard.
+        for text in ('The company states the message figures (700M messages) on the same slide [S2, S3].',
+                     'The company states the message figures (500M, 500M/month, 700M) on the same slide [S2, S3].'):
+            with self.subTest(sequence='full', text=text):
+                self.assertEqual(self.full(text), (text, []))
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+        # Control: the held figures alone are still restated.
+        text = 'The company states the message figures (500M, 500M/month) on the same slide [S2, S3].'
+        self.assertEqual(self.guard(text), ('The company states ' + PLACED_23 + '.', ['basis_source_location']))
+
     def test_a_list_marker_is_not_arithmetic(self):
         # Control: a bullet's marker is the line's lead, not a sign inside the clause.
         for lead in ('- ', '• '):
