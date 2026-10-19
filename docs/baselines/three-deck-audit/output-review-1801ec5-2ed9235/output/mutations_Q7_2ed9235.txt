@@ -1,0 +1,5 @@
+Q7 CAUGHT Ran 282 tests in 10.293s FAILED (failures=1) restored=True | OF-805: a condition does not keep the sentence
+    assertion failures in: test_a_denied_narrated_or_uncertain_statement_keeps_its_citations
+    errors in: -
+    failing sub-case: text="The company states, if the slide is read as one figure, 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16')."
+final sha matches pre-run: True 5e1da98dc7e99e76a9348031c28e495d595f0c91d3e02af206295955a472c599

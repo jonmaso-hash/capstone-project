@@ -1,0 +1,16 @@
+Q9 CAUGHT Ran 274 tests in 10.283s FAILED (failures=1) restored=True | OF-805: a page-12 ref not sharing its mention with the page-10 side is moved too
+    assertion failures in: test_correctly_separated_or_unrelated_wording_is_kept
+    errors in: -
+Q10 CAUGHT Ran 274 tests in 10.415s FAILED (failures=4) restored=True | OF-805: the pair clarification is not added after the moved fact
+    assertion failures in: test_of805_each_message_figure_keeps_its_own_page_and_context, test_the_merged_figure_is_split_by_source, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+Q11 CAUGHT Ran 274 tests in 10.389s FAILED (failures=5) restored=True | OF-807: the condition-attribution rule is not applied
+    assertion failures in: test_of807_the_conditions_stay_hypotheses, test_only_the_expected_rules_fired, test_the_conditions_are_not_company_statements, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+Q12 CAUGHT Ran 274 tests in 10.458s FAILED (failures=1) restored=True | OF-807: conditions the cited statements do state are rewritten too
+    assertion failures in: test_supported_unresolved_or_other_wording_is_kept
+    errors in: -
+Q13 CAUGHT Ran 274 tests in 10.336s FAILED (failures=1) restored=True | OF-807: any sentence before counts as setting conditions
+    assertion failures in: test_supported_unresolved_or_other_wording_is_kept
+    errors in: -
+final sha matches pre-run: True b183d1826ff20ff0f9dc75c1fe76eab2692e5ac6e3c7bddace2b42ea5f955d49

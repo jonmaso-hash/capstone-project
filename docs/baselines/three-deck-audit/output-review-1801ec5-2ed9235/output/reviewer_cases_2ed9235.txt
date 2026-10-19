@@ -1,0 +1,8 @@
+== guard_basis_wording at 2ed9235
+denial | ('Nothing shows that one or both figures misrepresent activity [S2, S3].', [])
+contradicted | ('One or both figures may misrepresent activity [S2, S3].', [])
+clause | ('These cannot be compared without clarification; how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].', ['basis_referent_judgment'])
+aside-denied | ("The company does not state 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16').", [])
+aside-narrator | ("Pitch Deck Hunt lists 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16').", [])
+aside-uncertain | ("The company may state 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16').", [])
+judgment-denied-noref | ('How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [C2, C3].', ['basis_overstatement'])

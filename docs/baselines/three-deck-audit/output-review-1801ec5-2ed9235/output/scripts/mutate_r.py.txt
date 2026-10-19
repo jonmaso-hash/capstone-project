@@ -1,0 +1,104 @@
+"""Targeted behavioural mutations for the OF-805/806/807 protections (review of d8b224c) and their integration
+(review of 1801ec5: R1-R6), carried Q1-Q15 unchanged, one at a time on the
+worktree's zelda_api/basis_fidelity.py. Each mutant must change exactly one anchored spot; the affected modules run
+against it; the original bytes are restored and SHA-256 checked before the next. A mutant counts as CAUGHT only by
+assertion failures; errors are reported separately and a run with errors but no failure is CRASH-ONLY, not coverage.
+Usage: python mutate_q.py <worktree> [ID ...]"""
+import hashlib, os, re, subprocess, sys
+
+WT = sys.argv[1]
+ONLY = set(sys.argv[2:])
+BF = os.path.join(WT, 'zelda_api', 'basis_fidelity.py')
+T = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'ra109', 't.sh')
+LABELS = ['zelda_api.tests_output_fidelity', 'zelda_api.tests_usage_basis', 'zelda_api.tests_funding_fidelity']
+M = [
+    ('Q1', 'OF-806: "one or both figures" does not continue the item\'s pair',
+     "(_FIGURE_REFERENT.search(sentence) or _PAIR_REFERENT.search(sentence)):", "_FIGURE_REFERENT.search(sentence):"),
+    ('Q2', 'OF-806: the referent-judgment rule is not applied',
+     "            sentence = _referent_judgment(sentence, pair, changes)\n", ""),
+    ('Q3', 'OF-806: a pair with a CONTRADICTED member is neutralised too',
+     "    if pair.contradicted or _asks(sentence) or not _PAIR_REFERENT.search(sentence):",
+     "    if _asks(sentence) or not _PAIR_REFERENT.search(sentence):"),
+    ('Q4', 'OF-806: a denied judgment ("Nothing shows that ...") is replaced',
+     " or _denied(clause, referent.start()) or _denied(clause, judgment.start()):", ":"),
+    ('Q5', 'OF-806: the whole sentence is replaced, not only the judgment clause',
+     "    parts = re.split(r'(;\\s*)', sentence)\n", "    parts = [sentence]\n"),
+    ('Q6', 'OF-805: the context-aside rule is not applied',
+     "        sentence = _context_aside(sentence, facts, changes)\n", ""),
+    ('Q7', 'OF-805: a condition does not keep the sentence',
+     "        if _conditional(sentence, match.start()):\n            continue\n        start = _place_clause_start",
+     "        start = _place_clause_start"),
+    ('Q8', 'OF-805: a narrated moved ref is moved anyway',
+     "        if not outside or not inside or set(outside) & facts.narrated:",
+     "        if not outside or not inside:"),
+    ('Q9', 'OF-805: a page-12 ref not sharing its mention with the page-10 side is moved too',
+     "        if not merged:\n            continue", "        if False:\n            continue"),
+    ('Q10', 'OF-805: the pair clarification is not added after the moved fact',
+     "        if clarification not in sentence:", "        if False:"),
+    ('Q11', 'OF-807: the condition-attribution rule is not applied',
+     "        sentence = _condition_attribution(sentence, before, facts, changes)\n", ""),
+    ('Q12', 'OF-807: conditions the cited statements do state are rewritten too',
+     "    unstated = [word for word in conditions if word not in stated]", "    unstated = list(conditions)"),
+    ('Q13', 'OF-807: any sentence before counts as setting conditions',
+     "    condition = _CONDITION.search(before)", "    condition = _CONDITION.search(before) or re.match('', before or '')"),
+    ('Q14', 'OF-807 / OF-806: the sentence before is carried across a new list item',
+     "            before = None\n", ""),
+    ('Q15', 'OF-807: the "rests on the company\'s own assertions" consequence is kept',
+     "    rest = _OWN_ASSERTIONS.sub('', sentence[match.end():])", "    rest = sentence[match.end():]"),
+    ('R1', 'review 1801ec5: the judgment rule does not leave a "one or both figures" judgment to its own rule',
+     "    if _asks(sentence) or not _JUDGMENT.search(sentence) or _referent_judged(sentence):",
+     "    if _asks(sentence) or not _JUDGMENT.search(sentence):"),
+    ('R2', 'review 1801ec5: one judging clause about "one or both figures" is enough to bypass the judgment rule',
+     "    return bool(judged) and all(_PAIR_REFERENT.search(clause) for clause in judged)",
+     "    return bool(judged) and any(_PAIR_REFERENT.search(clause) for clause in judged)"),
+    ('R3', 'review 1801ec5: the context split does not need the company as subject (a narrator listing is split)',
+     "        if not verbs or not _OWN_SUBJECT_END.search(head[:verbs[-1].start()]):",
+     "        if not verbs:"),
+    ('R4', 'review 1801ec5: the context split does not need a reporting verb',
+     "        if not verbs or not _OWN_SUBJECT_END.search(head[:verbs[-1].start()]):",
+     "        if verbs and not _OWN_SUBJECT_END.search(head[:verbs[-1].start()]):"),
+    ('R5', 'review 1801ec5: a denial in the clause does not keep the citations',
+     "        if set(words) & _DENIAL or _UNCERTAIN.search(' '.join(words)):",
+     "        if _UNCERTAIN.search(' '.join(words)):"),
+    ('R6', 'review 1801ec5: a hedge in the clause does not keep the citations',
+     "        if set(words) & _DENIAL or _UNCERTAIN.search(' '.join(words)):",
+     "        if set(words) & _DENIAL:"),
+]
+
+
+def sha(path):
+    return hashlib.sha256(open(path, 'rb').read()).hexdigest()
+
+
+original = open(BF, 'rb').read()
+before = sha(BF)
+for mid, desc, old, new in M:
+    if ONLY and mid not in ONLY:
+        continue
+    text = original.decode('utf-8')
+    if '\r\n' in text:                         # the working copy's line endings (core.autocrlf)
+        old, new = old.replace('\n', '\r\n'), new.replace('\n', '\r\n')
+    count = text.count(old)
+    if count != 1:
+        print(f'{mid} NOT-APPLIED anchor count {count} | {desc}', flush=True)
+        continue
+    open(BF, 'wb').write(text.replace(old, new).encode('utf-8'))
+    try:
+        run = subprocess.run(['sh', T, WT] + LABELS, capture_output=True, text=True, encoding='utf-8', errors='replace')
+        out = run.stdout + run.stderr
+    finally:
+        open(BF, 'wb').write(original)
+    restored = sha(BF) == before
+    summary = (re.findall(r'^(?:OK.*|FAILED \(.*\))$', out, re.M) or ['?'])[-1]
+    ran = (re.findall(r'^Ran \d+ tests.*$', out, re.M) or ['?'])[-1]
+    fails = sorted({m for m in re.findall(r'^FAIL: (\w+)', out, re.M)})
+    errors = sorted({m for m in re.findall(r'^ERROR: (\w+)', out, re.M)})
+    verdict = 'CAUGHT' if fails else ('CRASH-ONLY' if errors else 'SURVIVED')
+    print(f'{mid} {verdict} {ran} {summary} restored={restored} | {desc}', flush=True)
+    print(f'    assertion failures in: {", ".join(fails) or "-"}', flush=True)
+    print(f'    errors in: {", ".join(errors) or "-"}', flush=True)
+    for case in sorted(set(re.findall(r'^FAIL: \w+ \([^)]*\) \((.*)\)$', out, re.M))):
+        print(f'    failing sub-case: {case[:220]}', flush=True)
+    if not restored:
+        sys.exit('STOP: restore hash mismatch after ' + mid)
+print('final sha matches pre-run:', sha(BF) == before, sha(BF))

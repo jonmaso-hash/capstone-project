@@ -1,0 +1,371 @@
+{
+ "head": "1801ec56bb88d310c4351c232179d847acca8ebc",
+ "working_tree_basis_fidelity_differs_from_head": false,
+ "base": "f34e3a399349a2d7401f66d9b60b10834047e57a",
+ "memo96": {
+  "fields": 17,
+  "basis_note_present": false,
+  "fields_differing_from_f34e3a3_replay": {},
+  "f34e3a3_replay_equals_stored": null,
+  "rule_changes_f34e3a3": {
+   "what_would_change_the_picture": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "zelda_advantage": [
+    "provenance:Pitch Deck Hunt",
+    "provenance:Pitch Deck Hunt",
+    "provenance:Pitch Deck Hunt"
+   ],
+   "questions_for_management": [
+    "attribution:Pitch Deck Hunt"
+   ]
+  },
+  "rule_changes_fix": {
+   "what_would_change_the_picture": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "zelda_advantage": [
+    "provenance:Pitch Deck Hunt",
+    "provenance:Pitch Deck Hunt",
+    "provenance:Pitch Deck Hunt"
+   ],
+   "questions_for_management": [
+    "attribution:Pitch Deck Hunt"
+   ]
+  },
+  "reversed_items_same_output_and_changes": true,
+  "second_pass_unchanged": true,
+  "refs_in_order_same_as_f34e3a3_replay": {
+   "executive_summary": true,
+   "problem_solution": true,
+   "market_analysis": true,
+   "team_assessment": true,
+   "financial_analysis": true,
+   "risk_assessment": true,
+   "business_model_analysis": true,
+   "information_readiness": true,
+   "supported_points": true,
+   "open_concerns": true,
+   "what_would_change_the_picture": true,
+   "upside_scenario": true,
+   "base_scenario": true,
+   "downside_scenario": true,
+   "zelda_advantage": true,
+   "questions_for_management": true,
+   "evidence_level": true
+  }
+ },
+ "memo97": {
+  "fields": 17,
+  "basis_note_present": false,
+  "fields_differing_from_f34e3a3_replay": {},
+  "f34e3a3_replay_equals_stored": null,
+  "rule_changes_f34e3a3": {
+   "market_analysis": [
+    "profile_undated"
+   ],
+   "risk_assessment": [
+    "raise_premise"
+   ],
+   "what_would_change_the_picture": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "upside_scenario": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "questions_for_management": [
+    "attribution:Pitch Deck Hunt"
+   ]
+  },
+  "rule_changes_fix": {
+   "market_analysis": [
+    "profile_undated"
+   ],
+   "risk_assessment": [
+    "raise_premise"
+   ],
+   "what_would_change_the_picture": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "upside_scenario": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "questions_for_management": [
+    "attribution:Pitch Deck Hunt"
+   ]
+  },
+  "reversed_items_same_output_and_changes": true,
+  "second_pass_unchanged": true,
+  "refs_in_order_same_as_f34e3a3_replay": {
+   "executive_summary": true,
+   "problem_solution": true,
+   "market_analysis": true,
+   "team_assessment": true,
+   "financial_analysis": true,
+   "risk_assessment": true,
+   "business_model_analysis": true,
+   "information_readiness": true,
+   "supported_points": true,
+   "open_concerns": true,
+   "what_would_change_the_picture": true,
+   "upside_scenario": true,
+   "base_scenario": true,
+   "downside_scenario": true,
+   "zelda_advantage": true,
+   "questions_for_management": true,
+   "evidence_level": true
+  }
+ },
+ "memo98": {
+  "fields": 17,
+  "basis_note_present": true,
+  "fields_differing_from_f34e3a3_replay": {},
+  "f34e3a3_replay_equals_stored": null,
+  "rule_changes_f34e3a3": {
+   "risk_assessment": [
+    "basis_overstatement"
+   ],
+   "supported_points": [
+    "unsupported_total",
+    "narrator_narrative"
+   ],
+   "open_concerns": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "what_would_change_the_picture": [
+    "funding_not_runway"
+   ],
+   "questions_for_management": [
+    "attribution:Pitch Deck Hunt",
+    "funding_not_runway"
+   ]
+  },
+  "rule_changes_fix": {
+   "risk_assessment": [
+    "basis_overstatement"
+   ],
+   "supported_points": [
+    "unsupported_total",
+    "narrator_narrative"
+   ],
+   "open_concerns": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "what_would_change_the_picture": [
+    "funding_not_runway"
+   ],
+   "questions_for_management": [
+    "attribution:Pitch Deck Hunt",
+    "funding_not_runway"
+   ]
+  },
+  "reversed_items_same_output_and_changes": true,
+  "second_pass_unchanged": true,
+  "refs_in_order_same_as_f34e3a3_replay": {
+   "executive_summary": true,
+   "problem_solution": true,
+   "market_analysis": true,
+   "team_assessment": true,
+   "financial_analysis": true,
+   "risk_assessment": true,
+   "business_model_analysis": true,
+   "information_readiness": true,
+   "supported_points": true,
+   "open_concerns": true,
+   "what_would_change_the_picture": true,
+   "upside_scenario": true,
+   "base_scenario": true,
+   "downside_scenario": true,
+   "zelda_advantage": true,
+   "questions_for_management": true,
+   "evidence_level": true
+  }
+ },
+ "memo99": {
+  "fields": 17,
+  "basis_note_present": true,
+  "fields_differing_from_f34e3a3_replay": {},
+  "f34e3a3_replay_equals_stored": null,
+  "rule_changes_f34e3a3": {
+   "business_model_analysis": [
+    "basis_source_location"
+   ],
+   "risk_assessment": [
+    "cash_premise"
+   ],
+   "information_readiness": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "supported_points": [
+    "basis_source_location"
+   ],
+   "open_concerns": [
+    "basis_contradiction_label"
+   ],
+   "what_would_change_the_picture": [
+    "funding_not_runway"
+   ],
+   "downside_scenario": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "questions_for_management": [
+    "attribution:Pitch Deck Hunt"
+   ]
+  },
+  "rule_changes_fix": {
+   "business_model_analysis": [
+    "basis_source_location"
+   ],
+   "risk_assessment": [
+    "cash_premise"
+   ],
+   "information_readiness": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "supported_points": [
+    "basis_source_location"
+   ],
+   "open_concerns": [
+    "basis_contradiction_label"
+   ],
+   "what_would_change_the_picture": [
+    "funding_not_runway"
+   ],
+   "downside_scenario": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "questions_for_management": [
+    "attribution:Pitch Deck Hunt"
+   ]
+  },
+  "reversed_items_same_output_and_changes": true,
+  "second_pass_unchanged": true,
+  "refs_in_order_same_as_f34e3a3_replay": {
+   "executive_summary": true,
+   "problem_solution": true,
+   "market_analysis": true,
+   "team_assessment": true,
+   "financial_analysis": true,
+   "business_model_analysis": true,
+   "risk_assessment": true,
+   "information_readiness": true,
+   "supported_points": true,
+   "open_concerns": true,
+   "what_would_change_the_picture": true,
+   "upside_scenario": true,
+   "base_scenario": true,
+   "downside_scenario": true,
+   "zelda_advantage": true,
+   "questions_for_management": true,
+   "evidence_level": true
+  }
+ },
+ "memo100": {
+  "fields": 15,
+  "basis_note_present": true,
+  "fields_differing_from_f34e3a3_replay": {
+   "business_model_analysis": {
+    "removed": [
+     "The evidence establishes only that the company states 140,000+ bots [S1] and 500M messages [S2, S3] as traction metrics (in a slide context headed 'Traction by Apr-16'), and that it operates in software [P2] (current profile, undated) at Series A stage [P1]."
+    ],
+    "added": [
+     "The evidence establishes only that the company states 140,000+ bots [S1] and 500M messages [S2] as traction metrics (in a slide context headed 'Traction by Apr-16'), and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on), and that it operates in software [P2] (current profile, undated) at Series A stage [P1]."
+    ],
+    "rules_added": [
+     "basis_source_context"
+    ]
+   },
+   "open_concerns": {
+    "removed": [
+     "These cannot be compared without clarification; one or both figures may misrepresent the scale of actual activity."
+    ],
+    "added": [
+     "These cannot be compared without clarification; how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on."
+    ],
+    "rules_added": [
+     "basis_referent_judgment"
+    ]
+   },
+   "upside_scenario": {
+    "removed": [
+     "These conditions are stated by the company [S1, S2, S3] but have not been independently verified [C2, C3, C4], so the upside reading rests entirely on the company's own assertions."
+    ],
+    "added": [
+     "The figures are stated by the company [S1, S2, S3] but have not been independently verified [C2, C3, C4]; the conditions placed on them (active, paying customers, recurring revenue) are hypotheses the evidence does not state, and would need evidence."
+    ],
+    "rules_added": [
+     "basis_condition_attribution"
+    ]
+   }
+  },
+  "f34e3a3_replay_equals_stored": {
+   "executive_summary": true,
+   "problem_solution": true,
+   "market_analysis": true,
+   "team_assessment": true,
+   "financial_analysis": true,
+   "business_model_analysis": true,
+   "risk_assessment": true,
+   "open_concerns": true,
+   "what_would_change_the_picture": true,
+   "upside_scenario": true,
+   "base_scenario": true,
+   "downside_scenario": true,
+   "zelda_advantage": true,
+   "questions_for_management": true,
+   "evidence_level": true
+  },
+  "rule_changes_f34e3a3": {
+   "business_model_analysis": [
+    "profile_undated"
+   ],
+   "risk_assessment": [
+    "basis_overstatement"
+   ],
+   "open_concerns": [
+    "basis_contradiction_label"
+   ],
+   "what_would_change_the_picture": [
+    "attribution:Pitch Deck Hunt"
+   ]
+  },
+  "rule_changes_fix": {
+   "business_model_analysis": [
+    "profile_undated",
+    "basis_source_context"
+   ],
+   "risk_assessment": [
+    "basis_overstatement"
+   ],
+   "open_concerns": [
+    "basis_contradiction_label",
+    "basis_referent_judgment"
+   ],
+   "what_would_change_the_picture": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "upside_scenario": [
+    "basis_condition_attribution"
+   ]
+  },
+  "reversed_items_same_output_and_changes": true,
+  "second_pass_unchanged": true,
+  "refs_in_order_same_as_f34e3a3_replay": {
+   "executive_summary": true,
+   "problem_solution": true,
+   "market_analysis": true,
+   "team_assessment": true,
+   "financial_analysis": true,
+   "business_model_analysis": true,
+   "risk_assessment": true,
+   "open_concerns": true,
+   "what_would_change_the_picture": true,
+   "upside_scenario": true,
+   "base_scenario": true,
+   "downside_scenario": true,
+   "zelda_advantage": true,
+   "questions_for_management": true,
+   "evidence_level": true
+  }
+ }
+}

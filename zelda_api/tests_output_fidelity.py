@@ -1438,3 +1438,444 @@ class PipelineReviewB54d82bTests(TestCase):
         self.assertEqual(memo.executive_summary, FUNDING_PROBE_AFTER)
         self.assertIn(POINT_AFTER, memo.supported_points)
         self.assertIn(MODEL_AFTER, memo.business_model_analysis)
+
+
+# --- memo 100 (ManyChat, document 3142; graded at f17db5c): OF-805, OF-806, OF-807 ------------------------------
+#
+#     OF-805  business_model_analysis: "500M messages [S2, S3] as traction metrics (in a slide context headed
+#             'Traction by Apr-16')". S3 is page 12's monthly rate, with no slide context.
+#     OF-806  open_concerns 1: "one or both figures may misrepresent the scale of actual activity": a judgment
+#             from measurement ambiguity alone.
+#     OF-807  upside_scenario: "These conditions are stated by the company [S1, S2, S3]": the conditions (active,
+#             paying customers, recurring revenue) are the analysis's, not the deck's.
+#
+# The fixtures are memo 100's payload as sent and its raw reply (data/funding_fidelity/memo100*.json, from the
+# committed evidence d8b224c). Memo 100 itself is not edited; these tests replay its reply.
+
+def memo100():
+    with open(os.path.join(DATA, 'memo100.json'), encoding='utf-8') as f:
+        data = json.load(f)
+    return json.loads(re.search(r'\{.*\}', data['model_reply_text'], re.S).group(0)), data['stored']
+
+
+def memo100_payload():
+    with open(os.path.join(DATA, 'memo100_payload.json'), encoding='utf-8') as f:
+        return json.load(f)['payload']
+
+
+CLARIFY = ('how the figure stated without an explicit interval relates to the monthly figure needs clarification '
+           'before either is relied on')
+BMA_100_BEFORE = ("The evidence establishes only that the company states 140,000+ bots [S1] and 500M messages [S2, S3] "
+                  "as traction metrics (in a slide context headed 'Traction by Apr-16'), and that it operates in software "
+                  "[P2] (current profile, undated) at Series A stage [P1].")
+BMA_100_AFTER = ("The evidence establishes only that the company states 140,000+ bots [S1] and 500M messages [S2] "
+                 "as traction metrics (in a slide context headed 'Traction by Apr-16'), and separately 500M "
+                 "messages/month [S3] on page 12 (" + CLARIFY + "), and that it operates in software [P2] (current "
+                 "profile, undated) at Series A stage [P1].")
+OPEN_100_BEFORE = ('These cannot be compared without clarification; one or both figures may misrepresent the scale of '
+                   'actual activity.')
+OPEN_100_AFTER = 'These cannot be compared without clarification; ' + CLARIFY + '.'
+UPSIDE_100_BEFORE = ("These conditions are stated by the company [S1, S2, S3] but have not been independently verified "
+                     "[C2, C3, C4], so the upside reading rests entirely on the company's own assertions.")
+UPSIDE_100_AFTER = ("The figures are stated by the company [S1, S2, S3] but have not been independently verified "
+                    "[C2, C3, C4]; the conditions placed on them (active, paying customers, recurring revenue) are "
+                    "hypotheses the evidence does not state, and would need evidence.")
+CHANGED_100 = {'business_model_analysis', 'open_concerns', 'upside_scenario'}
+# The merged guards' accepted live edits on memo 100 (evidence 09e), unchanged by this correction.
+LIVE_100 = {'business_model_analysis': ['profile_undated'], 'risk_assessment': ['basis_overstatement'],
+            'open_concerns': ['basis_contradiction_label'], 'what_would_change_the_picture': ['attribution:Pitch Deck Hunt']}
+
+
+class Memo100ReplayTests(SimpleTestCase):
+    """The actual memo-100 reply through the pipeline's guards: the graded shapes change, nothing else."""
+
+    def setUp(self):
+        self.raw, self.stored = memo100()
+        self.payload = memo100_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+        self.out, self.changes = replay(self.raw, self.items, self.notes)
+
+    def test_the_fixture_is_memo_100_as_stored(self):
+        self.assertIn(BMA_100_BEFORE, self.stored['business_model_analysis'])
+        self.assertIn(OPEN_100_BEFORE, self.stored['open_concerns'])
+        self.assertIn(UPSIDE_100_BEFORE, self.stored['upside_scenario'])
+        self.assertEqual(self.notes[0][1], ('C3', 'C2'))
+        sources = {i['ref']: (i['sources'][0].get('page'), i.get('source_context')) for i in self.payload['items']}
+        self.assertEqual(sources['S2'], (10, 'Traction by Apr-16'))
+        self.assertEqual(sources['S3'], (12, None))
+        self.assertEqual(sources['S1'], (10, 'Traction by Apr-16'))
+
+    def test_the_live_corrections_are_reproduced(self):
+        # The merged guard's live edits on memo 100 still happen, exactly as stored.
+        self.assertEqual(self.out['risk_assessment'], self.stored['risk_assessment'])
+        self.assertTrue(self.out['open_concerns'].startswith('• Ambiguous message-volume measurement bases:'))
+        self.assertEqual(self.out['what_would_change_the_picture'], self.stored['what_would_change_the_picture'])
+
+    def test_of805_each_message_figure_keeps_its_own_page_and_context(self):
+        expected = self.stored['business_model_analysis'].replace(BMA_100_BEFORE, BMA_100_AFTER)
+        self.assertEqual(self.out['business_model_analysis'], expected)
+        before_aside = self.out['business_model_analysis'].split("(in a slide context headed 'Traction by Apr-16')")[0]
+        self.assertNotIn('S3', before_aside)                   # page 12 is not under the page-10 context
+        self.assertIn('140,000+ bots [S1]', before_aside)      # the bot count stays where the model put it
+
+    def test_of806_the_judgment_becomes_the_pair_clarification(self):
+        first, *rest = self.out['open_concerns'].split('\n')
+        self.assertTrue(first.endswith(OPEN_100_AFTER), first)
+        self.assertNotIn('misrepresent', self.out['open_concerns'])
+        # The item's facts and the other bullets are as stored.
+        self.assertIn("The deck states '500M messages' (slide context: 'Traction by Apr-16') [C3/S2] and '500M "
+                      "messages/month' on a separate page [C2/S3].", first)
+        self.assertEqual(rest, self.stored['open_concerns'].split('\n')[1:])
+
+    def test_of807_the_conditions_stay_hypotheses(self):
+        expected = self.stored['upside_scenario'].replace(UPSIDE_100_BEFORE, UPSIDE_100_AFTER)
+        self.assertEqual(self.out['upside_scenario'], expected)
+        self.assertNotIn('conditions are stated by the company', self.out['upside_scenario'])
+        # The conditional itself is kept: the conditions remain explicit "if"s.
+        self.assertIn('and if the 140,000+ bots [S1] reflect active, paying customers generating recurring revenue',
+                      self.out['upside_scenario'])
+
+    def test_every_other_field_is_exactly_as_stored(self):
+        for key, value in self.out.items():
+            if key in self.stored and key not in CHANGED_100:
+                self.assertEqual(value, self.stored[key], key)
+
+    def test_citations_are_preserved_in_order(self):
+        for key, value in self.out.items():
+            if isinstance(value, str) and key in self.stored:
+                self.assertEqual(refs(value), refs(self.stored[key]), key)
+
+    def test_a_second_pass_changes_nothing(self):
+        again, changes = replay(self.out, self.items, self.notes)
+        self.assertEqual(again, self.out)
+        self.assertEqual(changes, {})
+
+    def test_reversed_item_order_gives_the_same_output(self):
+        reversed_out, reversed_changes = replay(self.raw, list(reversed(self.items)), self.notes)
+        self.assertEqual(reversed_out, self.out)
+        self.assertEqual(reversed_changes, self.changes)
+
+    def test_only_the_expected_rules_fired(self):
+        self.assertEqual(self.changes, {
+            'business_model_analysis': ['profile_undated', 'basis_source_context'],
+            'risk_assessment': ['basis_overstatement'],
+            'open_concerns': ['basis_contradiction_label', 'basis_referent_judgment'],
+            'what_would_change_the_picture': ['attribution:Pitch Deck Hunt'],
+            'upside_scenario': ['basis_condition_attribution'],
+        })
+
+
+class Memo100StoredSectionsTests(SimpleTestCase):
+    """The stored memo-100 text (after the merged guards) through the basis guard: the same three repairs."""
+
+    def test_the_stored_sections_get_the_same_repairs(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        payload = memo100_payload()
+        facts = basis_facts(items_from(payload), notes_from(payload))
+        _, stored = memo100()
+        out = {key: guard_basis_wording(value, facts)[0] for key, value in stored.items()}
+        self.assertIn(BMA_100_AFTER, out['business_model_analysis'])
+        self.assertIn(OPEN_100_AFTER, out['open_concerns'])
+        self.assertIn(UPSIDE_100_AFTER, out['upside_scenario'])
+        self.assertEqual({k for k in stored if out[k] != stored[k]}, CHANGED_100)
+
+
+class PipelineMemo100Tests(TestCase):
+    """The memo writer itself (intelligence_pipeline._generate_memo) stores the repaired memo-100 reply."""
+
+    def test_the_stored_memo_carries_the_repairs(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('memo100_writer', password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo100_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items_from(payload)),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, stored = memo100()
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertIn(BMA_100_AFTER, memo.business_model_analysis)
+        self.assertIn(OPEN_100_AFTER, memo.open_concerns)
+        self.assertIn(UPSIDE_100_AFTER, memo.upside_scenario)
+        for key in ('executive_summary', 'risk_assessment', 'what_would_change_the_picture', 'zelda_advantage',
+                    'questions_for_management', 'downside_scenario', 'base_scenario', 'financial_analysis'):
+            self.assertEqual(getattr(memo, key), stored[key], key)
+
+
+class Of805SourceContextTests(SimpleTestCase):
+    """OF-805: a figure citing both sides of a basis pair before a trailing context aside keeps each side's own
+    page and context. Anything not known to be that shape is kept as written."""
+
+    def setUp(self):
+        self.payload = memo100_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text, items=None):
+        out, changes = replay({'section': text}, items or self.items, self.notes)
+        return out['section'], changes.get('section', [])
+
+    def guard(self, text, items=None, notes=(NOTE,)):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        return guard_basis_wording(text, basis_facts(items or _context_items(), notes))
+
+    def test_the_merged_figure_is_split_by_source(self):
+        text = ("The company states 140,000+ bots [S1] and 500M messages [S2, S3] as traction metrics (in a slide "
+                "context headed 'Traction by Apr-16').")
+        after = ("The company states 140,000+ bots [S1] and 500M messages [S2] as traction metrics (in a slide context "
+                 "headed 'Traction by Apr-16'), and separately 500M messages/month [S3] on page 12 (" + CLARIFY + ").")
+        self.assertEqual(self.full(text), (after, ['basis_source_context']))
+        self.assertEqual(self.guard(text), (after, ['basis_source_context']))
+        # Other context-aside wordings are the same shape.
+        colon = "The deck lists 500M messages [S2, S3] (slide context: 'Traction by Apr-16')."
+        self.assertEqual(self.guard(colon), ("The deck lists 500M messages [S2] (slide context: 'Traction by "
+                                             "Apr-16'), and separately 500M messages/month [S3] on page 12 (" + CLARIFY
+                                             + ").", ['basis_source_context']))
+
+    def test_the_following_clause_and_its_qualifications_are_kept(self):
+        text = ("The evidence establishes only that the company states 140,000+ bots [S1] and 500M messages [S2, S3] "
+                "(in a slide context headed 'Traction by Apr-16'), and that it operates in software [P2] (current "
+                "profile, undated) at Series A stage [P1].")
+        out, changes = self.guard(text)
+        self.assertEqual(changes, ['basis_source_context'])
+        self.assertTrue(out.endswith(", and that it operates in software [P2] (current profile, undated) at Series "
+                                     "A stage [P1]."), out)
+        self.assertEqual(refs(out), refs(text))
+
+    def test_correctly_separated_or_unrelated_wording_is_kept(self):
+        for text in (
+                # Page 10 under its own context, page 12 placed separately: correct already.
+                "The deck states 500M messages [S2] (slide context: 'Traction by Apr-16') and 500M messages/month "
+                "[S3] on page 12.",
+                "The deck states '500M messages' (slide context: 'Traction by Apr-16') [C3/S2] and '500M "
+                "messages/month' on a separate page [C2/S3].",
+                # The aside's context is held by every cited ref.
+                "The company states 140,000+ bots [S1] and 500M messages [S2] (in a slide context headed 'Traction by "
+                "Apr-16').",
+                # Unrelated figures, a different context, an unknown ref: not this pair's shape.
+                "The company states 140,000+ bots [S1] and 2M downloads [S5] (in a slide context headed 'Traction by "
+                "Apr-16').",
+                "The deck lists 500M messages [S2, S3] (in a slide context headed 'Pricing').",
+                "The deck lists 500M messages [S2, S9] (in a slide context headed 'Traction by Apr-16').",
+                # The page-12 figure alone under the aside is not split: no page-10 side shares its mention.
+                "The deck lists 500M messages/month [S3] (in a slide context headed 'Traction by Apr-16').",
+                # Limitation (recorded): a separate page-12 mention before the aside is not moved either.
+                "The deck lists 500M messages [S2] and 500M messages/month [S3] (in a slide context headed "
+                "'Traction by Apr-16').",
+                # Questions and conditions.
+                "Are 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16') the same figure?",
+                "If 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16') is one figure, it needs "
+                "a date."):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+
+    def test_without_a_basis_note_nothing_changes(self):
+        text = "The deck lists 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16')."
+        self.assertEqual(self.guard(text, notes=()), (text, []))
+
+    def test_a_narrated_figure_is_kept(self):
+        items = [i if i.ref != 'S3' else GroundedItem(ref='S3', kind='statement', category='Traction',
+                                                      statement='500M messages/month', status=SELF_REPORTED,
+                                                      sources=i.sources, narrator='Pitch Deck Hunt')
+                 for i in _context_items()]
+        text = "The deck lists 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16')."
+        self.assertEqual(self.guard(text, items=items), (text, []))
+
+
+class Of806ReferentJudgmentTests(SimpleTestCase):
+    """OF-806: "one or both figures" continuing a measurement-basis item resolves to its pair; an error judgment on
+    them becomes the pair's clarification. Nothing else is resolved or replaced."""
+
+    LEAD = "- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. "
+
+    def guard(self, text, status=INSUFFICIENT):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        return guard_basis_wording(text, basis_facts(_context_items(status), (NOTE,)))
+
+    def test_the_judgment_clause_becomes_the_clarification(self):
+        text = self.LEAD + 'These cannot be compared without clarification; one or both figures may misrepresent actual activity.'
+        self.assertEqual(self.guard(text), (self.LEAD + 'These cannot be compared without clarification; ' + CLARIFY + '.',
+                                            ['basis_referent_judgment']))
+        whole = self.LEAD + 'One or both figures may overstate the scale of actual activity.'
+        self.assertEqual(self.guard(whole), (self.LEAD + CLARIFY[0].upper() + CLARIFY[1:] + '.',
+                                             ['basis_referent_judgment']))
+
+    def test_unresolved_or_supported_judgments_are_kept(self):
+        for text in (
+                # A new bullet, or a different metric before it: no pair to continue.
+                self.LEAD + '\n- One or both figures may misrepresent actual activity.',
+                'Revenue is $10M [C8]. One or both figures may misrepresent actual activity.',
+                'One or both figures may misrepresent actual activity.',
+                # Independent evidence cited for the concern; a question; a denial; no judgment at all.
+                self.LEAD + 'One or both figures may misrepresent actual activity [S5].',
+                self.LEAD + 'Could one or both figures misrepresent actual activity?',
+                self.LEAD + 'Nothing shows that one or both figures misrepresent actual activity.',
+                self.LEAD + 'One or both figures need clarification before comparison.'):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+
+    def test_a_contradicted_pair_keeps_the_judgment(self):
+        # Truth Delta found a member CONTRADICTED: the concern may be independently evidenced.
+        from .grounded_context import CONTRADICTED
+        text = self.LEAD + 'One or both figures may misrepresent actual activity.'
+        self.assertEqual(self.guard(text, status=CONTRADICTED), (text, []))
+
+
+class Of807ConditionAttributionTests(SimpleTestCase):
+    """OF-807: conditions an analysis places on stated figures stay hypotheses; only the figures are the company's."""
+
+    COND = "If the 140,000+ bots [S1] reflect active, paying customers, ManyChat would show product-market fit. "
+
+    def guard(self, text, items=None):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        return guard_basis_wording(text, basis_facts(items or _context_items(), (NOTE,)))
+
+    def test_the_conditions_are_not_company_statements(self):
+        text = self.COND + 'These conditions are stated by the company [S1, S2] but have not been verified.'
+        self.assertEqual(self.guard(text), (
+            self.COND + 'The figures are stated by the company [S1, S2] but have not been verified; the conditions '
+            'placed on them (active, paying customers) are hypotheses the evidence does not state, and would need '
+            'evidence.', ['basis_condition_attribution']))
+
+    def test_supported_unresolved_or_other_wording_is_kept(self):
+        supported = _context_items() + [_statement('S7', '120,000 active paying customers', 10, 'Traction by Apr-16')]
+        self.assertEqual(self.guard(self.COND + 'These conditions are stated by the company [S7].', supported),
+                         (self.COND + 'These conditions are stated by the company [S7].', []))
+        for text in (
+                'These conditions are stated by the company [S1].',                       # no condition before it
+                self.COND + 'These conditions are stated by the company.',                # no citation to check
+                '- ' + self.COND + '\n- These conditions are stated by the company [S1].',  # another bullet
+                self.COND + 'These figures are stated by the company [S1].',              # the figures are
+                self.COND + 'These conditions are not stated by the company [S1].',       # a denial
+                'The bots [S1] reflect active, paying customers. These conditions are stated by the company [S1].',  # no condition
+                'If the 500M messages figure is a monthly rate [S3], usage is large. These conditions are stated by '
+                'the company [S3].'):                                                     # nothing beyond the figure
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+
+
+# --- review of 1801ec5: the earlier judgment rule bypassed OF-806's protections, and OF-805's split acted on
+# denied, narrated and uncertain statements -------------------------------------------------------------------
+
+JUDGED_DENIED = 'Nothing shows that one or both figures misrepresent activity [S2, S3].'
+JUDGED = 'One or both figures may misrepresent activity [S2, S3].'
+JUDGED_CLAUSE = 'These cannot be compared without clarification; one or both figures may misrepresent activity [S2, S3].'
+JUDGED_CLAUSE_AFTER = 'These cannot be compared without clarification; ' + CLARIFY + ' [S2, S3].'
+JUDGED_AFTER = CLARIFY[0].upper() + CLARIFY[1:] + ' [S2, S3].'
+ASIDE_KEPT = (
+    "The company does not state 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16').",
+    "The company never states 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16').",
+    "Pitch Deck Hunt lists 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16').",
+    "The company may state 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16').",
+    "The deck appears to list 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16').",
+    "500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16') is the headline figure.",
+    # The company's own subject and verb, with a denial or a hedge later in the clause.
+    "The company states that it has not verified 500M messages [S2, S3] (in a slide context headed 'Traction by "
+    "Apr-16').",
+    "The company states what may be 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16').",
+    # The company's own subject and verb, inside a condition.
+    "The company states, if the slide is read as one figure, 500M messages [S2, S3] (in a slide context headed "
+    "'Traction by Apr-16').",
+)
+# Through the full sequence the merged narrator-provenance rule (#281) answers the narrator's listing first; the
+# basis guard then leaves its citations together and fires nothing.
+NARRATOR_FULL = ("Pitch Deck Hunt lists 500M messages [S2, S3] (not Pitch Deck Hunt's: [S2, S3] are the company's own "
+                 "traction statements) (in a slide context headed 'Traction by Apr-16').", ['provenance:Pitch Deck Hunt'])
+MEMO98_JUDGMENT = ('If the cumulative figure is being presented as a monthly figure, the key traction claim is materially '
+                   'overstated [C2, C3].')
+
+
+def contradicted_items(payload):
+    """Memo 100's items with the monthly claim CONTRADICTED, as if Truth Delta had found it."""
+    from dataclasses import replace
+    from .grounded_context import CONTRADICTED
+    return [replace(i, status=CONTRADICTED) if i.ref == 'C2' else i for i in items_from(payload)]
+
+
+class Review1801ec5Tests(SimpleTestCase):
+    """Through the complete normalisation -> time -> funding -> basis sequence on memo 100's payload."""
+
+    def setUp(self):
+        self.payload = memo100_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text, items=None):
+        out, changes = replay({'section': text}, items or self.items, self.notes)
+        return out['section'], changes.get('section', [])
+
+    def test_a_cited_referent_judgment_keeps_its_protections(self):
+        self.assertEqual(self.full(JUDGED_DENIED), (JUDGED_DENIED, []))
+        self.assertEqual(self.full(JUDGED, contradicted_items(self.payload)), (JUDGED, []))
+        self.assertEqual(self.full(JUDGED_CLAUSE), (JUDGED_CLAUSE_AFTER, ['basis_referent_judgment']))
+
+    def test_an_undefended_cited_referent_judgment_is_still_replaced(self):
+        self.assertEqual(self.full(JUDGED), (JUDGED_AFTER, ['basis_referent_judgment']))
+
+    def test_the_memo_98_overstatement_is_still_corrected_whole(self):
+        self.assertEqual(self.full(MEMO98_JUDGMENT), (RISK_AFTER[:-1] + ' [C2, C3].', ['basis_overstatement']))
+
+    def test_a_judgment_not_only_about_one_or_both_figures_stays_with_the_judgment_rule(self):
+        # Only when every judging clause judges "one or both figures" is the clause rule in charge.
+        text = 'The page-10 figure is overstated as a monthly figure [C2, C3]; one or both figures may mislead.'
+        self.assertEqual(self.full(text), (RISK_AFTER[:-1] + ' [C2, C3].', ['basis_overstatement']))
+
+    def test_a_denied_narrated_or_uncertain_statement_keeps_its_citations(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        facts = basis_facts(self.items, self.notes)
+        for text in ASIDE_KEPT:
+            with self.subTest(text=text):
+                expected = NARRATOR_FULL if text.startswith('Pitch Deck Hunt') else (text, [])
+                self.assertEqual(self.full(text), expected)
+                self.assertEqual(guard_basis_wording(text, facts), (text, []))
+
+    def test_the_company_s_own_affirmative_statement_is_still_split(self):
+        out, changes = self.full("The company states 500M messages [S2, S3] (in a slide context headed 'Traction by "
+                                 "Apr-16').")
+        self.assertEqual(changes, ['basis_source_context'])
+        self.assertTrue(out.startswith("The company states 500M messages [S2] (in a slide context headed"), out)
+
+
+class PipelineReview1801ec5Tests(TestCase):
+    """The memo writer (intelligence_pipeline._generate_memo) stores the same results."""
+
+    def write(self, sections, items, name):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user(name, password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo100_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, _ = memo100()
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw, **sections)):
+            pipeline._generate_memo(context)
+        return IntelligenceMemo.objects.get(document_id=doc.id)
+
+    def test_the_writer_keeps_the_protections(self):
+        payload = memo100_payload()
+        memo = self.write({'market_analysis': JUDGED_DENIED, 'team_assessment': JUDGED_CLAUSE,
+                           'problem_solution': ASIDE_KEPT[0], 'financial_analysis': ASIDE_KEPT[2]},
+                          items_from(payload), 'review1801_a')
+        self.assertEqual(memo.market_analysis, JUDGED_DENIED)
+        self.assertEqual(memo.team_assessment, JUDGED_CLAUSE_AFTER)
+        self.assertEqual(memo.problem_solution, ASIDE_KEPT[0])
+        self.assertEqual(memo.financial_analysis, NARRATOR_FULL[0])
+        # Memo 100's own repairs are unchanged in the same write.
+        self.assertIn(BMA_100_AFTER, memo.business_model_analysis)
+        self.assertIn(OPEN_100_AFTER, memo.open_concerns)
+
+    def test_the_writer_keeps_a_contradicted_pair_s_judgment(self):
+        memo = self.write({'market_analysis': JUDGED}, contradicted_items(memo100_payload()), 'review1801_b')
+        self.assertEqual(memo.market_analysis, JUDGED)

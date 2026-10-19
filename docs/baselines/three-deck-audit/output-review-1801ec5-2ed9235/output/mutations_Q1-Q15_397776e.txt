@@ -1,0 +1,52 @@
+Q1 CAUGHT Ran 282 tests in 10.339s FAILED (failures=6) restored=True | OF-806: "one or both figures" does not continue the item's pair
+    assertion failures in: test_of806_the_judgment_becomes_the_pair_clarification, test_only_the_expected_rules_fired, test_the_judgment_clause_becomes_the_clarification, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs, test_the_writer_keeps_the_protections
+    errors in: -
+Q2 CAUGHT Ran 282 tests in 10.323s FAILED (failures=8) restored=True | OF-806: the referent-judgment rule is not applied
+    assertion failures in: test_a_cited_referent_judgment_keeps_its_protections, test_an_undefended_cited_referent_judgment_is_still_replaced, test_of806_the_judgment_becomes_the_pair_clarification, test_only_the_expected_rules_fired, test_the_judgment_clause_becomes_the_clarification, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs, test_the_writer_keeps_the_protections
+    errors in: -
+Q3 CAUGHT Ran 282 tests in 10.272s FAILED (failures=3) restored=True | OF-806: a pair with a CONTRADICTED member is neutralised too
+    assertion failures in: test_a_cited_referent_judgment_keeps_its_protections, test_a_contradicted_pair_keeps_the_judgment, test_the_writer_keeps_a_contradicted_pair_s_judgment
+    errors in: -
+Q4 CAUGHT Ran 282 tests in 10.329s FAILED (failures=3) restored=True | OF-806: a denied judgment ("Nothing shows that ...") is replaced
+    assertion failures in: test_a_cited_referent_judgment_keeps_its_protections, test_the_writer_keeps_the_protections, test_unresolved_or_supported_judgments_are_kept
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Nothing shows that one or both figures misrepresent actual activity.'
+Q5 CAUGHT Ran 282 tests in 10.271s FAILED (failures=7) restored=True | OF-806: the whole sentence is replaced, not only the judgment clause
+    assertion failures in: test_a_cited_referent_judgment_keeps_its_protections, test_of806_the_judgment_becomes_the_pair_clarification, test_only_the_expected_rules_fired, test_the_judgment_clause_becomes_the_clarification, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs, test_the_writer_keeps_the_protections
+    errors in: -
+final sha matches pre-run: True 5e1da98dc7e99e76a9348031c28e495d595f0c91d3e02af206295955a472c599
+Q6 CAUGHT Ran 282 tests in 10.267s FAILED (failures=8) restored=True | OF-805: the context-aside rule is not applied
+    assertion failures in: test_of805_each_message_figure_keeps_its_own_page_and_context, test_only_the_expected_rules_fired, test_the_company_s_own_affirmative_statement_is_still_split, test_the_following_clause_and_its_qualifications_are_kept, test_the_merged_figure_is_split_by_source, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs, test_the_writer_keeps_the_protections
+    errors in: -
+Q7 SURVIVED Ran 282 tests in 10.336s OK restored=True | OF-805: a condition does not keep the sentence
+    assertion failures in: -
+    errors in: -
+Q8 CAUGHT Ran 282 tests in 10.446s FAILED (failures=1) restored=True | OF-805: a narrated moved ref is moved anyway
+    assertion failures in: test_a_narrated_figure_is_kept
+    errors in: -
+Q9 CAUGHT Ran 282 tests in 23.264s FAILED (failures=1) restored=True | OF-805: a page-12 ref not sharing its mention with the page-10 side is moved too
+    assertion failures in: test_correctly_separated_or_unrelated_wording_is_kept
+    errors in: -
+    failing sub-case: text="The deck lists 500M messages [S2] and 500M messages/month [S3] (in a slide context headed 'Traction by Apr-16')."
+Q10 CAUGHT Ran 282 tests in 10.450s FAILED (failures=5) restored=True | OF-805: the pair clarification is not added after the moved fact
+    assertion failures in: test_of805_each_message_figure_keeps_its_own_page_and_context, test_the_merged_figure_is_split_by_source, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs, test_the_writer_keeps_the_protections
+    errors in: -
+final sha matches pre-run: True 5e1da98dc7e99e76a9348031c28e495d595f0c91d3e02af206295955a472c599
+Q11 CAUGHT Ran 282 tests in 10.310s FAILED (failures=5) restored=True | OF-807: the condition-attribution rule is not applied
+    assertion failures in: test_of807_the_conditions_stay_hypotheses, test_only_the_expected_rules_fired, test_the_conditions_are_not_company_statements, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+Q12 CAUGHT Ran 282 tests in 10.525s FAILED (failures=1) restored=True | OF-807: conditions the cited statements do state are rewritten too
+    assertion failures in: test_supported_unresolved_or_other_wording_is_kept
+    errors in: -
+Q13 CAUGHT Ran 282 tests in 10.420s FAILED (failures=1) restored=True | OF-807: any sentence before counts as setting conditions
+    assertion failures in: test_supported_unresolved_or_other_wording_is_kept
+    errors in: -
+    failing sub-case: text='The bots [S1] reflect active, paying customers. These conditions are stated by the company [S1].'
+Q14 CAUGHT Ran 282 tests in 10.378s FAILED (failures=1) restored=True | OF-807 / OF-806: the sentence before is carried across a new list item
+    assertion failures in: test_supported_unresolved_or_other_wording_is_kept
+    errors in: -
+    failing sub-case: text='- If the 140,000+ bots [S1] reflect active, paying customers, ManyChat would show product-market fit. \n- These conditions are stated by the company [S1].'
+Q15 CAUGHT Ran 282 tests in 10.413s FAILED (failures=3) restored=True | OF-807: the "rests on the company's own assertions" consequence is kept
+    assertion failures in: test_of807_the_conditions_stay_hypotheses, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+final sha matches pre-run: True 5e1da98dc7e99e76a9348031c28e495d595f0c91d3e02af206295955a472c599

@@ -73,6 +73,32 @@ and, first, in any sentence, one rule about where figures are stated (memo 99, O
                 ("500M+", "500M+/month", "500M/messages") keeps the sentence (review of 2465791). A denial ("does not state", "do not appear", "never"), another fact
                 ("revenue"), a narrator's subject or an unknown predicate keeps the sentence as written, as do
                 a condition, a question or a ref with no page; nothing is invented and no ref is dropped
+    context     a figure citing both sides of one pair before a trailing context aside ("500M messages [S2, S3]
+                ... (in a slide context headed 'Traction by Apr-16')", memo 100, OF-805) keeps, before the aside,
+                only the refs that context belongs to; the other side's fact follows the aside with its own ref,
+                page and context ("..., and separately 500M messages/month [S3] on page 12 (clarification)").
+                Only when every ref in the clause is a known place, the moved refs are one side of one pair, not
+                narrated, and each shares its citation group with the other side's ref under that context; and
+                only the company's own affirmative statement: its subject ("the company", "the deck") right
+                before the reporting verb the moved refs follow, and no denial or hedge ("does not state",
+                "may", "appears to") in the clause. A narrator's listing, a denial, a hedge, a question and a
+                condition keep their citations (review of 1801ec5)
+
+and two rules that continue an item's discussion (memo 100):
+
+    referent    "one or both figures", "both figures", "either figure" continues the pair the item's last
+    judgment    sentence resolved to, like "the figures" (OF-806). An error judgment in that clause
+                ("one or both figures may misrepresent the scale of actual activity") becomes the pair's
+                clarification; the sentence's other clauses stay. Not when the pair has a CONTRADICTED member,
+                the words are denied, the sentence asks, or it cites anything outside the pair. The judgment
+                rule above leaves such a clause to this one, cited or not, so these protections hold (review
+                of 1801ec5); a judgment not about "one or both figures" is still the judgment rule's
+    conditions  "These conditions are stated by the company [refs]" after a sentence setting conditions ("if
+                the bots reflect active, paying customers ...", OF-807): the cited statements state the
+                figures, not the conditions. The subject becomes "The figures", a "rests on the company's own
+                assertions" consequence is dropped, and the conditions the cited statements do not state are
+                named as hypotheses that need evidence. Kept when there is no condition before it in the same
+                item, no citation to check, or every condition is in the cited statements' own words
 
 A condition covers the words after "if" / "whether" / "unless" / "assuming" in the same sentence, for the
 label, total and location rules only; the judgment rule above is unchanged (memo 98's conditional
@@ -148,6 +174,33 @@ _DIGIT_GROUP = re.compile(r'(?<=\d)[ \u00a0\u202f](?=\d{3}\b)')
 _FIGURE_TOKEN = re.compile(r'\$?\d[\d,]*(?:\.\d+)?[kmb]?\+?(?:/[a-z]+)?[.,]?')
 # What may separate the words of a placing clause: no sign or operator ("+", "-", "=", "~", "%").
 _PLAIN_GAP = re.compile(r'[\s,.]*')
+# A referent for the two figures a basis item is discussing (memo 100, OF-806): "one or both figures".
+_PAIR_REFERENT = re.compile(r'\b(?:one\s+or\s+both|both|either|neither)\s+(?:of\s+the\s+(?:two\s+)?)?'
+                            r'(?:figures?|numbers?|metrics?)\b', re.I)
+# A context aside after a figure's citations (memo 100, OF-805): "(in a slide context headed 'X')",
+# "(slide context: 'X')", "(slide headed 'X')".
+_CONTEXT_ASIDE = re.compile(r"\(\s*(?:in\s+|on\s+)?(?:an?\s+|the\s+)?(?:slide|page)(?:\s+context)?\s*"
+                            r"(?:headed\s+|titled\s+|:\s*)?'(?P<ctx>[^']+)'\s*\)", re.I)
+# The company's own subject ending right before its reporting verb: "the company states", "... only that the deck
+# lists". A narrator ("Pitch Deck Hunt lists") or anything between ("the company does not state", "may state")
+# does not match (review of 1801ec5).
+_OWN_SUBJECT_END = re.compile(r"(?:^|\bthat\s+|\bwhile\s+|\bwhereas\s+|\band\s+|,\s*)(?:the\s+)?(?:company|deck|"
+                              r"pitch\s+deck|presentation|founders?|management)\s*$", re.I)
+# Hedged wording: a statement the clause does not make outright.
+_UNCERTAIN = re.compile(r"\b(?:may|might|could|possibly|perhaps|probably|likely|apparently|appears?|seems?|reportedly|"
+                        r"allegedly|purportedly|unclear|uncertain|unconfirmed|whether|estimated?|approximately|"
+                        r"roughly)\b", re.I)
+# "These conditions are stated by the company" (memo 100, OF-807); a denial ("are not stated") does not match.
+_CONDITION_CLAIM = re.compile(r"^(?P<lead>\s*(?:[-•*·–]\s*)?)(?P<subject>(?:these|those|the|both|all|such)\s+"
+                              r"(?:conditions|assumptions|premises))(?=\s+(?:are|were|have\s+been)\s+(?:all\s+)?"
+                              r"(?:stated|reported|claimed|asserted|presented|given)\s+by\s+(?:the\s+)?"
+                              r"(?:company|deck|management|founders?)\b)", re.I)
+# Conditions an analysis places on a usage figure that a deck's figure does not itself state.
+_HYPOTHESIS = re.compile(r'\b(?:active|paying\s+customers|paying|paid|recurring\s+revenue|revenue|customers|'
+                         r'retention|monetis\w*|monetiz\w*|profitab\w*)\b', re.I)
+# "..., so the upside reading rests entirely on the company's own assertions": the conditions are not those.
+_OWN_ASSERTIONS = re.compile(r",?\s*so\s+[^;.]*?\brests?\b[^;.]*?\bthe\s+company's\s+own\s+"
+                             r"(?:assertions|claims|statements)\b", re.I)
 # The model's own remark that the basis is open (memo 99): what the pair's restated clarification says.
 _BASIS_ASIDE = re.compile(r'measurement\s+basis\s+(?:unresolved|questioned|unclear|ambiguous)'
                           r'(?:\s*;\s*see\s+open\s+concerns)?', re.I)
@@ -241,7 +294,7 @@ def _resolve(sentence, facts, previous):
     named = [pair for pair in facts.pairs if pair.noun and re.search(rf'\b{re.escape(pair.noun[:-1])}s?\b', sentence, re.I)]
     if named:
         return named[0] if len(named) == 1 else None
-    if previous is not None and _FIGURE_REFERENT.search(sentence):
+    if previous is not None and (_FIGURE_REFERENT.search(sentence) or _PAIR_REFERENT.search(sentence)):
         return previous
     return None
 
@@ -251,9 +304,16 @@ def _bridges(sentence):
     return bool(_BRIDGE.fullmatch(sentence))
 
 
+def _referent_judged(sentence):
+    """Every clause judging the figures judges "one or both figures": _referent_judgment decides it, with its
+    protections (a denial, a contradicted pair, the sentence's other clauses; review of 1801ec5)."""
+    judged = [clause for clause in sentence.split(';') if _JUDGMENT.search(clause)]
+    return bool(judged) and all(_PAIR_REFERENT.search(clause) for clause in judged)
+
+
 def _judgment(sentence, pair, changes):
     """An error judgment about the pair's bases becomes its neutral clarification; its citations stay."""
-    if _asks(sentence) or not _JUDGMENT.search(sentence):
+    if _asks(sentence) or not _JUDGMENT.search(sentence) or _referent_judged(sentence):
         return sentence
     if not (_BASIS_WORDS.search(sentence) or _cited(sentence)):
         return sentence
@@ -261,6 +321,30 @@ def _judgment(sentence, pair, changes):
     groups = ' '.join(f'[{group}]' for group in _REF.findall(sentence))
     changes.append('basis_overstatement')
     return f"{lead}{pair.clarification}{' ' + groups if groups else ''}."
+
+
+def _referent_judgment(sentence, pair, changes):
+    """An error judgment on "one or both figures" of this pair: that clause becomes the pair's clarification; the
+    sentence's other clauses stay (OF-806)."""
+    if pair.contradicted or _asks(sentence) or not _PAIR_REFERENT.search(sentence):
+        return sentence
+    parts = re.split(r'(;\s*)', sentence)
+    hit = False
+    for i in range(0, len(parts), 2):
+        clause = parts[i]
+        referent, judgment = _PAIR_REFERENT.search(clause), _JUDGMENT.search(clause)
+        if referent is None or judgment is None or _denied(clause, referent.start()) or _denied(clause, judgment.start()):
+            continue
+        lead = _LEAD.match(clause).group('lead') if i == 0 else clause[:len(clause) - len(clause.lstrip())]
+        end = re.search(r'[.!]?["”’)]*\s*$', clause).group(0)
+        groups = ' '.join(f'[{group}]' for group in _REF.findall(clause))
+        text = pair.clarification if i == 0 else pair.clarification[0].lower() + pair.clarification[1:]
+        parts[i] = f"{lead}{text}{' ' + groups if groups else ''}{end}"
+        hit = True
+    if not hit:
+        return sentence
+    changes.append('basis_referent_judgment')
+    return ''.join(parts)
 
 
 def _referent(sentence, pair, changes):
@@ -466,24 +550,124 @@ def _location(sentence, facts, changes):
     return sentence
 
 
+def _split_refs(group):
+    return [ref.strip() for ref in re.split(r'[,;]', group)]
+
+
+def _context_aside(sentence, facts, changes):
+    """Both sides of a pair cited before a context aside that only one side's refs belong to: the other side's
+    refs leave that citation group and follow the aside as their own fact (OF-805; see the docstring)."""
+    if _asks(sentence) or not facts.pairs:
+        return sentence
+    places = {ref: (page, context, fact) for ref, page, context, fact in facts.places}
+    for match in _CONTEXT_ASIDE.finditer(sentence):
+        if _conditional(sentence, match.start()):
+            continue
+        start = _place_clause_start(sentence, match.start())
+        groups = list(_REF.finditer(sentence, start, match.start()))
+        cited = [ref for group in groups for ref in _split_refs(group.group(1))]
+        if not cited or any(ref not in places for ref in cited):
+            continue
+        claimed = match.group('ctx')
+        outside = [ref for ref in cited if places[ref][1] != claimed]
+        inside = [ref for ref in cited if places[ref][1] == claimed]
+        if not outside or not inside or set(outside) & facts.narrated:
+            continue
+        pair = next((p for p in facts.pairs if len(p.sides) == 2 and set(outside) <= p.members), None)
+        if pair is None:
+            continue
+        # Each moved ref shares its citation group with a ref of the same pair under the claimed context: one
+        # figure cited for both sides. (A side's refs share one page and context, so that ref is the other side.)
+        merged = all(any(ref in inside and ref in pair.members for ref in _split_refs(group.group(1)))
+                     for group in groups if set(_split_refs(group.group(1))) & set(outside))
+        if not merged:
+            continue                           # the page-12 figure is its own mention: not split here
+        # Only the company's own affirmative statement: its subject right before the reporting verb that the moved
+        # citations follow, and no denial or hedge in the clause (review of 1801ec5).
+        first = min(group.start() for group in groups if set(_split_refs(group.group(1))) & set(outside))
+        head = sentence[start:first]
+        verbs = [verb for verb in _REPORTING.finditer(head) if head[:verb.start()].count('(') == head[:verb.start()].count(')')]
+        if not verbs or not _OWN_SUBJECT_END.search(head[:verbs[-1].start()]):
+            continue
+        words = re.findall(r"[\w']+", _REF.sub(' ', sentence[start:match.start()]).lower())
+        if set(words) & _DENIAL or _UNCERTAIN.search(' '.join(words)):
+            continue
+        out, pos = sentence[:start], start
+        for group in groups:
+            keep = [ref for ref in _split_refs(group.group(1)) if ref not in outside]
+            out += sentence[pos:group.start()] + '[' + ', '.join(keep) + ']'
+            pos = group.end()
+        out += sentence[pos:match.end()]
+        runs = []                              # adjacent refs on one page and context share a run
+        for ref in outside:
+            if runs and runs[-1][0] == places[ref][:2]:
+                runs[-1][1].append(ref)
+            else:
+                runs.append((places[ref][:2], [ref]))
+        body = ''.join(', and separately ' + ' and '.join(f'{places[ref][2]} [{ref}]' for ref in refs)
+                       + f' on page {page}' + (f", under '{context}'" if context else '')
+                       for (page, context), refs in runs)
+        clarification = pair.clarification[0].lower() + pair.clarification[1:]
+        if clarification not in sentence:
+            body += f' ({clarification})'
+        changes.append('basis_source_context')
+        return out + body + sentence[match.end():]
+    return sentence
+
+
+def _condition_attribution(sentence, before, facts, changes):
+    """"These conditions are stated by the company [refs]" after conditions the cited statements do not state:
+    the figures are the company's, the conditions are hypotheses (OF-807; see the docstring)."""
+    match = _CONDITION_CLAIM.match(sentence)
+    if match is None or not before or _asks(sentence):
+        return sentence
+    condition = _CONDITION.search(before)
+    cited = _cited(sentence)
+    places = {ref: fact for ref, _, _, fact in facts.places}
+    if condition is None or not cited or any(ref not in places for ref in cited):
+        return sentence
+    conditions = []
+    for hit in _HYPOTHESIS.finditer(before[condition.start():]):
+        word = ' '.join(hit.group(0).lower().split())
+        if word not in conditions:
+            conditions.append(word)
+    stated = ' '.join(places[ref].lower() for ref in cited)
+    unstated = [word for word in conditions if word not in stated]
+    if not unstated:
+        return sentence
+    subject = 'The figures' if match.group('subject')[0].isupper() else 'the figures'
+    rest = _OWN_ASSERTIONS.sub('', sentence[match.end():])
+    end = re.search(r'[.!]?["”’)]*\s*$', rest).group(0)
+    rest = rest[:len(rest) - len(end)] if end else rest
+    changes.append('basis_condition_attribution')
+    return (f"{match.group('lead')}{subject}{rest}; the conditions placed on them ({', '.join(unstated)}) are "
+            f"hypotheses the evidence does not state, and would need evidence{end or '.'}")
+
+
 def guard_basis_wording(text, facts):
     """Apply the rules to one memo section. Returns (text, changes). Without a basis note no sentence resolves."""
     if not isinstance(text, str) or not text:
         return text, []
     changes, out = [], []
     previous: Optional[Pair] = None          # the pair this paragraph / list item is still discussing
+    before = None                            # the sentence before, in the same paragraph / list item
     for sentence, separator in _sentences(text):
         sentence = _location(sentence, facts, changes)
+        sentence = _context_aside(sentence, facts, changes)
+        sentence = _condition_attribution(sentence, before, facts, changes)
         pair = _resolve(sentence, facts, previous)
         if pair is not None:
             sentence = _judgment(sentence, pair, changes)
             sentence = _referent(sentence, pair, changes)
             sentence = _label(sentence, pair, changes)
             sentence = _total(sentence, pair, changes)
+            sentence = _referent_judgment(sentence, pair, changes)
             previous = pair
         elif not _bridges(sentence):
             previous = None                  # another metric, another citation or an unresolved figure
         out.append(sentence + separator)
+        before = sentence
         if '\n' in separator:
             previous = None                  # a new paragraph or list item
+            before = None
     return (''.join(out) if changes else text), changes
