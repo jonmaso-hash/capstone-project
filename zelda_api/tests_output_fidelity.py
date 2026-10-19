@@ -2068,9 +2068,9 @@ class Of903SharedContextTests(SimpleTestCase):
                 "The company states 500M messages (an ambiguity between a total and a monthly rate [S2]) in a slide "
                 "context headed 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (" + CLARIFY + ").",
             # No reporting verb: an asserted date for the cited figures.
-            "Taking the figures at face value [S2, S3], the platform had scale by the period referenced in the "
-            "'Traction by Apr-16' slide context.":
-                "Taking the figures at face value [S2], the platform had scale by the period referenced in the "
+            "Taking the self-reported figures at face value [S2, S3], the platform had scale by the period referenced in "
+            "the 'Traction by Apr-16' slide context.":
+                "Taking the self-reported figures at face value [S2], the platform had scale by the period referenced in the "
                 "'Traction by Apr-16' slide context; the deck separately states 500M messages/month [S3] on page 12 ("
                 + CLARIFY + ").",
             # A list item: the company's own verb after the list marker.
@@ -2107,7 +2107,7 @@ class Of903SharedContextTests(SimpleTestCase):
                 "Were 500M messages [S2, S3] counted in the 'Traction by Apr-16' slide context?",
                 # A context phrase inside a parenthesis that is not a context aside: kept (limitation, recorded).
                 "The deck states 500M messages [S2, S3] (within the 'Traction by Apr-16' slide context).",
-                "- 500M messages [S2, S3] (within the 'Traction by Apr-16' slide context)",
+                "- The self-reported 500M messages [S2, S3] (within the 'Traction by Apr-16' slide context)",
                 # A third party's reporting verb (not a recorded narrator): not the company's statement.
                 "An analyst lists 500M messages [S2, S3] in a slide context headed 'Traction by Apr-16'."):
             with self.subTest(text=text):
@@ -2183,3 +2183,96 @@ class Of906CumulativePresuppositionTests(SimpleTestCase):
         # A pair whose side is admitted cumulative ("3M messages to date") keeps "cumulative".
         supported = 'If the gap between the cumulative and weekly presentations [C7, C9] is real, usage is unclear.'
         self.assertEqual(self.guard(supported, items=_pairs_items(), notes=(NOTE_CUMULATIVE,)), (supported, []))
+
+
+# --- review of b040c23 / 750de3f: four scope regressions -----------------------------------------------------------
+#
+#     1  A denial lost across a dash: "Nothing suggests these figures are wrong — or inflated."
+#     2  A new subject after a dash inherited the figures' referent: "These figures need clarification — an analyst is
+#        wrong."
+#     3  A later message citation took ownership of another metric's phrase: "The cumulative and monthly revenue differ
+#        while the message counts remain ambiguous [C2, C3]."
+#     4  A third party's statement with no recognised reporting verb was split: "According to an analyst, 500M messages
+#        [S2, S3] sit in a slide context headed 'Traction by Apr-16'."
+
+PAIR_LEAD = "- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. "
+REVIEW_750_KEPT = (
+    PAIR_LEAD + "Nothing suggests these figures are wrong — or inflated.",
+    PAIR_LEAD + "These figures are not wrong — or inflated.",
+    PAIR_LEAD + "These figures need clarification — an analyst is wrong.",
+    PAIR_LEAD + "These figures need clarification — and the analyst is wrong.",
+    "The cumulative and monthly revenue differ while the message counts remain ambiguous [C2, C3].",
+    "The cumulative and monthly revenue [C2, C3] differ.",
+    "According to an analyst, 500M messages [S2, S3] sit in a slide context headed 'Traction by Apr-16'.",
+    # The company's own source named, but attributed to a third party.
+    "According to an analyst, the self-reported 500M messages [S2, S3] sit in a slide context headed 'Traction by "
+    "Apr-16'.",
+    "Per an industry report, the self-reported 500M messages [S2, S3] sit in the 'Traction by Apr-16' slide context.",
+)
+
+
+class Review750de3fTests(SimpleTestCase):
+    """Through the complete normalisation -> time -> funding -> basis sequence on memo 101's payload."""
+
+    def setUp(self):
+        self.payload = memo101_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text):
+        out, changes = replay({'section': text}, self.items, self.notes)
+        return out['section'], changes.get('section', [])
+
+    def test_denials_new_subjects_other_metrics_and_third_parties_are_kept(self):
+        for text in REVIEW_750_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_the_intended_repairs_still_happen(self):
+        cases = {
+            # A judgment continuing "these figures" after a dash, as in memo 101.
+            PAIR_LEAD + "These figures need clarification — possibly inflated.":
+                PAIR_LEAD + "These figures need clarification — " + CLARIFY + ".",
+            # Coordinated judgments of the same figures: one clarification, not two.
+            PAIR_LEAD + "These figures are wrong — or inflated.":
+                PAIR_LEAD + CLARIFY[0].upper() + CLARIFY[1:] + ".",
+            # The phrase's own noun is a figure noun of the pair.
+            "If the cumulative and monthly figures [C2, C3] diverge, usage is unclear.":
+                "If the unspecified-interval and monthly figures [C2, C3] diverge, usage is unclear.",
+        }
+        for text, after in cases.items():
+            with self.subTest(text=text):
+                out, changes = self.full(text)
+                self.assertEqual(out, after)
+                self.assertTrue(changes, changes)
+
+
+class PipelineReview750de3fTests(TestCase):
+    """The memo writer (intelligence_pipeline._generate_memo) keeps the four preserved shapes."""
+
+    def test_the_writer_keeps_them(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('review750_writer', password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo101_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items_from(payload)),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, _ = memo101()
+        sections = {'market_analysis': REVIEW_750_KEPT[0], 'team_assessment': REVIEW_750_KEPT[2],
+                    'problem_solution': REVIEW_750_KEPT[4], 'financial_analysis': REVIEW_750_KEPT[6]}
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw, **sections)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        for key, text in sections.items():
+            self.assertEqual(getattr(memo, key), text, key)
+        # Memo 101's own repairs are unchanged in the same write.
+        self.assertIn(BMA_101_AFTER, memo.business_model_analysis)
+        self.assertIn(BASE_101_AFTER, memo.base_scenario)
+        self.assertIn(RISK_101_AFTER, memo.risk_assessment)
+        self.assertIn(DOWN_101_AFTER, memo.downside_scenario)
