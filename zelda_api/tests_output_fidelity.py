@@ -2480,3 +2480,109 @@ class PipelineReview377a142Tests(TestCase):
         self.assertIn(BASE_101_AFTER, memo.base_scenario)
         self.assertIn(RISK_101_AFTER, memo.risk_assessment)
         self.assertIn(DOWN_101_AFTER, memo.downside_scenario)
+
+
+# --- review of 9b28e14 / e16ad6a: an independent cited fragment was taken over by the general judgment rule ---------
+#
+#     With the pair citations at the end, "These figures need clarification — misleading advertising is wrong [S2, S3]."
+#     lost its whole second sentence through basis_overstatement: _CONTINUATION rejected the fragment, so no referent
+#     governed it, and _judgment then replaced the whole sentence because citations were present. Present at 0664563,
+#     377a142 and 9b28e14: an incomplete fix, not a new regression.
+
+CLARIFY_SENTENCE = CLARIFY[0].upper() + CLARIFY[1:]
+REVIEW_9B2_KEPT = (
+    CONT_LEAD + "misleading advertising is wrong [S2, S3].",
+    CONT_LEAD + "inflation is affecting costs [S2, S3].",
+    CONT_LEAD + "wrong assumptions drive the model [S2, S3].",
+    CONT_LEAD + "or inflation is affecting costs [S2, S3].",
+    # A ";" clause and a standalone sentence: citations alone do not say what a judgment is about.
+    PAIR_LEAD + "These figures need clarification; misleading advertising is wrong [S2, S3].",
+    PAIR_LEAD + "Misleading advertising is wrong [S2, S3].",
+    # Basis words outside the judging clause do not make it about the bases.
+    PAIR_LEAD + "The monthly figure needs clarification — misleading advertising is wrong.",
+)
+REVIEW_9B2_REPAIRED = (
+    # A clause naming the figures or their bases is still the pair's, whole sentence (the existing form).
+    (PAIR_LEAD + "These figures need clarification — the cumulative figure is overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The 500M messages figure is overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "These figures need clarification — the larger figure is overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    # The pair's clause is repaired and an independent clause in the same sentence is kept.
+    (PAIR_LEAD + "The cumulative figure is overstated [S2, S3] — misleading advertising is wrong.",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3] — misleading advertising is wrong.", ['basis_overstatement']),
+    (PAIR_LEAD + "Misleading advertising is wrong; the monthly figure is inflated [S2, S3].",
+     PAIR_LEAD + "Misleading advertising is wrong; " + CLARIFY + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "These figures may be inflated — misleading advertising is wrong [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " — misleading advertising is wrong [S2, S3].", ['basis_referent_judgment']),
+    # A genuine cited continuation stays with the referent rule.
+    (CONT_LEAD + "possibly overstated [S2, S3].", CONT_LEAD + CLARIFY + " [S2, S3].", ['basis_referent_judgment']),
+)
+
+
+class Review9b28e14Tests(SimpleTestCase):
+    """Through the complete normalisation -> time -> funding -> basis sequence on memo 101's payload."""
+
+    def setUp(self):
+        self.payload = memo101_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text):
+        out, changes = replay({'section': text}, self.items, self.notes)
+        return out['section'], changes.get('section', [])
+
+    def test_a_cited_independent_clause_is_kept(self):
+        for text in REVIEW_9B2_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_the_pairs_own_judgments_are_still_repaired(self):
+        for text, after, changes in REVIEW_9B2_REPAIRED:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (after, changes))
+
+    def test_memo_98_conditional_correction_is_unchanged(self):
+        self.assertEqual(self.full(MEMO98_JUDGMENT), (RISK_AFTER[:-1] + ' [C2, C3].', ['basis_overstatement']))
+
+    def test_earlier_controls_are_unchanged(self):
+        for text in REVIEW_377_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+        for text in REVIEW_377_REPAIRED:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (CONT_LEAD + CLARIFY + '.', ['basis_referent_judgment']))
+
+
+class PipelineReview9b28e14Tests(TestCase):
+    """The memo writer (intelligence_pipeline._generate_memo, model response mocked) keeps both reviewed cited
+    clauses, repairs the pair's own clause in a mixed sentence and keeps memo 101's four repairs."""
+
+    def test_the_writer_keeps_them(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('review9b2_writer', password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo101_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items_from(payload)),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, _ = memo101()
+        mixed, mixed_after, _ = REVIEW_9B2_REPAIRED[2]
+        sections = {'market_analysis': REVIEW_9B2_KEPT[0], 'team_assessment': REVIEW_9B2_KEPT[1],
+                    'problem_solution': mixed}
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw, **sections)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertEqual(memo.market_analysis, REVIEW_9B2_KEPT[0])
+        self.assertEqual(memo.team_assessment, REVIEW_9B2_KEPT[1])
+        self.assertEqual(memo.problem_solution, mixed_after)
+        self.assertIn(BMA_101_AFTER, memo.business_model_analysis)
+        self.assertIn(BASE_101_AFTER, memo.base_scenario)
+        self.assertIn(RISK_101_AFTER, memo.risk_assessment)
+        self.assertIn(DOWN_101_AFTER, memo.downside_scenario)

@@ -388,19 +388,33 @@ def _bridges(sentence):
     return bool(_BRIDGE.fullmatch(sentence))
 
 
-def _judged_segments(sentence):
-    """The sentence split at ";" and at dashes, and for each segment holding a judgment: whether a pair referent
-    governs it, whether it is denied, and its chain. A referent governs its own segment and the continuation
-    fragments that follow it after a dash ("These figures ... — raising the possibility of inflation", memo 101,
-    OF-905). A ";" clause, or a dash followed by anything but a continuation fragment (a new subject: "— an analyst
-    is wrong"), starts a new chain. A denial before the referent, or of an earlier judgment in the chain, covers the
-    judgments that continue it ("Nothing suggests these figures are wrong — or inflated"; review of 750de3f)."""
+def _names_pair(text, pair):
+    """The clause itself names the pair's figures or their bases: a basis word, a figure referent ("the larger
+    figure"), or the pair's counted noun ("the 500M messages figure"); "these figures" governs its chain already.
+    Citations are not read: a sentence's final citations sit at the end of its last clause whichever clause they
+    support (review of 9b28e14)."""
+    text = _REF.sub('', text)
+    return bool(_BASIS_WORDS.search(text) or _FIGURE_REFERENT.search(text) or
+                (pair.noun and re.search(rf'\b{re.escape(pair.noun[:-1])}s?\b', text, re.I)))
+
+
+def _judged_segments(sentence, pair):
+    """The sentence split at ";" and at dashes; the chain of every segment; and for each segment holding a judgment:
+    whether a pair referent governs it, whether it is denied, its chain, and whether the judgment is the pair's.
+    A referent governs its own segment and the continuation fragments that follow it after a dash ("These figures
+    ... — raising the possibility of inflation", memo 101, OF-905). A ";" clause, or a dash followed by anything but
+    a continuation fragment (a new subject: "— an analyst is wrong"), starts a new chain. A denial before the
+    referent, or of an earlier judgment in the chain, covers the judgments that continue it ("Nothing suggests these
+    figures are wrong — or inflated"; review of 750de3f). A judgment is the pair's when a referent governs it or its
+    own chain names the pair (_names_pair); any other judgment has a subject of its own ("— misleading advertising
+    is wrong [S2, S3]", review of 9b28e14)."""
     parts = re.split(r'(;\s*|\s+[—–]\s+)', sentence)
-    judged, governed, denied, chain = [], False, False, 0
+    judged, chains, governed, denied, chain = [], [], False, False, 0
     for i in range(0, len(parts), 2):
         segment = parts[i]
         if i and (parts[i - 1].strip() == ';' or not _CONTINUATION.fullmatch(segment)):
             governed, denied, chain = False, False, chain + 1     # a new clause or a new subject
+        chains.append(chain)
         referent = _PAIR_REFERENT.search(segment)
         if referent:
             governed = True
@@ -409,27 +423,47 @@ def _judged_segments(sentence):
         if judgment:
             denied = denied or _denied(segment, judgment.start())
             judged.append((i, governed, denied, chain))
-    return parts, judged
+    named = {c for c in set(chains) if _names_pair(''.join(parts[2 * k] for k, ck in enumerate(chains) if ck == c), pair)}
+    judged = [(i, governed, denied, c, governed or c in named) for i, governed, denied, c in judged]
+    return parts, judged, chains
 
 
-def _referent_judged(sentence):
-    """Every segment judging the figures is governed by "one or both figures" / "these figures": _referent_judgment
-    decides it, with its protections (a denial, a contradicted pair, the sentence's other clauses; reviews of
-    1801ec5 and memo 101)."""
-    _, judged = _judged_segments(sentence)
-    return bool(judged) and all(governed for _, governed, _, _ in judged)
+def _referent_judged(sentence, pair):
+    """Every judgment of the pair is governed by "one or both figures" / "these figures": _referent_judgment decides
+    it, with its protections (a denial, a contradicted pair, the sentence's other clauses; reviews of 1801ec5 and
+    memo 101). Judgments that are not the pair's are left to neither rule."""
+    _, judged, _ = _judged_segments(sentence, pair)
+    return all(governed for _, governed, _, _, owned in judged if owned)
 
 
 def _judgment(sentence, pair, changes):
-    """An error judgment about the pair's bases becomes its neutral clarification; its citations stay."""
-    if _asks(sentence) or not _JUDGMENT.search(sentence) or _referent_judged(sentence):
+    """An error judgment about the pair's bases becomes its neutral clarification; its citations stay. When every
+    judging clause is the pair's, the whole sentence is replaced (memo 98); otherwise only the chains holding the
+    pair's judgments are, and a clause judging something else stays as written (review of 9b28e14)."""
+    if _asks(sentence) or not _JUDGMENT.search(sentence) or _referent_judged(sentence, pair):
         return sentence
     if not (_BASIS_WORDS.search(sentence) or _cited(sentence)):
         return sentence
-    lead = _LEAD.match(sentence).group('lead')
-    groups = ' '.join(f'[{group}]' for group in _REF.findall(sentence))
+    parts, judged, chains = _judged_segments(sentence, pair)
+    mine = {chain for _, _, _, chain, owned in judged if owned}          # not empty: see _referent_judged
     changes.append('basis_overstatement')
-    return f"{lead}{pair.clarification}{' ' + groups if groups else ''}."
+    if len(mine) == len({chain for _, _, _, chain, _ in judged}):
+        lead = _LEAD.match(sentence).group('lead')
+        groups = ' '.join(f'[{group}]' for group in _REF.findall(sentence))
+        return f"{lead}{pair.clarification}{' ' + groups if groups else ''}."
+    out = []
+    for chain in sorted(set(chains)):        # chains are contiguous runs of segments
+        first = 2 * chains.index(chain)
+        last = 2 * (len(chains) - 1 - chains[::-1].index(chain))
+        text = ''.join(parts[first:last + 1])
+        if chain in mine:                    # the pair's clause: the clarification, its citations, its end
+            end = re.search(r'[.!]?["”’)]*\s*$', text).group(0)
+            groups = ' '.join(f'[{group}]' for group in _REF.findall(text))
+            lead = _LEAD.match(text).group('lead') if first == 0 else text[:len(text) - len(text.lstrip())]
+            words = pair.clarification if first == 0 else pair.clarification[0].lower() + pair.clarification[1:]
+            text = f"{lead}{words}{' ' + groups if groups else ''}{end}"
+        out.append((parts[first - 1] if first else '') + text)
+    return ''.join(out)
 
 
 def _referent_judgment(sentence, pair, changes):
@@ -437,9 +471,9 @@ def _referent_judgment(sentence, pair, changes):
     sentence's other clauses stay (OF-806)."""
     if pair.contradicted or _asks(sentence) or not _PAIR_REFERENT.search(sentence):
         return sentence
-    parts, judged = _judged_segments(sentence)
+    parts, judged, _ = _judged_segments(sentence, pair)
     hit, replaced = False, set()
-    for i, governed, denied, chain in judged:
+    for i, governed, denied, chain, _ in judged:
         if not governed or denied:
             continue
         clause = parts[i]
