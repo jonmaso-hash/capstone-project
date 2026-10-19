@@ -153,8 +153,8 @@ _CUMULATIVE_REFERENT = re.compile(
     r'\b(?P<the>[Tt])he\s+cumulative\s+(?:(?:messages?|bots?|usage)\s+)?(?:figure|total|count|number|metric|value)\b')
 _BASIS_WORDS = re.compile(r'\b(?:cumulative(?:ly)?|monthly|weekly|daily|yearly|per\s+(?:month|week|day|year)|'
                           r'interval|run[- ]rate|measurement\s+bas[ie]s)\b|/\s?(?:month|week|day|year)\b', re.I)
-_JUDGMENT = re.compile(r'\b(?:overstat\w*|inflat\w*|exaggerat\w*|mislead\w*|misrepresent\w*|incorrect\w*|'
-                       r'erroneous\w*|wrong)\b', re.I)
+_JUDGMENT_WORD = r'(?:overstat\w*|inflat\w*|exaggerat\w*|mislead\w*|misrepresent\w*|incorrect\w*|erroneous\w*|wrong)\b'
+_JUDGMENT = re.compile(r'\b' + _JUDGMENT_WORD, re.I)
 # Metrics a usage-basis note says nothing about.
 _OTHER_METRIC = re.compile(r'\b(?:revenues?|sales|arr|mrr|gmv|bookings|profit|margin|ebitda|income|burn|cash|'
                            r'runway|funding|raised|valuation|customers?|users?|subscribers?|clients?|accounts?|'
@@ -235,7 +235,6 @@ UNSPECIFIED_ADJECTIVE = 'unspecified-interval'
 # inflation", "suggesting possible inflation"), or "or/and/nor/which" and hedges straight into the judgment ("or
 # inflated", "possibly inflated", "which may be overstated"). Anything else ("— or Bob is wrong", "— marketing is
 # misleading", "— suggesting marketing is misleading") starts a new subject (reviews of 750de3f and 7fb484b).
-_JUDGMENT_WORD = r'(?:overstat\w*|inflat\w*|exaggerat\w*|mislead\w*|misrepresent\w*|incorrect\w*|erroneous\w*|wrong)\b'
 _CONTINUATION = re.compile(
     r"\s*(?:(?:raising|suggesting|indicating|implying)\s+(?:the\s+(?:possibility|prospect|risk)\s+of\s+|"
     r"(?:concerns?|questions?)\s+(?:of|about)\s+)?(?:(?:possible|potential|metric|usage)\s+)*" + _JUDGMENT_WORD + r"|"
@@ -618,9 +617,8 @@ _OWN_HEAD_WORDS = frozenset({'selfreported', 'company', "company's", 'deck', "de
 def _own_head(head, cited, facts):
     """Every word before the moved citations is the company's own source, a placing word, or a word or figure of the
     cited statements: no other speaker ("An analyst describes the deck's ...", "An analyst's reading of ...") and no
-    aside. An allowlist, so an unlisted third party or verb keeps the sentence (review of 7fb484b)."""
-    if '(' in head or ')' in head:
-        return False
+    aside (a parenthesis is not a plain gap). An allowlist, so an unlisted third party or verb keeps the sentence
+    (review of 7fb484b)."""
     statements = [_DIGIT_GROUP.sub('', fact.lower()) for ref, *_, fact in facts.places if ref in cited]
     vocabulary = (_PLACING_WORDS | _OWN_HEAD_WORDS | {word for fact in statements for word in re.findall(r'[a-z]+', fact)}
                   | {form for fact in statements for form in _stated_forms(fact)})
