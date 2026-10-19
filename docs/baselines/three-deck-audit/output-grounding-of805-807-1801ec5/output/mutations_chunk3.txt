@@ -1,0 +1,24 @@
+Q4 CAUGHT Ran 274 tests in 10.350s FAILED (failures=1) restored=True | OF-806: a denied judgment ("Nothing shows that ...") is replaced
+    assertion failures in: test_unresolved_or_supported_judgments_are_kept
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Nothing shows that one or both figures misrepresent actual activity.'
+Q7 CAUGHT Ran 274 tests in 10.252s FAILED (failures=1) restored=True | OF-805: a condition does not keep the sentence
+    assertion failures in: test_correctly_separated_or_unrelated_wording_is_kept
+    errors in: -
+    failing sub-case: text="If 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16') is one figure, it needs a date."
+Q9 CAUGHT Ran 274 tests in 10.264s FAILED (failures=1) restored=True | OF-805: a page-12 ref not sharing its mention with the page-10 side is moved too
+    assertion failures in: test_correctly_separated_or_unrelated_wording_is_kept
+    errors in: -
+    failing sub-case: text="The deck lists 500M messages [S2] and 500M messages/month [S3] (in a slide context headed 'Traction by Apr-16')."
+Q13 CAUGHT Ran 274 tests in 10.259s FAILED (failures=1) restored=True | OF-807: any sentence before counts as setting conditions
+    assertion failures in: test_supported_unresolved_or_other_wording_is_kept
+    errors in: -
+    failing sub-case: text='The bots [S1] reflect active, paying customers. These conditions are stated by the company [S1].'
+Q14 CAUGHT Ran 274 tests in 10.265s FAILED (failures=1) restored=True | OF-807 / OF-806: the sentence before is carried across a new list item
+    assertion failures in: test_supported_unresolved_or_other_wording_is_kept
+    errors in: -
+    failing sub-case: text='- If the 140,000+ bots [S1] reflect active, paying customers, ManyChat would show product-market fit. \n- These conditions are stated by the company [S1].'
+Q15 CAUGHT Ran 274 tests in 10.257s FAILED (failures=3) restored=True | OF-807: the "rests on the company's own assertions" consequence is kept
+    assertion failures in: test_of807_the_conditions_stay_hypotheses, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+final sha matches pre-run: True b183d1826ff20ff0f9dc75c1fe76eab2692e5ac6e3c7bddace2b42ea5f955d49

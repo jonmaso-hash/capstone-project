@@ -1,0 +1,183 @@
+== red run at f34e3a3 application code (git rev f34e3a3), tests at working tree
+2026-10-18 19:13:18,507 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-18 19:14:15,196 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-18 19:14:15,217 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: funding-source fidelity ['profile_undated'] for document 1
+2026-10-18 19:14:15,222 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-18 19:14:15,255 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-18 19:14:15,256 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label'] for document 1
+2026-10-18 19:14:15,287 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+F...FFFF...F..FF..F..F
+======================================================================
+FAIL: test_the_stored_memo_carries_the_repairs (zelda_api.tests_output_fidelity.PipelineMemo100Tests.test_the_stored_memo_carries_the_repairs)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of807\zelda_api\tests_output_fidelity.py", line 1604, in test_the_stored_memo_carries_the_repairs
+    self.assertIn(BMA_100_AFTER, memo.business_model_analysis)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "The evidence establishes only that the company states 140,000+ bots [S1] and 500M messages [S2] as traction metrics (in a slide context headed 'Traction by Apr-16'), and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on), and that it operates in software [P2] (current profile, undated) at Series A stage [P1]." not found in "Insufficient disclosed data to describe the business model. No revenue statement, no product statement, and no description of how ManyChat charges customers were extracted from the document. The evidence establishes only that the company states 140,000+ bots [S1] and 500M messages [S2, S3] as traction metrics (in a slide context headed 'Traction by Apr-16'), and that it operates in software [P2] (current profile, undated) at Series A stage [P1]. Who pays, what they pay, and what drives growth are not found in the extracted evidence."
+
+======================================================================
+FAIL: test_of805_each_message_figure_keeps_its_own_page_and_context (zelda_api.tests_output_fidelity.Memo100ReplayTests.test_of805_each_message_figure_keeps_its_own_page_and_context)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of807\zelda_api\tests_output_fidelity.py", line 1516, in test_of805_each_message_figure_keeps_its_own_page_and_context
+    self.assertEqual(self.out['business_model_analysis'], expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "Insu[276 chars]s [S2, S3] as traction metrics (in a slide con[208 chars]nce." != "Insu[276 chars]s [S2] as traction metrics (in a slide context[386 chars]nce."
+Diff is 2231 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_of806_the_judgment_becomes_the_pair_clarification (zelda_api.tests_output_fidelity.Memo100ReplayTests.test_of806_the_judgment_becomes_the_pair_clarification)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of807\zelda_api\tests_output_fidelity.py", line 1523, in test_of806_the_judgment_becomes_the_pair_clarification
+    self.assertTrue(first.endswith(OPEN_100_AFTER), first)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : • Ambiguous message-volume measurement bases: The deck states '500M messages' (slide context: 'Traction by Apr-16') [C3/S2] and '500M messages/month' on a separate page [C2/S3]. These cannot be compared without clarification; one or both figures may misrepresent the scale of actual activity.
+
+======================================================================
+FAIL: test_of807_the_conditions_stay_hypotheses (zelda_api.tests_output_fidelity.Memo100ReplayTests.test_of807_the_conditions_stay_hypotheses)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of807\zelda_api\tests_output_fidelity.py", line 1532, in test_of807_the_conditions_stay_hypotheses
+    self.assertEqual(self.out['upside_scenario'], expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "If the 500M messages figure represents a[421 chars]ons." != 'If the 500M messages figure represents a[491 chars]nce.'
+Diff is 1007 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_only_the_expected_rules_fired (zelda_api.tests_output_fidelity.Memo100ReplayTests.test_only_the_expected_rules_fired)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of807\zelda_api\tests_output_fidelity.py", line 1559, in test_only_the_expected_rules_fired
+    self.assertEqual(self.changes, {
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+        'business_model_analysis': ['profile_undated', 'basis_source_context'],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        'upside_scenario': ['basis_condition_attribution'],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    })
+    ^^
+AssertionError: {'bus[36 chars]ated'], 'risk_assessment': ['basis_overstateme[114 chars]nt']} != {'bus[36 chars]ated', 'basis_source_context'], 'risk_assessme[217 chars]on']}
+- {'business_model_analysis': ['profile_undated'],
++ {'business_model_analysis': ['profile_undated', 'basis_source_context'],
+?                                               ++++++++++++++++++++++++
+
+-  'open_concerns': ['basis_contradiction_label'],
++  'open_concerns': ['basis_contradiction_label', 'basis_referent_judgment'],
+?                                               +++++++++++++++++++++++++++
+
+   'risk_assessment': ['basis_overstatement'],
++  'upside_scenario': ['basis_condition_attribution'],
+   'what_would_change_the_picture': ['attribution:Pitch Deck Hunt']}
+
+======================================================================
+FAIL: test_the_stored_sections_get_the_same_repairs (zelda_api.tests_output_fidelity.Memo100StoredSectionsTests.test_the_stored_sections_get_the_same_repairs)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of807\zelda_api\tests_output_fidelity.py", line 1577, in test_the_stored_sections_get_the_same_repairs
+    self.assertIn(BMA_100_AFTER, out['business_model_analysis'])
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "The evidence establishes only that the company states 140,000+ bots [S1] and 500M messages [S2] as traction metrics (in a slide context headed 'Traction by Apr-16'), and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on), and that it operates in software [P2] (current profile, undated) at Series A stage [P1]." not found in "Insufficient disclosed data to describe the business model. No revenue statement, no product statement, and no description of how ManyChat charges customers were extracted from the document. The evidence establishes only that the company states 140,000+ bots [S1] and 500M messages [S2, S3] as traction metrics (in a slide context headed 'Traction by Apr-16'), and that it operates in software [P2] (current profile, undated) at Series A stage [P1]. Who pays, what they pay, and what drives growth are not found in the extracted evidence."
+
+======================================================================
+FAIL: test_the_following_clause_and_its_qualifications_are_kept (zelda_api.tests_output_fidelity.Of805SourceContextTests.test_the_following_clause_and_its_qualifications_are_kept)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of807\zelda_api\tests_output_fidelity.py", line 1646, in test_the_following_clause_and_its_qualifications_are_kept
+    self.assertEqual(changes, ['basis_source_context'])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [] != ['basis_source_context']
+
+Second list contains 1 additional elements.
+First extra element 0:
+'basis_source_context'
+
+- []
++ ['basis_source_context']
+
+======================================================================
+FAIL: test_the_merged_figure_is_split_by_source (zelda_api.tests_output_fidelity.Of805SourceContextTests.test_the_merged_figure_is_split_by_source)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of807\zelda_api\tests_output_fidelity.py", line 1633, in test_the_merged_figure_is_split_by_source
+    self.assertEqual(self.full(text), (after, ['basis_source_context']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[51 chars]s [S2, S3] as traction metrics (in a slide con[35 chars], []) != ("The[51 chars]s [S2] as traction metrics (in a slide context[235 chars]xt'])
+
+First differing element 0:
+"The [50 chars]s [S2, S3] as traction metrics (in a slide con[30 chars]6')."
+"The [50 chars]s [S2] as traction metrics (in a slide context[208 chars]on)."
+
+Diff is 739 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_the_judgment_clause_becomes_the_clarification (zelda_api.tests_output_fidelity.Of806ReferentJudgmentTests.test_the_judgment_clause_becomes_the_clarification)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of807\zelda_api\tests_output_fidelity.py", line 1700, in test_the_judgment_clause_becomes_the_clarification
+    self.assertEqual(self.guard(text), (self.LEAD + 'These cannot be compared without clarification; ' + CLARIFY + '.',
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                        ['basis_referent_judgment']))
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[129 chars]ion; one or both figures may misrepresent actu[13 chars], []) != ('- T[129 chars]ion; how the figure stated without an explicit[113 chars]nt'])
+
+First differing element 0:
+'- Th[128 chars]ion; one or both figures may misrepresent actual activity.'
+'- Th[128 chars]ion; how the figure stated without an explicit[83 chars] on.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. These cannot be compared without clarification; one or both '
+?                                                                ^^^^^^^^
+
++  'on page 12. These cannot be compared without clarification; how the figure '
+?                                                               + ^^  ++++++++
+
+-  'figures may misrepresent actual activity.',
+-  [])
++  'stated without an explicit interval relates to the monthly figure needs '
++  'clarification before either is relied on.',
++  ['basis_referent_judgment'])
+
+======================================================================
+FAIL: test_the_conditions_are_not_company_statements (zelda_api.tests_output_fidelity.Of807ConditionAttributionTests.test_the_conditions_are_not_company_statements)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of807\zelda_api\tests_output_fidelity.py", line 1738, in test_the_conditions_are_not_company_statements
+    self.assertEqual(self.guard(text), (
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+        self.COND + 'The figures are stated by the company [S1, S2] but have not been verified; the conditions '
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        'placed on them (active, paying customers) are hypotheses the evidence does not state, and would need '
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        'evidence.', ['basis_condition_attribution']))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('If [95 chars]. These conditions are stated by the company [[36 chars], []) != ('If [95 chars]. The figures are stated by the company [S1, S[186 chars]on'])
+
+First differing element 0:
+'If t[94 chars]. These conditions are stated by the company [[31 chars]ied.'
+'If t[94 chars]. The figures are stated by the company [S1, S[152 chars]nce.'
+
+  ('If the 140,000+ bots [S1] reflect active, paying customers, ManyChat would '
+-  'show product-market fit. These conditions are stated by the company [S1, S2] '
+?                                ------------
+
++  'show product-market fit. The figures are stated by the company [S1, S2] but '
+?                               +++++++                                     ++++
+
+-  'but have not been verified.',
+-  [])
++  'have not been verified; the conditions placed on them (active, paying '
++  'customers) are hypotheses the evidence does not state, and would need '
++  'evidence.',
++  ['basis_condition_attribution'])
+
+----------------------------------------------------------------------
+Ran 22 tests in 0.413s
+
+FAILED (failures=10)
+Destroying test database for alias 'default'...
+Found 22 test(s).
+System check identified no issues (0 silenced).

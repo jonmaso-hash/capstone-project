@@ -1,0 +1,12 @@
+Q1 CAUGHT Ran 274 tests in 10.424s FAILED (failures=5) restored=True | OF-806: "one or both figures" does not continue the item's pair
+    assertion failures in: test_of806_the_judgment_becomes_the_pair_clarification, test_only_the_expected_rules_fired, test_the_judgment_clause_becomes_the_clarification, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+Q2 NOT-APPLIED anchor count 0 | OF-806: the referent-judgment rule is not applied
+Q3 CAUGHT Ran 274 tests in 10.334s FAILED (failures=1) restored=True | OF-806: a pair with a CONTRADICTED member is neutralised too
+    assertion failures in: test_a_contradicted_pair_keeps_the_judgment
+    errors in: -
+Q4 CAUGHT Ran 274 tests in 10.446s FAILED (failures=1) restored=True | OF-806: a denied judgment ("Nothing shows that ...") is replaced
+    assertion failures in: test_unresolved_or_supported_judgments_are_kept
+    errors in: -
+Q5 NOT-APPLIED anchor count 0 | OF-806: the whole sentence is replaced, not only the judgment clause
+final sha matches pre-run: True b183d1826ff20ff0f9dc75c1fe76eab2692e5ac6e3c7bddace2b42ea5f955d49

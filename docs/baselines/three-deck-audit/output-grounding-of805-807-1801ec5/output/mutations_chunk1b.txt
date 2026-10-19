@@ -1,0 +1,16 @@
+Q2 CAUGHT Ran 274 tests in 10.347s FAILED (failures=5) restored=True | OF-806: the referent-judgment rule is not applied
+    assertion failures in: test_of806_the_judgment_becomes_the_pair_clarification, test_only_the_expected_rules_fired, test_the_judgment_clause_becomes_the_clarification, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+Q5 CAUGHT Ran 274 tests in 10.322s FAILED (failures=5) restored=True | OF-806: the whole sentence is replaced, not only the judgment clause
+    assertion failures in: test_of806_the_judgment_becomes_the_pair_clarification, test_only_the_expected_rules_fired, test_the_judgment_clause_becomes_the_clarification, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+Q6 CAUGHT Ran 274 tests in 10.448s FAILED (failures=6) restored=True | OF-805: the context-aside rule is not applied
+    assertion failures in: test_of805_each_message_figure_keeps_its_own_page_and_context, test_only_the_expected_rules_fired, test_the_following_clause_and_its_qualifications_are_kept, test_the_merged_figure_is_split_by_source, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+Q7 CAUGHT Ran 274 tests in 10.403s FAILED (failures=1) restored=True | OF-805: a condition does not keep the sentence
+    assertion failures in: test_correctly_separated_or_unrelated_wording_is_kept
+    errors in: -
+Q8 CAUGHT Ran 274 tests in 10.301s FAILED (failures=1) restored=True | OF-805: a narrated moved ref is moved anyway
+    assertion failures in: test_a_narrated_figure_is_kept
+    errors in: -
+final sha matches pre-run: True b183d1826ff20ff0f9dc75c1fe76eab2692e5ac6e3c7bddace2b42ea5f955d49
