@@ -1,0 +1,281 @@
+== red run: zelda_api/basis_fidelity.py from 1801ec5 (git show), tests at working tree
+2026-10-18 20:09:36,877 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-18 20:10:29,015 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-18 20:10:29,032 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: funding-source fidelity ['profile_undated'] for document 1
+2026-10-18 20:10:29,037 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-18 20:10:29,116 INFO zelda_api.intelligence_pipeline - Memo market_analysis: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-18 20:10:29,118 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-18 20:10:29,119 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-18 20:10:29,121 INFO zelda_api.intelligence_pipeline - Memo upside_scenario: measurement-basis wording ['basis_condition_attribution'] for document 1
+2026-10-18 20:10:29,162 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+F2026-10-18 20:10:29,170 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-18 20:10:29,177 INFO zelda_api.intelligence_pipeline - Memo financial_analysis: funding-source fidelity ['provenance:Pitch Deck Hunt'] for document 1
+2026-10-18 20:10:29,178 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: funding-source fidelity ['profile_undated'] for document 1
+2026-10-18 20:10:29,183 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-18 20:10:29,188 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-18 20:10:29,188 INFO zelda_api.intelligence_pipeline - Memo market_analysis: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-18 20:10:29,188 INFO zelda_api.intelligence_pipeline - Memo team_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-18 20:10:29,189 INFO zelda_api.intelligence_pipeline - Memo financial_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-18 20:10:29,190 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-18 20:10:29,191 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-18 20:10:29,193 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label', 'basis_referent_judgment'] for document 1
+2026-10-18 20:10:29,193 INFO zelda_api.intelligence_pipeline - Memo upside_scenario: measurement-basis wording ['basis_condition_attribution'] for document 1
+2026-10-18 20:10:29,214 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+FFFFFFFFFFF..
+======================================================================
+FAIL: test_the_writer_keeps_a_contradicted_pair_s_judgment (zelda_api.tests_output_fidelity.PipelineReview1801ec5Tests.test_the_writer_keeps_a_contradicted_pair_s_judgment)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of807\zelda_api\tests_output_fidelity.py", line 1873, in test_the_writer_keeps_a_contradicted_pair_s_judgment
+    self.assertEqual(memo.market_analysis, JUDGED)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'How the figure stated without an explicit[92 chars]S3].' != 'One or both figures may misrepresent activity [S2, S3].'
+- How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
++ One or both figures may misrepresent activity [S2, S3].
+
+
+======================================================================
+FAIL: test_the_writer_keeps_the_protections (zelda_api.tests_output_fidelity.PipelineReview1801ec5Tests.test_the_writer_keeps_the_protections)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of807\zelda_api\tests_output_fidelity.py", line 1863, in test_the_writer_keeps_the_protections
+    self.assertEqual(memo.market_analysis, JUDGED_DENIED)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'How the figure stated without an explicit[92 chars]S3].' != 'Nothing shows that one or both figures mi[25 chars]S3].'
+- How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
++ Nothing shows that one or both figures misrepresent activity [S2, S3].
+
+
+======================================================================
+FAIL: test_a_cited_referent_judgment_keeps_its_protections (zelda_api.tests_output_fidelity.Review1801ec5Tests.test_a_cited_referent_judgment_keeps_its_protections)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of807\zelda_api\tests_output_fidelity.py", line 1810, in test_a_cited_referent_judgment_keeps_its_protections
+    self.assertEqual(self.full(JUDGED_DENIED), (JUDGED_DENIED, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('How the figure stated without an explicit[118 chars]nt']) != ('Nothing shows that one or both figures mi[30 chars], [])
+
+First differing element 0:
+'How the figure stated without an explicit[92 chars]S3].'
+'Nothing shows that one or both figures mi[25 chars]S3].'
+
++ ('Nothing shows that one or both figures misrepresent activity [S2, S3].', [])
+- ('How the figure stated without an explicit interval relates to the monthly '
+-  'figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_a_denied_narrated_or_uncertain_statement_keeps_its_citations (zelda_api.tests_output_fidelity.Review1801ec5Tests.test_a_denied_narrated_or_uncertain_statement_keeps_its_citations) (text="The company does not state 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16').")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of807\zelda_api\tests_output_fidelity.py", line 1826, in test_a_denied_narrated_or_uncertain_statement_keeps_its_citations
+    self.assertEqual(self.full(text), expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[36 chars]s [S2] (in a slide context headed 'Traction by[215 chars]xt']) != ("The[36 chars]s [S2, S3] (in a slide context headed 'Tractio[15 chars], [])
+
+First differing element 0:
+"The [35 chars]s [S2] (in a slide context headed 'Traction by[188 chars]on)."
+"The [35 chars]s [S2, S3] (in a slide context headed 'Traction by Apr-16')."
+
+- ('The company does not state 500M messages [S2] (in a slide context headed '
++ ('The company does not state 500M messages [S2, S3] (in a slide context headed '
+?                                               ++++
+
++  "'Traction by Apr-16').",
++  [])
+-  "'Traction by Apr-16'), and separately 500M messages/month [S3] on page 12 "
+-  '(how the figure stated without an explicit interval relates to the monthly '
+-  'figure needs clarification before either is relied on).',
+-  ['basis_source_context'])
+
+======================================================================
+FAIL: test_a_denied_narrated_or_uncertain_statement_keeps_its_citations (zelda_api.tests_output_fidelity.Review1801ec5Tests.test_a_denied_narrated_or_uncertain_statement_keeps_its_citations) (text="The company never states 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16').")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of807\zelda_api\tests_output_fidelity.py", line 1826, in test_a_denied_narrated_or_uncertain_statement_keeps_its_citations
+    self.assertEqual(self.full(text), expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[34 chars]s [S2] (in a slide context headed 'Traction by[215 chars]xt']) != ("The[34 chars]s [S2, S3] (in a slide context headed 'Tractio[15 chars], [])
+
+First differing element 0:
+"The [33 chars]s [S2] (in a slide context headed 'Traction by[188 chars]on)."
+"The [33 chars]s [S2, S3] (in a slide context headed 'Traction by Apr-16')."
+
+- ('The company never states 500M messages [S2] (in a slide context headed '
++ ('The company never states 500M messages [S2, S3] (in a slide context headed '
+?                                             ++++
+
++  "'Traction by Apr-16').",
++  [])
+-  "'Traction by Apr-16'), and separately 500M messages/month [S3] on page 12 "
+-  '(how the figure stated without an explicit interval relates to the monthly '
+-  'figure needs clarification before either is relied on).',
+-  ['basis_source_context'])
+
+======================================================================
+FAIL: test_a_denied_narrated_or_uncertain_statement_keeps_its_citations (zelda_api.tests_output_fidelity.Review1801ec5Tests.test_a_denied_narrated_or_uncertain_statement_keeps_its_citations) (text="Pitch Deck Hunt lists 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16').")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of807\zelda_api\tests_output_fidelity.py", line 1826, in test_a_denied_narrated_or_uncertain_statement_keeps_its_citations
+    self.assertEqual(self.full(text), expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Pit[31 chars]s [S2] (not Pitch Deck Hunt's: [S2] are the co[346 chars]xt']) != ("Pit[31 chars]s [S2, S3] (not Pitch Deck Hunt's: [S2, S3] ar[119 chars]nt'])
+
+First differing element 0:
+"Pitc[30 chars]s [S2] (not Pitch Deck Hunt's: [S2] are the co[289 chars]on)."
+"Pitc[30 chars]s [S2, S3] (not Pitch Deck Hunt's: [S2, S3] ar[86 chars]6')."
+
+Diff is 941 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_a_denied_narrated_or_uncertain_statement_keeps_its_citations (zelda_api.tests_output_fidelity.Review1801ec5Tests.test_a_denied_narrated_or_uncertain_statement_keeps_its_citations) (text="The company may state 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16').")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of807\zelda_api\tests_output_fidelity.py", line 1826, in test_a_denied_narrated_or_uncertain_statement_keeps_its_citations
+    self.assertEqual(self.full(text), expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[31 chars]s [S2] (in a slide context headed 'Traction by[215 chars]xt']) != ("The[31 chars]s [S2, S3] (in a slide context headed 'Tractio[15 chars], [])
+
+First differing element 0:
+"The [30 chars]s [S2] (in a slide context headed 'Traction by[188 chars]on)."
+"The [30 chars]s [S2, S3] (in a slide context headed 'Traction by Apr-16')."
+
+- ('The company may state 500M messages [S2] (in a slide context headed '
++ ('The company may state 500M messages [S2, S3] (in a slide context headed '
+?                                          ++++
+
++  "'Traction by Apr-16').",
++  [])
+-  "'Traction by Apr-16'), and separately 500M messages/month [S3] on page 12 "
+-  '(how the figure stated without an explicit interval relates to the monthly '
+-  'figure needs clarification before either is relied on).',
+-  ['basis_source_context'])
+
+======================================================================
+FAIL: test_a_denied_narrated_or_uncertain_statement_keeps_its_citations (zelda_api.tests_output_fidelity.Review1801ec5Tests.test_a_denied_narrated_or_uncertain_statement_keeps_its_citations) (text="The deck appears to list 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16').")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of807\zelda_api\tests_output_fidelity.py", line 1826, in test_a_denied_narrated_or_uncertain_statement_keeps_its_citations
+    self.assertEqual(self.full(text), expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[34 chars]s [S2] (in a slide context headed 'Traction by[215 chars]xt']) != ("The[34 chars]s [S2, S3] (in a slide context headed 'Tractio[15 chars], [])
+
+First differing element 0:
+"The [33 chars]s [S2] (in a slide context headed 'Traction by[188 chars]on)."
+"The [33 chars]s [S2, S3] (in a slide context headed 'Traction by Apr-16')."
+
+- ('The deck appears to list 500M messages [S2] (in a slide context headed '
++ ('The deck appears to list 500M messages [S2, S3] (in a slide context headed '
+?                                             ++++
+
++  "'Traction by Apr-16').",
++  [])
+-  "'Traction by Apr-16'), and separately 500M messages/month [S3] on page 12 "
+-  '(how the figure stated without an explicit interval relates to the monthly '
+-  'figure needs clarification before either is relied on).',
+-  ['basis_source_context'])
+
+======================================================================
+FAIL: test_a_denied_narrated_or_uncertain_statement_keeps_its_citations (zelda_api.tests_output_fidelity.Review1801ec5Tests.test_a_denied_narrated_or_uncertain_statement_keeps_its_citations) (text="500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16') is the headline figure.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of807\zelda_api\tests_output_fidelity.py", line 1826, in test_a_denied_narrated_or_uncertain_statement_keeps_its_citations
+    self.assertEqual(self.full(text), expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("500M messages [S2] (in a slide context headed 'Traction by[238 chars]xt']) != ("500M messages [S2, S3] (in a slide context headed 'Tractio[38 chars], [])
+
+First differing element 0:
+"500M messages [S2] (in a slide context headed 'Traction by[211 chars]ure."
+"500M messages [S2, S3] (in a slide context headed 'Tractio[33 chars]ure."
+
+- ("500M messages [S2] (in a slide context headed 'Traction by Apr-16'), and "
+?                                                                      ^^^^^
+
++ ("500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16') is "
+?                    ++++                                                  ^^^
+
++  'the headline figure.',
++  [])
+-  'separately 500M messages/month [S3] on page 12 (how the figure stated '
+-  'without an explicit interval relates to the monthly figure needs '
+-  'clarification before either is relied on) is the headline figure.',
+-  ['basis_source_context'])
+
+======================================================================
+FAIL: test_a_denied_narrated_or_uncertain_statement_keeps_its_citations (zelda_api.tests_output_fidelity.Review1801ec5Tests.test_a_denied_narrated_or_uncertain_statement_keeps_its_citations) (text="The company states that it has not verified 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16').")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of807\zelda_api\tests_output_fidelity.py", line 1826, in test_a_denied_narrated_or_uncertain_statement_keeps_its_citations
+    self.assertEqual(self.full(text), expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[53 chars]s [S2] (in a slide context headed 'Traction by[215 chars]xt']) != ("The[53 chars]s [S2, S3] (in a slide context headed 'Tractio[15 chars], [])
+
+First differing element 0:
+"The [52 chars]s [S2] (in a slide context headed 'Traction by[188 chars]on)."
+"The [52 chars]s [S2, S3] (in a slide context headed 'Traction by Apr-16')."
+
+- ('The company states that it has not verified 500M messages [S2] (in a slide '
+?                                                                        ------
+
++ ('The company states that it has not verified 500M messages [S2, S3] (in a '
+?                                                                ++++
+
++  "slide context headed 'Traction by Apr-16').",
++  [])
+-  "context headed 'Traction by Apr-16'), and separately 500M messages/month "
+-  '[S3] on page 12 (how the figure stated without an explicit interval relates '
+-  'to the monthly figure needs clarification before either is relied on).',
+-  ['basis_source_context'])
+
+======================================================================
+FAIL: test_a_denied_narrated_or_uncertain_statement_keeps_its_citations (zelda_api.tests_output_fidelity.Review1801ec5Tests.test_a_denied_narrated_or_uncertain_statement_keeps_its_citations) (text="The company states what may be 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16').")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of807\zelda_api\tests_output_fidelity.py", line 1826, in test_a_denied_narrated_or_uncertain_statement_keeps_its_citations
+    self.assertEqual(self.full(text), expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[40 chars]s [S2] (in a slide context headed 'Traction by[215 chars]xt']) != ("The[40 chars]s [S2, S3] (in a slide context headed 'Tractio[15 chars], [])
+
+First differing element 0:
+"The [39 chars]s [S2] (in a slide context headed 'Traction by[188 chars]on)."
+"The [39 chars]s [S2, S3] (in a slide context headed 'Traction by Apr-16')."
+
+- ('The company states what may be 500M messages [S2] (in a slide context headed '
+?                                                                         -------
+
++ ('The company states what may be 500M messages [S2, S3] (in a slide context '
+?                                                   ++++
+
++  "headed 'Traction by Apr-16').",
++  [])
+-  "'Traction by Apr-16'), and separately 500M messages/month [S3] on page 12 "
+-  '(how the figure stated without an explicit interval relates to the monthly '
+-  'figure needs clarification before either is relied on).',
+-  ['basis_source_context'])
+
+======================================================================
+FAIL: test_an_undefended_cited_referent_judgment_is_still_replaced (zelda_api.tests_output_fidelity.Review1801ec5Tests.test_an_undefended_cited_referent_judgment_is_still_replaced)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of807\zelda_api\tests_output_fidelity.py", line 1815, in test_an_undefended_cited_referent_judgment_is_still_replaced
+    self.assertEqual(self.full(JUDGED), (JUDGED_AFTER, ['basis_referent_judgment']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('How[102 chars]re either is relied on [S2, S3].', ['basis_overstatement']) != ('How[102 chars]re either is relied on [S2, S3].', ['basis_referent_judgment'])
+
+First differing element 1:
+['basis_overstatement']
+['basis_referent_judgment']
+
+  ('How the figure stated without an explicit interval relates to the monthly '
+   'figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
++  ['basis_referent_judgment'])
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.246s
+
+FAILED (failures=12)
+Destroying test database for alias 'default'...
+Found 7 test(s).
+System check identified no issues (0 silenced).

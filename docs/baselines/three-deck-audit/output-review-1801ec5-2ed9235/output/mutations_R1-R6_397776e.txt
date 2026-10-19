@@ -1,0 +1,23 @@
+R1 CAUGHT Ran 282 tests in 10.273s FAILED (failures=4) restored=True | review 1801ec5: the judgment rule does not leave a "one or both figures" judgment to its own rule
+    assertion failures in: test_a_cited_referent_judgment_keeps_its_protections, test_an_undefended_cited_referent_judgment_is_still_replaced, test_the_writer_keeps_a_contradicted_pair_s_judgment, test_the_writer_keeps_the_protections
+    errors in: -
+R2 CAUGHT Ran 282 tests in 10.322s FAILED (failures=1) restored=True | review 1801ec5: one judging clause about "one or both figures" is enough to bypass the judgment rule
+    assertion failures in: test_a_judgment_not_only_about_one_or_both_figures_stays_with_the_judgment_rule
+    errors in: -
+R3 CAUGHT Ran 282 tests in 10.504s FAILED (failures=1) restored=True | review 1801ec5: the context split does not need the company as subject (a narrator listing is split)
+    assertion failures in: test_a_denied_narrated_or_uncertain_statement_keeps_its_citations
+    errors in: -
+    failing sub-case: text="Pitch Deck Hunt lists 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16')."
+R4 CAUGHT Ran 282 tests in 10.394s FAILED (failures=1) restored=True | review 1801ec5: the context split does not need a reporting verb
+    assertion failures in: test_a_denied_narrated_or_uncertain_statement_keeps_its_citations
+    errors in: -
+    failing sub-case: text="500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16') is the headline figure."
+R5 CAUGHT Ran 282 tests in 10.391s FAILED (failures=1) restored=True | review 1801ec5: a denial in the clause does not keep the citations
+    assertion failures in: test_a_denied_narrated_or_uncertain_statement_keeps_its_citations
+    errors in: -
+    failing sub-case: text="The company states that it has not verified 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16')."
+R6 CAUGHT Ran 282 tests in 10.299s FAILED (failures=1) restored=True | review 1801ec5: a hedge in the clause does not keep the citations
+    assertion failures in: test_a_denied_narrated_or_uncertain_statement_keeps_its_citations
+    errors in: -
+    failing sub-case: text="The company states what may be 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16')."
+final sha matches pre-run: True 5e1da98dc7e99e76a9348031c28e495d595f0c91d3e02af206295955a472c599

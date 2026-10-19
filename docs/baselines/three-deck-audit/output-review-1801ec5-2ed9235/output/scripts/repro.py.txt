@@ -1,0 +1,14 @@
+from zelda_api.basis_fidelity import basis_facts, guard_basis_wording
+from zelda_api.grounded_context import CONTRADICTED
+from zelda_api.tests_output_fidelity import _context_items, NOTE
+ok = basis_facts(_context_items(), (NOTE,)); contra = basis_facts(_context_items(CONTRADICTED), (NOTE,))
+for label, facts, text in [
+    ('denial', ok, 'Nothing shows that one or both figures misrepresent activity [S2, S3].'),
+    ('contradicted', contra, 'One or both figures may misrepresent activity [S2, S3].'),
+    ('clause', ok, 'These cannot be compared without clarification; one or both figures may misrepresent activity [S2, S3].'),
+    ('aside-denied', ok, "The company does not state 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16')."),
+    ('aside-narrator', ok, "Pitch Deck Hunt lists 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16')."),
+    ('aside-uncertain', ok, "The company may state 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16')."),
+    ('judgment-denied-noref', ok, 'Nothing shows that the cumulative figure is overstated [C2, C3].'),
+]:
+    print(label, '|', guard_basis_wording(text, facts))
