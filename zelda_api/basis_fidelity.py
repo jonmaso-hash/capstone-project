@@ -392,8 +392,7 @@ def _names_pair(text, pair):
     """The clause itself names the pair's figures or their bases: a basis word, a figure referent ("the larger
     figure"), or the pair's counted noun ("the 500M messages figure"); "these figures" governs its chain already.
     Citations are not read: a sentence's final citations sit at the end of its last clause whichever clause they
-    support (review of 9b28e14)."""
-    text = _REF.sub('', text)
+    support (review of 9b28e14); none of these patterns matches a citation."""
     return bool(_BASIS_WORDS.search(text) or _FIGURE_REFERENT.search(text) or
                 (pair.noun and re.search(rf'\b{re.escape(pair.noun[:-1])}s?\b', text, re.I)))
 
