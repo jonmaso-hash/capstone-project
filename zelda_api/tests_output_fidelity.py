@@ -1368,6 +1368,19 @@ class ReviewB54d82bProbeTests(SimpleTestCase):
         text = 'The company states the message figures (500M, 500M/month) on the same slide [S2, S3].'
         self.assertEqual(self.guard(text), ('The company states ' + PLACED_23 + '.', ['basis_source_location']))
 
+    def test_a_figure_token_that_is_not_one_whole_figure_keeps_the_sentence(self):
+        # Review of a4f55e5 (P29): a figure token with more after its form ("/day" after "500M/month", "s" after
+        # "500m") is not one whole figure, so its leading form must not be read as a stated figure.
+        for text in ('The company states the message figures (500M/month/day) on the same slide [S2, S3].',
+                     'The company states the message figures (500ms) on the same slide [S2, S3].'):
+            with self.subTest(sequence='full', text=text):
+                self.assertEqual(self.full(text), (text, []))
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+        # Control: the whole stated forms are still restated.
+        text = 'The company states the message figures (500M, 500M/month) on the same slide [S2, S3].'
+        self.assertEqual(self.guard(text), ('The company states ' + PLACED_23 + '.', ['basis_source_location']))
+
     def test_a_list_marker_is_not_arithmetic(self):
         # Control: a bullet's marker is the line's lead, not a sign inside the clause.
         for lead in ('- ', '• '):
