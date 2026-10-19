@@ -2102,7 +2102,10 @@ class Of903SharedContextTests(SimpleTestCase):
                 # A question.
                 "Were 500M messages [S2, S3] counted in the 'Traction by Apr-16' slide context?",
                 # A context phrase inside a parenthesis that is not a context aside: kept (limitation, recorded).
-                "The deck states 500M messages [S2, S3] (within the 'Traction by Apr-16' slide context)."):
+                "The deck states 500M messages [S2, S3] (within the 'Traction by Apr-16' slide context).",
+                "- The deck states 500M messages [S2, S3] (within the 'Traction by Apr-16' slide context)",
+                # A third party's reporting verb (not a recorded narrator): not the company's statement.
+                "An analyst lists 500M messages [S2, S3] in a slide context headed 'Traction by Apr-16'."):
             with self.subTest(text=text):
                 self.assertEqual(self.full(text), (text, []))
 
