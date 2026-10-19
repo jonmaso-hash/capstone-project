@@ -1665,6 +1665,9 @@ class Of805SourceContextTests(SimpleTestCase):
                 "The deck lists 500M messages [S2, S9] (in a slide context headed 'Traction by Apr-16').",
                 # The page-12 figure alone under the aside is not split: no page-10 side shares its mention.
                 "The deck lists 500M messages/month [S3] (in a slide context headed 'Traction by Apr-16').",
+                # Limitation (recorded): a separate page-12 mention before the aside is not moved either.
+                "The deck lists 500M messages [S2] and 500M messages/month [S3] (in a slide context headed "
+                "'Traction by Apr-16').",
                 # Questions and conditions.
                 "Are 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16') the same figure?",
                 "If 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16') is one figure, it needs "
@@ -1750,6 +1753,7 @@ class Of807ConditionAttributionTests(SimpleTestCase):
                 '- ' + self.COND + '\n- These conditions are stated by the company [S1].',  # another bullet
                 self.COND + 'These figures are stated by the company [S1].',              # the figures are
                 self.COND + 'These conditions are not stated by the company [S1].',       # a denial
+                'The bots [S1] reflect active, paying customers. These conditions are stated by the company [S1].',  # no condition
                 'If the 500M messages figure is a monthly rate [S3], usage is large. These conditions are stated by '
                 'the company [S3].'):                                                     # nothing beyond the figure
             with self.subTest(text=text):

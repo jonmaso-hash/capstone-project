@@ -555,10 +555,8 @@ def _context_aside(sentence, facts, changes):
         pair = next((p for p in facts.pairs if len(p.sides) == 2 and set(outside) <= p.members), None)
         if pair is None:
             continue
-        sides_out = {i for i, side in enumerate(pair.sides) if set(outside) & side}
-        sides_in = {i for i, side in enumerate(pair.sides) if set(inside) & side}
-        if len(sides_out) != 1 or not sides_in - sides_out:
-            continue
+        # Each moved ref shares its citation group with a ref of the same pair under the claimed context: one
+        # figure cited for both sides. (A side's refs share one page and context, so that ref is the other side.)
         merged = all(any(ref in inside and ref in pair.members for ref in _split_refs(group.group(1)))
                      for group in groups if set(_split_refs(group.group(1))) & set(outside))
         if not merged:
