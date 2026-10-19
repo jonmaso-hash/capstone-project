@@ -1,0 +1,94 @@
+"""Derive this run's (ManyChat Pass A at 0664563, after PR #286) stage-1 scripts from the memo-100 run's (scratchpad
+f34/), changing only the listed names, paths, IDs, Redis databases and refusal/preservation lists. Each replacement
+must match at least once, so a stale value cannot survive silently. Usage: python make_scripts.py"""
+import os, secrets
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+PREV = os.path.join(os.path.dirname(HERE), 'f34')
+BS = chr(92)
+SP = lambda name: BS.join(['C--Users-jonathan-Desktop-KCV-np', 'c8a313d5-81e1-402a-b7da-9205b6f20fab', 'scratchpad', name])
+F34_LINE = "F34 = r'" + BS.join(['C:', 'Users', 'jonathan', 'AppData', 'Local', 'Temp', 'claude', SP('f34')]) + "'\n"
+WT_F34 = "WT = r'" + BS.join(['C:', 'Users', 'jonathan', 'Desktop', 'KCV-mc-f34']) + "'"
+WT_066 = "WT = r'" + BS.join(['C:', 'Users', 'jonathan', 'Desktop', 'KCV-mc-066']) + "'"
+OF_COPY = "OF + r'" + BS + "db_of_copy.sqlite3'"
+F34_COPY = "F34 + r'" + BS + "db_f34_copy.sqlite3'"
+
+
+def derive(name, reps, target=None):
+    s = open(os.path.join(PREV, name), encoding='utf-8').read()
+    for a, b in reps:
+        assert s.count(a) >= 1, (name, a)
+        s = s.replace(a, b)
+    open(os.path.join(HERE, target or name), 'w', encoding='utf-8', newline='\n').write(s)
+    print('derived', target or name)
+
+
+derive('prep_copy.py', [
+    ('ManyChat Pass A at f34e3a3 (after PR #285)', 'ManyChat Pass A at 0664563 (after PR #286)'),
+    ("    'memo99_copy_of': " + OF_COPY + ",\n}",
+     "    'memo99_copy_of': " + OF_COPY + ",\n    'memo100_copy_f34': " + F34_COPY + ",\n}"),
+    ("OLD = r'C:", F34_LINE + "OLD = r'C:"),
+    ("'db_f34_copy.sqlite3')\nphase", "'db_r066_copy.sqlite3')\nphase"),
+])
+derive('run_f34.py', [
+    ('ManyChat Pass A run wrapper at f34e3a3 (after PR #285)', 'ManyChat Pass A run wrapper at 0664563 (after PR #286)'),
+    ("Adapted from the memo-99 run's run_of.py: worktree, copy, expected head, Redis dbs, worker name and the\nrefusal list (memo-99 copy added) changed.",
+     "Adapted from the memo-100 run's run_f34.py: worktree, copy, expected head, Redis dbs, worker name and the\nrefusal list (memo-100 copy added) changed."),
+    ('  * code: worktree KCV-mc-f34, branch docs/manychat-output-fidelity-f34e3a3 at f34e3a3;',
+     '  * code: worktree KCV-mc-066, branch docs/manychat-output-fidelity-0664563 at 0664563;'),
+    ('local Memurai DBs 4 (broker) and 12 (results and cache), empty and without clients before the run\n'
+     '    (only dbs 4 and 12 were empty; results and cache share db 12, whose key prefixes cannot collide);',
+     'local Memurai DBs 1 (broker) and 3 (results and cache), without clients before the run. No db was\n'
+     '    empty; dbs 1 and 3 held only the three static _kombu.binding.* sets any Celery worker declares, with\n'
+     '    empty queues and no result or cache keys (results and cache share db 3; their key prefixes cannot collide);'),
+    (WT_F34, WT_066),
+    ("FORBIDDEN_DBS = [", F34_LINE + "FORBIDDEN_DBS = ["),
+    (", " + OF_COPY + "]", ", " + OF_COPY + ",\n                 " + F34_COPY + "]"),
+    ("COPY_DB = os.path.join(HERE, 'db_f34_copy.sqlite3')", "COPY_DB = os.path.join(HERE, 'db_r066_copy.sqlite3')"),
+    ("EXPECTED_HEAD = 'f34e3a399349a2d7401f66d9b60b10834047e57a'", "EXPECTED_HEAD = '066456341935d5ace32760a00788f78ec61a047a'"),
+    ("RUN_DBS = ('4', '12')", "RUN_DBS = ('1', '3')"),
+    ("'CELERY_BROKER_URL': 'redis://localhost:6379/4'", "'CELERY_BROKER_URL': 'redis://localhost:6379/1'"),
+    ("'CELERY_RESULT_BACKEND': 'redis://localhost:6379/12'", "'CELERY_RESULT_BACKEND': 'redis://localhost:6379/3'"),
+    ("'CACHE_URL': 'redis://localhost:6379/12'", "'CACHE_URL': 'redis://localhost:6379/3'"),
+    ("name=mcf34@%h queue=celery pool=solo concurrency=1 broker_db=4", "name=mc066@%h queue=celery pool=solo concurrency=1 broker_db=1"),
+    ("'-n', 'mcf34@%h'", "'-n', 'mc066@%h'"),
+], 'run_r066.py')
+derive('run_ro.py', [
+    (WT_F34, WT_066),
+    ("CELERY_BROKER_URL='redis://localhost:6379/4', CELERY_RESULT_BACKEND='redis://localhost:6379/12'",
+     "CELERY_BROKER_URL='redis://localhost:6379/1', CELERY_RESULT_BACKEND='redis://localhost:6379/3'"),
+    ("CACHE_URL='redis://localhost:6379/12'", "CACHE_URL='redis://localhost:6379/3'"),
+])
+derive('snapshot_ro.py', [('memo hashes', 'memo hashes')])
+derive('bump_sequences.py', [
+    ("Run in the f34 COPY (via run_f34.py script)", "Run in the r066 COPY (via run_r066.py script)"),
+    ("(document 3141, memo 99, ...)", "(document 3142, memo 100, ...)"),
+    (BS.join(['', 'scratchpad', 'of', 'db_of_copy.sqlite3']), BS.join(['', 'scratchpad', 'f34', 'db_f34_copy.sqlite3'])),
+    ("'db_f34_copy' in str", "'db_r066_copy' in str"),
+])
+derive('setup_fixtures.py', [
+    (SP('f34'), SP('r066')),
+    ("P = 'f34mc'          # f34e3a3 ManyChat Pass A: f34mc_*", "P = 'r66mc'          # 0664563 ManyChat Pass A: r66mc_*"),
+    ("'cus_f34_local_mc'", "'cus_r66_local_mc'"), ("'sub_f34_local_mc'", "'sub_r66_local_mc'"),
+    ('@f34.test', '@r66.test'),
+    ('ManyChat f34e3a3 Pass A run.', 'ManyChat 0664563 Pass A run.'),
+])
+derive('upload.py', [('Upload the deck ONCE', 'Upload the deck ONCE')])
+derive('dump_f34.py', [
+    ("(ManyChat Pass A at f34e3a3; reused from the memo-99 run's dump_of.py apart from this line and the label).",
+     "(ManyChat Pass A at 0664563; reused from the memo-100 run's dump_f34.py apart from this line and the label)."),
+    ("label='mcf34.dump (read-only rebuild)'", "label='mc066.dump (read-only rebuild)'"),
+], 'dump_r066.py')
+for name in ('memo97_vs_committed.py', 'memo98_vs_committed.py', 'memo99_vs_committed.py'):
+    derive(name, [('fields compared', 'fields compared')])
+derive('memo99_vs_committed.py', [
+    ("memo 99's stored fields vs the committed\n09_memo.json of that run (d821cca)",
+     "memo 100's stored fields vs the committed\n09_memo.json of that run (d8b224c)"),
+    ("RO_DB = the memo-99 run copy", "RO_DB = the memo-100 run copy"),
+    ("'d821cca:docs/baselines/manychat/output-fidelity-64f9db5/pass-a/09_memo.json'",
+     "'d8b224c:docs/baselines/manychat/output-fidelity-f34e3a3/pass-a/09_memo.json'"),
+    ("get(pk=99)", "get(pk=100)"),
+    ("'MEMO99-vs-d821cca fields compared'", "'MEMO100-vs-d8b224c fields compared'"),
+], 'memo100_vs_committed.py')
+open(os.path.join(HERE, 'pw.txt'), 'w').write(secrets.token_urlsafe(18))
+print('pw written (not printed)')

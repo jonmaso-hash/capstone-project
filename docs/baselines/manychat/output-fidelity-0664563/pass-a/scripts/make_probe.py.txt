@@ -1,0 +1,28 @@
+"""Stage 2a (after the memo): derive the HTTP probe, its config and the Markdown check from the memo-100 run's (f34/).
+probe.py is copied unchanged. probe_cfg.json: this run's outdir, document 3143, Entity Integrity report 42,
+principals r66mc_*; the marker list is kept and markers for the PR #286 rules' wording are appended.
+md_check.py: principal and document id only."""
+import json, os, shutil
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+PREV = os.path.join(os.path.dirname(HERE), 'f34')
+shutil.copy(os.path.join(PREV, 'probe.py'), os.path.join(HERE, 'probe.py'))
+cfg = json.load(open(os.path.join(PREV, 'probe_cfg.json'), encoding='utf-8-sig'))
+assert cfg['doc'] == 3142 and cfg['report'] == 41
+cfg['outdir'] = os.sep.join(['C:', 'Users', 'jonathan', 'Desktop', 'KCV-mc-066', 'docs', 'baselines', 'manychat',
+                             'output-fidelity-0664563', 'pass-a'])
+cfg['doc'], cfg['report'] = 3143, 42
+cfg['owner'] = 'r66mc_owner'
+cfg['principals'] = {'OWNER': 'r66mc_owner', 'LITE': 'r66mc_lite', 'PAID': 'r66mc_paid', 'STAFF': 'r66mc_staff', 'ANON': None}
+for m in ('misrepresent', 'conditions are stated by the company', 'hypotheses the evidence does not state',
+          'slide context', 'run rate', 'paying customers'):
+    if m not in cfg['markers']:
+        cfg['markers'].append(m)
+json.dump(cfg, open(os.path.join(HERE, 'probe_cfg.json'), 'w', encoding='utf-8', newline='\n'), indent=1, ensure_ascii=False)
+s = open(os.path.join(PREV, 'md_check.py'), encoding='utf-8').read()
+for a, b in (("ns['login']('f34mc_staff')", "ns['login']('r66mc_staff')"),
+             ("'/api/v1/zelda/documents/3142/ic-memo/download/'", "'/api/v1/zelda/documents/3143/ic-memo/download/'")):
+    assert s.count(a) == 1, a
+    s = s.replace(a, b)
+open(os.path.join(HERE, 'md_check.py'), 'w', encoding='utf-8', newline='\n').write(s)
+print('derived probe.py (copy), probe_cfg.json, md_check.py')

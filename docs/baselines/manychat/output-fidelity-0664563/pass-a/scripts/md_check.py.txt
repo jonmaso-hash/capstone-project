@@ -1,0 +1,45 @@
+"""FF-411 live check: the staff Markdown export's Content-Type, raw UTF-8 bytes, and what a normal reader
+(requests, which honours the declared charset) decodes. Reuses probe.py's login + real staff-MFA verify.
+Writes 14_markdown_utf8.json and the exported file as 14_ic_memo_export.md. No secrets are written."""
+import os, sys, json, hashlib, importlib.util
+SP = os.path.dirname(os.path.abspath(__file__))
+OUT = sys.argv[1]
+spec = importlib.util.spec_from_file_location('probe_mod', os.path.join(SP, 'probe.py'))
+src = open(os.path.join(SP, 'probe.py'), encoding='utf-8').read()
+src = src.split('matrix, payloads, rendered, walks, content_types = [], {}, {}, {}, {}')[0]   # helpers only
+sys.argv = ['probe.py', os.path.join(SP, 'probe_cfg.json')]
+ns = {'__name__': 'probe_helpers', '__file__': os.path.join(SP, 'probe.py')}
+exec(compile(src, 'probe.py(helpers)', 'exec'), ns)
+s = ns['login']('r66mc_staff')
+B = ns['B']
+r = s.get(B + '/api/v1/zelda/documents/3143/ic-memo/download/', allow_redirects=False)
+raw = r.content
+chars = {'• (bullet)': '•', '— (em dash)': '—', '– (en dash)': '–'}
+res = {
+    'status': r.status_code, 'content_type': r.headers.get('Content-Type'),
+    'content_disposition': r.headers.get('Content-Disposition'),
+    'charset_utf8_declared': 'charset=utf-8' in (r.headers.get('Content-Type') or '').lower(),
+    'bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest(),
+    'decodes_as_utf8': True, 'requests_encoding': r.encoding,
+    'char_counts_in_utf8_decode': {}, 'utf8_byte_sequences_present': {},
+    'reader_text_equals_utf8_decode': None, 'mojibake_in_reader_text': None,
+    'latin1_decode_would_show_mojibake': None,
+}
+try:
+    text = raw.decode('utf-8')
+except UnicodeDecodeError as e:
+    res['decodes_as_utf8'] = False
+    text = raw.decode('utf-8', errors='replace')
+for k, c in chars.items():
+    res['char_counts_in_utf8_decode'][k] = text.count(c)
+    res['utf8_byte_sequences_present'][k] = raw.count(c.encode('utf-8'))
+res['reader_text_equals_utf8_decode'] = r.text == text
+res['mojibake_in_reader_text'] = any(m in r.text for m in ('â€', 'â\u0080', 'Ã'))
+res['latin1_decode_would_show_mojibake'] = 'â\u0080' in raw.decode('latin-1')
+res['replacement_chars'] = text.count('�')
+open(os.path.join(OUT, '14_ic_memo_export.md'), 'wb').write(raw)
+s.post(B + '/accounts/logout/', data={'csrfmiddlewaretoken': s.cookies.get('csrftoken', '')}, headers={'Referer': B + '/'},
+       allow_redirects=False)
+res['staff_mfa'] = ns['MFA_LOG']
+json.dump(res, open(os.path.join(OUT, '14_markdown_utf8.json'), 'w', encoding='utf-8', newline='\n'), indent=1, ensure_ascii=False)
+print(json.dumps(res, indent=1, ensure_ascii=True))

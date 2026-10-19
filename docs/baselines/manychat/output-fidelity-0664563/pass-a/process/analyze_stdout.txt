@@ -1,0 +1,151 @@
+Invalid line: Truth_Delta_3-Report_Credit_Pack =price_1UNjeJDsh22gDRCcr3XE4qHO
+CODE-CHECK [script pid=10900] head=066456341935d5ace32760a00788f78ec61a047a tracked_changes=299 [' M accounts/__pycache__/__init__.cpython-314.pyc', ' M accounts/__pycache__/adapters.cpython-314.pyc', ' M accounts/__pycache__/admin.cpython-314.pyc', ' M accounts/__pycache__/apps.cpython-314.pyc', ' M accounts/__pycache__/forms.cpython-314.pyc']
+CODE-DIFF [script pid=10900] non_pyc_files_differing_from_0664563=0
+BASELINE-ENV-CHECK [script pid=10900] {'FILED_API_KEY': False, 'COMPANYENRICH_API_KEY': False, 'NEWS_API_KEY': False, 'DATA4B2B_API_KEY': False, 'USPTO_ODP_API_KEY': False, 'CRUNCHBASE_API_KEY': False, 'ANTHROPIC_API_KEY': True} USPTO_ODP_API_KEY_read_by_code=False (no reference in this commit; blanked in env)
+BROKER-CHECK [script pid=10900] broker (write) redis://localhost local=True redis_db=1
+BROKER-CHECK [script pid=10900] broker (read) redis://localhost local=True redis_db=1
+BROKER-CHECK [script pid=10900] result backend redis://localhost local=True redis_db=3
+BROKER-CHECK [script pid=10900] cache redis://localhost local=True redis_db=3
+DB-CHECK [script pid=10900] name=C:/Users/jonathan/AppData/Local/Temp/claude/C--Users-jonathan-Desktop-KCV-np/c8a313d5-81e1-402a-b7da-9205b6f20fab/scratchpad/r066/db_r066_copy.sqlite3 is_copy=True is_original=False is_historical_copy=False
+SCHEMA-CHECK [script pid=10900] pending=0 [] zelda_api.0035=True zelda_api.0044=True matchmaking.0083=True matchmaking.0095=True applied_heads={"accounts": "0017_personprofile_is_public", "billing": "0007_truth_delta_credit_wallet", "matchmaking": "0095_profile_reporting_currency", "zelda_api": "0044_claim_source_context"}
+EAGER-CHECK [script pid=10900] CELERY_TASK_ALWAYS_EAGER=False
+{
+ "memo_generation_principal": {
+  "user_id": 321,
+  "origin": "ORIGIN_TASK",
+  "as_in": "zelda_api/tasks.py:244 Principal.for_user(document.uploaded_by, ORIGIN_TASK)"
+ },
+ "model": "claude-sonnet-4-6",
+ "response_model": "claude-sonnet-4-6",
+ "stop_reason": "end_turn",
+ "usage": {
+  "input_tokens": 3771,
+  "output_tokens": 2398
+ },
+ "params": {
+  "model": "claude-sonnet-4-6",
+  "max_tokens": 4000
+ },
+ "prompt_rule_10_present": true,
+ "prompt_dated_runway_rule_present": true,
+ "sent_payload_equals_dump_rebuilt": true,
+ "sent_payload_equals_fresh_build_for_generation_principal": true,
+ "time_wording_allowed_for_dated_items": {
+  "C1": [],
+  "C2": [],
+  "C3": [],
+  "C4": [],
+  "S1": [],
+  "S2": [],
+  "S3": [],
+  "S4": []
+ },
+ "funding_facts_equal_with_reversed_items": true,
+ "absent_from_model_input": {
+  "Series A deck with": true,
+  "SlideShare deck has": true,
+  "CANARY": true,
+  "163000000": true,
+  "163,000,000": true,
+  "Bessemer": true,
+  "TechCrunch": true,
+  "Summit Partners": true,
+  "2019": true,
+  "$18M": true,
+  "$140M": true,
+  "STALENESS": true,
+  "ATTRIBUTION ERROR": true,
+  "INVENTED IDENTITY": true,
+  "ANSWER_KEY": true,
+  "Mike Yan": true,
+  "Anton Gorin": true,
+  "r66mc": true,
+  "Rerun Owner": true,
+  "Disposable profile": true,
+  "cumulative by context": true,
+  "manychat_ra109": true,
+  "ANSWER": true,
+  "conflict": true,
+  "UB-604": true,
+  "NP-603": true,
+  "NP-604": true,
+  "memo 98": true,
+  "figure stated without an explicit interval": true,
+  "before either is relied on": true,
+  "not cash on hand": true,
+  "OF-704": true,
+  "OF-705": true,
+  "memo 99": true,
+  "and separately 500M": true,
+  "with no explicit interval [": true,
+  "OF-805": true,
+  "OF-806": true,
+  "OF-807": true,
+  "memo 100": true,
+  "hypotheses the evidence does not state": true,
+  "conditions placed on them": true
+ },
+ "basis_facts": [
+  {
+   "refs": [
+    "C3",
+    "C2"
+   ],
+   "members": [
+    "C2",
+    "C3",
+    "S2",
+    "S3"
+   ],
+   "noun": "messages",
+   "cumulative_admitted": false,
+   "clarification": "How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on"
+  }
+ ],
+ "basis_facts_equal_with_reversed_items": false,
+ "sent_consistency_notes": [
+  {
+   "kind": "measurement_basis",
+   "refs": [
+    "C3",
+    "C2"
+   ],
+   "note": "Page 10 states 500M messages without an explicit interval; page 12 states 500M messages/month. These use different measurement bases and need clarification before comparison."
+  }
+ ],
+ "rebuilt_consistency_notes": [
+  {
+   "kind": "measurement_basis",
+   "refs": [
+    "C3",
+    "C2"
+   ],
+   "note": "Page 10 states 500M messages without an explicit interval; page 12 states 500M messages/month. These use different measurement bases and need clarification before comparison."
+  }
+ ],
+ "prompt_rule_11_present": true,
+ "user_prompt_points_to_rule_11": true,
+ "memo_id": 101,
+ "summary": {
+  "sections_compared": 17,
+  "all_stored_equal_replay": true,
+  "all_reversed_order_stable": true,
+  "all_idempotent": true,
+  "all_refs_identical_in_order": true,
+  "sections_changed_by_guards": [
+   "questions_for_management"
+  ],
+  "time_guard_removed_anything": false,
+  "rule_families_fired": [
+   "attribution"
+  ],
+  "narrator_provenance_rule_fired": false,
+  "basis_rule_fired": false,
+  "all_changes_by_section": {
+   "questions_for_management": [
+    "attribution:Pitch Deck Hunt"
+   ]
+  },
+  "not_stored_keys": []
+ }
+}

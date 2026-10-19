@@ -1,0 +1,53 @@
+{
+ "note": "Real Chrome (Claude in Chrome extension) against the run server 127.0.0.1:8000, 2026-10-18 21:55-21:58 local (UTC-7). Values are the page text read in the browser (document.body.innerText) at the time; screenshots in browser/. Login: fields set on form.elements, then requestSubmit(). Logout: the nav Sign Out form (/accounts/logout/); the Truth Delta page has no site nav (FF-413), so the paid logout went through /. The staff TOTP was computed for the next 30-second window. No model call was made by the walks (model_calls.jsonl stayed at 8).",
+ "first_attempts_blocked": "21:51-21:53 local: the connected browser returned chrome-error 'connection refused' for http://127.0.0.1:8000 and http://localhost:8000 while the server answered local HTTP (as at the start of the memo-100 run). The run paused; after the owner re-selected the browser (/chrome) the same URL loaded. Deviation D-9.",
+ "walks": {
+  "OWNER": {
+   "positive_control": {"url": "/api/v1/zelda/documents/3143/ic-memo/", "title": "AI Investment Committee Memo — ManyChat | Interlink Foundry", "text_chars": 5913},
+   "observed": {"business_model_analysis": "The only evidence of commercial activity is the self-reported traction data: the company states 140,000+ bots [S1] and 500M messages (with an ambiguity in measurement basis between a cumulative total and a monthly rate [S2, S3]) in a slide context headed 'Traction by Apr-16'.",
+                "open_concerns_1": "The 500M messages metric is presented with two different measurement bases across the deck — without a stated time interval on page 10 and as 500M/month on page 12 [C2, C3] — and this inconsistency ha…",
+                "canary": false, "note": "The owner sees the Lite memo sections (risk_assessment and the scenarios are not among them)."},
+   "logout": {"form": "/accounts/logout/ (nav Sign Out)", "landed": "/home/"},
+   "screenshot": "browser/owner_ic_memo_business_model.jpg"
+  },
+  "LITE": {
+   "positive_control": {"url": "/matchmaking/memo/profile/50/", "title": "Intelligence Memo: ManyChat | Interlink Foundry", "text_chars": 2269},
+   "observed": {"executive_summary_500M": "The company's deck presents traction metrics including 140,000+ bots and 500M messages, both as self-reported and as yet externally unverified [S1, S2, S3].",
+                "messages/month shown": false, "reconciliation panel": false, "canary": false},
+   "logout": {"form": "/accounts/logout/ (nav Sign Out)", "landed": "/home/", "then_truth_delta": "/accounts/login/?next=/api/v1/zelda/documents/3143/verification/"},
+   "screenshot": "browser/lite_company_overview.jpg"
+  },
+  "PAID": {
+   "positive_control": {"url": "/api/v1/zelda/documents/3143/verification/", "text_chars": 2731, "evidence_credibility": "N/A, NOT SCORED · LIMITED PUBLIC EVIDENCE", "claims": "4 analyzed, 0 verified, 4 not established"},
+   "observed": {"Measurement basis to clarify block": "Measurement basis to clarify Figures in this deck that need clarification before they are compared. This is not a verification result and doesn't affect the score. Page 10 states 500M messages without an explicit interval; page 12 states 500M messages/month. These use different measurement bases and need clarification before c…",
+                "reconciliation panel": false, "canary": false},
+   "logout": {"form": "/accounts/logout/ via / (FF-413)", "landed": "/home/", "then_truth_delta": "/accounts/login/?next=/api/v1/zelda/documents/3143/verification/"},
+   "screenshot": "browser/paid_truth_delta.jpg"
+  },
+  "STAFF": {
+   "login_landing": "/accounts/staff-mfa/verify/?next=/api/v1/zelda/documents/3143/verification/",
+   "mfa": "real TOTP verify (next-window code), POST 302 to the Truth Delta page",
+   "positive_controls": [
+    {"url": "/api/v1/zelda/documents/3143/verification/", "text_chars": 3384, "Measurement basis to clarify block": true, "reconciliation panel": false, "canary": false},
+    {"url": "/api/v1/zelda/documents/3143/ic-memo/", "text_chars": 12696, "canary": false,
+     "risk_assessment_1_tail": "These figures carry different measurement bases and cannot be directly compared without clarification — raising the possibility of metric inflation or imprecise reporting.",
+     "downside": "If the inconsistency between the cumulative and monthly presentations of the 500M messages figure [C2, C3] reflects imprecise metric reporting, and if the 140,0…",
+     "upside": "If the self-reported figure of 500M messages/month [S3] reflects a monthly run-rate as of the 'Traction by Apr-16' slide context, and if a meaningful share of the 140,000+ bots [S1] belong t…",
+     "base": "Taking the self-reported traction metrics at face value [S1, S2, S3], ManyChat had built a sizeable bot and messaging platform by the period referenced in the 'Traction by Apr-16' slide cont…"},
+    {"url": "/matchmaking/memo/profile/50/", "text_chars": 2365, "canary": false,
+     "worth_investigating": ["Funding raised — not established", "Usage — not established",
+                             "The 500M messages metric is presented with two different measurement bases across the d… see the IC Memo",
+                             "Revenue is entirely absent from the extracted evidence, leaving unknown whether the bot… see the IC Memo"]}
+   ],
+   "logout": {"form": "/accounts/logout/ (nav Sign Out)", "landed": "/home/"},
+   "screenshot": "browser/staff_ic_memo_risk_assessment.jpg"
+  },
+  "ANON": {
+   "positive_control": {"url": "/home/", "loaded": true},
+   "checks": "in-page fetch with redirect: 'manual' after the staff logout",
+   "results": {"/api/v1/zelda/documents/3143/ic-memo/": "opaqueredirect", "/api/v1/zelda/documents/3143/verification/": "opaqueredirect",
+               "/matchmaking/memo/profile/50/": "opaqueredirect", "/accounts/profile/r66mc_owner/": "opaqueredirect"},
+   "server_log": "each GET 302 at 21:57:38 (browser/server_log_browser_walks.txt)"
+  }
+ }
+}

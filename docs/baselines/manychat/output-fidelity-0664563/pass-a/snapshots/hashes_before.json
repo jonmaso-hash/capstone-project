@@ -1,0 +1,73 @@
+{
+ "phase": "before",
+ "at": "2026-10-19T04:42:21+00:00",
+ "dbs": {
+  "original_dev_db": {
+   "path": "C:\\Users\\jonathan\\Desktop\\KCV\\db.sqlite3",
+   "exists": true,
+   "bytes": 9121792,
+   "sha256": "5a0b8c1c2fb180ddcd5a75c34e2bb25ead369935ef6a4db1b0c7a0dbdfd7e9a2",
+   "sidecars": []
+  },
+  "memo94_copy_mcpost": {
+   "path": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV\\8edb8be9-5c85-488f-a1b8-020dd6a9a3c0\\scratchpad\\mcpost\\db_postfix_copy.sqlite3",
+   "exists": true,
+   "bytes": 9121792,
+   "sha256": "445a2f19cdc6f82ebd1529c10d67bc87c40c656f4d276f37a4aa25153b566415",
+   "sidecars": []
+  },
+  "memo95_copy_mcff": {
+   "path": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV\\8edb8be9-5c85-488f-a1b8-020dd6a9a3c0\\scratchpad\\mcff\\db_ff_copy.sqlite3",
+   "exists": true,
+   "bytes": 9121792,
+   "sha256": "2c5f58649126f96964d072affa1e1e6d00fae3bec201fdc4cb5959f6aae1702e",
+   "sidecars": []
+  },
+  "memo96_copy_mcff3": {
+   "path": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV\\8edb8be9-5c85-488f-a1b8-020dd6a9a3c0\\scratchpad\\mcff3\\db_ff3_copy.sqlite3",
+   "exists": true,
+   "bytes": 9121792,
+   "sha256": "3ce44d778f7b230221d99b5fe23305a9dacb17d8cb15de014b10f58734982fd4",
+   "sidecars": []
+  },
+  "memo97_copy_np": {
+   "path": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-np\\c8a313d5-81e1-402a-b7da-9205b6f20fab\\scratchpad\\np\\db_np_copy.sqlite3",
+   "exists": true,
+   "bytes": 9121792,
+   "sha256": "281265059871cd26c275d8c9a46d3d81711277dc43c5f32e77fd1d3b1ef9adf7",
+   "sidecars": []
+  },
+  "memo98_copy_ub": {
+   "path": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-np\\c8a313d5-81e1-402a-b7da-9205b6f20fab\\scratchpad\\ub\\db_ub_copy.sqlite3",
+   "exists": true,
+   "bytes": 9121792,
+   "sha256": "ded6c19072e70263a0647832f4e551c3fbd3dda0cc90175bb09c252a6b0c9a75",
+   "sidecars": []
+  },
+  "memo99_copy_of": {
+   "path": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-np\\c8a313d5-81e1-402a-b7da-9205b6f20fab\\scratchpad\\of\\db_of_copy.sqlite3",
+   "exists": true,
+   "bytes": 9121792,
+   "sha256": "795077ef0f2ab4d5af590d826d3140ece083991abcaa3a21c18b2e95f1be5cba",
+   "sidecars": []
+  },
+  "memo100_copy_f34": {
+   "path": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-np\\c8a313d5-81e1-402a-b7da-9205b6f20fab\\scratchpad\\f34\\db_f34_copy.sqlite3",
+   "exists": true,
+   "bytes": 9121792,
+   "sha256": "ba86bc2bfe3a6236234f65e9decc125ab475d9a93bd91b331f77a8abab818bfe",
+   "sidecars": []
+  }
+ },
+ "deck": {
+  "path": "C:\\Users\\jonathan\\Downloads\\manychat_series_a_audit_deck.pptx",
+  "bytes": 175622,
+  "sha256": "be7a7171bbc84b9895a45adfbc41f2533f3d23b3a4a561c82a8d9de6b94f3ef1"
+ },
+ "copy": {
+  "path": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-np\\c8a313d5-81e1-402a-b7da-9205b6f20fab\\scratchpad\\r066\\db_r066_copy.sqlite3",
+  "method": "sqlite3 backup API from the original opened mode=ro",
+  "sha256_at_creation": "15bec0d2f055ada53fb09031794b589d6f5028fb490d8e37993e9e4678e29f55",
+  "integrity_check": "ok"
+ }
+}
