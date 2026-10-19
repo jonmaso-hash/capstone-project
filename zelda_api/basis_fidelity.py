@@ -590,7 +590,7 @@ def _context_aside(sentence, facts, changes):
         if not verbs or not _OWN_SUBJECT_END.search(head[:verbs[-1].start()]):
             continue
         words = re.findall(r"[\w']+", _REF.sub(' ', sentence[start:match.start()]).lower())
-        if set(words) & _DENIAL or _TO_ESTABLISH.search(' '.join(words)) or _UNCERTAIN.search(' '.join(words)):
+        if set(words) & _DENIAL or _UNCERTAIN.search(' '.join(words)):
             continue
         out, pos = sentence[:start], start
         for group in groups:

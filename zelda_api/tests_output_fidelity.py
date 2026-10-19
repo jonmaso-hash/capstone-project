@@ -1817,6 +1817,11 @@ class Review1801ec5Tests(SimpleTestCase):
     def test_the_memo_98_overstatement_is_still_corrected_whole(self):
         self.assertEqual(self.full(MEMO98_JUDGMENT), (RISK_AFTER[:-1] + ' [C2, C3].', ['basis_overstatement']))
 
+    def test_a_judgment_not_only_about_one_or_both_figures_stays_with_the_judgment_rule(self):
+        # Only when every judging clause judges "one or both figures" is the clause rule in charge.
+        text = 'The page-10 figure is overstated as a monthly figure [C2, C3]; one or both figures may mislead.'
+        self.assertEqual(self.full(text), (RISK_AFTER[:-1] + ' [C2, C3].', ['basis_overstatement']))
+
     def test_a_denied_narrated_or_uncertain_statement_keeps_its_citations(self):
         from .basis_fidelity import basis_facts, guard_basis_wording
         facts = basis_facts(self.items, self.notes)
