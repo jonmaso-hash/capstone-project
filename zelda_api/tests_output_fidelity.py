@@ -2312,6 +2312,10 @@ REVIEW_7FB_KEPT = (
     "An analyst describes the deck's 500M messages [S2, S3] in a slide context headed 'Traction by Apr-16'.",
     # No attribution marker and no reporting verb: only the head's own wording shows a third party.
     "An analyst's reading of the deck's 500M messages [S2, S3] sits in a slide context headed 'Traction by Apr-16'.",
+    # The company's own verb, but a narrator named in the clause: kept by the narrator check alone (the no-verb
+    # narrator control is now also kept by the own-head allowlist).
+    "The company states 500M messages [S2, S3] from the Pitch Deck Hunt copy in a slide context headed 'Traction by "
+    "Apr-16'.",
 )
 
 
