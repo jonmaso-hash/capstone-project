@@ -1,0 +1,16 @@
+P17 CAUGHT Ran 251 tests in 9.978s FAILED (failures=1) restored
+P18 CAUGHT Ran 251 tests in 9.969s FAILED (failures=2) restored
+P19 CAUGHT Ran 251 tests in 10.168s FAILED (failures=24, errors=58) restored
+P20 CAUGHT Ran 251 tests in 9.786s FAILED (failures=31) restored
+P21 CAUGHT Ran 251 tests in 9.758s FAILED (failures=1) restored
+
+P17 | review b54: a clause with no predicate is restated (re-anchored at the second ed29f3b review) | CAUGHT Ran 251 tests in 9.978s FAILED (failures=1)
+    failing: test_a_clause_without_a_known_predicate_is_kept
+P18 | review b54 2: denial words count as placing words (the negation guard is negated) | CAUGHT Ran 251 tests in 9.969s FAILED (failures=2)
+    failing: test_a_negated_common_slide_statement_is_kept
+P19 | review b54: the reconstruction guard is inverted | CAUGHT Ran 251 tests in 10.168s FAILED (failures=24, errors=58)
+    failing: test_a_basis_aside_is_superseded_by_the_restated_clarification, test_a_citation_inside_the_clause_keeps_the_sentence, test_a_clause_without_a_known_predicate_is_kept, test_a_cross_page_group_is_placed_by_its_own_sources, test_a_figure_qualification_or_denominator_no_statement_gives_keeps_the_sentence, test_a_further_unknown_figure_keeps_the_sentence, test_a_list_marker_is_not_arithmetic, test_a_narrated_figure_is_never_restated_under_another_subject ...
+P20 | review 191e627: asides are not checked (stripped before the word check, as at d76237d) | CAUGHT Ran 251 tests in 9.786s FAILED (failures=31)
+    failing: test_a_figure_qualification_or_denominator_no_statement_gives_keeps_the_sentence, test_a_further_unknown_figure_keeps_the_sentence, test_a_parenthetical_fact_or_qualification_keeps_the_sentence, test_an_additional_figure_keeps_the_sentence, test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence
+P21 | review 191e627: a basis aside is dropped even when the pair's clarification is not restated | CAUGHT Ran 251 tests in 9.758s FAILED (failures=1)
+    failing: test_a_parenthetical_fact_or_qualification_keeps_the_sentence

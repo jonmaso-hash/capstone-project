@@ -1,0 +1,137 @@
+"""RA-109 review-correction mutation run (after a5494ae). One mutation at a time: apply, run the focused
+tests, restore, verify the hash. Usage: python mutate_ra109_review.py <worktree> [ID ...].
+A mutation is CAUGHT when the run is not OK. Anchors are written with LF; a CRLF file is matched with CRLF."""
+import hashlib, os, subprocess, sys
+
+WT = sys.argv[1]
+ONLY = set(sys.argv[2:])
+HERE = os.path.dirname(os.path.abspath(__file__))
+T = os.path.join(HERE, 't.sh').replace('\\', '/')
+LABELS = ['zelda_api.tests_usage_basis', 'zelda_api.tests_claim_extraction_recall', 'zelda_api.tests_claim_periods']
+UB, FM, IP, TD = 'zelda_api/usage_basis.py', 'zelda_api/financial_metrics.py', 'zelda_api/intelligence_pipeline.py', \
+    'zelda_api/truth_delta_tasks.py'
+
+M = [
+    # --- carried from a5494ae, re-anchored where the code changed -------------------------------
+    ('M1', 'lose the rate suffix in the claim unit', FM,
+     "        return f'{self.noun}/{self.rate}' if self.rate else self.noun",
+     "        return self.noun"),
+    ('M2', 'restore numeric-only dedup for usage', IP,
+     "                basis = usage_basis(text)\n                if basis is not None:\n                    value = _extract_numeric_value(text)",
+     "                basis = usage_basis(text)\n                if False:\n                    value = _extract_numeric_value(text)"),
+    ('M3', 'drop the rate candidate (no line join in the analyzer)', IP,
+     "            text = join_split_usage_lines(text, subject_names)",
+     "            text = text"),
+    ('M4', 'an owner label above no longer refuses', UB,
+     "        return OWNER_LABEL, line                      # a name or prose: the owner is not ours",
+     "        return None, ''"),
+    ('M5', 'bypass the claim-admission gate', TD,
+     "            if matched_category == 'usage' and unresolved_split(text, chunk_text, names):",
+     "            if False:"),
+    ('M6', 'a continuation below no longer refuses', UB,
+     "            return OWNER_LABEL, line                  # carries the figure on (\"via Telegram\")",
+     "            return None, ''"),
+    ('M7', 'turn the internal basis note into a contradiction', UB,
+     "'These use different measurement bases and need clarification before comparison.')",
+     "'These figures contradict each other.')"),
+    ('M8', 'drop the not-a-contradiction memo rule', IP,
+     "not a contradiction, not a verification result and not an error",
+     "a contradiction to report"),
+    ('M9', 'unsupported denominator word dropped to a bare count', FM,
+     "        if word is None or word['word'].lower() not in _RATE_WORDS:\n            return None",
+     "        if word is None or word['word'].lower() not in _RATE_WORDS:\n            return UsageBasis(_plural(noun.group(1)), '')"),
+    ('M10', 'the analyzer does not pass the subject names', IP,
+     "collect=sentences, subject_names=subject_names)",
+     "collect=sentences)"),
+    ('M11', 'note order follows claim ids, not pages', UB,
+     "    usage.sort(key=lambda pair:",
+     "    sorted(usage, key=lambda pair:"),
+    ('M12', 'payload carries consistency_notes even when empty', 'zelda_api/grounded_context.py',
+     "               if self.consistency_notes else {}),",
+     "               if True else {}),"),
+    ('M13', 'note for different numbers on different bases', UB,
+     "            if a.claimed_value_numeric != b.claimed_value_numeric:\n                continue",
+     "            pass"),
+    ('M14', 'dated_heading ignores the joined view', 'zelda_api/claim_context.py',
+     r"    lines = join_split_usage_lines((chunk_text or '').replace('\r\n', '\n'), names).splitlines()",
+     r"    lines = (chunk_text or '').splitlines()"),
+    ('M15', "the figure's own cumulative wording ignored", FM,
+     "    if not rate and _CUMULATIVE_AFTER.match(text, noun.end()):",
+     "    if False:"),
+    ('M16', 'a bare figure line above no longer refuses', UB,
+     "            return UNBOUNDED, line                    # a bare figure: an axis or a list",
+     "            continue"),
+    # --- review findings ------------------------------------------------------------------------
+    ('M17', 'F1: a blank line above erases the owner context', UB,
+     "            continue                                  # layout whitespace: the same block",
+     "            return None, ''"),
+    ('M18', 'F1: a sibling metric above erases the owner context', UB,
+     "            continue                                  # another metric in the same block",
+     "            return None, ''"),
+    ('M19', 'F1: only labels of up to two words count below', UB,
+     "    if not 0 < len(words) <= 6 or re.search(r'\\d', line) or _generic_heading(line):",
+     "    if not 0 < len(words) <= 2 or re.search(r'\\d', line) or _generic_heading(line):"),
+    ('M20', 'F1: a blank line below ends the block', UB,
+     "    for k in range(j, len(lines)):\n        line = lines[k].strip()\n        if not line:\n            continue",
+     "    for k in range(j, len(lines)):\n        line = lines[k].strip()\n        if not line:\n            return None, ''"),
+    ('M21', 'F2: a numeric denominator falls back to a bare count', FM,
+     "        if word is None or word['word'].lower() not in _RATE_WORDS:\n            return None",
+     "        if word is None:\n            return UsageBasis(_plural(noun.group(1)), '')\n"
+     "        if word['word'].lower() not in _RATE_WORDS:\n            return None"),
+    ('M22', 'F2: a compound denominator keeps the first rate', FM,
+     "        if _ANOTHER_DENOMINATOR.match(text, word.end()):\n            return None",
+     "        if False:\n            return None"),
+    ('M23', 'F3: cumulative wording borrowed from anywhere after the noun', FM,
+     "    if not rate and _CUMULATIVE_AFTER.match(text, noun.end()):",
+     "    if not rate and re.search(r'(?i)to\\s+date|cumulative|since\\s+(?:inception|launch|founding)|lifetime|all[- ]time', text[noun.end():]):"),
+    ('M24', 'F2: an unrepresentable rate keeps a selection slot', IP,
+     "            if category == 'Traction' and usage_unit(candidate[0]) and usage_basis(candidate[0]) is None:",
+     "            if False:"),
+    ('M25', 'F1: any label passes as the subject', UB,
+     "    if not names:\n        return False\n    masked = _mask_company(line, names)",
+     "    return True\n    masked = _mask_company(line, names)"),
+    ('M26', 'F2: unsupported rate adjectives (bi-monthly) accepted', FM,
+     "    if _UNSUPPORTED_RATE_ADJECTIVE.search(phrase):",
+     "    if False:"),
+]
+
+
+def sha(path):
+    return hashlib.sha256(open(path, 'rb').read()).hexdigest()
+
+
+results = []
+for mid, what, rel, old, new in M:
+    if ONLY and mid not in ONLY:
+        continue
+    path = os.path.join(WT, rel)
+    original = open(path, 'rb').read()
+    before = sha(path)
+    text = original.decode('utf-8')
+    if '\r\n' in text:
+        old, new = old.replace('\n', '\r\n'), new.replace('\n', '\r\n')
+    count = text.count(old)
+    if count != 1:
+        results.append((mid, what, f'NOT APPLIED (anchor found {count}x)'))
+        print(mid, 'NOT APPLIED', count, flush=True)
+        continue
+    try:
+        open(path, 'wb').write(text.replace(old, new).encode('utf-8'))
+        run = subprocess.run(['sh', T, WT, *LABELS], capture_output=True, text=True, encoding='utf-8', errors='replace')
+        out = run.stdout + run.stderr
+        summary = [l for l in out.splitlines() if l.startswith(('Ran ', 'OK', 'FAILED'))]
+        failing = sorted({l.split(' ')[1] for l in out.splitlines() if l.startswith(('FAIL:', 'ERROR:'))})
+        caught = not any(l.startswith('OK') for l in summary)
+        results.append((mid, what, ('CAUGHT' if caught else 'SURVIVED') + ' ' + ' '.join(summary), failing))
+    finally:
+        open(path, 'wb').write(original)
+    restored = sha(path) == before
+    print(mid, results[-1][2], 'restored' if restored else 'RESTORE FAILED', flush=True)
+    if not restored:
+        sys.exit('restore failed for ' + rel)
+
+print()
+for r in results:
+    print(' | '.join(r[:3]))
+    if len(r) > 3:
+        print('    failing:', ', '.join(r[3][:8]) + (' ...' if len(r[3]) > 8 else ''))

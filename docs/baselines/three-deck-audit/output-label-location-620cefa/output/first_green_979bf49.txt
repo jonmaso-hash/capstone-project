@@ -1,0 +1,37 @@
+2026-10-16 03:04:04,566 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-16 03:04:57,370 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-16 03:04:57,398 INFO zelda_api.intelligence_pipeline - Memo supported_points: funding-source fidelity ['unsupported_total', 'narrator_narrative'] for document 1
+2026-10-16 03:04:57,401 INFO zelda_api.intelligence_pipeline - Memo open_concerns: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-16 03:04:57,402 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-16 03:04:57,405 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt', 'funding_not_runway'] for document 1
+2026-10-16 03:04:57,467 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-16 03:04:57,499 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-16 03:04:57,505 INFO zelda_api.signals - DocumentSource created: a.pptx
+2026-10-16 03:04:57,508 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-16 03:04:57,526 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-16 03:04:57,534 INFO zelda_api.signals - DocumentSource created: b.pptx
+2026-10-16 03:04:57,538 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-16 03:04:57,554 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-16 03:04:57,560 INFO zelda_api.signals - DocumentSource created: c.pptx
+2026-10-16 03:04:57,563 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-16 03:04:57,563 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_cumulative_referent'] for document 1
+2026-10-16 03:04:57,580 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-16 03:04:57,618 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-16 03:04:57,630 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: funding-source fidelity ['cash_premise'] for document 1
+2026-10-16 03:04:57,634 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-16 03:04:57,637 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-16 03:04:57,640 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-16 03:04:57,643 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-16 03:04:57,645 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-16 03:04:57,647 INFO zelda_api.intelligence_pipeline - Memo supported_points: measurement-basis wording ['basis_unspecified_total', 'basis_source_location'] for document 1
+2026-10-16 03:04:57,648 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label'] for document 1
+2026-10-16 03:04:57,677 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+............................................................................
+----------------------------------------------------------------------
+Ran 80 tests in 0.999s
+
+OK
+Destroying test database for alias 'default'...
+Found 80 test(s).
+System check identified no issues (0 silenced).

@@ -1,0 +1,356 @@
+2026-10-18 02:13:50,340 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+FFFFFFFFFFFFFFFF
+======================================================================
+FAIL: test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence) (sequence='full', text='The company states the message figures (600M messages) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1321, in test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([43 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([38 chars]S3].'
+
++ ('The company states the message figures (600M messages) on the same slide '
++  '[S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence) (sequence='full', text='The company states the message figures (500M, 600M/month) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1321, in test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([46 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([41 chars]S3].'
+
++ ('The company states the message figures (500M, 600M/month) on the same slide '
++  '[S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence) (sequence='full', text='The company states the message figures (500M (600M)) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1321, in test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([41 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([36 chars]S3].'
+
++ ('The company states the message figures (500M (600M)) on the same slide [S2, '
++  'S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence) (sequence='full', text='The company states the message figures (500M + 500M) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1321, in test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([41 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([36 chars]S3].'
+
++ ('The company states the message figures (500M + 500M) on the same slide [S2, '
++  'S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence) (text='The company states the message figures (600M messages) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1335, in test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([43 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([38 chars]S3].'
+
++ ('The company states the message figures (600M messages) on the same slide '
++  '[S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence) (text='The company states the message figures (500M, 600M/month) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1335, in test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([46 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([41 chars]S3].'
+
++ ('The company states the message figures (500M, 600M/month) on the same slide '
++  '[S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence) (text='The company states the message figures (500M (600M)) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1335, in test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([41 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([36 chars]S3].'
+
++ ('The company states the message figures (500M (600M)) on the same slide [S2, '
++  'S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence) (text='The company states the message figures (500M + 500M) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1335, in test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([41 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([36 chars]S3].'
+
++ ('The company states the message figures (500M + 500M) on the same slide [S2, '
++  'S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence) (text='The company states the message figures (500M+500M) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1335, in test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([39 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([34 chars]S3].'
+
++ ('The company states the message figures (500M+500M) on the same slide [S2, '
++  'S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence) (text='The company states the message figures (500M = 500M/month) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1335, in test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([47 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([42 chars]S3].'
+
++ ('The company states the message figures (500M = 500M/month) on the same slide '
++  '[S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence) (text='The company states the message figures (500M-500M/month) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1335, in test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([45 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([40 chars]S3].'
+
++ ('The company states the message figures (500M-500M/month) on the same slide '
++  '[S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence) (text='The company states the message figures (~500M) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1335, in test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([35 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([30 chars]S3].'
+
++ ('The company states the message figures (~500M) on the same slide [S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence) (text='The company states the message figures (500M, 5%) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1335, in test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([38 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([33 chars]S3].'
+
++ ('The company states the message figures (500M, 5%) on the same slide [S2, '
++  'S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence) (text='The company states the message figures (500M (500M/month)) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1335, in test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([47 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([42 chars]S3].'
+
++ ('The company states the message figures (500M (500M/month)) on the same slide '
++  '[S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence) (text='The company states (the message figures on the same slide [S2, S3]).')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1335, in test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[270 chars]on']) != ('The company states (the message figures [29 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[242 chars]n))."
+'The company states (the message figures [24 chars]3]).'
+
++ ('The company states (the message figures on the same slide [S2, S3]).', [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on)).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence) (text='The company states the message figures (500M)) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1335, in test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([35 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([30 chars]S3].'
+
++ ('The company states the message figures (500M)) on the same slide [S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+----------------------------------------------------------------------
+Ran 1 test in 0.098s
+
+FAILED (failures=16)
+Found 1 test(s).
+System check identified no issues (0 silenced).

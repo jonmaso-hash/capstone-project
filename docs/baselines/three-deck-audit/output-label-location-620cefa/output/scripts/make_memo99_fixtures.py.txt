@@ -1,0 +1,33 @@
+"""Write zelda_api/data/funding_fidelity/memo99_payload.json and memo99.json from the committed memo-99 evidence
+(d821cca): the grounded payload exactly as sent to the model, and the model's raw reply with the stored sections.
+Normalised items and model output only -- no chunk text, key text or canary. Adapted from make_memo98_fixtures.py.
+Usage: python make_memo99_fixtures.py <worktree>"""
+import json, os, subprocess, sys
+
+WT = sys.argv[1]
+EV = 'docs/baselines/manychat/output-fidelity-64f9db5/pass-a'
+show = lambda p: subprocess.run(['git', 'show', f'd821cca:{EV}/{p}'], capture_output=True, text=True, encoding='utf-8',
+                                cwd=WT, check=True).stdout
+call = json.loads(show('09b_model_call.json'))
+user = call['request']['messages'][0]['content']
+start = user.find('{', user.find('## EVIDENCE'))
+payload, _ = json.JSONDecoder().raw_decode(user[start:])
+rebuilt = json.loads(show('09a_grounded_context_rebuilt.json'))['payload']
+assert payload == rebuilt, 'sent payload differs from the committed rebuild'
+memo = json.loads(show('09_memo.json'))['memo']
+out = os.path.join(WT, 'zelda_api', 'data', 'funding_fidelity')
+blob = json.dumps(payload) + call['response']['text'][0]
+for leak in ('CANARY', 'angel.co', 'mike@manychat.com', 'ANSWER_KEY', 'ofmc', 'OF-70', 'UB-604'):
+    assert leak not in blob, leak
+for name in ('memo99_payload.json', 'memo99.json'):
+    assert not os.path.exists(os.path.join(out, name)), name + ' exists; fixtures are additive'
+with open(os.path.join(out, 'memo99_payload.json'), 'w', encoding='utf-8', newline='\n') as f:
+    json.dump({'source': f'{EV}/09b_model_call.json at d821cca (memo 99, document 3141): the evidence payload as sent',
+               'payload': payload}, f, indent=1, ensure_ascii=False)
+    f.write('\n')
+sections = {k: v for k, v in memo.items() if isinstance(v, str) and k not in ('created_at', 'updated_at')}
+with open(os.path.join(out, 'memo99.json'), 'w', encoding='utf-8', newline='\n') as f:
+    json.dump({'source': f'{EV}/09b_model_call.json and 09_memo.json at d821cca (memo 99, document 3141)',
+               'model_reply_text': call['response']['text'][0], 'stored': sections}, f, indent=1, ensure_ascii=False)
+    f.write('\n')
+print('written', len(payload['items']), 'items;', len(sections), 'stored text fields; notes', payload.get('consistency_notes'))

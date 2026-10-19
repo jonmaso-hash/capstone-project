@@ -1,0 +1,28 @@
+"""Mutation run for the review of 191e627 (parenthetical asides checked at 1bb993b). Carries mutate_b54.py's 58
+mutations (P15-P17 re-anchored: _placing_words now takes `clarified`, same semantics) and adds P20-P21 for the
+aside boundary. Usage: python mutate_p.py <worktree> [ID ...]."""
+import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+src = open(os.path.join(HERE, 'mutate_b54.py'), encoding='utf-8').read()
+src = src.rsplit("exec(compile('def sha(path):'", 1)[0]
+prev = {'__file__': os.path.join(HERE, 'mutate_b54.py'), '__name__': 'b54_list'}
+exec(compile(src, 'mutate_b54.py', 'exec'), prev)
+ns, runner, BASE = prev['ns'], prev['runner'], prev['BASE']
+BF = 'zelda_api/basis_fidelity.py'
+NOVERB_GATE = "    if not set(words) & _LINKING or not _placing_words(clause, vocabulary, clarified):"
+REANCHORED = {
+    'P15': ('review b54 1/2: the object after the reporting verb may hold other facts or a denial (re-anchored at 1bb993b)',
+            "        if not _placing_words(clause[verb.end():], vocabulary, clarified):", "        if False:"),
+    'P16': ('review b54 1/2: a clause without a reporting verb may hold other facts or a denial (re-anchored at 1bb993b)',
+            NOVERB_GATE, "    if not set(words) & _LINKING:"),
+    'P17': ('review b54: a clause with no predicate is restated (re-anchored at 1bb993b)',
+            NOVERB_GATE, "    if not _placing_words(clause, vocabulary, clarified):"),
+}
+ns['M'] = [(m[0], REANCHORED[m[0]][0], BF, *REANCHORED[m[0]][1:]) if m[0] in REANCHORED else m for m in ns['M']] + [
+    ('P20', 'review 191e627: asides are not checked (stripped before the word check, as at d76237d)', BF,
+     "        for aside in asides)", "        for aside in [])"),
+    ('P21', "review 191e627: a basis aside is dropped even when the pair's clarification is not restated", BF,
+     "(clarified and _BASIS_ASIDE.fullmatch(aside.strip()))", "(_BASIS_ASIDE.fullmatch(aside.strip()))"),
+]
+exec(compile('def sha(path):' + runner, BASE + ' (runner)', 'exec'), ns)

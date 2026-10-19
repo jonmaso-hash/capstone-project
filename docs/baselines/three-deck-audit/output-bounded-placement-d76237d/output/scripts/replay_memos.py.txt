@@ -1,0 +1,49 @@
+"""Supplementary deterministic replay (not live evidence): memos 96, 97, 98 and 99's recorded model replies through the
+pipeline's post-generation steps at the current code, compared with what each run stored. Reads committed
+evidence with git show; no database, no model call. Run via `manage.py shell -c exec(...)` in the fix worktree.
+Prints one JSON line."""
+import json, re, subprocess
+from zelda_api.claim_context import guard_time_wording
+from zelda_api.funding_fidelity import funding_facts, guard_funding_fidelity
+from zelda_api.basis_fidelity import basis_facts, guard_basis_wording
+from zelda_api.memo_lists import memo_text
+from zelda_api.tests_output_fidelity import items_from, notes_from
+
+
+def show(rev, path):
+    return subprocess.run(['git', 'show', f'{rev}:{path}'], capture_output=True, text=True, encoding='utf-8', check=True).stdout
+
+
+RUNS = {
+    'memo96': ('5f08c05', 'docs/baselines/manychat/funding-fidelity-9b6d215/pass-a'),
+    'memo97': ('ea3ab13', 'docs/baselines/manychat/narrator-provenance-b9cddec/pass-a'),
+    'memo98': ('0dd8e91', 'docs/baselines/manychat/usage-basis-d276918/pass-a'),
+    'memo99': ('d821cca', 'docs/baselines/manychat/output-fidelity-64f9db5/pass-a'),
+}
+out = {'head': subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()}
+for name, (rev, folder) in RUNS.items():
+    call = json.loads(show(rev, f'{folder}/09b_model_call.json'))
+    user = call['request']['messages'][0]['content']
+    payload, _ = json.JSONDecoder().raw_decode(user[user.find('{', user.find('## EVIDENCE')):])
+    stored = json.loads(show(rev, f'{folder}/09_memo.json'))['memo']
+    raw = json.loads(re.search(r'\{.*\}', call['response']['text'][0], re.S).group(0))
+    items, notes = items_from(payload), notes_from(payload)
+    allowed = {i.ref: i.time_wording_allowed for i in items if i.dated}
+    facts, bfacts = funding_facts(items, payload.get('company') or 'ManyChat'), basis_facts(items, notes)
+    differs, changes = {}, {}
+    for key, value in raw.items():
+        if key not in stored:
+            continue
+        text = memo_text(value) if isinstance(value, (str, list, tuple, dict)) else value
+        text, removed = guard_time_wording(text, allowed)
+        text, fid = guard_funding_fidelity(text, facts)
+        text, basis = guard_basis_wording(text, bfacts)
+        if removed or fid or basis:
+            changes[key] = list(removed or []) + fid + basis
+        if text != stored[key]:
+            old = re.split(r'(?<=[.!?])\s+|\n', stored[key])
+            new = re.split(r'(?<=[.!?])\s+|\n', text)
+            differs[key] = {'removed': [s for s in old if s not in new], 'added': [s for s in new if s not in old]}
+    out[name] = {'sections_differing_from_stored': differs, 'rule_changes': changes,
+                 'basis_note_present': bool(notes)}
+print('REPLAY ' + json.dumps(out, ensure_ascii=False))

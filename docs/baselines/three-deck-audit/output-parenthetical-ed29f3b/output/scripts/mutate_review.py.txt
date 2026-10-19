@@ -1,0 +1,94 @@
+"""Mutation run for the review of d30a022 (OF-704/OF-705 revised at 8dfe5f5). Carries mutate_bridge.py's 29 mutations
+unchanged; the OF-704/705 mutations of mutate_of705.py are re-anchored to the revised code (L1-L5, T1-T2, P1-P5) and
+new ones remove each new boundary or restore the semantic conflation (L6-L7, T3, P6-P10).
+Usage: python mutate_review.py <worktree> [ID ...]."""
+import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+RA = os.path.join(os.path.dirname(HERE), 'ra109')
+BASE = os.path.join(RA, 'mutate_ra109_review.py')
+head, runner = open(BASE, encoding='utf-8').read().split('def sha(path):', 1)
+ns = {'__file__': BASE, '__name__': 'mutation_list'}
+exec(compile(head, BASE, 'exec'), ns)
+
+src = open(os.path.join(RA, 'mutate_bridge.py'), encoding='utf-8').read()
+src = src.rsplit("exec(compile('def sha(path):'", 1)[0]
+prev = {'__file__': os.path.join(RA, 'mutate_bridge.py'), '__name__': 'bridge_list'}
+exec(compile(src, 'mutate_bridge.py', 'exec'), prev)
+carried = list(prev['ns']['M'])
+
+BF = 'zelda_api/basis_fidelity.py'
+# C9 re-anchored: the statement aliases are now collected per side ("mine |= ..."), same semantics.
+carried = [m if m[0] != 'C9' else
+           ('C9', "P2-2: a statement repeating a pair claim is not counted as the pair's (re-anchored at 8dfe5f5)", BF,
+            "                mine |= {item.ref for item in items if item.kind == 'statement'",
+            "                mine |= set() if True else {item.ref for item in items if item.kind == 'statement'")
+           for m in carried]
+LABEL_GATE = "    if pair.contradicted or _asks(sentence) or not _CONTRADICTION.search(sentence):"
+LOC_GATE = ("        if not set(cited) & members or any(ref not in places for ref in cited) or "
+            "_conditional(sentence, match.start()):")
+ns['LABELS'] = prev['ns']['LABELS']
+ns['M'] = carried + [
+    # --- OF-704 label ------------------------------------------------------------------------------------
+    ('L1', 'OF-704: the label rule is off (the unsupported contradiction label is restored)', BF,
+     "    if hits:\n        changes.append('basis_contradiction_label')\n    return out", "    return sentence"),
+    ('L2', 'review 2: the denial/qualification boundary is removed', BF,
+     "        if _denied(sentence, match.start('word')) or _conditional(sentence, match.start()):",
+     "        if _conditional(sentence, match.start()):"),
+    ('L3', 'OF-704: an external CONTRADICTED state no longer keeps the word', BF,
+     LABEL_GATE, "    if _asks(sentence) or not _CONTRADICTION.search(sentence):"),
+    ('L4', 'OF-704: a question is relabelled too', BF,
+     LABEL_GATE, "    if pair.contradicted or not _CONTRADICTION.search(sentence):"),
+    ('L5', 'OF-704: global word replacement in every sentence (not tied to a pair)', BF,
+     "        sentence = _location(sentence, facts, changes)\n        pair = _resolve(",
+     "        sentence = _location(sentence, facts, changes)\n"
+     "        if _CONTRADICTION.search(sentence):\n"
+     "            changes.append('global_label')\n"
+     "            sentence = _CONTRADICTION.sub(lambda m: 'ambiguity', sentence)\n"
+     "        pair = _resolve("),
+    ('L6', 'review 3: the label rule ignores conditions', BF,
+     "        if _denied(sentence, match.start('word')) or _conditional(sentence, match.start()):",
+     "        if _denied(sentence, match.start('word')):"),
+    ('L7', 'review 2: an unasserted infinitive ("to establish a contradiction") is relabelled', BF,
+     "    return bool(words & _DENIAL) or bool(_TO_ESTABLISH.search(",
+     "    return bool(words & _DENIAL) or False and bool(_TO_ESTABLISH.search("),
+    # --- OF-705 total ------------------------------------------------------------------------------------
+    ('T1', 'OF-705: the unspecified-total rule is off', BF,
+     "            changes.append('basis_unspecified_total')\n            sentence = pattern.sub(",
+     "            continue\n            sentence = pattern.sub("),
+    ('T2', "OF-705: a pair's stated cumulative fact no longer keeps its total", BF,
+     "    if pair.cumulative_admitted or _asks(sentence):\n        return sentence\n    for figure in pair.unspecified:",
+     "    if _asks(sentence):\n        return sentence\n    for figure in pair.unspecified:"),
+    ('T3', 'review 3: the total rule ignores conditions', BF,
+     "        hits = [m for m in pattern.finditer(sentence) if not _conditional(sentence, m.start())]",
+     "        hits = list(pattern.finditer(sentence))"),
+    # --- OF-705 location ---------------------------------------------------------------------------------
+    ('P1', 'OF-705: the location rule is off (cross-page/context conflation restored)', BF,
+     "        changes.append('basis_source_location')\n        return _location(",
+     "        continue\n        return _location("),
+    ('P2', 'OF-705: only the first run is kept (the other refs are dropped)', BF,
+     "            + (f\", under '{context}'\" if context else '') for (page, context), refs in runs)",
+     "            + (f\", under '{context}'\" if context else '') for (page, context), refs in runs[:1])"),
+    ('P3', 'OF-705: the location rule is not bounded to a basis pair', BF,
+     LOC_GATE, "        if any(ref not in places for ref in cited) or _conditional(sentence, match.start()):"),
+    ('P4', 'OF-705: every run gets the claimed heading (the dated heading moves to page 12)', BF,
+     "            + (f\", under '{context}'\" if context else '') for",
+     "            + (f\", under '{claimed}'\" if claimed else '') for"),
+    ('P5', 'OF-705: a question is rewritten too', BF,
+     "    if _asks(sentence):\n        return sentence\n    places = {ref: (page, context, fact)",
+     "    places = {ref: (page, context, fact)"),
+    ('P6', 'review 3: the location rule ignores conditions', BF,
+     LOC_GATE, "        if not set(cited) & members or any(ref not in places for ref in cited):"),
+    ('P7', 'review 4: non-adjacent refs on one page are grouped (citation order changes)', BF,
+     "            if runs and runs[-1][0] == places[ref][:2]:\n                runs[-1][1].append(ref)",
+     "            if any(run[0] == places[ref][:2] for run in runs):\n"
+     "                next(run for run in runs if run[0] == places[ref][:2])[1].append(ref)"),
+    ('P8', 'review 1: refs placed without their facts (the shared metric predicate is kept)', BF,
+     "        verb = _reporting_verb(clause)\n        if verb is not None:\n            head = sentence[:start] + clause[:verb.end()] + ' '",
+     "        verb = _reporting_verb(clause)\n        if verb is not None:\n            head = sentence[:start] + clause"),
+    ('P9', "review 1: the no-interval side's basis is dropped from its fact", BF,
+     "item.statement + (' with no explicit interval' if item.ref in bare else '')", "item.statement"),
+    ('P10', 'review 1: the clarification is not kept when both sides are cited', BF,
+     "        if both is not None:\n            body +=", "        if False:\n            body +="),
+]
+exec(compile('def sha(path):' + runner, BASE + ' (runner)', 'exec'), ns)

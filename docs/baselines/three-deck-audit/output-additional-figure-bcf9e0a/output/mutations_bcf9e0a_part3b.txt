@@ -1,0 +1,19 @@
+P1 CAUGHT Ran 247 tests in 9.808s FAILED (failures=18) restored
+P2 CAUGHT Ran 247 tests in 9.985s FAILED (failures=18) restored
+P3 CAUGHT Ran 247 tests in 9.957s FAILED (failures=1) restored
+P4 CAUGHT Ran 247 tests in 10.064s FAILED (failures=17) restored
+P5 CAUGHT Ran 247 tests in 9.919s FAILED (failures=1) restored
+P6 CAUGHT Ran 247 tests in 9.824s FAILED (failures=1) restored
+
+P1 | OF-705: the location rule is off (cross-page/context conflation restored) | CAUGHT Ran 247 tests in 9.808s FAILED (failures=18)
+    failing: test_a_basis_aside_is_superseded_by_the_restated_clarification, test_a_cross_page_group_is_placed_by_its_own_sources, test_different_narrators_on_either_side_of_a_comma, test_every_placed_citation_supports_its_page_and_context, test_interleaved_locations_keep_the_flattened_citation_order, test_numbers_and_parentheticals_do_not_end_the_clause, test_of705_each_fact_keeps_its_own_page_and_context, test_only_the_expected_rules_fired ...
+P2 | OF-705: only the first run is kept (the other refs are dropped) | CAUGHT Ran 247 tests in 9.985s FAILED (failures=18)
+    failing: test_a_basis_aside_is_superseded_by_the_restated_clarification, test_a_cross_page_group_is_placed_by_its_own_sources, test_citations_are_preserved_in_order, test_different_narrators_on_either_side_of_a_comma, test_every_placed_citation_supports_its_page_and_context, test_interleaved_locations_keep_the_flattened_citation_order, test_numbers_and_parentheticals_do_not_end_the_clause, test_of705_each_fact_keeps_its_own_page_and_context ...
+P3 | OF-705: the location rule is not bounded to a basis pair | CAUGHT Ran 247 tests in 9.957s FAILED (failures=1)
+    failing: test_without_a_basis_note_nothing_is_placed
+P4 | OF-705: every run gets the claimed heading (the dated heading moves to page 12) | CAUGHT Ran 247 tests in 10.064s FAILED (failures=17)
+    failing: test_a_basis_aside_is_superseded_by_the_restated_clarification, test_a_cross_page_group_is_placed_by_its_own_sources, test_different_narrators_on_either_side_of_a_comma, test_every_placed_citation_supports_its_page_and_context, test_interleaved_locations_keep_the_flattened_citation_order, test_numbers_and_parentheticals_do_not_end_the_clause, test_of705_each_fact_keeps_its_own_page_and_context, test_the_funding_clause_and_its_narrator_are_kept ...
+P5 | OF-705: a question is rewritten too | CAUGHT Ran 247 tests in 9.919s FAILED (failures=1)
+    failing: test_a_question_or_condition_with_a_placeable_clause_is_kept
+P6 | review 3: the location rule ignores conditions | CAUGHT Ran 247 tests in 9.824s FAILED (failures=1)
+    failing: test_a_question_or_condition_with_a_placeable_clause_is_kept

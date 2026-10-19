@@ -1,0 +1,16 @@
+F4 CAUGHT Ran 251 tests in 9.705s FAILED (failures=9) restored
+F5 CAUGHT Ran 251 tests in 9.803s FAILED (failures=1) restored
+F6 CAUGHT Ran 251 tests in 9.902s FAILED (failures=5) restored
+F7 CAUGHT Ran 251 tests in 9.974s FAILED (failures=7) restored
+F9 CAUGHT Ran 251 tests in 9.726s FAILED (failures=7) restored
+
+F4 | NP-603: the unsupported-total rule is off | CAUGHT Ran 251 tests in 9.705s FAILED (failures=9)
+    failing: test_an_uncited_figure_resolves_by_its_amount, test_an_unsupported_total_is_dropped_and_a_stated_one_kept, test_np603_narrative_and_total_stay_with_the_narrator, test_only_the_expected_rules_fired, test_separate_clauses_each_keep_their_own_support, test_the_stored_memo_carries_the_corrections, test_the_unsupported_total_is_dropped_beside_another_sources_total
+F5 | NP-603: "total" is also stripped from questions | CAUGHT Ran 251 tests in 9.803s FAILED (failures=1)
+    failing: test_the_figure_phrase_is_not_split
+F6 | NP-603: an item's own stated total is stripped too | CAUGHT Ran 251 tests in 9.902s FAILED (failures=5)
+    failing: test_an_unsupported_total_is_dropped_and_a_stated_one_kept, test_separate_clauses_each_keep_their_own_support, test_the_stated_total_is_kept
+F7 | NP-604: the funding-not-runway rule is off | CAUGHT Ran 251 tests in 9.974s FAILED (failures=7)
+    failing: test_every_other_field_is_exactly_as_stored, test_funding_is_not_a_runway_denominator_even_with_dated_cash, test_np604_funding_is_not_the_runway_denominator, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_corrections, test_the_stored_memo_carries_the_repairs
+F9 | NP-604: the rule is not in the rule list | CAUGHT Ran 251 tests in 9.726s FAILED (failures=7)
+    failing: test_every_other_field_is_exactly_as_stored, test_funding_is_not_a_runway_denominator_even_with_dated_cash, test_np604_funding_is_not_the_runway_denominator, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_corrections, test_the_stored_memo_carries_the_repairs

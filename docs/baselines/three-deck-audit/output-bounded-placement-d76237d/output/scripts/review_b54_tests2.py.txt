@@ -1,0 +1,25 @@
+"""Review of b54d82b: two more controls (a narrated pair member; a clause with no predicate).
+Usage: python review_b54_tests2.py <tests_output_fidelity.py>"""
+import sys
+p = sys.argv[1]
+t = open(p, encoding='utf-8', newline='').read()
+nl = '\r\n' if '\r\n' in t else '\n'
+t = t.replace('\r\n', '\n')
+anchor = '''    def test_numbers_and_parentheticals_do_not_end_the_clause(self):'''
+assert t.count(anchor) == 1
+t = t.replace(anchor, '''    def test_a_narrated_figure_is_never_restated_under_another_subject(self):
+        from dataclasses import replace
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        items = [replace(i, narrator='Pitch Deck Hunt') if i.ref == 'S3' else i for i in _context_items()]
+        for text in ('The company states the message figures on the same slide [S2, S3].',
+                     'The figures appear on the same slide [S2, S3].'):
+            with self.subTest(text=text):
+                self.assertEqual(guard_basis_wording(text, basis_facts(items, (NOTE,))), (text, []))
+
+    def test_a_clause_without_a_known_predicate_is_kept(self):
+        text = 'Message figures on the same slide [S2, S3] need clarification.'
+        self.assertEqual(self.guard(text), (text, []))
+
+''' + anchor)
+open(p, 'w', encoding='utf-8', newline='').write(t.replace('\n', nl))
+print('ok')

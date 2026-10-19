@@ -1,0 +1,19 @@
+import json, subprocess
+from zelda_api.basis_fidelity import basis_facts, guard_basis_wording
+from zelda_api.tests_output_fidelity import NOTE, _context_items
+facts = basis_facts(_context_items(), (NOTE,))
+CASES = ['The messages cannot establish a contradiction [C3, C2].',
+         'The message figures provide insufficient evidence to establish a contradiction [C3, C2].',
+         'If the message figures are contradictory [C3, C2], management should explain the difference.',
+         'If 500M total is the correct interpretation [S2, S3], management should explain the reporting window.',
+         'The figures appear on the same slide [S1, S3, S2].',
+         'There is a contradiction between page 10 and page 12 [C3, C2].',
+         'If the cumulative figure [C3] is presented as monthly [C2], the claim is materially overstated.',
+         "Bots and messages are on a slide headed 'Traction by Apr-16' [S1, S2, S3].",
+         "The company states 140,000+ bots and 500M messages on a slide headed 'Traction by Apr-16' [S1, S2]."]
+head = subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
+rows = []
+for text in CASES:
+    out, changes = guard_basis_wording(text, facts)
+    rows.append({'in': text, 'out': out, 'changes': changes, 'unchanged': out == text})
+print('PROBE ' + json.dumps({'head': head, 'cases': rows}, ensure_ascii=False))

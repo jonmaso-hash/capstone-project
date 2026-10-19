@@ -1,0 +1,48 @@
+2026-10-17 14:56:06,283 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-17 14:57:02,986 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-17 14:57:03,017 INFO zelda_api.intelligence_pipeline - Memo supported_points: funding-source fidelity ['unsupported_total', 'narrator_narrative'] for document 1
+2026-10-17 14:57:03,021 INFO zelda_api.intelligence_pipeline - Memo open_concerns: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-17 14:57:03,022 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-17 14:57:03,025 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt', 'funding_not_runway'] for document 1
+2026-10-17 14:57:03,058 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-17 14:57:03,090 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-17 14:57:03,097 INFO zelda_api.signals - DocumentSource created: a.pptx
+2026-10-17 14:57:03,101 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-17 14:57:03,123 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-17 14:57:03,129 INFO zelda_api.signals - DocumentSource created: b.pptx
+2026-10-17 14:57:03,133 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-17 14:57:03,154 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-17 14:57:03,160 INFO zelda_api.signals - DocumentSource created: c.pptx
+2026-10-17 14:57:03,163 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-17 14:57:03,163 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_cumulative_referent'] for document 1
+2026-10-17 14:57:03,182 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-17 14:57:03,188 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-17 14:57:03,200 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: funding-source fidelity ['cash_premise'] for document 1
+2026-10-17 14:57:03,203 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-17 14:57:03,207 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-17 14:57:03,209 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-17 14:57:03,212 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-17 14:57:03,215 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-17 14:57:03,218 INFO zelda_api.intelligence_pipeline - Memo supported_points: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-17 14:57:03,220 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label'] for document 1
+2026-10-17 14:57:03,245 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-17 14:57:03,252 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-17 14:57:03,264 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: funding-source fidelity ['cash_premise'] for document 1
+2026-10-17 14:57:03,267 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-17 14:57:03,270 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-17 14:57:03,272 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-17 14:57:03,275 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-17 14:57:03,276 INFO zelda_api.intelligence_pipeline - Memo executive_summary: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-17 14:57:03,277 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-17 14:57:03,279 INFO zelda_api.intelligence_pipeline - Memo supported_points: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-17 14:57:03,280 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label'] for document 1
+2026-10-17 14:57:03,304 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+..................................................................................................
+----------------------------------------------------------------------
+Ran 103 tests in 1.135s
+
+OK
+Destroying test database for alias 'default'...
+Found 103 test(s).
+System check identified no issues (0 silenced).

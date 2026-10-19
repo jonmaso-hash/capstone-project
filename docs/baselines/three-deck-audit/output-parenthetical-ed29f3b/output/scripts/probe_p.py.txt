@@ -1,0 +1,55 @@
+"""Emitted text for the review-of-191e627 parenthetical probes, the review-of-b54d82b probes and the earlier review probes, at the current head.
+'full' cases run the complete normalisation -> time -> funding -> basis sequence on the memo-99 normalised payload;
+'helper' cases run the basis guard on the test module's context items. No database, no model call. Prints one JSON line."""
+import json, subprocess
+from zelda_api.basis_fidelity import basis_facts, guard_basis_wording
+from zelda_api.tests_output_fidelity import NOTE, _context_items, items_from, memo99_payload, notes_from, replay
+facts = basis_facts(_context_items(), (NOTE,))
+payload = memo99_payload()
+items, notes = items_from(payload), notes_from(payload)
+FULL = ['The company states the message figures (revenue is $10M) on the same slide [S2, S3].',
+        'The company states a messages figure of either 500M total or 500M/month (measurement basis unresolved; see open concerns) on the same traction slide [S2, S3].',
+        'Pitch Deck Hunt reports $23.1M raised [S4], while the usage figures appear on the same slide [S2, S3].',
+        'Pitch Deck Hunt reports $23.1M raised [S4], while the company states the message figures on the same slide [S2, S3].',
+        'The company states the message figures on the same slide [S2, S3], while Pitch Deck Hunt reports $23.1M raised [S4].',
+        'Pitch Deck Hunt states the message figures on the same slide [S2, S3].',
+        'The company does not state that the figures appear on the same slide [S2, S3].']
+HELPER = ['The company states the message figures (revenue is $10M) on the same slide [S2, S3].',
+          'The company states the message figures (unaudited) on the same slide [S2, S3].',
+          'The figures (not independently verified) appear on the same slide [S2, S3].',
+          'The company states 140,000+ bots and 500M messages (measurement basis questioned) on the same slide [S1, S3].',
+          'The company states the message figures ((nested) 500M) on the same slide [S2, S3].',
+          'The company reports revenue of $10M [C8], while the message figures appear on the same slide [S2, S3].',
+          'Revenue is $10M [C8], and the message figures appear on the same slide [S2, S3].',
+          'The company does not state that the figures appear on the same slide [S2, S3].',
+          'The company states that the figures do not appear on the same slide [S2, S3].',
+          'The figures do not appear on the same slide [S2, S3].',
+          'The deck never places the figures on the same slide [S2, S3].',
+          'Revenue is $10M, the message figures appear on the same slide [S2, S3].',
+          'Revenue is $10M while the message figures appear on the same slide [S2, S3].',
+          'Revenue and the message figures appear on the same slide [S2, S3].',
+          'The company states revenue and the message figures on the same slide [S2, S3].',
+          'The company states the message figures (see revenue [C8]) on the same slide [S2, S3].',
+          'The company states the message figures (500M, 500M/month) on the same slide [S2, S3].',
+          'Message figures on the same slide [S2, S3] need clarification.',
+          # earlier review probes (d30a022)
+          'The messages cannot establish a contradiction [C3, C2].',
+          'The message figures provide insufficient evidence to establish a contradiction [C3, C2].',
+          'If the message figures are contradictory [C3, C2], management should explain the difference.',
+          'If 500M total is the correct interpretation [S2, S3], management should explain the reporting window.',
+          'If the figures appear on the same slide [S2, S3], management should say which is current.',
+          'The figures appear on the same slide [S1, S3, S2].',
+          'There is a contradiction between page 10 and page 12 [C3, C2].',
+          'If the cumulative figure [C3] is presented as monthly [C2], the claim is materially overstated.',
+          "Bots and messages are on a slide headed 'Traction by Apr-16' [S1, S2, S3].",
+          "The company states 140,000+ bots and 500M messages on a slide headed 'Traction by Apr-16' [S1, S2]."]
+head = subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
+rows = []
+for text in FULL:
+    out, changes = replay({'section': text}, items, notes)
+    rows.append({'mode': 'full', 'in': text, 'out': out['section'], 'changes': changes.get('section', []),
+                 'unchanged': out['section'] == text})
+for text in HELPER:
+    out, changes = guard_basis_wording(text, facts)
+    rows.append({'mode': 'helper', 'in': text, 'out': out, 'changes': changes, 'unchanged': out == text})
+print('PROBE ' + json.dumps({'head': head, 'cases': rows}, ensure_ascii=False))

@@ -1,0 +1,386 @@
+2026-10-16 20:38:11,923 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-16 20:39:06,362 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-16 20:39:06,383 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: funding-source fidelity ['cash_premise'] for document 1
+2026-10-16 20:39:06,387 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-16 20:39:06,390 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-16 20:39:06,392 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-16 20:39:06,395 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-16 20:39:06,446 INFO zelda_api.intelligence_pipeline - Memo executive_summary: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-16 20:39:06,448 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-16 20:39:06,450 INFO zelda_api.intelligence_pipeline - Memo supported_points: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-16 20:39:06,451 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label'] for document 1
+2026-10-16 20:39:06,480 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+FFFFFFFFFFFFFFF.FFFFF
+======================================================================
+FAIL: test_the_writer_keeps_the_funding_clause (zelda_api.tests_output_fidelity.PipelineReviewB54d82bTests.test_the_writer_keeps_the_funding_clause)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1301, in test_the_writer_keeps_the_funding_clause
+    self.assertEqual(memo.executive_summary, FUNDING_PROBE_AFTER)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "Pitc[15 chars]orts 500M messages with no explicit interval [[221 chars]on)." != "Pitc[15 chars]orts $23.1M raised [S4], while the deck states[263 chars]on)."
+Diff is 697 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_a_clause_without_a_known_predicate_is_kept (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_a_clause_without_a_known_predicate_is_kept)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1263, in test_a_clause_without_a_known_predicate_is_kept
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The deck states 500M messages with no ex[285 chars]on']) != ('Message figures on the same slide [S2, S[23 chars], [])
+
+First differing element 0:
+"The deck states 500M messages with no ex[257 chars]ion."
+'Message figures on the same slide [S2, S[18 chars]ion.'
+
++ ('Message figures on the same slide [S2, S3] need clarification.', [])
+- ('The deck states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on) need '
+-  'clarification.',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_a_narrated_figure_is_never_restated_under_another_subject (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_a_narrated_figure_is_never_restated_under_another_subject) (text='The company states the message figures on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1259, in test_a_narrated_figure_is_never_restated_under_another_subject
+    self.assertEqual(guard_basis_wording(text, basis_facts(items, (NOTE,))), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures o[27 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures o[22 chars]S3].'
+
++ ('The company states the message figures on the same slide [S2, S3].', [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_a_narrated_figure_is_never_restated_under_another_subject (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_a_narrated_figure_is_never_restated_under_another_subject) (text='The figures appear on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1259, in test_a_narrated_figure_is_never_restated_under_another_subject
+    self.assertEqual(guard_basis_wording(text, basis_facts(items, (NOTE,))), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The deck states 500M messages with no ex[266 chars]on']) != ('The figures appear on the same slide [S2, S3].', [])
+
+First differing element 0:
+"The deck states 500M messages with no ex[238 chars]on)."
+'The figures appear on the same slide [S2, S3].'
+
++ ('The figures appear on the same slide [S2, S3].', [])
+- ('The deck states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_a_negated_common_slide_statement_is_kept (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_a_negated_common_slide_statement_is_kept) (text='The company does not state that the figures appear on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1218, in test_a_negated_common_slide_statement_is_kept
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company does not state 500M messages[277 chars]on']) != ('The company does not state that the figu[39 chars], [])
+
+First differing element 0:
+"The company does not state 500M messages[249 chars]on)."
+'The company does not state that the figu[34 chars]S3].'
+
++ ('The company does not state that the figures appear on the same slide [S2, '
++  'S3].',
++  [])
+- ('The company does not state 500M messages with no explicit interval [S2] on '
+-  "page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] "
+-  'on page 12 (how the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_a_negated_common_slide_statement_is_kept (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_a_negated_common_slide_statement_is_kept) (text='The company states that the figures do not appear on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1218, in test_a_negated_common_slide_statement_is_kept
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states that the figures do n[38 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states that the figures do n[33 chars]S3].'
+
++ ('The company states that the figures do not appear on the same slide [S2, '
++  'S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_a_negated_common_slide_statement_is_kept (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_a_negated_common_slide_statement_is_kept) (text='The figures do not appear on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1218, in test_a_negated_common_slide_statement_is_kept
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The deck states 500M messages with no ex[266 chars]on']) != ('The figures do not appear on the same sl[14 chars], [])
+
+First differing element 0:
+"The deck states 500M messages with no ex[238 chars]on)."
+'The figures do not appear on the same slide [S2, S3].'
+
++ ('The figures do not appear on the same slide [S2, S3].', [])
+- ('The deck states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_a_negated_common_slide_statement_is_kept (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_a_negated_common_slide_statement_is_kept) (text='The deck never places the figures on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1218, in test_a_negated_common_slide_statement_is_kept
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The deck states 500M messages with no ex[266 chars]on']) != ('The deck never places the figures on the[22 chars], [])
+
+First differing element 0:
+"The deck states 500M messages with no ex[238 chars]on)."
+'The deck never places the figures on the[17 chars]S3].'
+
++ ('The deck never places the figures on the same slide [S2, S3].', [])
+- ('The deck states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_unresolved_boundary_or_subject_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_unresolved_boundary_or_subject_keeps_the_sentence) (text='Revenue is $10M, the message figures appear on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1250, in test_an_unresolved_boundary_or_subject_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The deck states 500M messages with no ex[266 chars]on']) != ('Revenue is $10M, the message figures app[32 chars], [])
+
+First differing element 0:
+"The deck states 500M messages with no ex[238 chars]on)."
+'Revenue is $10M, the message figures app[27 chars]S3].'
+
++ ('Revenue is $10M, the message figures appear on the same slide [S2, S3].', [])
+- ('The deck states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_unresolved_boundary_or_subject_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_unresolved_boundary_or_subject_keeps_the_sentence) (text='Revenue is $10M while the message figures appear on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1250, in test_an_unresolved_boundary_or_subject_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The deck states 500M messages with no ex[266 chars]on']) != ('Revenue is $10M while the message figure[37 chars], [])
+
+First differing element 0:
+"The deck states 500M messages with no ex[238 chars]on)."
+'Revenue is $10M while the message figure[32 chars]S3].'
+
++ ('Revenue is $10M while the message figures appear on the same slide [S2, S3].',
++  [])
+- ('The deck states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_unresolved_boundary_or_subject_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_unresolved_boundary_or_subject_keeps_the_sentence) (text='Revenue and the message figures appear on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1250, in test_an_unresolved_boundary_or_subject_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The deck states 500M messages with no ex[266 chars]on']) != ('Revenue and the message figures appear o[27 chars], [])
+
+First differing element 0:
+"The deck states 500M messages with no ex[238 chars]on)."
+'Revenue and the message figures appear o[22 chars]S3].'
+
++ ('Revenue and the message figures appear on the same slide [S2, S3].', [])
+- ('The deck states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_unresolved_boundary_or_subject_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_unresolved_boundary_or_subject_keeps_the_sentence) (text='The company states revenue and the message figures on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1250, in test_an_unresolved_boundary_or_subject_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states revenue and the messa[39 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states revenue and the messa[34 chars]S3].'
+
++ ('The company states revenue and the message figures on the same slide [S2, '
++  'S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_an_unresolved_boundary_or_subject_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_unresolved_boundary_or_subject_keeps_the_sentence) (text='The company states the message figures (see revenue [C8]) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1250, in test_an_unresolved_boundary_or_subject_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([46 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([41 chars]S3].'
+
++ ('The company states the message figures (see revenue [C8]) on the same slide '
++  '[S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_different_narrators_on_either_side_of_a_comma (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_different_narrators_on_either_side_of_a_comma) (text='Pitch Deck Hunt reports $23.1M raised [S4], while the company states the message figures on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1231, in test_different_narrators_on_either_side_of_a_comma
+    self.assertEqual((out, changes), (expected, ['basis_source_location']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Pit[16 chars]orts 500M messages with no explicit interval [[249 chars]on']) != ("Pit[16 chars]orts $23.1M raised [S4], while the company sta[294 chars]on'])
+
+First differing element 0:
+"Pitc[15 chars]orts 500M messages with no explicit interval [[221 chars]on)."
+"Pitc[15 chars]orts $23.1M raised [S4], while the company sta[266 chars]on)."
+
+Diff is 738 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_different_narrators_on_either_side_of_a_comma (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_different_narrators_on_either_side_of_a_comma)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1238, in test_different_narrators_on_either_side_of_a_comma
+    self.assertEqual(guard_basis_wording(other, basis_facts(self.items, self.notes)), (other, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Pitch Deck Hunt states 500M messages wit[273 chars]on']) != ('Pitch Deck Hunt states the message figur[31 chars], [])
+
+First differing element 0:
+"Pitch Deck Hunt states 500M messages wit[245 chars]on)."
+'Pitch Deck Hunt states the message figur[26 chars]S3].'
+
++ ('Pitch Deck Hunt states the message figures on the same slide [S2, S3].', [])
+- ('Pitch Deck Hunt states 500M messages with no explicit interval [S2] on page '
+-  "10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on "
+-  'page 12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_the_funding_clause_and_its_narrator_are_kept (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_the_funding_clause_and_its_narrator_are_kept)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1192, in test_the_funding_clause_and_its_narrator_are_kept
+    self.assertEqual(out, FUNDING_PROBE_AFTER)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "Pitc[15 chars]orts 500M messages with no explicit interval [[221 chars]on)." != "Pitc[15 chars]orts $23.1M raised [S4], while the deck states[263 chars]on)."
+Diff is 697 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_the_repairs_are_stable_and_idempotent (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_the_repairs_are_stable_and_idempotent) (text='Pitch Deck Hunt reports $23.1M raised [S4], while the usage figures appear on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1275, in test_the_repairs_are_stable_and_idempotent
+    self.assertEqual(self.full(out), (out, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Pit[61 chars][S2] (not Pitch Deck Hunt's: [S2] is the compa[279 chars]nt']) != ("Pit[61 chars][S2] on page 10, under 'Traction by Apr-16', a[181 chars], [])
+
+First differing element 0:
+"Pitc[60 chars][S2] (not Pitch Deck Hunt's: [S2] is the compa[246 chars]on)."
+"Pitc[60 chars][S2] on page 10, under 'Traction by Apr-16', a[176 chars]on)."
+
+Diff is 942 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_the_repairs_are_stable_and_idempotent (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_the_repairs_are_stable_and_idempotent) (text='Pitch Deck Hunt reports $23.1M raised [S4], while the company states the message figures on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1275, in test_the_repairs_are_stable_and_idempotent
+    self.assertEqual(self.full(out), (out, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Pit[61 chars][S2] (not Pitch Deck Hunt's: [S2] is the compa[279 chars]nt']) != ("Pit[61 chars][S2] on page 10, under 'Traction by Apr-16', a[181 chars], [])
+
+First differing element 0:
+"Pitc[60 chars][S2] (not Pitch Deck Hunt's: [S2] is the compa[246 chars]on)."
+"Pitc[60 chars][S2] on page 10, under 'Traction by Apr-16', a[176 chars]on)."
+
+Diff is 942 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_the_revenue_clause_and_its_citation_are_kept (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_the_revenue_clause_and_its_citation_are_kept) (text='The company reports revenue of $10M [C8], while the message figures appear on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1209, in test_the_revenue_clause_and_its_citation_are_kept
+    self.assertEqual((out, changes), (expected, ['basis_source_location']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company reports 500M messages with no explicit interval [[249 chars]on']) != ("The company reports revenue of $10M [C8], while the deck stat[293 chars]on'])
+
+First differing element 0:
+"The company reports 500M messages with no explicit interval [[221 chars]on)."
+"The company reports revenue of $10M [C8], while the deck stat[265 chars]on)."
+
+Diff is 836 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_the_revenue_clause_and_its_citation_are_kept (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_the_revenue_clause_and_its_citation_are_kept) (text='Revenue is $10M [C8], and the message figures appear on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1209, in test_the_revenue_clause_and_its_citation_are_kept
+    self.assertEqual((out, changes), (expected, ['basis_source_location']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The deck states 500M messages with no exp[265 chars]on']) != ("Revenue is $10M [C8], and the deck states[291 chars]on'])
+
+First differing element 0:
+"The deck states 500M messages with no exp[237 chars]on)."
+"Revenue is $10M [C8], and the deck states[263 chars]on)."
+
+Diff is 777 characters long. Set self.maxDiff to None to see it.
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.215s
+
+FAILED (failures=20)
+Destroying test database for alias 'default'...
+Found 10 test(s).
+System check identified no issues (0 silenced).

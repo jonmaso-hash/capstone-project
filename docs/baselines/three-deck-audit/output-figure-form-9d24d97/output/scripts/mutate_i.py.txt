@@ -1,0 +1,37 @@
+"""Mutation run for the review of 2465791 (a figure is matched whole: "+" and interval). Carries mutate_h.py's 70
+mutations; P22, P23, P24, P25 and P32 are re-anchored to the complete-form check (same semantics). Adds P33-P35.
+Usage: python mutate_i.py <worktree> [ID ...]."""
+import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+src = open(os.path.join(HERE, 'mutate_h.py'), encoding='utf-8').read()
+src = src.rsplit("exec(compile('def sha(path):'", 1)[0]
+prev = {'__file__': os.path.join(HERE, 'mutate_h.py'), '__name__': 'h_list'}
+exec(compile(src, 'mutate_h.py', 'exec'), prev)
+ns, runner, BASE = prev['ns'], prev['runner'], prev['BASE']
+BF = 'zelda_api/basis_fidelity.py'
+GATE = "            if _figure_key(word) not in vocabulary:\n                return False\n"
+KEY = "    return (match.group(1) + match.group(2).replace(',', '') + match.group(3) + match.group(4)\n"
+REANCHORED = {
+    'P22': ('review ed29f3b: any figure is accepted (re-anchored at the review of 2465791)', GATE,
+            "            pass\n"),
+    'P23': ("review ed29f3b / 2465791: a figure's interval is not part of its form (500M/day, 500M/messages pass as "
+            "500M)", "            + (match.group(5) or ''))\n", "            )\n"),
+    'P24': ("review ed29f3b: the cited figures' forms are not known (no figure is ever placed; re-anchored)",
+            "                  | {form for fact in statements for form in _stated_forms(fact)})",
+            "                  | set())"),
+    'P25': ('review ed29f3b: a currency sign is dropped from the form ($500M passes as 500M; re-anchored)', KEY,
+            "    return (match.group(2).replace(',', '') + match.group(3) + match.group(4)\n"),
+    'P32': ('review ed29f3b 3: once a held figure is read, the rest of the text is not checked (re-anchored)', GATE,
+            GATE + "            return True\n"),
+}
+ns['M'] = [(m[0], REANCHORED[m[0]][0], BF, *REANCHORED[m[0]][1:]) if m[0] in REANCHORED else m for m in ns['M']] + [
+    ('P33', 'review 2465791: a figure\'s "+" is not part of its form ("500M+" passes as 500M)', BF,
+     KEY, "    return (match.group(1) + match.group(2).replace(',', '') + match.group(3)\n"),
+    ('P34', "review 2465791: a statement's interval on its noun is not read (\"500M messages/month\" states no "
+            "500M/month)", BF,
+     r"(?:/([a-z]+)|\s+[a-z]+/([a-z]+))?')", r"(?:/([a-z]+))?')"),
+    ('P35', 'review 2465791: every stated figure admits a "+" ("500M+" passes when the statement says "500M")', BF,
+     "        for qualifier in {'', match.group(2)}:", "        for qualifier in {'', '+'}:"),
+]
+exec(compile('def sha(path):' + runner, BASE + ' (runner)', 'exec'), ns)

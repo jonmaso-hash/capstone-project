@@ -1,0 +1,34 @@
+"""Mutation run for the second review of ed29f3b (arithmetic, signs and nested asides). Carries mutate_e29.py's
+66 mutations: P16, P17 and P24 re-anchored (same semantics), P27 retired (the lone-"$" guard is gone: the
+figure-token check rejects a lone "$" before a value is read). Adds P28-P31.
+Usage: python mutate_g.py <worktree> [ID ...]."""
+import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+src = open(os.path.join(HERE, 'mutate_e29.py'), encoding='utf-8').read()
+src = src.rsplit("exec(compile('def sha(path):'", 1)[0]
+prev = {'__file__': os.path.join(HERE, 'mutate_e29.py'), '__name__': 'e29_list'}
+exec(compile(src, 'mutate_e29.py', 'exec'), prev)
+ns, runner, BASE = prev['ns'], prev['runner'], prev['BASE']
+BF = 'zelda_api/basis_fidelity.py'
+NOVERB_GATE = "    if not set(words) & _LINKING or not _placing_words(clause[lead:], vocabulary, clarified):"
+REANCHORED = {
+    'P16': ('review b54 1/2: a clause without a reporting verb may hold other facts or a denial (re-anchored at the '
+            'second ed29f3b review)', NOVERB_GATE, "    if not set(words) & _LINKING:"),
+    'P17': ('review b54: a clause with no predicate is restated (re-anchored at the second ed29f3b review)',
+            NOVERB_GATE, "    if not _placing_words(clause[lead:], vocabulary, clarified):"),
+    'P24': ("review ed29f3b: the cited figures' values are not known (no figure is ever placed; re-anchored)",
+            "                     if _FIGURE_TOKEN.fullmatch(token)})", "                     if False})"),
+}
+ns['M'] = [(m[0], REANCHORED[m[0]][0], BF, *REANCHORED[m[0]][1:]) if m[0] in REANCHORED else m
+           for m in ns['M'] if m[0] != 'P27'] + [
+    ('P28', 'review ed29f3b 2: signs and operators between words are not checked ("500M + 500M", "~500M")', BF,
+     "    if not _PLAIN_GAP.fullmatch(_TOKEN.sub(' ', text)):", "    if False:"),
+    ('P29', 'review ed29f3b 2: a figure token need not be whole ("500M+500M" is read as 500M)', BF,
+     "            if not _FIGURE_TOKEN.fullmatch(word):", "            if False:"),
+    ('P30', 'review ed29f3b 2: parentheses count as gaps (a nested or unclosed aside passes)', BF,
+     "_PLAIN_GAP = re.compile(r'[\\s,.]*')", "_PLAIN_GAP = re.compile(r'[\\s,.()]*')"),
+    ('P31', "review ed29f3b 2: a list marker is checked as clause wording (a bullet's repair is lost)", BF,
+     NOVERB_GATE, "    if not set(words) & _LINKING or not _placing_words(clause, vocabulary, clarified):"),
+]
+exec(compile('def sha(path):' + runner, BASE + ' (runner)', 'exec'), ns)

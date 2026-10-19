@@ -1,0 +1,16 @@
+#!/bin/sh
+# Usage: batch_one.sh <A|B|C|D> -- one validation batch at the worktree HEAD; refuses under 1.2 GB free RAM.
+S=/c/Users/jonathan/AppData/Local/Temp/claude/C--Users-jonathan-Desktop-KCV-np/c8a313d5-81e1-402a-b7da-9205b6f20fab/scratchpad; O=$S/of705
+cd /c/Users/jonathan/Desktop/KCV-of705 || exit 1
+Z=zelda_api
+f=$(powershell -NoProfile -Command "[math]::Round((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory/1MB,2)")
+echo "$1 free=$f head=$(git rev-parse --short HEAD)" >> $O/b54_batches_ram.txt
+awk -v f="$f" 'BEGIN{exit !(f>=1.2)}' || { echo "STOP before $1: free=$f < 1.2" | tee -a $O/b54_batches_ram.txt; exit 3; }
+case $1 in
+A) L="$Z.tests_output_fidelity $Z.tests_funding_fidelity $Z.tests_claim_context_dates $Z.tests_grounded_context $Z.tests_memo_persistence $Z.tests_memo_list_rendering $Z.tests_claim_counts_per_claim $Z.tests_canonical_presentation $Z.tests_no_investment_advice $Z.tests_private_company_presentation $Z.tests_source_naming $Z.tests_verification_grounding pages.tests_ci_manifest";;
+B) L="$Z.tests_usage_basis $Z.tests_claim_extraction_recall $Z.tests_claim_currency $Z.tests_claim_periods $Z.tests_claim_attribution $Z.tests_claim_field_binding $Z.tests_claim_extraction_scoring $Z.tests_financial_fact_semantics $Z.tests_three_state_grounding $Z.tests_profile_reconciliation $Z.tests_dashboard_authorization $Z.tests_chunk_boundary $Z.tests_boundary_closeout $Z.tests_page_provenance $Z.tests_verification_no_claims $Z.tests_score_follows_verdict $Z.tests_summary_follows_verdict $Z.tests_report_semantics pages.tests_no_network_in_tests";;
+C) L="$Z.tests";;
+D) L="$Z.tests_authorization $Z.tests_assistant_panel_escaping $Z.tests_library $Z.tests_terminal_notifications $Z.tests_valuation_paywall $Z.tests_retrieval $Z.tests_principal $Z.tests_corroboration $Z.tests_source_capabilities $Z.tests_verification_starts_together $Z.tests_extraction_failures matchmaking.tests_company_overview_identity";;
+esac
+$S/ra109/t.sh . $L > $O/b54_batch$1.txt
+grep -E "^(FAIL|ERROR):|^Ran |^FAILED|^OK" $O/b54_batch$1.txt

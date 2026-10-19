@@ -1,0 +1,37 @@
+P10 CAUGHT Ran 246 tests in 23.053s FAILED (failures=16) restored
+P11 CAUGHT Ran 246 tests in 9.876s FAILED (failures=5) restored
+P12 CAUGHT Ran 246 tests in 9.824s FAILED (failures=2) restored
+P13 CAUGHT Ran 246 tests in 10.081s FAILED (failures=2) restored
+P14 CAUGHT Ran 246 tests in 9.990s FAILED (failures=2) restored
+P15 CAUGHT Ran 246 tests in 9.765s FAILED (failures=7) restored
+P16 CAUGHT Ran 246 tests in 9.875s FAILED (failures=5) restored
+P17 CAUGHT Ran 246 tests in 9.963s FAILED (failures=1) restored
+P18 CAUGHT Ran 246 tests in 9.954s FAILED (failures=2) restored
+P19 CAUGHT Ran 246 tests in 10.016s FAILED (failures=18, errors=22) restored
+P20 CAUGHT Ran 246 tests in 9.784s FAILED (failures=6) restored
+P21 CAUGHT Ran 246 tests in 9.931s FAILED (failures=1) restored
+
+P10 | review 1: the clarification is not kept when both sides are cited | CAUGHT Ran 246 tests in 23.053s FAILED (failures=16)
+    failing: test_a_basis_aside_is_superseded_by_the_restated_clarification, test_a_cross_page_group_is_placed_by_its_own_sources, test_different_narrators_on_either_side_of_a_comma, test_every_placed_citation_supports_its_page_and_context, test_interleaved_locations_keep_the_flattened_citation_order, test_numbers_and_parentheticals_do_not_end_the_clause, test_of705_each_fact_keeps_its_own_page_and_context, test_the_funding_clause_and_its_narrator_are_kept ...
+P11 | review b54 1: a clause-linking comma no longer ends the clause (the funding clause is swallowed) | CAUGHT Ran 246 tests in 9.876s FAILED (failures=5)
+    failing: test_different_narrators_on_either_side_of_a_comma, test_the_funding_clause_and_its_narrator_are_kept, test_the_revenue_clause_and_its_citation_are_kept, test_the_writer_keeps_the_funding_clause
+P12 | review b54 1: another citation inside the clause no longer keeps the sentence | CAUGHT Ran 246 tests in 9.824s FAILED (failures=2)
+    failing: test_a_citation_inside_the_clause_keeps_the_sentence
+P13 | review b54 1: a narrated cited figure is restated under the clause subject | CAUGHT Ran 246 tests in 10.081s FAILED (failures=2)
+    failing: test_a_narrated_figure_is_never_restated_under_another_subject
+P14 | review b54 1/2: any subject is borrowed (a narrator's, or a denial's) | CAUGHT Ran 246 tests in 9.990s FAILED (failures=2)
+    failing: test_a_negated_common_slide_statement_is_kept, test_different_narrators_on_either_side_of_a_comma
+P15 | review b54 1/2: the object after the reporting verb may hold other facts or a denial (re-anchored at 1bb993b) | CAUGHT Ran 246 tests in 9.765s FAILED (failures=7)
+    failing: test_a_negated_common_slide_statement_is_kept, test_a_parenthetical_fact_or_qualification_keeps_the_sentence, test_an_unresolved_boundary_or_subject_keeps_the_sentence
+P16 | review b54 1/2: a clause without a reporting verb may hold other facts or a denial (re-anchored at 1bb993b) | CAUGHT Ran 246 tests in 9.875s FAILED (failures=5)
+    failing: test_a_negated_common_slide_statement_is_kept, test_a_parenthetical_fact_or_qualification_keeps_the_sentence, test_an_unresolved_boundary_or_subject_keeps_the_sentence
+P17 | review b54: a clause with no predicate is restated (re-anchored at 1bb993b) | CAUGHT Ran 246 tests in 9.963s FAILED (failures=1)
+    failing: test_a_clause_without_a_known_predicate_is_kept
+P18 | review b54 2: denial words count as placing words (the negation guard is negated) | CAUGHT Ran 246 tests in 9.954s FAILED (failures=2)
+    failing: test_a_negated_common_slide_statement_is_kept
+P19 | review b54: the reconstruction guard is inverted | CAUGHT Ran 246 tests in 10.016s FAILED (failures=18, errors=22)
+    failing: test_a_basis_aside_is_superseded_by_the_restated_clarification, test_a_citation_inside_the_clause_keeps_the_sentence, test_a_clause_without_a_known_predicate_is_kept, test_a_cross_page_group_is_placed_by_its_own_sources, test_a_narrated_figure_is_never_restated_under_another_subject, test_a_negated_common_slide_statement_is_kept, test_a_parenthetical_fact_or_qualification_keeps_the_sentence, test_a_second_pass_changes_nothing ...
+P20 | review 191e627: asides are not checked (stripped before the word check, as at d76237d) | CAUGHT Ran 246 tests in 9.784s FAILED (failures=6)
+    failing: test_a_parenthetical_fact_or_qualification_keeps_the_sentence
+P21 | review 191e627: a basis aside is dropped even when the pair's clarification is not restated | CAUGHT Ran 246 tests in 9.931s FAILED (failures=1)
+    failing: test_a_parenthetical_fact_or_qualification_keeps_the_sentence

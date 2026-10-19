@@ -1,0 +1,29 @@
+"""Mutation run for the review of ed29f3b (additional figures in a placing clause). Carries mutate_p.py's 60
+mutations unchanged (no anchor moved) and adds P22-P25 for the figure boundary.
+Usage: python mutate_e29.py <worktree> [ID ...]."""
+import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+src = open(os.path.join(HERE, 'mutate_p.py'), encoding='utf-8').read()
+src = src.rsplit("exec(compile('def sha(path):'", 1)[0]
+prev = {'__file__': os.path.join(HERE, 'mutate_p.py'), '__name__': 'p_list'}
+exec(compile(src, 'mutate_p.py', 'exec'), prev)
+ns, runner, BASE = prev['ns'], prev['runner'], prev['BASE']
+BF = 'zelda_api/basis_fidelity.py'
+FIGURE_GATE = "            if value not in vocabulary or not set(tail) <= vocabulary:"
+ns['M'] = ns['M'] + [
+    ('P22', 'review ed29f3b: any figure is accepted (only the words after it are checked)', BF,
+     FIGURE_GATE, "            if not set(tail) <= vocabulary:"),
+    ('P23', "review ed29f3b: a cited figure's interval or unit is not checked (500M/day passes as 500M)", BF,
+     FIGURE_GATE, "            if value not in vocabulary:"),
+    ('P24', "review ed29f3b: the cited figures' values are not known (no figure is ever placed)", BF,
+     "                     if token[0] in '$0123456789'})", "                     if False})"),
+    ('P25', 'review ed29f3b: a currency sign is dropped from the value ($500M passes as 500M)', BF,
+     "    return (match.group(1) + match.group(2).replace(',', '') + match.group(3),",
+     "    return (match.group(2).replace(',', '') + match.group(3),"),
+    ('P26', 'review ed29f3b: a statement\'s space-grouped digits are not joined ("140 000+" is not "140,000+")', BF,
+     "    statements = [_DIGIT_GROUP.sub('', fact.lower()) for", "    statements = [fact.lower() for"),
+    ('P27', 'review ed29f3b: a lone "$" token is taken for a figure (no guard: the helper raises)', BF,
+     "    if match is None:\n        return token, []\n", ""),
+]
+exec(compile('def sha(path):' + runner, BASE + ' (runner)', 'exec'), ns)

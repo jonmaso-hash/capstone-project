@@ -1,0 +1,165 @@
+== P29 applied by hand (same old/new as the runner) at ffc408f; module zelda_api.tests_output_fidelity
+2026-10-18 17:59:01,916 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-18 17:59:54,564 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-18 17:59:54,592 INFO zelda_api.intelligence_pipeline - Memo supported_points: funding-source fidelity ['unsupported_total', 'narrator_narrative'] for document 1
+2026-10-18 17:59:54,596 INFO zelda_api.intelligence_pipeline - Memo open_concerns: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-18 17:59:54,614 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-18 17:59:54,617 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt', 'funding_not_runway'] for document 1
+2026-10-18 17:59:54,680 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-18 17:59:54,710 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-18 17:59:54,716 INFO zelda_api.signals - DocumentSource created: a.pptx
+2026-10-18 17:59:54,720 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-18 17:59:54,735 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-18 17:59:54,740 INFO zelda_api.signals - DocumentSource created: b.pptx
+2026-10-18 17:59:54,744 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-18 17:59:54,759 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-18 17:59:54,764 INFO zelda_api.signals - DocumentSource created: c.pptx
+2026-10-18 17:59:54,767 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-18 17:59:54,767 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_cumulative_referent'] for document 1
+2026-10-18 17:59:54,784 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-18 17:59:54,789 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-18 17:59:54,800 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: funding-source fidelity ['cash_premise'] for document 1
+2026-10-18 17:59:54,804 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-18 17:59:54,807 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-18 17:59:54,810 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-18 17:59:54,814 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-18 17:59:54,816 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-18 17:59:54,819 INFO zelda_api.intelligence_pipeline - Memo supported_points: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-18 17:59:54,820 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label'] for document 1
+2026-10-18 17:59:54,839 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-18 17:59:54,846 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-18 17:59:54,856 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: funding-source fidelity ['cash_premise'] for document 1
+2026-10-18 17:59:54,859 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-18 17:59:54,861 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-18 17:59:54,864 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-18 17:59:54,866 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-18 17:59:54,867 INFO zelda_api.intelligence_pipeline - Memo executive_summary: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-18 17:59:54,868 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-18 17:59:54,870 INFO zelda_api.intelligence_pipeline - Memo supported_points: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-18 17:59:54,871 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label'] for document 1
+2026-10-18 17:59:54,893 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+..................................................................................FFFF......E.............
+======================================================================
+ERROR: test_an_additional_figure_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_an_additional_figure_keeps_the_sentence) (text='The company states the message figures ($ 500M) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1311, in test_an_additional_figure_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+                     ~~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1181, in guard
+    return guard_basis_wording(text, basis_facts(_context_items(), (NOTE,)))
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\basis_fidelity.py", line 476, in guard_basis_wording
+    sentence = _location(sentence, facts, changes)
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\basis_fidelity.py", line 461, in _location
+    head = _placing_head(sentence, start, sentence[start:match.start()], cited, facts, both is not None)
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\basis_fidelity.py", line 414, in _placing_head
+    if not _placing_words(clause[verb.end():], vocabulary, clarified):
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\basis_fidelity.py", line 394, in _placing_words
+    return _plain_words(outside, vocabulary) and all(
+                                                 ^^^
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\basis_fidelity.py", line 395, in <genexpr>
+    _plain_words(aside, vocabulary) or (clarified and _BASIS_ASIDE.fullmatch(aside.strip()))
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\basis_fidelity.py", line 379, in _plain_words
+    if _figure_key(word) not in vocabulary:
+       ~~~~~~~~~~~^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\basis_fidelity.py", line 342, in _figure_key
+    return (match.group(1) + match.group(2).replace(',', '') + match.group(3) + match.group(4)
+            ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'group'
+
+======================================================================
+FAIL: test_a_figure_token_that_is_not_one_whole_figure_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_a_figure_token_that_is_not_one_whole_figure_keeps_the_sentence) (sequence='full', text='The company states the message figures (500M/month/day) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1377, in test_a_figure_token_that_is_not_one_whole_figure_keeps_the_sentence
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([44 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([39 chars]S3].'
+
++ ('The company states the message figures (500M/month/day) on the same slide '
++  '[S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_a_figure_token_that_is_not_one_whole_figure_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_a_figure_token_that_is_not_one_whole_figure_keeps_the_sentence) (text='The company states the message figures (500M/month/day) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1379, in test_a_figure_token_that_is_not_one_whole_figure_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([44 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([39 chars]S3].'
+
++ ('The company states the message figures (500M/month/day) on the same slide '
++  '[S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_a_figure_token_that_is_not_one_whole_figure_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_a_figure_token_that_is_not_one_whole_figure_keeps_the_sentence) (sequence='full', text='The company states the message figures (500ms) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1377, in test_a_figure_token_that_is_not_one_whole_figure_keeps_the_sentence
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([35 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([30 chars]S3].'
+
++ ('The company states the message figures (500ms) on the same slide [S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+======================================================================
+FAIL: test_a_figure_token_that_is_not_one_whole_figure_keeps_the_sentence (zelda_api.tests_output_fidelity.ReviewB54d82bProbeTests.test_a_figure_token_that_is_not_one_whole_figure_keeps_the_sentence) (text='The company states the message figures (500ms) on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1379, in test_a_figure_token_that_is_not_one_whole_figure_keeps_the_sentence
+    self.assertEqual(self.guard(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The company states 500M messages with no[269 chars]on']) != ('The company states the message figures ([35 chars], [])
+
+First differing element 0:
+"The company states 500M messages with no[241 chars]on)."
+'The company states the message figures ([30 chars]S3].'
+
++ ('The company states the message figures (500ms) on the same slide [S2, S3].',
++  [])
+- ('The company states 500M messages with no explicit interval [S2] on page 10, '
+-  "under 'Traction by Apr-16', and separately 500M messages/month [S3] on page "
+-  '12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_location'])
+
+----------------------------------------------------------------------
+Ran 108 tests in 1.124s
+
+FAILED (failures=4, errors=1)
+Destroying test database for alias 'default'...
+Found 108 test(s).
+System check identified no issues (0 silenced).

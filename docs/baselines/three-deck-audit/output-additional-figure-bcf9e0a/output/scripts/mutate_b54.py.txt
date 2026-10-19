@@ -1,0 +1,43 @@
+"""Mutation run for the review of b54d82b (location bounded to its clause and subject at e9d6763). Carries
+mutate_review.py's 49 mutations (P8 re-anchored: the head line moved into _placing_head, same semantics) and adds
+P11-P19, each removing one clause/narrator/predicate boundary or negating the reconstruction guard.
+Usage: python mutate_b54.py <worktree> [ID ...]."""
+import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+src = open(os.path.join(HERE, 'mutate_review.py'), encoding='utf-8').read()
+src = src.rsplit("exec(compile('def sha(path):'", 1)[0]
+prev = {'__file__': os.path.join(HERE, 'mutate_review.py'), '__name__': 'review_list'}
+exec(compile(src, 'mutate_review.py', 'exec'), prev)
+ns, runner, BASE = prev['ns'], prev['runner'], prev['BASE']
+BF = 'zelda_api/basis_fidelity.py'
+carried = [m if m[0] != 'P8' else
+           ('P8', 'review 1: refs placed without their facts (the shared metric predicate is kept; re-anchored at e9d6763)',
+            BF, "        return sentence[:start] + clause[:verb.end()] + ' '", "        return sentence[:start] + clause")
+           for m in ns['M']]
+HEAD_GATE = "    if _REF.search(clause) or set(cited) & facts.narrated:"
+NOVERB_GATE = "    if not set(words) & _LINKING or not _placing_words(clause, vocabulary):"
+ns['M'] = carried + [
+    ('P11', 'review b54 1: a clause-linking comma no longer ends the clause (the funding clause is swallowed)', BF,
+     "        elif depth == 0 and ch == ',' and _CLAUSE_LINK.match(sentence, i):", "        elif False:"),
+    ('P12', 'review b54 1: another citation inside the clause no longer keeps the sentence', BF,
+     HEAD_GATE, "    if set(cited) & facts.narrated:"),
+    ('P13', 'review b54 1: a narrated cited figure is restated under the clause subject', BF,
+     HEAD_GATE, "    if _REF.search(clause):"),
+    ('P14', "review b54 1/2: any subject is borrowed (a narrator's, or a denial's)", BF,
+     "        if not _OWN_SUBJECT.fullmatch(clause[lead:verb.start()].strip()):\n            return None",
+     "        if False:\n            return None"),
+    ('P15', 'review b54 1/2: the object after the reporting verb may hold other facts or a denial', BF,
+     "        if not _placing_words(clause[verb.end():], vocabulary):", "        if False:"),
+    ('P16', 'review b54 1/2: a clause without a reporting verb may hold other facts or a denial', BF,
+     NOVERB_GATE, "    if not set(words) & _LINKING:"),
+    ('P17', 'review b54: a clause with no predicate is restated', BF,
+     NOVERB_GATE, "    if not _placing_words(clause, vocabulary):"),
+    ('P18', 'review b54 2: denial words count as placing words (the negation guard is negated)', BF,
+     "'total', 'totals', 'rate', 'rates', 'usage', 'traction', 'message', 'headline'}) | _LINKING",
+     "'total', 'totals', 'rate', 'rates', 'usage', 'traction', 'message', 'headline', 'not', 'do', 'does', "
+     "'never'}) | _LINKING"),
+    ('P19', 'review b54: the reconstruction guard is inverted', BF,
+     "        if head is None:\n            continue", "        if head is not None:\n            continue"),
+]
+exec(compile('def sha(path):' + runner, BASE + ' (runner)', 'exec'), ns)

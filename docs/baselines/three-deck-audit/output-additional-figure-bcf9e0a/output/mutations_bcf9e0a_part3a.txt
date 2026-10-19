@@ -1,0 +1,25 @@
+L3 CAUGHT Ran 247 tests in 24.124s FAILED (failures=1) restored
+L4 CAUGHT Ran 247 tests in 10.168s FAILED (failures=1) restored
+L5 CAUGHT Ran 247 tests in 11.043s FAILED (failures=19) restored
+L6 CAUGHT Ran 247 tests in 9.919s FAILED (failures=1) restored
+L7 CAUGHT Ran 247 tests in 9.992s FAILED (failures=1) restored
+T1 CAUGHT Ran 247 tests in 9.791s FAILED (failures=1) restored
+T2 CAUGHT Ran 247 tests in 9.878s FAILED (failures=1) restored
+T3 CAUGHT Ran 247 tests in 9.310s FAILED (failures=1) restored
+
+L3 | OF-704: an external CONTRADICTED state no longer keeps the word | CAUGHT Ran 247 tests in 24.124s FAILED (failures=1)
+    failing: test_unrelated_and_external_contradictions_are_kept
+L4 | OF-704: a question is relabelled too | CAUGHT Ran 247 tests in 10.168s FAILED (failures=1)
+    failing: test_negations_questions_and_other_words_are_kept
+L5 | OF-704: global word replacement in every sentence (not tied to a pair) | CAUGHT Ran 247 tests in 11.043s FAILED (failures=19)
+    failing: test_an_affirmative_label_after_a_condition_clause_ends_is_still_repaired, test_an_unasserted_infinitive_is_kept, test_conditional_scenarios_are_kept_by_the_new_rules, test_denials_and_insufficient_evidence_are_kept, test_negations_questions_and_other_words_are_kept, test_only_the_expected_rules_fired, test_the_pair_label_becomes_an_ambiguity, test_unrelated_and_external_contradictions_are_kept
+L6 | review 3: the label rule ignores conditions | CAUGHT Ran 247 tests in 9.919s FAILED (failures=1)
+    failing: test_conditional_scenarios_are_kept_by_the_new_rules
+L7 | review 2: an unasserted infinitive ("to establish a contradiction") is relabelled | CAUGHT Ran 247 tests in 9.992s FAILED (failures=1)
+    failing: test_an_unasserted_infinitive_is_kept
+T1 | OF-705: the unspecified-total rule is off | CAUGHT Ran 247 tests in 9.791s FAILED (failures=1)
+    failing: test_the_unspecified_figure_is_not_called_a_total
+T2 | OF-705: a pair's stated cumulative fact no longer keeps its total | CAUGHT Ran 247 tests in 9.878s FAILED (failures=1)
+    failing: test_a_pair_with_a_stated_cumulative_side_keeps_its_total
+T3 | review 3: the total rule ignores conditions | CAUGHT Ran 247 tests in 9.310s FAILED (failures=1)
+    failing: test_conditional_scenarios_are_kept_by_the_new_rules

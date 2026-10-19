@@ -1,0 +1,19 @@
+"""P34 corrected (review of 424dd36). mutate_i.py's P34 removed the noun-interval capture group that
+_stated_forms still reads, so every use raised IndexError (85 errors, no assertion failure): it showed a crash, not
+the behaviour. The corrected P34 keeps the regex and stops reading the group, which disables only the interval
+stated on a figure's noun. All other mutations are carried unchanged from mutate_i.py.
+Usage: python mutate_j.py <worktree> [ID ...]."""
+import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+src = open(os.path.join(HERE, 'mutate_i.py'), encoding='utf-8').read()
+src = src.rsplit("exec(compile('def sha(path):'", 1)[0]
+prev = {'__file__': os.path.join(HERE, 'mutate_i.py'), '__name__': 'i_list'}
+exec(compile(src, 'mutate_i.py', 'exec'), prev)
+ns, runner, BASE = prev['ns'], prev['runner'], prev['BASE']
+BF = 'zelda_api/basis_fidelity.py'
+P34 = ('P34', "review 2465791 (corrected at the review of 424dd36): a statement's interval on its noun is not read "
+              "(\"500M messages/month\" states no 500M/month)", BF,
+       "match.group(3) or match.group(4)", "match.group(3)")
+ns['M'] = [P34 if m[0] == 'P34' else m for m in ns['M']]
+exec(compile('def sha(path):' + runner, BASE + ' (runner)', 'exec'), ns)

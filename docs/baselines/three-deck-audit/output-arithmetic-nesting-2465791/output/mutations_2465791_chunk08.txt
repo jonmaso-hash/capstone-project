@@ -1,0 +1,22 @@
+P11 CAUGHT Ran 249 tests in 9.777s FAILED (failures=5) restored
+P12 CAUGHT Ran 249 tests in 9.989s FAILED (failures=2) restored
+P13 CAUGHT Ran 249 tests in 9.807s FAILED (failures=2) restored
+P14 CAUGHT Ran 249 tests in 9.857s FAILED (failures=2) restored
+P15 CAUGHT Ran 249 tests in 10.051s FAILED (failures=32) restored
+P16 CAUGHT Ran 249 tests in 9.742s FAILED (failures=6) restored
+P17 CAUGHT Ran 249 tests in 9.965s FAILED (failures=1) restored
+
+P11 | review b54 1: a clause-linking comma no longer ends the clause (the funding clause is swallowed) | CAUGHT Ran 249 tests in 9.777s FAILED (failures=5)
+    failing: test_different_narrators_on_either_side_of_a_comma, test_the_funding_clause_and_its_narrator_are_kept, test_the_revenue_clause_and_its_citation_are_kept, test_the_writer_keeps_the_funding_clause
+P12 | review b54 1: another citation inside the clause no longer keeps the sentence | CAUGHT Ran 249 tests in 9.989s FAILED (failures=2)
+    failing: test_a_citation_inside_the_clause_keeps_the_sentence
+P13 | review b54 1: a narrated cited figure is restated under the clause subject | CAUGHT Ran 249 tests in 9.807s FAILED (failures=2)
+    failing: test_a_narrated_figure_is_never_restated_under_another_subject
+P14 | review b54 1/2: any subject is borrowed (a narrator's, or a denial's) | CAUGHT Ran 249 tests in 9.857s FAILED (failures=2)
+    failing: test_a_negated_common_slide_statement_is_kept, test_different_narrators_on_either_side_of_a_comma
+P15 | review b54 1/2: the object after the reporting verb may hold other facts or a denial (re-anchored at 1bb993b) | CAUGHT Ran 249 tests in 10.051s FAILED (failures=32)
+    failing: test_a_negated_common_slide_statement_is_kept, test_a_parenthetical_fact_or_qualification_keeps_the_sentence, test_an_additional_figure_keeps_the_sentence, test_an_unknown_number_arithmetic_or_nested_aside_keeps_the_sentence, test_an_unresolved_boundary_or_subject_keeps_the_sentence
+P16 | review b54 1/2: a clause without a reporting verb may hold other facts or a denial (re-anchored at the second ed29f3b review) | CAUGHT Ran 249 tests in 9.742s FAILED (failures=6)
+    failing: test_a_negated_common_slide_statement_is_kept, test_a_parenthetical_fact_or_qualification_keeps_the_sentence, test_an_additional_figure_keeps_the_sentence, test_an_unresolved_boundary_or_subject_keeps_the_sentence
+P17 | review b54: a clause with no predicate is restated (re-anchored at the second ed29f3b review) | CAUGHT Ran 249 tests in 9.965s FAILED (failures=1)
+    failing: test_a_clause_without_a_known_predicate_is_kept

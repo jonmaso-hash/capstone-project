@@ -1,0 +1,246 @@
+2026-10-16 03:02:01,583 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-16 03:02:56,941 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-16 03:02:56,971 INFO zelda_api.intelligence_pipeline - Memo supported_points: funding-source fidelity ['unsupported_total', 'narrator_narrative'] for document 1
+2026-10-16 03:02:56,975 INFO zelda_api.intelligence_pipeline - Memo open_concerns: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-16 03:02:56,976 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-16 03:02:56,996 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt', 'funding_not_runway'] for document 1
+2026-10-16 03:02:57,012 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-16 03:02:57,045 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-16 03:02:57,051 INFO zelda_api.signals - DocumentSource created: a.pptx
+2026-10-16 03:02:57,054 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-16 03:02:57,071 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-16 03:02:57,076 INFO zelda_api.signals - DocumentSource created: b.pptx
+2026-10-16 03:02:57,080 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-16 03:02:57,097 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-16 03:02:57,104 INFO zelda_api.signals - DocumentSource created: c.pptx
+2026-10-16 03:02:57,106 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-16 03:02:57,107 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_cumulative_referent'] for document 1
+2026-10-16 03:02:57,123 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-16 03:02:57,128 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-16 03:02:57,138 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: funding-source fidelity ['cash_premise'] for document 1
+2026-10-16 03:02:57,141 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-16 03:02:57,144 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-16 03:02:57,147 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-16 03:02:57,150 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-16 03:02:57,174 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+F.................................FFF.....FFF...F........................FFFF..F
+======================================================================
+FAIL: test_the_stored_memo_carries_the_repairs (zelda_api.tests_output_fidelity.PipelineMemo99Tests.test_the_stored_memo_carries_the_repairs)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 1032, in test_the_stored_memo_carries_the_repairs
+    self.assertTrue(memo.open_concerns.startswith(OPEN_AFTER), memo.open_concerns)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : - Measurement-basis contradiction in the headline usage metric: the deck states '500M messages' without an interval on page 10 and '500M messages/month' on page 12 [C2, C3]. These are not necessarily the same figure; until management clarifies whether 500M is a cumulative total or a monthly rate, the scale of platform activity cannot be reliably interpreted.
+- The $23.1M raised figure [C1, S4] is reported by Pitch Deck Hunt with no stated date and no independent evidence to establish or contradict it; the actual amount raised, when it was raised, and the resulting capital structure remain unknown.
+- No revenue, burn, or cash data are present in the extracted evidence, making it impossible to assess financial sustainability, monetisation progress, or how long the company can operate without additional funding.
+- No team, product, problem, market, or risk information was extracted from the document, representing the large majority of the standard due-diligence framework and leaving the investment thesis almost entirely unsubstantiated by the available evidence.
+
+======================================================================
+FAIL: test_the_pair_label_becomes_an_ambiguity (zelda_api.tests_output_fidelity.BasisLabelTests.test_the_pair_label_becomes_an_ambiguity) (text='There is a contradiction between page 10 and page 12 [C3, C2].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 932, in test_the_pair_label_becomes_an_ambiguity
+    self.assertEqual(self.guard(text), (expected, ['basis_contradiction_label']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('There is a contradiction between page 10 and page 12 [C3, C2].', []) != ('There is an ambiguity between page 10 and page 12 [[36 chars]el'])
+
+First differing element 0:
+'There is a contradiction between page 10 and page 12 [C3, C2].'
+'There is an ambiguity between page 10 and page 12 [C3, C2].'
+
+- ('There is a contradiction between page 10 and page 12 [C3, C2].', [])
+?             ---  ^^^^^^^^^                                        ----
+
++ ('There is an ambiguity between page 10 and page 12 [C3, C2].',
+?              ++++++++ ^
+
++  ['basis_contradiction_label'])
+
+======================================================================
+FAIL: test_the_pair_label_becomes_an_ambiguity (zelda_api.tests_output_fidelity.BasisLabelTests.test_the_pair_label_becomes_an_ambiguity) (text='The two message figures are contradictory [C3, C2].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 932, in test_the_pair_label_becomes_an_ambiguity
+    self.assertEqual(self.guard(text), (expected, ['basis_contradiction_label']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('The[14 chars]igures are contradictory [C3, C2].', []) != ('The[14 chars]igures are ambiguous [C3, C2].', ['basis_contradiction_label'])
+
+First differing element 0:
+'The two message figures are contradictory [C3, C2].'
+'The two message figures are ambiguous [C3, C2].'
+
+- ('The two message figures are contradictory [C3, C2].', [])
+?                               ^ ^^^^^^^^^^^            ----
+
++ ('The two message figures are ambiguous [C3, C2].',
+?                               ^^^^^^ ^^
+
++  ['basis_contradiction_label'])
+
+======================================================================
+FAIL: test_the_pair_label_becomes_an_ambiguity (zelda_api.tests_output_fidelity.BasisLabelTests.test_the_pair_label_becomes_an_ambiguity) (text='Contradictions in the messages metric need management review [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 932, in test_the_pair_label_becomes_an_ambiguity
+    self.assertEqual(self.guard(text), (expected, ['basis_contradiction_label']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('Contradictions in the messages metric nee[30 chars], []) != ('Ambiguities in the messages metric need m[54 chars]el'])
+
+First differing element 0:
+'Contradictions in the messages metric need management review [S2, S3].'
+'Ambiguities in the messages metric need management review [S2, S3].'
+
+- ('Contradictions in the messages metric need management review [S2, S3].', [])
+?   ^^^^^^^ ^  ^^                                                           ----
+
++ ('Ambiguities in the messages metric need management review [S2, S3].',
+?   ^^^ ^^^  ^
+
++  ['basis_contradiction_label'])
+
+======================================================================
+FAIL: test_a_cross_page_group_is_placed_by_its_own_sources (zelda_api.tests_output_fidelity.BasisSourceLocationTests.test_a_cross_page_group_is_placed_by_its_own_sources) (text='The figures appear on the same slide [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 972, in test_a_cross_page_group_is_placed_by_its_own_sources
+    self.assertEqual(self.guard(text), (expected, ['basis_source_location']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('The figures appear on the same slide [S2, S3].', []) != ("The figures appear on page 10 (slide hea[72 chars]on'])
+
+First differing element 0:
+'The figures appear on the same slide [S2, S3].'
+"The figures appear on page 10 (slide hea[44 chars]S3]."
+
+- ('The figures appear on the same slide [S2, S3].', [])
++ ("The figures appear on page 10 (slide headed 'Traction by Apr-16') [S2] and "
++  'page 12 [S3].',
++  ['basis_source_location'])
+
+======================================================================
+FAIL: test_a_cross_page_group_is_placed_by_its_own_sources (zelda_api.tests_output_fidelity.BasisSourceLocationTests.test_a_cross_page_group_is_placed_by_its_own_sources) (text="Bots and messages are on a slide headed 'Traction by Apr-16' [S1, S2, S3].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 972, in test_a_cross_page_group_is_placed_by_its_own_sources
+    self.assertEqual(self.guard(text), (expected, ['basis_source_location']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Bot[17 chars]e on a slide headed 'Traction by Apr-16' [S1, S2, S3].", []) != ("Bot[17 chars]e on page 10 (slide headed 'Traction by Apr-16[53 chars]on'])
+
+First differing element 0:
+"Bots[16 chars]e on a slide headed 'Traction by Apr-16' [S1, S2, S3]."
+"Bots[16 chars]e on page 10 (slide headed 'Traction by Apr-16[25 chars]S3]."
+
+- ("Bots and messages are on a slide headed 'Traction by Apr-16' [S1, S2, S3].",
+?                             ^                                       -------- -
+
++ ("Bots and messages are on page 10 (slide headed 'Traction by Apr-16') [S1, "
+?                            + ^^^^^^^                                 +
+
+-  [])
++  'S2] and page 12 [S3].',
++  ['basis_source_location'])
+
+======================================================================
+FAIL: test_a_cross_page_group_is_placed_by_its_own_sources (zelda_api.tests_output_fidelity.BasisSourceLocationTests.test_a_cross_page_group_is_placed_by_its_own_sources) (text="Both message figures appear in the slide headed 'Traction by Apr-16' [S3, S2].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 972, in test_a_cross_page_group_is_placed_by_its_own_sources
+    self.assertEqual(self.guard(text), (expected, ['basis_source_location']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Bot[20 chars]pear in the slide headed 'Traction by Apr-16' [S3, S2].", []) != ("Bot[20 chars]pear on page 12 [S3] and page 10 (slide headed[52 chars]on'])
+
+First differing element 0:
+"Both[19 chars]pear in the slide headed 'Traction by Apr-16' [S3, S2]."
+"Both[19 chars]pear on page 12 [S3] and page 10 (slide headed[24 chars]S2]."
+
+- ("Both message figures appear in the slide headed 'Traction by Apr-16' [S3, "
+-  'S2].',
+-  [])
++ ('Both message figures appear on page 12 [S3] and page 10 (slide headed '
++  "'Traction by Apr-16') [S2].",
++  ['basis_source_location'])
+
+======================================================================
+FAIL: test_the_unspecified_figure_is_not_called_a_total (zelda_api.tests_output_fidelity.BasisUnspecifiedTotalTests.test_the_unspecified_figure_is_not_called_a_total)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 996, in test_the_unspecified_figure_is_not_called_a_total
+    self.assertEqual(self.guard('The deck gives either 500M total or 500M/month [S2, S3].'),
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     ('The deck gives either 500M with no stated interval or 500M/month [S2, S3].',
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                      ['basis_unspecified_total']))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('The[19 chars]500M total or 500M/month [S2, S3].', []) != ('The[19 chars]500M with no stated interval or 500M/month [S2[32 chars]al'])
+
+First differing element 0:
+'The deck gives either 500M total or 500M/month [S2, S3].'
+'The deck gives either 500M with no stated interval or 500M/month [S2, S3].'
+
+- ('The deck gives either 500M total or 500M/month [S2, S3].', [])
+?                                                             ----
+
++ ('The deck gives either 500M with no stated interval or 500M/month [S2, S3].',
+?                              ++ +++ ++  +++++++++++
+
++  ['basis_unspecified_total'])
+
+======================================================================
+FAIL: test_every_placed_citation_supports_its_page_and_context (zelda_api.tests_output_fidelity.Memo99ReplayTests.test_every_placed_citation_supports_its_page_and_context)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 841, in test_every_placed_citation_supports_its_page_and_context
+    self.assertEqual(placed, 5)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: 0 != 5
+
+======================================================================
+FAIL: test_of704_the_basis_pair_is_an_ambiguity_not_a_contradiction (zelda_api.tests_output_fidelity.Memo99ReplayTests.test_of704_the_basis_pair_is_an_ambiguity_not_a_contradiction)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 818, in test_of704_the_basis_pair_is_an_ambiguity_not_a_contradiction
+    self.assertTrue(concerns.startswith(OPEN_AFTER), concerns)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : - Measurement-basis contradiction in the headline usage metric: the deck states '500M messages' without an interval on page 10 and '500M messages/month' on page 12 [C2, C3]. These are not necessarily the same figure; until management clarifies whether 500M is a cumulative total or a monthly rate, the scale of platform activity cannot be reliably interpreted.
+- The $23.1M raised figure [C1, S4] is reported by Pitch Deck Hunt with no stated date and no independent evidence to establish or contradict it; the actual amount raised, when it was raised, and the resulting capital structure remain unknown.
+- No revenue, burn, or cash data are present in the extracted evidence, making it impossible to assess financial sustainability, monetisation progress, or how long the company can operate without additional funding.
+- No team, product, problem, market, or risk information was extracted from the document, representing the large majority of the standard due-diligence framework and leaving the investment thesis almost entirely unsubstantiated by the available evidence.
+
+======================================================================
+FAIL: test_of705_each_fact_keeps_its_own_page_and_context (zelda_api.tests_output_fidelity.Memo99ReplayTests.test_of705_each_fact_keeps_its_own_page_and_context)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 827, in test_of705_each_fact_keeps_its_own_page_and_context
+    self.assertIn(POINT_AFTER, self.out['supported_points'])
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "- The company states a messages figure of either 500M with no stated interval or 500M/month (measurement basis unresolved; see open concerns) on page 10 (slide headed 'Traction by Apr-16') [S2] and page 12 [S3], suggesting material message volume on the platform at that time." not found in "- The company states 140,000+ bots on a slide headed 'Traction by Apr-16' [S1], indicating meaningful platform adoption at that point in time, though the figure is self-reported and not independently verified.\n- The company states a messages figure of either 500M total or 500M/month (measurement basis unresolved; see open concerns) on the same traction slide [S2, S3], suggesting material message volume on the platform at that time."
+
+======================================================================
+FAIL: test_only_the_expected_rules_fired (zelda_api.tests_output_fidelity.Memo99ReplayTests.test_only_the_expected_rules_fired)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 874, in test_only_the_expected_rules_fired
+    self.assertEqual(set(self.changes), CHANGED_99 | FUNDING_99)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Items in the second set but not the first:
+'open_concerns'
+'supported_points'
+'business_model_analysis'
+
+======================================================================
+FAIL: test_the_stored_sections_get_the_same_repairs (zelda_api.tests_output_fidelity.Memo99StoredSectionsTests.test_the_stored_sections_get_the_same_repairs)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of705\zelda_api\tests_output_fidelity.py", line 891, in test_the_stored_sections_get_the_same_repairs
+    self.assertTrue(out['open_concerns'].startswith(OPEN_AFTER))
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 80 tests in 0.880s
+
+FAILED (failures=13)
+Destroying test database for alias 'default'...
+Found 80 test(s).
+System check identified no issues (0 silenced).
