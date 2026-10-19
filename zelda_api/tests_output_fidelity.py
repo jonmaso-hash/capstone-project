@@ -2073,6 +2073,10 @@ class Of903SharedContextTests(SimpleTestCase):
                 "Taking the figures at face value [S2], the platform had scale by the period referenced in the "
                 "'Traction by Apr-16' slide context; the deck separately states 500M messages/month [S3] on page 12 ("
                 + CLARIFY + ").",
+            # A list item: the company's own verb after the list marker.
+            "- The company states 500M messages [S2, S3] in a slide context headed 'Traction by Apr-16'.":
+                "- The company states 500M messages [S2] in a slide context headed 'Traction by Apr-16', and separately "
+                "500M messages/month [S3] on page 12 (" + CLARIFY + ").",
             # "self-reported" is an adjective, not a narrator's reporting verb.
             "The self-reported figures [S2, S3] date to the period referenced in the 'Traction by Apr-16' slide context.":
                 "The self-reported figures [S2] date to the period referenced in the 'Traction by Apr-16' slide context; "
@@ -2103,7 +2107,7 @@ class Of903SharedContextTests(SimpleTestCase):
                 "Were 500M messages [S2, S3] counted in the 'Traction by Apr-16' slide context?",
                 # A context phrase inside a parenthesis that is not a context aside: kept (limitation, recorded).
                 "The deck states 500M messages [S2, S3] (within the 'Traction by Apr-16' slide context).",
-                "- The deck states 500M messages [S2, S3] (within the 'Traction by Apr-16' slide context)",
+                "- 500M messages [S2, S3] (within the 'Traction by Apr-16' slide context)",
                 # A third party's reporting verb (not a recorded narrator): not the company's statement.
                 "An analyst lists 500M messages [S2, S3] in a slide context headed 'Traction by Apr-16'."):
             with self.subTest(text=text):

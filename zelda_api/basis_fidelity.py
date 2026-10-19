@@ -212,7 +212,7 @@ _CLAUSE_END = re.compile(r'\s*(?:[.!]?["”’)]*\s*$|;|,\s*(?:while|whereas|and
 # The company's own subject ending right before its reporting verb: "the company states", "... only that the deck
 # lists". A narrator ("Pitch Deck Hunt lists") or anything between ("the company does not state", "may state")
 # does not match (review of 1801ec5).
-_OWN_SUBJECT_END = re.compile(r"(?:^\s*|\bthat\s+|\bwhile\s+|\bwhereas\s+|\band\s+|,\s*)(?:the\s+)?(?:company|deck|"
+_OWN_SUBJECT_END = re.compile(r"(?:^\s*(?:[-•*·–]\s*)?|\bthat\s+|\bwhile\s+|\bwhereas\s+|\band\s+|,\s*)(?:the\s+)?(?:company|deck|"
                               r"pitch\s+deck|presentation|founders?|management)\s*$", re.I)
 # "the cumulative and monthly presentations" (memo 101, OF-906): a definite description presupposing that one side
 # is cumulative. "is cumulative", "a cumulative total or a monthly rate" and questions are hypotheses, not this.
