@@ -2392,3 +2392,91 @@ class PipelineReview7fb484bTests(TestCase):
         self.assertIn(BASE_101_AFTER, memo.base_scenario)
         self.assertIn(RISK_101_AFTER, memo.risk_assessment)
         self.assertIn(DOWN_101_AFTER, memo.downside_scenario)
+
+
+# --- review of 377a142 / ee47a9a: a continuation prefix owned the rest of the clause -------------------------------
+#
+#     "These figures need clarification — misleading advertising is wrong." and "— inflation is affecting costs."
+#     were replaced by the clarification: _CONTINUATION matched a judgment-like first word and never read the rest
+#     of the fragment, which has its own subject.
+
+CONT_LEAD = PAIR_LEAD + "These figures need clarification — "
+REVIEW_377_KEPT = (
+    CONT_LEAD + "misleading advertising is wrong.",
+    CONT_LEAD + "inflation is affecting costs.",
+    # Independent subjects beginning with judgment-like words, after each kind of continuation starter.
+    CONT_LEAD + "wrong assumptions drive the model.",
+    CONT_LEAD + "overstated expectations are common.",
+    CONT_LEAD + "or inflation is affecting costs.",
+    CONT_LEAD + "suggesting inflation is affecting costs.",
+    CONT_LEAD + "possibly inflated expectations are common.",
+    # A bare judgment noun: whose inflation is not stated.
+    CONT_LEAD + "inflation.",
+    # An unfamiliar tail after a genuine judgment: not classified, so kept (the conservative direction).
+    CONT_LEAD + "possibly inflated by bots.",
+)
+REVIEW_377_REPAIRED = (
+    CONT_LEAD + "or possibly inflated.",
+    CONT_LEAD + "suggesting possible inflation.",
+    CONT_LEAD + "misleading.",
+    CONT_LEAD + "which may be overstated.",
+    CONT_LEAD + "raising the possibility of metric inflation or imprecise reporting.",
+)
+
+
+class Review377a142Tests(SimpleTestCase):
+    """Through the complete normalisation -> time -> funding -> basis sequence on memo 101's payload."""
+
+    def setUp(self):
+        self.payload = memo101_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text):
+        out, changes = replay({'section': text}, self.items, self.notes)
+        return out['section'], changes.get('section', [])
+
+    def test_an_independent_subject_after_a_dash_is_kept(self):
+        for text in REVIEW_377_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_genuine_continuations_are_repaired(self):
+        for text in REVIEW_377_REPAIRED:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (CONT_LEAD + CLARIFY + '.', ['basis_referent_judgment']))
+        # Citations inside the continuation stay with the clarification.
+        cited = CONT_LEAD + "possibly overstated [S2, S3]."
+        self.assertEqual(self.full(cited), (CONT_LEAD + CLARIFY + ' [S2, S3].', ['basis_referent_judgment']))
+
+
+class PipelineReview377a142Tests(TestCase):
+    """The memo writer (intelligence_pipeline._generate_memo, model response mocked) keeps both reviewed clauses,
+    repairs a genuine continuation and keeps memo 101's four repairs."""
+
+    def test_the_writer_keeps_them(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('review377_writer', password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo101_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items_from(payload)),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, _ = memo101()
+        sections = {'market_analysis': REVIEW_377_KEPT[0], 'team_assessment': REVIEW_377_KEPT[1],
+                    'problem_solution': REVIEW_377_REPAIRED[0]}
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw, **sections)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertEqual(memo.market_analysis, REVIEW_377_KEPT[0])
+        self.assertEqual(memo.team_assessment, REVIEW_377_KEPT[1])
+        self.assertEqual(memo.problem_solution, CONT_LEAD + CLARIFY + '.')
+        self.assertIn(BMA_101_AFTER, memo.business_model_analysis)
+        self.assertIn(BASE_101_AFTER, memo.base_scenario)
+        self.assertIn(RISK_101_AFTER, memo.risk_assessment)
+        self.assertIn(DOWN_101_AFTER, memo.downside_scenario)

@@ -230,16 +230,28 @@ _CUMULATIVE_PAIR = re.compile(r"\b(?:[Tt])he\s+(?:(?P<cum1>cumulative)\s+(?:and|
                               r"(?:monthly|weekly|daily|yearly|annual)|(?:monthly|weekly|daily|yearly|annual)\s+"
                               r"(?:and|or|vs\.?|versus)\s+(?P<cum2>cumulative))\b")
 UNSPECIFIED_ADJECTIVE = 'unspecified-interval'
-# A fragment continuing the clause before a dash rather than starting one with its own subject. An allowlist, not a
-# list of subjects to refuse: a listed participle with the judgment as its object ("raising the possibility of
-# inflation", "suggesting possible inflation"), or "or/and/nor/which" and hedges straight into the judgment ("or
-# inflated", "possibly inflated", "which may be overstated"). Anything else ("— or Bob is wrong", "— marketing is
-# misleading", "— suggesting marketing is misleading") starts a new subject (reviews of 750de3f and 7fb484b).
+# A fragment continuing the clause before a dash rather than starting one with its own subject. The WHOLE fragment
+# must parse as a continuation of the figures' clause (review of 377a142: a judgment-like first word, "misleading
+# advertising is wrong", "inflation is affecting costs", owned the rest of the clause):
+#   - a listed participle whose object is a judgment NOUN ("raising the possibility of metric inflation", "suggesting
+#     possible inflation"); or
+#   - optional "or/and/nor/which" and hedges, then a judgment PREDICATE about the figures ("or possibly inflated",
+#     "misleading", "which may be overstated");
+#   then only coordinated judgments ("or imprecise reporting"), the fragment's citations and closing punctuation.
+# A bare noun ("— inflation."), a noun phrase after a predicate ("— overstated expectations are common"), any other tail
+# ("— possibly inflated by bots") or an unlisted start ("— or Bob is wrong") is not classified: a new chain, kept
+# (reviews of 750de3f, 7fb484b and 377a142).
+_JUDGMENT_PREDICATE = r'(?:overstated|inflated|exaggerated|misleading|misrepresented|misrepresentative|incorrect|erroneous|wrong)\b'
+_JUDGMENT_NOUN = r'(?:overstatements?|inflation|exaggerations?|misrepresentations?|errors?|inaccurac(?:y|ies))\b'
+_CONTINUATION_MODIFIER = r'(?:possible|potential|metric|usage|imprecise|inaccurate)'
 _CONTINUATION = re.compile(
     r"\s*(?:(?:raising|suggesting|indicating|implying)\s+(?:the\s+(?:possibility|prospect|risk)\s+of\s+|"
-    r"(?:concerns?|questions?)\s+(?:of|about)\s+)?(?:(?:possible|potential|metric|usage)\s+)*" + _JUDGMENT_WORD + r"|"
+    r"(?:concerns?|questions?)\s+(?:of|about)\s+)?(?:" + _CONTINUATION_MODIFIER + r"\s+)*" + _JUDGMENT_NOUN + r"|"
     r"(?:(?:or|and|nor|which)\s+)?(?:(?:may|might|could|be|is|are|were|was|possibly|potentially|perhaps|probably|"
-    r"likely|even|also)\s+)*" + _JUDGMENT_WORD + r")", re.I)
+    r"likely|even|also)\s+)*" + _JUDGMENT_PREDICATE + r")"
+    r"(?:\s+(?:or|and)\s+(?:(?:" + _CONTINUATION_MODIFIER + r"|possibly|potentially)\s+)*(?:" + _JUDGMENT_PREDICATE + r"|"
+    + _JUDGMENT_NOUN + r"|reporting|measurement\b))*"
+    r"(?:\s*\[[A-Z]\d+(?:\s*[,;]\s*[A-Z]\d+)*\])*[.!]?[\"”’)]*\s*", re.I)
 # Words attributing a statement to someone ("According to an analyst, ...", "per an industry report", "X says ..."):
 # not the company's own statement (review of 750de3f).
 _ATTRIBUTION = re.compile(r"\b(?:according\s+to|per|as\s+(?:reported|stated|listed|cited|noted|described)\s+by|"
@@ -387,7 +399,7 @@ def _judged_segments(sentence):
     judged, governed, denied, chain = [], False, False, 0
     for i in range(0, len(parts), 2):
         segment = parts[i]
-        if i and (parts[i - 1].strip() == ';' or not _CONTINUATION.match(segment)):
+        if i and (parts[i - 1].strip() == ';' or not _CONTINUATION.fullmatch(segment)):
             governed, denied, chain = False, False, chain + 1     # a new clause or a new subject
         referent = _PAIR_REFERENT.search(segment)
         if referent:
