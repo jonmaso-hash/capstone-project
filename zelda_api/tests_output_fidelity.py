@@ -2096,6 +2096,8 @@ class Of903SharedContextTests(SimpleTestCase):
                 "Pitch Deck Hunt's listing of 500M messages [S2, S3] sits in the 'Traction by Apr-16' slide context.",
                 # Not at a clause end: nowhere to place the separate fact.
                 "500M messages [S2, S3] in the 'Traction by Apr-16' slide context is the headline figure.",
+                "The self-reported 500M messages [S2, S3] in the 'Traction by Apr-16' slide context are the headline "
+                "figure.",
                 # A denial and a hedge.
                 "The deck does not place 500M messages [S2, S3] in the 'Traction by Apr-16' slide context.",
                 "500M messages [S2, S3] may belong in the 'Traction by Apr-16' slide context.",
