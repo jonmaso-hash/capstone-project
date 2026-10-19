@@ -231,9 +231,10 @@ _CUMULATIVE_PAIR = re.compile(r"\b(?:[Tt])he\s+(?:(?P<cum1>cumulative)\s+(?:and|
                               r"(?:and|or|vs\.?|versus)\s+(?P<cum2>cumulative))\b")
 UNSPECIFIED_ADJECTIVE = 'unspecified-interval'
 # A fragment continuing the clause before a dash rather than starting one with its own subject: a participle
-# ("raising ..."), "or/and/nor" + a predicate ("or inflated"), "possibly ...", "which ..." (review of 750de3f).
-_CONTINUATION = re.compile(r"\s*(?:\w+ing\b|(?:or|and|nor)\s+(?!(?:a|an|the|this|that|these|those|it|its|they|their|he|"
-                           r"she|we|i|you|management|investors?|analysts?)\b)|possibly\b|potentially\b|perhaps\b|which\b)",
+# ("raising ..."), "or/and/nor/possibly/potentially/perhaps" + a predicate ("or inflated", "possibly inflated"),
+# "which ..."; never one naming a new subject ("— perhaps the deck is ...") (review of 750de3f).
+_CONTINUATION = re.compile(r"\s*(?:\w+ing\b|(?:or|and|nor|possibly|potentially|perhaps)\s+(?!(?:a|an|the|this|that|these|"
+                           r"those|it|its|they|their|he|she|we|i|you|management|investors?|analysts?)\b)|which\b)",
                            re.I)
 # Words attributing a statement to someone ("According to an analyst, ...", "per an industry report", "X says ..."):
 # not the company's own statement (review of 750de3f).

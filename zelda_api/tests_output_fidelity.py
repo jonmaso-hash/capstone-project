@@ -2214,6 +2214,9 @@ REVIEW_750_KEPT = (
     "inflated.",
     "The cumulative and monthly figures differ while the message counts remain ambiguous [C2, C3].",
     "500M messages [S2, S3] sit in a slide context headed 'Traction by Apr-16'.",
+    # A new subject after "perhaps" (dash), and an independent ";" clause.
+    PAIR_LEAD + "These figures need clarification — perhaps the deck is inflating usage.",
+    PAIR_LEAD + "These figures need clarification; possibly inflated.",
 )
 
 
