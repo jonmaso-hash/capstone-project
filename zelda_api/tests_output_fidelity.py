@@ -2208,6 +2208,12 @@ REVIEW_750_KEPT = (
     "According to an analyst, the self-reported 500M messages [S2, S3] sit in a slide context headed 'Traction by "
     "Apr-16'.",
     "Per an industry report, the self-reported 500M messages [S2, S3] sit in the 'Traction by Apr-16' slide context.",
+    # Controls that only one check keeps: a denial far before the referent; a figure noun whose later citation is
+    # another clause's; no reporting verb, no attribution and no own source named.
+    PAIR_LEAD + "Nothing in the deck suggests that these figures, taken together on both pages, are wrong — or "
+    "inflated.",
+    "The cumulative and monthly figures differ while the message counts remain ambiguous [C2, C3].",
+    "500M messages [S2, S3] sit in a slide context headed 'Traction by Apr-16'.",
 )
 
 

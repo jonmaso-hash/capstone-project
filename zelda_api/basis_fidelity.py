@@ -737,12 +737,14 @@ def _cumulative_presupposed(sentence, pair, facts, changes):
 
     def owner(match):
         group = _REF.search(sentence, match.end())
-        between = sentence[match.end():group.start()] if group is not None else ''
-        if group is not None and not re.search(r'[,;]', between) and not _CLAUSE_CONNECTOR.search(between):
-            refs = set(_split_refs(group.group(1)))
-            owners = [p for p in facts.pairs if refs <= p.members]
-            return owners[0] if len(owners) == 1 else None
-        return pair
+        if group is None:
+            return pair
+        between = sentence[match.end():group.start()]
+        if re.search(r'[,;]', between) or _CLAUSE_CONNECTOR.search(between):
+            return None                      # the later citation is another clause's: ownership unknown
+        refs = set(_split_refs(group.group(1)))
+        owners = [p for p in facts.pairs if refs <= p.members]
+        return owners[0] if len(owners) == 1 else None
 
     def neutral(match):
         noun = _FIGURE_NOUN.match(sentence, match.end())
