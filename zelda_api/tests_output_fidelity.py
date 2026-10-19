@@ -2100,7 +2100,9 @@ class Of903SharedContextTests(SimpleTestCase):
                 "messages/month [S3] on page 12.",
                 "The platform had scale by the period referenced in the 'Traction by Apr-16' slide context [S1, S2].",
                 # A question.
-                "Were 500M messages [S2, S3] counted in the 'Traction by Apr-16' slide context?"):
+                "Were 500M messages [S2, S3] counted in the 'Traction by Apr-16' slide context?",
+                # A context phrase inside a parenthesis that is not a context aside: kept (limitation, recorded).
+                "The deck states 500M messages [S2, S3] (within the 'Traction by Apr-16' slide context)."):
             with self.subTest(text=text):
                 self.assertEqual(self.full(text), (text, []))
 
