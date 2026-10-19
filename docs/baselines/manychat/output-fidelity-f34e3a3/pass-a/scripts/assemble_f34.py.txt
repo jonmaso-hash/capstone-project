@@ -1,0 +1,157 @@
+"""Assemble this run's record into the evidence directory (no DB access). Adapted from the memo-99 run's
+assemble_of.py: new paths and IDs; memo-99 copy added to preservation and compared with its committed 09_memo.json
+(d821cca); before-snapshots compared with the memo-99 run's committed after-snapshots (d821cca); frozen-artifact
+checks extended to the merged PR #285 evidence folders and the memo-99 run's evidence branch; the Q1-Q7 second
+attempt and its failed first attempt recorded; screenshots were copied to browser/ during the walks."""
+import os, re, json, shutil, subprocess
+HERE = os.path.dirname(os.path.abspath(__file__))
+WT = os.sep.join(['C:', 'Users', 'jonathan', 'Desktop', 'KCV-mc-f34'])
+OUT = os.path.join(WT, 'docs', 'baselines', 'manychat', 'output-fidelity-f34e3a3', 'pass-a')
+RUN = 'f34e3a399349a2d7401f66d9b60b10834047e57a'
+for sub in ('browser', 'process', 'scripts', 'snapshots'):
+    os.makedirs(os.path.join(OUT, sub), exist_ok=True)
+
+
+def read(name):
+    raw = open(os.path.join(HERE, name), 'rb').read()
+    if raw[:2] in (b'\xff\xfe', b'\xfe\xff'):
+        return raw.decode('utf-16')
+    return raw.decode('utf-8', errors='replace')
+
+
+def git(*a):
+    return subprocess.run(['git', *a], capture_output=True, text=True, cwd=WT, encoding='utf-8').stdout.strip()
+
+
+CHECK = r'^(CODE-CHECK|CODE-DIFF|BASELINE-ENV-CHECK|BROKER-CHECK|DB-CHECK|SCHEMA-CHECK|EAGER-CHECK|MODEL-CALL-LOG|WORKER-IDENTITY|REFUSING|CHECK OK|preflight ok|broker|result backend|cache|migrations)'
+lines = lambda name: [re.sub(r"tracked_changes=\d+ \[.*\]$", 'tracked_changes=<__pycache__ only; see CODE-DIFF>', l)
+                      for l in read(name).splitlines() if re.match(CHECK, l)]
+norm = lambda text: [l for l in text.replace('\r', '').splitlines() if not l.startswith('Invalid line')]
+hb, ha = json.loads(read('hashes_before.json')), json.loads(read('hashes_after.json'))
+SNAPS = ('orig', 'memo94', 'memo95', 'memo96', 'memo97', 'memo98', 'memo99')
+
+frozen = {}
+for path in ('docs/baselines/manychat/ANSWER_KEY.md', 'docs/baselines/three-deck-audit/PROTOCOL.md',
+             'docs/baselines/nike-fy2026/PROTOCOL.md'):
+    frozen[path] = {'blob_at_64f9db5': git('rev-parse', '64f9db5:' + path), 'blob_at_f34e3a3': git('rev-parse', RUN + ':' + path),
+                    'blob_in_worktree': git('hash-object', path),
+                    'last_commit_touching': git('log', '-1', '--format=%h %ad %s', '--date=short', RUN, '--', path)}
+prior = {
+    'docs/baselines/manychat/output-fidelity-64f9db5/pass-a': ('2e3b624', 'origin/docs/manychat-output-fidelity-64f9db5'),
+    'docs/baselines/manychat/narrator-provenance-b9cddec/pass-a': ('434a701', RUN),
+    'docs/baselines/three-deck-audit/output-figure-form-9d24d97': ('424dd36', RUN),
+    'docs/baselines/three-deck-audit/output-p34-correction-424dd36': ('a4f55e5', RUN),
+    'docs/baselines/three-deck-audit/output-p29-behaviour-ffc408f': ('2bd9056', RUN),
+    'docs/baselines/three-deck-audit/output-arithmetic-nesting-2465791': ('825d6c0', RUN),
+    'docs/baselines/three-deck-audit/output-bridge-aaa6e0a': ('6234627', RUN),
+    'zelda_api/data/funding_fidelity': ('2bd9056', RUN),
+}
+for path, (commit, ref) in prior.items():
+    a, b = git('rev-parse', f'{commit}:{path}'), git('rev-parse', f'{ref}:{path}')
+    frozen[path] = {'known_commit': commit, 'tree_at_known_commit': a, 'compared_ref': ref, 'tree_at_ref': b,
+                    'identical': bool(a) and a == b}
+
+vs_committed = {}
+for n in SNAPS[:-1]:
+    committed = git('show', f'd821cca:docs/baselines/manychat/output-fidelity-64f9db5/pass-a/snapshots/{n}_snapshot_after.txt')
+    vs_committed[n] = norm(read(f'{n}_snapshot_before.txt')) == norm(committed)
+
+calls = [json.loads(l) for l in read('model_calls.jsonl').splitlines() if l.strip()]
+kind = lambda c: 'memo' if 'investment memo' in json.dumps(c['request'].get('messages', '')) else 'ask_query_extraction'
+kinds = {}
+for c in calls:
+    kinds[kind(c)] = kinds.get(kind(c), 0) + 1
+order = [{'n': i + 1, 'process': c['process'], 'started': c['started'], 'kind': kind(c),
+          'response_id': c['response']['id'], 'stop_reason': c['response']['stop_reason'], 'usage': c['response']['usage']}
+         for i, c in enumerate(calls)]
+server = read('server.log')
+failed_ask = [l for l in server.splitlines() if 'Ask Zelda pipeline error' in l or ('/api/v1/zelda/ask/' in l and 'django.server' in l)]
+setup = {
+    'code': {'worktree': WT + ' (branch docs/manychat-output-fidelity-f34e3a3, created at f34e3a3)',
+             'origin_main_head_at_fetch': git('rev-parse', 'origin/main'),
+             'run_commit': RUN, 'run_commit_subject': git('log', '-1', '--format=%s', RUN),
+             'parents': git('log', '-1', '--format=%P', RUN).split(),
+             'files_differing_from_final_pr_head_2bd9056': git('diff', '--name-only', '2bd9056', RUN).split(),
+             'non_docs_files_changed_since_memo99_run_64f9db5': [f for f in git('diff', '--name-only', '64f9db5', RUN).split()
+                                                                  if not f.startswith('docs/')],
+             'migrations_since_64f9db5': git('diff', '--name-only', '64f9db5', RUN, '--', '*/migrations/*.py').split(),
+             'application_code_changes_during_run': 0, 'mismatch': 'none: origin/main == f34e3a3 when fetched'},
+    'database': {'original': hb['dbs']['original_dev_db']['path'], 'run_db': hb['copy']['path'],
+                 'run_db_method': hb['copy']['method'], 'run_db_sha256_at_creation': hb['copy']['sha256_at_creation'],
+                 'run_db_integrity_check': hb['copy']['integrity_check'],
+                 'historical_dbs': {k: v['path'] for k, v in hb['dbs'].items()},
+                 'refused_by_run_wrapper': 'the original and every historical copy above (FORBIDDEN_DBS in run_f34.py); DB-CHECK is_copy=True required',
+                 'source_dbs_sha256_before_after_same': {k: [hb['dbs'][k]['sha256'], ha['dbs'][k]['sha256'],
+                                                             hb['dbs'][k]['sha256'] == ha['dbs'][k]['sha256']] for k in hb['dbs']},
+                 'source_db_sidecars_after': {k: ha['dbs'][k]['sidecars'] for k in ha['dbs']},
+                 'gate_refusal_before_migrate': lines('gate_check_before_migrate.txt'),
+                 'migrate_on_copy': [l for l in read('migrate_copy.txt').splitlines() if 'Applying' in l],
+                 'id_sequences_advanced_in_copy_only': read('sequences.txt').splitlines(),
+                 'why': 'every run copy derives from the same original; counters advanced to the memo-99 run copy maxima '
+                        '(read mode=ro) so ids never repeat document 3141 or memo 99'},
+    'broker': {'isolation': 'local Memurai: broker db 4; results and cache db 12. Only dbs 4 and 12 were empty before the run '
+                            '(every other db held keys from earlier runs and was not purged), so results and cache share db 12; '
+                            'Celery result keys (celery-task-meta-*) and Django cache keys (:1:*) cannot collide. No clients before '
+                            'the fixtures. Worker mcf34@, queue "celery" on db 4',
+               'redis_before_processes': read('redis_before.txt').splitlines(), 'redis_after': read('redis_after.txt').splitlines(),
+               'clients_before': len(read('redis_clients_before.txt').splitlines()),
+               'other_dbs_unchanged': [l for l in read('redis_before.txt').splitlines() if not re.match(r'db (4|12) ', l)] ==
+                                      [l for l in read('redis_after.txt').splitlines() if not re.match(r'db (4|12) ', l)],
+               'note': 'nothing was purged; db 4/12 now hold this run\'s broker bindings, task results and cache keys'},
+    'preflight_local': lines('preflight_local.txt'),
+    'server_checks': lines('server.log'), 'worker_checks': lines('worker.log'),
+    'paid_keys_note': 'six paid keys blanked in os.environ (not .env); USPTO_ODP_API_KEY is read by no code at f34e3a3 (grep: no reference) and was checked from os.environ',
+    'keyless_outputs': 'Truth Delta provider_outcomes {"dataforb2b": "unconfigured"}; Entity Integrity website/domain checks "Not applicable" (no website on the profile) and SEC EDGAR "Not found". No non-EDGAR provider returned data',
+    'memwatch': [l for l in read('memwatch.log').replace('\x00', '').replace('﻿', '').splitlines() if l.strip()],
+    'fixtures': json.loads(read('fixtures.txt').split('FIXTURES ', 1)[1]),
+    'deck': {'path': ha['deck']['path'], 'bytes': ha['deck']['bytes'], 'sha256_on_disk': hb['deck']['sha256'],
+             'key_sha256': 'be7a7171bbc84b9895a45adfbc41f2533f3d23b3a4a561c82a8d9de6b94f3ef1'},
+    'upload': read('upload.txt').splitlines(),
+    'model_calls': {'total_successful': len(calls), 'by_kind': kinds, 'memo_model': 'claude-sonnet-4-6 (code literal)', 'order': order,
+                    'failed_attempts_not_in_log': 'first Q1-Q7 attempt: 5 /ask/ requests reached the Anthropic API and were rejected '
+                                                  '(HTTP 400, credit balance too low; Q1-Q5), then 2 returned 503 with no outbound '
+                                                  'request (Q6-Q7). The wrapper records only successful responses.',
+                    'first_attempt_server_log': failed_ask},
+    'preserved': {
+        **{f'{n}_before': [l for l in norm(read(f'{n}_snapshot_before.txt')) if l.startswith('MEMO')] for n in SNAPS},
+        **{f'{n}_before_after_byte_identical': read(f'{n}_snapshot_before.txt') == read(f'{n}_snapshot_after.txt') for n in SNAPS},
+        'before_snapshots_equal_committed_d821cca_after_snapshots': vs_committed,
+        'normalisation': 'carriage returns removed and lines starting "Invalid line" (a startup .env warning) omitted, on both sides; '
+                         'memo 99 has no committed snapshot (it was the memo-99 run\'s own output), so it is compared field by field instead',
+        'memo97_vs_committed_09_memo_ea3ab13': {'before': read('memo97_vs_committed_before.txt').strip(), 'after': read('memo97_vs_committed_after.txt').strip()},
+        'memo98_vs_committed_09_memo_0dd8e91': {'before': read('memo98_vs_committed_before.txt').strip(), 'after': read('memo98_vs_committed_after.txt').strip()},
+        'memo99_vs_committed_09_memo_d821cca': {'before': read('memo99_vs_committed_before.txt').strip(), 'after': read('memo99_vs_committed_after.txt').strip()}},
+    'frozen_artifacts': frozen,
+}
+with open(os.path.join(OUT, '00_setup.json'), 'w', encoding='utf-8', newline='\n') as f:
+    json.dump(setup, f, indent=1, ensure_ascii=False)
+chain = [l for l in read('worker.log').splitlines()
+         if re.search(r'Task .* (received|succeeded|failed|raised)|funding-source fidelity|measurement-basis|time wording', l)]
+open(os.path.join(OUT, '06_worker_chain.txt'), 'w', encoding='utf-8', newline='\n').write('\n'.join(chain) + '\n')
+with open(os.path.join(OUT, '09c_all_model_calls.json'), 'w', encoding='utf-8', newline='\n') as f:
+    json.dump({'note': 'Every successful anthropic Messages.create call in the run processes: %d in all (%s). One memo generation '
+                       '(worker); the rest are /ask/ query-extraction calls (server) from the second Q1-Q7 attempt. The first '
+                       'attempt\'s 5 rejected calls (credit balance) are not here: see 00_setup.json model_calls and '
+                       'process/server.log.txt.' % (len(calls), kinds),
+               'order': order, 'calls': calls}, f, indent=1, ensure_ascii=False)
+for src, dst in (('server.log', 'server.log.txt'), ('worker.log', 'worker.log.txt'), ('memwatch.log', 'memwatch.log.txt'),
+                 ('probe_stdout.txt', 'probe_stdout.txt'), ('ask_second_stdout.txt', 'ask_second_stdout.txt'),
+                 ('md_check_stdout.txt', 'md_check_stdout.txt'), ('analyze_stdout.txt', 'analyze_stdout.txt'),
+                 ('dump.txt', 'dump_stdout.txt')):
+    shutil.copy(os.path.join(HERE, src), os.path.join(OUT, 'process', dst))
+for n in SNAPS:
+    for p in ('before', 'after'):
+        shutil.copy(os.path.join(HERE, f'{n}_snapshot_{p}.txt'), os.path.join(OUT, 'snapshots', f'{n}_snapshot_{p}.txt'))
+for name in ('redis_before.txt', 'redis_after.txt', 'redis_clients_before.txt', 'hashes_before.json', 'hashes_after.json',
+             'memo97_vs_committed_before.txt', 'memo97_vs_committed_after.txt', 'memo98_vs_committed_before.txt',
+             'memo98_vs_committed_after.txt', 'memo99_vs_committed_before.txt', 'memo99_vs_committed_after.txt',
+             'gate_check_before_migrate.txt', 'migrate_copy.txt', 'sequences.txt'):
+    shutil.copy(os.path.join(HERE, name), os.path.join(OUT, 'snapshots', name))
+for name in ('make_scripts.py', 'make_scripts2.py', 'make_probe.py', 'make_scan.py', 'prep_copy.py', 'run_f34.py', 'run_ro.py',
+             'snapshot_ro.py', 'memo97_vs_committed.py', 'memo98_vs_committed.py', 'memo99_vs_committed.py', 'bump_sequences.py',
+             'setup_fixtures.py', 'upload.py', 'dump_f34.py', 'analyze_f34.py', 'probe.py', 'probe_cfg.json', 'md_check.py',
+             'scan_f34.py', 'ask_second.py', 'assemble_f34.py'):
+    shutil.copy(os.path.join(HERE, name), os.path.join(OUT, 'scripts', name + '.txt'))
+print('assembled', len(calls), kinds, 'failed ask lines', len(failed_ask))
+print(json.dumps({k: v.get('identical', v.get('blob_at_64f9db5') == v.get('blob_at_f34e3a3') == v.get('blob_in_worktree')) for k, v in frozen.items()}, indent=1))
+print('vs committed', vs_committed)

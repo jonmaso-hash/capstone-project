@@ -1,0 +1,28 @@
+"""Stage 2a (after the memo): derive the HTTP probe, its config and the Markdown check from the memo-99 run's (of/).
+probe.py is copied unchanged. probe_cfg.json: this run's outdir, document 3142, Entity Integrity report 41,
+principals f34mc_*; the marker list is kept and markers for the merged basis-guard wording (PR #285) are appended.
+md_check.py: principal and document id only."""
+import json, os, shutil
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+PREV = os.path.join(os.path.dirname(HERE), 'of')
+shutil.copy(os.path.join(PREV, 'probe.py'), os.path.join(HERE, 'probe.py'))
+cfg = json.load(open(os.path.join(PREV, 'probe_cfg.json'), encoding='utf-8-sig'))
+assert cfg['doc'] == 3141 and cfg['report'] == 40
+cfg['outdir'] = os.sep.join(['C:', 'Users', 'jonathan', 'Desktop', 'KCV-mc-f34', 'docs', 'baselines', 'manychat',
+                             'output-fidelity-f34e3a3', 'pass-a'])
+cfg['doc'], cfg['report'] = 3142, 41
+cfg['owner'] = 'f34mc_owner'
+cfg['principals'] = {'OWNER': 'f34mc_owner', 'LITE': 'f34mc_lite', 'PAID': 'f34mc_paid', 'STAFF': 'f34mc_staff', 'ANON': None}
+for m in ('ambiguity', 'ambiguous', 'contradiction', 'with no explicit interval', 'and separately', 'on page 12',
+          'on page 10', 'same slide', 'same traction slide'):
+    if m not in cfg['markers']:
+        cfg['markers'].append(m)
+json.dump(cfg, open(os.path.join(HERE, 'probe_cfg.json'), 'w', encoding='utf-8', newline='\n'), indent=1, ensure_ascii=False)
+s = open(os.path.join(PREV, 'md_check.py'), encoding='utf-8').read()
+for a, b in (("ns['login']('ofmc_staff')", "ns['login']('f34mc_staff')"),
+             ("'/api/v1/zelda/documents/3141/ic-memo/download/'", "'/api/v1/zelda/documents/3142/ic-memo/download/'")):
+    assert s.count(a) == 1, a
+    s = s.replace(a, b)
+open(os.path.join(HERE, 'md_check.py'), 'w', encoding='utf-8', newline='\n').write(s)
+print('derived probe.py (copy), probe_cfg.json, md_check.py')

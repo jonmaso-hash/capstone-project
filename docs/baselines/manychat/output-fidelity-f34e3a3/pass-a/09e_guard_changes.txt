@@ -1,0 +1,21 @@
+Model reply (after list-to-text) vs stored memo 100, per section, replayed through the pipeline order
+(time guard, then funding guard, then measurement-basis guard). Only changed sections are listed. Changes
+prefixed "basis:" are the measurement-basis guard (#284, revised in #285); the others are the funding guard
+("attribution" adds a narrator; "funding_not_runway" and "cash_premise" separate funding from cash).
+
+== business_model_analysis  ['profile_undated'] 
+-Insufficient disclosed data to describe the business model. No revenue statement, no product statement, and no description of how ManyChat charges customers were extracted from the document. The evidence establishes only that the company states 140,000+ bots [S1] and 500M messages [S2, S3] as traction metrics (in a slide context headed 'Traction by Apr-16'), and that it operates in software [P2] at Series A stage [P1]. Who pays, what they pay, and what drives growth are not found in the extracted evidence.
++Insufficient disclosed data to describe the business model. No revenue statement, no product statement, and no description of how ManyChat charges customers were extracted from the document. The evidence establishes only that the company states 140,000+ bots [S1] and 500M messages [S2, S3] as traction metrics (in a slide context headed 'Traction by Apr-16'), and that it operates in software [P2] (current profile, undated) at Series A stage [P1]. Who pays, what they pay, and what drives growth are not found in the extracted evidence.
+
+== risk_assessment  ['basis:basis_overstatement'] 
+-1. Measurement ambiguity in the core traction metric: The deck states '500M messages' on a slide headed 'Traction by Apr-16' [S2/C3] and separately states '500M messages/month' on page 12 [S3/C2]. These use different measurement bases. If the cumulative figure was restated as a monthly figure, the implied monthly activity would be materially overstated. Clarification is required before the number can be evaluated [C2, C3].
++1. Measurement ambiguity in the core traction metric: The deck states '500M messages' on a slide headed 'Traction by Apr-16' [S2/C3] and separately states '500M messages/month' on page 12 [S3/C2]. These use different measurement bases. How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on. Clarification is required before the number can be evaluated [C2, C3].
+
+== open_concerns  ['basis:basis_contradiction_label'] 
+-• Contradictory message-volume measurement bases: The deck states '500M messages' (slide context: 'Traction by Apr-16') [C3/S2] and '500M messages/month' on a separate page [C2/S3]. These cannot be compared without clarification; one or both figures may misrepresent the scale of actual activity.
++• Ambiguous message-volume measurement bases: The deck states '500M messages' (slide context: 'Traction by Apr-16') [C3/S2] and '500M messages/month' on a separate page [C2/S3]. These cannot be compared without clarification; one or both figures may misrepresent the scale of actual activity.
+
+== what_would_change_the_picture  ['attribution:Pitch Deck Hunt'] 
+-The single most important missing piece of evidence is audited or accountant-reviewed financial statements showing revenue, gross margin, and monthly burn rate — this would allow an assessment of whether the stated traction (140,000+ bots [S1], 500M messages [S2]) translates into a viable and scalable business, and would provide a basis for evaluating the $23.1M funding figure [S4] in context.
++The single most important missing piece of evidence is audited or accountant-reviewed financial statements showing revenue, gross margin, and monthly burn rate — this would allow an assessment of whether the stated traction (140,000+ bots [S1], 500M messages [S2]) translates into a viable and scalable business, and would provide a basis for evaluating the $23.1M funding figure (per Pitch Deck Hunt) [S4] in context.
+

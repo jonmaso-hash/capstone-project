@@ -1,0 +1,99 @@
+MFA {"f34mc_staff": {"step": "setup", "status": 200, "recovery_codes_shown": true, "control_home_after_mfa": 200}}
+OWNER Z_control_home 200  ['Series B', 'currency', 'verified', 'contradiction']  
+OWNER A_profile 200  ['163,000,000', 'Series B', 'currency', 'contradiction']  CANARY
+OWNER B_profile_analysis 200  ['Series B', 'currency', 'contradiction']  
+OWNER C_intel_report 404  []  
+OWNER C2_company_overview 403  []  
+OWNER D_ic_memo 200  ['23.1', '140,000', '500M', 'Series B', 'currency', 'verified', 'Pitch Deck Hunt', 'Apr-16', 'per Pitch Deck Hunt', 'current profile, undated', 'current profile, undated', 'messages/month', 'measurement bases', 'cumulative', 'monthly', 'ambiguous', 'contradiction']  
+OWNER E_ic_memo_dl 302 /api/v1/zelda/documents/3142/ic-memo/ []  
+OWNER F_truthdelta_ui 200  ['500M', 'currency', 'verified', 'messages/month', 'measurement bases', 'Measurement basis to clarify'] B2 
+OWNER G_memo_api 200  []  
+OWNER H_td_api 200  ['23.1', '140 000', '500M', 'no public data', 'currency', 'verified', 'independently', 'messages/month']  
+OWNER I_status 200  []  
+OWNER J_valuation_api 202  []  
+OWNER K_valuation_ui 404  []  
+OWNER L_identity_status 200  []  
+OWNER O_library 200  []  
+OWNER P_analyze_founder 403  []  
+OWNER M_search 200    
+OWNER N_rag 200    
+LITE Z_control_home 200  ['Series B', 'currency', 'verified']  
+LITE A_profile 200  ['Series B', 'currency']  
+LITE B_profile_analysis 302 /accounts/profile/f34mc_owner/ []  
+LITE C_intel_report 404  []  
+LITE C2_company_overview 200  ['23.1', '140,000', '500M', 'Series B', 'currency', 'verified', 'Pitch Deck Hunt', 'Apr-16', 'independently', 'profiled as']  
+LITE D_ic_memo 404  []  
+LITE E_ic_memo_dl 404  []  
+LITE F_truthdelta_ui 200  ['500M', 'verified', 'messages/month', 'measurement bases', 'Measurement basis to clarify']  
+LITE G_memo_api 200  ['23.1', '140,000', '500M', 'verified', 'Pitch Deck Hunt', 'Apr-16', 'per Pitch Deck Hunt', 'current profile, undated', 'current profile, undated', 'messages/month', 'measurement bases', 'cumulative', 'monthly', 'ambiguous']  
+LITE H_td_api 200  ['23.1', '140 000', '500M', 'no public data', 'currency', 'verified', 'independently', 'messages/month']  
+LITE I_status 403  []  
+LITE J_valuation_api 403  []  
+LITE K_valuation_ui 404  []  
+LITE L_identity_status 404  []  
+LITE O_library 200  []  
+LITE P_analyze_founder 200  []  
+LITE M_search 403    
+LITE N_rag 403    
+PAID Z_control_home 200  ['Series B', 'currency', 'verified']  
+PAID A_profile 200  ['Series B', 'currency']  
+PAID B_profile_analysis 302 /accounts/profile/f34mc_owner/ []  
+PAID C_intel_report 404  []  
+PAID C2_company_overview 200  ['23.1', '140,000', '500M', 'Series B', 'currency', 'verified', 'Pitch Deck Hunt', 'Apr-16', 'independently', 'profiled as']  
+PAID D_ic_memo 404  []  
+PAID E_ic_memo_dl 404  []  
+PAID F_truthdelta_ui 200  ['500M', 'verified', 'messages/month', 'measurement bases', 'Measurement basis to clarify']  
+PAID G_memo_api 200  ['23.1', '140,000', '500M', 'verified', 'Pitch Deck Hunt', 'Apr-16', 'per Pitch Deck Hunt', 'current profile, undated', 'current profile, undated', 'messages/month', 'measurement bases', 'cumulative', 'monthly', 'ambiguous']  
+PAID H_td_api 200  ['23.1', '140 000', '500M', 'no public data', 'currency', 'verified', 'independently', 'messages/month']  
+PAID I_status 403  []  
+PAID J_valuation_api 403  []  
+PAID K_valuation_ui 404  []  
+PAID L_identity_status 404  []  
+PAID O_library 200  []  
+PAID P_analyze_founder 200  []  
+PAID M_search 403    
+PAID N_rag 403    
+STAFF Z_control_home 200  ['Series B', 'currency', 'verified', 'contradiction']  
+STAFF A_profile 200  ['163,000,000', 'Series B', 'no public data', 'currency', 'verified', 'independently', 'contradiction']  CANARY
+STAFF B_profile_analysis 302 /accounts/profile/f34mc_owner/ []  
+STAFF C_intel_report 404  []  
+STAFF C2_company_overview 200  ['23.1', '140,000', '500M', 'Series B', 'currency', 'verified', 'Pitch Deck Hunt', 'Apr-16', 'independently', 'profiled as', 'measurement bases', 'ambiguous', 'contradiction']  
+STAFF D_ic_memo 200  ['23.1', '140,000', '500M', 'Series B', 'no public data', 'currency', 'verified', 'currently', 'Pitch Deck Hunt', 'Apr-16', 'per Pitch Deck Hunt', 'current profile, undated', 'runway', 'cash', 'independently', 'current profile, undated', 'profiled as', 'messages/month', 'measurement bases', 'cumulative', 'monthly', 'needs clarification before either is relied on', 'figure stated without an explicit interval', 'ambiguity', 'ambiguous', 'contradiction', 'and separately', 'on page 12']  
+STAFF E_ic_memo_dl 200  ['23.1', '140,000', '500M', 'no public data', 'verified', 'currently', 'Pitch Deck Hunt', 'Apr-16', 'per Pitch Deck Hunt', 'current profile, undated', 'runway', 'cash', 'independently', 'current profile, undated', 'profiled as', 'messages/month', 'measurement bases', 'cumulative', 'monthly', 'needs clarification before either is relied on', 'figure stated without an explicit interval', 'ambiguity', 'ambiguous', 'and separately', 'on page 12']  
+STAFF F_truthdelta_ui 200  ['500M', 'verified', 'messages/month', 'measurement bases', 'Measurement basis to clarify']  
+STAFF G_memo_api 200  ['23.1', '140,000', '140 000', '500M', 'verified', 'currently', 'Pitch Deck Hunt', 'Apr-16', 'per Pitch Deck Hunt', 'current profile, undated', 'runway', 'cash', 'independently', 'current profile, undated', 'profiled as', 'messages/month', 'measurement bases', 'cumulative', 'monthly', 'needs clarification before either is relied on', 'figure stated without an explicit interval', 'ambiguity', 'ambiguous', 'and separately', 'on page 12']  
+STAFF H_td_api 200  ['23.1', '140 000', '500M', 'no public data', 'currency', 'verified', 'independently', 'messages/month', 'monthly']  
+STAFF I_status 200  []  
+STAFF J_valuation_api 202  []  
+STAFF K_valuation_ui 404  []  
+STAFF L_identity_status 200  []  
+STAFF O_library 200  []  
+STAFF P_analyze_founder 403  []  
+STAFF M_search 200    
+STAFF N_rag 200    
+ANON Z_control_home 200  ['Series B', 'currency', 'verified']  
+ANON A_profile 302 /accounts/login/?next=/accounts/profile/f34mc []  
+ANON B_profile_analysis 302 /accounts/login/?next=/accounts/profile/f34mc []  
+ANON C_intel_report 302 /accounts/login/?next=/matchmaking/memo/manyc []  
+ANON C2_company_overview 302 /accounts/login/?next=/matchmaking/memo/profi []  
+ANON D_ic_memo 302 /accounts/login/?next=/api/v1/zelda/documents []  
+ANON E_ic_memo_dl 302 /accounts/login/?next=/api/v1/zelda/documents []  
+ANON F_truthdelta_ui 302 /accounts/login/?next=/api/v1/zelda/documents []  
+ANON G_memo_api 403  []  
+ANON H_td_api 403  []  
+ANON I_status 403  []  
+ANON J_valuation_api 403  []  
+ANON K_valuation_ui 302 /accounts/login/?next=/api/v1/zelda/valuation []  
+ANON L_identity_status 302 /accounts/login/?next=/api/v1/zelda/identity- []  
+ANON O_library 403  []  
+ANON P_analyze_founder 403  []  
+ANON M_search 403    
+ANON N_rag 403    
+WALKS {"OWNER": {"logout_status": 302, "logout_location": "/home/", "after_logout_profile_status": 302, "after_logout_location": "/accounts/login/?next=/accounts/profile/f34mc_owner/"}, "LITE": {"logout_status": 302, "logout_location": "/home/", "after_logout_profile_status": 302, "after_logout_location": "/accounts/login/?next=/accounts/profile/f34mc_owner/"}, "PAID": {"logout_status": 302, "logout_location": "/home/", "after_logout_profile_status": 302, "after_logout_location": "/accounts/login/?next=/accounts/profile/f34mc_owner/"}, "STAFF": {"logout_status": 302, "logout_location": "/home/", "after_logout_profile_status": 302, "after_logout_location": "/accounts/login/?next=/accounts/profile/f34mc_owner/"}}
+Q1 200 200 [(2, 0.19999999999999998), (1, 0.09999999999999999), (3, 0.09999999999999999), (4, 0.09999999999999999), (5, 0.09999999999999999)] | no_rel False | ask 500 
+Q2 200 200 [(1, 0.06), (2, 0.06), (3, 0.06), (4, 0.06), (5, 0.06)] | no_rel False | ask 500 
+Q3 200 200 [(10, 0.12), (12, 0.12), (1, 0.06), (2, 0.06), (3, 0.06)] | no_rel False | ask 500 
+Q4 200 200 [(2, 0.19999999999999998), (1, 0.09999999999999999), (3, 0.09999999999999999), (4, 0.09999999999999999), (5, 0.09999999999999999)] | no_rel False | ask 500 
+Q5 200 200 [(2, 0.15), (1, 0.075), (3, 0.075), (4, 0.075), (5, 0.075)] | no_rel False | ask 500 
+Q6 200 200 [(1, 0.15), (2, 0.15), (3, 0.075), (4, 0.075), (5, 0.075)] | no_rel False | ask 503 
+Q7 200 200 [(1, 0.09999999999999999), (2, 0.09999999999999999), (3, 0.09999999999999999), (4, 0.09999999999999999), (5, 0.09999999999999999)] | no_rel False | ask 503 

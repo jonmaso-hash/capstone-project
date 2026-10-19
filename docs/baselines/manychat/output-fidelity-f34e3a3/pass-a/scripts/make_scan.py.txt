@@ -1,0 +1,27 @@
+"""Derive scan_f34.py from the memo-99 run's scan_of.py. Ref sets are still read from the sent payload (09a); checks are
+added for shapes seen in this run's reply (a monthly-rate source cited under the page-10 context, judgment wording,
+"deployed", company-stated conditions). Hits are candidates for reading, not grades."""
+import os
+HERE = os.path.dirname(os.path.abspath(__file__))
+s = open(os.path.join(os.path.dirname(HERE), 'of', 'scan_of.py'), encoding='utf-8').read()
+reps = [
+    ("print('refs from payload: usage', _usage, 'funding', _funding)\n",
+     "_monthly = sorted(i['ref'] for i in _items if re.search(r'/month|per month|monthly', i.get('statement') or '', re.I))\n"
+     "MONTHLY_REF = r'\\[[^\\]]*\\b(?:' + '|'.join(_monthly) + r')\\b'\n"
+     "print('refs from payload: usage', _usage, 'funding', _funding, 'monthly', _monthly)\n"),
+    ("CHECKS = {\n",
+     "CHECKS = {\n"
+     "    # Added at f34e3a3 for this run's shapes.\n"
+     "    'monthly_source_ref_with_page10_context': lambda s: re.search(r'Traction by Apr-16', s) and re.search(MONTHLY_REF, s),\n"
+     "    'judgment_wording': lambda s: re.search(r'misrepresent|mislead|overstat|inflat|exaggerat', s, re.I),\n"
+     "    'deployed_or_processed': lambda s: re.search(r'\\bdeployed\\b|\\bprocessed\\b', s, re.I) and re.search(r'bots?|messages', s, re.I),\n"
+     "    'conditions_stated_by_company': lambda s: re.search(r'(?:conditions|assumptions) (?:are|were) stated by the company', s, re.I),\n"
+     "    'which_is_correct': lambda s: re.search(r'which (?:one )?is (?:correct|right|accurate)', s, re.I),\n"
+     "    'ambiguity_label': lambda s: re.search(r'ambigu', s, re.I),\n"),
+    ('Sentence-level scan of memo 99', 'Sentence-level scan of memo 100'),
+]
+for a, b in reps:
+    assert s.count(a) >= 1, a
+    s = s.replace(a, b)
+open(os.path.join(HERE, 'scan_f34.py'), 'w', encoding='utf-8', newline='\n').write(s)
+print('derived scan_f34.py')

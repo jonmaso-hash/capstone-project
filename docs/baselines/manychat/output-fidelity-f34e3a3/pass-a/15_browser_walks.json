@@ -1,0 +1,58 @@
+{
+ "note": "Real Chrome (Claude in Chrome extension) against the run server 127.0.0.1:8000, 2026-10-18 18:51-18:55 local (UTC-7). Values below are the page text read in the browser (document.body.innerText) at the time, as recorded in the session; screenshots in browser/. Login: fields set on form.elements, then requestSubmit(). Logout: the nav Sign Out form (/accounts/logout/) submitted via requestSubmit; the Truth Delta page has no site nav (FF-413), so the paid logout went through /. The staff TOTP was computed for the next 30-second window and submitted after it began. No model call was made by the walks (model_calls.jsonl stayed at 8).",
+ "first_attempts_blocked": "18:41-18:45 local: the connected browser returned chrome-error 'connection refused' for http://127.0.0.1:8000 and http://localhost:8000 (three attempts) while the server answered local HTTP; no request reached the server log. After the owner re-selected the browser (/chrome), the same URL loaded. Recorded as deviation D-9.",
+ "walks": {
+  "OWNER": {
+   "login_landing": "/accounts/post-login/ -> owner dashboard",
+   "positive_control": {"url": "/api/v1/zelda/documents/3142/ic-memo/", "title": "AI Investment Committee Memo — ManyChat | Interlink Foundry", "text_chars": 4147},
+   "observed": {"Ambiguous message-volume heading": true, "contradict word": false, "overstat word": false,
+                "risk_assessment clarification text": false,
+                "may misrepresent clause": true, "'500M messages [S2, S3]' with Traction by Apr-16 context": true, "canary": false},
+   "note": "Owner sees the Lite memo sections (risk_assessment is not among them, as in memo 99's run).",
+   "logout": {"form": "/accounts/logout/ (nav Sign Out)", "landed": "/home/", "then_protected_profile": "/accounts/login/?next=/accounts/profile/f34mc_owner/"},
+   "screenshot": "browser/owner_ic_memo_open_concerns.jpg"
+  },
+  "LITE": {
+   "login_landing": "/accounts/profile/f34mc_owner/ (the login next= redirect from the previous refusal overtook the scripted navigation, as D-4 in memo 99's run)",
+   "positive_control": {"url": "/matchmaking/memo/profile/50/", "title": "Intelligence Memo: ManyChat | Interlink Foundry", "text_chars": 2455},
+   "observed": {"executive summary 500M sentence": "The company states 140,000+ bots deployed and 500M messages as traction metrics appearing in a slide headed 'Traction by Apr-16' [S1, S2], though neither the exact measurement date nor the measurement interval for the message figure has been independently verified.",
+                "messages/month shown": false, "measurement basis flag": false, "ambiguity/contradiction label": false,
+                "only 'contradict' text": "Truth Delta count wording: 'none of the 4 claims could be verified or contradicted against a public source'",
+                "reconciliation panel": false, "canary": false},
+   "logout": {"form": "/accounts/logout/ (nav Sign Out)", "landed": "/home/", "then_overview": "/accounts/login/?next=/matchmaking/memo/profile/50/"},
+   "screenshot": "browser/lite_company_overview.jpg"
+  },
+  "PAID": {
+   "positive_control": {"url": "/api/v1/zelda/documents/3142/verification/", "text_chars": 2731, "evidence_credibility": "N/A, NOT SCORED · LIMITED PUBLIC EVIDENCE", "claims": "4 analyzed, 0 verified, 4 not established"},
+   "observed": {"Measurement basis to clarify block": "Measurement basis to clarify Figures in this deck that need clarification before they are compared. This is not a verification result and doesn't affect the score. Page 10 states 500M messages without an explicit interval; page 12 states 500M messages/month. These use different measurement bases and need clarification before comparison.",
+                "reconciliation panel": false, "canary": false},
+   "logout": {"form": "/accounts/logout/ via / (Truth Delta page has no site nav, FF-413)", "landed": "/home/", "then_truth_delta": "/accounts/login/?next=/api/v1/zelda/documents/3142/verification/"},
+   "screenshot": "browser/paid_truth_delta.jpg"
+  },
+  "STAFF": {
+   "login_landing": "/accounts/staff-mfa/verify/?next=/api/v1/zelda/documents/3142/verification/",
+   "mfa": "real TOTP verify (next-window code), POST 302 to the Truth Delta page",
+   "positive_controls": [
+    {"url": "/api/v1/zelda/documents/3142/verification/", "text_chars": 3384, "Measurement basis to clarify block": true, "reconciliation panel": false, "canary": false, "label": "Zelda AI — Full Verification"},
+    {"url": "/api/v1/zelda/documents/3142/ic-memo/", "title": "AI Investment Committee Memo — ManyChat | Interlink Foundry", "text_chars": 11225,
+     "risk_assessment_1": "Measurement ambiguity in the core traction metric: The deck states '500M messages' on a slide headed 'Traction by Apr-16' [S2/C3] and separately states '500M messages/month' on page 12 [S3/C2]. These use different measurement bases. How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on. Clarification is required before the number can be evaluated [C2, C3].",
+     "overstat word": false, "'the cumulative figure'": false,
+     "contradict words": ["Truth Delta: 'no claim could be verified or contradicted'", "'no corroborating or contradicting external data'", "'Contradicted — 0'"], "canary": false},
+    {"url": "/matchmaking/memo/profile/50/", "title": "Intelligence Memo: ManyChat | Interlink Foundry", "text_chars": 2551,
+     "worth_investigating": ["Funding raised — not established", "Usage — not established",
+                             "Ambiguous message-volume measurement bases: The deck states '500M messages' (slide cont… see the IC Memo",
+                             "These cannot be compared without clarification; one or both figures may misrepresent th… see the IC Memo"],
+     "contradiction label": false, "canary": false}
+   ],
+   "logout": {"form": "/accounts/logout/ (nav Sign Out)", "landed": "/home/"},
+   "screenshots": ["browser/staff_truth_delta_after_mfa.jpg", "browser/staff_ic_memo_risk_assessment.jpg", "browser/staff_company_overview_worth_investigating.jpg"]
+  },
+  "ANON": {
+   "positive_control": {"url": "/home/", "loaded": true},
+   "checks": "in-page fetch with redirect: 'manual' after the staff logout",
+   "results": {"/api/v1/zelda/documents/3142/ic-memo/": "opaqueredirect", "/api/v1/zelda/documents/3142/verification/": "opaqueredirect",
+               "/matchmaking/memo/profile/50/": "opaqueredirect", "/accounts/profile/f34mc_owner/": "opaqueredirect"},
+   "server_log": "each GET 302 at 18:54:56 (browser/server_log_browser_walks.txt)"
+  }
+ }
+}

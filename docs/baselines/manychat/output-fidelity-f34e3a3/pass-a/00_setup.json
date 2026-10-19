@@ -1,0 +1,520 @@
+{
+ "code": {
+  "worktree": "C:\\Users\\jonathan\\Desktop\\KCV-mc-f34 (branch docs/manychat-output-fidelity-f34e3a3, created at f34e3a3)",
+  "origin_main_head_at_fetch": "f34e3a399349a2d7401f66d9b60b10834047e57a",
+  "run_commit": "f34e3a399349a2d7401f66d9b60b10834047e57a",
+  "run_commit_subject": "Merge pull request #285 from jonmaso-hash/fix/basis-label-source-context",
+  "parents": [
+   "64f9db5286213e9d7f38dce6aab170bd26a15cc2",
+   "2bd90562f7079825167fbc468a95b6b3d769bdac"
+  ],
+  "files_differing_from_final_pr_head_2bd9056": [],
+  "non_docs_files_changed_since_memo99_run_64f9db5": [
+   "zelda_api/basis_fidelity.py",
+   "zelda_api/data/funding_fidelity/memo99.json",
+   "zelda_api/data/funding_fidelity/memo99_payload.json",
+   "zelda_api/tests_output_fidelity.py"
+  ],
+  "migrations_since_64f9db5": [],
+  "application_code_changes_during_run": 0,
+  "mismatch": "none: origin/main == f34e3a3 when fetched"
+ },
+ "database": {
+  "original": "C:\\Users\\jonathan\\Desktop\\KCV\\db.sqlite3",
+  "run_db": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-np\\c8a313d5-81e1-402a-b7da-9205b6f20fab\\scratchpad\\f34\\db_f34_copy.sqlite3",
+  "run_db_method": "sqlite3 backup API from the original opened mode=ro",
+  "run_db_sha256_at_creation": "15bec0d2f055ada53fb09031794b589d6f5028fb490d8e37993e9e4678e29f55",
+  "run_db_integrity_check": "ok",
+  "historical_dbs": {
+   "original_dev_db": "C:\\Users\\jonathan\\Desktop\\KCV\\db.sqlite3",
+   "memo94_copy_mcpost": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV\\8edb8be9-5c85-488f-a1b8-020dd6a9a3c0\\scratchpad\\mcpost\\db_postfix_copy.sqlite3",
+   "memo95_copy_mcff": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV\\8edb8be9-5c85-488f-a1b8-020dd6a9a3c0\\scratchpad\\mcff\\db_ff_copy.sqlite3",
+   "memo96_copy_mcff3": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV\\8edb8be9-5c85-488f-a1b8-020dd6a9a3c0\\scratchpad\\mcff3\\db_ff3_copy.sqlite3",
+   "memo97_copy_np": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-np\\c8a313d5-81e1-402a-b7da-9205b6f20fab\\scratchpad\\np\\db_np_copy.sqlite3",
+   "memo98_copy_ub": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-np\\c8a313d5-81e1-402a-b7da-9205b6f20fab\\scratchpad\\ub\\db_ub_copy.sqlite3",
+   "memo99_copy_of": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-np\\c8a313d5-81e1-402a-b7da-9205b6f20fab\\scratchpad\\of\\db_of_copy.sqlite3"
+  },
+  "refused_by_run_wrapper": "the original and every historical copy above (FORBIDDEN_DBS in run_f34.py); DB-CHECK is_copy=True required",
+  "source_dbs_sha256_before_after_same": {
+   "original_dev_db": [
+    "5a0b8c1c2fb180ddcd5a75c34e2bb25ead369935ef6a4db1b0c7a0dbdfd7e9a2",
+    "5a0b8c1c2fb180ddcd5a75c34e2bb25ead369935ef6a4db1b0c7a0dbdfd7e9a2",
+    true
+   ],
+   "memo94_copy_mcpost": [
+    "445a2f19cdc6f82ebd1529c10d67bc87c40c656f4d276f37a4aa25153b566415",
+    "445a2f19cdc6f82ebd1529c10d67bc87c40c656f4d276f37a4aa25153b566415",
+    true
+   ],
+   "memo95_copy_mcff": [
+    "2c5f58649126f96964d072affa1e1e6d00fae3bec201fdc4cb5959f6aae1702e",
+    "2c5f58649126f96964d072affa1e1e6d00fae3bec201fdc4cb5959f6aae1702e",
+    true
+   ],
+   "memo96_copy_mcff3": [
+    "3ce44d778f7b230221d99b5fe23305a9dacb17d8cb15de014b10f58734982fd4",
+    "3ce44d778f7b230221d99b5fe23305a9dacb17d8cb15de014b10f58734982fd4",
+    true
+   ],
+   "memo97_copy_np": [
+    "281265059871cd26c275d8c9a46d3d81711277dc43c5f32e77fd1d3b1ef9adf7",
+    "281265059871cd26c275d8c9a46d3d81711277dc43c5f32e77fd1d3b1ef9adf7",
+    true
+   ],
+   "memo98_copy_ub": [
+    "ded6c19072e70263a0647832f4e551c3fbd3dda0cc90175bb09c252a6b0c9a75",
+    "ded6c19072e70263a0647832f4e551c3fbd3dda0cc90175bb09c252a6b0c9a75",
+    true
+   ],
+   "memo99_copy_of": [
+    "795077ef0f2ab4d5af590d826d3140ece083991abcaa3a21c18b2e95f1be5cba",
+    "795077ef0f2ab4d5af590d826d3140ece083991abcaa3a21c18b2e95f1be5cba",
+    true
+   ]
+  },
+  "source_db_sidecars_after": {
+   "original_dev_db": [],
+   "memo94_copy_mcpost": [],
+   "memo95_copy_mcff": [],
+   "memo96_copy_mcff3": [],
+   "memo97_copy_np": [],
+   "memo98_copy_ub": [],
+   "memo99_copy_of": []
+  },
+  "gate_refusal_before_migrate": [
+   "CODE-CHECK [check pid=24796] head=f34e3a399349a2d7401f66d9b60b10834047e57a tracked_changes=<__pycache__ only; see CODE-DIFF>",
+   "CODE-DIFF [check pid=24796] non_pyc_files_differing_from_f34e3a3=0",
+   "BASELINE-ENV-CHECK [check pid=24796] {'FILED_API_KEY': False, 'COMPANYENRICH_API_KEY': False, 'NEWS_API_KEY': False, 'DATA4B2B_API_KEY': False, 'USPTO_ODP_API_KEY': False, 'CRUNCHBASE_API_KEY': False, 'ANTHROPIC_API_KEY': True} USPTO_ODP_API_KEY_read_by_code=False (no reference in this commit; blanked in env)",
+   "BROKER-CHECK [check pid=24796] broker (write) redis://localhost local=True redis_db=4",
+   "BROKER-CHECK [check pid=24796] broker (read) redis://localhost local=True redis_db=4",
+   "BROKER-CHECK [check pid=24796] result backend redis://localhost local=True redis_db=12",
+   "BROKER-CHECK [check pid=24796] cache redis://localhost local=True redis_db=12",
+   "DB-CHECK [check pid=24796] name=C:/Users/jonathan/AppData/Local/Temp/claude/C--Users-jonathan-Desktop-KCV-np/c8a313d5-81e1-402a-b7da-9205b6f20fab/scratchpad/f34/db_f34_copy.sqlite3 is_copy=True is_original=False is_historical_copy=False",
+   "SCHEMA-CHECK [check pid=24796] pending=1 ['zelda_api.0044_claim_source_context'] zelda_api.0035=True zelda_api.0044=False matchmaking.0083=True matchmaking.0095=True applied_heads={\"accounts\": \"0017_personprofile_is_public\", \"billing\": \"0007_truth_delta_credit_wallet\", \"matchmaking\": \"0095_profile_reporting_currency\", \"zelda_api\": \"0043_structured_periods\"}",
+   "EAGER-CHECK [check pid=24796] CELERY_TASK_ALWAYS_EAGER=False",
+   "REFUSING TO START [check pid=24796] ['1 pending migrations']"
+  ],
+  "migrate_on_copy": [
+   "  Applying zelda_api.0044_claim_source_context... OK"
+  ],
+  "id_sequences_advanced_in_copy_only": [
+   "SEQ zelda_api_claimeddatapoint 2356 -> 2376",
+   "SEQ zelda_api_documentchunk 4288 -> 4360",
+   "SEQ zelda_api_documentsource 3135 -> 3141",
+   "SEQ zelda_api_entityverificationreport 34 -> 40",
+   "SEQ zelda_api_intelligenceinsight 5168 -> 5188",
+   "SEQ zelda_api_intelligencememo 93 -> 99",
+   "SEQ zelda_api_truthdeltareport 87 -> 93"
+  ],
+  "why": "every run copy derives from the same original; counters advanced to the memo-99 run copy maxima (read mode=ro) so ids never repeat document 3141 or memo 99"
+ },
+ "broker": {
+  "isolation": "local Memurai: broker db 4; results and cache db 12. Only dbs 4 and 12 were empty before the run (every other db held keys from earlier runs and was not purged), so results and cache share db 12; Celery result keys (celery-task-meta-*) and Django cache keys (:1:*) cannot collide. No clients before the fixtures. Worker mcf34@, queue \"celery\" on db 4",
+  "redis_before_processes": [
+   "db 0 5",
+   "db 1 3",
+   "db 2 14",
+   "db 3 3",
+   "db 4 0",
+   "db 5 74",
+   "db 6 3",
+   "db 7 4",
+   "db 8 3",
+   "db 9 3",
+   "db 10 74",
+   "db 11 3",
+   "db 12 0",
+   "db 13 74",
+   "db 14 4",
+   "db 15 4"
+  ],
+  "redis_after": [
+   "db 0 5",
+   "db 1 3",
+   "db 2 14",
+   "db 3 3",
+   "db 4 3",
+   "db 5 74",
+   "db 6 3",
+   "db 7 4",
+   "db 8 3",
+   "db 9 3",
+   "db 10 74",
+   "db 11 3",
+   "db 12 25",
+   "db 13 74",
+   "db 14 4",
+   "db 15 4"
+  ],
+  "clients_before": 1,
+  "other_dbs_unchanged": true,
+  "note": "nothing was purged; db 4/12 now hold this run's broker bindings, task results and cache keys"
+ },
+ "preflight_local": [
+  "CODE-CHECK [preflight pid=5296] head=f34e3a399349a2d7401f66d9b60b10834047e57a tracked_changes=<__pycache__ only; see CODE-DIFF>",
+  "CODE-DIFF [preflight pid=5296] non_pyc_files_differing_from_f34e3a3=0",
+  "BASELINE-ENV-CHECK [preflight pid=5296] {'FILED_API_KEY': False, 'COMPANYENRICH_API_KEY': False, 'NEWS_API_KEY': False, 'DATA4B2B_API_KEY': False, 'USPTO_ODP_API_KEY': False, 'CRUNCHBASE_API_KEY': False, 'ANTHROPIC_API_KEY': True} USPTO_ODP_API_KEY_read_by_code=False (no reference in this commit; blanked in env)",
+  "BROKER-CHECK [preflight pid=5296] broker (write) redis://localhost local=True redis_db=4",
+  "BROKER-CHECK [preflight pid=5296] broker (read) redis://localhost local=True redis_db=4",
+  "BROKER-CHECK [preflight pid=5296] result backend redis://localhost local=True redis_db=12",
+  "BROKER-CHECK [preflight pid=5296] cache redis://localhost local=True redis_db=12",
+  "DB-CHECK [preflight pid=5296] name=C:/Users/jonathan/AppData/Local/Temp/claude/C--Users-jonathan-Desktop-KCV-np/c8a313d5-81e1-402a-b7da-9205b6f20fab/scratchpad/f34/db_f34_copy.sqlite3 is_copy=True is_original=False is_historical_copy=False",
+  "SCHEMA-CHECK [preflight pid=5296] pending=0 [] zelda_api.0035=True zelda_api.0044=True matchmaking.0083=True matchmaking.0095=True applied_heads={\"accounts\": \"0017_personprofile_is_public\", \"billing\": \"0007_truth_delta_credit_wallet\", \"matchmaking\": \"0095_profile_reporting_currency\", \"zelda_api\": \"0044_claim_source_context\"}",
+  "EAGER-CHECK [preflight pid=5296] CELERY_TASK_ALWAYS_EAGER=False",
+  "broker (write)  redis://localhost",
+  "broker (read)   redis://localhost",
+  "result backend  redis://localhost",
+  "cache           redis://localhost",
+  "migrations      0 pending",
+  "preflight ok"
+ ],
+ "server_checks": [
+  "CODE-CHECK [server pid=10492] head=f34e3a399349a2d7401f66d9b60b10834047e57a tracked_changes=<__pycache__ only; see CODE-DIFF>",
+  "CODE-DIFF [server pid=10492] non_pyc_files_differing_from_f34e3a3=0",
+  "BASELINE-ENV-CHECK [server pid=10492] {'FILED_API_KEY': False, 'COMPANYENRICH_API_KEY': False, 'NEWS_API_KEY': False, 'DATA4B2B_API_KEY': False, 'USPTO_ODP_API_KEY': False, 'CRUNCHBASE_API_KEY': False, 'ANTHROPIC_API_KEY': True} USPTO_ODP_API_KEY_read_by_code=False (no reference in this commit; blanked in env)",
+  "BROKER-CHECK [server pid=10492] broker (write) redis://localhost local=True redis_db=4",
+  "BROKER-CHECK [server pid=10492] broker (read) redis://localhost local=True redis_db=4",
+  "BROKER-CHECK [server pid=10492] result backend redis://localhost local=True redis_db=12",
+  "BROKER-CHECK [server pid=10492] cache redis://localhost local=True redis_db=12",
+  "DB-CHECK [server pid=10492] name=C:/Users/jonathan/AppData/Local/Temp/claude/C--Users-jonathan-Desktop-KCV-np/c8a313d5-81e1-402a-b7da-9205b6f20fab/scratchpad/f34/db_f34_copy.sqlite3 is_copy=True is_original=False is_historical_copy=False",
+  "SCHEMA-CHECK [server pid=10492] pending=0 [] zelda_api.0035=True zelda_api.0044=True matchmaking.0083=True matchmaking.0095=True applied_heads={\"accounts\": \"0017_personprofile_is_public\", \"billing\": \"0007_truth_delta_credit_wallet\", \"matchmaking\": \"0095_profile_reporting_currency\", \"zelda_api\": \"0044_claim_source_context\"}",
+  "EAGER-CHECK [server pid=10492] CELERY_TASK_ALWAYS_EAGER=False",
+  "MODEL-CALL-LOG installed [server pid=10492] C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-np\\c8a313d5-81e1-402a-b7da-9205b6f20fab\\scratchpad\\f34\\model_calls.jsonl"
+ ],
+ "worker_checks": [
+  "CODE-CHECK [worker pid=20100] head=f34e3a399349a2d7401f66d9b60b10834047e57a tracked_changes=<__pycache__ only; see CODE-DIFF>",
+  "CODE-DIFF [worker pid=20100] non_pyc_files_differing_from_f34e3a3=0",
+  "BASELINE-ENV-CHECK [worker pid=20100] {'FILED_API_KEY': False, 'COMPANYENRICH_API_KEY': False, 'NEWS_API_KEY': False, 'DATA4B2B_API_KEY': False, 'USPTO_ODP_API_KEY': False, 'CRUNCHBASE_API_KEY': False, 'ANTHROPIC_API_KEY': True} USPTO_ODP_API_KEY_read_by_code=False (no reference in this commit; blanked in env)",
+  "BROKER-CHECK [worker pid=20100] broker (write) redis://localhost local=True redis_db=4",
+  "BROKER-CHECK [worker pid=20100] broker (read) redis://localhost local=True redis_db=4",
+  "BROKER-CHECK [worker pid=20100] result backend redis://localhost local=True redis_db=12",
+  "BROKER-CHECK [worker pid=20100] cache redis://localhost local=True redis_db=12",
+  "DB-CHECK [worker pid=20100] name=C:/Users/jonathan/AppData/Local/Temp/claude/C--Users-jonathan-Desktop-KCV-np/c8a313d5-81e1-402a-b7da-9205b6f20fab/scratchpad/f34/db_f34_copy.sqlite3 is_copy=True is_original=False is_historical_copy=False",
+  "SCHEMA-CHECK [worker pid=20100] pending=0 [] zelda_api.0035=True zelda_api.0044=True matchmaking.0083=True matchmaking.0095=True applied_heads={\"accounts\": \"0017_personprofile_is_public\", \"billing\": \"0007_truth_delta_credit_wallet\", \"matchmaking\": \"0095_profile_reporting_currency\", \"zelda_api\": \"0044_claim_source_context\"}",
+  "EAGER-CHECK [worker pid=20100] CELERY_TASK_ALWAYS_EAGER=False",
+  "MODEL-CALL-LOG installed [worker pid=20100] C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-np\\c8a313d5-81e1-402a-b7da-9205b6f20fab\\scratchpad\\f34\\model_calls.jsonl",
+  "WORKER-IDENTITY [worker pid=20100] name=mcf34@%h queue=celery pool=solo concurrency=1 broker_db=4"
+ ],
+ "paid_keys_note": "six paid keys blanked in os.environ (not .env); USPTO_ODP_API_KEY is read by no code at f34e3a3 (grep: no reference) and was checked from os.environ",
+ "keyless_outputs": "Truth Delta provider_outcomes {\"dataforb2b\": \"unconfigured\"}; Entity Integrity website/domain checks \"Not applicable\" (no website on the profile) and SEC EDGAR \"Not found\". No non-EDGAR provider returned data",
+ "memwatch": [
+  "memwatch started 2026-10-18T18:27:22 threshold=1500MB log=C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-np\\c8a313d5-81e1-402a-b7da-9205b6f20fab\\scratchpad\\f34\\memwatch.log"
+ ],
+ "fixtures": {
+  "owner": {
+   "user_id": 321,
+   "username": "f34mc_owner",
+   "application_id": 50,
+   "is_premium": false
+  },
+  "lite": {
+   "user_id": 322,
+   "username": "f34mc_lite",
+   "investor_is_premium": false
+  },
+  "paid": {
+   "user_id": 323,
+   "username": "f34mc_paid",
+   "investor_is_premium": true,
+   "subscription": {
+    "id": 9,
+    "plan": "INVESTOR_PREMIUM",
+    "status": "active",
+    "current_period_end": "2026-11-18T01:31:52.042364+00:00"
+   }
+  },
+  "staff": {
+   "user_id": 324,
+   "username": "f34mc_staff",
+   "is_staff": true
+  },
+  "profile": {
+   "company_name": "ManyChat",
+   "geography": null,
+   "company_website": null,
+   "current_revenue": null,
+   "revenue_period": "",
+   "raising_amount": "0.00",
+   "prior_amount_raised": "163000000.00",
+   "reporting_currency": "",
+   "sector": "Software",
+   "stage": "Series A"
+  },
+  "canary_field": "reason_for_capital",
+  "canary_visibility": "PRIVATE",
+  "same_name_profiles": [
+   42,
+   45,
+   47,
+   50
+  ]
+ },
+ "deck": {
+  "path": "C:\\Users\\jonathan\\Downloads\\manychat_series_a_audit_deck.pptx",
+  "bytes": 175622,
+  "sha256_on_disk": "be7a7171bbc84b9895a45adfbc41f2533f3d23b3a4a561c82a8d9de6b94f3ef1",
+  "key_sha256": "be7a7171bbc84b9895a45adfbc41f2533f3d23b3a4a561c82a8d9de6b94f3ef1"
+ },
+ "upload": [
+  "UPLOAD started 2026-10-19T01:36:41+00:00",
+  "UPLOAD login {\"status\": 302, \"redirect\": \"/accounts/post-login/\", \"session\": true}",
+  "UPLOAD deck {\"bytes\": 175622, \"sha256\": \"be7a7171bbc84b9895a45adfbc41f2533f3d23b3a4a561c82a8d9de6b94f3ef1\", \"matches_key\": true}",
+  "UPLOAD response {\"status\": 201, \"at\": \"2026-10-19T01:36:48+00:00\", \"body\": {\"status\": \"ingested\", \"document_id\": 3142, \"filename\": \"manychat_series_a_audit_deck.pptx\", \"source_entity\": \"ManyChat\", \"polling_url\": \"/api/v1/zelda/documents/3142/status/\", \"memo_url\": \"/api/v1/zelda/documents/3142/memo/\", \"verification_url\": \"/api/v1/zelda/documents/3142/truth-delta/\", \"message\": \"Document queued for both Zelda Intelligence and Truth Delta verification.\"}}"
+ ],
+ "model_calls": {
+  "total_successful": 8,
+  "by_kind": {
+   "memo": 1,
+   "ask_query_extraction": 7
+  },
+  "memo_model": "claude-sonnet-4-6 (code literal)",
+  "order": [
+   {
+    "n": 1,
+    "process": "[worker pid=20100]",
+    "started": "2026-10-19T01:36:54.014640+00:00",
+    "kind": "memo",
+    "response_id": "msg_011CgAjqEXx9w6jVYHFirADz",
+    "stop_reason": "end_turn",
+    "usage": {
+     "input_tokens": 3771,
+     "output_tokens": 2039
+    }
+   },
+   {
+    "n": 2,
+    "process": "[server pid=10492]",
+    "started": "2026-10-19T01:44:30.467564+00:00",
+    "kind": "ask_query_extraction",
+    "response_id": "msg_011CgAkQsikjADVEvSdRw86a",
+    "stop_reason": "end_turn",
+    "usage": {
+     "input_tokens": 347,
+     "output_tokens": 8
+    }
+   },
+   {
+    "n": 3,
+    "process": "[server pid=10492]",
+    "started": "2026-10-19T01:44:32.496065+00:00",
+    "kind": "ask_query_extraction",
+    "response_id": "msg_011CgAkR263Wf3KJhcid8gi7",
+    "stop_reason": "end_turn",
+    "usage": {
+     "input_tokens": 348,
+     "output_tokens": 8
+    }
+   },
+   {
+    "n": 4,
+    "process": "[server pid=10492]",
+    "started": "2026-10-19T01:44:34.327214+00:00",
+    "kind": "ask_query_extraction",
+    "response_id": "msg_011CgAkR9zJ9ERzyZzGqHrH3",
+    "stop_reason": "end_turn",
+    "usage": {
+     "input_tokens": 348,
+     "output_tokens": 8
+    }
+   },
+   {
+    "n": 5,
+    "process": "[server pid=10492]",
+    "started": "2026-10-19T01:44:36.262780+00:00",
+    "kind": "ask_query_extraction",
+    "response_id": "msg_011CgAkRHitgvMXg5wJDgrcm",
+    "stop_reason": "end_turn",
+    "usage": {
+     "input_tokens": 348,
+     "output_tokens": 8
+    }
+   },
+   {
+    "n": 6,
+    "process": "[server pid=10492]",
+    "started": "2026-10-19T01:44:38.057600+00:00",
+    "kind": "ask_query_extraction",
+    "response_id": "msg_011CgAkRRE5PUfyxAppasLyX",
+    "stop_reason": "end_turn",
+    "usage": {
+     "input_tokens": 348,
+     "output_tokens": 8
+    }
+   },
+   {
+    "n": 7,
+    "process": "[server pid=10492]",
+    "started": "2026-10-19T01:44:39.748629+00:00",
+    "kind": "ask_query_extraction",
+    "response_id": "msg_011CgAkRYWsdZnsuFyhabjo8",
+    "stop_reason": "end_turn",
+    "usage": {
+     "input_tokens": 349,
+     "output_tokens": 8
+    }
+   },
+   {
+    "n": 8,
+    "process": "[server pid=10492]",
+    "started": "2026-10-19T01:44:41.601746+00:00",
+    "kind": "ask_query_extraction",
+    "response_id": "msg_011CgAkRh1r52mkp99bdTtuu",
+    "stop_reason": "end_turn",
+    "usage": {
+     "input_tokens": 347,
+     "output_tokens": 8
+    }
+   }
+  ],
+  "failed_attempts_not_in_log": "first Q1-Q7 attempt: 5 /ask/ requests reached the Anthropic API and were rejected (HTTP 400, credit balance too low; Q1-Q5), then 2 returned 503 with no outbound request (Q6-Q7). The wrapper records only successful responses.",
+  "first_attempt_server_log": [
+   "2026-10-18 18:38:57,803 ERROR zelda_api.views - Ask Zelda pipeline error: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.'}, 'request_id': 'req_011CgAjzHwqUEb9yTn8j6aS3'}",
+   "2026-10-18 18:38:57,805 ERROR django.server - \"POST /api/v1/zelda/ask/ HTTP/1.1\" 500 77",
+   "2026-10-18 18:38:58,905 ERROR zelda_api.views - Ask Zelda pipeline error: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.'}, 'request_id': 'req_011CgAjzP8sCSGtZHu9G8Ew1'}",
+   "2026-10-18 18:38:58,907 ERROR django.server - \"POST /api/v1/zelda/ask/ HTTP/1.1\" 500 77",
+   "2026-10-18 18:39:00,026 ERROR zelda_api.views - Ask Zelda pipeline error: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.'}, 'request_id': 'req_011CgAjzTw719oRFMb8FscFW'}",
+   "2026-10-18 18:39:00,027 ERROR django.server - \"POST /api/v1/zelda/ask/ HTTP/1.1\" 500 77",
+   "2026-10-18 18:39:01,163 ERROR zelda_api.views - Ask Zelda pipeline error: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.'}, 'request_id': 'req_011CgAjzYh6Pn6oYsvE746j4'}",
+   "2026-10-18 18:39:01,165 ERROR django.server - \"POST /api/v1/zelda/ask/ HTTP/1.1\" 500 77",
+   "2026-10-18 18:39:02,238 ERROR zelda_api.views - Ask Zelda pipeline error: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.'}, 'request_id': 'req_011CgAjzdZXszLW5zV8CTLgt'}",
+   "2026-10-18 18:39:02,240 ERROR django.server - \"POST /api/v1/zelda/ask/ HTTP/1.1\" 500 77",
+   "2026-10-18 18:39:02,903 ERROR django.server - \"POST /api/v1/zelda/ask/ HTTP/1.1\" 503 90",
+   "2026-10-18 18:39:03,564 ERROR django.server - \"POST /api/v1/zelda/ask/ HTTP/1.1\" 503 90",
+   "2026-10-18 18:44:31,797 INFO django.server - \"POST /api/v1/zelda/ask/ HTTP/1.1\" 200 165",
+   "2026-10-18 18:44:33,668 INFO django.server - \"POST /api/v1/zelda/ask/ HTTP/1.1\" 200 165",
+   "2026-10-18 18:44:35,603 INFO django.server - \"POST /api/v1/zelda/ask/ HTTP/1.1\" 200 165",
+   "2026-10-18 18:44:37,349 INFO django.server - \"POST /api/v1/zelda/ask/ HTTP/1.1\" 200 165",
+   "2026-10-18 18:44:39,102 INFO django.server - \"POST /api/v1/zelda/ask/ HTTP/1.1\" 200 165",
+   "2026-10-18 18:44:40,932 INFO django.server - \"POST /api/v1/zelda/ask/ HTTP/1.1\" 200 165",
+   "2026-10-18 18:44:42,775 INFO django.server - \"POST /api/v1/zelda/ask/ HTTP/1.1\" 200 165"
+  ]
+ },
+ "preserved": {
+  "orig_before": [
+   "MEMO 90 sha256 31e82cc972250b3fa945413c62be2d793f8aa0486d63a2a909bde9e3f344cbe4 updated 2026-10-11 00:47:33.868473+00:00",
+   "MEMO 91 sha256 43c7b37ef82d6528af89d3140ea8a627613839b36f58c19ca435b0885caa603f updated 2026-10-11 00:56:46.699739+00:00"
+  ],
+  "memo94_before": [
+   "MEMO 94 sha256 cdc861d5dd7e03b11a4bf69a86a0827aad88baf00e3b244f40901cc5f63a1c76 updated 2026-10-12 03:22:21.340729+00:00"
+  ],
+  "memo95_before": [
+   "MEMO 95 sha256 bc298328e1e8adb21ecf4b17fc58799bff85095afde07b4679966dda44bfe6b0 updated 2026-10-12 09:53:19.771586+00:00"
+  ],
+  "memo96_before": [
+   "MEMO 96 sha256 1f23b91704374607ce9300b012711f12c4c5c90269b8d296129df0305488493a updated 2026-10-13 07:58:46.129742+00:00"
+  ],
+  "memo97_before": [
+   "MEMO 97 sha256 0c864f26b0aacfe9dc70519979ae8f5432911b2f71f6518d1a310092660df239 updated 2026-10-15 03:44:15.587519+00:00"
+  ],
+  "memo98_before": [
+   "MEMO 98 sha256 367ba98d200f1d5397de82d006b84f7ad2259c259573b54244a14a59be637f0c updated 2026-10-15 08:23:36.070399+00:00"
+  ],
+  "memo99_before": [
+   "MEMO 99 sha256 14d8ba0e9adca84463a8c438d5ef8d484203e7b2d4d2b027715796238a6e46e4 updated 2026-10-16 09:27:52.989889+00:00"
+  ],
+  "orig_before_after_byte_identical": true,
+  "memo94_before_after_byte_identical": true,
+  "memo95_before_after_byte_identical": true,
+  "memo96_before_after_byte_identical": true,
+  "memo97_before_after_byte_identical": true,
+  "memo98_before_after_byte_identical": true,
+  "memo99_before_after_byte_identical": true,
+  "before_snapshots_equal_committed_d821cca_after_snapshots": {
+   "orig": true,
+   "memo94": true,
+   "memo95": true,
+   "memo96": true,
+   "memo97": true,
+   "memo98": true
+  },
+  "normalisation": "carriage returns removed and lines starting \"Invalid line\" (a startup .env warning) omitted, on both sides; memo 99 has no committed snapshot (it was the memo-99 run's own output), so it is compared field by field instead",
+  "memo97_vs_committed_09_memo_ea3ab13": {
+   "before": "MEMO97-vs-ea3ab13 fields compared 24 differing []",
+   "after": "MEMO97-vs-ea3ab13 fields compared 24 differing []"
+  },
+  "memo98_vs_committed_09_memo_0dd8e91": {
+   "before": "MEMO98-vs-0dd8e91 fields compared 24 differing []",
+   "after": "MEMO98-vs-0dd8e91 fields compared 24 differing []"
+  },
+  "memo99_vs_committed_09_memo_d821cca": {
+   "before": "MEMO99-vs-d821cca fields compared 24 differing []",
+   "after": "MEMO99-vs-d821cca fields compared 24 differing []"
+  }
+ },
+ "frozen_artifacts": {
+  "docs/baselines/manychat/ANSWER_KEY.md": {
+   "blob_at_64f9db5": "b70cdf0934eef5a2fdcbc1e5ac33815055d845c4",
+   "blob_at_f34e3a3": "b70cdf0934eef5a2fdcbc1e5ac33815055d845c4",
+   "blob_in_worktree": "b70cdf0934eef5a2fdcbc1e5ac33815055d845c4",
+   "last_commit_touching": "ce409d60 2026-10-04 docs: freeze the Ben & Jerry's and ManyChat answer keys and round protocol"
+  },
+  "docs/baselines/three-deck-audit/PROTOCOL.md": {
+   "blob_at_64f9db5": "77bd86ad4e1fe6397a6e435d6e4afd27a7377d91",
+   "blob_at_f34e3a3": "77bd86ad4e1fe6397a6e435d6e4afd27a7377d91",
+   "blob_in_worktree": "77bd86ad4e1fe6397a6e435d6e4afd27a7377d91",
+   "last_commit_touching": "ce409d60 2026-10-04 docs: freeze the Ben & Jerry's and ManyChat answer keys and round protocol"
+  },
+  "docs/baselines/nike-fy2026/PROTOCOL.md": {
+   "blob_at_64f9db5": "0a2d3f74a71d57bad4deb36c86ed216bdf51884a",
+   "blob_at_f34e3a3": "0a2d3f74a71d57bad4deb36c86ed216bdf51884a",
+   "blob_in_worktree": "0a2d3f74a71d57bad4deb36c86ed216bdf51884a",
+   "last_commit_touching": "31c7b11e 2026-10-03 docs: freeze the Nike FY2026 baseline answer key and run protocol"
+  },
+  "docs/baselines/manychat/output-fidelity-64f9db5/pass-a": {
+   "known_commit": "2e3b624",
+   "tree_at_known_commit": "13127a2f123cbe3aac28de8db95c7fb18b8dcff1",
+   "compared_ref": "origin/docs/manychat-output-fidelity-64f9db5",
+   "tree_at_ref": "13127a2f123cbe3aac28de8db95c7fb18b8dcff1",
+   "identical": true
+  },
+  "docs/baselines/manychat/narrator-provenance-b9cddec/pass-a": {
+   "known_commit": "434a701",
+   "tree_at_known_commit": "55648c9673a331702da1a56461a60dad708d86d9",
+   "compared_ref": "f34e3a399349a2d7401f66d9b60b10834047e57a",
+   "tree_at_ref": "55648c9673a331702da1a56461a60dad708d86d9",
+   "identical": true
+  },
+  "docs/baselines/three-deck-audit/output-figure-form-9d24d97": {
+   "known_commit": "424dd36",
+   "tree_at_known_commit": "17121513e38f3c0f43c312fca2c1225bbdd42418",
+   "compared_ref": "f34e3a399349a2d7401f66d9b60b10834047e57a",
+   "tree_at_ref": "17121513e38f3c0f43c312fca2c1225bbdd42418",
+   "identical": true
+  },
+  "docs/baselines/three-deck-audit/output-p34-correction-424dd36": {
+   "known_commit": "a4f55e5",
+   "tree_at_known_commit": "e2b5a3181c93d10e69dfcf2a303e7616a4a56fdf",
+   "compared_ref": "f34e3a399349a2d7401f66d9b60b10834047e57a",
+   "tree_at_ref": "e2b5a3181c93d10e69dfcf2a303e7616a4a56fdf",
+   "identical": true
+  },
+  "docs/baselines/three-deck-audit/output-p29-behaviour-ffc408f": {
+   "known_commit": "2bd9056",
+   "tree_at_known_commit": "a69cdbe99fa7019fc2bc7d2db6dfc4400c8b0734",
+   "compared_ref": "f34e3a399349a2d7401f66d9b60b10834047e57a",
+   "tree_at_ref": "a69cdbe99fa7019fc2bc7d2db6dfc4400c8b0734",
+   "identical": true
+  },
+  "docs/baselines/three-deck-audit/output-arithmetic-nesting-2465791": {
+   "known_commit": "825d6c0",
+   "tree_at_known_commit": "5ff761b4b1f855e45dd87d83b3c9e6decfb9353f",
+   "compared_ref": "f34e3a399349a2d7401f66d9b60b10834047e57a",
+   "tree_at_ref": "5ff761b4b1f855e45dd87d83b3c9e6decfb9353f",
+   "identical": true
+  },
+  "docs/baselines/three-deck-audit/output-bridge-aaa6e0a": {
+   "known_commit": "6234627",
+   "tree_at_known_commit": "49c70d99e7164d6b378bf9cfa14c0eb9ef7b6ff6",
+   "compared_ref": "f34e3a399349a2d7401f66d9b60b10834047e57a",
+   "tree_at_ref": "49c70d99e7164d6b378bf9cfa14c0eb9ef7b6ff6",
+   "identical": true
+  },
+  "zelda_api/data/funding_fidelity": {
+   "known_commit": "2bd9056",
+   "tree_at_known_commit": "6edc20f61e3c188cbd85a02511238def58f94195",
+   "compared_ref": "f34e3a399349a2d7401f66d9b60b10834047e57a",
+   "tree_at_ref": "6edc20f61e3c188cbd85a02511238def58f94195",
+   "identical": true
+  }
+ }
+}

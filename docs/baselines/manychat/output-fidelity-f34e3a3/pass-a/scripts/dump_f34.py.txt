@@ -1,0 +1,101 @@
+"""Read-only dump of one document's pipeline rows (ManyChat Pass A at f34e3a3; reused from the memo-99 run's dump_of.py apart from this line and the label).
+Adapted from the 458bdc9 rerun's dump.py; ClaimedDatapoint now carries
+source_sentence / narrator / source_context, which ser() picks up as fields.
+Also writes the GroundedContext payload rebuilt from the stored rows, so the
+memo input can be compared with what the instrumented call actually sent."""
+import sys, os, json, re, datetime, decimal
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
+from zelda_api.vector_models import DocumentSource, DocumentChunk, IntelligenceInsight, IntelligenceMemo, BusinessValuationReport
+from zelda_api.truth_delta_models import ClaimedDatapoint, ObservedDatapoint, TruthDeltaReport
+from zelda_api.entity_verification_models import EntityVerificationReport
+from zelda_api.truth_delta_tasks import _extract_numeric_value
+doc_id, outdir, prefix = int(sys.argv[1]), sys.argv[2], sys.argv[3]
+os.makedirs(outdir, exist_ok=True)
+EMB = re.compile(r'embedding|vector', re.I)
+
+
+def ser(obj):
+    d = {}
+    for f in obj._meta.concrete_fields:
+        v = getattr(obj, f.attname)
+        if EMB.search(f.name) and v not in (None, ''):
+            v = {'omitted': True, 'type': type(v).__name__, 'len': len(v) if hasattr(v, '__len__') else None}
+        d[f.attname] = v
+    return d
+
+
+def default(o):
+    if isinstance(o, (datetime.datetime, datetime.date)):
+        return o.isoformat()
+    if isinstance(o, decimal.Decimal):
+        return str(o)
+    return str(o)
+
+
+def w(name, data):
+    with open(os.path.join(outdir, name), 'w', encoding='utf-8', newline='\n') as f:
+        json.dump(data, f, indent=1, ensure_ascii=False, default=default)
+        f.write('\n')
+
+
+doc = DocumentSource.objects.get(id=doc_id)
+dd = ser(doc)
+dd['verification_state'] = doc.verification_state
+texts = {k: v for k, v in dd.items() if isinstance(v, str) and len(v) > 2000}
+w('01_extraction.json', {'document': dd, 'slide_markers': {k: re.findall(r'\[\[zelda:(?:slide|page) \d+\]\]', v) for k, v in texts.items()},
+                         'replacement_chars': {k: v.count('�') for k, v in texts.items()}})
+chunks = list(DocumentChunk.objects.filter(document=doc).order_by('id'))
+w('02_chunks.json', [ser(c) for c in chunks])
+w('03_insights.json', [ser(i) for i in IntelligenceInsight.objects.filter(document=doc).order_by('id')])
+page_text = {c.page_number: c.raw_text for c in chunks}
+claims = []
+for c in ClaimedDatapoint.objects.filter(document=doc).order_by('id'):
+    r = ser(c)
+    r['_slide_text'] = page_text.get(c.page_number)
+    claims.append(r)
+w('04_claims.json', claims)
+w('05_observations.json', [ser(o) for o in ObservedDatapoint.objects.filter(document=doc).order_by('id')])
+w('07_truth_delta_reports.json', [ser(t) for t in TruthDeltaReport.objects.filter(document=doc).order_by('id')])
+w('08_entity_integrity.json', [ser(e) for e in EntityVerificationReport.objects.filter(document=doc).order_by('id')])
+memo = IntelligenceMemo.objects.filter(document=doc).first()
+val = BusinessValuationReport.objects.filter(document=doc).first()
+w('09_memo.json', {'memo': ser(memo) if memo else None, 'valuation_report': ser(val) if val else None,
+                   'document_status': getattr(doc, 'status', None)})
+
+# The memo's input as GroundedContext would build it now from the stored rows (owner principal).
+from zelda_api.grounded_context import GroundedContext
+U = get_user_model()
+owner = U.objects.get(username=f'{prefix}_owner')
+try:
+    from zelda_api.principal import ORIGIN_TASK, Principal       # as zelda_api.tasks.generate_intelligence_memo
+    principal = Principal.for_user(doc.uploaded_by, ORIGIN_TASK, label='mcf34.dump (read-only rebuild)')
+    ctx = GroundedContext.build(principal, doc)
+    w('09a_grounded_context_rebuilt.json', {'principal': 'uploaded_by, ORIGIN_TASK (as the memo task)',
+                                            'payload': ctx.to_prompt_payload()})
+except Exception as e:
+    w('09a_grounded_context_rebuilt.json', {'error': type(e).__name__, 'detail': str(e)[:300]})
+
+# B-2 reconciliation per principal, in-process
+from zelda_api.profile_reconciliation import reconcile_profile_with_deck
+rec = {}
+for role in ['owner', 'lite', 'paid', 'staff']:
+    u = U.objects.get(username=f'{prefix}_{role}')
+    try:
+        res = reconcile_profile_with_deck(doc, u)
+        rec[role] = [r.__dict__ if hasattr(r, '__dict__') else r for r in (res or [])]
+    except Exception as e:
+        rec[role] = {'error': type(e).__name__, 'detail': str(e)[:200]}
+try:
+    rec['anon'] = [r.__dict__ if hasattr(r, '__dict__') else r for r in (reconcile_profile_with_deck(doc, AnonymousUser()) or [])]
+except Exception as e:
+    rec['anon'] = {'error': type(e).__name__, 'detail': str(e)[:200]}
+w('11b_reconciliation_by_principal.json', rec)
+probes = {s: _extract_numeric_value(s) for s in ['Unilever ice cream unit 2024 sales: €7.9B', '140 000+ bots', '$23.1M']}
+w('16_probes.json', {'_extract_numeric_value': probes})
+print('DUMP', doc_id, 'chunks', len(chunks), 'insights', IntelligenceInsight.objects.filter(document=doc).count(), 'claims', len(claims),
+      'claim_ids', [c['id'] for c in claims], 'insight_ids', list(IntelligenceInsight.objects.filter(document=doc).values_list('id', flat=True)),
+      'obs', ObservedDatapoint.objects.filter(document=doc).count(),
+      'td', list(TruthDeltaReport.objects.filter(document=doc).values_list('id', flat=True)),
+      'ei', list(EntityVerificationReport.objects.filter(document=doc).values_list('id', flat=True)), 'memo', memo.id if memo else None,
+      'state', doc.verification_state, 'status', getattr(doc, 'status', None))

@@ -1,0 +1,36 @@
+18:51:34,368 INFO django.server - "GET /accounts/login/ HTTP/1.1" 200 13399
+18:51:49,298 INFO django.server - "POST /accounts/login/ HTTP/1.1" 302 0
+18:51:49,353 INFO django.server - "GET /accounts/post-login/ HTTP/1.1" 302 0
+18:51:52,718 INFO django.server - "GET /api/v1/zelda/documents/3142/ic-memo/ HTTP/1.1" 200 159769
+18:52:14,482 INFO django.server - "POST /accounts/logout/ HTTP/1.1" 302 0
+18:52:14,567 INFO django.server - "GET /home/ HTTP/1.1" 200 36183
+18:52:17,979 INFO django.server - "GET /accounts/profile/f34mc_owner/ HTTP/1.1" 302 0
+18:52:18,019 INFO django.server - "GET /accounts/login/?next=/accounts/profile/f34mc_owner/ HTTP/1.1" 200 13603
+18:52:28,454 INFO django.server - "POST /accounts/login/?next=/accounts/profile/f34mc_owner/ HTTP/1.1" 302 0
+18:52:28,637 INFO django.server - "GET /accounts/profile/f34mc_owner/ HTTP/1.1" 200 150397
+18:52:32,287 INFO django.server - "GET /matchmaking/memo/profile/50/ HTTP/1.1" 200 136014
+18:53:04,189 INFO django.server - "POST /accounts/logout/ HTTP/1.1" 302 0
+18:53:04,289 INFO django.server - "GET /home/ HTTP/1.1" 200 36183
+18:53:07,067 INFO django.server - "GET /matchmaking/memo/profile/50/ HTTP/1.1" 302 0
+18:53:07,108 INFO django.server - "GET /accounts/login/?next=/matchmaking/memo/profile/50/ HTTP/1.1" 200 13605
+18:53:16,711 INFO django.server - "POST /accounts/login/?next=/matchmaking/memo/profile/50/ HTTP/1.1" 302 0
+18:53:18,854 INFO django.server - "GET /matchmaking/memo/profile/50/ HTTP/1.1" 200 136014
+18:53:19,534 INFO django.server - "GET /api/v1/zelda/documents/3142/verification/ HTTP/1.1" 200 54460
+18:53:35,366 INFO django.server - "GET / HTTP/1.1" 200 145689
+18:53:36,160 INFO django.server - "POST /accounts/logout/ HTTP/1.1" 302 0
+18:53:36,236 INFO django.server - "GET /home/ HTTP/1.1" 200 36183
+18:53:39,181 INFO django.server - "GET /api/v1/zelda/documents/3142/verification/ HTTP/1.1" 302 0
+18:53:39,219 INFO django.server - "GET /accounts/login/?next=/api/v1/zelda/documents/3142/verification/ HTTP/1.1" 200 13669
+18:53:49,314 INFO django.server - "POST /accounts/login/?next=/api/v1/zelda/documents/3142/verification/ HTTP/1.1" 302 0
+18:53:49,347 INFO django.server - "GET /api/v1/zelda/documents/3142/verification/ HTTP/1.1" 302 0
+18:53:49,441 INFO django.server - "GET /accounts/staff-mfa/verify/?next=%2Fapi%2Fv1%2Fzelda%2Fdocuments%2F3142%2Fverification%2F HTTP/1.1" 
+18:54:05,065 INFO django.server - "POST /accounts/staff-mfa/verify/?next=%2Fapi%2Fv1%2Fzelda%2Fdocuments%2F3142%2Fverification%2F HTTP/1.1"
+18:54:05,172 INFO django.server - "GET /api/v1/zelda/documents/3142/verification/ HTTP/1.1" 200 61485
+18:54:21,797 INFO django.server - "GET /api/v1/zelda/documents/3142/ic-memo/ HTTP/1.1" 200 170506
+18:54:36,427 INFO django.server - "GET /matchmaking/memo/profile/50/ HTTP/1.1" 200 159400
+18:54:53,666 INFO django.server - "POST /accounts/logout/ HTTP/1.1" 302 0
+18:54:53,757 INFO django.server - "GET /home/ HTTP/1.1" 200 36183
+18:54:56,949 INFO django.server - "GET /api/v1/zelda/documents/3142/ic-memo/ HTTP/1.1" 302 0
+18:54:56,964 INFO django.server - "GET /api/v1/zelda/documents/3142/verification/ HTTP/1.1" 302 0
+18:54:56,976 INFO django.server - "GET /matchmaking/memo/profile/50/ HTTP/1.1" 302 0
+18:54:56,987 INFO django.server - "GET /accounts/profile/f34mc_owner/ HTTP/1.1" 302 0

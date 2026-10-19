@@ -1,0 +1,43 @@
+"""Second, separately recorded Q1-Q7 attempt after the first attempt's /ask/ calls failed on the Anthropic credit
+balance (HTTP 400 for Q1-Q5, then 503 for Q6-Q7). The owner reloaded credits; nothing else changed (same server
+process, same code, same document). Same requests as probe.py's Q1-Q7 block (search, RAG, /ask/), once each, as the
+owner. Refuses if its output already exists, so it cannot be repeated until an answer passes. The first attempt's
+10_retrieval_ask_q1_q7.json is not touched. Usage: python ask_second.py <probe_cfg.json>"""
+import os, sys, json, datetime
+SP = os.path.dirname(os.path.abspath(__file__))
+cfg = json.load(open(sys.argv[1], encoding='utf-8-sig'))
+OUT = os.path.join(cfg['outdir'], '10b_retrieval_ask_q1_q7_second_attempt.json')
+if os.path.exists(OUT):
+    sys.exit('second attempt already recorded; refusing to repeat')
+src = open(os.path.join(SP, 'probe.py'), encoding='utf-8').read()
+src = src.split('matrix, payloads, rendered, walks, content_types = [], {}, {}, {}, {}')[0]   # helpers only
+sys.argv = ['probe.py', sys.argv[1]]
+ns = {'__name__': 'probe_helpers', '__file__': os.path.join(SP, 'probe.py')}
+exec(compile(src, 'probe.py(helpers)', 'exec'), ns)
+B, doc, body_of = ns['B'], ns['doc'], ns['body_of']
+s = ns['login'](cfg['principals']['OWNER'])
+hdr = {'X-CSRFToken': s.cookies.get('csrftoken', ''), 'Referer': B + '/'}
+qa = {'_attempt': {'n': 2, 'started': datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds'),
+                   'reason': 'first attempt (10_retrieval_ask_q1_q7.json) failed: Anthropic 400 credit balance too low; '
+                             'credits reloaded by the owner; same processes and code'}}
+for q, text in cfg['questions'].items():
+    e = {'question': text}
+    for k, path in [('search', f'/api/v1/zelda/documents/{doc}/search/'), ('rag', f'/api/v1/zelda/documents/{doc}/rag/')]:
+        r = s.post(B + path, json={'query': text, 'top_k': 5}, headers=hdr)
+        e[k] = {'status': r.status_code, 'body': body_of(r)}
+    r = s.post(B + '/api/v1/zelda/ask/', json={'q': text}, headers=hdr)
+    e['ask'] = {'status': r.status_code, 'at': datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds'),
+                'body': body_of(r)}
+    qa[q] = e
+r = s.post(B + '/accounts/logout/', data={'csrfmiddlewaretoken': s.cookies.get('csrftoken', '')}, headers={'Referer': B + '/'},
+           allow_redirects=False)
+qa['_attempt']['logout_status'] = r.status_code
+with open(OUT, 'w', encoding='utf-8', newline='\n') as f:
+    json.dump(qa, f, indent=1, ensure_ascii=False)
+    f.write('\n')
+for q, e in qa.items():
+    if q.startswith('_'):
+        continue
+    ab = e['ask']['body']
+    ab = (ab.get('response') or json.dumps(ab))[:160] if isinstance(ab, dict) else str(ab)[:160]
+    print(q, e['search']['status'], e['rag']['status'], '| ask', e['ask']['status'], ab.replace('\n', ' '))
