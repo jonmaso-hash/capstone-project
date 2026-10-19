@@ -78,8 +78,11 @@ and, first, in any sentence, one rule about where figures are stated (memo 99, O
                 only the refs that context belongs to; the other side's fact follows the aside with its own ref,
                 page and context ("..., and separately 500M messages/month [S3] on page 12 (clarification)").
                 Only when every ref in the clause is a known place, the moved refs are one side of one pair, not
-                narrated, and each shares its citation group with the other side's ref under that context;
-                questions and conditions are kept
+                narrated, and each shares its citation group with the other side's ref under that context; and
+                only the company's own affirmative statement: its subject ("the company", "the deck") right
+                before the reporting verb the moved refs follow, and no denial or hedge ("does not state",
+                "may", "appears to") in the clause. A narrator's listing, a denial, a hedge, a question and a
+                condition keep their citations (review of 1801ec5)
 
 and two rules that continue an item's discussion (memo 100):
 
@@ -87,7 +90,9 @@ and two rules that continue an item's discussion (memo 100):
     judgment    sentence resolved to, like "the figures" (OF-806). An error judgment in that clause
                 ("one or both figures may misrepresent the scale of actual activity") becomes the pair's
                 clarification; the sentence's other clauses stay. Not when the pair has a CONTRADICTED member,
-                the words are denied, the sentence asks, or it cites anything outside the pair
+                the words are denied, the sentence asks, or it cites anything outside the pair. The judgment
+                rule above leaves such a clause to this one, cited or not, so these protections hold (review
+                of 1801ec5); a judgment not about "one or both figures" is still the judgment rule's
     conditions  "These conditions are stated by the company [refs]" after a sentence setting conditions ("if
                 the bots reflect active, paying customers ...", OF-807): the cited statements state the
                 figures, not the conditions. The subject becomes "The figures", a "rests on the company's own
@@ -176,6 +181,15 @@ _PAIR_REFERENT = re.compile(r'\b(?:one\s+or\s+both|both|either|neither)\s+(?:of\
 # "(slide context: 'X')", "(slide headed 'X')".
 _CONTEXT_ASIDE = re.compile(r"\(\s*(?:in\s+|on\s+)?(?:an?\s+|the\s+)?(?:slide|page)(?:\s+context)?\s*"
                             r"(?:headed\s+|titled\s+|:\s*)?'(?P<ctx>[^']+)'\s*\)", re.I)
+# The company's own subject ending right before its reporting verb: "the company states", "... only that the deck
+# lists". A narrator ("Pitch Deck Hunt lists") or anything between ("the company does not state", "may state")
+# does not match (review of 1801ec5).
+_OWN_SUBJECT_END = re.compile(r"(?:^|\bthat\s+|\bwhile\s+|\bwhereas\s+|\band\s+|,\s*)(?:the\s+)?(?:company|deck|"
+                              r"pitch\s+deck|presentation|founders?|management)\s*$", re.I)
+# Hedged wording: a statement the clause does not make outright.
+_UNCERTAIN = re.compile(r"\b(?:may|might|could|possibly|perhaps|probably|likely|apparently|appears?|seems?|reportedly|"
+                        r"allegedly|purportedly|unclear|uncertain|unconfirmed|whether|estimated?|approximately|"
+                        r"roughly)\b", re.I)
 # "These conditions are stated by the company" (memo 100, OF-807); a denial ("are not stated") does not match.
 _CONDITION_CLAIM = re.compile(r"^(?P<lead>\s*(?:[-•*·–]\s*)?)(?P<subject>(?:these|those|the|both|all|such)\s+"
                               r"(?:conditions|assumptions|premises))(?=\s+(?:are|were|have\s+been)\s+(?:all\s+)?"
@@ -290,9 +304,16 @@ def _bridges(sentence):
     return bool(_BRIDGE.fullmatch(sentence))
 
 
+def _referent_judged(sentence):
+    """Every clause judging the figures judges "one or both figures": _referent_judgment decides it, with its
+    protections (a denial, a contradicted pair, the sentence's other clauses; review of 1801ec5)."""
+    judged = [clause for clause in sentence.split(';') if _JUDGMENT.search(clause)]
+    return bool(judged) and all(_PAIR_REFERENT.search(clause) for clause in judged)
+
+
 def _judgment(sentence, pair, changes):
     """An error judgment about the pair's bases becomes its neutral clarification; its citations stay."""
-    if _asks(sentence) or not _JUDGMENT.search(sentence):
+    if _asks(sentence) or not _JUDGMENT.search(sentence) or _referent_judged(sentence):
         return sentence
     if not (_BASIS_WORDS.search(sentence) or _cited(sentence)):
         return sentence
@@ -561,6 +582,16 @@ def _context_aside(sentence, facts, changes):
                      for group in groups if set(_split_refs(group.group(1))) & set(outside))
         if not merged:
             continue                           # the page-12 figure is its own mention: not split here
+        # Only the company's own affirmative statement: its subject right before the reporting verb that the moved
+        # citations follow, and no denial or hedge in the clause (review of 1801ec5).
+        first = min(group.start() for group in groups if set(_split_refs(group.group(1))) & set(outside))
+        head = sentence[start:first]
+        verbs = [verb for verb in _REPORTING.finditer(head) if head[:verb.start()].count('(') == head[:verb.start()].count(')')]
+        if not verbs or not _OWN_SUBJECT_END.search(head[:verbs[-1].start()]):
+            continue
+        words = re.findall(r"[\w']+", _REF.sub(' ', sentence[start:match.start()]).lower())
+        if set(words) & _DENIAL or _TO_ESTABLISH.search(' '.join(words)) or _UNCERTAIN.search(' '.join(words)):
+            continue
         out, pos = sentence[:start], start
         for group in groups:
             keep = [ref for ref in _split_refs(group.group(1)) if ref not in outside]
