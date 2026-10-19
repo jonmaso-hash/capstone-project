@@ -1,0 +1,8 @@
+R3 CAUGHT Ran 302 tests in 10.980s FAILED (failures=1) restored=True | review 1801ec5: a reporting verb before the moved refs need not have the company as subject (re-anchored)
+    assertion failures in: test_hypotheses_narrators_denials_hedges_and_correct_dates_are_kept
+    errors in: -
+    failing sub-case: text="An analyst lists 500M messages [S2, S3] in a slide context headed 'Traction by Apr-16'."
+T6 SURVIVED Ran 302 tests in 10.797s OK restored=True | OF-903: a context phrase inside a non-context parenthesis is read
+    assertion failures in: -
+    errors in: -
+final sha matches pre-run: True 76b4e03f1cb69b4706a0e6bf702a2689b5ee736ed3ae91d787734e2e286f1ad0
