@@ -230,12 +230,17 @@ _CUMULATIVE_PAIR = re.compile(r"\b(?:[Tt])he\s+(?:(?P<cum1>cumulative)\s+(?:and|
                               r"(?:monthly|weekly|daily|yearly|annual)|(?:monthly|weekly|daily|yearly|annual)\s+"
                               r"(?:and|or|vs\.?|versus)\s+(?P<cum2>cumulative))\b")
 UNSPECIFIED_ADJECTIVE = 'unspecified-interval'
-# A fragment continuing the clause before a dash rather than starting one with its own subject: a participle
-# ("raising ..."), "or/and/nor/possibly/potentially/perhaps" + a predicate ("or inflated", "possibly inflated"),
-# "which ..."; never one naming a new subject ("— perhaps the deck is ...") (review of 750de3f).
-_CONTINUATION = re.compile(r"\s*(?:\w+ing\b|(?:or|and|nor|possibly|potentially|perhaps)\s+(?!(?:a|an|the|this|that|these|"
-                           r"those|it|its|they|their|he|she|we|i|you|management|investors?|analysts?)\b)|which\b)",
-                           re.I)
+# A fragment continuing the clause before a dash rather than starting one with its own subject. An allowlist, not a
+# list of subjects to refuse: a listed participle with the judgment as its object ("raising the possibility of
+# inflation", "suggesting possible inflation"), or "or/and/nor/which" and hedges straight into the judgment ("or
+# inflated", "possibly inflated", "which may be overstated"). Anything else ("— or Bob is wrong", "— marketing is
+# misleading", "— suggesting marketing is misleading") starts a new subject (reviews of 750de3f and 7fb484b).
+_JUDGMENT_WORD = r'(?:overstat\w*|inflat\w*|exaggerat\w*|mislead\w*|misrepresent\w*|incorrect\w*|erroneous\w*|wrong)\b'
+_CONTINUATION = re.compile(
+    r"\s*(?:(?:raising|suggesting|indicating|implying)\s+(?:the\s+(?:possibility|prospect|risk)\s+of\s+|"
+    r"(?:concerns?|questions?)\s+(?:of|about)\s+)?(?:(?:possible|potential|metric|usage)\s+)*" + _JUDGMENT_WORD + r"|"
+    r"(?:(?:or|and|nor|which)\s+)?(?:(?:may|might|could|be|is|are|were|was|possibly|potentially|perhaps|probably|"
+    r"likely|even|also)\s+)*" + _JUDGMENT_WORD + r")", re.I)
 # Words attributing a statement to someone ("According to an analyst, ...", "per an industry report", "X says ..."):
 # not the company's own statement (review of 750de3f).
 _ATTRIBUTION = re.compile(r"\b(?:according\s+to|per|as\s+(?:reported|stated|listed|cited|noted|described)\s+by|"
@@ -602,6 +607,27 @@ def _placing_head(sentence, start, clause, cited, facts, clarified):
     return sentence[:start] + clause[:len(clause) - len(clause.lstrip())] + 'the deck states '
 
 
+# The words that may lead the company's own figures into a clause with no reporting verb, besides the placing words
+# and the cited statements' own words: its own source named ("the deck's", "the self-reported") and the "taking ...
+# at face value" frame (memo 101's base scenario).
+_OWN_HEAD_WORDS = frozenset({'selfreported', 'company', "company's", 'deck', "deck's", 'pitch', 'presentation',
+                             "presentation's", 'founders', "founders'", 'founder', "founder's", 'management',
+                             "management's", 'taking', 'at', 'face', 'value'})
+
+
+def _own_head(head, cited, facts):
+    """Every word before the moved citations is the company's own source, a placing word, or a word or figure of the
+    cited statements: no other speaker ("An analyst describes the deck's ...", "An analyst's reading of ...") and no
+    aside. An allowlist, so an unlisted third party or verb keeps the sentence (review of 7fb484b)."""
+    if '(' in head or ')' in head:
+        return False
+    statements = [_DIGIT_GROUP.sub('', fact.lower()) for ref, *_, fact in facts.places if ref in cited]
+    vocabulary = (_PLACING_WORDS | _OWN_HEAD_WORDS | {word for fact in statements for word in re.findall(r'[a-z]+', fact)}
+                  | {form for fact in statements for form in _stated_forms(fact)})
+    text = re.sub(r'\bself-reported\b', 'selfreported', head[_LEAD.match(head).end():], flags=re.I)
+    return _plain_words(text, vocabulary)
+
+
 def _reporting_verb(clause):
     """The clause's first reporting verb outside parentheses ("the company states ...")."""
     for match in _REPORTING.finditer(clause):
@@ -698,6 +724,8 @@ def _context_aside(sentence, facts, changes):
             continue                           # attributed to someone else (review of 750de3f)
         if not verbs and not _OWN_SOURCE.search(clause):
             continue                           # no reporting verb and no own source named: whose statement is unknown
+        if not verbs and not _own_head(head, cited, facts):
+            continue                           # someone else's words before the figures (review of 7fb484b)
         words = re.findall(r"[\w']+", _REF.sub(' ', clause).lower())
         if set(words) & _DENIAL or _UNCERTAIN.search(' '.join(words)):
             continue
@@ -750,11 +778,24 @@ def _cumulative_presupposed(sentence, pair, facts, changes):
     def neutral(match):
         noun = _FIGURE_NOUN.match(sentence, match.end())
         pair_noun = next((p.noun for p in facts.pairs if p.noun), '')
-        if noun is None and not (pair_noun and re.match(rf'\s+{re.escape(pair_noun[:-1])}s?\b', sentence[match.end():], re.I)):
+        own_noun = rf'\b{re.escape(pair_noun[:-1])}s?\b' if pair_noun else None
+        if noun is None and not (own_noun and re.match(r'\s+' + own_noun, sentence[match.end():], re.I)):
             return match.group(0)            # another metric's phrase ("the cumulative and monthly revenue")
+        if noun is not None:
+            # A generic figure noun names no metric of its own: a qualifier after it must name the pair's noun
+            # ("figures for messages", "presentations of the 500M messages figure"), never anything else ("figures
+            # for revenue", "figures for bots"; review of 7fb484b).
+            after = sentence[noun.end():]
+            if re.match(r'\s+(?:for|of|on|about|in|from|across)\b', after, re.I) and not (own_noun and re.match(
+                    r'\s+\w+\s+(?:(?:the|a|an|these|those)\s+)?(?:[$\d][\w.,+/$]*\s+)?' + own_noun, after, re.I)):
+                return match.group(0)
         mine = owner(match)
         if mine is None or mine.cumulative_admitted:
             return match.group(0)
+        group = _REF.search(sentence, match.end())
+        if _OTHER_METRIC.search(sentence[_place_clause_start(sentence, match.start()):
+                                         group.start() if group else len(sentence)]):
+            return match.group(0)            # another metric named before the owning citation ("differ from revenue")
         hits.append(match.group(0))
         word = 'cum1' if match.group('cum1') else 'cum2'
         s, e = match.start(word) - match.start(), match.end(word) - match.start()

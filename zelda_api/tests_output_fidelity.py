@@ -2287,3 +2287,99 @@ class PipelineReview750de3fTests(TestCase):
         self.assertIn(BASE_101_AFTER, memo.base_scenario)
         self.assertIn(RISK_101_AFTER, memo.risk_assessment)
         self.assertIn(DOWN_101_AFTER, memo.downside_scenario)
+
+
+# --- review of 7fb484b / bbe0ec4: three ownership regressions -----------------------------------------------------
+#
+#     1  A new subject after a dash inherited the figures' referent: "— or Bob is wrong", "— marketing is misleading"
+#        (an unlisted subject after "or"; any word ending in "ing" counted as a participle).
+#     2  A generic figure noun took the pair's ownership for another metric: "The cumulative and monthly figures for
+#        revenue differ from message counts [C2, C3]."
+#     3  A third party's statement naming the deck was split: "An analyst describes the deck's 500M messages [S2, S3]
+#        in a slide context headed 'Traction by Apr-16'."
+
+REVIEW_7FB_KEPT = (
+    PAIR_LEAD + "These figures need clarification — or Bob is wrong.",
+    PAIR_LEAD + "These figures need clarification — marketing is misleading.",
+    PAIR_LEAD + "These figures need clarification — pricing is wrong.",
+    # A listed participle whose complement has its own subject.
+    PAIR_LEAD + "These figures need clarification — suggesting marketing is misleading.",
+    "The cumulative and monthly figures for revenue differ from message counts [C2, C3].",
+    # Controls that only one check keeps: a qualifier naming something other than the pair's noun; another metric
+    # named before the owning citation with no qualifier.
+    "The cumulative and monthly figures for bots differ [C2, C3].",
+    "The cumulative and monthly figures differ from revenue [C2, C3].",
+    "An analyst describes the deck's 500M messages [S2, S3] in a slide context headed 'Traction by Apr-16'.",
+    # No attribution marker and no reporting verb: only the head's own wording shows a third party.
+    "An analyst's reading of the deck's 500M messages [S2, S3] sits in a slide context headed 'Traction by Apr-16'.",
+)
+
+
+class Review7fb484bTests(SimpleTestCase):
+    """Through the complete normalisation -> time -> funding -> basis sequence on memo 101's payload."""
+
+    def setUp(self):
+        self.payload = memo101_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text):
+        out, changes = replay({'section': text}, self.items, self.notes)
+        return out['section'], changes.get('section', [])
+
+    def test_new_subjects_other_metrics_and_third_parties_are_kept(self):
+        for text in REVIEW_7FB_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_the_intended_repairs_still_happen(self):
+        cases = {
+            # A judgment continuing "these figures" after a dash: "or" + an adverb + the judgment.
+            PAIR_LEAD + "These figures need clarification — or possibly inflated.":
+                PAIR_LEAD + "These figures need clarification — " + CLARIFY + ".",
+            # A listed participle followed by the judgment of the figures themselves.
+            PAIR_LEAD + "These figures need clarification — suggesting possible inflation.":
+                PAIR_LEAD + "These figures need clarification — " + CLARIFY + ".",
+            # A qualifier naming the pair's own noun.
+            "The cumulative and monthly figures for messages [C2, C3] differ.":
+                "The unspecified-interval and monthly figures for messages [C2, C3] differ.",
+            # The deck's own figures, with no reporting verb.
+            "The deck's 500M messages [S2, S3] sit in a slide context headed 'Traction by Apr-16'.":
+                "The deck's 500M messages [S2] sit in a slide context headed 'Traction by Apr-16'; the deck separately "
+                "states 500M messages/month [S3] on page 12 (" + CLARIFY + ").",
+        }
+        for text, after in cases.items():
+            with self.subTest(text=text):
+                out, changes = self.full(text)
+                self.assertEqual(out, after)
+                self.assertTrue(changes, changes)
+
+
+class PipelineReview7fb484bTests(TestCase):
+    """The memo writer (intelligence_pipeline._generate_memo) keeps the three reviewed shapes and memo 101's repairs."""
+
+    def test_the_writer_keeps_them(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('review7fb_writer', password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo101_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items_from(payload)),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, _ = memo101()
+        sections = {'market_analysis': REVIEW_7FB_KEPT[0], 'team_assessment': REVIEW_7FB_KEPT[1],
+                    'problem_solution': REVIEW_7FB_KEPT[4], 'financial_analysis': REVIEW_7FB_KEPT[7]}
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw, **sections)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        for key, text in sections.items():
+            self.assertEqual(getattr(memo, key), text, key)
+        self.assertIn(BMA_101_AFTER, memo.business_model_analysis)
+        self.assertIn(BASE_101_AFTER, memo.base_scenario)
+        self.assertIn(RISK_101_AFTER, memo.risk_assessment)
+        self.assertIn(DOWN_101_AFTER, memo.downside_scenario)
