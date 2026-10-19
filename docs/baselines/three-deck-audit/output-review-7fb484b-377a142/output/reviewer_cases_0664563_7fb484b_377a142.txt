@@ -1,0 +1,85 @@
+
+===== basis guard at 0664563
+ 1 [reviewer] UNCHANGED []
+   IN | - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — or Bob is wrong.
+ 2 [reviewer] UNCHANGED []
+   IN | - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — marketing is misleading.
+ 3 [reviewer] UNCHANGED []
+   IN | The cumulative and monthly figures for revenue differ from message counts [C2, C3].
+ 4 [reviewer] UNCHANGED []
+   IN | An analyst describes the deck's 500M messages [S2, S3] in a slide context headed 'Traction by Apr-16'.
+ 5 [control] UNCHANGED []
+   IN | - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — pricing is wrong.
+ 6 [control] UNCHANGED []
+   IN | - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — suggesting marketing is misleading.
+ 7 [control] UNCHANGED []
+   IN | The cumulative and monthly figures for bots differ [C2, C3].
+ 8 [control] UNCHANGED []
+   IN | The cumulative and monthly figures differ from revenue [C2, C3].
+ 9 [control] UNCHANGED []
+   IN | An analyst's reading of the deck's 500M messages [S2, S3] sits in a slide context headed 'Traction by Apr-16'.
+10 [control] UNCHANGED []
+   IN | The company states 500M messages [S2, S3] from the Pitch Deck Hunt copy in a slide context headed 'Traction by Apr-16'.
+11 [control] UNCHANGED []
+   IN | The self-reported 500M messages [S2, S3], an analyst says, sit in a slide context headed 'Traction by Apr-16'.
+12 [control] UNCHANGED []
+   IN | The cumulative and monthly bots [C2, C3] differ.
+===== basis guard at 7fb484b
+ 1 [reviewer] CHANGED ['basis_referent_judgment']
+   IN | - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — or Bob is wrong.
+   OUT| - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on.
+ 2 [reviewer] CHANGED ['basis_referent_judgment']
+   IN | - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — marketing is misleading.
+   OUT| - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on.
+ 3 [reviewer] CHANGED ['basis_cumulative_presupposed']
+   IN | The cumulative and monthly figures for revenue differ from message counts [C2, C3].
+   OUT| The unspecified-interval and monthly figures for revenue differ from message counts [C2, C3].
+ 4 [reviewer] CHANGED ['basis_source_context']
+   IN | An analyst describes the deck's 500M messages [S2, S3] in a slide context headed 'Traction by Apr-16'.
+   OUT| An analyst describes the deck's 500M messages [S2] in a slide context headed 'Traction by Apr-16'; the deck separately states 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).
+ 5 [control] CHANGED ['basis_referent_judgment']
+   IN | - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — pricing is wrong.
+   OUT| - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on.
+ 6 [control] CHANGED ['basis_referent_judgment']
+   IN | - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — suggesting marketing is misleading.
+   OUT| - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on.
+ 7 [control] CHANGED ['basis_cumulative_presupposed']
+   IN | The cumulative and monthly figures for bots differ [C2, C3].
+   OUT| The unspecified-interval and monthly figures for bots differ [C2, C3].
+ 8 [control] CHANGED ['basis_cumulative_presupposed']
+   IN | The cumulative and monthly figures differ from revenue [C2, C3].
+   OUT| The unspecified-interval and monthly figures differ from revenue [C2, C3].
+ 9 [control] CHANGED ['basis_source_context']
+   IN | An analyst's reading of the deck's 500M messages [S2, S3] sits in a slide context headed 'Traction by Apr-16'.
+   OUT| An analyst's reading of the deck's 500M messages [S2] sits in a slide context headed 'Traction by Apr-16'; the deck separately states 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).
+10 [control] UNCHANGED []
+   IN | The company states 500M messages [S2, S3] from the Pitch Deck Hunt copy in a slide context headed 'Traction by Apr-16'.
+11 [control] UNCHANGED []
+   IN | The self-reported 500M messages [S2, S3], an analyst says, sit in a slide context headed 'Traction by Apr-16'.
+12 [control] UNCHANGED []
+   IN | The cumulative and monthly bots [C2, C3] differ.
+===== basis guard at 377a142 (working tree)
+ 1 [reviewer] UNCHANGED []
+   IN | - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — or Bob is wrong.
+ 2 [reviewer] UNCHANGED []
+   IN | - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — marketing is misleading.
+ 3 [reviewer] UNCHANGED []
+   IN | The cumulative and monthly figures for revenue differ from message counts [C2, C3].
+ 4 [reviewer] UNCHANGED []
+   IN | An analyst describes the deck's 500M messages [S2, S3] in a slide context headed 'Traction by Apr-16'.
+ 5 [control] UNCHANGED []
+   IN | - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — pricing is wrong.
+ 6 [control] UNCHANGED []
+   IN | - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — suggesting marketing is misleading.
+ 7 [control] UNCHANGED []
+   IN | The cumulative and monthly figures for bots differ [C2, C3].
+ 8 [control] UNCHANGED []
+   IN | The cumulative and monthly figures differ from revenue [C2, C3].
+ 9 [control] UNCHANGED []
+   IN | An analyst's reading of the deck's 500M messages [S2, S3] sits in a slide context headed 'Traction by Apr-16'.
+10 [control] UNCHANGED []
+   IN | The company states 500M messages [S2, S3] from the Pitch Deck Hunt copy in a slide context headed 'Traction by Apr-16'.
+11 [control] UNCHANGED []
+   IN | The self-reported 500M messages [S2, S3], an analyst says, sit in a slide context headed 'Traction by Apr-16'.
+12 [control] UNCHANGED []
+   IN | The cumulative and monthly bots [C2, C3] differ.

@@ -1,0 +1,7 @@
+head=377a142 (exit codes are the manage.py process's, not a pipe's)
+$ manage.py check
+exit=0
+System check identified no issues (0 silenced).
+$ manage.py makemigrations --check --dry-run
+exit=0
+No changes detected

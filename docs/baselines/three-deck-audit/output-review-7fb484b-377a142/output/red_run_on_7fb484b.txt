@@ -1,0 +1,238 @@
+head=9c52ba4 application=7fb484b (basis_fidelity.py unchanged since: yes)
+2026-10-19 02:55:55,840 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-19 02:56:51,093 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-19 02:56:51,124 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-19 02:56:51,175 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-19 02:56:51,179 INFO zelda_api.intelligence_pipeline - Memo market_analysis: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-19 02:56:51,180 INFO zelda_api.intelligence_pipeline - Memo team_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-19 02:56:51,181 INFO zelda_api.intelligence_pipeline - Memo financial_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-19 02:56:51,182 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-19 02:56:51,184 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-19 02:56:51,189 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-19 02:56:51,189 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-19 02:56:51,217 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+FFFFFFFFFF.
+======================================================================
+FAIL: test_the_writer_keeps_them (zelda_api.tests_output_fidelity.PipelineReview7fb484bTests.test_the_writer_keeps_them)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2381, in test_the_writer_keeps_them
+    self.assertEqual(getattr(memo, key), text, key)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '- Th[115 chars]on — how the figure stated without an explicit[83 chars] on.' != '- Th[115 chars]on — or Bob is wrong.'
+- - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on.
++ - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — or Bob is wrong.
+ : market_analysis
+
+======================================================================
+FAIL: test_new_subjects_other_metrics_and_third_parties_are_kept (zelda_api.tests_output_fidelity.Review7fb484bTests.test_new_subjects_other_metrics_and_third_parties_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — or Bob is wrong.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2332, in test_new_subjects_other_metrics_and_third_parties_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[116 chars]on — how the figure stated without an explicit[113 chars]nt']) != ('- T[116 chars]on — or Bob is wrong.', [])
+
+First differing element 0:
+'- Th[115 chars]on — how the figure stated without an explicit[83 chars] on.'
+'- Th[115 chars]on — or Bob is wrong.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. These figures need clarification — or Bob is wrong.',
++  [])
+-  'on page 12. These figures need clarification — how the figure stated without '
+-  'an explicit interval relates to the monthly figure needs clarification '
+-  'before either is relied on.',
+-  ['basis_referent_judgment'])
+
+======================================================================
+FAIL: test_new_subjects_other_metrics_and_third_parties_are_kept (zelda_api.tests_output_fidelity.Review7fb484bTests.test_new_subjects_other_metrics_and_third_parties_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — marketing is misleading.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2332, in test_new_subjects_other_metrics_and_third_parties_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[116 chars]on — how the figure stated without an explicit[113 chars]nt']) != ('- T[116 chars]on — marketing is misleading.', [])
+
+First differing element 0:
+'- Th[115 chars]on — how the figure stated without an explicit[83 chars] on.'
+'- Th[115 chars]on — marketing is misleading.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. These figures need clarification — marketing is misleading.',
++  [])
+-  'on page 12. These figures need clarification — how the figure stated without '
+-  'an explicit interval relates to the monthly figure needs clarification '
+-  'before either is relied on.',
+-  ['basis_referent_judgment'])
+
+======================================================================
+FAIL: test_new_subjects_other_metrics_and_third_parties_are_kept (zelda_api.tests_output_fidelity.Review7fb484bTests.test_new_subjects_other_metrics_and_third_parties_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — pricing is wrong.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2332, in test_new_subjects_other_metrics_and_third_parties_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[116 chars]on — how the figure stated without an explicit[113 chars]nt']) != ('- T[116 chars]on — pricing is wrong.', [])
+
+First differing element 0:
+'- Th[115 chars]on — how the figure stated without an explicit[83 chars] on.'
+'- Th[115 chars]on — pricing is wrong.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. These figures need clarification — pricing is wrong.',
++  [])
+-  'on page 12. These figures need clarification — how the figure stated without '
+-  'an explicit interval relates to the monthly figure needs clarification '
+-  'before either is relied on.',
+-  ['basis_referent_judgment'])
+
+======================================================================
+FAIL: test_new_subjects_other_metrics_and_third_parties_are_kept (zelda_api.tests_output_fidelity.Review7fb484bTests.test_new_subjects_other_metrics_and_third_parties_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — suggesting marketing is misleading.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2332, in test_new_subjects_other_metrics_and_third_parties_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[116 chars]on — how the figure stated without an explicit[113 chars]nt']) != ('- T[116 chars]on — suggesting marketing is misleading.', [])
+
+First differing element 0:
+'- Th[115 chars]on — how the figure stated without an explicit[83 chars] on.'
+'- Th[115 chars]on — suggesting marketing is misleading.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. These figures need clarification — suggesting marketing is '
++  'misleading.',
++  [])
+-  'on page 12. These figures need clarification — how the figure stated without '
+-  'an explicit interval relates to the monthly figure needs clarification '
+-  'before either is relied on.',
+-  ['basis_referent_judgment'])
+
+======================================================================
+FAIL: test_new_subjects_other_metrics_and_third_parties_are_kept (zelda_api.tests_output_fidelity.Review7fb484bTests.test_new_subjects_other_metrics_and_third_parties_are_kept) (text='The cumulative and monthly figures for revenue differ from message counts [C2, C3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2332, in test_new_subjects_other_metrics_and_third_parties_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('The unspecified-interval and monthly figures [79 chars]ed']) != ('The cumulative and monthly figures for revenu[39 chars], [])
+
+First differing element 0:
+'The unspecified-interval and monthly figures [44 chars]C3].'
+'The cumulative and monthly figures for revenu[34 chars]C3].'
+
+- ('The unspecified-interval and monthly figures for revenue differ from message '
+?        ^^^ ---------------
+
++ ('The cumulative and monthly figures for revenue differ from message counts '
+?       + ^^^^^^^                                                      +++++++
+
+-  'counts [C2, C3].',
+?   -------
+
++  '[C2, C3].',
+-  ['basis_cumulative_presupposed'])
++  [])
+
+======================================================================
+FAIL: test_new_subjects_other_metrics_and_third_parties_are_kept (zelda_api.tests_output_fidelity.Review7fb484bTests.test_new_subjects_other_metrics_and_third_parties_are_kept) (text='The cumulative and monthly figures for bots differ [C2, C3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2332, in test_new_subjects_other_metrics_and_third_parties_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('The unspecified-interval and monthly figures [56 chars]ed']) != ('The cumulative and monthly figures for bots d[16 chars], [])
+
+First differing element 0:
+'The unspecified-interval and monthly figures for bots differ [C2, C3].'
+'The cumulative and monthly figures for bots differ [C2, C3].'
+
+- ('The unspecified-interval and monthly figures for bots differ [C2, C3].',
+?        ^^^ ---------------
+
++ ('The cumulative and monthly figures for bots differ [C2, C3].', [])
+?       + ^^^^^^^                                                 ++++
+
+-  ['basis_cumulative_presupposed'])
+
+======================================================================
+FAIL: test_new_subjects_other_metrics_and_third_parties_are_kept (zelda_api.tests_output_fidelity.Review7fb484bTests.test_new_subjects_other_metrics_and_third_parties_are_kept) (text='The cumulative and monthly figures differ from revenue [C2, C3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2332, in test_new_subjects_other_metrics_and_third_parties_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('The unspecified-interval and monthly figures [60 chars]ed']) != ('The cumulative and monthly figures differ fro[20 chars], [])
+
+First differing element 0:
+'The unspecified-interval and monthly figures differ from revenue [C2, C3].'
+'The cumulative and monthly figures differ from revenue [C2, C3].'
+
+- ('The unspecified-interval and monthly figures differ from revenue [C2, C3].',
+?        ^^^ ---------------
+
++ ('The cumulative and monthly figures differ from revenue [C2, C3].', [])
+?       + ^^^^^^^                                                     ++++
+
+-  ['basis_cumulative_presupposed'])
+
+======================================================================
+FAIL: test_new_subjects_other_metrics_and_third_parties_are_kept (zelda_api.tests_output_fidelity.Review7fb484bTests.test_new_subjects_other_metrics_and_third_parties_are_kept) (text="An analyst describes the deck's 500M messages [S2, S3] in a slide context headed 'Traction by Apr-16'.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2332, in test_new_subjects_other_metrics_and_third_parties_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("An [41 chars]s [S2] in a slide context headed 'Traction by [225 chars]xt']) != ("An [41 chars]s [S2, S3] in a slide context headed 'Traction[13 chars], [])
+
+First differing element 0:
+"An a[40 chars]s [S2] in a slide context headed 'Traction by [198 chars]on)."
+"An a[40 chars]s [S2, S3] in a slide context headed 'Traction by Apr-16'."
+
+- ("An analyst describes the deck's 500M messages [S2] in a slide context headed "
+?                                                                         -------
+
++ ("An analyst describes the deck's 500M messages [S2, S3] in a slide context "
+?                                                    ++++
+
++  "headed 'Traction by Apr-16'.",
++  [])
+-  "'Traction by Apr-16'; the deck separately states 500M messages/month [S3] on "
+-  'page 12 (how the figure stated without an explicit interval relates to the '
+-  'monthly figure needs clarification before either is relied on).',
+-  ['basis_source_context'])
+
+======================================================================
+FAIL: test_new_subjects_other_metrics_and_third_parties_are_kept (zelda_api.tests_output_fidelity.Review7fb484bTests.test_new_subjects_other_metrics_and_third_parties_are_kept) (text="An analyst's reading of the deck's 500M messages [S2, S3] sits in a slide context headed 'Traction by Apr-16'.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2332, in test_new_subjects_other_metrics_and_third_parties_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("An [44 chars]s [S2] sits in a slide context headed 'Tractio[230 chars]xt']) != ("An [44 chars]s [S2, S3] sits in a slide context headed 'Tra[18 chars], [])
+
+First differing element 0:
+"An a[43 chars]s [S2] sits in a slide context headed 'Tractio[203 chars]on)."
+"An a[43 chars]s [S2, S3] sits in a slide context headed 'Tra[13 chars]16'."
+
+- ("An analyst's reading of the deck's 500M messages [S2] sits in a slide "
++ ("An analyst's reading of the deck's 500M messages [S2, S3] sits in a slide "
+?                                                       ++++
+
++  "context headed 'Traction by Apr-16'.",
++  [])
+-  "context headed 'Traction by Apr-16'; the deck separately states 500M "
+-  'messages/month [S3] on page 12 (how the figure stated without an explicit '
+-  'interval relates to the monthly figure needs clarification before either is '
+-  'relied on).',
+-  ['basis_source_context'])
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.173s
+
+FAILED (failures=10)
+Destroying test database for alias 'default'...
+Found 3 test(s).
+System check identified no issues (0 silenced).
