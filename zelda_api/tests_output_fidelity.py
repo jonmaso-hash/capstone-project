@@ -2316,6 +2316,11 @@ REVIEW_7FB_KEPT = (
     # narrator control is now also kept by the own-head allowlist).
     "The company states 500M messages [S2, S3] from the Pitch Deck Hunt copy in a slide context headed 'Traction by "
     "Apr-16'.",
+    # An attribution after the citations, with the company's own words before them: kept by the attribution check
+    # alone (", in short," in its place is split). The phrase's own noun is neither a figure noun nor the pair's
+    # noun, and no listed metric: kept by the figure-noun check alone ("monthly messages" is rewritten).
+    "The self-reported 500M messages [S2, S3], an analyst says, sit in a slide context headed 'Traction by Apr-16'.",
+    "The cumulative and monthly bots [C2, C3] differ.",
 )
 
 
