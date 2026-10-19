@@ -1,0 +1,192 @@
+V1 CAUGHT Ran 305 tests in 11.038s FAILED (failures=4) restored=True | review 750de3f: a denial before the referent does not cover the chain
+    assertion failures in: test_a_cited_referent_judgment_keeps_its_protections, test_denials_new_subjects_other_metrics_and_third_parties_are_kept, test_the_writer_keeps_the_protections, test_unresolved_or_supported_judgments_are_kept
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Nothing in the deck suggests that these figures, taken together on both pages, are wrong — or inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Nothing shows that one or both figures misrepresent actual activity.'
+V2 CAUGHT Ran 305 tests in 10.945s FAILED (failures=1) restored=True | review 750de3f: a denied judgment does not cover the judgments coordinated with it
+    assertion failures in: test_denials_new_subjects_other_metrics_and_third_parties_are_kept
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures are not wrong — or inflated.'
+V3 CAUGHT Ran 305 tests in 11.095s FAILED (failures=4) restored=True | review 750de3f: a dash carries the referent into a part with its own subject
+    assertion failures in: test_denials_new_subjects_other_metrics_and_third_parties_are_kept, test_the_writer_keeps_them
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — an analyst is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — and the analyst is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — perhaps the deck is inflating usage.'
+V4 CAUGHT Ran 305 tests in 11.283s FAILED (failures=2) restored=True | review 750de3f: the continuation fragment needs no new-subject check
+    assertion failures in: test_denials_new_subjects_other_metrics_and_third_parties_are_kept
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — and the analyst is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — perhaps the deck is inflating usage.'
+V5 CAUGHT Ran 305 tests in 11.161s FAILED (failures=1) restored=True | review 750de3f: coordinated judgments each get a clarification
+    assertion failures in: test_the_intended_repairs_still_happen
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures are wrong — or inflated.'
+final sha matches pre-run: True cd1263d9453c29dbeb88006b0224bf2fd9ec42269bf50f98aaa783446259db57
+V6 CAUGHT Ran 305 tests in 11.457s FAILED (failures=1) restored=True | review 750de3f: an attribution to someone else does not keep the citations
+    assertion failures in: test_denials_new_subjects_other_metrics_and_third_parties_are_kept
+    errors in: -
+    failing sub-case: text="According to an analyst, the self-reported 500M messages [S2, S3] sit in a slide context headed 'Traction by Apr-16'."
+V7 CAUGHT Ran 305 tests in 11.071s FAILED (failures=1) restored=True | review 750de3f: without a reporting verb, no own source need be named
+    assertion failures in: test_denials_new_subjects_other_metrics_and_third_parties_are_kept
+    errors in: -
+    failing sub-case: text="500M messages [S2, S3] sit in a slide context headed 'Traction by Apr-16'."
+V8 CAUGHT Ran 305 tests in 11.140s FAILED (failures=1) restored=True | review 750de3f: the cumulative phrase need not be about a figure noun
+    assertion failures in: test_denials_new_subjects_other_metrics_and_third_parties_are_kept
+    errors in: -
+    failing sub-case: text='The cumulative and monthly revenue [C2, C3] differ.'
+V9 CAUGHT Ran 305 tests in 11.099s FAILED (failures=1) restored=True | review 750de3f: a later citation owns the phrase across a clause connector
+    assertion failures in: test_denials_new_subjects_other_metrics_and_third_parties_are_kept
+    errors in: -
+    failing sub-case: text='The cumulative and monthly figures differ while the message counts remain ambiguous [C2, C3].'
+final sha matches pre-run: True cd1263d9453c29dbeb88006b0224bf2fd9ec42269bf50f98aaa783446259db57
+T1 CAUGHT Ran 305 tests in 11.227s FAILED (failures=10) restored=True | OF-903/904: context phrases outside parentheses are not read
+    assertion failures in: test_of903_page_12_does_not_share_page_10_s_context, test_of904_the_asserted_base_date_is_page_10_s_alone, test_only_the_expected_rules_fired, test_shared_context_is_split_by_source, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs, test_the_writer_keeps_them
+    errors in: -
+    failing sub-case: text="- The company states 500M messages [S2, S3] in a slide context headed 'Traction by Apr-16'."
+    failing sub-case: text="Taking the self-reported figures at face value [S2, S3], the platform had scale by the period referenced in the 'Traction by Apr-16' slide context."
+    failing sub-case: text="The company states 500M messages (an ambiguity between a total and a monthly rate [S2, S3]) in a slide context headed 'Traction by Apr-16'."
+    failing sub-case: text="The self-reported figures [S2, S3] date to the period referenced in the 'Traction by Apr-16' slide context."
+T2 SURVIVED Ran 305 tests in 11.159s OK restored=True | OF-903/904: the fact is placed even mid-clause
+    assertion failures in: -
+    errors in: -
+T3 CAUGHT Ran 305 tests in 11.089s FAILED (failures=1) restored=True | OF-903/904: a narrator named in the clause does not keep it
+    assertion failures in: test_hypotheses_narrators_denials_hedges_and_correct_dates_are_kept
+    errors in: -
+    failing sub-case: text="Pitch Deck Hunt's listing of 500M messages [S2, S3] sits in the 'Traction by Apr-16' slide context."
+T4 CAUGHT Ran 305 tests in 11.022s FAILED (failures=7) restored=True | OF-904: "self-reported" is read as a reporting verb
+    assertion failures in: test_of904_the_asserted_base_date_is_page_10_s_alone, test_only_the_expected_rules_fired, test_shared_context_is_split_by_source, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs, test_the_writer_keeps_them
+    errors in: -
+    failing sub-case: text="Taking the self-reported figures at face value [S2, S3], the platform had scale by the period referenced in the 'Traction by Apr-16' slide context."
+    failing sub-case: text="The self-reported figures [S2, S3] date to the period referenced in the 'Traction by Apr-16' slide context."
+T5 CAUGHT Ran 305 tests in 11.215s FAILED (failures=6) restored=True | OF-904: without a reporting verb the fact still follows as "and separately"
+    assertion failures in: test_of904_the_asserted_base_date_is_page_10_s_alone, test_shared_context_is_split_by_source, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs, test_the_writer_keeps_them
+    errors in: -
+    failing sub-case: text="Taking the self-reported figures at face value [S2, S3], the platform had scale by the period referenced in the 'Traction by Apr-16' slide context."
+    failing sub-case: text="The self-reported figures [S2, S3] date to the period referenced in the 'Traction by Apr-16' slide context."
+T6 CAUGHT Ran 305 tests in 11.229s FAILED (failures=1) restored=True | OF-903: a context phrase inside a non-context parenthesis is read
+    assertion failures in: test_hypotheses_narrators_denials_hedges_and_correct_dates_are_kept
+    errors in: -
+    failing sub-case: text="- The self-reported 500M messages [S2, S3] (within the 'Traction by Apr-16' slide context)"
+final sha matches pre-run: True cd1263d9453c29dbeb88006b0224bf2fd9ec42269bf50f98aaa783446259db57
+T7 CAUGHT Ran 305 tests in 11.119s FAILED (failures=8) restored=True | OF-905: "these figures" does not continue the item's pair
+    assertion failures in: test_of905_these_figures_continue_the_basis_item, test_only_the_expected_rules_fired, test_the_intended_repairs_still_happen, test_the_judgment_after_these_figures_becomes_the_clarification, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs, test_the_writer_keeps_them
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures are wrong — or inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — possibly inflated.'
+T8 CAUGHT Ran 305 tests in 10.946s FAILED (failures=9) restored=True | OF-905: a dash does not separate segments
+    assertion failures in: test_denials_new_subjects_other_metrics_and_third_parties_are_kept, test_of905_these_figures_continue_the_basis_item, test_the_intended_repairs_still_happen, test_the_judgment_after_these_figures_becomes_the_clarification, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs, test_the_writer_keeps_them
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — an analyst is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — and the analyst is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — perhaps the deck is inflating usage.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — possibly inflated.'
+T9 CAUGHT Ran 305 tests in 11.259s FAILED (failures=1) restored=True | OF-905: an independent ";" clause inherits the referent (re-anchored)
+    assertion failures in: test_denials_new_subjects_other_metrics_and_third_parties_are_kept
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification; possibly inflated.'
+T10 CAUGHT Ran 305 tests in 11.004s FAILED (failures=8) restored=True | OF-906: the cumulative-presupposition rule is not applied
+    assertion failures in: test_of906_page_10_is_not_presupposed_cumulative, test_only_the_expected_rules_fired, test_the_intended_repairs_still_happen, test_the_presupposed_cumulative_side_is_the_unspecified_interval, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs, test_the_writer_keeps_them
+    errors in: -
+    failing sub-case: text='If the cumulative and monthly figures [C2, C3] diverge, usage is unclear.'
+    failing sub-case: text='If the gap between the cumulative and monthly presentations [C2, C3] is real, usage is unclear.'
+    failing sub-case: text='The monthly and cumulative figures [C2, C3] differ in basis.'
+T11 CAUGHT Ran 305 tests in 11.126s FAILED (failures=1) restored=True | OF-906: an admitted cumulative side is neutralised too
+    assertion failures in: test_hypotheses_alternatives_questions_and_supported_cumulative_are_kept
+    errors in: -
+T12 CAUGHT Ran 305 tests in 11.087s FAILED (failures=6) restored=True | OF-906: the phrase's own citation group is ignored (only the sentence's pair; re-anchored)
+    assertion failures in: test_denials_new_subjects_other_metrics_and_third_parties_are_kept, test_of906_page_10_is_not_presupposed_cumulative, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs, test_the_writer_keeps_them
+    errors in: -
+    failing sub-case: text='The cumulative and monthly figures differ while the message counts remain ambiguous [C2, C3].'
+final sha matches pre-run: True cd1263d9453c29dbeb88006b0224bf2fd9ec42269bf50f98aaa783446259db57
+R1 CAUGHT Ran 305 tests in 11.129s FAILED (failures=9) restored=True | review 1801ec5: the judgment rule does not leave a referent-governed judgment to its own rule
+    assertion failures in: test_a_cited_referent_judgment_keeps_its_protections, test_an_undefended_cited_referent_judgment_is_still_replaced, test_of905_these_figures_continue_the_basis_item, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs, test_the_writer_keeps_a_contradicted_pair_s_judgment, test_the_writer_keeps_the_protections, test_the_writer_keeps_them
+    errors in: -
+R2 CAUGHT Ran 305 tests in 11.048s FAILED (failures=1) restored=True | review 1801ec5: one governed judging segment is enough to bypass the judgment rule (re-anchored)
+    assertion failures in: test_a_judgment_not_only_about_one_or_both_figures_stays_with_the_judgment_rule
+    errors in: -
+R3 CAUGHT Ran 305 tests in 11.050s FAILED (failures=1) restored=True | review 1801ec5: a reporting verb before the moved refs need not have the company as subject
+    assertion failures in: test_hypotheses_narrators_denials_hedges_and_correct_dates_are_kept
+    errors in: -
+    failing sub-case: text="An analyst lists 500M messages [S2, S3] in a slide context headed 'Traction by Apr-16'."
+R5 CAUGHT Ran 305 tests in 11.062s FAILED (failures=2) restored=True | review 1801ec5: a denial in the clause does not keep the citations
+    assertion failures in: test_a_denied_narrated_or_uncertain_statement_keeps_its_citations, test_hypotheses_narrators_denials_hedges_and_correct_dates_are_kept
+    errors in: -
+    failing sub-case: text="The company states that it has not verified 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16')."
+    failing sub-case: text="The deck does not place 500M messages [S2, S3] in the 'Traction by Apr-16' slide context."
+R6 CAUGHT Ran 305 tests in 11.056s FAILED (failures=1) restored=True | review 1801ec5: a hedge in the clause does not keep the citations
+    assertion failures in: test_a_denied_narrated_or_uncertain_statement_keeps_its_citations
+    errors in: -
+    failing sub-case: text="The company states what may be 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16')."
+T13 CAUGHT Ran 305 tests in 11.099s FAILED (failures=1) restored=True | OF-906: a question is neutralised too
+    assertion failures in: test_hypotheses_alternatives_questions_and_supported_cumulative_are_kept
+    errors in: -
+    failing sub-case: text='Is the gap between the cumulative and monthly presentations real [C2, C3]?'
+final sha matches pre-run: True cd1263d9453c29dbeb88006b0224bf2fd9ec42269bf50f98aaa783446259db57
+Q1 CAUGHT Ran 305 tests in 11.041s FAILED (failures=14) restored=True | OF-806: "one or both figures" does not continue the item's pair
+    assertion failures in: test_of806_the_judgment_becomes_the_pair_clarification, test_of905_these_figures_continue_the_basis_item, test_only_the_expected_rules_fired, test_the_intended_repairs_still_happen, test_the_judgment_after_these_figures_becomes_the_clarification, test_the_judgment_clause_becomes_the_clarification, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs, test_the_writer_keeps_the_protections, test_the_writer_keeps_them
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures are wrong — or inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — possibly inflated.'
+Q2 CAUGHT Ran 305 tests in 11.235s FAILED (failures=16) restored=True | OF-806: the referent-judgment rule is not applied
+    assertion failures in: test_a_cited_referent_judgment_keeps_its_protections, test_an_undefended_cited_referent_judgment_is_still_replaced, test_of806_the_judgment_becomes_the_pair_clarification, test_of905_these_figures_continue_the_basis_item, test_only_the_expected_rules_fired, test_the_intended_repairs_still_happen, test_the_judgment_after_these_figures_becomes_the_clarification, test_the_judgment_clause_becomes_the_clarification, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs, test_the_writer_keeps_the_protections, test_the_writer_keeps_them
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures are wrong — or inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — possibly inflated.'
+Q3 CAUGHT Ran 305 tests in 11.105s FAILED (failures=4) restored=True | OF-806: a pair with a CONTRADICTED member is neutralised too
+    assertion failures in: test_a_cited_referent_judgment_keeps_its_protections, test_a_contradicted_pair_keeps_the_judgment, test_the_writer_keeps_a_contradicted_pair_s_judgment
+    errors in: -
+Q5 CAUGHT Ran 305 tests in 11.153s FAILED (failures=19) restored=True | OF-806: the whole sentence is replaced, not only the judging segment
+    assertion failures in: test_a_cited_referent_judgment_keeps_its_protections, test_a_judgment_not_only_about_one_or_both_figures_stays_with_the_judgment_rule, test_denials_new_subjects_other_metrics_and_third_parties_are_kept, test_of806_the_judgment_becomes_the_pair_clarification, test_of905_these_figures_continue_the_basis_item, test_only_the_expected_rules_fired, test_the_intended_repairs_still_happen, test_the_judgment_after_these_figures_becomes_the_clarification, test_the_judgment_clause_becomes_the_clarification, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs, test_the_writer_keeps_the_protections, test_the_writer_keeps_them, test_unresolved_unsupported_or_independent_cases_are_kept
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — an analyst is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — and the analyst is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — perhaps the deck is inflating usage.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — possibly inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification; possibly inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification; the deck may be inflating usage.'
+Q6 CAUGHT Ran 305 tests in 11.111s FAILED (failures=18) restored=True | OF-805: the context rule is not applied
+    assertion failures in: test_of805_each_message_figure_keeps_its_own_page_and_context, test_of903_page_12_does_not_share_page_10_s_context, test_of904_the_asserted_base_date_is_page_10_s_alone, test_only_the_expected_rules_fired, test_shared_context_is_split_by_source, test_the_company_s_own_affirmative_statement_is_still_split, test_the_following_clause_and_its_qualifications_are_kept, test_the_merged_figure_is_split_by_source, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs, test_the_writer_keeps_the_protections, test_the_writer_keeps_them
+    errors in: -
+    failing sub-case: text="- The company states 500M messages [S2, S3] in a slide context headed 'Traction by Apr-16'."
+    failing sub-case: text="Taking the self-reported figures at face value [S2, S3], the platform had scale by the period referenced in the 'Traction by Apr-16' slide context."
+    failing sub-case: text="The company states 500M messages (an ambiguity between a total and a monthly rate [S2, S3]) in a slide context headed 'Traction by Apr-16'."
+    failing sub-case: text="The self-reported figures [S2, S3] date to the period referenced in the 'Traction by Apr-16' slide context."
+Q7 CAUGHT Ran 305 tests in 11.112s FAILED (failures=1) restored=True | OF-805: a condition does not keep the sentence
+    assertion failures in: test_a_denied_narrated_or_uncertain_statement_keeps_its_citations
+    errors in: -
+    failing sub-case: text="The company states, if the slide is read as one figure, 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16')."
+final sha matches pre-run: True cd1263d9453c29dbeb88006b0224bf2fd9ec42269bf50f98aaa783446259db57
+Q8 CAUGHT Ran 305 tests in 11.055s FAILED (failures=1) restored=True | OF-805: a narrated moved ref is moved anyway
+    assertion failures in: test_a_narrated_figure_is_kept
+    errors in: -
+Q9 CAUGHT Ran 305 tests in 11.091s FAILED (failures=1) restored=True | OF-805: a page-12 ref not sharing its mention with the page-10 side is moved too
+    assertion failures in: test_correctly_separated_or_unrelated_wording_is_kept
+    errors in: -
+    failing sub-case: text="The deck lists 500M messages [S2] and 500M messages/month [S3] (in a slide context headed 'Traction by Apr-16')."
+Q10 CAUGHT Ran 305 tests in 10.981s FAILED (failures=14) restored=True | OF-805: the pair clarification is not added after the moved fact
+    assertion failures in: test_of805_each_message_figure_keeps_its_own_page_and_context, test_of903_page_12_does_not_share_page_10_s_context, test_of904_the_asserted_base_date_is_page_10_s_alone, test_shared_context_is_split_by_source, test_the_merged_figure_is_split_by_source, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs, test_the_writer_keeps_the_protections, test_the_writer_keeps_them
+    errors in: -
+    failing sub-case: text="- The company states 500M messages [S2, S3] in a slide context headed 'Traction by Apr-16'."
+    failing sub-case: text="Taking the self-reported figures at face value [S2, S3], the platform had scale by the period referenced in the 'Traction by Apr-16' slide context."
+    failing sub-case: text="The company states 500M messages (an ambiguity between a total and a monthly rate [S2, S3]) in a slide context headed 'Traction by Apr-16'."
+    failing sub-case: text="The self-reported figures [S2, S3] date to the period referenced in the 'Traction by Apr-16' slide context."
+Q11 CAUGHT Ran 305 tests in 11.162s FAILED (failures=5) restored=True | OF-807: the condition-attribution rule is not applied
+    assertion failures in: test_of807_the_conditions_stay_hypotheses, test_only_the_expected_rules_fired, test_the_conditions_are_not_company_statements, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+Q12 CAUGHT Ran 305 tests in 11.119s FAILED (failures=1) restored=True | OF-807: conditions the cited statements do state are rewritten too
+    assertion failures in: test_supported_unresolved_or_other_wording_is_kept
+    errors in: -
+Q13 CAUGHT Ran 305 tests in 10.864s FAILED (failures=1) restored=True | OF-807: any sentence before counts as setting conditions
+    assertion failures in: test_supported_unresolved_or_other_wording_is_kept
+    errors in: -
+    failing sub-case: text='The bots [S1] reflect active, paying customers. These conditions are stated by the company [S1].'
+final sha matches pre-run: True cd1263d9453c29dbeb88006b0224bf2fd9ec42269bf50f98aaa783446259db57
+Q14 CAUGHT Ran 305 tests in 11.076s FAILED (failures=1) restored=True | OF-807 / OF-806: the sentence before is carried across a new list item
+    assertion failures in: test_supported_unresolved_or_other_wording_is_kept
+    errors in: -
+    failing sub-case: text='- If the 140,000+ bots [S1] reflect active, paying customers, ManyChat would show product-market fit. \n- These conditions are stated by the company [S1].'
+Q15 CAUGHT Ran 305 tests in 10.941s FAILED (failures=3) restored=True | OF-807: the "rests on the company's own assertions" consequence is kept
+    assertion failures in: test_of807_the_conditions_stay_hypotheses, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+final sha matches pre-run: True cd1263d9453c29dbeb88006b0224bf2fd9ec42269bf50f98aaa783446259db57
