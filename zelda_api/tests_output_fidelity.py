@@ -1779,6 +1779,9 @@ ASIDE_KEPT = (
     "The company states that it has not verified 500M messages [S2, S3] (in a slide context headed 'Traction by "
     "Apr-16').",
     "The company states what may be 500M messages [S2, S3] (in a slide context headed 'Traction by Apr-16').",
+    # The company's own subject and verb, inside a condition.
+    "The company states, if the slide is read as one figure, 500M messages [S2, S3] (in a slide context headed "
+    "'Traction by Apr-16').",
 )
 # Through the full sequence the merged narrator-provenance rule (#281) answers the narrator's listing first; the
 # basis guard then leaves its citations together and fires nothing.
