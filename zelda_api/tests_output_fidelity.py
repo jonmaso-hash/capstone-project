@@ -2610,6 +2610,9 @@ REVIEW_8D7_KEPT = (
     # A condition about the pair does not make an unrelated consequence the pair's.
     PAIR_LEAD + "If the figures are monthly, misleading advertising is wrong [S2, S3].",
     PAIR_LEAD + "If the figures are monthly, monthly costs are inflated [S2, S3].",
+    PAIR_LEAD + "If the figures are monthly, hiring growth is overstated [S2, S3].",
+    # The pair's noun without one of its figures: messages that are sent, not the counted figure.
+    CONT_LEAD + "the messages are misleading [S2, S3].",
 )
 REVIEW_8D7_REPAIRED = (
     # 1. The pair's judgment is repaired; the independent clause and every citation stay.
