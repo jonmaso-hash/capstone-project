@@ -2763,6 +2763,13 @@ REVIEW_A6D_REPAIRED = (
     (PAIR_LEAD + "If the cumulative figure was restated as a monthly figure, the implied monthly activity would be "
                  "materially overstated [S2, S3].",
      PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    # A clause with a verb is not a list item, whatever its commas: the ", but" clause after it is its own.
+    (PAIR_LEAD + "Management has not clarified the definitions, in its view, but the monthly figure is overstated [S2, S3].",
+     PAIR_LEAD + "Management has not clarified the definitions, in its view, but " + CLARIFY + " [S2, S3].",
+     ['basis_overstatement']),
+    # A list item's marker is not a word before the subject.
+    (PAIR_LEAD.rstrip() + "\n- The monthly figure is overstated [S2, S3].",
+     PAIR_LEAD.rstrip() + "\n- " + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
 )
 
 
