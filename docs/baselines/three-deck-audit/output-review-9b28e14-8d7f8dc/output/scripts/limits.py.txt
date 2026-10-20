@@ -1,0 +1,14 @@
+import importlib.util, subprocess, sys
+import zelda_api
+from zelda_api import basis_fidelity as current
+from zelda_api.tests_output_fidelity import replay, items_from, notes_from, memo101_payload, PAIR_LEAD, CONT_LEAD
+p = memo101_payload(); items, notes = items_from(p), notes_from(p)
+src = subprocess.run(['git', 'show', '9b28e14:zelda_api/basis_fidelity.py'], capture_output=True, text=True, encoding='utf-8').stdout
+old = importlib.util.module_from_spec(importlib.util.spec_from_loader('zelda_api.basis_fidelity', loader=None)); old.__package__ = 'zelda_api'
+exec(compile(src, '9b28e14', 'exec'), old.__dict__)
+for t in (PAIR_LEAD + 'The key traction claim may be overstated [S2, S3].', CONT_LEAD + 'misleading messages are wrong [S2, S3].',
+          CONT_LEAD + 'monthly costs are inflated [S2, S3].', PAIR_LEAD + 'The cumulative figure is overstated [S2, S3], but misleading advertising is wrong.'):
+    for name, mod in (('9b28e14', old), ('8d7f8dc', current)):
+        sys.modules['zelda_api.basis_fidelity'] = zelda_api.basis_fidelity = mod
+        out, ch = replay({'s': t}, items, notes)
+        print(name, 'kept' if out['s'] == t else ch.get('s'), '|', t[len(PAIR_LEAD):])

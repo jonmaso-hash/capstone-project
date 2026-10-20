@@ -1,0 +1,10 @@
+versions: ['0664563', '7fb484b', '377a142', '9b28e14', '8d7f8dc (working tree, clean)']
+reviewer 9b28e14 (must keep): 0664563 0k/2c | 7fb484b 0k/2c | 377a142 0k/2c | 9b28e14 0k/2c | 8d7f8dc 2k/0c
+control 9b28e14 (must keep): 0664563 0k/5c | 7fb484b 0k/5c | 377a142 0k/5c | 9b28e14 0k/5c | 8d7f8dc 5k/0c
+control 9b28e14 (must repair, expected output asserted in tests): 0664563 0k/7c | 7fb484b 0k/7c | 377a142 0k/7c | 9b28e14 0k/7c | 8d7f8dc 0k/7c
+memo 98 conditional (must repair): 0664563 0k/1c | 7fb484b 0k/1c | 377a142 0k/1c | 9b28e14 0k/1c | 8d7f8dc 0k/1c
+carried 377a142 (must keep): 0664563 2k/0c | 7fb484b 1k/1c | 377a142 0k/2c | 9b28e14 2k/0c | 8d7f8dc 2k/0c
+carried 377a142 controls (must keep): 0664563 7k/0c | 7fb484b 3k/4c | 377a142 0k/7c | 9b28e14 7k/0c | 8d7f8dc 7k/0c
+carried 377a142 (must repair): 0664563 5k/1c | 7fb484b 0k/6c | 377a142 0k/6c | 9b28e14 0k/6c | 8d7f8dc 0k/6c
+carried 7fb484b (must keep): 0664563 12k/0c | 7fb484b 3k/9c | 377a142 12k/0c | 9b28e14 12k/0c | 8d7f8dc 12k/0c
+carried 750de3f (must keep): 0664563 14k/0c | 7fb484b 14k/0c | 377a142 14k/0c | 9b28e14 14k/0c | 8d7f8dc 14k/0c
