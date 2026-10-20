@@ -2747,6 +2747,9 @@ REVIEW_A6D_KEPT = (
     PAIR_LEAD + "The monthly figure is inflated, in management's view [S2, S3].",
     PAIR_LEAD + "In management's view, the monthly figure is inflated [S2, S3].",
     PAIR_LEAD + "Management says the monthly figure is overstated [S2, S3].",
+    # After a condition: an aside inside it, or a measure without the pair's basis, leaves the owner open.
+    PAIR_LEAD + "If the figures are monthly, in management's view, the claim is overstated [S2, S3].",
+    PAIR_LEAD + "If the figures are monthly, the implied activity is overstated [S2, S3].",
 )
 REVIEW_A6D_REPAIRED = (
     (PAIR_LEAD + "The monthly figure is inflated [S2, S3], but " + UNCLEAR + ".",
