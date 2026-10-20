@@ -1,0 +1,98 @@
+p = 'mutate_x.py'
+s = open(p, encoding='utf-8').read()
+
+
+def sub(old, new):
+    global s
+    assert s.count(old) == 1, old
+    s = s.replace(old, new)
+
+
+# Q5: the whole sentence is one segment (now in _clauses)
+sub('''    ('Q5', 'OF-806: the whole sentence is replaced, not only the judging segment',
+     "    parts = re.split(r'(;\\\\s*|\\\\s+[—–]\\\\s+)', sentence)\\n", "    parts = [sentence]\\n"),''',
+    '''    ('Q5', 'OF-806: the whole sentence is replaced, not only the judging segment (re-anchored: _clauses)',
+     "    parts = _CLAUSE_SPLIT.split(sentence)\\n    out = parts[:1]", "    parts = [sentence]\\n    out = parts[:1]"),''')
+# T8: a dash does not separate segments (now in _CLAUSE_SPLIT)
+sub('''    ('T8', 'OF-905: a dash does not separate segments (re-anchored)',
+     "    parts = re.split(r'(;\\\\s*|\\\\s+[—–]\\\\s+)', sentence)\\n    judged, chains, governed", "    parts = re.split(r'(;\\\\s*)', sentence)\\n    judged, chains, governed"),''',
+    '''    ('T8', 'OF-905: a dash does not separate segments (re-anchored: _CLAUSE_SPLIT)',
+     "_CLAUSE_SPLIT = re.compile(r'(;\\\\s*|\\\\s+[—–]\\\\s+|,", "_CLAUSE_SPLIT = re.compile(r'(;\\\\s*|,"),''')
+# Q13: unique anchor in _condition_attribution
+sub('''     "    condition = _CONDITION.search(before)", "    condition = _CONDITION.search(before) or re.match('', before or '')"),''',
+    '''     "    condition = _CONDITION.search(before)\\n    cited = _cited(sentence)",
+     "    condition = _CONDITION.search(before) or re.match('', before or '')\\n    cited = _cited(sentence)"),''')
+sub("""    ('Q13', 'OF-807: any sentence before counts as setting conditions',""",
+    """    ('Q13', 'OF-807: any sentence before counts as setting conditions (re-anchored: unique context)',""")
+# Y1, Y2: ownership now per chain from _owns_subject
+sub('''     "    named = {c for c in set(chains) if _names_pair(''.join(parts[2 * k] for k, ck in enumerate(chains) if ck == c), pair)}",
+     "    named = {c for c in set(chains) if _names_pair(''.join(parts[2 * k] for k, ck in enumerate(chains) if ck == c), pair)\\n             or _REF.search(''.join(parts[2 * k] for k, ck in enumerate(chains) if ck == c))}"),''',
+    '''     "        if any(_owns_subject(text, hit.start(), pair) for hit in _JUDGMENT.finditer(text)):",
+     "        if _REF.search(text) or any(_owns_subject(text, hit.start(), pair) for hit in _JUDGMENT.finditer(text)):"),''')
+sub("""('Y1', "review 9b28e14: a judging chain holding citations is the pair's (the 9b28e14 fallback: citations own the clause)",""",
+    """('Y1', "review 9b28e14: a judging chain holding citations is the pair's (the 9b28e14 fallback; re-anchored)",""")
+sub('''     "    judged = [(i, governed, denied, c, governed or c in named) for i, governed, denied, c in judged]",''',
+    '''     "    judged = [(i, governed, denied, c, governed or c in owned) for i, governed, denied, c in judged]",''')
+sub("""('Y2', "review 9b28e14: every judgment is the pair's (ownership not read)",""",
+    """('Y2', "review 9b28e14: every judgment is the pair's (ownership not read; re-anchored)",""")
+# Y3 retired: the whole-sentence branch no longer exists (Z1 mutates its behaviour back in)
+sub('''    ('Y3', 'review 9b28e14: a mixed sentence is replaced whole (the independent clause is lost)',
+     "    if len(mine) == len({chain for _, _, _, chain, _ in judged}):", "    if True:"),
+''', '')
+
+Z = r'''    # --- review of 8d7f8dc: clause preservation, judged subject, pair-directed claims (Z1-Z20)
+    ('Z1', 'review 8d7f8dc: the whole sentence is one run (whole-sentence replacement: the management clause is lost)',
+     "        if runs and (chain in mine) == runs[-1][0]:", "        if runs:"),
+    ('Z2', 'review 8d7f8dc: a linking comma does not separate clauses',
+     r"|\s+[—–]\s+|,\s+(?:and|but|while|whereas|yet|although|though|so|because|which)\s+)'", r"|\s+[—–]\s+)'"),
+    ('Z3', 'review 8d7f8dc: ", which" does not start a clause',
+     "|though|so|because|which)\\s+)'", "|though|so|because)\\s+)'"),
+    ('Z4', 'review 8d7f8dc: a serial list is split at its last comma (garbled)',
+     "        if separator.startswith(',') and ',' in left and not _ITEM_VERB.search(left.rsplit(',', 1)[1]):",
+     "        if False:"),
+    ('Z5', "review 8d7f8dc: a citation's commas count as a list's",
+     "        left = _REF.sub('', out[-1])", "        left = out[-1]"),
+    ('Z6', "review 8d7f8dc: the subject's qualifiers are not read (\"the hiring claim\")",
+     "    if pair_head and all(_BASIS_WORDS.search(word)", "    if pair_head or all(_BASIS_WORDS.search(word)"),
+    ('Z7', 'review 8d7f8dc: the subject\'s head is not read ("monthly costs")',
+     "    pair_head = bool(_FIGURE_HEAD.fullmatch(head) or", "    pair_head = bool(True or _FIGURE_HEAD.fullmatch(head) or"),
+    ('Z8', "review 8d7f8dc: the pair's noun is a pair head without one of its figures (\"the messages are misleading\")",
+     "(_pair_word(head, pair) and any(word.rstrip('+').lower() in pair.figures for word in qualifiers))",
+     "_pair_word(head, pair)"),
+    ('Z9', 'review 8d7f8dc: a condition owns any consequence ("If the figures are monthly, misleading advertising ...")',
+     "                (pair_head or bool(_MEASURE_HEAD.fullmatch(head)) and", "                (True or bool(_MEASURE_HEAD.fullmatch(head)) and"),
+    ('Z10', 'review 8d7f8dc: after a condition, a measure head needs no pair basis ("hiring growth")',
+     "                 any(_BASIS_WORDS.search(word) or _pair_word(word, pair) for word in qualifiers)))", "                 True))"),
+    ('Z11', 'review 8d7f8dc: after a condition, a basis word alone owns the consequence ("monthly costs")',
+     "                (pair_head or bool(_MEASURE_HEAD.fullmatch(head)) and", "                (pair_head or True and"),
+    ('Z12', 'review 8d7f8dc: the subject runs past its determiner',
+     "    while tokens and tokens[-1] != ',' and tokens[-1].lower() not in _DETERMINERS:", "    while tokens and tokens[-1] != ',':"),
+    ('Z13', 'review 8d7f8dc: the verb group is not skipped (the subject is never found)',
+     "    while tokens and tokens[-1].lower() in _VERB_GROUP:\n        tokens.pop()\n", ""),
+    ('Z14', 'positive: the pair\'s topics are not its vocabulary ("The key traction claim")',
+     "                word.lower() in pair.topics or word.rstrip('+').lower() in pair.figures)",
+     "                word.rstrip('+').lower() in pair.figures)"),
+    ('Z15', 'positive: a topic is not a pair head ("The reported usage is overstated")',
+     "    pair_head = bool(_FIGURE_HEAD.fullmatch(head) or head.lower() in pair.topics or",
+     "    pair_head = bool(_FIGURE_HEAD.fullmatch(head) or"),
+    ('Z16', 'positive: the condition path is not applied (memo 98 without its category, memo 100)',
+     "    condition = _CONDITION.search(before)\n    return bool(condition and", "    condition = None\n    return bool(condition and"),
+    ('Z17', 'positive: no measure head after a condition (memo 100: "the implied monthly activity")',
+     "                (pair_head or bool(_MEASURE_HEAD.fullmatch(head)) and", "                (pair_head or False and"),
+    ('Z18', 'positive: adjacent clauses judging the pair each get a clarification',
+     "        if runs and (chain in mine) == runs[-1][0]:", "        if runs and (chain in mine) == runs[-1][0] and chain == chains[k - 1]:"),
+    ('Z19', 'positive: a page is not a placing qualifier ("The page-10 figure")',
+     "           re.fullmatch(r'(?:page|slide)-?\\d+', word, re.I) for word in qualifiers):",
+     "           False for word in qualifiers):"),
+    ('Z20', "positive: the pair's figures are not its vocabulary (\"The 500M messages\")",
+     "                     (_pair_word(head, pair) and any(word.rstrip('+').lower() in pair.figures for word in qualifiers)))",
+     "                     False)"),
+'''
+marker = "\n]\n\n\ndef sha"
+assert s.count(marker) == 1
+s = s.replace(marker, "\n" + Z.rstrip('\n') + marker)
+s = s.replace('"""Review of 9b28e14: Y1-Y9 added;',
+              '"""Review of 8d7f8dc: Z1-Z20 added; Q5, Q13, T8, Y1, Y2 re-anchored (same meaning); Y3 retired (its branch, '
+              'whole-sentence replacement, is gone; Z1 mutates it back in). Review of 9b28e14: Y1-Y9 added;', 1)
+open(p, 'w', encoding='utf-8').write(s)
+print('patched')

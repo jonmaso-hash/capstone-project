@@ -1,0 +1,6 @@
+#!/bin/sh
+# Usage: shell.sh <worktree> <windows path to script.py> -- CI env, manage.py shell -c exec(...) (no network, memory broker).
+cd "$1" && SECRET_KEY=ci-only-placeholder-key-not-for-production-use DEBUG=True ALLOWED_HOSTS=localhost,127.0.0.1 \
+EMAIL_HOST_USER=ci@example.invalid CELERY_TASK_ALWAYS_EAGER=True CELERY_BROKER_URL=memory:// \
+CELERY_RESULT_BACKEND=cache+memory:// PYTHONIOENCODING=utf-8 PYTHONDONTWRITEBYTECODE=1 \
+/c/Users/jonathan/Desktop/KCV/venv/Scripts/python.exe manage.py shell -c "exec(open(r'$2', encoding='utf-8').read())" 2>&1

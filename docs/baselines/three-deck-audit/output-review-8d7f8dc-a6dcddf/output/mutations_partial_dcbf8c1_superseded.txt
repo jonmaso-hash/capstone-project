@@ -1,0 +1,429 @@
+Z1 CAUGHT Ran 320 tests in 11.784s FAILED (failures=15) restored=True | review 8d7f8dc: the whole sentence is one run (whole-sentence replacement: the management clause is lost)
+    assertion failures in: test_the_pairs_judgment_is_repaired_and_other_clauses_kept, test_the_pairs_own_judgments_are_still_repaired, test_the_writer_keeps_them
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions — the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions, and the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions; the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Misleading advertising is wrong; the monthly figure is inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative figure is overstated [S2, S3] — misleading advertising is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The key traction claim may be overstated [S2, S3], and monthly costs are inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3] — management has not clarified the definitions.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3], but management has not clarified the definitions.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3], which management has not explained.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3]; management has not clarified the definitions.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the cumulative figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the larger figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the monthly figure is overstated [S2, S3].'
+Z2 CAUGHT Ran 320 tests in 11.464s FAILED (failures=6) restored=True | review 8d7f8dc: a linking comma does not separate clauses
+    assertion failures in: test_independent_claims_with_incidental_pair_words_are_kept, test_the_pairs_judgment_is_repaired_and_other_clauses_kept
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions, and the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The key traction claim may be overstated [S2, S3], and monthly costs are inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3], but management has not clarified the definitions.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3], which management has not explained.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures may be inflated, but management has not clarified the definitions [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification, but monthly costs are inflated [S2, S3].'
+Z3 CAUGHT Ran 320 tests in 11.350s FAILED (failures=1) restored=True | review 8d7f8dc: ", which" does not start a clause
+    assertion failures in: test_the_pairs_judgment_is_repaired_and_other_clauses_kept
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3], which management has not explained.'
+Z4 CAUGHT Ran 320 tests in 11.504s FAILED (failures=1) restored=True | review 8d7f8dc: a serial list is split at its last comma (garbled)
+    assertion failures in: test_the_pairs_judgment_is_repaired_and_other_clauses_kept
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative, monthly, and daily figures are overstated [S2, S3].'
+Z5 CAUGHT Ran 320 tests in 11.543s FAILED (failures=3) restored=True | review 8d7f8dc: a citation's commas count as a list's
+    assertion failures in: test_the_pairs_judgment_is_repaired_and_other_clauses_kept
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The key traction claim may be overstated [S2, S3], and monthly costs are inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3], but management has not clarified the definitions.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3], which management has not explained.'
+final sha matches pre-run: True 319e70daaeb7bff4e1843945320f6fee3c95e321937a7206fc672a306d44bb3f
+Z6 CAUGHT Ran 320 tests in 11.612s FAILED (failures=1) restored=True | review 8d7f8dc: the subject's qualifiers are not read ("the hiring claim")
+    assertion failures in: test_independent_claims_with_incidental_pair_words_are_kept
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The hiring claim is overstated [S2, S3].'
+Z7 CAUGHT Ran 320 tests in 11.655s FAILED (failures=11) restored=True | review 8d7f8dc: the subject's head is not read ("monthly costs")
+    assertion failures in: test_a_cited_independent_clause_is_kept, test_independent_claims_with_incidental_pair_words_are_kept, test_memo_98_and_earlier_rounds_are_unchanged, test_the_pairs_judgment_is_repaired_and_other_clauses_kept, test_the_writer_keeps_them
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, hiring growth is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The key traction claim may be overstated [S2, S3], and monthly costs are inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — or inflation is affecting costs [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the messages are misleading [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification, but monthly costs are inflated [S2, S3].'
+Z8 CAUGHT Ran 320 tests in 11.442s FAILED (failures=1) restored=True | review 8d7f8dc: the pair's noun is a pair head without one of its figures ("the messages are misleading")
+    assertion failures in: test_independent_claims_with_incidental_pair_words_are_kept
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the messages are misleading [S2, S3].'
+Z9 CAUGHT Ran 320 tests in 11.793s FAILED (failures=3) restored=True | review 8d7f8dc: a condition owns any consequence ("If the figures are monthly, misleading advertising ...")
+    assertion failures in: test_independent_claims_with_incidental_pair_words_are_kept
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, hiring growth is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, monthly costs are inflated [S2, S3].'
+Z10 CAUGHT Ran 320 tests in 11.833s FAILED (failures=1) restored=True | review 8d7f8dc: after a condition, a measure head needs no pair basis ("hiring growth")
+    assertion failures in: test_independent_claims_with_incidental_pair_words_are_kept
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, hiring growth is overstated [S2, S3].'
+final sha matches pre-run: True 319e70daaeb7bff4e1843945320f6fee3c95e321937a7206fc672a306d44bb3f
+Z11 CAUGHT Ran 320 tests in 11.463s FAILED (failures=1) restored=True | review 8d7f8dc: after a condition, a basis word alone owns the consequence ("monthly costs")
+    assertion failures in: test_independent_claims_with_incidental_pair_words_are_kept
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, monthly costs are inflated [S2, S3].'
+Z12 CAUGHT Ran 320 tests in 11.525s FAILED (failures=31) restored=True | review 8d7f8dc: the subject runs past its determiner
+    assertion failures in: test_a_directly_following_referent_is_still_corrected, test_a_judgment_not_only_about_one_or_both_figures_stays_with_the_judgment_rule, test_a_second_pair_gets_its_own_basis_wording, test_an_overstatement_judgment_is_replaced_and_its_refs_kept, test_direct_cited_and_named_paths_are_unaffected, test_explicit_cumulative_evidence_and_questions_are_kept, test_the_known_bridges_continue_the_pair, test_the_pairs_judgment_is_repaired_and_other_clauses_kept, test_the_pairs_own_judgments_are_still_repaired, test_the_writer_keeps_them, test_unrelated_and_second_pair_sentences_through_the_writer
+    errors in: -
+    failing sub-case: middle='These use different measurement bases and cannot be compared or reconciled without clarification from management.'
+    failing sub-case: middle='These use different measurement bases and need clarification before comparison.'
+    failing sub-case: middle='These use different measurement bases.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions — the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions, and the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions; the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Misleading advertising is wrong; the monthly figure is inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The 500M messages are overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The 500M messages figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative figure is overstated [S2, S3] — misleading advertising is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The key traction claim may be overstated [S2, S3], and monthly costs are inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The key traction claim may be overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3] — management has not clarified the definitions.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3], but management has not clarified the definitions.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3], which management has not explained.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3]; management has not clarified the definitions.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2]; the cumulative figure is inflated [S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated, and possibly inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The reported usage is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the cumulative figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the larger figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the monthly figure is overstated [S2, S3].'
+Z13 CAUGHT Ran 320 tests in 11.515s FAILED (failures=53) restored=True | review 8d7f8dc: the verb group is not skipped (the subject is never found)
+    assertion failures in: test_a_directly_following_referent_is_still_corrected, test_a_judgment_not_only_about_one_or_both_figures_stays_with_the_judgment_rule, test_a_list_marker_and_numbering_are_kept, test_a_second_pair_gets_its_own_basis_wording, test_an_explicit_cumulative_fact_does_not_license_an_overstatement, test_cited_and_named_sentences_still_resolve, test_direct_cited_and_named_paths_are_unaffected, test_every_other_field_is_exactly_as_stored, test_explicit_cumulative_evidence_and_questions_are_kept, test_idempotent, test_memo_98_and_earlier_rounds_are_unchanged, test_memo_98_conditional_correction_is_unchanged, test_only_the_expected_rules_fired, test_the_accepted_memo_98_conditional_overstatement_is_still_corrected, test_the_known_bridges_continue_the_pair, test_the_live_corrections_are_reproduced, test_the_memo_98_contiguous_passage_is_still_corrected, test_the_memo_98_overstatement_is_still_corrected_whole, test_the_memo_98_passage_still_resolves_by_its_paragraph, test_the_pairs_judgment_is_repaired_and_other_clauses_kept, test_the_pairs_own_judgments_are_still_repaired, test_the_stored_memo_carries_the_corrections, test_the_stored_memo_carries_the_repairs, test_the_writer_keeps_the_referent_after_a_non_bridge, test_the_writer_keeps_them, test_the_writer_keeps_unrelated_prose_and_corrects_the_contiguous_passage, test_ub604_the_unsupported_cumulative_overstatement_is_replaced, test_unrelated_and_second_pair_sentences_through_the_writer, test_with_two_pairs_the_paragraph_names_the_pair
+    errors in: -
+    failing sub-case: middle='These use different measurement bases and cannot be compared or reconciled without clarification from management.'
+    failing sub-case: middle='These use different measurement bases and need clarification before comparison.'
+    failing sub-case: middle='These use different measurement bases.'
+    failing sub-case: notes=1
+    failing sub-case: notes=2
+    failing sub-case: notes=3
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions — the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions, and the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions; the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Misleading advertising is wrong; the monthly figure is inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The 500M messages are overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The 500M messages figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative figure is overstated [S2, S3] — misleading advertising is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative, monthly, and daily figures are overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The key traction claim may be overstated [S2, S3], and monthly costs are inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The key traction claim may be overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3] — management has not clarified the definitions.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3], but management has not clarified the definitions.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3], which management has not explained.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3]; management has not clarified the definitions.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2]; the cumulative figure is inflated [S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated, and possibly inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The reported usage is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the cumulative figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the larger figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the monthly figure is overstated [S2, S3].'
+Z14 CAUGHT Ran 320 tests in 11.584s FAILED (failures=3) restored=True | positive: the pair's topics are not its vocabulary ("The key traction claim")
+    assertion failures in: test_the_pairs_judgment_is_repaired_and_other_clauses_kept, test_the_writer_keeps_them
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The key traction claim may be overstated [S2, S3], and monthly costs are inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The key traction claim may be overstated [S2, S3].'
+Z15 CAUGHT Ran 320 tests in 11.894s FAILED (failures=1) restored=True | positive: a topic is not a pair head ("The reported usage is overstated")
+    assertion failures in: test_the_pairs_judgment_is_repaired_and_other_clauses_kept
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The reported usage is overstated [S2, S3].'
+final sha matches pre-run: True 319e70daaeb7bff4e1843945320f6fee3c95e321937a7206fc672a306d44bb3f
+Z16 CAUGHT Ran 320 tests in 11.484s FAILED (failures=4) restored=True | positive: the condition path is not applied (memo 98 without its category, memo 100)
+    assertion failures in: test_every_other_field_is_exactly_as_stored, test_only_the_expected_rules_fired, test_the_live_corrections_are_reproduced, test_the_stored_memo_carries_the_repairs
+    errors in: -
+Z17 CAUGHT Ran 320 tests in 11.476s FAILED (failures=4) restored=True | positive: no measure head after a condition (memo 100: "the implied monthly activity")
+    assertion failures in: test_every_other_field_is_exactly_as_stored, test_only_the_expected_rules_fired, test_the_live_corrections_are_reproduced, test_the_stored_memo_carries_the_repairs
+    errors in: -
+Z18 CAUGHT Ran 320 tests in 11.504s FAILED (failures=2) restored=True | positive: adjacent clauses judging the pair each get a clarification
+    assertion failures in: test_a_judgment_not_only_about_one_or_both_figures_stays_with_the_judgment_rule, test_the_pairs_judgment_is_repaired_and_other_clauses_kept
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2]; the cumulative figure is inflated [S3].'
+Z19 CAUGHT Ran 320 tests in 11.559s FAILED (failures=1) restored=True | positive: a page is not a placing qualifier ("The page-10 figure")
+    assertion failures in: test_a_judgment_not_only_about_one_or_both_figures_stays_with_the_judgment_rule
+    errors in: -
+Z20 CAUGHT Ran 320 tests in 11.426s FAILED (failures=1) restored=True | positive: the pair's figures are not its vocabulary ("The 500M messages")
+    assertion failures in: test_the_pairs_judgment_is_repaired_and_other_clauses_kept
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The 500M messages are overstated [S2, S3].'
+final sha matches pre-run: True 319e70daaeb7bff4e1843945320f6fee3c95e321937a7206fc672a306d44bb3f
+Q5 CAUGHT Ran 320 tests in 11.824s FAILED (failures=97) restored=True | OF-806: the whole sentence is replaced, not only the judging segment (re-anchored: _clauses)
+    assertion failures in: test_a_cited_independent_clause_is_kept, test_a_cited_referent_judgment_keeps_its_protections, test_a_judgment_not_only_about_one_or_both_figures_stays_with_the_judgment_rule, test_an_independent_subject_after_a_dash_is_kept, test_denials_new_subjects_other_metrics_and_third_parties_are_kept, test_earlier_controls_are_unchanged, test_genuine_continuations_are_repaired, test_independent_claims_with_incidental_pair_words_are_kept, test_memo_98_and_earlier_rounds_are_unchanged, test_new_subjects_other_metrics_and_third_parties_are_kept, test_of806_the_judgment_becomes_the_pair_clarification, test_of905_these_figures_continue_the_basis_item, test_only_the_expected_rules_fired, test_the_intended_repairs_still_happen, test_the_judgment_after_these_figures_becomes_the_clarification, test_the_judgment_clause_becomes_the_clarification, test_the_pairs_judgment_is_repaired_and_other_clauses_kept, test_the_pairs_own_judgments_are_still_repaired, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs, test_the_writer_keeps_the_protections, test_the_writer_keeps_them, test_unresolved_unsupported_or_independent_cases_are_kept
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions — the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions, and the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions; the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Misleading advertising is wrong; the monthly figure is inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative figure is overstated [S2, S3] — misleading advertising is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The key traction claim may be overstated [S2, S3], and monthly costs are inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3] — management has not clarified the definitions.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3], but management has not clarified the definitions.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3], which management has not explained.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3]; management has not clarified the definitions.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures may be inflated — misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures may be inflated, but management has not clarified the definitions [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — an analyst is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — and the analyst is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — inflation is affecting costs [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — inflation is affecting costs.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — inflation.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — marketing is misleading.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — misleading advertising is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — misleading messages are wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — misleading.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — or Bob is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — or inflation is affecting costs [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — or inflation is affecting costs.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — or possibly inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — overstated expectations are common.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — perhaps the deck is inflating usage.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — possibly inflated by bots.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — possibly inflated expectations are common.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — possibly inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — possibly overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — pricing is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — raising the possibility of metric inflation or imprecise reporting.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — suggesting inflation is affecting costs.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — suggesting marketing is misleading.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — suggesting possible inflation.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the cumulative figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the larger figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the messages are misleading [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — which may be overstated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — wrong assumptions drive the model [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — wrong assumptions drive the model.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification, but monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification; misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification; possibly inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification; the deck may be inflating usage.'
+Q13 CAUGHT Ran 320 tests in 11.590s FAILED (failures=1) restored=True | OF-807: any sentence before counts as setting conditions (re-anchored: unique context)
+    assertion failures in: test_supported_unresolved_or_other_wording_is_kept
+    errors in: -
+    failing sub-case: text='The bots [S1] reflect active, paying customers. These conditions are stated by the company [S1].'
+T8 CAUGHT Ran 320 tests in 11.689s FAILED (failures=76) restored=True | OF-905: a dash does not separate segments (re-anchored: _CLAUSE_SPLIT)
+    assertion failures in: test_a_cited_independent_clause_is_kept, test_an_independent_subject_after_a_dash_is_kept, test_denials_new_subjects_other_metrics_and_third_parties_are_kept, test_earlier_controls_are_unchanged, test_genuine_continuations_are_repaired, test_independent_claims_with_incidental_pair_words_are_kept, test_memo_98_and_earlier_rounds_are_unchanged, test_new_subjects_other_metrics_and_third_parties_are_kept, test_of905_these_figures_continue_the_basis_item, test_the_intended_repairs_still_happen, test_the_judgment_after_these_figures_becomes_the_clarification, test_the_pairs_judgment_is_repaired_and_other_clauses_kept, test_the_pairs_own_judgments_are_still_repaired, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs, test_the_writer_keeps_them
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions — the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative figure is overstated [S2, S3] — misleading advertising is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3] — management has not clarified the definitions.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures may be inflated — misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — an analyst is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — and the analyst is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — inflation is affecting costs [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — inflation is affecting costs.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — inflation.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — marketing is misleading.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — misleading advertising is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — misleading messages are wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — misleading.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — or Bob is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — or inflation is affecting costs [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — or inflation is affecting costs.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — or possibly inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — overstated expectations are common.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — perhaps the deck is inflating usage.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — possibly inflated by bots.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — possibly inflated expectations are common.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — possibly inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — possibly overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — pricing is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — raising the possibility of metric inflation or imprecise reporting.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — suggesting inflation is affecting costs.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — suggesting marketing is misleading.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — suggesting possible inflation.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the cumulative figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the larger figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the messages are misleading [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — which may be overstated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — wrong assumptions drive the model [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — wrong assumptions drive the model.'
+Y1 CAUGHT Ran 320 tests in 11.381s FAILED (failures=25) restored=True | review 9b28e14: a judging chain holding citations is the pair's (the 9b28e14 fallback; re-anchored)
+    assertion failures in: test_a_cited_independent_clause_is_kept, test_independent_claims_with_incidental_pair_words_are_kept, test_memo_98_and_earlier_rounds_are_unchanged, test_the_pairs_own_judgments_are_still_repaired, test_the_writer_keeps_them
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, hiring growth is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Misleading messages are wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The hiring claim is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures may be inflated — misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — inflation is affecting costs [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — misleading messages are wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — or inflation is affecting costs [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the messages are misleading [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — wrong assumptions drive the model [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification, but monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification; misleading advertising is wrong [S2, S3].'
+Y2 CAUGHT Ran 320 tests in 11.560s FAILED (failures=30) restored=True | review 9b28e14: every judgment is the pair's (ownership not read; re-anchored)
+    assertion failures in: test_a_cited_independent_clause_is_kept, test_independent_claims_with_incidental_pair_words_are_kept, test_memo_98_and_earlier_rounds_are_unchanged, test_the_pairs_judgment_is_repaired_and_other_clauses_kept, test_the_pairs_own_judgments_are_still_repaired, test_the_writer_keeps_them
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, hiring growth is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Misleading advertising is wrong; the monthly figure is inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Misleading messages are wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative figure is overstated [S2, S3] — misleading advertising is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The hiring claim is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The key traction claim may be overstated [S2, S3], and monthly costs are inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure needs clarification — misleading advertising is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures may be inflated — misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — inflation is affecting costs [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — misleading messages are wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — or inflation is affecting costs [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the messages are misleading [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — wrong assumptions drive the model [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification, but monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification; misleading advertising is wrong [S2, S3].'
+final sha matches pre-run: True 319e70daaeb7bff4e1843945320f6fee3c95e321937a7206fc672a306d44bb3f
+Y4 CAUGHT Ran 320 tests in 11.608s FAILED (failures=25) restored=True | review 9b28e14: the referent rule's dispatch counts judgments that are not the pair's
+    assertion failures in: test_a_cited_independent_clause_is_kept, test_independent_claims_with_incidental_pair_words_are_kept, test_memo_98_and_earlier_rounds_are_unchanged, test_the_pairs_own_judgments_are_still_repaired
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, hiring growth is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Misleading messages are wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The hiring claim is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure needs clarification — misleading advertising is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures may be inflated — misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — inflation is affecting costs [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — misleading messages are wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — or inflation is affecting costs [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the messages are misleading [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — wrong assumptions drive the model [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification, but monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification; misleading advertising is wrong [S2, S3].'
+Y5 SURVIVED Ran 320 tests in 11.558s OK restored=True | positive: a basis word does not name the pair ("as a monthly figure", memo 98 form)
+    assertion failures in: -
+    errors in: -
+Y6 SURVIVED Ran 320 tests in 11.416s OK restored=True | positive: a figure referent does not name the pair ("— the larger figure is overstated")
+    assertion failures in: -
+    errors in: -
+Y7 SURVIVED Ran 320 tests in 11.824s OK restored=True | positive: the pair's counted noun does not name the pair ("The 500M messages figure is overstated")
+    assertion failures in: -
+    errors in: -
+Y8 CAUGHT Ran 320 tests in 11.677s FAILED (failures=8) restored=True | positive: a later clause's clarification is not lower-cased in a mixed sentence
+    assertion failures in: test_the_pairs_judgment_is_repaired_and_other_clauses_kept, test_the_pairs_own_judgments_are_still_repaired, test_the_writer_keeps_them
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions — the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions, and the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions; the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Misleading advertising is wrong; the monthly figure is inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the cumulative figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the larger figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the monthly figure is overstated [S2, S3].'
+final sha matches pre-run: True 319e70daaeb7bff4e1843945320f6fee3c95e321937a7206fc672a306d44bb3f
+Q1 CAUGHT Ran 320 tests in 11.485s FAILED (failures=30) restored=True | OF-806: "one or both figures" does not continue the item's pair
+    assertion failures in: test_earlier_controls_are_unchanged, test_genuine_continuations_are_repaired, test_of806_the_judgment_becomes_the_pair_clarification, test_of905_these_figures_continue_the_basis_item, test_only_the_expected_rules_fired, test_the_intended_repairs_still_happen, test_the_judgment_after_these_figures_becomes_the_clarification, test_the_judgment_clause_becomes_the_clarification, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs, test_the_writer_keeps_the_protections, test_the_writer_keeps_them
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures are wrong — or inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — misleading.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — or possibly inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — possibly inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — raising the possibility of metric inflation or imprecise reporting.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — suggesting possible inflation.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — which may be overstated.'
+Q2 CAUGHT Ran 320 tests in 11.567s FAILED (failures=36) restored=True | OF-806: the referent-judgment rule is not applied
+    assertion failures in: test_a_cited_referent_judgment_keeps_its_protections, test_an_undefended_cited_referent_judgment_is_still_replaced, test_earlier_controls_are_unchanged, test_genuine_continuations_are_repaired, test_of806_the_judgment_becomes_the_pair_clarification, test_of905_these_figures_continue_the_basis_item, test_only_the_expected_rules_fired, test_the_intended_repairs_still_happen, test_the_judgment_after_these_figures_becomes_the_clarification, test_the_judgment_clause_becomes_the_clarification, test_the_pairs_judgment_is_repaired_and_other_clauses_kept, test_the_pairs_own_judgments_are_still_repaired, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs, test_the_writer_keeps_the_protections, test_the_writer_keeps_them
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures are wrong — or inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures may be inflated — misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures may be inflated, but management has not clarified the definitions [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — misleading.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — or possibly inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — possibly inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — possibly overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — raising the possibility of metric inflation or imprecise reporting.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — suggesting possible inflation.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — which may be overstated.'
+R1 CAUGHT Ran 320 tests in 11.572s FAILED (failures=41) restored=True | review 1801ec5: the judgment rule does not leave a referent-governed judgment to its own rule (re-anchored)
+    assertion failures in: test_a_cited_independent_clause_is_kept, test_a_cited_referent_judgment_keeps_its_protections, test_an_undefended_cited_referent_judgment_is_still_replaced, test_genuine_continuations_are_repaired, test_independent_claims_with_incidental_pair_words_are_kept, test_memo_98_and_earlier_rounds_are_unchanged, test_of905_these_figures_continue_the_basis_item, test_only_the_expected_rules_fired, test_the_pairs_judgment_is_repaired_and_other_clauses_kept, test_the_pairs_own_judgments_are_still_repaired, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs, test_the_writer_keeps_a_contradicted_pair_s_judgment, test_the_writer_keeps_the_protections, test_the_writer_keeps_them
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, hiring growth is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Misleading messages are wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The hiring claim is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure needs clarification — misleading advertising is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures may be inflated — misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures may be inflated, but management has not clarified the definitions [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — inflation is affecting costs [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — misleading messages are wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — or inflation is affecting costs [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — possibly overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the messages are misleading [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — wrong assumptions drive the model [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification, but monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification; misleading advertising is wrong [S2, S3].'
+R2 CAUGHT Ran 320 tests in 11.545s FAILED (failures=25) restored=True | review 1801ec5: one governed judging segment is enough to bypass the judgment rule (re-anchored)
+    assertion failures in: test_a_cited_independent_clause_is_kept, test_a_judgment_not_only_about_one_or_both_figures_stays_with_the_judgment_rule, test_independent_claims_with_incidental_pair_words_are_kept, test_memo_98_and_earlier_rounds_are_unchanged
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, hiring growth is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Misleading messages are wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The hiring claim is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure needs clarification — misleading advertising is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — inflation is affecting costs [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — misleading advertising is wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — misleading messages are wrong [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — or inflation is affecting costs [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the messages are misleading [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — wrong assumptions drive the model [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification, but monthly costs are inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification; misleading advertising is wrong [S2, S3].'
+Y9 CAUGHT Ran 320 tests in 11.426s FAILED (failures=32) restored=True | positive: the pair's clause loses its citations in a mixed sentence
+    assertion failures in: test_a_judgment_not_only_about_one_or_both_figures_stays_with_the_judgment_rule, test_a_second_pair_gets_its_own_basis_wording, test_an_overstatement_judgment_is_replaced_and_its_refs_kept, test_cited_and_named_sentences_still_resolve, test_direct_cited_and_named_paths_are_unaffected, test_memo_98_and_earlier_rounds_are_unchanged, test_memo_98_conditional_correction_is_unchanged, test_the_accepted_memo_98_conditional_overstatement_is_still_corrected, test_the_memo_98_overstatement_is_still_corrected_whole, test_the_pairs_judgment_is_repaired_and_other_clauses_kept, test_the_pairs_own_judgments_are_still_repaired, test_the_writer_keeps_them, test_unrelated_and_second_pair_sentences_through_the_writer
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions — the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions, and the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions; the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Misleading advertising is wrong; the monthly figure is inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The 500M messages are overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The 500M messages figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative figure is overstated [S2, S3] — misleading advertising is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative, monthly, and daily figures are overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The key traction claim may be overstated [S2, S3], and monthly costs are inflated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The key traction claim may be overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3] — management has not clarified the definitions.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3], but management has not clarified the definitions.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3], which management has not explained.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3]; management has not clarified the definitions.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2]; the cumulative figure is inflated [S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated, and possibly inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The reported usage is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the cumulative figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the larger figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the monthly figure is overstated [S2, S3].'
+final sha matches pre-run: True 319e70daaeb7bff4e1843945320f6fee3c95e321937a7206fc672a306d44bb3f
