@@ -397,14 +397,20 @@ def _bridges(sentence):
 # Where one clause ends and the next begins: ";", a spaced dash, or a comma before a clause-linking conjunction
 # ("…, but management has not clarified …"; review of 8d7f8dc). A coordinated judgment after the comma ("…, and
 # possibly inflated") is a continuation fragment and stays in its clause's chain.
-_CLAUSE_SPLIT = re.compile(r'(;\s*|\s+[—–]\s+|,\s+(?:and|but|while|whereas|yet|although|though|so|because)\s+)',
+_CLAUSE_SPLIT = re.compile(r'(;\s*|\s+[—–]\s+|,\s+(?:and|but|while|whereas|yet|although|though|so|because|which)\s+)',
                            re.I)
+# A verb in a list item: "The cumulative, monthly, and daily figures" is a list, not two clauses.
+_ITEM_VERB = re.compile(r"\b(?:is|are|was|were|be|been|has|have|had|do|does|did|can|could|may|might|must|should|will|"
+                        r"would|not|\w+ed)\b|" + _JUDGMENT_WORD, re.I)
 # The judged subject (review of 8d7f8dc): the noun phrase before the judgment's verb group. Its head must be a figure
 # or claim noun, one of the pair's own topics (the categories of its evidence: "traction", "usage"), or the pair's
 # counted noun with one of the pair's figures ("the 500M messages"). Every other word in it must place or qualify the
 # pair's figure: a basis word, the pair's noun, topic or figure, a page or slide, an own source, or a placing word.
 # Any other word ("monthly costs", "misleading messages", "the hiring claim") makes the subject someone else's.
 _FIGURE_HEAD = re.compile(r'(?:figure|total|count|number|metric|value|statistic|claim|rate)s?', re.I)
+# A measure the pair's figures stand for; after a condition about the pair it is the pair's only with the pair's basis
+# or vocabulary ("the implied monthly activity", memo 100), never with another noun ("monthly costs").
+_MEASURE_HEAD = re.compile(r'(?:activity|activities|volumes?|scale|engagement|growth)', re.I)
 _VERB_GROUP = frozenset({'is', 'are', 'was', 'were', 'be', 'been', 'being', 'may', 'might', 'could', 'can', 'would',
                          'will', 'should', 'must', 'appear', 'appears', 'seem', 'seems', 'look', 'looks', 'likely',
                          'possibly', 'potentially', 'probably', 'perhaps', 'materially', 'significantly',
@@ -412,7 +418,7 @@ _VERB_GROUP = frozenset({'is', 'are', 'was', 'were', 'be', 'been', 'being', 'may
 _DETERMINERS = frozenset({'the', 'a', 'an', 'this', 'that', 'these', 'those', 'its', 'their', 'each', 'either', 'both'})
 _SUBJECT_QUALIFIERS = frozenset({'key', 'main', 'headline', 'reported', 'stated', 'claimed', 'larger', 'smaller',
                                  'higher', 'lower', 'former', 'latter', 'first', 'second', 'same', 'two', "company's",
-                                 "deck's", "presentation's", "management's", "founders'"})
+                                 "deck's", "presentation's", "management's", "founders'", 'and', 'or'})
 
 
 def _names_pair(text, pair):
@@ -446,13 +452,28 @@ def _owns_subject(text, position, pair):
     if pair_head and all(_BASIS_WORDS.search(word) or _pair_word(word, pair) or word.lower() in _SUBJECT_QUALIFIERS or
                          re.fullmatch(r'(?:page|slide)-?\d+', word, re.I) for word in qualifiers):
         return True
-    # The consequence of a condition about the pair ("If the cumulative figure was restated as a monthly figure, the
-    # implied monthly activity would be materially overstated", memo 100): its subject is a figure or carries the
-    # pair's basis or vocabulary.
+    # The consequence of a condition about the pair ("If the cumulative figure is being presented as a monthly
+    # figure, the key traction claim is materially overstated", memo 98; "..., the implied monthly activity would be
+    # materially overstated", memo 100): its subject is a figure or claim, or a measure with the pair's basis.
     before = ' '.join(tokens)
     condition = _CONDITION.search(before)
     return bool(condition and _names_pair(before[condition.start():], pair) and
-                (pair_head or any(_BASIS_WORDS.search(word) or _pair_word(word, pair) for word in qualifiers)))
+                (pair_head or bool(_MEASURE_HEAD.fullmatch(head)) and
+                 any(_BASIS_WORDS.search(word) or _pair_word(word, pair) for word in qualifiers)))
+
+
+def _clauses(sentence):
+    """The sentence split at _CLAUSE_SPLIT, except at the comma closing a serial list: when the text after the last
+    bare comma before it has no verb ("The cumulative, monthly, and daily figures are overstated")."""
+    parts = _CLAUSE_SPLIT.split(sentence)
+    out = parts[:1]
+    for separator, segment in zip(parts[1::2], parts[2::2]):
+        left = _REF.sub('', out[-1])         # a citation's commas are not the list's
+        if separator.startswith(',') and ',' in left and not _ITEM_VERB.search(left.rsplit(',', 1)[1]):
+            out[-1] += separator + segment
+        else:
+            out += [separator, segment]
+    return out
 
 
 def _judged_segments(sentence, pair):
@@ -466,7 +487,7 @@ def _judged_segments(sentence, pair):
     referent governs it or one of its chain's judgments has the pair as its subject (_owns_subject); any other
     judgment is about something else ("— misleading advertising is wrong [S2, S3]", "— monthly costs are inflated";
     reviews of 9b28e14 and 8d7f8dc)."""
-    parts = _CLAUSE_SPLIT.split(sentence)
+    parts = _clauses(sentence)
     judged, chains, governed, denied, chain = [], [], False, False, 0
     for i in range(0, len(parts), 2):
         segment = parts[i]

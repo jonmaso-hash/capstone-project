@@ -2609,6 +2609,7 @@ REVIEW_8D7_KEPT = (
     PAIR_LEAD + "The hiring claim is overstated [S2, S3].",
     # A condition about the pair does not make an unrelated consequence the pair's.
     PAIR_LEAD + "If the figures are monthly, misleading advertising is wrong [S2, S3].",
+    PAIR_LEAD + "If the figures are monthly, monthly costs are inflated [S2, S3].",
 )
 REVIEW_8D7_REPAIRED = (
     # 1. The pair's judgment is repaired; the independent clause and every citation stay.
@@ -2644,6 +2645,11 @@ REVIEW_8D7_REPAIRED = (
     # Adjacent clauses judging the pair: one clarification with both clauses' citations.
     (PAIR_LEAD + "The monthly figure is overstated [S2]; the cumulative figure is inflated [S3].",
      PAIR_LEAD + CLARIFY_SENTENCE + " [S2] [S3].", ['basis_overstatement']),
+    # A relative clause after the pair's clause stays; a serial list is one clause, never split mid-list.
+    (PAIR_LEAD + "The monthly figure is overstated [S2, S3], which management has not explained.",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3], which management has not explained.", ['basis_overstatement']),
+    (PAIR_LEAD + "The cumulative, monthly, and daily figures are overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
 )
 
 
