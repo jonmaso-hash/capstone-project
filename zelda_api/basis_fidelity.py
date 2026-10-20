@@ -486,7 +486,7 @@ def _clauses(sentence):
     parts = _CLAUSE_SPLIT.split(sentence)
     out = parts[:1]
     for separator, segment in zip(parts[1::2], parts[2::2]):
-        left = _REF.sub('', out[-1])         # a citation's commas are not the list's
+        left = out[-1]
         if separator.startswith(',') and ',' in left and not _ITEM_VERB.search(left):
             out[-1] += separator + segment
         else:
@@ -545,13 +545,16 @@ def _judgment(sentence, pair, changes):
         return sentence
     parts, judged, chains = _judged_segments(sentence, pair)
     mine = {chain for _, _, _, chain, owned in judged if owned}          # not empty: see _referent_judged
-    changes.append('basis_overstatement')
     runs = []                                # (the pair's?, first part index, last part index)
     for k, chain in enumerate(chains):
         if runs and (chain in mine) == runs[-1][0]:
             runs[-1][2] = 2 * k
         else:
             runs.append([chain in mine, 2 * k, 2 * k])
+    for is_mine, first, _ in runs:
+        if is_mine and first and parts[first - 1].startswith(',') and not _ITEM_VERB.search(parts[first - 2]):
+            return sentence                  # a compound subject, not two clauses (review of a6dcddf)
+    changes.append('basis_overstatement')
     out = []
     for is_mine, first, last in runs:
         text = ''.join(parts[first:last + 1])

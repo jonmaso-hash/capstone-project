@@ -2750,6 +2750,10 @@ REVIEW_A6D_KEPT = (
     # After a condition: an aside inside it, or a measure without the pair's basis, leaves the owner open.
     PAIR_LEAD + "If the figures are monthly, in management's view, the claim is overstated [S2, S3].",
     PAIR_LEAD + "If the figures are monthly, the implied activity is overstated [S2, S3].",
+    # A linking comma after text with no verb joins a compound subject, not two clauses: the extent of the pair's
+    # clause cannot be established, so the sentence is kept (afbf715 replaced the second half).
+    PAIR_LEAD + "The monthly figure [S2, S3], and the larger figure are overstated.",
+    PAIR_LEAD + "The monthly figure [S2], and the larger figure [S3] are overstated.",
 )
 REVIEW_A6D_REPAIRED = (
     (PAIR_LEAD + "The monthly figure is inflated [S2, S3], but " + UNCLEAR + ".",
