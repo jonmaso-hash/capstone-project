@@ -2613,6 +2613,8 @@ REVIEW_8D7_KEPT = (
     PAIR_LEAD + "If the figures are monthly, hiring growth is overstated [S2, S3].",
     # The pair's noun without one of its figures: messages that are sent, not the counted figure.
     CONT_LEAD + "the messages are misleading [S2, S3].",
+    # A condition that does not name the pair does not make a measure the pair's.
+    PAIR_LEAD + "If the hiring plan slips, the implied monthly activity is overstated [S2, S3].",
 )
 REVIEW_8D7_REPAIRED = (
     # 1. The pair's judgment is repaired; the independent clause and every citation stay.
@@ -2652,6 +2654,13 @@ REVIEW_8D7_REPAIRED = (
     (PAIR_LEAD + "The monthly figure is overstated [S2, S3], which management has not explained.",
      PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3], which management has not explained.", ['basis_overstatement']),
     (PAIR_LEAD + "The cumulative, monthly, and daily figures are overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    # A condition names the pair by a basis word, a figure referent or the pair's noun, each alone (memo 100's form).
+    (PAIR_LEAD + "If the deck counts weekly, the implied monthly activity is overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "If the larger figure is restated, the implied monthly activity is overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "If the messages are restated, the implied monthly activity is overstated [S2, S3].",
      PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
 )
 
