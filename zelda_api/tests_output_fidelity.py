@@ -2728,3 +2728,105 @@ class PipelineReview8d7f8dcTests(TestCase):
         self.assertIn(BASE_101_AFTER, memo.base_scenario)
         self.assertIn(RISK_101_AFTER, memo.risk_assessment)
         self.assertIn(DOWN_101_AFTER, memo.downside_scenario)
+
+
+# --- review of a6dcddf / 9532c46: a condition overrode foreign qualifiers; a list guard merged an aside and a clause --
+#
+#     1. "If the figures are monthly, the hiring claim is overstated [S2, S3]." was rewritten: after a condition
+#        naming the pair, a figure or claim head was enough and the foreign qualifier ("hiring") was not read.
+#     2. "The monthly figure is inflated, in management's view, but the definitions remain unclear [S2, S3]." lost
+#        the attribution and the clause: the serial-list guard read ", in management's view" as a list item, merged
+#        the ", but" clause, and the whole chain was replaced.
+
+UNCLEAR = "the definitions remain unclear"
+REVIEW_A6D_KEPT = (
+    PAIR_LEAD + "If the figures are monthly, the hiring claim is overstated [S2, S3].",
+    PAIR_LEAD + "If the figures are monthly, the hiring growth rate is overstated [S2, S3].",
+    PAIR_LEAD + "The monthly figure is inflated, in management's view, but " + UNCLEAR + " [S2, S3].",
+    # An attribution or aside around the pair's clause: whose judgment it is cannot be established, so it is kept.
+    PAIR_LEAD + "The monthly figure is inflated, in management's view [S2, S3].",
+    PAIR_LEAD + "In management's view, the monthly figure is inflated [S2, S3].",
+    PAIR_LEAD + "Management says the monthly figure is overstated [S2, S3].",
+)
+REVIEW_A6D_REPAIRED = (
+    (PAIR_LEAD + "The monthly figure is inflated [S2, S3], but " + UNCLEAR + ".",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3], but " + UNCLEAR + ".", ['basis_overstatement']),
+    # A genuine serial list is still one clause, and a clause after it is still its own.
+    (PAIR_LEAD + "The cumulative, monthly, and daily figures are overstated [S2, S3], but " + UNCLEAR + ".",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3], but " + UNCLEAR + ".", ['basis_overstatement']),
+    # A condition naming the pair, then the pair's own subject (memo 98) or a measure with its basis (memo 100).
+    (PAIR_LEAD + "If the figures are monthly, the key traction claim is overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "If the cumulative figure was restated as a monthly figure, the implied monthly activity would be "
+                 "materially overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+)
+
+
+class ReviewA6dcddfTests(SimpleTestCase):
+    """Through the complete normalisation -> time -> funding -> basis sequence on memo 101's payload."""
+
+    def setUp(self):
+        self.payload = memo101_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text):
+        out, changes = replay({'section': text}, self.items, self.notes)
+        return out['section'], changes.get('section', [])
+
+    def test_foreign_qualifiers_attributions_and_asides_are_kept(self):
+        for text in REVIEW_A6D_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_the_pairs_own_clauses_are_still_repaired(self):
+        for text, after, changes in REVIEW_A6D_REPAIRED:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (after, changes))
+                if UNCLEAR in text:
+                    self.assertIn(UNCLEAR, after)
+                self.assertEqual(refs(after)[-2:], ['S2', 'S3'])
+
+    def test_memo_98_and_earlier_rounds_are_unchanged(self):
+        self.assertEqual(self.full(MEMO98_JUDGMENT), (RISK_AFTER[:-1] + ' [C2, C3].', ['basis_overstatement']))
+        for text in REVIEW_8D7_KEPT + REVIEW_9B2_KEPT + REVIEW_377_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+        for text, after, changes in REVIEW_8D7_REPAIRED + REVIEW_9B2_REPAIRED:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (after, changes))
+
+
+class PipelineReviewA6dcddfTests(TestCase):
+    """The memo writer (intelligence_pipeline._generate_memo, model response mocked) keeps the conditional foreign
+    claim and the attributed sentence, repairs the pair's clause before an independent one and keeps memo 101's four
+    repairs."""
+
+    def test_the_writer_keeps_them(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('reviewa6d_writer', password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo101_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items_from(payload)),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, _ = memo101()
+        repaired, repaired_after, _ = REVIEW_A6D_REPAIRED[0]
+        sections = {'market_analysis': REVIEW_A6D_KEPT[0], 'team_assessment': REVIEW_A6D_KEPT[2],
+                    'problem_solution': repaired}
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw, **sections)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertEqual(memo.market_analysis, REVIEW_A6D_KEPT[0])
+        self.assertEqual(memo.team_assessment, REVIEW_A6D_KEPT[2])
+        self.assertEqual(memo.problem_solution, repaired_after)
+        self.assertIn(BMA_101_AFTER, memo.business_model_analysis)
+        self.assertIn(BASE_101_AFTER, memo.base_scenario)
+        self.assertIn(RISK_101_AFTER, memo.risk_assessment)
+        self.assertIn(DOWN_101_AFTER, memo.downside_scenario)

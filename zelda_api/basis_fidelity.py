@@ -418,7 +418,8 @@ _VERB_GROUP = frozenset({'is', 'are', 'was', 'were', 'be', 'been', 'being', 'may
 _DETERMINERS = frozenset({'the', 'a', 'an', 'this', 'that', 'these', 'those', 'its', 'their', 'each', 'either', 'both'})
 _SUBJECT_QUALIFIERS = frozenset({'key', 'main', 'headline', 'reported', 'stated', 'claimed', 'larger', 'smaller',
                                  'higher', 'lower', 'former', 'latter', 'first', 'second', 'same', 'two', "company's",
-                                 "deck's", "presentation's", "management's", "founders'", 'and', 'or'})
+                                 "deck's", "presentation's", "management's", "founders'", 'and', 'or',
+                                 'implied', 'resulting', 'apparent', 'effective', 'underlying', 'overall', 'combined'})
 
 
 def _names_pair(text, pair):
@@ -435,41 +436,58 @@ def _pair_word(word, pair):
                 word.lower() in pair.topics or word.rstrip('+').lower() in pair.figures)
 
 
-def _owns_subject(text, position, pair):
-    """The judgment at `position` is about the pair: its subject is the pair's (see _FIGURE_HEAD), or it is the
-    consequence of a condition about the pair's figures."""
-    tokens = re.findall(r"[\w'’/.+-]+|,", _REF.sub('', text[:position]))
+def _owns_subject(segment, position, pair):
+    """The judgment at `position` in its clause is about the pair. Its subject is the pair's (see _FIGURE_HEAD): a
+    pair head and qualifiers that all place or qualify the pair's figure. After a condition naming the pair the head
+    may instead be a measure carrying the pair's basis ("the implied monthly activity", memo 100); the qualifiers are
+    read either way ("If the figures are monthly, the hiring claim is overstated" is not the pair's; review of
+    a6dcddf). Anything else in the clause leaves whose judgment it is open, so the clause is not the pair's: words
+    before the subject that are not a condition ("Management says", "In management's view,") or a comma-set aside
+    after the judgment ("…, in management's view")."""
+    if re.search(r',\s*\S', _REF.sub('', segment[position:])):
+        return False
+    tokens = re.findall(r"[\w'’/.+-]+|,", _REF.sub('', segment[:position]))
     while tokens and tokens[-1].lower() in _VERB_GROUP:
         tokens.pop()
     subject = []
     while tokens and tokens[-1] != ',' and tokens[-1].lower() not in _DETERMINERS:
         subject.insert(0, tokens.pop().strip('.'))
+    while {'and', 'or'} & {word.lower() for word in subject} and tokens and tokens[-1] == ',':
+        tokens.pop()                         # a serial list's earlier items: "The cumulative, monthly, and daily …"
+        while tokens and tokens[-1] != ',' and tokens[-1].lower() not in _DETERMINERS:
+            subject.insert(0, tokens.pop().strip('.'))
+    if tokens and tokens[-1] != ',':
+        tokens.pop()                         # the subject's determiner
+    if tokens and re.fullmatch(r'\d+[.)]?|[-+]', tokens[0]):
+        tokens.pop(0)                        # a list number or marker
     if not subject:
         return False
-    head, qualifiers = subject[-1], subject[:-1]
-    pair_head = bool(_FIGURE_HEAD.fullmatch(head) or head.lower() in pair.topics or
-                     (_pair_word(head, pair) and any(word.rstrip('+').lower() in pair.figures for word in qualifiers)))
-    if pair_head and all(_BASIS_WORDS.search(word) or _pair_word(word, pair) or word.lower() in _SUBJECT_QUALIFIERS or
-                         re.fullmatch(r'(?:page|slide)-?\d+', word, re.I) for word in qualifiers):
-        return True
-    # The consequence of a condition about the pair ("If the cumulative figure is being presented as a monthly
-    # figure, the key traction claim is materially overstated", memo 98; "..., the implied monthly activity would be
-    # materially overstated", memo 100): its subject is a figure or claim, or a measure with the pair's basis.
     before = ' '.join(tokens)
-    condition = _CONDITION.search(before)
-    return bool(condition and _names_pair(before[condition.start():], pair) and
-                (pair_head or bool(_MEASURE_HEAD.fullmatch(head)) and
-                 any(_BASIS_WORDS.search(word) or _pair_word(word, pair) for word in qualifiers)))
+    condition = bool(tokens) and _CONDITION.fullmatch(tokens[0]) and tokens.count(',') == 1 and tokens[-1] == ','
+    if tokens and not condition:
+        return False
+    head, qualifiers = subject[-1], subject[:-1]
+    if not all(_BASIS_WORDS.search(word) or _pair_word(word, pair) or word.lower() in _SUBJECT_QUALIFIERS or
+               re.fullmatch(r'(?:page|slide)-?\d+', word, re.I) for word in qualifiers):
+        return False
+    if (_FIGURE_HEAD.fullmatch(head) or head.lower() in pair.topics or
+            (_pair_word(head, pair) and any(word.rstrip('+').lower() in pair.figures for word in qualifiers))):
+        return True
+    # The consequence of a condition about the pair: a measure the pair's figures stand for, with the pair's basis.
+    return bool(condition and _names_pair(before, pair) and _MEASURE_HEAD.fullmatch(head) and
+                any(_BASIS_WORDS.search(word) or _pair_word(word, pair) for word in qualifiers))
 
 
 def _clauses(sentence):
-    """The sentence split at _CLAUSE_SPLIT, except at the comma closing a serial list: when the text after the last
-    bare comma before it has no verb ("The cumulative, monthly, and daily figures are overstated")."""
+    """The sentence split at _CLAUSE_SPLIT, except at the comma closing a serial list: when the clause before it has
+    a bare comma and no verb at all ("The cumulative, monthly, and daily figures are overstated"). A clause with a verb
+    is a clause, whatever its commas ("The monthly figure is inflated, in management's view, but …"; review of
+    a6dcddf)."""
     parts = _CLAUSE_SPLIT.split(sentence)
     out = parts[:1]
     for separator, segment in zip(parts[1::2], parts[2::2]):
         left = _REF.sub('', out[-1])         # a citation's commas are not the list's
-        if separator.startswith(',') and ',' in left and not _ITEM_VERB.search(left.rsplit(',', 1)[1]):
+        if separator.startswith(',') and ',' in left and not _ITEM_VERB.search(left):
             out[-1] += separator + segment
         else:
             out += [separator, segment]
@@ -502,11 +520,8 @@ def _judged_segments(sentence, pair):
         if judgment:
             denied = denied or _denied(segment, judgment.start())
             judged.append((i, governed, denied, chain))
-    owned = set()
-    for c in set(chains):
-        text = ''.join(parts[2 * chains.index(c):2 * (len(chains) - chains[::-1].index(c)) - 1])
-        if any(_owns_subject(text, hit.start(), pair) for hit in _JUDGMENT.finditer(text)):
-            owned.add(c)
+    owned = {c for k, c in enumerate(chains)
+             if any(_owns_subject(parts[2 * k], hit.start(), pair) for hit in _JUDGMENT.finditer(parts[2 * k]))}
     judged = [(i, governed, denied, c, governed or c in owned) for i, governed, denied, c in judged]
     return parts, judged, chains
 
