@@ -2502,13 +2502,14 @@ REVIEW_9B2_KEPT = (
     PAIR_LEAD + "The monthly figure needs clarification — misleading advertising is wrong.",
 )
 REVIEW_9B2_REPAIRED = (
-    # A clause naming the figures or their bases is still the pair's, whole sentence (the existing form).
+    # A clause naming the figures or their bases is still the pair's. Since the review of 8d7f8dc only that clause is
+    # replaced and the clause before the dash stays (at 8d7f8dc the whole sentence was replaced).
     (PAIR_LEAD + "These figures need clarification — the cumulative figure is overstated [S2, S3].",
-     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+     CONT_LEAD + CLARIFY + " [S2, S3].", ['basis_overstatement']),
     (PAIR_LEAD + "The 500M messages figure is overstated [S2, S3].",
      PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
     (PAIR_LEAD + "These figures need clarification — the larger figure is overstated [S2, S3].",
-     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+     CONT_LEAD + CLARIFY + " [S2, S3].", ['basis_overstatement']),
     # The pair's clause is repaired and an independent clause in the same sentence is kept.
     (PAIR_LEAD + "The cumulative figure is overstated [S2, S3] — misleading advertising is wrong.",
      PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3] — misleading advertising is wrong.", ['basis_overstatement']),
@@ -2582,6 +2583,129 @@ class PipelineReview9b28e14Tests(TestCase):
         self.assertEqual(memo.market_analysis, REVIEW_9B2_KEPT[0])
         self.assertEqual(memo.team_assessment, REVIEW_9B2_KEPT[1])
         self.assertEqual(memo.problem_solution, mixed_after)
+        self.assertIn(BMA_101_AFTER, memo.business_model_analysis)
+        self.assertIn(BASE_101_AFTER, memo.base_scenario)
+        self.assertIn(RISK_101_AFTER, memo.risk_assessment)
+        self.assertIn(DOWN_101_AFTER, memo.downside_scenario)
+
+
+# --- review of 8d7f8dc / eca3d8c: clause preservation, judged subject, pair-directed claims -------------------------
+#
+#     1. Whole-sentence replacement dropped independent clauses with no judgment word ("; management has not
+#        clarified the definitions"), after ";", a dash or a linking comma, before or after the pair's judgment.
+#     2. Ownership read incidental vocabulary anywhere in the clause ("— monthly costs are inflated", "— misleading
+#        messages are wrong"), not the subject the judgment is about.
+#     3. "The key traction claim may be overstated [S2, S3]." was kept at 8d7f8dc: its subject is the pair's claim.
+
+MGMT = "management has not clarified the definitions"
+MGMT_SENTENCE = MGMT[0].upper() + MGMT[1:]
+REVIEW_8D7_KEPT = (
+    CONT_LEAD + "monthly costs are inflated [S2, S3].",
+    CONT_LEAD + "misleading messages are wrong [S2, S3].",
+    PAIR_LEAD + "Monthly costs are inflated [S2, S3].",
+    PAIR_LEAD + "Misleading messages are wrong [S2, S3].",
+    PAIR_LEAD + "These figures need clarification, but monthly costs are inflated [S2, S3].",
+    # A claim noun about something else: its own qualifier is not the pair's.
+    PAIR_LEAD + "The hiring claim is overstated [S2, S3].",
+    # A condition about the pair does not make an unrelated consequence the pair's.
+    PAIR_LEAD + "If the figures are monthly, misleading advertising is wrong [S2, S3].",
+)
+REVIEW_8D7_REPAIRED = (
+    # 1. The pair's judgment is repaired; the independent clause and every citation stay.
+    (PAIR_LEAD + "The monthly figure is overstated [S2, S3]; " + MGMT + ".",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3]; " + MGMT + ".", ['basis_overstatement']),
+    (PAIR_LEAD + MGMT_SENTENCE + "; the monthly figure is overstated [S2, S3].",
+     PAIR_LEAD + MGMT_SENTENCE + "; " + CLARIFY + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The monthly figure is overstated [S2, S3] — " + MGMT + ".",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3] — " + MGMT + ".", ['basis_overstatement']),
+    (PAIR_LEAD + MGMT_SENTENCE + " — the monthly figure is overstated [S2, S3].",
+     PAIR_LEAD + MGMT_SENTENCE + " — " + CLARIFY + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The monthly figure is overstated [S2, S3], but " + MGMT + ".",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3], but " + MGMT + ".", ['basis_overstatement']),
+    (PAIR_LEAD + MGMT_SENTENCE + ", and the monthly figure is overstated [S2, S3].",
+     PAIR_LEAD + MGMT_SENTENCE + ", and " + CLARIFY + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "These figures may be inflated, but " + MGMT + " [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + ", but " + MGMT + " [S2, S3].", ['basis_referent_judgment']),
+    # A coordinated judgment after a comma continues the pair's clause: one clarification.
+    (PAIR_LEAD + "The monthly figure is overstated, and possibly inflated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    # 3. A claim whose qualifier is the pair's own evidence category.
+    (PAIR_LEAD + "The key traction claim may be overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The key traction claim may be overstated [S2, S3], and monthly costs are inflated.",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3], and monthly costs are inflated.", ['basis_overstatement']),
+    # 2. Genuine pair subjects are still repaired.
+    (CONT_LEAD + "the monthly figure is overstated [S2, S3].", CONT_LEAD + CLARIFY + " [S2, S3].",
+     ['basis_overstatement']),
+    (PAIR_LEAD + "The 500M messages are overstated [S2, S3].", PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].",
+     ['basis_overstatement']),
+    (PAIR_LEAD + "The reported usage is overstated [S2, S3].", PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].",
+     ['basis_overstatement']),
+    # Adjacent clauses judging the pair: one clarification with both clauses' citations.
+    (PAIR_LEAD + "The monthly figure is overstated [S2]; the cumulative figure is inflated [S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2] [S3].", ['basis_overstatement']),
+)
+
+
+class Review8d7f8dcTests(SimpleTestCase):
+    """Through the complete normalisation -> time -> funding -> basis sequence on memo 101's payload."""
+
+    def setUp(self):
+        self.payload = memo101_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text):
+        out, changes = replay({'section': text}, self.items, self.notes)
+        return out['section'], changes.get('section', [])
+
+    def test_independent_claims_with_incidental_pair_words_are_kept(self):
+        for text in REVIEW_8D7_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_the_pairs_judgment_is_repaired_and_other_clauses_kept(self):
+        for text, after, changes in REVIEW_8D7_REPAIRED:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (after, changes))
+                if MGMT in text:
+                    self.assertIn(MGMT, after)
+                self.assertEqual(refs(after)[-2:], ['S2', 'S3'])
+
+    def test_memo_98_and_earlier_rounds_are_unchanged(self):
+        self.assertEqual(self.full(MEMO98_JUDGMENT), (RISK_AFTER[:-1] + ' [C2, C3].', ['basis_overstatement']))
+        for text in REVIEW_9B2_KEPT + REVIEW_377_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+
+class PipelineReview8d7f8dcTests(TestCase):
+    """The memo writer (intelligence_pipeline._generate_memo, model response mocked) keeps the management clause,
+    keeps an independent claim with incidental pair words, repairs the pair-directed claim and keeps memo 101's
+    four repairs."""
+
+    def test_the_writer_keeps_them(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('review8d7_writer', password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo101_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items_from(payload)),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, _ = memo101()
+        (first, first_after, _), (claim, claim_after, _) = REVIEW_8D7_REPAIRED[0], REVIEW_8D7_REPAIRED[8]
+        sections = {'market_analysis': first, 'team_assessment': REVIEW_8D7_KEPT[0], 'problem_solution': claim}
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw, **sections)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertEqual(memo.market_analysis, first_after)
+        self.assertEqual(memo.team_assessment, REVIEW_8D7_KEPT[0])
+        self.assertEqual(memo.problem_solution, claim_after)
         self.assertIn(BMA_101_AFTER, memo.business_model_analysis)
         self.assertIn(BASE_101_AFTER, memo.base_scenario)
         self.assertIn(RISK_101_AFTER, memo.risk_assessment)

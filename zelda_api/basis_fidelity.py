@@ -299,6 +299,8 @@ class Pair:
     unspecified: Tuple[str, ...] = ()  # the figure on a side with no stated interval ("500M")
     sides: Tuple[frozenset, ...] = ()  # each side's members (its claim and the statements repeating it)
     unspecified_members: frozenset = frozenset()   # members of a side with no stated interval
+    topics: frozenset = frozenset()    # words of its evidence's categories ("usage", "traction")
+    figures: frozenset = frozenset()   # the figures its statements state ("500m")
 
 
 @dataclass(frozen=True)
@@ -353,7 +355,11 @@ def basis_facts(items, notes):
                           contradicted=any(item.status == CONTRADICTED for item in items if item.ref in members),
                           unspecified=tuple(unspecified), sides=tuple(side_members),
                           unspecified_members=frozenset().union(*(mine for mine, side in zip(side_members, sides)
-                                                                  if side[0] == UNSPECIFIED))))
+                                                                  if side[0] == UNSPECIFIED)),
+                          topics=frozenset(word for item in items if item.ref in members
+                                           for word in re.findall(r'[a-z]{3,}', (item.category or '').lower())),
+                          figures=frozenset(hit.group(0).strip().lower() for item in items if item.ref in members
+                                            for hit in _FIGURE.finditer(item.statement))))
     bare = frozenset().union(*(pair.unspecified_members for pair in pairs))
     places = tuple((item.ref, _page(item), item.source_context or '',
                     item.statement + (' with no explicit interval' if item.ref in bare else ''))
@@ -388,26 +394,79 @@ def _bridges(sentence):
     return bool(_BRIDGE.fullmatch(sentence))
 
 
+# Where one clause ends and the next begins: ";", a spaced dash, or a comma before a clause-linking conjunction
+# ("…, but management has not clarified …"; review of 8d7f8dc). A coordinated judgment after the comma ("…, and
+# possibly inflated") is a continuation fragment and stays in its clause's chain.
+_CLAUSE_SPLIT = re.compile(r'(;\s*|\s+[—–]\s+|,\s+(?:and|but|while|whereas|yet|although|though|so|because)\s+)',
+                           re.I)
+# The judged subject (review of 8d7f8dc): the noun phrase before the judgment's verb group. Its head must be a figure
+# or claim noun, one of the pair's own topics (the categories of its evidence: "traction", "usage"), or the pair's
+# counted noun with one of the pair's figures ("the 500M messages"). Every other word in it must place or qualify the
+# pair's figure: a basis word, the pair's noun, topic or figure, a page or slide, an own source, or a placing word.
+# Any other word ("monthly costs", "misleading messages", "the hiring claim") makes the subject someone else's.
+_FIGURE_HEAD = re.compile(r'(?:figure|total|count|number|metric|value|statistic|claim|rate)s?', re.I)
+_VERB_GROUP = frozenset({'is', 'are', 'was', 'were', 'be', 'been', 'being', 'may', 'might', 'could', 'can', 'would',
+                         'will', 'should', 'must', 'appear', 'appears', 'seem', 'seems', 'look', 'looks', 'likely',
+                         'possibly', 'potentially', 'probably', 'perhaps', 'materially', 'significantly',
+                         'substantially', 'also', 'even', 'to'})
+_DETERMINERS = frozenset({'the', 'a', 'an', 'this', 'that', 'these', 'those', 'its', 'their', 'each', 'either', 'both'})
+_SUBJECT_QUALIFIERS = frozenset({'key', 'main', 'headline', 'reported', 'stated', 'claimed', 'larger', 'smaller',
+                                 'higher', 'lower', 'former', 'latter', 'first', 'second', 'same', 'two', "company's",
+                                 "deck's", "presentation's", "management's", "founders'"})
+
+
 def _names_pair(text, pair):
-    """The clause itself names the pair's figures or their bases: a basis word, a figure referent ("the larger
-    figure"), or the pair's counted noun ("the 500M messages figure"); "these figures" governs its chain already.
-    Citations are not read: a sentence's final citations sit at the end of its last clause whichever clause they
-    support (review of 9b28e14); none of these patterns matches a citation."""
+    """The text names the pair's figures or their bases: a basis word, a figure referent ("the larger figure"), or
+    the pair's counted noun. Read for the condition a judgment depends on ("If the cumulative figure is presented as
+    monthly, the claim is overstated"); citations never match."""
     return bool(_BASIS_WORDS.search(text) or _FIGURE_REFERENT.search(text) or
                 (pair.noun and re.search(rf'\b{re.escape(pair.noun[:-1])}s?\b', text, re.I)))
 
 
+def _pair_word(word, pair):
+    """A word of the pair's own vocabulary: its counted noun, a topic of its evidence, or one of its figures."""
+    return bool((pair.noun and re.fullmatch(rf'{re.escape(pair.noun[:-1])}s?', word, re.I)) or
+                word.lower() in pair.topics or word.rstrip('+').lower() in pair.figures)
+
+
+def _owns_subject(text, position, pair):
+    """The judgment at `position` is about the pair: its subject is the pair's (see _FIGURE_HEAD), or it is the
+    consequence of a condition about the pair's figures."""
+    tokens = re.findall(r"[\w'’/.+-]+|,", _REF.sub('', text[:position]))
+    while tokens and tokens[-1].lower() in _VERB_GROUP:
+        tokens.pop()
+    subject = []
+    while tokens and tokens[-1] != ',' and tokens[-1].lower() not in _DETERMINERS:
+        subject.insert(0, tokens.pop().strip('.'))
+    if not subject:
+        return False
+    head, qualifiers = subject[-1], subject[:-1]
+    pair_head = bool(_FIGURE_HEAD.fullmatch(head) or head.lower() in pair.topics or
+                     (_pair_word(head, pair) and any(word.rstrip('+').lower() in pair.figures for word in qualifiers)))
+    if pair_head and all(_BASIS_WORDS.search(word) or _pair_word(word, pair) or word.lower() in _SUBJECT_QUALIFIERS or
+                         re.fullmatch(r'(?:page|slide)-?\d+', word, re.I) for word in qualifiers):
+        return True
+    # The consequence of a condition about the pair ("If the cumulative figure was restated as a monthly figure, the
+    # implied monthly activity would be materially overstated", memo 100): its subject is a figure or carries the
+    # pair's basis or vocabulary.
+    before = ' '.join(tokens)
+    condition = _CONDITION.search(before)
+    return bool(condition and _names_pair(before[condition.start():], pair) and
+                (pair_head or any(_BASIS_WORDS.search(word) or _pair_word(word, pair) for word in qualifiers)))
+
+
 def _judged_segments(sentence, pair):
-    """The sentence split at ";" and at dashes; the chain of every segment; and for each segment holding a judgment:
-    whether a pair referent governs it, whether it is denied, its chain, and whether the judgment is the pair's.
-    A referent governs its own segment and the continuation fragments that follow it after a dash ("These figures
-    ... — raising the possibility of inflation", memo 101, OF-905). A ";" clause, or a dash followed by anything but
-    a continuation fragment (a new subject: "— an analyst is wrong"), starts a new chain. A denial before the
-    referent, or of an earlier judgment in the chain, covers the judgments that continue it ("Nothing suggests these
-    figures are wrong — or inflated"; review of 750de3f). A judgment is the pair's when a referent governs it or its
-    own chain names the pair (_names_pair); any other judgment has a subject of its own ("— misleading advertising
-    is wrong [S2, S3]", review of 9b28e14)."""
-    parts = re.split(r'(;\s*|\s+[—–]\s+)', sentence)
+    """The sentence split into clauses (_CLAUSE_SPLIT); the chain of every segment; and for each segment holding a
+    judgment: whether a pair referent governs it, whether it is denied, its chain, and whether the judgment is the
+    pair's. A referent governs its own segment and the continuation fragments that follow it after a dash or a
+    linking comma ("These figures ... — raising the possibility of inflation", memo 101, OF-905). A ";" clause, or
+    any other segment that is not a continuation fragment (a new subject: "— an analyst is wrong"), starts a new
+    chain. A denial before the referent, or of an earlier judgment in the chain, covers the judgments that continue
+    it ("Nothing suggests these figures are wrong — or inflated"; review of 750de3f). A judgment is the pair's when a
+    referent governs it or one of its chain's judgments has the pair as its subject (_owns_subject); any other
+    judgment is about something else ("— misleading advertising is wrong [S2, S3]", "— monthly costs are inflated";
+    reviews of 9b28e14 and 8d7f8dc)."""
+    parts = _CLAUSE_SPLIT.split(sentence)
     judged, chains, governed, denied, chain = [], [], False, False, 0
     for i in range(0, len(parts), 2):
         segment = parts[i]
@@ -422,8 +481,12 @@ def _judged_segments(sentence, pair):
         if judgment:
             denied = denied or _denied(segment, judgment.start())
             judged.append((i, governed, denied, chain))
-    named = {c for c in set(chains) if _names_pair(''.join(parts[2 * k] for k, ck in enumerate(chains) if ck == c), pair)}
-    judged = [(i, governed, denied, c, governed or c in named) for i, governed, denied, c in judged]
+    owned = set()
+    for c in set(chains):
+        text = ''.join(parts[2 * chains.index(c):2 * (len(chains) - chains[::-1].index(c)) - 1])
+        if any(_owns_subject(text, hit.start(), pair) for hit in _JUDGMENT.finditer(text)):
+            owned.add(c)
+    judged = [(i, governed, denied, c, governed or c in owned) for i, governed, denied, c in judged]
     return parts, judged, chains
 
 
@@ -436,9 +499,10 @@ def _referent_judged(sentence, pair):
 
 
 def _judgment(sentence, pair, changes):
-    """An error judgment about the pair's bases becomes its neutral clarification; its citations stay. When every
-    judging clause is the pair's, the whole sentence is replaced (memo 98); otherwise only the chains holding the
-    pair's judgments are, and a clause judging something else stays as written (review of 9b28e14)."""
+    """An error judgment about the pair's bases becomes its neutral clarification; its citations stay. Only the
+    chains holding the pair's judgments are replaced, adjacent ones by one clarification; every other clause stays
+    as written, whether it judges something else or states a fact ("; management has not clarified the
+    definitions"; reviews of 9b28e14 and 8d7f8dc)."""
     if _asks(sentence) or not _JUDGMENT.search(sentence) or _referent_judged(sentence, pair):
         return sentence
     if not (_BASIS_WORDS.search(sentence) or _cited(sentence)):
@@ -446,16 +510,16 @@ def _judgment(sentence, pair, changes):
     parts, judged, chains = _judged_segments(sentence, pair)
     mine = {chain for _, _, _, chain, owned in judged if owned}          # not empty: see _referent_judged
     changes.append('basis_overstatement')
-    if len(mine) == len({chain for _, _, _, chain, _ in judged}):
-        lead = _LEAD.match(sentence).group('lead')
-        groups = ' '.join(f'[{group}]' for group in _REF.findall(sentence))
-        return f"{lead}{pair.clarification}{' ' + groups if groups else ''}."
+    runs = []                                # (the pair's?, first part index, last part index)
+    for k, chain in enumerate(chains):
+        if runs and (chain in mine) == runs[-1][0]:
+            runs[-1][2] = 2 * k
+        else:
+            runs.append([chain in mine, 2 * k, 2 * k])
     out = []
-    for chain in sorted(set(chains)):        # chains are contiguous runs of segments
-        first = 2 * chains.index(chain)
-        last = 2 * (len(chains) - 1 - chains[::-1].index(chain))
+    for is_mine, first, last in runs:
         text = ''.join(parts[first:last + 1])
-        if chain in mine:                    # the pair's clause: the clarification, its citations, its end
+        if is_mine:                          # the pair's clauses: one clarification, their citations, their end
             end = re.search(r'[.!]?["”’)]*\s*$', text).group(0)
             groups = ' '.join(f'[{group}]' for group in _REF.findall(text))
             lead = _LEAD.match(text).group('lead') if first == 0 else text[:len(text) - len(text.lstrip())]
