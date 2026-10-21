@@ -301,6 +301,8 @@ class Pair:
     unspecified_members: frozenset = frozenset()   # members of a side with no stated interval
     topics: frozenset = frozenset()    # words of its evidence's categories ("usage", "traction")
     figures: frozenset = frozenset()   # the figures its statements state ("500m")
+    pages: frozenset = frozenset()     # the pages its members are on (10, 12)
+    intervals: frozenset = frozenset()  # its sides' bases ("month"; "cumulative" for a cumulative or unstated side)
 
 
 @dataclass(frozen=True)
@@ -322,6 +324,16 @@ def _side(item):
 
 def _page(item):
     return item.sources[0].page_number if item is not None and item.sources else None
+
+
+def _interval(item):
+    """A side's basis as _pair_basis reads it: its rate's interval ("month"), or "cumulative" for a cumulative side
+    and for a side with no stated interval: "the cumulative figure" is the name the memos give the unstated figure,
+    which _referent rewrites (memo 98, UB-604)."""
+    basis = usage_basis(item.statement) if item is not None else None
+    if basis is None or not basis.rate or basis.rate == CUMULATIVE_BASIS:
+        return 'cumulative'
+    return basis.rate
 
 
 def basis_facts(items, notes):
@@ -359,7 +371,10 @@ def basis_facts(items, notes):
                           topics=frozenset(word for item in items if item.ref in members
                                            for word in re.findall(r'[a-z]{3,}', (item.category or '').lower())),
                           figures=frozenset(hit.group(0).strip().lower() for item in items if item.ref in members
-                                            for hit in _FIGURE.finditer(item.statement))))
+                                            for hit in _FIGURE.finditer(item.statement)),
+                          pages=frozenset(_page(item) for item in items
+                                          if item.ref in members and _page(item) is not None),
+                          intervals=frozenset(_interval(by_ref.get(ref)) for ref in refs)))
     bare = frozenset().union(*(pair.unspecified_members for pair in pairs))
     places = tuple((item.ref, _page(item), item.source_context or '',
                     item.statement + (' with no explicit interval' if item.ref in bare else ''))
@@ -439,11 +454,39 @@ def _replaceable(text, pair):
     if not judgments:
         return False
     rest = text[judgments.end():]
+    rest = re.sub(r'\b(page|slide)\s+(\d+)\b', r'\1-\2', re.sub(r'\bper\s+(month|week|day|year)\b', r'/\1', rest, flags=re.I),
+                  flags=re.I)
     words = rest[:re.search(r'\s*[.!]?["”’)]*\s*$', rest).start()].split()
     return all(word.lower() in _DETERMINERS or word.lower() in _TAIL_OBJECT_WORDS or
                word.lower() in _SUBJECT_QUALIFIERS or _MEASURE_HEAD.fullmatch(word) or _FIGURE_HEAD.fullmatch(word) or
-               _BASIS_WORDS.fullmatch(word) or _pair_word(word, pair) or re.fullmatch(r'(?:page|slide)-?\d+', word, re.I)
+               _pair_basis(word, pair) or _pair_word(word, pair) or _pair_page(word, pair)
                for word in words)
+
+
+_TAIL_INTERVAL = re.compile(r'(?:(?P<adjective>monthly|weekly|daily|yearly)|/\s?(?P<rate>month|week|day|year)|'
+                            r'(?P<cumulative>cumulative(?:ly)?)|(?P<interval>interval))', re.I)
+
+
+def _pair_basis(word, pair):
+    """A basis word after the judgment names one of the pair's own bases (Pair.intervals): "the monthly figure",
+    "the cumulative figure" for this pair, never "the yearly count" (review of 71ece83). "interval" names no other
+    figure; any other basis wording ("run-rate") is not read as the pair's."""
+    hit = _TAIL_INTERVAL.fullmatch(word)
+    if not hit:
+        return False
+    if hit['interval']:
+        return True
+    if hit['cumulative']:
+        return 'cumulative' in pair.intervals
+    rate = hit['rate'] or {'monthly': 'month', 'weekly': 'week', 'daily': 'day', 'yearly': 'year'}[hit['adjective'].lower()]
+    return rate.lower() in pair.intervals
+
+
+def _pair_page(word, pair):
+    """A page or slide after the judgment is one the pair's members are on (Pair.pages): "the page-10 count", never
+    "the page-99 count" (review of 71ece83)."""
+    hit = re.fullmatch(r'(?:page|slide)-?(\d+)', word, re.I)
+    return bool(hit) and int(hit.group(1)) in pair.pages
 
 
 def _has_verb(text):

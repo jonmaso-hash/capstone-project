@@ -2887,7 +2887,8 @@ REVIEW_724_REPAIRED = (
      PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_referent_judgment']),
     # The memo 100 form: an object naming the pair's measure.
     (PAIR_LEAD + "One or both figures may misrepresent the scale of actual activity [S2, S3].",
-     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_referent_judgment']),    # A comparison with the pair's other figure (the BasisGuardTests forms: "overstates the page-10 count").
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_referent_judgment']),
+    # A comparison with the pair's other figure (the BasisGuardTests forms: "overstates the page-10 count").
     (PAIR_LEAD + "The monthly figure is overstated compared with the cumulative figure [S2, S3].",
      PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
 )
@@ -2955,6 +2956,136 @@ class PipelineReview72418e2Tests(TestCase):
         self.assertEqual(memo.market_analysis, REVIEW_724_KEPT[0])
         self.assertEqual(memo.team_assessment, REVIEW_724_KEPT[4])
         self.assertEqual(memo.financial_analysis, REVIEW_724_KEPT[8])
+        self.assertEqual(memo.problem_solution, repaired_after)
+        self.assertIn(BMA_101_AFTER, memo.business_model_analysis)
+        self.assertIn(BASE_101_AFTER, memo.base_scenario)
+        self.assertIn(RISK_101_AFTER, memo.risk_assessment)
+        self.assertIn(DOWN_101_AFTER, memo.downside_scenario)
+
+
+# Review of 71ece83: the tail allowlist accepted any page and any basis word, so a comparison with something that is
+# not the pair's ("compared with the page-99 count", "compared with the yearly count") was deleted by the
+# clarification, in both rules. Present at 72418e2 too. A page after the judgment must be one the pair's members are on
+# and a basis word one of the pair's own bases (memo 101: pages 10 and 12; unstated and monthly, the unstated side
+# being the one the memos call "cumulative").
+
+REVIEW_71E_KEPT = (
+    PAIR_LEAD + "The monthly figure is overstated compared with the page-99 count [S2, S3].",
+    PAIR_LEAD + "The monthly figure is overstated compared with the page 99 count [S2, S3].",
+    PAIR_LEAD + "The monthly figure is overstated compared with the slide-7 figure [S2, S3].",
+    PAIR_LEAD + "The monthly figure is overstated compared with the weekly figure [S2, S3].",
+    PAIR_LEAD + "The monthly figure is overstated compared with the daily count [S2, S3].",
+    PAIR_LEAD + "The monthly figure is overstated compared with the run-rate [S2, S3].",
+    PAIR_LEAD + "These figures are overstated compared with the yearly count [S2, S3].",
+    PAIR_LEAD + "One or both figures may be overstated compared with the yearly count [S2, S3].",
+    PAIR_LEAD + "One or both figures may misrepresent the page-99 count [S2, S3].",
+    PAIR_LEAD + "These figures may overstate the weekly activity [S2, S3].",
+)
+REVIEW_71E_REPAIRED = (
+    (PAIR_LEAD + "The monthly figure is overstated compared with the page-10 count [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The monthly figure is overstated compared with the page 10 count [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The monthly figure is overstated compared with the slide-12 figure [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The page-10 figure is overstated compared with the per month figure [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "These figures are overstated compared with the monthly count [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_referent_judgment']),
+    (PAIR_LEAD + "One or both figures may overstate the page-12 count [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_referent_judgment']),
+    (PAIR_LEAD + "These figures may overstate the monthly activity [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_referent_judgment']),
+    # "interval" names no other figure.
+    (PAIR_LEAD + "The monthly figure is overstated relative to its stated interval [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+)
+
+
+class Review71ece83Tests(SimpleTestCase):
+    """Through the complete normalisation -> time -> funding -> basis sequence on memo 101's payload; and per pair,
+    with three pairs on different pages and bases."""
+
+    def setUp(self):
+        self.payload = memo101_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text):
+        out, changes = replay({'section': text}, self.items, self.notes)
+        return out['section'], changes.get('section', [])
+
+    def pairs(self, text):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        return guard_basis_wording(text, basis_facts(_pairs_items(), (NOTE, NOTE_BOTS, NOTE_CUMULATIVE)))
+
+    def test_comparisons_with_other_pages_and_intervals_are_kept(self):
+        for text in REVIEW_71E_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_comparisons_with_the_pairs_own_pages_and_intervals_are_repaired(self):
+        for text, after, changes in REVIEW_71E_REPAIRED:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (after, changes))
+
+    def test_pages_and_intervals_are_each_pairs_own(self):
+        cumulative = 'How the cumulative figure relates to the weekly figure needs clarification before either is relied on'
+        for text, expected in (
+                # Another pair's page or interval is not this pair's.
+                ('The daily bot figure [C6] is overstated compared with the page-12 bot count [C5].', None),
+                ('The daily bot figure [C6] is overstated compared with the monthly bot count [C5].', None),
+                ('The weekly figure [C9] is overstated compared with the daily figure [C7].', None),
+                ('The weekly figure [C9] is overstated compared with the page-10 figure [C7].', None),
+                # Its own are.
+                ('The daily bot figure [C6] is overstated compared with the page-5 bot count [C5].',
+                 DAILY_CLARIFICATION + ' [C6] [C5].'),
+                ('The weekly figure [C9] is overstated compared with the cumulative figure [C7].',
+                 cumulative + ' [C9] [C7].'),
+                ('The weekly figure [C9] is overstated compared with the page-7 figure [C7].',
+                 cumulative + ' [C9] [C7].')):
+            with self.subTest(text=text):
+                out, changes = self.pairs(text)
+                self.assertEqual(out, text if expected is None else expected)
+                self.assertEqual(bool(changes), expected is not None)
+
+    def test_earlier_rounds_are_unchanged(self):
+        self.assertEqual(self.full(MEMO98_JUDGMENT), (RISK_AFTER[:-1] + ' [C2, C3].', ['basis_overstatement']))
+        for text in REVIEW_724_KEPT + REVIEW_A6D_KEPT + REVIEW_8D7_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+        for text, after, changes in REVIEW_724_REPAIRED + REVIEW_A6D_REPAIRED + REVIEW_8D7_REPAIRED:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (after, changes))
+
+
+class PipelineReview71ece83Tests(TestCase):
+    """The memo writer (intelligence_pipeline._generate_memo, model response mocked) keeps comparisons with another
+    page and another interval, in both rules, repairs the pair's own page-10 comparison and keeps memo 101's repairs."""
+
+    def test_the_writer_keeps_them(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('review71e_writer', password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo101_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items_from(payload)),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, _ = memo101()
+        repaired, repaired_after, _ = REVIEW_71E_REPAIRED[0]
+        sections = {'market_analysis': REVIEW_71E_KEPT[0], 'team_assessment': REVIEW_71E_KEPT[6],
+                    'financial_analysis': REVIEW_71E_KEPT[8], 'problem_solution': repaired}
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw, **sections)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertEqual(memo.market_analysis, REVIEW_71E_KEPT[0])
+        self.assertEqual(memo.team_assessment, REVIEW_71E_KEPT[6])
+        self.assertEqual(memo.financial_analysis, REVIEW_71E_KEPT[8])
         self.assertEqual(memo.problem_solution, repaired_after)
         self.assertIn(BMA_101_AFTER, memo.business_model_analysis)
         self.assertIn(BASE_101_AFTER, memo.base_scenario)
