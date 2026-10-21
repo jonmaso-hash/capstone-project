@@ -421,13 +421,15 @@ _SUBJECT_QUALIFIERS = frozenset({'key', 'main', 'headline', 'reported', 'stated'
                                  "deck's", "presentation's", "management's", "founders'", 'and', 'or',
                                  'implied', 'resulting', 'apparent', 'effective', 'underlying', 'overall', 'combined'})
 # What may follow the pair's judgment in its own clause (_replaceable): coordinated judgments and their hedges, an
-# object naming the pair's measure ("misrepresent the scale of actual activity", memo 100), citations and closing
+# object or comparison naming only the pair's measure or figures ("misrepresent the scale of actual activity", memo
+# 100; "overstates the page-10 count", "overstated compared with the bare bot count"), citations and closing
 # punctuation. The clarification replaces all of it; anything else ("(in management's view)", "according to
 # management", "…, as noted earlier") is text it would delete, so the clause is kept (review of 72418e2).
 _JUDGMENT_TAIL = re.compile(
     r'\s*' + _JUDGMENT_WORD + r'(?:\s+(?:and|or)\s+(?:(?:may|might|could|be|is|are|possibly|potentially|perhaps|'
     r'probably|likely|even|also|materially|significantly|substantially)\s+)*' + _JUDGMENT_WORD + r')*', re.I)
-_TAIL_OBJECT_WORDS = frozenset({'of', 'actual', 'real', 'true'})
+_TAIL_OBJECT_WORDS = frozenset({'of', 'actual', 'real', 'true', 'bare', 'as', 'than', 'compared', 'with', 'to',
+                                'relative', 'against', 'versus', 'vs', 'vs.'})
 
 
 def _replaceable(text, pair):
@@ -440,7 +442,8 @@ def _replaceable(text, pair):
     words = rest[:re.search(r'\s*[.!]?["”’)]*\s*$', rest).start()].split()
     return all(word.lower() in _DETERMINERS or word.lower() in _TAIL_OBJECT_WORDS or
                word.lower() in _SUBJECT_QUALIFIERS or _MEASURE_HEAD.fullmatch(word) or _FIGURE_HEAD.fullmatch(word) or
-               _BASIS_WORDS.fullmatch(word) or _pair_word(word, pair) for word in words)
+               _BASIS_WORDS.fullmatch(word) or _pair_word(word, pair) or re.fullmatch(r'(?:page|slide)-?\d+', word, re.I)
+               for word in words)
 
 
 def _has_verb(text):

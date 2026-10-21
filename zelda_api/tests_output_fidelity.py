@@ -2869,6 +2869,7 @@ REVIEW_724_KEPT = (
     PAIR_LEAD + "One or both figures may be overstated according to management [S2, S3].",
     # An object after the judgment is replaceable only when it names the pair's measure (memo 100, below).
     PAIR_LEAD + "One or both figures may misrepresent the scale of hiring [S2, S3].",
+    PAIR_LEAD + "The monthly figure is overstated compared with the hiring plan [S2, S3].",
 )
 REVIEW_724_REPAIRED = (
     # "reported" with no determiner before it is the clause's verb: two clauses, and the second is the pair's.
@@ -2886,7 +2887,9 @@ REVIEW_724_REPAIRED = (
      PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_referent_judgment']),
     # The memo 100 form: an object naming the pair's measure.
     (PAIR_LEAD + "One or both figures may misrepresent the scale of actual activity [S2, S3].",
-     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_referent_judgment']),
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_referent_judgment']),    # A comparison with the pair's other figure (the BasisGuardTests forms: "overstates the page-10 count").
+    (PAIR_LEAD + "The monthly figure is overstated compared with the cumulative figure [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
 )
 
 
