@@ -489,6 +489,19 @@ def _pair_page(word, pair):
     return bool(hit) and int(hit.group(1)) in pair.pages
 
 
+def _pair_placing(word, pair):
+    """A subject word that places the pair's own figure (review of 8f11844): one of its bases (_pair_basis), alone
+    or on its noun or figure ("messages/month", "500M/month"), one of its pages (_pair_page), or its own vocabulary
+    (_pair_word). "The page-99 figure", "the yearly figure" and "the cumulative, monthly, and daily figures" name a
+    figure the pair does not establish, so the judgment is not the pair's."""
+    hits = list(_BASIS_WORDS.finditer(word))
+    if hits:
+        rest = _BASIS_WORDS.sub('', word).strip('/-')
+        return (all(_pair_basis(hit.group(0).replace(' ', ''), pair) for hit in hits) and
+                (not rest or _pair_word(rest, pair)))
+    return _pair_word(word, pair) or _pair_page(word, pair)
+
+
 def _has_verb(text):
     """The text has a verb (_ITEM_VERB). A participle or judgment word after its determiner, with only placing words
     between, modifies the figure and is not a verb: "The reported monthly figure [S2], and the larger figure [S3] are
@@ -547,8 +560,7 @@ def _owns_subject(segment, position, pair):
     if tokens and not condition:
         return False
     head, qualifiers = subject[-1], subject[:-1]
-    if not all(_BASIS_WORDS.search(word) or _pair_word(word, pair) or word.lower() in _SUBJECT_QUALIFIERS or
-               re.fullmatch(r'(?:page|slide)-?\d+', word, re.I) for word in qualifiers):
+    if not all(_pair_placing(word, pair) or word.lower() in _SUBJECT_QUALIFIERS for word in qualifiers):
         return False
     if (_FIGURE_HEAD.fullmatch(head) or head.lower() in pair.topics or
             (_pair_word(head, pair) and any(word.rstrip('+').lower() in pair.figures for word in qualifiers))):
@@ -680,8 +692,10 @@ def _referent_judgment(sentence, pair, changes):
 
 
 def _referent(sentence, pair, changes):
-    """"the cumulative figure" when this pair admits nothing cumulative: the figure has no stated interval."""
-    if pair.cumulative_admitted or not _CUMULATIVE_REFERENT.search(sentence):
+    """"the cumulative figure" when this pair admits nothing cumulative and has a side with no stated interval: that
+    figure has no stated interval. A pair of two stated rates has no such figure, so nothing is relabelled (review of
+    8f11844)."""
+    if pair.cumulative_admitted or not pair.unspecified_members or not _CUMULATIVE_REFERENT.search(sentence):
         return sentence
     changes.append('basis_cumulative_referent')
     return _CUMULATIVE_REFERENT.sub(lambda m: ('T' if m.group('the') == 'T' else 't') + UNSPECIFIED[1:], sentence)
@@ -1020,8 +1034,8 @@ def _cumulative_presupposed(sentence, pair, facts, changes):
                     r'\s+\w+\s+(?:(?:the|a|an|these|those)\s+)?(?:[$\d][\w.,+/$]*\s+)?' + own_noun, after, re.I)):
                 return match.group(0)
         mine = owner(match)
-        if mine is None or mine.cumulative_admitted:
-            return match.group(0)
+        if mine is None or mine.cumulative_admitted or not mine.unspecified_members:
+            return match.group(0)            # admitted cumulative, or no side without a stated interval (two rates)
         group = _REF.search(sentence, match.end())
         if _OTHER_METRIC.search(sentence[_place_clause_start(sentence, match.start()):
                                          group.start() if group else len(sentence)]):

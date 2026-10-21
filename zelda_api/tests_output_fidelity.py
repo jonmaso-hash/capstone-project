@@ -2653,7 +2653,10 @@ REVIEW_8D7_REPAIRED = (
     # A relative clause after the pair's clause stays; a serial list is one clause, never split mid-list.
     (PAIR_LEAD + "The monthly figure is overstated [S2, S3], which management has not explained.",
      PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3], which management has not explained.", ['basis_overstatement']),
+    # Corrected at the review of 8f11844: "daily" is not this pair's interval, so the list is another subject and kept.
     (PAIR_LEAD + "The cumulative, monthly, and daily figures are overstated [S2, S3].",
+     PAIR_LEAD + "The cumulative, monthly, and daily figures are overstated [S2, S3].", []),
+    (PAIR_LEAD + "The cumulative, monthly, and page-10 figures are overstated [S2, S3].",
      PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
     # A condition names the pair by a basis word, a figure referent or the pair's noun, each alone (memo 100's form).
     (PAIR_LEAD + "If the deck counts weekly, the implied monthly activity is overstated [S2, S3].",
@@ -2759,7 +2762,10 @@ REVIEW_A6D_REPAIRED = (
     (PAIR_LEAD + "The monthly figure is inflated [S2, S3], but " + UNCLEAR + ".",
      PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3], but " + UNCLEAR + ".", ['basis_overstatement']),
     # A genuine serial list is still one clause, and a clause after it is still its own.
+    # Corrected at the review of 8f11844: "daily" is not this pair's interval, so the list is kept.
     (PAIR_LEAD + "The cumulative, monthly, and daily figures are overstated [S2, S3], but " + UNCLEAR + ".",
+     PAIR_LEAD + "The cumulative, monthly, and daily figures are overstated [S2, S3], but " + UNCLEAR + ".", []),
+    (PAIR_LEAD + "The cumulative, monthly, and page-12 figures are overstated [S2, S3], but " + UNCLEAR + ".",
      PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3], but " + UNCLEAR + ".", ['basis_overstatement']),
     # A condition naming the pair, then the pair's own subject (memo 98) or a measure with its basis (memo 100).
     (PAIR_LEAD + "If the figures are monthly, the key traction claim is overstated [S2, S3].",
@@ -2878,7 +2884,10 @@ REVIEW_724_REPAIRED = (
     (PAIR_LEAD + "The reported figure is monthly [S2], and the larger figure [S3] is overstated.",
      PAIR_LEAD + "The reported figure is monthly [S2], and " + CLARIFY + " [S3].", ['basis_overstatement']),
     # A serial list led by a participle is still one clause, and the clause after it is still its own.
+    # Corrected at the review of 8f11844: "daily" is not this pair's interval, so the list is kept.
     (PAIR_LEAD + "The reported, monthly, and daily figures are overstated [S2, S3], but " + UNCLEAR + ".",
+     PAIR_LEAD + "The reported, monthly, and daily figures are overstated [S2, S3], but " + UNCLEAR + ".", []),
+    (PAIR_LEAD + "The reported, monthly, and cumulative figures are overstated [S2, S3], but " + UNCLEAR + ".",
      PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3], but " + UNCLEAR + ".", ['basis_overstatement']),
     # Coordinated judgments and hedges are replaceable text, in both rules.
     (PAIR_LEAD + "The monthly figure is overstated and possibly misleading [S2, S3].",
@@ -3104,3 +3113,171 @@ class PipelineReview71ece83Tests(TestCase):
         self.assertIn(BASE_101_AFTER, memo.base_scenario)
         self.assertIn(RISK_101_AFTER, memo.risk_assessment)
         self.assertIn(DOWN_101_AFTER, memo.downside_scenario)
+
+
+# Review of 8f11844: two disclosed gaps, both present before this branch's recent rounds.
+#     1. A subject naming a page or interval the pair does not have was still the pair's: "The page-99 figure is
+#        overstated [S2, S3]" and "The yearly figure is overstated [S2, S3]" became the clarification (memo 101's pair:
+#        pages 10 and 12, unstated and monthly). Subject qualifiers now use the same pair-specific reading as the text
+#        after the judgment. Three earlier expectations that a list naming "daily" is rewritten are corrected to kept;
+#        each gains a list of the pair's own words that is still repaired as one clause.
+#     2. For a pair of two stated rates (monthly and daily), "the cumulative figure [C10]" became "the figure stated
+#        without an explicit interval [C10]", and "the cumulative and daily figures" became "the unspecified-interval
+#        and daily figures", although both sides state an interval. Both relabels now need a side with no stated
+#        interval.
+
+REVIEW_8F1_KEPT = (
+    PAIR_LEAD + "The page-99 figure is overstated [S2, S3].",
+    PAIR_LEAD + "The yearly figure is overstated [S2, S3].",
+    PAIR_LEAD + "The slide-7 figure is overstated [S2, S3].",
+    PAIR_LEAD + "The weekly figure is overstated compared with the monthly figure [S2, S3].",
+    PAIR_LEAD + "The page-99 monthly figure is overstated [S2, S3].",
+    PAIR_LEAD + "The run-rate figure is overstated [S2, S3].",
+    PAIR_LEAD + "The 500M messages/week figure is overstated [S2, S3].",
+    PAIR_LEAD + "If the figures are monthly, the implied weekly activity is overstated [S2, S3].",
+    PAIR_LEAD + "The monthly figure is accurate [S2], and the daily figure [S3] is overstated.",
+)
+REVIEW_8F1_REPAIRED = (
+    (PAIR_LEAD + "The page-10 figure is overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The slide-12 monthly figure is overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The cumulative figure is overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The 500M messages/month figure is overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "If the figures are monthly, the implied monthly activity is overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The monthly figure is accurate [S2], and the larger figure [S3] is overstated.",
+     PAIR_LEAD + "The monthly figure is accurate [S2], and " + CLARIFY + " [S3].", ['basis_overstatement']),
+)
+TWO_RATE_ITEMS = lambda: [_usage('C10', '4M messages/month', 3), _usage('C11', '4M messages/day', 4)]
+TWO_RATE_NOTE = ('measurement_basis', ('C10', 'C11'), 'Page 3 states 4M messages/month; page 4 states 4M messages/day. '
+                 'These use different measurement bases and need clarification before comparison.')
+TWO_RATE_KEPT = (
+    'The daily figure [C11] is overstated compared with the cumulative figure [C10].',
+    'The cumulative figure [C10] sits beside a daily rate [C11].',
+    'The cumulative and daily figures [C10, C11] differ.',
+    'The cumulative and monthly presentations [C10, C11] need clarification.',
+)
+
+
+class Review8f11844Tests(SimpleTestCase):
+    """Through the complete normalisation -> time -> funding -> basis sequence on memo 101's payload; the two-rate
+    pair through the basis guard, with the single-unstated-side controls (BasisGuardTests' pair) beside it."""
+
+    def setUp(self):
+        self.payload = memo101_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text):
+        out, changes = replay({'section': text}, self.items, self.notes)
+        return out['section'], changes.get('section', [])
+
+    def test_subjects_naming_another_page_or_interval_are_kept(self):
+        for text in REVIEW_8F1_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_subjects_naming_the_pairs_own_are_repaired(self):
+        for text, after, changes in REVIEW_8F1_REPAIRED:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (after, changes))
+
+    def test_subjects_are_each_pairs_own(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        facts = basis_facts(_pairs_items(), (NOTE, NOTE_BOTS, NOTE_CUMULATIVE))
+        for text, expected in (
+                ('The weekly bot figure [C6] is overstated [C5].', None),
+                ('The page-6 bot figure [C6] is overstated [C5].', DAILY_CLARIFICATION + ' [C6] [C5].'),
+                ('The daily bot figure [C6] is overstated [C5].', DAILY_CLARIFICATION + ' [C6] [C5].'),
+                ('The page-12 bot figure [C6] is overstated [C5].', None)):
+            with self.subTest(text=text):
+                out, changes = guard_basis_wording(text, facts)
+                self.assertEqual(out, text if expected is None else expected)
+                self.assertEqual(bool(changes), expected is not None)
+
+    def test_a_pair_of_two_stated_rates_gains_no_unstated_interval(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording, UNSPECIFIED, UNSPECIFIED_ADJECTIVE
+        facts = basis_facts(TWO_RATE_ITEMS(), (TWO_RATE_NOTE,))
+        for text in TWO_RATE_KEPT:
+            with self.subTest(text=text):
+                out, changes = guard_basis_wording(text, facts)
+                self.assertEqual((out, changes), (text, []))
+                self.assertNotIn(UNSPECIFIED[4:], out)
+                self.assertNotIn(UNSPECIFIED_ADJECTIVE, out)
+
+    def test_a_pair_with_an_unstated_side_is_still_relabelled(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        items = [_usage('C2', '500M messages/month', 12), _usage('C3', '500M messages', 10)]
+        facts = basis_facts(items, (NOTE,))
+        self.assertEqual(guard_basis_wording('The cumulative figure [C3] sits beside a monthly rate [C2].', facts),
+                         ('The figure stated without an explicit interval [C3] sits beside a monthly rate [C2].',
+                          ['basis_cumulative_referent']))
+        self.assertEqual(guard_basis_wording('The cumulative and monthly figures [C3, C2] differ.', facts),
+                         ('The unspecified-interval and monthly figures [C3, C2] differ.',
+                          ['basis_cumulative_presupposed']))
+
+    def test_earlier_rounds_are_unchanged(self):
+        self.assertEqual(self.full(MEMO98_JUDGMENT), (RISK_AFTER[:-1] + ' [C2, C3].', ['basis_overstatement']))
+        for text in REVIEW_71E_KEPT + REVIEW_724_KEPT + REVIEW_A6D_KEPT + REVIEW_8D7_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+        for text, after, changes in (REVIEW_71E_REPAIRED + REVIEW_724_REPAIRED + REVIEW_A6D_REPAIRED +
+                                     REVIEW_8D7_REPAIRED):
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (after, changes))
+
+
+class PipelineReview8f11844Tests(TestCase):
+    """The memo writer (intelligence_pipeline._generate_memo, model response mocked) keeps subjects naming another page
+    or interval and repairs the pair's own (memo 101's payload); and for a pair of two stated rates, relabels
+    nothing as unstated."""
+
+    def _context(self, username, items, notes):
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .vector_models import DocumentSource
+        user = get_user_model().objects.create_user(username, password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        return doc, GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items),
+                                    gaps=(), verification='complete', analysis_confidence=0.5,
+                                    consistency_notes=tuple(notes))
+
+    def _write(self, context, sections):
+        from unittest import mock
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        raw, _ = memo101()
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw, **sections)):
+            pipeline._generate_memo(context)
+
+    def test_the_writer_keeps_another_figures_subject(self):
+        from .vector_models import IntelligenceMemo
+        payload = memo101_payload()
+        doc, context = self._context('review8f1_writer', items_from(payload), notes_from(payload))
+        repaired, repaired_after, _ = REVIEW_8F1_REPAIRED[0]
+        self._write(context, {'market_analysis': REVIEW_8F1_KEPT[0], 'team_assessment': REVIEW_8F1_KEPT[1],
+                              'problem_solution': repaired})
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertEqual(memo.market_analysis, REVIEW_8F1_KEPT[0])
+        self.assertEqual(memo.team_assessment, REVIEW_8F1_KEPT[1])
+        self.assertEqual(memo.problem_solution, repaired_after)
+        self.assertIn(BMA_101_AFTER, memo.business_model_analysis)
+        self.assertIn(BASE_101_AFTER, memo.base_scenario)
+        self.assertIn(RISK_101_AFTER, memo.risk_assessment)
+        self.assertIn(DOWN_101_AFTER, memo.downside_scenario)
+
+    def test_the_writer_relabels_nothing_for_two_stated_rates(self):
+        from .vector_models import IntelligenceMemo
+        doc, context = self._context('review8f1_two_rate', TWO_RATE_ITEMS(), (TWO_RATE_NOTE,))
+        repaired = 'The daily figure [C11] is overstated compared with the monthly activity [C10].'
+        self._write(context, {'market_analysis': TWO_RATE_KEPT[0], 'team_assessment': TWO_RATE_KEPT[2],
+                              'problem_solution': repaired})
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertEqual(memo.market_analysis, TWO_RATE_KEPT[0])
+        self.assertEqual(memo.team_assessment, TWO_RATE_KEPT[2])
+        # Positive control: the guard ran on this pair.
+        self.assertEqual(memo.problem_solution, 'How the monthly figure relates to the daily figure needs clarification '
+                                                'before either is relied on [C11] [C10].')
