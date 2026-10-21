@@ -1,0 +1,14 @@
+from zelda_api.tests_output_fidelity import _usage
+from zelda_api.basis_fidelity import basis_facts, guard_basis_wording
+items = [_usage('C10', '4M messages/month', 3), _usage('C11', '4M messages/day', 4)]
+note = ('measurement_basis', ('C10', 'C11'), 'Page 3 states 4M messages/month; page 4 states 4M messages/day. '
+        'These use different measurement bases and need clarification before comparison.')
+facts = basis_facts(items, (note,))
+print(facts.pairs[0].intervals, facts.pairs[0].pages, facts.pairs[0].clarification)
+for text in ('The daily figure [C11] is overstated compared with the cumulative figure [C10].',
+             'The daily figure [C11] is overstated compared with the monthly figure [C10].',
+             'The daily figure [C11] is overstated compared with the page-3 figure [C10].'):
+    print(text, '\n  ->', guard_basis_wording(text, facts))
+for text in ('The daily figure [C11] is overstated compared with the cumulative activity [C10].',
+             'The daily figure [C11] is overstated compared with the monthly activity [C10].'):
+    print(text, '\n  ->', guard_basis_wording(text, facts))
