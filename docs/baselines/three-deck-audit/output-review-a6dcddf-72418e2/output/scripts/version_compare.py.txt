@@ -1,0 +1,58 @@
+"""Review of a6dcddf: the reviewer's cases, this round's controls and the earlier rounds' reviewer controls,
+through the full normalisation -> time -> funding -> basis sequence on memo 101's payload, with the basis guard
+loaded from git at 0664563, 7fb484b, 377a142, 9b28e14, 8d7f8dc and a6dcddf and from the working tree. No model call, no database."""
+import importlib.util, subprocess, sys
+import zelda_api
+from zelda_api import basis_fidelity as current
+from zelda_api.tests_output_fidelity import (replay, items_from, notes_from, memo101_payload, REVIEW_377_KEPT,
+                                             REVIEW_377_REPAIRED, REVIEW_7FB_KEPT, REVIEW_750_KEPT, CONT_LEAD,
+                                             REVIEW_9B2_KEPT, REVIEW_9B2_REPAIRED, MEMO98_JUDGMENT,
+                                             REVIEW_8D7_KEPT, REVIEW_8D7_REPAIRED,
+                                             REVIEW_A6D_KEPT, REVIEW_A6D_REPAIRED)
+p = memo101_payload(); items, notes = items_from(p), notes_from(p)
+GROUPS = [('reviewer a6dcddf: condition + foreign qualifier (must keep)', REVIEW_A6D_KEPT[:2]),
+          ('reviewer a6dcddf: attribution + independent clause (must keep)', REVIEW_A6D_KEPT[2:3]),
+          ('control a6dcddf: attribution / aside (must keep)', REVIEW_A6D_KEPT[3:]),
+          ('control a6dcddf (must repair)', tuple(t for t, _, _ in REVIEW_A6D_REPAIRED)),
+          ('carried 8d7f8dc: management clause (must repair the pair, keep the clause)', tuple(t for t, _, _ in REVIEW_8D7_REPAIRED[:2])),
+          ('carried 8d7f8dc: dash/comma/referent clause forms (must repair the pair, keep the clause)', tuple(t for t, _, _ in REVIEW_8D7_REPAIRED[2:8])),
+          ('carried 8d7f8dc: pair-directed claim (must repair)', tuple(t for t, _, _ in REVIEW_8D7_REPAIRED[8:10])),
+          ('carried 8d7f8dc: genuine pair subjects (must repair)', tuple(t for t, _, _ in REVIEW_8D7_REPAIRED[10:])),
+          ('carried 8d7f8dc: incidental vocabulary (must keep)', REVIEW_8D7_KEPT[:2]),
+          ('carried 8d7f8dc (must keep)', REVIEW_8D7_KEPT[2:]),
+          ('carried 9b28e14 reviewer (must keep)', REVIEW_9B2_KEPT[:2]), ('carried 9b28e14 controls (must keep)', REVIEW_9B2_KEPT[2:]),
+          ('carried 9b28e14 (must repair)', tuple(t for t, _, _ in REVIEW_9B2_REPAIRED)),
+          ('memo 98 conditional (must repair)', (MEMO98_JUDGMENT,)),
+          ('carried 377a142 (must keep)', REVIEW_377_KEPT[:2]), ('carried 377a142 controls (must keep)', REVIEW_377_KEPT[2:]),
+          ('carried 377a142 (must repair)', REVIEW_377_REPAIRED + (CONT_LEAD + 'possibly overstated [S2, S3].',)),
+          ('carried 7fb484b (must keep)', REVIEW_7FB_KEPT), ('carried 750de3f (must keep)', REVIEW_750_KEPT)]
+
+
+def load(rev):
+    src = subprocess.run(['git', 'show', f'{rev}:zelda_api/basis_fidelity.py'], capture_output=True, text=True,
+                         encoding='utf-8', check=True).stdout
+    mod = importlib.util.module_from_spec(importlib.util.spec_from_loader('zelda_api.basis_fidelity', loader=None))
+    mod.__package__ = 'zelda_api'
+    exec(compile(src, f'{rev}:zelda_api/basis_fidelity.py', 'exec'), mod.__dict__)
+    return mod
+
+
+head = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True).stdout.strip()
+dirty = subprocess.run(['git', 'diff', '--quiet', 'HEAD', '--', 'zelda_api/basis_fidelity.py']).returncode
+versions = [('0664563', load('0664563')), ('7fb484b', load('7fb484b')), ('377a142', load('377a142')), ('9b28e14', load('9b28e14')), ('8d7f8dc', load('8d7f8dc')), ('a6dcddf', load('a6dcddf')),
+            (f'{head} (working tree{", DIRTY" if dirty else ", clean"})', current)]
+rows = []
+for gname, texts in GROUPS:
+    for t in texts:
+        res = []
+        for label, mod in versions:
+            sys.modules['zelda_api.basis_fidelity'], zelda_api.basis_fidelity = mod, mod
+            out, ch = replay({'s': t}, items, notes)
+            res.append(('kept' if out['s'] == t else 'CHANGED:' + ','.join(ch.get('s', [])), out['s']))
+        rows.append((gname, t, res))
+sys.modules['zelda_api.basis_fidelity'], zelda_api.basis_fidelity = current, current
+print('versions:', ' | '.join(v for v, _ in versions))
+for gname, t, res in rows:
+    print(f'[{gname}] {t}')
+    for (label, _), (verdict, out) in zip(versions, res):
+        print(f'    {label:>32}: {verdict}' + ('' if verdict == 'kept' else f'\n{"":38}-> {out}'))

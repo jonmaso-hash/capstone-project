@@ -1,0 +1,256 @@
+red run: tests from the final commit 72418e2, zelda_api/basis_fidelity.py = git show a6dcddf (sha256 5e30360367163017)
+2026-10-20 05:24:42,721 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-20 05:25:35,300 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-20 05:25:35,328 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-20 05:25:35,388 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-20 05:25:35,389 INFO zelda_api.intelligence_pipeline - Memo market_analysis: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-20 05:25:35,390 INFO zelda_api.intelligence_pipeline - Memo team_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-20 05:25:35,393 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-20 05:25:35,394 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-20 05:25:35,400 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-20 05:25:35,402 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-20 05:25:35,431 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+FFFFFFFFFF.F
+======================================================================
+FAIL: test_the_writer_keeps_them (zelda_api.tests_output_fidelity.PipelineReviewA6dcddfTests.test_the_writer_keeps_them)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2840, in test_the_writer_keeps_them
+    self.assertEqual(memo.market_analysis, REVIEW_A6D_KEPT[0])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].' != '- Th[80 chars] 12. If the figures are monthly, the hiring cl[23 chars]S3].'
+- - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
++ - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, the hiring claim is overstated [S2, S3].
+
+
+======================================================================
+FAIL: test_foreign_qualifiers_attributions_and_asides_are_kept (zelda_api.tests_output_fidelity.ReviewA6dcddfTests.test_foreign_qualifiers_attributions_and_asides_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, the hiring claim is overstated [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2794, in test_foreign_qualifiers_attributions_and_asides_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. If the figures are monthly, the hiring cl[28 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. If the figures are monthly, the hiring cl[23 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
++  'on page 12. If the figures are monthly, the hiring claim is overstated [S2, '
++  'S3].',
++  [])
+
+======================================================================
+FAIL: test_foreign_qualifiers_attributions_and_asides_are_kept (zelda_api.tests_output_fidelity.ReviewA6dcddfTests.test_foreign_qualifiers_attributions_and_asides_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, the hiring growth rate is overstated [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2794, in test_foreign_qualifiers_attributions_and_asides_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. If the figures are monthly, the hiring gr[34 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. If the figures are monthly, the hiring gr[29 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
++  'on page 12. If the figures are monthly, the hiring growth rate is overstated '
++  '[S2, S3].',
++  [])
+
+======================================================================
+FAIL: test_foreign_qualifiers_attributions_and_asides_are_kept (zelda_api.tests_output_fidelity.ReviewA6dcddfTests.test_foreign_qualifiers_attributions_and_asides_are_kept) (text="- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is inflated, in management's view, but the definitions remain unclear [S2, S3].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2794, in test_foreign_qualifiers_attributions_and_asides_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- The deck states 500M messages [S2] on [208 chars]nt']) != ("- The deck states 500M messages [S2] on [148 chars], [])
+
+First differing element 0:
+'- The deck states 500M messages [S2] on [182 chars]S3].'
+"- The deck states 500M messages [S2] on [143 chars]S3]."
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
++  "on page 12. The monthly figure is inflated, in management's view, but the "
++  'definitions remain unclear [S2, S3].',
++  [])
+
+======================================================================
+FAIL: test_foreign_qualifiers_attributions_and_asides_are_kept (zelda_api.tests_output_fidelity.ReviewA6dcddfTests.test_foreign_qualifiers_attributions_and_asides_are_kept) (text="- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is inflated, in management's view [S2, S3].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2794, in test_foreign_qualifiers_attributions_and_asides_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- The deck states 500M messages [S2] on [208 chars]nt']) != ("- The deck states 500M messages [S2] on [112 chars], [])
+
+First differing element 0:
+'- The deck states 500M messages [S2] on [182 chars]S3].'
+"- The deck states 500M messages [S2] on [107 chars]S3]."
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  "on page 12. The monthly figure is inflated, in management's view [S2, S3].",
++  [])
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_foreign_qualifiers_attributions_and_asides_are_kept (zelda_api.tests_output_fidelity.ReviewA6dcddfTests.test_foreign_qualifiers_attributions_and_asides_are_kept) (text="- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. In management's view, the monthly figure is inflated [S2, S3].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2794, in test_foreign_qualifiers_attributions_and_asides_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- The deck states 500M messages [S2] on [208 chars]nt']) != ("- The deck states 500M messages [S2] on [112 chars], [])
+
+First differing element 0:
+'- The deck states 500M messages [S2] on [182 chars]S3].'
+"- The deck states 500M messages [S2] on [107 chars]S3]."
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  "on page 12. In management's view, the monthly figure is inflated [S2, S3].",
++  [])
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_foreign_qualifiers_attributions_and_asides_are_kept (zelda_api.tests_output_fidelity.ReviewA6dcddfTests.test_foreign_qualifiers_attributions_and_asides_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management says the monthly figure is overstated [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2794, in test_foreign_qualifiers_attributions_and_asides_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. Management says the monthly figure is ove[18 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. Management says the monthly figure is ove[13 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. Management says the monthly figure is overstated [S2, S3].',
++  [])
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_foreign_qualifiers_attributions_and_asides_are_kept (zelda_api.tests_output_fidelity.ReviewA6dcddfTests.test_foreign_qualifiers_attributions_and_asides_are_kept) (text="- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, in management's view, the claim is overstated [S2, S3].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2794, in test_foreign_qualifiers_attributions_and_asides_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- The deck states 500M messages [S2] on [208 chars]nt']) != ("- The deck states 500M messages [S2] on [133 chars], [])
+
+First differing element 0:
+'- The deck states 500M messages [S2] on [182 chars]S3].'
+"- The deck states 500M messages [S2] on [128 chars]S3]."
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
++  "on page 12. If the figures are monthly, in management's view, the claim is "
++  'overstated [S2, S3].',
++  [])
+
+======================================================================
+FAIL: test_foreign_qualifiers_attributions_and_asides_are_kept (zelda_api.tests_output_fidelity.ReviewA6dcddfTests.test_foreign_qualifiers_attributions_and_asides_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure [S2, S3], and the larger figure are overstated.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2794, in test_foreign_qualifiers_attributions_and_asides_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[114 chars] and how the figure stated without an explicit[109 chars]nt']) != ('- T[114 chars] and the larger figure are overstated.', [])
+
+First differing element 0:
+'- Th[113 chars] and how the figure stated without an explicit[83 chars] on.'
+'- Th[113 chars] and the larger figure are overstated.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. The monthly figure [S2, S3], and how the figure stated without '
+?                                                ----           -- ^ ---------
+
++  'on page 12. The monthly figure [S2, S3], and the larger figure are '
+?                                                   +++++++         ^
+
++  'overstated.',
++  [])
+-  'an explicit interval relates to the monthly figure needs clarification '
+-  'before either is relied on.',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_foreign_qualifiers_attributions_and_asides_are_kept (zelda_api.tests_output_fidelity.ReviewA6dcddfTests.test_foreign_qualifiers_attributions_and_asides_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure [S2], and the larger figure [S3] are overstated.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2794, in test_foreign_qualifiers_attributions_and_asides_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[110 chars] and how the figure stated without an explicit[114 chars]nt']) != ('- T[110 chars] and the larger figure [S3] are overstated.', [])
+
+First differing element 0:
+'- Th[109 chars] and how the figure stated without an explicit[88 chars]S3].'
+'- Th[109 chars] and the larger figure [S3] are overstated.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. The monthly figure [S2], and how the figure stated without an '
+?                                            ----           ^^ ^ ------------
+
++  'on page 12. The monthly figure [S2], and the larger figure [S3] are '
+?                                               +++++++        ^^^^^ ^
+
++  'overstated.',
++  [])
+-  'explicit interval relates to the monthly figure needs clarification before '
+-  'either is relied on [S3].',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_the_pairs_own_clauses_are_still_repaired (zelda_api.tests_output_fidelity.ReviewA6dcddfTests.test_the_pairs_own_clauses_are_still_repaired) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions, in its view, but the monthly figure is overstated [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2799, in test_the_pairs_own_clauses_are_still_repaired
+    self.assertEqual(self.full(text), (after, changes))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. Management has not clarified the definiti[181 chars]nt'])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. Management has not clarified the definiti[155 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. Management has not clarified the definitions, in its view, but '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+?   ^^^^^^^^^^^^^
+
++  'how the figure stated without an explicit interval relates to the monthly '
+?   ^                                                             ++++++++++++
+
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+?   ------------
+
++  'figure needs clarification before either is relied on [S2, S3].',
+   ['basis_overstatement'])
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.292s
+
+FAILED (failures=11)
+Destroying test database for alias 'default'...
+Found 4 test(s).
+System check identified no issues (0 silenced).

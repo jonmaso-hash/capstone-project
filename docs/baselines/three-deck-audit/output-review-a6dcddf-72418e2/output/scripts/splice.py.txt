@@ -1,0 +1,76 @@
+import sys
+p = sys.argv[1]
+s = open(p, 'rb').read().decode('utf-8')
+crlf = '\r\n' in s
+s = s.replace('\r\n', '\n')
+
+
+def sub(old, new):
+    global s
+    assert s.count(old) == 1, old
+    s = s.replace(old, new)
+
+
+a, b = s.index('def _owns_subject(text, position, pair):'), s.index('def _clauses(sentence):')
+s = s[:a] + '''def _owns_subject(segment, position, pair):
+    """The judgment at `position` in its clause is about the pair. Its subject is the pair's (see _FIGURE_HEAD): a
+    pair head and qualifiers that all place or qualify the pair's figure. After a condition naming the pair the head
+    may instead be a measure carrying the pair's basis ("the implied monthly activity", memo 100); the qualifiers are
+    read either way ("If the figures are monthly, the hiring claim is overstated" is not the pair's; review of
+    a6dcddf). Anything else in the clause leaves whose judgment it is open, so the clause is not the pair's: words
+    before the subject that are not a condition ("Management says", "In management's view,") or a comma-set aside
+    after the judgment ("…, in management's view")."""
+    if re.search(r',\\s*\\S', _REF.sub('', segment[position:])):
+        return False
+    tokens = re.findall(r"[\\w'’/.+-]+|,", _REF.sub('', segment[:position]))
+    while tokens and tokens[-1].lower() in _VERB_GROUP:
+        tokens.pop()
+    subject = []
+    while tokens and tokens[-1] != ',' and tokens[-1].lower() not in _DETERMINERS:
+        subject.insert(0, tokens.pop().strip('.'))
+    if tokens and tokens[-1] != ',':
+        tokens.pop()                         # the subject's determiner
+    if tokens and re.fullmatch(r'\\d+[.)]?|[-+]', tokens[0]):
+        tokens.pop(0)                        # a list number or marker
+    if not subject:
+        return False
+    before = ' '.join(tokens)
+    condition = bool(tokens) and _CONDITION.fullmatch(tokens[0]) and tokens.count(',') == 1 and tokens[-1] == ','
+    if tokens and not condition:
+        return False
+    head, qualifiers = subject[-1], subject[:-1]
+    if not all(_BASIS_WORDS.search(word) or _pair_word(word, pair) or word.lower() in _SUBJECT_QUALIFIERS or
+               re.fullmatch(r'(?:page|slide)-?\\d+', word, re.I) for word in qualifiers):
+        return False
+    if (_FIGURE_HEAD.fullmatch(head) or head.lower() in pair.topics or
+            (_pair_word(head, pair) and any(word.rstrip('+').lower() in pair.figures for word in qualifiers))):
+        return True
+    # The consequence of a condition about the pair: a measure the pair's figures stand for, with the pair's basis.
+    return bool(condition and _names_pair(before, pair) and _MEASURE_HEAD.fullmatch(head) and
+                any(_BASIS_WORDS.search(word) or _pair_word(word, pair) for word in qualifiers))
+
+
+''' + s[b:]
+
+sub('''    """The sentence split at _CLAUSE_SPLIT, except at the comma closing a serial list: when the text after the last
+    bare comma before it has no verb ("The cumulative, monthly, and daily figures are overstated")."""''',
+    '''    """The sentence split at _CLAUSE_SPLIT, except at the comma closing a serial list: when the clause before it has
+    a bare comma and no verb at all ("The cumulative, monthly, and daily figures are overstated"). A clause with a verb
+    is a clause, whatever its commas ("The monthly figure is inflated, in management's view, but …"; review of
+    a6dcddf)."""''')
+sub("        if separator.startswith(',') and ',' in left and not _ITEM_VERB.search(left.rsplit(',', 1)[1]):",
+    "        if separator.startswith(',') and ',' in left and not _ITEM_VERB.search(left):")
+sub('''    owned = set()
+    for c in set(chains):
+        text = ''.join(parts[2 * chains.index(c):2 * (len(chains) - chains[::-1].index(c)) - 1])
+        if any(_owns_subject(text, hit.start(), pair) for hit in _JUDGMENT.finditer(text)):
+            owned.add(c)
+''', '''    owned = {c for k, c in enumerate(chains)
+             if any(_owns_subject(parts[2 * k], hit.start(), pair) for hit in _JUDGMENT.finditer(parts[2 * k]))}
+''')
+# memo 100's "implied": a word saying how the figure is read, not what is counted
+sub('''"deck's", "presentation's", "management's", "founders'", 'and', 'or'})''',
+    '''"deck's", "presentation's", "management's", "founders'", 'and', 'or',
+                                 'implied', 'resulting', 'apparent', 'effective', 'underlying', 'overall', 'combined'})''')
+open(p, 'wb').write((s.replace('\n', '\r\n') if crlf else s).encode('utf-8'))
+print('spliced')

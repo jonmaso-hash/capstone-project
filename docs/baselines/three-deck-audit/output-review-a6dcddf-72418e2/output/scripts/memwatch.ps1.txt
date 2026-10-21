@@ -1,0 +1,9 @@
+param([string]$Log, [int]$ThresholdMB = 1500)
+"memwatch started $(Get-Date -Format s) threshold=${ThresholdMB}MB log=$Log" | Out-File -Append -Encoding utf8 $Log
+while ($true) {
+  Get-Process python -ErrorAction SilentlyContinue | Where-Object { $_.WorkingSet64 / 1MB -gt $ThresholdMB } | ForEach-Object {
+    "$(Get-Date -Format s) KILL pid=$($_.Id) MB=$([math]::Round($_.WorkingSet64/1MB))" | Out-File -Append -Encoding utf8 $Log
+    Stop-Process -Id $_.Id -Force -Confirm:$false
+  }
+  Start-Sleep -Milliseconds 500
+}
