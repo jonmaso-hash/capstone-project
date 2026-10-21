@@ -3048,6 +3048,19 @@ class Review71ece83Tests(SimpleTestCase):
                 self.assertEqual(out, text if expected is None else expected)
                 self.assertEqual(bool(changes), expected is not None)
 
+    def test_a_pair_of_two_stated_rates_has_no_cumulative_side(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        items = [_usage('C10', '4M messages/month', 3), _usage('C11', '4M messages/day', 4)]
+        note = ('measurement_basis', ('C10', 'C11'), 'Page 3 states 4M messages/month; page 4 states 4M messages/day. '
+                'These use different measurement bases and need clarification before comparison.')
+        facts = basis_facts(items, (note,))
+        kept = 'The daily figure [C11] is overstated compared with the cumulative activity [C10].'
+        self.assertEqual(guard_basis_wording(kept, facts), (kept, []))
+        self.assertEqual(
+            guard_basis_wording('The daily figure [C11] is overstated compared with the monthly activity [C10].', facts),
+            ('How the monthly figure relates to the daily figure needs clarification before either is relied on '
+             '[C11] [C10].', ['basis_overstatement']))
+
     def test_earlier_rounds_are_unchanged(self):
         self.assertEqual(self.full(MEMO98_JUDGMENT), (RISK_AFTER[:-1] + ' [C2, C3].', ['basis_overstatement']))
         for text in REVIEW_724_KEPT + REVIEW_A6D_KEPT + REVIEW_8D7_KEPT:
