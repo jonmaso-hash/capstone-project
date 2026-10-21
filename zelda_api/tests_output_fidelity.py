@@ -2844,3 +2844,116 @@ class PipelineReviewA6dcddfTests(TestCase):
         self.assertIn(BASE_101_AFTER, memo.base_scenario)
         self.assertIn(RISK_101_AFTER, memo.risk_assessment)
         self.assertIn(DOWN_101_AFTER, memo.downside_scenario)
+
+
+# Review of 72418e2: two preservation gaps, both present since a6dcddf.
+#     1. "The reported monthly figure [S2], and the larger figure [S3] are overstated." was garbled: the compound-subject
+#        and list guards read "reported" (any "-ed" word) as a verb, so the subject was split as two clauses and its
+#        second half replaced. A participle after its determiner ("the reported", "the company's stated") modifies the
+#        figure; it is not a verb.
+#     2. "The monthly figure is overstated (in management's view) [S2, S3]." lost its attribution: only a comma after the
+#        judgment left the owner open. What follows the judgment must now be text the clarification may replace:
+#        coordinated judgments, hedges, citations and closing punctuation; anything else keeps the clause. The referent
+#        rule ("These figures may be inflated (in management's view)") had the same gap.
+
+REVIEW_724_KEPT = (
+    PAIR_LEAD + "The reported monthly figure [S2], and the larger figure [S3] are overstated.",
+    PAIR_LEAD + "The stated monthly figure [S2], and the larger figure [S3] are overstated.",
+    PAIR_LEAD + "The claimed figure [S2], and the larger figure [S3] are overstated.",
+    PAIR_LEAD + "The company's reported monthly figure [S2], and the larger figure [S3] are overstated.",
+    PAIR_LEAD + "The monthly figure is overstated (in management's view) [S2, S3].",
+    PAIR_LEAD + "The monthly figure is overstated according to management [S2, S3].",
+    PAIR_LEAD + "The monthly figure is overstated in management's view [S2, S3].",
+    PAIR_LEAD + "The monthly figure is overstated [S2, S3] (in management's view).",
+    PAIR_LEAD + "These figures may be inflated (in management's view) [S2, S3].",
+    PAIR_LEAD + "One or both figures may be overstated according to management [S2, S3].",
+    # An object after the judgment is replaceable only when it names the pair's measure (memo 100, below).
+    PAIR_LEAD + "One or both figures may misrepresent the scale of hiring [S2, S3].",
+)
+REVIEW_724_REPAIRED = (
+    # "reported" with no determiner before it is the clause's verb: two clauses, and the second is the pair's.
+    (PAIR_LEAD + "Management reported the monthly figure [S2], and the larger figure [S3] is overstated.",
+     PAIR_LEAD + "Management reported the monthly figure [S2], and " + CLARIFY + " [S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The reported figure is monthly [S2], and the larger figure [S3] is overstated.",
+     PAIR_LEAD + "The reported figure is monthly [S2], and " + CLARIFY + " [S3].", ['basis_overstatement']),
+    # A serial list led by a participle is still one clause, and the clause after it is still its own.
+    (PAIR_LEAD + "The reported, monthly, and daily figures are overstated [S2, S3], but " + UNCLEAR + ".",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3], but " + UNCLEAR + ".", ['basis_overstatement']),
+    # Coordinated judgments and hedges are replaceable text, in both rules.
+    (PAIR_LEAD + "The monthly figure is overstated and possibly misleading [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "One or both figures may be overstated or misleading [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_referent_judgment']),
+    # The memo 100 form: an object naming the pair's measure.
+    (PAIR_LEAD + "One or both figures may misrepresent the scale of actual activity [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_referent_judgment']),
+)
+
+
+class Review72418e2Tests(SimpleTestCase):
+    """Through the complete normalisation -> time -> funding -> basis sequence on memo 101's payload."""
+
+    def setUp(self):
+        self.payload = memo101_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text):
+        out, changes = replay({'section': text}, self.items, self.notes)
+        return out['section'], changes.get('section', [])
+
+    def test_participle_subjects_and_trailing_attributions_are_kept(self):
+        for text in REVIEW_724_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_the_pairs_own_clauses_are_still_repaired(self):
+        for text, after, changes in REVIEW_724_REPAIRED:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (after, changes))
+                if UNCLEAR in text:
+                    self.assertIn(UNCLEAR, after)
+
+    def test_memo_98_and_earlier_rounds_are_unchanged(self):
+        self.assertEqual(self.full(MEMO98_JUDGMENT), (RISK_AFTER[:-1] + ' [C2, C3].', ['basis_overstatement']))
+        for text in REVIEW_A6D_KEPT + REVIEW_8D7_KEPT + REVIEW_9B2_KEPT + REVIEW_377_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+        for text, after, changes in REVIEW_A6D_REPAIRED + REVIEW_8D7_REPAIRED + REVIEW_9B2_REPAIRED:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (after, changes))
+
+
+class PipelineReview72418e2Tests(TestCase):
+    """The memo writer (intelligence_pipeline._generate_memo, model response mocked) keeps the participle compound
+    subject and both trailing attributions, repairs the pair's clause after a reporting verb and keeps memo 101's four
+    repairs."""
+
+    def test_the_writer_keeps_them(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('review724_writer', password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo101_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items_from(payload)),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, _ = memo101()
+        repaired, repaired_after, _ = REVIEW_724_REPAIRED[0]
+        sections = {'market_analysis': REVIEW_724_KEPT[0], 'team_assessment': REVIEW_724_KEPT[4],
+                    'financial_analysis': REVIEW_724_KEPT[8], 'problem_solution': repaired}
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw, **sections)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertEqual(memo.market_analysis, REVIEW_724_KEPT[0])
+        self.assertEqual(memo.team_assessment, REVIEW_724_KEPT[4])
+        self.assertEqual(memo.financial_analysis, REVIEW_724_KEPT[8])
+        self.assertEqual(memo.problem_solution, repaired_after)
+        self.assertIn(BMA_101_AFTER, memo.business_model_analysis)
+        self.assertIn(BASE_101_AFTER, memo.base_scenario)
+        self.assertIn(RISK_101_AFTER, memo.risk_assessment)
+        self.assertIn(DOWN_101_AFTER, memo.downside_scenario)

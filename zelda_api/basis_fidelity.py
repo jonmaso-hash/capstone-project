@@ -420,6 +420,41 @@ _SUBJECT_QUALIFIERS = frozenset({'key', 'main', 'headline', 'reported', 'stated'
                                  'higher', 'lower', 'former', 'latter', 'first', 'second', 'same', 'two', "company's",
                                  "deck's", "presentation's", "management's", "founders'", 'and', 'or',
                                  'implied', 'resulting', 'apparent', 'effective', 'underlying', 'overall', 'combined'})
+# What may follow the pair's judgment in its own clause (_replaceable): coordinated judgments and their hedges, an
+# object naming the pair's measure ("misrepresent the scale of actual activity", memo 100), citations and closing
+# punctuation. The clarification replaces all of it; anything else ("(in management's view)", "according to
+# management", "…, as noted earlier") is text it would delete, so the clause is kept (review of 72418e2).
+_JUDGMENT_TAIL = re.compile(
+    r'\s*' + _JUDGMENT_WORD + r'(?:\s+(?:and|or)\s+(?:(?:may|might|could|be|is|are|possibly|potentially|perhaps|'
+    r'probably|likely|even|also|materially|significantly|substantially)\s+)*' + _JUDGMENT_WORD + r')*', re.I)
+_TAIL_OBJECT_WORDS = frozenset({'of', 'actual', 'real', 'true'})
+
+
+def _replaceable(text, pair):
+    """The text from a judgment to its clause's end is what the pair's clarification may replace (_JUDGMENT_TAIL)."""
+    text = _REF.sub('', text)
+    judgments = _JUDGMENT_TAIL.match(text)
+    if not judgments:
+        return False
+    rest = text[judgments.end():]
+    words = rest[:re.search(r'\s*[.!]?["”’)]*\s*$', rest).start()].split()
+    return all(word.lower() in _DETERMINERS or word.lower() in _TAIL_OBJECT_WORDS or
+               word.lower() in _SUBJECT_QUALIFIERS or _MEASURE_HEAD.fullmatch(word) or _FIGURE_HEAD.fullmatch(word) or
+               _BASIS_WORDS.fullmatch(word) or _pair_word(word, pair) for word in words)
+
+
+def _has_verb(text):
+    """The text has a verb (_ITEM_VERB). A participle or judgment word after its determiner, with only placing words
+    between, modifies the figure and is not a verb: "The reported monthly figure [S2], and the larger figure [S3] are
+    overstated" is one compound subject, "Management reported the monthly figure [S2], and …" two clauses (review of
+    72418e2)."""
+    for hit in _ITEM_VERB.finditer(text):
+        before = re.findall(r"[\w'’]+", _REF.sub('', text[:hit.start()]))
+        while before and (before[-1].lower() in _SUBJECT_QUALIFIERS or _BASIS_WORDS.fullmatch(before[-1])):
+            before.pop()
+        if not (before and before[-1].lower() in _DETERMINERS):
+            return True
+    return False
 
 
 def _names_pair(text, pair):
@@ -442,10 +477,9 @@ def _owns_subject(segment, position, pair):
     may instead be a measure carrying the pair's basis ("the implied monthly activity", memo 100); the qualifiers are
     read either way ("If the figures are monthly, the hiring claim is overstated" is not the pair's; review of
     a6dcddf). Anything else in the clause leaves whose judgment it is open, so the clause is not the pair's: words
-    before the subject that are not a condition ("Management says", "In management's view,") or a comma-set aside
-    after the judgment ("…, in management's view")."""
-    if re.search(r',\s*\S', _REF.sub('', segment[position:])):
-        return False
+    before the subject that are not a condition ("Management says", "In management's view,"). Text after the judgment
+    ("…, in management's view", "(in management's view)") is read in _judged_segments, for both rules (_replaceable;
+    review of 72418e2)."""
     tokens = re.findall(r"[\w'’/.+-]+|,", _REF.sub('', segment[:position]))
     while tokens and tokens[-1].lower() in _VERB_GROUP:
         tokens.pop()
@@ -487,7 +521,7 @@ def _clauses(sentence):
     out = parts[:1]
     for separator, segment in zip(parts[1::2], parts[2::2]):
         left = out[-1]
-        if separator.startswith(',') and ',' in left and not _ITEM_VERB.search(left):
+        if separator.startswith(',') and ',' in left and not _has_verb(left):
             out[-1] += separator + segment
         else:
             out += [separator, segment]
@@ -504,9 +538,11 @@ def _judged_segments(sentence, pair):
     it ("Nothing suggests these figures are wrong — or inflated"; review of 750de3f). A judgment is the pair's when a
     referent governs it or one of its chain's judgments has the pair as its subject (_owns_subject); any other
     judgment is about something else ("— misleading advertising is wrong [S2, S3]", "— monthly costs are inflated";
-    reviews of 9b28e14 and 8d7f8dc)."""
+    reviews of 9b28e14 and 8d7f8dc). Neither makes it the pair's when its chain's first clause goes on past the
+    judgment with text the clarification would delete (_replaceable: "(in management's view)", "according to
+    management"; review of 72418e2); continuation fragments are a fixed grammar and need no such reading."""
     parts = _clauses(sentence)
-    judged, chains, governed, denied, chain = [], [], False, False, 0
+    judged, chains, governed, denied, chain, opened = [], [], False, False, 0, set()
     for i in range(0, len(parts), 2):
         segment = parts[i]
         if i and (parts[i - 1].strip() == ';' or not _CONTINUATION.fullmatch(segment)):
@@ -520,9 +556,11 @@ def _judged_segments(sentence, pair):
         if judgment:
             denied = denied or _denied(segment, judgment.start())
             judged.append((i, governed, denied, chain))
+            if (not i or chains[-2] != chain) and not _replaceable(segment[judgment.start():], pair):
+                opened.add(chain)            # text after the judgment the clarification would delete
     owned = {c for k, c in enumerate(chains)
              if any(_owns_subject(parts[2 * k], hit.start(), pair) for hit in _JUDGMENT.finditer(parts[2 * k]))}
-    judged = [(i, governed, denied, c, governed or c in owned) for i, governed, denied, c in judged]
+    judged = [(i, governed, denied, c, (governed or c in owned) and c not in opened) for i, governed, denied, c in judged]
     return parts, judged, chains
 
 
@@ -552,7 +590,7 @@ def _judgment(sentence, pair, changes):
         else:
             runs.append([chain in mine, 2 * k, 2 * k])
     for is_mine, first, _ in runs:
-        if is_mine and first and parts[first - 1].startswith(',') and not _ITEM_VERB.search(parts[first - 2]):
+        if is_mine and first and parts[first - 1].startswith(',') and not _has_verb(parts[first - 2]):
             return sentence                  # a compound subject, not two clauses (review of a6dcddf)
     changes.append('basis_overstatement')
     out = []
@@ -575,8 +613,8 @@ def _referent_judgment(sentence, pair, changes):
         return sentence
     parts, judged, _ = _judged_segments(sentence, pair)
     hit, replaced = False, set()
-    for i, governed, denied, chain, _ in judged:
-        if not governed or denied:
+    for i, governed, denied, chain, owned in judged:
+        if not (governed and owned) or denied:
             continue
         clause = parts[i]
         end = re.search(r'[.!]?["”’)]*\s*$', clause).group(0)
