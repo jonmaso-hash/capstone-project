@@ -3134,6 +3134,7 @@ REVIEW_8F1_KEPT = (
     PAIR_LEAD + "The page-99 monthly figure is overstated [S2, S3].",
     PAIR_LEAD + "The run-rate figure is overstated [S2, S3].",
     PAIR_LEAD + "The 500M messages/week figure is overstated [S2, S3].",
+    PAIR_LEAD + "The costs/month figure is overstated [S2, S3].",
     PAIR_LEAD + "If the figures are monthly, the implied weekly activity is overstated [S2, S3].",
     PAIR_LEAD + "The monthly figure is accurate [S2], and the daily figure [S3] is overstated.",
 )
