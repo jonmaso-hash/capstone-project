@@ -3219,6 +3219,20 @@ class Review8f11844Tests(SimpleTestCase):
                          ('The unspecified-interval and monthly figures [C3, C2] differ.',
                           ['basis_cumulative_presupposed']))
 
+    def test_an_admitted_cumulative_side_is_never_relabelled_beside_an_unstated_one(self):
+        # A pair of a cumulative side and an unstated side: "cumulative" names the admitted side, so neither relabel
+        # applies, although the pair has a side with no stated interval.
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        items = [_usage('C7', '3M messages to date', 7), _usage('C8', '3M messages', 8)]
+        note = ('measurement_basis', ('C7', 'C8'), 'Page 7 states 3M messages as a cumulative total; page 8 states 3M '
+                'messages without an explicit interval. These use different measurement bases and need clarification '
+                'before comparison.')
+        facts = basis_facts(items, (note,))
+        for text in ('The cumulative figure [C7] sits beside the figure on page 8 [C8].',
+                     'The cumulative and monthly presentations [C7, C8] differ.'):
+            with self.subTest(text=text):
+                self.assertEqual(guard_basis_wording(text, facts), (text, []))
+
     def test_earlier_rounds_are_unchanged(self):
         self.assertEqual(self.full(MEMO98_JUDGMENT), (RISK_AFTER[:-1] + ' [C2, C3].', ['basis_overstatement']))
         for text in REVIEW_71E_KEPT + REVIEW_724_KEPT + REVIEW_A6D_KEPT + REVIEW_8D7_KEPT:
