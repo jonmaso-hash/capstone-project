@@ -1,0 +1,69 @@
+"""Reviews of 8d7f8dc, a6dcddf and 72418e2: exact expected outputs per version for this round's cases, and boundary probes for the
+remaining limitations. Full normalisation -> time -> funding -> basis sequence on memo 101's payload; the basis guard
+from git at each earlier commit and from the working tree. No model call, no database."""
+import importlib.util, subprocess, sys
+import zelda_api
+from zelda_api import basis_fidelity as current
+from zelda_api.tests_output_fidelity import (replay, items_from, notes_from, memo101_payload, PAIR_LEAD, CONT_LEAD,
+                                             REVIEW_8D7_KEPT, REVIEW_8D7_REPAIRED, REVIEW_9B2_REPAIRED,
+                                             REVIEW_A6D_KEPT, REVIEW_A6D_REPAIRED, REVIEW_724_KEPT, REVIEW_724_REPAIRED,
+                                             MEMO98_JUDGMENT, RISK_AFTER)
+p = memo101_payload(); items, notes = items_from(p), notes_from(p)
+
+
+def load(rev):
+    src = subprocess.run(['git', 'show', f'{rev}:zelda_api/basis_fidelity.py'], capture_output=True, text=True,
+                         encoding='utf-8', check=True).stdout
+    mod = importlib.util.module_from_spec(importlib.util.spec_from_loader('zelda_api.basis_fidelity', loader=None))
+    mod.__package__ = 'zelda_api'
+    exec(compile(src, rev, 'exec'), mod.__dict__)
+    return mod
+
+
+head = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True).stdout.strip()
+dirty = subprocess.run(['git', 'diff', '--quiet', 'HEAD', '--', 'zelda_api/basis_fidelity.py']).returncode
+versions = [(r, load(r)) for r in ('0664563', '9b28e14', '8d7f8dc', 'a6dcddf', '72418e2')] + [(f'{head}{" DIRTY" if dirty else ""}', current)]
+
+
+def run(mod, text):
+    sys.modules['zelda_api.basis_fidelity'] = zelda_api.basis_fidelity = mod
+    out, ch = replay({'s': text}, items, notes)
+    return out['s'], ch.get('s', [])
+
+
+cases = ([(t, (t, [])) for t in REVIEW_724_KEPT + REVIEW_A6D_KEPT + REVIEW_8D7_KEPT] +
+         [(t, (a, c)) for t, a, c in REVIEW_724_REPAIRED + REVIEW_A6D_REPAIRED + REVIEW_8D7_REPAIRED + REVIEW_9B2_REPAIRED] +
+         [(MEMO98_JUDGMENT, (RISK_AFTER[:-1] + ' [C2, C3].', ['basis_overstatement']))])
+print('EXACT expected output and rule, per version:', ' | '.join(v for v, _ in versions))
+totals = {v: 0 for v, _ in versions}
+for text, expected in cases:
+    marks = []
+    for v, mod in versions:
+        ok = run(mod, text) == expected
+        totals[v] += ok
+        marks.append('exact' if ok else 'WRONG')
+    print(f"  {' '.join(f'{m:5}' for m in marks)}  {text[len(PAIR_LEAD):]}")
+print('  totals:', ', '.join(f'{v} {n}/{len(cases)}' for v, n in totals.items()))
+
+PROBES = [
+    PAIR_LEAD + "The monthly figure is overstated, as compared with the cumulative figure [S2, S3].",
+    PAIR_LEAD + "The monthly figure is overstated by management [S2, S3].",
+    PAIR_LEAD + "The monthly figure is overstated relative to the larger figure [S2, S3].",
+    PAIR_LEAD + "The inflated monthly figure [S2], and the larger figure [S3] are overstated.",
+    PAIR_LEAD + "Without clarification, one or both figures may be overstated [S2, S3].",
+    PAIR_LEAD + "Moreover, the monthly figure is overstated [S2, S3].",
+    PAIR_LEAD + "The monthly figure is overstated, as noted earlier [S2, S3].",
+    PAIR_LEAD + "The monthly figure, in management's view, is inflated [S2, S3].",
+    PAIR_LEAD + "If the cumulative figure is presented as monthly, in management's view, the claim is overstated [S2, S3].",
+    PAIR_LEAD + "The cumulative, monthly and daily figures are overstated [S2, S3].",
+    PAIR_LEAD + "The monthly figure is clearly overstated [S2, S3].",
+    PAIR_LEAD + "The claim is overstated [S2, S3].",
+    PAIR_LEAD + "According to management, the monthly figure is overstated [S2, S3].",
+]
+print('\nBOUNDARY probes (output per version):')
+for text in PROBES:
+    print('  ' + text[len(PAIR_LEAD):])
+    for v, mod in versions:
+        out, ch = run(mod, text)
+        print(f'    {v:>8}: ' + ('kept' if out == text else f'{ch} -> {out[len(PAIR_LEAD):]}'))
+sys.modules['zelda_api.basis_fidelity'] = zelda_api.basis_fidelity = current

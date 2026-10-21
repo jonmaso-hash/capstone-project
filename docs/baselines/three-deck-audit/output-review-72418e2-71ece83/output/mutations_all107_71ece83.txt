@@ -1,0 +1,138 @@
+All 107 mutants at 71ece83 (one at a time, three modules, 328 tests; restore SHA-256 checked). Chunks f01-f14.
+== f01
+Q1 CAUGHT Ran 328 tests in 11.982s FAILED (failures=32) restored=True | OF-806: "one or both figures" does not continue the item's pair
+Q2 CAUGHT Ran 328 tests in 11.921s FAILED (failures=46) restored=True | OF-806: the referent-judgment rule is not applied
+Q3 CAUGHT Ran 328 tests in 11.811s FAILED (failures=4) restored=True | OF-806: a pair with a CONTRADICTED member is neutralised too
+Q5 CAUGHT Ran 328 tests in 12.052s FAILED (failures=121) restored=True | OF-806: the whole sentence is replaced, not only the judging segment (re-anchored: _clauses)
+Q6 CAUGHT Ran 328 tests in 11.846s FAILED (failures=25) restored=True | OF-805: the context rule is not applied
+Q7 CAUGHT Ran 328 tests in 11.769s FAILED (failures=1) restored=True | OF-805: a condition does not keep the sentence
+Q8 CAUGHT Ran 328 tests in 12.050s FAILED (failures=1) restored=True | OF-805: a narrated moved ref is moved anyway
+Q9 CAUGHT Ran 328 tests in 12.010s FAILED (failures=1) restored=True | OF-805: a page-12 ref not sharing its mention with the page-10 side is moved too
+Q10 CAUGHT Ran 328 tests in 10.907s FAILED (failures=21) restored=True | OF-805: the pair clarification is not added after the moved fact
+Q11 CAUGHT Ran 328 tests in 10.931s FAILED (failures=5) restored=True | OF-807: the condition-attribution rule is not applied
+Q12 CAUGHT Ran 328 tests in 10.997s FAILED (failures=1) restored=True | OF-807: conditions the cited statements do state are rewritten too
+Q13 CAUGHT Ran 328 tests in 10.928s FAILED (failures=1) restored=True | OF-807: any sentence before counts as setting conditions (re-anchored: unique context)
+Q14 CAUGHT Ran 328 tests in 11.150s FAILED (failures=1) restored=True | OF-807 / OF-806: the sentence before is carried across a new list item
+Q15 CAUGHT Ran 328 tests in 10.949s FAILED (failures=3) restored=True | OF-807: the "rests on the company's own assertions" consequence is kept
+R1 CAUGHT Ran 328 tests in 10.989s FAILED (failures=114) restored=True | review 1801ec5: the judgment rule does not leave a referent-governed judgment to its own rule (re-anchored)
+R2 CAUGHT Ran 328 tests in 11.031s FAILED (failures=88) restored=True | review 1801ec5: one governed judging segment is enough to bypass the judgment rule (re-anchored)
+R3 CAUGHT Ran 328 tests in 10.970s FAILED (failures=1) restored=True | review 1801ec5: a reporting verb before the moved refs need not have the company as subject
+R5 CAUGHT Ran 328 tests in 10.960s FAILED (failures=1) restored=True | review 1801ec5: a denial in the clause does not keep the citations
+R6 CAUGHT Ran 328 tests in 10.929s FAILED (failures=1) restored=True | review 1801ec5: a hedge in the clause does not keep the citations
+T1 CAUGHT Ran 328 tests in 10.843s FAILED (failures=17) restored=True | OF-903/904: context phrases outside parentheses are not read
+final sha matches pre-run: True 8f7782ec26374879666896443772d39d08acb63141481b8581037a1cf5af725c
+== f02
+T2 CAUGHT Ran 328 tests in 11.811s FAILED (failures=1) restored=True | OF-903/904: the fact is placed even mid-clause
+T3 CAUGHT Ran 328 tests in 11.944s FAILED (failures=1) restored=True | OF-903/904: a narrator named in the clause does not keep it
+T4 CAUGHT Ran 328 tests in 11.966s FAILED (failures=13) restored=True | OF-904: "self-reported" is read as a reporting verb
+T5 CAUGHT Ran 328 tests in 11.902s FAILED (failures=13) restored=True | OF-904: without a reporting verb the fact still follows as "and separately"
+T6 CAUGHT Ran 328 tests in 11.908s FAILED (failures=1) restored=True | OF-903: a context phrase inside a non-context parenthesis is read
+T7 CAUGHT Ran 328 tests in 12.000s FAILED (failures=36) restored=True | OF-905: "these figures" does not continue the item's pair
+T8 CAUGHT Ran 328 tests in 12.015s FAILED (failures=69) restored=True | OF-905: a dash does not separate segments (re-anchored: _CLAUSE_SPLIT)
+final sha matches pre-run: True 8f7782ec26374879666896443772d39d08acb63141481b8581037a1cf5af725c
+== f03
+T9 CAUGHT Ran 328 tests in 11.779s FAILED (failures=1) restored=True | OF-905: an independent ";" clause inherits the referent (re-anchored)
+T10 CAUGHT Ran 328 tests in 11.828s FAILED (failures=15) restored=True | OF-906: the cumulative-presupposition rule is not applied
+T11 CAUGHT Ran 328 tests in 11.739s FAILED (failures=1) restored=True | OF-906: an admitted cumulative side is neutralised too
+T12 CAUGHT Ran 328 tests in 11.871s FAILED (failures=12) restored=True | OF-906: the phrase's own citation group is ignored (only the sentence's pair; re-anchored)
+T13 CAUGHT Ran 328 tests in 11.787s FAILED (failures=1) restored=True | OF-906: a question is neutralised too
+V1 CAUGHT Ran 328 tests in 11.818s FAILED (failures=4) restored=True | review 750de3f: a denial before the referent does not cover the chain
+V2 CAUGHT Ran 328 tests in 11.960s FAILED (failures=1) restored=True | review 750de3f: a denied judgment does not cover the judgments coordinated with it
+final sha matches pre-run: True 8f7782ec26374879666896443772d39d08acb63141481b8581037a1cf5af725c
+== f04
+V3 CAUGHT Ran 328 tests in 12.167s FAILED (failures=135) restored=True | review 750de3f: a dash carries the referent into a part with its own subject (re-anchored: fullmatch)
+V5 CAUGHT Ran 328 tests in 12.071s FAILED (failures=1) restored=True | review 750de3f: coordinated judgments each get a clarification
+V6 CAUGHT Ran 328 tests in 11.805s FAILED (failures=1) restored=True | review 750de3f: an attribution to someone else does not keep the citations
+V7 CAUGHT Ran 328 tests in 11.877s FAILED (failures=1) restored=True | review 750de3f: without a reporting verb, no own source need be named
+V8 CAUGHT Ran 328 tests in 12.064s FAILED (failures=1) restored=True | review 750de3f: the cumulative phrase need not be about a figure noun
+V9 CAUGHT Ran 328 tests in 12.167s FAILED (failures=1) restored=True | review 750de3f: a later citation owns the phrase across a clause connector
+W1 CAUGHT Ran 328 tests in 11.958s FAILED (failures=29) restored=True | review 7fb484b: any word ending in "ing" counts as a continuing participle (the old rule; re-anchored)
+final sha matches pre-run: True 8f7782ec26374879666896443772d39d08acb63141481b8581037a1cf5af725c
+== f05
+W2 CAUGHT Ran 328 tests in 11.856s FAILED (failures=6) restored=True | review 7fb484b: a listed participle continues whatever its object (re-anchored)
+W3 CAUGHT Ran 328 tests in 11.829s FAILED (failures=12) restored=True | review 7fb484b: "or/and/nor/which" continues whatever follows it (re-anchored)
+W4 CAUGHT Ran 328 tests in 11.841s FAILED (failures=1) restored=True | review 7fb484b: a qualifier after a generic figure noun need not name the pair's noun
+W5 CAUGHT Ran 328 tests in 12.131s FAILED (failures=1) restored=True | review 7fb484b: a qualifier may name any noun
+W6 CAUGHT Ran 328 tests in 11.850s FAILED (failures=1) restored=True | review 7fb484b: another metric before the owning citation does not keep the phrase
+W7 CAUGHT Ran 328 tests in 11.810s FAILED (failures=3) restored=True | review 7fb484b: a no-verb clause's head need not be the company's own words
+W8 CAUGHT Ran 328 tests in 12.052s FAILED (failures=3) restored=True | review 7fb484b: any word is an own-head word
+final sha matches pre-run: True 8f7782ec26374879666896443772d39d08acb63141481b8581037a1cf5af725c
+== f06
+W9 CAUGHT Ran 328 tests in 11.842s FAILED (failures=17) restored=True | positive: no participle continues ("raising the possibility of inflation", memo 101 risk)
+W10 CAUGHT Ran 328 tests in 12.136s FAILED (failures=17) restored=True | positive: no hedge or "or" before the judgment continues ("— possibly inflated", "— or inflated")
+W11 CAUGHT Ran 328 tests in 11.850s FAILED (failures=14) restored=True | positive: the own-head vocabulary lacks the own-source words ("the deck's", "self-reported", "taking ... at face value")
+X1 CAUGHT Ran 328 tests in 11.884s FAILED (failures=49) restored=True | review 377a142: prefix-only matching (match, not fullmatch: the rest of the fragment is not read)
+X2 CAUGHT Ran 328 tests in 11.959s FAILED (failures=49) restored=True | review 377a142: anything may follow the judgment (the tail is not validated)
+X3 CAUGHT Ran 328 tests in 11.899s FAILED (failures=5) restored=True | review 377a142: the predicate slot accepts a bare judgment noun ("— inflation.")
+X4 CAUGHT Ran 328 tests in 11.882s FAILED (failures=13) restored=True | positive: no coordinated judgment after the first ("or imprecise reporting", memo 101 risk)
+final sha matches pre-run: True 8f7782ec26374879666896443772d39d08acb63141481b8581037a1cf5af725c
+== f07
+X5 CAUGHT Ran 328 tests in 11.802s FAILED (failures=7) restored=True | positive: the fragment's own citations are not allowed ("— possibly overstated [S2, S3].")
+X6 CAUGHT Ran 328 tests in 11.884s FAILED (failures=17) restored=True | positive: the participle's object must be a predicate, not a noun ("— suggesting possible inflation.")
+Y1 CAUGHT Ran 328 tests in 11.967s FAILED (failures=40) restored=True | review 9b28e14: a judging clause holding citations is the pair's (the 9b28e14 fallback; re-anchored: per segment)
+Y2 CAUGHT Ran 328 tests in 11.975s FAILED (failures=103) restored=True | review 9b28e14: every judgment is the pair's (ownership not read; re-anchored)
+Y4 CAUGHT Ran 328 tests in 12.033s FAILED (failures=87) restored=True | review 9b28e14: the referent rule's dispatch counts judgments that are not the pair's
+Y5 CAUGHT Ran 328 tests in 11.916s FAILED (failures=3) restored=True | positive: a basis word in a condition does not name the pair ("If the deck counts weekly, ..."; _names_pair now reads only conditions)
+Y6 CAUGHT Ran 328 tests in 11.772s FAILED (failures=3) restored=True | positive: a figure referent in a condition does not name the pair ("If the larger figure is restated, ...")
+final sha matches pre-run: True 8f7782ec26374879666896443772d39d08acb63141481b8581037a1cf5af725c
+== f08
+Y7 CAUGHT Ran 328 tests in 12.056s FAILED (failures=3) restored=True | positive: the pair's noun in a condition does not name the pair ("If the messages are restated, ...")
+Y8 CAUGHT Ran 328 tests in 12.004s FAILED (failures=27) restored=True | positive: a later clause's clarification is not lower-cased in a mixed sentence
+Y9 CAUGHT Ran 328 tests in 11.817s FAILED (failures=50) restored=True | positive: the pair's clause loses its citations in a mixed sentence
+Z1 CAUGHT Ran 328 tests in 12.014s FAILED (failures=58) restored=True | review 8d7f8dc: the whole sentence is one run (whole-sentence replacement: the management clause is lost)
+Z2 CAUGHT Ran 328 tests in 11.829s FAILED (failures=32) restored=True | review 8d7f8dc: a linking comma does not separate clauses
+Z3 CAUGHT Ran 328 tests in 11.842s FAILED (failures=3) restored=True | review 8d7f8dc: ", which" does not start a clause
+Z4 CAUGHT Ran 328 tests in 11.838s FAILED (failures=6) restored=True | review 8d7f8dc: a serial list is split at its last comma (garbled; re-anchored)
+final sha matches pre-run: True 8f7782ec26374879666896443772d39d08acb63141481b8581037a1cf5af725c
+== f09
+Z6 CAUGHT Ran 328 tests in 11.892s FAILED (failures=8) restored=True | review 8d7f8dc: the subject's qualifiers are not read ("the hiring claim"; re-anchored)
+Z7 CAUGHT Ran 328 tests in 12.093s FAILED (failures=24) restored=True | review 8d7f8dc: the subject's head is not read ("monthly costs"; re-anchored)
+Z8 CAUGHT Ran 328 tests in 12.330s FAILED (failures=3) restored=True | review 8d7f8dc: the pair's noun is a pair head without one of its figures ("the messages are misleading")
+Z9 CAUGHT Ran 328 tests in 12.012s FAILED (failures=5) restored=True | review 8d7f8dc: after a condition, any head with allowed qualifiers is the pair's ("monthly costs"; re-anchored)
+Z10 CAUGHT Ran 328 tests in 11.744s FAILED (failures=2) restored=True | review 8d7f8dc: after a condition, a measure head needs no pair basis ("the implied activity"; re-anchored)
+Z11 CAUGHT Ran 328 tests in 11.706s FAILED (failures=3) restored=True | review 8d7f8dc: after a condition, a basis word alone owns the consequence ("monthly costs"; re-anchored)
+Z12 CAUGHT Ran 328 tests in 11.833s FAILED (failures=69) restored=True | review 8d7f8dc: the subject runs past its determiner (re-anchored: unique context)
+final sha matches pre-run: True 8f7782ec26374879666896443772d39d08acb63141481b8581037a1cf5af725c
+== f10
+Z13 CAUGHT Ran 328 tests in 11.841s FAILED (failures=71) restored=True | review 8d7f8dc: the verb group is not skipped (the subject is never found)
+Z14 CAUGHT Ran 328 tests in 11.675s FAILED (failures=19) restored=True | positive: the pair's topics are not its vocabulary ("The key traction claim")
+Z15 CAUGHT Ran 328 tests in 11.865s FAILED (failures=3) restored=True | positive: a topic is not a pair head ("The reported usage is overstated"; re-anchored)
+Z16 CAUGHT Ran 328 tests in 11.580s FAILED (failures=30) restored=True | positive: the condition path is not applied (memo 98 and memo 100 forms; re-anchored)
+Z17 CAUGHT Ran 328 tests in 11.830s FAILED (failures=15) restored=True | positive: no measure head after a condition (memo 100: "the implied monthly activity"; re-anchored)
+Z18 CAUGHT Ran 328 tests in 11.761s FAILED (failures=4) restored=True | positive: adjacent clauses judging the pair each get a clarification
+Z19 CAUGHT Ran 328 tests in 12.207s FAILED (failures=1) restored=True | positive: a page is not a placing qualifier ("The page-10 figure")
+final sha matches pre-run: True 8f7782ec26374879666896443772d39d08acb63141481b8581037a1cf5af725c
+== f11
+Z20 CAUGHT Ran 328 tests in 11.967s FAILED (failures=3) restored=True | positive: the pair's figures are not its vocabulary ("The 500M messages"; re-anchored)
+N1 CAUGHT Ran 328 tests in 11.926s FAILED (failures=5) restored=True | review a6dcddf: a condition overrides foreign qualifiers (the a6dcddf behaviour: "the hiring claim")
+N2 CAUGHT Ran 328 tests in 11.988s FAILED (failures=17) restored=True | review a6dcddf: the list guard reads only the text after the last comma (the a6dcddf behaviour; re-anchored)
+N4 CAUGHT Ran 328 tests in 11.876s FAILED (failures=8) restored=True | review a6dcddf: words before the subject do not open the owner ("Management says", "In management's view,")
+N5 CAUGHT Ran 328 tests in 11.784s FAILED (failures=2) restored=True | review a6dcddf: a condition may hold an aside ("If the figures are monthly, in management's view, …")
+N6 CAUGHT Ran 328 tests in 11.996s FAILED (failures=2) restored=True | positive: a list number or marker is read as words before the subject ("1. If …")
+N7 CAUGHT Ran 328 tests in 11.733s FAILED (failures=6) restored=True | positive: a serial-list subject does not collect its earlier items ("The cumulative, monthly, and daily figures")
+final sha matches pre-run: True 8f7782ec26374879666896443772d39d08acb63141481b8581037a1cf5af725c
+== f12
+N8 CAUGHT Ran 328 tests in 11.931s FAILED (failures=15) restored=True | positive: "implied" is not a placing qualifier (memo 100)
+N9 SURVIVED Ran 328 tests in 11.953s OK restored=True | positive: ownership is read over the joined chain, separators included ("…, and possibly inflated")
+N10 CAUGHT Ran 328 tests in 12.073s FAILED (failures=7) restored=True | review a6dcddf: a compound subject is split as two clauses ("The monthly figure [S2], and the larger figure [S3] are ..."; re-anchored)
+K1 CAUGHT Ran 328 tests in 11.883s FAILED (failures=6) restored=True | review 72418e2: every -ed word is a verb (the 72418e2 behaviour: "The reported monthly figure [S2], and ...")
+K2 CAUGHT Ran 328 tests in 11.943s FAILED (failures=1) restored=True | review 72418e2: placing words between the determiner and the participle are not skipped ("The company's reported")
+K3 CAUGHT Ran 328 tests in 11.938s FAILED (failures=23) restored=True | positive: no word is ever a verb ("Management reported the monthly figure [S2], and ..." is two clauses)
+K4 CAUGHT Ran 328 tests in 11.806s FAILED (failures=1) restored=True | review 72418e2: the list guard reads -ed modifiers as verbs ("The reported, monthly, and daily figures")
+final sha matches pre-run: True 8f7782ec26374879666896443772d39d08acb63141481b8581037a1cf5af725c
+== f13
+K5 CAUGHT Ran 328 tests in 11.861s FAILED (failures=5) restored=True | review 72418e2: the compound-subject check reads -ed modifiers as verbs
+K6 CAUGHT Ran 328 tests in 11.947s FAILED (failures=14) restored=True | review 72418e2: the text after the judgment is not read ("(in management's view)", "according to management")
+K7 CAUGHT Ran 328 tests in 11.961s FAILED (failures=4) restored=True | review 72418e2: the referent rule ignores the tail ("These figures may be inflated (in management's view)")
+K8 CAUGHT Ran 328 tests in 11.899s FAILED (failures=13) restored=True | positive: continuation fragments are read as tails too (memo 101: "or imprecise reporting")
+K9 CAUGHT Ran 328 tests in 11.952s FAILED (failures=14) restored=True | positive: no object after the judgment is replaceable (memo 100: "misrepresent the scale of actual activity")
+K10 CAUGHT Ran 328 tests in 11.801s FAILED (failures=14) restored=True | review 72418e2: any object is replaceable ("the scale of hiring", "compared with the hiring plan")
+K11 CAUGHT Ran 328 tests in 11.850s FAILED (failures=2) restored=True | positive: the pair's own words are not object vocabulary ("compared with the bare bot count")
+final sha matches pre-run: True 8f7782ec26374879666896443772d39d08acb63141481b8581037a1cf5af725c
+== f14
+K12 CAUGHT Ran 328 tests in 12.030s FAILED (failures=1) restored=True | positive: a page or slide is not object vocabulary ("overstates the page-10 count")
+K13 CAUGHT Ran 328 tests in 11.808s FAILED (failures=2) restored=True | positive: coordinated judgments are not replaceable ("overstated and possibly misleading")
+K14 CAUGHT Ran 328 tests in 11.803s FAILED (failures=4) restored=True | positive: comparison connectives are not object vocabulary ("compared with the cumulative figure", "as a monthly figure")
+final sha matches pre-run: True 8f7782ec26374879666896443772d39d08acb63141481b8581037a1cf5af725c
+
+tally: 106 caught, 1 survived, 0 crash-only; error lines: 0

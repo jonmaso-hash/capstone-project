@@ -1,0 +1,313 @@
+"""Review of 72418e2: K1-K14 added; Y2, Z4, N2, N10 re-anchored to _has_verb and the tail-aware ownership (same meaning); N3 retired (its comma check is replaced by _replaceable, mutated away as K6). Review of a6dcddf: N1-N10 added; Z5 retired (the list guard no longer strips citations: with the compound-subject check its outcome cannot differ); Y1, Z4, Z6, Z7, Z9-Z12, Z15-Z17, Z20 re-anchored to the rewritten _owns_subject (same meaning; Z9 and Z10 now pin the measure path). Review of 8d7f8dc: Z1-Z20 added; Q5, Q13, T8, Y1, Y2 re-anchored (same meaning); Y3 retired (its branch, whole-sentence replacement, is gone; Z1 mutates it back in). Review of 9b28e14: Y1-Y9 added; R1, R2, T8 re-anchored to the ownership-aware _judged_segments (same meaning). Review of 377a142: X1-X6 added; W1-W3, W9, W10 re-anchored to the whole-fragment _CONTINUATION. Review of 7fb484b: W1-W11 added, V4 retired (its anchor, the old new-subject lookahead, is replaced by the W1-W3 allowlist). Carried: targeted behavioural mutations for the OF-903..906 protections and their review-of-750de3f scope corrections (V1-V9),
+with the OF-805..807 (Q), integration (R) and memo-101 (T) mutations carried. Q4 is retired: the denial check it removed
+is now computed per chain in _judged_segments and mutated as V1 and V2. R2, T9 and T12 are re-anchored to the moved code
+(same meaning). One mutant at a time on the worktree's zelda_api/basis_fidelity.py; the three affected modules run
+against it; the original bytes are restored and SHA-256 checked before the next. A mutant counts as CAUGHT only by
+assertion failures; errors are listed separately and errors alone are CRASH-ONLY. Usage: python mutate_v.py <worktree> [ID ...]"""
+import hashlib, os, re, subprocess, sys
+
+WT = sys.argv[1]
+ONLY = set(sys.argv[2:])
+BF = os.path.join(WT, 'zelda_api', 'basis_fidelity.py')
+T = os.path.join(os.path.dirname(os.path.abspath(__file__)), 't.sh')
+LABELS = ['zelda_api.tests_output_fidelity', 'zelda_api.tests_usage_basis', 'zelda_api.tests_funding_fidelity']
+M = [
+    # --- carried: OF-806 (Q1-Q5; Q4 retired), OF-805 (Q6-Q10), OF-807 (Q11-Q15)
+    ('Q1', 'OF-806: "one or both figures" does not continue the item\'s pair',
+     "(_FIGURE_REFERENT.search(sentence) or _PAIR_REFERENT.search(sentence)):", "_FIGURE_REFERENT.search(sentence):"),
+    ('Q2', 'OF-806: the referent-judgment rule is not applied',
+     "            sentence = _referent_judgment(sentence, pair, changes)\n", ""),
+    ('Q3', 'OF-806: a pair with a CONTRADICTED member is neutralised too',
+     "    if pair.contradicted or _asks(sentence) or not _PAIR_REFERENT.search(sentence):",
+     "    if _asks(sentence) or not _PAIR_REFERENT.search(sentence):"),
+    ('Q5', 'OF-806: the whole sentence is replaced, not only the judging segment (re-anchored: _clauses)',
+     "    parts = _CLAUSE_SPLIT.split(sentence)\n    out = parts[:1]", "    parts = [sentence]\n    out = parts[:1]"),
+    ('Q6', 'OF-805: the context rule is not applied',
+     "        sentence = _context_aside(sentence, facts, changes)\n", ""),
+    ('Q7', 'OF-805: a condition does not keep the sentence',
+     "        if _conditional(sentence, at):\n            continue\n", ""),
+    ('Q8', 'OF-805: a narrated moved ref is moved anyway',
+     "        if not outside or not inside or set(outside) & facts.narrated:", "        if not outside or not inside:"),
+    ('Q9', 'OF-805: a page-12 ref not sharing its mention with the page-10 side is moved too',
+     "        if not merged:\n            continue", "        if False:\n            continue"),
+    ('Q10', 'OF-805: the pair clarification is not added after the moved fact',
+     "        if clarification not in sentence:", "        if False:"),
+    ('Q11', 'OF-807: the condition-attribution rule is not applied',
+     "        sentence = _condition_attribution(sentence, before, facts, changes)\n", ""),
+    ('Q12', 'OF-807: conditions the cited statements do state are rewritten too',
+     "    unstated = [word for word in conditions if word not in stated]", "    unstated = list(conditions)"),
+    ('Q13', 'OF-807: any sentence before counts as setting conditions (re-anchored: unique context)',
+     "    condition = _CONDITION.search(before)\n    cited = _cited(sentence)",
+     "    condition = _CONDITION.search(before) or re.match('', before or '')\n    cited = _cited(sentence)"),
+    ('Q14', 'OF-807 / OF-806: the sentence before is carried across a new list item',
+     "            before = None\n", ""),
+    ('Q15', 'OF-807: the "rests on the company\'s own assertions" consequence is kept',
+     "    rest = _OWN_ASSERTIONS.sub('', sentence[match.end():])", "    rest = sentence[match.end():]"),
+    # --- carried: integration (review of 1801ec5)
+    ('R1', 'review 1801ec5: the judgment rule does not leave a referent-governed judgment to its own rule (re-anchored)',
+     "    if _asks(sentence) or not _JUDGMENT.search(sentence) or _referent_judged(sentence, pair):",
+     "    if _asks(sentence) or not _JUDGMENT.search(sentence):"),
+    ('R2', 'review 1801ec5: one governed judging segment is enough to bypass the judgment rule (re-anchored)',
+     "    return all(governed for _, governed, _, _, owned in judged if owned)",
+     "    return any(governed for _, governed, _, _, owned in judged if owned)"),
+    ('R3', 'review 1801ec5: a reporting verb before the moved refs need not have the company as subject',
+     "        if verbs and not _OWN_SUBJECT_END.search(head[:verbs[-1].start()]):", "        if False:"),
+    ('R5', 'review 1801ec5: a denial in the clause does not keep the citations',
+     "        if set(words) & _DENIAL or _UNCERTAIN.search(' '.join(words)):", "        if _UNCERTAIN.search(' '.join(words)):"),
+    ('R6', 'review 1801ec5: a hedge in the clause does not keep the citations',
+     "        if set(words) & _DENIAL or _UNCERTAIN.search(' '.join(words)):", "        if set(words) & _DENIAL:"),
+    # --- carried: memo 101 (OF-903..906)
+    ('T1', 'OF-903/904: context phrases outside parentheses are not read',
+     "for m in _CONTEXT_PHRASE.finditer(sentence)", "for m in []"),
+    ('T2', 'OF-903/904: the fact is placed even mid-clause',
+     "        if not _CLAUSE_END.match(sentence, end):", "        if False:"),
+    ('T3', 'OF-903/904: a narrator named in the clause does not keep it',
+     "        if any(name.lower() in clause.lower() for name in facts.narrators):", "        if False:"),
+    ('T4', 'OF-904: "self-reported" is read as a reporting verb',
+     "\n                 and head[verb.start() - 1:verb.start()] != '-']", "]"),
+    ('T5', 'OF-904: without a reporting verb the fact still follows as "and separately"',
+     "        if aside or verbs:", "        if True:"),
+    ('T6', 'OF-903: a context phrase inside a non-context parenthesis is read',
+     "\n              if sentence[:m.start()].count('(') == sentence[:m.start()].count(')')]", "]"),
+    ('T7', 'OF-905: "these figures" does not continue the item\'s pair',
+     "|(?:these|those)\\s+(?:two\\s+)?(?:figures|numbers|metrics))\\b'", ")\\b'"),
+    ('T8', 'OF-905: a dash does not separate segments (re-anchored: _CLAUSE_SPLIT)',
+     "_CLAUSE_SPLIT = re.compile(r'(;\\s*|\\s+[—–]\\s+|,", "_CLAUSE_SPLIT = re.compile(r'(;\\s*|,"),
+    ('T9', 'OF-905: an independent ";" clause inherits the referent (re-anchored)',
+     "(parts[i - 1].strip() == ';' or not", "(False or not"),
+    ('T10', 'OF-906: the cumulative-presupposition rule is not applied',
+     "        sentence = _cumulative_presupposed(sentence, pair, facts, changes)\n", ""),
+    ('T11', 'OF-906: an admitted cumulative side is neutralised too',
+     "        if mine is None or mine.cumulative_admitted:", "        if mine is None:"),
+    ('T12', 'OF-906: the phrase\'s own citation group is ignored (only the sentence\'s pair; re-anchored)',
+     "        if group is None:\n            return pair\n", "        return pair\n"),
+    ('T13', 'OF-906: a question is neutralised too',
+     "    if _asks(sentence) or not _CUMULATIVE_PAIR.search(sentence):", "    if not _CUMULATIVE_PAIR.search(sentence):"),
+    # --- new: review of 750de3f
+    ('V1', 'review 750de3f: a denial before the referent does not cover the chain',
+     "            denied = denied or _denied(segment, referent.start())\n", "            pass\n"),
+    ('V2', 'review 750de3f: a denied judgment does not cover the judgments coordinated with it',
+     "            denied = denied or _denied(segment, judgment.start())\n", "            pass\n"),
+    ('V3', 'review 750de3f: a dash carries the referent into a part with its own subject (re-anchored: fullmatch)',
+     "(parts[i - 1].strip() == ';' or not _CONTINUATION.fullmatch(segment))", "(parts[i - 1].strip() == ';')"),
+    ('V5', 'review 750de3f: coordinated judgments each get a clarification',
+     "        if chain in replaced:", "        if False:"),
+    ('V6', 'review 750de3f: an attribution to someone else does not keep the citations',
+     "        if _ATTRIBUTION.search(sentence[:at]):", "        if False:"),
+    ('V7', 'review 750de3f: without a reporting verb, no own source need be named',
+     "        if not verbs and not _OWN_SOURCE.search(clause):", "        if False:"),
+    ('V8', 'review 750de3f: the cumulative phrase need not be about a figure noun',
+     "        if noun is None and not (", "        if False and not ("),
+    ('V9', 'review 750de3f: a later citation owns the phrase across a clause connector',
+     "        if re.search(r'[,;]', between) or _CLAUSE_CONNECTOR.search(between):", "        if re.search(r'[,;]', between):"),
+    # --- new: review of 7fb484b (W1-W11); V4 retired: the lookahead it mutated is replaced by the allowlist W1-W3 mutate
+    # W1-W3, W9, W10 re-anchored at 9b28e14 to the whole-fragment _CONTINUATION (same meaning; ".*" because the
+    # pattern is now matched whole).
+    ('W1', 'review 7fb484b: any word ending in "ing" counts as a continuing participle (the old rule; re-anchored)',
+     r'r"\s*(?:(?:raising|suggesting|indicating|implying)\s+(?:the', r'r"\s*(?:\w+ing\b.*|(?:raising|suggesting|indicating|implying)\s+(?:the'),
+    ('W2', 'review 7fb484b: a listed participle continues whatever its object (re-anchored)',
+     r'(?:" + _CONTINUATION_MODIFIER + r"\s+)*" + _JUDGMENT_NOUN + r"|"', r'.*|"'),
+    ('W3', 'review 7fb484b: "or/and/nor/which" continues whatever follows it (re-anchored)',
+     r'r"(?:(?:or|and|nor|which)\s+)?(?:(?:may|', r'r"(?:or|and|nor|which)\s+.*|(?:(?:may|'),
+    ('W4', "review 7fb484b: a qualifier after a generic figure noun need not name the pair's noun",
+     r"            if re.match(r'\s+(?:for|of|on|about|in|from|across)\b', after, re.I) and not (",
+     r"            if False and not ("),
+    ('W5', 'review 7fb484b: a qualifier may name any noun',
+     r"(?:[$\d][\w.,+/$]*\s+)?' + own_noun, after, re.I)):", r"(?:[$\d][\w.,+/$]*\s+)?' + r'\w+', after, re.I)):"),
+    ('W6', 'review 7fb484b: another metric before the owning citation does not keep the phrase',
+     "        if _OTHER_METRIC.search(sentence[_place_clause_start(", "        if False and _OTHER_METRIC.search(sentence[_place_clause_start("),
+    ('W7', 'review 7fb484b: a no-verb clause\'s head need not be the company\'s own words',
+     "        if not verbs and not _own_head(head, cited, facts):", "        if False:"),
+    ('W8', 'review 7fb484b: any word is an own-head word',
+     "    return _plain_words(text, vocabulary)\n", "    return _PLAIN_GAP.fullmatch(_TOKEN.sub(' ', text.lower())) is not None\n"),
+    # Positive pins: narrowing the allowlists loses memo 101's and the review's intended repairs.
+    ('W9', 'positive: no participle continues ("raising the possibility of inflation", memo 101 risk)',
+     r'(?:raising|suggesting|indicating|implying)\s+(?:the', r'(?:xraising|xsuggesting)\s+(?:the'),
+    ('W10', 'positive: no hedge or "or" before the judgment continues ("— possibly inflated", "— or inflated")',
+     r'r"(?:(?:or|and|nor|which)\s+)?(?:(?:may|might|could|be|is|are|were|was|possibly|potentially|perhaps|probably|"' + '\n'
+     + r'    r"likely|even|also)\s+)*" + _JUDGMENT_PREDICATE',
+     r'r"(?!)" + _JUDGMENT_PREDICATE'),
+    ('W11', 'positive: the own-head vocabulary lacks the own-source words ("the deck\'s", "self-reported", "taking ... at face value")',
+     "    vocabulary = (_PLACING_WORDS | _OWN_HEAD_WORDS |", "    vocabulary = (_PLACING_WORDS |"),
+    # --- new: review of 377a142 (X1-X6): prefix-only matching rejected; genuine continuations still repaired.
+    ('X1', 'review 377a142: prefix-only matching (match, not fullmatch: the rest of the fragment is not read)',
+     "not _CONTINUATION.fullmatch(segment))", "not _CONTINUATION.match(segment))"),
+    ('X2', 'review 377a142: anything may follow the judgment (the tail is not validated)',
+     r'r"(?:\s+(?:or|and)\s+(?:(?:" + _CONTINUATION_MODIFIER + r"|possibly|potentially)\s+)*(?:" + _JUDGMENT_PREDICATE + r"|"' + '\n'
+     + r'    + _JUDGMENT_NOUN + r"|reporting|measurement\b))*"',
+     r'r"(?:\s+[\w-]+)*"'),
+    ('X3', 'review 377a142: the predicate slot accepts a bare judgment noun ("— inflation.")',
+     r'likely|even|also)\s+)*" + _JUDGMENT_PREDICATE + r")"',
+     r'likely|even|also)\s+)*(?:" + _JUDGMENT_PREDICATE + r"|" + _JUDGMENT_NOUN + r"))"'),
+    ('X4', 'positive: no coordinated judgment after the first ("or imprecise reporting", memo 101 risk)',
+     r'r"(?:\s+(?:or|and)\s+(?:(?:" + _CONTINUATION_MODIFIER + r"|possibly|potentially)\s+)*(?:" + _JUDGMENT_PREDICATE + r"|"' + '\n'
+     + r'    + _JUDGMENT_NOUN + r"|reporting|measurement\b))*"',
+     r'r""'),
+    ('X5', 'positive: the fragment\'s own citations are not allowed ("— possibly overstated [S2, S3].")',
+     r'r"(?:\s*\[[A-Z]\d+(?:\s*[,;]\s*[A-Z]\d+)*\])*[.!]?', r'r"[.!]?'),
+    ('X6', 'positive: the participle\'s object must be a predicate, not a noun ("— suggesting possible inflation.")',
+     r'+ r"\s+)*" + _JUDGMENT_NOUN + r"|"', r'+ r"\s+)*" + _JUDGMENT_PREDICATE + r"|"'),
+    # --- review of 9b28e14: judgment ownership and the general rule's fallback (Y1-Y9)
+    ('Y1', "review 9b28e14: a judging clause holding citations is the pair's (the 9b28e14 fallback; re-anchored: per segment)",
+     "             if any(_owns_subject(parts[2 * k], hit.start(), pair) for hit in _JUDGMENT.finditer(parts[2 * k]))}",
+     "             if _REF.search(parts[2 * k]) or any(_owns_subject(parts[2 * k], hit.start(), pair) for hit in _JUDGMENT.finditer(parts[2 * k]))}"),
+    ('Y2', "review 9b28e14: every judgment is the pair's (ownership not read; re-anchored)",
+     "    judged = [(i, governed, denied, c, (governed or c in owned) and c not in opened) for i, governed, denied, c in judged]",
+     "    judged = [(i, governed, denied, c, True) for i, governed, denied, c in judged]"),
+    ('Y4', "review 9b28e14: the referent rule's dispatch counts judgments that are not the pair's",
+     "    return all(governed for _, governed, _, _, owned in judged if owned)",
+     "    return all(governed for _, governed, _, _, owned in judged)"),
+    ('Y5', 'positive: a basis word in a condition does not name the pair ("If the deck counts weekly, ..."; _names_pair now reads only conditions)',
+     "    return bool(_BASIS_WORDS.search(text) or _FIGURE_REFERENT.search(text) or", "    return bool(_FIGURE_REFERENT.search(text) or"),
+    ('Y6', 'positive: a figure referent in a condition does not name the pair ("If the larger figure is restated, ...")',
+     "    return bool(_BASIS_WORDS.search(text) or _FIGURE_REFERENT.search(text) or", "    return bool(_BASIS_WORDS.search(text) or"),
+    ('Y7', "positive: the pair's noun in a condition does not name the pair (\"If the messages are restated, ...\")",
+     "                (pair.noun and re.search(rf'\\b{re.escape(pair.noun[:-1])}s?\\b', text, re.I)))",
+     "                False)"),
+    ('Y8', "positive: a later clause's clarification is not lower-cased in a mixed sentence",
+     "            words = pair.clarification if first == 0 else pair.clarification[0].lower() + pair.clarification[1:]",
+     "            words = pair.clarification"),
+    ('Y9', "positive: the pair's clause loses its citations in a mixed sentence",
+     "            groups = ' '.join(f'[{group}]' for group in _REF.findall(text))\n            lead = _LEAD.match(text).group('lead') if first == 0",
+     "            groups = ''\n            lead = _LEAD.match(text).group('lead') if first == 0"),
+    # --- review of 8d7f8dc: clause preservation, judged subject, pair-directed claims (Z1-Z20)
+    ('Z1', 'review 8d7f8dc: the whole sentence is one run (whole-sentence replacement: the management clause is lost)',
+     "        if runs and (chain in mine) == runs[-1][0]:", "        if runs:"),
+    ('Z2', 'review 8d7f8dc: a linking comma does not separate clauses',
+     r"|\s+[—–]\s+|,\s+(?:and|but|while|whereas|yet|although|though|so|because|which)\s+)'", r"|\s+[—–]\s+)'"),
+    ('Z3', 'review 8d7f8dc: ", which" does not start a clause',
+     "|though|so|because|which)\\s+)'", "|though|so|because)\\s+)'"),
+    ('Z4', 'review 8d7f8dc: a serial list is split at its last comma (garbled; re-anchored)',
+     "        if separator.startswith(',') and ',' in left and not _has_verb(left):", "        if False:"),
+    ('Z6', "review 8d7f8dc: the subject's qualifiers are not read (\"the hiring claim\"; re-anchored)",
+     "    if not all(_BASIS_WORDS.search(word) or _pair_word(word, pair)", "    if False and not all(_BASIS_WORDS.search(word) or _pair_word(word, pair)"),
+    ('Z7', 'review 8d7f8dc: the subject\'s head is not read ("monthly costs"; re-anchored)',
+     "    if (_FIGURE_HEAD.fullmatch(head) or head.lower() in pair.topics or", "    if (True or _FIGURE_HEAD.fullmatch(head) or head.lower() in pair.topics or"),
+    ('Z8', "review 8d7f8dc: the pair's noun is a pair head without one of its figures (\"the messages are misleading\")",
+     "(_pair_word(head, pair) and any(word.rstrip('+').lower() in pair.figures for word in qualifiers))",
+     "_pair_word(head, pair)"),
+    ('Z9', 'review 8d7f8dc: after a condition, any head with allowed qualifiers is the pair\'s ("monthly costs"; re-anchored)',
+     "_MEASURE_HEAD.fullmatch(head) and\n                any(_BASIS_WORDS.search(word) or _pair_word(word, pair) for word in qualifiers))",
+     "True)"),
+    ('Z10', 'review 8d7f8dc: after a condition, a measure head needs no pair basis ("the implied activity"; re-anchored)',
+     "                any(_BASIS_WORDS.search(word) or _pair_word(word, pair) for word in qualifiers))\n\n\ndef _clauses",
+     "                True)\n\n\ndef _clauses"),
+    ('Z11', 'review 8d7f8dc: after a condition, a basis word alone owns the consequence ("monthly costs"; re-anchored)',
+     "    return bool(condition and _names_pair(before, pair) and _MEASURE_HEAD.fullmatch(head) and",
+     "    return bool(condition and _names_pair(before, pair) and True and"),
+    ('Z12', 'review 8d7f8dc: the subject runs past its determiner (re-anchored: unique context)',
+     "    subject = []\n    while tokens and tokens[-1] != ',' and tokens[-1].lower() not in _DETERMINERS:",
+     "    subject = []\n    while tokens and tokens[-1] != ',':"),
+    ('Z13', 'review 8d7f8dc: the verb group is not skipped (the subject is never found)',
+     "    while tokens and tokens[-1].lower() in _VERB_GROUP:\n        tokens.pop()\n", ""),
+    ('Z14', 'positive: the pair\'s topics are not its vocabulary ("The key traction claim")',
+     "                word.lower() in pair.topics or word.rstrip('+').lower() in pair.figures)",
+     "                word.rstrip('+').lower() in pair.figures)"),
+    ('Z15', 'positive: a topic is not a pair head ("The reported usage is overstated"; re-anchored)',
+     "    if (_FIGURE_HEAD.fullmatch(head) or head.lower() in pair.topics or", "    if (_FIGURE_HEAD.fullmatch(head) or"),
+    ('Z16', 'positive: the condition path is not applied (memo 98 and memo 100 forms; re-anchored)',
+     "    condition = bool(tokens) and _CONDITION.fullmatch(tokens[0])", "    condition = False and _CONDITION.fullmatch(tokens[0])"),
+    ('Z17', 'positive: no measure head after a condition (memo 100: "the implied monthly activity"; re-anchored)',
+     "    return bool(condition and _names_pair(before, pair) and _MEASURE_HEAD.fullmatch(head) and",
+     "    return bool(condition and _names_pair(before, pair) and False and"),
+    ('Z18', 'positive: adjacent clauses judging the pair each get a clarification',
+     "        if runs and (chain in mine) == runs[-1][0]:", "        if runs and (chain in mine) == runs[-1][0] and chain == chains[k - 1]:"),
+    ('Z19', 'positive: a page is not a placing qualifier ("The page-10 figure")',
+     "           re.fullmatch(r'(?:page|slide)-?\\d+', word, re.I) for word in qualifiers):",
+     "           False for word in qualifiers):"),
+    ('Z20', "positive: the pair's figures are not its vocabulary (\"The 500M messages\"; re-anchored)",
+     "            (_pair_word(head, pair) and any(word.rstrip('+').lower() in pair.figures for word in qualifiers))):",
+     "            False):"),
+    # --- review of a6dcddf: qualifiers after a condition; asides, attributions and the list guard (N1-N9)
+    ('N1', 'review a6dcddf: a condition overrides foreign qualifiers (the a6dcddf behaviour: "the hiring claim")',
+     "    if not all(_BASIS_WORDS.search(word) or _pair_word(word, pair)", "    if not condition and not all(_BASIS_WORDS.search(word) or _pair_word(word, pair)"),
+    ('N2', 'review a6dcddf: the list guard reads only the text after the last comma (the a6dcddf behaviour; re-anchored)',
+     "and ',' in left and not _has_verb(left):", "and ',' in left and not _has_verb(left.rsplit(',', 1)[1]):"),
+    ('N4', 'review a6dcddf: words before the subject do not open the owner ("Management says", "In management\'s view,")',
+     "    if tokens and not condition:\n        return False\n", ""),
+    ('N5', "review a6dcddf: a condition may hold an aside (\"If the figures are monthly, in management's view, …\")",
+     "and tokens.count(',') == 1 and", "and"),
+    ('N6', 'positive: a list number or marker is read as words before the subject ("1. If …")',
+     "    if tokens and re.fullmatch(r'\\d+[.)]?|[-+]', tokens[0]):\n        tokens.pop(0)                        # a list number or marker\n", ""),
+    ('N7', 'positive: a serial-list subject does not collect its earlier items ("The cumulative, monthly, and daily figures")',
+     "    while {'and', 'or'} & {word.lower() for word in subject} and tokens and tokens[-1] == ',':",
+     "    while False:"),
+    ('N8', 'positive: "implied" is not a placing qualifier (memo 100)',
+     "'implied', 'resulting',", "'resulting',"),
+    ('N9', 'positive: ownership is read over the joined chain, separators included ("…, and possibly inflated")',
+     "             if any(_owns_subject(parts[2 * k], hit.start(), pair) for hit in _JUDGMENT.finditer(parts[2 * k]))}",
+     "             if any(_owns_subject(''.join(parts[2 * chains.index(c):2 * (len(chains) - chains[::-1].index(c)) - 1]), hit.start(), pair)\n                    for hit in _JUDGMENT.finditer(''.join(parts[2 * chains.index(c):2 * (len(chains) - chains[::-1].index(c)) - 1])))}"),
+    ('N10', 'review a6dcddf: a compound subject is split as two clauses ("The monthly figure [S2], and the larger figure [S3] are ..."; re-anchored)',
+     "        if is_mine and first and parts[first - 1].startswith(',') and not _has_verb(parts[first - 2]):\n            return sentence",
+     "        if False:\n            return sentence"),
+    # --- review of 72418e2: participle modifiers (_has_verb) and the replaceable tail (_replaceable) (K1-K14)
+    ('K1', 'review 72418e2: every -ed word is a verb (the 72418e2 behaviour: "The reported monthly figure [S2], and ...")',
+     "        if not (before and before[-1].lower() in _DETERMINERS):\n            return True", "        return True"),
+    ('K2', 'review 72418e2: placing words between the determiner and the participle are not skipped ("The company\'s reported")',
+     "        while before and (before[-1].lower() in _SUBJECT_QUALIFIERS or _BASIS_WORDS.fullmatch(before[-1])):\n            before.pop()\n", ""),
+    ('K3', 'positive: no word is ever a verb ("Management reported the monthly figure [S2], and ..." is two clauses)',
+     "        if not (before and before[-1].lower() in _DETERMINERS):\n            return True", "        if False:\n            return True"),
+    ('K4', 'review 72418e2: the list guard reads -ed modifiers as verbs ("The reported, monthly, and daily figures")',
+     "and ',' in left and not _has_verb(left):", "and ',' in left and not _ITEM_VERB.search(left):"),
+    ('K5', 'review 72418e2: the compound-subject check reads -ed modifiers as verbs',
+     "and not _has_verb(parts[first - 2]):", "and not _ITEM_VERB.search(parts[first - 2]):"),
+    ('K6', 'review 72418e2: the text after the judgment is not read ("(in management\'s view)", "according to management")',
+     "            if (not i or chains[-2] != chain) and not _replaceable(segment[judgment.start():], pair):", "            if False:"),
+    ('K7', 'review 72418e2: the referent rule ignores the tail ("These figures may be inflated (in management\'s view)")',
+     "        if not (governed and owned) or denied:", "        if not governed or denied:"),
+    ('K8', 'positive: continuation fragments are read as tails too (memo 101: "or imprecise reporting")',
+     "            if (not i or chains[-2] != chain) and not _replaceable(", "            if not _replaceable("),
+    ('K9', 'positive: no object after the judgment is replaceable (memo 100: "misrepresent the scale of actual activity")',
+     "    return all(word.lower() in _DETERMINERS or word.lower() in _TAIL_OBJECT_WORDS or",
+     "    return not words and all(word.lower() in _DETERMINERS or word.lower() in _TAIL_OBJECT_WORDS or"),
+    ('K10', 'review 72418e2: any object is replaceable ("the scale of hiring", "compared with the hiring plan")',
+     "    return all(word.lower() in _DETERMINERS or word.lower() in _TAIL_OBJECT_WORDS or",
+     "    return True or all(word.lower() in _DETERMINERS or word.lower() in _TAIL_OBJECT_WORDS or"),
+    ('K11', 'positive: the pair\'s own words are not object vocabulary ("compared with the bare bot count")',
+     "               _BASIS_WORDS.fullmatch(word) or _pair_word(word, pair) or re.fullmatch(",
+     "               _BASIS_WORDS.fullmatch(word) or re.fullmatch("),
+    ('K12', 'positive: a page or slide is not object vocabulary ("overstates the page-10 count")',
+     " or re.fullmatch(r'(?:page|slide)-?\\d+', word, re.I)\n               for word in words)", "\n               for word in words)"),
+    ('K13', 'positive: coordinated judgments are not replaceable ("overstated and possibly misleading")',
+     "+ _JUDGMENT_WORD + r')*', re.I)", "+ _JUDGMENT_WORD + r'){0}', re.I)"),
+    ('K14', 'positive: comparison connectives are not object vocabulary ("compared with the cumulative figure", "as a monthly figure")',
+     "'bare', 'as', 'than', 'compared', 'with', 'to',", "'bare',"),
+]
+
+
+def sha(path):
+    return hashlib.sha256(open(path, 'rb').read()).hexdigest()
+
+
+original = open(BF, 'rb').read()
+before = sha(BF)
+for mid, desc, old, new in M:
+    if ONLY and mid not in ONLY:
+        continue
+    text = original.decode('utf-8')
+    if '\r\n' in text:                         # the working copy's line endings (core.autocrlf)
+        old, new = old.replace('\n', '\r\n'), new.replace('\n', '\r\n')
+    count = text.count(old)
+    if count != 1:
+        print(f'{mid} NOT-APPLIED anchor count {count} | {desc}', flush=True)
+        continue
+    open(BF, 'wb').write(text.replace(old, new).encode('utf-8'))
+    try:
+        run = subprocess.run(['sh', T, WT] + LABELS, capture_output=True, text=True, encoding='utf-8', errors='replace')
+        out = run.stdout + run.stderr
+    finally:
+        open(BF, 'wb').write(original)
+    restored = sha(BF) == before
+    summary = (re.findall(r'^(?:OK.*|FAILED \(.*\))$', out, re.M) or ['?'])[-1]
+    ran = (re.findall(r'^Ran \d+ tests.*$', out, re.M) or ['?'])[-1]
+    fails = sorted({m for m in re.findall(r'^FAIL: (\w+)', out, re.M)})
+    errors = sorted({m for m in re.findall(r'^ERROR: (\w+)', out, re.M)})
+    verdict = 'CAUGHT' if fails else ('CRASH-ONLY' if errors else 'SURVIVED')
+    print(f'{mid} {verdict} {ran} {summary} restored={restored} | {desc}', flush=True)
+    print(f'    assertion failures in: {", ".join(fails) or "-"}', flush=True)
+    print(f'    errors in: {", ".join(errors) or "-"}', flush=True)
+    for case in sorted(set(re.findall(r'^FAIL: \w+ \([^)]*\) \((.*)\)$', out, re.M))):
+        print(f'    failing sub-case: {case[:220]}', flush=True)
+    if not restored:
+        sys.exit('STOP: restore hash mismatch after ' + mid)
+print('final sha matches pre-run:', sha(BF) == before, sha(BF))

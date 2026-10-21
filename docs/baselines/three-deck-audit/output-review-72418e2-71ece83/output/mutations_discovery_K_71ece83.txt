@@ -1,0 +1,21 @@
+Discovery pass of the new K1-K14 at 71ece83 before the full run (superseded by the full run; kills not counted twice).
+== dK1
+K1 CAUGHT Ran 328 tests in 11.917s FAILED (failures=6) restored=True | review 72418e2: every -ed word is a verb (the 72418e2 behaviour: "The reported monthly figure [S2], and ...")
+K2 CAUGHT Ran 328 tests in 11.888s FAILED (failures=1) restored=True | review 72418e2: placing words between the determiner and the participle are not skipped ("The company's reported")
+K3 CAUGHT Ran 328 tests in 11.821s FAILED (failures=23) restored=True | positive: no word is ever a verb ("Management reported the monthly figure [S2], and ..." is two clauses)
+K4 CAUGHT Ran 328 tests in 11.806s FAILED (failures=1) restored=True | review 72418e2: the list guard reads -ed modifiers as verbs ("The reported, monthly, and daily figures")
+K5 CAUGHT Ran 328 tests in 11.858s FAILED (failures=5) restored=True | review 72418e2: the compound-subject check reads -ed modifiers as verbs
+final sha matches pre-run: True 8f7782ec26374879666896443772d39d08acb63141481b8581037a1cf5af725c
+== dK2
+K6 CAUGHT Ran 328 tests in 11.810s FAILED (failures=14) restored=True | review 72418e2: the text after the judgment is not read ("(in management's view)", "according to management")
+K7 CAUGHT Ran 328 tests in 11.763s FAILED (failures=4) restored=True | review 72418e2: the referent rule ignores the tail ("These figures may be inflated (in management's view)")
+K8 CAUGHT Ran 328 tests in 11.987s FAILED (failures=13) restored=True | positive: continuation fragments are read as tails too (memo 101: "or imprecise reporting")
+K9 CAUGHT Ran 328 tests in 11.772s FAILED (failures=14) restored=True | positive: no object after the judgment is replaceable (memo 100: "misrepresent the scale of actual activity")
+K10 CAUGHT Ran 328 tests in 11.997s FAILED (failures=14) restored=True | review 72418e2: any object is replaceable ("the scale of hiring", "compared with the hiring plan")
+final sha matches pre-run: True 8f7782ec26374879666896443772d39d08acb63141481b8581037a1cf5af725c
+== dK3
+K11 CAUGHT Ran 328 tests in 11.893s FAILED (failures=2) restored=True | positive: the pair's own words are not object vocabulary ("compared with the bare bot count")
+K12 CAUGHT Ran 328 tests in 11.778s FAILED (failures=1) restored=True | positive: a page or slide is not object vocabulary ("overstates the page-10 count")
+K13 CAUGHT Ran 328 tests in 11.998s FAILED (failures=2) restored=True | positive: coordinated judgments are not replaceable ("overstated and possibly misleading")
+K14 CAUGHT Ran 328 tests in 12.190s FAILED (failures=4) restored=True | positive: comparison connectives are not object vocabulary ("compared with the cumulative figure", "as a monthly figure")
+final sha matches pre-run: True 8f7782ec26374879666896443772d39d08acb63141481b8581037a1cf5af725c

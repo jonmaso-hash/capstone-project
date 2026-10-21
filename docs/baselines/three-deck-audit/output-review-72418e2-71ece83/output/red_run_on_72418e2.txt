@@ -1,0 +1,326 @@
+red run: final tests (71ece83) against basis_fidelity.py at 72418e2 2026-10-20T19:11:52-07:00
+2026-10-20 19:12:01,527 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-20 19:12:53,757 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-20 19:12:53,787 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-20 19:12:53,887 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-20 19:12:53,897 INFO zelda_api.intelligence_pipeline - Memo market_analysis: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-20 19:12:53,898 INFO zelda_api.intelligence_pipeline - Memo team_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-20 19:12:53,899 INFO zelda_api.intelligence_pipeline - Memo financial_analysis: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-20 19:12:53,901 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-20 19:12:53,902 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-20 19:12:53,906 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-20 19:12:53,908 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-20 19:12:53,935 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+F.FFFFFFFFFFFFF
+======================================================================
+FAIL: test_the_writer_keeps_them (zelda_api.tests_output_fidelity.PipelineReview72418e2Tests.test_the_writer_keeps_them)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2955, in test_the_writer_keeps_them
+    self.assertEqual(memo.market_analysis, REVIEW_724_KEPT[0])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '- Th[118 chars] and how the figure stated without an explicit[88 chars]S3].' != '- Th[118 chars] and the larger figure [S3] are overstated.'
+- - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The reported monthly figure [S2], and how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S3].
++ - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The reported monthly figure [S2], and the larger figure [S3] are overstated.
+
+
+======================================================================
+FAIL: test_participle_subjects_and_trailing_attributions_are_kept (zelda_api.tests_output_fidelity.Review72418e2Tests.test_participle_subjects_and_trailing_attributions_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The reported monthly figure [S2], and the larger figure [S3] are overstated.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2910, in test_participle_subjects_and_trailing_attributions_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[119 chars] and how the figure stated without an explicit[114 chars]nt']) != ('- T[119 chars] and the larger figure [S3] are overstated.', [])
+
+First differing element 0:
+'- Th[118 chars] and how the figure stated without an explicit[88 chars]S3].'
+'- Th[118 chars] and the larger figure [S3] are overstated.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. The reported monthly figure [S2], and how the figure stated '
+?                                                     ----           ^^ ^ -
+
++  'on page 12. The reported monthly figure [S2], and the larger figure [S3] are '
+?                                                        +++++++        ^^^^^ ^
+
++  'overstated.',
++  [])
+-  'without an explicit interval relates to the monthly figure needs '
+-  'clarification before either is relied on [S3].',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_participle_subjects_and_trailing_attributions_are_kept (zelda_api.tests_output_fidelity.Review72418e2Tests.test_participle_subjects_and_trailing_attributions_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The stated monthly figure [S2], and the larger figure [S3] are overstated.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2910, in test_participle_subjects_and_trailing_attributions_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[117 chars] and how the figure stated without an explicit[114 chars]nt']) != ('- T[117 chars] and the larger figure [S3] are overstated.', [])
+
+First differing element 0:
+'- Th[116 chars] and how the figure stated without an explicit[88 chars]S3].'
+'- Th[116 chars] and the larger figure [S3] are overstated.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. The stated monthly figure [S2], and how the figure stated '
+?                                                   ----           ^^ ^ -
+
++  'on page 12. The stated monthly figure [S2], and the larger figure [S3] are '
+?                                                      +++++++        ^^^^^ ^
+
++  'overstated.',
++  [])
+-  'without an explicit interval relates to the monthly figure needs '
+-  'clarification before either is relied on [S3].',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_participle_subjects_and_trailing_attributions_are_kept (zelda_api.tests_output_fidelity.Review72418e2Tests.test_participle_subjects_and_trailing_attributions_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The claimed figure [S2], and the larger figure [S3] are overstated.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2910, in test_participle_subjects_and_trailing_attributions_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[110 chars] and how the figure stated without an explicit[114 chars]nt']) != ('- T[110 chars] and the larger figure [S3] are overstated.', [])
+
+First differing element 0:
+'- Th[109 chars] and how the figure stated without an explicit[88 chars]S3].'
+'- Th[109 chars] and the larger figure [S3] are overstated.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. The claimed figure [S2], and how the figure stated without an '
+?                                            ----           ^^ ^ ------------
+
++  'on page 12. The claimed figure [S2], and the larger figure [S3] are '
+?                                               +++++++        ^^^^^ ^
+
++  'overstated.',
++  [])
+-  'explicit interval relates to the monthly figure needs clarification before '
+-  'either is relied on [S3].',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_participle_subjects_and_trailing_attributions_are_kept (zelda_api.tests_output_fidelity.Review72418e2Tests.test_participle_subjects_and_trailing_attributions_are_kept) (text="- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The company's reported monthly figure [S2], and the larger figure [S3] are overstated.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2910, in test_participle_subjects_and_trailing_attributions_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("- T[129 chars] and how the figure stated without an explicit[114 chars]nt']) != ("- T[129 chars] and the larger figure [S3] are overstated.", [])
+
+First differing element 0:
+"- Th[128 chars] and how the figure stated without an explicit[88 chars]S3]."
+"- Th[128 chars] and the larger figure [S3] are overstated."
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  "on page 12. The company's reported monthly figure [S2], and how the figure "
+?                                                               ----    ^^ ^ -
+
++  "on page 12. The company's reported monthly figure [S2], and the larger "
+?                                                                   ^^^ ^
+
++  'figure [S3] are overstated.',
++  [])
+-  'stated without an explicit interval relates to the monthly figure needs '
+-  'clarification before either is relied on [S3].',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_participle_subjects_and_trailing_attributions_are_kept (zelda_api.tests_output_fidelity.Review72418e2Tests.test_participle_subjects_and_trailing_attributions_are_kept) (text="- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated (in management's view) [S2, S3].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2910, in test_participle_subjects_and_trailing_attributions_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- The deck states 500M messages [S2] on [208 chars]nt']) != ("- The deck states 500M messages [S2] on [115 chars], [])
+
+First differing element 0:
+'- The deck states 500M messages [S2] on [182 chars]S3].'
+"- The deck states 500M messages [S2] on [110 chars]S3]."
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
++  "on page 12. The monthly figure is overstated (in management's view) [S2, "
++  'S3].',
++  [])
+
+======================================================================
+FAIL: test_participle_subjects_and_trailing_attributions_are_kept (zelda_api.tests_output_fidelity.Review72418e2Tests.test_participle_subjects_and_trailing_attributions_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated according to management [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2910, in test_participle_subjects_and_trailing_attributions_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. The monthly figure is overstated accordin[26 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. The monthly figure is overstated accordin[21 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
++  'on page 12. The monthly figure is overstated according to management [S2, '
++  'S3].',
++  [])
+
+======================================================================
+FAIL: test_participle_subjects_and_trailing_attributions_are_kept (zelda_api.tests_output_fidelity.Review72418e2Tests.test_participle_subjects_and_trailing_attributions_are_kept) (text="- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated in management's view [S2, S3].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2910, in test_participle_subjects_and_trailing_attributions_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- The deck states 500M messages [S2] on [208 chars]nt']) != ("- The deck states 500M messages [S2] on [113 chars], [])
+
+First differing element 0:
+'- The deck states 500M messages [S2] on [182 chars]S3].'
+"- The deck states 500M messages [S2] on [108 chars]S3]."
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  "on page 12. The monthly figure is overstated in management's view [S2, S3].",
++  [])
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_participle_subjects_and_trailing_attributions_are_kept (zelda_api.tests_output_fidelity.Review72418e2Tests.test_participle_subjects_and_trailing_attributions_are_kept) (text="- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3] (in management's view).")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2910, in test_participle_subjects_and_trailing_attributions_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- The deck states 500M messages [S2] on [208 chars]nt']) != ("- The deck states 500M messages [S2] on [115 chars], [])
+
+First differing element 0:
+'- The deck states 500M messages [S2] on [182 chars]S3].'
+"- The deck states 500M messages [S2] on [110 chars]ew)."
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
++  "on page 12. The monthly figure is overstated [S2, S3] (in management's "
++  'view).',
++  [])
+
+======================================================================
+FAIL: test_participle_subjects_and_trailing_attributions_are_kept (zelda_api.tests_output_fidelity.Review72418e2Tests.test_participle_subjects_and_trailing_attributions_are_kept) (text="- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures may be inflated (in management's view) [S2, S3].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2910, in test_participle_subjects_and_trailing_attributions_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- The deck states 500M messages [S2] on [212 chars]nt']) != ("- The deck states 500M messages [S2] on [112 chars], [])
+
+First differing element 0:
+'- The deck states 500M messages [S2] on [182 chars]S3].'
+"- The deck states 500M messages [S2] on [107 chars]S3]."
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  "on page 12. These figures may be inflated (in management's view) [S2, S3].",
++  [])
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_referent_judgment'])
+
+======================================================================
+FAIL: test_participle_subjects_and_trailing_attributions_are_kept (zelda_api.tests_output_fidelity.Review72418e2Tests.test_participle_subjects_and_trailing_attributions_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. One or both figures may be overstated according to management [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2910, in test_participle_subjects_and_trailing_attributions_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[122 chars]nt']) != ('- T[81 chars] 12. One or both figures may be overstated acc[31 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. One or both figures may be overstated acc[26 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_referent_judgment'])
++  'on page 12. One or both figures may be overstated according to management '
++  '[S2, S3].',
++  [])
+
+======================================================================
+FAIL: test_participle_subjects_and_trailing_attributions_are_kept (zelda_api.tests_output_fidelity.Review72418e2Tests.test_participle_subjects_and_trailing_attributions_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. One or both figures may misrepresent the scale of hiring [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2910, in test_participle_subjects_and_trailing_attributions_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[122 chars]nt']) != ('- T[81 chars] 12. One or both figures may misrepresent the [26 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. One or both figures may misrepresent the [21 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_referent_judgment'])
++  'on page 12. One or both figures may misrepresent the scale of hiring [S2, '
++  'S3].',
++  [])
+
+======================================================================
+FAIL: test_participle_subjects_and_trailing_attributions_are_kept (zelda_api.tests_output_fidelity.Review72418e2Tests.test_participle_subjects_and_trailing_attributions_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated compared with the hiring plan [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2910, in test_participle_subjects_and_trailing_attributions_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. The monthly figure is overstated compared[32 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. The monthly figure is overstated compared[27 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
++  'on page 12. The monthly figure is overstated compared with the hiring plan '
++  '[S2, S3].',
++  [])
+
+======================================================================
+FAIL: test_the_pairs_own_clauses_are_still_repaired (zelda_api.tests_output_fidelity.Review72418e2Tests.test_the_pairs_own_clauses_are_still_repaired) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The reported, monthly, and daily figures are overstated [S2, S3], but the definitions remain unclear.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2915, in test_the_pairs_own_clauses_are_still_repaired
+    self.assertEqual(self.full(text), (after, changes))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. The reported, monthly, and how the figure[181 chars]nt']) != ('- T[81 chars] 12. How the figure stated without an explicit[154 chars]nt'])
+
+First differing element 0:
+'- Th[80 chars] 12. The reported, monthly, and how the figure[155 chars]ear.'
+'- Th[80 chars] 12. How the figure stated without an explicit[128 chars]ear.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. The reported, monthly, and how the figure stated without an '
+-  'explicit interval relates to the monthly figure needs clarification before '
+-  'either is relied on [S2, S3], but the definitions remain unclear.',
++  'on page 12. How the figure stated without an explicit interval relates to '
++  'the monthly figure needs clarification before either is relied on [S2, S3], '
++  'but the definitions remain unclear.',
+   ['basis_overstatement'])
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.356s
+
+FAILED (failures=14)
+Destroying test database for alias 'default'...
+Found 4 test(s).
+System check identified no issues (0 silenced).

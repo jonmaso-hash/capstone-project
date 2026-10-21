@@ -1,0 +1,34 @@
+"""Every trailing text (after the judgment) of a judgment _owns_subject owns, over the replay, probes and test data."""
+import contextlib, io, os
+D = os.path.dirname(r'C:\Users\jonathan\AppData\Local\Temp\claude\C--Users-jonathan-Desktop-KCV-of903\76db1fe6-5688-4619-abfd-5bc2b6bec113\scratchpad\r8\x')
+from zelda_api import basis_fidelity as bf
+seen = {}
+orig = bf._owns_subject
+
+
+def spy(segment, position, pair):
+    r = orig(segment, position, pair)
+    if r:
+        seen.setdefault(bf._REF.sub('', segment[position:]).strip(), segment)
+    return r
+
+
+bf._owns_subject = spy
+for name in ('replay.py', 'probe.py'):
+    with contextlib.redirect_stdout(io.StringIO()):
+        exec(open(os.path.join(D, name), encoding='utf-8').read(), {'__name__': 'x'})
+from zelda_api import tests_output_fidelity as T
+p = T.memo101_payload()
+items, notes = T.items_from(p), T.notes_from(p)
+for name in dir(T):
+    v = getattr(T, name)
+    if name.isupper() and isinstance(v, (list, tuple)):
+        for x in v:
+            t = x[0] if isinstance(x, tuple) else x
+            if isinstance(t, str):
+                try:
+                    T.replay({'s': T.PAIR_LEAD + t}, items, notes)
+                except Exception:
+                    pass
+for k, v in sorted(seen.items()):
+    print(repr(k), '<=', repr(v[:110]))
