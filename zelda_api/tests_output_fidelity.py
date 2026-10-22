@@ -3714,3 +3714,110 @@ class Of1003ConditionContextTests(SimpleTestCase):
         self.assertEqual(self.full(text), (
             "The company states 140,000+ bots and 500M messages [S1, S2] under the 'Traction by Apr-16' framing, and "
             "separately 500M messages/month [S3] on page 12 (" + CLARIFY + ").", ['basis_source_context']))
+
+
+
+# Review of 75ca81f: a denial of, or question about, what a page states keeps that page's citations; a condition whose
+# moved refs sit in a group of their own is kept, never left with "[]" and a dangling connector.
+REVIEW_IDENTITY_KEPT = (
+    "Page 10 does not state '500M messages/month' [C3, S2].",                    # the review's case
+    "The deck does not state '500M messages/month' [C3, S2].",                   # a denial alone
+    "The 'Traction by Apr-16' slide omits '500M messages/month' [C3, S2].",
+    "Page 10 states '500M messages/month' [C3, S2].",                            # another page named alone
+    "The 'Traction by Apr-16' slide states '500M messages/month' [C3, S2].",     # another source context named alone
+    "Does page 10 state '500M messages/month' [C3, S2]?",
+    "Whether page 10 states '500M messages/month' [C3, S2] is unclear.",
+    "Whether the deck states '500M messages/month' [C3, S2] is unclear.",        # "whether" alone
+    "Is '500M messages/month' [C3, S3] a run rate?",                             # a question alone
+    "The deck does not reconcile [C3, S2] vs [C3, S3].",                         # a "vs" in a denial
+)
+REVIEW_IDENTITY_FIXED = (
+    # The affirmative clause beside a denied one is still corrected; the denied one keeps page 10's refs.
+    ("Page 10 does not state '500M messages/month' [C3, S2], but page 12 states '500M messages/month' [C3, S3].",
+     "Page 10 does not state '500M messages/month' [C3, S2], but page 12 states '500M messages/month' [C2, S3]."),
+    ("Page 12 states '500M messages/month' [C3, S3], but page 10 does not.",
+     "Page 12 states '500M messages/month' [C2, S3], but page 10 does not."),
+    ("The slide on page 12 states '500M messages/month' [C3, S3].",
+     "The slide on page 12 states '500M messages/month' [C2, S3]."),
+    # A parenthesis is its own clause: the words around it are not its denial.
+    ("Page 10 gives no interval (page 12 states '500M messages/month' [C3, S3]).",
+     "Page 10 gives no interval (page 12 states '500M messages/month' [C2, S3])."),
+    ("Page 10 is undated (page 12 states '500M messages/month' [C3, S3]) and gives no interval.",
+     "Page 10 is undated (page 12 states '500M messages/month' [C2, S3]) and gives no interval."),
+)
+REVIEW_CONDITION_KEPT = (
+    "If the traction figures [S1, S2] and [S3] are taken at face value under the 'Traction by Apr-16' framing, the "
+    "picture changes.",                                                          # the review's case
+    "If the traction figures [S1, S2], [S3] are taken at face value under the 'Traction by Apr-16' framing, the "
+    "picture changes.",
+)
+REVIEW_CONDITION_FIXED = (
+    # No group is emptied: the moved ref shares its group with one that stays.
+    ("If the traction figures [S1] and [S2, S3] are taken at face value under the 'Traction by Apr-16' framing, the "
+     "picture changes.",
+     "If the traction figures [S1] and [S2] are taken at face value under the 'Traction by Apr-16' framing, the picture "
+     "changes; the deck separately states 500M messages/month [S3] on page 12 (" + CLARIFY + ")."),
+)
+
+
+class Review75ca81fTests(SimpleTestCase):
+    """Review of 75ca81f: denials and questions about what a page states keep their citations; separately grouped
+    condition citations are kept whole; memo 102's affirmative corrections stay (Memo102ReplayTests)."""
+
+    def setUp(self):
+        self.payload = memo102_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text, items=None):
+        out, changes = replay({'s': text}, items or self.items, self.notes)
+        return out['s'], changes.get('s', [])
+
+    def test_denials_and_questions_about_a_page_keep_its_citations(self):
+        for text in REVIEW_IDENTITY_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_affirmative_clauses_beside_them_are_still_corrected(self):
+        for before, after in REVIEW_IDENTITY_FIXED:
+            with self.subTest(text=before):
+                self.assertEqual(self.full(before), (after, ['basis_citation_identity']))
+
+    def test_separately_grouped_condition_citations_are_kept_whole(self):
+        for text in REVIEW_CONDITION_KEPT:
+            with self.subTest(text=text):
+                out = self.full(text)
+                self.assertEqual(out, (text, []))
+                self.assertNotIn('[]', out[0])
+
+    def test_a_shared_group_in_a_split_condition_is_still_corrected(self):
+        for before, after in REVIEW_CONDITION_FIXED:
+            with self.subTest(text=before):
+                self.assertEqual(self.full(before), (after, ['basis_condition_context']))
+
+    def test_stable_idempotent_and_every_citation_owned(self):
+        texts = (REVIEW_IDENTITY_KEPT + REVIEW_CONDITION_KEPT + tuple(a for a, _ in REVIEW_IDENTITY_FIXED)
+                 + tuple(a for a, _ in REVIEW_CONDITION_FIXED))
+        supplied = {item.ref for item in self.items}
+        for text in texts:
+            with self.subTest(text=text):
+                out, _ = self.full(text)
+                self.assertEqual(self.full(out), (out, []))                          # a second pass changes nothing
+                self.assertEqual(self.full(text, list(reversed(self.items)))[0], out)  # item order does not matter
+                self.assertNotIn('[]', out)
+                self.assertLessEqual({ref for group in re.findall(r'\[([^\]]*)\]', out)
+                                      for ref in re.split(r'\s*[,;]\s*', group) if ref}, supplied)
+        # The page-12 figure's corrected group cites only page 12's claim and statement.
+        for _, after in REVIEW_IDENTITY_FIXED:
+            with self.subTest(text=after):
+                self.assertIn("'500M messages/month' [C2, S3]", after)
+
+    def test_another_pair_alike(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        facts = basis_facts(OTHER_PAIR_ITEMS(), (OTHER_PAIR_NOTE,))
+        for text in ("Page 7 does not state '3M bots/week' [C7, S7].", "Does page 7 state '3M bots/week' [C7, S7]?",
+                     "If the usage figures [S7] and [S8] are taken at face value under the 'Growth by Q3-19' framing, "
+                     "the platform was sizeable then."):
+            with self.subTest(text=text):
+                self.assertEqual(guard_basis_wording(text, facts), (text, []))
+        self.assertEqual(guard_basis_wording("Page 8 states '3M bots/week' [C7, S8].", facts),
+                         ("Page 8 states '3M bots/week' [C8, S8].", ['basis_citation_identity']))

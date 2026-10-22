@@ -1067,6 +1067,9 @@ def _condition_context(sentence, facts, changes):
         pair = next((p for p in facts.pairs if len(p.sides) == 2 and set(outside) <= p.members), None)
         if not outside or not inside or pair is None:
             continue                           # nothing stays under the heading, or the moved refs are no pair's side
+        if any(set(_split_refs(group.group(1))) <= set(outside) for group in groups):
+            continue                           # a group of moved refs alone ("[S1, S2] and [S3]") would be left empty
+                                               # and its connector dangling: no faithful rewrite, kept (review of 75ca81f)
         head = sentence[condition.end():groups[0].start()]
         clause = sentence[start:at]
         # A denial or hedge cannot pass: _ACCEPTANCE is matched whole and the subject is an allowlist.
@@ -1148,6 +1151,68 @@ def _compares(refs, pair):
     return len(claims) > 1 or len(statements) > 1
 
 
+# Words that make a clause deny what a source states ("Page 10 does not state ...", "the slide omits ..."): its
+# citations are the evidence of that source, not of the figure it lacks (review of 75ca81f).
+_IDENTITY_DENIAL = _DENIAL | frozenset({'omit', 'omits', 'omitted', 'absent', 'missing', 'nowhere', "doesn't", "don't",
+                                        "isn't", "aren't", "wasn't", "weren't", "didn't"})
+_NAMED_PAGES = re.compile(r'\bpages?[\s-]+(\d+(?:\s*(?:,|and|or|&)\s*\d+)*)', re.I)
+
+
+def _clause_bounds(sentence, at):
+    """(start, end) of the clause holding `at`: it stops at ";", ":", a dash, a clause-linking comma (", while") or
+    an unmatched parenthesis on either side, and at the sentence's end."""
+    start, depth = 0, 0
+    for i in range(at - 1, -1, -1):
+        ch = sentence[i]
+        if ch == ')':
+            depth += 1
+        elif ch == '(':
+            if depth == 0:
+                start = i + 1
+                break
+            depth -= 1
+        elif depth == 0 and ch in ';:—':
+            start = i + 1
+            break
+        elif depth == 0 and ch == ',' and _CLAUSE_LINK.match(sentence, i):
+            start = _CLAUSE_LINK.match(sentence, i).end()
+            break
+    end, depth = len(sentence), 0
+    for i in range(at, len(sentence)):
+        ch = sentence[i]
+        if ch == '(':
+            depth += 1
+        elif ch == ')':
+            if depth == 0:
+                end = i
+                break
+            depth -= 1
+        elif depth == 0 and (ch in ';:—' or (ch == ',' and _CLAUSE_LINK.match(sentence, i))):
+            end = i
+            break
+    return start, end
+
+
+def _states_as_cited(sentence, at, pair, sides, places):
+    """The clause holding the group at `at` affirms the figure as the named side's: it is not a question, not a
+    "whether", denies nothing, and every page or source context it names is one of `sides`' own (a "vs" names both). "Page 10 does not state
+    '500M messages/month' [C3, S2]" and "Does page 10 state ...?" cite page 10 as what page 10 states: kept."""
+    if _asks(sentence):
+        return False
+    start, end = _clause_bounds(sentence, at)
+    clause = _REF.sub(' ', sentence[start:end])
+    words = set(re.findall(r"[\w']+", clause.lower()))
+    if words & _IDENTITY_DENIAL or 'whether' in words:
+        return False
+    own = {places[ref][0] for i in sides for ref in pair.sides[i] if ref in places}
+    named = {int(n) for found in _NAMED_PAGES.finditer(clause) for n in re.findall(r'\d+', found.group(1))}
+    if named - own:
+        return False                           # another page is named: the refs may be its evidence
+    others = {places[ref][1] for i, members in enumerate(pair.sides) if i not in sides for ref in members if ref in places}
+    others -= {places[ref][1] for i in sides for ref in pair.sides[i] if ref in places}
+    return not any(context and context.lower() in clause.lower() for context in others)
+
+
 def _identity_fix(refs, pair, side, changes):
     """`refs` cite the figure on `side`: a ref of the pair's other side becomes this side's ref of the same kind
     (its claim for a claim, its one repeating statement for a statement). With no such ref, the wrong ref is dropped
@@ -1179,6 +1244,7 @@ def _citation_identity(sentence, facts, changes):
     kept: comparisons cite both sides."""
     if not facts.pairs:
         return sentence
+    places = {ref: (page, context) for ref, page, context, fact in facts.places}
     out, pos, previous_end = '', 0, 0
     for group in _REF.finditer(sentence):
         refs = _split_refs(group.group(1))
@@ -1197,6 +1263,8 @@ def _citation_identity(sentence, facts, changes):
                 if any(_figure_key(token).split('/')[0].rstrip('+') == value.rstrip('+')
                        for token in _FIGURE_TOKEN.findall(_DIGIT_GROUP.sub('', earlier).lower())):
                     continue                   # the group may cover an earlier figure of the pair: a list
+                if not _states_as_cited(sentence, group.start(), pair, {side}, places):
+                    continue                   # a denial, a question or another source named: kept
                 fixed = _identity_fix(refs, pair, side, changes)
         out += sentence[pos:group.start()] + ('[' + ', '.join(fixed) + ']' if fixed != refs else group.group(0))
         if fixed != refs:
@@ -1211,7 +1279,7 @@ def _citation_identity(sentence, facts, changes):
                 continue
             on = lambda refs: {i for i, members in enumerate(pair.sides) for ref in refs if ref in members}
             sa, sb = on(a), on(b)
-            if _compares(a, pair) or _compares(b, pair):
+            if _compares(a, pair) or _compares(b, pair) or not _states_as_cited(sentence, match.start(), pair, {0, 1}, places):
                 continue
             if len(sa) == 1 and sb == {0, 1}:
                 b = _identity_fix(b, pair, 1 - next(iter(sa)), changes)
