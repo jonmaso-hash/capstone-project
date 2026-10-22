@@ -3730,6 +3730,8 @@ REVIEW_IDENTITY_KEPT = (
     "Whether the deck states '500M messages/month' [C3, S2] is unclear.",        # "whether" alone
     "Is '500M messages/month' [C3, S3] a run rate?",                             # a question alone
     "The deck does not reconcile [C3, S2] vs [C3, S3].",                         # a "vs" in a denial
+    # One group after a list of both figures, no page named: only the list guard keeps it (I3 survived at b4fa23e).
+    "The deck states 500M messages and 500M messages/month [C3, S3].",
 )
 REVIEW_IDENTITY_FIXED = (
     # The affirmative clause beside a denied one is still corrected; the denied one keeps page 10's refs.
