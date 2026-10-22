@@ -1,0 +1,81 @@
+S1 CAUGHT Ran 342 tests in 12.729s FAILED (failures=20) restored=True | review 8f11844: any basis word in the subject is the pair's (the 8f11844 behaviour: "The yearly figure")
+    assertion failures in: test_earlier_rounds_are_unchanged, test_memo_98_and_earlier_rounds_are_unchanged, test_subjects_are_each_pairs_own, test_subjects_naming_another_page_or_interval_are_kept, test_the_pairs_judgment_is_repaired_and_other_clauses_kept, test_the_pairs_own_clauses_are_still_repaired, test_the_writer_keeps_another_figures_subject
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, the implied weekly activity is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The 500M messages/week figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative, monthly, and daily figures are overstated [S2, S3], but the definitions remain unclear.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative, monthly, and daily figures are overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is accurate [S2], and the daily figure [S3] is overstated.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The reported, monthly, and daily figures are overstated [S2, S3], but the definitions remain unclear.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The run-rate figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The weekly figure is overstated compared with the monthly figure [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The yearly figure is overstated [S2, S3].'
+    failing sub-case: text='The weekly bot figure [C6] is overstated [C5].'
+S2 CAUGHT Ran 342 tests in 12.425s FAILED (failures=5) restored=True | review 8f11844: any page in the subject is the pair's (the 8f11844 behaviour: "The page-99 figure")
+    assertion failures in: test_subjects_are_each_pairs_own, test_subjects_naming_another_page_or_interval_are_kept, test_the_writer_keeps_another_figures_subject
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The page-99 figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The page-99 monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The slide-7 figure is overstated [S2, S3].'
+    failing sub-case: text='The page-12 bot figure [C6] is overstated [C5].'
+S3 CAUGHT Ran 342 tests in 12.561s FAILED (failures=1) restored=True | review 8f11844: the rest of a word around its basis is not read ("The costs/month figure")
+    assertion failures in: test_subjects_naming_another_page_or_interval_are_kept
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The costs/month figure is overstated [S2, S3].'
+S4 CAUGHT Ran 342 tests in 12.410s FAILED (failures=1) restored=True | positive: no word with a basis and more is the pair's ("The 500M messages/month figure")
+    assertion failures in: test_subjects_naming_the_pairs_own_are_repaired
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The 500M messages/month figure is overstated [S2, S3].'
+S5 CAUGHT Ran 342 tests in 12.656s FAILED (failures=16) restored=True | positive: no page in the subject is the pair's ("The page-10 figure", "The slide-12 monthly figure")
+    assertion failures in: test_a_judgment_not_only_about_one_or_both_figures_stays_with_the_judgment_rule, test_comparisons_with_the_pairs_own_pages_and_intervals_are_repaired, test_earlier_rounds_are_unchanged, test_memo_98_and_earlier_rounds_are_unchanged, test_subjects_are_each_pairs_own, test_subjects_naming_the_pairs_own_are_repaired, test_the_pairs_judgment_is_repaired_and_other_clauses_kept, test_the_pairs_own_clauses_are_still_repaired, test_the_writer_keeps_another_figures_subject
+    errors in: -
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative, monthly, and page-10 figures are overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative, monthly, and page-12 figures are overstated [S2, S3], but the definitions remain unclear.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The page-10 figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The page-10 figure is overstated compared with the per month figure [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The slide-12 monthly figure is overstated [S2, S3].'
+    failing sub-case: text='The page-6 bot figure [C6] is overstated [C5].'
+S6 CAUGHT Ran 342 tests in 12.638s FAILED (failures=142) restored=True | positive: no basis word in the subject is the pair's ("The monthly figure", "The cumulative figure")
+    assertion failures in: test_a_directly_following_referent_is_still_corrected, test_a_pair_of_two_stated_rates_has_no_cumulative_side, test_a_second_pair_gets_its_own_basis_wording, test_an_overstatement_judgment_is_replaced_and_its_refs_kept, test_comparisons_with_the_pairs_own_pages_and_intervals_are_repaired, test_direct_cited_and_named_paths_are_unaffected, test_earlier_rounds_are_unchanged, test_every_other_field_is_exactly_as_stored, test_explicit_cumulative_evidence_and_questions_are_kept, test_memo_98_and_earlier_rounds_are_unchanged, test_only_the_expected_rules_fired, test_pages_and_intervals_are_each_pairs_own, test_subjects_are_each_pairs_own, test_subjects_naming_the_pairs_own_are_repaired, test_the_known_bridges_continue_the_pair, test_the_live_corrections_are_reproduced, test_the_pairs_judgment_is_repaired_and_other_clauses_kept, test_the_pairs_own_clauses_are_still_repaired, test_the_pairs_own_judgments_are_still_repaired, test_the_stored_memo_carries_the_repairs, test_the_writer_keeps_them, test_the_writer_relabels_nothing_for_two_stated_rates, test_unrelated_and_second_pair_sentences_through_the_writer
+    errors in: -
+    failing sub-case: middle='These use different measurement bases and cannot be compared or reconciled without clarification from management.'
+    failing sub-case: middle='These use different measurement bases and need clarification before comparison.'
+    failing sub-case: middle='These use different measurement bases.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the cumulative figure was restated as a monthly figure, the implied monthly activity would be materially overstated [S2, S
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the deck counts weekly, the implied monthly activity is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, the implied monthly activity is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the larger figure is restated, the implied monthly activity is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the messages are restated, the implied monthly activity is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions — the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions, and the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions, in its view, but the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Management has not clarified the definitions; the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Misleading advertising is wrong; the monthly figure is inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The 500M messages/month figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative figure is overstated [S2, S3] — misleading advertising is wrong.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative, monthly, and page-10 figures are overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative, monthly, and page-12 figures are overstated [S2, S3], but the definitions remain unclear.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is inflated [S2, S3], but the definitions remain unclear.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3] — management has not clarified the definitions.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3], but management has not clarified the definitions.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3], which management has not explained.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2, S3]; management has not clarified the definitions.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated [S2]; the cumulative figure is inflated [S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated and possibly misleading [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated compared with the cumulative figure [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated compared with the page 10 count [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated compared with the page-10 count [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated compared with the slide-12 figure [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated relative to its stated interval [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated, and possibly inflated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The reported, monthly, and cumulative figures are overstated [S2, S3], but the definitions remain unclear.'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The slide-12 monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the cumulative figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — the monthly figure is overstated [S2, S3].'
+    failing sub-case: text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12.\n- The monthly figure is overstated [S2, S3].'
+    failing sub-case: text='The daily bot figure [C6] is overstated [C5].'
+    failing sub-case: text='The daily bot figure [C6] is overstated compared with the page-5 bot count [C5].'
+    failing sub-case: text='The weekly figure [C9] is overstated compared with the cumulative figure [C7].'
+    failing sub-case: text='The weekly figure [C9] is overstated compared with the page-7 figure [C7].'
+final sha matches pre-run: True ccfe74b77d8846b7fc760f26795d25351c48a6bdd7baecf3bd0d451dcae5fe68

@@ -1,0 +1,65 @@
+"""Review of 71ece83: re-anchor K11 and K12 (same meaning) to the pair-specific tail predicates, retire N9 (it
+survived at 71ece83: the comma check it guarded is gone; disclosed there), add L1-L12."""
+p = 'mutate_x.py'
+s = open(p, encoding='utf-8').read()
+
+
+def entry(mid):
+    a = s.index(f"    ('{mid}',")
+    ends = [i for i in (s.find("\n    ('", a + 1), s.find("\n    #", a + 1), s.find("\n]", a + 1)) if i != -1]
+    return a, min(ends) + 1
+
+
+def replace_entry(mid, text):
+    global s
+    a, b = entry(mid)
+    s = s[:a] + text + s[b:]
+
+
+replace_entry('K11', '''    ('K11', 'positive: the pair\\'s own words are not object vocabulary ("compared with the bare bot count"; re-anchored)',
+     "               _pair_basis(word, pair) or _pair_word(word, pair) or _pair_page(word, pair)",
+     "               _pair_basis(word, pair) or _pair_page(word, pair)"),
+''')
+replace_entry('K12', '''    ('K12', 'positive: a page or slide is not object vocabulary ("overstates the page-10 count"; re-anchored)',
+     "               _pair_basis(word, pair) or _pair_word(word, pair) or _pair_page(word, pair)",
+     "               _pair_basis(word, pair) or _pair_word(word, pair)"),
+''')
+a, b = entry('N9')
+s = s[:a] + s[b:]
+
+L = r'''    # --- review of 71ece83: pages and intervals after the judgment must be the pair's own (L1-L12)
+    ('L1', 'review 71ece83: any basis word is the pair\'s (the 71ece83 behaviour: "compared with the yearly count")',
+     "    if hit['interval']:\n        return True\n    if hit['cumulative']:", "    if True:\n        return True\n    if hit['cumulative']:"),
+    ('L2', 'review 71ece83: any rate is the pair\'s ("compared with the weekly figure")',
+     "    return rate.lower() in pair.intervals", "    return True"),
+    ('L3', 'review 71ece83: any page or slide is the pair\'s (the 71ece83 behaviour: "compared with the page-99 count")',
+     "    return bool(hit) and int(hit.group(1)) in pair.pages", "    return bool(hit)"),
+    ('L4', 'review 71ece83: "cumulative" is always the pair\'s ("compared with the daily figure [C7]" is not; cumulative for any pair)',
+     "        return 'cumulative' in pair.intervals", "        return True"),
+    ('L5', 'positive: no page is the pair\'s ("overstates the page-10 count", "the page-12 count")',
+     "    return bool(hit) and int(hit.group(1)) in pair.pages", "    return False"),
+    ('L6', 'positive: no basis word is the pair\'s ("compared with the monthly count", "the cumulative figure")',
+     "    hit = _TAIL_INTERVAL.fullmatch(word)\n    if not hit:", "    hit = _TAIL_INTERVAL.fullmatch(word)\n    if True:"),
+    ('L7', 'positive: "page 10" is not read as a page ("compared with the page 10 count")',
+     r"""r'\1-\2', re.sub(""", r"""r'\1 \2', re.sub("""),
+    ('L8', 'positive: "per month" is not read as a rate ("compared with the per month figure")',
+     r"""r'/\1', rest, flags=re.I)""", r"""r'per \1', rest, flags=re.I)"""),
+    ('L9', 'positive: the pair has no pages (Pair.pages never filled)',
+     "                                          if item.ref in members and _page(item) is not None),",
+     "                                          if False),"),
+    ('L10', 'positive: the side with no stated interval is not "cumulative" (memo 101: "compared with the cumulative figure")',
+     "    if basis is None or not basis.rate or basis.rate == CUMULATIVE_BASIS:\n        return 'cumulative'",
+     "    if basis is None or not basis.rate:\n        return ''\n    if basis.rate == CUMULATIVE_BASIS:\n        return 'cumulative'"),
+    ('L11', 'positive: "interval" is not the pair\'s ("relative to its stated interval")',
+     "    if hit['interval']:\n        return True\n    if hit['cumulative']:", "    if hit['interval']:\n        return False\n    if hit['cumulative']:"),
+    ('L12', 'positive: an adjective rate is not read ("compared with the monthly count"; "/month" still read)',
+     "    rate = hit['rate'] or {'monthly'", "    rate = hit['rate'] or 'none' or {'monthly'"),
+'''
+marker = "\n]\n\n\ndef sha"
+assert s.count(marker) == 1
+s = s.replace(marker, "\n" + L.rstrip('\n') + marker)
+s = s.replace('"""Review of 72418e2: K1-K14 added;',
+              '"""Review of 71ece83: L1-L12 added; K11 and K12 re-anchored to the pair-specific tail predicates (same '
+              'meaning); N9 retired (survived at 71ece83; its comma check is gone). Review of 72418e2: K1-K14 added;', 1)
+open(p, 'w', encoding='utf-8').write(s)
+print('patched')

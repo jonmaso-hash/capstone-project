@@ -1,0 +1,10 @@
+p = 'mutate_x.py'
+s = open(p, encoding='utf-8').read()
+old = "    verdict = 'CAUGHT' if fails else ('CRASH-ONLY' if errors else 'SURVIVED')\n"
+new = ("    verdict = 'CAUGHT' if fails else ('CRASH-ONLY' if errors else 'SURVIVED')\n"
+       "    if ran == '?':                          # no test run at all (a missing t.sh once reported every mutant SURVIVED)\n"
+       "        verdict = 'NO-RUN'\n")
+assert s.count(old) == 1
+s = s.replace(old, new)
+open(p, 'w', encoding='utf-8').write(s)
+print('ok')

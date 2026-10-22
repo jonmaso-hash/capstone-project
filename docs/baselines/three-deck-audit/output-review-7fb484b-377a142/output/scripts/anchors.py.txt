@@ -1,0 +1,12 @@
+import sys
+src = open('mutate_w.py', encoding='utf-8').read()
+ns = {'__file__': 'mutate_w.py'}
+pre = src.split("\n\ndef sha")[0].replace("WT = sys.argv[1]", "WT = 'C:/Users/jonathan/Desktop/KCV-of903'").replace("ONLY = set(sys.argv[2:])", "ONLY = set()")
+exec(pre, ns)
+t = open(ns['BF'], 'rb').read().decode('utf-8')
+bad = 0
+for mid, d, old, new in ns['M']:
+    o = old.replace('\n', '\r\n') if '\r\n' in t else old
+    if t.count(o) != 1:
+        bad += 1; print(mid, 'count', t.count(o))
+print('checked', len(ns['M']), 'bad', bad, 'crlf', '\r\n' in t)

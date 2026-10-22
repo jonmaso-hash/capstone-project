@@ -1,0 +1,9 @@
+== full guard sequence on memo 101's payload at 7fb484b
+IN | - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Nothing suggests these figures are wrong — or inflated.
+OUT| - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Nothing suggests these figures are wrong — or inflated. []
+IN | - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — an analyst is wrong.
+OUT| - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — an analyst is wrong. []
+IN | The cumulative and monthly revenue differ while the message counts remain ambiguous [C2, C3].
+OUT| The cumulative and monthly revenue differ while the message counts remain ambiguous [C2, C3]. []
+IN | According to an analyst, 500M messages [S2, S3] sit in a slide context headed 'Traction by Apr-16'.
+OUT| According to an analyst, 500M messages [S2, S3] sit in a slide context headed 'Traction by Apr-16'. []

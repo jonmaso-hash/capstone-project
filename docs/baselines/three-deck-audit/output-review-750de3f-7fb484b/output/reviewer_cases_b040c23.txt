@@ -1,0 +1,9 @@
+== full guard sequence on memo 101's payload, basis_fidelity.py from b040c23 (git show)
+IN | - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Nothing suggests these figures are wrong — or inflated.
+OUT| - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. Nothing suggests these figures are wrong — how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on. ['basis_referent_judgment']
+IN | - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — an analyst is wrong.
+OUT| - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on. ['basis_referent_judgment']
+IN | The cumulative and monthly revenue differ while the message counts remain ambiguous [C2, C3].
+OUT| The unspecified-interval and monthly revenue differ while the message counts remain ambiguous [C2, C3]. ['basis_cumulative_presupposed']
+IN | According to an analyst, 500M messages [S2, S3] sit in a slide context headed 'Traction by Apr-16'.
+OUT| According to an analyst, 500M messages [S2] sit in a slide context headed 'Traction by Apr-16'; the deck separately states 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on). ['basis_source_context']

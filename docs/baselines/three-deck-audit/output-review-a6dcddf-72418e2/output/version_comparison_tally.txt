@@ -1,0 +1,20 @@
+versions: ['0664563', '7fb484b', '377a142', '9b28e14', '8d7f8dc', 'a6dcddf', '72418e2 (working tree, clean)']
+reviewer a6dcddf: condition + foreign qualifier (must keep): 0664563 0k/2c | 7fb484b 0k/2c | 377a142 0k/2c | 9b28e14 0k/2c | 8d7f8dc 0k/2c | a6dcddf 0k/2c | 72418e2 2k/0c
+reviewer a6dcddf: attribution + independent clause (must keep): 0664563 0k/1c | 7fb484b 0k/1c | 377a142 0k/1c | 9b28e14 0k/1c | 8d7f8dc 0k/1c | a6dcddf 0k/1c | 72418e2 1k/0c
+control a6dcddf: attribution / aside (must keep): 0664563 0k/7c | 7fb484b 0k/7c | 377a142 0k/7c | 9b28e14 0k/7c | 8d7f8dc 0k/7c | a6dcddf 1k/6c | 72418e2 7k/0c
+control a6dcddf (must repair): 0664563 0k/6c | 7fb484b 0k/6c | 377a142 0k/6c | 9b28e14 0k/6c | 8d7f8dc 0k/6c | a6dcddf 0k/6c | 72418e2 0k/6c
+carried 8d7f8dc: management clause (must repair the pair, keep the clause): 0664563 0k/2c | 7fb484b 0k/2c | 377a142 0k/2c | 9b28e14 0k/2c | 8d7f8dc 0k/2c | a6dcddf 0k/2c | 72418e2 0k/2c
+carried 8d7f8dc: dash/comma/referent clause forms (must repair the pair, keep the clause): 0664563 0k/6c | 7fb484b 0k/6c | 377a142 0k/6c | 9b28e14 0k/6c | 8d7f8dc 0k/6c | a6dcddf 0k/6c | 72418e2 0k/6c
+carried 8d7f8dc: pair-directed claim (must repair): 0664563 0k/2c | 7fb484b 0k/2c | 377a142 0k/2c | 9b28e14 0k/2c | 8d7f8dc 1k/1c | a6dcddf 0k/2c | 72418e2 0k/2c
+carried 8d7f8dc: genuine pair subjects (must repair): 0664563 0k/9c | 7fb484b 0k/9c | 377a142 0k/9c | 9b28e14 0k/9c | 8d7f8dc 1k/8c | a6dcddf 0k/9c | 72418e2 0k/9c
+carried 8d7f8dc: incidental vocabulary (must keep): 0664563 0k/2c | 7fb484b 0k/2c | 377a142 0k/2c | 9b28e14 0k/2c | 8d7f8dc 0k/2c | a6dcddf 2k/0c | 72418e2 2k/0c
+carried 8d7f8dc (must keep): 0664563 0k/9c | 7fb484b 0k/9c | 377a142 0k/9c | 9b28e14 0k/9c | 8d7f8dc 1k/8c | a6dcddf 9k/0c | 72418e2 9k/0c
+carried 9b28e14 reviewer (must keep): 0664563 0k/2c | 7fb484b 0k/2c | 377a142 0k/2c | 9b28e14 0k/2c | 8d7f8dc 2k/0c | a6dcddf 2k/0c | 72418e2 2k/0c
+carried 9b28e14 controls (must keep): 0664563 0k/5c | 7fb484b 0k/5c | 377a142 0k/5c | 9b28e14 0k/5c | 8d7f8dc 5k/0c | a6dcddf 5k/0c | 72418e2 5k/0c
+carried 9b28e14 (must repair): 0664563 0k/7c | 7fb484b 0k/7c | 377a142 0k/7c | 9b28e14 0k/7c | 8d7f8dc 0k/7c | a6dcddf 0k/7c | 72418e2 0k/7c
+memo 98 conditional (must repair): 0664563 0k/1c | 7fb484b 0k/1c | 377a142 0k/1c | 9b28e14 0k/1c | 8d7f8dc 0k/1c | a6dcddf 0k/1c | 72418e2 0k/1c
+carried 377a142 (must keep): 0664563 2k/0c | 7fb484b 1k/1c | 377a142 0k/2c | 9b28e14 2k/0c | 8d7f8dc 2k/0c | a6dcddf 2k/0c | 72418e2 2k/0c
+carried 377a142 controls (must keep): 0664563 7k/0c | 7fb484b 3k/4c | 377a142 0k/7c | 9b28e14 7k/0c | 8d7f8dc 7k/0c | a6dcddf 7k/0c | 72418e2 7k/0c
+carried 377a142 (must repair): 0664563 5k/1c | 7fb484b 0k/6c | 377a142 0k/6c | 9b28e14 0k/6c | 8d7f8dc 0k/6c | a6dcddf 0k/6c | 72418e2 0k/6c
+carried 7fb484b (must keep): 0664563 12k/0c | 7fb484b 3k/9c | 377a142 12k/0c | 9b28e14 12k/0c | 8d7f8dc 12k/0c | a6dcddf 12k/0c | 72418e2 12k/0c
+carried 750de3f (must keep): 0664563 14k/0c | 7fb484b 14k/0c | 377a142 14k/0c | 9b28e14 14k/0c | 8d7f8dc 14k/0c | a6dcddf 14k/0c | 72418e2 14k/0c

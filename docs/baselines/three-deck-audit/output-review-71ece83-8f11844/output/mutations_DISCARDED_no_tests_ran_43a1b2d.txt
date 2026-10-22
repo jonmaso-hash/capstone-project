@@ -1,0 +1,22 @@
+L1 SURVIVED ? ? restored=True | review 71ece83: any basis word is the pair's (the 71ece83 behaviour: "compared with the yearly count")
+    assertion failures in: -
+    errors in: -
+L2 SURVIVED ? ? restored=True | review 71ece83: any rate is the pair's ("compared with the weekly figure")
+    assertion failures in: -
+    errors in: -
+L3 SURVIVED ? ? restored=True | review 71ece83: any page or slide is the pair's (the 71ece83 behaviour: "compared with the page-99 count")
+    assertion failures in: -
+    errors in: -
+L4 SURVIVED ? ? restored=True | review 71ece83: "cumulative" is always the pair's ("compared with the daily figure [C7]" is not; cumulative for any pair)
+    assertion failures in: -
+    errors in: -
+L5 SURVIVED ? ? restored=True | positive: no page is the pair's ("overstates the page-10 count", "the page-12 count")
+    assertion failures in: -
+    errors in: -
+L6 SURVIVED ? ? restored=True | positive: no basis word is the pair's ("compared with the monthly count", "the cumulative figure")
+    assertion failures in: -
+    errors in: -
+L7 SURVIVED ? ? restored=True | positive: "page 10" is not read as a page ("compared with the page 10 count")
+    assertion failures in: -
+    errors in: -
+final sha matches pre-run: True 85d77b320196bfc561ef6c1605f464f15e6ba3c1707b95c6a4aef2ecbcd9575a

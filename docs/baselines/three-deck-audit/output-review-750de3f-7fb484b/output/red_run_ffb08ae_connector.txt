@@ -1,0 +1,35 @@
+== red run: basis_fidelity.py from ffb08ae (git show), tests at working tree
+2026-10-19 00:28:08,388 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+F.
+======================================================================
+FAIL: test_denials_new_subjects_other_metrics_and_third_parties_are_kept (zelda_api.tests_output_fidelity.Review750de3fTests.test_denials_new_subjects_other_metrics_and_third_parties_are_kept) (text='The cumulative and monthly figures differ while the message counts remain ambiguous [C2, C3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2234, in test_denials_new_subjects_other_metrics_and_third_parties_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('The unspecified-interval and monthly figures [89 chars]ed']) != ('The cumulative and monthly figures differ whi[49 chars], [])
+
+First differing element 0:
+'The unspecified-interval and monthly figures [54 chars]C3].'
+'The cumulative and monthly figures differ whi[44 chars]C3].'
+
+- ('The unspecified-interval and monthly figures differ while the message counts '
+?        ^^^ ---------------
+
++ ('The cumulative and monthly figures differ while the message counts remain '
+?       + ^^^^^^^                                                      +++++++
+
+-  'remain ambiguous [C2, C3].',
+?   -------
+
++  'ambiguous [C2, C3].',
+-  ['basis_cumulative_presupposed'])
++  [])
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.108s
+
+FAILED (failures=1)
+Found 2 test(s).
+System check identified no issues (0 silenced).

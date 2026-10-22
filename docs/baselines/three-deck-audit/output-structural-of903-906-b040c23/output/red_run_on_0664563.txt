@@ -1,0 +1,220 @@
+== red run at 0664563 application code (HEAD 0664563, basis_fidelity.py unchanged), tests at working tree
+2026-10-18 22:18:16,322 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-18 22:19:14,552 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-18 22:19:14,626 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-18 22:19:14,784 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+F...FF.FFF..F.FF.F..FF
+======================================================================
+FAIL: test_the_stored_memo_carries_the_repairs (zelda_api.tests_output_fidelity.PipelineMemo101Tests.test_the_stored_memo_carries_the_repairs)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2040, in test_the_stored_memo_carries_the_repairs
+    self.assertIn(BMA_101_AFTER, memo.business_model_analysis)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "the company states 140,000+ bots [S1] and 500M messages (with an ambiguity in measurement basis between a cumulative total and a monthly rate [S2]) in a slide context headed 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on)." not found in "Insufficient disclosed data to describe the business model. No revenue model, pricing structure, customer acquisition approach, or expansion strategy was extracted from the document. The only evidence of commercial activity is the self-reported traction data: the company states 140,000+ bots [S1] and 500M messages (with an ambiguity in measurement basis between a cumulative total and a monthly rate [S2, S3]) in a slide context headed 'Traction by Apr-16'. Whether these metrics reflect paying customers, free users, or a mix is not stated. Who pays — businesses, developers, or end users — is not found in the extracted evidence. What drives growth and any stated expansion plans are similarly absent."
+
+======================================================================
+FAIL: test_of903_page_12_does_not_share_page_10_s_context (zelda_api.tests_output_fidelity.Memo101ReplayTests.test_of903_page_12_does_not_share_page_10_s_context)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 1952, in test_of903_page_12_does_not_share_page_10_s_context
+    self.assertEqual(self.out['business_model_analysis'],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     self.stored['business_model_analysis'].replace(BMA_101_BEFORE, BMA_101_AFTER))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "Insu[396 chars]e [S2, S3]) in a slide context headed 'Tractio[255 chars]ent." != "Insu[396 chars]e [S2]) in a slide context headed 'Traction by[433 chars]ent."
+Diff is 2646 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_of904_the_asserted_base_date_is_page_10_s_alone (zelda_api.tests_output_fidelity.Memo101ReplayTests.test_of904_the_asserted_base_date_is_page_10_s_alone)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 1956, in test_of904_the_asserted_base_date_is_page_10_s_alone
+    self.assertEqual(self.out['base_scenario'], self.stored['base_scenario'].replace(BASE_101_BEFORE, BASE_101_AFTER))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "Taki[54 chars]1, S2, S3], ManyChat had built a sizeable bot [357 chars]nce." != "Taki[54 chars]1, S2], ManyChat had built a sizeable bot and [547 chars]nce."
+Diff is 1583 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_of905_these_figures_continue_the_basis_item (zelda_api.tests_output_fidelity.Memo101ReplayTests.test_of905_these_figures_continue_the_basis_item)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 1963, in test_of905_these_figures_continue_the_basis_item
+    self.assertEqual(self.out['risk_assessment'],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     self.stored['risk_assessment'].replace(RISK_101_BEFORE, RISK_101_AFTER))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "1. M[334 chars]on — raising the possibility of metric inflati[812 chars]C4]." != "1. M[334 chars]on — how the figure stated without an explicit[873 chars]C4]."
+Diff is 2567 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_of906_page_10_is_not_presupposed_cumulative (zelda_api.tests_output_fidelity.Memo101ReplayTests.test_of906_page_10_is_not_presupposed_cumulative)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 1968, in test_of906_page_10_is_not_presupposed_cumulative
+    self.assertEqual(self.out['downside_scenario'],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     self.stored['downside_scenario'].replace(DOWN_101_BEFORE, DOWN_101_AFTER))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "If t[24 chars] the cumulative and monthly presentations of t[384 chars]ing." != "If t[24 chars] the unspecified-interval and monthly presenta[394 chars]ing."
+Diff is 1051 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_only_the_expected_rules_fired (zelda_api.tests_output_fidelity.Memo101ReplayTests.test_only_the_expected_rules_fired)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 1994, in test_only_the_expected_rules_fired
+    self.assertEqual(self.changes, {
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+        'business_model_analysis': ['basis_source_context'],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        'questions_for_management': ['attribution:Pitch Deck Hunt'],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    })
+    ^^
+AssertionError: {'questions_for_management': ['attribution:[13 chars]nt']} != {'business_model_analysis': ['basis_source_[212 chars]nt']}
++ {'base_scenario': ['basis_source_context'],
++  'business_model_analysis': ['basis_source_context'],
++  'downside_scenario': ['basis_cumulative_presupposed'],
+- {'questions_for_management': ['attribution:Pitch Deck Hunt']}
+? ^                                                           ^
+
++  'questions_for_management': ['attribution:Pitch Deck Hunt'],
+? ^                                                           ^
+
++  'risk_assessment': ['basis_referent_judgment']}
+
+======================================================================
+FAIL: test_the_stored_sections_get_the_same_repairs (zelda_api.tests_output_fidelity.Memo101StoredSectionsTests.test_the_stored_sections_get_the_same_repairs)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2012, in test_the_stored_sections_get_the_same_repairs
+    self.assertIn(BMA_101_AFTER, out['business_model_analysis'])
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "the company states 140,000+ bots [S1] and 500M messages (with an ambiguity in measurement basis between a cumulative total and a monthly rate [S2]) in a slide context headed 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on)." not found in "Insufficient disclosed data to describe the business model. No revenue model, pricing structure, customer acquisition approach, or expansion strategy was extracted from the document. The only evidence of commercial activity is the self-reported traction data: the company states 140,000+ bots [S1] and 500M messages (with an ambiguity in measurement basis between a cumulative total and a monthly rate [S2, S3]) in a slide context headed 'Traction by Apr-16'. Whether these metrics reflect paying customers, free users, or a mix is not stated. Who pays — businesses, developers, or end users — is not found in the extracted evidence. What drives growth and any stated expansion plans are similarly absent."
+
+======================================================================
+FAIL: test_shared_context_is_split_by_source (zelda_api.tests_output_fidelity.Of903SharedContextTests.test_shared_context_is_split_by_source) (text="The company states 500M messages (an ambiguity between a total and a monthly rate [S2, S3]) in a slide context headed 'Traction by Apr-16'.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2079, in test_shared_context_is_split_by_source
+    self.assertEqual(self.full(text), (after, ['basis_source_context']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[77 chars]e [S2, S3]) in a slide context headed 'Tractio[14 chars], []) != ("The[77 chars]e [S2]) in a slide context headed 'Traction by[214 chars]xt'])
+
+First differing element 0:
+"The [76 chars]e [S2, S3]) in a slide context headed 'Traction by Apr-16'."
+"The [76 chars]e [S2]) in a slide context headed 'Traction by[187 chars]on)."
+
+  ('The company states 500M messages (an ambiguity between a total and a monthly '
+-  "rate [S2, S3]) in a slide context headed 'Traction by Apr-16'.",
+?           ----                                                 ^ -
+
++  "rate [S2]) in a slide context headed 'Traction by Apr-16', and separately "
+?                                                            ^^^^^^^^^^^^^^^^^
+
+-  [])
++  '500M messages/month [S3] on page 12 (how the figure stated without an '
++  'explicit interval relates to the monthly figure needs clarification before '
++  'either is relied on).',
++  ['basis_source_context'])
+
+======================================================================
+FAIL: test_shared_context_is_split_by_source (zelda_api.tests_output_fidelity.Of903SharedContextTests.test_shared_context_is_split_by_source) (text="Taking the figures at face value [S2, S3], the platform had scale by the period referenced in the 'Traction by Apr-16' slide context.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2079, in test_shared_context_is_split_by_source
+    self.assertEqual(self.full(text), (after, ['basis_source_context']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Tak[28 chars]e [S2, S3], the platform had scale by the peri[57 chars], []) != ("Tak[28 chars]e [S2], the platform had scale by the period r[269 chars]xt'])
+
+First differing element 0:
+"Taki[27 chars]e [S2, S3], the platform had scale by the peri[52 chars]ext."
+"Taki[27 chars]e [S2], the platform had scale by the period r[242 chars]on)."
+
+Diff is 812 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_the_judgment_after_these_figures_becomes_the_clarification (zelda_api.tests_output_fidelity.Of905TheseFiguresTests.test_the_judgment_after_these_figures_becomes_the_clarification)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2116, in test_the_judgment_after_these_figures_becomes_the_clarification
+    self.assertEqual(self.guard(text), (self.LEAD + 'These figures cannot be compared without clarification — '
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                        + CLARIFY + '.', ['basis_referent_judgment']))
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[138 chars]on — raising the possibility of inflation.', []) != ('- T[138 chars]on — how the figure stated without an explicit[113 chars]nt'])
+
+First differing element 0:
+'- Th[137 chars]on — raising the possibility of inflation.'
+'- Th[137 chars]on — how the figure stated without an explicit[83 chars] on.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. These figures cannot be compared without clarification — raising '
+?                                                                        ^^^^^^^
+
++  'on page 12. These figures cannot be compared without clarification — how the '
+?                                                                        ^^^^^^^
+
+-  'the possibility of inflation.',
+-  [])
++  'figure stated without an explicit interval relates to the monthly figure '
++  'needs clarification before either is relied on.',
++  ['basis_referent_judgment'])
+
+======================================================================
+FAIL: test_the_presupposed_cumulative_side_is_the_unspecified_interval (zelda_api.tests_output_fidelity.Of906CumulativePresuppositionTests.test_the_presupposed_cumulative_side_is_the_unspecified_interval) (text='If the gap between the cumulative and monthly presentations [C2, C3] is real, usage is unclear.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2160, in test_the_presupposed_cumulative_side_is_the_unspecified_interval
+    self.assertEqual(self.guard(text), (after, ['basis_cumulative_presupposed']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('If [15 chars] the cumulative and monthly presentations [C2,[32 chars], []) != ('If [15 chars] the unspecified-interval and monthly presenta[72 chars]ed'])
+
+First differing element 0:
+'If t[14 chars] the cumulative and monthly presentations [C2,[27 chars]ear.'
+'If t[14 chars] the unspecified-interval and monthly presenta[37 chars]ear.'
+
+- ('If the gap between the cumulative and monthly presentations [C2, C3] is '
+?                           ^^^ -----                                -------
+
++ ('If the gap between the unspecified-interval and monthly presentations [C2, '
+?                          +++++ ^^^^^^^^^^^^^
+
+-  'real, usage is unclear.',
++  'C3] is real, usage is unclear.',
+?   +++++++
+
+-  [])
++  ['basis_cumulative_presupposed'])
+
+======================================================================
+FAIL: test_the_presupposed_cumulative_side_is_the_unspecified_interval (zelda_api.tests_output_fidelity.Of906CumulativePresuppositionTests.test_the_presupposed_cumulative_side_is_the_unspecified_interval) (text='The monthly and cumulative figures [C2, C3] differ in basis.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2160, in test_the_presupposed_cumulative_side_is_the_unspecified_interval
+    self.assertEqual(self.guard(text), (after, ['basis_cumulative_presupposed']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('The monthly and cumulative figures [C2, C3] differ in basis.', []) != ('The monthly and unspecified-interval figures [C2, C3] dif[44 chars]ed'])
+
+First differing element 0:
+'The monthly and cumulative figures [C2, C3] differ in basis.'
+'The monthly and unspecified-interval figures [C2, C3] differ in basis.'
+
+- ('The monthly and cumulative figures [C2, C3] differ in basis.', [])
+?                    ^^^ -----                                    ----
+
++ ('The monthly and unspecified-interval figures [C2, C3] differ in basis.',
+?                   +++++ ^^^^^^^^^^^^^
+
++  ['basis_cumulative_presupposed'])
+
+----------------------------------------------------------------------
+Ran 20 tests in 0.686s
+
+FAILED (failures=12)
+Destroying test database for alias 'default'...
+Found 20 test(s).
+System check identified no issues (0 silenced).

@@ -1,0 +1,21 @@
+"""Compare this round's replay and probe JSON with the ones committed at 72418e2's evidence (94c6ecc)."""
+import json, sys
+S, E, tag = sys.argv[1], sys.argv[2], sys.argv[3]
+out = []
+for new, old in ((f'replay_memos_96_to_101_{tag}.json', 'replay_memos_96_to_101_71ece83.json'),
+                 (f'carried_probes_75_{tag}.json', 'carried_probes_75_71ece83.json')):
+    a = json.load(open(f'{S}/{new}', encoding='utf-8')); b = json.load(open(f'{E}/{old}', encoding='utf-8'))
+    ha, hb = a.pop('head'), b.pop('head')
+    for d in (a, b):
+        d.pop('working_tree_basis_fidelity_differs_from_head', None)
+    out.append(f'{new} vs {old} (committed in 7490245) | head {ha} vs {hb} | identical apart from head: {a == b}')
+    if 'cases' in a:
+        out.append(f'  probe cases: {len(a["cases"])}')
+        for x, y in zip(a['cases'], b['cases']):
+            if x != y:
+                out.append(f'  DIFF {x["in"]}')
+    else:
+        for k in a:
+            if a[k] != b.get(k):
+                out.append(f'  DIFF {k}')
+print('\n'.join(out))

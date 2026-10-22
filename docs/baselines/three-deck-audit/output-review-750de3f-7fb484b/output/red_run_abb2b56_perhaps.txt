@@ -1,0 +1,35 @@
+== red run: basis_fidelity.py from abb2b56 (git show), tests at working tree
+2026-10-19 00:36:18,009 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+F.
+======================================================================
+FAIL: test_denials_new_subjects_other_metrics_and_third_parties_are_kept (zelda_api.tests_output_fidelity.Review750de3fTests.test_denials_new_subjects_other_metrics_and_third_parties_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — perhaps the deck is inflating usage.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2237, in test_denials_new_subjects_other_metrics_and_third_parties_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[116 chars]on — how the figure stated without an explicit[113 chars]nt']) != ('- T[116 chars]on — perhaps the deck is inflating usage.', [])
+
+First differing element 0:
+'- Th[115 chars]on — how the figure stated without an explicit[83 chars] on.'
+'- Th[115 chars]on — perhaps the deck is inflating usage.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. These figures need clarification — how the figure stated without '
+?                                                   ^^      ^^^^^^^^  ---- ^^^^^
+
++  'on page 12. These figures need clarification — perhaps the deck is inflating '
+?                                                  +++ ^^^     ++++++++++ ^   ^^
+
++  'usage.',
++  [])
+-  'an explicit interval relates to the monthly figure needs clarification '
+-  'before either is relied on.',
+-  ['basis_referent_judgment'])
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.109s
+
+FAILED (failures=1)
+Found 2 test(s).
+System check identified no issues (0 silenced).

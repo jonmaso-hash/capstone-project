@@ -1,0 +1,10 @@
+head=afbf715 clean=0-changes 2026-10-20T03:14:00-07:00; zelda_api/basis_fidelity.py identical to 2471eb3: yes
+== zelda_api.tests_output_fidelity free=1.41GB
+Ran 180 tests in 2.905s
+OK
+== zelda_api.tests_usage_basis free=1.22GB
+Ran 77 tests in 3.504s
+OK
+== zelda_api.tests_funding_fidelity free=1.23GB
+Ran 67 tests in 5.899s
+OK

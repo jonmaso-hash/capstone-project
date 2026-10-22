@@ -1,0 +1,17 @@
+import json, sys, subprocess
+S, E = sys.argv[1], sys.argv[2]
+out = []
+for new, old in (('replay_memos_96_to_101_72418e2.json', 'replay_memos_96_to_101_a6dcddf.json'),
+                 ('carried_probes_75_72418e2.json', 'carried_probes_75_a6dcddf.json')):
+    a = json.load(open(f'{S}/{new}', encoding='utf-8')); b = json.load(open(f'{E}/{old}', encoding='utf-8'))
+    ha, hb = a.pop('head'), b.pop('head')
+    a.pop('working_tree_basis_fidelity_differs_from_head', None); wt = b.pop('working_tree_basis_fidelity_differs_from_head', None)
+    out.append(f'{new} vs {old} (committed in 9532c46) | head {ha} vs {hb} | identical apart from head: {a == b}')
+    if 'cases' in a:
+        out.append(f'  probe cases: {len(a["cases"])}')
+        for x, y in zip(a['cases'], b['cases']):
+            if x != y: out.append(f'  DIFF {x["in"]}')
+    else:
+        for k in a:
+            if a[k] != b.get(k): out.append(f'  DIFF {k}')
+print('\n'.join(out))

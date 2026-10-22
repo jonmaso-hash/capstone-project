@@ -1,0 +1,10 @@
+from zelda_api.tests_output_fidelity import replay, items_from, notes_from, memo101_payload
+p = memo101_payload(); items, notes = items_from(p), notes_from(p)
+L = "- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — "
+for f in ["misleading advertising is wrong.", "inflation is affecting costs.", "wrong assumptions drive the model.",
+          "overstated expectations are common.", "inflation.", "or inflation is affecting costs.",
+          "suggesting inflation is affecting costs.", "possibly inflated by bots.",
+          "or possibly inflated.", "suggesting possible inflation.", "misleading.", "possibly overstated [S2, S3].",
+          "which may be overstated.", "raising the possibility of metric inflation or imprecise reporting."]:
+    out, ch = replay({'s': L + f}, items, notes)
+    print('CHANGED' if out['s'] != L + f else 'kept   ', ch.get('s', []), '|', f, '->', out['s'][len(L):] if out['s'].startswith(L) else out['s'])

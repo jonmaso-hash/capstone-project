@@ -1,0 +1,16 @@
+p = 'mutate_x.py'
+s = open(p, encoding='utf-8').read()
+a = s.index("    ('Z5',")
+b = min(i for i in (s.find("\n    ('", a + 1), s.find("\n    #", a + 1), s.find("\n]", a + 1)) if i != -1) + 1
+s = s[:a] + s[b:]
+N10 = '''    ('N10', 'review a6dcddf: a compound subject is split as two clauses ("The monthly figure [S2], and the larger figure [S3] are ...")',
+     "        if is_mine and first and parts[first - 1].startswith(',') and not _ITEM_VERB.search(parts[first - 2]):\\n            return sentence",
+     "        if False:\\n            return sentence"),
+'''
+marker = "\n]\n\n\ndef sha"
+assert s.count(marker) == 1
+s = s.replace(marker, "\n" + N10.rstrip('\n') + marker)
+s = s.replace('"""Review of a6dcddf: N1-N9 added;', '"""Review of a6dcddf: N1-N10 added; Z5 retired (the list guard no longer '
+              'strips citations: with the compound-subject check its outcome cannot differ);', 1)
+open(p, 'w', encoding='utf-8').write(s)
+print('patched')

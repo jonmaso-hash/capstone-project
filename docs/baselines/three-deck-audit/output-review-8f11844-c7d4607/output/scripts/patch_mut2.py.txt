@@ -1,0 +1,35 @@
+"""Review of 8f11844: re-anchor T11, Z6 and N1 (same meaning) to the moved lines; retire Z19 (S5 is the same
+mutation of the new subject page check)."""
+p = 'mutate_x.py'
+s = open(p, encoding='utf-8').read()
+
+
+def entry(mid):
+    a = s.index(f"    ('{mid}',")
+    ends = [i for i in (s.find("\n    ('", a + 1), s.find("\n    #", a + 1), s.find("\n]", a + 1)) if i != -1]
+    return a, min(ends) + 1
+
+
+def replace_entry(mid, text):
+    global s
+    a, b = entry(mid)
+    s = s[:a] + text + s[b:]
+
+
+replace_entry('T11', '''    ('T11', 'OF-906: an admitted cumulative side is neutralised too (re-anchored)',
+     "        if mine is None or mine.cumulative_admitted or not mine.unspecified_members:",
+     "        if mine is None or not mine.unspecified_members:"),
+''')
+replace_entry('Z6', '''    ('Z6', "review 8d7f8dc: the subject's qualifiers are not read (\\"the hiring claim\\"; re-anchored)",
+     "    if not all(_pair_placing(word, pair) or word.lower()", "    if False and not all(_pair_placing(word, pair) or word.lower()"),
+''')
+replace_entry('N1', '''    ('N1', 'review a6dcddf: a condition overrides foreign qualifiers (the a6dcddf behaviour: "the hiring claim"; re-anchored)',
+     "    if not all(_pair_placing(word, pair) or word.lower()", "    if not condition and not all(_pair_placing(word, pair) or word.lower()"),
+''')
+a, b = entry('Z19')
+s = s[:a] + s[b:]
+s = s.replace('"""Review of 8f11844: S1-S10 added.',
+              '"""Review of 8f11844: S1-S10 added; T11, Z6 and N1 re-anchored (same meaning); Z19 retired (S5 is the '
+              'same mutation of the new subject page check).', 1)
+open(p, 'w', encoding='utf-8').write(s)
+print('patched')

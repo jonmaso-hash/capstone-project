@@ -1,0 +1,92 @@
+1d0
+< 
+9a9
+>   WRONG WRONG WRONG WRONG WRONG WRONG WRONG exact  The costs/month figure is overstated [S2, S3].
+112c112
+<   totals: 0664563 29/109, 9b28e14 32/109, 8d7f8dc 35/109, a6dcddf 65/109, 72418e2 74/109, 71ece83 86/109, 8f11844 97/109, HEAD 109/109
+---
+>   totals: 0664563 29/110, 9b28e14 32/110, 8d7f8dc 35/110, a6dcddf 65/110, 72418e2 74/110, 71ece83 86/110, 8f11844 97/110, HEAD 110/110
+116,117c116,117
+<      0664563: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      9b28e14: ['basis_overstatement'] -> CLARIFY [S2, S3].
+---
+>      0664563: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      9b28e14: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+125,127c125,127
+<      0664563: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      9b28e14: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      8d7f8dc: ['basis_overstatement'] -> CLARIFY [S2, S3].
+---
+>      0664563: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      9b28e14: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      8d7f8dc: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+134,136c134,136
+<      0664563: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      9b28e14: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      8d7f8dc: ['basis_overstatement'] -> CLARIFY [S2, S3].
+---
+>      0664563: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      9b28e14: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      8d7f8dc: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+143,144c143,144
+<      0664563: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      9b28e14: ['basis_overstatement'] -> CLARIFY [S2, S3].
+---
+>      0664563: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      9b28e14: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+152,158c152,158
+<      0664563: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      9b28e14: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      8d7f8dc: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      a6dcddf: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      72418e2: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      71ece83: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      8f11844: ['basis_overstatement'] -> CLARIFY [S2, S3].
+---
+>      0664563: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      9b28e14: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      8d7f8dc: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      a6dcddf: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      72418e2: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      71ece83: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      8f11844: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+161,162c161,162
+<      0664563: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      9b28e14: ['basis_overstatement'] -> CLARIFY [S2, S3].
+---
+>      0664563: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      9b28e14: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+170,176c170,176
+<      0664563: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      9b28e14: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      8d7f8dc: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      a6dcddf: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      72418e2: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      71ece83: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      8f11844: ['basis_overstatement'] -> CLARIFY [S2, S3].
+---
+>      0664563: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      9b28e14: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      8d7f8dc: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      a6dcddf: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      72418e2: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      71ece83: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      8f11844: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+179,180c179,180
+<      0664563: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      9b28e14: ['basis_overstatement'] -> CLARIFY [S2, S3].
+---
+>      0664563: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      9b28e14: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+182,186c182,186
+<      a6dcddf: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      72418e2: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      71ece83: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      8f11844: ['basis_overstatement'] -> CLARIFY [S2, S3].
+<      HEAD: ['basis_overstatement'] -> CLARIFY [S2, S3].
+---
+>      a6dcddf: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      72418e2: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      71ece83: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      8f11844: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+>      HEAD: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].

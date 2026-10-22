@@ -1,0 +1,331 @@
+RED at head 8f11844 tests, zelda_api/basis_fidelity.py replaced by the 71ece83 bytes: 8f7782ec26374879666896443772d39d08acb63141481b8581037a1cf5af725c *zelda_api/basis_fidelity.py
+2026-10-21 04:21:43,379 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-21 04:22:35,578 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-21 04:22:35,611 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-21 04:22:35,674 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-21 04:22:35,692 INFO zelda_api.intelligence_pipeline - Memo market_analysis: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-21 04:22:35,693 INFO zelda_api.intelligence_pipeline - Memo team_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-21 04:22:35,694 INFO zelda_api.intelligence_pipeline - Memo financial_analysis: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-21 04:22:35,696 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-21 04:22:35,697 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 04:22:35,702 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 04:22:35,703 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-21 04:22:35,733 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+FFFFFFFFFFFFF.FFFF
+======================================================================
+FAIL: test_the_writer_keeps_them (zelda_api.tests_output_fidelity.PipelineReview71ece83Tests.test_the_writer_keeps_them)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3099, in test_the_writer_keeps_them
+    self.assertEqual(memo.market_analysis, REVIEW_71E_KEPT[0])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].' != '- Th[80 chars] 12. The monthly figure is overstated compared[29 chars]S3].'
+- - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
++ - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated compared with the page-99 count [S2, S3].
+
+
+======================================================================
+FAIL: test_a_pair_of_two_stated_rates_has_no_cumulative_side (zelda_api.tests_output_fidelity.Review71ece83Tests.test_a_pair_of_two_stated_rates_has_no_cumulative_side)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3058, in test_a_pair_of_two_stated_rates_has_no_cumulative_side
+    self.assertEqual(guard_basis_wording(kept, facts), (kept, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('How the monthly figure relates to the dai[91 chars]nt']) != ('The daily figure [C11] is overstated comp[41 chars], [])
+
+First differing element 0:
+'How the monthly figure relates to the dai[65 chars]10].'
+'The daily figure [C11] is overstated comp[36 chars]10].'
+
+- ('How the monthly figure relates to the daily figure needs clarification '
+-  'before either is relied on [C11] [C10].',
+-  ['basis_overstatement'])
++ ('The daily figure [C11] is overstated compared with the cumulative activity '
++  '[C10].',
++  [])
+
+======================================================================
+FAIL: test_comparisons_with_other_pages_and_intervals_are_kept (zelda_api.tests_output_fidelity.Review71ece83Tests.test_comparisons_with_other_pages_and_intervals_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated compared with the page-99 count [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3024, in test_comparisons_with_other_pages_and_intervals_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. The monthly figure is overstated compared[34 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. The monthly figure is overstated compared[29 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
++  'on page 12. The monthly figure is overstated compared with the page-99 count '
++  '[S2, S3].',
++  [])
+
+======================================================================
+FAIL: test_comparisons_with_other_pages_and_intervals_are_kept (zelda_api.tests_output_fidelity.Review71ece83Tests.test_comparisons_with_other_pages_and_intervals_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated compared with the slide-7 figure [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3024, in test_comparisons_with_other_pages_and_intervals_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. The monthly figure is overstated compared[35 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. The monthly figure is overstated compared[30 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
++  'on page 12. The monthly figure is overstated compared with the slide-7 '
++  'figure [S2, S3].',
++  [])
+
+======================================================================
+FAIL: test_comparisons_with_other_pages_and_intervals_are_kept (zelda_api.tests_output_fidelity.Review71ece83Tests.test_comparisons_with_other_pages_and_intervals_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated compared with the weekly figure [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3024, in test_comparisons_with_other_pages_and_intervals_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. The monthly figure is overstated compared[34 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. The monthly figure is overstated compared[29 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
++  'on page 12. The monthly figure is overstated compared with the weekly figure '
++  '[S2, S3].',
++  [])
+
+======================================================================
+FAIL: test_comparisons_with_other_pages_and_intervals_are_kept (zelda_api.tests_output_fidelity.Review71ece83Tests.test_comparisons_with_other_pages_and_intervals_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated compared with the daily count [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3024, in test_comparisons_with_other_pages_and_intervals_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. The monthly figure is overstated compared[32 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. The monthly figure is overstated compared[27 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
++  'on page 12. The monthly figure is overstated compared with the daily count '
++  '[S2, S3].',
++  [])
+
+======================================================================
+FAIL: test_comparisons_with_other_pages_and_intervals_are_kept (zelda_api.tests_output_fidelity.Review71ece83Tests.test_comparisons_with_other_pages_and_intervals_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated compared with the run-rate [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3024, in test_comparisons_with_other_pages_and_intervals_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. The monthly figure is overstated compared[29 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. The monthly figure is overstated compared[24 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
++  'on page 12. The monthly figure is overstated compared with the run-rate [S2, '
++  'S3].',
++  [])
+
+======================================================================
+FAIL: test_comparisons_with_other_pages_and_intervals_are_kept (zelda_api.tests_output_fidelity.Review71ece83Tests.test_comparisons_with_other_pages_and_intervals_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures are overstated compared with the yearly count [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3024, in test_comparisons_with_other_pages_and_intervals_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[122 chars]nt']) != ('- T[81 chars] 12. These figures are overstated compared wit[29 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. These figures are overstated compared wit[24 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_referent_judgment'])
++  'on page 12. These figures are overstated compared with the yearly count [S2, '
++  'S3].',
++  [])
+
+======================================================================
+FAIL: test_comparisons_with_other_pages_and_intervals_are_kept (zelda_api.tests_output_fidelity.Review71ece83Tests.test_comparisons_with_other_pages_and_intervals_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. One or both figures may be overstated compared with the yearly count [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3024, in test_comparisons_with_other_pages_and_intervals_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[122 chars]nt']) != ('- T[81 chars] 12. One or both figures may be overstated com[38 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. One or both figures may be overstated com[33 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_referent_judgment'])
++  'on page 12. One or both figures may be overstated compared with the yearly '
++  'count [S2, S3].',
++  [])
+
+======================================================================
+FAIL: test_comparisons_with_other_pages_and_intervals_are_kept (zelda_api.tests_output_fidelity.Review71ece83Tests.test_comparisons_with_other_pages_and_intervals_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. One or both figures may misrepresent the page-99 count [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3024, in test_comparisons_with_other_pages_and_intervals_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[122 chars]nt']) != ('- T[81 chars] 12. One or both figures may misrepresent the [24 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. One or both figures may misrepresent the [19 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. One or both figures may misrepresent the page-99 count [S2, S3].',
++  [])
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_referent_judgment'])
+
+======================================================================
+FAIL: test_comparisons_with_other_pages_and_intervals_are_kept (zelda_api.tests_output_fidelity.Review71ece83Tests.test_comparisons_with_other_pages_and_intervals_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures may overstate the weekly activity [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3024, in test_comparisons_with_other_pages_and_intervals_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[122 chars]nt']) != ('- T[81 chars] 12. These figures may overstate the weekly ac[17 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. These figures may overstate the weekly activity [S2, S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. These figures may overstate the weekly activity [S2, S3].',
++  [])
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_referent_judgment'])
+
+======================================================================
+FAIL: test_comparisons_with_the_pairs_own_pages_and_intervals_are_repaired (zelda_api.tests_output_fidelity.Review71ece83Tests.test_comparisons_with_the_pairs_own_pages_and_intervals_are_repaired) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is overstated compared with the page 10 count [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3029, in test_comparisons_with_the_pairs_own_pages_and_intervals_are_repaired
+    self.assertEqual(self.full(text), (after, changes))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. The monthly figure is overstated compared[34 chars], []) != ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt'])
+
+First differing element 0:
+'- Th[80 chars] 12. The monthly figure is overstated compared[29 chars]S3].'
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. The monthly figure is overstated compared with the page 10 count '
+-  '[S2, S3].',
+-  [])
++  'on page 12. How the figure stated without an explicit interval relates to '
++  'the monthly figure needs clarification before either is relied on [S2, S3].',
++  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_comparisons_with_the_pairs_own_pages_and_intervals_are_repaired (zelda_api.tests_output_fidelity.Review71ece83Tests.test_comparisons_with_the_pairs_own_pages_and_intervals_are_repaired) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The page-10 figure is overstated compared with the per month figure [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3029, in test_comparisons_with_the_pairs_own_pages_and_intervals_are_repaired
+    self.assertEqual(self.full(text), (after, changes))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. The page-10 figure is overstated compared[37 chars], []) != ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt'])
+
+First differing element 0:
+'- Th[80 chars] 12. The page-10 figure is overstated compared[32 chars]S3].'
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. The page-10 figure is overstated compared with the per month '
+-  'figure [S2, S3].',
+-  [])
++  'on page 12. How the figure stated without an explicit interval relates to '
++  'the monthly figure needs clarification before either is relied on [S2, S3].',
++  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_pages_and_intervals_are_each_pairs_own (zelda_api.tests_output_fidelity.Review71ece83Tests.test_pages_and_intervals_are_each_pairs_own) (text='The daily bot figure [C6] is overstated compared with the page-12 bot count [C5].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3048, in test_pages_and_intervals_are_each_pairs_own
+    self.assertEqual(out, text if expected is None else expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'How the figure stated without an explicit[91 chars]C5].' != 'The daily bot figure [C6] is overstated c[36 chars]C5].'
+- How the figure stated without an explicit interval relates to the daily figure needs clarification before either is relied on [C6] [C5].
++ The daily bot figure [C6] is overstated compared with the page-12 bot count [C5].
+
+
+======================================================================
+FAIL: test_pages_and_intervals_are_each_pairs_own (zelda_api.tests_output_fidelity.Review71ece83Tests.test_pages_and_intervals_are_each_pairs_own) (text='The daily bot figure [C6] is overstated compared with the monthly bot count [C5].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3048, in test_pages_and_intervals_are_each_pairs_own
+    self.assertEqual(out, text if expected is None else expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'How the figure stated without an explicit[91 chars]C5].' != 'The daily bot figure [C6] is overstated c[36 chars]C5].'
+- How the figure stated without an explicit interval relates to the daily figure needs clarification before either is relied on [C6] [C5].
++ The daily bot figure [C6] is overstated compared with the monthly bot count [C5].
+
+
+======================================================================
+FAIL: test_pages_and_intervals_are_each_pairs_own (zelda_api.tests_output_fidelity.Review71ece83Tests.test_pages_and_intervals_are_each_pairs_own) (text='The weekly figure [C9] is overstated compared with the daily figure [C7].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3048, in test_pages_and_intervals_are_each_pairs_own
+    self.assertEqual(out, text if expected is None else expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'How the cumulative figure relates to the [67 chars]C7].' != 'The weekly figure [C9] is overstated comp[28 chars]C7].'
+- How the cumulative figure relates to the weekly figure needs clarification before either is relied on [C9] [C7].
++ The weekly figure [C9] is overstated compared with the daily figure [C7].
+
+
+======================================================================
+FAIL: test_pages_and_intervals_are_each_pairs_own (zelda_api.tests_output_fidelity.Review71ece83Tests.test_pages_and_intervals_are_each_pairs_own) (text='The weekly figure [C9] is overstated compared with the page-10 figure [C7].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3048, in test_pages_and_intervals_are_each_pairs_own
+    self.assertEqual(out, text if expected is None else expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'How the cumulative figure relates to the [67 chars]C7].' != 'The weekly figure [C9] is overstated comp[30 chars]C7].'
+- How the cumulative figure relates to the weekly figure needs clarification before either is relied on [C9] [C7].
++ The weekly figure [C9] is overstated compared with the page-10 figure [C7].
+
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.338s
+
+FAILED (failures=17)
+Destroying test database for alias 'default'...
+Found 6 test(s).
+System check identified no issues (0 silenced).

@@ -1879,3 +1879,1420 @@ class PipelineReview1801ec5Tests(TestCase):
     def test_the_writer_keeps_a_contradicted_pair_s_judgment(self):
         memo = self.write({'market_analysis': JUDGED}, contradicted_items(memo100_payload()), 'review1801_b')
         self.assertEqual(memo.market_analysis, JUDGED)
+
+
+# --- memo 101 (ManyChat, document 3143; graded at f7eb39d): OF-903, OF-904 (base), OF-905, OF-906 -----------------
+#
+#     OF-903  business_model_analysis: "500M messages (with an ambiguity ... [S2, S3]) in a slide context headed
+#             'Traction by Apr-16'": page 12's source shares page 10's context, cited inside a parenthesis.
+#     OF-904  base_scenario: "[S1, S2, S3], ManyChat had built ... by the period referenced in the 'Traction by
+#             Apr-16' slide context": page 12's figure asserted under page 10's date. (The upside's "If ... [S3]
+#             reflects a monthly run-rate as of the 'Traction by Apr-16' slide context" is a hypothesis: kept.)
+#     OF-905  risk_assessment 1: "These figures ... — raising the possibility of metric inflation or imprecise
+#             reporting": a judgment from measurement ambiguity alone.
+#     OF-906  downside_scenario: "the cumulative and monthly presentations of the 500M messages figure [C2, C3]":
+#             page 10 presupposed cumulative.
+#
+# The fixtures are memo 101's payload as sent and its raw reply (data/funding_fidelity/memo101*.json, from the
+# committed evidence 82771ef). Memo 101 itself is not edited; these tests replay its reply.
+
+def memo101():
+    with open(os.path.join(DATA, 'memo101.json'), encoding='utf-8') as f:
+        data = json.load(f)
+    return json.loads(re.search(r'\{.*\}', data['model_reply_text'], re.S).group(0)), data['stored']
+
+
+def memo101_payload():
+    with open(os.path.join(DATA, 'memo101_payload.json'), encoding='utf-8') as f:
+        return json.load(f)['payload']
+
+
+BMA_101_BEFORE = ("the company states 140,000+ bots [S1] and 500M messages (with an ambiguity in measurement basis between "
+                  "a cumulative total and a monthly rate [S2, S3]) in a slide context headed 'Traction by Apr-16'.")
+BMA_101_AFTER = ("the company states 140,000+ bots [S1] and 500M messages (with an ambiguity in measurement basis between "
+                 "a cumulative total and a monthly rate [S2]) in a slide context headed 'Traction by Apr-16', and separately "
+                 "500M messages/month [S3] on page 12 (" + CLARIFY + ").")
+BASE_101_BEFORE = ("Taking the self-reported traction metrics at face value [S1, S2, S3], ManyChat had built a sizeable "
+                   "bot and messaging platform by the period referenced in the 'Traction by Apr-16' slide context.")
+BASE_101_AFTER = ("Taking the self-reported traction metrics at face value [S1, S2], ManyChat had built a sizeable bot and "
+                  "messaging platform by the period referenced in the 'Traction by Apr-16' slide context; the deck "
+                  "separately states 500M messages/month [S3] on page 12 (" + CLARIFY + ").")
+RISK_101_BEFORE = ('These figures carry different measurement bases and cannot be directly compared without '
+                   'clarification — raising the possibility of metric inflation or imprecise reporting.')
+RISK_101_AFTER = ('These figures carry different measurement bases and cannot be directly compared without '
+                  'clarification — ' + CLARIFY + '.')
+DOWN_101_BEFORE = ('If the inconsistency between the cumulative and monthly presentations of the 500M messages figure '
+                   '[C2, C3] reflects imprecise metric reporting')
+DOWN_101_AFTER = ('If the inconsistency between the unspecified-interval and monthly presentations of the 500M messages '
+                  'figure [C2, C3] reflects imprecise metric reporting')
+UPSIDE_101 = ("If the self-reported figure of 500M messages/month [S3] reflects a monthly run-rate as of the 'Traction by "
+              "Apr-16' slide context")
+CHANGED_101 = {'business_model_analysis', 'base_scenario', 'risk_assessment', 'downside_scenario'}
+
+
+class Memo101ReplayTests(SimpleTestCase):
+    """The actual memo-101 reply through the pipeline's guards: the graded shapes change, nothing else."""
+
+    def setUp(self):
+        self.raw, self.stored = memo101()
+        self.payload = memo101_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+        self.out, self.changes = replay(self.raw, self.items, self.notes)
+
+    def test_the_fixture_is_memo_101_as_stored(self):
+        for text, key in ((BMA_101_BEFORE, 'business_model_analysis'), (BASE_101_BEFORE, 'base_scenario'),
+                          (RISK_101_BEFORE, 'risk_assessment'), (DOWN_101_BEFORE, 'downside_scenario'),
+                          (UPSIDE_101, 'upside_scenario')):
+            self.assertIn(text, self.stored[key], key)
+        self.assertEqual(self.notes[0][1], ('C3', 'C2'))
+        sources = {i['ref']: (i['sources'][0].get('page'), i.get('source_context')) for i in self.payload['items']}
+        self.assertEqual((sources['S2'], sources['S3']), ((10, 'Traction by Apr-16'), (12, None)))
+
+    def test_of903_page_12_does_not_share_page_10_s_context(self):
+        self.assertEqual(self.out['business_model_analysis'],
+                         self.stored['business_model_analysis'].replace(BMA_101_BEFORE, BMA_101_AFTER))
+
+    def test_of904_the_asserted_base_date_is_page_10_s_alone(self):
+        self.assertEqual(self.out['base_scenario'], self.stored['base_scenario'].replace(BASE_101_BEFORE, BASE_101_AFTER))
+
+    def test_of904_the_upside_hypothesis_is_kept(self):
+        # A condition: the upside proposes that date as a hypothesis. Recorded, not rewritten.
+        self.assertEqual(self.out['upside_scenario'], self.stored['upside_scenario'])
+
+    def test_of905_these_figures_continue_the_basis_item(self):
+        self.assertEqual(self.out['risk_assessment'],
+                         self.stored['risk_assessment'].replace(RISK_101_BEFORE, RISK_101_AFTER))
+        self.assertNotIn('inflation', self.out['risk_assessment'])
+
+    def test_of906_page_10_is_not_presupposed_cumulative(self):
+        self.assertEqual(self.out['downside_scenario'],
+                         self.stored['downside_scenario'].replace(DOWN_101_BEFORE, DOWN_101_AFTER))
+        # The rest of the conditional, its other premise and its consequence stay.
+        self.assertIn('and if the 140,000+ bots [S1] are predominantly unpaid or inactive', self.out['downside_scenario'])
+
+    def test_every_other_field_is_exactly_as_stored(self):
+        for key, value in self.out.items():
+            if key in self.stored and key not in CHANGED_101:
+                self.assertEqual(value, self.stored[key], key)
+
+    def test_citations_are_preserved_in_order(self):
+        for key, value in self.out.items():
+            if isinstance(value, str) and key in self.stored:
+                self.assertEqual(refs(value), refs(self.stored[key]), key)
+
+    def test_a_second_pass_changes_nothing(self):
+        again, changes = replay(self.out, self.items, self.notes)
+        self.assertEqual(again, self.out)
+        self.assertEqual(changes, {})
+
+    def test_reversed_item_order_gives_the_same_output(self):
+        reversed_out, reversed_changes = replay(self.raw, list(reversed(self.items)), self.notes)
+        self.assertEqual(reversed_out, self.out)
+        self.assertEqual(reversed_changes, self.changes)
+
+    def test_only_the_expected_rules_fired(self):
+        self.assertEqual(self.changes, {
+            'business_model_analysis': ['basis_source_context'],
+            'base_scenario': ['basis_source_context'],
+            'risk_assessment': ['basis_referent_judgment'],
+            'downside_scenario': ['basis_cumulative_presupposed'],
+            'questions_for_management': ['attribution:Pitch Deck Hunt'],
+        })
+
+
+class Memo101StoredSectionsTests(SimpleTestCase):
+    """The stored memo-101 text through the basis guard: the same four repairs."""
+
+    def test_the_stored_sections_get_the_same_repairs(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        payload = memo101_payload()
+        facts = basis_facts(items_from(payload), notes_from(payload))
+        _, stored = memo101()
+        out = {key: guard_basis_wording(value, facts)[0] for key, value in stored.items()}
+        self.assertIn(BMA_101_AFTER, out['business_model_analysis'])
+        self.assertIn(BASE_101_AFTER, out['base_scenario'])
+        self.assertIn(RISK_101_AFTER, out['risk_assessment'])
+        self.assertIn(DOWN_101_AFTER, out['downside_scenario'])
+        self.assertEqual({k for k in stored if out[k] != stored[k]}, CHANGED_101)
+
+
+class PipelineMemo101Tests(TestCase):
+    """The memo writer itself (intelligence_pipeline._generate_memo) stores the repaired memo-101 reply."""
+
+    def test_the_stored_memo_carries_the_repairs(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('memo101_writer', password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo101_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items_from(payload)),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, stored = memo101()
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertIn(BMA_101_AFTER, memo.business_model_analysis)
+        self.assertIn(BASE_101_AFTER, memo.base_scenario)
+        self.assertIn(RISK_101_AFTER, memo.risk_assessment)
+        self.assertIn(DOWN_101_AFTER, memo.downside_scenario)
+        self.assertIn(UPSIDE_101, memo.upside_scenario)
+        for key in ('executive_summary', 'information_readiness', 'supported_points', 'open_concerns', 'zelda_advantage',
+                    'upside_scenario', 'financial_analysis'):
+            self.assertEqual(getattr(memo, key), stored[key], key)
+
+
+class Of903SharedContextTests(SimpleTestCase):
+    """OF-903 / OF-904: a context phrase (parenthesised or not) after a citation group naming both sides of one pair
+    keeps only the refs it belongs to; the other side follows as its own fact. Only at a clause end, never for a
+    narrator, a denial, a hedge, a question or a condition."""
+
+    def setUp(self):
+        self.payload = memo101_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text):
+        out, changes = replay({'section': text}, self.items, self.notes)
+        return out['section'], changes.get('section', [])
+
+    def test_shared_context_is_split_by_source(self):
+        cases = {
+            # Citations inside a parenthesis, the context phrase after it, the company's own verb.
+            "The company states 500M messages (an ambiguity between a total and a monthly rate [S2, S3]) in a slide "
+            "context headed 'Traction by Apr-16'.":
+                "The company states 500M messages (an ambiguity between a total and a monthly rate [S2]) in a slide "
+                "context headed 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (" + CLARIFY + ").",
+            # No reporting verb: an asserted date for the cited figures.
+            "Taking the self-reported figures at face value [S2, S3], the platform had scale by the period referenced in "
+            "the 'Traction by Apr-16' slide context.":
+                "Taking the self-reported figures at face value [S2], the platform had scale by the period referenced in the "
+                "'Traction by Apr-16' slide context; the deck separately states 500M messages/month [S3] on page 12 ("
+                + CLARIFY + ").",
+            # A list item: the company's own verb after the list marker.
+            "- The company states 500M messages [S2, S3] in a slide context headed 'Traction by Apr-16'.":
+                "- The company states 500M messages [S2] in a slide context headed 'Traction by Apr-16', and separately "
+                "500M messages/month [S3] on page 12 (" + CLARIFY + ").",
+            # "self-reported" is an adjective, not a narrator's reporting verb.
+            "The self-reported figures [S2, S3] date to the period referenced in the 'Traction by Apr-16' slide context.":
+                "The self-reported figures [S2] date to the period referenced in the 'Traction by Apr-16' slide context; "
+                "the deck separately states 500M messages/month [S3] on page 12 (" + CLARIFY + ").",
+        }
+        for text, after in cases.items():
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (after, ['basis_source_context']))
+
+    def test_hypotheses_narrators_denials_hedges_and_correct_dates_are_kept(self):
+        for text in (
+                # A hypothesis inside a condition (memo 101's upside shape) and a condition over shared refs.
+                UPSIDE_101 + ", adoption was large.",
+                "If the figures [S2, S3] were counted by the period referenced in the 'Traction by Apr-16' slide "
+                "context, adoption was large.",
+                # A narrator's listing, without a reporting verb.
+                "Pitch Deck Hunt's listing of 500M messages [S2, S3] sits in the 'Traction by Apr-16' slide context.",
+                # Not at a clause end: nowhere to place the separate fact.
+                "500M messages [S2, S3] in the 'Traction by Apr-16' slide context is the headline figure.",
+                "The self-reported 500M messages [S2, S3] in the 'Traction by Apr-16' slide context are the headline "
+                "figure.",
+                # A denial and a hedge.
+                "The deck does not place 500M messages [S2, S3] in the 'Traction by Apr-16' slide context.",
+                "500M messages [S2, S3] may belong in the 'Traction by Apr-16' slide context.",
+                # Correctly attributed: only page 10's refs before the context; page 12 separately; refs after it.
+                "140,000+ bots [S1] and 500M messages [S2] in the 'Traction by Apr-16' slide context; 500M "
+                "messages/month [S3] on page 12.",
+                "The platform had scale by the period referenced in the 'Traction by Apr-16' slide context [S1, S2].",
+                # A question.
+                "Were 500M messages [S2, S3] counted in the 'Traction by Apr-16' slide context?",
+                # A context phrase inside a parenthesis that is not a context aside: kept (limitation, recorded).
+                "The deck states 500M messages [S2, S3] (within the 'Traction by Apr-16' slide context).",
+                "- The self-reported 500M messages [S2, S3] (within the 'Traction by Apr-16' slide context)",
+                # A third party's reporting verb (not a recorded narrator): not the company's statement.
+                "An analyst lists 500M messages [S2, S3] in a slide context headed 'Traction by Apr-16'."):
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+
+class Of905TheseFiguresTests(SimpleTestCase):
+    """OF-905: "these figures" continues the item's resolved basis pair; a judgment after it (or after its dash)
+    becomes the clarification. Unresolved, contradicted, denied or independently evidenced judgments stay."""
+
+    LEAD = "- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. "
+
+    def guard(self, text, status=INSUFFICIENT):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        return guard_basis_wording(text, basis_facts(_context_items(status), (NOTE,)))
+
+    def test_the_judgment_after_these_figures_becomes_the_clarification(self):
+        text = self.LEAD + 'These figures cannot be compared without clarification — raising the possibility of inflation.'
+        self.assertEqual(self.guard(text), (self.LEAD + 'These figures cannot be compared without clarification — '
+                                            + CLARIFY + '.', ['basis_referent_judgment']))
+        whole = self.LEAD + 'These figures may be inflated.'
+        self.assertEqual(self.guard(whole), (self.LEAD + CLARIFY[0].upper() + CLARIFY[1:] + '.',
+                                             ['basis_referent_judgment']))
+
+    def test_unresolved_unsupported_or_independent_cases_are_kept(self):
+        for text in (
+                self.LEAD + '\n- These figures may be inflated.',                       # a new bullet
+                'Revenue is $10M [C8]. These figures may be inflated.',                  # another metric before
+                'These figures may be inflated.',                                         # no antecedent
+                self.LEAD + 'These figures may be inflated [S5].',                        # cites outside the pair
+                self.LEAD + 'Nothing suggests that these figures are inflated.',          # a denial
+                self.LEAD + 'Are these figures inflated?',                                # a question
+                self.LEAD + 'These figures need clarification.',                          # no judgment
+                # A judgment in an independent clause that is not about these figures.
+                self.LEAD + 'These figures need clarification; the deck may be inflating usage.'):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+
+    def test_a_contradicted_pair_keeps_the_judgment(self):
+        from .grounded_context import CONTRADICTED
+        text = self.LEAD + 'These figures may be inflated.'
+        self.assertEqual(self.guard(text, status=CONTRADICTED), (text, []))
+
+
+class Of906CumulativePresuppositionTests(SimpleTestCase):
+    """OF-906: "the cumulative and monthly ..." presupposes a cumulative side; for a pair whose no-interval side is
+    not admitted cumulative, it becomes the unspecified interval, inside a condition too. A hypothesis that page 10
+    is cumulative, an alternative, a question and an admitted cumulative side are kept."""
+
+    def guard(self, text, items=None, notes=(NOTE,)):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        return guard_basis_wording(text, basis_facts(items or _context_items(), notes))
+
+    def test_the_presupposed_cumulative_side_is_the_unspecified_interval(self):
+        cases = {
+            'If the gap between the cumulative and monthly presentations [C2, C3] is real, usage is unclear.':
+                'If the gap between the unspecified-interval and monthly presentations [C2, C3] is real, usage is unclear.',
+            'The monthly and cumulative figures [C2, C3] differ in basis.':
+                'The monthly and unspecified-interval figures [C2, C3] differ in basis.',
+        }
+        for text, after in cases.items():
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (after, ['basis_cumulative_presupposed']))
+
+    def test_hypotheses_alternatives_questions_and_supported_cumulative_are_kept(self):
+        for text in (
+                'If the 500M figure is cumulative [C2, C3], monthly activity is lower.',      # a hypothesis
+                'It is unclear whether 500M is a cumulative total or a monthly rate [C2, C3].',  # an alternative
+                'Is the gap between the cumulative and monthly presentations real [C2, C3]?',  # a question
+                'The cumulative and monthly downloads [S5, S6] differ.'):                     # not this pair
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+        # A pair whose side is admitted cumulative ("3M messages to date") keeps "cumulative".
+        supported = 'If the gap between the cumulative and weekly presentations [C7, C9] is real, usage is unclear.'
+        self.assertEqual(self.guard(supported, items=_pairs_items(), notes=(NOTE_CUMULATIVE,)), (supported, []))
+
+
+# --- review of b040c23 / 750de3f: four scope regressions -----------------------------------------------------------
+#
+#     1  A denial lost across a dash: "Nothing suggests these figures are wrong — or inflated."
+#     2  A new subject after a dash inherited the figures' referent: "These figures need clarification — an analyst is
+#        wrong."
+#     3  A later message citation took ownership of another metric's phrase: "The cumulative and monthly revenue differ
+#        while the message counts remain ambiguous [C2, C3]."
+#     4  A third party's statement with no recognised reporting verb was split: "According to an analyst, 500M messages
+#        [S2, S3] sit in a slide context headed 'Traction by Apr-16'."
+
+PAIR_LEAD = "- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. "
+REVIEW_750_KEPT = (
+    PAIR_LEAD + "Nothing suggests these figures are wrong — or inflated.",
+    PAIR_LEAD + "These figures are not wrong — or inflated.",
+    PAIR_LEAD + "These figures need clarification — an analyst is wrong.",
+    PAIR_LEAD + "These figures need clarification — and the analyst is wrong.",
+    "The cumulative and monthly revenue differ while the message counts remain ambiguous [C2, C3].",
+    "The cumulative and monthly revenue [C2, C3] differ.",
+    "According to an analyst, 500M messages [S2, S3] sit in a slide context headed 'Traction by Apr-16'.",
+    # The company's own source named, but attributed to a third party.
+    "According to an analyst, the self-reported 500M messages [S2, S3] sit in a slide context headed 'Traction by "
+    "Apr-16'.",
+    "Per an industry report, the self-reported 500M messages [S2, S3] sit in the 'Traction by Apr-16' slide context.",
+    # Controls that only one check keeps: a denial far before the referent; a figure noun whose later citation is
+    # another clause's; no reporting verb, no attribution and no own source named.
+    PAIR_LEAD + "Nothing in the deck suggests that these figures, taken together on both pages, are wrong — or "
+    "inflated.",
+    "The cumulative and monthly figures differ while the message counts remain ambiguous [C2, C3].",
+    "500M messages [S2, S3] sit in a slide context headed 'Traction by Apr-16'.",
+    # A new subject after "perhaps" (dash), and an independent ";" clause.
+    PAIR_LEAD + "These figures need clarification — perhaps the deck is inflating usage.",
+    PAIR_LEAD + "These figures need clarification; possibly inflated.",
+)
+
+
+class Review750de3fTests(SimpleTestCase):
+    """Through the complete normalisation -> time -> funding -> basis sequence on memo 101's payload."""
+
+    def setUp(self):
+        self.payload = memo101_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text):
+        out, changes = replay({'section': text}, self.items, self.notes)
+        return out['section'], changes.get('section', [])
+
+    def test_denials_new_subjects_other_metrics_and_third_parties_are_kept(self):
+        for text in REVIEW_750_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_the_intended_repairs_still_happen(self):
+        cases = {
+            # A judgment continuing "these figures" after a dash, as in memo 101.
+            PAIR_LEAD + "These figures need clarification — possibly inflated.":
+                PAIR_LEAD + "These figures need clarification — " + CLARIFY + ".",
+            # Coordinated judgments of the same figures: one clarification, not two.
+            PAIR_LEAD + "These figures are wrong — or inflated.":
+                PAIR_LEAD + CLARIFY[0].upper() + CLARIFY[1:] + ".",
+            # The phrase's own noun is a figure noun of the pair.
+            "If the cumulative and monthly figures [C2, C3] diverge, usage is unclear.":
+                "If the unspecified-interval and monthly figures [C2, C3] diverge, usage is unclear.",
+        }
+        for text, after in cases.items():
+            with self.subTest(text=text):
+                out, changes = self.full(text)
+                self.assertEqual(out, after)
+                self.assertTrue(changes, changes)
+
+
+class PipelineReview750de3fTests(TestCase):
+    """The memo writer (intelligence_pipeline._generate_memo) keeps the four preserved shapes."""
+
+    def test_the_writer_keeps_them(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('review750_writer', password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo101_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items_from(payload)),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, _ = memo101()
+        sections = {'market_analysis': REVIEW_750_KEPT[0], 'team_assessment': REVIEW_750_KEPT[2],
+                    'problem_solution': REVIEW_750_KEPT[4], 'financial_analysis': REVIEW_750_KEPT[6]}
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw, **sections)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        for key, text in sections.items():
+            self.assertEqual(getattr(memo, key), text, key)
+        # Memo 101's own repairs are unchanged in the same write.
+        self.assertIn(BMA_101_AFTER, memo.business_model_analysis)
+        self.assertIn(BASE_101_AFTER, memo.base_scenario)
+        self.assertIn(RISK_101_AFTER, memo.risk_assessment)
+        self.assertIn(DOWN_101_AFTER, memo.downside_scenario)
+
+
+# --- review of 7fb484b / bbe0ec4: three ownership regressions -----------------------------------------------------
+#
+#     1  A new subject after a dash inherited the figures' referent: "— or Bob is wrong", "— marketing is misleading"
+#        (an unlisted subject after "or"; any word ending in "ing" counted as a participle).
+#     2  A generic figure noun took the pair's ownership for another metric: "The cumulative and monthly figures for
+#        revenue differ from message counts [C2, C3]."
+#     3  A third party's statement naming the deck was split: "An analyst describes the deck's 500M messages [S2, S3]
+#        in a slide context headed 'Traction by Apr-16'."
+
+REVIEW_7FB_KEPT = (
+    PAIR_LEAD + "These figures need clarification — or Bob is wrong.",
+    PAIR_LEAD + "These figures need clarification — marketing is misleading.",
+    PAIR_LEAD + "These figures need clarification — pricing is wrong.",
+    # A listed participle whose complement has its own subject.
+    PAIR_LEAD + "These figures need clarification — suggesting marketing is misleading.",
+    "The cumulative and monthly figures for revenue differ from message counts [C2, C3].",
+    # Controls that only one check keeps: a qualifier naming something other than the pair's noun; another metric
+    # named before the owning citation with no qualifier.
+    "The cumulative and monthly figures for bots differ [C2, C3].",
+    "The cumulative and monthly figures differ from revenue [C2, C3].",
+    "An analyst describes the deck's 500M messages [S2, S3] in a slide context headed 'Traction by Apr-16'.",
+    # No attribution marker and no reporting verb: only the head's own wording shows a third party.
+    "An analyst's reading of the deck's 500M messages [S2, S3] sits in a slide context headed 'Traction by Apr-16'.",
+    # The company's own verb, but a narrator named in the clause: kept by the narrator check alone (the no-verb
+    # narrator control is now also kept by the own-head allowlist).
+    "The company states 500M messages [S2, S3] from the Pitch Deck Hunt copy in a slide context headed 'Traction by "
+    "Apr-16'.",
+    # An attribution after the citations, with the company's own words before them: kept by the attribution check
+    # alone (", in short," in its place is split). The phrase's own noun is neither a figure noun nor the pair's
+    # noun, and no listed metric: kept by the figure-noun check alone ("monthly messages" is rewritten).
+    "The self-reported 500M messages [S2, S3], an analyst says, sit in a slide context headed 'Traction by Apr-16'.",
+    "The cumulative and monthly bots [C2, C3] differ.",
+)
+
+
+class Review7fb484bTests(SimpleTestCase):
+    """Through the complete normalisation -> time -> funding -> basis sequence on memo 101's payload."""
+
+    def setUp(self):
+        self.payload = memo101_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text):
+        out, changes = replay({'section': text}, self.items, self.notes)
+        return out['section'], changes.get('section', [])
+
+    def test_new_subjects_other_metrics_and_third_parties_are_kept(self):
+        for text in REVIEW_7FB_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_the_intended_repairs_still_happen(self):
+        cases = {
+            # A judgment continuing "these figures" after a dash: "or" + an adverb + the judgment.
+            PAIR_LEAD + "These figures need clarification — or possibly inflated.":
+                PAIR_LEAD + "These figures need clarification — " + CLARIFY + ".",
+            # A listed participle followed by the judgment of the figures themselves.
+            PAIR_LEAD + "These figures need clarification — suggesting possible inflation.":
+                PAIR_LEAD + "These figures need clarification — " + CLARIFY + ".",
+            # A qualifier naming the pair's own noun.
+            "The cumulative and monthly figures for messages [C2, C3] differ.":
+                "The unspecified-interval and monthly figures for messages [C2, C3] differ.",
+            # The deck's own figures, with no reporting verb.
+            "The deck's 500M messages [S2, S3] sit in a slide context headed 'Traction by Apr-16'.":
+                "The deck's 500M messages [S2] sit in a slide context headed 'Traction by Apr-16'; the deck separately "
+                "states 500M messages/month [S3] on page 12 (" + CLARIFY + ").",
+        }
+        for text, after in cases.items():
+            with self.subTest(text=text):
+                out, changes = self.full(text)
+                self.assertEqual(out, after)
+                self.assertTrue(changes, changes)
+
+
+class PipelineReview7fb484bTests(TestCase):
+    """The memo writer (intelligence_pipeline._generate_memo) keeps the three reviewed shapes and memo 101's repairs."""
+
+    def test_the_writer_keeps_them(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('review7fb_writer', password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo101_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items_from(payload)),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, _ = memo101()
+        sections = {'market_analysis': REVIEW_7FB_KEPT[0], 'team_assessment': REVIEW_7FB_KEPT[1],
+                    'problem_solution': REVIEW_7FB_KEPT[4], 'financial_analysis': REVIEW_7FB_KEPT[7]}
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw, **sections)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        for key, text in sections.items():
+            self.assertEqual(getattr(memo, key), text, key)
+        self.assertIn(BMA_101_AFTER, memo.business_model_analysis)
+        self.assertIn(BASE_101_AFTER, memo.base_scenario)
+        self.assertIn(RISK_101_AFTER, memo.risk_assessment)
+        self.assertIn(DOWN_101_AFTER, memo.downside_scenario)
+
+
+# --- review of 377a142 / ee47a9a: a continuation prefix owned the rest of the clause -------------------------------
+#
+#     "These figures need clarification — misleading advertising is wrong." and "— inflation is affecting costs."
+#     were replaced by the clarification: _CONTINUATION matched a judgment-like first word and never read the rest
+#     of the fragment, which has its own subject.
+
+CONT_LEAD = PAIR_LEAD + "These figures need clarification — "
+REVIEW_377_KEPT = (
+    CONT_LEAD + "misleading advertising is wrong.",
+    CONT_LEAD + "inflation is affecting costs.",
+    # Independent subjects beginning with judgment-like words, after each kind of continuation starter.
+    CONT_LEAD + "wrong assumptions drive the model.",
+    CONT_LEAD + "overstated expectations are common.",
+    CONT_LEAD + "or inflation is affecting costs.",
+    CONT_LEAD + "suggesting inflation is affecting costs.",
+    CONT_LEAD + "possibly inflated expectations are common.",
+    # A bare judgment noun: whose inflation is not stated.
+    CONT_LEAD + "inflation.",
+    # An unfamiliar tail after a genuine judgment: not classified, so kept (the conservative direction).
+    CONT_LEAD + "possibly inflated by bots.",
+)
+REVIEW_377_REPAIRED = (
+    CONT_LEAD + "or possibly inflated.",
+    CONT_LEAD + "suggesting possible inflation.",
+    CONT_LEAD + "misleading.",
+    CONT_LEAD + "which may be overstated.",
+    CONT_LEAD + "raising the possibility of metric inflation or imprecise reporting.",
+)
+
+
+class Review377a142Tests(SimpleTestCase):
+    """Through the complete normalisation -> time -> funding -> basis sequence on memo 101's payload."""
+
+    def setUp(self):
+        self.payload = memo101_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text):
+        out, changes = replay({'section': text}, self.items, self.notes)
+        return out['section'], changes.get('section', [])
+
+    def test_an_independent_subject_after_a_dash_is_kept(self):
+        for text in REVIEW_377_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_genuine_continuations_are_repaired(self):
+        for text in REVIEW_377_REPAIRED:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (CONT_LEAD + CLARIFY + '.', ['basis_referent_judgment']))
+        # Citations inside the continuation stay with the clarification.
+        cited = CONT_LEAD + "possibly overstated [S2, S3]."
+        self.assertEqual(self.full(cited), (CONT_LEAD + CLARIFY + ' [S2, S3].', ['basis_referent_judgment']))
+
+
+class PipelineReview377a142Tests(TestCase):
+    """The memo writer (intelligence_pipeline._generate_memo, model response mocked) keeps both reviewed clauses,
+    repairs a genuine continuation and keeps memo 101's four repairs."""
+
+    def test_the_writer_keeps_them(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('review377_writer', password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo101_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items_from(payload)),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, _ = memo101()
+        sections = {'market_analysis': REVIEW_377_KEPT[0], 'team_assessment': REVIEW_377_KEPT[1],
+                    'problem_solution': REVIEW_377_REPAIRED[0]}
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw, **sections)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertEqual(memo.market_analysis, REVIEW_377_KEPT[0])
+        self.assertEqual(memo.team_assessment, REVIEW_377_KEPT[1])
+        self.assertEqual(memo.problem_solution, CONT_LEAD + CLARIFY + '.')
+        self.assertIn(BMA_101_AFTER, memo.business_model_analysis)
+        self.assertIn(BASE_101_AFTER, memo.base_scenario)
+        self.assertIn(RISK_101_AFTER, memo.risk_assessment)
+        self.assertIn(DOWN_101_AFTER, memo.downside_scenario)
+
+
+# --- review of 9b28e14 / e16ad6a: an independent cited fragment was taken over by the general judgment rule ---------
+#
+#     With the pair citations at the end, "These figures need clarification — misleading advertising is wrong [S2, S3]."
+#     lost its whole second sentence through basis_overstatement: _CONTINUATION rejected the fragment, so no referent
+#     governed it, and _judgment then replaced the whole sentence because citations were present. Present at 0664563,
+#     377a142 and 9b28e14: an incomplete fix, not a new regression.
+
+CLARIFY_SENTENCE = CLARIFY[0].upper() + CLARIFY[1:]
+REVIEW_9B2_KEPT = (
+    CONT_LEAD + "misleading advertising is wrong [S2, S3].",
+    CONT_LEAD + "inflation is affecting costs [S2, S3].",
+    CONT_LEAD + "wrong assumptions drive the model [S2, S3].",
+    CONT_LEAD + "or inflation is affecting costs [S2, S3].",
+    # A ";" clause and a standalone sentence: citations alone do not say what a judgment is about.
+    PAIR_LEAD + "These figures need clarification; misleading advertising is wrong [S2, S3].",
+    PAIR_LEAD + "Misleading advertising is wrong [S2, S3].",
+    # Basis words outside the judging clause do not make it about the bases.
+    PAIR_LEAD + "The monthly figure needs clarification — misleading advertising is wrong.",
+)
+REVIEW_9B2_REPAIRED = (
+    # A clause naming the figures or their bases is still the pair's. Since the review of 8d7f8dc only that clause is
+    # replaced and the clause before the dash stays (at 8d7f8dc the whole sentence was replaced).
+    (PAIR_LEAD + "These figures need clarification — the cumulative figure is overstated [S2, S3].",
+     CONT_LEAD + CLARIFY + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The 500M messages figure is overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "These figures need clarification — the larger figure is overstated [S2, S3].",
+     CONT_LEAD + CLARIFY + " [S2, S3].", ['basis_overstatement']),
+    # The pair's clause is repaired and an independent clause in the same sentence is kept.
+    (PAIR_LEAD + "The cumulative figure is overstated [S2, S3] — misleading advertising is wrong.",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3] — misleading advertising is wrong.", ['basis_overstatement']),
+    (PAIR_LEAD + "Misleading advertising is wrong; the monthly figure is inflated [S2, S3].",
+     PAIR_LEAD + "Misleading advertising is wrong; " + CLARIFY + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "These figures may be inflated — misleading advertising is wrong [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " — misleading advertising is wrong [S2, S3].", ['basis_referent_judgment']),
+    # A genuine cited continuation stays with the referent rule.
+    (CONT_LEAD + "possibly overstated [S2, S3].", CONT_LEAD + CLARIFY + " [S2, S3].", ['basis_referent_judgment']),
+)
+
+
+class Review9b28e14Tests(SimpleTestCase):
+    """Through the complete normalisation -> time -> funding -> basis sequence on memo 101's payload."""
+
+    def setUp(self):
+        self.payload = memo101_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text):
+        out, changes = replay({'section': text}, self.items, self.notes)
+        return out['section'], changes.get('section', [])
+
+    def test_a_cited_independent_clause_is_kept(self):
+        for text in REVIEW_9B2_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_the_pairs_own_judgments_are_still_repaired(self):
+        for text, after, changes in REVIEW_9B2_REPAIRED:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (after, changes))
+
+    def test_memo_98_conditional_correction_is_unchanged(self):
+        self.assertEqual(self.full(MEMO98_JUDGMENT), (RISK_AFTER[:-1] + ' [C2, C3].', ['basis_overstatement']))
+
+    def test_earlier_controls_are_unchanged(self):
+        for text in REVIEW_377_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+        for text in REVIEW_377_REPAIRED:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (CONT_LEAD + CLARIFY + '.', ['basis_referent_judgment']))
+
+
+class PipelineReview9b28e14Tests(TestCase):
+    """The memo writer (intelligence_pipeline._generate_memo, model response mocked) keeps both reviewed cited
+    clauses, repairs the pair's own clause in a mixed sentence and keeps memo 101's four repairs."""
+
+    def test_the_writer_keeps_them(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('review9b2_writer', password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo101_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items_from(payload)),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, _ = memo101()
+        mixed, mixed_after, _ = REVIEW_9B2_REPAIRED[2]
+        sections = {'market_analysis': REVIEW_9B2_KEPT[0], 'team_assessment': REVIEW_9B2_KEPT[1],
+                    'problem_solution': mixed}
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw, **sections)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertEqual(memo.market_analysis, REVIEW_9B2_KEPT[0])
+        self.assertEqual(memo.team_assessment, REVIEW_9B2_KEPT[1])
+        self.assertEqual(memo.problem_solution, mixed_after)
+        self.assertIn(BMA_101_AFTER, memo.business_model_analysis)
+        self.assertIn(BASE_101_AFTER, memo.base_scenario)
+        self.assertIn(RISK_101_AFTER, memo.risk_assessment)
+        self.assertIn(DOWN_101_AFTER, memo.downside_scenario)
+
+
+# --- review of 8d7f8dc / eca3d8c: clause preservation, judged subject, pair-directed claims -------------------------
+#
+#     1. Whole-sentence replacement dropped independent clauses with no judgment word ("; management has not
+#        clarified the definitions"), after ";", a dash or a linking comma, before or after the pair's judgment.
+#     2. Ownership read incidental vocabulary anywhere in the clause ("— monthly costs are inflated", "— misleading
+#        messages are wrong"), not the subject the judgment is about.
+#     3. "The key traction claim may be overstated [S2, S3]." was kept at 8d7f8dc: its subject is the pair's claim.
+
+MGMT = "management has not clarified the definitions"
+MGMT_SENTENCE = MGMT[0].upper() + MGMT[1:]
+REVIEW_8D7_KEPT = (
+    CONT_LEAD + "monthly costs are inflated [S2, S3].",
+    CONT_LEAD + "misleading messages are wrong [S2, S3].",
+    PAIR_LEAD + "Monthly costs are inflated [S2, S3].",
+    PAIR_LEAD + "Misleading messages are wrong [S2, S3].",
+    PAIR_LEAD + "These figures need clarification, but monthly costs are inflated [S2, S3].",
+    # A claim noun about something else: its own qualifier is not the pair's.
+    PAIR_LEAD + "The hiring claim is overstated [S2, S3].",
+    # A condition about the pair does not make an unrelated consequence the pair's.
+    PAIR_LEAD + "If the figures are monthly, misleading advertising is wrong [S2, S3].",
+    PAIR_LEAD + "If the figures are monthly, monthly costs are inflated [S2, S3].",
+    PAIR_LEAD + "If the figures are monthly, hiring growth is overstated [S2, S3].",
+    # The pair's noun without one of its figures: messages that are sent, not the counted figure.
+    CONT_LEAD + "the messages are misleading [S2, S3].",
+    # A condition that does not name the pair does not make a measure the pair's.
+    PAIR_LEAD + "If the hiring plan slips, the implied monthly activity is overstated [S2, S3].",
+)
+REVIEW_8D7_REPAIRED = (
+    # 1. The pair's judgment is repaired; the independent clause and every citation stay.
+    (PAIR_LEAD + "The monthly figure is overstated [S2, S3]; " + MGMT + ".",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3]; " + MGMT + ".", ['basis_overstatement']),
+    (PAIR_LEAD + MGMT_SENTENCE + "; the monthly figure is overstated [S2, S3].",
+     PAIR_LEAD + MGMT_SENTENCE + "; " + CLARIFY + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The monthly figure is overstated [S2, S3] — " + MGMT + ".",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3] — " + MGMT + ".", ['basis_overstatement']),
+    (PAIR_LEAD + MGMT_SENTENCE + " — the monthly figure is overstated [S2, S3].",
+     PAIR_LEAD + MGMT_SENTENCE + " — " + CLARIFY + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The monthly figure is overstated [S2, S3], but " + MGMT + ".",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3], but " + MGMT + ".", ['basis_overstatement']),
+    (PAIR_LEAD + MGMT_SENTENCE + ", and the monthly figure is overstated [S2, S3].",
+     PAIR_LEAD + MGMT_SENTENCE + ", and " + CLARIFY + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "These figures may be inflated, but " + MGMT + " [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + ", but " + MGMT + " [S2, S3].", ['basis_referent_judgment']),
+    # A coordinated judgment after a comma continues the pair's clause: one clarification.
+    (PAIR_LEAD + "The monthly figure is overstated, and possibly inflated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    # 3. A claim whose qualifier is the pair's own evidence category.
+    (PAIR_LEAD + "The key traction claim may be overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The key traction claim may be overstated [S2, S3], and monthly costs are inflated.",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3], and monthly costs are inflated.", ['basis_overstatement']),
+    # 2. Genuine pair subjects are still repaired.
+    (CONT_LEAD + "the monthly figure is overstated [S2, S3].", CONT_LEAD + CLARIFY + " [S2, S3].",
+     ['basis_overstatement']),
+    (PAIR_LEAD + "The 500M messages are overstated [S2, S3].", PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].",
+     ['basis_overstatement']),
+    (PAIR_LEAD + "The reported usage is overstated [S2, S3].", PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].",
+     ['basis_overstatement']),
+    # Adjacent clauses judging the pair: one clarification with both clauses' citations.
+    (PAIR_LEAD + "The monthly figure is overstated [S2]; the cumulative figure is inflated [S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2] [S3].", ['basis_overstatement']),
+    # A relative clause after the pair's clause stays; a serial list is one clause, never split mid-list.
+    (PAIR_LEAD + "The monthly figure is overstated [S2, S3], which management has not explained.",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3], which management has not explained.", ['basis_overstatement']),
+    # Corrected at the review of 8f11844: "daily" is not this pair's interval, so the list is another subject and kept.
+    (PAIR_LEAD + "The cumulative, monthly, and daily figures are overstated [S2, S3].",
+     PAIR_LEAD + "The cumulative, monthly, and daily figures are overstated [S2, S3].", []),
+    (PAIR_LEAD + "The cumulative, monthly, and page-10 figures are overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    # A condition names the pair by a basis word, a figure referent or the pair's noun, each alone (memo 100's form).
+    (PAIR_LEAD + "If the deck counts weekly, the implied monthly activity is overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "If the larger figure is restated, the implied monthly activity is overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "If the messages are restated, the implied monthly activity is overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+)
+
+
+class Review8d7f8dcTests(SimpleTestCase):
+    """Through the complete normalisation -> time -> funding -> basis sequence on memo 101's payload."""
+
+    def setUp(self):
+        self.payload = memo101_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text):
+        out, changes = replay({'section': text}, self.items, self.notes)
+        return out['section'], changes.get('section', [])
+
+    def test_independent_claims_with_incidental_pair_words_are_kept(self):
+        for text in REVIEW_8D7_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_the_pairs_judgment_is_repaired_and_other_clauses_kept(self):
+        for text, after, changes in REVIEW_8D7_REPAIRED:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (after, changes))
+                if MGMT in text:
+                    self.assertIn(MGMT, after)
+                self.assertEqual(refs(after)[-2:], ['S2', 'S3'])
+
+    def test_memo_98_and_earlier_rounds_are_unchanged(self):
+        self.assertEqual(self.full(MEMO98_JUDGMENT), (RISK_AFTER[:-1] + ' [C2, C3].', ['basis_overstatement']))
+        for text in REVIEW_9B2_KEPT + REVIEW_377_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+
+class PipelineReview8d7f8dcTests(TestCase):
+    """The memo writer (intelligence_pipeline._generate_memo, model response mocked) keeps the management clause,
+    keeps an independent claim with incidental pair words, repairs the pair-directed claim and keeps memo 101's
+    four repairs."""
+
+    def test_the_writer_keeps_them(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('review8d7_writer', password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo101_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items_from(payload)),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, _ = memo101()
+        (first, first_after, _), (claim, claim_after, _) = REVIEW_8D7_REPAIRED[0], REVIEW_8D7_REPAIRED[8]
+        sections = {'market_analysis': first, 'team_assessment': REVIEW_8D7_KEPT[0], 'problem_solution': claim}
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw, **sections)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertEqual(memo.market_analysis, first_after)
+        self.assertEqual(memo.team_assessment, REVIEW_8D7_KEPT[0])
+        self.assertEqual(memo.problem_solution, claim_after)
+        self.assertIn(BMA_101_AFTER, memo.business_model_analysis)
+        self.assertIn(BASE_101_AFTER, memo.base_scenario)
+        self.assertIn(RISK_101_AFTER, memo.risk_assessment)
+        self.assertIn(DOWN_101_AFTER, memo.downside_scenario)
+
+
+# --- review of a6dcddf / 9532c46: a condition overrode foreign qualifiers; a list guard merged an aside and a clause --
+#
+#     1. "If the figures are monthly, the hiring claim is overstated [S2, S3]." was rewritten: after a condition
+#        naming the pair, a figure or claim head was enough and the foreign qualifier ("hiring") was not read.
+#     2. "The monthly figure is inflated, in management's view, but the definitions remain unclear [S2, S3]." lost
+#        the attribution and the clause: the serial-list guard read ", in management's view" as a list item, merged
+#        the ", but" clause, and the whole chain was replaced.
+
+UNCLEAR = "the definitions remain unclear"
+REVIEW_A6D_KEPT = (
+    PAIR_LEAD + "If the figures are monthly, the hiring claim is overstated [S2, S3].",
+    PAIR_LEAD + "If the figures are monthly, the hiring growth rate is overstated [S2, S3].",
+    PAIR_LEAD + "The monthly figure is inflated, in management's view, but " + UNCLEAR + " [S2, S3].",
+    # An attribution or aside around the pair's clause: whose judgment it is cannot be established, so it is kept.
+    PAIR_LEAD + "The monthly figure is inflated, in management's view [S2, S3].",
+    PAIR_LEAD + "In management's view, the monthly figure is inflated [S2, S3].",
+    PAIR_LEAD + "Management says the monthly figure is overstated [S2, S3].",
+    # After a condition: an aside inside it, or a measure without the pair's basis, leaves the owner open.
+    PAIR_LEAD + "If the figures are monthly, in management's view, the claim is overstated [S2, S3].",
+    PAIR_LEAD + "If the figures are monthly, the implied activity is overstated [S2, S3].",
+    # A linking comma after text with no verb joins a compound subject, not two clauses: the extent of the pair's
+    # clause cannot be established, so the sentence is kept (afbf715 replaced the second half).
+    PAIR_LEAD + "The monthly figure [S2, S3], and the larger figure are overstated.",
+    PAIR_LEAD + "The monthly figure [S2], and the larger figure [S3] are overstated.",
+)
+REVIEW_A6D_REPAIRED = (
+    (PAIR_LEAD + "The monthly figure is inflated [S2, S3], but " + UNCLEAR + ".",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3], but " + UNCLEAR + ".", ['basis_overstatement']),
+    # A genuine serial list is still one clause, and a clause after it is still its own.
+    # Corrected at the review of 8f11844: "daily" is not this pair's interval, so the list is kept.
+    (PAIR_LEAD + "The cumulative, monthly, and daily figures are overstated [S2, S3], but " + UNCLEAR + ".",
+     PAIR_LEAD + "The cumulative, monthly, and daily figures are overstated [S2, S3], but " + UNCLEAR + ".", []),
+    (PAIR_LEAD + "The cumulative, monthly, and page-12 figures are overstated [S2, S3], but " + UNCLEAR + ".",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3], but " + UNCLEAR + ".", ['basis_overstatement']),
+    # A condition naming the pair, then the pair's own subject (memo 98) or a measure with its basis (memo 100).
+    (PAIR_LEAD + "If the figures are monthly, the key traction claim is overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "If the cumulative figure was restated as a monthly figure, the implied monthly activity would be "
+                 "materially overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    # A clause with a verb is not a list item, whatever its commas: the ", but" clause after it is its own.
+    (PAIR_LEAD + "Management has not clarified the definitions, in its view, but the monthly figure is overstated [S2, S3].",
+     PAIR_LEAD + "Management has not clarified the definitions, in its view, but " + CLARIFY + " [S2, S3].",
+     ['basis_overstatement']),
+    # A list item's marker is not a word before the subject.
+    (PAIR_LEAD.rstrip() + "\n- The monthly figure is overstated [S2, S3].",
+     PAIR_LEAD.rstrip() + "\n- " + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+)
+
+
+class ReviewA6dcddfTests(SimpleTestCase):
+    """Through the complete normalisation -> time -> funding -> basis sequence on memo 101's payload."""
+
+    def setUp(self):
+        self.payload = memo101_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text):
+        out, changes = replay({'section': text}, self.items, self.notes)
+        return out['section'], changes.get('section', [])
+
+    def test_foreign_qualifiers_attributions_and_asides_are_kept(self):
+        for text in REVIEW_A6D_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_the_pairs_own_clauses_are_still_repaired(self):
+        for text, after, changes in REVIEW_A6D_REPAIRED:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (after, changes))
+                if UNCLEAR in text:
+                    self.assertIn(UNCLEAR, after)
+                self.assertEqual(refs(after)[-2:], ['S2', 'S3'])
+
+    def test_memo_98_and_earlier_rounds_are_unchanged(self):
+        self.assertEqual(self.full(MEMO98_JUDGMENT), (RISK_AFTER[:-1] + ' [C2, C3].', ['basis_overstatement']))
+        for text in REVIEW_8D7_KEPT + REVIEW_9B2_KEPT + REVIEW_377_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+        for text, after, changes in REVIEW_8D7_REPAIRED + REVIEW_9B2_REPAIRED:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (after, changes))
+
+
+class PipelineReviewA6dcddfTests(TestCase):
+    """The memo writer (intelligence_pipeline._generate_memo, model response mocked) keeps the conditional foreign
+    claim and the attributed sentence, repairs the pair's clause before an independent one and keeps memo 101's four
+    repairs."""
+
+    def test_the_writer_keeps_them(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('reviewa6d_writer', password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo101_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items_from(payload)),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, _ = memo101()
+        repaired, repaired_after, _ = REVIEW_A6D_REPAIRED[0]
+        sections = {'market_analysis': REVIEW_A6D_KEPT[0], 'team_assessment': REVIEW_A6D_KEPT[2],
+                    'problem_solution': repaired}
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw, **sections)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertEqual(memo.market_analysis, REVIEW_A6D_KEPT[0])
+        self.assertEqual(memo.team_assessment, REVIEW_A6D_KEPT[2])
+        self.assertEqual(memo.problem_solution, repaired_after)
+        self.assertIn(BMA_101_AFTER, memo.business_model_analysis)
+        self.assertIn(BASE_101_AFTER, memo.base_scenario)
+        self.assertIn(RISK_101_AFTER, memo.risk_assessment)
+        self.assertIn(DOWN_101_AFTER, memo.downside_scenario)
+
+
+# Review of 72418e2: two preservation gaps, both present since a6dcddf.
+#     1. "The reported monthly figure [S2], and the larger figure [S3] are overstated." was garbled: the compound-subject
+#        and list guards read "reported" (any "-ed" word) as a verb, so the subject was split as two clauses and its
+#        second half replaced. A participle after its determiner ("the reported", "the company's stated") modifies the
+#        figure; it is not a verb.
+#     2. "The monthly figure is overstated (in management's view) [S2, S3]." lost its attribution: only a comma after the
+#        judgment left the owner open. What follows the judgment must now be text the clarification may replace:
+#        coordinated judgments, hedges, citations and closing punctuation; anything else keeps the clause. The referent
+#        rule ("These figures may be inflated (in management's view)") had the same gap.
+
+REVIEW_724_KEPT = (
+    PAIR_LEAD + "The reported monthly figure [S2], and the larger figure [S3] are overstated.",
+    PAIR_LEAD + "The stated monthly figure [S2], and the larger figure [S3] are overstated.",
+    PAIR_LEAD + "The claimed figure [S2], and the larger figure [S3] are overstated.",
+    PAIR_LEAD + "The company's reported monthly figure [S2], and the larger figure [S3] are overstated.",
+    PAIR_LEAD + "The monthly figure is overstated (in management's view) [S2, S3].",
+    PAIR_LEAD + "The monthly figure is overstated according to management [S2, S3].",
+    PAIR_LEAD + "The monthly figure is overstated in management's view [S2, S3].",
+    PAIR_LEAD + "The monthly figure is overstated [S2, S3] (in management's view).",
+    PAIR_LEAD + "These figures may be inflated (in management's view) [S2, S3].",
+    PAIR_LEAD + "One or both figures may be overstated according to management [S2, S3].",
+    # An object after the judgment is replaceable only when it names the pair's measure (memo 100, below).
+    PAIR_LEAD + "One or both figures may misrepresent the scale of hiring [S2, S3].",
+    PAIR_LEAD + "The monthly figure is overstated compared with the hiring plan [S2, S3].",
+)
+REVIEW_724_REPAIRED = (
+    # "reported" with no determiner before it is the clause's verb: two clauses, and the second is the pair's.
+    (PAIR_LEAD + "Management reported the monthly figure [S2], and the larger figure [S3] is overstated.",
+     PAIR_LEAD + "Management reported the monthly figure [S2], and " + CLARIFY + " [S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The reported figure is monthly [S2], and the larger figure [S3] is overstated.",
+     PAIR_LEAD + "The reported figure is monthly [S2], and " + CLARIFY + " [S3].", ['basis_overstatement']),
+    # A serial list led by a participle is still one clause, and the clause after it is still its own.
+    # Corrected at the review of 8f11844: "daily" is not this pair's interval, so the list is kept.
+    (PAIR_LEAD + "The reported, monthly, and daily figures are overstated [S2, S3], but " + UNCLEAR + ".",
+     PAIR_LEAD + "The reported, monthly, and daily figures are overstated [S2, S3], but " + UNCLEAR + ".", []),
+    (PAIR_LEAD + "The reported, monthly, and cumulative figures are overstated [S2, S3], but " + UNCLEAR + ".",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3], but " + UNCLEAR + ".", ['basis_overstatement']),
+    # Coordinated judgments and hedges are replaceable text, in both rules.
+    (PAIR_LEAD + "The monthly figure is overstated and possibly misleading [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "One or both figures may be overstated or misleading [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_referent_judgment']),
+    # The memo 100 form: an object naming the pair's measure.
+    (PAIR_LEAD + "One or both figures may misrepresent the scale of actual activity [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_referent_judgment']),
+    # A comparison with the pair's other figure (the BasisGuardTests forms: "overstates the page-10 count").
+    (PAIR_LEAD + "The monthly figure is overstated compared with the cumulative figure [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+)
+
+
+class Review72418e2Tests(SimpleTestCase):
+    """Through the complete normalisation -> time -> funding -> basis sequence on memo 101's payload."""
+
+    def setUp(self):
+        self.payload = memo101_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text):
+        out, changes = replay({'section': text}, self.items, self.notes)
+        return out['section'], changes.get('section', [])
+
+    def test_participle_subjects_and_trailing_attributions_are_kept(self):
+        for text in REVIEW_724_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_the_pairs_own_clauses_are_still_repaired(self):
+        for text, after, changes in REVIEW_724_REPAIRED:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (after, changes))
+                if UNCLEAR in text:
+                    self.assertIn(UNCLEAR, after)
+
+    def test_memo_98_and_earlier_rounds_are_unchanged(self):
+        self.assertEqual(self.full(MEMO98_JUDGMENT), (RISK_AFTER[:-1] + ' [C2, C3].', ['basis_overstatement']))
+        for text in REVIEW_A6D_KEPT + REVIEW_8D7_KEPT + REVIEW_9B2_KEPT + REVIEW_377_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+        for text, after, changes in REVIEW_A6D_REPAIRED + REVIEW_8D7_REPAIRED + REVIEW_9B2_REPAIRED:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (after, changes))
+
+
+class PipelineReview72418e2Tests(TestCase):
+    """The memo writer (intelligence_pipeline._generate_memo, model response mocked) keeps the participle compound
+    subject and both trailing attributions, repairs the pair's clause after a reporting verb and keeps memo 101's four
+    repairs."""
+
+    def test_the_writer_keeps_them(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('review724_writer', password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo101_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items_from(payload)),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, _ = memo101()
+        repaired, repaired_after, _ = REVIEW_724_REPAIRED[0]
+        sections = {'market_analysis': REVIEW_724_KEPT[0], 'team_assessment': REVIEW_724_KEPT[4],
+                    'financial_analysis': REVIEW_724_KEPT[8], 'problem_solution': repaired}
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw, **sections)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertEqual(memo.market_analysis, REVIEW_724_KEPT[0])
+        self.assertEqual(memo.team_assessment, REVIEW_724_KEPT[4])
+        self.assertEqual(memo.financial_analysis, REVIEW_724_KEPT[8])
+        self.assertEqual(memo.problem_solution, repaired_after)
+        self.assertIn(BMA_101_AFTER, memo.business_model_analysis)
+        self.assertIn(BASE_101_AFTER, memo.base_scenario)
+        self.assertIn(RISK_101_AFTER, memo.risk_assessment)
+        self.assertIn(DOWN_101_AFTER, memo.downside_scenario)
+
+
+# Review of 71ece83: the tail allowlist accepted any page and any basis word, so a comparison with something that is
+# not the pair's ("compared with the page-99 count", "compared with the yearly count") was deleted by the
+# clarification, in both rules. Present at 72418e2 too. A page after the judgment must be one the pair's members are on
+# and a basis word one of the pair's own bases (memo 101: pages 10 and 12; unstated and monthly, the unstated side
+# being the one the memos call "cumulative").
+
+REVIEW_71E_KEPT = (
+    PAIR_LEAD + "The monthly figure is overstated compared with the page-99 count [S2, S3].",
+    PAIR_LEAD + "The monthly figure is overstated compared with the page 99 count [S2, S3].",
+    PAIR_LEAD + "The monthly figure is overstated compared with the slide-7 figure [S2, S3].",
+    PAIR_LEAD + "The monthly figure is overstated compared with the weekly figure [S2, S3].",
+    PAIR_LEAD + "The monthly figure is overstated compared with the daily count [S2, S3].",
+    PAIR_LEAD + "The monthly figure is overstated compared with the run-rate [S2, S3].",
+    PAIR_LEAD + "These figures are overstated compared with the yearly count [S2, S3].",
+    PAIR_LEAD + "One or both figures may be overstated compared with the yearly count [S2, S3].",
+    PAIR_LEAD + "One or both figures may misrepresent the page-99 count [S2, S3].",
+    PAIR_LEAD + "These figures may overstate the weekly activity [S2, S3].",
+)
+REVIEW_71E_REPAIRED = (
+    (PAIR_LEAD + "The monthly figure is overstated compared with the page-10 count [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The monthly figure is overstated compared with the page 10 count [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The monthly figure is overstated compared with the slide-12 figure [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The page-10 figure is overstated compared with the per month figure [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "These figures are overstated compared with the monthly count [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_referent_judgment']),
+    (PAIR_LEAD + "One or both figures may overstate the page-12 count [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_referent_judgment']),
+    (PAIR_LEAD + "These figures may overstate the monthly activity [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_referent_judgment']),
+    # "interval" names no other figure.
+    (PAIR_LEAD + "The monthly figure is overstated relative to its stated interval [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+)
+
+
+class Review71ece83Tests(SimpleTestCase):
+    """Through the complete normalisation -> time -> funding -> basis sequence on memo 101's payload; and per pair,
+    with three pairs on different pages and bases."""
+
+    def setUp(self):
+        self.payload = memo101_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text):
+        out, changes = replay({'section': text}, self.items, self.notes)
+        return out['section'], changes.get('section', [])
+
+    def pairs(self, text):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        return guard_basis_wording(text, basis_facts(_pairs_items(), (NOTE, NOTE_BOTS, NOTE_CUMULATIVE)))
+
+    def test_comparisons_with_other_pages_and_intervals_are_kept(self):
+        for text in REVIEW_71E_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_comparisons_with_the_pairs_own_pages_and_intervals_are_repaired(self):
+        for text, after, changes in REVIEW_71E_REPAIRED:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (after, changes))
+
+    def test_pages_and_intervals_are_each_pairs_own(self):
+        cumulative = 'How the cumulative figure relates to the weekly figure needs clarification before either is relied on'
+        for text, expected in (
+                # Another pair's page or interval is not this pair's.
+                ('The daily bot figure [C6] is overstated compared with the page-12 bot count [C5].', None),
+                ('The daily bot figure [C6] is overstated compared with the monthly bot count [C5].', None),
+                ('The weekly figure [C9] is overstated compared with the daily figure [C7].', None),
+                ('The weekly figure [C9] is overstated compared with the page-10 figure [C7].', None),
+                # Its own are.
+                ('The daily bot figure [C6] is overstated compared with the page-5 bot count [C5].',
+                 DAILY_CLARIFICATION + ' [C6] [C5].'),
+                ('The weekly figure [C9] is overstated compared with the cumulative figure [C7].',
+                 cumulative + ' [C9] [C7].'),
+                ('The weekly figure [C9] is overstated compared with the page-7 figure [C7].',
+                 cumulative + ' [C9] [C7].')):
+            with self.subTest(text=text):
+                out, changes = self.pairs(text)
+                self.assertEqual(out, text if expected is None else expected)
+                self.assertEqual(bool(changes), expected is not None)
+
+    def test_a_pair_of_two_stated_rates_has_no_cumulative_side(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        items = [_usage('C10', '4M messages/month', 3), _usage('C11', '4M messages/day', 4)]
+        note = ('measurement_basis', ('C10', 'C11'), 'Page 3 states 4M messages/month; page 4 states 4M messages/day. '
+                'These use different measurement bases and need clarification before comparison.')
+        facts = basis_facts(items, (note,))
+        kept = 'The daily figure [C11] is overstated compared with the cumulative activity [C10].'
+        self.assertEqual(guard_basis_wording(kept, facts), (kept, []))
+        self.assertEqual(
+            guard_basis_wording('The daily figure [C11] is overstated compared with the monthly activity [C10].', facts),
+            ('How the monthly figure relates to the daily figure needs clarification before either is relied on '
+             '[C11] [C10].', ['basis_overstatement']))
+
+    def test_earlier_rounds_are_unchanged(self):
+        self.assertEqual(self.full(MEMO98_JUDGMENT), (RISK_AFTER[:-1] + ' [C2, C3].', ['basis_overstatement']))
+        for text in REVIEW_724_KEPT + REVIEW_A6D_KEPT + REVIEW_8D7_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+        for text, after, changes in REVIEW_724_REPAIRED + REVIEW_A6D_REPAIRED + REVIEW_8D7_REPAIRED:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (after, changes))
+
+
+class PipelineReview71ece83Tests(TestCase):
+    """The memo writer (intelligence_pipeline._generate_memo, model response mocked) keeps comparisons with another
+    page and another interval, in both rules, repairs the pair's own page-10 comparison and keeps memo 101's repairs."""
+
+    def test_the_writer_keeps_them(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('review71e_writer', password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo101_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items_from(payload)),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, _ = memo101()
+        repaired, repaired_after, _ = REVIEW_71E_REPAIRED[0]
+        sections = {'market_analysis': REVIEW_71E_KEPT[0], 'team_assessment': REVIEW_71E_KEPT[6],
+                    'financial_analysis': REVIEW_71E_KEPT[8], 'problem_solution': repaired}
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw, **sections)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertEqual(memo.market_analysis, REVIEW_71E_KEPT[0])
+        self.assertEqual(memo.team_assessment, REVIEW_71E_KEPT[6])
+        self.assertEqual(memo.financial_analysis, REVIEW_71E_KEPT[8])
+        self.assertEqual(memo.problem_solution, repaired_after)
+        self.assertIn(BMA_101_AFTER, memo.business_model_analysis)
+        self.assertIn(BASE_101_AFTER, memo.base_scenario)
+        self.assertIn(RISK_101_AFTER, memo.risk_assessment)
+        self.assertIn(DOWN_101_AFTER, memo.downside_scenario)
+
+
+# Review of 8f11844: two disclosed gaps, both present before this branch's recent rounds.
+#     1. A subject naming a page or interval the pair does not have was still the pair's: "The page-99 figure is
+#        overstated [S2, S3]" and "The yearly figure is overstated [S2, S3]" became the clarification (memo 101's pair:
+#        pages 10 and 12, unstated and monthly). Subject qualifiers now use the same pair-specific reading as the text
+#        after the judgment. Three earlier expectations that a list naming "daily" is rewritten are corrected to kept;
+#        each gains a list of the pair's own words that is still repaired as one clause.
+#     2. For a pair of two stated rates (monthly and daily), "the cumulative figure [C10]" became "the figure stated
+#        without an explicit interval [C10]", and "the cumulative and daily figures" became "the unspecified-interval
+#        and daily figures", although both sides state an interval. Both relabels now need a side with no stated
+#        interval.
+
+REVIEW_8F1_KEPT = (
+    PAIR_LEAD + "The page-99 figure is overstated [S2, S3].",
+    PAIR_LEAD + "The yearly figure is overstated [S2, S3].",
+    PAIR_LEAD + "The slide-7 figure is overstated [S2, S3].",
+    PAIR_LEAD + "The weekly figure is overstated compared with the monthly figure [S2, S3].",
+    PAIR_LEAD + "The page-99 monthly figure is overstated [S2, S3].",
+    PAIR_LEAD + "The run-rate figure is overstated [S2, S3].",
+    PAIR_LEAD + "The 500M messages/week figure is overstated [S2, S3].",
+    PAIR_LEAD + "The costs/month figure is overstated [S2, S3].",
+    PAIR_LEAD + "If the figures are monthly, the implied weekly activity is overstated [S2, S3].",
+    PAIR_LEAD + "The monthly figure is accurate [S2], and the daily figure [S3] is overstated.",
+)
+REVIEW_8F1_REPAIRED = (
+    (PAIR_LEAD + "The page-10 figure is overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The slide-12 monthly figure is overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The cumulative figure is overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The 500M messages/month figure is overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "If the figures are monthly, the implied monthly activity is overstated [S2, S3].",
+     PAIR_LEAD + CLARIFY_SENTENCE + " [S2, S3].", ['basis_overstatement']),
+    (PAIR_LEAD + "The monthly figure is accurate [S2], and the larger figure [S3] is overstated.",
+     PAIR_LEAD + "The monthly figure is accurate [S2], and " + CLARIFY + " [S3].", ['basis_overstatement']),
+)
+TWO_RATE_ITEMS = lambda: [_usage('C10', '4M messages/month', 3), _usage('C11', '4M messages/day', 4)]
+TWO_RATE_NOTE = ('measurement_basis', ('C10', 'C11'), 'Page 3 states 4M messages/month; page 4 states 4M messages/day. '
+                 'These use different measurement bases and need clarification before comparison.')
+TWO_RATE_KEPT = (
+    'The daily figure [C11] is overstated compared with the cumulative figure [C10].',
+    'The cumulative figure [C10] sits beside a daily rate [C11].',
+    'The cumulative and daily figures [C10, C11] differ.',
+    'The cumulative and monthly presentations [C10, C11] need clarification.',
+)
+
+
+class Review8f11844Tests(SimpleTestCase):
+    """Through the complete normalisation -> time -> funding -> basis sequence on memo 101's payload; the two-rate
+    pair through the basis guard, with the single-unstated-side controls (BasisGuardTests' pair) beside it."""
+
+    def setUp(self):
+        self.payload = memo101_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text):
+        out, changes = replay({'section': text}, self.items, self.notes)
+        return out['section'], changes.get('section', [])
+
+    def test_subjects_naming_another_page_or_interval_are_kept(self):
+        for text in REVIEW_8F1_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_subjects_naming_the_pairs_own_are_repaired(self):
+        for text, after, changes in REVIEW_8F1_REPAIRED:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (after, changes))
+
+    def test_subjects_are_each_pairs_own(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        facts = basis_facts(_pairs_items(), (NOTE, NOTE_BOTS, NOTE_CUMULATIVE))
+        for text, expected in (
+                ('The weekly bot figure [C6] is overstated [C5].', None),
+                ('The page-6 bot figure [C6] is overstated [C5].', DAILY_CLARIFICATION + ' [C6] [C5].'),
+                ('The daily bot figure [C6] is overstated [C5].', DAILY_CLARIFICATION + ' [C6] [C5].'),
+                ('The page-12 bot figure [C6] is overstated [C5].', None)):
+            with self.subTest(text=text):
+                out, changes = guard_basis_wording(text, facts)
+                self.assertEqual(out, text if expected is None else expected)
+                self.assertEqual(bool(changes), expected is not None)
+
+    def test_a_pair_of_two_stated_rates_gains_no_unstated_interval(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording, UNSPECIFIED, UNSPECIFIED_ADJECTIVE
+        facts = basis_facts(TWO_RATE_ITEMS(), (TWO_RATE_NOTE,))
+        for text in TWO_RATE_KEPT:
+            with self.subTest(text=text):
+                out, changes = guard_basis_wording(text, facts)
+                self.assertEqual((out, changes), (text, []))
+                self.assertNotIn(UNSPECIFIED[4:], out)
+                self.assertNotIn(UNSPECIFIED_ADJECTIVE, out)
+
+    def test_a_pair_with_an_unstated_side_is_still_relabelled(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        items = [_usage('C2', '500M messages/month', 12), _usage('C3', '500M messages', 10)]
+        facts = basis_facts(items, (NOTE,))
+        self.assertEqual(guard_basis_wording('The cumulative figure [C3] sits beside a monthly rate [C2].', facts),
+                         ('The figure stated without an explicit interval [C3] sits beside a monthly rate [C2].',
+                          ['basis_cumulative_referent']))
+        self.assertEqual(guard_basis_wording('The cumulative and monthly figures [C3, C2] differ.', facts),
+                         ('The unspecified-interval and monthly figures [C3, C2] differ.',
+                          ['basis_cumulative_presupposed']))
+
+    def test_an_admitted_cumulative_side_is_never_relabelled_beside_an_unstated_one(self):
+        # A pair of a cumulative side and an unstated side: "cumulative" names the admitted side, so neither relabel
+        # applies, although the pair has a side with no stated interval.
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        items = [_usage('C7', '3M messages to date', 7), _usage('C8', '3M messages', 8)]
+        note = ('measurement_basis', ('C7', 'C8'), 'Page 7 states 3M messages as a cumulative total; page 8 states 3M '
+                'messages without an explicit interval. These use different measurement bases and need clarification '
+                'before comparison.')
+        facts = basis_facts(items, (note,))
+        for text in ('The cumulative figure [C7] sits beside the figure on page 8 [C8].',
+                     'The cumulative and monthly presentations [C7, C8] differ.'):
+            with self.subTest(text=text):
+                self.assertEqual(guard_basis_wording(text, facts), (text, []))
+
+    def test_earlier_rounds_are_unchanged(self):
+        self.assertEqual(self.full(MEMO98_JUDGMENT), (RISK_AFTER[:-1] + ' [C2, C3].', ['basis_overstatement']))
+        for text in REVIEW_71E_KEPT + REVIEW_724_KEPT + REVIEW_A6D_KEPT + REVIEW_8D7_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+        for text, after, changes in (REVIEW_71E_REPAIRED + REVIEW_724_REPAIRED + REVIEW_A6D_REPAIRED +
+                                     REVIEW_8D7_REPAIRED):
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (after, changes))
+
+
+class PipelineReview8f11844Tests(TestCase):
+    """The memo writer (intelligence_pipeline._generate_memo, model response mocked) keeps subjects naming another page
+    or interval and repairs the pair's own (memo 101's payload); and for a pair of two stated rates, relabels
+    nothing as unstated."""
+
+    def _context(self, username, items, notes):
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .vector_models import DocumentSource
+        user = get_user_model().objects.create_user(username, password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        return doc, GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items),
+                                    gaps=(), verification='complete', analysis_confidence=0.5,
+                                    consistency_notes=tuple(notes))
+
+    def _write(self, context, sections):
+        from unittest import mock
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        raw, _ = memo101()
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw, **sections)):
+            pipeline._generate_memo(context)
+
+    def test_the_writer_keeps_another_figures_subject(self):
+        from .vector_models import IntelligenceMemo
+        payload = memo101_payload()
+        doc, context = self._context('review8f1_writer', items_from(payload), notes_from(payload))
+        repaired, repaired_after, _ = REVIEW_8F1_REPAIRED[0]
+        self._write(context, {'market_analysis': REVIEW_8F1_KEPT[0], 'team_assessment': REVIEW_8F1_KEPT[1],
+                              'problem_solution': repaired})
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertEqual(memo.market_analysis, REVIEW_8F1_KEPT[0])
+        self.assertEqual(memo.team_assessment, REVIEW_8F1_KEPT[1])
+        self.assertEqual(memo.problem_solution, repaired_after)
+        self.assertIn(BMA_101_AFTER, memo.business_model_analysis)
+        self.assertIn(BASE_101_AFTER, memo.base_scenario)
+        self.assertIn(RISK_101_AFTER, memo.risk_assessment)
+        self.assertIn(DOWN_101_AFTER, memo.downside_scenario)
+
+    def test_the_writer_relabels_nothing_for_two_stated_rates(self):
+        from .vector_models import IntelligenceMemo
+        doc, context = self._context('review8f1_two_rate', TWO_RATE_ITEMS(), (TWO_RATE_NOTE,))
+        repaired = 'The daily figure [C11] is overstated compared with the monthly activity [C10].'
+        self._write(context, {'market_analysis': TWO_RATE_KEPT[0], 'team_assessment': TWO_RATE_KEPT[2],
+                              'problem_solution': repaired})
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertEqual(memo.market_analysis, TWO_RATE_KEPT[0])
+        self.assertEqual(memo.team_assessment, TWO_RATE_KEPT[2])
+        # Positive control: the guard ran on this pair.
+        self.assertEqual(memo.problem_solution, 'How the monthly figure relates to the daily figure needs clarification '
+                                                'before either is relied on [C11] [C10].')

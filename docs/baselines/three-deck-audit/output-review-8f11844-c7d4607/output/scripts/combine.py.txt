@@ -1,0 +1,23 @@
+import re, glob, sys
+sys.path.insert(0, '.')
+src = open('mutate_x.py', encoding='utf-8').read()
+defined = re.findall(r"^\s+\('([A-Z]\d+)',", src, re.M)
+rows = {}
+for f in sorted(glob.glob('mut_c[0-9][0-9].txt')):
+    for line in open(f, encoding='utf-8', errors='replace'):
+        m = re.match(r'([A-Z]\d+) (\S+) (.*)', line)
+        if m and m.group(1) in defined:
+            rows.setdefault(m.group(1), []).append((f, m.group(2), m.group(3)))
+order = [l.split() for l in open('chunks.txt')]
+flat = [x for l in order for x in l]
+print('defined', len(defined), 'unique', len(set(defined)), 'in chunks', len(flat), 'same set', set(flat) == set(defined))
+bad = []
+for k in defined:
+    r = rows.get(k, [])
+    if len(r) != 1: bad.append((k, 'runs', len(r))); continue
+    f, st, rest = r[0]
+    fm = re.search(r'failures=(\d+)', rest); em = re.search(r'errors=(\d+)', rest)
+    if st != 'CAUGHT' or not fm or int(fm.group(1)) == 0 or em or 'restored=True' not in rest or 'Ran 343 tests' not in rest:
+        bad.append((k, st, rest[:90]))
+print('caught by failures, 343 run, restored, no errors:', len(defined) - len(bad), '/', len(defined))
+print('bad', bad)

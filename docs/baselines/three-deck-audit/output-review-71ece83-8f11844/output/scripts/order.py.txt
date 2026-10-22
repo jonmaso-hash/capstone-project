@@ -1,0 +1,6 @@
+src = open('mutate_x.py', encoding='utf-8').read().split("\n\ndef sha")[0]
+ns = {'__file__': 'mutate_x.py'}
+exec(src.replace("WT = sys.argv[1]", "WT = '.'").replace("ONLY = set(sys.argv[2:])", "ONLY = set()"), ns)
+ids = [m[0] for m in ns['M']]
+print(len(ids))
+open('order.txt', 'w').write(' '.join(ids))

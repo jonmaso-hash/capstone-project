@@ -1,0 +1,5 @@
+T2 CAUGHT Ran 305 tests in 11.017s FAILED (failures=1) restored=True | OF-903/904: the fact is placed even mid-clause
+    assertion failures in: test_hypotheses_narrators_denials_hedges_and_correct_dates_are_kept
+    errors in: -
+    failing sub-case: text="The self-reported 500M messages [S2, S3] in the 'Traction by Apr-16' slide context are the headline figure."
+final sha matches pre-run: True cd1263d9453c29dbeb88006b0224bf2fd9ec42269bf50f98aaa783446259db57

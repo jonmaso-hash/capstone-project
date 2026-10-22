@@ -82,17 +82,46 @@ and, first, in any sentence, one rule about where figures are stated (memo 99, O
                 only the company's own affirmative statement: its subject ("the company", "the deck") right
                 before the reporting verb the moved refs follow, and no denial or hedge ("does not state",
                 "may", "appears to") in the clause. A narrator's listing, a denial, a hedge, a question and a
-                condition keep their citations (review of 1801ec5)
+                condition keep their citations (review of 1801ec5).
+                The same context named outside parentheses ("... [S2, S3]) in a slide context headed 'X'",
+                "[S1, S2, S3], ... by the period referenced in the 'X' slide context", memo 101, OF-903/904) is
+                treated alike, citations inside an earlier parenthesis included. The other side's fact is placed
+                only where the context phrase ends its clause (end of sentence, ";" or a clause-linking comma):
+                mid-clause ("... in the 'X' slide context is the headline figure") there is nowhere to put it,
+                so the sentence is kept. A reporting verb before the moved refs must have the company as its
+                subject ("self-reported" is an adjective, not a verb); a narrator named in the clause keeps it.
+                Without a reporting verb the fact is its own clause ("; the deck separately states 500M
+                messages/month [S3] on page 12 (clarification)"), and only when the clause names the company's
+                own source ("self-reported", "the deck", "the company"); a statement attributed to anyone else
+                ("According to an analyst, ...", "per ...", "as reported by ...", "... says") keeps its citations
+                (review of 750de3f). A hypothesis inside a condition ("If ... [S3] reflects a monthly run-rate
+                as of the 'X' slide context") is kept
+    cumulative  "the cumulative and monthly presentations" (memo 101, OF-906) presupposes that one side is
+    presupposed cumulative. For the pair its own following citation group belongs to (or else the pair the
+                sentence resolved to), when that pair admits no cumulative fact, "cumulative" becomes
+                "unspecified-interval", inside a condition too: the phrase presupposes rather than supposes.
+                The phrase's own noun must be a figure noun ("presentations", "figures") or the pair's noun,
+                never another metric ("the cumulative and monthly revenue"), and a later citation owns it only
+                when no clause connector ("while", "but", ...) stands between them (review of 750de3f).
+                "If the figure is cumulative", "a cumulative total or a monthly rate", a question, another
+                pair's or another metric's figures, and a pair with an admitted cumulative side are kept
 
 and two rules that continue an item's discussion (memo 100):
 
     referent    "one or both figures", "both figures", "either figure" continues the pair the item's last
-    judgment    sentence resolved to, like "the figures" (OF-806). An error judgment in that clause
-                ("one or both figures may misrepresent the scale of actual activity") becomes the pair's
-                clarification; the sentence's other clauses stay. Not when the pair has a CONTRADICTED member,
-                the words are denied, the sentence asks, or it cites anything outside the pair. The judgment
-                rule above leaves such a clause to this one, cited or not, so these protections hold (review
-                of 1801ec5); a judgment not about "one or both figures" is still the judgment rule's
+    judgment    sentence resolved to, like "the figures" (OF-806), and so does "these figures" (memo 101,
+                OF-905). An error judgment in that clause ("one or both figures may misrepresent the scale of
+                actual activity"), or in a part of it after a dash that continues "these figures" ("These
+                figures ... — raising the possibility of metric inflation"), becomes the pair's clarification;
+                the sentence's other parts stay. An independent clause after ";", or a part after a dash that
+                has its own subject ("— an analyst is wrong"), needs its own referent; a denial before the
+                referent or of an earlier judgment covers the judgments coordinated with it after a dash
+                ("Nothing suggests these figures are wrong — or inflated"), and coordinated judgments of the
+                same figures become one clarification (review of 750de3f). Not
+                when the pair has a CONTRADICTED member, the words are denied, the sentence asks, or it cites
+                anything outside the pair. The judgment rule above leaves such a sentence to this one, cited or
+                not, so these protections hold (review of 1801ec5); a judgment not governed by such a referent
+                is still the judgment rule's
     conditions  "These conditions are stated by the company [refs]" after a sentence setting conditions ("if
                 the bots reflect active, paying customers ...", OF-807): the cited statements state the
                 figures, not the conditions. The subject becomes "The figures", a "rests on the company's own
@@ -124,8 +153,8 @@ _CUMULATIVE_REFERENT = re.compile(
     r'\b(?P<the>[Tt])he\s+cumulative\s+(?:(?:messages?|bots?|usage)\s+)?(?:figure|total|count|number|metric|value)\b')
 _BASIS_WORDS = re.compile(r'\b(?:cumulative(?:ly)?|monthly|weekly|daily|yearly|per\s+(?:month|week|day|year)|'
                           r'interval|run[- ]rate|measurement\s+bas[ie]s)\b|/\s?(?:month|week|day|year)\b', re.I)
-_JUDGMENT = re.compile(r'\b(?:overstat\w*|inflat\w*|exaggerat\w*|mislead\w*|misrepresent\w*|incorrect\w*|'
-                       r'erroneous\w*|wrong)\b', re.I)
+_JUDGMENT_WORD = r'(?:overstat\w*|inflat\w*|exaggerat\w*|mislead\w*|misrepresent\w*|incorrect\w*|erroneous\w*|wrong)\b'
+_JUDGMENT = re.compile(r'\b' + _JUDGMENT_WORD, re.I)
 # Metrics a usage-basis note says nothing about.
 _OTHER_METRIC = re.compile(r'\b(?:revenues?|sales|arr|mrr|gmv|bookings|profit|margin|ebitda|income|burn|cash|'
                            r'runway|funding|raised|valuation|customers?|users?|subscribers?|clients?|accounts?|'
@@ -174,18 +203,71 @@ _DIGIT_GROUP = re.compile(r'(?<=\d)[ \u00a0\u202f](?=\d{3}\b)')
 _FIGURE_TOKEN = re.compile(r'\$?\d[\d,]*(?:\.\d+)?[kmb]?\+?(?:/[a-z]+)?[.,]?')
 # What may separate the words of a placing clause: no sign or operator ("+", "-", "=", "~", "%").
 _PLAIN_GAP = re.compile(r'[\s,.]*')
-# A referent for the two figures a basis item is discussing (memo 100, OF-806): "one or both figures".
-_PAIR_REFERENT = re.compile(r'\b(?:one\s+or\s+both|both|either|neither)\s+(?:of\s+the\s+(?:two\s+)?)?'
-                            r'(?:figures?|numbers?|metrics?)\b', re.I)
+# A referent for the two figures a basis item is discussing (memo 100, OF-806): "one or both figures"; and the
+# plural demonstrative continuing it (memo 101, OF-905): "these figures".
+_PAIR_REFERENT = re.compile(r'\b(?:(?:one\s+or\s+both|both|either|neither)\s+(?:of\s+the\s+(?:two\s+)?)?'
+                            r'(?:figures?|numbers?|metrics?)|(?:these|those)\s+(?:two\s+)?(?:figures|numbers|metrics))\b',
+                            re.I)
 # A context aside after a figure's citations (memo 100, OF-805): "(in a slide context headed 'X')",
 # "(slide context: 'X')", "(slide headed 'X')".
 _CONTEXT_ASIDE = re.compile(r"\(\s*(?:in\s+|on\s+)?(?:an?\s+|the\s+)?(?:slide|page)(?:\s+context)?\s*"
                             r"(?:headed\s+|titled\s+|:\s*)?'(?P<ctx>[^']+)'\s*\)", re.I)
+# The same context named outside parentheses (memo 101, OF-903/904): "in a slide context headed 'X'",
+# "in the 'X' slide context", "within a 'X' slide heading".
+_CONTEXT_PHRASE = re.compile(r"\b(?:in|on|within|under)\s+(?:an?\s+|the\s+)?(?:(?:slide|page)(?:\s+context)?\s*"
+                             r"(?:headed|titled|:)\s*'(?P<ctx>[^']+)'|'(?P<ctx2>[^']+)'\s+(?:slide\s+)?(?:context|heading))",
+                             re.I)
+# Where a context phrase may be followed by a separately placed fact: the end of its clause.
+_CLAUSE_END = re.compile(r'\s*(?:[.!]?["”’)]*\s*$|;|,\s*(?:while|whereas|and|but)\s)', re.I)
 # The company's own subject ending right before its reporting verb: "the company states", "... only that the deck
 # lists". A narrator ("Pitch Deck Hunt lists") or anything between ("the company does not state", "may state")
 # does not match (review of 1801ec5).
-_OWN_SUBJECT_END = re.compile(r"(?:^|\bthat\s+|\bwhile\s+|\bwhereas\s+|\band\s+|,\s*)(?:the\s+)?(?:company|deck|"
+_OWN_SUBJECT_END = re.compile(r"(?:^\s*(?:[-•*·–]\s*)?|\bthat\s+|\bwhile\s+|\bwhereas\s+|\band\s+|,\s*)(?:the\s+)?(?:company|deck|"
                               r"pitch\s+deck|presentation|founders?|management)\s*$", re.I)
+# "the cumulative and monthly presentations" (memo 101, OF-906): a definite description presupposing that one side
+# is cumulative. "is cumulative", "a cumulative total or a monthly rate" and questions are hypotheses, not this.
+_CUMULATIVE_PAIR = re.compile(r"\b(?:[Tt])he\s+(?:(?P<cum1>cumulative)\s+(?:and|or|vs\.?|versus)\s+"
+                              r"(?:monthly|weekly|daily|yearly|annual)|(?:monthly|weekly|daily|yearly|annual)\s+"
+                              r"(?:and|or|vs\.?|versus)\s+(?P<cum2>cumulative))\b")
+UNSPECIFIED_ADJECTIVE = 'unspecified-interval'
+# A fragment continuing the clause before a dash rather than starting one with its own subject. The WHOLE fragment
+# must parse as a continuation of the figures' clause (review of 377a142: a judgment-like first word, "misleading
+# advertising is wrong", "inflation is affecting costs", owned the rest of the clause):
+#   - a listed participle whose object is a judgment NOUN ("raising the possibility of metric inflation", "suggesting
+#     possible inflation"); or
+#   - optional "or/and/nor/which" and hedges, then a judgment PREDICATE about the figures ("or possibly inflated",
+#     "misleading", "which may be overstated");
+#   then only coordinated judgments ("or imprecise reporting"), the fragment's citations and closing punctuation.
+# A bare noun ("— inflation."), a noun phrase after a predicate ("— overstated expectations are common"), any other tail
+# ("— possibly inflated by bots") or an unlisted start ("— or Bob is wrong") is not classified: a new chain, kept
+# (reviews of 750de3f, 7fb484b and 377a142).
+_JUDGMENT_PREDICATE = r'(?:overstated|inflated|exaggerated|misleading|misrepresented|misrepresentative|incorrect|erroneous|wrong)\b'
+_JUDGMENT_NOUN = r'(?:overstatements?|inflation|exaggerations?|misrepresentations?|errors?|inaccurac(?:y|ies))\b'
+_CONTINUATION_MODIFIER = r'(?:possible|potential|metric|usage|imprecise|inaccurate)'
+_CONTINUATION = re.compile(
+    r"\s*(?:(?:raising|suggesting|indicating|implying)\s+(?:the\s+(?:possibility|prospect|risk)\s+of\s+|"
+    r"(?:concerns?|questions?)\s+(?:of|about)\s+)?(?:" + _CONTINUATION_MODIFIER + r"\s+)*" + _JUDGMENT_NOUN + r"|"
+    r"(?:(?:or|and|nor|which)\s+)?(?:(?:may|might|could|be|is|are|were|was|possibly|potentially|perhaps|probably|"
+    r"likely|even|also)\s+)*" + _JUDGMENT_PREDICATE + r")"
+    r"(?:\s+(?:or|and)\s+(?:(?:" + _CONTINUATION_MODIFIER + r"|possibly|potentially)\s+)*(?:" + _JUDGMENT_PREDICATE + r"|"
+    + _JUDGMENT_NOUN + r"|reporting|measurement\b))*"
+    r"(?:\s*\[[A-Z]\d+(?:\s*[,;]\s*[A-Z]\d+)*\])*[.!]?[\"”’)]*\s*", re.I)
+# Words attributing a statement to someone ("According to an analyst, ...", "per an industry report", "X says ..."):
+# not the company's own statement (review of 750de3f).
+_ATTRIBUTION = re.compile(r"\b(?:according\s+to|per|as\s+(?:reported|stated|listed|cited|noted|described)\s+by|"
+                          r"(?:reported|listed|cited|noted|described|estimated)\s+by|says?|said|claims?|claimed|notes?|"
+                          r"noted|writes?|wrote|estimates?|believes?|argues?|argued|told)\b", re.I)
+# The company's own source named in a clause with no reporting verb ("the self-reported traction metrics", "the
+# deck's figures"): required before such a clause's citations are moved (review of 750de3f).
+_OWN_SOURCE = re.compile(r"\bself-reported\b|\b(?:the\s+)?(?:company|deck|pitch\s+deck|presentation|founders?|"
+                         r"management)(?:'s)?\b", re.I)
+# The noun a "the cumulative and monthly ..." phrase is about must be a figure noun, never another metric
+# ("the cumulative and monthly revenue"; review of 750de3f).
+_FIGURE_NOUN = re.compile(r"\s+(?:presentations?|figures?|numbers?|counts?|totals?|rates?|bases|basis|readings?|"
+                          r"versions?|metrics?|values?|statements?|measures?)\b", re.I)
+# A connector starting another clause between a phrase and a later citation ("... differ while the message counts
+# ... [C2, C3]"): the citation is that clause's.
+_CLAUSE_CONNECTOR = re.compile(r"\b(?:while|whereas|but|although|though|because|since|unless|whereby)\b", re.I)
 # Hedged wording: a statement the clause does not make outright.
 _UNCERTAIN = re.compile(r"\b(?:may|might|could|possibly|perhaps|probably|likely|apparently|appears?|seems?|reportedly|"
                         r"allegedly|purportedly|unclear|uncertain|unconfirmed|whether|estimated?|approximately|"
@@ -217,6 +299,10 @@ class Pair:
     unspecified: Tuple[str, ...] = ()  # the figure on a side with no stated interval ("500M")
     sides: Tuple[frozenset, ...] = ()  # each side's members (its claim and the statements repeating it)
     unspecified_members: frozenset = frozenset()   # members of a side with no stated interval
+    topics: frozenset = frozenset()    # words of its evidence's categories ("usage", "traction")
+    figures: frozenset = frozenset()   # the figures its statements state ("500m")
+    pages: frozenset = frozenset()     # the pages its members are on (10, 12)
+    intervals: frozenset = frozenset()  # its sides' bases ("month"; "cumulative" for a cumulative or unstated side)
 
 
 @dataclass(frozen=True)
@@ -224,6 +310,7 @@ class BasisFacts:
     pairs: Tuple[Pair, ...] = ()      # empty: no note, so no sentence can resolve and nothing changes
     places: Tuple[Tuple[str, int, str, str], ...] = ()   # (ref, page, source context, fact) for items with a page
     narrated: frozenset = frozenset()  # refs a narrator (not the company) reports
+    narrators: frozenset = frozenset()  # the narrators' names ("Pitch Deck Hunt")
 
 
 def _side(item):
@@ -237,6 +324,16 @@ def _side(item):
 
 def _page(item):
     return item.sources[0].page_number if item is not None and item.sources else None
+
+
+def _interval(item):
+    """A side's basis as _pair_basis reads it: its rate's interval ("month"), or "cumulative" for a cumulative side
+    and for a side with no stated interval: "the cumulative figure" is the name the memos give the unstated figure,
+    which _referent rewrites (memo 98, UB-604)."""
+    basis = usage_basis(item.statement) if item is not None else None
+    if basis is None or not basis.rate or basis.rate == CUMULATIVE_BASIS:
+        return 'cumulative'
+    return basis.rate
 
 
 def basis_facts(items, notes):
@@ -270,13 +367,21 @@ def basis_facts(items, notes):
                           contradicted=any(item.status == CONTRADICTED for item in items if item.ref in members),
                           unspecified=tuple(unspecified), sides=tuple(side_members),
                           unspecified_members=frozenset().union(*(mine for mine, side in zip(side_members, sides)
-                                                                  if side[0] == UNSPECIFIED))))
+                                                                  if side[0] == UNSPECIFIED)),
+                          topics=frozenset(word for item in items if item.ref in members
+                                           for word in re.findall(r'[a-z]{3,}', (item.category or '').lower())),
+                          figures=frozenset(hit.group(0).strip().lower() for item in items if item.ref in members
+                                            for hit in _FIGURE.finditer(item.statement)),
+                          pages=frozenset(_page(item) for item in items
+                                          if item.ref in members and _page(item) is not None),
+                          intervals=frozenset(_interval(by_ref.get(ref)) for ref in refs)))
     bare = frozenset().union(*(pair.unspecified_members for pair in pairs))
     places = tuple((item.ref, _page(item), item.source_context or '',
                     item.statement + (' with no explicit interval' if item.ref in bare else ''))
                    for item in items if _page(item) is not None)
     return BasisFacts(pairs=tuple(pairs), places=places,
-                      narrated=frozenset(item.ref for item in items if getattr(item, 'narrator', '')))
+                      narrated=frozenset(item.ref for item in items if getattr(item, 'narrator', '')),
+                      narrators=frozenset(item.narrator for item in items if getattr(item, 'narrator', '')))
 
 
 def _cited(sentence):
@@ -304,23 +409,259 @@ def _bridges(sentence):
     return bool(_BRIDGE.fullmatch(sentence))
 
 
-def _referent_judged(sentence):
-    """Every clause judging the figures judges "one or both figures": _referent_judgment decides it, with its
-    protections (a denial, a contradicted pair, the sentence's other clauses; review of 1801ec5)."""
-    judged = [clause for clause in sentence.split(';') if _JUDGMENT.search(clause)]
-    return bool(judged) and all(_PAIR_REFERENT.search(clause) for clause in judged)
+# Where one clause ends and the next begins: ";", a spaced dash, or a comma before a clause-linking conjunction
+# ("…, but management has not clarified …"; review of 8d7f8dc). A coordinated judgment after the comma ("…, and
+# possibly inflated") is a continuation fragment and stays in its clause's chain.
+_CLAUSE_SPLIT = re.compile(r'(;\s*|\s+[—–]\s+|,\s+(?:and|but|while|whereas|yet|although|though|so|because|which)\s+)',
+                           re.I)
+# A verb in a list item: "The cumulative, monthly, and daily figures" is a list, not two clauses.
+_ITEM_VERB = re.compile(r"\b(?:is|are|was|were|be|been|has|have|had|do|does|did|can|could|may|might|must|should|will|"
+                        r"would|not|\w+ed)\b|" + _JUDGMENT_WORD, re.I)
+# The judged subject (review of 8d7f8dc): the noun phrase before the judgment's verb group. Its head must be a figure
+# or claim noun, one of the pair's own topics (the categories of its evidence: "traction", "usage"), or the pair's
+# counted noun with one of the pair's figures ("the 500M messages"). Every other word in it must place or qualify the
+# pair's figure: a basis word, the pair's noun, topic or figure, a page or slide, an own source, or a placing word.
+# Any other word ("monthly costs", "misleading messages", "the hiring claim") makes the subject someone else's.
+_FIGURE_HEAD = re.compile(r'(?:figure|total|count|number|metric|value|statistic|claim|rate)s?', re.I)
+# A measure the pair's figures stand for; after a condition about the pair it is the pair's only with the pair's basis
+# or vocabulary ("the implied monthly activity", memo 100), never with another noun ("monthly costs").
+_MEASURE_HEAD = re.compile(r'(?:activity|activities|volumes?|scale|engagement|growth)', re.I)
+_VERB_GROUP = frozenset({'is', 'are', 'was', 'were', 'be', 'been', 'being', 'may', 'might', 'could', 'can', 'would',
+                         'will', 'should', 'must', 'appear', 'appears', 'seem', 'seems', 'look', 'looks', 'likely',
+                         'possibly', 'potentially', 'probably', 'perhaps', 'materially', 'significantly',
+                         'substantially', 'also', 'even', 'to'})
+_DETERMINERS = frozenset({'the', 'a', 'an', 'this', 'that', 'these', 'those', 'its', 'their', 'each', 'either', 'both'})
+_SUBJECT_QUALIFIERS = frozenset({'key', 'main', 'headline', 'reported', 'stated', 'claimed', 'larger', 'smaller',
+                                 'higher', 'lower', 'former', 'latter', 'first', 'second', 'same', 'two', "company's",
+                                 "deck's", "presentation's", "management's", "founders'", 'and', 'or',
+                                 'implied', 'resulting', 'apparent', 'effective', 'underlying', 'overall', 'combined'})
+# What may follow the pair's judgment in its own clause (_replaceable): coordinated judgments and their hedges, an
+# object or comparison naming only the pair's measure or figures ("misrepresent the scale of actual activity", memo
+# 100; "overstates the page-10 count", "overstated compared with the bare bot count"), citations and closing
+# punctuation. The clarification replaces all of it; anything else ("(in management's view)", "according to
+# management", "…, as noted earlier") is text it would delete, so the clause is kept (review of 72418e2).
+_JUDGMENT_TAIL = re.compile(
+    r'\s*' + _JUDGMENT_WORD + r'(?:\s+(?:and|or)\s+(?:(?:may|might|could|be|is|are|possibly|potentially|perhaps|'
+    r'probably|likely|even|also|materially|significantly|substantially)\s+)*' + _JUDGMENT_WORD + r')*', re.I)
+_TAIL_OBJECT_WORDS = frozenset({'of', 'actual', 'real', 'true', 'bare', 'as', 'than', 'compared', 'with', 'to',
+                                'relative', 'against', 'versus', 'vs', 'vs.'})
+
+
+def _replaceable(text, pair):
+    """The text from a judgment to its clause's end is what the pair's clarification may replace (_JUDGMENT_TAIL)."""
+    text = _REF.sub('', text)
+    judgments = _JUDGMENT_TAIL.match(text)
+    if not judgments:
+        return False
+    rest = text[judgments.end():]
+    rest = re.sub(r'\b(page|slide)\s+(\d+)\b', r'\1-\2', re.sub(r'\bper\s+(month|week|day|year)\b', r'/\1', rest, flags=re.I),
+                  flags=re.I)
+    words = rest[:re.search(r'\s*[.!]?["”’)]*\s*$', rest).start()].split()
+    return all(word.lower() in _DETERMINERS or word.lower() in _TAIL_OBJECT_WORDS or
+               word.lower() in _SUBJECT_QUALIFIERS or _MEASURE_HEAD.fullmatch(word) or _FIGURE_HEAD.fullmatch(word) or
+               _pair_basis(word, pair) or _pair_word(word, pair) or _pair_page(word, pair)
+               for word in words)
+
+
+_TAIL_INTERVAL = re.compile(r'(?:(?P<adjective>monthly|weekly|daily|yearly)|/\s?(?P<rate>month|week|day|year)|'
+                            r'(?P<cumulative>cumulative(?:ly)?)|(?P<interval>interval))', re.I)
+
+
+def _pair_basis(word, pair):
+    """A basis word after the judgment names one of the pair's own bases (Pair.intervals): "the monthly figure",
+    "the cumulative figure" for this pair, never "the yearly count" (review of 71ece83). "interval" names no other
+    figure; any other basis wording ("run-rate") is not read as the pair's."""
+    hit = _TAIL_INTERVAL.fullmatch(word)
+    if not hit:
+        return False
+    if hit['interval']:
+        return True
+    if hit['cumulative']:
+        return 'cumulative' in pair.intervals
+    rate = hit['rate'] or {'monthly': 'month', 'weekly': 'week', 'daily': 'day', 'yearly': 'year'}[hit['adjective'].lower()]
+    return rate.lower() in pair.intervals
+
+
+def _pair_page(word, pair):
+    """A page or slide after the judgment is one the pair's members are on (Pair.pages): "the page-10 count", never
+    "the page-99 count" (review of 71ece83)."""
+    hit = re.fullmatch(r'(?:page|slide)-?(\d+)', word, re.I)
+    return bool(hit) and int(hit.group(1)) in pair.pages
+
+
+def _pair_placing(word, pair):
+    """A subject word that places the pair's own figure (review of 8f11844): one of its bases (_pair_basis), alone
+    or on its noun or figure ("messages/month", "500M/month"), one of its pages (_pair_page), or its own vocabulary
+    (_pair_word). "The page-99 figure", "the yearly figure" and "the cumulative, monthly, and daily figures" name a
+    figure the pair does not establish, so the judgment is not the pair's."""
+    hits = list(_BASIS_WORDS.finditer(word))
+    if hits:
+        rest = _BASIS_WORDS.sub('', word).strip('/-')
+        return (all(_pair_basis(hit.group(0).replace(' ', ''), pair) for hit in hits) and
+                (not rest or _pair_word(rest, pair)))
+    return _pair_word(word, pair) or _pair_page(word, pair)
+
+
+def _has_verb(text):
+    """The text has a verb (_ITEM_VERB). A participle or judgment word after its determiner, with only placing words
+    between, modifies the figure and is not a verb: "The reported monthly figure [S2], and the larger figure [S3] are
+    overstated" is one compound subject, "Management reported the monthly figure [S2], and …" two clauses (review of
+    72418e2)."""
+    for hit in _ITEM_VERB.finditer(text):
+        before = re.findall(r"[\w'’]+", _REF.sub('', text[:hit.start()]))
+        while before and (before[-1].lower() in _SUBJECT_QUALIFIERS or _BASIS_WORDS.fullmatch(before[-1])):
+            before.pop()
+        if not (before and before[-1].lower() in _DETERMINERS):
+            return True
+    return False
+
+
+def _names_pair(text, pair):
+    """The text names the pair's figures or their bases: a basis word, a figure referent ("the larger figure"), or
+    the pair's counted noun. Read for the condition a judgment depends on ("If the cumulative figure is presented as
+    monthly, the claim is overstated"); citations never match."""
+    return bool(_BASIS_WORDS.search(text) or _FIGURE_REFERENT.search(text) or
+                (pair.noun and re.search(rf'\b{re.escape(pair.noun[:-1])}s?\b', text, re.I)))
+
+
+def _pair_word(word, pair):
+    """A word of the pair's own vocabulary: its counted noun, a topic of its evidence, or one of its figures."""
+    return bool((pair.noun and re.fullmatch(rf'{re.escape(pair.noun[:-1])}s?', word, re.I)) or
+                word.lower() in pair.topics or word.rstrip('+').lower() in pair.figures)
+
+
+def _owns_subject(segment, position, pair):
+    """The judgment at `position` in its clause is about the pair. Its subject is the pair's (see _FIGURE_HEAD): a
+    pair head and qualifiers that all place or qualify the pair's figure. After a condition naming the pair the head
+    may instead be a measure carrying the pair's basis ("the implied monthly activity", memo 100); the qualifiers are
+    read either way ("If the figures are monthly, the hiring claim is overstated" is not the pair's; review of
+    a6dcddf). Anything else in the clause leaves whose judgment it is open, so the clause is not the pair's: words
+    before the subject that are not a condition ("Management says", "In management's view,"). Text after the judgment
+    ("…, in management's view", "(in management's view)") is read in _judged_segments, for both rules (_replaceable;
+    review of 72418e2)."""
+    tokens = re.findall(r"[\w'’/.+-]+|,", _REF.sub('', segment[:position]))
+    while tokens and tokens[-1].lower() in _VERB_GROUP:
+        tokens.pop()
+    subject = []
+    while tokens and tokens[-1] != ',' and tokens[-1].lower() not in _DETERMINERS:
+        subject.insert(0, tokens.pop().strip('.'))
+    while {'and', 'or'} & {word.lower() for word in subject} and tokens and tokens[-1] == ',':
+        tokens.pop()                         # a serial list's earlier items: "The cumulative, monthly, and daily …"
+        while tokens and tokens[-1] != ',' and tokens[-1].lower() not in _DETERMINERS:
+            subject.insert(0, tokens.pop().strip('.'))
+    if tokens and tokens[-1] != ',':
+        tokens.pop()                         # the subject's determiner
+    if tokens and re.fullmatch(r'\d+[.)]?|[-+]', tokens[0]):
+        tokens.pop(0)                        # a list number or marker
+    if not subject:
+        return False
+    before = ' '.join(tokens)
+    condition = bool(tokens) and _CONDITION.fullmatch(tokens[0]) and tokens.count(',') == 1 and tokens[-1] == ','
+    if tokens and not condition:
+        return False
+    head, qualifiers = subject[-1], subject[:-1]
+    if not all(_pair_placing(word, pair) or word.lower() in _SUBJECT_QUALIFIERS for word in qualifiers):
+        return False
+    if (_FIGURE_HEAD.fullmatch(head) or head.lower() in pair.topics or
+            (_pair_word(head, pair) and any(word.rstrip('+').lower() in pair.figures for word in qualifiers))):
+        return True
+    # The consequence of a condition about the pair: a measure the pair's figures stand for, with the pair's basis.
+    return bool(condition and _names_pair(before, pair) and _MEASURE_HEAD.fullmatch(head) and
+                any(_BASIS_WORDS.search(word) or _pair_word(word, pair) for word in qualifiers))
+
+
+def _clauses(sentence):
+    """The sentence split at _CLAUSE_SPLIT, except at the comma closing a serial list: when the clause before it has
+    a bare comma and no verb at all ("The cumulative, monthly, and daily figures are overstated"). A clause with a verb
+    is a clause, whatever its commas ("The monthly figure is inflated, in management's view, but …"; review of
+    a6dcddf)."""
+    parts = _CLAUSE_SPLIT.split(sentence)
+    out = parts[:1]
+    for separator, segment in zip(parts[1::2], parts[2::2]):
+        left = out[-1]
+        if separator.startswith(',') and ',' in left and not _has_verb(left):
+            out[-1] += separator + segment
+        else:
+            out += [separator, segment]
+    return out
+
+
+def _judged_segments(sentence, pair):
+    """The sentence split into clauses (_CLAUSE_SPLIT); the chain of every segment; and for each segment holding a
+    judgment: whether a pair referent governs it, whether it is denied, its chain, and whether the judgment is the
+    pair's. A referent governs its own segment and the continuation fragments that follow it after a dash or a
+    linking comma ("These figures ... — raising the possibility of inflation", memo 101, OF-905). A ";" clause, or
+    any other segment that is not a continuation fragment (a new subject: "— an analyst is wrong"), starts a new
+    chain. A denial before the referent, or of an earlier judgment in the chain, covers the judgments that continue
+    it ("Nothing suggests these figures are wrong — or inflated"; review of 750de3f). A judgment is the pair's when a
+    referent governs it or one of its chain's judgments has the pair as its subject (_owns_subject); any other
+    judgment is about something else ("— misleading advertising is wrong [S2, S3]", "— monthly costs are inflated";
+    reviews of 9b28e14 and 8d7f8dc). Neither makes it the pair's when its chain's first clause goes on past the
+    judgment with text the clarification would delete (_replaceable: "(in management's view)", "according to
+    management"; review of 72418e2); continuation fragments are a fixed grammar and need no such reading."""
+    parts = _clauses(sentence)
+    judged, chains, governed, denied, chain, opened = [], [], False, False, 0, set()
+    for i in range(0, len(parts), 2):
+        segment = parts[i]
+        if i and (parts[i - 1].strip() == ';' or not _CONTINUATION.fullmatch(segment)):
+            governed, denied, chain = False, False, chain + 1     # a new clause or a new subject
+        chains.append(chain)
+        referent = _PAIR_REFERENT.search(segment)
+        if referent:
+            governed = True
+            denied = denied or _denied(segment, referent.start())
+        judgment = _JUDGMENT.search(segment)
+        if judgment:
+            denied = denied or _denied(segment, judgment.start())
+            judged.append((i, governed, denied, chain))
+            if (not i or chains[-2] != chain) and not _replaceable(segment[judgment.start():], pair):
+                opened.add(chain)            # text after the judgment the clarification would delete
+    owned = {c for k, c in enumerate(chains)
+             if any(_owns_subject(parts[2 * k], hit.start(), pair) for hit in _JUDGMENT.finditer(parts[2 * k]))}
+    judged = [(i, governed, denied, c, (governed or c in owned) and c not in opened) for i, governed, denied, c in judged]
+    return parts, judged, chains
+
+
+def _referent_judged(sentence, pair):
+    """Every judgment of the pair is governed by "one or both figures" / "these figures": _referent_judgment decides
+    it, with its protections (a denial, a contradicted pair, the sentence's other clauses; reviews of 1801ec5 and
+    memo 101). Judgments that are not the pair's are left to neither rule."""
+    _, judged, _ = _judged_segments(sentence, pair)
+    return all(governed for _, governed, _, _, owned in judged if owned)
 
 
 def _judgment(sentence, pair, changes):
-    """An error judgment about the pair's bases becomes its neutral clarification; its citations stay."""
-    if _asks(sentence) or not _JUDGMENT.search(sentence) or _referent_judged(sentence):
+    """An error judgment about the pair's bases becomes its neutral clarification; its citations stay. Only the
+    chains holding the pair's judgments are replaced, adjacent ones by one clarification; every other clause stays
+    as written, whether it judges something else or states a fact ("; management has not clarified the
+    definitions"; reviews of 9b28e14 and 8d7f8dc)."""
+    if _asks(sentence) or not _JUDGMENT.search(sentence) or _referent_judged(sentence, pair):
         return sentence
     if not (_BASIS_WORDS.search(sentence) or _cited(sentence)):
         return sentence
-    lead = _LEAD.match(sentence).group('lead')
-    groups = ' '.join(f'[{group}]' for group in _REF.findall(sentence))
+    parts, judged, chains = _judged_segments(sentence, pair)
+    mine = {chain for _, _, _, chain, owned in judged if owned}          # not empty: see _referent_judged
+    runs = []                                # (the pair's?, first part index, last part index)
+    for k, chain in enumerate(chains):
+        if runs and (chain in mine) == runs[-1][0]:
+            runs[-1][2] = 2 * k
+        else:
+            runs.append([chain in mine, 2 * k, 2 * k])
+    for is_mine, first, _ in runs:
+        if is_mine and first and parts[first - 1].startswith(',') and not _has_verb(parts[first - 2]):
+            return sentence                  # a compound subject, not two clauses (review of a6dcddf)
     changes.append('basis_overstatement')
-    return f"{lead}{pair.clarification}{' ' + groups if groups else ''}."
+    out = []
+    for is_mine, first, last in runs:
+        text = ''.join(parts[first:last + 1])
+        if is_mine:                          # the pair's clauses: one clarification, their citations, their end
+            end = re.search(r'[.!]?["”’)]*\s*$', text).group(0)
+            groups = ' '.join(f'[{group}]' for group in _REF.findall(text))
+            lead = _LEAD.match(text).group('lead') if first == 0 else text[:len(text) - len(text.lstrip())]
+            words = pair.clarification if first == 0 else pair.clarification[0].lower() + pair.clarification[1:]
+            text = f"{lead}{words}{' ' + groups if groups else ''}{end}"
+        out.append((parts[first - 1] if first else '') + text)
+    return ''.join(out)
 
 
 def _referent_judgment(sentence, pair, changes):
@@ -328,18 +669,21 @@ def _referent_judgment(sentence, pair, changes):
     sentence's other clauses stay (OF-806)."""
     if pair.contradicted or _asks(sentence) or not _PAIR_REFERENT.search(sentence):
         return sentence
-    parts = re.split(r'(;\s*)', sentence)
-    hit = False
-    for i in range(0, len(parts), 2):
-        clause = parts[i]
-        referent, judgment = _PAIR_REFERENT.search(clause), _JUDGMENT.search(clause)
-        if referent is None or judgment is None or _denied(clause, referent.start()) or _denied(clause, judgment.start()):
+    parts, judged, _ = _judged_segments(sentence, pair)
+    hit, replaced = False, set()
+    for i, governed, denied, chain, owned in judged:
+        if not (governed and owned) or denied:
             continue
-        lead = _LEAD.match(clause).group('lead') if i == 0 else clause[:len(clause) - len(clause.lstrip())]
+        clause = parts[i]
         end = re.search(r'[.!]?["”’)]*\s*$', clause).group(0)
         groups = ' '.join(f'[{group}]' for group in _REF.findall(clause))
+        if chain in replaced:                # a coordinated judgment of the same figures: one clarification
+            parts[i - 1], parts[i] = '', (' ' + groups if groups else '') + end
+            continue
+        lead = _LEAD.match(clause).group('lead') if i == 0 else clause[:len(clause) - len(clause.lstrip())]
         text = pair.clarification if i == 0 else pair.clarification[0].lower() + pair.clarification[1:]
         parts[i] = f"{lead}{text}{' ' + groups if groups else ''}{end}"
+        replaced.add(chain)
         hit = True
     if not hit:
         return sentence
@@ -348,8 +692,10 @@ def _referent_judgment(sentence, pair, changes):
 
 
 def _referent(sentence, pair, changes):
-    """"the cumulative figure" when this pair admits nothing cumulative: the figure has no stated interval."""
-    if pair.cumulative_admitted or not _CUMULATIVE_REFERENT.search(sentence):
+    """"the cumulative figure" when this pair admits nothing cumulative and has a side with no stated interval: that
+    figure has no stated interval. A pair of two stated rates has no such figure, so nothing is relabelled (review of
+    8f11844)."""
+    if pair.cumulative_admitted or not pair.unspecified_members or not _CUMULATIVE_REFERENT.search(sentence):
         return sentence
     changes.append('basis_cumulative_referent')
     return _CUMULATIVE_REFERENT.sub(lambda m: ('T' if m.group('the') == 'T' else 't') + UNSPECIFIED[1:], sentence)
@@ -506,6 +852,26 @@ def _placing_head(sentence, start, clause, cited, facts, clarified):
     return sentence[:start] + clause[:len(clause) - len(clause.lstrip())] + 'the deck states '
 
 
+# The words that may lead the company's own figures into a clause with no reporting verb, besides the placing words
+# and the cited statements' own words: its own source named ("the deck's", "the self-reported") and the "taking ...
+# at face value" frame (memo 101's base scenario).
+_OWN_HEAD_WORDS = frozenset({'selfreported', 'company', "company's", 'deck', "deck's", 'pitch', 'presentation',
+                             "presentation's", 'founders', "founders'", 'founder', "founder's", 'management',
+                             "management's", 'taking', 'at', 'face', 'value'})
+
+
+def _own_head(head, cited, facts):
+    """Every word before the moved citations is the company's own source, a placing word, or a word or figure of the
+    cited statements: no other speaker ("An analyst describes the deck's ...", "An analyst's reading of ...") and no
+    aside (a parenthesis is not a plain gap). An allowlist, so an unlisted third party or verb keeps the sentence
+    (review of 7fb484b)."""
+    statements = [_DIGIT_GROUP.sub('', fact.lower()) for ref, *_, fact in facts.places if ref in cited]
+    vocabulary = (_PLACING_WORDS | _OWN_HEAD_WORDS | {word for fact in statements for word in re.findall(r'[a-z]+', fact)}
+                  | {form for fact in statements for form in _stated_forms(fact)})
+    text = re.sub(r'\bself-reported\b', 'selfreported', head[_LEAD.match(head).end():], flags=re.I)
+    return _plain_words(text, vocabulary)
+
+
 def _reporting_verb(clause):
     """The clause's first reporting verb outside parentheses ("the company states ...")."""
     for match in _REPORTING.finditer(clause):
@@ -560,15 +926,19 @@ def _context_aside(sentence, facts, changes):
     if _asks(sentence) or not facts.pairs:
         return sentence
     places = {ref: (page, context, fact) for ref, page, context, fact in facts.places}
-    for match in _CONTEXT_ASIDE.finditer(sentence):
-        if _conditional(sentence, match.start()):
+    found = [(m.start(), m.end(), m.group('ctx'), True) for m in _CONTEXT_ASIDE.finditer(sentence)]
+    found += [(m.start(), m.end(), m.group('ctx') or m.group('ctx2'), False) for m in _CONTEXT_PHRASE.finditer(sentence)
+              if sentence[:m.start()].count('(') == sentence[:m.start()].count(')')]   # an aside's own words: above
+    for at, end, claimed, aside in sorted(found):
+        if _conditional(sentence, at):
             continue
-        start = _place_clause_start(sentence, match.start())
-        groups = list(_REF.finditer(sentence, start, match.start()))
+        if not _CLAUSE_END.match(sentence, end):
+            continue                           # mid-clause ("... is the headline figure"): no place for the fact
+        start = _place_clause_start(sentence, at)
+        groups = list(_REF.finditer(sentence, start, at))
         cited = [ref for group in groups for ref in _split_refs(group.group(1))]
         if not cited or any(ref not in places for ref in cited):
             continue
-        claimed = match.group('ctx')
         outside = [ref for ref in cited if places[ref][1] != claimed]
         inside = [ref for ref in cited if places[ref][1] == claimed]
         if not outside or not inside or set(outside) & facts.narrated:
@@ -582,14 +952,25 @@ def _context_aside(sentence, facts, changes):
                      for group in groups if set(_split_refs(group.group(1))) & set(outside))
         if not merged:
             continue                           # the page-12 figure is its own mention: not split here
-        # Only the company's own affirmative statement: its subject right before the reporting verb that the moved
-        # citations follow, and no denial or hedge in the clause (review of 1801ec5).
+        # Only an affirmative statement of the company's own figures: a reporting verb the moved citations follow
+        # must have the company as its subject (review of 1801ec5); no narrator named in the clause, and no denial
+        # or hedge in it.
         first = min(group.start() for group in groups if set(_split_refs(group.group(1))) & set(outside))
         head = sentence[start:first]
-        verbs = [verb for verb in _REPORTING.finditer(head) if head[:verb.start()].count('(') == head[:verb.start()].count(')')]
-        if not verbs or not _OWN_SUBJECT_END.search(head[:verbs[-1].start()]):
+        verbs = [verb for verb in _REPORTING.finditer(head) if head[:verb.start()].count('(') == head[:verb.start()].count(')')
+                 and head[verb.start() - 1:verb.start()] != '-']     # "self-reported" is an adjective, not a verb
+        if verbs and not _OWN_SUBJECT_END.search(head[:verbs[-1].start()]):
             continue
-        words = re.findall(r"[\w']+", _REF.sub(' ', sentence[start:match.start()]).lower())
+        clause = sentence[start:at]
+        if any(name.lower() in clause.lower() for name in facts.narrators):
+            continue
+        if _ATTRIBUTION.search(sentence[:at]):
+            continue                           # attributed to someone else (review of 750de3f)
+        if not verbs and not _OWN_SOURCE.search(clause):
+            continue                           # no reporting verb and no own source named: whose statement is unknown
+        if not verbs and not _own_head(head, cited, facts):
+            continue                           # someone else's words before the figures (review of 7fb484b)
+        words = re.findall(r"[\w']+", _REF.sub(' ', clause).lower())
         if set(words) & _DENIAL or _UNCERTAIN.search(' '.join(words)):
             continue
         out, pos = sentence[:start], start
@@ -597,22 +978,77 @@ def _context_aside(sentence, facts, changes):
             keep = [ref for ref in _split_refs(group.group(1)) if ref not in outside]
             out += sentence[pos:group.start()] + '[' + ', '.join(keep) + ']'
             pos = group.end()
-        out += sentence[pos:match.end()]
+        out += sentence[pos:end]
         runs = []                              # adjacent refs on one page and context share a run
         for ref in outside:
             if runs and runs[-1][0] == places[ref][:2]:
                 runs[-1][1].append(ref)
             else:
                 runs.append((places[ref][:2], [ref]))
-        body = ''.join(', and separately ' + ' and '.join(f'{places[ref][2]} [{ref}]' for ref in refs)
-                       + f' on page {page}' + (f", under '{context}'" if context else '')
-                       for (page, context), refs in runs)
+        facts_text = [' and '.join(f'{places[ref][2]} [{ref}]' for ref in refs) + f' on page {page}'
+                      + (f", under '{context}'" if context else '') for (page, context), refs in runs]
+        if aside or verbs:                     # the company's verb carries on: "..., and separately X on page 12"
+            body = ''.join(', and separately ' + text for text in facts_text)
+        else:                                  # no reporting verb to carry on: a clause of its own
+            body = '; the deck separately states ' + ', and separately '.join(facts_text)
         clarification = pair.clarification[0].lower() + pair.clarification[1:]
         if clarification not in sentence:
             body += f' ({clarification})'
         changes.append('basis_source_context')
-        return out + body + sentence[match.end():]
+        return out + body + sentence[end:]
     return sentence
+
+
+def _cumulative_presupposed(sentence, pair, facts, changes):
+    """"the cumulative and monthly ..." for a pair whose side without a stated interval is not admitted cumulative:
+    that side's interval is unspecified (memo 101, OF-906). The pair is the one the phrase's own following citation
+    group belongs to, or else the one the sentence resolved to; inside a condition too, since the phrase presupposes
+    rather than supposes. Questions are kept."""
+    if _asks(sentence) or not _CUMULATIVE_PAIR.search(sentence):
+        return sentence
+    hits = []
+
+    def owner(match):
+        group = _REF.search(sentence, match.end())
+        if group is None:
+            return pair
+        between = sentence[match.end():group.start()]
+        if re.search(r'[,;]', between) or _CLAUSE_CONNECTOR.search(between):
+            return None                      # the later citation is another clause's: ownership unknown
+        refs = set(_split_refs(group.group(1)))
+        owners = [p for p in facts.pairs if refs <= p.members]
+        return owners[0] if len(owners) == 1 else None
+
+    def neutral(match):
+        noun = _FIGURE_NOUN.match(sentence, match.end())
+        pair_noun = next((p.noun for p in facts.pairs if p.noun), '')
+        own_noun = rf'\b{re.escape(pair_noun[:-1])}s?\b' if pair_noun else None
+        if noun is None and not (own_noun and re.match(r'\s+' + own_noun, sentence[match.end():], re.I)):
+            return match.group(0)            # another metric's phrase ("the cumulative and monthly revenue")
+        if noun is not None:
+            # A generic figure noun names no metric of its own: a qualifier after it must name the pair's noun
+            # ("figures for messages", "presentations of the 500M messages figure"), never anything else ("figures
+            # for revenue", "figures for bots"; review of 7fb484b).
+            after = sentence[noun.end():]
+            if re.match(r'\s+(?:for|of|on|about|in|from|across)\b', after, re.I) and not (own_noun and re.match(
+                    r'\s+\w+\s+(?:(?:the|a|an|these|those)\s+)?(?:[$\d][\w.,+/$]*\s+)?' + own_noun, after, re.I)):
+                return match.group(0)
+        mine = owner(match)
+        if mine is None or mine.cumulative_admitted or not mine.unspecified_members:
+            return match.group(0)            # admitted cumulative, or no side without a stated interval (two rates)
+        group = _REF.search(sentence, match.end())
+        if _OTHER_METRIC.search(sentence[_place_clause_start(sentence, match.start()):
+                                         group.start() if group else len(sentence)]):
+            return match.group(0)            # another metric named before the owning citation ("differ from revenue")
+        hits.append(match.group(0))
+        word = 'cum1' if match.group('cum1') else 'cum2'
+        s, e = match.start(word) - match.start(), match.end(word) - match.start()
+        return match.group(0)[:s] + UNSPECIFIED_ADJECTIVE + match.group(0)[e:]
+
+    out = _CUMULATIVE_PAIR.sub(neutral, sentence)
+    if hits:
+        changes.append('basis_cumulative_presupposed')
+    return out
 
 
 def _condition_attribution(sentence, before, facts, changes):
@@ -665,6 +1101,7 @@ def guard_basis_wording(text, facts):
             previous = pair
         elif not _bridges(sentence):
             previous = None                  # another metric, another citation or an unresolved figure
+        sentence = _cumulative_presupposed(sentence, pair, facts, changes)
         out.append(sentence + separator)
         before = sentence
         if '\n' in separator:

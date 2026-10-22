@@ -1,0 +1,36 @@
+"""Review of 71ece83: comparisons after the judgment whose page or interval is not the pair's. Memo 101 payload,
+full normalisation -> time -> funding -> basis sequence; working tree. No model call, no database."""
+from zelda_api.tests_output_fidelity import replay, items_from, notes_from, memo101_payload, PAIR_LEAD
+from zelda_api.basis_fidelity import basis_facts
+p = memo101_payload(); items, notes = items_from(p), notes_from(p)
+for pair in basis_facts(items, notes).pairs:
+    print('pair', pair.refs, sorted(getattr(pair, 'pages', ())), sorted(getattr(pair, 'bases', ())))
+CASES = [
+    "The monthly figure is overstated compared with the page-99 count [S2, S3].",
+    "These figures are overstated compared with the yearly count [S2, S3].",
+    "The monthly figure is overstated compared with the page 99 count [S2, S3].",
+    "The monthly figure is overstated compared with the slide-7 figure [S2, S3].",
+    "The monthly figure is overstated compared with the weekly figure [S2, S3].",
+    "The monthly figure is overstated compared with the daily count [S2, S3].",
+    "The monthly figure is overstated compared with the run-rate [S2, S3].",
+    "One or both figures may be overstated compared with the yearly count [S2, S3].",
+    "One or both figures may misrepresent the page-99 count [S2, S3].",
+    "These figures may overstate the weekly activity [S2, S3].",
+    # the pair's own pages and intervals: still repaired
+    "The monthly figure is overstated compared with the page-10 count [S2, S3].",
+    "The monthly figure is overstated compared with the page 10 count [S2, S3].",
+    "The monthly figure is overstated compared with the slide-12 figure [S2, S3].",
+    "The page-10 figure is overstated compared with the monthly figure [S2, S3].",
+    "These figures are overstated compared with the monthly count [S2, S3].",
+    "The monthly figure is overstated compared with the cumulative figure [S2, S3].",
+    "One or both figures may misrepresent the scale of actual activity [S2, S3].",
+    "One or both figures may overstate the page-12 count [S2, S3].",
+    "These figures may overstate the monthly activity [S2, S3].",
+    # subject side (not in this review's scope; reported)
+    "The page-99 figure is overstated [S2, S3].",
+    "The yearly figure is overstated [S2, S3].",
+]
+for text in CASES:
+    out, ch = replay({'s': PAIR_LEAD + text}, items, notes)
+    out = out['s'][len(PAIR_LEAD):]
+    print(('KEPT     ' if out == text else f"{ch.get('s')} ") + text + ('' if out == text else '\n           -> ' + out))

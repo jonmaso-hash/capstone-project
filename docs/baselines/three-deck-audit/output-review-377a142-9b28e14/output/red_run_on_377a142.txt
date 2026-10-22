@@ -1,0 +1,244 @@
+worktree head=ee47a9ad92c82d60e519e1b8eadc1feaa3a96317; basis_fidelity.py identical to 377a142: yes; tests: new Review377a142Tests + PipelineReview377a142Tests (uncommitted)
+2026-10-19 12:25:32,527 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-19 12:26:26,879 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-19 12:26:26,909 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-19 12:26:26,961 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-19 12:26:26,966 INFO zelda_api.intelligence_pipeline - Memo market_analysis: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-19 12:26:26,967 INFO zelda_api.intelligence_pipeline - Memo team_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-19 12:26:26,969 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-19 12:26:26,970 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-19 12:26:26,975 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-19 12:26:26,977 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-19 12:26:27,004 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+FFFFFFFFFF.
+======================================================================
+FAIL: test_the_writer_keeps_them (zelda_api.tests_output_fidelity.PipelineReview377a142Tests.test_the_writer_keeps_them)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2476, in test_the_writer_keeps_them
+    self.assertEqual(memo.market_analysis, REVIEW_377_KEPT[0])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '- Th[115 chars]on — how the figure stated without an explicit[83 chars] on.' != '- Th[115 chars]on — misleading advertising is wrong.'
+- - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on.
++ - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — misleading advertising is wrong.
+
+
+======================================================================
+FAIL: test_an_independent_subject_after_a_dash_is_kept (zelda_api.tests_output_fidelity.Review377a142Tests.test_an_independent_subject_after_a_dash_is_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — misleading advertising is wrong.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2441, in test_an_independent_subject_after_a_dash_is_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[116 chars]on — how the figure stated without an explicit[113 chars]nt']) != ('- T[116 chars]on — misleading advertising is wrong.', [])
+
+First differing element 0:
+'- Th[115 chars]on — how the figure stated without an explicit[83 chars] on.'
+'- Th[115 chars]on — misleading advertising is wrong.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. These figures need clarification — misleading advertising is '
++  'wrong.',
++  [])
+-  'on page 12. These figures need clarification — how the figure stated without '
+-  'an explicit interval relates to the monthly figure needs clarification '
+-  'before either is relied on.',
+-  ['basis_referent_judgment'])
+
+======================================================================
+FAIL: test_an_independent_subject_after_a_dash_is_kept (zelda_api.tests_output_fidelity.Review377a142Tests.test_an_independent_subject_after_a_dash_is_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — inflation is affecting costs.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2441, in test_an_independent_subject_after_a_dash_is_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[116 chars]on — how the figure stated without an explicit[113 chars]nt']) != ('- T[116 chars]on — inflation is affecting costs.', [])
+
+First differing element 0:
+'- Th[115 chars]on — how the figure stated without an explicit[83 chars] on.'
+'- Th[115 chars]on — inflation is affecting costs.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. These figures need clarification — inflation is affecting costs.',
++  [])
+-  'on page 12. These figures need clarification — how the figure stated without '
+-  'an explicit interval relates to the monthly figure needs clarification '
+-  'before either is relied on.',
+-  ['basis_referent_judgment'])
+
+======================================================================
+FAIL: test_an_independent_subject_after_a_dash_is_kept (zelda_api.tests_output_fidelity.Review377a142Tests.test_an_independent_subject_after_a_dash_is_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — wrong assumptions drive the model.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2441, in test_an_independent_subject_after_a_dash_is_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[116 chars]on — how the figure stated without an explicit[113 chars]nt']) != ('- T[116 chars]on — wrong assumptions drive the model.', [])
+
+First differing element 0:
+'- Th[115 chars]on — how the figure stated without an explicit[83 chars] on.'
+'- Th[115 chars]on — wrong assumptions drive the model.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. These figures need clarification — wrong assumptions drive the '
++  'model.',
++  [])
+-  'on page 12. These figures need clarification — how the figure stated without '
+-  'an explicit interval relates to the monthly figure needs clarification '
+-  'before either is relied on.',
+-  ['basis_referent_judgment'])
+
+======================================================================
+FAIL: test_an_independent_subject_after_a_dash_is_kept (zelda_api.tests_output_fidelity.Review377a142Tests.test_an_independent_subject_after_a_dash_is_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — overstated expectations are common.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2441, in test_an_independent_subject_after_a_dash_is_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[116 chars]on — how the figure stated without an explicit[113 chars]nt']) != ('- T[116 chars]on — overstated expectations are common.', [])
+
+First differing element 0:
+'- Th[115 chars]on — how the figure stated without an explicit[83 chars] on.'
+'- Th[115 chars]on — overstated expectations are common.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. These figures need clarification — how the figure stated without '
+?                                                  - ^^^^ ----- --       ^ -- ^^
+
++  'on page 12. These figures need clarification — overstated expectations are '
+?                                                   ^         ^^^^^^^^  ^^^^^^
+
++  'common.',
++  [])
+-  'an explicit interval relates to the monthly figure needs clarification '
+-  'before either is relied on.',
+-  ['basis_referent_judgment'])
+
+======================================================================
+FAIL: test_an_independent_subject_after_a_dash_is_kept (zelda_api.tests_output_fidelity.Review377a142Tests.test_an_independent_subject_after_a_dash_is_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — or inflation is affecting costs.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2441, in test_an_independent_subject_after_a_dash_is_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[116 chars]on — how the figure stated without an explicit[113 chars]nt']) != ('- T[116 chars]on — or inflation is affecting costs.', [])
+
+First differing element 0:
+'- Th[115 chars]on — how the figure stated without an explicit[83 chars] on.'
+'- Th[115 chars]on — or inflation is affecting costs.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. These figures need clarification — or inflation is affecting '
++  'costs.',
++  [])
+-  'on page 12. These figures need clarification — how the figure stated without '
+-  'an explicit interval relates to the monthly figure needs clarification '
+-  'before either is relied on.',
+-  ['basis_referent_judgment'])
+
+======================================================================
+FAIL: test_an_independent_subject_after_a_dash_is_kept (zelda_api.tests_output_fidelity.Review377a142Tests.test_an_independent_subject_after_a_dash_is_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — suggesting inflation is affecting costs.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2441, in test_an_independent_subject_after_a_dash_is_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[116 chars]on — how the figure stated without an explicit[113 chars]nt']) != ('- T[116 chars]on — suggesting inflation is affecting costs.', [])
+
+First differing element 0:
+'- Th[115 chars]on — how the figure stated without an explicit[83 chars] on.'
+'- Th[115 chars]on — suggesting inflation is affecting costs.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. These figures need clarification — how the figure stated without '
+?                                                  ^^^^^^ --------    ---- -- ^^
+
++  'on page 12. These figures need clarification — suggesting inflation is '
+?                                                  ^^^^   ++++++++    ^^^^
+
++  'affecting costs.',
++  [])
+-  'an explicit interval relates to the monthly figure needs clarification '
+-  'before either is relied on.',
+-  ['basis_referent_judgment'])
+
+======================================================================
+FAIL: test_an_independent_subject_after_a_dash_is_kept (zelda_api.tests_output_fidelity.Review377a142Tests.test_an_independent_subject_after_a_dash_is_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — possibly inflated expectations are common.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2441, in test_an_independent_subject_after_a_dash_is_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[116 chars]on — how the figure stated without an explicit[113 chars]nt']) != ('- T[116 chars]on — possibly inflated expectations are common.', [])
+
+First differing element 0:
+'- Th[115 chars]on — how the figure stated without an explicit[83 chars] on.'
+'- Th[115 chars]on — possibly inflated expectations are common.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. These figures need clarification — how the figure stated without '
+?                                                  ^ ^^^^^^ ^^^^^^^^     --------
+
++  'on page 12. These figures need clarification — possibly inflated '
+?                                                  ^ ^^^^^^^^^ ^
+
++  'expectations are common.',
++  [])
+-  'an explicit interval relates to the monthly figure needs clarification '
+-  'before either is relied on.',
+-  ['basis_referent_judgment'])
+
+======================================================================
+FAIL: test_an_independent_subject_after_a_dash_is_kept (zelda_api.tests_output_fidelity.Review377a142Tests.test_an_independent_subject_after_a_dash_is_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — inflation.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2441, in test_an_independent_subject_after_a_dash_is_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[116 chars]on — how the figure stated without an explicit[113 chars]nt']) != ('- T[116 chars]on — inflation.', [])
+
+First differing element 0:
+'- Th[115 chars]on — how the figure stated without an explicit[83 chars] on.'
+'- Th[115 chars]on — inflation.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. These figures need clarification — how the figure stated without '
+?                                                  ^^^^^^^^ ^^^^^^^^  ---- -- ^^^
+
++  'on page 12. These figures need clarification — inflation.',
+?                                                  ^^ ^    ^^ +
+
++  [])
+-  'an explicit interval relates to the monthly figure needs clarification '
+-  'before either is relied on.',
+-  ['basis_referent_judgment'])
+
+======================================================================
+FAIL: test_an_independent_subject_after_a_dash_is_kept (zelda_api.tests_output_fidelity.Review377a142Tests.test_an_independent_subject_after_a_dash_is_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. These figures need clarification — possibly inflated by bots.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2441, in test_an_independent_subject_after_a_dash_is_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[116 chars]on — how the figure stated without an explicit[113 chars]nt']) != ('- T[116 chars]on — possibly inflated by bots.', [])
+
+First differing element 0:
+'- Th[115 chars]on — how the figure stated without an explicit[83 chars] on.'
+'- Th[115 chars]on — possibly inflated by bots.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. These figures need clarification — possibly inflated by bots.',
++  [])
+-  'on page 12. These figures need clarification — how the figure stated without '
+-  'an explicit interval relates to the monthly figure needs clarification '
+-  'before either is relied on.',
+-  ['basis_referent_judgment'])
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.183s
+
+FAILED (failures=10)
+Destroying test database for alias 'default'...
+Found 3 test(s).
+System check identified no issues (0 silenced).

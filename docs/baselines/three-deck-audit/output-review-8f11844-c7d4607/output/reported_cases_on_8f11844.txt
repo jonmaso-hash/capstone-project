@@ -1,0 +1,37 @@
+
+== memo 101 pair (pages 10/12; unstated + monthly), full sequence
+['basis_overstatement'] The page-99 figure is overstated [S2, S3].
+           -> CLARIFY [S2, S3].
+['basis_overstatement'] The yearly figure is overstated [S2, S3].
+           -> CLARIFY [S2, S3].
+['basis_overstatement'] The weekly figure is overstated compared with the monthly figure [S2, S3].
+           -> CLARIFY [S2, S3].
+['basis_overstatement'] The page-99 monthly figure is overstated [S2, S3].
+           -> CLARIFY [S2, S3].
+['basis_overstatement'] The run-rate figure is overstated [S2, S3].
+           -> CLARIFY [S2, S3].
+['basis_overstatement'] The cumulative, monthly, and daily figures are overstated [S2, S3].
+           -> CLARIFY [S2, S3].
+['basis_overstatement'] If the figures are monthly, the implied weekly activity is overstated [S2, S3].
+           -> CLARIFY [S2, S3].
+['basis_overstatement'] The page-10 figure is overstated [S2, S3].
+           -> CLARIFY [S2, S3].
+['basis_overstatement'] The monthly figure is overstated [S2, S3].
+           -> CLARIFY [S2, S3].
+['basis_overstatement'] The cumulative figure is overstated [S2, S3].
+           -> CLARIFY [S2, S3].
+['basis_overstatement'] The 500M messages/month figure is overstated [S2, S3].
+           -> CLARIFY [S2, S3].
+['basis_overstatement'] The cumulative and monthly figures are overstated [S2, S3].
+           -> CLARIFY [S2, S3].
+['basis_overstatement'] If the figures are monthly, the implied monthly activity is overstated [S2, S3].
+           -> CLARIFY [S2, S3].
+== monthly (page 3) / daily (page 4) pair, basis guard
+['basis_cumulative_referent'] The daily figure [C11] is overstated compared with the cumulative figure [C10].
+           -> The daily figure [C11] is overstated compared with the figure stated without an explicit interval [C10].
+['basis_cumulative_referent'] The cumulative figure [C10] sits beside a daily rate [C11].
+           -> The figure stated without an explicit interval [C10] sits beside a daily rate [C11].
+['basis_cumulative_presupposed'] The cumulative and daily figures [C10, C11] differ.
+           -> The unspecified-interval and daily figures [C10, C11] differ.
+['basis_cumulative_presupposed'] The cumulative and monthly presentations [C10, C11] need clarification.
+           -> The unspecified-interval and monthly presentations [C10, C11] need clarification.

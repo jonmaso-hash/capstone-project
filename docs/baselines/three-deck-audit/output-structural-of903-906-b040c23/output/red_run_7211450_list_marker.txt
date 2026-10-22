@@ -1,0 +1,35 @@
+== red run: basis_fidelity.py from 7211450 (git show), tests at working tree
+2026-10-18 23:21:01,952 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+.F
+======================================================================
+FAIL: test_shared_context_is_split_by_source (zelda_api.tests_output_fidelity.Of903SharedContextTests.test_shared_context_is_split_by_source) (text="- The company states 500M messages [S2, S3] in a slide context headed 'Traction by Apr-16'.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2087, in test_shared_context_is_split_by_source
+    self.assertEqual(self.full(text), (after, ['basis_source_context']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("- T[30 chars]s [S2, S3] in a slide context headed 'Traction[13 chars], []) != ("- T[30 chars]s [S2] in a slide context headed 'Traction by [213 chars]xt'])
+
+First differing element 0:
+"- Th[29 chars]s [S2, S3] in a slide context headed 'Traction by Apr-16'."
+"- Th[29 chars]s [S2] in a slide context headed 'Traction by [186 chars]on)."
+
+- ('- The company states 500M messages [S2, S3] in a slide context headed '
+?  ^                                      ----
+
++ ("- The company states 500M messages [S2] in a slide context headed 'Traction "
+?  ^                                                                   ++++++++++
+
+-  "'Traction by Apr-16'.",
+-  [])
++  "by Apr-16', and separately 500M messages/month [S3] on page 12 (how the "
++  'figure stated without an explicit interval relates to the monthly figure '
++  'needs clarification before either is relied on).',
++  ['basis_source_context'])
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.101s
+
+FAILED (failures=1)
+Found 2 test(s).
+System check identified no issues (0 silenced).

@@ -1,0 +1,13 @@
+head=8f11844
+
+frozenset({'day', 'month'}) frozenset({3, 4}) How the monthly figure relates to the daily figure needs clarification before either is relied on
+The daily figure [C11] is overstated compared with the cumulative figure [C10]. 
+  -> ('The daily figure [C11] is overstated compared with the figure stated without an explicit interval [C10].', ['basis_cumulative_referent'])
+The daily figure [C11] is overstated compared with the monthly figure [C10]. 
+  -> ('How the monthly figure relates to the daily figure needs clarification before either is relied on [C11] [C10].', ['basis_overstatement'])
+The daily figure [C11] is overstated compared with the page-3 figure [C10]. 
+  -> ('How the monthly figure relates to the daily figure needs clarification before either is relied on [C11] [C10].', ['basis_overstatement'])
+The daily figure [C11] is overstated compared with the cumulative activity [C10]. 
+  -> ('The daily figure [C11] is overstated compared with the cumulative activity [C10].', [])
+The daily figure [C11] is overstated compared with the monthly activity [C10]. 
+  -> ('How the monthly figure relates to the daily figure needs clarification before either is relied on [C11] [C10].', ['basis_overstatement'])

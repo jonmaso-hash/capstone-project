@@ -1,0 +1,77 @@
+"""Review of 72418e2: re-anchor Y2, Z4, N2, N10 (same meaning), retire N3 (its comma check is replaced by the
+_replaceable tail read; K6 mutates that read away), add K1-K14."""
+p = 'mutate_x.py'
+s = open(p, encoding='utf-8').read()
+
+
+def entry(mid):
+    a = s.index(f"    ('{mid}',")
+    ends = [i for i in (s.find("\n    ('", a + 1), s.find("\n    #", a + 1), s.find("\n]", a + 1)) if i != -1]
+    return a, min(ends) + 1
+
+
+def replace_entry(mid, text):
+    global s
+    a, b = entry(mid)
+    s = s[:a] + text + s[b:]
+
+
+replace_entry('Y2', '''    ('Y2', "review 9b28e14: every judgment is the pair's (ownership not read; re-anchored)",
+     "    judged = [(i, governed, denied, c, (governed or c in owned) and c not in opened) for i, governed, denied, c in judged]",
+     "    judged = [(i, governed, denied, c, True) for i, governed, denied, c in judged]"),
+''')
+replace_entry('Z4', '''    ('Z4', 'review 8d7f8dc: a serial list is split at its last comma (garbled; re-anchored)',
+     "        if separator.startswith(',') and ',' in left and not _has_verb(left):", "        if False:"),
+''')
+replace_entry('N2', '''    ('N2', 'review a6dcddf: the list guard reads only the text after the last comma (the a6dcddf behaviour; re-anchored)',
+     "and ',' in left and not _has_verb(left):", "and ',' in left and not _has_verb(left.rsplit(',', 1)[1]):"),
+''')
+replace_entry('N10', '''    ('N10', 'review a6dcddf: a compound subject is split as two clauses ("The monthly figure [S2], and the larger figure [S3] are ..."; re-anchored)',
+     "        if is_mine and first and parts[first - 1].startswith(',') and not _has_verb(parts[first - 2]):\\n            return sentence",
+     "        if False:\\n            return sentence"),
+''')
+a, b = entry('N3')
+s = s[:a] + s[b:]
+
+K = r'''    # --- review of 72418e2: participle modifiers (_has_verb) and the replaceable tail (_replaceable) (K1-K14)
+    ('K1', 'review 72418e2: every -ed word is a verb (the 72418e2 behaviour: "The reported monthly figure [S2], and ...")',
+     "        if not (before and before[-1].lower() in _DETERMINERS):\n            return True", "        return True"),
+    ('K2', 'review 72418e2: placing words between the determiner and the participle are not skipped ("The company\'s reported")',
+     "        while before and (before[-1].lower() in _SUBJECT_QUALIFIERS or _BASIS_WORDS.fullmatch(before[-1])):\n            before.pop()\n", ""),
+    ('K3', 'positive: no word is ever a verb ("Management reported the monthly figure [S2], and ..." is two clauses)',
+     "        if not (before and before[-1].lower() in _DETERMINERS):\n            return True", "        if False:\n            return True"),
+    ('K4', 'review 72418e2: the list guard reads -ed modifiers as verbs ("The reported, monthly, and daily figures")',
+     "and ',' in left and not _has_verb(left):", "and ',' in left and not _ITEM_VERB.search(left):"),
+    ('K5', 'review 72418e2: the compound-subject check reads -ed modifiers as verbs',
+     "and not _has_verb(parts[first - 2]):", "and not _ITEM_VERB.search(parts[first - 2]):"),
+    ('K6', 'review 72418e2: the text after the judgment is not read ("(in management\'s view)", "according to management")',
+     "            if (not i or chains[-2] != chain) and not _replaceable(segment[judgment.start():], pair):", "            if False:"),
+    ('K7', 'review 72418e2: the referent rule ignores the tail ("These figures may be inflated (in management\'s view)")',
+     "        if not (governed and owned) or denied:", "        if not governed or denied:"),
+    ('K8', 'positive: continuation fragments are read as tails too (memo 101: "or imprecise reporting")',
+     "            if (not i or chains[-2] != chain) and not _replaceable(", "            if not _replaceable("),
+    ('K9', 'positive: no object after the judgment is replaceable (memo 100: "misrepresent the scale of actual activity")',
+     "    return all(word.lower() in _DETERMINERS or word.lower() in _TAIL_OBJECT_WORDS or",
+     "    return not words and all(word.lower() in _DETERMINERS or word.lower() in _TAIL_OBJECT_WORDS or"),
+    ('K10', 'review 72418e2: any object is replaceable ("the scale of hiring", "compared with the hiring plan")',
+     "    return all(word.lower() in _DETERMINERS or word.lower() in _TAIL_OBJECT_WORDS or",
+     "    return True or all(word.lower() in _DETERMINERS or word.lower() in _TAIL_OBJECT_WORDS or"),
+    ('K11', 'positive: the pair\'s own words are not object vocabulary ("compared with the bare bot count")',
+     "               _BASIS_WORDS.fullmatch(word) or _pair_word(word, pair) or re.fullmatch(",
+     "               _BASIS_WORDS.fullmatch(word) or re.fullmatch("),
+    ('K12', 'positive: a page or slide is not object vocabulary ("overstates the page-10 count")',
+     " or re.fullmatch(r'(?:page|slide)-?\d+', word, re.I)\n               for word in words)", "\n               for word in words)"),
+    ('K13', 'positive: coordinated judgments are not replaceable ("overstated and possibly misleading")',
+     "+ _JUDGMENT_WORD + r')*', re.I)", "+ _JUDGMENT_WORD + r'){0}', re.I)"),
+    ('K14', 'positive: comparison connectives are not object vocabulary ("compared with the cumulative figure", "as a monthly figure")',
+     "'bare', 'as', 'than', 'compared', 'with', 'to',", "'bare',"),
+'''
+marker = "\n]\n\n\ndef sha"
+assert s.count(marker) == 1
+s = s.replace(marker, "\n" + K.rstrip('\n') + marker)
+s = s.replace('"""Review of a6dcddf: N1-N10 added;',
+              '"""Review of 72418e2: K1-K14 added; Y2, Z4, N2, N10 re-anchored to _has_verb and the tail-aware ownership '
+              '(same meaning); N3 retired (its comma check is replaced by _replaceable, mutated away as K6). '
+              'Review of a6dcddf: N1-N10 added;', 1)
+open(p, 'w', encoding='utf-8').write(s)
+print('patched')

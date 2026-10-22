@@ -1,0 +1,12 @@
+import re, sys, collections
+lines = open(sys.argv[1], encoding='utf-8').read().splitlines()
+vers = [v.strip() for v in next(l for l in lines if l.startswith('versions:'))[9:].split('|')]
+t = collections.OrderedDict(); g = None
+for l in lines:
+    m = re.match(r'^\[(.*?)\] ', l)
+    if m: g = m.group(1); t.setdefault(g, collections.Counter()); continue
+    m = re.match(r'^\s+(.+?): (kept|CHANGED:.*)$', l)
+    if m and g: t[g][(m.group(1).strip(), 'kept' if m.group(2) == 'kept' else 'changed')] += 1
+print('versions:', vers)
+for g, c in t.items():
+    print(g + ': ' + ' | '.join(f"{v.split(' ')[0]} {c[(v,'kept')]}k/{c[(v,'changed')]}c" for v in vers))

@@ -1,0 +1,37 @@
+"""Review of 7fb484b: the reviewer's three cases (and this round's controls) through the full normalisation -> time ->
+funding -> basis sequence on memo 101's payload, with the basis guard loaded from git at 0664563 and 7fb484b and from
+the working tree. Run via manage.py shell -c exec(...). No model call, no database."""
+import importlib.util, subprocess, sys
+import zelda_api
+from zelda_api import basis_fidelity as current
+from zelda_api.tests_output_fidelity import replay, items_from, notes_from, memo101_payload, REVIEW_7FB_KEPT
+p = memo101_payload(); items, notes = items_from(p), notes_from(p)
+LEAD = "- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. "
+REVIEWER = [LEAD + "These figures need clarification — or Bob is wrong.",
+            LEAD + "These figures need clarification — marketing is misleading.",
+            "The cumulative and monthly figures for revenue differ from message counts [C2, C3].",
+            "An analyst describes the deck's 500M messages [S2, S3] in a slide context headed 'Traction by Apr-16'."]
+CASES = REVIEWER + [t for t in REVIEW_7FB_KEPT if t not in REVIEWER]
+
+
+def load(rev):
+    src = subprocess.run(['git', 'show', f'{rev}:zelda_api/basis_fidelity.py'], capture_output=True, text=True,
+                         encoding='utf-8', check=True).stdout
+    mod = importlib.util.module_from_spec(importlib.util.spec_from_loader('zelda_api.basis_fidelity', loader=None))
+    mod.__package__ = 'zelda_api'
+    exec(compile(src, f'{rev}:zelda_api/basis_fidelity.py', 'exec'), mod.__dict__)
+    return mod
+
+
+head = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True).stdout.strip()
+for label, mod in (('0664563', load('0664563')), ('7fb484b', load('7fb484b')), (f'{head} (working tree)', current)):
+    sys.modules['zelda_api.basis_fidelity'], zelda_api.basis_fidelity = mod, mod
+    print(f'===== basis guard at {label}')
+    for n, t in enumerate(CASES, 1):
+        out, ch = replay({'s': t}, items, notes)
+        tag = 'reviewer' if t in REVIEWER else 'control'
+        print(f'{n:2} [{tag}] {"UNCHANGED" if out["s"] == t else "CHANGED"} {ch.get("s", [])}')
+        print('   IN |', t)
+        if out['s'] != t:
+            print('   OUT|', out['s'])
+sys.modules['zelda_api.basis_fidelity'], zelda_api.basis_fidelity = current, current

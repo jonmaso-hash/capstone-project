@@ -1,0 +1,8 @@
+from zelda_api.tests_output_fidelity import replay, items_from, notes_from, memo101_payload
+p = memo101_payload(); items, notes = items_from(p), notes_from(p)
+LEAD = "- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. "
+for t in [LEAD + "Nothing suggests these figures are wrong — or inflated.",
+          LEAD + "These figures need clarification — an analyst is wrong.",
+          "The cumulative and monthly revenue differ while the message counts remain ambiguous [C2, C3].",
+          "According to an analyst, 500M messages [S2, S3] sit in a slide context headed 'Traction by Apr-16'."]:
+    out, ch = replay({'s': t}, items, notes); print('IN |', t); print('OUT|', out['s'], ch.get('s', []))
