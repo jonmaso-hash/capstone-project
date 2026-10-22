@@ -1,0 +1,45 @@
+import sys, json
+from datetime import timedelta
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+from allauth.account.models import EmailAddress
+from matchmaking.models import Application, InvestorApplication, FIELD_PRIVATE, NEW_PROFILE_FIELD_VISIBILITY
+from billing.models import Subscription
+SP = r'C:\Users\jonathan\AppData\Local\Temp\claude\C--Users-jonathan-Desktop-KCV-of903\76db1fe6-5688-4619-abfd-5bc2b6bec113\scratchpad\rd0b'
+deck = 'mc'
+pw = open(SP + r'\pw.txt').read().strip()
+P = 'd0bmc'          # d0bad8f ManyChat Pass A: d0bmc_*
+U = get_user_model()
+assert not U.objects.filter(username__startswith=P + '_').exists(), 'principals already exist'
+def mk(name, **kw):
+    u = U.objects.create_user(name, email=f'{name}@d0b.test', password=pw, **kw)
+    EmailAddress.objects.create(user=u, email=u.email, verified=True, primary=True)
+    return u
+owner = mk(P + '_owner')
+vis = dict(NEW_PROFILE_FIELD_VISIBILITY); vis['reason_for_capital'] = FIELD_PRIVATE
+common = dict(user=owner, founder_name='Rerun Owner', email=owner.email, field_visibility=vis)
+if deck == 'bj':
+    app = Application.objects.create(company_name="Ben & Jerry's", geography='South Burlington, VT',
+        description="Disposable profile for the Ben & Jerry's Pass A rerun.", sector='Consumer', stage='Public',
+        reason_for_capital='CANARY-BJ-2084 private reason for capital', **common)
+else:
+    app = Application.objects.create(company_name='ManyChat', prior_amount_raised=163000000, raising_amount=0,
+        description='Disposable profile for the ManyChat d0bad8f Pass A run.', sector='Software', stage='Series A',
+        reason_for_capital='CANARY-MANYCHAT-4417 private reason for capital', **common)
+lite = mk(P + '_lite')
+InvestorApplication.objects.create(user=lite, full_name='Lite Investor', email=lite.email, company_name='Lite Capital', investment_focus='Consumer', investment_stage='Growth')
+paid = mk(P + '_paid')
+InvestorApplication.objects.create(user=paid, full_name='Paid Investor', email=paid.email, company_name='Paid Capital', investment_focus='Consumer', investment_stage='Growth', is_premium=True)
+sub = Subscription.objects.create(user=paid, plan='INVESTOR_PREMIUM', stripe_customer_id='cus_d0b_local_mc', stripe_subscription_id='sub_d0b_local_mc', status='active', current_period_end=timezone.now() + timedelta(days=30))
+staff = mk(P + '_staff', is_staff=True)
+app.refresh_from_db()
+out = {'owner': {'user_id': owner.id, 'username': owner.username, 'application_id': app.id, 'is_premium': app.is_premium},
+       'lite': {'user_id': lite.id, 'username': lite.username, 'investor_is_premium': False},
+       'paid': {'user_id': paid.id, 'username': paid.username, 'investor_is_premium': InvestorApplication.objects.get(user=paid).is_premium,
+                'subscription': {'id': sub.id, 'plan': sub.plan, 'status': sub.status, 'current_period_end': sub.current_period_end.isoformat()}},
+       'staff': {'user_id': staff.id, 'username': staff.username, 'is_staff': staff.is_staff},
+       'profile': {f: (str(getattr(app, f)) if getattr(app, f) is not None else None) for f in
+                   ['company_name', 'geography', 'company_website', 'current_revenue', 'revenue_period', 'raising_amount', 'prior_amount_raised', 'reporting_currency', 'sector', 'stage']},
+       'canary_field': 'reason_for_capital', 'canary_visibility': app.field_visibility.get('reason_for_capital'),
+       'same_name_profiles': list(Application.objects.filter(company_name__iexact=app.company_name).values_list('id', flat=True))}
+print('FIXTURES ' + json.dumps(out))

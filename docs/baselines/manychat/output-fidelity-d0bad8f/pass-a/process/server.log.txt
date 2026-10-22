@@ -1,0 +1,218 @@
+Invalid line: Truth_Delta_3-Report_Credit_Pack =price_1UNjeJDsh22gDRCcr3XE4qHO
+CODE-CHECK [server pid=6300] head=d0bad8fdaace39f2f64be9f576874da9b0bf5e7a tracked_changes=223 [' M accounts/__pycache__/__init__.cpython-314.pyc', ' M accounts/__pycache__/admin.cpython-314.pyc', ' M accounts/__pycache__/apps.cpython-314.pyc', ' M accounts/__pycache__/models.cpython-314.pyc', ' M accounts/migrations/__pycache__/0001_initial.cpython-314.pyc']
+CODE-DIFF [server pid=6300] non_pyc_files_differing_from_d0bad8f=0
+BASELINE-ENV-CHECK [server pid=6300] {'FILED_API_KEY': False, 'COMPANYENRICH_API_KEY': False, 'NEWS_API_KEY': False, 'DATA4B2B_API_KEY': False, 'USPTO_ODP_API_KEY': False, 'CRUNCHBASE_API_KEY': False, 'ANTHROPIC_API_KEY': True} USPTO_ODP_API_KEY_read_by_code=False (no reference in this commit; blanked in env)
+BROKER-CHECK [server pid=6300] broker (write) redis://localhost local=True redis_db=1
+BROKER-CHECK [server pid=6300] broker (read) redis://localhost local=True redis_db=1
+BROKER-CHECK [server pid=6300] result backend redis://localhost local=True redis_db=4
+BROKER-CHECK [server pid=6300] cache redis://localhost local=True redis_db=4
+DB-CHECK [server pid=6300] name=C:/Users/jonathan/AppData/Local/Temp/claude/C--Users-jonathan-Desktop-KCV-of903/76db1fe6-5688-4619-abfd-5bc2b6bec113/scratchpad/rd0b/db_rd0b_copy.sqlite3 is_copy=True is_original=False is_historical_copy=False
+SCHEMA-CHECK [server pid=6300] pending=0 [] zelda_api.0035=True zelda_api.0044=True matchmaking.0083=True matchmaking.0095=True applied_heads={"accounts": "0017_personprofile_is_public", "billing": "0007_truth_delta_credit_wallet", "matchmaking": "0095_profile_reporting_currency", "zelda_api": "0044_claim_source_context"}
+EAGER-CHECK [server pid=6300] CELERY_TASK_ALWAYS_EAGER=False
+MODEL-CALL-LOG installed [server pid=6300] C:\Users\jonathan\AppData\Local\Temp\claude\C--Users-jonathan-Desktop-KCV-of903\76db1fe6-5688-4619-abfd-5bc2b6bec113\scratchpad\rd0b\model_calls.jsonl
+2026-10-22 00:47:52,106 INFO django.server - "GET /accounts/login/ HTTP/1.1" 200 13399
+2026-10-22 00:47:53,599 INFO django.server - "POST /accounts/login/ HTTP/1.1" 302 0
+2026-10-22 00:47:54,539 INFO zelda_api.signals - DocumentSource created: manychat_series_a_audit_deck.pptx
+2026-10-22 00:48:00,766 INFO django.server - "POST /api/v1/zelda/documents/ingest/ HTTP/1.1" 201 364
+2026-10-22 01:00:57,337 INFO django.server - "GET /accounts/login/ HTTP/1.1" 200 13399
+2026-10-22 01:00:58,805 INFO django.server - "POST /accounts/login/ HTTP/1.1" 302 0
+2026-10-22 01:00:59,044 INFO django.server - "GET / HTTP/1.1" 200 168173
+2026-10-22 01:00:59,581 INFO django.server - "GET /accounts/profile/d0bmc_owner/ HTTP/1.1" 200 185064
+2026-10-22 01:00:59,709 INFO django.server - "GET /accounts/profile/d0bmc_owner/analysis/ HTTP/1.1" 200 149545
+2026-10-22 01:00:59,798 WARNING django.request - Not Found: /matchmaking/memo/manychat/
+2026-10-22 01:00:59,799 WARNING django.server - "GET /matchmaking/memo/manychat/ HTTP/1.1" 404 14113
+2026-10-22 01:00:59,833 WARNING django.request - Forbidden (Permission denied): /matchmaking/memo/profile/50/
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\jonathan\Desktop\KCV-mc-d0b\matchmaking\views.py", line 2552, in company_overview_view
+    return _company_overview(request, get_object_or_404(Application, pk=application_id))
+  File "C:\Users\jonathan\Desktop\KCV-mc-d0b\matchmaking\views.py", line 2591, in _company_overview
+    raise PermissionDenied("Access to proprietary asset intelligence reports is restricted.")
+django.core.exceptions.PermissionDenied: Access to proprietary asset intelligence reports is restricted.
+2026-10-22 01:00:59,931 WARNING django.server - "GET /matchmaking/memo/profile/50/ HTTP/1.1" 403 135
+2026-10-22 01:01:00,032 INFO django.server - "GET /api/v1/zelda/documents/3144/ic-memo/ HTTP/1.1" 200 161227
+2026-10-22 01:01:00,071 INFO django.server - "GET /api/v1/zelda/documents/3144/ic-memo/download/ HTTP/1.1" 302 0
+2026-10-22 01:01:00,223 INFO django.server - "GET /api/v1/zelda/documents/3144/verification/ HTTP/1.1" 200 60085
+2026-10-22 01:01:00,254 INFO django.server - "GET /api/v1/zelda/documents/3144/memo/ HTTP/1.1" 200 141
+2026-10-22 01:01:00,277 INFO django.server - "GET /api/v1/zelda/documents/3144/truth-delta/ HTTP/1.1" 200 1974
+2026-10-22 01:01:00,295 INFO django.server - "GET /api/v1/zelda/documents/3144/status/ HTTP/1.1" 200 269
+2026-10-22 01:01:00,309 INFO django.server - "GET /api/v1/zelda/documents/3144/valuation/ HTTP/1.1" 202 70
+2026-10-22 01:01:00,335 WARNING django.request - Not Found: /api/v1/zelda/valuation/3144/
+2026-10-22 01:01:00,336 WARNING django.server - "GET /api/v1/zelda/valuation/3144/ HTTP/1.1" 404 16519
+2026-10-22 01:01:00,356 INFO django.server - "GET /api/v1/zelda/identity-check/43/status/ HTTP/1.1" 200 87
+2026-10-22 01:01:00,491 INFO django.server - "GET /api/v1/zelda/library/ HTTP/1.1" 200 790
+2026-10-22 01:01:00,503 WARNING django.request - Forbidden: /api/v1/zelda/analyze/founder/d0bmc_owner/
+2026-10-22 01:01:00,504 WARNING django.server - "GET /api/v1/zelda/analyze/founder/d0bmc_owner/ HTTP/1.1" 403 58
+2026-10-22 01:01:00,545 INFO django.server - "POST /api/v1/zelda/documents/3144/search/ HTTP/1.1" 200 2040
+2026-10-22 01:01:00,565 INFO django.server - "POST /api/v1/zelda/documents/3144/rag/ HTTP/1.1" 200 2279
+2026-10-22 01:01:00,591 INFO django.server - "POST /accounts/logout/ HTTP/1.1" 302 0
+2026-10-22 01:01:00,599 INFO django.server - "GET /accounts/profile/d0bmc_owner/ HTTP/1.1" 302 0
+2026-10-22 01:01:00,634 INFO django.server - "GET /accounts/login/ HTTP/1.1" 200 13399
+2026-10-22 01:01:02,080 INFO django.server - "POST /accounts/login/ HTTP/1.1" 302 0
+2026-10-22 01:01:02,144 INFO django.server - "GET / HTTP/1.1" 200 145689
+2026-10-22 01:01:02,338 INFO django.server - "GET /accounts/profile/d0bmc_owner/ HTTP/1.1" 200 150396
+2026-10-22 01:01:02,361 INFO django.server - "GET /accounts/profile/d0bmc_owner/analysis/ HTTP/1.1" 302 0
+2026-10-22 01:01:02,404 WARNING django.request - Not Found: /matchmaking/memo/manychat/
+2026-10-22 01:01:02,405 WARNING django.server - "GET /matchmaking/memo/manychat/ HTTP/1.1" 404 14113
+2026-10-22 01:01:10,145 INFO django.server - "GET /matchmaking/memo/profile/50/ HTTP/1.1" 200 136248
+2026-10-22 01:01:10,189 WARNING django.request - Not Found: /api/v1/zelda/documents/3144/ic-memo/
+2026-10-22 01:01:10,190 WARNING django.server - "GET /api/v1/zelda/documents/3144/ic-memo/ HTTP/1.1" 404 15295
+2026-10-22 01:01:10,225 WARNING django.request - Not Found: /api/v1/zelda/documents/3144/ic-memo/download/
+2026-10-22 01:01:10,226 WARNING django.server - "GET /api/v1/zelda/documents/3144/ic-memo/download/ HTTP/1.1" 404 15653
+2026-10-22 01:01:10,319 INFO django.server - "GET /api/v1/zelda/documents/3144/verification/ HTTP/1.1" 200 54460
+2026-10-22 01:01:10,367 INFO django.server - "GET /api/v1/zelda/documents/3144/memo/ HTTP/1.1" 200 4009
+2026-10-22 01:01:10,402 INFO django.server - "GET /api/v1/zelda/documents/3144/truth-delta/ HTTP/1.1" 200 1974
+2026-10-22 01:01:10,418 WARNING django.request - Forbidden: /api/v1/zelda/documents/3144/status/
+2026-10-22 01:01:10,419 WARNING django.server - "GET /api/v1/zelda/documents/3144/status/ HTTP/1.1" 403 26
+2026-10-22 01:01:10,430 WARNING django.request - Forbidden: /api/v1/zelda/documents/3144/valuation/
+2026-10-22 01:01:10,431 WARNING django.server - "GET /api/v1/zelda/documents/3144/valuation/ HTTP/1.1" 403 26
+2026-10-22 01:01:10,455 WARNING django.request - Not Found: /api/v1/zelda/valuation/3144/
+2026-10-22 01:01:10,456 WARNING django.server - "GET /api/v1/zelda/valuation/3144/ HTTP/1.1" 404 16519
+2026-10-22 01:01:10,481 WARNING django.request - Not Found: /api/v1/zelda/identity-check/43/status/
+2026-10-22 01:01:10,482 WARNING django.server - "GET /api/v1/zelda/identity-check/43/status/ HTTP/1.1" 404 23
+2026-10-22 01:01:10,538 INFO django.server - "GET /api/v1/zelda/library/ HTTP/1.1" 200 813
+2026-10-22 01:01:10,591 INFO django.server - "GET /api/v1/zelda/analyze/founder/d0bmc_owner/ HTTP/1.1" 200 130
+2026-10-22 01:01:10,601 WARNING django.request - Forbidden: /api/v1/zelda/documents/3144/search/
+2026-10-22 01:01:10,602 WARNING django.server - "POST /api/v1/zelda/documents/3144/search/ HTTP/1.1" 403 26
+2026-10-22 01:01:10,613 WARNING django.request - Forbidden: /api/v1/zelda/documents/3144/rag/
+2026-10-22 01:01:10,614 WARNING django.server - "POST /api/v1/zelda/documents/3144/rag/ HTTP/1.1" 403 26
+2026-10-22 01:01:10,637 INFO django.server - "POST /accounts/logout/ HTTP/1.1" 302 0
+2026-10-22 01:01:10,644 INFO django.server - "GET /accounts/profile/d0bmc_owner/ HTTP/1.1" 302 0
+2026-10-22 01:01:10,683 INFO django.server - "GET /accounts/login/ HTTP/1.1" 200 13399
+2026-10-22 01:01:12,138 INFO django.server - "POST /accounts/login/ HTTP/1.1" 302 0
+2026-10-22 01:01:12,198 INFO django.server - "GET / HTTP/1.1" 200 145689
+2026-10-22 01:01:12,332 INFO django.server - "GET /accounts/profile/d0bmc_owner/ HTTP/1.1" 200 150397
+2026-10-22 01:01:12,353 INFO django.server - "GET /accounts/profile/d0bmc_owner/analysis/ HTTP/1.1" 302 0
+2026-10-22 01:01:12,400 WARNING django.request - Not Found: /matchmaking/memo/manychat/
+2026-10-22 01:01:12,401 WARNING django.server - "GET /matchmaking/memo/manychat/ HTTP/1.1" 404 14113
+2026-10-22 01:01:14,493 INFO django.server - "GET /matchmaking/memo/profile/50/ HTTP/1.1" 200 136248
+2026-10-22 01:01:14,536 WARNING django.request - Not Found: /api/v1/zelda/documents/3144/ic-memo/
+2026-10-22 01:01:14,537 WARNING django.server - "GET /api/v1/zelda/documents/3144/ic-memo/ HTTP/1.1" 404 15295
+2026-10-22 01:01:14,578 WARNING django.request - Not Found: /api/v1/zelda/documents/3144/ic-memo/download/
+2026-10-22 01:01:14,579 WARNING django.server - "GET /api/v1/zelda/documents/3144/ic-memo/download/ HTTP/1.1" 404 15653
+2026-10-22 01:01:14,684 INFO django.server - "GET /api/v1/zelda/documents/3144/verification/ HTTP/1.1" 200 54460
+2026-10-22 01:01:14,736 INFO django.server - "GET /api/v1/zelda/documents/3144/memo/ HTTP/1.1" 200 4009
+2026-10-22 01:01:14,768 INFO django.server - "GET /api/v1/zelda/documents/3144/truth-delta/ HTTP/1.1" 200 1974
+2026-10-22 01:01:14,783 WARNING django.request - Forbidden: /api/v1/zelda/documents/3144/status/
+2026-10-22 01:01:14,784 WARNING django.server - "GET /api/v1/zelda/documents/3144/status/ HTTP/1.1" 403 26
+2026-10-22 01:01:14,801 WARNING django.request - Forbidden: /api/v1/zelda/documents/3144/valuation/
+2026-10-22 01:01:14,802 WARNING django.server - "GET /api/v1/zelda/documents/3144/valuation/ HTTP/1.1" 403 26
+2026-10-22 01:01:14,838 WARNING django.request - Not Found: /api/v1/zelda/valuation/3144/
+2026-10-22 01:01:14,840 WARNING django.server - "GET /api/v1/zelda/valuation/3144/ HTTP/1.1" 404 16519
+2026-10-22 01:01:14,864 WARNING django.request - Not Found: /api/v1/zelda/identity-check/43/status/
+2026-10-22 01:01:14,865 WARNING django.server - "GET /api/v1/zelda/identity-check/43/status/ HTTP/1.1" 404 23
+2026-10-22 01:01:14,940 INFO django.server - "GET /api/v1/zelda/library/ HTTP/1.1" 200 813
+2026-10-22 01:01:14,993 INFO django.server - "GET /api/v1/zelda/analyze/founder/d0bmc_owner/ HTTP/1.1" 200 130
+2026-10-22 01:01:15,003 WARNING django.request - Forbidden: /api/v1/zelda/documents/3144/search/
+2026-10-22 01:01:15,004 WARNING django.server - "POST /api/v1/zelda/documents/3144/search/ HTTP/1.1" 403 26
+2026-10-22 01:01:15,016 WARNING django.request - Forbidden: /api/v1/zelda/documents/3144/rag/
+2026-10-22 01:01:15,017 WARNING django.server - "POST /api/v1/zelda/documents/3144/rag/ HTTP/1.1" 403 26
+2026-10-22 01:01:15,039 INFO django.server - "POST /accounts/logout/ HTTP/1.1" 302 0
+2026-10-22 01:01:15,046 INFO django.server - "GET /accounts/profile/d0bmc_owner/ HTTP/1.1" 302 0
+2026-10-22 01:01:15,081 INFO django.server - "GET /accounts/login/ HTTP/1.1" 200 13399
+2026-10-22 01:01:16,547 INFO django.server - "POST /accounts/login/ HTTP/1.1" 302 0
+2026-10-22 01:01:16,674 INFO django.server - "GET /accounts/staff-mfa/setup/ HTTP/1.1" 200 1862
+2026-10-22 01:01:18,074 INFO django.server - "POST /accounts/staff-mfa/setup/ HTTP/1.1" 200 1716
+2026-10-22 01:01:18,160 INFO django.server - "GET / HTTP/1.1" 200 165722
+2026-10-22 01:01:18,237 INFO django.server - "GET / HTTP/1.1" 200 165722
+2026-10-22 01:01:18,395 INFO django.server - "GET /accounts/profile/d0bmc_owner/ HTTP/1.1" 200 174049
+2026-10-22 01:01:18,436 INFO django.server - "GET /accounts/profile/d0bmc_owner/analysis/ HTTP/1.1" 302 0
+2026-10-22 01:01:18,485 WARNING django.request - Not Found: /matchmaking/memo/manychat/
+2026-10-22 01:01:18,486 WARNING django.server - "GET /matchmaking/memo/manychat/ HTTP/1.1" 404 14113
+2026-10-22 01:01:18,587 INFO django.server - "GET /matchmaking/memo/profile/50/ HTTP/1.1" 200 159629
+2026-10-22 01:01:18,751 INFO django.server - "GET /api/v1/zelda/documents/3144/ic-memo/ HTTP/1.1" 200 171539
+2026-10-22 01:01:18,830 INFO django.server - "GET /api/v1/zelda/documents/3144/ic-memo/download/ HTTP/1.1" 200 11197
+2026-10-22 01:01:18,915 INFO django.server - "GET /api/v1/zelda/documents/3144/verification/ HTTP/1.1" 200 61485
+2026-10-22 01:01:18,962 INFO django.server - "GET /api/v1/zelda/documents/3144/memo/ HTTP/1.1" 200 10369
+2026-10-22 01:01:19,009 INFO django.server - "GET /api/v1/zelda/documents/3144/truth-delta/ HTTP/1.1" 200 5173
+2026-10-22 01:01:19,045 INFO django.server - "GET /api/v1/zelda/documents/3144/status/ HTTP/1.1" 200 269
+2026-10-22 01:01:19,073 INFO django.server - "GET /api/v1/zelda/documents/3144/valuation/ HTTP/1.1" 202 70
+2026-10-22 01:01:19,109 WARNING django.request - Not Found: /api/v1/zelda/valuation/3144/
+2026-10-22 01:01:19,110 WARNING django.server - "GET /api/v1/zelda/valuation/3144/ HTTP/1.1" 404 16519
+2026-10-22 01:01:19,138 INFO django.server - "GET /api/v1/zelda/identity-check/43/status/ HTTP/1.1" 200 87
+2026-10-22 01:01:19,188 INFO django.server - "GET /api/v1/zelda/library/ HTTP/1.1" 200 145
+2026-10-22 01:01:19,212 WARNING django.request - Forbidden: /api/v1/zelda/analyze/founder/d0bmc_owner/
+2026-10-22 01:01:19,213 WARNING django.server - "GET /api/v1/zelda/analyze/founder/d0bmc_owner/ HTTP/1.1" 403 58
+2026-10-22 01:01:19,244 INFO django.server - "POST /api/v1/zelda/documents/3144/search/ HTTP/1.1" 200 2040
+2026-10-22 01:01:19,279 INFO django.server - "POST /api/v1/zelda/documents/3144/rag/ HTTP/1.1" 200 2279
+2026-10-22 01:01:19,300 INFO django.server - "POST /accounts/logout/ HTTP/1.1" 302 0
+2026-10-22 01:01:19,306 INFO django.server - "GET /accounts/profile/d0bmc_owner/ HTTP/1.1" 302 0
+2026-10-22 01:01:19,383 INFO django.server - "GET / HTTP/1.1" 200 36156
+2026-10-22 01:01:19,406 INFO django.server - "GET /accounts/profile/d0bmc_owner/ HTTP/1.1" 302 0
+2026-10-22 01:01:19,414 INFO django.server - "GET /accounts/profile/d0bmc_owner/analysis/ HTTP/1.1" 302 0
+2026-10-22 01:01:19,421 INFO django.server - "GET /matchmaking/memo/manychat/ HTTP/1.1" 302 0
+2026-10-22 01:01:19,429 INFO django.server - "GET /matchmaking/memo/profile/50/ HTTP/1.1" 302 0
+2026-10-22 01:01:19,437 INFO django.server - "GET /api/v1/zelda/documents/3144/ic-memo/ HTTP/1.1" 302 0
+2026-10-22 01:01:19,444 INFO django.server - "GET /api/v1/zelda/documents/3144/ic-memo/download/ HTTP/1.1" 302 0
+2026-10-22 01:01:19,451 INFO django.server - "GET /api/v1/zelda/documents/3144/verification/ HTTP/1.1" 302 0
+2026-10-22 01:01:19,459 WARNING django.request - Forbidden: /api/v1/zelda/documents/3144/memo/
+2026-10-22 01:01:19,460 WARNING django.server - "GET /api/v1/zelda/documents/3144/memo/ HTTP/1.1" 403 58
+2026-10-22 01:01:19,466 WARNING django.request - Forbidden: /api/v1/zelda/documents/3144/truth-delta/
+2026-10-22 01:01:19,467 WARNING django.server - "GET /api/v1/zelda/documents/3144/truth-delta/ HTTP/1.1" 403 58
+2026-10-22 01:01:19,473 WARNING django.request - Forbidden: /api/v1/zelda/documents/3144/status/
+2026-10-22 01:01:19,474 WARNING django.server - "GET /api/v1/zelda/documents/3144/status/ HTTP/1.1" 403 58
+2026-10-22 01:01:19,481 WARNING django.request - Forbidden: /api/v1/zelda/documents/3144/valuation/
+2026-10-22 01:01:19,482 WARNING django.server - "GET /api/v1/zelda/documents/3144/valuation/ HTTP/1.1" 403 58
+2026-10-22 01:01:19,489 INFO django.server - "GET /api/v1/zelda/valuation/3144/ HTTP/1.1" 302 0
+2026-10-22 01:01:19,496 INFO django.server - "GET /api/v1/zelda/identity-check/43/status/ HTTP/1.1" 302 0
+2026-10-22 01:01:19,503 WARNING django.request - Forbidden: /api/v1/zelda/library/
+2026-10-22 01:01:19,504 WARNING django.server - "GET /api/v1/zelda/library/ HTTP/1.1" 403 58
+2026-10-22 01:01:19,510 WARNING django.request - Forbidden: /api/v1/zelda/analyze/founder/d0bmc_owner/
+2026-10-22 01:01:19,511 WARNING django.server - "GET /api/v1/zelda/analyze/founder/d0bmc_owner/ HTTP/1.1" 403 58
+2026-10-22 01:01:19,518 WARNING django.request - Forbidden: /api/v1/zelda/documents/3144/search/
+2026-10-22 01:01:19,519 WARNING django.server - "POST /api/v1/zelda/documents/3144/search/ HTTP/1.1" 403 58
+2026-10-22 01:01:19,526 WARNING django.request - Forbidden: /api/v1/zelda/documents/3144/rag/
+2026-10-22 01:01:19,527 WARNING django.server - "POST /api/v1/zelda/documents/3144/rag/ HTTP/1.1" 403 58
+2026-10-22 01:01:19,565 INFO django.server - "GET /accounts/login/ HTTP/1.1" 200 13399
+2026-10-22 01:01:21,027 INFO django.server - "POST /accounts/login/ HTTP/1.1" 302 0
+2026-10-22 01:01:21,048 INFO django.server - "POST /api/v1/zelda/documents/3144/search/ HTTP/1.1" 200 2040
+2026-10-22 01:01:21,069 INFO django.server - "POST /api/v1/zelda/documents/3144/rag/ HTTP/1.1" 200 2279
+2026-10-22 01:01:31,769 INFO httpx - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-10-22 01:01:31,835 INFO zelda_api.intelligence_pipeline - [Anthropic usage] nl query extraction for ad-hoc request: input_tokens=347, output_tokens=8
+2026-10-22 01:01:31,836 INFO django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 200 165
+2026-10-22 01:01:31,855 INFO django.server - "POST /api/v1/zelda/documents/3144/search/ HTTP/1.1" 200 1970
+2026-10-22 01:01:31,872 INFO django.server - "POST /api/v1/zelda/documents/3144/rag/ HTTP/1.1" 200 2204
+2026-10-22 01:01:37,298 INFO httpx - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-10-22 01:01:37,305 INFO zelda_api.intelligence_pipeline - [Anthropic usage] nl query extraction for ad-hoc request: input_tokens=348, output_tokens=8
+2026-10-22 01:01:37,306 INFO django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 200 165
+2026-10-22 01:01:37,324 INFO django.server - "POST /api/v1/zelda/documents/3144/search/ HTTP/1.1" 200 2114
+2026-10-22 01:01:37,344 INFO django.server - "POST /api/v1/zelda/documents/3144/rag/ HTTP/1.1" 200 2352
+2026-10-22 01:01:42,316 INFO httpx - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-10-22 01:01:42,322 INFO zelda_api.intelligence_pipeline - [Anthropic usage] nl query extraction for ad-hoc request: input_tokens=348, output_tokens=8
+2026-10-22 01:01:42,323 INFO django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 200 165
+2026-10-22 01:01:42,346 INFO django.server - "POST /api/v1/zelda/documents/3144/search/ HTTP/1.1" 200 2047
+2026-10-22 01:01:42,364 INFO django.server - "POST /api/v1/zelda/documents/3144/rag/ HTTP/1.1" 200 2286
+2026-10-22 01:01:46,412 INFO httpx - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-10-22 01:01:46,418 INFO zelda_api.intelligence_pipeline - [Anthropic usage] nl query extraction for ad-hoc request: input_tokens=348, output_tokens=8
+2026-10-22 01:01:46,419 INFO django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 200 165
+2026-10-22 01:01:46,436 INFO django.server - "POST /api/v1/zelda/documents/3144/search/ HTTP/1.1" 200 1975
+2026-10-22 01:01:46,453 INFO django.server - "POST /api/v1/zelda/documents/3144/rag/ HTTP/1.1" 200 2210
+2026-10-22 01:01:48,665 INFO httpx - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-10-22 01:01:48,671 INFO zelda_api.intelligence_pipeline - [Anthropic usage] nl query extraction for ad-hoc request: input_tokens=348, output_tokens=8
+2026-10-22 01:01:48,672 INFO django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 200 165
+2026-10-22 01:01:48,689 INFO django.server - "POST /api/v1/zelda/documents/3144/search/ HTTP/1.1" 200 1976
+2026-10-22 01:01:48,709 INFO django.server - "POST /api/v1/zelda/documents/3144/rag/ HTTP/1.1" 200 2212
+2026-10-22 01:01:50,730 INFO httpx - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-10-22 01:01:50,735 INFO zelda_api.intelligence_pipeline - [Anthropic usage] nl query extraction for ad-hoc request: input_tokens=349, output_tokens=8
+2026-10-22 01:01:50,736 INFO django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 200 165
+2026-10-22 01:01:50,755 INFO django.server - "POST /api/v1/zelda/documents/3144/search/ HTTP/1.1" 200 2039
+2026-10-22 01:01:50,775 INFO django.server - "POST /api/v1/zelda/documents/3144/rag/ HTTP/1.1" 200 2278
+2026-10-22 01:01:52,674 INFO httpx - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-10-22 01:01:52,680 INFO zelda_api.intelligence_pipeline - [Anthropic usage] nl query extraction for ad-hoc request: input_tokens=347, output_tokens=8
+2026-10-22 01:01:52,681 INFO django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 200 165
+2026-10-22 01:01:52,720 INFO django.server - "POST /accounts/logout/ HTTP/1.1" 302 0
+2026-10-22 01:02:06,239 INFO django.server - "GET /accounts/login/ HTTP/1.1" 200 13399
+2026-10-22 01:02:07,689 INFO django.server - "POST /accounts/login/ HTTP/1.1" 302 0
+2026-10-22 01:02:07,738 INFO django.server - "GET /accounts/staff-mfa/setup/ HTTP/1.1" 302 0
+2026-10-22 01:02:07,806 INFO django.server - "POST /accounts/staff-mfa/verify/ HTTP/1.1" 302 0
+2026-10-22 01:02:07,899 INFO django.server - "GET / HTTP/1.1" 200 165722
+2026-10-22 01:02:07,945 INFO django.server - "GET /api/v1/zelda/documents/3144/ic-memo/download/ HTTP/1.1" 200 11197
+2026-10-22 01:02:07,970 INFO django.server - "POST /accounts/logout/ HTTP/1.1" 302 0
+2026-10-22 01:08:30,606 INFO django.server - "GET /accounts/login/ HTTP/1.1" 200 13399
+2026-10-22 01:08:30,940 INFO django.server - "GET /accounts/login/ HTTP/1.1" 200 13399
+2026-10-22 01:09:51,796 INFO django.server - "GET /accounts/login/ HTTP/1.1" 200 13399

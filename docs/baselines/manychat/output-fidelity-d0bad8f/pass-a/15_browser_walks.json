@@ -1,0 +1,21 @@
+{
+ "status": "BLOCKED: no Chrome walk ran in this run. No browser result is recorded, and no HTTP-captured page in 13_rendered_reports_text.json is counted as browser validation.",
+ "browser": "Claude in Chrome extension, connected browser 'Browser 1' (Windows; reported isLocal=true, inUse=true). First check (2026-10-22 ~01:05 local): no browser was connected. The owner ran /chrome (\"Now using browser 'Browser 1'\").",
+ "attempts": [
+  {"local_time": "2026-10-22 ~01:08", "tab": "existing tab", "url": "http://127.0.0.1:8000/accounts/login/", "result": "chrome-error://chromewebdata/ (page text not extractable; screenshot refused: frame showing error page)"},
+  {"local_time": "2026-10-22 ~01:08", "tab": "existing tab", "url": "http://localhost:8000/accounts/login/", "result": "error page (screenshot refused: frame showing error page)"},
+  {"local_time": "2026-10-22 ~01:09", "tab": "existing tab, after the owner chose to retry", "url": "http://127.0.0.1:8000/accounts/login/", "result": "chrome-error://chromewebdata/; page text: 'This site can't be reached. 127.0.0.1 refused to connect. ... ERR_CONNECTION_REFUSED'"},
+  {"local_time": "2026-10-22 ~01:09", "tab": "new tab", "url": "http://127.0.0.1:8000/accounts/login/", "result": "chrome-error://chromewebdata/; 'This site can't be reached. 127.0.0.1 refused to connect.' (ERR_CONNECTION_REFUSED)"}
+ ],
+ "server_side_at_the_same_time": {
+  "listening": "127.0.0.1:8000 LISTENING, pid 6300 (the run server)",
+  "local_http": "curl http://127.0.0.1:8000/accounts/login/ -> 200 and http://localhost:8000/accounts/login/ -> 200 (01:08:30 twice and 01:09:51 local; these three are the only request lines in process/server.log.txt after the Markdown check's logout at 01:02:07)",
+  "browser_requests_in_server_log": "none: no request line corresponds to any browser navigation above",
+  "winhttp_proxy": "Direct access (no proxy server)"
+ },
+ "root_cause": "Not established. The symptom matches D-9 of the memo-101 run (connection refused from the connected browser while the server answered local HTTP); there the owner re-selecting the browser cleared it, here /chrome and a retry did not.",
+ "not_done_because_blocked": ["owner IC memo walk", "Lite company overview walk", "paid Truth Delta walk", "staff walk with real MFA (IC memo, Truth Delta, profile memo)", "anonymous refusals in the browser", "screenshots (browser/ is absent)"],
+ "covered_only_by_the_http_probe": "authorization matrix (11), API payloads (12), rendered page text fetched over HTTP (13), Markdown export (14). These are HTTP evidence, not browser evidence.",
+ "model_calls": "unchanged by the attempts: model_calls.jsonl stayed at 8",
+ "owner_decision": "Finalize memo 102's evidence with the Chrome walks recorded as blocked (owner instruction, 2026-10-22)."
+}

@@ -1,0 +1,23 @@
+"""List the memo-101 (r066) run's shell commands, in order, from that session's transcript (read-only)."""
+import json, sys
+BS = chr(92)
+n = 0
+out = open(sys.argv[2], 'w', encoding='utf-8')
+for line in open(sys.argv[1], encoding='utf-8'):
+    try:
+        o = json.loads(line)
+    except Exception:
+        continue
+    msg = o.get('message') or {}
+    if msg.get('role') != 'assistant':
+        continue
+    for c in msg.get('content') or []:
+        if isinstance(c, dict) and c.get('type') == 'tool_use' and c.get('name') in ('Bash', 'PowerShell', 'Monitor'):
+            cmd = c['input'].get('command', '') or json.dumps(c['input'])
+            norm = cmd.replace(BS, '/')
+            if 'r066' in norm or 'mc-066' in norm or 'KCV-mc-066' in norm:
+                n += 1
+                out.write('=' * 20 + ' %d %s [%s]%s\n' % (n, c['input'].get('description', ''), c['name'],
+                                                         ' bg' if c['input'].get('run_in_background') else ''))
+                out.write(cmd[:3000] + '\n')
+print(n)

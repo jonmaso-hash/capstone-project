@@ -1,0 +1,9 @@
+Model reply (after list-to-text) vs stored memo 102, per section, replayed through the pipeline order
+(time guard, then funding guard, then measurement-basis guard). Only changed sections are listed. Changes
+prefixed "basis:" are the measurement-basis guard (#284, revised in #285); the others are the funding guard
+("attribution" adds a narrator; "funding_not_runway" and "cash_premise" separate funding from cash).
+
+== information_readiness  ['attribution:Pitch Deck Hunt'] 
+-• The $23.1M raised figure — undated and not independently verified [C1]
++• The $23.1M raised figure (per Pitch Deck Hunt) — undated and not independently verified [C1]
+

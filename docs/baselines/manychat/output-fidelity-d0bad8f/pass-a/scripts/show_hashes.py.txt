@@ -1,0 +1,5 @@
+import json, sys
+h = json.load(open(sys.argv[1]))
+for k, v in h['dbs'].items(): print(k, v['exists'], v['sha256'][:12] if v['sha256'] else None, v['sidecars'])
+print('deck', h['deck']['bytes'], h['deck']['sha256'])
+if 'copy' in h: print('copy', h['copy']['integrity_check'], h['copy']['sha256_at_creation'][:12])

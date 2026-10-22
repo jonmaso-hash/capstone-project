@@ -1,0 +1,20 @@
+"""Where the measurement-basis note appears, per principal and surface (reads 12/13 of this run and, for comparison,
+of memo 101's run). Usage: note_vis.py <evidence dir> <memo-101 12 json> <memo-101 13 json>"""
+import json, sys
+E, p12, p13 = sys.argv[1:4]
+
+
+def where(api, rendered):
+    out = {}
+    for k, v in api.items():
+        b = json.dumps(v.get('body') if isinstance(v, dict) else v, ensure_ascii=False)
+        out[k] = ('measurement_basis' in b, 'not a verification result' in b, 'Page 10 states 500M messages' in b)
+    for k, v in rendered.items():
+        out['rendered:' + k] = ('Measurement basis to clarify' in v, 'not a verification result' in v, 'Page 10 states 500M messages' in v)
+    return {k: v for k, v in out.items() if any(v)}
+
+
+a = where(json.load(open(E + r'\12_api_payloads.json', encoding='utf-8')), json.load(open(E + r'\13_rendered_reports_text.json', encoding='utf-8')))
+b = where(json.load(open(p12, encoding='utf-8')), json.load(open(p13, encoding='utf-8')))
+print('memo 102:', json.dumps(a, indent=0))
+print('same surfaces and flags as memo 101:', a == b)

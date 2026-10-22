@@ -1,0 +1,17 @@
+"""Print the stored memo's text sections and the 09d summary (read-only, from the evidence files).
+Usage: python show_memo.py <evidence dir>"""
+import json, sys
+E = sys.argv[1]
+d = json.load(open(E + r'\09d_memo_input_output_check.json', encoding='utf-8'))
+print({k: d[k] for k in ('model', 'stop_reason', 'usage', 'sent_payload_equals_dump_rebuilt',
+                         'sent_payload_equals_fresh_build_for_generation_principal', 'basis_facts_equal_with_reversed_items',
+                         'prompt_rule_11_present', 'memo_id')})
+print('absent all', all(d['absent_from_model_input'].values()), [k for k, v in d['absent_from_model_input'].items() if not v])
+print(json.dumps(d['summary'], indent=0))
+print(open(E + r'\09e_guard_changes.txt', encoding='utf-8').read())
+m = json.load(open(E + r'\09_memo.json', encoding='utf-8'))['memo']
+for k, v in m.items():
+    if isinstance(v, str) and len(v) > 40 and k not in ('created_at', 'updated_at', 'retrieved_context'):
+        print('=====', k)
+        print(v)
+        print()

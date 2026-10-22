@@ -1,0 +1,4 @@
+import json
+b = json.load(open('hashes_before.json')); a = json.load(open('hashes_after.json'))
+for k in b['dbs']: print(k, 'same' if b['dbs'][k]['sha256'] == a['dbs'][k]['sha256'] else 'CHANGED', a['dbs'][k]['sidecars'])
+print('deck same', a['deck']['sha256'] == b['deck']['sha256'])

@@ -1,0 +1,439 @@
+Sentence-level scan of memo 102: stored sections, memo API per principal (Lite and full), rendered
+pages (HTTP probe). Hits are candidates for reading, not grades. Sentences containing $23.1: 44.
+Surfaces: 51.
+
+== other_interval_or_page_with_judgment: 0
+
+== figures_referent_with_judgment: 0
+
+== unspecified_interval_relabel: 0
+
+== cumulative_presupposed: 0
+
+== inflation_or_imprecise: 0
+
+== monthly_dated_by_page10_context: 28
+  stored:risk_assessment: Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3].
+  stored:business_model_analysis: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  stored:open_concerns: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  stored:base_scenario: If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful platform scale at that point in time.
+  stored:zelda_advantage: The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+  LITE:memo_api:business_model_analysis: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  LITE:memo_api:open_concerns: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  PAID:memo_api:business_model_analysis: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  PAID:memo_api:open_concerns: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  STAFF:memo_api:risk_assessment: Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3].
+  STAFF:memo_api:business_model_analysis: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  STAFF:memo_api:open_concerns: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  STAFF:memo_api:base_scenario: If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful platform scale at that point in time.
+  STAFF:memo_api:zelda_advantage: The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+  rendered:OWNER:D_ic_memo: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2] • A messages/month figure of 500M stated separately [S3] • Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4] • Stage profile: Series A [P1] • Sector profile: Software [P2] Needs Validation: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2] • The $23.1M r
+  rendered:OWNER:D_ic_memo: Open Concerns • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  rendered:STAFF:D_ic_memo: Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3].
+  rendered:STAFF:D_ic_memo: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2] • A messages/month figure of 500M stated separately [S3] • Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4] • Stage profile: Series A [P1] • Sector profile: Software [P2] Needs Validation: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2] • The $23.1M r
+  rendered:STAFF:D_ic_memo: Open Concerns • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  rendered:STAFF:D_ic_memo: Base Scenario If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful platform scale at that point in time.
+  rendered:STAFF:D_ic_memo: Zelda Advantage The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+  rendered:STAFF:E_ic_memo_dl: Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3].
+  rendered:STAFF:E_ic_memo_dl: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  rendered:STAFF:E_ic_memo_dl: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  rendered:STAFF:E_ic_memo_dl: If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful platform scale at that point in time.
+  rendered:STAFF:E_ic_memo_dl: The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+
+== merged_500M_with_both_sources: 0
+
+== monthly_source_ref_with_page10_context: 28
+  stored:risk_assessment: Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3].
+  stored:business_model_analysis: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  stored:open_concerns: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  stored:base_scenario: If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful platform scale at that point in time.
+  stored:zelda_advantage: The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+  LITE:memo_api:business_model_analysis: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  LITE:memo_api:open_concerns: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  PAID:memo_api:business_model_analysis: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  PAID:memo_api:open_concerns: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  STAFF:memo_api:risk_assessment: Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3].
+  STAFF:memo_api:business_model_analysis: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  STAFF:memo_api:open_concerns: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  STAFF:memo_api:base_scenario: If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful platform scale at that point in time.
+  STAFF:memo_api:zelda_advantage: The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+  rendered:OWNER:D_ic_memo: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2] • A messages/month figure of 500M stated separately [S3] • Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4] • Stage profile: Series A [P1] • Sector profile: Software [P2] Needs Validation: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2] • The $23.1M r
+  rendered:OWNER:D_ic_memo: Open Concerns • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  rendered:STAFF:D_ic_memo: Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3].
+  rendered:STAFF:D_ic_memo: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2] • A messages/month figure of 500M stated separately [S3] • Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4] • Stage profile: Series A [P1] • Sector profile: Software [P2] Needs Validation: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2] • The $23.1M r
+  rendered:STAFF:D_ic_memo: Open Concerns • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  rendered:STAFF:D_ic_memo: Base Scenario If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful platform scale at that point in time.
+  rendered:STAFF:D_ic_memo: Zelda Advantage The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+  rendered:STAFF:E_ic_memo_dl: Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3].
+  rendered:STAFF:E_ic_memo_dl: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  rendered:STAFF:E_ic_memo_dl: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  rendered:STAFF:E_ic_memo_dl: If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful platform scale at that point in time.
+  rendered:STAFF:E_ic_memo_dl: The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+
+== judgment_wording: 0
+
+== deployed_or_processed: 0
+
+== conditions_stated_by_company: 0
+
+== which_is_correct: 4
+  stored:questions_for_management: The deck presents both framings [C3, S2 vs S3] — please clarify which is correct and provide the measurement methodology.
+  STAFF:memo_api:questions_for_management: The deck presents both framings [C3, S2 vs S3] — please clarify which is correct and provide the measurement methodology.
+  rendered:STAFF:D_ic_memo: The deck presents both framings [C3, S2 vs S3] — please clarify which is correct and provide the measurement methodology.
+  rendered:STAFF:E_ic_memo_dl: The deck presents both framings [C3, S2 vs S3] — please clarify which is correct and provide the measurement methodology.
+
+== ambiguity_label: 8
+  stored:risk_assessment: Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3].
+  stored:zelda_advantage: The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+  STAFF:memo_api:risk_assessment: Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3].
+  STAFF:memo_api:zelda_advantage: The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+  rendered:STAFF:D_ic_memo: Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3].
+  rendered:STAFF:D_ic_memo: Zelda Advantage The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+  rendered:STAFF:E_ic_memo_dl: Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3].
+  rendered:STAFF:E_ic_memo_dl: The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+
+== basis_contradiction_label: 0
+
+== same_slide_or_page_claim: 0
+
+== monthly_ref_with_traction_slide: 24
+  stored:risk_assessment: Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3].
+  stored:business_model_analysis: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  stored:open_concerns: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  stored:zelda_advantage: The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+  LITE:memo_api:business_model_analysis: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  LITE:memo_api:open_concerns: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  PAID:memo_api:business_model_analysis: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  PAID:memo_api:open_concerns: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  STAFF:memo_api:risk_assessment: Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3].
+  STAFF:memo_api:business_model_analysis: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  STAFF:memo_api:open_concerns: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  STAFF:memo_api:zelda_advantage: The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+  rendered:OWNER:D_ic_memo: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2] • A messages/month figure of 500M stated separately [S3] • Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4] • Stage profile: Series A [P1] • Sector profile: Software [P2] Needs Validation: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2] • The $23.1M r
+  rendered:OWNER:D_ic_memo: Open Concerns • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  rendered:STAFF:D_ic_memo: Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3].
+  rendered:STAFF:D_ic_memo: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2] • A messages/month figure of 500M stated separately [S3] • Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4] • Stage profile: Series A [P1] • Sector profile: Software [P2] Needs Validation: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2] • The $23.1M r
+  rendered:STAFF:D_ic_memo: Open Concerns • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  rendered:STAFF:D_ic_memo: Zelda Advantage The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+  rendered:STAFF:E_ic_memo_dl: Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3].
+  rendered:STAFF:E_ic_memo_dl: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  rendered:STAFF:E_ic_memo_dl: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  rendered:STAFF:E_ic_memo_dl: The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+
+== this_or_the_total_funding: 0
+
+== company_possessive_funding: 0
+
+== basis_guard_wording: 0
+
+== ra109_basis_mention: 54
+  stored:risk_assessment: Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3].
+  stored:business_model_analysis: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  stored:information_readiness: • A messages/month figure of 500M stated separately [S3]
+  stored:information_readiness: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2]
+  stored:information_readiness: Next evidence to supply: Audited or reviewed financial statements including revenue, gross margin, and a dated cash balance, plus a clarification of whether the 500M messages figure is cumulative or a monthly run rate.
+  stored:open_concerns: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  stored:upside_scenario: If the 500M messages figure reflects a monthly run rate [S3] rather than a cumulative total, and if the 140,000+ bots [S1] represent active, paying or monetisable deployments, the platform would demonstrate substantial recurring engagement.
+  stored:downside_scenario: If the 500M messages figure [C3, S2] is a cumulative total rather than a monthly rate, the implied activity level is materially lower than the monthly reading suggests.
+  stored:zelda_advantage: The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+  stored:questions_for_management: - Is the 500M messages figure a cumulative total or a monthly run rate?
+  LITE:memo_api:business_model_analysis: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  LITE:memo_api:information_readiness: • A messages/month figure of 500M stated separately [S3]
+  LITE:memo_api:information_readiness: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2]
+  LITE:memo_api:information_readiness: Next evidence to supply: Audited or reviewed financial statements including revenue, gross margin, and a dated cash balance, plus a clarification of whether the 500M messages figure is cumulative or a monthly run rate.
+  LITE:memo_api:open_concerns: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  PAID:memo_api:business_model_analysis: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  PAID:memo_api:information_readiness: • A messages/month figure of 500M stated separately [S3]
+  PAID:memo_api:information_readiness: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2]
+  PAID:memo_api:information_readiness: Next evidence to supply: Audited or reviewed financial statements including revenue, gross margin, and a dated cash balance, plus a clarification of whether the 500M messages figure is cumulative or a monthly run rate.
+  PAID:memo_api:open_concerns: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  STAFF:memo_api:risk_assessment: Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3].
+  STAFF:memo_api:business_model_analysis: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  STAFF:memo_api:information_readiness: • A messages/month figure of 500M stated separately [S3]
+  STAFF:memo_api:information_readiness: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2]
+  STAFF:memo_api:information_readiness: Next evidence to supply: Audited or reviewed financial statements including revenue, gross margin, and a dated cash balance, plus a clarification of whether the 500M messages figure is cumulative or a monthly run rate.
+  STAFF:memo_api:open_concerns: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  STAFF:memo_api:upside_scenario: If the 500M messages figure reflects a monthly run rate [S3] rather than a cumulative total, and if the 140,000+ bots [S1] represent active, paying or monetisable deployments, the platform would demonstrate substantial recurring engagement.
+  STAFF:memo_api:downside_scenario: If the 500M messages figure [C3, S2] is a cumulative total rather than a monthly rate, the implied activity level is materially lower than the monthly reading suggests.
+  STAFF:memo_api:zelda_advantage: The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+  STAFF:memo_api:questions_for_management: - Is the 500M messages figure a cumulative total or a monthly run rate?
+  rendered:OWNER:D_ic_memo: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2] • A messages/month figure of 500M stated separately [S3] • Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4] • Stage profile: Series A [P1] • Sector profile: Software [P2] Needs Validation: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2] • The $23.1M r
+  rendered:OWNER:D_ic_memo: Open Concerns • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  rendered:OWNER:F_truthdelta_ui: Page 10 states 500M messages without an explicit interval; page 12 states 500M messages/month.
+  rendered:PAID:F_truthdelta_ui: Page 10 states 500M messages without an explicit interval; page 12 states 500M messages/month.
+  rendered:STAFF:D_ic_memo: Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3].
+  rendered:STAFF:D_ic_memo: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2] • A messages/month figure of 500M stated separately [S3] • Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4] • Stage profile: Series A [P1] • Sector profile: Software [P2] Needs Validation: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2] • The $23.1M r
+  rendered:STAFF:D_ic_memo: Open Concerns • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  rendered:STAFF:D_ic_memo: Upside Scenario If the 500M messages figure reflects a monthly run rate [S3] rather than a cumulative total, and if the 140,000+ bots [S1] represent active, paying or monetisable deployments, the platform would demonstrate substantial recurring engagement.
+  rendered:STAFF:D_ic_memo: Downside Scenario If the 500M messages figure [C3, S2] is a cumulative total rather than a monthly rate, the implied activity level is materially lower than the monthly reading suggests.
+  rendered:STAFF:D_ic_memo: Zelda Advantage The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+  rendered:STAFF:D_ic_memo: Questions for Management Is the 500M messages figure a cumulative total or a monthly run rate?
+  rendered:STAFF:E_ic_memo_dl: Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3].
+  rendered:STAFF:E_ic_memo_dl: The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  rendered:STAFF:E_ic_memo_dl: • A messages/month figure of 500M stated separately [S3]
+  rendered:STAFF:E_ic_memo_dl: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2]
+  rendered:STAFF:E_ic_memo_dl: Next evidence to supply: Audited or reviewed financial statements including revenue, gross margin, and a dated cash balance, plus a clarification of whether the 500M messages figure is cumulative or a monthly run rate.
+  rendered:STAFF:E_ic_memo_dl: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  rendered:STAFF:E_ic_memo_dl: If the 500M messages figure reflects a monthly run rate [S3] rather than a cumulative total, and if the 140,000+ bots [S1] represent active, paying or monetisable deployments, the platform would demonstrate substantial recurring engagement.
+  rendered:STAFF:E_ic_memo_dl: If the 500M messages figure [C3, S2] is a cumulative total rather than a monthly rate, the implied activity level is materially lower than the monthly reading suggests.
+  rendered:STAFF:E_ic_memo_dl: The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+  rendered:STAFF:E_ic_memo_dl: - Is the 500M messages figure a cumulative total or a monthly run rate?
+  rendered:STAFF:F_truthdelta_ui: Page 10 states 500M messages without an explicit interval; page 12 states 500M messages/month.
+
+== ra109_cumulative_asserted: 0
+
+== ra109_contradiction_or_error_words: 26
+  stored:open_concerns: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  stored:zelda_advantage: The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+  LITE:memo_api:open_concerns: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  PAID:memo_api:open_concerns: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  STAFF:memo_api:open_concerns: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  STAFF:memo_api:zelda_advantage: The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+  rendered:OWNER:B_profile_analysis: One-time purchase Truth Delta Report Checks document claims against available external evidence, keeping contradictions, missing evidence and unavailable sources distinct. $19.99 USD Review your company and evidence Use your own company materials to see what Zelda may surface to an investor.
+  rendered:OWNER:D_ic_memo: Open Concerns • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  rendered:OWNER:D_ic_memo: One-time purchase Truth Delta Report Checks document claims against available external evidence, keeping contradictions, missing evidence and unavailable sources distinct. $19.99 USD Review your company and evidence Use your own company materials to see what Zelda may surface to an investor.
+  rendered:OWNER:F_truthdelta_ui: Zelda Lite Verification 🔍 Truth Delta Verification Evidence Credibility — /100 — 4 Claims Analyzed 0 Verified 4 Not established Evidence Coverage Of the claims Zelda cross-checked, how many public sources (SEC EDGAR) verified, contradicted, or could not establish.
+  rendered:PAID:C2_company_overview: Partial Claims & verification Evidence Credibility: not scored Limited public evidence: none of the 4 claims could be verified or contradicted against a public source.
+  rendered:PAID:F_truthdelta_ui: Zelda Lite Verification 🔍 Truth Delta Verification Evidence Credibility — /100 — 4 Claims Analyzed 0 Verified 4 Not established Evidence Coverage Of the claims Zelda cross-checked, how many public sources (SEC EDGAR) verified, contradicted, or could not establish.
+  rendered:STAFF:C2_company_overview: Worth investigating Funding raised — not established check in Truth Delta → Usage — not established check in Truth Delta → The messaging volume metric is internally inconsistent: the slide headed 'Traction by A… see the IC Memo → Whether the figure is cumulative or a monthly run rate is unresolved and directly affec… see the IC Memo → Claims & verification Evidence Credibility: not scored Limited public evidence: none of the 4 claims could be verified or contradicted against a public source. ■ V
+  rendered:STAFF:C2_company_overview: One-time purchase Truth Delta Report Checks document claims against available external evidence, keeping contradictions, missing evidence and unavailable sources distinct. $19.99 USD Select the company and evidence Upload a document or select a company below.
+  rendered:STAFF:D_ic_memo: Open Concerns • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  rendered:STAFF:D_ic_memo: Zelda Advantage The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+  rendered:STAFF:D_ic_memo: Evidence Credibility: not scored — no claim could be verified or contradicted against a public source No public data could be found to independently verify these claims (checked SEC EDGAR).
+  rendered:STAFF:D_ic_memo: This is not a confirmation the claims are accurate — only that no corroborating or contradicting external data was found for "ManyChat".
+  rendered:STAFF:D_ic_memo: Claims checked: 4 ■ Verified against public sources — 0 · ■ Contradicted — 0 · ■ Not established — 4 (of 4) View the full Truth Delta report → Financial Snapshot Raising: not disclosed Current revenue: not disclosed Monthly burn: not disclosed Runway: not calculated Team size: not disclosed ℹ This report is provided for informational and due-diligence purposes only.
+  rendered:STAFF:D_ic_memo: One-time purchase Truth Delta Report Checks document claims against available external evidence, keeping contradictions, missing evidence and unavailable sources distinct. $19.99 USD Select the company and evidence Upload a document or select a company below.
+  rendered:STAFF:E_ic_memo_dl: • The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+  rendered:STAFF:E_ic_memo_dl: The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.
+  rendered:STAFF:E_ic_memo_dl: **Evidence Credibility:** not scored — no claim could be verified or contradicted against a public source
+  rendered:STAFF:E_ic_memo_dl: This is not a confirmation the claims are accurate — only that no corroborating or contradicting external data was found for "ManyChat".
+  rendered:STAFF:E_ic_memo_dl: **Evidence coverage:** 0 verified · 0 contradicted · 4 not established (of 4)
+  rendered:STAFF:F_truthdelta_ui: Zelda AI — Full Verification 🔍 Truth Delta Verification Evidence Credibility — /100 — 4 Claims Analyzed 0 Verified 4 Not established Evidence Coverage Of the claims Zelda cross-checked, how many public sources (SEC EDGAR) verified, contradicted, or could not establish.
+
+== ra109_merged_or_verified_500M: 7
+  stored:supported_points: • The company states 140,000+ bots and 500M messages in a slide headed 'Traction by Apr-16' [S1, S2], indicating claimed platform scale at that point in time, though neither figure has been independently verified.
+  LITE:memo_api:supported_points: • The company states 140,000+ bots and 500M messages in a slide headed 'Traction by Apr-16' [S1, S2], indicating claimed platform scale at that point in time, though neither figure has been independently verified.
+  PAID:memo_api:supported_points: • The company states 140,000+ bots and 500M messages in a slide headed 'Traction by Apr-16' [S1, S2], indicating claimed platform scale at that point in time, though neither figure has been independently verified.
+  STAFF:memo_api:supported_points: • The company states 140,000+ bots and 500M messages in a slide headed 'Traction by Apr-16' [S1, S2], indicating claimed platform scale at that point in time, though neither figure has been independently verified.
+  rendered:OWNER:D_ic_memo: • The company states 140,000+ bots and 500M messages in a slide headed 'Traction by Apr-16' [S1, S2], indicating claimed platform scale at that point in time, though neither figure has been independently verified.
+  rendered:STAFF:D_ic_memo: • The company states 140,000+ bots and 500M messages in a slide headed 'Traction by Apr-16' [S1, S2], indicating claimed platform scale at that point in time, though neither figure has been independently verified.
+  rendered:STAFF:E_ic_memo_dl: • The company states 140,000+ bots and 500M messages in a slide headed 'Traction by Apr-16' [S1, S2], indicating claimed platform scale at that point in time, though neither figure has been independently verified.
+
+== ra109_annualised_or_converted: 0
+
+== funding_total_wording: 9
+  stored:supported_points: • Pitch Deck Hunt lists $23.1M raised [C1, S4]; this is narrated by Pitch Deck Hunt and undated, and was not independently verified, so it cannot be treated as a confirmed funding total but is on record as a stated figure.
+  LITE:memo_api:supported_points: • Pitch Deck Hunt lists $23.1M raised [C1, S4]; this is narrated by Pitch Deck Hunt and undated, and was not independently verified, so it cannot be treated as a confirmed funding total but is on record as a stated figure.
+  PAID:memo_api:supported_points: • Pitch Deck Hunt lists $23.1M raised [C1, S4]; this is narrated by Pitch Deck Hunt and undated, and was not independently verified, so it cannot be treated as a confirmed funding total but is on record as a stated figure.
+  STAFF:memo_api:supported_points: • Pitch Deck Hunt lists $23.1M raised [C1, S4]; this is narrated by Pitch Deck Hunt and undated, and was not independently verified, so it cannot be treated as a confirmed funding total but is on record as a stated figure.
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2] • A messages/month figure of 500M stated separately [S3] • Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4] • Stage profile: Series A [P1] • Sector profile: Software [P2] Needs Validation: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2] • The $23.1M r
+  rendered:OWNER:D_ic_memo: Supported Points • Pitch Deck Hunt lists $23.1M raised [C1, S4]; this is narrated by Pitch Deck Hunt and undated, and was not independently verified, so it cannot be treated as a confirmed funding total but is on record as a stated figure.
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2] • A messages/month figure of 500M stated separately [S3] • Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4] • Stage profile: Series A [P1] • Sector profile: Software [P2] Needs Validation: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2] • The $23.1M r
+  rendered:STAFF:D_ic_memo: Supported Points • Pitch Deck Hunt lists $23.1M raised [C1, S4]; this is narrated by Pitch Deck Hunt and undated, and was not independently verified, so it cannot be treated as a confirmed funding total but is on record as a stated figure.
+  rendered:STAFF:E_ic_memo_dl: • Pitch Deck Hunt lists $23.1M raised [C1, S4]; this is narrated by Pitch Deck Hunt and undated, and was not independently verified, so it cannot be treated as a confirmed funding total but is on record as a stated figure.
+
+== funding_credited_to_company: 2
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2] • A messages/month figure of 500M stated separately [S3] • Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4] • Stage profile: Series A [P1] • Sector profile: Software [P2] Needs Validation: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2] • The $23.1M r
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2] • A messages/month figure of 500M stated separately [S3] • Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4] • Stage profile: Series A [P1] • Sector profile: Software [P2] Needs Validation: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2] • The $23.1M r
+
+== funds_presupposed_used: 4
+  stored:risk_assessment: Investors cannot confirm total capital deployed or remaining reserves.
+  STAFF:memo_api:risk_assessment: Investors cannot confirm total capital deployed or remaining reserves.
+  rendered:STAFF:D_ic_memo: Investors cannot confirm total capital deployed or remaining reserves.
+  rendered:STAFF:E_ic_memo_dl: Investors cannot confirm total capital deployed or remaining reserves.
+
+== outside_knowledge_platform: 0
+
+== funding_sentence_missing_narrator: 0
+
+== narrator_with_traction_refs_or_words: 2
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2] • A messages/month figure of 500M stated separately [S3] • Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4] • Stage profile: Series A [P1] • Sector profile: Software [P2] Needs Validation: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2] • The $23.1M r
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2] • A messages/month figure of 500M stated separately [S3] • Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4] • Stage profile: Series A [P1] • Sector profile: Software [P2] Needs Validation: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2] • The $23.1M r
+
+== equality_wording: 0
+
+== independent_validation_wording: 98
+  stored:executive_summary: Pitch Deck Hunt lists $23.1M raised [C1, S4], though this figure is undated and could not be independently verified.
+  stored:financial_analysis: • Funding raised: Pitch Deck Hunt lists $23.1M raised [C1, S4]; the figure is undated and was not independently verified — it could not be confirmed as comparable to any external source [C1].
+  stored:risk_assessment: Unverified funding history: The $23.1M raised figure [C1, S4] is narrated by Pitch Deck Hunt, is undated, and could not be independently verified.
+  stored:information_readiness: Needs Validation:
+  stored:information_readiness: • The $23.1M raised figure (per Pitch Deck Hunt) — undated and not independently verified [C1]
+  stored:information_readiness: • All traction figures — none independently verified [C2, C3, C4, S1, S2, S3]
+  stored:supported_points: • Pitch Deck Hunt lists $23.1M raised [C1, S4]; this is narrated by Pitch Deck Hunt and undated, and was not independently verified, so it cannot be treated as a confirmed funding total but is on record as a stated figure.
+  stored:supported_points: • The company states 140,000+ bots and 500M messages in a slide headed 'Traction by Apr-16' [S1, S2], indicating claimed platform scale at that point in time, though neither figure has been independently verified.
+  stored:open_concerns: • The $23.1M raised figure [C1, S4] is narrated by Pitch Deck Hunt, is undated, and was not independently verified — it is unknown when this capital was raised, in how many tranches, or what remains.
+  stored:upside_scenario: This reading requires independent validation of both the measurement basis and whether any revenue attaches to that volume — neither is available in the extracted evidence.
+  LITE:memo_api:information_readiness: Needs Validation:
+  LITE:memo_api:information_readiness: • The $23.1M raised figure (per Pitch Deck Hunt) — undated and not independently verified [C1]
+  LITE:memo_api:information_readiness: • All traction figures — none independently verified [C2, C3, C4, S1, S2, S3]
+  LITE:memo_api:open_concerns: • The $23.1M raised figure [C1, S4] is narrated by Pitch Deck Hunt, is undated, and was not independently verified — it is unknown when this capital was raised, in how many tranches, or what remains.
+  LITE:memo_api:supported_points: • Pitch Deck Hunt lists $23.1M raised [C1, S4]; this is narrated by Pitch Deck Hunt and undated, and was not independently verified, so it cannot be treated as a confirmed funding total but is on record as a stated figure.
+  LITE:memo_api:supported_points: • The company states 140,000+ bots and 500M messages in a slide headed 'Traction by Apr-16' [S1, S2], indicating claimed platform scale at that point in time, though neither figure has been independently verified.
+  PAID:memo_api:information_readiness: Needs Validation:
+  PAID:memo_api:information_readiness: • The $23.1M raised figure (per Pitch Deck Hunt) — undated and not independently verified [C1]
+  PAID:memo_api:information_readiness: • All traction figures — none independently verified [C2, C3, C4, S1, S2, S3]
+  PAID:memo_api:open_concerns: • The $23.1M raised figure [C1, S4] is narrated by Pitch Deck Hunt, is undated, and was not independently verified — it is unknown when this capital was raised, in how many tranches, or what remains.
+  PAID:memo_api:supported_points: • Pitch Deck Hunt lists $23.1M raised [C1, S4]; this is narrated by Pitch Deck Hunt and undated, and was not independently verified, so it cannot be treated as a confirmed funding total but is on record as a stated figure.
+  PAID:memo_api:supported_points: • The company states 140,000+ bots and 500M messages in a slide headed 'Traction by Apr-16' [S1, S2], indicating claimed platform scale at that point in time, though neither figure has been independently verified.
+  STAFF:memo_api:executive_summary: Pitch Deck Hunt lists $23.1M raised [C1, S4], though this figure is undated and could not be independently verified.
+  STAFF:memo_api:financial_analysis: • Funding raised: Pitch Deck Hunt lists $23.1M raised [C1, S4]; the figure is undated and was not independently verified — it could not be confirmed as comparable to any external source [C1].
+  STAFF:memo_api:risk_assessment: Unverified funding history: The $23.1M raised figure [C1, S4] is narrated by Pitch Deck Hunt, is undated, and could not be independently verified.
+  STAFF:memo_api:information_readiness: Needs Validation:
+  STAFF:memo_api:information_readiness: • The $23.1M raised figure (per Pitch Deck Hunt) — undated and not independently verified [C1]
+  STAFF:memo_api:information_readiness: • All traction figures — none independently verified [C2, C3, C4, S1, S2, S3]
+  STAFF:memo_api:supported_points: • Pitch Deck Hunt lists $23.1M raised [C1, S4]; this is narrated by Pitch Deck Hunt and undated, and was not independently verified, so it cannot be treated as a confirmed funding total but is on record as a stated figure.
+  STAFF:memo_api:supported_points: • The company states 140,000+ bots and 500M messages in a slide headed 'Traction by Apr-16' [S1, S2], indicating claimed platform scale at that point in time, though neither figure has been independently verified.
+  STAFF:memo_api:open_concerns: • The $23.1M raised figure [C1, S4] is narrated by Pitch Deck Hunt, is undated, and was not independently verified — it is unknown when this capital was raised, in how many tranches, or what remains.
+  STAFF:memo_api:upside_scenario: This reading requires independent validation of both the measurement basis and whether any revenue attaches to that volume — neither is available in the extracted evidence.
+  rendered:OWNER:B_profile_analysis: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:B_profile_analysis: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:B_profile_analysis: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:B_profile_analysis: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:B_profile_analysis: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:B_profile_analysis: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:B_profile_analysis: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2] • A messages/month figure of 500M stated separately [S3] • Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4] • Stage profile: Series A [P1] • Sector profile: Software [P2] Needs Validation: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2] • The $23.1M r
+  rendered:OWNER:D_ic_memo: Supported Points • Pitch Deck Hunt lists $23.1M raised [C1, S4]; this is narrated by Pitch Deck Hunt and undated, and was not independently verified, so it cannot be treated as a confirmed funding total but is on record as a stated figure.
+  rendered:OWNER:D_ic_memo: • The company states 140,000+ bots and 500M messages in a slide headed 'Traction by Apr-16' [S1, S2], indicating claimed platform scale at that point in time, though neither figure has been independently verified.
+  rendered:OWNER:D_ic_memo: • The $23.1M raised figure [C1, S4] is narrated by Pitch Deck Hunt, is undated, and was not independently verified — it is unknown when this capital was raised, in how many tranches, or what remains.
+  rendered:OWNER:D_ic_memo: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+  rendered:OWNER:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:OWNER:F_truthdelta_ui: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+  rendered:PAID:C2_company_overview: Pitch Deck Hunt lists $23.1M raised [C1, S4], though this figure is undated and could not be independently verified.
+  rendered:PAID:C2_company_overview: Outside Overall fit Only part of the picture is corroborated, so this is a softer match.
+  rendered:PAID:C2_company_overview: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+  rendered:PAID:F_truthdelta_ui: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+  rendered:STAFF:C2_company_overview: Pitch Deck Hunt lists $23.1M raised [C1, S4], though this figure is undated and could not be independently verified.
+  rendered:STAFF:C2_company_overview: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+  rendered:STAFF:C2_company_overview: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:C2_company_overview: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:C2_company_overview: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:C2_company_overview: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:C2_company_overview: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:C2_company_overview: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:C2_company_overview: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:D_ic_memo: Pitch Deck Hunt lists $23.1M raised [C1, S4], though this figure is undated and could not be independently verified.
+  rendered:STAFF:D_ic_memo: • Funding raised: Pitch Deck Hunt lists $23.1M raised [C1, S4]; the figure is undated and was not independently verified — it could not be confirmed as comparable to any external source [C1].
+  rendered:STAFF:D_ic_memo: Unverified funding history: The $23.1M raised figure [C1, S4] is narrated by Pitch Deck Hunt, is undated, and could not be independently verified.
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2] • A messages/month figure of 500M stated separately [S3] • Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4] • Stage profile: Series A [P1] • Sector profile: Software [P2] Needs Validation: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2] • The $23.1M r
+  rendered:STAFF:D_ic_memo: Supported Points • Pitch Deck Hunt lists $23.1M raised [C1, S4]; this is narrated by Pitch Deck Hunt and undated, and was not independently verified, so it cannot be treated as a confirmed funding total but is on record as a stated figure.
+  rendered:STAFF:D_ic_memo: • The company states 140,000+ bots and 500M messages in a slide headed 'Traction by Apr-16' [S1, S2], indicating claimed platform scale at that point in time, though neither figure has been independently verified.
+  rendered:STAFF:D_ic_memo: • The $23.1M raised figure [C1, S4] is narrated by Pitch Deck Hunt, is undated, and was not independently verified — it is unknown when this capital was raised, in how many tranches, or what remains.
+  rendered:STAFF:D_ic_memo: This reading requires independent validation of both the measurement basis and whether any revenue attaches to that volume — neither is available in the extracted evidence.
+  rendered:STAFF:D_ic_memo: Truth Delta An automated cross-check of the deck's claims against independent public records.
+  rendered:STAFF:D_ic_memo: Evidence Credibility: not scored — no claim could be verified or contradicted against a public source No public data could be found to independently verify these claims (checked SEC EDGAR).
+  rendered:STAFF:D_ic_memo: This is not a confirmation the claims are accurate — only that no corroborating or contradicting external data was found for "ManyChat".
+  rendered:STAFF:D_ic_memo: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+  rendered:STAFF:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:D_ic_memo: After payment confirmation, Zelda generates your reports and saves them in Library.
+  rendered:STAFF:E_ic_memo_dl: Pitch Deck Hunt lists $23.1M raised [C1, S4], though this figure is undated and could not be independently verified.
+  rendered:STAFF:E_ic_memo_dl: • Funding raised: Pitch Deck Hunt lists $23.1M raised [C1, S4]; the figure is undated and was not independently verified — it could not be confirmed as comparable to any external source [C1].
+  rendered:STAFF:E_ic_memo_dl: Unverified funding history: The $23.1M raised figure [C1, S4] is narrated by Pitch Deck Hunt, is undated, and could not be independently verified.
+  rendered:STAFF:E_ic_memo_dl: Needs Validation:
+  rendered:STAFF:E_ic_memo_dl: • The $23.1M raised figure (per Pitch Deck Hunt) — undated and not independently verified [C1]
+  rendered:STAFF:E_ic_memo_dl: • All traction figures — none independently verified [C2, C3, C4, S1, S2, S3]
+  rendered:STAFF:E_ic_memo_dl: • Pitch Deck Hunt lists $23.1M raised [C1, S4]; this is narrated by Pitch Deck Hunt and undated, and was not independently verified, so it cannot be treated as a confirmed funding total but is on record as a stated figure.
+  rendered:STAFF:E_ic_memo_dl: • The company states 140,000+ bots and 500M messages in a slide headed 'Traction by Apr-16' [S1, S2], indicating claimed platform scale at that point in time, though neither figure has been independently verified.
+  rendered:STAFF:E_ic_memo_dl: • The $23.1M raised figure [C1, S4] is narrated by Pitch Deck Hunt, is undated, and was not independently verified — it is unknown when this capital was raised, in how many tranches, or what remains.
+  rendered:STAFF:E_ic_memo_dl: This reading requires independent validation of both the measurement basis and whether any revenue attaches to that volume — neither is available in the extracted evidence.
+  rendered:STAFF:E_ic_memo_dl: No public data could be found to independently verify these claims (checked SEC EDGAR).
+  rendered:STAFF:E_ic_memo_dl: This is not a confirmation the claims are accurate — only that no corroborating or contradicting external data was found for "ManyChat".
+  rendered:STAFF:E_ic_memo_dl: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+  rendered:STAFF:F_truthdelta_ui: You are responsible for conducting your own independent due diligence and, where appropriate, consulting qualified professional advisers.
+
+== narrator_of_wording: 0
+
+== current_total_wording_on_funding: 3
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2] • A messages/month figure of 500M stated separately [S3] • Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4] • Stage profile: Series A [P1] • Sector profile: Software [P2] Needs Validation: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2] • The $23.1M r
+  rendered:STAFF:C2_company_overview: Worth investigating Funding raised — not established check in Truth Delta → Usage — not established check in Truth Delta → The messaging volume metric is internally inconsistent: the slide headed 'Traction by A… see the IC Memo → Whether the figure is cumulative or a monthly run rate is unresolved and directly affec… see the IC Memo → Claims & verification Evidence Credibility: not scored Limited public evidence: none of the 4 claims could be verified or contradicted against a public source. ■ V
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2] • A messages/month figure of 500M stated separately [S3] • Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4] • Stage profile: Series A [P1] • Sector profile: Software [P2] Needs Validation: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2] • The $23.1M r
+
+== funding_with_2015: 0
+
+== historical_as_current: 0
+
+== as_of_slide_context: 0
+
+== runway_or_cash_premise: 0
+
+== runway_or_cash_any: 33
+  stored:financial_analysis: • Burn rate: Not found in the extracted evidence.
+  stored:financial_analysis: • Runway: Cannot be determined — no dated cash balance or burn rate is present in the extracted evidence.
+  stored:information_readiness: Next evidence to supply: Audited or reviewed financial statements including revenue, gross margin, and a dated cash balance, plus a clarification of whether the 500M messages figure is cumulative or a monthly run rate.
+  stored:open_concerns: • No revenue, burn, or unit-economics data is present in the extracted evidence, leaving the commercial viability of the stated user and message volumes entirely unassessable.
+  stored:base_scenario: Without revenue data, burn figures, or a dated cash position, no trajectory beyond that snapshot can be inferred from the available evidence.
+  stored:questions_for_management: - What is the current monthly cash burn, and what is the dated cash balance?
+  LITE:memo_api:information_readiness: Next evidence to supply: Audited or reviewed financial statements including revenue, gross margin, and a dated cash balance, plus a clarification of whether the 500M messages figure is cumulative or a monthly run rate.
+  LITE:memo_api:open_concerns: • No revenue, burn, or unit-economics data is present in the extracted evidence, leaving the commercial viability of the stated user and message volumes entirely unassessable.
+  PAID:memo_api:information_readiness: Next evidence to supply: Audited or reviewed financial statements including revenue, gross margin, and a dated cash balance, plus a clarification of whether the 500M messages figure is cumulative or a monthly run rate.
+  PAID:memo_api:open_concerns: • No revenue, burn, or unit-economics data is present in the extracted evidence, leaving the commercial viability of the stated user and message volumes entirely unassessable.
+  STAFF:memo_api:financial_analysis: • Burn rate: Not found in the extracted evidence.
+  STAFF:memo_api:financial_analysis: • Runway: Cannot be determined — no dated cash balance or burn rate is present in the extracted evidence.
+  STAFF:memo_api:information_readiness: Next evidence to supply: Audited or reviewed financial statements including revenue, gross margin, and a dated cash balance, plus a clarification of whether the 500M messages figure is cumulative or a monthly run rate.
+  STAFF:memo_api:open_concerns: • No revenue, burn, or unit-economics data is present in the extracted evidence, leaving the commercial viability of the stated user and message volumes entirely unassessable.
+  STAFF:memo_api:base_scenario: Without revenue data, burn figures, or a dated cash position, no trajectory beyond that snapshot can be inferred from the available evidence.
+  STAFF:memo_api:questions_for_management: - What is the current monthly cash burn, and what is the dated cash balance?
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2] • A messages/month figure of 500M stated separately [S3] • Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4] • Stage profile: Series A [P1] • Sector profile: Software [P2] Needs Validation: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2] • The $23.1M r
+  rendered:OWNER:D_ic_memo: • No revenue, burn, or unit-economics data is present in the extracted evidence, leaving the commercial viability of the stated user and message volumes entirely unassessable.
+  rendered:STAFF:D_ic_memo: • Burn rate: Not found in the extracted evidence.
+  rendered:STAFF:D_ic_memo: • Runway: Cannot be determined — no dated cash balance or burn rate is present in the extracted evidence.
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2] • A messages/month figure of 500M stated separately [S3] • Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4] • Stage profile: Series A [P1] • Sector profile: Software [P2] Needs Validation: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2] • The $23.1M r
+  rendered:STAFF:D_ic_memo: • No revenue, burn, or unit-economics data is present in the extracted evidence, leaving the commercial viability of the stated user and message volumes entirely unassessable.
+  rendered:STAFF:D_ic_memo: Without revenue data, burn figures, or a dated cash position, no trajectory beyond that snapshot can be inferred from the available evidence.
+  rendered:STAFF:D_ic_memo: What is the current monthly cash burn, and what is the dated cash balance?
+  rendered:STAFF:D_ic_memo: Claims checked: 4 ■ Verified against public sources — 0 · ■ Contradicted — 0 · ■ Not established — 4 (of 4) View the full Truth Delta report → Financial Snapshot Raising: not disclosed Current revenue: not disclosed Monthly burn: not disclosed Runway: not calculated Team size: not disclosed ℹ This report is provided for informational and due-diligence purposes only.
+  rendered:STAFF:E_ic_memo_dl: • Burn rate: Not found in the extracted evidence.
+  rendered:STAFF:E_ic_memo_dl: • Runway: Cannot be determined — no dated cash balance or burn rate is present in the extracted evidence.
+  rendered:STAFF:E_ic_memo_dl: Next evidence to supply: Audited or reviewed financial statements including revenue, gross margin, and a dated cash balance, plus a clarification of whether the 500M messages figure is cumulative or a monthly run rate.
+  rendered:STAFF:E_ic_memo_dl: • No revenue, burn, or unit-economics data is present in the extracted evidence, leaving the commercial viability of the stated user and message volumes entirely unassessable.
+  rendered:STAFF:E_ic_memo_dl: Without revenue data, burn figures, or a dated cash position, no trajectory beyond that snapshot can be inferred from the available evidence.
+  rendered:STAFF:E_ic_memo_dl: - What is the current monthly cash burn, and what is the dated cash balance?
+  rendered:STAFF:E_ic_memo_dl: - Monthly burn: not disclosed
+  rendered:STAFF:E_ic_memo_dl: - Runway: not calculated
+
+== raise_premise: 8
+  stored:financial_analysis: • Use of proceeds: Not found in the extracted evidence.
+  stored:questions_for_management: - What is the intended use of proceeds from any fundraise?
+  STAFF:memo_api:financial_analysis: • Use of proceeds: Not found in the extracted evidence.
+  STAFF:memo_api:questions_for_management: - What is the intended use of proceeds from any fundraise?
+  rendered:STAFF:D_ic_memo: • Use of proceeds: Not found in the extracted evidence.
+  rendered:STAFF:D_ic_memo: What is the intended use of proceeds from any fundraise?
+  rendered:STAFF:E_ic_memo_dl: • Use of proceeds: Not found in the extracted evidence.
+  rendered:STAFF:E_ic_memo_dl: - What is the intended use of proceeds from any fundraise?
+
+== self_reported_with_funding_ref: 0
+
+== stage_near_slide_date: 2
+  rendered:OWNER:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2] • A messages/month figure of 500M stated separately [S3] • Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4] • Stage profile: Series A [P1] • Sector profile: Software [P2] Needs Validation: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2] • The $23.1M r
+  rendered:STAFF:D_ic_memo: Information Readiness Score: 10/100 Present: • Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2] • A messages/month figure of 500M stated separately [S3] • Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4] • Stage profile: Series A [P1] • Sector profile: Software [P2] Needs Validation: • Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2] • The $23.1M r
+
+== platform_user_counts: 0
+
+== advice_words: 3
+  rendered:PAID:C2_company_overview: Buy 3 Truth Delta credits for $25.
+  rendered:PAID:C2_company_overview: Redeem one credit for one new Truth Delta report on any company you evaluate. $25.00 USD 0 Truth Delta credits available 3 reports, 3 companies, use them when you need them Buy three Truth Delta credits now and redeem them later, one at a time, against any company you evaluate.
+  rendered:PAID:C2_company_overview: Buy 3 Truth Delta credits · $25.00 That is $8.33 per report versus $10 each individually.
+
+== list_repr: 0
+
+== mojibake: 0
+

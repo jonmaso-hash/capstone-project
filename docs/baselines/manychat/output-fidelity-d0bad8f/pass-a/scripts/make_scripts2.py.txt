@@ -1,0 +1,58 @@
+"""Stage 2 (after the memo): derive this run's HTTP probe, its config, the Markdown check, the replay analysis and the
+sentence scan from the memo-101 run's (r066/). probe.py is copied unchanged. probe_cfg.json: this run's outdir,
+document 3144, Entity Integrity report 43, principals d0bmc_*; markers kept, PR #287 output phrases appended.
+md_check.py: principal and document id only. analyze: paths, label, fixture prefix; this round's review IDs and guard
+phrases added to the absent-from-input list. scan: header relabelled to memo 102; checks added for the shapes PR #287
+changed (subject naming another page/interval with a judgment, "these/the figures" with a judgment, the
+unspecified-interval relabel). Each replacement must match. Usage: python make_scripts2.py"""
+import json, os, shutil
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+BS = chr(92)
+PREV = BS.join(['C:', 'Users', 'jonathan', 'AppData', 'Local', 'Temp', 'claude', 'C--Users-jonathan-Desktop-KCV-np',
+                'c8a313d5-81e1-402a-b7da-9205b6f20fab', 'scratchpad', 'r066'])
+
+
+def derive(name, reps, target=None):
+    s = open(os.path.join(PREV, name), encoding='utf-8').read()
+    for a, b in reps:
+        assert s.count(a) >= 1, (name, a)
+        s = s.replace(a, b)
+    open(os.path.join(HERE, target or name), 'w', encoding='utf-8', newline='\n').write(s)
+    print('derived', target or name)
+
+
+shutil.copy(os.path.join(PREV, 'probe.py'), os.path.join(HERE, 'probe.py'))
+cfg = json.load(open(os.path.join(PREV, 'probe_cfg.json'), encoding='utf-8-sig'))
+assert cfg['doc'] == 3143 and cfg['report'] == 42 and cfg['application_id'] == 50
+cfg['outdir'] = BS.join(['C:', 'Users', 'jonathan', 'Desktop', 'KCV-mc-d0b', 'docs', 'baselines', 'manychat',
+                         'output-fidelity-d0bad8f', 'pass-a'])
+cfg['doc'], cfg['report'] = 3144, 43
+cfg['owner'] = 'd0bmc_owner'
+cfg['principals'] = {'OWNER': 'd0bmc_owner', 'LITE': 'd0bmc_lite', 'PAID': 'd0bmc_paid', 'STAFF': 'd0bmc_staff', 'ANON': None}
+for m in ('stated without an explicit interval', 'unspecified-interval', 'before either is relied on', 'overstat', 'inflat'):
+    if m not in cfg['markers']:
+        cfg['markers'].append(m)
+json.dump(cfg, open(os.path.join(HERE, 'probe_cfg.json'), 'w', encoding='utf-8', newline='\n'), indent=1, ensure_ascii=False)
+print('derived probe.py (copy), probe_cfg.json')
+derive('md_check.py', [("ns['login']('r66mc_staff')", "ns['login']('d0bmc_staff')"),
+                       ("'/api/v1/zelda/documents/3143/ic-memo/download/'", "'/api/v1/zelda/documents/3144/ic-memo/download/'")])
+derive('analyze_r066.py', [
+    ("HERE = r'" + PREV + "'", "HERE = r'" + HERE + "'"),
+    ("label='mc066.analyze (read-only rebuild)'", "label='mcd0b.analyze (read-only rebuild)'"),
+    ("'r66mc', 'Rerun Owner'", "'d0bmc', 'Rerun Owner'"),
+    ("'OF-807', 'memo 100', ", "'OF-807', 'memo 100', 'OF-903', 'OF-904', 'OF-905', 'OF-906', 'memo 101', 'unspecified-interval', "),
+], 'analyze_rd0b.py')
+derive('scan_r066.py', [
+    ('Sentence-level scan of memo 101 on every captured surface', 'Sentence-level scan of memo 102 on every captured surface'),
+    ("f.write('Sentence-level scan of memo 101:", "f.write('Sentence-level scan of memo 102:"),
+    ("CHECKS = {\n",
+     "CHECKS = {\n"
+     "    # Added at d0bad8f for the shapes PR #287 changed (candidates for reading, not grades).\n"
+     "    'other_interval_or_page_with_judgment': lambda s: re.search(r'\\b(?:yearly|weekly|daily|annual|quarterly|run-rate|page[- ]\\d+|slide[- ]\\d+)\\b', s, re.I)\n"
+     "                                                      and re.search(r'overstat|inflat|mislead|exaggerat|wrong|inaccura', s, re.I),\n"
+     "    'figures_referent_with_judgment': lambda s: re.search(r'\\b(?:these|the|both|one or both) figures\\b', s, re.I)\n"
+     "                                                and re.search(r'overstat|inflat|mislead|exaggerat|misrepresent|imprecise', s, re.I),\n"
+     "    'unspecified_interval_relabel': lambda s: re.search(r'unspecified-interval|stated without an explicit interval', s, re.I),\n"),
+], 'scan_rd0b.py')
+print('stage 2 derived')

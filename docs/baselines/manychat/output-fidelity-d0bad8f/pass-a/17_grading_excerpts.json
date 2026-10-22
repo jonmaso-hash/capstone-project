@@ -1,0 +1,924 @@
+{
+ "note": "Excerpts are copied whole from the run files (09a payload, 04 claims, 09b raw reply, 09 stored memo, 09d replay).",
+ "source_map": {
+  "C1": {
+   "kind": "claim",
+   "category": "funding_raised",
+   "statement": "$23.1M raised",
+   "status": "INSUFFICIENT",
+   "source_context": null,
+   "narrator": "Pitch Deck Hunt",
+   "as_of": "not stated",
+   "sources": [
+    {
+     "document_id": 3144,
+     "page": 2
+    }
+   ]
+  },
+  "C2": {
+   "kind": "claim",
+   "category": "usage",
+   "statement": "500M messages/month",
+   "status": "INSUFFICIENT",
+   "source_context": null,
+   "narrator": null,
+   "as_of": "not stated",
+   "sources": [
+    {
+     "document_id": 3144,
+     "page": 12
+    }
+   ]
+  },
+  "C3": {
+   "kind": "claim",
+   "category": "usage",
+   "statement": "500M messages",
+   "status": "INSUFFICIENT",
+   "source_context": "Traction by Apr-16",
+   "narrator": null,
+   "as_of": "not stated",
+   "sources": [
+    {
+     "document_id": 3144,
+     "page": 10
+    }
+   ]
+  },
+  "C4": {
+   "kind": "claim",
+   "category": "usage",
+   "statement": "140 000+ bots",
+   "status": "INSUFFICIENT",
+   "source_context": "Traction by Apr-16",
+   "narrator": null,
+   "as_of": "not stated",
+   "sources": [
+    {
+     "document_id": 3144,
+     "page": 10
+    }
+   ]
+  },
+  "S1": {
+   "kind": "statement",
+   "category": "Traction",
+   "statement": "140 000+ bots",
+   "status": "SELF_REPORTED",
+   "source_context": "Traction by Apr-16",
+   "narrator": null,
+   "as_of": "not stated",
+   "sources": [
+    {
+     "document_id": 3144,
+     "page": 10,
+     "chunk": 9
+    }
+   ]
+  },
+  "S2": {
+   "kind": "statement",
+   "category": "Traction",
+   "statement": "500M messages",
+   "status": "SELF_REPORTED",
+   "source_context": "Traction by Apr-16",
+   "narrator": null,
+   "as_of": "not stated",
+   "sources": [
+    {
+     "document_id": 3144,
+     "page": 10,
+     "chunk": 9
+    }
+   ]
+  },
+  "S3": {
+   "kind": "statement",
+   "category": "Traction",
+   "statement": "500M messages/month",
+   "status": "SELF_REPORTED",
+   "source_context": null,
+   "narrator": null,
+   "as_of": "not stated",
+   "sources": [
+    {
+     "document_id": 3144,
+     "page": 12,
+     "chunk": 11
+    }
+   ]
+  },
+  "S4": {
+   "kind": "statement",
+   "category": "Funding",
+   "statement": "$23.1M raised",
+   "status": "SELF_REPORTED",
+   "source_context": null,
+   "narrator": "Pitch Deck Hunt",
+   "as_of": "not stated",
+   "sources": [
+    {
+     "document_id": 3144,
+     "page": 2,
+     "chunk": 1
+    }
+   ]
+  },
+  "P1": {
+   "kind": "profile",
+   "category": "Stage (profile)",
+   "statement": "Stage (profile): Series A",
+   "status": "SELF_REPORTED",
+   "source_context": null,
+   "narrator": null,
+   "as_of": null,
+   "sources": [
+    {
+     "profile_field": "stage"
+    }
+   ]
+  },
+  "P2": {
+   "kind": "profile",
+   "category": "Sector (profile)",
+   "statement": "Sector (profile): Software",
+   "status": "SELF_REPORTED",
+   "source_context": null,
+   "narrator": null,
+   "as_of": null,
+   "sources": [
+    {
+     "profile_field": "sector"
+    }
+   ]
+  }
+ },
+ "claim_refs_resolved": {
+  "C1": {
+   "claim_id": 2385,
+   "page": 2,
+   "claimed_value": "$23.1M raised",
+   "source_context": "",
+   "chunk": "c80948f9",
+   "statement_matches_payload": true
+  },
+  "C2": {
+   "claim_id": 2386,
+   "page": 12,
+   "claimed_value": "500M messages/month",
+   "source_context": "",
+   "chunk": "a6ff6361",
+   "statement_matches_payload": true
+  },
+  "C3": {
+   "claim_id": 2387,
+   "page": 10,
+   "claimed_value": "500M messages",
+   "source_context": "Traction by Apr-16",
+   "chunk": "4981cd72",
+   "statement_matches_payload": true
+  },
+  "C4": {
+   "claim_id": 2388,
+   "page": 10,
+   "claimed_value": "140 000+ bots",
+   "source_context": "Traction by Apr-16",
+   "chunk": "4981cd72",
+   "statement_matches_payload": true
+  }
+ },
+ "consistency_notes": [
+  {
+   "kind": "measurement_basis",
+   "refs": [
+    "C3",
+    "C2"
+   ],
+   "note": "Page 10 states 500M messages without an explicit interval; page 12 states 500M messages/month. These use different measurement bases and need clarification before comparison."
+  }
+ ],
+ "raw_reply_text": "```json\n{\n  \"executive_summary\": \"ManyChat is a software company operating in the chatbot/messaging automation space, profiled as a Series A company [P1, P2]. Pitch Deck Hunt lists $23.1M raised [C1, S4], though this figure is undated and could not be independently verified. The company states 140,000+ bots and 500M messages as traction metrics in a slide headed 'Traction by Apr-16' [S1, S2].\",\n\n  \"problem_solution\": \"No problem statement was extracted from the document. The customer profile and the specific problem ManyChat addresses are not found in the extracted evidence. The traction figures [S1, S2, S3] imply a product enabling businesses or developers to create and operate messaging bots at scale, but the deck's stated value proposition and target customer are not available in the evidence provided.\",\n\n  \"market_analysis\": \"Market size not found in the extracted evidence. No market size, addressable market estimate, or competitive landscape statement was extracted from the document.\",\n\n  \"team_assessment\": \"No team statement was extracted from the document. Founder names, credentials, and prior experience are not found in the extracted evidence. The team section cannot be assessed from the available material.\",\n\n  \"financial_analysis\": \"• Revenue: Not found in the extracted evidence.\\n• Burn rate: Not found in the extracted evidence.\\n• Funding raised: Pitch Deck Hunt lists $23.1M raised [C1, S4]; the figure is undated and was not independently verified — it could not be confirmed as comparable to any external source [C1].\\n• Use of proceeds: Not found in the extracted evidence.\\n• Runway: Cannot be determined — no dated cash balance or burn rate is present in the extracted evidence.\",\n\n  \"risk_assessment\": \"1. Unverified funding history: The $23.1M raised figure [C1, S4] is narrated by Pitch Deck Hunt, is undated, and could not be independently verified. Investors cannot confirm total capital deployed or remaining reserves.\\n2. Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3]. These use different measurement bases; whether the figure is a cumulative total or a monthly run rate is unresolved, which materially changes the growth story.\\n3. No revenue or monetisation data: Revenue, gross margin, pricing, and unit economics are not found in the extracted evidence, making it impossible to assess whether bot or message volume translates to a viable commercial model.\\n4. Complete absence of team information: No founders, credentials, or organisational detail were extracted. Team quality and execution risk cannot be evaluated.\\n5. No product or competitive context: No product description, differentiation claim, or competitive landscape statement was extracted, leaving the company's defensibility unassessable.\",\n\n  \"business_model_analysis\": \"Insufficient disclosed data to describe the business model. No revenue model, pricing structure, customer type, or growth driver statement was extracted from the document. The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence. The sector is profiled as Software [P2] and the stage as Series A [P1], but neither informs the revenue mechanism.\",\n\n  \"information_readiness\": \"Score: 10/100\\nPresent:\\n• Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2]\\n• A messages/month figure of 500M stated separately [S3]\\n• Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4]\\n• Stage profile: Series A [P1]\\n• Sector profile: Software [P2]\\n\\nNeeds Validation:\\n• Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2]\\n• The $23.1M raised figure — undated and not independently verified [C1]\\n• All traction figures — none independently verified [C2, C3, C4, S1, S2, S3]\\n\\nNext evidence to supply: Audited or reviewed financial statements including revenue, gross margin, and a dated cash balance, plus a clarification of whether the 500M messages figure is cumulative or a monthly run rate.\",\n\n  \"supported_points\": \"• Pitch Deck Hunt lists $23.1M raised [C1, S4]; this is narrated by Pitch Deck Hunt and undated, and was not independently verified, so it cannot be treated as a confirmed funding total but is on record as a stated figure.\\n• The company states 140,000+ bots and 500M messages in a slide headed 'Traction by Apr-16' [S1, S2], indicating claimed platform scale at that point in time, though neither figure has been independently verified.\",\n\n  \"open_concerns\": \"• The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3]. Whether the figure is cumulative or a monthly run rate is unresolved and directly affects the interpretation of growth trajectory.\\n• No revenue, burn, or unit-economics data is present in the extracted evidence, leaving the commercial viability of the stated user and message volumes entirely unassessable.\\n• The $23.1M raised figure [C1, S4] is narrated by Pitch Deck Hunt, is undated, and was not independently verified — it is unknown when this capital was raised, in how many tranches, or what remains.\\n• The complete absence of team, product, problem, and market information in the extracted evidence means that core diligence inputs — defensibility, founder quality, and market sizing — cannot be evaluated from this material.\",\n\n  \"what_would_change_the_picture\": \"The single most important missing piece of evidence is an audited or reviewed income statement with dated revenue figures and gross margin, which would establish whether the stated message and bot volume translates to a scalable commercial business. Without it, the traction metrics [S1, S2, S3] remain unanchored to any financial outcome.\",\n\n  \"upside_scenario\": \"If the 500M messages figure reflects a monthly run rate [S3] rather than a cumulative total, and if the 140,000+ bots [S1] represent active, paying or monetisable deployments, the platform would demonstrate substantial recurring engagement. This reading requires independent validation of both the measurement basis and whether any revenue attaches to that volume — neither is available in the extracted evidence.\",\n\n  \"base_scenario\": \"If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful platform scale at that point in time. Without revenue data, burn figures, or a dated cash position, no trajectory beyond that snapshot can be inferred from the available evidence.\",\n\n  \"downside_scenario\": \"If the 500M messages figure [C3, S2] is a cumulative total rather than a monthly rate, the implied activity level is materially lower than the monthly reading suggests. Combined with the complete absence of revenue data, team detail, and product differentiation in the extracted evidence, the actual commercial and competitive position of the company cannot be determined, and the traction figures may not support the Series A profile [P1] on their own.\",\n\n  \"zelda_advantage\": \"The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.\",\n\n  \"questions_for_management\": [\n    \"Is the 500M messages figure a cumulative total or a monthly run rate? The deck presents both framings [C3, S2 vs S3] — please clarify which is correct and provide the measurement methodology.\",\n    \"What is the current monthly recurring revenue (MRR) or annual recurring revenue (ARR), and what is the revenue model — subscription, usage-based, or other?\",\n    \"What is the current monthly cash burn, and what is the dated cash balance? The $23.1M raised figure [C1, S4] is undated and narrated by Pitch Deck Hunt — how much of that capital remains, and when was it raised?\",\n    \"Of the 140,000+ bots stated [S1], how many are active, and how many are associated with paying customers versus free-tier users?\",\n    \"Who are the founders and key team members, and what are their relevant backgrounds? No team information was extractable from the deck.\",\n    \"What is the product — specifically, what does ManyChat offer that differentiates it from competing bot-building platforms, and what are the primary customer segments?\",\n    \"Is a new fundraising round currently being planned or in progress? The profile indicates Series A [P1] but no active raise is stated in the extracted evidence.\",\n    \"What is the intended use of proceeds from any fundraise?\",\n    \"What is the competitive landscape, and how does ManyChat defend its position as bot-creation tools become more commoditised?\"\n  ],\n\n  \"evidence_level\": \"LITTLE_EVIDENCE\"\n}\n```",
+ "sections": {
+  "executive_summary": {
+   "raw": "ManyChat is a software company operating in the chatbot/messaging automation space, profiled as a Series A company [P1, P2]. Pitch Deck Hunt lists $23.1M raised [C1, S4], though this figure is undated and could not be independently verified. The company states 140,000+ bots and 500M messages as traction metrics in a slide headed 'Traction by Apr-16' [S1, S2].",
+   "stored": "ManyChat is a software company operating in the chatbot/messaging automation space, profiled as a Series A company [P1, P2]. Pitch Deck Hunt lists $23.1M raised [C1, S4], though this figure is undated and could not be independently verified. The company states 140,000+ bots and 500M messages as traction metrics in a slide headed 'Traction by Apr-16' [S1, S2].",
+   "raw_equals_stored": true,
+   "stored_equals_guard_replay_of_raw": true,
+   "guard_changes": []
+  },
+  "problem_solution": {
+   "raw": "No problem statement was extracted from the document. The customer profile and the specific problem ManyChat addresses are not found in the extracted evidence. The traction figures [S1, S2, S3] imply a product enabling businesses or developers to create and operate messaging bots at scale, but the deck's stated value proposition and target customer are not available in the evidence provided.",
+   "stored": "No problem statement was extracted from the document. The customer profile and the specific problem ManyChat addresses are not found in the extracted evidence. The traction figures [S1, S2, S3] imply a product enabling businesses or developers to create and operate messaging bots at scale, but the deck's stated value proposition and target customer are not available in the evidence provided.",
+   "raw_equals_stored": true,
+   "stored_equals_guard_replay_of_raw": true,
+   "guard_changes": []
+  },
+  "market_analysis": {
+   "raw": "Market size not found in the extracted evidence. No market size, addressable market estimate, or competitive landscape statement was extracted from the document.",
+   "stored": "Market size not found in the extracted evidence. No market size, addressable market estimate, or competitive landscape statement was extracted from the document.",
+   "raw_equals_stored": true,
+   "stored_equals_guard_replay_of_raw": true,
+   "guard_changes": []
+  },
+  "team_assessment": {
+   "raw": "No team statement was extracted from the document. Founder names, credentials, and prior experience are not found in the extracted evidence. The team section cannot be assessed from the available material.",
+   "stored": "No team statement was extracted from the document. Founder names, credentials, and prior experience are not found in the extracted evidence. The team section cannot be assessed from the available material.",
+   "raw_equals_stored": true,
+   "stored_equals_guard_replay_of_raw": true,
+   "guard_changes": []
+  },
+  "financial_analysis": {
+   "raw": "• Revenue: Not found in the extracted evidence.\n• Burn rate: Not found in the extracted evidence.\n• Funding raised: Pitch Deck Hunt lists $23.1M raised [C1, S4]; the figure is undated and was not independently verified — it could not be confirmed as comparable to any external source [C1].\n• Use of proceeds: Not found in the extracted evidence.\n• Runway: Cannot be determined — no dated cash balance or burn rate is present in the extracted evidence.",
+   "stored": "• Revenue: Not found in the extracted evidence.\n• Burn rate: Not found in the extracted evidence.\n• Funding raised: Pitch Deck Hunt lists $23.1M raised [C1, S4]; the figure is undated and was not independently verified — it could not be confirmed as comparable to any external source [C1].\n• Use of proceeds: Not found in the extracted evidence.\n• Runway: Cannot be determined — no dated cash balance or burn rate is present in the extracted evidence.",
+   "raw_equals_stored": true,
+   "stored_equals_guard_replay_of_raw": true,
+   "guard_changes": []
+  },
+  "risk_assessment": {
+   "raw": "1. Unverified funding history: The $23.1M raised figure [C1, S4] is narrated by Pitch Deck Hunt, is undated, and could not be independently verified. Investors cannot confirm total capital deployed or remaining reserves.\n2. Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3]. These use different measurement bases; whether the figure is a cumulative total or a monthly run rate is unresolved, which materially changes the growth story.\n3. No revenue or monetisation data: Revenue, gross margin, pricing, and unit economics are not found in the extracted evidence, making it impossible to assess whether bot or message volume translates to a viable commercial model.\n4. Complete absence of team information: No founders, credentials, or organisational detail were extracted. Team quality and execution risk cannot be evaluated.\n5. No product or competitive context: No product description, differentiation claim, or competitive landscape statement was extracted, leaving the company's defensibility unassessable.",
+   "stored": "1. Unverified funding history: The $23.1M raised figure [C1, S4] is narrated by Pitch Deck Hunt, is undated, and could not be independently verified. Investors cannot confirm total capital deployed or remaining reserves.\n2. Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3]. These use different measurement bases; whether the figure is a cumulative total or a monthly run rate is unresolved, which materially changes the growth story.\n3. No revenue or monetisation data: Revenue, gross margin, pricing, and unit economics are not found in the extracted evidence, making it impossible to assess whether bot or message volume translates to a viable commercial model.\n4. Complete absence of team information: No founders, credentials, or organisational detail were extracted. Team quality and execution risk cannot be evaluated.\n5. No product or competitive context: No product description, differentiation claim, or competitive landscape statement was extracted, leaving the company's defensibility unassessable.",
+   "raw_equals_stored": true,
+   "stored_equals_guard_replay_of_raw": true,
+   "guard_changes": []
+  },
+  "business_model_analysis": {
+   "raw": "Insufficient disclosed data to describe the business model. No revenue model, pricing structure, customer type, or growth driver statement was extracted from the document. The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence. The sector is profiled as Software [P2] and the stage as Series A [P1], but neither informs the revenue mechanism.",
+   "stored": "Insufficient disclosed data to describe the business model. No revenue model, pricing structure, customer type, or growth driver statement was extracted from the document. The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence. The sector is profiled as Software [P2] and the stage as Series A [P1], but neither informs the revenue mechanism.",
+   "raw_equals_stored": true,
+   "stored_equals_guard_replay_of_raw": true,
+   "guard_changes": []
+  },
+  "information_readiness": {
+   "raw": "Score: 10/100\nPresent:\n• Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2]\n• A messages/month figure of 500M stated separately [S3]\n• Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4]\n• Stage profile: Series A [P1]\n• Sector profile: Software [P2]\n\nNeeds Validation:\n• Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2]\n• The $23.1M raised figure — undated and not independently verified [C1]\n• All traction figures — none independently verified [C2, C3, C4, S1, S2, S3]\n\nNext evidence to supply: Audited or reviewed financial statements including revenue, gross margin, and a dated cash balance, plus a clarification of whether the 500M messages figure is cumulative or a monthly run rate.",
+   "stored": "Score: 10/100\nPresent:\n• Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2]\n• A messages/month figure of 500M stated separately [S3]\n• Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4]\n• Stage profile: Series A [P1]\n• Sector profile: Software [P2]\n\nNeeds Validation:\n• Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2]\n• The $23.1M raised figure (per Pitch Deck Hunt) — undated and not independently verified [C1]\n• All traction figures — none independently verified [C2, C3, C4, S1, S2, S3]\n\nNext evidence to supply: Audited or reviewed financial statements including revenue, gross margin, and a dated cash balance, plus a clarification of whether the 500M messages figure is cumulative or a monthly run rate.",
+   "raw_equals_stored": false,
+   "stored_equals_guard_replay_of_raw": true,
+   "guard_changes": [
+    "attribution:Pitch Deck Hunt"
+   ]
+  },
+  "supported_points": {
+   "raw": "• Pitch Deck Hunt lists $23.1M raised [C1, S4]; this is narrated by Pitch Deck Hunt and undated, and was not independently verified, so it cannot be treated as a confirmed funding total but is on record as a stated figure.\n• The company states 140,000+ bots and 500M messages in a slide headed 'Traction by Apr-16' [S1, S2], indicating claimed platform scale at that point in time, though neither figure has been independently verified.",
+   "stored": "• Pitch Deck Hunt lists $23.1M raised [C1, S4]; this is narrated by Pitch Deck Hunt and undated, and was not independently verified, so it cannot be treated as a confirmed funding total but is on record as a stated figure.\n• The company states 140,000+ bots and 500M messages in a slide headed 'Traction by Apr-16' [S1, S2], indicating claimed platform scale at that point in time, though neither figure has been independently verified.",
+   "raw_equals_stored": true,
+   "stored_equals_guard_replay_of_raw": true,
+   "guard_changes": []
+  },
+  "open_concerns": {
+   "raw": "• The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3]. Whether the figure is cumulative or a monthly run rate is unresolved and directly affects the interpretation of growth trajectory.\n• No revenue, burn, or unit-economics data is present in the extracted evidence, leaving the commercial viability of the stated user and message volumes entirely unassessable.\n• The $23.1M raised figure [C1, S4] is narrated by Pitch Deck Hunt, is undated, and was not independently verified — it is unknown when this capital was raised, in how many tranches, or what remains.\n• The complete absence of team, product, problem, and market information in the extracted evidence means that core diligence inputs — defensibility, founder quality, and market sizing — cannot be evaluated from this material.",
+   "stored": "• The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3]. Whether the figure is cumulative or a monthly run rate is unresolved and directly affects the interpretation of growth trajectory.\n• No revenue, burn, or unit-economics data is present in the extracted evidence, leaving the commercial viability of the stated user and message volumes entirely unassessable.\n• The $23.1M raised figure [C1, S4] is narrated by Pitch Deck Hunt, is undated, and was not independently verified — it is unknown when this capital was raised, in how many tranches, or what remains.\n• The complete absence of team, product, problem, and market information in the extracted evidence means that core diligence inputs — defensibility, founder quality, and market sizing — cannot be evaluated from this material.",
+   "raw_equals_stored": true,
+   "stored_equals_guard_replay_of_raw": true,
+   "guard_changes": []
+  },
+  "what_would_change_the_picture": {
+   "raw": "The single most important missing piece of evidence is an audited or reviewed income statement with dated revenue figures and gross margin, which would establish whether the stated message and bot volume translates to a scalable commercial business. Without it, the traction metrics [S1, S2, S3] remain unanchored to any financial outcome.",
+   "stored": "The single most important missing piece of evidence is an audited or reviewed income statement with dated revenue figures and gross margin, which would establish whether the stated message and bot volume translates to a scalable commercial business. Without it, the traction metrics [S1, S2, S3] remain unanchored to any financial outcome.",
+   "raw_equals_stored": true,
+   "stored_equals_guard_replay_of_raw": true,
+   "guard_changes": []
+  },
+  "upside_scenario": {
+   "raw": "If the 500M messages figure reflects a monthly run rate [S3] rather than a cumulative total, and if the 140,000+ bots [S1] represent active, paying or monetisable deployments, the platform would demonstrate substantial recurring engagement. This reading requires independent validation of both the measurement basis and whether any revenue attaches to that volume — neither is available in the extracted evidence.",
+   "stored": "If the 500M messages figure reflects a monthly run rate [S3] rather than a cumulative total, and if the 140,000+ bots [S1] represent active, paying or monetisable deployments, the platform would demonstrate substantial recurring engagement. This reading requires independent validation of both the measurement basis and whether any revenue attaches to that volume — neither is available in the extracted evidence.",
+   "raw_equals_stored": true,
+   "stored_equals_guard_replay_of_raw": true,
+   "guard_changes": []
+  },
+  "base_scenario": {
+   "raw": "If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful platform scale at that point in time. Without revenue data, burn figures, or a dated cash position, no trajectory beyond that snapshot can be inferred from the available evidence.",
+   "stored": "If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful platform scale at that point in time. Without revenue data, burn figures, or a dated cash position, no trajectory beyond that snapshot can be inferred from the available evidence.",
+   "raw_equals_stored": true,
+   "stored_equals_guard_replay_of_raw": true,
+   "guard_changes": []
+  },
+  "downside_scenario": {
+   "raw": "If the 500M messages figure [C3, S2] is a cumulative total rather than a monthly rate, the implied activity level is materially lower than the monthly reading suggests. Combined with the complete absence of revenue data, team detail, and product differentiation in the extracted evidence, the actual commercial and competitive position of the company cannot be determined, and the traction figures may not support the Series A profile [P1] on their own.",
+   "stored": "If the 500M messages figure [C3, S2] is a cumulative total rather than a monthly rate, the implied activity level is materially lower than the monthly reading suggests. Combined with the complete absence of revenue data, team detail, and product differentiation in the extracted evidence, the actual commercial and competitive position of the company cannot be determined, and the traction figures may not support the Series A profile [P1] on their own.",
+   "raw_equals_stored": true,
+   "stored_equals_guard_replay_of_raw": true,
+   "guard_changes": []
+  },
+  "zelda_advantage": {
+   "raw": "The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.",
+   "stored": "The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric.",
+   "raw_equals_stored": true,
+   "stored_equals_guard_replay_of_raw": true,
+   "guard_changes": []
+  },
+  "questions_for_management": {
+   "raw": [
+    "Is the 500M messages figure a cumulative total or a monthly run rate? The deck presents both framings [C3, S2 vs S3] — please clarify which is correct and provide the measurement methodology.",
+    "What is the current monthly recurring revenue (MRR) or annual recurring revenue (ARR), and what is the revenue model — subscription, usage-based, or other?",
+    "What is the current monthly cash burn, and what is the dated cash balance? The $23.1M raised figure [C1, S4] is undated and narrated by Pitch Deck Hunt — how much of that capital remains, and when was it raised?",
+    "Of the 140,000+ bots stated [S1], how many are active, and how many are associated with paying customers versus free-tier users?",
+    "Who are the founders and key team members, and what are their relevant backgrounds? No team information was extractable from the deck.",
+    "What is the product — specifically, what does ManyChat offer that differentiates it from competing bot-building platforms, and what are the primary customer segments?",
+    "Is a new fundraising round currently being planned or in progress? The profile indicates Series A [P1] but no active raise is stated in the extracted evidence.",
+    "What is the intended use of proceeds from any fundraise?",
+    "What is the competitive landscape, and how does ManyChat defend its position as bot-creation tools become more commoditised?"
+   ],
+   "stored": "- Is the 500M messages figure a cumulative total or a monthly run rate? The deck presents both framings [C3, S2 vs S3] — please clarify which is correct and provide the measurement methodology.\n- What is the current monthly recurring revenue (MRR) or annual recurring revenue (ARR), and what is the revenue model — subscription, usage-based, or other?\n- What is the current monthly cash burn, and what is the dated cash balance? The $23.1M raised figure [C1, S4] is undated and narrated by Pitch Deck Hunt — how much of that capital remains, and when was it raised?\n- Of the 140,000+ bots stated [S1], how many are active, and how many are associated with paying customers versus free-tier users?\n- Who are the founders and key team members, and what are their relevant backgrounds? No team information was extractable from the deck.\n- What is the product — specifically, what does ManyChat offer that differentiates it from competing bot-building platforms, and what are the primary customer segments?\n- Is a new fundraising round currently being planned or in progress? The profile indicates Series A [P1] but no active raise is stated in the extracted evidence.\n- What is the intended use of proceeds from any fundraise?\n- What is the competitive landscape, and how does ManyChat defend its position as bot-creation tools become more commoditised?",
+   "raw_equals_stored": true,
+   "stored_equals_guard_replay_of_raw": true,
+   "guard_changes": []
+  },
+  "evidence_level": {
+   "raw": "LITTLE_EVIDENCE",
+   "stored": "LITTLE_EVIDENCE",
+   "raw_equals_stored": true,
+   "stored_equals_guard_replay_of_raw": true,
+   "guard_changes": []
+  }
+ },
+ "citation_groups": [
+  {
+   "section": "executive_summary",
+   "group": "[P1, P2]",
+   "refs": [
+    "P1",
+    "P2"
+   ],
+   "pages": {
+    "P1": null,
+    "P2": null
+   },
+   "sentence": "ManyChat is a software company operating in the chatbot/messaging automation space, profiled as a Series A company [P1, P2]."
+  },
+  {
+   "section": "executive_summary",
+   "group": "[C1, S4]",
+   "refs": [
+    "C1",
+    "S4"
+   ],
+   "pages": {
+    "C1": 2,
+    "S4": 2
+   },
+   "sentence": "Pitch Deck Hunt lists $23.1M raised [C1, S4], though this figure is undated and could not be independently verified."
+  },
+  {
+   "section": "executive_summary",
+   "group": "[S1, S2]",
+   "refs": [
+    "S1",
+    "S2"
+   ],
+   "pages": {
+    "S1": 10,
+    "S2": 10
+   },
+   "sentence": "The company states 140,000+ bots and 500M messages as traction metrics in a slide headed 'Traction by Apr-16' [S1, S2]."
+  },
+  {
+   "section": "problem_solution",
+   "group": "[S1, S2, S3]",
+   "refs": [
+    "S1",
+    "S2",
+    "S3"
+   ],
+   "pages": {
+    "S1": 10,
+    "S2": 10,
+    "S3": 12
+   },
+   "sentence": "The traction figures [S1, S2, S3] imply a product enabling businesses or developers to create and operate messaging bots at scale, but the deck's stated value proposition and target customer are not available in the evidence provided."
+  },
+  {
+   "section": "financial_analysis",
+   "group": "[C1, S4]",
+   "refs": [
+    "C1",
+    "S4"
+   ],
+   "pages": {
+    "C1": 2,
+    "S4": 2
+   },
+   "sentence": "• Funding raised: Pitch Deck Hunt lists $23.1M raised [C1, S4]; the figure is undated and was not independently verified — it could not be confirmed as comparable to any external source [C1]."
+  },
+  {
+   "section": "financial_analysis",
+   "group": "[C1]",
+   "refs": [
+    "C1"
+   ],
+   "pages": {
+    "C1": 2
+   },
+   "sentence": "• Funding raised: Pitch Deck Hunt lists $23.1M raised [C1, S4]; the figure is undated and was not independently verified — it could not be confirmed as comparable to any external source [C1]."
+  },
+  {
+   "section": "risk_assessment",
+   "group": "[C1, S4]",
+   "refs": [
+    "C1",
+    "S4"
+   ],
+   "pages": {
+    "C1": 2,
+    "S4": 2
+   },
+   "sentence": "Unverified funding history: The $23.1M raised figure [C1, S4] is narrated by Pitch Deck Hunt, is undated, and could not be independently verified."
+  },
+  {
+   "section": "risk_assessment",
+   "group": "[C3, S2]",
+   "refs": [
+    "C3",
+    "S2"
+   ],
+   "pages": {
+    "C3": 10,
+    "S2": 10
+   },
+   "sentence": "Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3]."
+  },
+  {
+   "section": "risk_assessment",
+   "group": "[C2, S3]",
+   "refs": [
+    "C2",
+    "S3"
+   ],
+   "pages": {
+    "C2": 12,
+    "S3": 12
+   },
+   "sentence": "Measurement ambiguity in the core traction metric: The deck presents '500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3]."
+  },
+  {
+   "section": "business_model_analysis",
+   "group": "[C3, S2]",
+   "refs": [
+    "C3",
+    "S2"
+   ],
+   "pages": {
+    "C3": 10,
+    "S2": 10
+   },
+   "sentence": "The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence."
+  },
+  {
+   "section": "business_model_analysis",
+   "group": "[C3, S3]",
+   "refs": [
+    "C3",
+    "S3"
+   ],
+   "pages": {
+    "C3": 10,
+    "S3": 12
+   },
+   "sentence": "The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence."
+  },
+  {
+   "section": "business_model_analysis",
+   "group": "[S1, S2]",
+   "refs": [
+    "S1",
+    "S2"
+   ],
+   "pages": {
+    "S1": 10,
+    "S2": 10
+   },
+   "sentence": "The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence."
+  },
+  {
+   "section": "business_model_analysis",
+   "group": "[S3]",
+   "refs": [
+    "S3"
+   ],
+   "pages": {
+    "S3": 12
+   },
+   "sentence": "The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence."
+  },
+  {
+   "section": "business_model_analysis",
+   "group": "[P2]",
+   "refs": [
+    "P2"
+   ],
+   "pages": {
+    "P2": null
+   },
+   "sentence": "The sector is profiled as Software [P2] and the stage as Series A [P1], but neither informs the revenue mechanism."
+  },
+  {
+   "section": "business_model_analysis",
+   "group": "[P1]",
+   "refs": [
+    "P1"
+   ],
+   "pages": {
+    "P1": null
+   },
+   "sentence": "The sector is profiled as Software [P2] and the stage as Series A [P1], but neither informs the revenue mechanism."
+  },
+  {
+   "section": "information_readiness",
+   "group": "[S1, S2]",
+   "refs": [
+    "S1",
+    "S2"
+   ],
+   "pages": {
+    "S1": 10,
+    "S2": 10
+   },
+   "sentence": "• Traction metrics: the company states 140,000+ bots and 500M messages (slide headed 'Traction by Apr-16') [S1, S2]"
+  },
+  {
+   "section": "information_readiness",
+   "group": "[S3]",
+   "refs": [
+    "S3"
+   ],
+   "pages": {
+    "S3": 12
+   },
+   "sentence": "• A messages/month figure of 500M stated separately [S3]"
+  },
+  {
+   "section": "information_readiness",
+   "group": "[C1, S4]",
+   "refs": [
+    "C1",
+    "S4"
+   ],
+   "pages": {
+    "C1": 2,
+    "S4": 2
+   },
+   "sentence": "• Funding raised figure narrated by Pitch Deck Hunt: $23.1M [C1, S4]"
+  },
+  {
+   "section": "information_readiness",
+   "group": "[P1]",
+   "refs": [
+    "P1"
+   ],
+   "pages": {
+    "P1": null
+   },
+   "sentence": "• Stage profile: Series A [P1]"
+  },
+  {
+   "section": "information_readiness",
+   "group": "[P2]",
+   "refs": [
+    "P2"
+   ],
+   "pages": {
+    "P2": null
+   },
+   "sentence": "• Sector profile: Software [P2]"
+  },
+  {
+   "section": "information_readiness",
+   "group": "[C3, C2]",
+   "refs": [
+    "C3",
+    "C2"
+   ],
+   "pages": {
+    "C3": 10,
+    "C2": 12
+   },
+   "sentence": "• Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2]"
+  },
+  {
+   "section": "information_readiness",
+   "group": "[C1]",
+   "refs": [
+    "C1"
+   ],
+   "pages": {
+    "C1": 2
+   },
+   "sentence": "• The $23.1M raised figure (per Pitch Deck Hunt) — undated and not independently verified [C1]"
+  },
+  {
+   "section": "information_readiness",
+   "group": "[C2, C3, C4, S1, S2, S3]",
+   "refs": [
+    "C2",
+    "C3",
+    "C4",
+    "S1",
+    "S2",
+    "S3"
+   ],
+   "pages": {
+    "C2": 12,
+    "C3": 10,
+    "C4": 10,
+    "S1": 10,
+    "S2": 10,
+    "S3": 12
+   },
+   "sentence": "• All traction figures — none independently verified [C2, C3, C4, S1, S2, S3]"
+  },
+  {
+   "section": "supported_points",
+   "group": "[C1, S4]",
+   "refs": [
+    "C1",
+    "S4"
+   ],
+   "pages": {
+    "C1": 2,
+    "S4": 2
+   },
+   "sentence": "• Pitch Deck Hunt lists $23.1M raised [C1, S4]; this is narrated by Pitch Deck Hunt and undated, and was not independently verified, so it cannot be treated as a confirmed funding total but is on record as a stated figure."
+  },
+  {
+   "section": "supported_points",
+   "group": "[S1, S2]",
+   "refs": [
+    "S1",
+    "S2"
+   ],
+   "pages": {
+    "S1": 10,
+    "S2": 10
+   },
+   "sentence": "• The company states 140,000+ bots and 500M messages in a slide headed 'Traction by Apr-16' [S1, S2], indicating claimed platform scale at that point in time, though neither figure has been independently verified."
+  },
+  {
+   "section": "open_concerns",
+   "group": "[C3, S2]",
+   "refs": [
+    "C3",
+    "S2"
+   ],
+   "pages": {
+    "C3": 10,
+    "S2": 10
+   },
+   "sentence": "• The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3]."
+  },
+  {
+   "section": "open_concerns",
+   "group": "[C3, S3]",
+   "refs": [
+    "C3",
+    "S3"
+   ],
+   "pages": {
+    "C3": 10,
+    "S3": 12
+   },
+   "sentence": "• The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3]."
+  },
+  {
+   "section": "open_concerns",
+   "group": "[C1, S4]",
+   "refs": [
+    "C1",
+    "S4"
+   ],
+   "pages": {
+    "C1": 2,
+    "S4": 2
+   },
+   "sentence": "• The $23.1M raised figure [C1, S4] is narrated by Pitch Deck Hunt, is undated, and was not independently verified — it is unknown when this capital was raised, in how many tranches, or what remains."
+  },
+  {
+   "section": "what_would_change_the_picture",
+   "group": "[S1, S2, S3]",
+   "refs": [
+    "S1",
+    "S2",
+    "S3"
+   ],
+   "pages": {
+    "S1": 10,
+    "S2": 10,
+    "S3": 12
+   },
+   "sentence": "Without it, the traction metrics [S1, S2, S3] remain unanchored to any financial outcome."
+  },
+  {
+   "section": "upside_scenario",
+   "group": "[S3]",
+   "refs": [
+    "S3"
+   ],
+   "pages": {
+    "S3": 12
+   },
+   "sentence": "If the 500M messages figure reflects a monthly run rate [S3] rather than a cumulative total, and if the 140,000+ bots [S1] represent active, paying or monetisable deployments, the platform would demonstrate substantial recurring engagement."
+  },
+  {
+   "section": "upside_scenario",
+   "group": "[S1]",
+   "refs": [
+    "S1"
+   ],
+   "pages": {
+    "S1": 10
+   },
+   "sentence": "If the 500M messages figure reflects a monthly run rate [S3] rather than a cumulative total, and if the 140,000+ bots [S1] represent active, paying or monetisable deployments, the platform would demonstrate substantial recurring engagement."
+  },
+  {
+   "section": "base_scenario",
+   "group": "[S1, S2, S3]",
+   "refs": [
+    "S1",
+    "S2",
+    "S3"
+   ],
+   "pages": {
+    "S1": 10,
+    "S2": 10,
+    "S3": 12
+   },
+   "sentence": "If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful platform scale at that point in time."
+  },
+  {
+   "section": "downside_scenario",
+   "group": "[C3, S2]",
+   "refs": [
+    "C3",
+    "S2"
+   ],
+   "pages": {
+    "C3": 10,
+    "S2": 10
+   },
+   "sentence": "If the 500M messages figure [C3, S2] is a cumulative total rather than a monthly rate, the implied activity level is materially lower than the monthly reading suggests."
+  },
+  {
+   "section": "downside_scenario",
+   "group": "[P1]",
+   "refs": [
+    "P1"
+   ],
+   "pages": {
+    "P1": null
+   },
+   "sentence": "Combined with the complete absence of revenue data, team detail, and product differentiation in the extracted evidence, the actual commercial and competitive position of the company cannot be determined, and the traction figures may not support the Series A profile [P1] on their own."
+  },
+  {
+   "section": "zelda_advantage",
+   "group": "[C3, C2]",
+   "refs": [
+    "C3",
+    "C2"
+   ],
+   "pages": {
+    "C3": 10,
+    "C2": 12
+   },
+   "sentence": "The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric."
+  },
+  {
+   "section": "questions_for_management",
+   "group": "[C3, S2 vs S3]",
+   "refs": [
+    "C3",
+    "S2",
+    "S3"
+   ],
+   "pages": {
+    "C3": 10,
+    "S2": 10,
+    "S3": 12
+   },
+   "sentence": "The deck presents both framings [C3, S2 vs S3] — please clarify which is correct and provide the measurement methodology."
+  },
+  {
+   "section": "questions_for_management",
+   "group": "[C1, S4]",
+   "refs": [
+    "C1",
+    "S4"
+   ],
+   "pages": {
+    "C1": 2,
+    "S4": 2
+   },
+   "sentence": "The $23.1M raised figure [C1, S4] is undated and narrated by Pitch Deck Hunt — how much of that capital remains, and when was it raised?"
+  },
+  {
+   "section": "questions_for_management",
+   "group": "[S1]",
+   "refs": [
+    "S1"
+   ],
+   "pages": {
+    "S1": 10
+   },
+   "sentence": "- Of the 140,000+ bots stated [S1], how many are active, and how many are associated with paying customers versus free-tier users?"
+  },
+  {
+   "section": "questions_for_management",
+   "group": "[P1]",
+   "refs": [
+    "P1"
+   ],
+   "pages": {
+    "P1": null
+   },
+   "sentence": "The profile indicates Series A [P1] but no active raise is stated in the extracted evidence."
+  }
+ ],
+ "groups_pairing_C3_with_a_page12_ref": [
+  {
+   "section": "business_model_analysis",
+   "group": "[C3, S3]",
+   "refs": [
+    "C3",
+    "S3"
+   ],
+   "pages": {
+    "C3": 10,
+    "S3": 12
+   },
+   "sentence": "The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence."
+  },
+  {
+   "section": "information_readiness",
+   "group": "[C3, C2]",
+   "refs": [
+    "C3",
+    "C2"
+   ],
+   "pages": {
+    "C3": 10,
+    "C2": 12
+   },
+   "sentence": "• Whether 500M messages is a cumulative total or a monthly figure — the two slides present conflicting bases [C3, C2]"
+  },
+  {
+   "section": "information_readiness",
+   "group": "[C2, C3, C4, S1, S2, S3]",
+   "refs": [
+    "C2",
+    "C3",
+    "C4",
+    "S1",
+    "S2",
+    "S3"
+   ],
+   "pages": {
+    "C2": 12,
+    "C3": 10,
+    "C4": 10,
+    "S1": 10,
+    "S2": 10,
+    "S3": 12
+   },
+   "sentence": "• All traction figures — none independently verified [C2, C3, C4, S1, S2, S3]"
+  },
+  {
+   "section": "open_concerns",
+   "group": "[C3, S3]",
+   "refs": [
+    "C3",
+    "S3"
+   ],
+   "pages": {
+    "C3": 10,
+    "S3": 12
+   },
+   "sentence": "• The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3]."
+  },
+  {
+   "section": "zelda_advantage",
+   "group": "[C3, C2]",
+   "refs": [
+    "C3",
+    "C2"
+   ],
+   "pages": {
+    "C3": 10,
+    "C2": 12
+   },
+   "sentence": "The verification pass surfaced a specific internal measurement-basis inconsistency: the same 500M messages figure appears without an interval on one slide (headed 'Traction by Apr-16') and as a monthly figure on another [C3, C2], a discrepancy that directly affects how the company's growth trajectory should be read and that a plain summary of the deck would likely present as a single, unambiguous metric."
+  },
+  {
+   "section": "questions_for_management",
+   "group": "[C3, S2 vs S3]",
+   "refs": [
+    "C3",
+    "S2",
+    "S3"
+   ],
+   "pages": {
+    "C3": 10,
+    "S2": 10,
+    "S3": 12
+   },
+   "sentence": "The deck presents both framings [C3, S2 vs S3] — please clarify which is correct and provide the measurement methodology."
+  }
+ ]
+}

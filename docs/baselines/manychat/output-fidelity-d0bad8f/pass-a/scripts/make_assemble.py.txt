@@ -1,0 +1,92 @@
+"""Derive assemble_rd0b.py from the memo-101 run's assemble_r066.py: new paths, IDs, Redis dbs; memo-101 copy added to
+preservation and compared with its committed 09_memo.json (82771ef); before-snapshots compared with the memo-101 run's
+committed after-snapshots (82771ef); frozen-artifact checks extended to the memo-101 run's evidence branch (grade
+f7eb39d) and PR #287's evidence folders; screenshots are absent (Chrome walks blocked). Each replacement must match."""
+import os
+HERE = os.path.dirname(os.path.abspath(__file__))
+BS = chr(92)
+PREV = BS.join(['C:', 'Users', 'jonathan', 'AppData', 'Local', 'Temp', 'claude', 'C--Users-jonathan-Desktop-KCV-np',
+                'c8a313d5-81e1-402a-b7da-9205b6f20fab', 'scratchpad', 'r066'])
+s = open(os.path.join(PREV, 'assemble_r066.py'), encoding='utf-8').read()
+P287 = ['output-structural-of903-906-b040c23', 'output-review-750de3f-7fb484b', 'output-review-7fb484b-377a142',
+        'output-review-377a142-9b28e14', 'output-review-9b28e14-8d7f8dc', 'output-review-8d7f8dc-a6dcddf',
+        'output-review-a6dcddf-72418e2', 'output-review-72418e2-71ece83', 'output-review-71ece83-8f11844',
+        'output-review-8f11844-c7d4607']
+R = [
+    (s.split('"""')[1], "Assemble this run's record into the evidence directory (no DB access). Adapted from the memo-101 run's\n"
+     "assemble_r066.py by make_assemble.py: new paths and IDs; memo-101 copy added to preservation and compared with its\n"
+     "committed 09_memo.json (82771ef); before-snapshots compared with the memo-101 run's committed after-snapshots\n"
+     "(82771ef); frozen-artifact checks extended to the memo-101 run's evidence branch (grade f7eb39d) and PR #287's\n"
+     "evidence folders; Q1-Q7 ran once; no screenshots (the Chrome walks were blocked; see 15_browser_walks.json)."),
+    ("'KCV-mc-066'", "'KCV-mc-d0b'"),
+    ("'output-fidelity-0664563', 'pass-a')", "'output-fidelity-d0bad8f', 'pass-a')"),
+    ("RUN = '066456341935d5ace32760a00788f78ec61a047a'", "RUN = 'd0bad8fdaace39f2f64be9f576874da9b0bf5e7a'"),
+    ("SNAPS = ('orig', 'memo94', 'memo95', 'memo96', 'memo97', 'memo98', 'memo99', 'memo100')",
+     "SNAPS = ('orig', 'memo94', 'memo95', 'memo96', 'memo97', 'memo98', 'memo99', 'memo100', 'memo101')"),
+    ("{'blob_at_f34e3a3': git('rev-parse', 'f34e3a3:' + path), 'blob_at_0664563': git('rev-parse', RUN + ':' + path),",
+     "{'blob_at_0664563': git('rev-parse', '0664563:' + path), 'blob_at_d0bad8f': git('rev-parse', RUN + ':' + path),"),
+    ("v.get('blob_at_f34e3a3') == v.get('blob_at_0664563') == v.get('blob_in_worktree')",
+     "v.get('blob_at_0664563') == v.get('blob_at_d0bad8f') == v.get('blob_in_worktree')"),
+    ("    'docs/baselines/manychat/output-fidelity-f34e3a3/pass-a': ('f17db5c', 'origin/docs/manychat-output-fidelity-f34e3a3'),\n",
+     "    'docs/baselines/manychat/output-fidelity-0664563/pass-a': ('f7eb39d', 'origin/docs/manychat-output-fidelity-0664563'),\n"
+     "    'docs/baselines/manychat/output-fidelity-f34e3a3/pass-a': ('f17db5c', 'origin/docs/manychat-output-fidelity-f34e3a3'),\n"
+     + ''.join("    'docs/baselines/three-deck-audit/%s': ('44af018', RUN),\n" % f for f in P287)),
+    ("    'zelda_api/data/funding_fidelity': ('5937e51', RUN),", "    'zelda_api/data/funding_fidelity': ('44af018', RUN),"),
+    ("f'd8b224c:docs/baselines/manychat/output-fidelity-f34e3a3/pass-a/snapshots/{n}_snapshot_after.txt'",
+     "f'82771ef:docs/baselines/manychat/output-fidelity-0664563/pass-a/snapshots/{n}_snapshot_after.txt'"),
+    ("'code': {'worktree': WT + ' (branch docs/manychat-output-fidelity-0664563, created at 0664563)',",
+     "'code': {'worktree': WT + ' (branch docs/manychat-output-fidelity-d0bad8f, created at d0bad8f)',"),
+    ("'files_differing_from_final_pr_head_5937e51': git('diff', '--name-only', '5937e51', RUN).split(),",
+     "'files_differing_from_final_pr_head_44af018': git('diff', '--name-only', '44af018', RUN).split(),"),
+    ("'non_docs_files_changed_since_memo100_run_f34e3a3': [f for f in git('diff', '--name-only', 'f34e3a3', RUN).split()",
+     "'non_docs_files_changed_since_memo101_run_0664563': [f for f in git('diff', '--name-only', '0664563', RUN).split()"),
+    ("'migrations_since_f34e3a3': git('diff', '--name-only', 'f34e3a3', RUN, '--', '*/migrations/*.py').split(),",
+     "'migrations_since_0664563': git('diff', '--name-only', '0664563', RUN, '--', '*/migrations/*.py').split(),"),
+    ("'mismatch': 'none: origin/main == 0664563 when fetched'", "'mismatch': 'none: origin/main == d0bad8f when fetched'"),
+    ("FORBIDDEN_DBS in run_r066.py", "FORBIDDEN_DBS in run_rd0b.py"),
+    ("'why': 'every run copy derives from the same original; counters advanced to the memo-100 run copy maxima '\n"
+     "                        '(read mode=ro) so ids never repeat document 3142 or memo 100'},",
+     "'why': 'every run copy derives from the same original; counters advanced to the memo-101 run copy maxima '\n"
+     "                        '(read mode=ro) so ids never repeat document 3143 or memo 101'},"),
+    ("'local Memurai: broker db 1; results and cache db 3. No db was empty before the run and none was '\n"
+     "                            'purged. Dbs 1 and 3 held only the three static _kombu.binding.* sets any Celery worker declares, '\n"
+     "                            'with empty queues and no result or cache keys. The cache dbs (7, 10, 12, 14, 15) held cached values, '\n"
+     "                            'including sec_identity_v3:manychat, and were not used. Results and cache share db 3; their key '\n"
+     "                            'prefixes cannot collide. No clients before the fixtures. Worker mc066@, queue \"celery\" on db 1',",
+     "'local Memurai: broker db 1; results and cache db 4. No db was empty before the run and none was '\n"
+     "                            'purged. Dbs 1 and 4 held only the three static _kombu.binding.* sets any Celery worker declares, '\n"
+     "                            'with empty queues and no result or cache keys. Db 3 held the memo-101 run\\'s cached embeddings and '\n"
+     "                            'was not used; the other cache dbs were not used either. Results and cache share db 4; their key '\n"
+     "                            'prefixes cannot collide. One client (the listing itself) before the fixtures. Worker mcd0b@, queue \"celery\" on db 1',"),
+    ("re.match(r'db (1|3) ', l)] ==", "re.match(r'db (1|4) ', l)] =="),
+    ("[l for l in read('redis_after.txt').splitlines() if not re.match(r'db (1|3) ', l)]",
+     "[l for l in read('redis_after.txt').splitlines() if not re.match(r'db (1|4) ', l)]"),
+    ("\"nothing was purged; db 1/3 now hold this run's broker bindings, task results and cache keys\"",
+     "\"nothing was purged; db 1/4 now hold this run's broker bindings, task results and cache keys\""),
+    ("USPTO_ODP_API_KEY is read by no code at 0664563", "USPTO_ODP_API_KEY is read by no code at d0bad8f"),
+    ("'before_snapshots_equal_committed_d8b224c_after_snapshots': vs_committed,",
+     "'before_snapshots_equal_committed_82771ef_after_snapshots': vs_committed,"),
+    ("\"memo 100 has no committed snapshot (it was the memo-100 run's own output), so it is compared field by field instead\"",
+     "\"memo 101 has no committed snapshot (it was the memo-101 run's own output), so it is compared field by field instead\""),
+    ("for n, c in (('97', 'ea3ab13'), ('98', '0dd8e91'), ('99', 'd821cca'), ('100', 'd8b224c'))}},",
+     "for n, c in (('97', 'ea3ab13'), ('98', '0dd8e91'), ('99', 'd821cca'), ('100', 'd8b224c'), ('101', '82771ef'))}},"),
+    ("for n in (97, 98, 99, 100) for p in ('before', 'after')]):", "for n in (97, 98, 99, 100, 101) for p in ('before', 'after')]):"),
+    ("for name in ('make_scripts.py', 'make_probe.py', 'make_scan.py', 'prep_copy.py', 'run_r066.py', 'run_ro.py',\n"
+     "             'snapshot_ro.py', 'memo97_vs_committed.py', 'memo98_vs_committed.py', 'memo99_vs_committed.py',\n"
+     "             'memo100_vs_committed.py', 'bump_sequences.py', 'setup_fixtures.py', 'upload.py', 'dump_r066.py', 'analyze_r066.py',\n"
+     "             'probe.py', 'probe_cfg.json', 'md_check.py', 'scan_r066.py', 'assemble_r066.py'):",
+     "for name in ('make_scripts.py', 'make_scripts2.py', 'make_assemble.py', 'prep_copy.py', 'run_rd0b.py', 'run_ro.py',\n"
+     "             'snapshot_ro.py', 'memo97_vs_committed.py', 'memo98_vs_committed.py', 'memo99_vs_committed.py',\n"
+     "             'memo100_vs_committed.py', 'memo101_vs_committed.py', 'bump_sequences.py', 'setup_fixtures.py', 'upload.py',\n"
+     "             'dump_rd0b.py', 'analyze_rd0b.py', 'probe.py', 'probe_cfg.json', 'md_check.py', 'scan_rd0b.py', 'assemble_rd0b.py',\n"
+     "             'find_cmds.py', 'cmp_input.py', 'cmp_matrix.py', 'show_memo.py', 'show_refs.py', 'scan_unique.py',\n"
+     "             'extract_excerpts.py', 'facts.py', 'note_vis.py', 'show_hashes.py', 'cmp_hashes.py', 't.sh'):"),
+    ("('analyze_stdout.txt', 'analyze_stdout.txt'), ('dump.txt', 'dump_stdout.txt')):",
+     "('analyze_stdout.txt', 'analyze_stdout.txt'), ('dump.txt', 'dump_stdout.txt'),\n"
+     "                 ('modules_d0bad8f.txt', 'modules_d0bad8f.txt'), ('check_and_migrations_d0bad8f.txt', 'check_and_migrations_d0bad8f.txt')):"),
+]
+for a, b in R:
+    assert s.count(a) >= 1, a[:90]
+    s = s.replace(a, b)
+open(os.path.join(HERE, 'assemble_rd0b.py'), 'w', encoding='utf-8', newline='\n').write(s)
+print('derived assemble_rd0b.py')
