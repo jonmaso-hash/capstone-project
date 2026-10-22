@@ -3632,7 +3632,7 @@ CONDITION_KEPT = (
     "According to an analyst, if the traction figures [S1, S2, S3] are taken at face value under the 'Traction by "
     "Apr-16' framing, the platform was sizeable.",
     # Nothing would stay under the heading: page 12's figure alone (a limitation, not a hypothesis kept by design).
-    "If the monthly figure [S3] is taken at face value under the 'Traction by Apr-16' framing, the platform was sizeable.",
+    "If the figure [S3] is taken at face value under the 'Traction by Apr-16' framing, the platform was sizeable.",
     "If the revenue and traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, the "
     "picture changes.",
     "If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing and revenue "
@@ -3672,6 +3672,19 @@ class Of1003ConditionContextTests(SimpleTestCase):
         self.assertNotIn('basis_condition_context', changes)
         self.assertIn('the traction figures [S1, S2, S3]', out)
         self.assertNotIn('the deck separately states', out)
+
+    def test_the_pair_s_own_category_names_its_figures(self):
+        # "engagement" is no placing word: only the pair's evidence category lets it name the figures.
+        from dataclasses import replace
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        items = [replace(item, category='Engagement') for item in OTHER_PAIR_ITEMS()]
+        facts = basis_facts(items, (OTHER_PAIR_NOTE,))
+        text = ("If the engagement figures [S7, S8] are taken at face value under the 'Growth by Q3-19' framing, the "
+                "platform was sizeable then.")
+        self.assertEqual(guard_basis_wording(text, facts), (
+            "If the engagement figures [S7] are taken at face value under the 'Growth by Q3-19' framing, the platform "
+            "was sizeable then; the deck separately states 3M bots/week [S8] on page 8 (" + CLARIFY_WEEKLY + ").",
+            ['basis_condition_context']))
 
     def test_a_narrated_side_is_not_restated_as_the_deck_s(self):
         from dataclasses import replace
