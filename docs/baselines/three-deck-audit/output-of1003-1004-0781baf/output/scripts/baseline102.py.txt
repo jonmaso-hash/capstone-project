@@ -1,0 +1,13 @@
+"""Memo 102's raw reply through the full guard sequence at the current code: does it reproduce the stored memo?"""
+import json, os, re
+from zelda_api.tests_output_fidelity import replay, items_from, notes_from, DATA
+data = json.load(open(os.path.join(DATA, 'memo102.json'), encoding='utf-8'))
+raw = json.loads(re.search(r'\{.*\}', data['model_reply_text'], re.S).group(0))
+stored = data['stored']
+payload = json.load(open(os.path.join(DATA, 'memo102_payload.json'), encoding='utf-8'))['payload']
+out, changes = replay(raw, items_from(payload), notes_from(payload))
+print('changes', changes)
+print('differs from stored:', [k for k in out if k in stored and out[k] != stored[k]])
+for key in ('base_scenario', 'open_concerns', 'business_model_analysis'):
+    print('==', key)
+    print(out[key][:700])

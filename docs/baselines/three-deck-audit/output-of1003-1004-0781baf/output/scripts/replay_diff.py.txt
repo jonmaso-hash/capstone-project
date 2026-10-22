@@ -1,0 +1,51 @@
+"""Memos 96-102: the recorded raw reply through the full guard sequence with the guard at a base commit and with the
+working tree; print every section whose output differs between the two, sentence by sentence."""
+import difflib, importlib.util, json, os, re, subprocess, sys
+import zelda_api
+from zelda_api import basis_fidelity as current
+from zelda_api.tests_output_fidelity import replay, items_from, notes_from, DATA
+BASE = os.environ.get('BASE', 'd0bad8f')
+
+
+def load(rev):
+    src = subprocess.run(['git', 'show', f'{rev}:zelda_api/basis_fidelity.py'], capture_output=True, text=True,
+                         encoding='utf-8', check=True).stdout
+    mod = importlib.util.module_from_spec(importlib.util.spec_from_loader('zelda_api.basis_fidelity', loader=None))
+    mod.__package__ = 'zelda_api'
+    exec(compile(src, rev, 'exec'), mod.__dict__)
+    return mod
+
+
+def run(mod, raw, items, notes):
+    sys.modules['zelda_api.basis_fidelity'] = zelda_api.basis_fidelity = mod
+    try:
+        return replay(raw, items, notes)
+    finally:
+        sys.modules['zelda_api.basis_fidelity'] = zelda_api.basis_fidelity = current
+
+
+base = load(BASE)
+SPLIT = re.compile(r'(?<=[.!?])\s+|\n+')
+report = {}
+for n in (96, 98, 99, 100, 101, 102):
+    data = json.load(open(os.path.join(DATA, f'memo{n}.json'), encoding='utf-8'))
+    raw = json.loads(re.search(r'\{.*\}', data['model_reply_text'], re.S).group(0))
+    payload = json.load(open(os.path.join(DATA, f'memo{n}_payload.json'), encoding='utf-8'))['payload']
+    items, notes = items_from(payload), notes_from(payload)
+    a, ca = run(base, raw, items, notes)
+    b, cb = run(current, raw, items, notes)
+    diffs = {}
+    for key in b:
+        if a.get(key) != b.get(key):
+            sa, sb = SPLIT.split(str(a[key])), SPLIT.split(str(b[key]))
+            lines = [l for l in difflib.unified_diff(sa, sb, 'base', 'new', lineterm='', n=0)
+                     if l[:1] in '+-' and l[:3] not in ('+++', '---')]
+            diffs[key] = {'base_rules': ca.get(key), 'new_rules': cb.get(key), 'diff': lines}
+    report[n] = diffs
+    print(f'== memo {n}: {len(diffs)} section(s) differ from {BASE}')
+    for key, d in diffs.items():
+        print(f'  -- {key}  base={d["base_rules"]}  new={d["new_rules"]}')
+        for l in d['diff']:
+            print('     ' + l)
+if os.environ.get('OUT'):
+    json.dump(report, open(os.environ['OUT'], 'w', encoding='utf-8'), indent=1, ensure_ascii=False)

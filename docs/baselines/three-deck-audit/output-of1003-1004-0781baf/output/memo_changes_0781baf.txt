@@ -1,0 +1,16 @@
+
+== memo 96: 0 section(s) differ from d0bad8f
+== memo 98: 0 section(s) differ from d0bad8f
+== memo 99: 0 section(s) differ from d0bad8f
+== memo 100: 0 section(s) differ from d0bad8f
+== memo 101: 0 section(s) differ from d0bad8f
+== memo 102: 3 section(s) differ from d0bad8f
+  -- business_model_analysis  base=None  new=['basis_citation_identity']
+     -The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C3, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+     +The company states 140,000+ bots and 500M messages (with measurement basis requiring clarification — see consistency note on [C3, S2] vs [C2, S3]) in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating platform-level usage, but how ManyChat monetises that usage is not found in the extracted evidence.
+  -- open_concerns  base=None  new=['basis_citation_identity']
+     -• The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].
+     +• The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C2, S3].
+  -- base_scenario  base=None  new=['basis_condition_context']
+     -If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful platform scale at that point in time.
+     +If the traction figures [S1, S2] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful platform scale at that point in time; the deck separately states 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).
