@@ -1,0 +1,21 @@
+"""Derive mutate_r.py from r11's mutate_n.py: the 31 carried mutants (I15's anchor follows the new vs-path check)
+plus R1-R14 (r_mutants.py) for the review-of-75ca81f protections. Each replacement must match once."""
+import os
+HERE = os.path.dirname(os.path.abspath(__file__))
+s = open(os.path.join(HERE, '..', 'r11', 'mutate_n.py'), encoding='utf-8').read()
+R = [
+    ('rule (C1-C14), each a correction removed',
+     'rule (C1-C14) and the review-of-75ca81f protections (R1-R14, r_mutants.py), each a correction removed'),
+    (r'''     "            if _compares(a, pair) or _compares(b, pair):\n                continue",
+     "            if False:\n                continue"),''',
+     r'''     "            if _compares(a, pair) or _compares(b, pair) or not",
+     "            if not"),'''),
+    ("\n]\n\n\ndef sha(path):",
+     "\n]\nexec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'r_mutants.py'), encoding='utf-8').read())\n"
+     "M += RM\n\n\ndef sha(path):"),
+]
+for a, b in R:
+    assert s.count(a) == 1, a[:70]
+    s = s.replace(a, b)
+open(os.path.join(HERE, 'mutate_r.py'), 'w', encoding='utf-8', newline='\n').write(s)
+print('derived mutate_r.py')

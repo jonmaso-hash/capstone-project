@@ -1,0 +1,21 @@
+C5 CAUGHT Ran 374 tests in 13.720s FAILED (failures=1) restored=True | overcorrection: the context phrase need not end the antecedent
+    assertion failures in: test_hypotheses_and_other_conditions_are_kept
+    errors in: -
+    failing sub-case: text="If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing and revenue follows, the picture changes."
+C6 CAUGHT Ran 374 tests in 13.755s FAILED (failures=1) restored=True | OF-1003 generality: the pair's topics do not name its figures ("the usage figures")
+    assertion failures in: test_the_pair_s_own_category_names_its_figures
+    errors in: -
+C7 CAUGHT Ran 374 tests in 13.704s FAILED (failures=3) restored=True | overcorrection: the subject allowlist is not read (another speaker, another metric)
+    assertion failures in: test_another_pair_s_context_is_handled_alike, test_hypotheses_and_other_conditions_are_kept
+    errors in: -
+    failing sub-case: text="If an analyst's figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, the picture changes."
+    failing sub-case: text="If the growth figures [S7, S8] are taken at face value under the 'Growth by Q3-19' framing, the platform was sizeable then."
+    failing sub-case: text="If the revenue and traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, the picture changes."
+C8 CAUGHT Ran 374 tests in 13.911s FAILED (failures=2) restored=True | overcorrection: narrator and attribution are not read
+    assertion failures in: test_a_narrator_s_condition_is_not_the_deck_s, test_hypotheses_and_other_conditions_are_kept
+    errors in: -
+    failing sub-case: text="According to an analyst, if the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, the platform was sizeable."
+C9 SURVIVED Ran 374 tests in 13.811s OK restored=True | overcorrection: a condition citing only page 12 is emptied
+    assertion failures in: -
+    errors in: -
+final sha matches pre-run: True 4a627720af499952f031279bf9e90714a85cf422a52b2090dddb879eb18fcbd9

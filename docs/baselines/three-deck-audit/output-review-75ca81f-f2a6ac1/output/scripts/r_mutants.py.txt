@@ -1,0 +1,49 @@
+# Review of 75ca81f: the protections for denials / questions about a page, and for separately grouped condition refs.
+# Each entry: (id, description, anchor, replacement); anchors use "\n" and are matched once in basis_fidelity.py.
+RM = [
+    ('R1', 'overcorrection: a question\'s citation is corrected ("Is \'500M messages/month\' [C3, S3] a run rate?")',
+     "    if _asks(sentence):\n        return False\n    start, end = _clause_bounds",
+     "    if False:\n        return False\n    start, end = _clause_bounds"),
+    ('R2', 'overcorrection: a denial\'s citation is corrected ("The deck does not state ... [C3, S2]")',
+     "    if words & _IDENTITY_DENIAL or 'whether' in words:", "    if 'whether' in words:"),
+    ('R3', 'overcorrection: a "whether" clause\'s citation is corrected',
+     "    if words & _IDENTITY_DENIAL or 'whether' in words:", "    if words & _IDENTITY_DENIAL:"),
+    ('R4', 'overcorrection: a clause naming another page has its refs replaced ("Page 10 states ... [C3, S2]")',
+     "    if named - own:\n        return False", "    if False:\n        return False"),
+    ('R5', 'overcorrection: a clause naming another source context has its refs replaced',
+     "    return not any(context and context.lower() in clause.lower() for context in others)", "    return True"),
+    ('R6', 'under-correction: a ", but" clause is not its own clause backwards (a denial before it blocks the fix)',
+     "        elif depth == 0 and ch == ',' and _CLAUSE_LINK.match(sentence, i):\n            start = _CLAUSE_LINK",
+     "        elif False:\n            start = _CLAUSE_LINK"),
+    ('R7', 'under-correction: a parenthesis does not start its own clause',
+     "            if depth == 0:\n                start = i + 1\n                break\n            depth -= 1",
+     "            if depth == 0:\n                pass\n            depth -= 1"),
+    ('R8', 'under-correction: a parenthesis does not end its own clause',
+     "            if depth == 0:\n                end = i\n                break\n            depth -= 1",
+     "            if depth == 0:\n                pass\n            depth -= 1"),
+    ('R9', 'under-correction: a clause does not end at a following ", but" clause',
+     "        elif depth == 0 and (ch in ';:—' or (ch == ',' and _CLAUSE_LINK.match(sentence, i))):\n            end = i",
+     "        elif False:\n            end = i"),
+    ('R10', 'overcorrection: the identity rule ignores the clause (the review\'s denial is switched to page 12)',
+     "                if not _states_as_cited(sentence, group.start(), pair, {side}, places):\n                    continue",
+     "                if False:\n                    continue"),
+    ('R11', 'overcorrection: a "vs" in a denial is corrected',
+     " or not _states_as_cited(sentence, match.start(), pair, {0, 1}, places):", ":"),
+    ('R12', 'OF-1004 returns: no figure group is ever corrected (memo 102\'s open_concerns kept wrong)',
+     "                if not _states_as_cited(sentence, group.start(), pair, {side}, places):\n                    continue",
+     "                if True:\n                    continue"),
+    ('R13', 'the review\'s defect returns: a group of moved refs alone is emptied ("[S1, S2] and []")',
+     "        if any(set(_split_refs(group.group(1))) <= set(outside) for group in groups):\n            continue",
+     "        if False:\n            continue"),
+    ('R14', 'OF-1003 returns: any group with a moved ref blocks the rule (memo 102\'s base_scenario kept wrong)',
+     "        if any(set(_split_refs(group.group(1))) <= set(outside) for group in groups):",
+     "        if any(set(_split_refs(group.group(1))) & set(outside) for group in groups):"),
+    # C9 is equivalent at b4fa23e: with no ref under the heading every group holds moved refs alone, which R13's check
+    # keeps. Removing both shows the page-12-only protection is still pinned.
+    ('C9R13', 'overcorrection: both checks removed, a condition citing only page 12 is emptied',
+     "        if not outside or not inside or pair is None:\n            continue                           # nothing stays"
+     " under the heading, or the moved refs are no pair's side\n        if any(set(_split_refs(group.group(1))) <= "
+     "set(outside) for group in groups):\n            continue",
+     "        if not outside or pair is None:\n            continue                           # nothing stays"
+     " under the heading, or the moved refs are no pair's side\n        if False:\n            continue"),
+]

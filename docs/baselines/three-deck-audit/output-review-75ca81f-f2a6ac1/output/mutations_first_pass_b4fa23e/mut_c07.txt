@@ -1,0 +1,27 @@
+I18 CAUGHT Ran 374 tests in 13.781s FAILED (failures=1) restored=True | overcorrection: another noun still names a side ("500M bots/month")
+    assertion failures in: test_comparisons_lists_and_correct_citations_are_kept
+    errors in: -
+    failing sub-case: text='The deck states 500M bots/month [C3, S3].'
+C1 CAUGHT Ran 374 tests in 13.772s FAILED (failures=9) restored=True | OF-1003: the condition rule is not applied (the memo-102 defect returns)
+    assertion failures in: test_a_shared_group_in_a_split_condition_is_still_corrected, test_an_accepting_condition_does_not_carry_the_heading, test_another_pair_s_context_is_handled_alike, test_of1003_page_12_is_not_dated_by_page_10_s_heading, test_only_the_expected_rules_fired, test_the_pair_s_own_category_names_its_figures, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+    failing sub-case: text="Assuming the traction figures [S1, S2, S3] are accepted as stated under the 'Traction by Apr-16' heading, the platform was sizeable by then."
+    failing sub-case: text="If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful scale, though revenue is not found [C1]."
+    failing sub-case: text="If the traction figures [S1] and [S2, S3] are taken at face value under the 'Traction by Apr-16' framing, the picture changes."
+C2 CAUGHT Ran 374 tests in 13.684s FAILED (failures=9) restored=True | OF-1003: "framing" is not a context noun
+    assertion failures in: test_a_shared_group_in_a_split_condition_is_still_corrected, test_an_accepting_condition_does_not_carry_the_heading, test_another_pair_s_context_is_handled_alike, test_of1003_page_12_is_not_dated_by_page_10_s_heading, test_only_the_expected_rules_fired, test_the_affirmative_framing_is_the_context_rule_s, test_the_pair_s_own_category_names_its_figures, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+    failing sub-case: text="If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful scale, though revenue is not found [C1]."
+    failing sub-case: text="If the traction figures [S1] and [S2, S3] are taken at face value under the 'Traction by Apr-16' framing, the picture changes."
+C3 CAUGHT Ran 374 tests in 13.692s FAILED (failures=1) restored=True | overcorrection: "whether" counts as an accepting condition
+    assertion failures in: test_hypotheses_and_other_conditions_are_kept
+    errors in: -
+    failing sub-case: text="Whether the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, the scale is open."
+C4 CAUGHT Ran 374 tests in 13.890s FAILED (failures=4) restored=True | overcorrection: any predicate accepts (explicit date hypotheses rewritten)
+    assertion failures in: test_hypotheses_and_other_conditions_are_kept, test_hypotheses_narrators_denials_hedges_and_correct_dates_are_kept
+    errors in: -
+    failing sub-case: text="If the figures [S2, S3] were counted by the period referenced in the 'Traction by Apr-16' slide context, adoption was large."
+    failing sub-case: text="If the traction figures [S1, S2, S3] all fall under the 'Traction by Apr-16' heading, the platform was sizeable by then."
+    failing sub-case: text="If the traction figures [S1, S2, S3] are not taken at face value under the 'Traction by Apr-16' framing, the picture changes."
+    failing sub-case: text="If the traction figures [S1, S2, S3] are perhaps taken at face value under the 'Traction by Apr-16' framing, the picture changes."
+final sha matches pre-run: True 4a627720af499952f031279bf9e90714a85cf422a52b2090dddb879eb18fcbd9
