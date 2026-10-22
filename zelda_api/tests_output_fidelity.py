@@ -3525,6 +3525,11 @@ IDENTITY_KEPT = (
     "Page 10 states '500M messages' and page 12 states '500M messages/month' [C3, S3].",
     # Both operands mixed: which is meant is unknown.
     "Compare [C3, S3] vs [C2, S2] before relying on either.",
+    # An operand citing both claims is itself a comparison.
+    "Compare [C3, S2] vs [C3, C2] before relying on either.",
+    # A "+" or a noun no statement gives: not a side's figure.
+    "The deck states 500M+ messages/month [C3, S3].",
+    "The deck states 500M bots/month [C3, S3].",
     "The monthly figure, '500M messages/month' [C2, C3], needs clarification against page 10.",
     "The deck states 500M messages/month [S2, S3].",
     "The two slides present conflicting bases [C3, C2].",
@@ -3615,6 +3620,8 @@ CONDITION_KEPT = (
     "If the 500M messages figure [C3, S2] is a cumulative total rather than a monthly rate, the implied activity level is lower.",
     # Whether, questions, denials, hedges, another speaker, another metric, a longer antecedent.
     "Whether the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing is unclear.",
+    "Whether the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, the "
+    "scale is open.",
     "If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, what scale had "
     "ManyChat reached?",
     "If the traction figures [S1, S2, S3] are not taken at face value under the 'Traction by Apr-16' framing, the picture "
@@ -3665,6 +3672,13 @@ class Of1003ConditionContextTests(SimpleTestCase):
         self.assertNotIn('basis_condition_context', changes)
         self.assertIn('the traction figures [S1, S2, S3]', out)
         self.assertNotIn('the deck separately states', out)
+
+    def test_a_narrated_side_is_not_restated_as_the_deck_s(self):
+        from dataclasses import replace
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        items = [replace(item, narrator='An Analyst') if item.ref == 'S8' else item for item in OTHER_PAIR_ITEMS()]
+        text = "If the usage figures [S7, S8] are taken at face value under the 'Growth by Q3-19' framing, the platform was sizeable then."
+        self.assertEqual(guard_basis_wording(text, basis_facts(items, (OTHER_PAIR_NOTE,))), (text, []))
 
     def test_another_pair_s_context_is_handled_alike(self):
         from .basis_fidelity import basis_facts, guard_basis_wording
