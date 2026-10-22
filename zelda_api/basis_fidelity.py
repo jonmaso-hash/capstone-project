@@ -47,7 +47,23 @@ reported as $10M.") leaves the next referent unresolved. A sentence naming a lis
                 total") becomes "500M with no stated interval" (memo 99, OF-705), unless that pair admits a
                 cumulative fact, the sentence asks, or the words sit inside a condition ("If 500M total is ...")
 
-and, first, in any sentence, one rule about where figures are stated (memo 99, OF-705; review of d30a022):
+and, first, in any sentence, one rule about which source a figure's citation names (memo 102, OF-1004):
+
+    identity    a citation group written straight after ONE figure of a pair cites that figure's side: "states
+                '500M messages/month' [C3, S3]" names page 12's figure, so page 10's claim C3 becomes page 12's
+                C2 ("[C2, S3]"). A figure names a side only by its value, "+" and stated interval together (the
+                same number alone names none), or, with no interval written, as a quotation of one side's whole
+                statement ("'500M messages'"). One operand of "[C3, S2] vs [C3, S3]" whose other operand cites one
+                side alone names the other side. The wrong ref becomes the named side's ref of the same kind (its
+                claim, or its one repeating statement); with none, it is dropped when the group still cites the
+                named side, and otherwise kept and logged as unresolved. Comparisons are kept: a group citing both
+                sides' claims ("[C2, C3]") or both sides' statements, a group after a list holding the pair's
+                other figure ("page 10 states '500M messages' ... while page 12 states '500M messages/month' [C2,
+                C3]"), a group following no figure ("conflicting bases [C3, C2]"), a figure with another interval
+                ("500M messages/day"), an unquoted figure with no interval ("500M messages [C2]"), and every ref
+                outside the pair
+
+and one rule about where figures are stated (memo 99, OF-705; review of d30a022):
 
     location    a clause placing a citation group "on the same (traction) slide" or "on a slide headed 'X'",
                 when the group mixes pages or contexts and cites a basis pair's member, is restated fact by
@@ -95,7 +111,17 @@ and, first, in any sentence, one rule about where figures are stated (memo 99, O
                 own source ("self-reported", "the deck", "the company"); a statement attributed to anyone else
                 ("According to an analyst, ...", "per ...", "as reported by ...", "... says") keeps its citations
                 (review of 750de3f). A hypothesis inside a condition ("If ... [S3] reflects a monthly run-rate
-                as of the 'X' slide context") is kept
+                as of the 'X' slide context") is kept.
+                A condition that only ACCEPTS the cited figures is not a hypothesis about their context (memo 102,
+                OF-1003): "If the traction figures [S1, S2, S3] are taken at face value under the 'X' framing, ...
+                at that point in time" carries page 10's heading onto page 12's S3. When the condition ("if",
+                "assuming", "supposing") holds nothing but the figures' own subject (placing words, the pair's
+                topics, the cited statements' words), their citations, an acceptance frame ("are taken at face
+                value", "are accepted as stated") and the context phrase ending the antecedent, the other side's
+                refs leave the condition's citations and follow the sentence as the deck's own fact ("...; the deck
+                separately states 500M messages/month [S3] on page 12 (clarification)"). Any other predicate
+                ("reflects a monthly run-rate", "all fall under"), "whether", a question, a denial, a hedge, a
+                narrator, another speaker or another metric keeps the sentence
     cumulative  "the cumulative and monthly presentations" (memo 101, OF-906) presupposes that one side is
     presupposed cumulative. For the pair its own following citation group belongs to (or else the pair the
                 sentence resolved to), when that pair admits no cumulative fact, "cumulative" becomes
@@ -213,10 +239,10 @@ _PAIR_REFERENT = re.compile(r'\b(?:(?:one\s+or\s+both|both|either|neither)\s+(?:
 _CONTEXT_ASIDE = re.compile(r"\(\s*(?:in\s+|on\s+)?(?:an?\s+|the\s+)?(?:slide|page)(?:\s+context)?\s*"
                             r"(?:headed\s+|titled\s+|:\s*)?'(?P<ctx>[^']+)'\s*\)", re.I)
 # The same context named outside parentheses (memo 101, OF-903/904): "in a slide context headed 'X'",
-# "in the 'X' slide context", "within a 'X' slide heading".
+# "in the 'X' slide context", "within a 'X' slide heading"; and memo 102's "under the 'X' framing" (OF-1003).
 _CONTEXT_PHRASE = re.compile(r"\b(?:in|on|within|under)\s+(?:an?\s+|the\s+)?(?:(?:slide|page)(?:\s+context)?\s*"
-                             r"(?:headed|titled|:)\s*'(?P<ctx>[^']+)'|'(?P<ctx2>[^']+)'\s+(?:slide\s+)?(?:context|heading))",
-                             re.I)
+                             r"(?:headed|titled|:)\s*'(?P<ctx>[^']+)'|'(?P<ctx2>[^']+)'\s+(?:slide\s+)?"
+                             r"(?:context|heading|framing))", re.I)
 # Where a context phrase may be followed by a separately placed fact: the end of its clause.
 _CLAUSE_END = re.compile(r'\s*(?:[.!]?["”’)]*\s*$|;|,\s*(?:while|whereas|and|but)\s)', re.I)
 # The company's own subject ending right before its reporting verb: "the company states", "... only that the deck
@@ -303,6 +329,7 @@ class Pair:
     figures: frozenset = frozenset()   # the figures its statements state ("500m")
     pages: frozenset = frozenset()     # the pages its members are on (10, 12)
     intervals: frozenset = frozenset()  # its sides' bases ("month"; "cumulative" for a cumulative or unstated side)
+    statements: Tuple[str, ...] = ()   # each side's claim statement, in refs order ("500M messages", "500M messages/month")
 
 
 @dataclass(frozen=True)
@@ -374,7 +401,8 @@ def basis_facts(items, notes):
                                             for hit in _FIGURE.finditer(item.statement)),
                           pages=frozenset(_page(item) for item in items
                                           if item.ref in members and _page(item) is not None),
-                          intervals=frozenset(_interval(by_ref.get(ref)) for ref in refs)))
+                          intervals=frozenset(_interval(by_ref.get(ref)) for ref in refs),
+                          statements=tuple(by_ref[ref].statement if ref in by_ref else '' for ref in refs)))
     bare = frozenset().union(*(pair.unspecified_members for pair in pairs))
     places = tuple((item.ref, _page(item), item.source_context or '',
                     item.statement + (' with no explicit interval' if item.ref in bare else ''))
@@ -860,14 +888,15 @@ _OWN_HEAD_WORDS = frozenset({'selfreported', 'company', "company's", 'deck', "de
                              "management's", 'taking', 'at', 'face', 'value'})
 
 
-def _own_head(head, cited, facts):
+def _own_head(head, cited, facts, topics=frozenset()):
     """Every word before the moved citations is the company's own source, a placing word, or a word or figure of the
     cited statements: no other speaker ("An analyst describes the deck's ...", "An analyst's reading of ...") and no
     aside (a parenthesis is not a plain gap). An allowlist, so an unlisted third party or verb keeps the sentence
-    (review of 7fb484b)."""
+    (review of 7fb484b). `topics`: the pair's own evidence categories ("the usage figures"), for a condition's
+    subject (OF-1003)."""
     statements = [_DIGIT_GROUP.sub('', fact.lower()) for ref, *_, fact in facts.places if ref in cited]
     vocabulary = (_PLACING_WORDS | _OWN_HEAD_WORDS | {word for fact in statements for word in re.findall(r'[a-z]+', fact)}
-                  | {form for fact in statements for form in _stated_forms(fact)})
+                  | {form for fact in statements for form in _stated_forms(fact)} | topics)
     text = re.sub(r'\bself-reported\b', 'selfreported', head[_LEAD.match(head).end():], flags=re.I)
     return _plain_words(text, vocabulary)
 
@@ -999,6 +1028,205 @@ def _context_aside(sentence, facts, changes):
     return sentence
 
 
+# A condition that accepts the cited figures rather than supposing anything about their date or basis (memo 102,
+# OF-1003): "If the traction figures [refs] are taken at face value under the 'X' framing, ...". An allowlist: any
+# other predicate ("reflects a monthly run-rate", "also falls under", "dates from") is a hypothesis and is kept.
+_ACCEPTANCE_CONDITION = re.compile(r'\b(?:if|assuming|supposing|suppose)\b', re.I)
+_ACCEPTANCE = re.compile(r"\s*(?:are|is|were|was|be)\s+(?:all\s+)?(?:taken|accepted|read|treated)\s+"
+                         r"(?:at\s+(?:their\s+|its\s+)?face\s+value|as\s+(?:stated|reported|presented|given))\s*", re.I)
+# What may end a condition's context phrase: the comma before its consequence, a ";" or the end of the sentence.
+_ANTECEDENT_END = re.compile(r'\s*(?:,|;|[.!]?["”’)]*\s*$)')
+
+
+def _condition_context(sentence, facts, changes):
+    """A condition that only accepts the cited figures, followed by a context phrase that only one side's refs
+    belong to: the context is not supposed, it is carried onto the other side's refs (OF-1003). Those refs leave the
+    condition's citations and follow the sentence as their own fact, with their own page and context."""
+    if _asks(sentence) or not facts.pairs:
+        return sentence
+    places = {ref: (page, context, fact) for ref, page, context, fact in facts.places}
+    for match in _CONTEXT_PHRASE.finditer(sentence):
+        at, end, claimed = match.start(), match.end(), match.group('ctx') or match.group('ctx2')
+        if sentence[:at].count('(') != sentence[:at].count(')') or not _ANTECEDENT_END.match(sentence, end):
+            continue
+        start = _place_clause_start(sentence, at)
+        conditions = list(_ACCEPTANCE_CONDITION.finditer(sentence, start, at))
+        if not conditions:
+            continue                           # not a condition: the affirmative rule above decides
+        condition = conditions[-1]
+        groups = list(_REF.finditer(sentence, condition.end(), at))
+        if not groups or not _ACCEPTANCE.fullmatch(sentence, groups[-1].end(), at):
+            continue                           # another predicate: a hypothesis about the figures, kept
+        if any(not re.fullmatch(r'[\s,]*(?:and\s+)?', sentence[a.end():b.start()]) for a, b in zip(groups, groups[1:])):
+            continue
+        cited = [ref for group in groups for ref in _split_refs(group.group(1))]
+        if any(ref not in places for ref in cited) or set(cited) & facts.narrated:
+            continue
+        outside = [ref for ref in cited if places[ref][1] != claimed]
+        inside = [ref for ref in cited if places[ref][1] == claimed]
+        pair = next((p for p in facts.pairs if len(p.sides) == 2 and set(outside) <= p.members), None)
+        if not outside or not inside or pair is None:
+            continue                           # nothing stays under the heading, or the moved refs are no pair's side
+        head = sentence[condition.end():groups[0].start()]
+        clause = sentence[start:at]
+        # A denial or hedge cannot pass: _ACCEPTANCE is matched whole and the subject is an allowlist.
+        if (any(name.lower() in clause.lower() for name in facts.narrators) or _ATTRIBUTION.search(sentence[:at])
+                or not _own_head(head, cited, facts, pair.topics)):
+            continue                           # someone else's figures, or words the rule does not know
+        out, pos = sentence[:groups[0].start()], groups[0].start()
+        for group in groups:
+            keep = [ref for ref in _split_refs(group.group(1)) if ref not in outside]
+            out += sentence[pos:group.start()] + '[' + ', '.join(keep) + ']'
+            pos = group.end()
+        out += sentence[pos:]
+        runs = []                              # adjacent refs on one page and context share a run
+        for ref in outside:
+            if runs and runs[-1][0] == places[ref][:2]:
+                runs[-1][1].append(ref)
+            else:
+                runs.append((places[ref][:2], [ref]))
+        body = '; the deck separately states ' + ', and separately '.join(
+            ' and '.join(f'{places[ref][2]} [{ref}]' for ref in refs) + f' on page {page}'
+            + (f", under '{context}'" if context else '') for (page, context), refs in runs)
+        clarification = pair.clarification[0].lower() + pair.clarification[1:]
+        if clarification not in sentence:
+            body += f' ({clarification})'
+        final = re.search(r'[.!]?["”’)]*\s*$', out)
+        changes.append('basis_condition_context')
+        return out[:final.start()] + body + out[final.start():]
+    return sentence
+
+
+# A citation group written straight after one figure ("states '500M messages/month' [C3, S3]"): the figure, any
+# opening quote before it and closing quote after it. The figure may carry its noun and its interval.
+_MENTION_END = re.compile(r"(?P<open>['‘\"“])?(?<![\w.,$])(?P<value>\$?\d[\d,]*(?:\.\d+)?[kmb]?)(?P<plus>\+?)"
+                          r"(?:/(?P<rate>[a-z]+))?(?:\s+(?P<noun>[a-z]+)(?:/(?P<nrate>[a-z]+))?)?"
+                          r"(?P<close>['’\"”])?\s*$", re.I)
+# Two citation groups contrasted as two figures: "[C3, S2] vs [C2, S3]".
+_VERSUS = re.compile(r"\[(?P<a>[A-Z]\d+(?:\s*[,;]\s*[A-Z]\d+)*)\]\s*(?:vs\.?|versus)\s*"
+                     r"\[(?P<b>[A-Z]\d+(?:\s*[,;]\s*[A-Z]\d+)*)\]", re.I)
+
+
+def _statement_form(statement):
+    """A statement's first figure as (value, plus, interval, noun): "500M messages/month" -> ("500m", "", "month",
+    "messages"). Lowercased, digit groups joined."""
+    found = re.search(r'(?<![\w.$])(\$?\d[\d,]*(?:\.\d+)?[kmb]?)(\+?)(?:/([a-z]+))?(?:\s+([a-z]+)(?:/([a-z]+))?)?',
+                      _DIGIT_GROUP.sub('', statement.lower()))
+    if found is None:
+        return None
+    return found.group(1).replace(',', ''), found.group(2), found.group(3) or found.group(5) or '', found.group(4) or ''
+
+
+def _mention_side(pair, mention):
+    """The one side of `pair` a figure mention names, or None. The figure's value, "+" and stated interval must be
+    exactly one side's ("500M messages/month" is the monthly side); with no interval written, only a quotation of
+    one side's whole statement names it ("'500M messages'"). The same number alone names no side."""
+    value = mention.group('value').lower().replace(',', '')
+    rate = (mention.group('rate') or mention.group('nrate') or '').lower()
+    noun = (mention.group('noun') or '').lower()
+    quoted = bool(mention.group('open')) and bool(mention.group('close'))
+    forms = [_statement_form(statement) for statement in pair.statements]
+    if any(form is None for form in forms) or len(forms) != len(pair.sides):
+        return None
+    if rate:
+        sides = [i for i, (v, plus, interval, n) in enumerate(forms)
+                 if v == value and interval == rate and plus == mention.group('plus') and (not noun or noun == n)]
+    elif quoted:
+        text = _DIGIT_GROUP.sub('', mention.group(0).strip().strip('\'‘’"“” ').lower())
+        sides = [i for i, statement in enumerate(pair.statements)
+                 if ' '.join(_DIGIT_GROUP.sub('', statement.lower()).split()) == ' '.join(text.split())]
+    else:
+        return None
+    return sides[0] if len(sides) == 1 else None
+
+
+def _compares(refs, pair):
+    """The group cites both sides' claims ("[C3, C2]") or both sides' statements ("[S2, S3]"): a comparison of the
+    two figures, whatever figure it follows."""
+    claims = {i for i, members in enumerate(pair.sides) for ref in refs if ref in members and ref in pair.refs}
+    statements = {i for i, members in enumerate(pair.sides) for ref in refs if ref in members and ref not in pair.refs}
+    return len(claims) > 1 or len(statements) > 1
+
+
+def _identity_fix(refs, pair, side, changes):
+    """`refs` cite the figure on `side`: a ref of the pair's other side becomes this side's ref of the same kind
+    (its claim for a claim, its one repeating statement for a statement). With no such ref, the wrong ref is dropped
+    when the group still cites this side, and kept, as unresolved, when it does not. Other refs are untouched."""
+    other = set().union(*(members for i, members in enumerate(pair.sides) if i != side))
+    claim, statements = pair.refs[side], sorted(pair.sides[side] - set(pair.refs))
+    out, unresolved = [], False
+    for ref in refs:
+        if ref not in other:
+            out.append(ref)
+            continue
+        replacement = claim if ref in pair.refs else (statements[0] if len(statements) == 1 else None)
+        if replacement is not None and replacement not in refs and replacement not in out:
+            out.append(replacement)
+        elif replacement is None and not set(refs) & pair.sides[side]:
+            out.append(ref)                    # nothing the evidence can put in its place
+            unresolved = True
+    if unresolved:
+        changes.append('basis_citation_identity_unresolved')
+    return out
+
+
+def _citation_identity(sentence, facts, changes):
+    """A citation group attached to one figure of a pair cites that figure's own side (OF-1004): a ref of the other
+    side ("'500M messages/month' [C3, S3]", C3 being page 10's claim) becomes the named side's ref. Only a group
+    written straight after one figure that names a side, or one operand of "[...] vs [...]" whose other operand cites
+    one side alone. A group after a list of the pair's figures ("500M messages and 500M messages/month [C3, C2]"), a
+    group following no figure ("the two slides present conflicting bases [C3, C2]") and refs outside the pair are
+    kept: comparisons cite both sides."""
+    if not facts.pairs:
+        return sentence
+    out, pos, previous_end = '', 0, 0
+    for group in _REF.finditer(sentence):
+        refs = _split_refs(group.group(1))
+        before = sentence[:group.start()]
+        mention = _MENTION_END.search(before)
+        fixed = refs
+        if mention is not None:
+            for pair in facts.pairs:
+                if len(pair.sides) != 2 or not set(refs) & pair.members or _compares(refs, pair):
+                    continue
+                side = _mention_side(pair, mention)
+                if side is None:
+                    continue
+                value = mention.group('value').lower().replace(',', '')
+                earlier = sentence[max(previous_end, _place_clause_start(sentence, mention.start())):mention.start()]
+                if any(_figure_key(token).split('/')[0].rstrip('+') == value.rstrip('+')
+                       for token in _FIGURE_TOKEN.findall(_DIGIT_GROUP.sub('', earlier).lower())):
+                    continue                   # the group may cover an earlier figure of the pair: a list
+                fixed = _identity_fix(refs, pair, side, changes)
+        out += sentence[pos:group.start()] + ('[' + ', '.join(fixed) + ']' if fixed != refs else group.group(0))
+        if fixed != refs:
+            changes.append('basis_citation_identity')
+        pos = previous_end = group.end()
+    sentence = out + sentence[pos:]
+
+    def contrast(match):
+        a, b = _split_refs(match.group('a')), _split_refs(match.group('b'))
+        for pair in facts.pairs:
+            if len(pair.sides) != 2:
+                continue
+            on = lambda refs: {i for i, members in enumerate(pair.sides) for ref in refs if ref in members}
+            sa, sb = on(a), on(b)
+            if _compares(a, pair) or _compares(b, pair):
+                continue
+            if len(sa) == 1 and sb == {0, 1}:
+                b = _identity_fix(b, pair, 1 - next(iter(sa)), changes)
+            elif len(sb) == 1 and sa == {0, 1}:
+                a = _identity_fix(a, pair, 1 - next(iter(sb)), changes)
+            else:
+                continue
+            changes.append('basis_citation_identity')
+            between = sentence[match.end('a') + 1:match.start('b') - 1]
+            return '[' + ', '.join(a) + ']' + between + '[' + ', '.join(b) + ']'
+        return match.group(0)
+
+    return _VERSUS.sub(contrast, sentence)
+
+
 def _cumulative_presupposed(sentence, pair, facts, changes):
     """"the cumulative and monthly ..." for a pair whose side without a stated interval is not admitted cumulative:
     that side's interval is unspecified (memo 101, OF-906). The pair is the one the phrase's own following citation
@@ -1088,8 +1316,10 @@ def guard_basis_wording(text, facts):
     previous: Optional[Pair] = None          # the pair this paragraph / list item is still discussing
     before = None                            # the sentence before, in the same paragraph / list item
     for sentence, separator in _sentences(text):
+        sentence = _citation_identity(sentence, facts, changes)
         sentence = _location(sentence, facts, changes)
         sentence = _context_aside(sentence, facts, changes)
+        sentence = _condition_context(sentence, facts, changes)
         sentence = _condition_attribution(sentence, before, facts, changes)
         pair = _resolve(sentence, facts, previous)
         if pair is not None:
