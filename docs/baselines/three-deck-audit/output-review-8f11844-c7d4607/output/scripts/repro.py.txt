@@ -1,0 +1,37 @@
+"""Review of 8f11844: (1) subjects naming a page or interval the pair does not have; (2) unstated-interval relabels
+for a pair of two stated rates. Memo 101 payload through the full sequence; a monthly/daily pair through the basis
+guard. No model call, no database."""
+from zelda_api.tests_output_fidelity import replay, items_from, notes_from, memo101_payload, PAIR_LEAD, _usage
+from zelda_api.basis_fidelity import basis_facts, guard_basis_wording
+p = memo101_payload(); items, notes = items_from(p), notes_from(p)
+print('== memo 101 pair (pages 10/12; unstated + monthly), full sequence')
+for text in (
+        "The page-99 figure is overstated [S2, S3].",
+        "The yearly figure is overstated [S2, S3].",
+        "The weekly figure is overstated compared with the monthly figure [S2, S3].",
+        "The page-99 monthly figure is overstated [S2, S3].",
+        "The run-rate figure is overstated [S2, S3].",
+        "The cumulative, monthly, and daily figures are overstated [S2, S3].",
+        "If the figures are monthly, the implied weekly activity is overstated [S2, S3].",
+        # still the pair's
+        "The page-10 figure is overstated [S2, S3].",
+        "The monthly figure is overstated [S2, S3].",
+        "The cumulative figure is overstated [S2, S3].",
+        "The 500M messages/month figure is overstated [S2, S3].",
+        "The cumulative and monthly figures are overstated [S2, S3].",
+        "If the figures are monthly, the implied monthly activity is overstated [S2, S3].",
+):
+    out, ch = replay({'s': PAIR_LEAD + text}, items, notes)
+    out = out['s'][len(PAIR_LEAD):]
+    print(('KEPT     ' if out == text else f"{ch.get('s')} ") + text + ('' if out == text else '\n           -> ' + out))
+print('== monthly (page 3) / daily (page 4) pair, basis guard')
+two = [_usage('C10', '4M messages/month', 3), _usage('C11', '4M messages/day', 4)]
+note = ('measurement_basis', ('C10', 'C11'), 'Page 3 states 4M messages/month; page 4 states 4M messages/day. '
+        'These use different measurement bases and need clarification before comparison.')
+facts = basis_facts(two, (note,))
+for text in ('The daily figure [C11] is overstated compared with the cumulative figure [C10].',
+             'The cumulative figure [C10] sits beside a daily rate [C11].',
+             'The cumulative and daily figures [C10, C11] differ.',
+             'The cumulative and monthly presentations [C10, C11] need clarification.'):
+    out, ch = guard_basis_wording(text, facts)
+    print(('KEPT     ' if out == text else f"{ch} ") + text + ('' if out == text else '\n           -> ' + out))

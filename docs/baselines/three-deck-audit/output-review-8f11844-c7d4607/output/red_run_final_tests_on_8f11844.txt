@@ -1,0 +1,769 @@
+RED (final tests at c7d4607), basis_fidelity.py = 8f11844 bytes: 85d77b320196bfc561ef6c1605f464f15e6ba3c1707b95c6a4aef2ecbcd9575a *zelda_api/basis_fidelity.py
+2026-10-21 23:25:06,363 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-21 23:25:59,449 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-21 23:25:59,474 INFO zelda_api.intelligence_pipeline - Memo supported_points: funding-source fidelity ['unsupported_total', 'narrator_narrative'] for document 1
+2026-10-21 23:25:59,496 INFO zelda_api.intelligence_pipeline - Memo open_concerns: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-21 23:25:59,497 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-21 23:25:59,500 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt', 'funding_not_runway'] for document 1
+2026-10-21 23:25:59,574 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-21 23:25:59,603 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-21 23:25:59,608 INFO zelda_api.signals - DocumentSource created: a.pptx
+2026-10-21 23:25:59,613 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-21 23:25:59,628 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-21 23:25:59,633 INFO zelda_api.signals - DocumentSource created: b.pptx
+2026-10-21 23:25:59,638 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-21 23:25:59,653 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-21 23:25:59,658 INFO zelda_api.signals - DocumentSource created: c.pptx
+2026-10-21 23:25:59,662 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-21 23:25:59,662 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_cumulative_referent'] for document 1
+2026-10-21 23:25:59,678 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-21 23:25:59,683 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-21 23:25:59,691 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: funding-source fidelity ['profile_undated'] for document 1
+2026-10-21 23:25:59,695 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-21 23:25:59,701 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 23:25:59,703 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-21 23:25:59,706 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label', 'basis_referent_judgment'] for document 1
+2026-10-21 23:25:59,707 INFO zelda_api.intelligence_pipeline - Memo upside_scenario: measurement-basis wording ['basis_condition_attribution'] for document 1
+2026-10-21 23:25:59,725 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-21 23:25:59,731 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-21 23:25:59,753 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-21 23:25:59,764 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-21 23:25:59,766 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 23:25:59,770 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 23:25:59,772 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-21 23:25:59,790 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-21 23:25:59,796 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-21 23:25:59,807 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: funding-source fidelity ['cash_premise'] for document 1
+2026-10-21 23:25:59,810 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-21 23:25:59,814 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-21 23:25:59,816 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-21 23:25:59,819 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-21 23:25:59,822 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-21 23:25:59,825 INFO zelda_api.intelligence_pipeline - Memo supported_points: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-21 23:25:59,827 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label'] for document 1
+2026-10-21 23:25:59,849 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-21 23:25:59,855 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-21 23:25:59,865 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: funding-source fidelity ['profile_undated'] for document 1
+2026-10-21 23:25:59,869 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-21 23:25:59,875 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 23:25:59,877 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-21 23:25:59,879 INFO zelda_api.intelligence_pipeline - Memo upside_scenario: measurement-basis wording ['basis_condition_attribution'] for document 1
+2026-10-21 23:25:59,897 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-21 23:25:59,903 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-21 23:25:59,909 INFO zelda_api.intelligence_pipeline - Memo financial_analysis: funding-source fidelity ['provenance:Pitch Deck Hunt'] for document 1
+2026-10-21 23:25:59,910 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: funding-source fidelity ['profile_undated'] for document 1
+2026-10-21 23:25:59,914 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-21 23:25:59,920 INFO zelda_api.intelligence_pipeline - Memo team_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-21 23:25:59,921 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 23:25:59,923 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-21 23:25:59,925 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label', 'basis_referent_judgment'] for document 1
+2026-10-21 23:25:59,926 INFO zelda_api.intelligence_pipeline - Memo upside_scenario: measurement-basis wording ['basis_condition_attribution'] for document 1
+2026-10-21 23:25:59,943 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-21 23:25:59,948 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-21 23:25:59,966 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-21 23:25:59,968 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-21 23:25:59,971 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-21 23:25:59,973 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 23:25:59,978 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 23:25:59,979 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-21 23:26:00,001 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-21 23:26:00,007 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-21 23:26:00,027 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-21 23:26:00,029 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-21 23:26:00,032 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-21 23:26:00,034 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 23:26:00,038 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 23:26:00,038 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-21 23:26:00,055 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-21 23:26:00,060 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-21 23:26:00,079 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-21 23:26:00,081 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-21 23:26:00,084 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-21 23:26:00,085 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 23:26:00,089 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 23:26:00,090 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-21 23:26:00,111 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-21 23:26:00,117 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-21 23:26:00,135 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-21 23:26:00,140 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-21 23:26:00,141 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 23:26:00,145 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 23:26:00,146 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-21 23:26:00,164 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-21 23:26:00,169 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-21 23:26:00,186 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-21 23:26:00,190 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-21 23:26:00,191 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 23:26:00,196 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 23:26:00,197 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-21 23:26:00,219 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-21 23:26:00,224 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-21 23:26:00,245 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-21 23:26:00,247 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-21 23:26:00,248 INFO zelda_api.intelligence_pipeline - Memo market_analysis: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-21 23:26:00,250 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-21 23:26:00,251 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 23:26:00,255 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 23:26:00,256 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-21 23:26:00,273 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-21 23:26:00,279 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-21 23:26:00,296 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-21 23:26:00,298 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-21 23:26:00,299 INFO zelda_api.intelligence_pipeline - Memo market_analysis: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-21 23:26:00,299 INFO zelda_api.intelligence_pipeline - Memo team_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-21 23:26:00,302 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-21 23:26:00,303 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 23:26:00,307 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 23:26:00,308 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-21 23:26:00,327 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+F2026-10-21 23:26:00,336 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-21 23:26:00,350 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-21 23:26:00,350 INFO zelda_api.intelligence_pipeline - Memo market_analysis: measurement-basis wording ['basis_cumulative_referent'] for document 1
+2026-10-21 23:26:00,351 INFO zelda_api.intelligence_pipeline - Memo team_assessment: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-21 23:26:00,372 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+F2026-10-21 23:26:00,379 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-21 23:26:00,397 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-21 23:26:00,399 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-21 23:26:00,402 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-21 23:26:00,403 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 23:26:00,407 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 23:26:00,408 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-21 23:26:00,426 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-21 23:26:00,432 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-21 23:26:00,453 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-21 23:26:00,455 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-21 23:26:00,458 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-21 23:26:00,459 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 23:26:00,464 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-21 23:26:00,465 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-21 23:26:00,483 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-21 23:26:00,488 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-21 23:26:00,497 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: funding-source fidelity ['cash_premise'] for document 1
+2026-10-21 23:26:00,500 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-21 23:26:00,502 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-21 23:26:00,505 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-21 23:26:00,507 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-21 23:26:00,508 INFO zelda_api.intelligence_pipeline - Memo executive_summary: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-21 23:26:00,510 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-21 23:26:00,514 INFO zelda_api.intelligence_pipeline - Memo supported_points: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-21 23:26:00,515 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label'] for document 1
+2026-10-21 23:26:00,534 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.................................................................................................................................FFF.FF.F......FFFFF..FFFFFFFFFFFFFFF......FF.........................
+======================================================================
+FAIL: test_the_writer_keeps_another_figures_subject (zelda_api.tests_output_fidelity.PipelineReview8f11844Tests.test_the_writer_keeps_another_figures_subject)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3279, in test_the_writer_keeps_another_figures_subject
+    self.assertEqual(memo.market_analysis, REVIEW_8F1_KEPT[0])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].' != '- Th[80 chars] 12. The page-99 figure is overstated [S2, S3].'
+- - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
++ - The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The page-99 figure is overstated [S2, S3].
+
+
+======================================================================
+FAIL: test_the_writer_relabels_nothing_for_two_stated_rates (zelda_api.tests_output_fidelity.PipelineReview8f11844Tests.test_the_writer_relabels_nothing_for_two_stated_rates)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3294, in test_the_writer_relabels_nothing_for_two_stated_rates
+    self.assertEqual(memo.market_analysis, TWO_RATE_KEPT[0])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'The [38 chars]red with the figure stated without an explicit interval [C10].' != 'The [38 chars]red with the cumulative figure [C10].'
+- The daily figure [C11] is overstated compared with the figure stated without an explicit interval [C10].
++ The daily figure [C11] is overstated compared with the cumulative figure [C10].
+
+
+======================================================================
+FAIL: test_earlier_rounds_are_unchanged (zelda_api.tests_output_fidelity.Review71ece83Tests.test_earlier_rounds_are_unchanged) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The reported, monthly, and daily figures are overstated [S2, S3], but the definitions remain unclear.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3080, in test_earlier_rounds_are_unchanged
+    self.assertEqual(self.full(text), (after, changes))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[154 chars]nt']) != ('- T[81 chars] 12. The reported, monthly, and daily figures [61 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[128 chars]ear.'
+'- Th[80 chars] 12. The reported, monthly, and daily figures [56 chars]ear.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. The reported, monthly, and daily figures are overstated [S2, '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3], '
+-  'but the definitions remain unclear.',
++  'S3], but the definitions remain unclear.',
+?   +++++
+
+-  ['basis_overstatement'])
++  [])
+
+======================================================================
+FAIL: test_earlier_rounds_are_unchanged (zelda_api.tests_output_fidelity.Review71ece83Tests.test_earlier_rounds_are_unchanged) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative, monthly, and daily figures are overstated [S2, S3], but the definitions remain unclear.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3080, in test_earlier_rounds_are_unchanged
+    self.assertEqual(self.full(text), (after, changes))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[154 chars]nt']) != ('- T[81 chars] 12. The cumulative, monthly, and daily figure[63 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[128 chars]ear.'
+'- Th[80 chars] 12. The cumulative, monthly, and daily figure[58 chars]ear.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. The cumulative, monthly, and daily figures are overstated [S2, '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3], '
+-  'but the definitions remain unclear.',
++  'S3], but the definitions remain unclear.',
+?   +++++
+
+-  ['basis_overstatement'])
++  [])
+
+======================================================================
+FAIL: test_earlier_rounds_are_unchanged (zelda_api.tests_output_fidelity.Review71ece83Tests.test_earlier_rounds_are_unchanged) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative, monthly, and daily figures are overstated [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3080, in test_earlier_rounds_are_unchanged
+    self.assertEqual(self.full(text), (after, changes))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. The cumulative, monthly, and daily figure[27 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. The cumulative, monthly, and daily figure[22 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
++  'on page 12. The cumulative, monthly, and daily figures are overstated [S2, '
++  'S3].',
++  [])
+
+======================================================================
+FAIL: test_memo_98_and_earlier_rounds_are_unchanged (zelda_api.tests_output_fidelity.Review72418e2Tests.test_memo_98_and_earlier_rounds_are_unchanged) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative, monthly, and daily figures are overstated [S2, S3], but the definitions remain unclear.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2936, in test_memo_98_and_earlier_rounds_are_unchanged
+    self.assertEqual(self.full(text), (after, changes))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[154 chars]nt']) != ('- T[81 chars] 12. The cumulative, monthly, and daily figure[63 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[128 chars]ear.'
+'- Th[80 chars] 12. The cumulative, monthly, and daily figure[58 chars]ear.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. The cumulative, monthly, and daily figures are overstated [S2, '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3], '
+-  'but the definitions remain unclear.',
++  'S3], but the definitions remain unclear.',
+?   +++++
+
+-  ['basis_overstatement'])
++  [])
+
+======================================================================
+FAIL: test_memo_98_and_earlier_rounds_are_unchanged (zelda_api.tests_output_fidelity.Review72418e2Tests.test_memo_98_and_earlier_rounds_are_unchanged) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative, monthly, and daily figures are overstated [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2936, in test_memo_98_and_earlier_rounds_are_unchanged
+    self.assertEqual(self.full(text), (after, changes))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. The cumulative, monthly, and daily figure[27 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. The cumulative, monthly, and daily figure[22 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
++  'on page 12. The cumulative, monthly, and daily figures are overstated [S2, '
++  'S3].',
++  [])
+
+======================================================================
+FAIL: test_the_pairs_own_clauses_are_still_repaired (zelda_api.tests_output_fidelity.Review72418e2Tests.test_the_pairs_own_clauses_are_still_repaired) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The reported, monthly, and daily figures are overstated [S2, S3], but the definitions remain unclear.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2925, in test_the_pairs_own_clauses_are_still_repaired
+    self.assertEqual(self.full(text), (after, changes))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[154 chars]nt']) != ('- T[81 chars] 12. The reported, monthly, and daily figures [61 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[128 chars]ear.'
+'- Th[80 chars] 12. The reported, monthly, and daily figures [56 chars]ear.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. The reported, monthly, and daily figures are overstated [S2, '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3], '
+-  'but the definitions remain unclear.',
++  'S3], but the definitions remain unclear.',
+?   +++++
+
+-  ['basis_overstatement'])
++  [])
+
+======================================================================
+FAIL: test_the_pairs_judgment_is_repaired_and_other_clauses_kept (zelda_api.tests_output_fidelity.Review8d7f8dcTests.test_the_pairs_judgment_is_repaired_and_other_clauses_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative, monthly, and daily figures are overstated [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2690, in test_the_pairs_judgment_is_repaired_and_other_clauses_kept
+    self.assertEqual(self.full(text), (after, changes))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. The cumulative, monthly, and daily figure[27 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. The cumulative, monthly, and daily figure[22 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
++  'on page 12. The cumulative, monthly, and daily figures are overstated [S2, '
++  'S3].',
++  [])
+
+======================================================================
+FAIL: test_a_pair_of_two_stated_rates_gains_no_unstated_interval (zelda_api.tests_output_fidelity.Review8f11844Tests.test_a_pair_of_two_stated_rates_gains_no_unstated_interval) (text='The daily figure [C11] is overstated compared with the cumulative figure [C10].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3207, in test_a_pair_of_two_stated_rates_gains_no_unstated_interval
+    self.assertEqual((out, changes), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('The[47 chars] the figure stated without an explicit interva[36 chars]nt']) != ('The[47 chars] the cumulative figure [C10].', [])
+
+First differing element 0:
+'The [38 chars]red with the figure stated without an explicit interval [C10].'
+'The [38 chars]red with the cumulative figure [C10].'
+
+- ('The daily figure [C11] is overstated compared with the figure stated without '
+?                                                                 ---------------
+
++ ('The daily figure [C11] is overstated compared with the cumulative figure '
+?                                                         +++++++++++
+
+-  'an explicit interval [C10].',
+-  ['basis_cumulative_referent'])
++  '[C10].',
++  [])
+
+======================================================================
+FAIL: test_a_pair_of_two_stated_rates_gains_no_unstated_interval (zelda_api.tests_output_fidelity.Review8f11844Tests.test_a_pair_of_two_stated_rates_gains_no_unstated_interval) (text='The cumulative figure [C10] sits beside a daily rate [C11].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3207, in test_a_pair_of_two_stated_rates_gains_no_unstated_interval
+    self.assertEqual((out, changes), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('The figure stated without an explicit interva[67 chars]nt']) != ('The cumulative figure [C10] sits beside a dai[15 chars], [])
+
+First differing element 0:
+'The figure stated without an explicit interva[35 chars]11].'
+'The cumulative figure [C10] sits beside a daily rate [C11].'
+
++ ('The cumulative figure [C10] sits beside a daily rate [C11].', [])
+- ('The figure stated without an explicit interval [C10] sits beside a daily '
+-  'rate [C11].',
+-  ['basis_cumulative_referent'])
+
+======================================================================
+FAIL: test_a_pair_of_two_stated_rates_gains_no_unstated_interval (zelda_api.tests_output_fidelity.Review8f11844Tests.test_a_pair_of_two_stated_rates_gains_no_unstated_interval) (text='The cumulative and daily figures [C10, C11] differ.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3207, in test_a_pair_of_two_stated_rates_gains_no_unstated_interval
+    self.assertEqual((out, changes), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('The unspecified-interval and daily figures [C[47 chars]ed']) != ('The cumulative and daily figures [C10, C11] differ.', [])
+
+First differing element 0:
+'The unspecified-interval and daily figures [C10, C11] differ.'
+'The cumulative and daily figures [C10, C11] differ.'
+
+- ('The unspecified-interval and daily figures [C10, C11] differ.',
+?        ^^^ ---------------
+
++ ('The cumulative and daily figures [C10, C11] differ.', [])
+?       + ^^^^^^^                                        ++++
+
+-  ['basis_cumulative_presupposed'])
+
+======================================================================
+FAIL: test_a_pair_of_two_stated_rates_gains_no_unstated_interval (zelda_api.tests_output_fidelity.Review8f11844Tests.test_a_pair_of_two_stated_rates_gains_no_unstated_interval) (text='The cumulative and monthly presentations [C10, C11] need clarification.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3207, in test_a_pair_of_two_stated_rates_gains_no_unstated_interval
+    self.assertEqual((out, changes), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('The unspecified-interval and monthly presenta[67 chars]ed']) != ('The cumulative and monthly presentations [C10[27 chars], [])
+
+First differing element 0:
+'The unspecified-interval and monthly presenta[32 chars]ion.'
+'The cumulative and monthly presentations [C10[22 chars]ion.'
+
++ ('The cumulative and monthly presentations [C10, C11] need clarification.', [])
+- ('The unspecified-interval and monthly presentations [C10, C11] need '
+-  'clarification.',
+-  ['basis_cumulative_presupposed'])
+
+======================================================================
+FAIL: test_earlier_rounds_are_unchanged (zelda_api.tests_output_fidelity.Review8f11844Tests.test_earlier_rounds_are_unchanged) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The reported, monthly, and daily figures are overstated [S2, S3], but the definitions remain unclear.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3244, in test_earlier_rounds_are_unchanged
+    self.assertEqual(self.full(text), (after, changes))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[154 chars]nt']) != ('- T[81 chars] 12. The reported, monthly, and daily figures [61 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[128 chars]ear.'
+'- Th[80 chars] 12. The reported, monthly, and daily figures [56 chars]ear.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. The reported, monthly, and daily figures are overstated [S2, '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3], '
+-  'but the definitions remain unclear.',
++  'S3], but the definitions remain unclear.',
+?   +++++
+
+-  ['basis_overstatement'])
++  [])
+
+======================================================================
+FAIL: test_earlier_rounds_are_unchanged (zelda_api.tests_output_fidelity.Review8f11844Tests.test_earlier_rounds_are_unchanged) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative, monthly, and daily figures are overstated [S2, S3], but the definitions remain unclear.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3244, in test_earlier_rounds_are_unchanged
+    self.assertEqual(self.full(text), (after, changes))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[154 chars]nt']) != ('- T[81 chars] 12. The cumulative, monthly, and daily figure[63 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[128 chars]ear.'
+'- Th[80 chars] 12. The cumulative, monthly, and daily figure[58 chars]ear.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. The cumulative, monthly, and daily figures are overstated [S2, '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3], '
+-  'but the definitions remain unclear.',
++  'S3], but the definitions remain unclear.',
+?   +++++
+
+-  ['basis_overstatement'])
++  [])
+
+======================================================================
+FAIL: test_earlier_rounds_are_unchanged (zelda_api.tests_output_fidelity.Review8f11844Tests.test_earlier_rounds_are_unchanged) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative, monthly, and daily figures are overstated [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3244, in test_earlier_rounds_are_unchanged
+    self.assertEqual(self.full(text), (after, changes))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. The cumulative, monthly, and daily figure[27 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. The cumulative, monthly, and daily figure[22 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
++  'on page 12. The cumulative, monthly, and daily figures are overstated [S2, '
++  'S3].',
++  [])
+
+======================================================================
+FAIL: test_subjects_are_each_pairs_own (zelda_api.tests_output_fidelity.Review8f11844Tests.test_subjects_are_each_pairs_own) (text='The weekly bot figure [C6] is overstated [C5].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3198, in test_subjects_are_each_pairs_own
+    self.assertEqual(out, text if expected is None else expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'How the figure stated without an explicit[91 chars]C5].' != 'The weekly bot figure [C6] is overstated [C5].'
+- How the figure stated without an explicit interval relates to the daily figure needs clarification before either is relied on [C6] [C5].
++ The weekly bot figure [C6] is overstated [C5].
+
+
+======================================================================
+FAIL: test_subjects_are_each_pairs_own (zelda_api.tests_output_fidelity.Review8f11844Tests.test_subjects_are_each_pairs_own) (text='The page-12 bot figure [C6] is overstated [C5].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3198, in test_subjects_are_each_pairs_own
+    self.assertEqual(out, text if expected is None else expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'How the figure stated without an explicit[91 chars]C5].' != 'The page-12 bot figure [C6] is overstated [C5].'
+- How the figure stated without an explicit interval relates to the daily figure needs clarification before either is relied on [C6] [C5].
++ The page-12 bot figure [C6] is overstated [C5].
+
+
+======================================================================
+FAIL: test_subjects_naming_another_page_or_interval_are_kept (zelda_api.tests_output_fidelity.Review8f11844Tests.test_subjects_naming_another_page_or_interval_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The page-99 figure is overstated [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3181, in test_subjects_naming_another_page_or_interval_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. The page-99 figure is overstated [S2, S3].', [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. The page-99 figure is overstated [S2, S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. The page-99 figure is overstated [S2, S3].',
++  [])
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_subjects_naming_another_page_or_interval_are_kept (zelda_api.tests_output_fidelity.Review8f11844Tests.test_subjects_naming_another_page_or_interval_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The yearly figure is overstated [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3181, in test_subjects_naming_another_page_or_interval_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. The yearly figure is overstated [S2, S3].', [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. The yearly figure is overstated [S2, S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. The yearly figure is overstated [S2, S3].',
++  [])
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_subjects_naming_another_page_or_interval_are_kept (zelda_api.tests_output_fidelity.Review8f11844Tests.test_subjects_naming_another_page_or_interval_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The slide-7 figure is overstated [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3181, in test_subjects_naming_another_page_or_interval_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. The slide-7 figure is overstated [S2, S3].', [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. The slide-7 figure is overstated [S2, S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. The slide-7 figure is overstated [S2, S3].',
++  [])
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_subjects_naming_another_page_or_interval_are_kept (zelda_api.tests_output_fidelity.Review8f11844Tests.test_subjects_naming_another_page_or_interval_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The weekly figure is overstated compared with the monthly figure [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3181, in test_subjects_naming_another_page_or_interval_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. The weekly figure is overstated compared [34 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. The weekly figure is overstated compared [29 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
++  'on page 12. The weekly figure is overstated compared with the monthly figure '
++  '[S2, S3].',
++  [])
+
+======================================================================
+FAIL: test_subjects_naming_another_page_or_interval_are_kept (zelda_api.tests_output_fidelity.Review8f11844Tests.test_subjects_naming_another_page_or_interval_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The page-99 monthly figure is overstated [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3181, in test_subjects_naming_another_page_or_interval_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. The page-99 monthly figure is overstated [S2, S3].', [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. The page-99 monthly figure is overstated [S2, S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. The page-99 monthly figure is overstated [S2, S3].',
++  [])
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_subjects_naming_another_page_or_interval_are_kept (zelda_api.tests_output_fidelity.Review8f11844Tests.test_subjects_naming_another_page_or_interval_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The run-rate figure is overstated [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3181, in test_subjects_naming_another_page_or_interval_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. The run-rate figure is overstated [S2, S3].', [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. The run-rate figure is overstated [S2, S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. The run-rate figure is overstated [S2, S3].',
++  [])
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_subjects_naming_another_page_or_interval_are_kept (zelda_api.tests_output_fidelity.Review8f11844Tests.test_subjects_naming_another_page_or_interval_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The 500M messages/week figure is overstated [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3181, in test_subjects_naming_another_page_or_interval_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. The 500M messages/week figure is overstat[13 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. The 500M messages/week figure is overstated [S2, S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. The 500M messages/week figure is overstated [S2, S3].',
++  [])
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_subjects_naming_another_page_or_interval_are_kept (zelda_api.tests_output_fidelity.Review8f11844Tests.test_subjects_naming_another_page_or_interval_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The costs/month figure is overstated [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3181, in test_subjects_naming_another_page_or_interval_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. The costs/month figure is overstated [S2, S3].', [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. The costs/month figure is overstated [S2, S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. The costs/month figure is overstated [S2, S3].',
++  [])
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_subjects_naming_another_page_or_interval_are_kept (zelda_api.tests_output_fidelity.Review8f11844Tests.test_subjects_naming_another_page_or_interval_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. If the figures are monthly, the implied weekly activity is overstated [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3181, in test_subjects_naming_another_page_or_interval_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. If the figures are monthly, the implied w[39 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. If the figures are monthly, the implied w[34 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
++  'on page 12. If the figures are monthly, the implied weekly activity is '
++  'overstated [S2, S3].',
++  [])
+
+======================================================================
+FAIL: test_subjects_naming_another_page_or_interval_are_kept (zelda_api.tests_output_fidelity.Review8f11844Tests.test_subjects_naming_another_page_or_interval_are_kept) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The monthly figure is accurate [S2], and the daily figure [S3] is overstated.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 3181, in test_subjects_naming_another_page_or_interval_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[122 chars] and how the figure stated without an explicit[114 chars]nt']) != ('- T[122 chars] and the daily figure [S3] is overstated.', [])
+
+First differing element 0:
+'- Th[121 chars] and how the figure stated without an explicit[88 chars]S3].'
+'- Th[121 chars] and the daily figure [S3] is overstated.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. The monthly figure is accurate [S2], and how the figure stated '
+?                                                        ----           ^^^^^^
+
++  'on page 12. The monthly figure is accurate [S2], and the daily figure [S3] '
+?                                                           ++++++        ^^^^
+
++  'is overstated.',
++  [])
+-  'without an explicit interval relates to the monthly figure needs '
+-  'clarification before either is relied on [S3].',
+-  ['basis_overstatement'])
+
+======================================================================
+FAIL: test_memo_98_and_earlier_rounds_are_unchanged (zelda_api.tests_output_fidelity.ReviewA6dcddfTests.test_memo_98_and_earlier_rounds_are_unchanged) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative, monthly, and daily figures are overstated [S2, S3].')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2817, in test_memo_98_and_earlier_rounds_are_unchanged
+    self.assertEqual(self.full(text), (after, changes))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[118 chars]nt']) != ('- T[81 chars] 12. The cumulative, monthly, and daily figure[27 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[92 chars]S3].'
+'- Th[80 chars] 12. The cumulative, monthly, and daily figure[22 chars]S3].'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3].',
+-  ['basis_overstatement'])
++  'on page 12. The cumulative, monthly, and daily figures are overstated [S2, '
++  'S3].',
++  [])
+
+======================================================================
+FAIL: test_the_pairs_own_clauses_are_still_repaired (zelda_api.tests_output_fidelity.ReviewA6dcddfTests.test_the_pairs_own_clauses_are_still_repaired) (text='- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] on page 12. The cumulative, monthly, and daily figures are overstated [S2, S3], but the definitions remain unclear.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of903\zelda_api\tests_output_fidelity.py", line 2805, in test_the_pairs_own_clauses_are_still_repaired
+    self.assertEqual(self.full(text), (after, changes))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- T[81 chars] 12. How the figure stated without an explicit[154 chars]nt']) != ('- T[81 chars] 12. The cumulative, monthly, and daily figure[63 chars], [])
+
+First differing element 0:
+'- Th[80 chars] 12. How the figure stated without an explicit[128 chars]ear.'
+'- Th[80 chars] 12. The cumulative, monthly, and daily figure[58 chars]ear.'
+
+  ('- The deck states 500M messages [S2] on page 10 and 500M messages/month [S3] '
++  'on page 12. The cumulative, monthly, and daily figures are overstated [S2, '
+-  'on page 12. How the figure stated without an explicit interval relates to '
+-  'the monthly figure needs clarification before either is relied on [S2, S3], '
+-  'but the definitions remain unclear.',
++  'S3], but the definitions remain unclear.',
+?   +++++
+
+-  ['basis_overstatement'])
++  [])
+
+----------------------------------------------------------------------
+Ran 199 tests in 3.631s
+
+FAILED (failures=30)
+Destroying test database for alias 'default'...
+Found 199 test(s).
+System check identified no issues (0 silenced).

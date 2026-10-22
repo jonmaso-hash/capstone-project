@@ -1,0 +1,39 @@
+"""Review of 8f11844: add S1-S10 (pair-specific subject qualifiers; unstated-only relabels). Anchors re-checked
+with anchors.py afterwards; any carried mutant whose anchor moved is reported there and handled explicitly."""
+p = 'mutate_x.py'
+s = open(p, encoding='utf-8').read()
+S = r'''    # --- review of 8f11844: subjects read against the pair (_pair_placing); unstated-only relabels (S1-S10)
+    ('S1', 'review 8f11844: any basis word in the subject is the pair\'s (the 8f11844 behaviour: "The yearly figure")',
+     "        return (all(_pair_basis(hit.group(0).replace(' ', ''), pair) for hit in hits) and",
+     "        return (True and"),
+    ('S2', 'review 8f11844: any page in the subject is the pair\'s (the 8f11844 behaviour: "The page-99 figure")',
+     "    return _pair_word(word, pair) or _pair_page(word, pair)\n",
+     "    return _pair_word(word, pair) or bool(re.fullmatch(r'(?:page|slide)-?\\d+', word, re.I))\n"),
+    ('S3', 'review 8f11844: the rest of a word around its basis is not read ("The costs/month figure")',
+     "                (not rest or _pair_word(rest, pair)))", "                True)"),
+    ('S4', 'positive: no word with a basis and more is the pair\'s ("The 500M messages/month figure")',
+     "                (not rest or _pair_word(rest, pair)))", "                (not rest))"),
+    ('S5', 'positive: no page in the subject is the pair\'s ("The page-10 figure", "The slide-12 monthly figure")',
+     "    return _pair_word(word, pair) or _pair_page(word, pair)\n", "    return _pair_word(word, pair)\n"),
+    ('S6', 'positive: no basis word in the subject is the pair\'s ("The monthly figure", "The cumulative figure")',
+     "    if hits:\n        rest = _BASIS_WORDS.sub", "    if hits:\n        return False\n        rest = _BASIS_WORDS.sub"),
+    ('S7', 'review 8f11844: "the cumulative figure" is relabelled for a pair of two stated rates (the 8f11844 behaviour)',
+     "    if pair.cumulative_admitted or not pair.unspecified_members or not _CUMULATIVE_REFERENT.search(sentence):",
+     "    if pair.cumulative_admitted or not _CUMULATIVE_REFERENT.search(sentence):"),
+    ('S8', 'review 8f11844: "the cumulative and daily ..." becomes "unspecified-interval" for two stated rates',
+     "        if mine is None or mine.cumulative_admitted or not mine.unspecified_members:",
+     "        if mine is None or mine.cumulative_admitted:"),
+    ('S9', 'positive: "the cumulative figure" is never relabelled (memo 98\'s pair: "sits beside a monthly rate")',
+     "    if pair.cumulative_admitted or not pair.unspecified_members or not _CUMULATIVE_REFERENT.search(sentence):",
+     "    if True:"),
+    ('S10', 'positive: "the cumulative and monthly ..." is never relabelled (memo 101, OF-906)',
+     "        if mine is None or mine.cumulative_admitted or not mine.unspecified_members:",
+     "        if True:"),
+'''
+marker = "\n]\n\n\ndef sha"
+assert s.count(marker) == 1
+s = s.replace(marker, "\n" + S.rstrip('\n') + marker)
+s = s.replace('"""Review of 71ece83: L1-L12 added;',
+              '"""Review of 8f11844: S1-S10 added. Review of 71ece83: L1-L12 added;', 1)
+open(p, 'w', encoding='utf-8').write(s)
+print('patched')
