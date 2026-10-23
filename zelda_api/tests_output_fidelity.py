@@ -3916,6 +3916,7 @@ REVIEW_B71_KEPT = (
     "Page 10 does not state (as reported, '500M messages/month' [C3, S2]).",
     "Page 10 does not state: a cited '500M messages/month' [C3, S2].",
     "Page 10 does not state (the figure reported elsewhere, '500M messages/month' [C3, S2]).",
+    "Page 10 does not state (reported elsewhere, '500M messages/month' [C3, S2]).",            # a verb, no subject
     "Page 10 does not state (as the deck states elsewhere, '500M messages/month' [C3, S2]).",   # subordinate "as"
     "Page 10 does not state (page 12 reported as '500M messages/month' [C3, S2]).",            # "verb as": participle
     "Page 10 doesn’t state (reported as '500M messages/month' [C3, S2]).",
