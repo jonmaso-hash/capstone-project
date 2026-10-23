@@ -1,0 +1,22 @@
+R1 CAUGHT Ran 374 tests in 13.774s FAILED (failures=1) restored=True | overcorrection: a question's citation is corrected ("Is '500M messages/month' [C3, S3] a run rate?")
+    assertion failures in: test_denials_and_questions_about_a_page_keep_its_citations
+    errors in: -
+    failing sub-case: text="Is '500M messages/month' [C3, S3] a run rate?"
+R2 CAUGHT Ran 374 tests in 13.800s FAILED (failures=2) restored=True | overcorrection: a denial's citation is corrected ("The deck does not state ... [C3, S2]")
+    assertion failures in: test_denials_and_questions_about_a_page_keep_its_citations
+    errors in: -
+    failing sub-case: text="The deck does not state '500M messages/month' [C3, S2]."
+    failing sub-case: text='The deck does not reconcile [C3, S2] vs [C3, S3].'
+R3 CAUGHT Ran 374 tests in 13.852s FAILED (failures=1) restored=True | overcorrection: a "whether" clause's citation is corrected
+    assertion failures in: test_denials_and_questions_about_a_page_keep_its_citations
+    errors in: -
+    failing sub-case: text="Whether the deck states '500M messages/month' [C3, S2] is unclear."
+R4 CAUGHT Ran 374 tests in 13.889s FAILED (failures=1) restored=True | overcorrection: a clause naming another page has its refs replaced ("Page 10 states ... [C3, S2]")
+    assertion failures in: test_denials_and_questions_about_a_page_keep_its_citations
+    errors in: -
+    failing sub-case: text="Page 10 states '500M messages/month' [C3, S2]."
+R5 CAUGHT Ran 374 tests in 13.616s FAILED (failures=1) restored=True | overcorrection: a clause naming another source context has its refs replaced
+    assertion failures in: test_denials_and_questions_about_a_page_keep_its_citations
+    errors in: -
+    failing sub-case: text="The 'Traction by Apr-16' slide states '500M messages/month' [C3, S2]."
+final sha matches pre-run: True 4a627720af499952f031279bf9e90714a85cf422a52b2090dddb879eb18fcbd9

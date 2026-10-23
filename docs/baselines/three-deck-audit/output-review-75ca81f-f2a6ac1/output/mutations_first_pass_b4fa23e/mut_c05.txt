@@ -1,0 +1,29 @@
+I6 CAUGHT Ran 374 tests in 13.811s FAILED (failures=1) restored=True | OF-1004: a quotation of one side's statement names no side
+    assertion failures in: test_a_figure_s_wrong_claim_becomes_its_own
+    errors in: -
+    failing sub-case: text="Page 10 states '500M messages' [C2, S3]."
+I8 CAUGHT Ran 374 tests in 13.865s FAILED (failures=2) restored=True | OF-1004: a wrong statement ref is replaced by a claim (kind not kept)
+    assertion failures in: test_a_figure_s_wrong_claim_becomes_its_own, test_a_side_without_one_statement_is_not_invented
+    errors in: -
+    failing sub-case: text="Page 10 states '500M messages' [C2, S3]."
+I9 CAUGHT Ran 374 tests in 14.127s FAILED (failures=18) restored=True | OF-1004: the other side's claim is put in
+    assertion failures in: test_a_figure_s_wrong_claim_becomes_its_own, test_affirmative_clauses_beside_them_are_still_corrected, test_another_pair_alike, test_another_pair_s_refs_are_corrected_alike, test_citations_change_only_where_corrected, test_of1004_the_monthly_figure_cites_its_own_claim, test_of1004_the_monthly_operand_cites_its_own_claim, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+    failing sub-case: text="Page 10 does not state '500M messages/month' [C3, S2], but page 12 states '500M messages/month' [C3, S3]."
+    failing sub-case: text="Page 10 gives no interval (page 12 states '500M messages/month' [C3, S3])."
+    failing sub-case: text="Page 10 is undated (page 12 states '500M messages/month' [C3, S3]) and gives no interval."
+    failing sub-case: text="Page 10 states '500M messages' [C2, S3]."
+    failing sub-case: text="Page 12 states '500M messages/month' [C3, S3], but page 10 does not."
+    failing sub-case: text="Page 12 states '500M messages/month' [C3]."
+    failing sub-case: text="Pitch Deck Hunt lists $23.1M raised [C1, S4], and the deck separately states '500M messages/month' [C3, S3], which is unverified."
+    failing sub-case: text="The slide on page 12 states '500M messages/month' [C3, S3]."
+    failing sub-case: text='Compare [C3, S2] versus [C3, S3] before relying on either.'
+    failing sub-case: text='The deck states 500M messages/month [C3, S3, P1].'
+    failing sub-case: text='The deck states 500M messages/month [C3, S3] on page 12.'
+I10 CAUGHT Ran 374 tests in 13.918s FAILED (failures=1) restored=True | uncertainty: a wrong ref beside the named side's claim is kept and logged, not dropped
+    assertion failures in: test_a_side_without_one_statement_is_not_invented
+    errors in: -
+I11 CAUGHT Ran 374 tests in 13.596s FAILED (failures=1) restored=True | uncertainty: an unresolvable wrong ref is kept silently (not logged)
+    assertion failures in: test_a_side_without_one_statement_is_not_invented
+    errors in: -
+final sha matches pre-run: True 4a627720af499952f031279bf9e90714a85cf422a52b2090dddb879eb18fcbd9

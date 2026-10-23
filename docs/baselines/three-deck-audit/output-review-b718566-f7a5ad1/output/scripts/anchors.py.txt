@@ -1,0 +1,11 @@
+import os, sys, re
+src = open('mutate_r.py', encoding='utf-8').read()
+ns = {'__file__': os.path.abspath('mutate_r.py')}
+exec(src.split('\n\ndef sha(path):')[0].replace('WT = sys.argv[1]', "WT = 'C:/Users/jonathan/Desktop/KCV-of1003'").replace('ONLY = set(sys.argv[2:])', 'ONLY=set()'), ns)
+text = open(ns['BF'], encoding='utf-8', newline='').read()
+bad = 0
+for mid, desc, old, new in ns['M']:
+    o = old.replace('\n', '\r\n') if '\r\n' in text else old
+    c = text.count(o)
+    if c != 1: bad += 1; print(mid, 'count', c)
+print(len(ns['M']), 'mutants;', bad, 'anchors not matching once')

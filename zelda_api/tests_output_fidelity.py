@@ -3296,3 +3296,697 @@ class PipelineReview8f11844Tests(TestCase):
         # Positive control: the guard ran on this pair.
         self.assertEqual(memo.problem_solution, 'How the monthly figure relates to the daily figure needs clarification '
                                                 'before either is relied on [C11] [C10].')
+
+
+# --- Memo 102 (ManyChat, document 3144, live at d0bad8f; independent grade f2a282f) ------------------------------
+#
+#     OF-1003  base_scenario: "If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by
+#              Apr-16' framing, ManyChat had reached meaningful platform scale at that point in time." S3 is page
+#              12's monthly statement with no supplied context; "taken at face value" does not give it page 10's
+#              date. P2, blocking.
+#     OF-1004  open_concerns and business_model_analysis cite page 12's monthly figure [C3, S3]; C3 is page 10's
+#              claim (C3 / S2: page 10, 500M messages, interval unstated; C2 / S3: page 12, 500M messages/month).
+#              P2, blocking. OF-1005 is not an additional blocker: the sentence places the monthly figure
+#              "elsewhere [S3]".
+#
+# The fixtures are memo 102's payload as sent and its raw reply (data/funding_fidelity/memo102*.json, from the
+# committed evidence 6d131f5). Memo 102 itself is not edited; these tests replay its reply.
+
+def memo102():
+    with open(os.path.join(DATA, 'memo102.json'), encoding='utf-8') as f:
+        data = json.load(f)
+    return json.loads(re.search(r'\{.*\}', data['model_reply_text'], re.S).group(0)), data['stored']
+
+
+def memo102_payload():
+    with open(os.path.join(DATA, 'memo102_payload.json'), encoding='utf-8') as f:
+        return json.load(f)['payload']
+
+
+BASE_102_BEFORE = ("If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, "
+                   "ManyChat had reached meaningful platform scale at that point in time.")
+BASE_102_AFTER = ("If the traction figures [S1, S2] are taken at face value under the 'Traction by Apr-16' framing, "
+                  "ManyChat had reached meaningful platform scale at that point in time; the deck separately states 500M "
+                  "messages/month [S3] on page 12 (" + CLARIFY + ").")
+OPEN_102_BEFORE = "while a separate page states '500M messages/month' [C3, S3]."
+OPEN_102_AFTER = "while a separate page states '500M messages/month' [C2, S3]."
+BMA_102_BEFORE = "see consistency note on [C3, S2] vs [C3, S3])"
+BMA_102_AFTER = "see consistency note on [C3, S2] vs [C2, S3])"
+# OF-1005: the same sentence's own placing, unchanged.
+BMA_102_PLACES = ("in a slide headed 'Traction by Apr-16' [S1, S2], and 500M messages/month elsewhere [S3], indicating "
+                  "platform-level usage")
+UPSIDE_102 = "If the 500M messages figure reflects a monthly run rate [S3] rather than a cumulative total"
+DOWN_102 = "If the 500M messages figure [C3, S2] is a cumulative total rather than a monthly rate"
+QUESTION_102 = "The deck presents both framings [C3, S2 vs S3]"
+RISK_102 = "'500M messages' without an explicit interval on page 10 (slide headed 'Traction by Apr-16') [C3, S2] and '500M messages/month' on page 12 [C2, S3]"
+COMPARE_102 = ("the two slides present conflicting bases [C3, C2]", "and as a monthly figure on another [C3, C2]",
+               "All traction figures — none independently verified [C2, C3, C4, S1, S2, S3]")
+CHANGED_102 = {'business_model_analysis', 'open_concerns', 'base_scenario'}
+
+
+class Memo102ReplayTests(SimpleTestCase):
+    """The actual memo-102 reply through the pipeline's guards: the two graded defects change, nothing else."""
+
+    def setUp(self):
+        self.raw, self.stored = memo102()
+        self.payload = memo102_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+        self.out, self.changes = replay(self.raw, self.items, self.notes)
+
+    def test_the_fixture_is_memo_102_as_stored(self):
+        for text, key in ((BASE_102_BEFORE, 'base_scenario'), (OPEN_102_BEFORE, 'open_concerns'),
+                          (BMA_102_BEFORE, 'business_model_analysis'), (BMA_102_PLACES, 'business_model_analysis'),
+                          (UPSIDE_102, 'upside_scenario'), (DOWN_102, 'downside_scenario'),
+                          (QUESTION_102, 'questions_for_management'), (RISK_102, 'risk_assessment')):
+            self.assertIn(text, self.stored[key], key)
+        self.assertEqual(self.notes[0][1], ('C3', 'C2'))
+        sources = {i['ref']: (i['statement'], i['sources'][0].get('page'), i.get('source_context'))
+                   for i in self.payload['items']}
+        self.assertEqual(sources['C3'], ('500M messages', 10, 'Traction by Apr-16'))
+        self.assertEqual(sources['S2'], ('500M messages', 10, 'Traction by Apr-16'))
+        self.assertEqual(sources['C2'], ('500M messages/month', 12, None))
+        self.assertEqual(sources['S3'], ('500M messages/month', 12, None))
+
+    def test_of1003_page_12_is_not_dated_by_page_10_s_heading(self):
+        self.assertEqual(self.out['base_scenario'], self.stored['base_scenario'].replace(BASE_102_BEFORE, BASE_102_AFTER))
+
+    def test_of1004_the_monthly_figure_cites_its_own_claim(self):
+        self.assertEqual(self.out['open_concerns'], self.stored['open_concerns'].replace(OPEN_102_BEFORE, OPEN_102_AFTER))
+        # The page-10 figure's own correct citation, earlier in the same sentence, is unchanged.
+        self.assertIn("states '500M messages' without an interval [C3, S2], while", self.out['open_concerns'])
+
+    def test_of1004_the_monthly_operand_cites_its_own_claim(self):
+        self.assertEqual(self.out['business_model_analysis'],
+                         self.stored['business_model_analysis'].replace(BMA_102_BEFORE, BMA_102_AFTER))
+        self.assertIn(BMA_102_PLACES, self.out['business_model_analysis'])
+
+    def test_hypotheses_questions_and_comparisons_are_kept(self):
+        self.assertIn(UPSIDE_102, self.out['upside_scenario'])
+        self.assertIn(DOWN_102, self.out['downside_scenario'])
+        self.assertIn(QUESTION_102, self.out['questions_for_management'])
+        self.assertIn(RISK_102, self.out['risk_assessment'])
+        joined = '\n'.join(v for v in self.out.values() if isinstance(v, str))
+        for text in COMPARE_102:
+            self.assertIn(text, joined)
+
+    def test_every_other_field_is_exactly_as_stored(self):
+        for key, value in self.out.items():
+            if key in self.stored and key not in CHANGED_102:
+                self.assertEqual(value, self.stored[key], key)
+
+    def test_citations_change_only_where_corrected(self):
+        for key, value in self.out.items():
+            if isinstance(value, str) and key in self.stored:
+                expected = refs(self.stored[key])
+                if key == 'open_concerns':
+                    expected[expected.index('S3') - 1] = 'C2'
+                if key == 'business_model_analysis':
+                    self.assertEqual(expected[:4], ['C3', 'S2', 'C3', 'S3'])
+                    expected[2] = 'C2'
+                self.assertEqual(refs(value), expected, key)
+
+    def test_every_citation_names_a_supplied_ref(self):
+        supplied = {i['ref'] for i in self.payload['items']}
+        for key, value in self.out.items():
+            if isinstance(value, str):
+                self.assertLessEqual(set(refs(value)), supplied, key)
+
+    def test_a_second_pass_changes_nothing(self):
+        again, changes = replay(self.out, self.items, self.notes)
+        self.assertEqual(again, self.out)
+        self.assertEqual(changes, {})
+
+    def test_reversed_item_order_gives_the_same_output(self):
+        reversed_out, reversed_changes = replay(self.raw, list(reversed(self.items)), self.notes)
+        self.assertEqual(reversed_out, self.out)
+        self.assertEqual(reversed_changes, self.changes)
+
+    def test_only_the_expected_rules_fired(self):
+        self.assertEqual(self.changes, {
+            'business_model_analysis': ['basis_citation_identity'],
+            'open_concerns': ['basis_citation_identity'],
+            'base_scenario': ['basis_condition_context'],
+            'information_readiness': ['attribution:Pitch Deck Hunt'],
+        })
+
+    def test_earlier_memos_get_neither_new_rule(self):
+        for n in (96, 98, 99, 100, 101):
+            with open(os.path.join(DATA, f'memo{n}.json'), encoding='utf-8') as f:
+                raw = json.loads(re.search(r'\{.*\}', json.load(f)['model_reply_text'], re.S).group(0))
+            with open(os.path.join(DATA, f'memo{n}_payload.json'), encoding='utf-8') as f:
+                payload = json.load(f)['payload']
+            _, changes = replay(raw, items_from(payload), notes_from(payload))
+            fired = {rule for rules in changes.values() for rule in rules}
+            with self.subTest(memo=n):
+                self.assertFalse(fired & {'basis_citation_identity', 'basis_citation_identity_unresolved',
+                                          'basis_condition_context'}, fired)
+
+
+class Memo102StoredSectionsTests(SimpleTestCase):
+    """The stored memo-102 text through the basis guard: the same three repairs, nothing else."""
+
+    def test_the_stored_sections_get_the_same_repairs(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        payload = memo102_payload()
+        facts = basis_facts(items_from(payload), notes_from(payload))
+        _, stored = memo102()
+        out = {key: guard_basis_wording(value, facts)[0] for key, value in stored.items()}
+        self.assertIn(BASE_102_AFTER, out['base_scenario'])
+        self.assertIn(OPEN_102_AFTER, out['open_concerns'])
+        self.assertIn(BMA_102_AFTER, out['business_model_analysis'])
+        self.assertEqual({k for k in stored if out[k] != stored[k]}, CHANGED_102)
+
+
+class PipelineMemo102Tests(TestCase):
+    """The memo writer itself (intelligence_pipeline._generate_memo) stores the repaired memo-102 reply."""
+
+    def test_the_stored_memo_carries_the_repairs(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('memo102_writer', password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo102_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items_from(payload)),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, stored = memo102()
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertEqual(memo.base_scenario, stored['base_scenario'].replace(BASE_102_BEFORE, BASE_102_AFTER))
+        self.assertEqual(memo.open_concerns, stored['open_concerns'].replace(OPEN_102_BEFORE, OPEN_102_AFTER))
+        self.assertEqual(memo.business_model_analysis,
+                         stored['business_model_analysis'].replace(BMA_102_BEFORE, BMA_102_AFTER))
+        for key in ('executive_summary', 'information_readiness', 'supported_points', 'risk_assessment',
+                    'upside_scenario', 'downside_scenario', 'zelda_advantage', 'financial_analysis',
+                    'questions_for_management'):
+            self.assertEqual(getattr(memo, key), stored[key], key)
+
+
+def _evidence(ref, kind, statement, page, context=''):
+    return GroundedItem(ref=ref, kind=kind, category='usage' if kind == 'claim' else 'Traction', statement=statement,
+                        status=INSUFFICIENT if kind == 'claim' else SELF_REPORTED,
+                        sources=(SourceRef(document_id=1, page_number=page),), source_context=context)
+
+
+# A second pair with other refs, figures, noun, pages, interval and context: the rules are not memo 102's strings.
+OTHER_PAIR_ITEMS = lambda: [_evidence('C7', 'claim', '3M bots', 7, 'Growth by Q3-19'),
+                            _evidence('C8', 'claim', '3M bots/week', 8),
+                            _evidence('S7', 'statement', '3M bots', 7, 'Growth by Q3-19'),
+                            _evidence('S8', 'statement', '3M bots/week', 8),
+                            _evidence('S9', 'statement', '40 staff', 9)]
+OTHER_PAIR_NOTE = ('measurement_basis', ('C7', 'C8'), 'Page 7 states 3M bots; page 8 states 3M bots/week.')
+CLARIFY_WEEKLY = ('how the figure stated without an explicit interval relates to the weekly figure needs clarification '
+                  'before either is relied on')
+
+IDENTITY_FIXED = (
+    ("Page 12 states '500M messages/month' [C3].", "Page 12 states '500M messages/month' [C2]."),
+    ("Page 10 states '500M messages' [C2, S3].", "Page 10 states '500M messages' [C3, S2]."),
+    ("The deck states 500M messages/month [C3, S3] on page 12.", "The deck states 500M messages/month [C2, S3] on page 12."),
+    # Compound sentences: the unrelated fact, its narrator and its qualification keep their citations.
+    ("Pitch Deck Hunt lists $23.1M raised [C1, S4], and the deck separately states '500M messages/month' [C3, S3], "
+     "which is unverified.",
+     "Pitch Deck Hunt lists $23.1M raised [C1, S4], and the deck separately states '500M messages/month' [C2, S3], "
+     "which is unverified."),
+    ("Compare [C3, S2] versus [C3, S3] before relying on either.",
+     "Compare [C3, S2] versus [C2, S3] before relying on either."),
+    # A ref outside the pair in the same group is untouched.
+    ("The deck states 500M messages/month [C3, S3, P1].", "The deck states 500M messages/month [C2, S3, P1]."),
+)
+IDENTITY_KEPT = (
+    "Page 12 states '500M messages/month' [C2, S3].",
+    "Page 10 states '500M messages' without an interval while page 12 states '500M messages/month' [C2, C3].",
+    # One group after a list of both figures cites each figure once: C3 is page 10's.
+    "Page 10 states '500M messages' and page 12 states '500M messages/month' [C3, S3].",
+    # Both operands mixed: which is meant is unknown.
+    "Compare [C3, S3] vs [C2, S2] before relying on either.",
+    # An operand citing both claims is itself a comparison.
+    "Compare [C3, S2] vs [C3, C2] before relying on either.",
+    # A "+" or a noun no statement gives: not a side's figure.
+    "The deck states 500M+ messages/month [C3, S3].",
+    "The deck states 500M bots/month [C3, S3].",
+    "The monthly figure, '500M messages/month' [C2, C3], needs clarification against page 10.",
+    "The deck states 500M messages/month [S2, S3].",
+    "The two slides present conflicting bases [C3, C2].",
+    "All traction figures are unverified [C2, C3, C4, S1, S2, S3].",
+    "The deck presents both framings [C3, S2 vs S3].",
+    "Compare [C3, S2] vs [C2, S3] before relying on either.",
+    "The deck states 500M messages [C2].",                     # the same number alone names no side
+    "The deck states 500M messages/day [C3, S3].",             # an interval neither side states
+    "The deck states 140,000+ bots [S1] and 500M messages/month [C2, S3].",
+    "Pitch Deck Hunt lists $23.1M raised [C1, S4].",
+    "Is '500M messages/month' [C2, S3] a run rate?",
+)
+
+
+class Of1004CitationIdentityTests(SimpleTestCase):
+    """OF-1004: a citation group attached to one figure cites that figure's own side; comparisons, lists, other
+    figures and correct citations are kept."""
+
+    def setUp(self):
+        self.payload = memo102_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text):
+        out, changes = replay({'s': text}, self.items, self.notes)
+        return out['s'], changes.get('s', [])
+
+    def test_a_figure_s_wrong_claim_becomes_its_own(self):
+        for before, after in IDENTITY_FIXED:
+            with self.subTest(text=before):
+                self.assertEqual(self.full(before), (after, ['basis_citation_identity']))
+
+    def test_comparisons_lists_and_correct_citations_are_kept(self):
+        for text in IDENTITY_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def guard(self, text, items=None):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        return guard_basis_wording(text, basis_facts(items or OTHER_PAIR_ITEMS(), (OTHER_PAIR_NOTE,)))
+
+    def test_another_pair_s_refs_are_corrected_alike(self):
+        self.assertEqual(self.guard("Page 8 states '3M bots/week' [C7, S8]."),
+                         ("Page 8 states '3M bots/week' [C8, S8].", ['basis_citation_identity']))
+        self.assertEqual(self.guard("See [C7, S7] vs [C7, S8]."), ("See [C7, S7] vs [C8, S8].", ['basis_citation_identity']))
+        self.assertEqual(self.guard("The team counts 40 staff [S9] and page 8 states '3M bots/week' [C7, S8]."),
+                         ("The team counts 40 staff [S9] and page 8 states '3M bots/week' [C8, S8].",
+                          ['basis_citation_identity']))
+        for text in ("Page 8 states '3M bots/week' [C8, S8].", "Page 7 states '3M bots' and page 8 states '3M bots/week' [C7, C8].",
+                     "The team counts 40 staff [S9]."):
+            with self.subTest(text=text):
+                self.assertEqual(self.guard(text), (text, []))
+
+    def test_a_side_without_one_statement_is_not_invented(self):
+        # Two statements repeat page 8's figure: none can be chosen for a wrong statement ref. With a correct ref of
+        # the side beside it, the wrong one is dropped; alone, it is kept and logged as unresolved.
+        items = OTHER_PAIR_ITEMS() + [_evidence('S10', 'statement', '3M bots/week', 8)]
+        self.assertEqual(self.guard("Page 8 states '3M bots/week' [C8, S7].", items),
+                         ("Page 8 states '3M bots/week' [C8].", ['basis_citation_identity']))
+        # Both sides' statements are a comparison, as with both claims: kept.
+        self.assertEqual(self.guard("Page 8 states '3M bots/week' [S7, S8].", items),
+                         ("Page 8 states '3M bots/week' [S7, S8].", []))
+        self.assertEqual(self.guard("Page 8 states '3M bots/week' [S7].", items),
+                         ("Page 8 states '3M bots/week' [S7].", ['basis_citation_identity_unresolved']))
+
+
+CONDITION_FIXED = (
+    ("If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had "
+     "reached meaningful scale, though revenue is not found [C1].",
+     "If the traction figures [S1, S2] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had "
+     "reached meaningful scale, though revenue is not found [C1]; the deck separately states 500M messages/month [S3] on "
+     "page 12 (" + CLARIFY + ")."),
+    ("Assuming the traction figures [S1, S2, S3] are accepted as stated under the 'Traction by Apr-16' heading, the "
+     "platform was sizeable by then.",
+     "Assuming the traction figures [S1, S2] are accepted as stated under the 'Traction by Apr-16' heading, the "
+     "platform was sizeable by then; the deck separately states 500M messages/month [S3] on page 12 (" + CLARIFY + ")."),
+)
+CONDITION_KEPT = (
+    # Correct already: only page 10's refs under page 10's heading.
+    "If the traction figures [S1, S2] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had "
+    "reached meaningful platform scale at that point in time.",
+    # Explicit hypotheses about the figure's date or basis.
+    "If the 500M messages/month figure [S3] reflects a monthly run rate under the 'Traction by Apr-16' heading, the "
+    "platform was sizeable.",
+    "If the traction figures [S1, S2, S3] all fall under the 'Traction by Apr-16' heading, the platform was sizeable by then.",
+    "If the self-reported figure of 500M messages/month [S3] reflects a monthly run-rate as of the 'Traction by Apr-16' "
+    "slide context, the platform was sizeable.",
+    "If the 500M messages figure reflects a monthly run rate [S3] rather than a cumulative total, the platform is large.",
+    "If the 500M messages figure [C3, S2] is a cumulative total rather than a monthly rate, the implied activity level is lower.",
+    # Whether, questions, denials, hedges, another speaker, another metric, a longer antecedent.
+    "Whether the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing is unclear.",
+    "Whether the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, the "
+    "scale is open.",
+    "If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, what scale had "
+    "ManyChat reached?",
+    "If the traction figures [S1, S2, S3] are not taken at face value under the 'Traction by Apr-16' framing, the picture "
+    "changes.",
+    "If the traction figures [S1, S2, S3] are perhaps taken at face value under the 'Traction by Apr-16' framing, the "
+    "picture changes.",
+    "If an analyst's figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, the picture changes.",
+    "According to an analyst, if the traction figures [S1, S2, S3] are taken at face value under the 'Traction by "
+    "Apr-16' framing, the platform was sizeable.",
+    # Nothing would stay under the heading: page 12's figure alone (a limitation, not a hypothesis kept by design).
+    "If the figure [S3] is taken at face value under the 'Traction by Apr-16' framing, the platform was sizeable.",
+    "If the revenue and traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, the "
+    "picture changes.",
+    "If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing and revenue "
+    "follows, the picture changes.",
+)
+
+
+class Of1003ConditionContextTests(SimpleTestCase):
+    """OF-1003: a condition that only accepts the figures does not give page 12's figure page 10's heading; explicit
+    hypotheses, questions, denials, hedges and other speakers keep their wording and citations."""
+
+    def setUp(self):
+        self.payload = memo102_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text):
+        out, changes = replay({'s': text}, self.items, self.notes)
+        return out['s'], changes.get('s', [])
+
+    def test_an_accepting_condition_does_not_carry_the_heading(self):
+        for before, after in CONDITION_FIXED:
+            with self.subTest(text=before):
+                self.assertEqual(self.full(before), (after, ['basis_condition_context']))
+
+    def test_hypotheses_and_other_conditions_are_kept(self):
+        for text in CONDITION_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_a_narrator_s_condition_is_not_the_deck_s(self):
+        # The funding guard notes the narrator here (its own rule); the basis guard leaves the citations alone.
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        text = ("Pitch Deck Hunt suggests that if the traction figures [S1, S2, S3] are taken at face value under the "
+                "'Traction by Apr-16' framing, the platform was sizeable.")
+        self.assertEqual(guard_basis_wording(text, basis_facts(self.items, self.notes)), (text, []))
+        out, changes = self.full(text)
+        self.assertNotIn('basis_condition_context', changes)
+        self.assertIn('the traction figures [S1, S2, S3]', out)
+        self.assertNotIn('the deck separately states', out)
+
+    def test_the_pair_s_own_category_names_its_figures(self):
+        # "engagement" is no placing word: only the pair's evidence category lets it name the figures.
+        from dataclasses import replace
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        items = [replace(item, category='Engagement') for item in OTHER_PAIR_ITEMS()]
+        facts = basis_facts(items, (OTHER_PAIR_NOTE,))
+        text = ("If the engagement figures [S7, S8] are taken at face value under the 'Growth by Q3-19' framing, the "
+                "platform was sizeable then.")
+        self.assertEqual(guard_basis_wording(text, facts), (
+            "If the engagement figures [S7] are taken at face value under the 'Growth by Q3-19' framing, the platform "
+            "was sizeable then; the deck separately states 3M bots/week [S8] on page 8 (" + CLARIFY_WEEKLY + ").",
+            ['basis_condition_context']))
+
+    def test_a_narrated_side_is_not_restated_as_the_deck_s(self):
+        from dataclasses import replace
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        items = [replace(item, narrator='An Analyst') if item.ref == 'S8' else item for item in OTHER_PAIR_ITEMS()]
+        text = "If the usage figures [S7, S8] are taken at face value under the 'Growth by Q3-19' framing, the platform was sizeable then."
+        self.assertEqual(guard_basis_wording(text, basis_facts(items, (OTHER_PAIR_NOTE,))), (text, []))
+
+    def test_another_pair_s_context_is_handled_alike(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        facts = basis_facts(OTHER_PAIR_ITEMS(), (OTHER_PAIR_NOTE,))
+        text = "If the usage figures [S7, S8] are taken at face value under the 'Growth by Q3-19' framing, the platform was sizeable then."
+        self.assertEqual(guard_basis_wording(text, facts), (
+            "If the usage figures [S7] are taken at face value under the 'Growth by Q3-19' framing, the platform was "
+            "sizeable then; the deck separately states 3M bots/week [S8] on page 8 (" + CLARIFY_WEEKLY + ").",
+            ['basis_condition_context']))
+        for kept in ("If the growth figures [S7, S8] are taken at face value under the 'Growth by Q3-19' framing, the "
+                     "platform was sizeable then.",
+                     "If the usage figures [S7] are taken at face value under the 'Growth by Q3-19' framing, the "
+                     "platform was sizeable then."):
+            with self.subTest(text=kept):
+                self.assertEqual(guard_basis_wording(kept, facts), (kept, []))
+
+    def test_the_affirmative_framing_is_the_context_rule_s(self):
+        # "framing" names a context for the merged affirmative rule too.
+        text = "The company states 140,000+ bots and 500M messages [S1, S2, S3] under the 'Traction by Apr-16' framing."
+        self.assertEqual(self.full(text), (
+            "The company states 140,000+ bots and 500M messages [S1, S2] under the 'Traction by Apr-16' framing, and "
+            "separately 500M messages/month [S3] on page 12 (" + CLARIFY + ").", ['basis_source_context']))
+
+
+
+# Review of 75ca81f: a denial of, or question about, what a page states keeps that page's citations; a condition whose
+# moved refs sit in a group of their own is kept, never left with "[]" and a dangling connector.
+REVIEW_IDENTITY_KEPT = (
+    "Page 10 does not state '500M messages/month' [C3, S2].",                    # the review's case
+    "The deck does not state '500M messages/month' [C3, S2].",                   # a denial alone
+    "The 'Traction by Apr-16' slide omits '500M messages/month' [C3, S2].",
+    "Page 10 states '500M messages/month' [C3, S2].",                            # another page named alone
+    "The 'Traction by Apr-16' slide states '500M messages/month' [C3, S2].",     # another source context named alone
+    "Does page 10 state '500M messages/month' [C3, S2]?",
+    "Whether page 10 states '500M messages/month' [C3, S2] is unclear.",
+    "Whether the deck states '500M messages/month' [C3, S2] is unclear.",        # "whether" alone
+    "Is '500M messages/month' [C3, S3] a run rate?",                             # a question alone
+    "The deck does not reconcile [C3, S2] vs [C3, S3].",                         # a "vs" in a denial
+    # One group after a list of both figures, no page named: only the list guard keeps it (I3 survived at b4fa23e).
+    "The deck states 500M messages and 500M messages/month [C3, S3].",
+)
+REVIEW_IDENTITY_FIXED = (
+    # The affirmative clause beside a denied one is still corrected; the denied one keeps page 10's refs.
+    ("Page 10 does not state '500M messages/month' [C3, S2], but page 12 states '500M messages/month' [C3, S3].",
+     "Page 10 does not state '500M messages/month' [C3, S2], but page 12 states '500M messages/month' [C2, S3]."),
+    ("Page 12 states '500M messages/month' [C3, S3], but page 10 does not.",
+     "Page 12 states '500M messages/month' [C2, S3], but page 10 does not."),
+    ("The slide on page 12 states '500M messages/month' [C3, S3].",
+     "The slide on page 12 states '500M messages/month' [C2, S3]."),
+    # A parenthesis is its own clause: the words around it are not its denial.
+    ("Page 10 gives no interval (page 12 states '500M messages/month' [C3, S3]).",
+     "Page 10 gives no interval (page 12 states '500M messages/month' [C2, S3])."),
+    ("Page 10 is undated (page 12 states '500M messages/month' [C3, S3]) and gives no interval.",
+     "Page 10 is undated (page 12 states '500M messages/month' [C2, S3]) and gives no interval."),
+)
+REVIEW_CONDITION_KEPT = (
+    "If the traction figures [S1, S2] and [S3] are taken at face value under the 'Traction by Apr-16' framing, the "
+    "picture changes.",                                                          # the review's case
+    "If the traction figures [S1, S2], [S3] are taken at face value under the 'Traction by Apr-16' framing, the "
+    "picture changes.",
+)
+REVIEW_CONDITION_FIXED = (
+    # No group is emptied: the moved ref shares its group with one that stays.
+    ("If the traction figures [S1] and [S2, S3] are taken at face value under the 'Traction by Apr-16' framing, the "
+     "picture changes.",
+     "If the traction figures [S1] and [S2] are taken at face value under the 'Traction by Apr-16' framing, the picture "
+     "changes; the deck separately states 500M messages/month [S3] on page 12 (" + CLARIFY + ")."),
+)
+
+
+class Review75ca81fTests(SimpleTestCase):
+    """Review of 75ca81f: denials and questions about what a page states keep their citations; separately grouped
+    condition citations are kept whole; memo 102's affirmative corrections stay (Memo102ReplayTests)."""
+
+    def setUp(self):
+        self.payload = memo102_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text, items=None):
+        out, changes = replay({'s': text}, items or self.items, self.notes)
+        return out['s'], changes.get('s', [])
+
+    def test_denials_and_questions_about_a_page_keep_its_citations(self):
+        for text in REVIEW_IDENTITY_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_affirmative_clauses_beside_them_are_still_corrected(self):
+        for before, after in REVIEW_IDENTITY_FIXED:
+            with self.subTest(text=before):
+                self.assertEqual(self.full(before), (after, ['basis_citation_identity']))
+
+    def test_separately_grouped_condition_citations_are_kept_whole(self):
+        for text in REVIEW_CONDITION_KEPT:
+            with self.subTest(text=text):
+                out = self.full(text)
+                self.assertEqual(out, (text, []))
+                self.assertNotIn('[]', out[0])
+
+    def test_a_shared_group_in_a_split_condition_is_still_corrected(self):
+        for before, after in REVIEW_CONDITION_FIXED:
+            with self.subTest(text=before):
+                self.assertEqual(self.full(before), (after, ['basis_condition_context']))
+
+    def test_stable_idempotent_and_every_citation_owned(self):
+        texts = (REVIEW_IDENTITY_KEPT + REVIEW_CONDITION_KEPT + tuple(a for a, _ in REVIEW_IDENTITY_FIXED)
+                 + tuple(a for a, _ in REVIEW_CONDITION_FIXED))
+        supplied = {item.ref for item in self.items}
+        for text in texts:
+            with self.subTest(text=text):
+                out, _ = self.full(text)
+                self.assertEqual(self.full(out), (out, []))                          # a second pass changes nothing
+                self.assertEqual(self.full(text, list(reversed(self.items)))[0], out)  # item order does not matter
+                self.assertNotIn('[]', out)
+                self.assertLessEqual({ref for group in re.findall(r'\[([^\]]*)\]', out)
+                                      for ref in re.split(r'\s*[,;]\s*', group) if ref}, supplied)
+        # The page-12 figure's corrected group cites only page 12's claim and statement.
+        for _, after in REVIEW_IDENTITY_FIXED:
+            with self.subTest(text=after):
+                self.assertIn("'500M messages/month' [C2, S3]", after)
+
+    def test_another_pair_alike(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        facts = basis_facts(OTHER_PAIR_ITEMS(), (OTHER_PAIR_NOTE,))
+        for text in ("Page 7 does not state '3M bots/week' [C7, S7].", "Does page 7 state '3M bots/week' [C7, S7]?",
+                     "If the usage figures [S7] and [S8] are taken at face value under the 'Growth by Q3-19' framing, "
+                     "the platform was sizeable then."):
+            with self.subTest(text=text):
+                self.assertEqual(guard_basis_wording(text, facts), (text, []))
+        self.assertEqual(guard_basis_wording("Page 8 states '3M bots/week' [C7, S8].", facts),
+                         ("Page 8 states '3M bots/week' [C8, S8].", ['basis_citation_identity']))
+
+
+# Review of f2a6ac1: a colon, dash or parenthesis that only sets the figure off does not cut it from the clause that
+# names its source and any denial; typographic and other "-n't" contractions deny.
+REVIEW_F2A_KEPT = (
+    "Page 10 does not state: '500M messages/month' [C3, S2].",                   # the review's cases
+    "Page 10 does not state ('500M messages/month' [C3, S2]).",
+    "The deck doesn’t state '500M messages/month' [C3, S2].",
+    "Page 10 does not state — '500M messages/month' [C3, S2].",
+    "('500M messages/month' [C3, S2]) is not stated on page 10.",                # the denial after the parenthesis
+    "The deck doesn’t state: '500M messages/month' [C3, S2].",
+    "The deck hasn’t stated '500M messages/month' [C3, S2].",
+    "The deck hasn't stated '500M messages/month' [C3, S2].",                    # any "-n't" word
+    "Page 10 states: '500M messages/month' [C3, S2].",                           # another page across a colon
+    "Page 10 lists ('500M messages/month' [C3, S2]).",
+    "The 'Traction by Apr-16' slide states: '500M messages/month' [C3, S2].",
+    "Does page 10 state: '500M messages/month' [C3, S2]?",
+)
+REVIEW_F2A_FIXED = (
+    ("Page 12 states: '500M messages/month' [C3, S3].", "Page 12 states: '500M messages/month' [C2, S3]."),
+    ("The deck states: '500M messages/month' [C3, S3].", "The deck states: '500M messages/month' [C2, S3]."),
+    ("The deck states ('500M messages/month' [C3, S3]).", "The deck states ('500M messages/month' [C2, S3])."),
+    ("The deck states — '500M messages/month' [C3, S3].", "The deck states — '500M messages/month' [C2, S3]."),
+    # A parenthesis that reports for itself, a source and its own reporting verb, is its own clause. ("on page 12, ..."
+    # was corrected here at b718566; a page alone is no clause of its own since the review of b718566: see
+    # REVIEW_B71_KEPT.)
+    ("Page 10 doesn’t give an interval (page 12 states '500M messages/month' [C3, S3]).",
+     "Page 10 doesn’t give an interval (page 12 states '500M messages/month' [C2, S3])."),
+    ("Page 10 doesn’t give an interval (the deck states '500M messages/month' [C3, S3] elsewhere).",
+     "Page 10 doesn’t give an interval (the deck states '500M messages/month' [C2, S3] elsewhere)."),
+    ("Page 10 doesn’t give an interval; page 12 states '500M messages/month' [C3, S3].",
+     "Page 10 doesn’t give an interval; page 12 states '500M messages/month' [C2, S3]."),
+    ("Page 10 doesn’t give an interval, but page 12 states '500M messages/month' [C3, S3].",
+     "Page 10 doesn’t give an interval, but page 12 states '500M messages/month' [C2, S3]."),
+)
+
+
+class ReviewF2a6ac1Tests(SimpleTestCase):
+    """Review of f2a6ac1: a denial or another source governs a figure across a colon, a dash or a parenthesis;
+    typographic contractions deny; affirmative clauses in those shapes are still corrected."""
+
+    def setUp(self):
+        self.payload = memo102_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text, items=None):
+        out, changes = replay({'s': text}, items or self.items, self.notes)
+        return out['s'], changes.get('s', [])
+
+    def test_a_governing_denial_or_source_across_punctuation_keeps_the_citations(self):
+        for text in REVIEW_F2A_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_affirmative_clauses_in_those_shapes_are_still_corrected(self):
+        for before, after in REVIEW_F2A_FIXED:
+            with self.subTest(text=before):
+                self.assertEqual(self.full(before), (after, ['basis_citation_identity']))
+
+    def test_stable_idempotent_and_every_citation_owned(self):
+        supplied = {item.ref for item in self.items}
+        for text in REVIEW_F2A_KEPT + tuple(before for before, _ in REVIEW_F2A_FIXED):
+            with self.subTest(text=text):
+                out, _ = self.full(text)
+                self.assertEqual(self.full(out), (out, []))
+                self.assertEqual(self.full(text, list(reversed(self.items)))[0], out)
+                self.assertLessEqual({ref for group in re.findall(r'\[([^\]]*)\]', out)
+                                      for ref in re.split(r'\s*[,;]\s*', group) if ref}, supplied)
+        for _, after in REVIEW_F2A_FIXED:
+            with self.subTest(text=after):
+                self.assertIn("'500M messages/month' [C2, S3]", after)
+
+    def test_another_pair_alike(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        facts = basis_facts(OTHER_PAIR_ITEMS(), (OTHER_PAIR_NOTE,))
+        for text in ("Page 7 doesn’t state: '3M bots/week' [C7, S7].", "Page 7 does not state ('3M bots/week' [C7, S7])."):
+            with self.subTest(text=text):
+                self.assertEqual(guard_basis_wording(text, facts), (text, []))
+        self.assertEqual(guard_basis_wording("Page 8 states: '3M bots/week' [C7, S8].", facts),
+                         ("Page 8 states: '3M bots/week' [C8, S8].", ['basis_citation_identity']))
+
+
+# Review of b718566: a reporting word alone (an adjective or participle) does not make a set-off segment its own
+# clause; only a source as subject with its finite reporting verb does. Otherwise the governing denial or source holds.
+REVIEW_B71_KEPT = (
+    "Page 10 does not state: the reported '500M messages/month' [C3, S2].",      # the review's cases
+    "Page 10 does not state (reported as '500M messages/month' [C3, S2]).",
+    "Page 10 does not state: the stated '500M messages/month' [C3, S2].",
+    "Page 10 does not state (listed as '500M messages/month' [C3, S2]).",
+    "Page 10 does not state (shown as '500M messages/month' [C3, S2]).",
+    "Page 10 does not state (as reported, '500M messages/month' [C3, S2]).",
+    "Page 10 does not state: a cited '500M messages/month' [C3, S2].",
+    "Page 10 does not state (the figure reported elsewhere, '500M messages/month' [C3, S2]).",
+    "Page 10 does not state (reported elsewhere, '500M messages/month' [C3, S2]).",            # a verb, no subject
+    "Page 10 does not state (as the deck states elsewhere, '500M messages/month' [C3, S2]).",   # subordinate "as"
+    "Page 10 does not state (page 12 reported as '500M messages/month' [C3, S2]).",            # "verb as": participle
+    "Page 10 doesn’t state (reported as '500M messages/month' [C3, S2]).",
+    "Page 10 has no interval (on page 12, '500M messages/month' [C3, S3]).",     # a page alone: no clause of its own
+)
+REVIEW_B71_FIXED = (
+    # The review's control: only the independent clause's group changes.
+    ("Page 10 doesn’t give an interval (page 12 states '500M messages/month' [C3, S3]).",
+     "Page 10 doesn’t give an interval (page 12 states '500M messages/month' [C2, S3])."),
+    ("Page 10 doesn’t give an interval (page 12 stated '500M messages/month' [C3, S3]).",
+     "Page 10 doesn’t give an interval (page 12 stated '500M messages/month' [C2, S3])."),
+    ("Page 10 doesn’t give an interval (while page 12 states '500M messages/month' [C3, S3]).",
+     "Page 10 doesn’t give an interval (while page 12 states '500M messages/month' [C2, S3])."),
+    ("Page 10 doesn’t give an interval (page 12 also reports '500M messages/month' [C3, S3]).",
+     "Page 10 doesn’t give an interval (page 12 also reports '500M messages/month' [C2, S3])."),
+    ("Page 10 does not state: page 12 lists '500M messages/month' [C3, S3].",
+     "Page 10 does not state: page 12 lists '500M messages/month' [C2, S3]."),
+    ("Page 10 does not state — the deck shows '500M messages/month' [C3, S3] elsewhere.",
+     "Page 10 does not state — the deck shows '500M messages/month' [C2, S3] elsewhere."),
+    # An adjective or participle in an affirmative sentence: the outer clause governs and affirms.
+    ("The deck states: the reported '500M messages/month' [C3, S3].",
+     "The deck states: the reported '500M messages/month' [C2, S3]."),
+    ("The deck states (reported as '500M messages/month' [C3, S3]).",
+     "The deck states (reported as '500M messages/month' [C2, S3])."),
+)
+
+
+class ReviewB718566Tests(SimpleTestCase):
+    """Review of b718566: clause ownership needs a source and its finite reporting verb, not a reporting word."""
+
+    def setUp(self):
+        self.payload = memo102_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text, items=None):
+        out, changes = replay({'s': text}, items or self.items, self.notes)
+        return out['s'], changes.get('s', [])
+
+    def test_a_reporting_word_alone_keeps_the_governing_denial(self):
+        for text in REVIEW_B71_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_an_independent_reporting_clause_is_still_corrected(self):
+        for before, after in REVIEW_B71_FIXED:
+            with self.subTest(text=before):
+                self.assertEqual(self.full(before), (after, ['basis_citation_identity']))
+                # Only the independent clause's group changes.
+                self.assertEqual(after, before.replace('[C3, S3]', '[C2, S3]'))
+
+    def test_stable_idempotent_and_every_citation_owned(self):
+        supplied = {item.ref for item in self.items}
+        for text in REVIEW_B71_KEPT + tuple(before for before, _ in REVIEW_B71_FIXED):
+            with self.subTest(text=text):
+                out, _ = self.full(text)
+                self.assertEqual(self.full(out), (out, []))
+                self.assertEqual(self.full(text, list(reversed(self.items)))[0], out)
+                self.assertLessEqual({ref for group in re.findall(r'\[([^\]]*)\]', out)
+                                      for ref in re.split(r'\s*[,;]\s*', group) if ref}, supplied)
+        for _, after in REVIEW_B71_FIXED:
+            with self.subTest(text=after):
+                self.assertIn("'500M messages/month' [C2, S3]", after)
+
+    def test_another_pair_alike(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        facts = basis_facts(OTHER_PAIR_ITEMS(), (OTHER_PAIR_NOTE,))
+        for text in ("Page 7 does not state: the reported '3M bots/week' [C7, S7].",
+                     "Page 7 does not state (reported as '3M bots/week' [C7, S7]).",
+                     "Page 7 has no interval (on page 8, '3M bots/week' [C7, S8])."):
+            with self.subTest(text=text):
+                self.assertEqual(guard_basis_wording(text, facts), (text, []))
+        self.assertEqual(guard_basis_wording("Page 7 has no interval (page 8 states '3M bots/week' [C7, S8]).", facts),
+                         ("Page 7 has no interval (page 8 states '3M bots/week' [C8, S8]).", ['basis_citation_identity']))

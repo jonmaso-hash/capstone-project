@@ -1,0 +1,26 @@
+"""Build zelda_api/data/funding_fidelity/memo102*.json from the committed memo-102 evidence (6d131f5), in the same
+shape as memo101*.json. Reads git objects only; the recorded memo is not touched. Usage: make_fixtures.py <worktree>"""
+import json, os, subprocess, sys
+WT = sys.argv[1]
+EV = 'docs/baselines/manychat/output-fidelity-d0bad8f/pass-a'
+REV = '6d131f585cb5232a7535d896d6659583b5ecb053'
+show = lambda path: subprocess.run(['git', 'show', f'{REV}:{path}'], capture_output=True, cwd=WT, check=True).stdout.decode('utf-8')
+call = json.loads(show(f'{EV}/09b_model_call.json'))
+memo = json.loads(show(f'{EV}/09_memo.json'))['memo']
+payload = json.loads(show(f'{EV}/09a_grounded_context_rebuilt.json'))['payload']
+ref = json.load(open(os.path.join(WT, 'zelda_api', 'data', 'funding_fidelity', 'memo101.json'), encoding='utf-8'))
+fields = list(ref['stored'])
+missing = [f for f in fields if f not in memo]
+assert not missing, missing
+out = {'source': f'{EV}/09b_model_call.json and 09_memo.json at {REV[:7]} (memo 102, document 3144)',
+       'model_reply_text': call['response']['text'][0],
+       'stored': {f: memo[f] for f in fields}}
+ref_p = json.load(open(os.path.join(WT, 'zelda_api', 'data', 'funding_fidelity', 'memo101_payload.json'), encoding='utf-8'))
+out_p = {'source': f'{EV}/09a_grounded_context_rebuilt.json at {REV[:7]} (the payload sent for memo 102)', 'payload': payload}
+assert set(out_p) == set(ref_p), (set(out_p), set(ref_p))
+for name, data in (('memo102.json', out), ('memo102_payload.json', out_p)):
+    with open(os.path.join(WT, 'zelda_api', 'data', 'funding_fidelity', name), 'w', encoding='utf-8', newline='\n') as f:
+        json.dump(data, f, indent=1, ensure_ascii=False)
+        f.write('\n')
+print('fields', len(fields), 'items', len(payload['items']), 'notes', payload.get('consistency_notes'))
+print('ref source line', ref['source'][:80], '|', ref_p['source'][:80])

@@ -1,0 +1,189 @@
+2026-10-22 03:43:09,449 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+110 objects imported automatically (use -v 2 for details).
+
+EXACT expected output and rule, per version: 0664563 | 9b28e14 | 8d7f8dc | a6dcddf | 72418e2 | 71ece83 | 8f11844 | 0781baf
+  WRONG WRONG exact WRONG WRONG WRONG WRONG exact  The page-99 figure is overstated [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG WRONG WRONG exact  The yearly figure is overstated [S2, S3].
+  WRONG WRONG exact WRONG WRONG WRONG WRONG exact  The slide-7 figure is overstated [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG WRONG WRONG exact  The weekly figure is overstated compared with the monthly figure [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG WRONG WRONG exact  The page-99 monthly figure is overstated [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG WRONG WRONG exact  The run-rate figure is overstated [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG WRONG WRONG exact  The 500M messages/week figure is overstated [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG WRONG WRONG exact  The costs/month figure is overstated [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG WRONG WRONG exact  If the figures are monthly, the implied weekly activity is overstated [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG WRONG WRONG exact  The monthly figure is accurate [S2], and the daily figure [S3] is overstated.
+  WRONG WRONG WRONG WRONG WRONG WRONG exact exact  The monthly figure is overstated compared with the page-99 count [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG exact exact exact  The monthly figure is overstated compared with the page 99 count [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG WRONG exact exact  The monthly figure is overstated compared with the slide-7 figure [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG WRONG exact exact  The monthly figure is overstated compared with the weekly figure [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG WRONG exact exact  The monthly figure is overstated compared with the daily count [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG WRONG exact exact  The monthly figure is overstated compared with the run-rate [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG WRONG exact exact  These figures are overstated compared with the yearly count [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG WRONG exact exact  One or both figures may be overstated compared with the yearly count [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG WRONG exact exact  One or both figures may misrepresent the page-99 count [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG WRONG exact exact  These figures may overstate the weekly activity [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG exact exact exact  The reported monthly figure [S2], and the larger figure [S3] are overstated.
+  WRONG WRONG WRONG WRONG WRONG exact exact exact  The stated monthly figure [S2], and the larger figure [S3] are overstated.
+  WRONG WRONG WRONG WRONG WRONG exact exact exact  The claimed figure [S2], and the larger figure [S3] are overstated.
+  WRONG WRONG WRONG WRONG WRONG exact exact exact  The company's reported monthly figure [S2], and the larger figure [S3] are overstated.
+  WRONG WRONG WRONG WRONG WRONG exact exact exact  The monthly figure is overstated (in management's view) [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG exact exact exact  The monthly figure is overstated according to management [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG exact exact exact  The monthly figure is overstated in management's view [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG exact exact exact  The monthly figure is overstated [S2, S3] (in management's view).
+  WRONG WRONG WRONG WRONG WRONG exact exact exact  These figures may be inflated (in management's view) [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG exact exact exact  One or both figures may be overstated according to management [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG exact exact exact  One or both figures may misrepresent the scale of hiring [S2, S3].
+  WRONG WRONG WRONG WRONG WRONG exact exact exact  The monthly figure is overstated compared with the hiring plan [S2, S3].
+  WRONG WRONG WRONG WRONG exact exact exact exact  If the figures are monthly, the hiring claim is overstated [S2, S3].
+  WRONG WRONG WRONG WRONG exact exact exact exact  If the figures are monthly, the hiring growth rate is overstated [S2, S3].
+  WRONG WRONG WRONG WRONG exact exact exact exact  The monthly figure is inflated, in management's view, but the definitions remain unclear [S2, S3].
+  WRONG WRONG WRONG WRONG exact exact exact exact  The monthly figure is inflated, in management's view [S2, S3].
+  WRONG WRONG WRONG WRONG exact exact exact exact  In management's view, the monthly figure is inflated [S2, S3].
+  WRONG WRONG WRONG WRONG exact exact exact exact  Management says the monthly figure is overstated [S2, S3].
+  WRONG WRONG WRONG WRONG exact exact exact exact  If the figures are monthly, in management's view, the claim is overstated [S2, S3].
+  WRONG WRONG WRONG exact exact exact exact exact  If the figures are monthly, the implied activity is overstated [S2, S3].
+  WRONG WRONG WRONG WRONG exact exact exact exact  The monthly figure [S2, S3], and the larger figure are overstated.
+  WRONG WRONG WRONG WRONG exact exact exact exact  The monthly figure [S2], and the larger figure [S3] are overstated.
+  WRONG WRONG WRONG exact exact exact exact exact  These figures need clarification — monthly costs are inflated [S2, S3].
+  WRONG WRONG WRONG exact exact exact exact exact  These figures need clarification — misleading messages are wrong [S2, S3].
+  WRONG WRONG WRONG exact exact exact exact exact  Monthly costs are inflated [S2, S3].
+  WRONG WRONG WRONG exact exact exact exact exact  Misleading messages are wrong [S2, S3].
+  WRONG WRONG WRONG exact exact exact exact exact  These figures need clarification, but monthly costs are inflated [S2, S3].
+  WRONG WRONG exact exact exact exact exact exact  The hiring claim is overstated [S2, S3].
+  WRONG WRONG WRONG exact exact exact exact exact  If the figures are monthly, misleading advertising is wrong [S2, S3].
+  WRONG WRONG WRONG exact exact exact exact exact  If the figures are monthly, monthly costs are inflated [S2, S3].
+  WRONG WRONG WRONG exact exact exact exact exact  If the figures are monthly, hiring growth is overstated [S2, S3].
+  WRONG WRONG WRONG exact exact exact exact exact  These figures need clarification — the messages are misleading [S2, S3].
+  WRONG WRONG WRONG exact exact exact exact exact  If the hiring plan slips, the implied monthly activity is overstated [S2, S3].
+  exact exact WRONG exact exact exact exact exact  The page-10 figure is overstated [S2, S3].
+  exact exact exact exact exact exact exact exact  The slide-12 monthly figure is overstated [S2, S3].
+  exact exact exact exact exact exact exact exact  The cumulative figure is overstated [S2, S3].
+  exact exact exact exact exact exact exact exact  The 500M messages/month figure is overstated [S2, S3].
+  exact exact exact exact exact exact exact exact  If the figures are monthly, the implied monthly activity is overstated [S2, S3].
+  WRONG WRONG WRONG exact exact exact exact exact  The monthly figure is accurate [S2], and the larger figure [S3] is overstated.
+  exact exact exact exact exact exact exact exact  The monthly figure is overstated compared with the page-10 count [S2, S3].
+  exact exact exact exact exact WRONG exact exact  The monthly figure is overstated compared with the page 10 count [S2, S3].
+  exact exact exact exact exact exact exact exact  The monthly figure is overstated compared with the slide-12 figure [S2, S3].
+  exact exact exact exact exact WRONG exact exact  The page-10 figure is overstated compared with the per month figure [S2, S3].
+  WRONG exact exact exact exact exact exact exact  These figures are overstated compared with the monthly count [S2, S3].
+  exact exact exact exact exact exact exact exact  One or both figures may overstate the page-12 count [S2, S3].
+  WRONG exact exact exact exact exact exact exact  These figures may overstate the monthly activity [S2, S3].
+  exact exact exact exact exact exact exact exact  The monthly figure is overstated relative to its stated interval [S2, S3].
+  WRONG WRONG WRONG exact exact exact exact exact  Management reported the monthly figure [S2], and the larger figure [S3] is overstated.
+  WRONG WRONG WRONG exact exact exact exact exact  The reported figure is monthly [S2], and the larger figure [S3] is overstated.
+  WRONG WRONG WRONG WRONG WRONG WRONG WRONG exact  The reported, monthly, and daily figures are overstated [S2, S3], but the definitions remain unclear.
+  WRONG WRONG WRONG exact WRONG exact exact exact  The reported, monthly, and cumulative figures are overstated [S2, S3], but the definitions remain unclear.
+  exact exact exact exact exact exact exact exact  The monthly figure is overstated and possibly misleading [S2, S3].
+  exact exact exact exact exact exact exact exact  One or both figures may be overstated or misleading [S2, S3].
+  exact exact exact exact exact exact exact exact  One or both figures may misrepresent the scale of actual activity [S2, S3].
+  exact exact exact exact exact exact exact exact  The monthly figure is overstated compared with the cumulative figure [S2, S3].
+  WRONG WRONG WRONG exact exact exact exact exact  The monthly figure is inflated [S2, S3], but the definitions remain unclear.
+  WRONG WRONG WRONG WRONG WRONG WRONG WRONG exact  The cumulative, monthly, and daily figures are overstated [S2, S3], but the definitions remain unclear.
+  WRONG WRONG WRONG exact exact exact exact exact  The cumulative, monthly, and page-12 figures are overstated [S2, S3], but the definitions remain unclear.
+  exact exact exact exact exact exact exact exact  If the figures are monthly, the key traction claim is overstated [S2, S3].
+  exact exact exact exact exact exact exact exact  If the cumulative figure was restated as a monthly figure, the implied monthly activity would be materially overstated [S2, S3].
+  WRONG WRONG WRONG WRONG exact exact exact exact  Management has not clarified the definitions, in its view, but the monthly figure is overstated [S2, S3].
+  exact exact exact exact exact exact exact exact  - The monthly figure is overstated [S2, S3].
+  WRONG WRONG WRONG exact exact exact exact exact  The monthly figure is overstated [S2, S3]; management has not clarified the definitions.
+  WRONG WRONG WRONG exact exact exact exact exact  Management has not clarified the definitions; the monthly figure is overstated [S2, S3].
+  WRONG WRONG WRONG exact exact exact exact exact  The monthly figure is overstated [S2, S3] — management has not clarified the definitions.
+  WRONG WRONG WRONG exact exact exact exact exact  Management has not clarified the definitions — the monthly figure is overstated [S2, S3].
+  WRONG WRONG WRONG exact exact exact exact exact  The monthly figure is overstated [S2, S3], but management has not clarified the definitions.
+  WRONG WRONG WRONG exact exact exact exact exact  Management has not clarified the definitions, and the monthly figure is overstated [S2, S3].
+  WRONG WRONG WRONG exact exact exact exact exact  These figures may be inflated, but management has not clarified the definitions [S2, S3].
+  exact exact exact exact exact exact exact exact  The monthly figure is overstated, and possibly inflated [S2, S3].
+  exact exact WRONG exact exact exact exact exact  The key traction claim may be overstated [S2, S3].
+  WRONG WRONG WRONG exact exact exact exact exact  The key traction claim may be overstated [S2, S3], and monthly costs are inflated.
+  WRONG WRONG WRONG exact exact exact exact exact  These figures need clarification — the monthly figure is overstated [S2, S3].
+  exact exact exact exact exact exact exact exact  The 500M messages are overstated [S2, S3].
+  exact exact WRONG exact exact exact exact exact  The reported usage is overstated [S2, S3].
+  exact exact exact exact exact exact exact exact  The monthly figure is overstated [S2]; the cumulative figure is inflated [S3].
+  WRONG WRONG WRONG exact exact exact exact exact  The monthly figure is overstated [S2, S3], which management has not explained.
+  WRONG WRONG WRONG WRONG WRONG WRONG WRONG exact  The cumulative, monthly, and daily figures are overstated [S2, S3].
+  exact exact exact exact exact exact exact exact  The cumulative, monthly, and page-10 figures are overstated [S2, S3].
+  exact exact exact exact exact exact exact exact  If the deck counts weekly, the implied monthly activity is overstated [S2, S3].
+  exact exact exact exact exact exact exact exact  If the larger figure is restated, the implied monthly activity is overstated [S2, S3].
+  exact exact exact exact exact exact exact exact  If the messages are restated, the implied monthly activity is overstated [S2, S3].
+  WRONG WRONG WRONG exact exact exact exact exact  These figures need clarification — the cumulative figure is overstated [S2, S3].
+  exact exact exact exact exact exact exact exact  The 500M messages figure is overstated [S2, S3].
+  WRONG WRONG WRONG exact exact exact exact exact  These figures need clarification — the larger figure is overstated [S2, S3].
+  WRONG WRONG exact exact exact exact exact exact  The cumulative figure is overstated [S2, S3] — misleading advertising is wrong.
+  WRONG WRONG exact exact exact exact exact exact  Misleading advertising is wrong; the monthly figure is inflated [S2, S3].
+  WRONG WRONG exact exact exact exact exact exact  These figures may be inflated — misleading advertising is wrong [S2, S3].
+  WRONG exact exact exact exact exact exact exact  These figures need clarification — possibly overstated [S2, S3].
+  exact exact exact exact exact exact exact exact  s materially overstated [C2, C3].
+  totals: 0664563 29/110, 9b28e14 32/110, 8d7f8dc 35/110, a6dcddf 65/110, 72418e2 74/110, 71ece83 86/110, 8f11844 97/110, 0781baf 110/110
+
+BOUNDARY probes (output per version):
+  The page 99 figure is overstated [S2, S3].
+     0664563: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     9b28e14: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     8d7f8dc: kept
+     a6dcddf: kept
+     72418e2: kept
+     71ece83: kept
+     8f11844: kept
+     0781baf: kept
+  The figure on page 99 is overstated [S2, S3].
+     0664563: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     9b28e14: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     8d7f8dc: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     a6dcddf: kept
+     72418e2: kept
+     71ece83: kept
+     8f11844: kept
+     0781baf: kept
+  The annual figure is overstated [S2, S3].
+     0664563: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     9b28e14: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     8d7f8dc: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     a6dcddf: kept
+     72418e2: kept
+     71ece83: kept
+     8f11844: kept
+     0781baf: kept
+  The quarterly figure is overstated [S2, S3].
+     0664563: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     9b28e14: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     8d7f8dc: kept
+     a6dcddf: kept
+     72418e2: kept
+     71ece83: kept
+     8f11844: kept
+     0781baf: kept
+  The monthly-basis figure is overstated [S2, S3].
+     0664563: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     9b28e14: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     8d7f8dc: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     a6dcddf: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     72418e2: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     71ece83: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     8f11844: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     0781baf: kept
+  The per-day figure is overstated [S2, S3].
+     0664563: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     9b28e14: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     8d7f8dc: kept
+     a6dcddf: kept
+     72418e2: kept
+     71ece83: kept
+     8f11844: kept
+     0781baf: kept
+  The monthly and daily figures are overstated [S2, S3].
+     0664563: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     9b28e14: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     8d7f8dc: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     a6dcddf: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     72418e2: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     71ece83: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     8f11844: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     0781baf: kept
+  The page-12 figure is overstated compared with the page-10 count [S2, S3].
+     0664563: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     9b28e14: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     8d7f8dc: kept
+     a6dcddf: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     72418e2: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     71ece83: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     8f11844: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].
+     0781baf: ['basis_overstatement'] -> How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on [S2, S3].

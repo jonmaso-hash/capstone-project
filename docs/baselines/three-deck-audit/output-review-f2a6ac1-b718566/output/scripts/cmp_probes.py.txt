@@ -1,0 +1,5 @@
+import json, sys
+a = json.load(open(sys.argv[1], encoding='utf-8')); b = json.load(open(sys.argv[2], encoding='utf-8'))
+print('head', a.pop('head'), 'vs', b.pop('head'), '| cases', len(a['cases']), len(b['cases']), '| identical apart from head:', a == b)
+for x, y in zip(a['cases'], b['cases']):
+    if x != y: print('DIFF', x)

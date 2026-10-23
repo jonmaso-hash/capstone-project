@@ -1,0 +1,30 @@
+I12 CAUGHT Ran 374 tests in 16.566s FAILED (failures=1) restored=True | overcorrection: a ref outside the pair in the group is dropped
+    assertion failures in: test_a_figure_s_wrong_claim_becomes_its_own
+    errors in: -
+    failing sub-case: text='The deck states 500M messages/month [C3, S3, P1].'
+I13 CAUGHT Ran 374 tests in 13.872s FAILED (failures=7) restored=True | OF-1004: the "[...] vs [...]" operand rule is not applied
+    assertion failures in: test_a_figure_s_wrong_claim_becomes_its_own, test_another_pair_s_refs_are_corrected_alike, test_citations_change_only_where_corrected, test_of1004_the_monthly_operand_cites_its_own_claim, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+    failing sub-case: text='Compare [C3, S2] versus [C3, S3] before relying on either.'
+I14 CAUGHT Ran 374 tests in 13.708s FAILED (failures=1) restored=True | overcorrection: an operand is fixed when both operands mix sides
+    assertion failures in: test_comparisons_lists_and_correct_citations_are_kept
+    errors in: -
+    failing sub-case: text='Compare [C3, S3] vs [C2, S2] before relying on either.'
+I16 CAUGHT Ran 374 tests in 13.885s FAILED (failures=18) restored=True | OF-1004: the pair carries no side statements
+    assertion failures in: test_a_figure_s_wrong_claim_becomes_its_own, test_a_side_without_one_statement_is_not_invented, test_affirmative_clauses_beside_them_are_still_corrected, test_another_pair_alike, test_another_pair_s_refs_are_corrected_alike, test_citations_change_only_where_corrected, test_of1004_the_monthly_figure_cites_its_own_claim, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+    failing sub-case: text="Page 10 does not state '500M messages/month' [C3, S2], but page 12 states '500M messages/month' [C3, S3]."
+    failing sub-case: text="Page 10 gives no interval (page 12 states '500M messages/month' [C3, S3])."
+    failing sub-case: text="Page 10 is undated (page 12 states '500M messages/month' [C3, S3]) and gives no interval."
+    failing sub-case: text="Page 10 states '500M messages' [C2, S3]."
+    failing sub-case: text="Page 12 states '500M messages/month' [C3, S3], but page 10 does not."
+    failing sub-case: text="Page 12 states '500M messages/month' [C3]."
+    failing sub-case: text="Pitch Deck Hunt lists $23.1M raised [C1, S4], and the deck separately states '500M messages/month' [C3, S3], which is unverified."
+    failing sub-case: text="The slide on page 12 states '500M messages/month' [C3, S3]."
+    failing sub-case: text='The deck states 500M messages/month [C3, S3, P1].'
+    failing sub-case: text='The deck states 500M messages/month [C3, S3] on page 12.'
+I17 CAUGHT Ran 374 tests in 14.259s FAILED (failures=1) restored=True | overcorrection: a "+" no statement gives still names a side ("500M+ messages/month")
+    assertion failures in: test_comparisons_lists_and_correct_citations_are_kept
+    errors in: -
+    failing sub-case: text='The deck states 500M+ messages/month [C3, S3].'
+final sha matches pre-run: True 4a627720af499952f031279bf9e90714a85cf422a52b2090dddb879eb18fcbd9

@@ -1,0 +1,474 @@
+RED: final tests, basis_fidelity.py = d0bad8f content (git show; LF): 872f30f6e2c64907b9aa086b14c82fa0ee64ca69941fcc3511f74f7d0bfe1c52 *zelda_api/basis_fidelity.py
+2026-10-22 02:02:35,129 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-22 02:03:27,275 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 02:03:27,302 INFO zelda_api.intelligence_pipeline - Memo supported_points: funding-source fidelity ['unsupported_total', 'narrator_narrative'] for document 1
+2026-10-22 02:03:27,305 INFO zelda_api.intelligence_pipeline - Memo open_concerns: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 02:03:27,324 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-22 02:03:27,327 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt', 'funding_not_runway'] for document 1
+2026-10-22 02:03:27,400 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 02:03:27,433 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 02:03:27,439 INFO zelda_api.signals - DocumentSource created: a.pptx
+2026-10-22 02:03:27,443 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 02:03:27,458 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 02:03:27,464 INFO zelda_api.signals - DocumentSource created: b.pptx
+2026-10-22 02:03:27,469 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 02:03:27,484 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 02:03:27,488 INFO zelda_api.signals - DocumentSource created: c.pptx
+2026-10-22 02:03:27,492 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 02:03:27,493 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_cumulative_referent'] for document 1
+2026-10-22 02:03:27,507 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 02:03:27,513 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 02:03:27,522 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: funding-source fidelity ['profile_undated'] for document 1
+2026-10-22 02:03:27,526 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 02:03:27,534 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 02:03:27,536 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 02:03:27,538 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label', 'basis_referent_judgment'] for document 1
+2026-10-22 02:03:27,539 INFO zelda_api.intelligence_pipeline - Memo upside_scenario: measurement-basis wording ['basis_condition_attribution'] for document 1
+2026-10-22 02:03:27,558 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 02:03:27,563 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 02:03:27,581 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 02:03:27,585 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 02:03:27,586 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 02:03:27,591 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 02:03:27,592 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-22 02:03:27,608 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 02:03:27,614 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 02:03:27,627 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 02:03:27,658 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+F2026-10-22 02:03:27,671 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 02:03:27,683 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: funding-source fidelity ['cash_premise'] for document 1
+2026-10-22 02:03:27,686 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 02:03:27,688 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-22 02:03:27,690 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 02:03:27,693 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 02:03:27,696 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-22 02:03:27,700 INFO zelda_api.intelligence_pipeline - Memo supported_points: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-22 02:03:27,701 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label'] for document 1
+2026-10-22 02:03:27,720 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 02:03:27,726 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 02:03:27,735 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: funding-source fidelity ['profile_undated'] for document 1
+2026-10-22 02:03:27,739 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 02:03:27,745 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 02:03:27,748 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 02:03:27,750 INFO zelda_api.intelligence_pipeline - Memo upside_scenario: measurement-basis wording ['basis_condition_attribution'] for document 1
+2026-10-22 02:03:27,769 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 02:03:27,775 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 02:03:27,782 INFO zelda_api.intelligence_pipeline - Memo financial_analysis: funding-source fidelity ['provenance:Pitch Deck Hunt'] for document 1
+2026-10-22 02:03:27,783 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: funding-source fidelity ['profile_undated'] for document 1
+2026-10-22 02:03:27,787 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 02:03:27,792 INFO zelda_api.intelligence_pipeline - Memo team_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 02:03:27,794 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 02:03:27,796 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 02:03:27,798 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label', 'basis_referent_judgment'] for document 1
+2026-10-22 02:03:27,799 INFO zelda_api.intelligence_pipeline - Memo upside_scenario: measurement-basis wording ['basis_condition_attribution'] for document 1
+2026-10-22 02:03:27,818 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 02:03:27,824 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 02:03:27,846 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 02:03:27,848 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 02:03:27,853 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 02:03:27,854 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 02:03:27,858 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 02:03:27,859 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-22 02:03:27,879 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 02:03:27,887 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 02:03:27,905 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 02:03:27,906 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 02:03:27,910 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 02:03:27,911 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 02:03:27,915 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 02:03:27,916 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-22 02:03:27,932 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 02:03:27,937 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 02:03:27,957 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 02:03:27,959 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 02:03:27,963 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 02:03:27,964 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 02:03:27,970 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 02:03:27,971 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-22 02:03:27,992 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 02:03:27,998 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 02:03:28,016 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 02:03:28,020 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 02:03:28,022 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 02:03:28,025 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 02:03:28,026 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-22 02:03:28,045 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 02:03:28,051 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 02:03:28,069 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 02:03:28,074 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 02:03:28,075 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 02:03:28,079 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 02:03:28,080 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-22 02:03:28,099 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 02:03:28,105 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 02:03:28,125 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 02:03:28,127 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 02:03:28,128 INFO zelda_api.intelligence_pipeline - Memo market_analysis: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 02:03:28,131 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 02:03:28,132 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 02:03:28,136 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 02:03:28,137 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-22 02:03:28,153 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 02:03:28,159 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 02:03:28,178 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 02:03:28,180 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 02:03:28,186 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 02:03:28,187 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 02:03:28,192 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 02:03:28,193 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-22 02:03:28,210 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 02:03:28,216 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 02:03:28,228 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 02:03:28,252 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 02:03:28,258 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 02:03:28,278 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 02:03:28,281 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 02:03:28,285 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 02:03:28,287 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 02:03:28,291 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 02:03:28,291 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-22 02:03:28,310 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 02:03:28,317 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 02:03:28,336 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 02:03:28,338 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 02:03:28,341 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 02:03:28,342 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 02:03:28,346 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 02:03:28,346 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-22 02:03:28,365 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 02:03:28,371 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 02:03:28,382 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: funding-source fidelity ['cash_premise'] for document 1
+2026-10-22 02:03:28,385 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 02:03:28,387 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-22 02:03:28,391 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 02:03:28,393 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 02:03:28,394 INFO zelda_api.intelligence_pipeline - Memo executive_summary: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-22 02:03:28,396 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-22 02:03:28,399 INFO zelda_api.intelligence_pipeline - Memo supported_points: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-22 02:03:28,400 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label'] for document 1
+2026-10-22 02:03:28,421 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+...............................................................................F....FFFF..F.....................FFF.FFFFFFFF..................................................................................
+======================================================================
+FAIL: test_the_stored_memo_carries_the_repairs (zelda_api.tests_output_fidelity.PipelineMemo102Tests.test_the_stored_memo_carries_the_repairs)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3481, in test_the_stored_memo_carries_the_repairs
+    self.assertEqual(memo.base_scenario, stored['base_scenario'].replace(BASE_102_BEFORE, BASE_102_AFTER))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "If t[22 chars]1, S2, S3] are taken at face value under the '[236 chars]nce." != "If t[22 chars]1, S2] are taken at face value under the 'Trac[426 chars]nce."
+Diff is 1221 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_citations_change_only_where_corrected (zelda_api.tests_output_fidelity.Memo102ReplayTests.test_citations_change_only_where_corrected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3406, in test_citations_change_only_where_corrected
+    self.assertEqual(refs(value), expected, key)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: ['C3', 'S2', 'C3', 'S3', 'S1', 'S2', 'S3', 'P2', 'P1'] != ['C3', 'S2', 'C2', 'S3', 'S1', 'S2', 'S3', 'P2', 'P1']
+
+First differing element 2:
+'C3'
+'C2'
+
+- ['C3', 'S2', 'C3', 'S3', 'S1', 'S2', 'S3', 'P2', 'P1']
+?                ^
+
++ ['C3', 'S2', 'C2', 'S3', 'S1', 'S2', 'S3', 'P2', 'P1']
+?                ^
+ : business_model_analysis
+
+======================================================================
+FAIL: test_of1003_page_12_is_not_dated_by_page_10_s_heading (zelda_api.tests_output_fidelity.Memo102ReplayTests.test_of1003_page_12_is_not_dated_by_page_10_s_heading)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3371, in test_of1003_page_12_is_not_dated_by_page_10_s_heading
+    self.assertEqual(self.out['base_scenario'], self.stored['base_scenario'].replace(BASE_102_BEFORE, BASE_102_AFTER))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "If t[22 chars]1, S2, S3] are taken at face value under the '[236 chars]nce." != "If t[22 chars]1, S2] are taken at face value under the 'Trac[426 chars]nce."
+Diff is 1221 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_of1004_the_monthly_figure_cites_its_own_claim (zelda_api.tests_output_fidelity.Memo102ReplayTests.test_of1004_the_monthly_figure_cites_its_own_claim)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3374, in test_of1004_the_monthly_figure_cites_its_own_claim
+    self.assertEqual(self.out['open_concerns'], self.stored['open_concerns'].replace(OPEN_102_BEFORE, OPEN_102_AFTER))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "• Th[193 chars]h' [C3, S3]. Whether the figure is cumulative [698 chars]ial." != "• Th[193 chars]h' [C2, S3]. Whether the figure is cumulative [698 chars]ial."
+Diff is 1707 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_of1004_the_monthly_operand_cites_its_own_claim (zelda_api.tests_output_fidelity.Memo102ReplayTests.test_of1004_the_monthly_operand_cites_its_own_claim)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3379, in test_of1004_the_monthly_operand_cites_its_own_claim
+    self.assertEqual(self.out['business_model_analysis'],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     self.stored['business_model_analysis'].replace(BMA_102_BEFORE, BMA_102_AFTER))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "Insu[302 chars]vs [C3, S3]) in a slide headed 'Traction by Ap[277 chars]ism." != "Insu[302 chars]vs [C2, S3]) in a slide headed 'Traction by Ap[277 chars]ism."
+Diff is 1905 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_only_the_expected_rules_fired (zelda_api.tests_output_fidelity.Memo102ReplayTests.test_only_the_expected_rules_fired)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3425, in test_only_the_expected_rules_fired
+    self.assertEqual(self.changes, {
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+        'business_model_analysis': ['basis_citation_identity'],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        'information_readiness': ['attribution:Pitch Deck Hunt'],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    })
+    ^^
+AssertionError: {'information_readiness': ['attribution:Pitch Deck Hunt']} != {'business_model_analysis': ['basis_citatio[158 chars]nt']}
++ {'base_scenario': ['basis_condition_context'],
++  'business_model_analysis': ['basis_citation_identity'],
+- {'information_readiness': ['attribution:Pitch Deck Hunt']}
+? ^                                                        ^
+
++  'information_readiness': ['attribution:Pitch Deck Hunt'],
+? ^                                                        ^
+
++  'open_concerns': ['basis_citation_identity']}
+
+======================================================================
+FAIL: test_the_stored_sections_get_the_same_repairs (zelda_api.tests_output_fidelity.Memo102StoredSectionsTests.test_the_stored_sections_get_the_same_repairs)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3454, in test_the_stored_sections_get_the_same_repairs
+    self.assertIn(BASE_102_AFTER, out['base_scenario'])
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "If the traction figures [S1, S2] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful platform scale at that point in time; the deck separately states 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on)." not found in "If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful platform scale at that point in time. Without revenue data, burn figures, or a dated cash position, no trajectory beyond that snapshot can be inferred from the available evidence."
+
+======================================================================
+FAIL: test_an_accepting_condition_does_not_carry_the_heading (zelda_api.tests_output_fidelity.Of1003ConditionContextTests.test_an_accepting_condition_does_not_carry_the_heading) (text="If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful scale, though revenue is not found [C1].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3641, in test_an_accepting_condition_does_not_carry_the_heading
+    self.assertEqual(self.full(before), (after, ['basis_condition_context']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("If [23 chars]1, S2, S3] are taken at face value under the '[102 chars], []) != ("If [23 chars]1, S2] are taken at face value under the 'Trac[317 chars]xt'])
+
+First differing element 0:
+"If t[22 chars]1, S2, S3] are taken at face value under the '[97 chars]C1]."
+"If t[22 chars]1, S2] are taken at face value under the 'Trac[287 chars]on)."
+
+Diff is 849 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_an_accepting_condition_does_not_carry_the_heading (zelda_api.tests_output_fidelity.Of1003ConditionContextTests.test_an_accepting_condition_does_not_carry_the_heading) (text="Assuming the traction figures [S1, S2, S3] are accepted as stated under the 'Traction by Apr-16' heading, the platform was sizeable by then.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3641, in test_an_accepting_condition_does_not_carry_the_heading
+    self.assertEqual(self.full(before), (after, ['basis_condition_context']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Ass[29 chars]1, S2, S3] are accepted as stated under the 'T[63 chars], []) != ("Ass[29 chars]1, S2] are accepted as stated under the 'Tract[278 chars]xt'])
+
+First differing element 0:
+"Assu[28 chars]1, S2, S3] are accepted as stated under the 'T[58 chars]hen."
+"Assu[28 chars]1, S2] are accepted as stated under the 'Tract[248 chars]on)."
+
+Diff is 752 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_another_pair_s_context_is_handled_alike (zelda_api.tests_output_fidelity.Of1003ConditionContextTests.test_another_pair_s_context_is_handled_alike)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3652, in test_another_pair_s_context_is_handled_alike
+    self.assertEqual(guard_basis_wording(text, facts), (
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        "If the usage figures [S7] are taken at face value under the 'Growth by Q3-19' framing, the platform was "
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        "sizeable then; the deck separately states 3M bots/week [S8] on page 8 (" + CLARIFY_WEEKLY + ").",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ['basis_condition_context']))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("If [16 chars]s [S7, S8] are taken at face value under the '[58 chars], []) != ("If [16 chars]s [S7] are taken at face value under the 'Grow[264 chars]xt'])
+
+First differing element 0:
+"If t[15 chars]s [S7, S8] are taken at face value under the '[53 chars]hen."
+"If t[15 chars]s [S7] are taken at face value under the 'Grow[234 chars]on)."
+
+Diff is 678 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_the_affirmative_framing_is_the_context_rule_s (zelda_api.tests_output_fidelity.Of1003ConditionContextTests.test_the_affirmative_framing_is_the_context_rule_s)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3666, in test_the_affirmative_framing_is_the_context_rule_s
+    self.assertEqual(self.full(text), (
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+        "The company states 140,000+ bots and 500M messages [S1, S2] under the 'Traction by Apr-16' framing, and "
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        "separately 500M messages/month [S3] on page 12 (" + CLARIFY + ").", ['basis_source_context']))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[50 chars]1, S2, S3] under the 'Traction by Apr-16' framing.", []) != ("The[50 chars]1, S2] under the 'Traction by Apr-16' framing,[205 chars]xt'])
+
+First differing element 0:
+"The [49 chars]1, S2, S3] under the 'Traction by Apr-16' framing."
+"The [49 chars]1, S2] under the 'Traction by Apr-16' framing,[178 chars]on)."
+
+- ('The company states 140,000+ bots and 500M messages [S1, S2, S3] under the '
+?                                                             ----
+
++ ('The company states 140,000+ bots and 500M messages [S1, S2] under the '
+-  "'Traction by Apr-16' framing.",
+-  [])
++  "'Traction by Apr-16' framing, and separately 500M messages/month [S3] on "
++  'page 12 (how the figure stated without an explicit interval relates to the '
++  'monthly figure needs clarification before either is relied on).',
++  ['basis_source_context'])
+
+======================================================================
+FAIL: test_a_figure_s_wrong_claim_becomes_its_own (zelda_api.tests_output_fidelity.Of1004CitationIdentityTests.test_a_figure_s_wrong_claim_becomes_its_own) (text="Page 12 states '500M messages/month' [C3].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3551, in test_a_figure_s_wrong_claim_becomes_its_own
+    self.assertEqual(self.full(before), (after, ['basis_citation_identity']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Page 12 states '500M messages/month' [C3].", []) != ("Page 12 states '500M messages/month' [C2].", ['basis_citation_identity'])
+
+First differing element 0:
+"Page 12 states '500M messages/month' [C3]."
+"Page 12 states '500M messages/month' [C2]."
+
+- ("Page 12 states '500M messages/month' [C3].", [])
+?                                          ^
+
++ ("Page 12 states '500M messages/month' [C2].", ['basis_citation_identity'])
+?                                          ^      +++++++++++++++++++++++++
+
+
+======================================================================
+FAIL: test_a_figure_s_wrong_claim_becomes_its_own (zelda_api.tests_output_fidelity.Of1004CitationIdentityTests.test_a_figure_s_wrong_claim_becomes_its_own) (text="Page 10 states '500M messages' [C2, S3].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3551, in test_a_figure_s_wrong_claim_becomes_its_own
+    self.assertEqual(self.full(before), (after, ['basis_citation_identity']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Page 10 states '500M messages' [C2, S3].", []) != ("Page 10 states '500M messages' [C3, S2].", ['basis_citation_identity'])
+
+First differing element 0:
+"Page 10 states '500M messages' [C2, S3]."
+"Page 10 states '500M messages' [C3, S2]."
+
+- ("Page 10 states '500M messages' [C2, S3].", [])
++ ("Page 10 states '500M messages' [C3, S2].", ['basis_citation_identity'])
+
+======================================================================
+FAIL: test_a_figure_s_wrong_claim_becomes_its_own (zelda_api.tests_output_fidelity.Of1004CitationIdentityTests.test_a_figure_s_wrong_claim_becomes_its_own) (text='The deck states 500M messages/month [C3, S3] on page 12.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3551, in test_a_figure_s_wrong_claim_becomes_its_own
+    self.assertEqual(self.full(before), (after, ['basis_citation_identity']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('The[21 chars]sages/month [C3, S3] on page 12.', []) != ('The[21 chars]sages/month [C2, S3] on page 12.', ['basis_citation_identity'])
+
+First differing element 0:
+'The deck states 500M messages/month [C3, S3] on page 12.'
+'The deck states 500M messages/month [C2, S3] on page 12.'
+
+- ('The deck states 500M messages/month [C3, S3] on page 12.', [])
+?                                         ^                   ----
+
++ ('The deck states 500M messages/month [C2, S3] on page 12.',
+?                                         ^
+
++  ['basis_citation_identity'])
+
+======================================================================
+FAIL: test_a_figure_s_wrong_claim_becomes_its_own (zelda_api.tests_output_fidelity.Of1004CitationIdentityTests.test_a_figure_s_wrong_claim_becomes_its_own) (text="Pitch Deck Hunt lists $23.1M raised [C1, S4], and the deck separately states '500M messages/month' [C3, S3], which is unverified.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3551, in test_a_figure_s_wrong_claim_becomes_its_own
+    self.assertEqual(self.full(before), (after, ['basis_citation_identity']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Pit[93 chars]h' [C3, S3], which is unverified.", []) != ("Pit[93 chars]h' [C2, S3], which is unverified.", ['basis_ci[13 chars]ty'])
+
+First differing element 0:
+"Pitc[63 chars]ly states '500M messages/month' [C3, S3], which is unverified."
+"Pitc[63 chars]ly states '500M messages/month' [C2, S3], which is unverified."
+
+  ('Pitch Deck Hunt lists $23.1M raised [C1, S4], and the deck separately states '
+-  "'500M messages/month' [C3, S3], which is unverified.",
+?                           ^
+
++  "'500M messages/month' [C2, S3], which is unverified.",
+?                           ^
+
+-  [])
++  ['basis_citation_identity'])
+
+======================================================================
+FAIL: test_a_figure_s_wrong_claim_becomes_its_own (zelda_api.tests_output_fidelity.Of1004CitationIdentityTests.test_a_figure_s_wrong_claim_becomes_its_own) (text='Compare [C3, S2] versus [C3, S3] before relying on either.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3551, in test_a_figure_s_wrong_claim_becomes_its_own
+    self.assertEqual(self.full(before), (after, ['basis_citation_identity']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('Com[18 chars]us [C3, S3] before relying on either.', []) != ('Com[18 chars]us [C2, S3] before relying on either.', ['basi[17 chars]ty'])
+
+First differing element 0:
+'Compare [C3, S2] versus [C3, S3] before relying on either.'
+'Compare [C3, S2] versus [C2, S3] before relying on either.'
+
+- ('Compare [C3, S2] versus [C3, S3] before relying on either.', [])
+?                             ^                                 ----
+
++ ('Compare [C3, S2] versus [C2, S3] before relying on either.',
+?                             ^
+
++  ['basis_citation_identity'])
+
+======================================================================
+FAIL: test_a_side_without_one_statement_is_not_invented (zelda_api.tests_output_fidelity.Of1004CitationIdentityTests.test_a_side_without_one_statement_is_not_invented)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3578, in test_a_side_without_one_statement_is_not_invented
+    self.assertEqual(self.guard("Page 8 states '3M bots/week' [C8, S7].", items),
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     ("Page 8 states '3M bots/week' [C8].", ['basis_citation_identity']))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Page 8 states '3M bots/week' [C8, S7].", []) != ("Page 8 states '3M bots/week' [C8].", ['basis_citation_identity'])
+
+First differing element 0:
+"Page 8 states '3M bots/week' [C8, S7]."
+"Page 8 states '3M bots/week' [C8]."
+
+- ("Page 8 states '3M bots/week' [C8, S7].", [])
++ ("Page 8 states '3M bots/week' [C8].", ['basis_citation_identity'])
+
+======================================================================
+FAIL: test_another_pair_s_refs_are_corrected_alike (zelda_api.tests_output_fidelity.Of1004CitationIdentityTests.test_another_pair_s_refs_are_corrected_alike)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3563, in test_another_pair_s_refs_are_corrected_alike
+    self.assertEqual(self.guard("Page 8 states '3M bots/week' [C7, S8]."),
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     ("Page 8 states '3M bots/week' [C8, S8].", ['basis_citation_identity']))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Page 8 states '3M bots/week' [C7, S8].", []) != ("Page 8 states '3M bots/week' [C8, S8].", ['basis_citation_identity'])
+
+First differing element 0:
+"Page 8 states '3M bots/week' [C7, S8]."
+"Page 8 states '3M bots/week' [C8, S8]."
+
+- ("Page 8 states '3M bots/week' [C7, S8].", [])
+?                                  ^
+
++ ("Page 8 states '3M bots/week' [C8, S8].", ['basis_citation_identity'])
+?                                  ^          +++++++++++++++++++++++++
+
+
+----------------------------------------------------------------------
+Ran 221 tests in 4.236s
+
+FAILED (failures=18)
+Destroying test database for alias 'default'...
+Found 221 test(s).
+System check identified no issues (0 silenced).

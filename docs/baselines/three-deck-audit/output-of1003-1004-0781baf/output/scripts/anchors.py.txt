@@ -1,0 +1,15 @@
+"""Check every mutant's anchor occurs exactly once in the worktree's basis_fidelity.py (no test run, no file write)."""
+import os, sys
+WT = sys.argv[1]
+src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mutate_n.py'), encoding='utf-8').read()
+ns = {}
+exec(src[src.index('M = ['):src.index('\n\ndef sha')], ns)
+text = open(os.path.join(WT, 'zelda_api', 'basis_fidelity.py'), 'rb').read().decode('utf-8')
+bad = 0
+for mid, desc, old, new in ns['M']:
+    if '\r\n' in text:
+        old = old.replace('\n', '\r\n')
+    n = text.count(old)
+    bad += n != 1
+    print(mid, n, '' if n == 1 else '<-- NOT UNIQUE')
+print('mutants', len(ns['M']), 'bad anchors', bad)

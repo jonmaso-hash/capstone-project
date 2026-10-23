@@ -1,0 +1,44 @@
+# Review-of-f2a6ac1 cases through the full post-generation replay (memo 102's payload) and the second pair.
+import json
+from zelda_api.tests_output_fidelity import (replay, items_from, notes_from, memo102_payload, OTHER_PAIR_ITEMS,
+                                             OTHER_PAIR_NOTE)
+from zelda_api.basis_fidelity import basis_facts, guard_basis_wording
+p = memo102_payload(); items, notes = items_from(p), notes_from(p)
+MEMO = [
+    # preservation: the governing denial or source sits across a colon, dash or parenthesis; typographic contractions
+    "Page 10 does not state: '500M messages/month' [C3, S2].",
+    "Page 10 does not state ('500M messages/month' [C3, S2]).",
+    "Page 10 does not state — '500M messages/month' [C3, S2].",
+    "The deck doesn’t state '500M messages/month' [C3, S2].",
+    "The deck doesn’t state: '500M messages/month' [C3, S2].",
+    "The deck hasn’t stated '500M messages/month' [C3, S2].",
+    "The deck hasn't stated '500M messages/month' [C3, S2].",
+    "Page 10 states: '500M messages/month' [C3, S2].",
+    "Page 10 lists ('500M messages/month' [C3, S2]).",
+    "The 'Traction by Apr-16' slide states: '500M messages/month' [C3, S2].",
+    "The ‘Traction by Apr-16’ slide states '500M messages/month' [C3, S2].",
+    "Does page 10 state: '500M messages/month' [C3, S2]?",
+    # affirmative: still corrected
+    "Page 12 states: '500M messages/month' [C3, S3].",
+    "The deck states: '500M messages/month' [C3, S3].",
+    "The deck states ('500M messages/month' [C3, S3]).",
+    "The deck states — '500M messages/month' [C3, S3].",
+    "Page 10 doesn’t give an interval (page 12 states '500M messages/month' [C3, S3]).",
+    "Page 10 doesn’t give an interval; page 12 states '500M messages/month' [C3, S3].",
+    "Page 10 doesn’t give an interval, but page 12 states '500M messages/month' [C3, S3].",
+]
+OTHER = [
+    "Page 7 doesn’t state: '3M bots/week' [C7, S7].",
+    "Page 7 does not state ('3M bots/week' [C7, S7]).",
+    "Page 8 states: '3M bots/week' [C7, S8].",
+]
+rows = []
+for t in MEMO:
+    out, ch = replay({'s': t}, items, notes)
+    rows.append({'set': 'memo102', 'in': t, 'out': out['s'], 'changes': ch.get('s', [])})
+facts = basis_facts(OTHER_PAIR_ITEMS(), (OTHER_PAIR_NOTE,))
+for t in OTHER:
+    out, ch = guard_basis_wording(t, facts)
+    rows.append({'set': 'other_pair', 'in': t, 'out': out, 'changes': ch})
+for r in rows:
+    print(('CHANGED ' if r['out'] != r['in'] else 'kept    ') + json.dumps(r, ensure_ascii=False))

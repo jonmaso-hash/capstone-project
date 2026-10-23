@@ -1,0 +1,26 @@
+"""Derive replay.py (memos 96-102, base d0bad8f) from the r8 replay; each replacement must match."""
+import os
+HERE = os.path.dirname(os.path.abspath(__file__))
+s = open(os.path.join(HERE, '..', 'r8', 'replay.py'), encoding='utf-8').read()
+R = [
+    ('memos 96-101\'s recorded model replies', 'memos 96-102\'s recorded model replies'),
+    ('execution commit 0664563 (PR #286 merged)', 'execution commit d0bad8f (PR #287 merged; memo 102\'s run)'),
+    ('for memos 100 and 101 the base replay is also compared with what the run stored',
+     'for memos 100, 101 and 102 the base replay is also compared with what the run stored; every output citation must '
+     'name a ref the payload supplies'),
+    ("BASE = '066456341935d5ace32760a00788f78ec61a047a'", "BASE = 'd0bad8fdaace39f2f64be9f576874da9b0bf5e7a'"),
+    ("'zelda_api.basis_fidelity_0664563'", "'zelda_api.basis_fidelity_d0bad8f'"),
+    ("'0664563:zelda_api/basis_fidelity.py'", "'d0bad8f:zelda_api/basis_fidelity.py'"),
+    ("    'memo101': ('82771ef', 'docs/baselines/manychat/output-fidelity-0664563/pass-a'),\n}",
+     "    'memo101': ('82771ef', 'docs/baselines/manychat/output-fidelity-0664563/pass-a'),\n"
+     "    'memo102': ('6d131f5', 'docs/baselines/manychat/output-fidelity-d0bad8f/pass-a'),\n}"),
+    ("if name in ('memo100', 'memo101') else None,", "if name in ('memo100', 'memo101', 'memo102') else None,"),
+    ("        'refs_in_order_same_as_base_replay':",
+     "        'every_ref_supplied': all(set(refs(new[k])) <= {i.ref for i in items} for k in raw if isinstance(new[k], str)),\n"
+     "        'refs_in_order_same_as_base_replay':"),
+]
+for a, b in R:
+    assert s.count(a) == 1, a[:60]
+    s = s.replace(a, b)
+open(os.path.join(HERE, 'replay.py'), 'w', encoding='utf-8', newline='\n').write(s)
+print('derived replay.py')

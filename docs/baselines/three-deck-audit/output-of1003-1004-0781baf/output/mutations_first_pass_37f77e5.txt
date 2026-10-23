@@ -1,0 +1,157 @@
+===== chunk c01: I1 I2 I3 I4 I5 I6
+I1 CAUGHT Ran 367 tests in 13.243s FAILED (failures=14) restored=True | OF-1004: the identity rule is not applied (the memo-102 defect returns)
+    assertion failures in: test_a_figure_s_wrong_claim_becomes_its_own, test_a_side_without_one_statement_is_not_invented, test_another_pair_s_refs_are_corrected_alike, test_citations_change_only_where_corrected, test_of1004_the_monthly_figure_cites_its_own_claim, test_of1004_the_monthly_operand_cites_its_own_claim, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+    failing sub-case: text="Page 10 states '500M messages' [C2, S3]."
+    failing sub-case: text="Page 12 states '500M messages/month' [C3]."
+    failing sub-case: text="Pitch Deck Hunt lists $23.1M raised [C1, S4], and the deck separately states '500M messages/month' [C3, S3], which is unverified."
+    failing sub-case: text='Compare [C3, S2] versus [C3, S3] before relying on either.'
+    failing sub-case: text='The deck states 500M messages/month [C3, S3, P1].'
+    failing sub-case: text='The deck states 500M messages/month [C3, S3] on page 12.'
+I2 CAUGHT Ran 367 tests in 13.547s FAILED (failures=4) restored=True | overcorrection: no group is a comparison ("[C2, C3]" after one figure loses C3)
+    assertion failures in: test_a_side_without_one_statement_is_not_invented, test_comparisons_lists_and_correct_citations_are_kept
+    errors in: -
+    failing sub-case: text="The monthly figure, '500M messages/month' [C2, C3], needs clarification against page 10."
+    failing sub-case: text='Compare [C3, S2] vs [C3, C2] before relying on either.'
+    failing sub-case: text='The deck states 500M messages/month [S2, S3].'
+I3 CAUGHT Ran 367 tests in 13.386s FAILED (failures=1) restored=True | overcorrection: a group after a list of both figures is read as one figure's
+    assertion failures in: test_comparisons_lists_and_correct_citations_are_kept
+    errors in: -
+    failing sub-case: text="Page 10 states '500M messages' and page 12 states '500M messages/month' [C3, S3]."
+I4 CAUGHT Ran 367 tests in 13.662s FAILED (failures=11) restored=True | OF-1004: the stated interval does not name a side (the same number alone)
+    assertion failures in: test_a_figure_s_wrong_claim_becomes_its_own, test_a_side_without_one_statement_is_not_invented, test_another_pair_s_refs_are_corrected_alike, test_citations_change_only_where_corrected, test_of1004_the_monthly_figure_cites_its_own_claim, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+    failing sub-case: text="Page 12 states '500M messages/month' [C3]."
+    failing sub-case: text="Pitch Deck Hunt lists $23.1M raised [C1, S4], and the deck separately states '500M messages/month' [C3, S3], which is unverified."
+    failing sub-case: text='The deck states 500M messages/month [C3, S3, P1].'
+    failing sub-case: text='The deck states 500M messages/month [C3, S3] on page 12.'
+I5 CAUGHT Ran 367 tests in 13.531s FAILED (failures=1) restored=True | overcorrection: an unquoted figure with no interval names a side ("500M messages [C2]")
+    assertion failures in: test_comparisons_lists_and_correct_citations_are_kept
+    errors in: -
+    failing sub-case: text='The deck states 500M messages [C2].'
+I6 CAUGHT Ran 367 tests in 13.399s FAILED (failures=1) restored=True | OF-1004: a quotation of one side's statement names no side
+    assertion failures in: test_a_figure_s_wrong_claim_becomes_its_own
+    errors in: -
+    failing sub-case: text="Page 10 states '500M messages' [C2, S3]."
+final sha matches pre-run: True 455acc01c96ac6ba9f3b7e62d4493d5dfc07d3fb92a56ba7c98c71974aa4d7b6
+===== chunk c02: I8 I9 I10 I11 I12 I13
+I8 CAUGHT Ran 367 tests in 13.537s FAILED (failures=2) restored=True | OF-1004: a wrong statement ref is replaced by a claim (kind not kept)
+    assertion failures in: test_a_figure_s_wrong_claim_becomes_its_own, test_a_side_without_one_statement_is_not_invented
+    errors in: -
+    failing sub-case: text="Page 10 states '500M messages' [C2, S3]."
+I9 CAUGHT Ran 367 tests in 13.662s FAILED (failures=12) restored=True | OF-1004: the other side's claim is put in
+    assertion failures in: test_a_figure_s_wrong_claim_becomes_its_own, test_another_pair_s_refs_are_corrected_alike, test_citations_change_only_where_corrected, test_of1004_the_monthly_figure_cites_its_own_claim, test_of1004_the_monthly_operand_cites_its_own_claim, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+    failing sub-case: text="Page 10 states '500M messages' [C2, S3]."
+    failing sub-case: text="Page 12 states '500M messages/month' [C3]."
+    failing sub-case: text="Pitch Deck Hunt lists $23.1M raised [C1, S4], and the deck separately states '500M messages/month' [C3, S3], which is unverified."
+    failing sub-case: text='Compare [C3, S2] versus [C3, S3] before relying on either.'
+    failing sub-case: text='The deck states 500M messages/month [C3, S3, P1].'
+    failing sub-case: text='The deck states 500M messages/month [C3, S3] on page 12.'
+I10 CAUGHT Ran 367 tests in 13.592s FAILED (failures=1) restored=True | uncertainty: a wrong ref beside the named side's claim is kept and logged, not dropped
+    assertion failures in: test_a_side_without_one_statement_is_not_invented
+    errors in: -
+I11 CAUGHT Ran 367 tests in 13.513s FAILED (failures=1) restored=True | uncertainty: an unresolvable wrong ref is kept silently (not logged)
+    assertion failures in: test_a_side_without_one_statement_is_not_invented
+    errors in: -
+I12 CAUGHT Ran 367 tests in 13.451s FAILED (failures=1) restored=True | overcorrection: a ref outside the pair in the group is dropped
+    assertion failures in: test_a_figure_s_wrong_claim_becomes_its_own
+    errors in: -
+    failing sub-case: text='The deck states 500M messages/month [C3, S3, P1].'
+I13 CAUGHT Ran 367 tests in 13.470s FAILED (failures=7) restored=True | OF-1004: the "[...] vs [...]" operand rule is not applied
+    assertion failures in: test_a_figure_s_wrong_claim_becomes_its_own, test_another_pair_s_refs_are_corrected_alike, test_citations_change_only_where_corrected, test_of1004_the_monthly_operand_cites_its_own_claim, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+    failing sub-case: text='Compare [C3, S2] versus [C3, S3] before relying on either.'
+final sha matches pre-run: True 455acc01c96ac6ba9f3b7e62d4493d5dfc07d3fb92a56ba7c98c71974aa4d7b6
+===== chunk c03: I14 I15 I16 I17 I18 C1
+I14 CAUGHT Ran 367 tests in 13.547s FAILED (failures=1) restored=True | overcorrection: an operand is fixed when both operands mix sides
+    assertion failures in: test_comparisons_lists_and_correct_citations_are_kept
+    errors in: -
+    failing sub-case: text='Compare [C3, S3] vs [C2, S2] before relying on either.'
+I15 CAUGHT Ran 367 tests in 13.454s FAILED (failures=1) restored=True | overcorrection: an operand citing both claims is not a comparison
+    assertion failures in: test_comparisons_lists_and_correct_citations_are_kept
+    errors in: -
+    failing sub-case: text='Compare [C3, S2] vs [C3, C2] before relying on either.'
+I16 CAUGHT Ran 367 tests in 13.693s FAILED (failures=12) restored=True | OF-1004: the pair carries no side statements
+    assertion failures in: test_a_figure_s_wrong_claim_becomes_its_own, test_a_side_without_one_statement_is_not_invented, test_another_pair_s_refs_are_corrected_alike, test_citations_change_only_where_corrected, test_of1004_the_monthly_figure_cites_its_own_claim, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+    failing sub-case: text="Page 10 states '500M messages' [C2, S3]."
+    failing sub-case: text="Page 12 states '500M messages/month' [C3]."
+    failing sub-case: text="Pitch Deck Hunt lists $23.1M raised [C1, S4], and the deck separately states '500M messages/month' [C3, S3], which is unverified."
+    failing sub-case: text='The deck states 500M messages/month [C3, S3, P1].'
+    failing sub-case: text='The deck states 500M messages/month [C3, S3] on page 12.'
+I17 CAUGHT Ran 367 tests in 13.547s FAILED (failures=1) restored=True | overcorrection: a "+" no statement gives still names a side ("500M+ messages/month")
+    assertion failures in: test_comparisons_lists_and_correct_citations_are_kept
+    errors in: -
+    failing sub-case: text='The deck states 500M+ messages/month [C3, S3].'
+I18 CAUGHT Ran 367 tests in 13.395s FAILED (failures=1) restored=True | overcorrection: another noun still names a side ("500M bots/month")
+    assertion failures in: test_comparisons_lists_and_correct_citations_are_kept
+    errors in: -
+    failing sub-case: text='The deck states 500M bots/month [C3, S3].'
+C1 CAUGHT Ran 367 tests in 13.520s FAILED (failures=7) restored=True | OF-1003: the condition rule is not applied (the memo-102 defect returns)
+    assertion failures in: test_an_accepting_condition_does_not_carry_the_heading, test_another_pair_s_context_is_handled_alike, test_of1003_page_12_is_not_dated_by_page_10_s_heading, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+    failing sub-case: text="Assuming the traction figures [S1, S2, S3] are accepted as stated under the 'Traction by Apr-16' heading, the platform was sizeable by then."
+    failing sub-case: text="If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful scale, though revenue is not found [C1]."
+final sha matches pre-run: True 455acc01c96ac6ba9f3b7e62d4493d5dfc07d3fb92a56ba7c98c71974aa4d7b6
+===== chunk c04: C2 C3 C4 C5 C6 C7
+C2 CAUGHT Ran 367 tests in 13.704s FAILED (failures=7) restored=True | OF-1003: "framing" is not a context noun
+    assertion failures in: test_an_accepting_condition_does_not_carry_the_heading, test_another_pair_s_context_is_handled_alike, test_of1003_page_12_is_not_dated_by_page_10_s_heading, test_only_the_expected_rules_fired, test_the_affirmative_framing_is_the_context_rule_s, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+    failing sub-case: text="If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful scale, though revenue is not found [C1]."
+C3 CAUGHT Ran 367 tests in 13.475s FAILED (failures=1) restored=True | overcorrection: "whether" counts as an accepting condition
+    assertion failures in: test_hypotheses_and_other_conditions_are_kept
+    errors in: -
+    failing sub-case: text="Whether the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, the scale is open."
+C4 CAUGHT Ran 367 tests in 13.549s FAILED (failures=4) restored=True | overcorrection: any predicate accepts (explicit date hypotheses rewritten)
+    assertion failures in: test_hypotheses_and_other_conditions_are_kept, test_hypotheses_narrators_denials_hedges_and_correct_dates_are_kept
+    errors in: -
+    failing sub-case: text="If the figures [S2, S3] were counted by the period referenced in the 'Traction by Apr-16' slide context, adoption was large."
+    failing sub-case: text="If the traction figures [S1, S2, S3] all fall under the 'Traction by Apr-16' heading, the platform was sizeable by then."
+    failing sub-case: text="If the traction figures [S1, S2, S3] are not taken at face value under the 'Traction by Apr-16' framing, the picture changes."
+    failing sub-case: text="If the traction figures [S1, S2, S3] are perhaps taken at face value under the 'Traction by Apr-16' framing, the picture changes."
+C5 CAUGHT Ran 367 tests in 13.576s FAILED (failures=1) restored=True | overcorrection: the context phrase need not end the antecedent
+    assertion failures in: test_hypotheses_and_other_conditions_are_kept
+    errors in: -
+    failing sub-case: text="If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing and revenue follows, the picture changes."
+C6 SURVIVED Ran 367 tests in 13.464s OK restored=True | OF-1003 generality: the pair's topics do not name its figures ("the usage figures")
+    assertion failures in: -
+    errors in: -
+C7 CAUGHT Ran 367 tests in 13.307s FAILED (failures=3) restored=True | overcorrection: the subject allowlist is not read (another speaker, another metric)
+    assertion failures in: test_another_pair_s_context_is_handled_alike, test_hypotheses_and_other_conditions_are_kept
+    errors in: -
+    failing sub-case: text="If an analyst's figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, the picture changes."
+    failing sub-case: text="If the growth figures [S7, S8] are taken at face value under the 'Growth by Q3-19' framing, the platform was sizeable then."
+    failing sub-case: text="If the revenue and traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, the picture changes."
+final sha matches pre-run: True 455acc01c96ac6ba9f3b7e62d4493d5dfc07d3fb92a56ba7c98c71974aa4d7b6
+===== chunk c05: C8 C9 C10 C11 C12 C13
+C8 CAUGHT Ran 367 tests in 13.645s FAILED (failures=2) restored=True | overcorrection: narrator and attribution are not read
+    assertion failures in: test_a_narrator_s_condition_is_not_the_deck_s, test_hypotheses_and_other_conditions_are_kept
+    errors in: -
+    failing sub-case: text="According to an analyst, if the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, the platform was sizeable."
+C9 SURVIVED Ran 367 tests in 13.512s OK restored=True | overcorrection: a condition citing only page 12 is emptied
+    assertion failures in: -
+    errors in: -
+C10 CAUGHT Ran 367 tests in 13.429s FAILED (failures=6) restored=True | OF-1003: the pair clarification is not added after the restated fact
+    assertion failures in: test_an_accepting_condition_does_not_carry_the_heading, test_another_pair_s_context_is_handled_alike, test_of1003_page_12_is_not_dated_by_page_10_s_heading, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+    failing sub-case: text="Assuming the traction figures [S1, S2, S3] are accepted as stated under the 'Traction by Apr-16' heading, the platform was sizeable by then."
+    failing sub-case: text="If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful scale, though revenue is not found [C1]."
+C11 CAUGHT Ran 367 tests in 13.643s FAILED (failures=1) restored=True | OF-1003: "accepted as stated" is not an acceptance frame
+    assertion failures in: test_an_accepting_condition_does_not_carry_the_heading
+    errors in: -
+    failing sub-case: text="Assuming the traction figures [S1, S2, S3] are accepted as stated under the 'Traction by Apr-16' heading, the platform was sizeable by then."
+C12 CAUGHT Ran 367 tests in 13.474s FAILED (failures=1) restored=True | OF-1003: "assuming" is not a condition
+    assertion failures in: test_an_accepting_condition_does_not_carry_the_heading
+    errors in: -
+    failing sub-case: text="Assuming the traction figures [S1, S2, S3] are accepted as stated under the 'Traction by Apr-16' heading, the platform was sizeable by then."
+C13 CAUGHT Ran 367 tests in 13.620s FAILED (failures=1) restored=True | overcorrection: questions are rewritten
+    assertion failures in: test_hypotheses_and_other_conditions_are_kept
+    errors in: -
+    failing sub-case: text="If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, what scale had ManyChat reached?"
+final sha matches pre-run: True 455acc01c96ac6ba9f3b7e62d4493d5dfc07d3fb92a56ba7c98c71974aa4d7b6
+===== chunk c06: C14
+C14 CAUGHT Ran 367 tests in 13.584s FAILED (failures=1) restored=True | overcorrection: a narrated side is restated as the deck's
+    assertion failures in: test_a_narrated_side_is_not_restated_as_the_deck_s
+    errors in: -
+final sha matches pre-run: True 455acc01c96ac6ba9f3b7e62d4493d5dfc07d3fb92a56ba7c98c71974aa4d7b6
