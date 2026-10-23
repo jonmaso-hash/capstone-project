@@ -1,0 +1,22 @@
+CHANGED {"set": "memo102", "in": "Page 10 does not state: '500M messages/month' [C3, S2].", "out": "Page 10 does not state: '500M messages/month' [C2, S3].", "changes": ["basis_citation_identity"]}
+CHANGED {"set": "memo102", "in": "Page 10 does not state ('500M messages/month' [C3, S2]).", "out": "Page 10 does not state ('500M messages/month' [C2, S3]).", "changes": ["basis_citation_identity"]}
+CHANGED {"set": "memo102", "in": "Page 10 does not state — '500M messages/month' [C3, S2].", "out": "Page 10 does not state — '500M messages/month' [C2, S3].", "changes": ["basis_citation_identity"]}
+CHANGED {"set": "memo102", "in": "The deck doesn’t state '500M messages/month' [C3, S2].", "out": "The deck doesn’t state '500M messages/month' [C2, S3].", "changes": ["basis_citation_identity"]}
+CHANGED {"set": "memo102", "in": "The deck doesn’t state: '500M messages/month' [C3, S2].", "out": "The deck doesn’t state: '500M messages/month' [C2, S3].", "changes": ["basis_citation_identity"]}
+CHANGED {"set": "memo102", "in": "The deck hasn’t stated '500M messages/month' [C3, S2].", "out": "The deck hasn’t stated '500M messages/month' [C2, S3].", "changes": ["basis_citation_identity"]}
+CHANGED {"set": "memo102", "in": "The deck hasn't stated '500M messages/month' [C3, S2].", "out": "The deck hasn't stated '500M messages/month' [C2, S3].", "changes": ["basis_citation_identity"]}
+CHANGED {"set": "memo102", "in": "Page 10 states: '500M messages/month' [C3, S2].", "out": "Page 10 states: '500M messages/month' [C2, S3].", "changes": ["basis_citation_identity"]}
+CHANGED {"set": "memo102", "in": "Page 10 lists ('500M messages/month' [C3, S2]).", "out": "Page 10 lists ('500M messages/month' [C2, S3]).", "changes": ["basis_citation_identity"]}
+CHANGED {"set": "memo102", "in": "The 'Traction by Apr-16' slide states: '500M messages/month' [C3, S2].", "out": "The 'Traction by Apr-16' slide states: '500M messages/month' [C2, S3].", "changes": ["basis_citation_identity"]}
+kept    {"set": "memo102", "in": "The ‘Traction by Apr-16’ slide states '500M messages/month' [C3, S2].", "out": "The ‘Traction by Apr-16’ slide states '500M messages/month' [C3, S2].", "changes": []}
+kept    {"set": "memo102", "in": "Does page 10 state: '500M messages/month' [C3, S2]?", "out": "Does page 10 state: '500M messages/month' [C3, S2]?", "changes": []}
+CHANGED {"set": "memo102", "in": "Page 12 states: '500M messages/month' [C3, S3].", "out": "Page 12 states: '500M messages/month' [C2, S3].", "changes": ["basis_citation_identity"]}
+CHANGED {"set": "memo102", "in": "The deck states: '500M messages/month' [C3, S3].", "out": "The deck states: '500M messages/month' [C2, S3].", "changes": ["basis_citation_identity"]}
+CHANGED {"set": "memo102", "in": "The deck states ('500M messages/month' [C3, S3]).", "out": "The deck states ('500M messages/month' [C2, S3]).", "changes": ["basis_citation_identity"]}
+CHANGED {"set": "memo102", "in": "The deck states — '500M messages/month' [C3, S3].", "out": "The deck states — '500M messages/month' [C2, S3].", "changes": ["basis_citation_identity"]}
+CHANGED {"set": "memo102", "in": "Page 10 doesn’t give an interval (page 12 states '500M messages/month' [C3, S3]).", "out": "Page 10 doesn’t give an interval (page 12 states '500M messages/month' [C2, S3]).", "changes": ["basis_citation_identity"]}
+CHANGED {"set": "memo102", "in": "Page 10 doesn’t give an interval; page 12 states '500M messages/month' [C3, S3].", "out": "Page 10 doesn’t give an interval; page 12 states '500M messages/month' [C2, S3].", "changes": ["basis_citation_identity"]}
+CHANGED {"set": "memo102", "in": "Page 10 doesn’t give an interval, but page 12 states '500M messages/month' [C3, S3].", "out": "Page 10 doesn’t give an interval, but page 12 states '500M messages/month' [C2, S3].", "changes": ["basis_citation_identity"]}
+CHANGED {"set": "other_pair", "in": "Page 7 doesn’t state: '3M bots/week' [C7, S7].", "out": "Page 7 doesn’t state: '3M bots/week' [C8, S8].", "changes": ["basis_citation_identity"]}
+CHANGED {"set": "other_pair", "in": "Page 7 does not state ('3M bots/week' [C7, S7]).", "out": "Page 7 does not state ('3M bots/week' [C8, S8]).", "changes": ["basis_citation_identity"]}
+CHANGED {"set": "other_pair", "in": "Page 8 states: '3M bots/week' [C7, S8].", "out": "Page 8 states: '3M bots/week' [C8, S8].", "changes": ["basis_citation_identity"]}

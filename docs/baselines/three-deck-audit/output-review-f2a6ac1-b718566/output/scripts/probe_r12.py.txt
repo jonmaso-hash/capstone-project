@@ -1,0 +1,39 @@
+# Review-of-75ca81f cases through the full post-generation replay (memo 102's payload) and the second pair.
+import json
+from zelda_api.tests_output_fidelity import (replay, items_from, notes_from, memo102_payload, OTHER_PAIR_ITEMS,
+                                             OTHER_PAIR_NOTE)
+from zelda_api.basis_fidelity import basis_facts, guard_basis_wording
+p = memo102_payload(); items, notes = items_from(p), notes_from(p)
+MEMO = [
+    "Page 10 does not state '500M messages/month' [C3, S2].",
+    "The deck does not state '500M messages/month' [C3, S2].",
+    "The 'Traction by Apr-16' slide omits '500M messages/month' [C3, S2].",
+    "Page 10 states '500M messages/month' [C3, S2].",
+    "The 'Traction by Apr-16' slide states '500M messages/month' [C3, S2].",
+    "Does page 10 state '500M messages/month' [C3, S2]?",
+    "Whether page 10 states '500M messages/month' [C3, S2] is unclear.",
+    "Is '500M messages/month' [C3, S3] a run rate?",
+    "The deck does not reconcile [C3, S2] vs [C3, S3].",
+    "Page 10 does not state '500M messages/month' [C3, S2], but page 12 states '500M messages/month' [C3, S3].",
+    "The slide on page 12 states '500M messages/month' [C3, S3].",
+    "Page 10 gives no interval (page 12 states '500M messages/month' [C3, S3]).",
+    "If the traction figures [S1, S2] and [S3] are taken at face value under the 'Traction by Apr-16' framing, the picture changes.",
+    "If the traction figures [S1, S2], [S3] are taken at face value under the 'Traction by Apr-16' framing, the picture changes.",
+    "If the traction figures [S1] and [S2, S3] are taken at face value under the 'Traction by Apr-16' framing, the picture changes.",
+]
+OTHER = [
+    "Page 7 does not state '3M bots/week' [C7, S7].",
+    "Does page 7 state '3M bots/week' [C7, S7]?",
+    "Page 8 states '3M bots/week' [C7, S8].",
+    "If the usage figures [S7] and [S8] are taken at face value under the 'Growth by Q3-19' framing, the platform was sizeable then.",
+]
+rows = []
+for t in MEMO:
+    out, ch = replay({'s': t}, items, notes)
+    rows.append({'set': 'memo102', 'in': t, 'out': out['s'], 'changes': ch.get('s', [])})
+facts = basis_facts(OTHER_PAIR_ITEMS(), (OTHER_PAIR_NOTE,))
+for t in OTHER:
+    out, ch = guard_basis_wording(t, facts)
+    rows.append({'set': 'other_pair', 'in': t, 'out': out, 'changes': ch})
+for r in rows:
+    print(('CHANGED ' if r['out'] != r['in'] else 'kept    ') + json.dumps(r, ensure_ascii=False))

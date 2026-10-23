@@ -1,0 +1,130 @@
+"""Focused mutations for OF-1003 / OF-1004 (memo 102): the citation-identity rule (I1-I18) and the accepting-condition
+rule (C1-C14) and the review-of-75ca81f protections (R1-R14, C9R13, G1-G9: r_mutants.py), each a correction removed (the memo-102 defect returns) or a protection removed (harmful
+overcorrection). Same harness as the r10 runner: one mutant at a time on the worktree's zelda_api/basis_fidelity.py,
+the three affected modules run against it, the original bytes restored and SHA-256 checked before the next. A mutant
+counts as CAUGHT only by assertion failures; errors alone are CRASH-ONLY; no test run is NO-RUN.
+Usage: python mutate_n.py <worktree> [ID ...]"""
+import hashlib, os, re, subprocess, sys
+
+WT = sys.argv[1]
+ONLY = set(sys.argv[2:])
+BF = os.path.join(WT, 'zelda_api', 'basis_fidelity.py')
+T = os.path.join(os.path.dirname(os.path.abspath(__file__)), 't.sh')
+LABELS = ['zelda_api.tests_output_fidelity', 'zelda_api.tests_usage_basis', 'zelda_api.tests_funding_fidelity']
+M = [
+    # --- OF-1004: citation identity
+    ('I1', 'OF-1004: the identity rule is not applied (the memo-102 defect returns)',
+     "        sentence = _citation_identity(sentence, facts, changes)\n", ""),
+    ('I2', 'overcorrection: no group is a comparison ("[C2, C3]" after one figure loses C3)',
+     "    return len(claims) > 1 or len(statements) > 1", "    return False"),
+    ('I3', 'overcorrection: a group after a list of both figures is read as one figure\'s',
+     "                    continue                   # the group may cover an earlier figure of the pair: a list",
+     "                    pass"),
+    ('I4', 'OF-1004: the stated interval does not name a side (the same number alone)',
+     "if v == value and interval == rate and plus", "if v == value and plus"),
+    ('I5', 'overcorrection: an unquoted figure with no interval names a side ("500M messages [C2]")',
+     "    elif quoted:", "    elif True:"),
+    ('I6', 'OF-1004: a quotation of one side\'s statement names no side',
+     "    elif quoted:", "    elif False:"),
+    ('I8', 'OF-1004: a wrong statement ref is replaced by a claim (kind not kept)',
+     "        replacement = claim if ref in pair.refs else", "        replacement = claim if True else"),
+    ('I9', 'OF-1004: the other side\'s claim is put in',
+     "    claim, statements = pair.refs[side],", "    claim, statements = pair.refs[1 - side],"),
+    ('I10', 'uncertainty: a wrong ref beside the named side\'s claim is kept and logged, not dropped',
+     "        elif replacement is None and not set(refs) & pair.sides[side]:", "        elif replacement is None:"),
+    ('I11', 'uncertainty: an unresolvable wrong ref is kept silently (not logged)',
+     "            unresolved = True", "            pass"),
+    ('I12', 'overcorrection: a ref outside the pair in the group is dropped',
+     "        if ref not in other:\n            out.append(ref)\n            continue",
+     "        if ref not in other and ref in pair.members:\n            out.append(ref)\n            continue"),
+    ('I13', 'OF-1004: the "[...] vs [...]" operand rule is not applied',
+     "    return _VERSUS.sub(contrast, sentence)", "    return sentence"),
+    ('I14', 'overcorrection: an operand is fixed when both operands mix sides',
+     "            if len(sa) == 1 and sb == {0, 1}:", "            if sb == {0, 1}:"),
+    ('I15', 'overcorrection: an operand citing both claims is not a comparison',
+     "            if _compares(a, pair) or _compares(b, pair) or not",
+     "            if not"),
+    ('I16', 'OF-1004: the pair carries no side statements',
+     "statements=tuple(by_ref[ref].statement if ref in by_ref else '' for ref in refs)))", "statements=()))"),
+    ('I17', 'overcorrection: a "+" no statement gives still names a side ("500M+ messages/month")',
+     "and plus == mention.group('plus') and", "and"),
+    ('I18', 'overcorrection: another noun still names a side ("500M bots/month")',
+     "and (not noun or noun == n)]", "]"),
+    # --- OF-1003: an accepting condition does not carry the heading
+    ('C1', 'OF-1003: the condition rule is not applied (the memo-102 defect returns)',
+     "        sentence = _condition_context(sentence, facts, changes)\n", ""),
+    ('C2', 'OF-1003: "framing" is not a context noun',
+     "(?:context|heading|framing))", "(?:context|heading))"),
+    ('C3', 'overcorrection: "whether" counts as an accepting condition',
+     "_ACCEPTANCE_CONDITION = re.compile(r'\\b(?:if|assuming", "_ACCEPTANCE_CONDITION = re.compile(r'\\b(?:if|whether|assuming"),
+    ('C4', 'overcorrection: any predicate accepts (explicit date hypotheses rewritten)',
+     "        if not groups or not _ACCEPTANCE.fullmatch(sentence, groups[-1].end(), at):", "        if not groups:"),
+    ('C5', 'overcorrection: the context phrase need not end the antecedent',
+     "or not _ANTECEDENT_END.match(sentence, end):", "or False:"),
+    ('C6', 'OF-1003 generality: the pair\'s topics do not name its figures ("the usage figures")',
+     "| {form for fact in statements for form in _stated_forms(fact)} | topics)",
+     "| {form for fact in statements for form in _stated_forms(fact)})"),
+    ('C7', 'overcorrection: the subject allowlist is not read (another speaker, another metric)',
+     "                or not _own_head(head, cited, facts, pair.topics)):", "                or False):"),
+    ('C8', 'overcorrection: narrator and attribution are not read',
+     "        if (any(name.lower() in clause.lower() for name in facts.narrators) or _ATTRIBUTION.search(sentence[:at])",
+     "        if (False"),
+    ('C9', 'overcorrection: a condition citing only page 12 is emptied',
+     "        if not outside or not inside or pair is None:", "        if not outside or pair is None:"),
+    ('C10', 'OF-1003: the pair clarification is not added after the restated fact',
+     "            body += f' ({clarification})'\n        final = re.search", "            pass\n        final = re.search"),
+    ('C11', 'OF-1003: "accepted as stated" is not an acceptance frame',
+     "|as\\s+(?:stated|reported|presented|given))\\s*\", re.I)", ")\\s*\", re.I)"),
+    ('C12', 'OF-1003: "assuming" is not a condition',
+     "(?:if|assuming|supposing|suppose)\\b', re.I)\n_ACCEPTANCE", "(?:if)\\b', re.I)\n_ACCEPTANCE"),
+    ('C13', 'overcorrection: questions are rewritten',
+     "    if _asks(sentence) or not facts.pairs:\n        return sentence\n    places = {ref: (page, context, fact) for ref, page, "
+     "context, fact in facts.places}\n    for match in _CONTEXT_PHRASE.finditer(sentence):",
+     "    if not facts.pairs:\n        return sentence\n    places = {ref: (page, context, fact) for ref, page, "
+     "context, fact in facts.places}\n    for match in _CONTEXT_PHRASE.finditer(sentence):"),
+    ('C14', 'overcorrection: a narrated side is restated as the deck\'s',
+     "        if any(ref not in places for ref in cited) or set(cited) & facts.narrated:",
+     "        if any(ref not in places for ref in cited):"),
+]
+exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'r_mutants.py'), encoding='utf-8').read())
+M += RM
+
+
+def sha(path):
+    return hashlib.sha256(open(path, 'rb').read()).hexdigest()
+
+
+original = open(BF, 'rb').read()
+before = sha(BF)
+for mid, desc, old, new in M:
+    if ONLY and mid not in ONLY:
+        continue
+    text = original.decode('utf-8')
+    if '\r\n' in text:                         # the working copy's line endings (core.autocrlf)
+        old, new = old.replace('\n', '\r\n'), new.replace('\n', '\r\n')
+    count = text.count(old)
+    if count != 1:
+        print(f'{mid} NOT-APPLIED anchor count {count} | {desc}', flush=True)
+        continue
+    open(BF, 'wb').write(text.replace(old, new).encode('utf-8'))
+    try:
+        run = subprocess.run(['sh', T, WT] + LABELS, capture_output=True, text=True, encoding='utf-8', errors='replace')
+        out = run.stdout + run.stderr
+    finally:
+        open(BF, 'wb').write(original)
+    restored = sha(BF) == before
+    summary = (re.findall(r'^(?:OK.*|FAILED \(.*\))$', out, re.M) or ['?'])[-1]
+    ran = (re.findall(r'^Ran \d+ tests.*$', out, re.M) or ['?'])[-1]
+    fails = sorted({m for m in re.findall(r'^FAIL: (\w+)', out, re.M)})
+    errors = sorted({m for m in re.findall(r'^ERROR: (\w+)', out, re.M)})
+    verdict = 'CAUGHT' if fails else ('CRASH-ONLY' if errors else 'SURVIVED')
+    if ran == '?':
+        verdict = 'NO-RUN'
+    print(f'{mid} {verdict} {ran} {summary} restored={restored} | {desc}', flush=True)
+    print(f'    assertion failures in: {", ".join(fails) or "-"}', flush=True)
+    print(f'    errors in: {", ".join(errors) or "-"}', flush=True)
+    for case in sorted(set(re.findall(r'^FAIL: \w+ \([^)]*\) \((.*)\)$', out, re.M))):
+        print(f'    failing sub-case: {case[:220]}', flush=True)
+    if not restored:
+        sys.exit('STOP: restore hash mismatch after ' + mid)
+print('final sha matches pre-run:', sha(BF) == before, sha(BF))
