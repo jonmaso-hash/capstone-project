@@ -3846,13 +3846,13 @@ REVIEW_F2A_FIXED = (
     ("The deck states: '500M messages/month' [C3, S3].", "The deck states: '500M messages/month' [C2, S3]."),
     ("The deck states ('500M messages/month' [C3, S3]).", "The deck states ('500M messages/month' [C2, S3])."),
     ("The deck states — '500M messages/month' [C3, S3].", "The deck states — '500M messages/month' [C2, S3]."),
-    # A parenthesis that reports for itself, by a verb or a page of its own, is its own clause.
+    # A parenthesis that reports for itself, a source and its own reporting verb, is its own clause. ("on page 12, ..."
+    # was corrected here at b718566; a page alone is no clause of its own since the review of b718566: see
+    # REVIEW_B71_KEPT.)
     ("Page 10 doesn’t give an interval (page 12 states '500M messages/month' [C3, S3]).",
      "Page 10 doesn’t give an interval (page 12 states '500M messages/month' [C2, S3])."),
     ("Page 10 doesn’t give an interval (the deck states '500M messages/month' [C3, S3] elsewhere).",
      "Page 10 doesn’t give an interval (the deck states '500M messages/month' [C2, S3] elsewhere)."),
-    ("Page 10 has no interval (on page 12, '500M messages/month' [C3, S3]).",
-     "Page 10 has no interval (on page 12, '500M messages/month' [C2, S3])."),
     ("Page 10 doesn’t give an interval; page 12 states '500M messages/month' [C3, S3].",
      "Page 10 doesn’t give an interval; page 12 states '500M messages/month' [C2, S3]."),
     ("Page 10 doesn’t give an interval, but page 12 states '500M messages/month' [C3, S3].",
@@ -3903,3 +3903,89 @@ class ReviewF2a6ac1Tests(SimpleTestCase):
                 self.assertEqual(guard_basis_wording(text, facts), (text, []))
         self.assertEqual(guard_basis_wording("Page 8 states: '3M bots/week' [C7, S8].", facts),
                          ("Page 8 states: '3M bots/week' [C8, S8].", ['basis_citation_identity']))
+
+
+# Review of b718566: a reporting word alone (an adjective or participle) does not make a set-off segment its own
+# clause; only a source as subject with its finite reporting verb does. Otherwise the governing denial or source holds.
+REVIEW_B71_KEPT = (
+    "Page 10 does not state: the reported '500M messages/month' [C3, S2].",      # the review's cases
+    "Page 10 does not state (reported as '500M messages/month' [C3, S2]).",
+    "Page 10 does not state: the stated '500M messages/month' [C3, S2].",
+    "Page 10 does not state (listed as '500M messages/month' [C3, S2]).",
+    "Page 10 does not state (shown as '500M messages/month' [C3, S2]).",
+    "Page 10 does not state (as reported, '500M messages/month' [C3, S2]).",
+    "Page 10 does not state: a cited '500M messages/month' [C3, S2].",
+    "Page 10 does not state (the figure reported elsewhere, '500M messages/month' [C3, S2]).",
+    "Page 10 does not state (as the deck states elsewhere, '500M messages/month' [C3, S2]).",   # subordinate "as"
+    "Page 10 does not state (page 12 reported as '500M messages/month' [C3, S2]).",            # "verb as": participle
+    "Page 10 doesn’t state (reported as '500M messages/month' [C3, S2]).",
+    "Page 10 has no interval (on page 12, '500M messages/month' [C3, S3]).",     # a page alone: no clause of its own
+)
+REVIEW_B71_FIXED = (
+    # The review's control: only the independent clause's group changes.
+    ("Page 10 doesn’t give an interval (page 12 states '500M messages/month' [C3, S3]).",
+     "Page 10 doesn’t give an interval (page 12 states '500M messages/month' [C2, S3])."),
+    ("Page 10 doesn’t give an interval (page 12 stated '500M messages/month' [C3, S3]).",
+     "Page 10 doesn’t give an interval (page 12 stated '500M messages/month' [C2, S3])."),
+    ("Page 10 doesn’t give an interval (while page 12 states '500M messages/month' [C3, S3]).",
+     "Page 10 doesn’t give an interval (while page 12 states '500M messages/month' [C2, S3])."),
+    ("Page 10 doesn’t give an interval (page 12 also reports '500M messages/month' [C3, S3]).",
+     "Page 10 doesn’t give an interval (page 12 also reports '500M messages/month' [C2, S3])."),
+    ("Page 10 does not state: page 12 lists '500M messages/month' [C3, S3].",
+     "Page 10 does not state: page 12 lists '500M messages/month' [C2, S3]."),
+    ("Page 10 does not state — the deck shows '500M messages/month' [C3, S3] elsewhere.",
+     "Page 10 does not state — the deck shows '500M messages/month' [C2, S3] elsewhere."),
+    # An adjective or participle in an affirmative sentence: the outer clause governs and affirms.
+    ("The deck states: the reported '500M messages/month' [C3, S3].",
+     "The deck states: the reported '500M messages/month' [C2, S3]."),
+    ("The deck states (reported as '500M messages/month' [C3, S3]).",
+     "The deck states (reported as '500M messages/month' [C2, S3])."),
+)
+
+
+class ReviewB718566Tests(SimpleTestCase):
+    """Review of b718566: clause ownership needs a source and its finite reporting verb, not a reporting word."""
+
+    def setUp(self):
+        self.payload = memo102_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text, items=None):
+        out, changes = replay({'s': text}, items or self.items, self.notes)
+        return out['s'], changes.get('s', [])
+
+    def test_a_reporting_word_alone_keeps_the_governing_denial(self):
+        for text in REVIEW_B71_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_an_independent_reporting_clause_is_still_corrected(self):
+        for before, after in REVIEW_B71_FIXED:
+            with self.subTest(text=before):
+                self.assertEqual(self.full(before), (after, ['basis_citation_identity']))
+                # Only the independent clause's group changes.
+                self.assertEqual(after, before.replace('[C3, S3]', '[C2, S3]'))
+
+    def test_stable_idempotent_and_every_citation_owned(self):
+        supplied = {item.ref for item in self.items}
+        for text in REVIEW_B71_KEPT + tuple(before for before, _ in REVIEW_B71_FIXED):
+            with self.subTest(text=text):
+                out, _ = self.full(text)
+                self.assertEqual(self.full(out), (out, []))
+                self.assertEqual(self.full(text, list(reversed(self.items)))[0], out)
+                self.assertLessEqual({ref for group in re.findall(r'\[([^\]]*)\]', out)
+                                      for ref in re.split(r'\s*[,;]\s*', group) if ref}, supplied)
+        for _, after in REVIEW_B71_FIXED:
+            with self.subTest(text=after):
+                self.assertIn("'500M messages/month' [C2, S3]", after)
+
+    def test_another_pair_alike(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        facts = basis_facts(OTHER_PAIR_ITEMS(), (OTHER_PAIR_NOTE,))
+        for text in ("Page 7 does not state: the reported '3M bots/week' [C7, S7].",
+                     "Page 7 does not state (reported as '3M bots/week' [C7, S7]).",
+                     "Page 7 has no interval (on page 8, '3M bots/week' [C7, S8])."):
+            with self.subTest(text=text):
+                self.assertEqual(guard_basis_wording(text, facts), (text, []))
+        self.assertEqual(guard_basis_wording("Page 7 has no interval (page 8 states '3M bots/week' [C7, S8]).", facts),
+                         ("Page 7 has no interval (page 8 states '3M bots/week' [C8, S8]).", ['basis_citation_identity']))

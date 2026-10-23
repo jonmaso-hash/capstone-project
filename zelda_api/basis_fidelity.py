@@ -1195,14 +1195,28 @@ def _clause_bounds(sentence, at, soft=True):
     return start, end
 
 
+# A segment that reports for itself: it opens (after an optional "and", "but", "while", "whereas") with a source as
+# subject and that subject's finite reporting verb: "page 12 states", "the deck stated", "while page 12 lists". An
+# allowlist (review of b718566): a reporting word alone is often an adjective or participle ("the reported '500M
+# messages/month'", "reported as", "as reported", "the figure reported elsewhere"), a subordinate "as the deck states"
+# reports nothing of its own, and a page alone ("on page 12, ...") is no clause. A verb followed by "as" is read as
+# a participle.
+_OWN_REPORT = re.compile(
+    r"\s*(?:(?:and|but|while|whereas)\s+)?"
+    r"(?:pages?[\s-]+\d+|slides?[\s-]+\d+|the\s+(?:deck|pitch\s+deck|company|slide|presentation|founders?|management|team)"
+    r"|it|they)\s+(?:(?:also|separately|instead|itself)\s+)?"
+    r"(?:states|stated|reports|reported|presents|presented|lists|listed|shows|showed|gives|gave|cites|cited)\b"
+    r"(?!\s+as\b)", re.I)
+
+
 def _governing_clause(sentence, at):
     """The words governing the group at `at`, citations removed: its own clause when that clause reports something
-    itself (a reporting verb or a page of its own: "(page 12 states '500M messages/month' [C3, S3])"); otherwise the
-    figure is only set off by a colon, a dash or a parenthesis, and the clause around it names the source and any
-    denial ("Page 10 does not state: '500M messages/month' [C3, S2]", "... does not state ('...' [C3, S2])")."""
+    itself (_OWN_REPORT: "(page 12 states '500M messages/month' [C3, S3])"); otherwise the figure is only set off by
+    a colon, a dash or a parenthesis, and the clause around it names the source and any denial ("Page 10 does not
+    state: the reported '500M messages/month' [C3, S2]", "... does not state (reported as '...' [C3, S2])")."""
     start, end = _clause_bounds(sentence, at)
     inner = _REF.sub(' ', sentence[start:end])
-    if _REPORTING.search(inner) or _NAMED_PAGES.search(inner):
+    if _OWN_REPORT.match(inner):
         return inner
     start, end = _clause_bounds(sentence, at, soft=False)
     return _REF.sub(' ', sentence[start:end])
