@@ -1,0 +1,477 @@
+guard: b718566 bytes
+60fd0b329baef1ff13456e8390c438d36b9b1ece7352b85e5f4b52824b2444ec */c/Users/jonathan/Desktop/KCV-of1003/zelda_api/basis_fidelity.py
+tests: final (head f7a5ad1)
+b01e164b3b2f69df96a21fc4947ade64609f8a3f33719cb16139c74f80815f6e */c/Users/jonathan/Desktop/KCV-of1003/zelda_api/tests_output_fidelity.py
+2026-10-22 20:31:23,387 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-22 20:32:16,572 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 20:32:16,596 INFO zelda_api.intelligence_pipeline - Memo supported_points: funding-source fidelity ['unsupported_total', 'narrator_narrative'] for document 1
+2026-10-22 20:32:16,600 INFO zelda_api.intelligence_pipeline - Memo open_concerns: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 20:32:16,602 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-22 20:32:16,605 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt', 'funding_not_runway'] for document 1
+2026-10-22 20:32:16,700 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 20:32:16,739 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 20:32:16,746 INFO zelda_api.signals - DocumentSource created: a.pptx
+2026-10-22 20:32:16,752 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 20:32:16,768 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 20:32:16,773 INFO zelda_api.signals - DocumentSource created: b.pptx
+2026-10-22 20:32:16,779 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 20:32:16,795 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 20:32:16,802 INFO zelda_api.signals - DocumentSource created: c.pptx
+2026-10-22 20:32:16,805 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 20:32:16,806 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_cumulative_referent'] for document 1
+2026-10-22 20:32:16,826 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 20:32:16,831 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 20:32:16,840 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: funding-source fidelity ['profile_undated'] for document 1
+2026-10-22 20:32:16,844 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 20:32:16,852 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 20:32:16,855 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 20:32:16,856 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label', 'basis_referent_judgment'] for document 1
+2026-10-22 20:32:16,858 INFO zelda_api.intelligence_pipeline - Memo upside_scenario: measurement-basis wording ['basis_condition_attribution'] for document 1
+2026-10-22 20:32:16,877 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 20:32:16,882 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 20:32:16,900 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 20:32:16,905 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 20:32:16,907 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 20:32:16,913 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 20:32:16,915 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-22 20:32:16,936 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 20:32:16,942 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 20:32:16,957 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 20:32:16,969 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_citation_identity'] for document 1
+2026-10-22 20:32:16,972 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_citation_identity'] for document 1
+2026-10-22 20:32:16,974 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_condition_context'] for document 1
+2026-10-22 20:32:16,994 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 20:32:17,000 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 20:32:17,011 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: funding-source fidelity ['cash_premise'] for document 1
+2026-10-22 20:32:17,014 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 20:32:17,017 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-22 20:32:17,020 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 20:32:17,022 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 20:32:17,026 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-22 20:32:17,031 INFO zelda_api.intelligence_pipeline - Memo supported_points: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-22 20:32:17,032 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label'] for document 1
+2026-10-22 20:32:17,055 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 20:32:17,061 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 20:32:17,069 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: funding-source fidelity ['profile_undated'] for document 1
+2026-10-22 20:32:17,073 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 20:32:17,080 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 20:32:17,083 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 20:32:17,086 INFO zelda_api.intelligence_pipeline - Memo upside_scenario: measurement-basis wording ['basis_condition_attribution'] for document 1
+2026-10-22 20:32:17,104 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 20:32:17,110 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 20:32:17,117 INFO zelda_api.intelligence_pipeline - Memo financial_analysis: funding-source fidelity ['provenance:Pitch Deck Hunt'] for document 1
+2026-10-22 20:32:17,118 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: funding-source fidelity ['profile_undated'] for document 1
+2026-10-22 20:32:17,122 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 20:32:17,128 INFO zelda_api.intelligence_pipeline - Memo team_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 20:32:17,130 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 20:32:17,134 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 20:32:17,136 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label', 'basis_referent_judgment'] for document 1
+2026-10-22 20:32:17,137 INFO zelda_api.intelligence_pipeline - Memo upside_scenario: measurement-basis wording ['basis_condition_attribution'] for document 1
+2026-10-22 20:32:17,161 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 20:32:17,167 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 20:32:17,186 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 20:32:17,188 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 20:32:17,193 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 20:32:17,194 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 20:32:17,200 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 20:32:17,201 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-22 20:32:17,218 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 20:32:17,223 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 20:32:17,241 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 20:32:17,243 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 20:32:17,248 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 20:32:17,249 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 20:32:17,256 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 20:32:17,257 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-22 20:32:17,279 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 20:32:17,285 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 20:32:17,303 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 20:32:17,306 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 20:32:17,311 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 20:32:17,312 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 20:32:17,318 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 20:32:17,319 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-22 20:32:17,338 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 20:32:17,345 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 20:32:17,364 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 20:32:17,370 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 20:32:17,372 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 20:32:17,378 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 20:32:17,379 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-22 20:32:17,398 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 20:32:17,405 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 20:32:17,423 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 20:32:17,428 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 20:32:17,430 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 20:32:17,435 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 20:32:17,436 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-22 20:32:17,454 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 20:32:17,460 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 20:32:17,481 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 20:32:17,484 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 20:32:17,486 INFO zelda_api.intelligence_pipeline - Memo market_analysis: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 20:32:17,490 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 20:32:17,491 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 20:32:17,497 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 20:32:17,498 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-22 20:32:17,516 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 20:32:17,523 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 20:32:17,541 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 20:32:17,543 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 20:32:17,547 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 20:32:17,549 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 20:32:17,555 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 20:32:17,556 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-22 20:32:17,574 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 20:32:17,579 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 20:32:17,593 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 20:32:17,623 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 20:32:17,629 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 20:32:17,648 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 20:32:17,651 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 20:32:17,656 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 20:32:17,658 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 20:32:17,664 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 20:32:17,665 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-22 20:32:17,687 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 20:32:17,692 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 20:32:17,712 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 20:32:17,714 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-22 20:32:17,719 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-22 20:32:17,721 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 20:32:17,727 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-22 20:32:17,728 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-22 20:32:17,747 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-22 20:32:17,753 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-22 20:32:17,763 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: funding-source fidelity ['cash_premise'] for document 1
+2026-10-22 20:32:17,766 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 20:32:17,769 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-22 20:32:17,771 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 20:32:17,773 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-22 20:32:17,775 INFO zelda_api.intelligence_pipeline - Memo executive_summary: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-22 20:32:17,777 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-22 20:32:17,782 INFO zelda_api.intelligence_pipeline - Memo supported_points: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-22 20:32:17,784 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label'] for document 1
+2026-10-22 20:32:17,803 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+............................................................................................................................................................................................................FFFFFFFFFFFF.FFF...........
+======================================================================
+FAIL: test_a_reporting_word_alone_keeps_the_governing_denial (zelda_api.tests_output_fidelity.ReviewB718566Tests.test_a_reporting_word_alone_keeps_the_governing_denial) (text="Page 10 does not state: the reported '500M messages/month' [C3, S2].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3961, in test_a_reporting_word_alone_keeps_the_governing_denial
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Pag[33 chars] '500M messages/month' [C2, S3].", ['basis_citation_identity']) != ("Pag[33 chars] '500M messages/month' [C3, S2].", [])
+
+First differing element 0:
+"Page 10 does not state: the reported '500M messages/month' [C2, S3]."
+"Page 10 does not state: the reported '500M messages/month' [C3, S2]."
+
+- ("Page 10 does not state: the reported '500M messages/month' [C2, S3].",
+?                                                                 ----
+
++ ("Page 10 does not state: the reported '500M messages/month' [C3, S2].", [])
+?                                                                ++++     ++++
+
+-  ['basis_citation_identity'])
+
+======================================================================
+FAIL: test_a_reporting_word_alone_keeps_the_governing_denial (zelda_api.tests_output_fidelity.ReviewB718566Tests.test_a_reporting_word_alone_keeps_the_governing_denial) (text="Page 10 does not state (reported as '500M messages/month' [C3, S2]).")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3961, in test_a_reporting_word_alone_keeps_the_governing_denial
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Pag[33 chars]'500M messages/month' [C2, S3]).", ['basis_citation_identity']) != ("Pag[33 chars]'500M messages/month' [C3, S2]).", [])
+
+First differing element 0:
+"Page 10 does not state (reported as '500M messages/month' [C2, S3])."
+"Page 10 does not state (reported as '500M messages/month' [C3, S2])."
+
+- ("Page 10 does not state (reported as '500M messages/month' [C2, S3]).",
+?                                                                ----
+
++ ("Page 10 does not state (reported as '500M messages/month' [C3, S2]).", [])
+?                                                               ++++      ++++
+
+-  ['basis_citation_identity'])
+
+======================================================================
+FAIL: test_a_reporting_word_alone_keeps_the_governing_denial (zelda_api.tests_output_fidelity.ReviewB718566Tests.test_a_reporting_word_alone_keeps_the_governing_denial) (text="Page 10 does not state: the stated '500M messages/month' [C3, S2].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3961, in test_a_reporting_word_alone_keeps_the_governing_denial
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Pag[31 chars] '500M messages/month' [C2, S3].", ['basis_citation_identity']) != ("Pag[31 chars] '500M messages/month' [C3, S2].", [])
+
+First differing element 0:
+"Page 10 does not state: the stated '500M messages/month' [C2, S3]."
+"Page 10 does not state: the stated '500M messages/month' [C3, S2]."
+
+- ("Page 10 does not state: the stated '500M messages/month' [C2, S3].",
+?                                                               ----
+
++ ("Page 10 does not state: the stated '500M messages/month' [C3, S2].", [])
+?                                                              ++++     ++++
+
+-  ['basis_citation_identity'])
+
+======================================================================
+FAIL: test_a_reporting_word_alone_keeps_the_governing_denial (zelda_api.tests_output_fidelity.ReviewB718566Tests.test_a_reporting_word_alone_keeps_the_governing_denial) (text="Page 10 does not state (listed as '500M messages/month' [C3, S2]).")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3961, in test_a_reporting_word_alone_keeps_the_governing_denial
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Pag[31 chars]'500M messages/month' [C2, S3]).", ['basis_citation_identity']) != ("Pag[31 chars]'500M messages/month' [C3, S2]).", [])
+
+First differing element 0:
+"Page 10 does not state (listed as '500M messages/month' [C2, S3])."
+"Page 10 does not state (listed as '500M messages/month' [C3, S2])."
+
+- ("Page 10 does not state (listed as '500M messages/month' [C2, S3]).",
+?                                                              ----
+
++ ("Page 10 does not state (listed as '500M messages/month' [C3, S2]).", [])
+?                                                             ++++      ++++
+
+-  ['basis_citation_identity'])
+
+======================================================================
+FAIL: test_a_reporting_word_alone_keeps_the_governing_denial (zelda_api.tests_output_fidelity.ReviewB718566Tests.test_a_reporting_word_alone_keeps_the_governing_denial) (text="Page 10 does not state (shown as '500M messages/month' [C3, S2]).")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3961, in test_a_reporting_word_alone_keeps_the_governing_denial
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Pag[30 chars]'500M messages/month' [C2, S3]).", ['basis_citation_identity']) != ("Pag[30 chars]'500M messages/month' [C3, S2]).", [])
+
+First differing element 0:
+"Page 10 does not state (shown as '500M messages/month' [C2, S3])."
+"Page 10 does not state (shown as '500M messages/month' [C3, S2])."
+
+- ("Page 10 does not state (shown as '500M messages/month' [C2, S3]).",
+?                                                             ----
+
++ ("Page 10 does not state (shown as '500M messages/month' [C3, S2]).", [])
+?                                                            ++++      ++++
+
+-  ['basis_citation_identity'])
+
+======================================================================
+FAIL: test_a_reporting_word_alone_keeps_the_governing_denial (zelda_api.tests_output_fidelity.ReviewB718566Tests.test_a_reporting_word_alone_keeps_the_governing_denial) (text="Page 10 does not state (as reported, '500M messages/month' [C3, S2]).")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3961, in test_a_reporting_word_alone_keeps_the_governing_denial
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Pag[34 chars]'500M messages/month' [C2, S3]).", ['basis_citation_identity']) != ("Pag[34 chars]'500M messages/month' [C3, S2]).", [])
+
+First differing element 0:
+"Page 10 does not state (as reported, '500M messages/month' [C2, S3])."
+"Page 10 does not state (as reported, '500M messages/month' [C3, S2])."
+
+- ("Page 10 does not state (as reported, '500M messages/month' [C2, S3]).",
+?                                                                 ----
+
++ ("Page 10 does not state (as reported, '500M messages/month' [C3, S2]).", [])
+?                                                                ++++      ++++
+
+-  ['basis_citation_identity'])
+
+======================================================================
+FAIL: test_a_reporting_word_alone_keeps_the_governing_denial (zelda_api.tests_output_fidelity.ReviewB718566Tests.test_a_reporting_word_alone_keeps_the_governing_denial) (text="Page 10 does not state (the figure reported elsewhere, '500M messages/month' [C3, S2]).")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3961, in test_a_reporting_word_alone_keeps_the_governing_denial
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Pag[52 chars]'500M messages/month' [C2, S3]).", ['basis_citation_identity']) != ("Pag[52 chars]'500M messages/month' [C3, S2]).", [])
+
+First differing element 0:
+"Page[21 chars]he figure reported elsewhere, '500M messages/month' [C2, S3])."
+"Page[21 chars]he figure reported elsewhere, '500M messages/month' [C3, S2])."
+
+  ("Page 10 does not state (the figure reported elsewhere, '500M messages/month' "
+-  '[C2, S3]).',
+-  ['basis_citation_identity'])
++  '[C3, S2]).',
++  [])
+
+======================================================================
+FAIL: test_a_reporting_word_alone_keeps_the_governing_denial (zelda_api.tests_output_fidelity.ReviewB718566Tests.test_a_reporting_word_alone_keeps_the_governing_denial) (text="Page 10 does not state (reported elsewhere, '500M messages/month' [C3, S2]).")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3961, in test_a_reporting_word_alone_keeps_the_governing_denial
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Pag[41 chars]'500M messages/month' [C2, S3]).", ['basis_citation_identity']) != ("Pag[41 chars]'500M messages/month' [C3, S2]).", [])
+
+First differing element 0:
+"Page 10 does not state (reported elsewhere, '500M messages/month' [C2, S3])."
+"Page 10 does not state (reported elsewhere, '500M messages/month' [C3, S2])."
+
+- ("Page 10 does not state (reported elsewhere, '500M messages/month' [C2, S3]).",
+?                                                                        ----
+
++ ("Page 10 does not state (reported elsewhere, '500M messages/month' [C3, S2]).",
+?                                                                       ++++
+
+-  ['basis_citation_identity'])
++  [])
+
+======================================================================
+FAIL: test_a_reporting_word_alone_keeps_the_governing_denial (zelda_api.tests_output_fidelity.ReviewB718566Tests.test_a_reporting_word_alone_keeps_the_governing_denial) (text="Page 10 does not state (as the deck states elsewhere, '500M messages/month' [C3, S2]).")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3961, in test_a_reporting_word_alone_keeps_the_governing_denial
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Pag[51 chars]'500M messages/month' [C2, S3]).", ['basis_citation_identity']) != ("Pag[51 chars]'500M messages/month' [C3, S2]).", [])
+
+First differing element 0:
+"Page[20 chars]as the deck states elsewhere, '500M messages/month' [C2, S3])."
+"Page[20 chars]as the deck states elsewhere, '500M messages/month' [C3, S2])."
+
+  ("Page 10 does not state (as the deck states elsewhere, '500M messages/month' "
+-  '[C2, S3]).',
+-  ['basis_citation_identity'])
++  '[C3, S2]).',
++  [])
+
+======================================================================
+FAIL: test_a_reporting_word_alone_keeps_the_governing_denial (zelda_api.tests_output_fidelity.ReviewB718566Tests.test_a_reporting_word_alone_keeps_the_governing_denial) (text="Page 10 does not state (page 12 reported as '500M messages/month' [C3, S2]).")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3961, in test_a_reporting_word_alone_keeps_the_governing_denial
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Pag[41 chars]'500M messages/month' [C2, S3]).", ['basis_citation_identity']) != ("Pag[41 chars]'500M messages/month' [C3, S2]).", [])
+
+First differing element 0:
+"Page 10 does not state (page 12 reported as '500M messages/month' [C2, S3])."
+"Page 10 does not state (page 12 reported as '500M messages/month' [C3, S2])."
+
+- ("Page 10 does not state (page 12 reported as '500M messages/month' [C2, S3]).",
+?                                                                        ----
+
++ ("Page 10 does not state (page 12 reported as '500M messages/month' [C3, S2]).",
+?                                                                       ++++
+
+-  ['basis_citation_identity'])
++  [])
+
+======================================================================
+FAIL: test_a_reporting_word_alone_keeps_the_governing_denial (zelda_api.tests_output_fidelity.ReviewB718566Tests.test_a_reporting_word_alone_keeps_the_governing_denial) (text="Page 10 doesn’t state (reported as '500M messages/month' [C3, S2]).")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3961, in test_a_reporting_word_alone_keeps_the_governing_denial
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Pag[32 chars]'500M messages/month' [C2, S3]).", ['basis_citation_identity']) != ("Pag[32 chars]'500M messages/month' [C3, S2]).", [])
+
+First differing element 0:
+"Page 10 doesn’t state (reported as '500M messages/month' [C2, S3])."
+"Page 10 doesn’t state (reported as '500M messages/month' [C3, S2])."
+
+- ("Page 10 doesn’t state (reported as '500M messages/month' [C2, S3]).",
+?                                                               ----
+
++ ("Page 10 doesn’t state (reported as '500M messages/month' [C3, S2]).", [])
+?                                                              ++++      ++++
+
+-  ['basis_citation_identity'])
+
+======================================================================
+FAIL: test_a_reporting_word_alone_keeps_the_governing_denial (zelda_api.tests_output_fidelity.ReviewB718566Tests.test_a_reporting_word_alone_keeps_the_governing_denial) (text="Page 10 has no interval (on page 12, '500M messages/month' [C3, S3]).")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3961, in test_a_reporting_word_alone_keeps_the_governing_denial
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Pag[34 chars]'500M messages/month' [C2, S3]).", ['basis_citation_identity']) != ("Pag[34 chars]'500M messages/month' [C3, S3]).", [])
+
+First differing element 0:
+"Page 10 has no interval (on page 12, '500M messages/month' [C2, S3])."
+"Page 10 has no interval (on page 12, '500M messages/month' [C3, S3])."
+
+- ("Page 10 has no interval (on page 12, '500M messages/month' [C2, S3]).",
+?                                                                ^
+
++ ("Page 10 has no interval (on page 12, '500M messages/month' [C3, S3]).", [])
+?                                                                ^         ++++
+
+-  ['basis_citation_identity'])
+
+======================================================================
+FAIL: test_another_pair_alike (zelda_api.tests_output_fidelity.ReviewB718566Tests.test_another_pair_alike) (text="Page 7 does not state: the reported '3M bots/week' [C7, S7].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3990, in test_another_pair_alike
+    self.assertEqual(guard_basis_wording(text, facts), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Pag[25 chars]eported '3M bots/week' [C8, S8].", ['basis_citation_identity']) != ("Pag[25 chars]eported '3M bots/week' [C7, S7].", [])
+
+First differing element 0:
+"Page 7 does not state: the reported '3M bots/week' [C8, S8]."
+"Page 7 does not state: the reported '3M bots/week' [C7, S7]."
+
+- ("Page 7 does not state: the reported '3M bots/week' [C8, S8].",
+?                                                        ^   ^
+
++ ("Page 7 does not state: the reported '3M bots/week' [C7, S7].", [])
+?                                                        ^   ^    ++++
+
+-  ['basis_citation_identity'])
+
+======================================================================
+FAIL: test_another_pair_alike (zelda_api.tests_output_fidelity.ReviewB718566Tests.test_another_pair_alike) (text="Page 7 does not state (reported as '3M bots/week' [C7, S7]).")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3990, in test_another_pair_alike
+    self.assertEqual(guard_basis_wording(text, facts), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Pag[25 chars]ted as '3M bots/week' [C8, S8]).", ['basis_citation_identity']) != ("Pag[25 chars]ted as '3M bots/week' [C7, S7]).", [])
+
+First differing element 0:
+"Page 7 does not state (reported as '3M bots/week' [C8, S8])."
+"Page 7 does not state (reported as '3M bots/week' [C7, S7])."
+
+- ("Page 7 does not state (reported as '3M bots/week' [C8, S8]).",
+?                                                       ^   ^
+
++ ("Page 7 does not state (reported as '3M bots/week' [C7, S7]).", [])
+?                                                       ^   ^     ++++
+
+-  ['basis_citation_identity'])
+
+======================================================================
+FAIL: test_another_pair_alike (zelda_api.tests_output_fidelity.ReviewB718566Tests.test_another_pair_alike) (text="Page 7 has no interval (on page 8, '3M bots/week' [C7, S8]).")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1003\zelda_api\tests_output_fidelity.py", line 3990, in test_another_pair_alike
+    self.assertEqual(guard_basis_wording(text, facts), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Pag[25 chars]age 8, '3M bots/week' [C8, S8]).", ['basis_citation_identity']) != ("Pag[25 chars]age 8, '3M bots/week' [C7, S8]).", [])
+
+First differing element 0:
+"Page 7 has no interval (on page 8, '3M bots/week' [C8, S8])."
+"Page 7 has no interval (on page 8, '3M bots/week' [C7, S8])."
+
+- ("Page 7 has no interval (on page 8, '3M bots/week' [C8, S8]).",
+?                                                       ^
+
++ ("Page 7 has no interval (on page 8, '3M bots/week' [C7, S8]).", [])
+?                                                       ^         ++++
+
+-  ['basis_citation_identity'])
+
+----------------------------------------------------------------------
+Ran 238 tests in 5.135s
+
+FAILED (failures=15)
+Destroying test database for alias 'default'...
+Found 238 test(s).
+System check identified no issues (0 silenced).
