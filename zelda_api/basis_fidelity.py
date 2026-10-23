@@ -1153,25 +1153,27 @@ def _compares(refs, pair):
 
 # Words that make a clause deny what a source states ("Page 10 does not state ...", "the slide omits ..."): its
 # citations are the evidence of that source, not of the figure it lacks (review of 75ca81f).
-_IDENTITY_DENIAL = _DENIAL | frozenset({'omit', 'omits', 'omitted', 'absent', 'missing', 'nowhere', "doesn't", "don't",
-                                        "isn't", "aren't", "wasn't", "weren't", "didn't"})
+_IDENTITY_DENIAL = _DENIAL | frozenset({'omit', 'omits', 'omitted', 'absent', 'missing', 'nowhere'})
 _NAMED_PAGES = re.compile(r'\bpages?[\s-]+(\d+(?:\s*(?:,|and|or|&)\s*\d+)*)', re.I)
+# Typographic apostrophes read as "'": "doesn’t" is "doesn't" (review of f2a6ac1). Any "-n't" word denies.
+_APOSTROPHES = str.maketrans({'’': "'", '‘': "'", 'ʼ': "'"})
 
 
-def _clause_bounds(sentence, at):
+def _clause_bounds(sentence, at, soft=True):
     """(start, end) of the clause holding `at`: it stops at ";", ":", a dash, a clause-linking comma (", while") or
-    an unmatched parenthesis on either side, and at the sentence's end."""
+    an unmatched parenthesis on either side, and at the sentence's end. With soft=False only ";" and a clause-linking
+    comma end it: a colon, a dash or a parenthesis does not."""
     start, depth = 0, 0
     for i in range(at - 1, -1, -1):
         ch = sentence[i]
-        if ch == ')':
+        if soft and ch == ')':
             depth += 1
-        elif ch == '(':
+        elif soft and ch == '(':
             if depth == 0:
                 start = i + 1
                 break
             depth -= 1
-        elif depth == 0 and ch in ';:—':
+        elif depth == 0 and (ch == ';' or (soft and ch in ':—')):
             start = i + 1
             break
         elif depth == 0 and ch == ',' and _CLAUSE_LINK.match(sentence, i):
@@ -1180,17 +1182,30 @@ def _clause_bounds(sentence, at):
     end, depth = len(sentence), 0
     for i in range(at, len(sentence)):
         ch = sentence[i]
-        if ch == '(':
+        if soft and ch == '(':
             depth += 1
-        elif ch == ')':
+        elif soft and ch == ')':
             if depth == 0:
                 end = i
                 break
             depth -= 1
-        elif depth == 0 and (ch in ';:—' or (ch == ',' and _CLAUSE_LINK.match(sentence, i))):
+        elif depth == 0 and (ch == ';' or (soft and ch in ':—') or (ch == ',' and _CLAUSE_LINK.match(sentence, i))):
             end = i
             break
     return start, end
+
+
+def _governing_clause(sentence, at):
+    """The words governing the group at `at`, citations removed: its own clause when that clause reports something
+    itself (a reporting verb or a page of its own: "(page 12 states '500M messages/month' [C3, S3])"); otherwise the
+    figure is only set off by a colon, a dash or a parenthesis, and the clause around it names the source and any
+    denial ("Page 10 does not state: '500M messages/month' [C3, S2]", "... does not state ('...' [C3, S2])")."""
+    start, end = _clause_bounds(sentence, at)
+    inner = _REF.sub(' ', sentence[start:end])
+    if _REPORTING.search(inner) or _NAMED_PAGES.search(inner):
+        return inner
+    start, end = _clause_bounds(sentence, at, soft=False)
+    return _REF.sub(' ', sentence[start:end])
 
 
 def _states_as_cited(sentence, at, pair, sides, places):
@@ -1199,10 +1214,9 @@ def _states_as_cited(sentence, at, pair, sides, places):
     '500M messages/month' [C3, S2]" and "Does page 10 state ...?" cite page 10 as what page 10 states: kept."""
     if _asks(sentence):
         return False
-    start, end = _clause_bounds(sentence, at)
-    clause = _REF.sub(' ', sentence[start:end])
+    clause = _governing_clause(sentence, at).translate(_APOSTROPHES)
     words = set(re.findall(r"[\w']+", clause.lower()))
-    if words & _IDENTITY_DENIAL or 'whether' in words:
+    if words & _IDENTITY_DENIAL or any(word.endswith("n't") for word in words) or 'whether' in words:
         return False
     own = {places[ref][0] for i in sides for ref in pair.sides[i] if ref in places}
     named = {int(n) for found in _NAMED_PAGES.finditer(clause) for n in re.findall(r'\d+', found.group(1))}
@@ -1210,7 +1224,7 @@ def _states_as_cited(sentence, at, pair, sides, places):
         return False                           # another page is named: the refs may be its evidence
     others = {places[ref][1] for i, members in enumerate(pair.sides) if i not in sides for ref in members if ref in places}
     others -= {places[ref][1] for i in sides for ref in pair.sides[i] if ref in places}
-    return not any(context and context.lower() in clause.lower() for context in others)
+    return not any(context and context.translate(_APOSTROPHES).lower() in clause.lower() for context in others)
 
 
 def _identity_fix(refs, pair, side, changes):

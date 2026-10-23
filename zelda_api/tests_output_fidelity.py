@@ -3823,3 +3823,83 @@ class Review75ca81fTests(SimpleTestCase):
                 self.assertEqual(guard_basis_wording(text, facts), (text, []))
         self.assertEqual(guard_basis_wording("Page 8 states '3M bots/week' [C7, S8].", facts),
                          ("Page 8 states '3M bots/week' [C8, S8].", ['basis_citation_identity']))
+
+
+# Review of f2a6ac1: a colon, dash or parenthesis that only sets the figure off does not cut it from the clause that
+# names its source and any denial; typographic and other "-n't" contractions deny.
+REVIEW_F2A_KEPT = (
+    "Page 10 does not state: '500M messages/month' [C3, S2].",                   # the review's cases
+    "Page 10 does not state ('500M messages/month' [C3, S2]).",
+    "The deck doesn’t state '500M messages/month' [C3, S2].",
+    "Page 10 does not state — '500M messages/month' [C3, S2].",
+    "('500M messages/month' [C3, S2]) is not stated on page 10.",                # the denial after the parenthesis
+    "The deck doesn’t state: '500M messages/month' [C3, S2].",
+    "The deck hasn’t stated '500M messages/month' [C3, S2].",
+    "The deck hasn't stated '500M messages/month' [C3, S2].",                    # any "-n't" word
+    "Page 10 states: '500M messages/month' [C3, S2].",                           # another page across a colon
+    "Page 10 lists ('500M messages/month' [C3, S2]).",
+    "The 'Traction by Apr-16' slide states: '500M messages/month' [C3, S2].",
+    "Does page 10 state: '500M messages/month' [C3, S2]?",
+)
+REVIEW_F2A_FIXED = (
+    ("Page 12 states: '500M messages/month' [C3, S3].", "Page 12 states: '500M messages/month' [C2, S3]."),
+    ("The deck states: '500M messages/month' [C3, S3].", "The deck states: '500M messages/month' [C2, S3]."),
+    ("The deck states ('500M messages/month' [C3, S3]).", "The deck states ('500M messages/month' [C2, S3])."),
+    ("The deck states — '500M messages/month' [C3, S3].", "The deck states — '500M messages/month' [C2, S3]."),
+    # A parenthesis that reports for itself, by a verb or a page of its own, is its own clause.
+    ("Page 10 doesn’t give an interval (page 12 states '500M messages/month' [C3, S3]).",
+     "Page 10 doesn’t give an interval (page 12 states '500M messages/month' [C2, S3])."),
+    ("Page 10 doesn’t give an interval (the deck states '500M messages/month' [C3, S3] elsewhere).",
+     "Page 10 doesn’t give an interval (the deck states '500M messages/month' [C2, S3] elsewhere)."),
+    ("Page 10 has no interval (on page 12, '500M messages/month' [C3, S3]).",
+     "Page 10 has no interval (on page 12, '500M messages/month' [C2, S3])."),
+    ("Page 10 doesn’t give an interval; page 12 states '500M messages/month' [C3, S3].",
+     "Page 10 doesn’t give an interval; page 12 states '500M messages/month' [C2, S3]."),
+    ("Page 10 doesn’t give an interval, but page 12 states '500M messages/month' [C3, S3].",
+     "Page 10 doesn’t give an interval, but page 12 states '500M messages/month' [C2, S3]."),
+)
+
+
+class ReviewF2a6ac1Tests(SimpleTestCase):
+    """Review of f2a6ac1: a denial or another source governs a figure across a colon, a dash or a parenthesis;
+    typographic contractions deny; affirmative clauses in those shapes are still corrected."""
+
+    def setUp(self):
+        self.payload = memo102_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text, items=None):
+        out, changes = replay({'s': text}, items or self.items, self.notes)
+        return out['s'], changes.get('s', [])
+
+    def test_a_governing_denial_or_source_across_punctuation_keeps_the_citations(self):
+        for text in REVIEW_F2A_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_affirmative_clauses_in_those_shapes_are_still_corrected(self):
+        for before, after in REVIEW_F2A_FIXED:
+            with self.subTest(text=before):
+                self.assertEqual(self.full(before), (after, ['basis_citation_identity']))
+
+    def test_stable_idempotent_and_every_citation_owned(self):
+        supplied = {item.ref for item in self.items}
+        for text in REVIEW_F2A_KEPT + tuple(before for before, _ in REVIEW_F2A_FIXED):
+            with self.subTest(text=text):
+                out, _ = self.full(text)
+                self.assertEqual(self.full(out), (out, []))
+                self.assertEqual(self.full(text, list(reversed(self.items)))[0], out)
+                self.assertLessEqual({ref for group in re.findall(r'\[([^\]]*)\]', out)
+                                      for ref in re.split(r'\s*[,;]\s*', group) if ref}, supplied)
+        for _, after in REVIEW_F2A_FIXED:
+            with self.subTest(text=after):
+                self.assertIn("'500M messages/month' [C2, S3]", after)
+
+    def test_another_pair_alike(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        facts = basis_facts(OTHER_PAIR_ITEMS(), (OTHER_PAIR_NOTE,))
+        for text in ("Page 7 doesn’t state: '3M bots/week' [C7, S7].", "Page 7 does not state ('3M bots/week' [C7, S7])."):
+            with self.subTest(text=text):
+                self.assertEqual(guard_basis_wording(text, facts), (text, []))
+        self.assertEqual(guard_basis_wording("Page 8 states: '3M bots/week' [C7, S8].", facts),
+                         ("Page 8 states: '3M bots/week' [C8, S8].", ['basis_citation_identity']))
