@@ -1,0 +1,252 @@
+M0 CAUGHT Ran 403 tests in 15.586s FAILED (failures=18) restored=True | review defect returns: nothing after the consequence's clause is read
+    assertion failures in: test_another_pair_alike, test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would be large at the time of the 'Growth by Q3-19' slide — if the weekly figure dates from then."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — according to an analyst."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — as at 2016."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — as at April 2016."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — contingent on the monthly figure referring to that period."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — given that this holds."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — if the monthly figure dates from that period."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — in the event that this holds."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — not the monthly figure's period."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — only when the monthly figure is from that period."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — should that hold for page 12."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — subject to the monthly figure referring to that period."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — the messages included."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — though not a certainty."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — which presumes the monthly figure dates from then."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — which wouldn’t follow otherwise."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — with the monthly figure from that period."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide; growth would follow [S2]."
+M1 CAUGHT Ran 403 tests in 15.721s FAILED (failures=2) restored=True | review defect returns: a contingency wording ("in the event that", "given that", "subject to") is ignored
+    assertion failures in: test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — given that this holds."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — in the event that this holds."
+M2 CAUGHT Ran 403 tests in 15.662s FAILED (failures=2) restored=True | review defect returns: a later clause naming the figures or a time ("— with the monthly figure from that period")
+    assertion failures in: test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — the messages included."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — with the monthly figure from that period."
+M3 CAUGHT Ran 403 tests in 15.351s FAILED (failures=2) restored=True | overcorrection: a later figure or citation ("— as at 2016", "; growth would follow [S2]") is ignored
+    assertion failures in: test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — as at 2016."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide; growth would follow [S2]."
+M4 CAUGHT Ran 403 tests in 15.759s FAILED (failures=1) restored=True | overcorrection: a later "-n't" word ("— which wouldn’t follow otherwise") is ignored
+    assertion failures in: test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — which wouldn’t follow otherwise."
+final sha matches pre-run: True aae9f16bec9535902b59443ea04ff4cebfc90bc94a6a06d9fe5a4ee5e91f615f
+L1 CAUGHT Ran 403 tests in 15.522s FAILED (failures=26) restored=True | review defect returns: the heading need not close the consequence (", according to ...", "[S1, S3]" unread)
+    assertion failures in: test_another_pair_alike, test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would be large at the time of the 'Growth by Q3-19' slide [S7, S8]."
+    failing sub-case: text="If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would be large at the time of the 'Growth by Q3-19' slide — if the weekly figure dates from then."
+    failing sub-case: text="If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would be large at the time of the 'Growth by Q3-19' slide, according to an analyst."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide [S1, S3]."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide [S3]."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — according to an analyst."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — as at 2016."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — as at April 2016."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — contingent on the monthly figure referring to that period."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — given that this holds."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — if the monthly figure dates from that period."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — in the event that this holds."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — not the monthly figure's period."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — only when the monthly figure is from that period."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — should that hold for page 12."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — subject to the monthly figure referring to that period."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — the messages included."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — though not a certainty."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — which presumes the monthly figure dates from then."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — which wouldn’t follow otherwise."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — with the monthly figure from that period."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide, according to an analyst."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide, only if the monthly figure dates from that period."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide, provided the monthly figure dates from then."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide, when page 12 was written."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide; growth would follow [S2]."
+L3 CAUGHT Ran 403 tests in 15.472s FAILED (failures=2) restored=True | review defect returns: a later condition or date hypothesis ("— if the monthly figure dates ...") is ignored
+    assertion failures in: test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — given that this holds."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — in the event that this holds."
+L4 CAUGHT Ran 403 tests in 15.487s FAILED (failures=1) restored=True | review defect returns: a later speaker ("— according to an analyst") is ignored
+    assertion failures in: test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — according to an analyst."
+M5 CAUGHT Ran 403 tests in 15.585s FAILED (failures=4) restored=True | review regression returns: a denial in the consequence's subject ("No platform", "Neither platform")
+    assertion failures in: test_another_pair_alike, test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would have no scale at the time of the 'Growth by Q3-19' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, Few would have a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, Neither platform would have significant throughput at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, No platform would have significant throughput at the time of the 'Traction by Apr-16' slide."
+M6 CAUGHT Ran 403 tests in 15.503s FAILED (failures=1) restored=True | overcorrection: a near-denial subject ("Few would have ...") gets the note
+    assertion failures in: test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="If the figures [S1, S3] are accurate, Few would have a large platform at the time of the 'Traction by Apr-16' slide."
+final sha matches pre-run: True aae9f16bec9535902b59443ea04ff4cebfc90bc94a6a06d9fe5a4ee5e91f615f
+L5 CAUGHT Ran 403 tests in 15.551s FAILED (failures=1) restored=True | overcorrection: a later denial ("— though not a certainty") is ignored
+    assertion failures in: test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — though not a certainty."
+L6 CAUGHT Ran 403 tests in 15.496s FAILED (failures=1) restored=True | overcorrection: a narrator named after the heading only is not seen
+    assertion failures in: test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — in line with Pitch Deck Hunt's profile."
+L7 CAUGHT Ran 403 tests in 15.683s FAILED (failures=18) restored=True | review defect returns: an unrelated consequence ("revenue would be $10M") gets the note
+    assertion failures in: test_another_pair_alike, test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="If the 3M bots [S7] and 3M bots/week [S8] are accurate, revenue would be $4M at the time of the 'Growth by Q3-19' slide."
+    failing sub-case: text="If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would have no scale at the time of the 'Growth by Q3-19' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, Few platforms would have significant throughput at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, Few would have a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would be large at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would hardly have had a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would have 250M messages/month at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would have had 40 staff at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would not have had a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat wouldn't have had a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat wouldn’t have had a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, Neither platform would have significant throughput at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, No platform would have significant throughput at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, an analyst says ManyChat was a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, revenue would be $10M at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, revenue would be significant at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, the analyst would represent a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, the company's margins would be large at the time of the 'Traction by Apr-16' slide."
+L8 CAUGHT Ran 403 tests in 15.515s FAILED (failures=1) restored=True | overcorrection: a consequence naming no scale ("ManyChat would be large") gets the note
+    assertion failures in: test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would be large at the time of the 'Traction by Apr-16' slide."
+L9 CAUGHT Ran 403 tests in 15.582s FAILED (failures=2) restored=True | overcorrection: any lower-case words may be the skipped subject ("the analyst would ...")
+    assertion failures in: test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat wouldn't have had a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, the analyst would represent a large platform at the time of the 'Traction by Apr-16' slide."
+final sha matches pre-run: True aae9f16bec9535902b59443ea04ff4cebfc90bc94a6a06d9fe5a4ee5e91f615f
+K1 CAUGHT Ran 403 tests in 15.255s FAILED (failures=16) restored=True | OF-1103 returns: the consequence rule is not applied
+    assertion failures in: test_a_condition_s_consequence_does_not_date_page_12, test_another_pair_alike, test_citations_change_only_where_corrected, test_of1103_the_consequence_does_not_date_page_12, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+    failing sub-case: text="Assuming the 140,000+ bots [S1] and 500M messages/month [S3] are accurate, ManyChat would have had significant scale as of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If 500M messages/month [S3] is accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would be large at the time of the 'Growth by Q3-19' slide."
+    failing sub-case: text="If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat had a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would have run a high-volume messaging platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide; growth would follow."
+    failing sub-case: text="If the figures [S1, S3] are accurate, it would have had significant traction at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, the platform would have had 140,000+ bots and 500M messages/month at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the self-reported figures [S1, S3] are accurate without independent verification, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the traction figures [S1, S3] are taken at face value, ManyChat would have built a sizeable platform by the period referenced in the 'Traction by Apr-16' slide context."
+K2 CAUGHT Ran 403 tests in 15.504s FAILED (failures=7) restored=True | OF-1103 returns: a citation group's comma ends the antecedent ("[S1, S3]")
+    assertion failures in: test_a_condition_s_consequence_does_not_date_page_12
+    errors in: -
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat had a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would have run a high-volume messaging platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide; growth would follow."
+    failing sub-case: text="If the figures [S1, S3] are accurate, it would have had significant traction at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, the platform would have had 140,000+ bots and 500M messages/month at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the self-reported figures [S1, S3] are accurate without independent verification, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the traction figures [S1, S3] are taken at face value, ManyChat would have built a sizeable platform by the period referenced in the 'Traction by Apr-16' slide context."
+K3 CAUGHT Ran 403 tests in 15.429s FAILED (failures=7) restored=True | OF-1103 returns: a thousands comma ends the antecedent ("140,000+")
+    assertion failures in: test_a_condition_s_consequence_does_not_date_page_12, test_citations_change_only_where_corrected, test_of1103_the_consequence_does_not_date_page_12, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+    failing sub-case: text="Assuming the 140,000+ bots [S1] and 500M messages/month [S3] are accurate, ManyChat would have had significant scale as of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time
+K4 CAUGHT Ran 403 tests in 15.619s FAILED (failures=5) restored=True | overcorrection: any antecedent accepts (explicit date hypotheses get the note)
+    assertion failures in: test_another_pair_alike, test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="If revenue and the figures [S1, S3] are accurate, ManyChat would be a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the 3M bots/week [S8] figure dates from the 'Growth by Q3-19' slide, the platform would be large at the time of the 'Growth by Q3-19' slide."
+    failing sub-case: text="If the 500M messages/month [S3] figure dates from the 'Traction by Apr-16' slide, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the 500M messages/month [S3] is accurate as of April 2016, ManyChat would have been a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, and if they date from the 'Traction by Apr-16' slide, ManyChat would be a large platform at the time of the 'Traction by Apr-16' slide."
+K5 SURVIVED Ran 403 tests in 15.558s OK restored=True | overcorrection: a further condition's comma ends the antecedent (", and if they date from ...")
+    assertion failures in: -
+    errors in: -
+final sha matches pre-run: True aae9f16bec9535902b59443ea04ff4cebfc90bc94a6a06d9fe5a4ee5e91f615f
+K7 CAUGHT Ran 403 tests in 15.631s FAILED (failures=1) restored=True | overcorrection: a consequence with its own citation gets the note
+    assertion failures in: test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would have 140,000+ bots [S1] at the time of the 'Traction by Apr-16' slide."
+K8 SURVIVED Ran 403 tests in 15.517s OK restored=True | not idempotent: the placed note is added again on a second pass
+    assertion failures in: -
+    errors in: -
+K9 CAUGHT Ran 403 tests in 15.892s FAILED (failures=1) restored=True | overcorrection: a condition later in the sentence is read ("According to an analyst, if ...")
+    assertion failures in: test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="According to an analyst, if the figures [S1, S3] are accurate, ManyChat would be a large platform at the time of the 'Traction by Apr-16' slide."
+K10 CAUGHT Ran 403 tests in 15.490s FAILED (failures=1) restored=True | false note: a side under a heading of its own is said to have no date context
+    assertion failures in: test_a_side_with_its_own_heading_or_narrator_is_not_restated
+    errors in: -
+    failing sub-case: items=[('S8', 'Weekly view', '')]
+K11 CAUGHT Ran 403 tests in 15.468s FAILED (failures=1) restored=True | overcorrection: a narrated side is restated as the deck's
+    assertion failures in: test_a_side_with_its_own_heading_or_narrator_is_not_restated
+    errors in: -
+    failing sub-case: items=[('S8', '', 'An Analyst')]
+final sha matches pre-run: True aae9f16bec9535902b59443ea04ff4cebfc90bc94a6a06d9fe5a4ee5e91f615f
+J1 CAUGHT Ran 403 tests in 15.561s FAILED (failures=13) restored=True | OF-1102 returns: the verification qualifier stays in the head (own-head check refuses)
+    assertion failures in: test_an_asserted_date_transfer_is_corrected, test_another_pair_alike, test_citations_change_only_where_corrected, test_of1102_keeps_the_verification_qualifier_and_the_funding_clause, test_of1102_page_12_is_not_dated_by_page_10_s_heading, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+    failing sub-case: text="Taking the self-reported traction at face value without external verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context."
+    failing sub-case: text="Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform as of the 'Traction by Apr-16' slide."
+    failing sub-case: text="Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, 
+    failing sub-case: text="Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context."
+    failing sub-case: text="Taking the self-reported traction, not independently verified, at face value [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context."
+    failing sub-case: text="Taking the self-reported usage at face value without independent verification [S7, S8], the platform was sizeable by the period referenced in the 'Growth by Q3-19' slide context, with 40 staff [S9]."
+    failing sub-case: text="Taking the unverified, self-reported traction at face value [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context."
+J2 CAUGHT Ran 403 tests in 15.679s FAILED (failures=12) restored=True | OF-1102 returns: the verification qualifier counts as a denial ("without")
+    assertion failures in: test_an_asserted_date_transfer_is_corrected, test_another_pair_alike, test_citations_change_only_where_corrected, test_of1102_keeps_the_verification_qualifier_and_the_funding_clause, test_of1102_page_12_is_not_dated_by_page_10_s_heading, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+    failing sub-case: text="Taking the self-reported traction at face value without external verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context."
+    failing sub-case: text="Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform as of the 'Traction by Apr-16' slide."
+    failing sub-case: text="Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, 
+    failing sub-case: text="Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context."
+    failing sub-case: text="Taking the self-reported traction, not independently verified, at face value [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context."
+    failing sub-case: text="Taking the self-reported usage at face value without independent verification [S7, S8], the platform was sizeable by the period referenced in the 'Growth by Q3-19' slide context, with 40 staff [S9]."
+J3 CAUGHT Ran 403 tests in 15.596s FAILED (failures=10) restored=True | OF-1102 returns: a closing "with ..." clause blocks the rule
+    assertion failures in: test_an_asserted_date_transfer_is_corrected, test_another_pair_alike, test_citations_change_only_where_corrected, test_of1102_keeps_the_verification_qualifier_and_the_funding_clause, test_of1102_page_12_is_not_dated_by_page_10_s_heading, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+    failing sub-case: text="Taking the self-reported traction at face value [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, alongside Pitch Deck Hunt's listi
+    failing sub-case: text="Taking the self-reported traction at face value [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.
+    failing sub-case: text="Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, 
+    failing sub-case: text="Taking the self-reported usage at face value without independent verification [S7, S8], the platform was sizeable by the period referenced in the 'Growth by Q3-19' slide context, with 40 staff [S9]."
+J4 CAUGHT Ran 403 tests in 15.668s FAILED (failures=8) restored=True | wrong placement: the moved fact is put before the closing clause, which then reads as page 12's
+    assertion failures in: test_an_asserted_date_transfer_is_corrected, test_another_pair_alike, test_citations_change_only_where_corrected, test_of1102_page_12_is_not_dated_by_page_10_s_heading, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+    failing sub-case: text="Taking the self-reported traction at face value [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, alongside Pitch Deck Hunt's listi
+    failing sub-case: text="Taking the self-reported traction at face value [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.
+    failing sub-case: text="Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, 
+    failing sub-case: text="Taking the self-reported usage at face value without independent verification [S7, S8], the platform was sizeable by the period referenced in the 'Growth by Q3-19' slide context, with 40 staff [S9]."
+J5 CAUGHT Ran 403 tests in 15.510s FAILED (failures=1) restored=True | overcorrection: a closing clause naming the pair's figures, noun or bases is moved past
+    assertion failures in: test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="Taking the self-reported traction at face value [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with 500M messages/month stated s
+final sha matches pre-run: True aae9f16bec9535902b59443ea04ff4cebfc90bc94a6a06d9fe5a4ee5e91f615f
+J6 CAUGHT Ran 403 tests in 15.852s FAILED (failures=1) restored=True | overcorrection: a closing clause holding a condition is moved past
+    assertion failures in: test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="Taking the self-reported traction at face value [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with growth to follow if monetise
+J7 CAUGHT Ran 403 tests in 15.572s FAILED (failures=1) restored=True | overcorrection: a closing clause naming a page, slide or heading is moved past
+    assertion failures in: test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="Taking the self-reported traction at face value [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with page 12 giving no date."
+J8 CAUGHT Ran 403 tests in 15.419s FAILED (failures=13) restored=True | overcorrection: any "without" is a verification qualifier (no allowlist)
+    assertion failures in: test_a_condition_s_consequence_does_not_date_page_12, test_an_asserted_date_transfer_is_corrected, test_another_pair_alike, test_citations_change_only_where_corrected, test_hypotheses_denials_questions_and_other_speakers_are_kept, test_of1102_keeps_the_verification_qualifier_and_the_funding_clause, test_of1102_page_12_is_not_dated_by_page_10_s_heading, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+    failing sub-case: text="If the self-reported figures [S1, S3] are accurate without independent verification, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="Taking the self-reported traction at face value without external verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context."
+    failing sub-case: text="Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform as of the 'Traction by Apr-16' slide."
+    failing sub-case: text="Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, 
+    failing sub-case: text="Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context."
+    failing sub-case: text="Taking the self-reported traction at face value without the 500M messages [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context."
+    failing sub-case: text="Taking the self-reported usage at face value without independent verification [S7, S8], the platform was sizeable by the period referenced in the 'Growth by Q3-19' slide context, with 40 staff [S9]."
+J9 CAUGHT Ran 403 tests in 15.385s FAILED (failures=1) restored=True | OF-1102 variant returns: "as of / at the time of the 'X' slide" is not read as the heading
+    assertion failures in: test_an_asserted_date_transfer_is_corrected
+    errors in: -
+    failing sub-case: text="Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform as of the 'Traction by Apr-16' slide."
+final sha matches pre-run: True aae9f16bec9535902b59443ea04ff4cebfc90bc94a6a06d9fe5a4ee5e91f615f
