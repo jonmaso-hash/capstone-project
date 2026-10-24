@@ -4205,6 +4205,7 @@ DATE_KEPT = (
     f"{_TAKING} without independent verification [S1, S2], {_DEPLOYED}{_FUNDING}.",
     # A "without" that is no verification qualifier, a hedge, a denial and a question.
     f"{_TAKING} without the monthly figure [S1, S2, S3], {_DEPLOYED}.",
+    f"{_TAKING} without the 500M messages [S1, S2, S3], {_DEPLOYED}.",          # only figure words after "without"
     f"{_TAKING}, possibly without independent verification [S1, S2, S3], {_DEPLOYED}.",
     "The deck does not date the traction figures [S1, S2, S3] by the period referenced in the 'Traction by Apr-16' slide context.",
     "Was the self-reported traction [S1, S2, S3] deployed by the period referenced in the 'Traction by Apr-16' slide "
@@ -4273,6 +4274,7 @@ CONSEQUENCE_KEPT = (
     "According to an analyst, if the figures [S1, S3] are accurate, ManyChat would be large at the time of the "
     "'Traction by Apr-16' slide.",
     "ManyChat would be large at the time of the 'Traction by Apr-16' slide if the figures [S1, S3] are accurate.",
+    "If the figures [S1, S3] are accurate, an analyst says ManyChat was large at the time of the 'Traction by Apr-16' slide.",
     "Whether the figures [S1, S3] are accurate, ManyChat was large at the time of the 'Traction by Apr-16' slide.",
     # Another metric in the condition; a citation inside the consequence.
     "If revenue and the figures [S1, S3] are accurate, ManyChat would be large at the time of the 'Traction by Apr-16' slide.",
@@ -4371,3 +4373,16 @@ class Of1102Of1103DateTransferTests(SimpleTestCase):
                      "of the 'Traction by Apr-16' slide."):
             with self.subTest(text=kept):
                 self.assertEqual(guard_basis_wording(kept, facts), (kept, []))
+
+    def test_a_side_with_its_own_heading_or_narrator_is_not_restated(self):
+        # "with no date context" would be false for a side under a heading of its own, and the deck's for a narrated one.
+        from dataclasses import replace
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        text = ("If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would be large at the time of the "
+                "'Growth by Q3-19' slide.")
+        headed = [replace(item, source_context='Weekly view') if item.ref in ('C8', 'S8') else item
+                  for item in OTHER_PAIR_ITEMS()]
+        narrated = [replace(item, narrator='An Analyst') if item.ref == 'S8' else item for item in OTHER_PAIR_ITEMS()]
+        for items in (headed, narrated):
+            with self.subTest(items=[(i.ref, i.source_context, i.narrator) for i in items if i.ref == 'S8']):
+                self.assertEqual(guard_basis_wording(text, basis_facts(items, (OTHER_PAIR_NOTE,))), (text, []))
