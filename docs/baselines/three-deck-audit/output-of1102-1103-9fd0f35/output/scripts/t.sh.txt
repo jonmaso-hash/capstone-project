@@ -1,0 +1,8 @@
+#!/bin/sh
+# Usage: t.sh <worktree> <test labels...>  -- CI env, one process, no parallelism. ALWAYS pass labels.
+cd "$1" && shift
+[ $# -eq 0 ] && { echo "refusing: no test labels (would run the full suite)"; exit 2; }
+SECRET_KEY=ci-only-placeholder-key-not-for-production-use DEBUG=True ALLOWED_HOSTS=localhost,127.0.0.1 \
+EMAIL_HOST_USER=ci@example.invalid CELERY_TASK_ALWAYS_EAGER=True CELERY_BROKER_URL=memory:// \
+CELERY_RESULT_BACKEND=cache+memory:// PYTHONIOENCODING=utf-8 PYTHONDONTWRITEBYTECODE=1 \
+/c/Users/jonathan/Desktop/KCV/venv/Scripts/python.exe manage.py test "$@" --parallel 1 2>&1

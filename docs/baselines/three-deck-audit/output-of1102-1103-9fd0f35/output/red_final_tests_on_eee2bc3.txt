@@ -1,0 +1,252 @@
+2026-10-24 03:51:09,086 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-24 03:52:02,723 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 03:52:02,748 INFO zelda_api.intelligence_pipeline - Memo supported_points: funding-source fidelity ['unsupported_total', 'narrator_narrative'] for document 1
+2026-10-24 03:52:02,752 INFO zelda_api.intelligence_pipeline - Memo open_concerns: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:02,753 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-24 03:52:02,760 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt', 'funding_not_runway'] for document 1
+2026-10-24 03:52:02,908 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 03:52:02,959 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 03:52:02,966 INFO zelda_api.signals - DocumentSource created: a.pptx
+2026-10-24 03:52:02,972 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 03:52:02,990 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 03:52:02,996 INFO zelda_api.signals - DocumentSource created: b.pptx
+2026-10-24 03:52:03,003 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 03:52:03,019 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 03:52:03,024 INFO zelda_api.signals - DocumentSource created: c.pptx
+2026-10-24 03:52:03,027 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 03:52:03,028 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_cumulative_referent'] for document 1
+2026-10-24 03:52:03,043 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 03:52:03,048 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 03:52:03,056 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: funding-source fidelity ['profile_undated'] for document 1
+2026-10-24 03:52:03,060 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:03,068 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:03,071 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 03:52:03,073 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label', 'basis_referent_judgment'] for document 1
+2026-10-24 03:52:03,074 INFO zelda_api.intelligence_pipeline - Memo upside_scenario: measurement-basis wording ['basis_condition_attribution'] for document 1
+2026-10-24 03:52:03,095 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 03:52:03,100 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 03:52:03,119 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:03,124 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 03:52:03,126 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:03,133 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:03,135 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-24 03:52:03,151 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 03:52:03,157 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 03:52:03,170 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:03,181 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_citation_identity'] for document 1
+2026-10-24 03:52:03,185 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_citation_identity'] for document 1
+2026-10-24 03:52:03,187 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_condition_context'] for document 1
+2026-10-24 03:52:03,206 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 03:52:03,212 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 03:52:03,225 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: funding-source fidelity ['profile_undated'] for document 1
+2026-10-24 03:52:03,228 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:03,232 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:03,237 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:03,250 INFO zelda_api.intelligence_pipeline - Memo upside_scenario: measurement-basis wording ['basis_consequence_context'] for document 1
+2026-10-24 03:52:03,252 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:03,271 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 03:52:03,276 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 03:52:03,287 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: funding-source fidelity ['cash_premise'] for document 1
+2026-10-24 03:52:03,290 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:03,292 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-24 03:52:03,294 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:03,297 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:03,301 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-24 03:52:03,307 INFO zelda_api.intelligence_pipeline - Memo supported_points: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-24 03:52:03,309 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label'] for document 1
+2026-10-24 03:52:03,332 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 03:52:03,339 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 03:52:03,347 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: funding-source fidelity ['profile_undated'] for document 1
+2026-10-24 03:52:03,351 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:03,359 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:03,362 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 03:52:03,365 INFO zelda_api.intelligence_pipeline - Memo upside_scenario: measurement-basis wording ['basis_condition_attribution'] for document 1
+2026-10-24 03:52:03,383 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 03:52:03,389 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 03:52:03,395 INFO zelda_api.intelligence_pipeline - Memo financial_analysis: funding-source fidelity ['provenance:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:03,396 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: funding-source fidelity ['profile_undated'] for document 1
+2026-10-24 03:52:03,401 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:03,407 INFO zelda_api.intelligence_pipeline - Memo team_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 03:52:03,409 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:03,412 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 03:52:03,414 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label', 'basis_referent_judgment'] for document 1
+2026-10-24 03:52:03,415 INFO zelda_api.intelligence_pipeline - Memo upside_scenario: measurement-basis wording ['basis_condition_attribution'] for document 1
+2026-10-24 03:52:03,437 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 03:52:03,443 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 03:52:03,464 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:03,466 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 03:52:03,471 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 03:52:03,473 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:03,479 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:03,480 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-24 03:52:03,498 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 03:52:03,503 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 03:52:03,522 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:03,524 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 03:52:03,529 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 03:52:03,531 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:03,538 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:03,539 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-24 03:52:03,561 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 03:52:03,566 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 03:52:03,584 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:03,588 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 03:52:03,593 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 03:52:03,595 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:03,601 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:03,602 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-24 03:52:03,623 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 03:52:03,628 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 03:52:03,646 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:03,652 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 03:52:03,654 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:03,661 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:03,662 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-24 03:52:03,681 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 03:52:03,687 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 03:52:03,705 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:03,711 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 03:52:03,713 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:03,720 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:03,721 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-24 03:52:03,744 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 03:52:03,749 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 03:52:03,768 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:03,771 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 03:52:03,773 INFO zelda_api.intelligence_pipeline - Memo market_analysis: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 03:52:03,777 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 03:52:03,779 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:03,786 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:03,788 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-24 03:52:03,807 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 03:52:03,813 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 03:52:03,832 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:03,834 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 03:52:03,839 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 03:52:03,841 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:03,848 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:03,849 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-24 03:52:03,869 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 03:52:03,874 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 03:52:03,890 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 03:52:03,917 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 03:52:03,922 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 03:52:03,941 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:03,943 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 03:52:03,948 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 03:52:03,950 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:03,956 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:03,957 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-24 03:52:03,976 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 03:52:03,982 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 03:52:04,005 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:04,023 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 03:52:04,028 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 03:52:04,029 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:04,036 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 03:52:04,036 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-24 03:52:04,053 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 03:52:04,059 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 03:52:04,068 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: funding-source fidelity ['cash_premise'] for document 1
+2026-10-24 03:52:04,071 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:04,073 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-24 03:52:04,076 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:04,078 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 03:52:04,079 INFO zelda_api.intelligence_pipeline - Memo executive_summary: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-24 03:52:04,082 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-24 03:52:04,089 INFO zelda_api.intelligence_pipeline - Memo supported_points: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-24 03:52:04,091 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label'] for document 1
+2026-10-24 03:52:04,115 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.............................................................................................................................................FFFFFFF................................................................................................
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — on the footing that this holds.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4403, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[117 chars]lide ('Traction by Apr-16' heads page 10, whic[133 chars]lds." != "If t[117 chars]lide — on the footing that this holds."
+- If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) — on the footing that this holds.
++ If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — on the footing that this holds.
+
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — premised on this holding.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4403, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[117 chars]lide ('Traction by Apr-16' heads page 10, whic[127 chars]ing." != "If t[117 chars]lide — premised on this holding."
+- If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) — premised on this holding.
++ If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — premised on this holding.
+
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — barring surprises.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4403, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[117 chars]lide ('Traction by Apr-16' heads page 10, whic[120 chars]ses." != "If t[117 chars]lide — barring surprises."
+- If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) — barring surprises.
++ If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — barring surprises.
+
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide; growth would follow.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4403, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[116 chars]slide ('Traction by Apr-16' heads page 10, whi[122 chars]low." != "If t[116 chars]slide; growth would follow."
+- If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context); growth would follow.
++ If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide; growth would follow.
+
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide: a plausible reading.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4403, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[116 chars]slide ('Traction by Apr-16' heads page 10, whi[122 chars]ing." != "If t[116 chars]slide: a plausible reading."
+- If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context): a plausible reading.
++ If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide: a plausible reading.
+
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — consistent with a business approaching scale on that footing.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4403, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[117 chars]lide ('Traction by Apr-16' heads page 10, whic[163 chars]ing." != "If t[117 chars]lide — consistent with a business approaching [18 chars]ing."
+- If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) — consistent with a business approaching scale on that footing.
++ If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — consistent with a business approaching scale on that footing.
+
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — consistent with this holding.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4403, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[117 chars]lide ('Traction by Apr-16' heads page 10, whic[131 chars]ing." != "If t[117 chars]lide — consistent with this holding."
+- If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) — consistent with this holding.
++ If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — consistent with this holding.
+
+
+----------------------------------------------------------------------
+Ran 259 tests in 6.758s
+
+FAILED (failures=7)
+Destroying test database for alias 'default'...
+Found 259 test(s).
+System check identified no issues (0 silenced).
