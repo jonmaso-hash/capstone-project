@@ -4317,6 +4317,8 @@ CONSEQUENCE_KEPT = (
     f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE}; Pitch Deck Hunt lists $23.1M in prior "
     "funding [C1, S4].",
     f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — not the monthly figure's period.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE}; growth would follow [S2].",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — in line with Pitch Deck Hunt's profile.",
     # Review of c8a0336: a consequence about something other than the cited figures' scale.
     f"{_IF_ACCURATE}, revenue would be $10M {_AT_SLIDE}.",
     f"{_IF_ACCURATE}, revenue would be significant {_AT_SLIDE}.",
@@ -4424,7 +4426,10 @@ class Of1102Of1103DateTransferTests(SimpleTestCase):
                      "If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would be large at the time of "
                      "the 'Growth by Q3-19' slide — if the weekly figure dates from then.",
                      "If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would be large at the time of "
-                     "the 'Growth by Q3-19' slide [S7, S8]."):
+                     "the 'Growth by Q3-19' slide [S7, S8].",
+                     # A denial borrowed from a statement's own words ("3M bots with no explicit interval").
+                     "If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would have no scale at the "
+                     "time of the 'Growth by Q3-19' slide."):
             with self.subTest(text=kept):
                 self.assertEqual(guard_basis_wording(kept, facts), (kept, []))
 
