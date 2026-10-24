@@ -1,0 +1,26 @@
+"""Write memo 103's test fixtures (zelda_api/data/funding_fidelity/memo103*.json) from the committed evidence 4ee3639,
+in the same shape as memo 102's: the raw model reply text, the stored memo fields memo102.json keeps, and the payload
+as sent. Reads git objects only. Usage: make_fixtures.py <worktree>"""
+import json, os, subprocess, sys
+WT = sys.argv[1]
+EVC = '4ee36395e61c5a943809940cab0f7bddc647cd57'
+EV = 'docs/baselines/manychat/output-fidelity-c6c3d1b/pass-a/'
+DATA = os.path.join(WT, 'zelda_api', 'data', 'funding_fidelity')
+show = lambda path: json.loads(subprocess.run(['git', 'show', f'{EVC}:{EV}{path}'], cwd=WT, capture_output=True,
+                                              encoding='utf-8', check=True).stdout)
+call = show('09b_model_call.json')
+texts = [t for t in call['response']['text'] if t]
+assert len(texts) == 1, len(texts)
+memo = show('09_memo.json')['memo']
+keys = sorted(json.load(open(os.path.join(DATA, 'memo102.json'), encoding='utf-8'))['stored'])
+assert all(k in memo for k in keys), [k for k in keys if k not in memo]
+out = {'source': f'{EV}09b_model_call.json and 09_memo.json at {EVC[:7]} (memo 103, document 3145)',
+       'model_reply_text': texts[0], 'stored': {k: memo[k] for k in keys}}
+payload = show('09a_grounded_context_rebuilt.json')['payload']
+assert payload['items'] and payload.get('consistency_notes'), 'payload incomplete'
+with open(os.path.join(DATA, 'memo103.json'), 'w', encoding='utf-8', newline='\n') as f:
+    json.dump(out, f, indent=1, ensure_ascii=False)
+with open(os.path.join(DATA, 'memo103_payload.json'), 'w', encoding='utf-8', newline='\n') as f:
+    json.dump({'source': f'{EV}09a_grounded_context_rebuilt.json at {EVC[:7]} (the payload sent for memo 103)',
+               'payload': payload}, f, indent=1, ensure_ascii=False)
+print('memo103 fixtures', len(texts[0]), 'reply chars;', len(keys), 'stored keys;', len(payload['items']), 'items')
