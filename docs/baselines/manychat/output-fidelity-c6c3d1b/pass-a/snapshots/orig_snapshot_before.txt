@@ -1,0 +1,60 @@
+Invalid line: Truth_Delta_3-Report_Credit_Pack =price_1UNjeJDsh22gDRCcr3XE4qHO
+READ-ONLY (1,)
+MEMO 90 sha256 31e82cc972250b3fa945413c62be2d793f8aa0486d63a2a909bde9e3f344cbe4 updated 2026-10-11 00:47:33.868473+00:00
+MEMO 91 sha256 43c7b37ef82d6528af89d3140ea8a627613839b36f58c19ca435b0885caa603f updated 2026-10-11 00:56:46.699739+00:00
+ROWS {
+ "3132": {
+  "DocumentChunk": {
+   "count": 11,
+   "latest_ts": "2026-10-11 00:46:41.265184+00:00",
+   "max_pk": 4276
+  },
+  "EntityVerificationReport": {
+   "count": 1,
+   "latest_ts": "2026-10-11 00:46:42.273006+00:00",
+   "max_pk": 33
+  },
+  "IntelligenceInsight": {
+   "count": 7,
+   "latest_ts": "2026-10-11 00:46:41.843113+00:00",
+   "max_pk": 5163
+  },
+  "IntelligenceMemo": {
+   "count": 1,
+   "latest_ts": "2026-10-11 00:47:33.868473+00:00",
+   "max_pk": 90
+  }
+ },
+ "3133": {
+  "ClaimedDatapoint": {
+   "count": 3,
+   "latest_ts": "2026-10-11 00:55:58.288874+00:00",
+   "max_pk": 2356
+  },
+  "DocumentChunk": {
+   "count": 12,
+   "latest_ts": "2026-10-11 00:55:57.780607+00:00",
+   "max_pk": 4288
+  },
+  "EntityVerificationReport": {
+   "count": 1,
+   "latest_ts": "2026-10-11 00:55:58.341569+00:00",
+   "max_pk": 34
+  },
+  "IntelligenceInsight": {
+   "count": 3,
+   "latest_ts": "2026-10-11 00:55:58.157688+00:00",
+   "max_pk": 5166
+  },
+  "IntelligenceMemo": {
+   "count": 1,
+   "latest_ts": "2026-10-11 00:56:46.699739+00:00",
+   "max_pk": 91
+  },
+  "TruthDeltaReport": {
+   "count": 1,
+   "latest_ts": "2026-10-11 00:55:58.524453+00:00",
+   "max_pk": 87
+  }
+ }
+}

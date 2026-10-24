@@ -1,0 +1,25 @@
+"""Print Truth Delta, Entity Integrity, reconciliation, note visibility and model-call facts (reads evidence files)."""
+import json, sys
+E = sys.argv[1]
+r = lambda n: json.load(open(E + '\\' + n, encoding='utf-8'))
+t = r('07_truth_delta_reports.json')[0]
+d = t['details']
+print('TD', t['id'], t.get('overall_truth_score'), d.get('provider_outcomes'), [(p['claim_id'], p['observed']) for p in d['per_claim']])
+e = r('08_entity_integrity.json')[0]
+print('EI', e['id'], e.get('status'), json.dumps(e, ensure_ascii=False, default=str)[:600])
+print('obs', len(r('05_observations.json')))
+rec = r('11b_reconciliation_by_principal.json')
+print({k: json.dumps(v)[:140] for k, v in rec.items()})
+m = r('09b_model_call.json')
+print('memo call', m['response']['id'], m['started'], m['process'], m['response']['model'], m['response']['usage'], m['request'].get('max_tokens'))
+api = r('12_api_payloads.json')
+for k, v in api.items():
+    body = json.dumps(v.get('body'), ensure_ascii=False) if isinstance(v, dict) else ''
+    if 'Measurement basis to clarify' in body or 'not a verification result' in body:
+        print('note visible:', k, v.get('status'))
+rt = r('13_rendered_reports_text.json')
+for k, v in rt.items():
+    if 'Measurement basis to clarify' in v:
+        print('note rendered:', k, 'not a verification result' in v)
+print('canary in memo/reports/api:', any('CANARY' in json.dumps(x, ensure_ascii=False) for x in (r('09_memo.json'), api)),
+      [k for k, v in rt.items() if 'CANARY' in v])

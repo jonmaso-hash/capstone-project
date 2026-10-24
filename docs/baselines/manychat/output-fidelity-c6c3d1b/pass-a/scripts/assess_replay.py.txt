@@ -1,0 +1,59 @@
+"""ASSESSMENT ONLY (not part of the run): read-only replay of selected sentences through the merged guard sequence
+(time -> funding -> basis) with document 3145's own context, to tell whether a flagged memo-103 shape is one the
+merged rules read. No model call, no write. Run via run_rc6c.py script mode after the run's 8 calls.
+Usage: assess_replay.py <doc_id> <out json>"""
+import json, sys
+from zelda_api.claim_context import guard_time_wording
+from zelda_api.funding_fidelity import funding_facts, guard_funding_fidelity
+from zelda_api.basis_fidelity import basis_facts, guard_basis_wording
+from zelda_api.grounded_context import GroundedContext
+from zelda_api.principal import ORIGIN_TASK, Principal
+from zelda_api.vector_models import DocumentSource
+
+DOC, OUT = int(sys.argv[1]), sys.argv[2]
+doc = DocumentSource.objects.get(id=DOC)
+ctx = GroundedContext.build(Principal.for_user(doc.uploaded_by, ORIGIN_TASK, label='mcc6c.assess (read-only)'), doc)
+allowed = {item.ref: item.time_wording_allowed for item in ctx.items if item.dated}
+facts = funding_facts(ctx.items, ctx.company)
+basis = basis_facts(ctx.items, ctx.consistency_notes)
+
+CASES = {
+    'memo103_base_scenario (stored)':
+        "Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had "
+        "deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch "
+        "Deck Hunt listing $23.1M in prior funding [C1, S4].",
+    'memo103_upside_scenario_sentence1 (stored)':
+        "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month "
+        "figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the "
+        "'Traction by Apr-16' slide — consistent with a network-effect-driven software business approaching scale.",
+    'variant A: memo103 base without "without independent verification"':
+        "Taking the self-reported traction at face value [S1, S2, S3], the company had "
+        "deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch "
+        "Deck Hunt listing $23.1M in prior funding [C1, S4].",
+    'variant B: memo103 base without the trailing funding clause':
+        "Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had "
+        "deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context.",
+    'variant C: memo103 base without both':
+        "Taking the self-reported traction at face value [S1, S2, S3], the company had "
+        "deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context.",
+    'memo101_base_scenario_sentence1 (82771ef; graded P2 OF-904)':
+        "Taking the self-reported traction metrics at face value [S1, S2, S3], ManyChat had built a sizeable bot and "
+        "messaging platform by the period referenced in the 'Traction by Apr-16' slide context.",
+    'memo102_base_scenario_sentence1 (6d131f5; graded P2 OF-1003)':
+        "If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had "
+        "reached meaningful platform scale at that point in time.",
+    'memo102_open_concerns_1 (6d131f5; graded P2 OF-1004)':
+        "• The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M "
+        "messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].",
+}
+out = {}
+for name, text in CASES.items():
+    after_time, removed = guard_time_wording(text, allowed)
+    after, fid = guard_funding_fidelity(after_time, facts)
+    after, bas = guard_basis_wording(after, basis)
+    out[name] = {'before': text, 'after': after, 'changed': after != text, 'time_removed': removed,
+                 'funding_changes': fid, 'basis_changes': bas}
+    print(name, '| changed' if after != text else '| unchanged', bas, fid)
+    if after != text:
+        print('   after:', after)
+json.dump(out, open(OUT, 'w', encoding='utf-8', newline='\n'), indent=1, ensure_ascii=False)

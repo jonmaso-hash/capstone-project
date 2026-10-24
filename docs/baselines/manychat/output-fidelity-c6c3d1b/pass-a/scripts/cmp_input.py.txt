@@ -1,0 +1,13 @@
+"""Read-only: this run's claims, and its rebuilt model payload vs memo 102's committed payload (6d131f5), doc ids masked.
+Usage: python cmp_input.py <evidence dir> <memo-102 09a json path>"""
+import json, re, sys
+E, prev = sys.argv[1], sys.argv[2]
+cl = json.load(open(E + r'\04_claims.json', encoding='utf-8'))
+for c in cl:
+    print(c['id'], 'p%s' % c['page_number'], repr(c['claimed_value']), c['claimed_value_numeric'], repr(c['unit']),
+          '|narr', c.get('narrator'), '|pk', c.get('period_kind'), repr(c.get('time_period')), c.get('period_end'),
+          '|ctx', repr(c.get('source_context')), '|chunk', c['chunk_hash'][:8] if c['chunk_hash'] else None)
+a = json.load(open(E + r'\09a_grounded_context_rebuilt.json', encoding='utf-8'))['payload']
+b = json.load(open(prev, encoding='utf-8'))['payload']
+strip = lambda x: json.loads(re.sub(r'"document_id": \d+', '"document_id": 0', json.dumps(x)))
+print('rebuilt payload == memo-102 payload (doc ids masked):', strip(a) == strip(b))

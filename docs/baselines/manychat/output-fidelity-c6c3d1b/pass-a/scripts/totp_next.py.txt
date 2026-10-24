@@ -1,0 +1,9 @@
+"""Print only a TOTP code for the staff test principal (never the secret): the code for the window that is current
+at least 12 s from now, and the seconds until that window starts. Usage: totp_next.py"""
+import os, time, pyotp
+secret = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'c6cmc_staff.totp')).read().strip()
+t = pyotp.TOTP(secret)
+now = time.time()
+left = 30 - (now % 30)
+at = now if left > 12 else now + left + 0.5
+print(t.at(at), round(max(0, at - now), 1))

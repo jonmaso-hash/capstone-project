@@ -1,0 +1,604 @@
+{
+ "payload_refs": {
+  "C1": {
+   "statement": "$23.1M raised",
+   "page": 2,
+   "context": null
+  },
+  "C2": {
+   "statement": "500M messages/month",
+   "page": 12,
+   "context": null
+  },
+  "C3": {
+   "statement": "500M messages",
+   "page": 10,
+   "context": null
+  },
+  "C4": {
+   "statement": "140 000+ bots",
+   "page": 10,
+   "context": null
+  },
+  "S1": {
+   "statement": "140 000+ bots",
+   "page": 10,
+   "context": null
+  },
+  "S2": {
+   "statement": "500M messages",
+   "page": 10,
+   "context": null
+  },
+  "S3": {
+   "statement": "500M messages/month",
+   "page": 12,
+   "context": null
+  },
+  "S4": {
+   "statement": "$23.1M raised",
+   "page": 2,
+   "context": null
+  },
+  "P1": {
+   "statement": "Stage (profile): Series A",
+   "page": null,
+   "context": null
+  },
+  "P2": {
+   "statement": "Sector (profile): Software",
+   "page": null,
+   "context": null
+  }
+ },
+ "brackets": [
+  {
+   "section": "executive_summary",
+   "bracket": "[P1, P2]",
+   "standard_form": true,
+   "refs": {
+    "P1": {
+     "page": null,
+     "statement": "Stage (profile): Series A"
+    },
+    "P2": {
+     "page": null,
+     "statement": "Sector (profile): Software"
+    }
+   },
+   "text_before": "are company operating in the chatbot/messaging automation space, listed at Series A stage "
+  },
+  {
+   "section": "executive_summary",
+   "bracket": "[C1, S4]",
+   "standard_form": true,
+   "refs": {
+    "C1": {
+     "page": 2,
+     "statement": "$23.1M raised"
+    },
+    "S4": {
+     "page": 2,
+     "statement": "$23.1M raised"
+    }
+   },
+   "text_before": " automation space, listed at Series A stage [P1, P2]. Pitch Deck Hunt lists $23.1M raised "
+  },
+  {
+   "section": "executive_summary",
+   "bracket": "[S1, S2]",
+   "standard_form": true,
+   "refs": {
+    "S1": {
+     "page": 10,
+     "statement": "140 000+ bots"
+    },
+    "S2": {
+     "page": 10,
+     "statement": "500M messages"
+    }
+   },
+   "text_before": "40,000+ bots and 500M messages as traction metrics on a slide headed 'Traction by Apr-16' "
+  },
+  {
+   "section": "executive_summary",
+   "bracket": "[S3]",
+   "standard_form": true,
+   "refs": {
+    "S3": {
+     "page": 12,
+     "statement": "500M messages/month"
+    }
+   },
+   "text_before": "e headed 'Traction by Apr-16' [S1, S2], with a separate slide stating 500M messages/month "
+  },
+  {
+   "section": "problem_solution",
+   "bracket": "[S1]",
+   "standard_form": true,
+   "refs": {
+    "S1": {
+     "page": 10,
+     "statement": "140 000+ bots"
+    }
+   },
+   "text_before": "rom the extracted evidence alone. The traction figures — the company states 140,000+ bots "
+  },
+  {
+   "section": "problem_solution",
+   "bracket": "[S2, S3]",
+   "standard_form": true,
+   "refs": {
+    "S2": {
+     "page": 10,
+     "statement": "500M messages"
+    },
+    "S3": {
+     "page": 12,
+     "statement": "500M messages/month"
+    }
+   },
+   "text_before": " figures — the company states 140,000+ bots [S1] and 500M messages or 500M messages/month "
+  },
+  {
+   "section": "financial_analysis",
+   "bracket": "[C1, S4]",
+   "standard_form": true,
+   "refs": {
+    "C1": {
+     "page": 2,
+     "statement": "$23.1M raised"
+    },
+    "S4": {
+     "page": 2,
+     "statement": "$23.1M raised"
+    }
+   },
+   "text_before": "• Funding raised: Pitch Deck Hunt lists $23.1M raised "
+  },
+  {
+   "section": "risk_assessment",
+   "bracket": "[S1]",
+   "standard_form": true,
+   "refs": {
+    "S1": {
+     "page": 10,
+     "statement": "140 000+ bots"
+    }
+   },
+   "text_before": "1. Unverified traction: The company states 140,000+ bots "
+  },
+  {
+   "section": "risk_assessment",
+   "bracket": "[S2]",
+   "standard_form": true,
+   "refs": {
+    "S2": {
+     "page": 10,
+     "statement": "500M messages"
+    }
+   },
+   "text_before": "1. Unverified traction: The company states 140,000+ bots [S1] and 500M messages "
+  },
+  {
+   "section": "risk_assessment",
+   "bracket": "[S3]",
+   "standard_form": true,
+   "refs": {
+    "S3": {
+     "page": 12,
+     "statement": "500M messages/month"
+    }
+   },
+   "text_before": "es [S2] on a slide headed 'Traction by Apr-16', and separately states 500M messages/month "
+  },
+  {
+   "section": "risk_assessment",
+   "bracket": "[C3/S2]",
+   "standard_form": false,
+   "refs": {
+    "C3": {
+     "page": 10,
+     "statement": "500M messages"
+    },
+    "S2": {
+     "page": 10,
+     "statement": "500M messages"
+    }
+   },
+   "text_before": "easurement-basis inconsistency: Page 10 states 500M messages without an explicit interval "
+  },
+  {
+   "section": "risk_assessment",
+   "bracket": "[C2/S3]",
+   "standard_form": false,
+   "refs": {
+    "C2": {
+     "page": 12,
+     "statement": "500M messages/month"
+    },
+    "S3": {
+     "page": 12,
+     "statement": "500M messages/month"
+    }
+   },
+   "text_before": "es 500M messages without an explicit interval [C3/S2]; page 12 states 500M messages/month "
+  },
+  {
+   "section": "risk_assessment",
+   "bracket": "[C1, S4]",
+   "standard_form": true,
+   "refs": {
+    "C1": {
+     "page": 2,
+     "statement": "$23.1M raised"
+    },
+    "S4": {
+     "page": 2,
+     "statement": "$23.1M raised"
+    }
+   },
+   "text_before": "ry.\n3. Funding figure provenance: The $23.1M raised figure is narrated by Pitch Deck Hunt "
+  },
+  {
+   "section": "business_model_analysis",
+   "bracket": "[P2]",
+   "standard_form": true,
+   "refs": {
+    "P2": {
+     "page": null,
+     "statement": "Sector (profile): Software"
+    }
+   },
+   "text_before": "s model. The extracted evidence establishes that ManyChat operates in the software sector "
+  },
+  {
+   "section": "business_model_analysis",
+   "bracket": "[S1, S2]",
+   "standard_form": true,
+   "refs": {
+    "S1": {
+     "page": 10,
+     "statement": "140 000+ bots"
+    },
+    "S2": {
+     "page": 10,
+     "statement": "500M messages"
+    }
+   },
+   "text_before": "n a slide headed 'Traction by Apr-16', the company states 140,000+ bots and 500M messages "
+  },
+  {
+   "section": "business_model_analysis",
+   "bracket": "[S3]",
+   "standard_form": true,
+   "refs": {
+    "S3": {
+     "page": 12,
+     "statement": "500M messages/month"
+    }
+   },
+   "text_before": "0,000+ bots and 500M messages [S1, S2], with a separate slide stating 500M messages/month "
+  },
+  {
+   "section": "information_readiness",
+   "bracket": "[P1]",
+   "standard_form": true,
+   "refs": {
+    "P1": {
+     "page": null,
+     "statement": "Stage (profile): Series A"
+    }
+   },
+   "text_before": "Score: 12/100\nPresent:\n• Stage designation: Series A "
+  },
+  {
+   "section": "information_readiness",
+   "bracket": "[P2]",
+   "standard_form": true,
+   "refs": {
+    "P2": {
+     "page": null,
+     "statement": "Sector (profile): Software"
+    }
+   },
+   "text_before": "Score: 12/100\nPresent:\n• Stage designation: Series A [P1]\n• Sector designation: Software "
+  },
+  {
+   "section": "information_readiness",
+   "bracket": "[S1]",
+   "standard_form": true,
+   "refs": {
+    "S1": {
+     "page": 10,
+     "statement": "140 000+ bots"
+    }
+   },
+   "text_before": " designation: Software [P2]\n• Traction figures (self-reported, unverified): 140,000+ bots "
+  },
+  {
+   "section": "information_readiness",
+   "bracket": "[S2, S3]",
+   "standard_form": true,
+   "refs": {
+    "S2": {
+     "page": 10,
+     "statement": "500M messages"
+    },
+    "S3": {
+     "page": 12,
+     "statement": "500M messages/month"
+    }
+   },
+   "text_before": "ures (self-reported, unverified): 140,000+ bots [S1], 500M messages / 500M messages/month "
+  },
+  {
+   "section": "information_readiness",
+   "bracket": "[C1, S4]",
+   "standard_form": true,
+   "refs": {
+    "C1": {
+     "page": 2,
+     "statement": "$23.1M raised"
+    },
+    "S4": {
+     "page": 2,
+     "statement": "$23.1M raised"
+    }
+   },
+   "text_before": "/month [S2, S3]\n• Funding raised figure (narrated by Pitch Deck Hunt, unverified): $23.1M "
+  },
+  {
+   "section": "information_readiness",
+   "bracket": "[C2, C3]",
+   "standard_form": true,
+   "refs": {
+    "C2": {
+     "page": 12,
+     "statement": "500M messages/month"
+    },
+    "C3": {
+     "page": 10,
+     "statement": "500M messages"
+    }
+   },
+   "text_before": "23.1M [C1, S4]\n\nNeeds Validation:\n• Message-volume measurement basis: total vs. per-month "
+  },
+  {
+   "section": "information_readiness",
+   "bracket": "[C1]",
+   "standard_form": true,
+   "refs": {
+    "C1": {
+     "page": 2,
+     "statement": "$23.1M raised"
+    }
+   },
+   "text_before": "on\n• Funding raised: no external source confirmed the $23.1M figure (per Pitch Deck Hunt) "
+  },
+  {
+   "section": "supported_points",
+   "bracket": "[S1]",
+   "standard_form": true,
+   "refs": {
+    "S1": {
+     "page": 10,
+     "statement": "140 000+ bots"
+    }
+   },
+   "text_before": "- The company states 140,000+ bots as of a slide headed 'Traction by Apr-16' "
+  },
+  {
+   "section": "supported_points",
+   "bracket": "[C1, S4]",
+   "standard_form": true,
+   "refs": {
+    "C1": {
+     "page": 2,
+     "statement": "$23.1M raised"
+    },
+    "S4": {
+     "page": 2,
+     "statement": "$23.1M raised"
+    }
+   },
+   "text_before": "form adoption scale.\n- Pitch Deck Hunt lists a cumulative funding figure of $23.1M raised "
+  },
+  {
+   "section": "open_concerns",
+   "bracket": "[S2]",
+   "standard_form": true,
+   "refs": {
+    "S2": {
+     "page": 10,
+     "statement": "500M messages"
+    }
+   },
+   "text_before": "age-volume figures — 500M messages (no interval stated) on the 'Traction by Apr-16' slide "
+  },
+  {
+   "section": "open_concerns",
+   "bracket": "[S3]",
+   "standard_form": true,
+   "refs": {
+    "S3": {
+     "page": 12,
+     "statement": "500M messages/month"
+    }
+   },
+   "text_before": "tated) on the 'Traction by Apr-16' slide [S2] and 500M messages/month on a separate slide "
+  },
+  {
+   "section": "open_concerns",
+   "bracket": "[C1, S4]",
+   "standard_form": true,
+   "refs": {
+    "C1": {
+     "page": 2,
+     "statement": "$23.1M raised"
+    },
+    "S4": {
+     "page": 2,
+     "statement": "$23.1M raised"
+    }
+   },
+   "text_before": "M raised figure is narrated by Pitch Deck Hunt rather than stated in the body of the deck "
+  },
+  {
+   "section": "upside_scenario",
+   "bracket": "[S1]",
+   "standard_form": true,
+   "refs": {
+    "S1": {
+     "page": 10,
+     "statement": "140 000+ bots"
+    }
+   },
+   "text_before": "If the company's self-reported 140,000+ bots "
+  },
+  {
+   "section": "upside_scenario",
+   "bracket": "[S3]",
+   "standard_form": true,
+   "refs": {
+    "S3": {
+     "page": 12,
+     "statement": "500M messages/month"
+    }
+   },
+   "text_before": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month "
+  },
+  {
+   "section": "base_scenario",
+   "bracket": "[S1, S2, S3]",
+   "standard_form": true,
+   "refs": {
+    "S1": {
+     "page": 10,
+     "statement": "140 000+ bots"
+    },
+    "S2": {
+     "page": 10,
+     "statement": "500M messages"
+    },
+    "S3": {
+     "page": 12,
+     "statement": "500M messages/month"
+    }
+   },
+   "text_before": "Taking the self-reported traction at face value without independent verification "
+  },
+  {
+   "section": "base_scenario",
+   "bracket": "[C1, S4]",
+   "standard_form": true,
+   "refs": {
+    "C1": {
+     "page": 2,
+     "statement": "$23.1M raised"
+    },
+    "S4": {
+     "page": 2,
+     "statement": "$23.1M raised"
+    }
+   },
+   "text_before": " 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.1M in prior funding "
+  },
+  {
+   "section": "downside_scenario",
+   "bracket": "[C3 vs. C2, consistency note]",
+   "standard_form": false,
+   "refs": {
+    "C3": {
+     "page": 10,
+     "statement": "500M messages"
+    },
+    "C2": {
+     "page": 12,
+     "statement": "500M messages/month"
+    }
+   },
+   "text_before": "If the 500M messages figure refers to a cumulative total rather than a monthly run rate "
+  },
+  {
+   "section": "zelda_advantage",
+   "bracket": "[C3]",
+   "standard_form": true,
+   "refs": {
+    "C3": {
+     "page": 10,
+     "statement": "500M messages"
+    }
+   },
+   "text_before": "nternal measurement-basis inconsistency: page 10 states 500M messages without an interval "
+  },
+  {
+   "section": "zelda_advantage",
+   "bracket": "[C2/S3]",
+   "standard_form": false,
+   "refs": {
+    "C2": {
+     "page": 12,
+     "statement": "500M messages/month"
+    },
+    "S3": {
+     "page": 12,
+     "statement": "500M messages/month"
+    }
+   },
+   "text_before": "10 states 500M messages without an interval [C3] while page 12 states 500M messages/month "
+  },
+  {
+   "section": "questions_for_management",
+   "bracket": "[S2]",
+   "standard_form": true,
+   "refs": {
+    "S2": {
+     "page": 10,
+     "statement": "500M messages"
+    }
+   },
+   "text_before": "- Do the '500M messages' on the traction slide "
+  },
+  {
+   "section": "questions_for_management",
+   "bracket": "[S3]",
+   "standard_form": true,
+   "refs": {
+    "S3": {
+     "page": 12,
+     "statement": "500M messages/month"
+    }
+   },
+   "text_before": "500M messages' on the traction slide [S2] and '500M messages/month' on the separate slide "
+  },
+  {
+   "section": "questions_for_management",
+   "bracket": "[C1, S4]",
+   "standard_form": true,
+   "refs": {
+    "C1": {
+     "page": 2,
+     "statement": "$23.1M raised"
+    },
+    "S4": {
+     "page": 2,
+     "statement": "$23.1M raised"
+    }
+   },
+   "text_before": " from which runway can be calculated?\n- Is the $23.1M raised figure (per Pitch Deck Hunt) "
+  },
+  {
+   "section": "questions_for_management",
+   "bracket": "[S1]",
+   "standard_form": true,
+   "refs": {
+    "S1": {
+     "page": 10,
+     "statement": "140 000+ bots"
+    }
+   },
+   "text_before": "ose platforms?\n- What is the company's pricing model, and what share of the 140,000+ bots "
+  }
+ ]
+}

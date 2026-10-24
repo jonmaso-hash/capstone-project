@@ -1,0 +1,72 @@
+{
+ "note": "Real Chrome (Claude in Chrome extension, \"Browser 2\", device b60b1997-c8fe-4250-82c0-9bd77a0e5dae, on this computer: inventoroftues, 192.168.0.64) against the run server 127.0.0.1:8000, 2026-10-23 16:51-16:55 local (UTC-7). Values are page text read in the browser (document.body.innerText) at the time; screenshots in browser/. Login: fields set on form.elements of the form holding the password field, then requestSubmit(). Logout: the nav logout form (POST /accounts/logout/); the Truth Delta page has no site nav (FF-413), so the paid logout went through /. The staff TOTP was computed for a window with at least 12 s left (scripts/totp_next.py; the code is not recorded). No model call was made by the walks (model_calls.jsonl stayed at 8). Every request below appears in browser/server_log_browser_walks.txt.",
+ "browser_gate": {
+  "requirement": "D-9 / BROWSER_DIAGNOSIS.md (30115fb): before any model call, the selected browser must load a loopback page on this computer and the server must log that request",
+  "browser_1": "device 203c1a8f-f7f4-42f3-ae45-909ada617a59: four loopback probes (127.0.0.1:8765-8768, fresh nonces) showed Chrome's error page and the probe server logged no browser request; the first at 01:38 local while this computer had no chrome.exe process at all. Not this computer; not used",
+  "browser_2_probe": "16:25:58 local: http://127.0.0.1:8769/index.html showed title 'loopback probe 5' and text LOOPBACK-NONCE-8b9cafeda45da918 (the nonce written to that page); the probe server logged GET /index.html 200 and GET /favicon.ico 404 at 16:25:58. No curl was run against that probe. Probe pages and logs in browser/loopback_gate/",
+  "run_server_before_model_calls": "16:42:20 local, before the deck upload (16:42:45) and so before every model call: http://127.0.0.1:8000/accounts/login/ loaded (title 'Log in', password form present; Chrome 155 on Windows); run server logged GET /accounts/login/ 200 13399 at 16:42:20. The server serving it printed CODE-CHECK head=c6c3d1b9 and CODE-DIFF non_pyc_files_differing_from_c6c3d1b=0"
+ },
+ "walks": {
+  "OWNER": {
+   "principal": "c6cmc_owner",
+   "positive_control": {"url": "/api/v1/zelda/documents/3145/ic-memo/", "title": "AI Investment Committee Memo — ManyChat | Interlink Foundry", "text_chars": 5482, "badge": "Zelda Lite Memo"},
+   "observed": {
+    "business_model_analysis": "Insufficient disclosed data to fully describe the business model. The extracted evidence establishes that ManyChat operates in the software sector [P2] (current profile, undated) and that, on a slide headed 'Traction by Apr-16', the company states 140,000+ bots and 500M messages [S1, S2], with a separate slide stating …",
+    "open_concerns_1": "The two message-volume figures — 500M messages (no interval stated) on the 'Traction by Apr-16' slide [S2] and 500M messages/month on a separate slide [S3] — use different measurement bases and have not been reconciled. …",
+    "scenario_sections_shown": false,
+    "group_[C3, S3]_shown": false,
+    "canary": false
+   },
+   "logout": {"form": "/accounts/logout/ (nav, POST)", "landed": "/home/"},
+   "screenshot": "browser/owner_ic_memo.jpg"
+  },
+  "LITE": {
+   "principal": "c6cmc_lite",
+   "positive_control": {"url": "/matchmaking/memo/profile/50/", "title": "Intelligence Memo: ManyChat | Interlink Foundry", "text_chars": 2488, "badge": "Zelda Lite Report"},
+   "observed": {
+    "executive_summary_500M": "The company states 140,000+ bots and 500M messages as traction metrics on a slide headed 'Traction by Apr-16' [S1, S2], with a separate slide stating 500M messages/month [S3]; these two figures have not been independently verified and carry an internal measurement-basis ambiguity requiring clarification.",
+    "messages/month shown": true, "reconciliation panel": false, "group_[C3, S3]_shown": false, "canary": false
+   },
+   "logout": {"form": "/accounts/logout/ (nav, POST)", "landed": "/home/", "then_truth_delta": "/accounts/login/?next=/api/v1/zelda/documents/3145/verification/"},
+   "screenshot": "browser/lite_company_overview.jpg"
+  },
+  "PAID": {
+   "principal": "c6cmc_paid",
+   "positive_control": {"url": "/api/v1/zelda/documents/3145/verification/", "text_chars": 2731, "evidence_credibility": "N/A /100 · NOT SCORED · LIMITED PUBLIC EVIDENCE", "claims": "4 analyzed, 0 verified, 4 not established"},
+   "observed": {
+    "Measurement basis to clarify block": "Measurement basis to clarify Figures in this deck that need clarification before they are compared. This is not a verification result and doesn't affect the score. Page 10 states 500M messages without an explicit interval; page 12 states 500M messages/month. These use different measurement bases and need clarification before comparison.",
+    "reconciliation panel": false, "canary": false, "site_nav_logout_form_on_page": false
+   },
+   "logout": {"form": "/accounts/logout/ via / (FF-413)", "landed": "/home/", "then_truth_delta": "/accounts/login/?next=/api/v1/zelda/documents/3145/verification/"},
+   "screenshot": "browser/paid_truth_delta.jpg"
+  },
+  "STAFF": {
+   "principal": "c6cmc_staff",
+   "login_landing": "/accounts/staff-mfa/verify/?next=%2Fapi%2Fv1%2Fzelda%2Fdocuments%2F3145%2Fverification%2F",
+   "mfa": "real TOTP verify (setup done in the HTTP probe), POST at 16:54:09 302 to the Truth Delta page; no MFA error",
+   "positive_controls": [
+    {"url": "/api/v1/zelda/documents/3145/verification/", "text_chars": 3384, "Measurement basis to clarify block": true, "reconciliation panel": false, "canary": false},
+    {"url": "/api/v1/zelda/documents/3145/ic-memo/", "text_chars": 12907, "canary": false, "group_[C3, S3]_shown": false,
+     "base": "Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4]. Without revenue, burn, or team data, the trajectory from traction to sustainable business cannot be ass…",
+     "upside": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide — consistent with a network-effect-driven software business approaching scale. …",
+     "downside": "If the 500M messages figure refers to a cumulative total rather than a monthly run rate [C3 vs. C2, consistency note], the underlying activity level would be materially lower than the per-month presentation implies. …",
+     "risk_assessment_2": "Measurement-basis inconsistency: Page 10 states 500M messages without an explicit interval [C3/S2]; page 12 states 500M messages/month [C2/S3]. …",
+     "zelda_advantage": "The verification pass identified a specific internal measurement-basis inconsistency: page 10 states 500M messages without an interval [C3] while page 12 states 500M messages/month [C2/S3] — …"},
+    {"url": "/matchmaking/memo/profile/50/", "text_chars": 2584, "canary": false,
+     "worth_investigating": ["Funding raised — not established", "Usage — not established",
+                             "The two message-volume figures — 500M messages (no interval stated) on the 'Traction by… see the IC Memo",
+                             "Until clarified, it is unknown whether these refer to the same or different metrics, wh… see the IC Memo"]}
+   ],
+   "logout": {"form": "/accounts/logout/ (nav, POST)", "landed": "/home/"},
+   "screenshot": "browser/staff_ic_memo_base_scenario.jpg (the displayed Base Scenario)"
+  },
+  "ANON": {
+   "positive_control": {"url": "/home/", "loaded": true, "title": "Interlink Foundry"},
+   "checks": "in-page fetch with redirect: 'manual' after the staff logout, 2026-10-23T23:54:41Z",
+   "results": {"/api/v1/zelda/documents/3145/ic-memo/": "opaqueredirect", "/api/v1/zelda/documents/3145/verification/": "opaqueredirect",
+               "/matchmaking/memo/profile/50/": "opaqueredirect", "/accounts/profile/c6cmc_owner/": "opaqueredirect"},
+   "server_log": "each GET 302 at 16:54:41 (browser/server_log_browser_walks.txt)"
+  }
+ },
+ "not_done": "No paid purchase, billing change or permission change was made; the paid principal's local INVESTOR_PREMIUM subscription has fake Stripe IDs and no payment action."
+}

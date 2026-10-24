@@ -1,0 +1,21 @@
+Model reply (after list-to-text) vs stored memo 103, per section, replayed through the pipeline order
+(time guard, then funding guard, then measurement-basis guard). Only changed sections are listed. Changes
+prefixed "basis:" are the measurement-basis guard (#284, revised in #285); the others are the funding guard
+("attribution" adds a narrator; "funding_not_runway" and "cash_premise" separate funding from cash).
+
+== business_model_analysis  ['profile_undated'] 
+-Insufficient disclosed data to fully describe the business model. The extracted evidence establishes that ManyChat operates in the software sector [P2] and that, on a slide headed 'Traction by Apr-16', the company states 140,000+ bots and 500M messages [S1, S2], with a separate slide stating 500M messages/month [S3]. These figures are consistent with a platform model serving a large number of bot-deploying users, but no revenue model, pricing structure, customer definition, or growth driver is found in the extracted evidence. How the company monetises, who pays, and what drives expansion are not found in the extracted evidence.
++Insufficient disclosed data to fully describe the business model. The extracted evidence establishes that ManyChat operates in the software sector [P2] (current profile, undated) and that, on a slide headed 'Traction by Apr-16', the company states 140,000+ bots and 500M messages [S1, S2], with a separate slide stating 500M messages/month [S3]. These figures are consistent with a platform model serving a large number of bot-deploying users, but no revenue model, pricing structure, customer definition, or growth driver is found in the extracted evidence. How the company monetises, who pays, and what drives expansion are not found in the extracted evidence.
+
+== information_readiness  ['attribution:Pitch Deck Hunt'] 
+-• Funding raised: no external source confirmed the $23.1M figure [C1]
++• Funding raised: no external source confirmed the $23.1M figure (per Pitch Deck Hunt) [C1]
+
+== what_would_change_the_picture  ['attribution:Pitch Deck Hunt'] 
+-The single most important missing piece of evidence is a dated income statement and cash flow statement showing revenue, gross margin, and monthly burn — these would allow assessment of whether the self-reported usage metrics translate into a financially sustainable business and would establish how much of the narrated $23.1M raised remains available.
++The single most important missing piece of evidence is a dated income statement and cash flow statement showing revenue, gross margin, and monthly burn — these would allow assessment of whether the self-reported usage metrics translate into a financially sustainable business and would establish how much of the narrated $23.1M raised (per Pitch Deck Hunt) remains available.
+
+== questions_for_management  ['attribution:Pitch Deck Hunt'] 
+-- Is the $23.1M raised figure [C1, S4] a cumulative total of all rounds to date, and what are the individual round sizes, dates, and investors?
++- Is the $23.1M raised figure (per Pitch Deck Hunt) [C1, S4] a cumulative total of all rounds to date, and what are the individual round sizes, dates, and investors?
+

@@ -1,0 +1,74 @@
+{
+ "memo103_base_scenario (stored)": {
+  "before": "Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4].",
+  "after": "Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4].",
+  "changed": false,
+  "time_removed": [],
+  "funding_changes": [],
+  "basis_changes": []
+ },
+ "memo103_upside_scenario_sentence1 (stored)": {
+  "before": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide — consistent with a network-effect-driven software business approaching scale.",
+  "after": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide — consistent with a network-effect-driven software business approaching scale.",
+  "changed": false,
+  "time_removed": [],
+  "funding_changes": [],
+  "basis_changes": []
+ },
+ "variant A: memo103 base without \"without independent verification\"": {
+  "before": "Taking the self-reported traction at face value [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4].",
+  "after": "Taking the self-reported traction at face value [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4].",
+  "changed": false,
+  "time_removed": [],
+  "funding_changes": [],
+  "basis_changes": []
+ },
+ "variant B: memo103 base without the trailing funding clause": {
+  "before": "Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context.",
+  "after": "Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context.",
+  "changed": false,
+  "time_removed": [],
+  "funding_changes": [],
+  "basis_changes": []
+ },
+ "variant C: memo103 base without both": {
+  "before": "Taking the self-reported traction at face value [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context.",
+  "after": "Taking the self-reported traction at face value [S1, S2], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context; the deck separately states 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+  "changed": true,
+  "time_removed": [],
+  "funding_changes": [],
+  "basis_changes": [
+   "basis_source_context"
+  ]
+ },
+ "memo101_base_scenario_sentence1 (82771ef; graded P2 OF-904)": {
+  "before": "Taking the self-reported traction metrics at face value [S1, S2, S3], ManyChat had built a sizeable bot and messaging platform by the period referenced in the 'Traction by Apr-16' slide context.",
+  "after": "Taking the self-reported traction metrics at face value [S1, S2], ManyChat had built a sizeable bot and messaging platform by the period referenced in the 'Traction by Apr-16' slide context; the deck separately states 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+  "changed": true,
+  "time_removed": [],
+  "funding_changes": [],
+  "basis_changes": [
+   "basis_source_context"
+  ]
+ },
+ "memo102_base_scenario_sentence1 (6d131f5; graded P2 OF-1003)": {
+  "before": "If the traction figures [S1, S2, S3] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful platform scale at that point in time.",
+  "after": "If the traction figures [S1, S2] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had reached meaningful platform scale at that point in time; the deck separately states 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+  "changed": true,
+  "time_removed": [],
+  "funding_changes": [],
+  "basis_changes": [
+   "basis_condition_context"
+  ]
+ },
+ "memo102_open_concerns_1 (6d131f5; graded P2 OF-1004)": {
+  "before": "• The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C3, S3].",
+  "after": "• The messaging volume metric is internally inconsistent: the slide headed 'Traction by Apr-16' states '500M messages' without an interval [C3, S2], while a separate page states '500M messages/month' [C2, S3].",
+  "changed": true,
+  "time_removed": [],
+  "funding_changes": [],
+  "basis_changes": [
+   "basis_citation_identity"
+  ]
+ }
+}

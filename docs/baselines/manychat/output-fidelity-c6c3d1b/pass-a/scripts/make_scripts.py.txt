@@ -1,0 +1,99 @@
+"""Derive this run's (ManyChat Pass A at c6c3d1b, after PR #288) stage-1 scripts from the memo-102 run's (scratchpad
+rd0b/ of this session), changing only the listed names, paths, IDs, Redis databases and refusal/preservation lists.
+Each replacement must match at least once, so a stale value cannot survive silently.
+Usage: python make_scripts.py"""
+import os, secrets
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+BS = chr(92)
+PREV = os.path.join(os.path.dirname(HERE), 'rd0b')
+NPS = BS.join(['C:', 'Users', 'jonathan', 'AppData', 'Local', 'Temp', 'claude', 'C--Users-jonathan-Desktop-KCV-np',
+               'c8a313d5-81e1-402a-b7da-9205b6f20fab', 'scratchpad'])
+R066_LINE = "R066 = r'" + NPS + BS + "r066'\n"
+RD0B_LINE = "RD0B = r'" + PREV + "'\n"
+WT_D0B = "WT = r'" + BS.join(['C:', 'Users', 'jonathan', 'Desktop', 'KCV-mc-d0b']) + "'"
+WT_C6C = "WT = r'" + BS.join(['C:', 'Users', 'jonathan', 'Desktop', 'KCV-mc-c6c']) + "'"
+R066_COPY = "R066 + r'" + BS + "db_r066_copy.sqlite3'"
+RD0B_COPY = "RD0B + r'" + BS + "db_rd0b_copy.sqlite3'"
+
+
+def derive(name, reps, target=None):
+    s = open(os.path.join(PREV, name), encoding='utf-8').read()
+    for a, b in reps:
+        assert s.count(a) >= 1, (name, a)
+        s = s.replace(a, b)
+    open(os.path.join(HERE, target or name), 'w', encoding='utf-8', newline='\n').write(s)
+    print('derived', target or name)
+
+
+derive('prep_copy.py', [
+    ('ManyChat Pass A at d0bad8f (after PR #287)', 'ManyChat Pass A at c6c3d1b (after PR #288)'),
+    ("COPY = os.path.join(HERE, 'db_rd0b_copy.sqlite3')", "COPY = os.path.join(HERE, 'db_rc6c_copy.sqlite3')"),
+    ("    'memo101_copy_r066': " + R066_COPY + ",\n}",
+     "    'memo101_copy_r066': " + R066_COPY + ",\n    'memo102_copy_rd0b': " + RD0B_COPY + ",\n}"),
+    (R066_LINE, R066_LINE + RD0B_LINE),
+])
+derive('run_rd0b.py', [
+    ('ManyChat Pass A run wrapper at d0bad8f (after PR #287)', 'ManyChat Pass A run wrapper at c6c3d1b (after PR #288)'),
+    ("Adapted from the memo-101 run's run_r066.py: worktree, copy, expected head, Redis dbs, worker name and the\nrefusal list (memo-101 copy added) changed.",
+     "Adapted from the memo-102 run's run_rd0b.py: worktree, copy, expected head, Redis dbs, worker name and the\nrefusal list (memo-102 copy added) changed."),
+    ('  * code: worktree KCV-mc-d0b, branch docs/manychat-output-fidelity-d0bad8f at d0bad8f;',
+     '  * code: worktree KCV-mc-c6c, branch docs/manychat-output-fidelity-c6c3d1b at c6c3d1b;'),
+    ('local Memurai DBs 1 (broker) and 4 (results and cache), without clients before the run. No db was\n'
+     '    empty; dbs 1 and 4 held only the three static _kombu.binding.* sets any Celery worker declares, with\n'
+     '    empty queues and no result or cache keys (results and cache share db 4; their key prefixes cannot collide;\n'
+     '    db 3 now holds the memo-101 run\'s cached embeddings and is not used);',
+     'local Memurai DBs 1 (broker) and 6 (results and cache), without clients before the run. No db was\n'
+     '    empty; dbs 1 and 6 held only the three static _kombu.binding.* sets any Celery worker declares, with\n'
+     '    empty queues and no result or cache keys (results and cache share db 6; their key prefixes cannot collide;\n'
+     '    dbs 3 and 4 hold the memo-101 and memo-102 runs\' cached embeddings and are not used);'),
+    (WT_D0B, WT_C6C),
+    (R066_LINE + "FORBIDDEN_DBS = [", R066_LINE + RD0B_LINE + "FORBIDDEN_DBS = ["),
+    ("\n                 " + R066_COPY + "]", "\n                 " + R066_COPY + ",\n                 " + RD0B_COPY + "]"),
+    ("COPY_DB = os.path.join(HERE, 'db_rd0b_copy.sqlite3')", "COPY_DB = os.path.join(HERE, 'db_rc6c_copy.sqlite3')"),
+    ("EXPECTED_HEAD = 'd0bad8fdaace39f2f64be9f576874da9b0bf5e7a'", "EXPECTED_HEAD = 'c6c3d1b9b1fe8b5e32d856c64a5b535a986684a0'"),
+    ("RUN_DBS = ('1', '4')", "RUN_DBS = ('1', '6')"),
+    ("'CELERY_RESULT_BACKEND': 'redis://localhost:6379/4'", "'CELERY_RESULT_BACKEND': 'redis://localhost:6379/6'"),
+    ("'CACHE_URL': 'redis://localhost:6379/4'", "'CACHE_URL': 'redis://localhost:6379/6'"),
+    ("name=mcd0b@%h queue=celery pool=solo concurrency=1 broker_db=1", "name=mcc6c@%h queue=celery pool=solo concurrency=1 broker_db=1"),
+    ("'-n', 'mcd0b@%h'", "'-n', 'mcc6c@%h'"),
+], 'run_rc6c.py')
+derive('run_ro.py', [
+    (WT_D0B, WT_C6C),
+    ("CELERY_RESULT_BACKEND='redis://localhost:6379/4'", "CELERY_RESULT_BACKEND='redis://localhost:6379/6'"),
+    ("CACHE_URL='redis://localhost:6379/4'", "CACHE_URL='redis://localhost:6379/6'"),
+])
+derive('snapshot_ro.py', [('memo hashes', 'memo hashes')])
+derive('bump_sequences.py', [
+    ("Run in the rd0b COPY (via run_rd0b.py script)", "Run in the rc6c COPY (via run_rc6c.py script)"),
+    ("(document 3143, memo 101, ...)", "(document 3144, memo 102, ...)"),
+    ("PREV = r'" + NPS + BS + 'r066' + BS + "db_r066_copy.sqlite3'", "PREV = r'" + PREV + BS + "db_rd0b_copy.sqlite3'"),
+    ("'db_rd0b_copy' in str", "'db_rc6c_copy' in str"),
+])
+derive('setup_fixtures.py', [
+    ("SP = r'" + PREV + "'", "SP = r'" + HERE + "'"),
+    ("P = 'd0bmc'          # d0bad8f ManyChat Pass A: d0bmc_*", "P = 'c6cmc'          # c6c3d1b ManyChat Pass A: c6cmc_*"),
+    ("'cus_d0b_local_mc'", "'cus_c6c_local_mc'"), ("'sub_d0b_local_mc'", "'sub_c6c_local_mc'"),
+    ('@d0b.test', '@c6c.test'),
+    ('ManyChat d0bad8f Pass A run.', 'ManyChat c6c3d1b Pass A run.'),
+])
+derive('upload.py', [('Upload the deck ONCE', 'Upload the deck ONCE')])
+derive('dump_rd0b.py', [
+    ("(ManyChat Pass A at d0bad8f; reused from the memo-101 run's dump_r066.py apart from this line and the label).",
+     "(ManyChat Pass A at c6c3d1b; reused from the memo-102 run's dump_rd0b.py apart from this line and the label)."),
+    ("label='mcd0b.dump (read-only rebuild)'", "label='mcc6c.dump (read-only rebuild)'"),
+], 'dump_rc6c.py')
+for name in ('memo97_vs_committed.py', 'memo98_vs_committed.py', 'memo99_vs_committed.py', 'memo100_vs_committed.py',
+             'memo101_vs_committed.py'):
+    derive(name, [('fields compared', 'fields compared')])
+derive('memo101_vs_committed.py', [
+    ("memo 101's stored fields vs the committed\n09_memo.json of that run (82771ef)",
+     "memo 102's stored fields vs the committed\n09_memo.json of that run (6d131f5)"),
+    ("RO_DB = the memo-101 run copy", "RO_DB = the memo-102 run copy"),
+    ("'82771ef:docs/baselines/manychat/output-fidelity-0664563/pass-a/09_memo.json'",
+     "'6d131f5:docs/baselines/manychat/output-fidelity-d0bad8f/pass-a/09_memo.json'"),
+    ("get(pk=101)", "get(pk=102)"),
+    ("'MEMO101-vs-82771ef fields compared'", "'MEMO102-vs-6d131f5 fields compared'"),
+], 'memo102_vs_committed.py')
+open(os.path.join(HERE, 'pw.txt'), 'w').write(secrets.token_urlsafe(18))
+print('pw written (not printed)')

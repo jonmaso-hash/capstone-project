@@ -1,0 +1,75 @@
+"""Grading excerpts for memo 103 (no DB access; reads the run's evidence files). Writes 17_grading_excerpts.json:
+the sent payload's source map (every ref with its statement, context, status and sources), the consistency note,
+the raw model reply and the stored memo for every section (untruncated), and every citation group in the stored
+memo with its sentence, each ref resolved to its source page. Usage: extract_excerpts.py <evidence dir>"""
+import json, os, re, sys
+EV = sys.argv[1]
+r = lambda n: json.load(open(os.path.join(EV, n), encoding='utf-8'))
+payload = r('09a_grounded_context_rebuilt.json')['payload']
+claims = {c['id']: c for c in r('04_claims.json')}
+call = r('09b_model_call.json')
+raw_text = call['response']['text'][0]
+raw = json.loads(re.search(r'\{.*\}', raw_text, re.S).group(0))
+stored = r('09_memo.json')['memo']
+check = r('09d_memo_input_output_check.json')
+
+source_map = {}
+for i in payload['items']:
+    source_map[i['ref']] = {k: i.get(k) for k in ('kind', 'category', 'statement', 'status', 'source_context', 'narrator',
+                                                 'as_of', 'sources')}
+# Claim refs C1..C4 are the claims in id order (verified below against each statement and page).
+claim_rows = sorted(claims.values(), key=lambda c: c['id'])
+c_refs = sorted([k for k in source_map if k.startswith('C')], key=lambda k: int(k[1:]))
+claim_map = {}
+for ref, c in zip(c_refs, claim_rows):
+    claim_map[ref] = {'claim_id': c['id'], 'page': c['page_number'], 'claimed_value': c['claimed_value'],
+                      'source_context': c.get('source_context'), 'chunk': (c.get('chunk_hash') or '')[:8],
+                      'statement_matches_payload': c['claimed_value'] == source_map[ref]['statement']}
+
+
+def page_of(ref):
+    if ref in claim_map:
+        return claim_map[ref]['page']
+    src = source_map.get(ref, {}).get('sources') or []
+    pages = sorted({s.get('page') or s.get('page_number') for s in src if isinstance(s, dict)} - {None})
+    return pages[0] if len(pages) == 1 else (pages or None)
+
+
+SENT = re.compile(r'(?<=[.!?])\s+(?=[A-Z•\-\d(])|\n+')
+GROUP = re.compile(r'\[([A-Z]\d+(?:\s*(?:,|vs\.?)\s*[A-Z]\d+)*)\]')
+groups = []
+for key, text in stored.items():
+    if not isinstance(text, str) or key in ('created_at', 'updated_at', 'retrieved_context'):
+        continue
+    for sent in SENT.split(text):
+        for m in GROUP.finditer(sent):
+            refs = re.findall(r'[A-Z]\d+', m.group(1))
+            groups.append({'section': key, 'group': m.group(0), 'refs': refs,
+                           'pages': {x: page_of(x) for x in refs}, 'sentence': sent.strip()})
+c3_with_page12 = [g for g in groups if 'C3' in g['refs'] and any(page_of(x) == 12 for x in g['refs'])]
+out = {
+    'note': 'Excerpts are copied whole from the run files (09a payload, 04 claims, 09b raw reply, 09 stored memo, 09d replay).',
+    'source_map': source_map,
+    'claim_refs_resolved': claim_map,
+    'consistency_notes': payload.get('consistency_notes'),
+    'raw_reply_text': raw_text,
+    'sections': {k: {'raw': raw.get(k), 'stored': stored.get(k),
+                     'raw_equals_stored': check['sections'].get(k, {}).get('raw_equals_stored'),
+                     'stored_equals_guard_replay_of_raw': check['sections'].get(k, {}).get('stored_equals_guard_replay_of_raw'),
+                     'guard_changes': check['sections'].get(k, {}).get('funding_fidelity_changes')}
+                 for k in raw},
+    'citation_groups': groups,
+    'groups_pairing_C3_with_a_page12_ref': c3_with_page12,
+}
+with open(os.path.join(EV, '17_grading_excerpts.json'), 'w', encoding='utf-8', newline='\n') as f:
+    json.dump(out, f, indent=1, ensure_ascii=False)
+print('claim refs', json.dumps(claim_map, ensure_ascii=False))
+for k, v in source_map.items():
+    print(k, v['statement'], '| ctx', v['source_context'], '| page', page_of(k), '| sources', json.dumps(v['sources'], ensure_ascii=False)[:160])
+print('groups', len(groups), 'C3 with a page-12 ref:', len(c3_with_page12))
+for g in c3_with_page12:
+    print(' ', g['section'], g['group'], g['pages'], '|', g['sentence'])
+print('groups with S3 or C2:')
+for g in groups:
+    if 'S3' in g['refs'] or 'C2' in g['refs']:
+        print(' ', g['section'], g['group'], g['pages'], '|', g['sentence'][:200])
