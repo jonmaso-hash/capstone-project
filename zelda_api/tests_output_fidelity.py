@@ -4319,6 +4319,28 @@ CONSEQUENCE_KEPT = (
     f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — not the monthly figure's period.",
     f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE}; growth would follow [S2].",
     f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — in line with Pitch Deck Hunt's profile.",
+    # Review of c49cb4d: a later clause supposing the date in other words, and nearby wordings.
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — subject to the monthly figure referring "
+    "to that period.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — contingent on the monthly figure "
+    "referring to that period.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — only when the monthly figure is from "
+    "that period.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — should that hold for page 12.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — in the event that this holds.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — given that this holds.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — with the monthly figure from that "
+    "period.",                                                      # no connective: it names the figure and a time
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — the messages included.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — as at April 2016.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — which wouldn’t follow otherwise.",
+    # Review of c49cb4d: a denial in the consequence's subject, and other denials and near-denials.
+    f"{_IF_ACCURATE}, No platform would have significant throughput {_AT_SLIDE}.",
+    f"{_IF_ACCURATE}, Neither platform would have significant throughput {_AT_SLIDE}.",
+    f"{_IF_ACCURATE}, Few platforms would have significant throughput {_AT_SLIDE}.",
+    f"{_IF_ACCURATE}, ManyChat wouldn't have had a large platform {_AT_SLIDE}.",
+    f"{_IF_ACCURATE}, ManyChat wouldn’t have had a large platform {_AT_SLIDE}.",
+    f"{_IF_ACCURATE}, ManyChat would hardly have had a large platform {_AT_SLIDE}.",
     # Review of c8a0336: a consequence about something other than the cited figures' scale.
     f"{_IF_ACCURATE}, revenue would be $10M {_AT_SLIDE}.",
     f"{_IF_ACCURATE}, revenue would be significant {_AT_SLIDE}.",

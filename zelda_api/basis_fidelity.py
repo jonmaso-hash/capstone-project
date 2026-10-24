@@ -1185,11 +1185,41 @@ _SCALE_NOUNS = frozenset({'platform', 'scale', 'throughput', 'adoption', 'footpr
 # The heading phrase must close the consequence's clause: the sentence ends, or a dash, ";" or ":" follows. Anything
 # else after it (", according to an analyst", ", only if ...", "[S1, S3]") is part of the consequence, and kept.
 _CONSEQUENCE_CLOSE = re.compile(r'\s*(?:[.!]?["”’)]*\s*$|[—–;:]|-(?=\s))')
-# What may not follow the clause either: a condition or supposition, a citation, a speaker, a denial or the date
-# itself ("— if the monthly figure dates from that period", "— according to an analyst").
+# What may not follow the clause either: a condition, supposition or contingency, a citation, a speaker, a denial or
+# the date itself ("— if the monthly figure dates from that period", "— subject to the monthly figure referring to
+# that period", "— according to an analyst").
 _LATER_HYPOTHESIS = re.compile(r"\b(?:if|whether|unless|assuming|supposing|suppose|provided|providing|so\s+long\s+as|"
-                               r"as\s+long\s+as|on\s+(?:the\s+)?(?:condition|assumption)|presum\w*|dat(?:e|es|ed|ing))\b",
-                               re.I)
+                               r"as\s+long\s+as|on\s+(?:the\s+)?(?:condition|assumption|basis|understanding)|presum\w*|"
+                               r"dat(?:e|es|ed|ing)|subject\s+to|contingent|conditional\w*|conditioned|dependent|"
+                               r"depend(?:s|ing)?|only\s+when|insofar|in\s+(?:the\s+)?event|in\s+case|should|given\s+that|"
+                               r"refer\w*|relat(?:e|es|ed|ing)|appl(?:y|ies|ied)|cover(?:s|ed|ing)?)\b", re.I)
+# Nor may it name the figures, their basis, a place or any time: a clause about them after the heading may suppose
+# their date in words no list holds ("— with the monthly figure from that period"). Besides these, the pair's
+# categories, bases and the cited statements' words; any figure or quoted span keeps the sentence too.
+_REST_FIGURE_WORDS = frozenset({'figure', 'figures', 'number', 'numbers', 'metric', 'metrics', 'statement',
+                                'statements', 'period', 'periods', 'time', 'times', 'timing', 'when', 'whenever', 'then',
+                                'until', 'before', 'after', 'since', 'during', 'interval', 'intervals', 'basis', 'bases',
+                                'page', 'pages', 'slide', 'slides', 'heading', 'headings', 'month', 'monthly', 'week',
+                                'weekly', 'day', 'daily', 'year', 'yearly', 'annual', 'annually', 'quarter', 'quarterly',
+                                'cumulative', 'total', 'run', 'rate', 'april', 'apr'})
+# Words that deny or all but deny a consequence wherever they stand, its subject included ("No platform would ...",
+# "Neither platform ...", "Few platforms ..."); any "-n't" word too (review of c49cb4d).
+_CONSEQUENCE_DENIAL = _DENIAL | frozenset({'few', 'hardly', 'barely', 'scarcely', 'nobody', 'nowhere'})
+
+
+def _rest_free(rest, cited, facts, pair):
+    """What follows the consequence's clause (after a dash, ";" or ":") adds nothing that qualifies it: no condition
+    or contingency, no citation, speaker or denial, and no mention of the figures, their basis, a place or a time."""
+    text = rest.lower().translate(_APOSTROPHES)
+    words = set(re.findall(r"[a-z']+", re.sub(r'(?<=[a-z])[-/](?=[a-z])', ' ', text)))
+    statements = [_DIGIT_GROUP.sub('', fact.lower()) for ref, *_, fact in facts.places if ref in cited]
+    figure_words = ((_REST_FIGURE_WORDS | pair.topics | set(pair.intervals)
+                     | {_RATE_ADJECTIVE.get(interval, interval) for interval in pair.intervals}
+                     | {word for fact in statements for word in re.findall(r'[a-z]+', fact)}) - _PLACING_WORDS
+                    | {'figure', 'figures', 'total', 'rate'})
+    return not (_REF.search(rest) or _LATER_HYPOTHESIS.search(rest) or _ATTRIBUTION.search(rest)
+                or words & _DENIAL or any(word.endswith("n't") for word in words)
+                or words & figure_words or re.search(r"\d|'[^']+'|‘[^’]+’", rest))
 
 
 def _figures_consequence(consequence, cited, facts, pair):
@@ -1198,6 +1228,9 @@ def _figures_consequence(consequence, cited, facts, pair):
     subject = _CONSEQUENCE_SUBJECT.match(consequence)
     if subject is None:
         return False
+    every = set(re.findall(r"[a-z']+", consequence.lower().translate(_APOSTROPHES)))
+    if every & _CONSEQUENCE_DENIAL or any(word.endswith("n't") for word in every):
+        return False                           # a denial, the subject's too ("No platform", "Neither platform")
     statements = [_DIGIT_GROUP.sub('', fact.lower()) for ref, *_, fact in facts.places if ref in cited]
     nouns = {form[3] for form in map(_statement_form, statements) if form and form[3]} | pair.topics   # "bots"
     vocabulary = ((_PLACING_WORDS | _CONSEQUENCE_WORDS | _SCALE_NOUNS | nouns
@@ -1260,8 +1293,7 @@ def _consequence_context(sentence, facts, changes):
     if close is None:
         return sentence                        # the consequence goes on past the heading: its words are not read
     rest = sentence[close.end():]              # after a dash, ";" or ":"; empty at the sentence's end
-    if (_REF.search(consequence) or _REF.search(rest) or _LATER_HYPOTHESIS.search(rest) or _ATTRIBUTION.search(rest)
-            or set(re.findall(r"[\w']+", rest.lower().translate(_APOSTROPHES))) & _DENIAL
+    if (_REF.search(consequence) or not _rest_free(rest, cited, facts, pair)
             or any(name.lower() in sentence.lower() for name in facts.narrators)
             or not _figures_consequence(consequence, cited, facts, pair)
             or not _accepting_antecedent(antecedent, cited, facts, pair)):
