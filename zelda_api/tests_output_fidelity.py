@@ -3990,3 +3990,384 @@ class ReviewB718566Tests(SimpleTestCase):
                 self.assertEqual(guard_basis_wording(text, facts), (text, []))
         self.assertEqual(guard_basis_wording("Page 7 has no interval (page 8 states '3M bots/week' [C7, S8]).", facts),
                          ("Page 7 has no interval (page 8 states '3M bots/week' [C8, S8]).", ['basis_citation_identity']))
+
+
+# --- Memo 103 (ManyChat, document 3145, live at c6c3d1b; independent grade e967274) -----------------------------
+#
+#     OF-1102  base_scenario: "Taking the self-reported traction at face value without independent verification [S1,
+#              S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction
+#              by Apr-16' slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4]." Page 10's
+#              heading dates page 12's monthly statement S3. P2, blocking. The merged source-context rule read neither
+#              the verification qualifier ("without" counted as a denial) nor the trailing funding clause.
+#     OF-1103  upside_scenario: "If ... 500M messages/month [S3] are accurate and the per-month figure is the correct
+#              basis, ManyChat would represent a platform ... at the time of the 'Traction by Apr-16' slide". The
+#              condition supposes accuracy and basis, not the date: the consequence still dates S3. P2, blocking.
+#
+# The fixtures are memo 103's payload as sent and its raw reply (data/funding_fidelity/memo103*.json, from the
+# committed evidence 4ee3639). Memo 103 itself is not edited; these tests replay its reply.
+
+def memo103():
+    with open(os.path.join(DATA, 'memo103.json'), encoding='utf-8') as f:
+        data = json.load(f)
+    return json.loads(re.search(r'\{.*\}', data['model_reply_text'], re.S).group(0)), data['stored']
+
+
+def memo103_payload():
+    with open(os.path.join(DATA, 'memo103_payload.json'), encoding='utf-8') as f:
+        return json.load(f)['payload']
+
+
+BASE_103_BEFORE = ("Taking the self-reported traction at face value without independent verification [S1, S2, S3], the "
+                   "company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' "
+                   "slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4].")
+BASE_103_AFTER = ("Taking the self-reported traction at face value without independent verification [S1, S2], the "
+                  "company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' "
+                  "slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4]; the deck separately "
+                  "states 500M messages/month [S3] on page 12 (" + CLARIFY + ").")
+UPSIDE_103_BEFORE = "at the time of the 'Traction by Apr-16' slide — consistent with"
+UPSIDE_103_AFTER = ("at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states "
+                    "140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) — "
+                    "consistent with")
+UPSIDE_103_CONDITION = ("If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and "
+                        "the per-month figure is the correct basis, ManyChat would represent a platform with significant "
+                        "throughput")
+DOWN_103 = "If the 500M messages figure refers to a cumulative total rather than a monthly run rate [C3 vs. C2, consistency note]"
+RISK_103 = "Page 10 states 500M messages without an explicit interval [C3/S2]; page 12 states 500M messages/month [C2/S3]."
+CHANGED_103 = {'base_scenario', 'upside_scenario'}
+
+
+class Memo103ReplayTests(SimpleTestCase):
+    """The actual memo-103 reply through the pipeline's guards: the two graded defects change, nothing else."""
+
+    def setUp(self):
+        self.raw, self.stored = memo103()
+        self.payload = memo103_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+        self.out, self.changes = replay(self.raw, self.items, self.notes)
+
+    def test_the_fixture_is_memo_103_as_stored(self):
+        for text, key in ((BASE_103_BEFORE, 'base_scenario'), (UPSIDE_103_BEFORE, 'upside_scenario'),
+                          (UPSIDE_103_CONDITION, 'upside_scenario'), (DOWN_103, 'downside_scenario'),
+                          (RISK_103, 'risk_assessment')):
+            self.assertIn(text, self.stored[key], key)
+        self.assertEqual(self.notes[0][1], ('C3', 'C2'))
+        sources = {i['ref']: (i['statement'], i['sources'][0].get('page'), i.get('source_context'))
+                   for i in self.payload['items']}
+        self.assertEqual(sources['S1'], ('140 000+ bots', 10, 'Traction by Apr-16'))
+        self.assertEqual(sources['S2'], ('500M messages', 10, 'Traction by Apr-16'))
+        self.assertEqual(sources['S3'], ('500M messages/month', 12, None))
+
+    def test_of1102_page_12_is_not_dated_by_page_10_s_heading(self):
+        self.assertEqual(self.out['base_scenario'], self.stored['base_scenario'].replace(BASE_103_BEFORE, BASE_103_AFTER))
+
+    def test_of1102_keeps_the_verification_qualifier_and_the_funding_clause(self):
+        self.assertIn('at face value without independent verification [S1, S2]', self.out['base_scenario'])
+        self.assertIn('with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4]', self.out['base_scenario'])
+
+    def test_of1103_the_consequence_does_not_date_page_12(self):
+        self.assertEqual(self.out['upside_scenario'],
+                         self.stored['upside_scenario'].replace(UPSIDE_103_BEFORE, UPSIDE_103_AFTER))
+        self.assertIn(UPSIDE_103_CONDITION, self.out['upside_scenario'])    # the conditions are kept whole
+
+    def test_hypotheses_comparisons_and_correct_citations_are_kept(self):
+        self.assertIn(DOWN_103, self.out['downside_scenario'])
+        self.assertIn(RISK_103, self.out['risk_assessment'])
+
+    def test_every_other_field_is_exactly_as_stored(self):
+        for key, value in self.out.items():
+            if key in self.stored and key not in CHANGED_103:
+                self.assertEqual(value, self.stored[key], key)
+
+    def test_citations_change_only_where_corrected(self):
+        for key, value in self.out.items():
+            if isinstance(value, str) and key in self.stored:
+                expected = refs(self.stored[key])
+                if key == 'base_scenario':
+                    self.assertEqual(expected[:5], ['S1', 'S2', 'S3', 'C1', 'S4'])
+                    expected = ['S1', 'S2', 'C1', 'S4', 'S3'] + expected[5:]
+                if key == 'upside_scenario':
+                    self.assertEqual(expected[:2], ['S1', 'S3'])
+                    expected = ['S1', 'S3', 'S1', 'S3'] + expected[2:]
+                self.assertEqual(refs(value), expected, key)
+
+    def test_every_citation_names_a_supplied_ref(self):
+        supplied = {i['ref'] for i in self.payload['items']}
+        for key, value in self.out.items():
+            if isinstance(value, str):
+                self.assertLessEqual(set(refs(value)), supplied, key)
+
+    def test_a_second_pass_changes_nothing(self):
+        again, changes = replay(self.out, self.items, self.notes)
+        self.assertEqual(again, self.out)
+        self.assertEqual(changes, {})
+
+    def test_reversed_item_order_gives_the_same_output(self):
+        reversed_out, reversed_changes = replay(self.raw, list(reversed(self.items)), self.notes)
+        self.assertEqual(reversed_out, self.out)
+        self.assertEqual(reversed_changes, self.changes)
+
+    def test_only_the_expected_rules_fired(self):
+        self.assertEqual(self.changes, {
+            'base_scenario': ['basis_source_context'],
+            'upside_scenario': ['basis_consequence_context'],
+            'business_model_analysis': ['profile_undated'],
+            'information_readiness': ['attribution:Pitch Deck Hunt'],
+            'what_would_change_the_picture': ['attribution:Pitch Deck Hunt'],
+            'questions_for_management': ['attribution:Pitch Deck Hunt'],
+        })
+
+    def test_earlier_memos_get_no_consequence_rule(self):
+        for n in (96, 98, 99, 100, 101, 102):
+            with open(os.path.join(DATA, f'memo{n}.json'), encoding='utf-8') as f:
+                raw = json.loads(re.search(r'\{.*\}', json.load(f)['model_reply_text'], re.S).group(0))
+            with open(os.path.join(DATA, f'memo{n}_payload.json'), encoding='utf-8') as f:
+                payload = json.load(f)['payload']
+            _, changes = replay(raw, items_from(payload), notes_from(payload))
+            fired = {rule for rules in changes.values() for rule in rules}
+            with self.subTest(memo=n):
+                self.assertNotIn('basis_consequence_context', fired)
+
+
+class Memo103StoredSectionsTests(SimpleTestCase):
+    """The stored memo-103 text through the basis guard: the same two repairs, nothing else."""
+
+    def test_the_stored_sections_get_the_same_repairs(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        payload = memo103_payload()
+        facts = basis_facts(items_from(payload), notes_from(payload))
+        _, stored = memo103()
+        out = {key: guard_basis_wording(value, facts)[0] for key, value in stored.items()}
+        self.assertIn(BASE_103_AFTER, out['base_scenario'])
+        self.assertIn(UPSIDE_103_AFTER, out['upside_scenario'])
+        self.assertEqual({k for k in stored if out[k] != stored[k]}, CHANGED_103)
+
+
+class PipelineMemo103Tests(TestCase):
+    """The memo writer itself (intelligence_pipeline._generate_memo) stores the repaired memo-103 reply."""
+
+    def test_the_stored_memo_carries_the_repairs(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('memo103_writer', password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo103_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items_from(payload)),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, stored = memo103()
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertEqual(memo.base_scenario, stored['base_scenario'].replace(BASE_103_BEFORE, BASE_103_AFTER))
+        self.assertEqual(memo.upside_scenario, stored['upside_scenario'].replace(UPSIDE_103_BEFORE, UPSIDE_103_AFTER))
+        for key in ('executive_summary', 'information_readiness', 'supported_points', 'risk_assessment',
+                    'open_concerns', 'downside_scenario', 'zelda_advantage', 'financial_analysis',
+                    'business_model_analysis', 'questions_for_management', 'problem_solution'):
+            self.assertEqual(getattr(memo, key), stored[key], key)
+
+
+# OF-1102 and nearby variants: an affirmative clause dating page 12's figure by page 10's heading. The verification
+# qualifier and a trailing "with ..." clause stay where they are; the moved fact follows the whole sentence.
+_TAKING = "Taking the self-reported traction at face value"
+_DEPLOYED = "the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context"
+_MOVED = "; the deck separately states 500M messages/month [S3] on page 12 (" + CLARIFY + ")"
+_FUNDING = ", with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4]"
+DATE_FIXED = (
+    # The memo's sentence, the qualifier alone and the trailing clause alone (each blocked the rule at c6c3d1b).
+    (f"{_TAKING} without independent verification [S1, S2, S3], {_DEPLOYED}{_FUNDING}.",
+     f"{_TAKING} without independent verification [S1, S2], {_DEPLOYED}{_FUNDING}{_MOVED}."),
+    (f"{_TAKING} without independent verification [S1, S2, S3], {_DEPLOYED}.",
+     f"{_TAKING} without independent verification [S1, S2], {_DEPLOYED}{_MOVED}."),
+    (f"{_TAKING} [S1, S2, S3], {_DEPLOYED}{_FUNDING}.",
+     f"{_TAKING} [S1, S2], {_DEPLOYED}{_FUNDING}{_MOVED}."),
+    # Other wordings of the same qualification.
+    (f"{_TAKING} without external verification [S1, S2, S3], {_DEPLOYED}.",
+     f"{_TAKING} without external verification [S1, S2], {_DEPLOYED}{_MOVED}."),
+    (f"Taking the self-reported traction, not independently verified, at face value [S1, S2, S3], {_DEPLOYED}.",
+     f"Taking the self-reported traction, not independently verified, at face value [S1, S2], {_DEPLOYED}{_MOVED}."),
+    (f"Taking the unverified, self-reported traction at face value [S1, S2, S3], {_DEPLOYED}.",
+     f"Taking the unverified, self-reported traction at face value [S1, S2], {_DEPLOYED}{_MOVED}."),
+    # Another trailing wording, and the date named "as of the slide".
+    (f"{_TAKING} [S1, S2, S3], {_DEPLOYED}, alongside Pitch Deck Hunt's listing of $23.1M raised [C1, S4].",
+     f"{_TAKING} [S1, S2], {_DEPLOYED}, alongside Pitch Deck Hunt's listing of $23.1M raised [C1, S4]{_MOVED}."),
+    (f"{_TAKING} without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform as "
+     "of the 'Traction by Apr-16' slide.",
+     f"{_TAKING} without independent verification [S1, S2], the company had deployed a meaningful bot platform as of "
+     f"the 'Traction by Apr-16' slide{_MOVED}."),
+)
+DATE_KEPT = (
+    # Correct already: only page 10's refs under page 10's heading.
+    f"{_TAKING} without independent verification [S1, S2], {_DEPLOYED}{_FUNDING}.",
+    # A "without" that is no verification qualifier, a hedge, a denial and a question.
+    f"{_TAKING} without the monthly figure [S1, S2, S3], {_DEPLOYED}.",
+    f"{_TAKING}, possibly without independent verification [S1, S2, S3], {_DEPLOYED}.",
+    "The deck does not date the traction figures [S1, S2, S3] by the period referenced in the 'Traction by Apr-16' slide context.",
+    "Was the self-reported traction [S1, S2, S3] deployed by the period referenced in the 'Traction by Apr-16' slide "
+    "context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4]?",
+    # A narrator's figures.
+    f"Taking Pitch Deck Hunt's traction at face value without independent verification [S1, S2, S3], {_DEPLOYED}.",
+    # Trailing clauses the rule does not move past: another page, a condition, the pair's own figure, another opener.
+    f"{_TAKING} [S1, S2, S3], {_DEPLOYED}, with page 12 giving no date.",
+    f"{_TAKING} [S1, S2, S3], {_DEPLOYED}, with revenue to follow if the figures hold.",
+    f"{_TAKING} [S1, S2, S3], {_DEPLOYED}, with 500M messages/month stated separately.",
+    f"{_TAKING} [S1, S2, S3], {_DEPLOYED}, which Pitch Deck Hunt lists at $23.1M [C1, S4].",
+)
+
+# OF-1103 and nearby variants: a condition supposing accuracy or basis whose consequence dates page 12's figure by
+# page 10's heading. The condition is kept whole; the heading is placed where it belongs, right after its phrase.
+_PLACED = ("('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month "
+           "[S3] on page 12, with no date context)")
+CONSEQUENCE_FIXED = (
+    ("If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month "
+     "figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the "
+     "'Traction by Apr-16' slide — consistent with a business approaching scale.",
+     "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month "
+     "figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the "
+     f"'Traction by Apr-16' slide {_PLACED} — consistent with a business approaching scale."),
+    ("Assuming the 140,000+ bots [S1] and 500M messages/month [S3] are accurate, ManyChat would have had significant "
+     "scale as of the 'Traction by Apr-16' slide.",
+     "Assuming the 140,000+ bots [S1] and 500M messages/month [S3] are accurate, ManyChat would have had significant "
+     f"scale as of the 'Traction by Apr-16' slide {_PLACED}."),
+    ("If the self-reported figures [S1, S3] are accurate without independent verification, ManyChat would represent "
+     "a large platform at the time of the 'Traction by Apr-16' slide.",
+     "If the self-reported figures [S1, S3] are accurate without independent verification, ManyChat would represent "
+     f"a large platform at the time of the 'Traction by Apr-16' slide {_PLACED}."),
+    # The "in the 'X' slide context" phrase in a consequence (memo 101's base wording, under a condition).
+    ("If the traction figures [S1, S3] are taken at face value, ManyChat would have built a sizeable platform by the "
+     "period referenced in the 'Traction by Apr-16' slide context.",
+     "If the traction figures [S1, S3] are taken at face value, ManyChat would have built a sizeable platform by the "
+     f"period referenced in the 'Traction by Apr-16' slide context {_PLACED}."),
+    # A consequence in the indicative dates the figure just the same.
+    ("If the figures [S1, S3] are accurate, ManyChat had a large platform at the time of the 'Traction by Apr-16' slide.",
+     f"If the figures [S1, S3] are accurate, ManyChat had a large platform at the time of the 'Traction by Apr-16' slide "
+     f"{_PLACED}."),
+    # Page 12's figure alone in the condition.
+    ("If 500M messages/month [S3] is accurate, ManyChat would represent a large platform at the time of the "
+     "'Traction by Apr-16' slide.",
+     "If 500M messages/month [S3] is accurate, ManyChat would represent a large platform at the time of the "
+     "'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10; the deck states 500M messages/month [S3] on "
+     "page 12, with no date context)."),
+)
+CONSEQUENCE_KEPT = (
+    # Explicit date hypotheses: the condition itself supposes the date.
+    "If the 500M messages/month [S3] figure dates from the 'Traction by Apr-16' slide, ManyChat would represent a large "
+    "platform at the time of the 'Traction by Apr-16' slide.",
+    "If the self-reported figure of 500M messages/month [S3] reflects a monthly run-rate as of the 'Traction by Apr-16' "
+    "slide context, and if a meaningful share of the 140,000+ bots [S1] belong to paying businesses, ManyChat would "
+    "represent a high-volume platform with demonstrated adoption ahead of monetisation.",
+    "If the 500M messages/month [S3] is accurate as of April 2016, ManyChat would have been large at the time of the "
+    "'Traction by Apr-16' slide.",
+    "If the figures [S1, S3] are accurate, and if they date from the 'Traction by Apr-16' slide, ManyChat would be "
+    "large at the time of the 'Traction by Apr-16' slide.",
+    # Only page 10's figures supposed; a question; a denial; a narrator; another speaker; a later or "whether" condition.
+    "If the 140,000+ bots [S1] are accurate, ManyChat would represent a large platform at the time of the 'Traction by "
+    "Apr-16' slide.",
+    "If the figures [S1, S3] are accurate, would ManyChat have been large at the time of the 'Traction by Apr-16' slide?",
+    "If the figures [S1, S3] are accurate, ManyChat would not have been large at the time of the 'Traction by Apr-16' slide.",
+    "If Pitch Deck Hunt's figures [S1, S3] are accurate, ManyChat would be large at the time of the 'Traction by Apr-16' slide.",
+    "According to an analyst, if the figures [S1, S3] are accurate, ManyChat would be large at the time of the "
+    "'Traction by Apr-16' slide.",
+    "ManyChat would be large at the time of the 'Traction by Apr-16' slide if the figures [S1, S3] are accurate.",
+    "Whether the figures [S1, S3] are accurate, ManyChat was large at the time of the 'Traction by Apr-16' slide.",
+    # Another metric in the condition; a citation inside the consequence.
+    "If revenue and the figures [S1, S3] are accurate, ManyChat would be large at the time of the 'Traction by Apr-16' slide.",
+    "If the figures [S1, S3] are accurate, ManyChat would have 140,000+ bots [S1] at the time of the 'Traction by "
+    "Apr-16' slide.",
+    # Memo 102's accepting condition is the condition rule's (its antecedent names the heading).
+    "If the traction figures [S1, S2] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had "
+    "reached meaningful platform scale at that point in time.",
+)
+
+
+class Of1102Of1103DateTransferTests(SimpleTestCase):
+    """OF-1102 / OF-1103: page 10's heading does not date page 12's figure, whether a clause asserts it or a
+    condition's consequence carries it; explicit date hypotheses, qualifications, conditions, denials, questions,
+    unrelated facts and narrators keep their wording and citations."""
+
+    def setUp(self):
+        self.payload = memo103_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+
+    def full(self, text, items=None):
+        out, changes = replay({'s': text}, items or self.items, self.notes)
+        return out['s'], changes.get('s', [])
+
+    def test_an_asserted_date_transfer_is_corrected(self):
+        for before, after in DATE_FIXED:
+            with self.subTest(text=before):
+                self.assertEqual(self.full(before)[0], after)
+                self.assertIn('basis_source_context', self.full(before)[1])
+
+    def test_a_condition_s_consequence_does_not_date_page_12(self):
+        for before, after in CONSEQUENCE_FIXED:
+            with self.subTest(text=before):
+                self.assertEqual(self.full(before), (after, ['basis_consequence_context']))
+
+    def test_hypotheses_denials_questions_and_other_speakers_are_kept(self):
+        for text in DATE_KEPT + CONSEQUENCE_KEPT:
+            with self.subTest(text=text):
+                out, changes = self.full(text)
+                self.assertEqual(out, text)
+                self.assertFalse({'basis_source_context', 'basis_consequence_context'} & set(changes), changes)
+
+    def test_earlier_graded_repairs_are_unchanged(self):
+        # Memo 101's OF-904 base, memo 102's OF-1003 condition and OF-1004 citation, through memo 103's own context.
+        for before, after, rule in (
+                ("Taking the self-reported traction metrics at face value [S1, S2, S3], ManyChat had built a sizeable "
+                 "bot and messaging platform by the period referenced in the 'Traction by Apr-16' slide context.",
+                 "Taking the self-reported traction metrics at face value [S1, S2], ManyChat had built a sizeable bot "
+                 "and messaging platform by the period referenced in the 'Traction by Apr-16' slide context" + _MOVED + ".",
+                 'basis_source_context'),
+                (BASE_102_BEFORE, BASE_102_AFTER, 'basis_condition_context'),
+                ("A separate page states '500M messages/month' [C3, S3].",
+                 "A separate page states '500M messages/month' [C2, S3].", 'basis_citation_identity')):
+            with self.subTest(text=before):
+                self.assertEqual(self.full(before), (after, [rule]))
+
+    def test_stable_idempotent_and_every_citation_owned(self):
+        supplied = {item.ref for item in self.items}
+        texts = DATE_KEPT + CONSEQUENCE_KEPT + tuple(b for b, _ in DATE_FIXED + CONSEQUENCE_FIXED)
+        for text in texts:
+            with self.subTest(text=text):
+                out, _ = self.full(text)
+                self.assertEqual(self.full(out), (out, []))
+                self.assertEqual(self.full(text, list(reversed(self.items)))[0], out)
+                self.assertLessEqual(set(refs(out)), supplied)
+
+    def test_another_pair_alike(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        facts = basis_facts(OTHER_PAIR_ITEMS(), (OTHER_PAIR_NOTE,))
+        facts_rev = basis_facts(list(reversed(OTHER_PAIR_ITEMS())), (OTHER_PAIR_NOTE,))
+        moved = "; the deck separately states 3M bots/week [S8] on page 8 (" + CLARIFY_WEEKLY + ")"
+        cases = (
+            ("Taking the self-reported usage at face value without independent verification [S7, S8], the platform "
+             "was sizeable by the period referenced in the 'Growth by Q3-19' slide context, with 40 staff [S9].",
+             "Taking the self-reported usage at face value without independent verification [S7], the platform was "
+             "sizeable by the period referenced in the 'Growth by Q3-19' slide context, with 40 staff [S9]" + moved + ".",
+             ['basis_source_context']),
+            ("If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would be large at the time of the "
+             "'Growth by Q3-19' slide.",
+             "If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would be large at the time of the "
+             "'Growth by Q3-19' slide ('Growth by Q3-19' heads page 7, which states 3M bots with no explicit interval "
+             "[S7]; the deck states 3M bots/week [S8] on page 8, with no date context).",
+             ['basis_consequence_context']),
+        )
+        for before, after, rule in cases:
+            with self.subTest(text=before):
+                self.assertEqual(guard_basis_wording(before, facts), (after, rule))
+                self.assertEqual(guard_basis_wording(before, facts_rev), (after, rule))
+                self.assertEqual(guard_basis_wording(after, facts), (after, []))
+        for kept in ("If the 3M bots/week [S8] figure dates from the 'Growth by Q3-19' slide, the platform would be "
+                     "large at the time of the 'Growth by Q3-19' slide.",
+                     "Taking the self-reported usage at face value without independent verification [S7], the platform "
+                     "was sizeable by the period referenced in the 'Growth by Q3-19' slide context, with 40 staff [S9].",
+                     # Memo 103's heading is not this pair's: nothing of this pair sits under it.
+                     "If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would be large at the time "
+                     "of the 'Traction by Apr-16' slide."):
+            with self.subTest(text=kept):
+                self.assertEqual(guard_basis_wording(kept, facts), (kept, []))
