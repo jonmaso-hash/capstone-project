@@ -4256,10 +4256,12 @@ CONSEQUENCE_FIXED = (
      "If 500M messages/month [S3] is accurate, ManyChat would represent a large platform at the time of the "
      "'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10; the deck states 500M messages/month [S3] on "
      "page 12, with no date context)."),
-    # Review of c8a0336: the heading closes the consequence; a clause after a dash or ";" adds no condition, speaker,
-    # citation or denial; the consequence names the figures' scale in other allowed words.
-    (f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE}; growth would follow.",
-     f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} {_PLACED}; growth would follow."),
+    # Review of c8a0336: the heading closes the consequence, and only a recognised harmless continuation follows
+    # (review of eee2bc3): memo 103's own wording; the consequence names the figures' scale in other allowed words.
+    (f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — consistent with a network-effect-driven "
+     "software business approaching scale.",
+     f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} {_PLACED} — consistent with a "
+     "network-effect-driven software business approaching scale."),
     (f"{_IF_ACCURATE}, ManyChat would have run a high-volume messaging platform {_AT_SLIDE}.",
      f"{_IF_ACCURATE}, ManyChat would have run a high-volume messaging platform {_AT_SLIDE} {_PLACED}."),
     (f"{_IF_ACCURATE}, the platform would have had 140,000+ bots and 500M messages/month {_AT_SLIDE}.",
@@ -4318,6 +4320,18 @@ CONSEQUENCE_KEPT = (
     "funding [C1, S4].",
     f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — not the monthly figure's period.",
     f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE}; growth would follow [S2].",
+    # Review of eee2bc3: an unrecognised later clause is kept, whatever its words; only a recognised harmless
+    # continuation may follow.
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — on the footing that this holds.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — premised on this holding.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — barring surprises.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE}; growth would follow.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE}: a plausible reading.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — consistent with a business approaching "
+    "scale on that footing.",                          # a recognised opening, then words outside its allowlist
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — consistent with this holding.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — consistent with a business approaching "
+    "scale, if this holds.",
     f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — in line with Pitch Deck Hunt's profile.",
     # Review of c49cb4d: a later clause supposing the date in other words, and nearby wordings.
     f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — subject to the monthly figure referring "
