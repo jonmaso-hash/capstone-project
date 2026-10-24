@@ -1,0 +1,95 @@
+"""Review of c8a0336 / correction evidence (not live acceptance): memos 96-103's recorded model replies through the pipeline's
+post-generation steps (list normalisation, time guard, funding guard, basis guard), once with the basis guard at the
+execution commit c6c3d1b (PR #288 merged; memo 103's run) (loaded from git, not from the working tree) and once with the working tree's.
+Every field is compared; for memos 100-103 the base replay is also compared with what the run stored; every output citation must name a ref the payload supplies. Reads committed evidence
+with git show; no database, no model call. Run via `manage.py shell -c exec(...)` in the fix worktree.
+Prints one JSON line."""
+import importlib.util, json, re, subprocess, sys
+from zelda_api.claim_context import guard_time_wording
+from zelda_api.funding_fidelity import funding_facts, guard_funding_fidelity
+from zelda_api import basis_fidelity as new_basis
+from zelda_api.memo_lists import memo_text
+from zelda_api.tests_output_fidelity import items_from, notes_from
+
+BASE = 'c6c3d1b9b1fe8b5e32d856c64a5b535a986684a0'
+REF = re.compile(r'\[([A-Z]\d+(?:\s*,\s*[A-Z]\d+)*)\]')
+
+
+def show(rev, path):
+    return subprocess.run(['git', 'show', f'{rev}:{path}'], capture_output=True, text=True, encoding='utf-8', check=True).stdout
+
+
+spec = importlib.util.spec_from_loader('zelda_api.basis_fidelity_c6c3d1b', loader=None)
+old_basis = importlib.util.module_from_spec(spec)
+old_basis.__package__ = 'zelda_api'
+exec(compile(show(BASE, 'zelda_api/basis_fidelity.py'), 'c6c3d1b:zelda_api/basis_fidelity.py', 'exec'), old_basis.__dict__)
+PREV = 'c8a033632b17335090c63ee7fcef7a6ad39b6ec6'   # the reviewed correction head (review of c8a0336)
+prev_basis = importlib.util.module_from_spec(importlib.util.spec_from_loader('zelda_api.basis_fidelity_c8a0336', loader=None))
+prev_basis.__package__ = 'zelda_api'
+exec(compile(show(PREV, 'zelda_api/basis_fidelity.py'), 'c8a0336:zelda_api/basis_fidelity.py', 'exec'), prev_basis.__dict__)
+
+RUNS = {
+    'memo96': ('5f08c05', 'docs/baselines/manychat/funding-fidelity-9b6d215/pass-a'),
+    'memo97': ('ea3ab13', 'docs/baselines/manychat/narrator-provenance-b9cddec/pass-a'),
+    'memo98': ('0dd8e91', 'docs/baselines/manychat/usage-basis-d276918/pass-a'),
+    'memo99': ('d821cca', 'docs/baselines/manychat/output-fidelity-64f9db5/pass-a'),
+    'memo100': ('d8b224c', 'docs/baselines/manychat/output-fidelity-f34e3a3/pass-a'),
+    'memo101': ('82771ef', 'docs/baselines/manychat/output-fidelity-0664563/pass-a'),
+    'memo102': ('6d131f5', 'docs/baselines/manychat/output-fidelity-d0bad8f/pass-a'),
+    'memo103': ('4ee3639', 'docs/baselines/manychat/output-fidelity-c6c3d1b/pass-a'),
+}
+refs = lambda t: [r.strip() for g in REF.findall(t or '') for r in g.split(',')]
+sentences = lambda t: [s for s in re.split(r'(?<=[.!?])\s+|\n', t or '') if s]
+
+
+def replay(raw, items, notes, company, module):
+    allowed = {i.ref: i.time_wording_allowed for i in items if i.dated}
+    facts, bfacts = funding_facts(items, company), module.basis_facts(items, notes)
+    out, changes = {}, {}
+    for key, value in raw.items():
+        text = memo_text(value) if isinstance(value, (str, list, tuple, dict)) else value
+        text, removed = guard_time_wording(text, allowed)
+        text, fid = guard_funding_fidelity(text, facts)
+        text, basis = module.guard_basis_wording(text, bfacts)
+        out[key] = text
+        if removed or fid or basis:
+            changes[key] = list(removed or []) + list(fid) + list(basis)
+    return out, changes
+
+
+result = {'head': subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip(),
+          'working_tree_basis_fidelity_differs_from_head': bool(subprocess.run(
+              ['git', 'diff', '--quiet', 'HEAD', '--', 'zelda_api/basis_fidelity.py']).returncode),
+          'base': BASE, 'previous': PREV}
+for name, (rev, folder) in RUNS.items():
+    call = json.loads(show(rev, f'{folder}/09b_model_call.json'))
+    user = call['request']['messages'][0]['content']
+    payload, _ = json.JSONDecoder().raw_decode(user[user.find('{', user.find('## EVIDENCE')):])
+    stored = json.loads(show(rev, f'{folder}/09_memo.json'))['memo']
+    raw = json.loads(re.search(r'\{.*\}', call['response']['text'][0], re.S).group(0))
+    raw = {k: v for k, v in raw.items() if k in stored}
+    items, notes, company = items_from(payload), notes_from(payload), payload.get('company') or 'ManyChat'
+    old, old_changes = replay(raw, items, notes, company, old_basis)
+    new, new_changes = replay(raw, items, notes, company, new_basis)
+    prev, prev_changes = replay(raw, items, notes, company, prev_basis)
+    rev_out, rev_changes = replay(raw, list(reversed(items)), notes, company, new_basis)
+    again, again_changes = replay(new, items, notes, company, new_basis)
+    differs = {}
+    for key in raw:
+        if new[key] != old[key]:
+            differs[key] = {'removed': [s for s in sentences(old[key]) if s not in sentences(new[key])],
+                            'added': [s for s in sentences(new[key]) if s not in sentences(old[key])],
+                            'rules_added': [c for c in new_changes.get(key, []) if c not in old_changes.get(key, [])]}
+    result[name] = {
+        'fields': len(raw), 'basis_note_present': bool(notes),
+        'fields_differing_from_base_replay': differs,
+        'base_replay_equals_stored': {k: old[k] == stored[k] for k in raw} if name in ('memo100', 'memo101', 'memo102', 'memo103') else None,
+        'fields_differing_from_c8a0336_replay': sorted(k for k in raw if new[k] != prev[k]),
+        'rule_changes_c8a0336_equal_fix': prev_changes == new_changes,
+        'rule_changes_base': old_changes, 'rule_changes_fix': new_changes,
+        'reversed_items_same_output_and_changes': rev_out == new and rev_changes == new_changes,
+        'second_pass_unchanged': again == new and not again_changes,
+        'every_ref_supplied': all(set(refs(new[k])) <= {i.ref for i in items} for k in raw if isinstance(new[k], str)),
+        'refs_in_order_same_as_base_replay': {k: refs(new[k]) == refs(old[k]) for k in raw if isinstance(new[k], str)},
+    }
+print('REPLAY ' + json.dumps(result, ensure_ascii=False))
