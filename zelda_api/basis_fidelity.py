@@ -1167,12 +1167,56 @@ def _accepting_antecedent(text, cited, facts, pair):
     return _plain_words(text, vocabulary)
 
 
+# The consequence's subject: the company named ("ManyChat"), "the company", "the platform" or "it". Its own words
+# are not read; the predicate after it must describe the cited figures (review of c8a0336).
+_CONSEQUENCE_SUBJECT = re.compile(r"\s*(?:the\s+(?:company|platform|business)|it|[A-Z][\w&'.-]*(?:\s+[A-Z][\w&'.-]*){0,2})"
+                                  r"(?=\s)")
+# What a consequence may say about the cited figures besides their own words, figures and the pair's categories: the
+# scale they describe ("would represent a platform with significant throughput", "had a large platform"). An
+# allowlist: another metric ("revenue would be $10M"), a denial, a speaker or an unknown word keeps the sentence.
+_CONSEQUENCE_WORDS = frozenset({'would', 'could', 'might', 'may', 'will', 'have', 'has', 'had', 'been', 'be', 'is',
+                                'was', 'represent', 'represents', 'represented', 'built', 'reached', 'achieved',
+                                'operated', 'run', 'with', 'its', 'by', 'period', 'referenced', 'already',
+                                'significant', 'sizeable', 'sizable', 'large', 'meaningful', 'substantial',
+                                'considerable', 'high', 'volume', 'bot', 'messaging', 'user', 'base'})
+# At least one of these, the pair's categories or the cited statements' words must be in the predicate: it is the
+# figures' scale the heading dates, not something else ("revenue would be significant" names none).
+_SCALE_NOUNS = frozenset({'platform', 'scale', 'throughput', 'adoption', 'footprint', 'reach', 'volume'})
+# The heading phrase must close the consequence's clause: the sentence ends, or a dash, ";" or ":" follows. Anything
+# else after it (", according to an analyst", ", only if ...", "[S1, S3]") is part of the consequence, and kept.
+_CONSEQUENCE_CLOSE = re.compile(r'\s*(?:[.!]?["”’)]*\s*$|[—–;:]|-(?=\s))')
+# What may not follow the clause either: a condition or supposition, a citation, a speaker, a denial or the date
+# itself ("— if the monthly figure dates from that period", "— according to an analyst").
+_LATER_HYPOTHESIS = re.compile(r"\b(?:if|whether|unless|assuming|supposing|suppose|provided|providing|so\s+long\s+as|"
+                               r"as\s+long\s+as|on\s+(?:the\s+)?(?:condition|assumption)|presum\w*|dat(?:e|es|ed|ing))\b",
+                               re.I)
+
+
+def _figures_consequence(consequence, cited, facts, pair):
+    """The consequence before the heading phrase is a subject and a predicate about the cited figures' scale, in
+    allowlisted words, naming that scale (a scale noun, the pair's category or a word of the cited statements)."""
+    subject = _CONSEQUENCE_SUBJECT.match(consequence)
+    if subject is None:
+        return False
+    statements = [_DIGIT_GROUP.sub('', fact.lower()) for ref, *_, fact in facts.places if ref in cited]
+    nouns = {form[3] for form in map(_statement_form, statements) if form and form[3]} | pair.topics   # "bots"
+    vocabulary = ((_PLACING_WORDS | _CONSEQUENCE_WORDS | _SCALE_NOUNS | nouns
+                   | {word for fact in statements for word in re.findall(r'[a-z]+', fact)}) - _DENIAL
+                  | {form for fact in statements for form in _stated_forms(fact)})
+    predicate = re.sub(r'(?<=[a-z])[-/](?=[a-z])', ' ', consequence[subject.end():], flags=re.I)  # "high-volume"
+    words = set(re.findall(r"[a-z']+", re.sub(r'(?<=[a-z])[-/](?=[a-z])', ' ', consequence.lower())))
+    return _plain_words(predicate, vocabulary) and bool(words & (_SCALE_NOUNS | nouns))   # "the platform would be large"
+
+
 def _consequence_context(sentence, facts, changes):
     """A condition that only accepts the cited figures (or their basis), whose CONSEQUENCE places them at page 10's
     heading ("..., ManyChat would represent a platform ... at the time of the 'Traction by Apr-16' slide"): the
     heading is carried onto page 12's figure, which the condition never supposed (OF-1103). The condition and its
     consequence are kept whole; right after the phrase, a parenthesis places the heading on its own page and page
-    12's figure on its page, with no date context. Conditions that suppose the date themselves are kept."""
+    12's figure on its page, with no date context. Conditions that suppose the date themselves are kept, and so is
+    a consequence about anything but the cited figures' scale, one the heading does not close (", according to an
+    analyst", ", only if ...", a citation), and one followed by a condition, speaker, citation or denial (review of
+    c8a0336)."""
     if _asks(sentence) or not facts.pairs:
         return sentence
     condition = _LEADING_CONDITION.match(sentence)
@@ -1211,12 +1255,18 @@ def _consequence_context(sentence, facts, changes):
     pages = {page for _, page, context, _ in facts.places if context == claimed}
     if len(pages) != 1:
         return sentence                        # the heading is no single page's
-    consequence = sentence[split:at]
-    if (_REF.search(consequence) or set(re.findall(r"[\w']+", consequence.lower())) & _DENIAL
-            or _ATTRIBUTION.search(consequence)
-            or any(name.lower() in sentence[:end].lower() for name in facts.narrators)
+    consequence = sentence[split + 1:at]
+    close = _CONSEQUENCE_CLOSE.match(sentence, end)
+    if close is None:
+        return sentence                        # the consequence goes on past the heading: its words are not read
+    rest = sentence[close.end():]              # after a dash, ";" or ":"; empty at the sentence's end
+    if (_REF.search(consequence) or _REF.search(rest) or _LATER_HYPOTHESIS.search(rest) or _ATTRIBUTION.search(rest)
+            or set(re.findall(r"[\w']+", rest.lower().translate(_APOSTROPHES))) & _DENIAL
+            or any(name.lower() in sentence.lower() for name in facts.narrators)
+            or not _figures_consequence(consequence, cited, facts, pair)
             or not _accepting_antecedent(antecedent, cited, facts, pair)):
-        return sentence                        # a cited, denied or attributed consequence, or a hypothesis of its own
+        return sentence                        # a cited consequence or one about something else, a later condition,
+                                               # speaker, citation or denial, or a hypothesis of the condition's own
     runs = []                                  # adjacent refs on one page share a run
     for ref in outside:
         if runs and runs[-1][0] == places[ref][0]:

@@ -4224,6 +4224,8 @@ DATE_KEPT = (
 # page 10's heading. The condition is kept whole; the heading is placed where it belongs, right after its phrase.
 _PLACED = ("('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month "
            "[S3] on page 12, with no date context)")
+_IF_ACCURATE = "If the figures [S1, S3] are accurate"
+_AT_SLIDE = "at the time of the 'Traction by Apr-16' slide"
 CONSEQUENCE_FIXED = (
     ("If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month "
      "figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the "
@@ -4254,6 +4256,16 @@ CONSEQUENCE_FIXED = (
      "If 500M messages/month [S3] is accurate, ManyChat would represent a large platform at the time of the "
      "'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10; the deck states 500M messages/month [S3] on "
      "page 12, with no date context)."),
+    # Review of c8a0336: the heading closes the consequence; a clause after a dash or ";" adds no condition, speaker,
+    # citation or denial; the consequence names the figures' scale in other allowed words.
+    (f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE}; growth would follow.",
+     f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} {_PLACED}; growth would follow."),
+    (f"{_IF_ACCURATE}, ManyChat would have run a high-volume messaging platform {_AT_SLIDE}.",
+     f"{_IF_ACCURATE}, ManyChat would have run a high-volume messaging platform {_AT_SLIDE} {_PLACED}."),
+    (f"{_IF_ACCURATE}, the platform would have had 140,000+ bots and 500M messages/month {_AT_SLIDE}.",
+     f"{_IF_ACCURATE}, the platform would have had 140,000+ bots and 500M messages/month {_AT_SLIDE} {_PLACED}."),
+    (f"{_IF_ACCURATE}, it would have had significant traction {_AT_SLIDE}.",
+     f"{_IF_ACCURATE}, it would have had significant traction {_AT_SLIDE} {_PLACED}."),
 )
 CONSEQUENCE_KEPT = (
     # Explicit date hypotheses: the condition itself supposes the date.
@@ -4262,25 +4274,57 @@ CONSEQUENCE_KEPT = (
     "If the self-reported figure of 500M messages/month [S3] reflects a monthly run-rate as of the 'Traction by Apr-16' "
     "slide context, and if a meaningful share of the 140,000+ bots [S1] belong to paying businesses, ManyChat would "
     "represent a high-volume platform with demonstrated adoption ahead of monetisation.",
-    "If the 500M messages/month [S3] is accurate as of April 2016, ManyChat would have been large at the time of the "
-    "'Traction by Apr-16' slide.",
+    "If the 500M messages/month [S3] is accurate as of April 2016, ManyChat would have been a large platform at the "
+    "time of the 'Traction by Apr-16' slide.",
     "If the figures [S1, S3] are accurate, and if they date from the 'Traction by Apr-16' slide, ManyChat would be "
-    "large at the time of the 'Traction by Apr-16' slide.",
+    "a large platform at the time of the 'Traction by Apr-16' slide.",
     # Only page 10's figures supposed; a question; a denial; a narrator; another speaker; a later or "whether" condition.
     "If the 140,000+ bots [S1] are accurate, ManyChat would represent a large platform at the time of the 'Traction by "
     "Apr-16' slide.",
-    "If the figures [S1, S3] are accurate, would ManyChat have been large at the time of the 'Traction by Apr-16' slide?",
-    "If the figures [S1, S3] are accurate, ManyChat would not have been large at the time of the 'Traction by Apr-16' slide.",
-    "If Pitch Deck Hunt's figures [S1, S3] are accurate, ManyChat would be large at the time of the 'Traction by Apr-16' slide.",
-    "According to an analyst, if the figures [S1, S3] are accurate, ManyChat would be large at the time of the "
+    "If the figures [S1, S3] are accurate, would ManyChat have had a large platform at the time of the 'Traction by "
+    "Apr-16' slide?",
+    "If the figures [S1, S3] are accurate, ManyChat would not have had a large platform at the time of the 'Traction by "
+    "Apr-16' slide.",
+    "If Pitch Deck Hunt's figures [S1, S3] are accurate, ManyChat would be a large platform at the time of the "
     "'Traction by Apr-16' slide.",
-    "ManyChat would be large at the time of the 'Traction by Apr-16' slide if the figures [S1, S3] are accurate.",
-    "If the figures [S1, S3] are accurate, an analyst says ManyChat was large at the time of the 'Traction by Apr-16' slide.",
-    "Whether the figures [S1, S3] are accurate, ManyChat was large at the time of the 'Traction by Apr-16' slide.",
+    "According to an analyst, if the figures [S1, S3] are accurate, ManyChat would be a large platform at the time of "
+    "the 'Traction by Apr-16' slide.",
+    "ManyChat would be a large platform at the time of the 'Traction by Apr-16' slide if the figures [S1, S3] are accurate.",
+    "If the figures [S1, S3] are accurate, an analyst says ManyChat was a large platform at the time of the 'Traction "
+    "by Apr-16' slide.",
+    "Whether the figures [S1, S3] are accurate, ManyChat had a large platform at the time of the 'Traction by Apr-16' "
+    "slide.",
     # Another metric in the condition; a citation inside the consequence.
-    "If revenue and the figures [S1, S3] are accurate, ManyChat would be large at the time of the 'Traction by Apr-16' slide.",
+    "If revenue and the figures [S1, S3] are accurate, ManyChat would be a large platform at the time of the 'Traction "
+    "by Apr-16' slide.",
     "If the figures [S1, S3] are accurate, ManyChat would have 140,000+ bots [S1] at the time of the 'Traction by "
     "Apr-16' slide.",
+    # Review of c8a0336: what follows the heading is part of the consequence: a speaker, an explicit date hypothesis,
+    # the consequence's own citation; and nearby wordings after a comma, a dash or a semicolon.
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE}, according to an analyst.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE}, only if the monthly figure dates from "
+    "that period.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} [S1, S3].",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} [S3].",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE}, provided the monthly figure dates from "
+    "then.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE}, when page 12 was written.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — according to an analyst.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — if the monthly figure dates from that "
+    "period.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — which presumes the monthly figure dates "
+    "from then.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE}; Pitch Deck Hunt lists $23.1M in prior "
+    "funding [C1, S4].",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — not the monthly figure's period.",
+    # Review of c8a0336: a consequence about something other than the cited figures' scale.
+    f"{_IF_ACCURATE}, revenue would be $10M {_AT_SLIDE}.",
+    f"{_IF_ACCURATE}, revenue would be significant {_AT_SLIDE}.",
+    f"{_IF_ACCURATE}, ManyChat would have had 40 staff {_AT_SLIDE}.",
+    f"{_IF_ACCURATE}, the company's margins would be large {_AT_SLIDE}.",
+    f"{_IF_ACCURATE}, ManyChat would be large {_AT_SLIDE}.",           # no scale named: what is dated is unknown
+    f"{_IF_ACCURATE}, ManyChat would have 250M messages/month {_AT_SLIDE}.",
+    f"{_IF_ACCURATE}, the analyst would represent a large platform {_AT_SLIDE}.",
     # Memo 102's accepting condition is the condition rule's (its antecedent names the heading).
     "If the traction figures [S1, S2] are taken at face value under the 'Traction by Apr-16' framing, ManyChat had "
     "reached meaningful platform scale at that point in time.",
@@ -4371,7 +4415,16 @@ class Of1102Of1103DateTransferTests(SimpleTestCase):
                      "was sizeable by the period referenced in the 'Growth by Q3-19' slide context, with 40 staff [S9].",
                      # Memo 103's heading is not this pair's: nothing of this pair sits under it.
                      "If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would be large at the time "
-                     "of the 'Traction by Apr-16' slide."):
+                     "of the 'Traction by Apr-16' slide.",
+                     # Review of c8a0336: another metric, a later speaker, a later date hypothesis, a citation.
+                     "If the 3M bots [S7] and 3M bots/week [S8] are accurate, revenue would be $4M at the time of the "
+                     "'Growth by Q3-19' slide.",
+                     "If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would be large at the time of "
+                     "the 'Growth by Q3-19' slide, according to an analyst.",
+                     "If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would be large at the time of "
+                     "the 'Growth by Q3-19' slide — if the weekly figure dates from then.",
+                     "If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would be large at the time of "
+                     "the 'Growth by Q3-19' slide [S7, S8]."):
             with self.subTest(text=kept):
                 self.assertEqual(guard_basis_wording(kept, facts), (kept, []))
 
