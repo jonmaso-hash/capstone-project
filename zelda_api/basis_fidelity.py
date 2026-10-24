@@ -1203,7 +1203,7 @@ _REST_FIGURE_WORDS = frozenset({'figure', 'figures', 'number', 'numbers', 'metri
                                 'weekly', 'day', 'daily', 'year', 'yearly', 'annual', 'annually', 'quarter', 'quarterly',
                                 'cumulative', 'total', 'run', 'rate', 'april', 'apr'})
 # Words that deny or all but deny a consequence wherever they stand, its subject included ("No platform would ...",
-# "Neither platform ...", "Few platforms ..."); any "-n't" word too (review of c49cb4d).
+# "Neither platform ...", "Few would ...") (review of c49cb4d).
 _CONSEQUENCE_DENIAL = _DENIAL | frozenset({'few', 'hardly', 'barely', 'scarcely', 'nobody', 'nowhere'})
 
 
@@ -1217,9 +1217,10 @@ def _rest_free(rest, cited, facts, pair):
                      | {_RATE_ADJECTIVE.get(interval, interval) for interval in pair.intervals}
                      | {word for fact in statements for word in re.findall(r'[a-z]+', fact)}) - _PLACING_WORDS
                     | {'figure', 'figures', 'total', 'rate'})
-    return not (_REF.search(rest) or _LATER_HYPOTHESIS.search(rest) or _ATTRIBUTION.search(rest)
+    return not (_LATER_HYPOTHESIS.search(rest) or _ATTRIBUTION.search(rest)
                 or words & _DENIAL or any(word.endswith("n't") for word in words)
-                or words & figure_words or re.search(r"\d|'[^']+'|‘[^’]+’", rest))
+                or words & figure_words
+                or re.search(r"\d|'[^']+'|‘[^’]+’", rest))   # any digit: a figure, or a citation ("[S2]")
 
 
 def _figures_consequence(consequence, cited, facts, pair):
@@ -1228,13 +1229,14 @@ def _figures_consequence(consequence, cited, facts, pair):
     subject = _CONSEQUENCE_SUBJECT.match(consequence)
     if subject is None:
         return False
-    every = set(re.findall(r"[a-z']+", consequence.lower().translate(_APOSTROPHES)))
-    if every & _CONSEQUENCE_DENIAL or any(word.endswith("n't") for word in every):
-        return False                           # a denial, the subject's too ("No platform", "Neither platform")
+    if set(re.findall(r"[a-z']+", consequence.lower())) & _CONSEQUENCE_DENIAL:
+        return False                           # a denial, the subject's too ("No platform", "Neither platform"), or
+                                               # one borrowed from a statement ("3M bots with no explicit interval");
+                                               # a "-n't" word is no predicate word, so the allowlist below refuses it
     statements = [_DIGIT_GROUP.sub('', fact.lower()) for ref, *_, fact in facts.places if ref in cited]
     nouns = {form[3] for form in map(_statement_form, statements) if form and form[3]} | pair.topics   # "bots"
-    vocabulary = ((_PLACING_WORDS | _CONSEQUENCE_WORDS | _SCALE_NOUNS | nouns
-                   | {word for fact in statements for word in re.findall(r'[a-z]+', fact)}) - _DENIAL
+    vocabulary = (_PLACING_WORDS | _CONSEQUENCE_WORDS | _SCALE_NOUNS | nouns
+                  | {word for fact in statements for word in re.findall(r'[a-z]+', fact)}
                   | {form for fact in statements for form in _stated_forms(fact)})
     predicate = re.sub(r'(?<=[a-z])[-/](?=[a-z])', ' ', consequence[subject.end():], flags=re.I)  # "high-volume"
     words = set(re.findall(r"[a-z']+", re.sub(r'(?<=[a-z])[-/](?=[a-z])', ' ', consequence.lower())))

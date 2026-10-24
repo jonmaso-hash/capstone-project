@@ -4334,10 +4334,13 @@ CONSEQUENCE_KEPT = (
     f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — the messages included.",
     f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — as at April 2016.",
     f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — which wouldn’t follow otherwise.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — though not a certainty.",
+    f"{_IF_ACCURATE}, ManyChat would represent a large platform {_AT_SLIDE} — as at 2016.",
     # Review of c49cb4d: a denial in the consequence's subject, and other denials and near-denials.
     f"{_IF_ACCURATE}, No platform would have significant throughput {_AT_SLIDE}.",
     f"{_IF_ACCURATE}, Neither platform would have significant throughput {_AT_SLIDE}.",
     f"{_IF_ACCURATE}, Few platforms would have significant throughput {_AT_SLIDE}.",
+    f"{_IF_ACCURATE}, Few would have a large platform {_AT_SLIDE}.",
     f"{_IF_ACCURATE}, ManyChat wouldn't have had a large platform {_AT_SLIDE}.",
     f"{_IF_ACCURATE}, ManyChat wouldn’t have had a large platform {_AT_SLIDE}.",
     f"{_IF_ACCURATE}, ManyChat would hardly have had a large platform {_AT_SLIDE}.",
