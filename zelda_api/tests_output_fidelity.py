@@ -4215,6 +4215,7 @@ DATE_KEPT = (
     # Trailing clauses the rule does not move past: another page, a condition, the pair's own figure, another opener.
     f"{_TAKING} [S1, S2, S3], {_DEPLOYED}, with page 12 giving no date.",
     f"{_TAKING} [S1, S2, S3], {_DEPLOYED}, with revenue to follow if the figures hold.",
+    f"{_TAKING} [S1, S2, S3], {_DEPLOYED}, with growth to follow if monetised.",   # only its condition keeps it (J6)
     f"{_TAKING} [S1, S2, S3], {_DEPLOYED}, with 500M messages/month stated separately.",
     f"{_TAKING} [S1, S2, S3], {_DEPLOYED}, which Pitch Deck Hunt lists at $23.1M [C1, S4].",
 )
